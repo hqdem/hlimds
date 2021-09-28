@@ -14,6 +14,8 @@
 
 #include <iostream>
 
+#include "config.h"
+
 #include "gate/model/gate.h"
 #include "gate/model/netlist.h"
 #include "hls/model/model.h"
@@ -71,7 +73,9 @@ int hls_main(const std::string &filename) {
 }
 
 int main(int argc, char **argv) {
-  std::cout << "EDA Utopia | Copyright (c) 2021 ISPRAS" << std::endl;
+  std::cout << "EDA Utopia ";
+  std::cout << VERSION_MAJOR << "." << VERSION_MINOR << " | ";
+  std::cout << "Copyright (c) 2021 ISPRAS" << std::endl;
 
   if (argc <= 1) {
     std::cout << "Usage: " << argv[0] << " <input-file(s)>" << std::endl;

@@ -12,21 +12,16 @@ Utopia is an open-source HLS-based EDA for digital hardware.
 
 ## Working in Command Line
 
-## Building Project
+## Building/Running Project
 
 ```
 cd src
 cmake -S . -B build
 cmake --build build
-```
-
-## Running Project
-
-```
 ./build/umain <file(s)>
 ```
 
-## Running Unit Tests
+## Building/Running Unit Tests
 
 ```
 cd test

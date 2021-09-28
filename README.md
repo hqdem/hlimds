@@ -16,14 +16,24 @@ Utopia is an open-source HLS-based EDA for digital hardware.
 
 ```
 cd src
-mkdir build
-cd build
-cmake ..
-make
+cmake -S . -B build
+cmake --build build
 ```
+
+## Running Project
+
+```
+./build/umain <file(s)>
+```
+
 ## Running Unit Tests
 
-TODO
+```
+cd test
+cmake -S . -B build
+cmake --build build
+./build/utest
+```
 
 ## Working in Visual Studio Code
 
@@ -50,6 +60,3 @@ TODO
   * Press the `I trust the authors` button
 * Click on the `Build` text in the status bar
 
-### Running Unit Tests
-
-TODO

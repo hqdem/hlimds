@@ -19,32 +19,29 @@
 #include "gate/model/gate.h"
 #include "gate/model/netlist.h"
 #include "hls/model/model.h"
-#include "hls/parser/builder.h"
-#include "hls/parser/parser.h"
+#include "hls/parser/hil/builder.h"
+#include "hls/parser/hil/parser.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
-#include "rtl/parser/builder.h"
-#include "rtl/parser/parser.h"
+#include "rtl/parser/ril/builder.h"
+#include "rtl/parser/ril/parser.h"
+#include "util/utils.h"
 
 using namespace eda::gate::model;
 using namespace eda::rtl::compiler;
 using namespace eda::rtl::library;
 using namespace eda::rtl::model;
-
-inline bool ends_with(const std::string &string, const std::string &suffix) {
-  return string.size() >= suffix.size()
-      && string.compare(string.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
+using namespace eda::utils;
 
 int rtl_main(const std::string &filename) {
-  if (eda::rtl::parser::parse(filename) == -1) {
+  if (eda::rtl::parser::ril::parse(filename) == -1) {
     std::cout << "Could not parse " << filename << std::endl;
     std::cout << "Synthesis terminated." << std::endl;
     return -1;
   }
 
-  std::unique_ptr<Net> pnet = eda::rtl::parser::Builder::get().create();
+  std::unique_ptr<Net> pnet = eda::rtl::parser::ril::Builder::get().create();
   pnet->create();
 
   std::cout << "------ p/v-nets ------" << std::endl;
@@ -60,13 +57,13 @@ int rtl_main(const std::string &filename) {
 }
 
 int hls_main(const std::string &filename) {
-  if (eda::hls::parser::parse(filename) == -1) {
+  if (eda::hls::parser::hil::parse(filename) == -1) {
     std::cout << "Could not parse " << filename << std::endl;
     std::cout << "Synthesis terminated." << std::endl;
     return -1;
   }
 
-  std::unique_ptr<Model> model = eda::hls::parser::Builder::get().create();
+  std::unique_ptr<Model> model = eda::hls::parser::hil::Builder::get().create();
   std::cout << *model;
 
   return 0;

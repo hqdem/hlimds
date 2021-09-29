@@ -25,7 +25,7 @@
 
 using namespace eda::rtl::model;
 
-namespace eda::rtl::parser {
+namespace eda::rtl::parser::ril {
 
 struct AstDecl final {
   AstDecl(Variable::Kind kind, Variable::Bind bind,
@@ -130,4 +130,4 @@ private:
   static std::unique_ptr<Builder> _instance;
 };
 
-} // namespace eda::rtl::parser
+} // namespace eda::rtl::parser::ril

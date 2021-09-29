@@ -15,11 +15,11 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "rtl/parser/builder.h"
+#include "rtl/parser/ril/builder.h"
 
 using namespace eda::rtl;
 
-namespace eda::rtl::parser {
+namespace eda::rtl::parser::ril {
 
 std::unique_ptr<Builder> Builder::_instance = nullptr;
 
@@ -150,4 +150,4 @@ std::unique_ptr<Net> Builder::create() {
   return net;
 }
 
-} // namespace eda::rtl::parser
+} // namespace eda::rtl::parser::ril

@@ -16,10 +16,10 @@
   #include <string>
   #include <iostream>
 
-  #include "rtl/parser/builder.h"
+  #include "rtl/parser/ril/builder.h"
 
   using namespace eda::rtl;
-  using namespace eda::rtl::parser;
+  using namespace eda::rtl::parser::ril;
 
   extern int rrlineno;
   extern char* rrtext;

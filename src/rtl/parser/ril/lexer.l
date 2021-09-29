@@ -19,7 +19,7 @@
 
 %{
   #include <string>
-  #include <rtl/parser/parser.tab.hpp>
+  #include <rtl/parser/ril/parser.tab.hpp>
 %}
 
 NUM  [1-9][0-9]*

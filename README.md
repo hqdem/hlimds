@@ -1,31 +1,70 @@
 # Utopia EDA
 
-Utopia is an open-source HLS-based EDA for digital hardware.
+Utopia is an open-source HLS-based EDA for digital hardware design.
+
+The EDA takes the following inputs:
+* an algorithmic description of the accelerator (IP core);
+* a configuration of the target hardware (FPGA, ULA, or ASIC);
+* custom constraints.
+
+And produces the following outputs:
+* an RTL model of the accelerator;
+* recommendations for placing elements of the RTL model on a chip;
+* implementation of the API for interacting with the accelerator (if necessary).
+
+## Licensing and Distribution
+
+Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 ## System Requirements
 
 * `gcc`
+* `clang`
+* `lld`
 * `make`
+* `ninja`
 * `cmake`
 * `flex`
 * `bison`
 
+### LLVM Installation
+
+```
+cd <workdir>
+git clone https://github.com/llvm/llvm-project.git
+mkdir llvm-project/build
+cd llvm-project/build
+cmake -G Ninja ../llvm \
+   -DLLVM_ENABLE_PROJECTS=mlir \
+   -DLLVM_BUILD_EXAMPLES=ON \
+   -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" \
+   -DCMAKE_BUILD_TYPE=Release \
+   -DLLVM_ENABLE_ASSERTIONS=ON \
+   -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON
+
+cmake --build . --target check-mlir
+```
+
+```
+export MLIR_HOME=<workdir>/llvm-project/build/lib/cmake/mlir/
+```
+
 ## Working in Command Line
 
-## Building/Running Project
+### Building/Running Project
 
 ```
 cd src
-cmake -S . -B build
+cmake -S . -B build -G Ninja
 cmake --build build
 ./build/umain <file(s)>
 ```
 
-## Building/Running Unit Tests
+### Building/Running Unit Tests
 
 ```
 cd test
-cmake -S . -B build
+cmake -S . -B build -G Ninja
 cmake --build build
 ./build/utest
 ```
@@ -54,4 +93,3 @@ cmake --build build
   * Select the `<UTOPIA_HOME>/src` directory
   * Press the `I trust the authors` button
 * Click on the `Build` text in the status bar
-

@@ -62,7 +62,7 @@ public:
   const std::string& name() const { return _var.name(); }
   const Type& type() const { return _var.type(); }
 
-  const std::size_t esize() const { return _events.size(); }
+  std::size_t esize() const { return _events.size(); }
   const Event::List& events() const { return _events; }
   const Event& event(std::size_t i) const { return _events[i]; }
 

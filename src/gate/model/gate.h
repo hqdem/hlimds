@@ -40,7 +40,7 @@ class Gate final {
 public:
   using List = std::vector<Gate *>;
 
-  const unsigned id() const { return _id; }
+  unsigned id() const { return _id; }
   GateSymbol kind() const { return _kind; }
   std::size_t arity() const { return _inputs.size(); }
 

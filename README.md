@@ -77,7 +77,7 @@ cmake --build build
   * Wait until the package is downloaded
 * Install the VS Studio package
   ```
-  sudo sudo apt install -f ~/Downloads/code_1.60.2-1632313585_amd64.deb
+  sudo apt install -f ~/Downloads/code_1.60.2-1632313585_amd64.deb
   ```
 * Install the C/C++ and CMake extensions
   * Start VS Code

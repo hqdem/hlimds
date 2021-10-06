@@ -52,22 +52,32 @@ export MLIR_DIR=<workdir>/llvm-project/build/lib/cmake/mlir/
 
 ## Working in Command Line
 
-### Building/Running Project
+### Building Project w/o Tests
 
 ```
 cd src
 cmake -S . -B build -G Ninja
 cmake --build build
+```
+
+### Running Utopia EDA
+
+```
 ./build/umain <file(s)>
 ```
 
-### Building/Running Unit Tests
+### Building Project w/ Tests
 
 ```
-cd test
 cmake -S . -B build -G Ninja
 cmake --build build
-./build/utest
+```
+
+### Running Tests
+
+```
+./build/test/utest
+
 ```
 
 ## Working in Visual Studio Code
@@ -91,6 +101,6 @@ cmake --build build
 ### Opening/Building Project
 
 * Click on the `File` and `Open Folder...` menu items
-  * Select the `<UTOPIA_HOME>/src` directory
+  * Select the `<UTOPIA_HOME>/src` directory (or `<UTOPIA_HOME>`)
   * Press the `I trust the authors` button
 * Click on the `Build` text in the status bar

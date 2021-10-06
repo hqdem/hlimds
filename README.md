@@ -21,6 +21,7 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 * `gcc`
 * `clang`
 * `lld`
+* `clang-tidy`
 * `make`
 * `ninja`
 * `cmake`

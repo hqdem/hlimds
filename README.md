@@ -47,7 +47,7 @@ cmake --build . --target check-mlir
 ```
 
 ```
-export MLIR_HOME=<workdir>/llvm-project/build/lib/cmake/mlir/
+export MLIR_DIR=<workdir>/llvm-project/build/lib/cmake/mlir/
 ```
 
 ## Working in Command Line

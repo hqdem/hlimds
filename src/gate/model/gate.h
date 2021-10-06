@@ -16,7 +16,7 @@
 
 namespace eda::rtl::compiler {
   class Compiler;
-} // eda::rtl::compiler
+} // namespace eda::rtl::compiler
 
 namespace eda::gate::model {
 

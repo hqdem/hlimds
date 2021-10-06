@@ -26,4 +26,4 @@ int parse(const std::string &filename) {
   return rrparse();
 }
 
-} // namespace eda::rtl::parser::rtl
+} // namespace eda::rtl::parser::ril

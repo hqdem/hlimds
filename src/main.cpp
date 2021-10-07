@@ -13,12 +13,10 @@
 #include "gate/model/gate.h"
 #include "gate/model/netlist.h"
 #include "hls/model/model.h"
-#include "hls/parser/hil/builder.h"
 #include "hls/parser/hil/parser.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
-#include "rtl/parser/ril/builder.h"
 #include "rtl/parser/ril/parser.h"
 #include "util/utils.h"
 
@@ -29,20 +27,18 @@ using namespace eda::rtl::model;
 using namespace eda::utils;
 
 int rtl_main(const std::string &filename) {
-  if (eda::rtl::parser::ril::parse(filename) == -1) {
+  auto model = eda::rtl::parser::ril::parse(filename);
+  if (model == nullptr) {
     std::cout << "Could not parse " << filename << std::endl;
     std::cout << "Synthesis terminated." << std::endl;
     return -1;
   }
 
-  std::unique_ptr<Net> pnet = eda::rtl::parser::ril::Builder::get().create();
-  pnet->create();
-
   std::cout << "------ p/v-nets ------" << std::endl;
-  std::cout << *pnet << std::endl;
+  std::cout << *model << std::endl;
 
   Compiler compiler(FLibraryDefault::get());
-  std::unique_ptr<Netlist> netlist = compiler.compile(*pnet);
+  auto netlist = compiler.compile(*model);
 
   std::cout << "------ netlist ------" << std::endl;
   std::cout << *netlist;
@@ -51,20 +47,19 @@ int rtl_main(const std::string &filename) {
 }
 
 int hls_main(const std::string &filename) {
-  if (eda::hls::parser::hil::parse(filename) == -1) {
+  auto model = eda::hls::parser::hil::parse(filename);
+  if (model == nullptr) {
     std::cout << "Could not parse " << filename << std::endl;
     std::cout << "Synthesis terminated." << std::endl;
     return -1;
   }
 
-  std::unique_ptr<Model> model = eda::hls::parser::hil::Builder::get().create();
   std::cout << *model;
-
   return 0;
 }
 
 int main(int argc, char **argv) {
-  std::cout << "EDA Utopia ";
+  std::cout << "Utopia EDA";
   std::cout << VERSION_MAJOR << "." << VERSION_MINOR << " | ";
   std::cout << "Copyright (c) 2021 ISPRAS" << std::endl;
 

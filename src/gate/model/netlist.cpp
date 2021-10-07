@@ -11,7 +11,7 @@
 namespace eda::gate::model {
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist) {
-  for (const auto gate: netlist.gates()) {
+  for (const auto *gate: netlist.gates()) {
     out << *gate << std::endl;
   }
   return out;

@@ -30,11 +30,11 @@ std::unique_ptr<Netlist> Compiler::compile(const Net &net) {
 
   _gates_id.clear();
 
-  for (const auto vnode: net.vnodes()) {
+  for (const auto *vnode: net.vnodes()) {
     alloc_gates(vnode, *netlist);
   }
 
-  for (const auto vnode: net.vnodes()) {
+  for (const auto *vnode: net.vnodes()) {
     switch (vnode->kind()) {
     case VNode::SRC:
       synth_src(vnode, *netlist);

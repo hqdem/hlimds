@@ -19,7 +19,7 @@ std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
   if (pnode.gsize() > 0) {  
     out << "if (";
     bool separator = false;
-    for (const auto vnode: pnode.guard()) {
+    for (const auto *vnode: pnode.guard()) {
       out << (separator ? " && " : "") << *vnode;
       separator = true;
     }
@@ -28,7 +28,7 @@ std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
     out << "{" << std::endl;
   }
 
-  for (const auto vnode: pnode.action()) {
+  for (const auto *vnode: pnode.action()) {
     out << "  " << *vnode << std::endl;
   }
 

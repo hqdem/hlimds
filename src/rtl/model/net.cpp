@@ -179,11 +179,11 @@ VNode* Net::create_mux(const Variable &output, const VNode::List &defines) {
 }
 
 std::ostream& operator <<(std::ostream &out, const Net &net) {
-  for (const auto pnode: net.pnodes()) {
+  for (const auto *pnode: net.pnodes()) {
     out << *pnode << std::endl;
   }
 
-  for (const auto vnode: net.vnodes()) {
+  for (const auto *vnode: net.vnodes()) {
     out << *vnode << std::endl;
   }
 

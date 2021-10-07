@@ -6,10 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
+#pragma once
+
+#include <memory>
 #include <string>
+
+namespace eda::rtl::model {
+  class Net;
+} // namespace eda::rtl::model
 
 namespace eda::rtl::parser::ril {
 
-int parse(const std::string &filename);
+std::unique_ptr<eda::rtl::model::Net> parse(const std::string &filename);
 
 } // namespace eda::rtl::parser::ril

@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: Apache-2.0 ->
+
 # Utopia EDA
 
 Utopia is an open-source HLS-based EDA for digital hardware design.

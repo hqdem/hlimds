@@ -10,7 +10,7 @@
 #include <cstddef>
 
 #include "rtl/model/net.h"
-#include "util/utils.h"
+#include "util/string.h"
 
 using namespace eda::utils;
 

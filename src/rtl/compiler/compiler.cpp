@@ -16,7 +16,7 @@
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
 #include "rtl/model/vnode.h"
-#include "util/utils.h"
+#include "util/string.h"
 
 using namespace eda::gate::model;
 using namespace eda::rtl::library;

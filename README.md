@@ -84,6 +84,20 @@ cmake --build build
 
 ```
 
+### Run Specific Tests
+
+```
+./build/test/utest --gtest_filter=<test-pattern>
+```
+Test pattern accepts ```*``` and ```?``` wildcards.
+
+### List All Tests
+
+```
+./build/test/utest --gtest_list_tests
+```
+
+
 ## Working in Visual Studio Code
 
 ### Installing VS Studio w/ C/C++ and CMake Extensions

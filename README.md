@@ -26,10 +26,10 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 * `clang-tidy`
 * `make`
 * `ninja`
+* `python`
 * `cmake`
 * `flex`
 * `bison`
-* `libz3-dev`
 * `liblpsolve55-dev`
 
 ### LLVM Installation
@@ -52,6 +52,18 @@ cmake --build . --target check-mlir
 
 ```
 export MLIR_DIR=<workdir>/llvm-project/build/lib/cmake/mlir/
+```
+
+### Z3 Installation
+
+```
+cd <workdir>
+git clone https://github.com/Z3Prover/z3.git
+cd z3
+python scripts/mk_make.py
+cd build
+make
+sudo make install
 ```
 
 ## Working in Command Line

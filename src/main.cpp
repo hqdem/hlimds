@@ -17,6 +17,7 @@
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
+#include "hls/scheduler/solver.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
@@ -59,8 +60,14 @@ int hls_main(const std::string &filename) {
 
   std::cout << *model;
 
+  eda::hls::scheduler::LpSolver balancer(model.get());
+  balancer.balance();
+  auto* balancedModel = balancer.getModel();
+  std::cout<<"Balancing done.\n";
+  std::cout << *balancedModel;
+
   std::ofstream output(filename + ".dot");
-  printDot(output, *model);
+  printDot(output, *balancedModel);
   output.close();
 
   return 0;

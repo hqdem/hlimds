@@ -26,7 +26,7 @@ public:
     /// Unsigned integer (width).
     UINT,
     /// Floating-point number (width, fract).
-    REAL
+    FLOAT
   };
 
   Type(Kind kind, std::size_t width, std::size_t fract = 0):

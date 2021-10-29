@@ -6,13 +6,16 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <fstream>
 #include <iostream>
+#include <string>
 
 #include "config.h"
 
 #include "gate/model/gate.h"
 #include "gate/model/netlist.h"
 #include "hls/model/model.h"
+#include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
@@ -55,6 +58,11 @@ int hls_main(const std::string &filename) {
   }
 
   std::cout << *model;
+
+  std::ofstream output(filename + ".dot");
+  printDot(output, *model);
+  output.close();
+
   return 0;
 }
 

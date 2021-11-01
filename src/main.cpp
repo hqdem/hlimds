@@ -60,14 +60,14 @@ int hls_main(const std::string &filename) {
 
   std::cout << *model;
 
-  eda::hls::scheduler::LpSolver balancer(model.get());
-  balancer.balance();
-  auto* balancedModel = balancer.getModel();
-  std::cout<<"Balancing done.\n";
-  std::cout << *balancedModel;
+  eda::hls::scheduler::LpSolver balancer;
+  balancer.balance(*model);
+  //auto* balancedModel = balancer.getModel();
+  std::cout << "Balancing done.\n";
+  std::cout << *model;
 
   std::ofstream output(filename + ".dot");
-  printDot(output, *balancedModel);
+  printDot(output, *model);
   output.close();
 
   return 0;

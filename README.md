@@ -65,6 +65,8 @@ cd build
 make
 sudo make install
 ```
+If you would like to install Z3 to a non-standard location,
+please set `Z3_DIR` environment variable to Z3 build/installation directory.
 
 ## Working in Command Line
 

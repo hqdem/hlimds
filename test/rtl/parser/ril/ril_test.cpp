@@ -40,5 +40,5 @@ int rilTest(const std::string &filename) {
 }
 
 TEST(RilTest, SingleTest) {
-  EXPECT_EQ(rilTest("test/ril/test.ril"), 0);
+  EXPECT_EQ(rilTest("test/data/ril/test.ril"), 0);
 }

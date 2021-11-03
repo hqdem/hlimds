@@ -17,6 +17,7 @@
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
+#include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/solver.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
@@ -60,9 +61,28 @@ int hls_main(const std::string &filename) {
 
   std::cout << *model;
 
+  // Optimization criterion and constraints.
+  eda::hls::scheduler::Criteria criteria(
+    Throughput,
+    Constraint(1000, 500000),                               // Frequency (kHz)
+    Constraint(1000, 500000),                               // Throughput (=frequency)
+    Constraint(0,    100),                                  // Latency (cycles)
+    Constraint(0,    std::numeric_limits<unsigned>::max()), // Power (does not matter)
+    Constraint(1,    150000));                              // Area (number of LUTs)
+
+  model->save();
+
+  Indicators indicators;
+  std::map<std::string, Parameters> params =
+    eda::hls::scheduler::ParametersOptimizer::get().optimize(criteria, *model, indicators);
+
+  model->save();
+
+  /*
   eda::hls::scheduler::LpSolver balancer;
   balancer.balance(*model);
   //auto* balancedModel = balancer.getModel();
+  */
   std::cout << "Balancing done.\n";
   std::cout << *model;
 
@@ -74,7 +94,7 @@ int hls_main(const std::string &filename) {
 }
 
 int main(int argc, char **argv) {
-  std::cout << "Utopia EDA";
+  std::cout << "Utopia EDA ";
   std::cout << VERSION_MAJOR << "." << VERSION_MINOR << " | ";
   std::cout << "Copyright (c) 2021 ISPRAS" << std::endl;
 

@@ -18,6 +18,7 @@
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 #include "hls/scheduler/solver.h"
+#include "hls/scheduler/param_optimizer.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
@@ -65,6 +66,14 @@ int hls_main(const std::string &filename) {
   //auto* balancedModel = balancer.getModel();
   std::cout << "Balancing done.\n";
   std::cout << *model;
+
+  eda::hls::library::Indicators indicators{1000, 1000, 1000, 1000, 1000};
+  eda::hls::library::Constraint frequency(500, 1000), throughput(500, 1000),
+                                latency(500, 1000), power(500, 1000), area(500, 1000);
+  eda::hls::scheduler::Criteria criteria(Throughput, frequency, throughput, latency, power, area);
+
+  auto& optimizer = eda::hls::scheduler::ParametersOptimizer::get();
+  auto result = optimizer.optimize(*model, criteria, indicators);
 
   std::ofstream output(filename + ".dot");
   printDot(output, *model);

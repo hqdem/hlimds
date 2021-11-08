@@ -6,12 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <fstream>
-#include <iostream>
-#include <string>
-
 #include "config.h"
-
 #include "gate/model/gate.h"
 #include "gate/model/netlist.h"
 #include "hls/model/model.h"
@@ -25,6 +20,14 @@
 #include "rtl/parser/ril/parser.h"
 #include "util/string.h"
 
+#include "easylogging++.h"
+
+#include <fstream>
+#include <iostream>
+#include <string>
+
+INITIALIZE_EASYLOGGINGPP
+
 using namespace eda::gate::model;
 using namespace eda::rtl::compiler;
 using namespace eda::rtl::library;
@@ -32,6 +35,8 @@ using namespace eda::rtl::model;
 using namespace eda::utils;
 
 int rtl_main(const std::string &filename) {
+  LOG(INFO) << "Starting rtl_main " << filename;
+
   auto model = eda::rtl::parser::ril::parse(filename);
   if (model == nullptr) {
     std::cout << "Could not parse " << filename << std::endl;
@@ -52,6 +57,8 @@ int rtl_main(const std::string &filename) {
 }
 
 int hls_main(const std::string &filename) {
+  LOG(INFO) << "Starting hls_main " << filename;
+
   auto model = eda::hls::parser::hil::parse(filename);
   if (model == nullptr) {
     std::cout << "Could not parse " << filename << std::endl;
@@ -94,6 +101,8 @@ int hls_main(const std::string &filename) {
 }
 
 int main(int argc, char **argv) {
+  START_EASYLOGGINGPP(argc, argv);
+
   std::cout << "Utopia EDA ";
   std::cout << VERSION_MAJOR << "." << VERSION_MINOR << " | ";
   std::cout << "Copyright (c) 2021 ISPRAS" << std::endl;

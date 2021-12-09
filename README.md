@@ -20,6 +20,9 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ## System Requirements
 
+* `zlib`
+* `zlib1g`
+* `python`
 * `gcc`
 * `clang`
 * `lld`
@@ -31,6 +34,51 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 * `flex`
 * `bison`
 * `liblpsolve55-dev`
+
+
+### CIRCT Installation
+
+#### Check out LLVM and CIRCT repos
+
+```
+git clone git@github.com:circt/circt.git
+cd circt
+git submodule init
+git submodule update
+```
+
+#### Build and test LLVM/MLIR
+
+```
+cd circt
+mkdir llvm/build
+cd llvm/build
+cmake -G Ninja ../llvm \
+   -DLLVM_ENABLE_PROJECTS=mlir \
+   -DLLVM_BUILD_EXAMPLES=ON \
+   -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" \
+   -DCMAKE_BUILD_TYPE=Release \
+   -DLLVM_ENABLE_ASSERTIONS=ON
+ninja
+ninja check-mlir
+```
+
+#### Build and test CIRCT
+
+```
+cd circt
+mkdir build
+cd build
+cmake -G Ninja .. \
+   -DCMAKE_BUILD_TYPE=Release \
+   -DLLVM_ENABLE_ASSERTIONS=ON \
+   -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
+   -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm
+ninja
+ninja check-circt
+ninja check-circt-integration
+```
+
 
 ### LLVM Installation
 

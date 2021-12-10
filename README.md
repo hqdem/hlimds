@@ -58,7 +58,7 @@ cmake -G Ninja ../llvm \
 ninja
 ninja check-mlir
 ```
-Set `MLIR_DIR` environment variable to directory with MLIR CMake files.
+Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
 ```
 export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
@@ -66,7 +66,7 @@ export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 #### Build and test CIRCT
 
 ```
-cd ../../circt
+cd <workdir>/circt
 mkdir build
 cd build
 cmake -G Ninja .. \
@@ -78,7 +78,8 @@ ninja
 ninja check-circt
 ninja check-circt-integration
 ```
-Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin` to your `PATH` environment variable.
+Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
+to your `PATH` environment variable:
 ```
 export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
 ```

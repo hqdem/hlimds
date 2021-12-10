@@ -78,6 +78,10 @@ ninja
 ninja check-circt
 ninja check-circt-integration
 ```
+Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin` to your `PATH` environment variable.
+```
+export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
+```
 
 ### Z3 Installation
 

@@ -20,31 +20,26 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ## System Requirements
 
-* `zlib`
-* `zlib1g`
-* `python`
-* `gcc`
+* `bison`
 * `clang`
-* `lld`
 * `clang-tidy`
+* `cmake`
+* `flex`
+* `gcc`
+* `liblpsolve55-dev`
+* `lld`
 * `make`
 * `ninja`
 * `python`
-* `cmake`
-* `flex`
-* `bison`
-* `liblpsolve55-dev`
-
+* `zlib`
+* `zlib1g`
 
 ### CIRCT Installation
 
 #### Check out LLVM and CIRCT repos
 
 ```
-git clone git@github.com:circt/circt.git
-cd circt
-git submodule init
-git submodule update
+git clone --recursive https://github.com/circt/circt.git
 ```
 
 #### Build and test LLVM/MLIR
@@ -58,15 +53,20 @@ cmake -G Ninja ../llvm \
    -DLLVM_BUILD_EXAMPLES=ON \
    -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" \
    -DCMAKE_BUILD_TYPE=Release \
-   -DLLVM_ENABLE_ASSERTIONS=ON
+   -DLLVM_ENABLE_ASSERTIONS=ON \
+   -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON
 ninja
 ninja check-mlir
+```
+Set `MLIR_DIR` environment variable to directory with MLIR CMake files.
+```
+export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
 
 #### Build and test CIRCT
 
 ```
-cd circt
+cd ../../circt
 mkdir build
 cd build
 cmake -G Ninja .. \
@@ -77,29 +77,6 @@ cmake -G Ninja .. \
 ninja
 ninja check-circt
 ninja check-circt-integration
-```
-
-
-### LLVM Installation
-
-```
-cd <workdir>
-git clone https://github.com/llvm/llvm-project.git
-mkdir llvm-project/build
-cd llvm-project/build
-cmake -G Ninja ../llvm \
-   -DLLVM_ENABLE_PROJECTS=mlir \
-   -DLLVM_BUILD_EXAMPLES=ON \
-   -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" \
-   -DCMAKE_BUILD_TYPE=Release \
-   -DLLVM_ENABLE_ASSERTIONS=ON \
-   -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON
-
-cmake --build . --target check-mlir
-```
-
-```
-export MLIR_DIR=<workdir>/llvm-project/build/lib/cmake/mlir/
 ```
 
 ### Z3 Installation

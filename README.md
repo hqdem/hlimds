@@ -27,7 +27,6 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 * `clang-tidy`
 * `cmake`
 * `flex`
-* `g++`
 * `gcc`
 * `liblpsolve55-dev`
 * `lld`
@@ -36,10 +35,10 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 * `python`
 * `zlib1g`
 
-To install this packages run the following command:
+### Command:
 
 ```
-sudo apt-get install bison clang clang-tidy cmake flex g++ gcc liblpsolve55-dev lld make ninja-build python zlib1g
+sudo apt-get install bison clang clang-tidy cmake flex gcc liblpsolve55-dev lld make ninja-build python zlib1g
 ```
 
 ### CIRCT Installation
@@ -81,10 +80,9 @@ cmake -G Ninja .. \
    -DCMAKE_BUILD_TYPE=Release \
    -DLLVM_ENABLE_ASSERTIONS=ON \
    -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
-   -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm
+   -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
+   -DVERILATOR_DISABLE=ON
 ninja
-ninja check-circt
-ninja check-circt-integration
 ```
 Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
 to your `PATH` environment variable:

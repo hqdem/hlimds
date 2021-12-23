@@ -105,7 +105,7 @@ sudo make install
 If you would like to install Z3 to a non-standard location,
 please set `Z3_DIR` environment variable to Z3 build/installation directory.
 
-### C++ Ctemplate Installation
+### C++ CTemplate Installation
 
 ```
 cd <workdir>
@@ -116,6 +116,8 @@ cd ctemplate
 make
 sudo make install
 ```
+If you would like to install CTemplate to a non-standard location,
+please set `CT_DIR` environment variable to CTemplate build/installation directory.
 
 ## Working in Command Line
 

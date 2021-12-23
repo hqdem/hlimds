@@ -22,6 +22,7 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ### Ubuntu 20.04:
 
+* `autoconf`
 * `bison`
 * `clang`
 * `clang-tidy`
@@ -38,7 +39,7 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 ### Command:
 
 ```
-sudo apt-get install bison clang clang-tidy cmake flex gcc liblpsolve55-dev lld make ninja-build python zlib1g
+sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55-dev lld make ninja-build python zlib1g
 ```
 
 ### CIRCT Installation

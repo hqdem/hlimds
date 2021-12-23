@@ -110,7 +110,7 @@ please set `Z3_DIR` environment variable to Z3 build/installation directory.
 cd <workdir>
 git clone https://github.com/OlafvdSpek/ctemplate.git
 cd ctemplate
-./autoconf.sh
+./autogen.sh
 ./configure
 make
 sudo make install

@@ -113,7 +113,7 @@ cd <workdir>
 git clone https://github.com/OlafvdSpek/ctemplate.git
 cd ctemplate
 ./autogen.sh
-./configure
+./configure --prefix=/usr
 make
 sudo make install
 ```

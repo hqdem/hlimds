@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <math.h>
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -73,9 +74,9 @@ int hls_main(const std::string &filename) {
     Throughput,
     Constraint(1000, 500000),                               // Frequency (kHz)
     Constraint(1000, 500000),                               // Throughput (=frequency)
-    Constraint(0,    100),                                  // Latency (cycles)
+    Constraint(0,    1000),                                  // Latency (cycles)
     Constraint(0,    std::numeric_limits<unsigned>::max()), // Power (does not matter)
-    Constraint(1,    150000));                              // Area (number of LUTs)
+    Constraint(1,    5000));                              // Area (number of LUTs)
 
   model->save();
 
@@ -85,11 +86,10 @@ int hls_main(const std::string &filename) {
 
   model->save();
 
-  /*
   eda::hls::scheduler::LpSolver balancer;
   balancer.balance(*model);
-  //auto* balancedModel = balancer.getModel();
-  */
+  auto* balancedModel = balancer.getModel();
+  
   std::cout << "Balancing done.\n";
   std::cout << *model;
 

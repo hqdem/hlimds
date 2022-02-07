@@ -86,9 +86,11 @@ int hls_main(const std::string &filename) {
 
   model->save();
 
+/*
   eda::hls::scheduler::LpSolver balancer;
   balancer.balance(*model);
   auto* balancedModel = balancer.getModel();
+*/
   
   std::cout << "Balancing done.\n";
   std::cout << *model;

@@ -12,9 +12,9 @@
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
+#include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 #include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/solver.h"
-#include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
@@ -25,8 +25,8 @@
 
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <math.h>
+#include <string>
 
 INITIALIZE_EASYLOGGINGPP
 

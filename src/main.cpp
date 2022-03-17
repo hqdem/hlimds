@@ -24,8 +24,8 @@
 
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <math.h>
+#include <string>
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -91,7 +91,7 @@ int hls_main(const std::string &filename) {
   balancer.balance(*model);
   auto* balancedModel = balancer.getModel();
 */
-  
+
   std::cout << "Balancing done.\n";
   std::cout << *model;
 

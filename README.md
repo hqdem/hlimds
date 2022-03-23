@@ -12,7 +12,7 @@ The EDA takes the following inputs:
 And produces the following outputs:
 * an RTL model of the accelerator;
 * recommendations for placing elements of the RTL model on a chip;
-* implementation of the API for interacting with the accelerator (if necessary).
+* an implementation of the API for interacting with the accelerator (if necessary).
 
 ## Licensing and Distribution
 

@@ -49,6 +49,7 @@ sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55
 
 ```
 git clone --recursive https://github.com/circt/circt.git
+git checkout 4014b816
 ```
 
 #### Build and test LLVM/MLIR
@@ -72,7 +73,7 @@ Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
 export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
 
-#### Build and test CIRCT
+#### Build CIRCT
 
 ```
 cd <workdir>/circt

@@ -8,9 +8,11 @@
 
 #pragma once
 
-#include "gate/model/gate.h"
+#include "gate/model/netlist.h"
 
 using namespace eda::gate::model;
+
+class Solver;
 
 namespace eda::gate::checker {
 
@@ -21,7 +23,21 @@ namespace eda::gate::checker {
 class Checker final {
 public:
   /// Checks logic equivalence of two netlists.
-  bool check(const Netlist &lhs, const Netlist &rhs);
+  bool check(const Netlist &lhs, const Netlist &rhs) const;
+
+private:
+  void encode(const Netlist &net, Solver &solver);
+  void encode(const Gate &gate, Solver &solver);
+  void encodeZero(const Gate &gate, Solver &solver);
+  void encodeOne(const Gate &gate, Solver &solver);
+  void encodeNop(const Gate &gate, Solver &solver);
+  void encodeNot(const Gate &gate, Solver &solver);
+  void encodeAnd(const Gate &gate, Solver &solver);
+  void encodeOr(const Gate &gate, Solver &solver);
+  void encodeXor(const Gate &gate, Solver &solver);
+  void encodeNand(const Gate &gate, Solver &solver);
+  void encodeNor(const Gate &gate, Solver &solver);
+  void encodeXnor(const Gate &gate, Solver &solver);
 };
 
 } // namespace eda::gate::checker

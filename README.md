@@ -50,6 +50,7 @@ sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55
 
 ```
 git clone --recursive https://github.com/circt/circt.git
+cd circt
 git checkout 4014b816
 ```
 

@@ -36,11 +36,12 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 * `ninja-build`
 * `python`
 * `zlib1g`
+* `zlib1g-dev`
 
 ### Command:
 
 ```
-sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55-dev libtool lld make ninja-build python zlib1g
+sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55-dev libtool lld make ninja-build python zlib1g zlib1g-dev
 ```
 
 ### CIRCT Installation

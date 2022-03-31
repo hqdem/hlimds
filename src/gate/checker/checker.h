@@ -12,7 +12,9 @@
 
 using namespace eda::gate::model;
 
-class Solver;
+namespace Minisat {
+  class Solver;
+} // namespace Minisat
 
 namespace eda::gate::checker {
 
@@ -26,18 +28,16 @@ public:
   bool check(const Netlist &lhs, const Netlist &rhs) const;
 
 private:
-  void encode(const Netlist &net, Solver &solver);
-  void encode(const Gate &gate, Solver &solver);
-  void encodeZero(const Gate &gate, Solver &solver);
-  void encodeOne(const Gate &gate, Solver &solver);
-  void encodeNop(const Gate &gate, Solver &solver);
-  void encodeNot(const Gate &gate, Solver &solver);
-  void encodeAnd(const Gate &gate, Solver &solver);
-  void encodeOr(const Gate &gate, Solver &solver);
-  void encodeXor(const Gate &gate, Solver &solver);
-  void encodeNand(const Gate &gate, Solver &solver);
-  void encodeNor(const Gate &gate, Solver &solver);
-  void encodeXnor(const Gate &gate, Solver &solver);
+  void encode(const Netlist &net, Minisat::Solver &solver);
+  void encode(const Gate &gate, Minisat::Solver &solver);
+
+  void encodeFix(const Gate &gate, bool sign, Minisat::Solver &solver);
+  void encodeBuf(const Gate &gate, bool sign, Minisat::Solver &solver);
+  void encodeAnd(const Gate &gate, bool sign, Minisat::Solver &solver);
+  void encodeOr (const Gate &gate, bool sign, Minisat::Solver &solver);
+  void encodeXor(const Gate &gate, bool sign, Minisat::Solver &solver);
+
+  unsigned getNewVar();
 };
 
 } // namespace eda::gate::checker

@@ -10,6 +10,8 @@
 
 #include "gate/model/netlist.h"
 
+#include <vector>
+
 using namespace eda::gate::model;
 
 namespace Minisat {
@@ -25,19 +27,27 @@ namespace eda::gate::checker {
 class Checker final {
 public:
   /// Checks logic equivalence of two netlists.
-  bool check(const Netlist &lhs, const Netlist &rhs) const;
+  bool equiv(const Netlist &lhs,
+             const Netlist &rhs,
+	     const std::vector<std::pair<Gate*,Gate*>> &imap,
+	     const std::vector<std::pair<Gate*,Gate*>> &omap) const;
 
 private:
-  void encode(const Netlist &net, Minisat::Solver &solver);
-  void encode(const Gate &gate, Minisat::Solver &solver);
+  void encode(unsigned offset, const Netlist &net,
+              Minisat::Solver &solver) const;
+  void encode(unsigned offset, const Gate &gate,
+              Minisat::Solver &solver) const;
 
-  void encodeFix(const Gate &gate, bool sign, Minisat::Solver &solver);
-  void encodeBuf(const Gate &gate, bool sign, Minisat::Solver &solver);
-  void encodeAnd(const Gate &gate, bool sign, Minisat::Solver &solver);
-  void encodeOr (const Gate &gate, bool sign, Minisat::Solver &solver);
-  void encodeXor(const Gate &gate, bool sign, Minisat::Solver &solver);
-
-  unsigned getNewVar();
+  void encodeFix(unsigned offset, const Gate &gate, bool sign,
+                 Minisat::Solver &solver) const;
+  void encodeBuf(unsigned offset, const Gate &gate, bool sign,
+                 Minisat::Solver &solver) const;
+  void encodeAnd(unsigned offset, const Gate &gate, bool sign,
+                 Minisat::Solver &solver) const;
+  void encodeOr (unsigned offset, const Gate &gate, bool sign,
+                 Minisat::Solver &solver) const;
+  void encodeXor(unsigned offset, const Gate &gate, bool sign,
+                 Minisat::Solver &solver) const;
 };
 
 } // namespace eda::gate::checker

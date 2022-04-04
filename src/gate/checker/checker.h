@@ -29,8 +29,8 @@ public:
   /// Checks logic equivalence of two netlists.
   bool equiv(const Netlist &lhs,
              const Netlist &rhs,
-	     const std::vector<std::pair<Gate*,Gate*>> &imap,
-	     const std::vector<std::pair<Gate*,Gate*>> &omap) const;
+	     const std::vector<std::pair<const Gate*, const Gate*>> &imap,
+	     const std::vector<std::pair<const Gate*, const Gate*>> &omap) const;
 
 private:
   void encode(unsigned offset, const Netlist &net,

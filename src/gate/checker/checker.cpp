@@ -59,8 +59,8 @@ inline void encode_xor(unsigned y, unsigned x1, unsigned x2,
 
 bool Checker::equiv(const Netlist &lhs,
                     const Netlist &rhs,
-                    const std::vector<std::pair<Gate*,Gate*>> &imap,
-                    const std::vector<std::pair<Gate*,Gate*>> &omap) const {
+                    const std::vector<std::pair<const Gate*,const Gate*>> &imap,
+                    const std::vector<std::pair<const Gate*,const Gate*>> &omap) const {
   Minisat::Solver solver;
 
   const unsigned lhsOffset = 0;

@@ -44,6 +44,9 @@ public:
   const Gate::List& gates() const { return _gates; }
   Gate* gate(std::size_t i) const { return _gates[i]; }
 
+  const GateIdList& sources() const { return _sources; }
+  const GateIdList& triggers() const { return _triggers; }
+
   Signal posedge(unsigned id) const { return Signal(Event::POSEDGE, gate(id)); }
   Signal negedge(unsigned id) const { return Signal(Event::NEGEDGE, gate(id)); }
   Signal level0(unsigned id) const { return Signal(Event::LEVEL0, gate(id)); }
@@ -64,19 +67,25 @@ public:
   }
 
   /// Modifies the existing gate.
-  void set_gate(unsigned id, GateSymbol kind, const Signal::List &inputs) {
-    Gate *g = gate(id);
-    g->set_kind(kind);
-    g->set_inputs(inputs);
-  }
+  void set_gate(unsigned id, GateSymbol kind, const Signal::List &inputs);
 
 private:
   unsigned add_gate(Gate *gate) {
     _gates.push_back(gate);
+
+    if (gate->is_source()) {
+      _sources.push_back(gate->id());
+    } else if (gate->is_trigger()) {
+      _triggers.push_back(gate->id());
+    }
+
     return gate->id();
   }
 
   Gate::List _gates;
+
+  GateIdList _sources;
+  GateIdList _triggers;
 };
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist);

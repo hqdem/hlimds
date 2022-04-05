@@ -22,8 +22,8 @@ bool checkDeMorganTest() {
   Signal::List lhsInputs;
 
   for (unsigned i = 0; i < N; i++) {
-    const unsigned lhsGateId = lhs.add_gate();
-    const Signal lhsInput = lhs.always(lhsGateId);
+    const unsigned lhsInputId = lhs.add_gate();
+    const Signal lhsInput = lhs.always(lhsInputId);
     lhsInputs.push_back(lhsInput);
   }
 
@@ -34,8 +34,8 @@ bool checkDeMorganTest() {
   Signal::List rhsInputs, andInputs;
 
   for (unsigned i = 0; i < N; i++) {
-    const unsigned rhsGateId = rhs.add_gate();
-    const Signal rhsInput = rhs.always(rhsGateId);
+    const unsigned rhsInputId = rhs.add_gate();
+    const Signal rhsInput = rhs.always(rhsInputId);
     rhsInputs.push_back(rhsInput);
 
     const unsigned notGateId = rhs.add_gate(GateSymbol::NOT, { rhsInput });

@@ -28,13 +28,18 @@ inline Minisat::Lit lit(unsigned id, bool sign) {
 }
 
 /// Creates a variable.
+inline unsigned var(unsigned offset, unsigned gateId) {
+  return offset + gateId;
+}
+
+/// Creates a variable.
 inline unsigned var(unsigned offset, const Gate &gate) {
-  return offset + gate.id();
+  return var(offset, gate.id());
 }
 
 /// Creates a variable.
 inline unsigned var(unsigned offset, const Signal &signal) {
-  return offset + signal.gate()->id();
+  return var(offset, *signal.gate());
 }
 
 /// Encodes the equality y^s == x.
@@ -46,7 +51,7 @@ inline void encode_buf(unsigned y, unsigned x,
 
 /// Encodes the equality y^s == x1 ^ x2.
 inline void encode_xor(unsigned y, unsigned x1, unsigned x2,
-                      bool sign, Minisat::Solver &solver) {
+                       bool sign, Minisat::Solver &solver) {
   solver.addClause(lit(y, sign), lit(x1, true), lit(x2, true));
   solver.addClause(lit(y, sign), lit(x1, false), lit(x2, false));
   solver.addClause(lit(y, !sign), lit(x1, true), lit(x2, false));
@@ -59,8 +64,8 @@ inline void encode_xor(unsigned y, unsigned x1, unsigned x2,
 
 bool Checker::equiv(const Netlist &lhs,
                     const Netlist &rhs,
-                    const std::vector<std::pair<const Gate*,const Gate*>> &imap,
-                    const std::vector<std::pair<const Gate*,const Gate*>> &omap) const {
+                    const std::vector<std::pair<unsigned, unsigned>> &imap,
+                    const std::vector<std::pair<unsigned, unsigned>> &omap) const {
   Minisat::Solver solver;
 
   const unsigned lhsOffset = 0;
@@ -71,19 +76,19 @@ bool Checker::equiv(const Netlist &lhs,
   encode(rhsOffset, rhs, solver);
 
   // Equate the inputs.
-  for (const auto &[lhsGate, rhsGate] : imap) {
-    const unsigned x = var(lhsOffset, *lhsGate);
-    const unsigned y = var(rhsOffset, *rhsGate);
+  for (const auto &[lhsGateId, rhsGateId] : imap) {
+    const unsigned x = var(lhsOffset, lhsGateId);
+    const unsigned y = var(rhsOffset, rhsGateId);
 
     encode_buf(y, x, true, solver);
   }
 
   // Compare the outputs.
   Minisat::vec<Minisat::Lit> existsDiff(omap.size());
-  for (const auto &[lhsGate, rhsGate] : omap) {
+  for (const auto &[lhsGateId, rhsGateId] : omap) {
     const unsigned y  = new_var();
-    const unsigned x1 = var(lhsOffset, *lhsGate);
-    const unsigned x2 = var(rhsOffset, *rhsGate);
+    const unsigned x1 = var(lhsOffset, lhsGateId);
+    const unsigned x2 = var(rhsOffset, rhsGateId);
 
     encode_xor(y, x1, x2, true, solver);
     existsDiff.push(lit(y, true));

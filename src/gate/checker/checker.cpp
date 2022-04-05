@@ -10,6 +10,8 @@
 
 #include "minisat/core/Solver.h"
 
+#include <cassert>
+
 namespace eda::gate::checker {
 
 //===----------------------------------------------------------------------===//
@@ -28,23 +30,23 @@ inline Minisat::Lit lit(unsigned id, bool sign) {
 }
 
 /// Creates a variable.
-inline unsigned var(unsigned offset, unsigned gateId) {
+inline unsigned var(std::size_t offset, unsigned gateId) {
   return offset + gateId;
 }
 
 /// Creates a variable.
-inline unsigned var(unsigned offset, const Gate &gate) {
+inline unsigned var(std::size_t offset, const Gate &gate) {
   return var(offset, gate.id());
 }
 
 /// Creates a variable.
-inline unsigned var(unsigned offset, const Signal &signal) {
+inline unsigned var(std::size_t offset, const Signal &signal) {
   return var(offset, *signal.gate());
 }
 
 /// Encodes the equality y^s == x.
 inline void encode_buf(unsigned y, unsigned x,
-                      bool sign, Minisat::Solver &solver) {
+                       bool sign, Minisat::Solver &solver) {
   solver.addClause(lit(x, true), lit(y, !sign));
   solver.addClause(lit(x, false), lit(y, sign));
 }
@@ -64,19 +66,19 @@ inline void encode_xor(unsigned y, unsigned x1, unsigned x2,
 
 bool Checker::equiv(const Netlist &lhs,
                     const Netlist &rhs,
-                    const std::vector<std::pair<unsigned, unsigned>> &imap,
-                    const std::vector<std::pair<unsigned, unsigned>> &omap) const {
+                    const Checker::GateBindList &ibind,
+                    const Checker::GateBindList &obind) const {
   Minisat::Solver solver;
 
-  const unsigned lhsOffset = 0;
-  const unsigned rhsOffset = lhs.size();
+  const std::size_t lhsOffset = 0;
+  const std::size_t rhsOffset = lhs.size();
 
   // Encode the netlists.
   encode(lhsOffset, lhs, solver);
   encode(rhsOffset, rhs, solver);
 
   // Equate the inputs.
-  for (const auto &[lhsGateId, rhsGateId] : imap) {
+  for (const auto &[lhsGateId, rhsGateId] : ibind) {
     const unsigned x = var(lhsOffset, lhsGateId);
     const unsigned y = var(rhsOffset, rhsGateId);
 
@@ -84,8 +86,8 @@ bool Checker::equiv(const Netlist &lhs,
   }
 
   // Compare the outputs.
-  Minisat::vec<Minisat::Lit> existsDiff(omap.size());
-  for (const auto &[lhsGateId, rhsGateId] : omap) {
+  Minisat::vec<Minisat::Lit> existsDiff(obind.size());
+  for (const auto &[lhsGateId, rhsGateId] : obind) {
     const unsigned y  = new_var();
     const unsigned x1 = var(lhsOffset, lhsGateId);
     const unsigned x2 = var(rhsOffset, rhsGateId);
@@ -100,16 +102,47 @@ bool Checker::equiv(const Netlist &lhs,
   return !solver.solve();
 }
 
+bool Checker::equiv(const Netlist &lhs,
+                    const Netlist &rhs,
+                    const GateBindList &ibind,
+                    const GateBindList &obind,
+                    const GateBindList &tbind) const {
+  GateBindList imap(ibind);
+  GateBindList omap(obind);
+
+  // Cut triggers.
+  for (const auto &[lhsTriggerId, rhsTriggerId] : tbind) {
+    const Gate *lhsTrigger = lhs.gate(lhsTriggerId);
+    const Gate *rhsTrigger = rhs.gate(rhsTriggerId);
+
+    if (lhsTrigger->kind() != rhsTrigger->kind())
+      return false;
+
+    imap.push_back({ lhsTrigger->id(), rhsTrigger->id() });
+
+    assert(lhsTrigger->arity() == rhsTrigger->arity());
+    for (unsigned i = 0; i < lhsTrigger->arity(); i++) {
+      const Signal lhsInput = lhsTrigger->input(i);
+      const Signal rhsInput = rhsTrigger->input(i);
+
+      // TODO: Handle clocks and resets.
+      omap.push_back({ lhsInput.gate()->id(), rhsInput.gate()->id() });
+    }
+  }
+
+  return equiv(lhs, rhs, imap, omap);
+}
+
 //===----------------------------------------------------------------------===//
 // Tseitin Encoding
 //===----------------------------------------------------------------------===//
 
-void Checker::encode(unsigned offset, const Netlist &net, Minisat::Solver &solver) const {
+void Checker::encode(std::size_t offset, const Netlist &net, Minisat::Solver &solver) const {
   for (const auto *gate: net.gates())
     encode(offset, *gate, solver);
 }
 
-void Checker::encode(unsigned offset, const Gate &gate, Minisat::Solver &solver) const {
+void Checker::encode(std::size_t offset, const Gate &gate, Minisat::Solver &solver) const {
   if (gate.is_source())
     return;
 
@@ -145,22 +178,22 @@ void Checker::encode(unsigned offset, const Gate &gate, Minisat::Solver &solver)
     encodeXor(offset, gate, false, solver);
     break;
   default:
-    assert(false && "Unsupported operation");
+    assert(false && "Unsupported gate");
   }
 }
 
-void Checker::encodeFix(unsigned offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
+void Checker::encodeFix(std::size_t offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
   solver.addClause(lit(var(offset, gate), sign));
 }
 
-void Checker::encodeBuf(unsigned offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
+void Checker::encodeBuf(std::size_t offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
   const unsigned x = var(offset, gate.input(0));
   const unsigned y = var(offset, gate);
 
   encode_buf(y, x, sign, solver);
 }
 
-void Checker::encodeAnd(unsigned offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
+void Checker::encodeAnd(std::size_t offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
   const unsigned y = var(offset, gate);
   Minisat::vec<Minisat::Lit> clause(gate.arity() + 1);
   
@@ -175,7 +208,7 @@ void Checker::encodeAnd(unsigned offset, const Gate &gate, bool sign, Minisat::S
   solver.addClause(clause);
 }
 
-void Checker::encodeOr(unsigned offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
+void Checker::encodeOr(std::size_t offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
   const unsigned y = var(offset, gate);
   Minisat::vec<Minisat::Lit> clause(gate.arity() + 1);
   
@@ -190,7 +223,7 @@ void Checker::encodeOr(unsigned offset, const Gate &gate, bool sign, Minisat::So
   solver.addClause(clause);
 }
 
-void Checker::encodeXor(unsigned offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
+void Checker::encodeXor(std::size_t offset, const Gate &gate, bool sign, Minisat::Solver &solver) const {
   if (gate.arity() == 1)
     return encodeBuf(offset, gate, sign, solver);
 

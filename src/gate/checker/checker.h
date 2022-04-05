@@ -26,27 +26,38 @@ namespace eda::gate::checker {
  */
 class Checker final {
 public:
-  /// Checks logic equivalence of two netlists.
+  using GateBind = std::pair<unsigned, unsigned>;
+  using GateBindList = std::vector<GateBind>;
+
+  /// Checks logic equivalence of two combinational netlists.
   bool equiv(const Netlist &lhs,
              const Netlist &rhs,
-	     const std::vector<std::pair<unsigned, unsigned>> &imap,
-	     const std::vector<std::pair<unsigned, unsigned>> &omap) const;
+	     const GateBindList &ibind,
+	     const GateBindList &obind) const;
 
+  /// Checks logic equivalence of two sequential netlists
+  /// with one-to-one correspondence of triggers.
+  bool equiv(const Netlist &lhs,
+             const Netlist &rhs,
+             const GateBindList &ibind,
+             const GateBindList &obind,
+             const GateBindList &tbind) const;
+	     
 private:
-  void encode(unsigned offset, const Netlist &net,
+  void encode(std::size_t offset, const Netlist &net,
               Minisat::Solver &solver) const;
-  void encode(unsigned offset, const Gate &gate,
+  void encode(std::size_t offset, const Gate &gate,
               Minisat::Solver &solver) const;
 
-  void encodeFix(unsigned offset, const Gate &gate, bool sign,
+  void encodeFix(std::size_t offset, const Gate &gate, bool sign,
                  Minisat::Solver &solver) const;
-  void encodeBuf(unsigned offset, const Gate &gate, bool sign,
+  void encodeBuf(std::size_t offset, const Gate &gate, bool sign,
                  Minisat::Solver &solver) const;
-  void encodeAnd(unsigned offset, const Gate &gate, bool sign,
+  void encodeAnd(std::size_t offset, const Gate &gate, bool sign,
                  Minisat::Solver &solver) const;
-  void encodeOr (unsigned offset, const Gate &gate, bool sign,
+  void encodeOr (std::size_t offset, const Gate &gate, bool sign,
                  Minisat::Solver &solver) const;
-  void encodeXor(unsigned offset, const Gate &gate, bool sign,
+  void encodeXor(std::size_t offset, const Gate &gate, bool sign,
                  Minisat::Solver &solver) const;
 };
 

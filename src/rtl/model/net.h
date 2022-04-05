@@ -80,7 +80,7 @@ public:
   /// Updates the given v-node.
   void update(VNode *vnode, const VNode::List inputs) {
     vnode->replace_with(vnode->kind(), vnode->var(), vnode->events(),
-      vnode->func(), inputs, vnode->value());
+                        vnode->func(), inputs, vnode->value());
   }
 
   /// Creates the v-net according to the p-net.

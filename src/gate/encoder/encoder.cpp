@@ -59,24 +59,24 @@ void Encoder::encode(const Gate &gate) {
 }
 
 void Encoder::encodeFix(const Gate &gate, bool sign) {
-  const unsigned x = _context.var(gate);
+  const auto x = _context.var(gate);
   _context.solver.addClause(Context::lit(x, sign));
 }
 
 void Encoder::encodeBuf(const Gate &gate, bool sign) {
-  const unsigned x = _context.var(gate.input(0));
-  const unsigned y = _context.var(gate);
+  const auto x = _context.var(gate.input(0));
+  const auto y = _context.var(gate);
 
   encodeBuf(y, x, sign);
 }
 
 void Encoder::encodeAnd(const Gate &gate, bool sign) {
-  const unsigned y = _context.var(gate);
+  const auto y = _context.var(gate);
   Context::Clause clause(gate.arity() + 1);
   
   clause.push(Context::lit(y, sign));
   for (const auto &input : gate.inputs()) {
-    const unsigned x = _context.var(input);
+    const auto x = _context.var(input);
 
     clause.push(Context::lit(x, false));
     _context.solver.addClause(Context::lit(y, !sign),
@@ -87,12 +87,12 @@ void Encoder::encodeAnd(const Gate &gate, bool sign) {
 }
 
 void Encoder::encodeOr(const Gate &gate, bool sign) {
-  const unsigned y = _context.var(gate);
+  const auto y = _context.var(gate);
   Context::Clause clause(gate.arity() + 1);
   
   clause.push(Context::lit(y, !sign));
   for (const auto &input : gate.inputs()) {
-    const unsigned x = _context.var(input);
+    const auto x = _context.var(input);
 
     clause.push(Context::lit(x, true));
     _context.solver.addClause(Context::lit(y, sign),
@@ -107,10 +107,10 @@ void Encoder::encodeXor(const Gate &gate, bool sign) {
     return encodeBuf(gate, sign);
   }
 
-  unsigned y = _context.var(gate);
+  auto y = _context.var(gate);
   for (unsigned i = 0; i < gate.arity() - 1; i++) {
-    const unsigned x1 = _context.var(gate.input(i));
-    const unsigned x2 = (i == gate.arity() - 2)
+    const auto x1 = _context.var(gate.input(i));
+    const auto x2 = (i == gate.arity() - 2)
       ? _context.var(gate.input(i + 1))
       : _context.newVar();
 
@@ -119,14 +119,14 @@ void Encoder::encodeXor(const Gate &gate, bool sign) {
   }
 }
 
-void Encoder::encodeBuf(unsigned y, unsigned x, bool sign) {
+void Encoder::encodeBuf(uint64_t y, uint64_t x, bool sign) {
   _context.solver.addClause(Context::lit(x, true),
                             Context::lit(y, !sign));
   _context.solver.addClause(Context::lit(x, false),
                             Context::lit(y, sign));
 }
 
-void Encoder::encodeXor(unsigned y, unsigned x1, unsigned x2, bool sign) {
+void Encoder::encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool sign) {
   _context.solver.addClause(Context::lit(y,  sign),
                             Context::lit(x1, true),
                             Context::lit(x2, true));

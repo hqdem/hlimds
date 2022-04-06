@@ -33,8 +33,8 @@ bool Checker::equiv(const Netlist &lhs,
 
   // Equate the inputs.
   for (const auto &[lhsGateId, rhsGateId] : ibind) {
-    const unsigned x = Context::var(lhsOffset, lhsGateId);
-    const unsigned y = Context::var(rhsOffset, rhsGateId);
+    const auto x = Context::var(lhsOffset, lhsGateId);
+    const auto y = Context::var(rhsOffset, rhsGateId);
 
     encoder.encodeBuf(y, x, true);
   }
@@ -42,9 +42,9 @@ bool Checker::equiv(const Netlist &lhs,
   // Compare the outputs.
   Context::Clause existsDiff(obind.size());
   for (const auto &[lhsGateId, rhsGateId] : obind) {
-    const unsigned y  = encoder.newVar();
-    const unsigned x1 = Context::var(lhsOffset, lhsGateId);
-    const unsigned x2 = Context::var(rhsOffset, rhsGateId);
+    const auto y  = encoder.newVar();
+    const auto x1 = Context::var(lhsOffset, lhsGateId);
+    const auto x2 = Context::var(rhsOffset, rhsGateId);
 
     encoder.encodeXor(y, x1, x2, true);
     existsDiff.push(Context::lit(y, true));

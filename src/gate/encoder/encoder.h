@@ -40,7 +40,7 @@ public:
     _context.offset = offset;
   }
 
-  unsigned newVar() {
+  uint64_t newVar() {
     return _context.newVar();
   }
 
@@ -55,9 +55,9 @@ public:
   void encodeXor(const Gate &gate, bool sign);
 
   /// Encodes the equality y^sign == x.
-  void encodeBuf(unsigned y, unsigned x, bool sign);
+  void encodeBuf(uint64_t y, uint64_t x, bool sign);
   /// Encodes the equality y^sign == x1 ^ x2.
-  void encodeXor(unsigned y, unsigned x1, unsigned x2, bool sign);
+  void encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool sign);
 
 private:
   Context _context;

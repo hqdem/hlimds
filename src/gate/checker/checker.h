@@ -14,10 +14,6 @@
 
 using namespace eda::gate::model;
 
-namespace Minisat {
-  class Solver;
-} // namespace Minisat
-
 namespace eda::gate::checker {
 
 /**
@@ -42,23 +38,6 @@ public:
              const GateBindList &ibind,
              const GateBindList &obind,
              const GateBindList &tbind) const;
-	     
-private:
-  void encode(std::size_t offset, const Netlist &net,
-              Minisat::Solver &solver) const;
-  void encode(std::size_t offset, const Gate &gate,
-              Minisat::Solver &solver) const;
-
-  void encodeFix(std::size_t offset, const Gate &gate, bool sign,
-                 Minisat::Solver &solver) const;
-  void encodeBuf(std::size_t offset, const Gate &gate, bool sign,
-                 Minisat::Solver &solver) const;
-  void encodeAnd(std::size_t offset, const Gate &gate, bool sign,
-                 Minisat::Solver &solver) const;
-  void encodeOr (std::size_t offset, const Gate &gate, bool sign,
-                 Minisat::Solver &solver) const;
-  void encodeXor(std::size_t offset, const Gate &gate, bool sign,
-                 Minisat::Solver &solver) const;
 };
 
 } // namespace eda::gate::checker

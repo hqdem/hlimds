@@ -25,14 +25,14 @@ namespace eda::gate::encoder {
  */
 class Encoder final {
 public:
-  void encode(const Netlist &net);
-  void encode(const Gate &gate);
+  void encode(const Netlist &net, uint16_t version);
+  void encode(const Gate &gate, uint16_t version);
 
   void encode(const Context::Clause &clause) {
     _context.solver.addClause(clause);
   }
 
-  Context& getContext() {
+  Context& context() {
     return _context;
   }
 
@@ -48,16 +48,28 @@ public:
     return _context.solver.solve();
   }
 
-  void encodeFix(const Gate &gate, bool sign);
-  void encodeBuf(const Gate &gate, bool sign);
-  void encodeAnd(const Gate &gate, bool sign);
-  void encodeOr (const Gate &gate, bool sign);
-  void encodeXor(const Gate &gate, bool sign);
+  // Combinational gates.
+  void encodeFix(const Gate &gate, bool sign, uint16_t version);
+  void encodeBuf(const Gate &gate, bool sign, uint16_t version);
+  void encodeAnd(const Gate &gate, bool sign, uint16_t version);
+  void encodeOr (const Gate &gate, bool sign, uint16_t version);
+  void encodeXor(const Gate &gate, bool sign, uint16_t version);
 
-  /// Encodes the equality y^sign == x.
-  void encodeBuf(uint64_t y, uint64_t x, bool sign);
-  /// Encodes the equality y^sign == x1 ^ x2.
-  void encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool sign);
+  // Latches and flip-flops.
+  void encodeLatch(const Gate &gate, uint16_t version);
+  void encodeDff  (const Gate &gate, uint16_t version);
+  void encodeDffRs(const Gate &gate, uint16_t version);
+
+  /// Encodes the equality y^s == x.
+  void encodeBuf(uint64_t y, uint64_t x, bool s);
+  /// Encodes the equality y^s == x1^s1 | x2^s2.
+  void encodeAnd(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2);
+  /// Encodes the equality y^s == x1^s1 | x2^s2.
+  void encodeOr (uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2);
+  /// Encodes the equality y^s == x1^s1 ^ x2^s2.
+  void encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2);
+  /// Encodes the equality y^s == c ? x1 : x2.
+  void encodeMux(uint64_t y, uint64_t c, uint64_t x1, uint64_t x2, bool s);
 
 private:
   Context _context;

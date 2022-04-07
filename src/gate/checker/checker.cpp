@@ -26,15 +26,15 @@ bool Checker::equiv(const Netlist &lhs,
 
   // Encode the netlists.
   encoder.setOffset(lhsOffset);
-  encoder.encode(lhs);
+  encoder.encode(lhs, 0);
 
   encoder.setOffset(rhsOffset);
-  encoder.encode(rhs);
+  encoder.encode(rhs, 0);
 
   // Equate the inputs.
   for (const auto &[lhsGateId, rhsGateId] : ibind) {
-    const auto x = Context::var(lhsOffset, lhsGateId);
-    const auto y = Context::var(rhsOffset, rhsGateId);
+    const auto x = Context::var(lhsOffset, lhsGateId, 0);
+    const auto y = Context::var(rhsOffset, rhsGateId, 0);
 
     encoder.encodeBuf(y, x, true);
   }
@@ -43,10 +43,10 @@ bool Checker::equiv(const Netlist &lhs,
   Context::Clause existsDiff(obind.size());
   for (const auto &[lhsGateId, rhsGateId] : obind) {
     const auto y  = encoder.newVar();
-    const auto x1 = Context::var(lhsOffset, lhsGateId);
-    const auto x2 = Context::var(rhsOffset, rhsGateId);
+    const auto x1 = Context::var(lhsOffset, lhsGateId, 0);
+    const auto x2 = Context::var(rhsOffset, rhsGateId, 0);
 
-    encoder.encodeXor(y, x1, x2, true);
+    encoder.encodeXor(y, x1, x2, true, true, true);
     existsDiff.push(Context::lit(y, true));
   }
 

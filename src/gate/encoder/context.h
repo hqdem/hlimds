@@ -37,7 +37,7 @@ struct Context final {
    *
    * The field widths are limited by MiniSAT.
    */
-  static uint64_t var(std::size_t offset, unsigned gateId, uint16_t version = 0) {
+  static uint64_t var(std::size_t offset, unsigned gateId, uint16_t version) {
     return ((uint64_t)version << 21) |
            ((uint64_t)offset + gateId) << 1;
   }
@@ -48,17 +48,17 @@ struct Context final {
   }
 
   /// Returns a variable id.
-  uint64_t var(unsigned gateId, uint16_t version = 0) {
+  uint64_t var(unsigned gateId, uint16_t version) {
     return var(offset, gateId, version);
   }
 
   /// Returns a variable id.
-  uint64_t var(const Gate &gate, uint16_t version = 0) {
+  uint64_t var(const Gate &gate, uint16_t version) {
     return var(offset, gate.id(), version);
   }
 
   /// Returns a variable id.
-  uint64_t var(const Signal &signal, uint16_t version = 0) {
+  uint64_t var(const Signal &signal, uint16_t version) {
     return var(*signal.gate(), version);
   }
 

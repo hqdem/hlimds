@@ -75,6 +75,11 @@ struct Context final {
     return ((var++) << 1) | 1;
   }
 
+  /// Dumps the current formula to the file.
+  void dump(const std::string &file) {
+    solver.toDimacs(file.c_str());
+  }
+
   std::size_t offset;
   Minisat::Solver solver;
 };

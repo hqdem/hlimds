@@ -13,6 +13,7 @@
 
 #include "minisat/core/Solver.h"
 
+#include <string>
 #include <vector>
 
 using namespace eda::gate::model;

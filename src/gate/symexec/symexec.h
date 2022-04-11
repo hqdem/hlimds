@@ -22,19 +22,19 @@ namespace eda::gate::symexec {
  */
 class SymbolicExecutor final {
 public:
-  SymbolicExecutor(): _cycle(1) {}
+  SymbolicExecutor(): _cycle(1 /* should be positive */) {}
 
   void exec(const Netlist &net);
-  void exec(const Gate &gate);
+  void exec(const Netlist &net, unsigned cycles);
 
   void tick() { _cycle++; }
 
   unsigned cycle() const { return _cycle; }
-  Context& context() { return _context; }
+  Context& context() { return _encoder.context(); }
 
 private:
   unsigned _cycle;
-  Context _context;
+  Encoder _encoder;
 };
 
 } // namespace eda::gate::symexec

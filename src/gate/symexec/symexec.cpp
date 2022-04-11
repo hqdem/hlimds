@@ -16,11 +16,14 @@ using namespace eda::gate::encoder;
 namespace eda::gate::symexec {
 
 void SymbolicExecutor::exec(const Netlist &net) {
-  // TODO:
+  _encoder.encode(net, _cycle);
 }
 
-void SymbolicExecutor::exec(const Gate &gate) {
-  // TODO:
+void SymbolicExecutor::exec(const Netlist &net, unsigned cycles) {
+  for (unsigned i = 0; i < cycles; i++) {
+    exec(net);
+    tick();
+  }
 }
 
 } // namespace eda::gate::symexec

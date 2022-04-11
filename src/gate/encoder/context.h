@@ -28,6 +28,9 @@ struct Context final {
   using Lit = Minisat::Lit;
   using Clause = Minisat::vec<Lit>;
 
+  // Signal access mode.
+  enum Mode { GET, SET };
+
   /**
    * Returns a variable id, which is an integer of the following format:
    *
@@ -35,7 +38,8 @@ struct Context final {
    *    2     8      20   (1)  32 bits [as is]
    *  (16)  (16)    (31)  (1)  64 bits [to be]
    *
-   * The field widths are limited by MiniSAT.
+   * The version is used for symbolic execution and can borrow bits for id.
+   * The current limitations on the field widths are caused by MiniSAT.
    */
   static uint64_t var(std::size_t offset, unsigned gateId, uint16_t version) {
     return ((uint64_t)version << 21) |
@@ -53,13 +57,15 @@ struct Context final {
   }
 
   /// Returns a variable id.
-  uint64_t var(const Gate &gate, uint16_t version) {
-    return var(offset, gate.id(), version);
+  uint64_t var(const Gate &gate, uint16_t version, Mode mode) {
+    return (mode == GET && gate.is_trigger() && version > 0)
+      ? var(offset, gate.id(), version - 1)
+      : var(offset, gate.id(), version);
   }
 
   /// Returns a variable id.
-  uint64_t var(const Signal &signal, uint16_t version) {
-    return var(*signal.gate(), version);
+  uint64_t var(const Signal &signal, uint16_t version, Mode mode) {
+    return var(*signal.gate(), version, mode);
   }
 
   /// Returns a new variable id.

@@ -69,24 +69,24 @@ void Encoder::encode(const Gate &gate, uint16_t version) {
 }
 
 void Encoder::encodeFix(const Gate &gate, bool sign, uint16_t version) {
-  const auto x = _context.var(gate, version);
-  _context.solver.addClause(Context::lit(x, sign));
+  const auto y = _context.var(gate, version, Context::SET);
+  _context.solver.addClause(Context::lit(y, sign));
 }
 
 void Encoder::encodeBuf(const Gate &gate, bool sign, uint16_t version) {
-  const auto x = _context.var(gate.input(0), version);
-  const auto y = _context.var(gate, version);
+  const auto x = _context.var(gate.input(0), version, Context::GET);
+  const auto y = _context.var(gate, version, Context::SET);
 
   encodeBuf(y, x, sign);
 }
 
 void Encoder::encodeAnd(const Gate &gate, bool sign, uint16_t version) {
-  const auto y = _context.var(gate, version);
+  const auto y = _context.var(gate, version, Context::SET);
   Context::Clause clause(gate.arity() + 1);
   
   clause.push(Context::lit(y, sign));
   for (const auto &input : gate.inputs()) {
-    const auto x = _context.var(input, version);
+    const auto x = _context.var(input, version, Context::GET);
 
     clause.push(Context::lit(x, false));
     _context.solver.addClause(Context::lit(y, !sign),
@@ -97,12 +97,12 @@ void Encoder::encodeAnd(const Gate &gate, bool sign, uint16_t version) {
 }
 
 void Encoder::encodeOr(const Gate &gate, bool sign, uint16_t version) {
-  const auto y = _context.var(gate, version);
+  const auto y = _context.var(gate, version, Context::SET);
   Context::Clause clause(gate.arity() + 1);
   
   clause.push(Context::lit(y, !sign));
   for (const auto &input : gate.inputs()) {
-    const auto x = _context.var(input, version);
+    const auto x = _context.var(input, version, Context::GET);
 
     clause.push(Context::lit(x, true));
     _context.solver.addClause(Context::lit(y, sign),
@@ -117,11 +117,11 @@ void Encoder::encodeXor(const Gate &gate, bool sign, uint16_t version) {
     return encodeBuf(gate, sign, version);
   }
 
-  auto y = _context.var(gate, version);
+  auto y = _context.var(gate, version, Context::SET);
   for (unsigned i = 0; i < gate.arity() - 1; i++) {
-    const auto x1 = _context.var(gate.input(i), version);
+    const auto x1 = _context.var(gate.input(i), version, Context::GET);
     const auto x2 = (i == gate.arity() - 2)
-      ? _context.var(gate.input(i + 1), version)
+      ? _context.var(gate.input(i + 1), version, Context::GET)
       : _context.newVar();
 
     encodeXor(y, x1, x2, sign, true, true);
@@ -132,14 +132,14 @@ void Encoder::encodeXor(const Gate &gate, bool sign, uint16_t version) {
 void Encoder::encodeLatch(const Gate &gate, uint16_t version) {
   assert(version > 0 && "Version 0 is not supported in triggers");
 
-  // D latch (Q, D, ENA):
+  // D latch (Q; D, ENA):
   // Q(t) = ENA(level1) ? D : Q(t-1).
-  assert(gate.arity() == 3);
+  assert(gate.arity() == 2);
 
-  const auto Qt  = _context.var(gate.input(0), version);
-  const auto Qp  = _context.var(gate.input(0), version - 1);
-  const auto D   = _context.var(gate.input(1), version);
-  const auto ENA = _context.var(gate.input(2), version);
+  const auto Qt  = _context.var(gate, version, Context::SET);
+  const auto Qp  = _context.var(gate, version, Context::GET);
+  const auto D   = _context.var(gate.input(0), version, Context::GET);
+  const auto ENA = _context.var(gate.input(1), version, Context::GET);
 
   encodeMux(Qt, ENA, D, Qp, true);
 }
@@ -147,12 +147,12 @@ void Encoder::encodeLatch(const Gate &gate, uint16_t version) {
 void Encoder::encodeDff(const Gate &gate, uint16_t version) {
   assert(version > 0 && "Version 0 is not supported in triggers");
 
-  // D flip-flop (Q, D, CLK):
+  // D flip-flop (Q; D, CLK):
   // Q(t) = CLK(posedge) ? D : Q(t-1).
-  assert(gate.arity() == 3);
+  assert(gate.arity() == 2);
 
-  const auto Qt = _context.var(gate.input(0), version);
-  const auto D  = _context.var(gate.input(1), version);
+  const auto Qt = _context.var(gate, version, Context::SET);
+  const auto D  = _context.var(gate.input(0), version, Context::GET);
 
   // ASSUME: Design is synchronous: Q(t) = D.
   encodeBuf(Qt, D, true);
@@ -161,14 +161,14 @@ void Encoder::encodeDff(const Gate &gate, uint16_t version) {
 void Encoder::encodeDffRs(const Gate &gate, uint16_t version) {
   assert(version > 0 && "Version 0 is not supported in triggers");
 
-  // D flip-flop w/ (asynchronous) reset and set (Q, D, CLK, RST, SET):
+  // D flip-flop w/ (asynchronous) reset and set (Q; D, CLK, RST, SET):
   // Q(t) = RST(level1) ? 0 : (SET(level1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
-  assert(gate.arity() == 5);
+  assert(gate.arity() == 4);
 
-  const auto Qt  = _context.var(gate.input(0), version);
-  const auto D   = _context.var(gate.input(1), version);
-  const auto RST = _context.var(gate.input(3), version);
-  const auto SET = _context.var(gate.input(4), version);
+  const auto Qt  = _context.var(gate, version, Context::SET);
+  const auto D   = _context.var(gate.input(0), version, Context::GET);
+  const auto RST = _context.var(gate.input(2), version, Context::GET);
+  const auto SET = _context.var(gate.input(3), version, Context::GET);
   const auto TMP = _context.newVar();
 
   // ASSUME: Design is synchronous: Q(t) = ~RST & (SET | D).
@@ -222,7 +222,7 @@ void Encoder::encodeMux(uint64_t y, uint64_t c, uint64_t x1, uint64_t x2, bool s
   const auto t1 = _context.newVar();
   const auto t2 = _context.newVar();
 
-  // y = (t1 | t2), where t1 = (c & x1) and (t2 = ~c & x2).
+  // y = (t1 | t2), where t1 = (c & x1) and t2 = (~c & x2).
   encodeOr(y, t1, t2, s, true, true);
   encodeAnd(t1, c, x1, true, true, true);
   encodeAnd(t2, c, x2, true, false, true);

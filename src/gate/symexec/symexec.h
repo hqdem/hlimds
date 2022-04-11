@@ -17,7 +17,7 @@ using namespace eda::gate::model;
 namespace eda::gate::symexec {
 
 /**
- * \brief Implements a symbolic executor.
+ * \brief Implements a symbolic executor of gate-level netlists.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class SymbolicExecutor final {

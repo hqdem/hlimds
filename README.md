@@ -125,7 +125,7 @@ and set `CT_DIR` environment variable to it too.
 
 ```
 wget https://dlcdn.apache.org//xerces/c/3/sources/xerces-c-3.2.3.tar.gz
-gzip -d xerces-c-3.2.3.tar.gz
+tar xf xerces-c-3.2.3.tar.gz
 cd xerces-c-3.2.3
 mkdir build
 cd build

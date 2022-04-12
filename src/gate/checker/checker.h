@@ -22,6 +22,7 @@ namespace eda::gate::checker {
  */
 class Checker final {
 public:
+  using GateIdList = Netlist::GateIdList;
   using GateBind = std::pair<unsigned, unsigned>;
   using GateBindList = std::vector<GateBind>;
 
@@ -38,6 +39,18 @@ public:
              const GateBindList &ibind,
              const GateBindList &obind,
              const GateBindList &tbind) const;
+
+  /// Checks logic equivalence of two sequential netlists
+  /// with given correspondence of state encodings.
+  bool equiv(const Netlist &lhs,
+             const Netlist &rhs,
+             const Netlist &enc,
+             const Netlist &dec,
+             const GateBindList &ibind,
+             const GateBindList &obind,
+             const GateBindList &encOutDecIn,
+             const GateBindList &lhsTriEncIn,
+             const GateBindList &lhsTriDecOut) const;
 };
 
 } // namespace eda::gate::checker

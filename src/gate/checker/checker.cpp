@@ -33,8 +33,8 @@ bool Checker::equiv(const Netlist &lhs,
 
   // Equate the inputs.
   for (const auto &[lhsGateId, rhsGateId] : ibind) {
-    const auto x = Context::var(lhsOffset, lhsGateId, 0);
-    const auto y = Context::var(rhsOffset, rhsGateId, 0);
+    const auto x = Context::var(lhsOffset, nullptr, lhsGateId, 0);
+    const auto y = Context::var(rhsOffset, nullptr, rhsGateId, 0);
 
     encoder.encodeBuf(y, x, true);
   }
@@ -43,8 +43,8 @@ bool Checker::equiv(const Netlist &lhs,
   Context::Clause existsDiff(obind.size());
   for (const auto &[lhsGateId, rhsGateId] : obind) {
     const auto y  = encoder.newVar();
-    const auto x1 = Context::var(lhsOffset, lhsGateId, 0);
-    const auto x2 = Context::var(rhsOffset, rhsGateId, 0);
+    const auto x1 = Context::var(lhsOffset, nullptr, lhsGateId, 0);
+    const auto x2 = Context::var(rhsOffset, nullptr, rhsGateId, 0);
 
     encoder.encodeXor(y, x1, x2, true, true, true);
     existsDiff.push(Context::lit(y, true));
@@ -79,12 +79,25 @@ bool Checker::equiv(const Netlist &lhs,
       const Signal lhsInput = lhsTrigger->input(i);
       const Signal rhsInput = rhsTrigger->input(i);
 
-      // TODO: Handle clocks and resets.
       omap.push_back({ lhsInput.gate()->id(), rhsInput.gate()->id() });
     }
   }
 
   return equiv(lhs, rhs, imap, omap);
+}
+
+bool Checker::equiv(const Netlist &lhs,
+                    const Netlist &rhs,
+                    const Netlist &enc,
+                    const Netlist &dec,
+                    const GateBindList &ibind,
+                    const GateBindList &obind,
+                    const GateBindList &encOutDecIn,
+                    const GateBindList &lhsTriEncIn,
+                    const GateBindList &lhsTriDecOut) const {
+  
+  //
+  return false;
 }
 
 } // namespace eda::gate::checker

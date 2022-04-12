@@ -41,6 +41,10 @@ public:
     _context.offset = offset;
   }
 
+  void setConnectTo(Context::GateIdMap *connectTo) {
+    _context.connectTo = connectTo;
+  }
+
   uint64_t newVar() {
     return _context.newVar();
   }

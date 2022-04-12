@@ -13,6 +13,7 @@
 #include "minisat/core/Solver.h"
 
 #include <cstdint>
+#include <unordered_map>
 
 using namespace eda::gate::model;
 
@@ -27,6 +28,10 @@ struct Context final {
   using Var = Minisat::Var;
   using Lit = Minisat::Lit;
   using Clause = Minisat::vec<Lit>;
+  using Solver = Minisat::Solver;
+
+  // Gate reconnection map.
+  using GateIdMap = std::unordered_map<unsigned, unsigned>;
 
   // Signal access mode.
   enum Mode { GET, SET };
@@ -41,9 +46,23 @@ struct Context final {
    * The version is used for symbolic execution and can borrow bits for id.
    * The current limitations on the field widths are caused by MiniSAT.
    */
-  static uint64_t var(std::size_t offset, unsigned gateId, uint16_t version) {
+  static uint64_t var(std::size_t offset,
+                      GateIdMap *connectTo,
+                      unsigned gateId,
+                      uint16_t version) {
     return ((uint64_t)version << 21) |
-           ((uint64_t)offset + gateId) << 1;
+           ((uint64_t)offset + connectedTo(connectTo, gateId)) << 1;
+  }
+
+  /// Returns the gate id the given one is connected to.
+  static unsigned connectedTo(GateIdMap *connectTo, unsigned gateId) {
+    if (connectTo) {
+      auto i = connectTo->find(gateId);
+      if (i != connectTo->end())
+        return i->second;
+    }
+
+    return gateId;
   }
 
   /// Creates a literal.
@@ -53,14 +72,14 @@ struct Context final {
 
   /// Returns a variable id.
   uint64_t var(unsigned gateId, uint16_t version) {
-    return var(offset, gateId, version);
+    return var(offset, connectTo, gateId, version);
   }
 
   /// Returns a variable id.
   uint64_t var(const Gate &gate, uint16_t version, Mode mode) {
     return (mode == GET && gate.is_trigger() && version > 0)
-      ? var(offset, gate.id(), version - 1)
-      : var(offset, gate.id(), version);
+      ? var(gate.id(), version - 1)
+      : var(gate.id(), version);
   }
 
   /// Returns a variable id.
@@ -81,7 +100,9 @@ struct Context final {
   }
 
   std::size_t offset;
-  Minisat::Solver solver;
+  GateIdMap *connectTo = nullptr;
+
+  Solver solver;
 };
 
 } // namespace eda::gate::encoder

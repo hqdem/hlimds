@@ -122,10 +122,9 @@ please specify `--prefix` option of `configure` script to installation directory
 and set `CT_DIR` environment variable to it too.
 
 ### Xerces-C++ XML Parser Installation
-Download Xerces-C++ XML Parser from official site:
-https://xerces.apache.org/xerces-c/download.cgi
-Extract the files from the compressed archive and install Xerces-C++ XML parser:
+
 ```
+wget https://dlcdn.apache.org//xerces/c/3/sources/xerces-c-3.2.3.tar.gz
 gzip -d xerces-c-3.2.3.tar.gz
 cd xerces-c-3.2.3
 mkdir build

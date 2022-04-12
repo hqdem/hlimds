@@ -50,8 +50,6 @@ sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55
 
 ```
 git clone --recursive https://github.com/circt/circt.git
-cd circt
-git checkout 4014b816
 ```
 
 #### Build and test LLVM/MLIR
@@ -68,7 +66,6 @@ cmake -G Ninja ../llvm \
    -DLLVM_ENABLE_ASSERTIONS=ON \
    -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON
 ninja
-ninja check-mlir
 ```
 Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
 ```
@@ -123,6 +120,23 @@ sudo make install
 If you would like to install CTemplate to a non-standard location,
 please specify `--prefix` option of `configure` script to installation directory you want
 and set `CT_DIR` environment variable to it too.
+
+### Xerces-C++ XML Parser Installation
+Download Xerces-C++ XML Parser from official site:
+https://xerces.apache.org/xerces-c/download.cgi
+Extract the files from the compressed archive and install Xerces-C++ XML parser:
+```
+gzip -d xerces-c-3.2.3.tar.gz
+cd xerces-c-3.2.3
+mkdir build
+cd build
+../configure
+make
+sudo make install
+```
+If you would like to install Xerces-C++ XML Parser to a non-standard location,
+please specify `--prefix` option of `configure` script to installation directory you want
+and set `XERCES_DIR` environment variable to it too.
 
 ## Working in Command Line
 

@@ -49,6 +49,7 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
   // (lOut[1] != rOut[1]) || ... || (lOut[m] != rOut[m]).
   encoder.encode(existsDiff);
 
+  encoder.context().dump("checker.cnf");
   return !encoder.solve();
 }
 
@@ -72,8 +73,9 @@ bool Checker::equiv(const Netlist &lhs,
     const Gate *lhsTrigger = lhs.gate(lhsTriggerId);
     const Gate *rhsTrigger = rhs.gate(rhsTriggerId);
 
-    if (lhsTrigger->kind() != rhsTrigger->kind())
+    if (lhsTrigger->kind() != rhsTrigger->kind()) {
       return false;
+    }
 
     imap.push_back({ lhsTrigger->id(), rhsTrigger->id() });
 

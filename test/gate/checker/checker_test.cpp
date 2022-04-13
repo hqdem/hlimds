@@ -15,25 +15,19 @@
 using namespace eda::gate::checker;
 using namespace eda::gate::model;
 
-bool checkDeMorganTest() {
-  const unsigned N = 1024;
-  std::vector<std::pair<unsigned, unsigned>> imap, omap;
-
-  // ~(x1 | ... | xN).
-  Signal::List lhsInputs;
-  unsigned lhsOutputId;
-  auto lhs = notOfOrs(N, lhsInputs, lhsOutputId);
-
-  // (~x1 & ... & ~xN).
-  Signal::List rhsInputs;
-  unsigned rhsOutputId;
-  auto rhs = andOfNots(N, rhsInputs, rhsOutputId);
+static bool checkEquivTest(unsigned N,
+                           const Netlist &lhs,
+                           const Signal::List &lhsInputs,
+                           unsigned lhsOutputId,
+                           const Netlist &rhs,
+                           const Signal::List &rhsInputs,
+                           unsigned rhsOutputId) {
+  Checker::GateBindList imap, omap;
 
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {
-    std::pair<unsigned, unsigned> binding(lhsInputs[i].gate()->id(),
-                                          rhsInputs[i].gate()->id());
-
+    Checker::GateBind binding(lhsInputs[i].gate()->id(),
+                              rhsInputs[i].gate()->id());
     imap.push_back(binding);
   }
 
@@ -41,9 +35,43 @@ bool checkDeMorganTest() {
   omap.push_back({ lhsOutputId, rhsOutputId });
 
   Checker checker;
-  return checker.equiv(*lhs, *rhs, imap, omap); 
+  return checker.equiv(lhs, rhs, imap, omap); 
 }
 
-TEST(CheckNetlistTest, CheckDeMorganTest) {
-  EXPECT_TRUE(checkDeMorganTest);
+bool checkNorAndnTest(unsigned N) {
+  // ~(x1 | ... | xN).
+  Signal::List lhsInputs;
+  unsigned lhsOutputId;
+  auto lhs = makeNor(N, lhsInputs, lhsOutputId);
+
+  // (~x1 & ... & ~xN).
+  Signal::List rhsInputs;
+  unsigned rhsOutputId;
+  auto rhs = makeAndn(N, rhsInputs, rhsOutputId);
+
+  return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
+                           *rhs, rhsInputs, rhsOutputId);
+}
+
+bool checkNorAndTest(unsigned N) {
+  // ~(x1 | ... | xN).
+  Signal::List lhsInputs;
+  unsigned lhsOutputId;
+  auto lhs = makeNor(N, lhsInputs, lhsOutputId);
+
+  // (x1 & ... & xN).
+  Signal::List rhsInputs;
+  unsigned rhsOutputId;
+  auto rhs = makeAnd(N, rhsInputs, rhsOutputId);
+
+  return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
+                           *rhs, rhsInputs, rhsOutputId);
+}
+
+TEST(CheckNetlistTest, CheckNorAndnTest) {
+  EXPECT_TRUE(checkNorAndnTest(16));
+}
+
+TEST(CheckNetlistTest, CheckNorAndTest) {
+  EXPECT_FALSE(checkNorAndTest(16));
 }

@@ -49,6 +49,7 @@ struct Context final {
   static uint64_t var(const GateIdMap *connectTo,
                       unsigned gateId,
                       uint16_t version) {
+    // FIXME: Such encoding is not suitable for MiniSAT w/ IntMap implemented as a vector.
     return ((uint64_t)version << 21) |
            ((uint64_t)connectedTo(connectTo, gateId) << 1);
   }
@@ -66,7 +67,8 @@ struct Context final {
 
   /// Creates a literal.
   static Lit lit(uint64_t var, bool sign) {
-    return Minisat::mkLit(static_cast<Var>(var), sign);
+    const Lit literal = Minisat::mkLit(static_cast<Var>(var));
+    return sign ? literal : ~literal;
   }
 
   /// Returns a variable id.
@@ -96,6 +98,13 @@ struct Context final {
   /// Dumps the current formula to the file.
   void dump(const std::string &file) {
     solver.toDimacs(file.c_str());
+  }
+
+  /// Reserves the variable in the solver.
+  void reserve(uint64_t var) {
+    while (var >= (uint64_t)solver.nVars()) {
+      solver.newVar();
+    }
   }
 
   const GateIdMap *connectTo = nullptr;

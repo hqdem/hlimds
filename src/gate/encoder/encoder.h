@@ -61,6 +61,8 @@ public:
   void encodeDff  (const Gate &gate, uint16_t version);
   void encodeDffRs(const Gate &gate, uint16_t version);
 
+  /// Encodes the equality y == s.
+  void encodeFix(uint64_t y, bool s);
   /// Encodes the equality y^s == x.
   void encodeBuf(uint64_t y, uint64_t x, bool s);
   /// Encodes the equality y^s == x1^s1 | x2^s2.

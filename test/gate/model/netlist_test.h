@@ -14,8 +14,27 @@
 
 using namespace eda::gate::model;
 
+// (x1 | ... | xN).
+std::unique_ptr<Netlist> makeOr(unsigned N,
+                                Signal::List &inputs,
+                                unsigned &outputId);
+// (x1 & ... & xN).
+std::unique_ptr<Netlist> makeAnd(unsigned N,
+                                 Signal::List &inputs,
+                                 unsigned &outputId);
 // ~(x1 | ... | xN).
-std::unique_ptr<Netlist> notOfOrs(unsigned N, Signal::List &inputs, unsigned &outputId);
-
+std::unique_ptr<Netlist> makeNor(unsigned N,
+                                 Signal::List &inputs,
+                                 unsigned &outputId);
+// ~(x1 & ... & xN).
+std::unique_ptr<Netlist> makeNand(unsigned N,
+                                  Signal::List &inputs,
+                                  unsigned &outputId);
+// (~x1 | ... | ~xN).
+std::unique_ptr<Netlist> makeOrn(unsigned N,
+                                 Signal::List &inputs,
+                                 unsigned &outputId);
 // (~x1 & ... & ~xN).
-std::unique_ptr<Netlist> andOfNots(unsigned N, Signal::List &inputs, unsigned &outputId);
+std::unique_ptr<Netlist> makeAndn(unsigned N,
+                                  Signal::List &inputs,
+                                  unsigned &outputId);

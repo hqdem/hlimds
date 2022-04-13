@@ -70,7 +70,8 @@ void Encoder::encode(const Gate &gate, uint16_t version) {
 
 void Encoder::encodeFix(const Gate &gate, bool sign, uint16_t version) {
   const auto y = _context.var(gate, version, Context::SET);
-  _context.solver.addClause(Context::lit(y, sign));
+
+  encodeFix(y, sign);
 }
 
 void Encoder::encodeBuf(const Gate &gate, bool sign, uint16_t version) {
@@ -176,7 +177,16 @@ void Encoder::encodeDffRs(const Gate &gate, uint16_t version) {
   encodeOr(TMP, SET, D, true, true, true);
 }
 
+void Encoder::encodeFix(uint64_t y, bool s) {
+  _context.reserve(y);
+
+  _context.solver.addClause(Context::lit(y, s));
+}
+
 void Encoder::encodeBuf(uint64_t y, uint64_t x, bool s) {
+  _context.reserve(x);
+  _context.reserve(y);
+
   _context.solver.addClause(Context::lit(x, true),
                             Context::lit(y, !s));
   _context.solver.addClause(Context::lit(x, false),
@@ -184,6 +194,10 @@ void Encoder::encodeBuf(uint64_t y, uint64_t x, bool s) {
 }
 
 void Encoder::encodeAnd(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2) {
+  _context.reserve(x1);
+  _context.reserve(x2);
+  _context.reserve(y);
+
   _context.solver.addClause(Context::lit(y,  s),
                             Context::lit(x1, !s1),
                             Context::lit(x2, !s2));
@@ -194,6 +208,10 @@ void Encoder::encodeAnd(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, b
 }
 
 void Encoder::encodeOr(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2) {
+  _context.reserve(x1);
+  _context.reserve(x2);
+  _context.reserve(y);
+
   _context.solver.addClause(Context::lit(y,  !s),
                             Context::lit(x1, s1),
                             Context::lit(x2, s2));
@@ -204,6 +222,10 @@ void Encoder::encodeOr(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bo
 }
 
 void Encoder::encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2) {
+  _context.reserve(x1);
+  _context.reserve(x2);
+  _context.reserve(y);
+
   _context.solver.addClause(Context::lit(y,  s),
                             Context::lit(x1, s1),
                             Context::lit(x2, s2));

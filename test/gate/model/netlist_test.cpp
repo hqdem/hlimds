@@ -12,8 +12,11 @@
 
 using namespace eda::gate::model;
 
-// ~(x1 | ... | xN).
-std::unique_ptr<Netlist> notOfOrs(unsigned N, Signal::List &inputs, unsigned &outputId) {
+// gate(x1, ..., xN).
+static std::unique_ptr<Netlist> makeNet(GateSymbol gate,
+                                        unsigned N,
+                                        Signal::List &inputs,
+                                        unsigned &outputId) {
   auto net = std::make_unique<Netlist>();
 
   for (unsigned i = 0; i < N; i++) {
@@ -22,12 +25,15 @@ std::unique_ptr<Netlist> notOfOrs(unsigned N, Signal::List &inputs, unsigned &ou
     inputs.push_back(input);
   }
 
-  outputId = net->add_gate(GateSymbol::NOR, inputs);
+  outputId = net->add_gate(gate, inputs);
   return net;
 }
 
-// (~x1 & ... & ~xN).
-std::unique_ptr<Netlist> andOfNots(unsigned N, Signal::List &inputs, unsigned &outputId) {
+// gate(~x1, ..., ~xN).
+static std::unique_ptr<Netlist> makeNetn(GateSymbol gate,
+                                         unsigned N,
+                                         Signal::List &inputs,
+                                         unsigned &outputId) {
   auto net = std::make_unique<Netlist>();
 
   Signal::List andInputs;
@@ -41,20 +47,92 @@ std::unique_ptr<Netlist> andOfNots(unsigned N, Signal::List &inputs, unsigned &o
     andInputs.push_back(andInput);
   }
 
-  outputId = net->add_gate(GateSymbol::AND, andInputs);
+  outputId = net->add_gate(gate, andInputs);
   return net;
 }
 
-TEST(NetlistTest, NotOfOrsTest) {
+// (x1 | ... | xN).
+std::unique_ptr<Netlist> makeOr(unsigned N,
+                                Signal::List &inputs,
+                                unsigned &outputId) {
+  return makeNet(GateSymbol::OR, N, inputs, outputId);
+}
+
+// (x1 & ... & xN).
+std::unique_ptr<Netlist> makeAnd(unsigned N,
+                                 Signal::List &inputs,
+                                 unsigned &outputId) {
+  return makeNet(GateSymbol::AND, N, inputs, outputId);
+}
+
+
+// ~(x1 | ... | xN).
+std::unique_ptr<Netlist> makeNor(unsigned N,
+                                 Signal::List &inputs,
+                                 unsigned &outputId) {
+  return makeNet(GateSymbol::NOR, N, inputs, outputId);
+}
+
+// ~(x1 & ... & xN).
+std::unique_ptr<Netlist> makeNand(unsigned N,
+                                  Signal::List &inputs,
+                                  unsigned &outputId) {
+  return makeNet(GateSymbol::NAND, N, inputs, outputId);
+}
+
+
+// (~x1 | ... | ~xN).
+std::unique_ptr<Netlist> makeOrn(unsigned N,
+                                 Signal::List &inputs,
+                                 unsigned &outputId) {
+  return makeNetn(GateSymbol::OR, N, inputs, outputId);
+}
+
+// (~x1 & ... & ~xN).
+std::unique_ptr<Netlist> makeAndn(unsigned N,
+                                  Signal::List &inputs,
+                                  unsigned &outputId) {
+  return makeNetn(GateSymbol::AND, N, inputs, outputId);
+}
+
+TEST(NetlistTest, NetlistOrTest) {
   Signal::List inputs;
   unsigned outputId;
-  auto net = notOfOrs(1024, inputs, outputId);
+  auto net = makeOr(1024, inputs, outputId);
   EXPECT_TRUE(net != nullptr);
 }
 
-TEST(NetlistTest, AndOfNotsTest) {
+TEST(NetlistTest, NetlistAndTest) {
   Signal::List inputs;
   unsigned outputId;
-  auto net = andOfNots(1024, inputs, outputId);
+  auto net = makeAnd(1024, inputs, outputId);
+  EXPECT_TRUE(net != nullptr);
+}
+
+TEST(NetlistTest, NetlistNorTest) {
+  Signal::List inputs;
+  unsigned outputId;
+  auto net = makeNor(1024, inputs, outputId);
+  EXPECT_TRUE(net != nullptr);
+}
+
+TEST(NetlistTest, NetlistNandTest) {
+  Signal::List inputs;
+  unsigned outputId;
+  auto net = makeNand(1024, inputs, outputId);
+  EXPECT_TRUE(net != nullptr);
+}
+
+TEST(NetlistTest, NetlistOrnTest) {
+  Signal::List inputs;
+  unsigned outputId;
+  auto net = makeOrn(1024, inputs, outputId);
+  EXPECT_TRUE(net != nullptr);
+}
+
+TEST(NetlistTest, NetlistAndnTest) {
+  Signal::List inputs;
+  unsigned outputId;
+  auto net = makeAndn(1024, inputs, outputId);
   EXPECT_TRUE(net != nullptr);
 }

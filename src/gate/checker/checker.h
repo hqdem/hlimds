@@ -8,10 +8,12 @@
 
 #pragma once
 
+#include "gate/encoder/encoder.h"
 #include "gate/model/netlist.h"
 
 #include <vector>
 
+using namespace eda::gate::encoder;
 using namespace eda::gate::model;
 
 namespace eda::gate::checker {
@@ -25,6 +27,13 @@ public:
   using GateIdList = Netlist::GateIdList;
   using GateBind = std::pair<unsigned, unsigned>;
   using GateBindList = std::vector<GateBind>;
+  using GateIdMap = Context::GateIdMap;
+
+  /// Checks logic equivalence of two combinational netlists.
+  bool equiv(const std::vector<Netlist> &nets,
+             const GateIdMap *connectTo,
+	     const GateBindList &ibind,
+	     const GateBindList &obind) const;
 
   /// Checks logic equivalence of two combinational netlists.
   bool equiv(const Netlist &lhs,
@@ -48,9 +57,10 @@ public:
              const Netlist &dec,
              const GateBindList &ibind,
              const GateBindList &obind,
-             const GateBindList &encOutDecIn,
              const GateBindList &lhsTriEncIn,
-             const GateBindList &lhsTriDecOut) const;
+             const GateBindList &lhsTriDecOut,
+             const GateBindList &rhsTriEncOut,
+             const GateBindList &rhsTriDecIn) const;
 };
 
 } // namespace eda::gate::checker

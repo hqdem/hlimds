@@ -15,26 +15,22 @@ using namespace eda::gate::encoder;
 
 namespace eda::gate::checker {
 
-bool Checker::equiv(const Netlist &lhs,
-                    const Netlist &rhs,
+bool Checker::equiv(const std::vector<Netlist> &nets,
+                    const Checker::GateIdMap *connectTo,
                     const Checker::GateBindList &ibind,
                     const Checker::GateBindList &obind) const {
   Encoder encoder;
-
-  const std::size_t lhsOffset = 0;
-  const std::size_t rhsOffset = lhs.size();
+  encoder.setConnectTo(connectTo);
 
   // Encode the netlists.
-  encoder.setOffset(lhsOffset);
-  encoder.encode(lhs, 0);
-
-  encoder.setOffset(rhsOffset);
-  encoder.encode(rhs, 0);
+  for (const auto &net : nets) {
+    encoder.encode(net, 0);
+  }
 
   // Equate the inputs.
   for (const auto &[lhsGateId, rhsGateId] : ibind) {
-    const auto x = Context::var(lhsOffset, nullptr, lhsGateId, 0);
-    const auto y = Context::var(rhsOffset, nullptr, rhsGateId, 0);
+    const auto x = Context::var(connectTo, lhsGateId, 0);
+    const auto y = Context::var(connectTo, rhsGateId, 0);
 
     encoder.encodeBuf(y, x, true);
   }
@@ -43,8 +39,8 @@ bool Checker::equiv(const Netlist &lhs,
   Context::Clause existsDiff(obind.size());
   for (const auto &[lhsGateId, rhsGateId] : obind) {
     const auto y  = encoder.newVar();
-    const auto x1 = Context::var(lhsOffset, nullptr, lhsGateId, 0);
-    const auto x2 = Context::var(rhsOffset, nullptr, rhsGateId, 0);
+    const auto x1 = Context::var(connectTo, lhsGateId, 0);
+    const auto x2 = Context::var(connectTo, rhsGateId, 0);
 
     encoder.encodeXor(y, x1, x2, true, true, true);
     existsDiff.push(Context::lit(y, true));
@@ -54,6 +50,13 @@ bool Checker::equiv(const Netlist &lhs,
   encoder.encode(existsDiff);
 
   return !encoder.solve();
+}
+
+bool Checker::equiv(const Netlist &lhs,
+                    const Netlist &rhs,
+                    const Checker::GateBindList &ibind,
+                    const Checker::GateBindList &obind) const {
+  return equiv({ lhs, rhs }, nullptr, ibind, obind);
 }
 
 bool Checker::equiv(const Netlist &lhs,
@@ -92,12 +95,53 @@ bool Checker::equiv(const Netlist &lhs,
                     const Netlist &dec,
                     const GateBindList &ibind,
                     const GateBindList &obind,
-                    const GateBindList &encOutDecIn,
                     const GateBindList &lhsTriEncIn,
-                    const GateBindList &lhsTriDecOut) const {
+                    const GateBindList &lhsTriDecOut,
+                    const GateBindList &rhsTriEncOut,
+                    const GateBindList &rhsTriDecIn) const {
   
-  //
-  return false;
+  //=========================================//
+  //                                         //
+  //   inputs---------inputs                 //
+  //    LHS'           RHS'                  //
+  //     |              |                    //
+  //   encode           |                    //
+  //     |--------------|---------- outputs' //
+  // (triggers)     (triggers)               //
+  //     |--------------|---------- inputs'  //
+  //   decode           |                    //
+  //     |              |                    //
+  //    LHS''          RHS''                 //
+  //  outputs--------outputs                 //
+  //                                         //
+  //=========================================//
+
+  Context::GateIdMap connectTo;
+
+  GateBindList imap(ibind);
+  GateBindList omap(obind);
+
+  // Connect the encoder inputs to the LHS-trigger D inputs' drivers.
+  for (const auto &[lhsTriId, encInId] : lhsTriEncIn) {
+    connectTo.insert({ encInId, lhs.gate(lhsTriId)->input(0).gate()->id() });
+  }
+
+  // Connect the LHS-trigger outputs to the decoder outputs.
+  for (const auto &[lhsTriId, decOutId] : lhsTriDecOut) {
+    connectTo.insert({ lhsTriId, decOutId });
+  }
+
+  // Append the encoder outputs and the RHS-trigger inputs to the outputs.
+  for (const auto &[rhsTriId, encOutId] : rhsTriEncOut) {
+    omap.push_back({ encOutId, rhs.gate(rhsTriId)->input(0).gate()->id() });
+  }
+
+  // Append the decoder inputs and the RHS-trigger outputs to to the inputs.
+  for (const auto &[rhsTriId, decInId] : rhsTriDecIn) {
+    imap.push_back({ decInId, rhsTriId });
+  }
+
+  return equiv({ lhs, rhs, enc, dec }, &connectTo, imap, omap);
 }
 
 } // namespace eda::gate::checker

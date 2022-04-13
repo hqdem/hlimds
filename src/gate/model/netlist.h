@@ -42,7 +42,7 @@ public:
 
   std::size_t size() const { return _gates.size(); }
   const Gate::List& gates() const { return _gates; }
-  Gate* gate(std::size_t i) const { return _gates[i]; }
+  Gate* gate(unsigned id) const { return _storage[id]; }
 
   const GateIdList& sources() const { return _sources; }
   const GateIdList& triggers() const { return _triggers; }
@@ -54,7 +54,7 @@ public:
   Signal always(unsigned id) const { return Signal(Event::ALWAYS, gate(id)); }
 
   /// Returns the next gate identifier.
-  unsigned next_gate_id() const { return _gates.size(); }
+  unsigned next_gate_id() const { return _storage.size(); }
 
   /// Adds a new source and returns its identifier.
   unsigned add_gate() {
@@ -71,6 +71,7 @@ public:
 
 private:
   unsigned add_gate(Gate *gate) {
+    _storage.push_back(gate);
     _gates.push_back(gate);
 
     if (gate->is_source()) {
@@ -82,10 +83,14 @@ private:
     return gate->id();
   }
 
+  /// Pointers to the common storage (see below).
   Gate::List _gates;
 
   GateIdList _sources;
   GateIdList _triggers;
+
+  /// Common gate storage
+  static Gate::List _storage;
 };
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist);

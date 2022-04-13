@@ -46,16 +46,15 @@ struct Context final {
    * The version is used for symbolic execution and can borrow bits for id.
    * The current limitations on the field widths are caused by MiniSAT.
    */
-  static uint64_t var(std::size_t offset,
-                      GateIdMap *connectTo,
+  static uint64_t var(const GateIdMap *connectTo,
                       unsigned gateId,
                       uint16_t version) {
     return ((uint64_t)version << 21) |
-           ((uint64_t)offset + connectedTo(connectTo, gateId)) << 1;
+           ((uint64_t)connectedTo(connectTo, gateId) << 1);
   }
 
   /// Returns the gate id the given one is connected to.
-  static unsigned connectedTo(GateIdMap *connectTo, unsigned gateId) {
+  static unsigned connectedTo(const GateIdMap *connectTo, unsigned gateId) {
     if (connectTo) {
       auto i = connectTo->find(gateId);
       if (i != connectTo->end())
@@ -72,7 +71,7 @@ struct Context final {
 
   /// Returns a variable id.
   uint64_t var(unsigned gateId, uint16_t version) {
-    return var(offset, connectTo, gateId, version);
+    return var(connectTo, gateId, version);
   }
 
   /// Returns a variable id.
@@ -99,9 +98,7 @@ struct Context final {
     solver.toDimacs(file.c_str());
   }
 
-  std::size_t offset;
-  GateIdMap *connectTo = nullptr;
-
+  const GateIdMap *connectTo = nullptr;
   Solver solver;
 };
 

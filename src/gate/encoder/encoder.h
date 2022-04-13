@@ -37,11 +37,7 @@ public:
     return _context;
   }
 
-  void setOffset(std::size_t offset) {
-    _context.offset = offset;
-  }
-
-  void setConnectTo(Context::GateIdMap *connectTo) {
+  void setConnectTo(const Context::GateIdMap *connectTo) {
     _context.connectTo = connectTo;
   }
 

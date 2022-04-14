@@ -38,6 +38,21 @@ static bool checkEquivTest(unsigned N,
   return checker.equiv(lhs, rhs, imap, omap); 
 }
 
+bool checkNorNorTest(unsigned N) {
+  // ~(x1 | ... | xN).
+  Signal::List lhsInputs;
+  unsigned lhsOutputId;
+  auto lhs = makeNor(N, lhsInputs, lhsOutputId);
+
+  // ~(x1 | ... | xN).
+  Signal::List rhsInputs;
+  unsigned rhsOutputId;
+  auto rhs = makeNor(N, rhsInputs, rhsOutputId);
+
+  return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
+                           *rhs, rhsInputs, rhsOutputId);
+}
+
 bool checkNorAndnTest(unsigned N) {
   // ~(x1 | ... | xN).
   Signal::List lhsInputs;
@@ -66,6 +81,10 @@ bool checkNorAndTest(unsigned N) {
 
   return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
                            *rhs, rhsInputs, rhsOutputId);
+}
+
+TEST(CheckNetlistTest, CheckNorNorTest) {
+  EXPECT_TRUE(checkNorNorTest(16));
 }
 
 TEST(CheckNetlistTest, CheckNorAndnTest) {

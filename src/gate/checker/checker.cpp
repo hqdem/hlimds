@@ -29,8 +29,8 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
 
   // Equate the inputs.
   for (const auto &[lhsGateId, rhsGateId] : ibind) {
-    const auto x = Context::var(connectTo, lhsGateId, 0);
-    const auto y = Context::var(connectTo, rhsGateId, 0);
+    const auto x = encoder.var(lhsGateId, 0);
+    const auto y = encoder.var(rhsGateId, 0);
 
     encoder.encodeBuf(y, x, true);
   }
@@ -39,8 +39,8 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
   Context::Clause existsDiff(obind.size());
   for (const auto &[lhsGateId, rhsGateId] : obind) {
     const auto y  = encoder.newVar();
-    const auto x1 = Context::var(connectTo, lhsGateId, 0);
-    const auto x2 = Context::var(connectTo, rhsGateId, 0);
+    const auto x1 = encoder.var(lhsGateId, 0);
+    const auto x2 = encoder.var(rhsGateId, 0);
 
     encoder.encodeXor(y, x1, x2, true, true, true);
     existsDiff.push(Context::lit(y, true));
@@ -50,6 +50,7 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
   encoder.encode(existsDiff);
 
   encoder.context().dump("checker.cnf");
+
   return !encoder.solve();
 }
 

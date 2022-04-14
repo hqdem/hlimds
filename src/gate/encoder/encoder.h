@@ -29,26 +29,6 @@ public:
   void encode(const Netlist &net, uint16_t version);
   void encode(const Gate &gate, uint16_t version);
 
-  void encode(const Context::Clause &clause) {
-    _context.solver.addClause(clause);
-  }
-
-  Context& context() {
-    return _context;
-  }
-
-  void setConnectTo(const Context::GateIdMap *connectTo) {
-    _context.connectTo = connectTo;
-  }
-
-  uint64_t newVar() {
-    return _context.newVar();
-  }
-
-  bool solve() {
-    return _context.solver.solve();
-  }
-
   // Combinational gates.
   void encodeFix(const Gate &gate, bool sign, uint16_t version);
   void encodeBuf(const Gate &gate, bool sign, uint16_t version);
@@ -73,6 +53,42 @@ public:
   void encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2);
   /// Encodes the equality y^s == c ? x1 : x2.
   void encodeMux(uint64_t y, uint64_t c, uint64_t x1, uint64_t x2, bool s);
+
+  void encode(Context::Lit lit) {
+    _context.solver().addClause(lit);
+  }
+
+  void encode(Context::Lit lit1, Context::Lit lit2) {
+    _context.solver().addClause(lit1, lit2);
+  }
+
+  void encode(Context::Lit lit1, Context::Lit lit2, Context::Lit lit3) {
+    _context.solver().addClause(lit1, lit2, lit3);
+  }
+
+  void encode(const Context::Clause &clause) {
+    _context.solver().addClause(clause);
+  }
+
+  Context& context() {
+    return _context;
+  }
+
+  void setConnectTo(const Context::GateIdMap *connectTo) {
+    _context.setConnectTo(connectTo);
+  }
+
+  uint64_t var(unsigned gateId, uint16_t version) {
+    return _context.var(gateId, version);
+  }
+
+  uint64_t newVar() {
+    return _context.newVar();
+  }
+
+  bool solve() {
+    return _context.solver().solve();
+  }
 
 private:
   Context _context;

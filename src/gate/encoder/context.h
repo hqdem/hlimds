@@ -23,7 +23,8 @@ namespace eda::gate::encoder {
  * \brief Logic formula representing a gate-level netlist.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
-struct Context final {
+class Context final {
+public:
   // MiniSAT-related types.
   using Var = Minisat::Var;
   using Lit = Minisat::Lit;
@@ -36,6 +37,51 @@ struct Context final {
   // Signal access mode.
   enum Mode { GET, SET };
 
+  /// Creates a literal.
+  static Lit lit(uint64_t var, bool sign) {
+    return Minisat::mkLit(static_cast<Var>(var), sign);
+  }
+
+  /// Returns a variable id.
+  uint64_t var(unsigned gateId, uint16_t version) {
+    return reserve(var(_connectTo, gateId, version));
+  }
+
+  /// Returns a variable id.
+  uint64_t var(const Gate &gate, uint16_t version, Mode mode) {
+    return (mode == GET && gate.is_trigger() && version > 0)
+      ? var(gate.id(), version - 1)
+      : var(gate.id(), version);
+  }
+
+  /// Returns a variable id.
+  uint64_t var(const Signal &signal, uint16_t version, Mode mode) {
+    return var(*signal.gate(), version, mode);
+  }
+
+  /// Returns a new variable id.
+  uint64_t newVar() {
+    // See the variable id format.
+    static uint64_t var = 0;
+    return reserve(((var++) << 1) | 1);
+  }
+
+  /// Dumps the current formula to the file.
+  void dump(const std::string &file) {
+    _solver.toDimacs(file.c_str());
+  }
+
+  /// Sets the gate reconnection map.
+  void setConnectTo(const GateIdMap *connectTo) {
+    _connectTo = connectTo;
+  }
+
+  /// Returns the SAT solver instance.
+  Solver& solver() {
+    return _solver;
+  }
+
+private:
   /**
    * Returns a variable id, which is an integer of the following format:
    *
@@ -65,50 +111,16 @@ struct Context final {
     return gateId;
   }
 
-  /// Creates a literal.
-  static Lit lit(uint64_t var, bool sign) {
-    const Lit literal = Minisat::mkLit(static_cast<Var>(var));
-    return sign ? literal : ~literal;
-  }
-
-  /// Returns a variable id.
-  uint64_t var(unsigned gateId, uint16_t version) {
-    return var(connectTo, gateId, version);
-  }
-
-  /// Returns a variable id.
-  uint64_t var(const Gate &gate, uint16_t version, Mode mode) {
-    return (mode == GET && gate.is_trigger() && version > 0)
-      ? var(gate.id(), version - 1)
-      : var(gate.id(), version);
-  }
-
-  /// Returns a variable id.
-  uint64_t var(const Signal &signal, uint16_t version, Mode mode) {
-    return var(*signal.gate(), version, mode);
-  }
-
-  /// Returns a new variable id.
-  uint64_t newVar() {
-    // See the variable id format.
-    static uint64_t var = 0;
-    return ((var++) << 1) | 1;
-  }
-
-  /// Dumps the current formula to the file.
-  void dump(const std::string &file) {
-    solver.toDimacs(file.c_str());
-  }
-
-  /// Reserves the variable in the solver.
-  void reserve(uint64_t var) {
-    while (var >= (uint64_t)solver.nVars()) {
-      solver.newVar();
+  /// Allocates the variable in the SAT solver.
+  uint64_t reserve(uint64_t var) {
+    while (var >= (uint64_t)_solver.nVars()) {
+      _solver.newVar();
     }
+    return var;
   }
 
-  const GateIdMap *connectTo = nullptr;
-  Solver solver;
+  const GateIdMap *_connectTo = nullptr;
+  Solver _solver;
 };
 
 } // namespace eda::gate::encoder

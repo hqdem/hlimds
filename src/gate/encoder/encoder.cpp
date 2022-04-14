@@ -90,11 +90,10 @@ void Encoder::encodeAnd(const Gate &gate, bool sign, uint16_t version) {
     const auto x = _context.var(input, version, Context::GET);
 
     clause.push(Context::lit(x, false));
-    _context.solver.addClause(Context::lit(y, !sign),
-                              Context::lit(x, true));
+    encode(Context::lit(y, !sign), Context::lit(x, true));
   }
 
-  _context.solver.addClause(clause);
+  encode(clause);
 }
 
 void Encoder::encodeOr(const Gate &gate, bool sign, uint16_t version) {
@@ -106,11 +105,10 @@ void Encoder::encodeOr(const Gate &gate, bool sign, uint16_t version) {
     const auto x = _context.var(input, version, Context::GET);
 
     clause.push(Context::lit(x, true));
-    _context.solver.addClause(Context::lit(y, sign),
-                              Context::lit(x, false));
+    encode(Context::lit(y, sign), Context::lit(x, false));
   }
 
-  _context.solver.addClause(clause);
+  encode(clause);
 }
 
 void Encoder::encodeXor(const Gate &gate, bool sign, uint16_t version) {
@@ -178,66 +176,31 @@ void Encoder::encodeDffRs(const Gate &gate, uint16_t version) {
 }
 
 void Encoder::encodeFix(uint64_t y, bool s) {
-  _context.reserve(y);
-
-  _context.solver.addClause(Context::lit(y, s));
+  encode(Context::lit(y, s));
 }
 
 void Encoder::encodeBuf(uint64_t y, uint64_t x, bool s) {
-  _context.reserve(x);
-  _context.reserve(y);
-
-  _context.solver.addClause(Context::lit(x, true),
-                            Context::lit(y, !s));
-  _context.solver.addClause(Context::lit(x, false),
-                            Context::lit(y, s));
+  encode(Context::lit(x, true),  Context::lit(y, !s));
+  encode(Context::lit(x, false), Context::lit(y,  s));
 }
 
 void Encoder::encodeAnd(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2) {
-  _context.reserve(x1);
-  _context.reserve(x2);
-  _context.reserve(y);
-
-  _context.solver.addClause(Context::lit(y,  s),
-                            Context::lit(x1, !s1),
-                            Context::lit(x2, !s2));
-  _context.solver.addClause(Context::lit(y,  !s),
-                            Context::lit(x1, s1));
-  _context.solver.addClause(Context::lit(y,  !s),
-                            Context::lit(x2, s2));
+  encode(Context::lit(y,  s), Context::lit(x1, !s1), Context::lit(x2, !s2));
+  encode(Context::lit(y, !s), Context::lit(x1,  s1));
+  encode(Context::lit(y, !s), Context::lit(x2,  s2));
 }
 
 void Encoder::encodeOr(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2) {
-  _context.reserve(x1);
-  _context.reserve(x2);
-  _context.reserve(y);
-
-  _context.solver.addClause(Context::lit(y,  !s),
-                            Context::lit(x1, s1),
-                            Context::lit(x2, s2));
-  _context.solver.addClause(Context::lit(y,  s),
-                            Context::lit(x1, !s1));
-  _context.solver.addClause(Context::lit(y,  s),
-                            Context::lit(x2, !s2));
+  encode(Context::lit(y, !s), Context::lit(x1,  s1), Context::lit(x2, s2));
+  encode(Context::lit(y,  s), Context::lit(x1, !s1));
+  encode(Context::lit(y,  s), Context::lit(x2, !s2));
 }
 
 void Encoder::encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2) {
-  _context.reserve(x1);
-  _context.reserve(x2);
-  _context.reserve(y);
-
-  _context.solver.addClause(Context::lit(y,  s),
-                            Context::lit(x1, s1),
-                            Context::lit(x2, s2));
-  _context.solver.addClause(Context::lit(y,  s),
-                            Context::lit(x1, !s1),
-                            Context::lit(x2, !s2));
-  _context.solver.addClause(Context::lit(y,  !s),
-                            Context::lit(x1, s1),
-                            Context::lit(x2, !s2));
-  _context.solver.addClause(Context::lit(y,  !s),
-                            Context::lit(x1, !s1),
-                            Context::lit(x2, s2));
+  encode(Context::lit(y,  s), Context::lit(x1,  s1), Context::lit(x2,  s2));
+  encode(Context::lit(y,  s), Context::lit(x1, !s1), Context::lit(x2, !s2));
+  encode(Context::lit(y, !s), Context::lit(x1,  s1), Context::lit(x2, !s2));
+  encode(Context::lit(y, !s), Context::lit(x1, !s1), Context::lit(x2,  s2));
 }
 
 void Encoder::encodeMux(uint64_t y, uint64_t c, uint64_t x1, uint64_t x2, bool s) {

@@ -180,8 +180,8 @@ void Encoder::encodeFix(uint64_t y, bool s) {
 }
 
 void Encoder::encodeBuf(uint64_t y, uint64_t x, bool s) {
-  encode(Context::lit(x, true),  Context::lit(y, !s));
-  encode(Context::lit(x, false), Context::lit(y,  s));
+  encode(Context::lit(y, !s), Context::lit(x, true));
+  encode(Context::lit(y,  s), Context::lit(x, false));
 }
 
 void Encoder::encodeAnd(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2) {

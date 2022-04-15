@@ -22,17 +22,17 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
   Encoder encoder;
   encoder.setConnectTo(connectTo);
 
-  // Encode the netlists.
-  for (const auto &net : nets) {
-    encoder.encode(net, 0);
-  }
-
   // Equate the inputs.
   for (const auto &[lhsGateId, rhsGateId] : ibind) {
     const auto x = encoder.var(lhsGateId, 0);
     const auto y = encoder.var(rhsGateId, 0);
 
     encoder.encodeBuf(y, x, true);
+  }
+
+  // Encode the netlists.
+  for (const auto &net : nets) {
+    encoder.encode(net, 0);
   }
 
   // Compare the outputs.

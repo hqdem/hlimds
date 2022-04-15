@@ -24,6 +24,9 @@ static bool checkEquivTest(unsigned N,
                            unsigned rhsOutputId) {
   Checker::GateBindList imap, omap;
 
+  std::cout << lhs << std::endl;
+  std::cout << rhs << std::endl;
+
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {
     Checker::GateBind binding(lhsInputs[i].gate()->id(),
@@ -84,13 +87,13 @@ bool checkNorAndTest(unsigned N) {
 }
 
 TEST(CheckNetlistTest, CheckNorNorTest) {
-  EXPECT_TRUE(checkNorNorTest(16));
+  EXPECT_TRUE(checkNorNorTest(2));
 }
 
 TEST(CheckNetlistTest, CheckNorAndnTest) {
-  EXPECT_TRUE(checkNorAndnTest(16));
+  EXPECT_TRUE(checkNorAndnTest(2));
 }
 
 TEST(CheckNetlistTest, CheckNorAndTest) {
-  EXPECT_FALSE(checkNorAndTest(16));
+  EXPECT_FALSE(checkNorAndTest(2));
 }

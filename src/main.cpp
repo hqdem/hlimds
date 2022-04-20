@@ -13,7 +13,7 @@
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
 #include "hls/scheduler/param_optimizer.h"
-#include "hls/scheduler/solver.h"
+#include "hls/scheduler/latency_solver.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"

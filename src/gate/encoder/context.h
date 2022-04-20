@@ -66,6 +66,11 @@ public:
     return reserve(((var++) << 1) | 1);
   }
 
+  /// Returns the variable value.
+  bool value(uint64_t var) {
+    return _solver.modelValue(static_cast<Var>(var)) == Minisat::l_True;
+  }
+
   /// Dumps the current formula to the file.
   void dump(const std::string &file) {
     _solver.toDimacs(file.c_str());

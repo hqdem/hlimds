@@ -61,6 +61,11 @@ public:
              const GateBindList &lhsTriDecOut,
              const GateBindList &rhsTriEncOut,
              const GateBindList &rhsTriDecIn) const;
+
+private:
+  void error(Context &context,
+	     const GateBindList &ibind,
+	     const GateBindList &obind) const;
 };
 
 } // namespace eda::gate::checker

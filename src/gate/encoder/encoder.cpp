@@ -83,7 +83,7 @@ void Encoder::encodeBuf(const Gate &gate, bool sign, uint16_t version) {
 
 void Encoder::encodeAnd(const Gate &gate, bool sign, uint16_t version) {
   const auto y = _context.var(gate, version, Context::SET);
-  Context::Clause clause(gate.arity() + 1);
+  Context::Clause clause;
   
   clause.push(Context::lit(y, sign));
   for (const auto &input : gate.inputs()) {
@@ -98,8 +98,8 @@ void Encoder::encodeAnd(const Gate &gate, bool sign, uint16_t version) {
 
 void Encoder::encodeOr(const Gate &gate, bool sign, uint16_t version) {
   const auto y = _context.var(gate, version, Context::SET);
-  Context::Clause clause(gate.arity() + 1);
-  
+  Context::Clause clause;
+ 
   clause.push(Context::lit(y, !sign));
   for (const auto &input : gate.inputs()) {
     const auto x = _context.var(input, version, Context::GET);
@@ -197,10 +197,10 @@ void Encoder::encodeOr(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bo
 }
 
 void Encoder::encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2) {
-  encode(Context::lit(y,  s), Context::lit(x1,  s1), Context::lit(x2,  s2));
-  encode(Context::lit(y,  s), Context::lit(x1, !s1), Context::lit(x2, !s2));
-  encode(Context::lit(y, !s), Context::lit(x1,  s1), Context::lit(x2, !s2));
-  encode(Context::lit(y, !s), Context::lit(x1, !s1), Context::lit(x2,  s2));
+  encode(Context::lit(y, !s), Context::lit(x1, !s1), Context::lit(x2, !s2));
+  encode(Context::lit(y, !s), Context::lit(x1,  s1), Context::lit(x2,  s2));
+  encode(Context::lit(y,  s), Context::lit(x1, !s1), Context::lit(x2,  s2));
+  encode(Context::lit(y,  s), Context::lit(x1,  s1), Context::lit(x2, !s2));
 }
 
 void Encoder::encodeMux(uint64_t y, uint64_t c, uint64_t x1, uint64_t x2, bool s) {

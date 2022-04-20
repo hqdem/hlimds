@@ -36,7 +36,7 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
   }
 
   // Compare the outputs.
-  Context::Clause existsDiff(obind.size());
+  Context::Clause existsDiff;
   for (const auto &[lhsGateId, rhsGateId] : obind) {
     const auto y  = encoder.newVar();
     const auto x1 = encoder.var(lhsGateId, 0);
@@ -49,9 +49,13 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
   // (lOut[1] != rOut[1]) || ... || (lOut[m] != rOut[m]).
   encoder.encode(existsDiff);
 
-  encoder.context().dump("checker.cnf");
+  const auto verdict = !encoder.solve();
 
-  return !encoder.solve();
+  if (!verdict) {
+    error(encoder.context(), ibind, obind);
+  }
+
+  return verdict;
 }
 
 bool Checker::equiv(const Netlist &lhs,
@@ -145,6 +149,35 @@ bool Checker::equiv(const Netlist &lhs,
   }
 
   return equiv({ lhs, rhs, enc, dec }, &connectTo, imap, omap);
+}
+
+void Checker::error(Context &context,
+                    const GateBindList &ibind,
+                    const GateBindList &obind) const {
+  bool comma;
+  context.dump("miter.cnf");
+
+  comma = false;
+  std::cout << "Inputs: ";
+  for (const auto &[lhsGateId, rhsGateId] : ibind) {
+    if (comma) std::cout << ", ";
+    comma = true;
+
+    std::cout << context.value(context.var(lhsGateId, 0)) << "|";
+    std::cout << context.value(context.var(rhsGateId, 0));
+  }
+  std::cout << std::endl;
+
+  comma = false;
+  std::cout << "Outputs: ";
+  for (const auto &[lhsGateId, rhsGateId] : obind) {
+    if (comma) std::cout << ", ";
+    comma = true;
+
+    std::cout << context.value(context.var(lhsGateId, 0)) << "|";
+    std::cout << context.value(context.var(rhsGateId, 0));
+  }
+  std::cout << std::endl;
 }
 
 } // namespace eda::gate::checker

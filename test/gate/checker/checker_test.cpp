@@ -87,13 +87,13 @@ bool checkNorAndTest(unsigned N) {
 }
 
 TEST(CheckNetlistTest, CheckNorNorTest) {
-  EXPECT_TRUE(checkNorNorTest(2));
+  EXPECT_TRUE(checkNorNorTest(16));
 }
 
 TEST(CheckNetlistTest, CheckNorAndnTest) {
-  EXPECT_TRUE(checkNorAndnTest(2));
+  EXPECT_TRUE(checkNorAndnTest(16));
 }
 
 TEST(CheckNetlistTest, CheckNorAndTest) {
-  EXPECT_FALSE(checkNorAndTest(2));
+  EXPECT_FALSE(checkNorAndTest(16));
 }

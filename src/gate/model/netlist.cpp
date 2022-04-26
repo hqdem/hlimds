@@ -19,7 +19,7 @@ Gate::List Netlist::_storage = []{
   return storage;
 }();
 
-void Netlist::set_gate(unsigned id, GateSymbol kind, const Signal::List &inputs) {
+void Netlist::set_gate(Gate::Id id, GateSymbol kind, const Signal::List &inputs) {
   Gate *g = gate(id);
 
   if (g->is_source()) {

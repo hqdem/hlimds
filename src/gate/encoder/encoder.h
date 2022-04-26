@@ -78,7 +78,7 @@ public:
     _context.setConnectTo(connectTo);
   }
 
-  uint64_t var(unsigned gateId, uint16_t version) {
+  uint64_t var(Gate::Id gateId, uint16_t version) {
     return _context.var(gateId, version);
   }
 

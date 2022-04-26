@@ -32,7 +32,7 @@ public:
   using Solver = Minisat::Solver;
 
   // Gate reconnection map.
-  using GateIdMap = std::unordered_map<unsigned, unsigned>;
+  using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 
   // Signal access mode.
   enum Mode { GET, SET };
@@ -43,7 +43,7 @@ public:
   }
 
   /// Returns a variable id.
-  uint64_t var(unsigned gateId, uint16_t version) {
+  uint64_t var(Gate::Id gateId, uint16_t version) {
     return reserve(var(_connectTo, gateId, version));
   }
 
@@ -98,7 +98,7 @@ private:
    * The current limitations on the field widths are caused by MiniSAT.
    */
   static uint64_t var(const GateIdMap *connectTo,
-                      unsigned gateId,
+                      Gate::Id gateId,
                       uint16_t version) {
     // FIXME: Such encoding is not suitable for MiniSAT w/ IntMap implemented as a vector.
     return ((uint64_t)version << 21) |
@@ -106,7 +106,7 @@ private:
   }
 
   /// Returns the gate id the given one is connected to.
-  static unsigned connectedTo(const GateIdMap *connectTo, unsigned gateId) {
+  static Gate::Id connectedTo(const GateIdMap *connectTo, Gate::Id gateId) {
     if (connectTo) {
       auto i = connectTo->find(gateId);
       if (i != connectTo->end())

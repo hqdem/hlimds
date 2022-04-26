@@ -39,8 +39,8 @@ public:
 private:
   FLibrary &_library;
 
-  unsigned gate_id(const VNode *vnode) const;
-  unsigned gate_id(const VNode *vnode, const Netlist &netlist);
+  Gate::Id gate_id(const VNode *vnode) const;
+  Gate::Id gate_id(const VNode *vnode, const Netlist &netlist);
 
   void alloc_gates(const VNode *vnode, Netlist &netlist);
 
@@ -54,7 +54,7 @@ private:
   Netlist::Out out(const VNode *vnode);
 
   // Maps vnodes to the identifiers of their lower bits' gates.
-  std::unordered_map<std::string, unsigned> _gates_id;
+  std::unordered_map<std::string, Gate::Id> _gates_id;
 };
 
 } // namespace eda::rtl::compiler

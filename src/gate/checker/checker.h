@@ -25,7 +25,7 @@ namespace eda::gate::checker {
 class Checker final {
 public:
   using GateIdList = Netlist::GateIdList;
-  using GateBind = std::pair<unsigned, unsigned>;
+  using GateBind = std::pair<Gate::Id, Gate::Id>;
   using GateBindList = std::vector<GateBind>;
   using GateIdMap = Context::GateIdMap;
 

@@ -29,11 +29,11 @@ class Netlist final {
   friend class eda::rtl::compiler::Compiler;
 
 public:
-  using GateIdList = std::vector<unsigned>;
+  using GateIdList = std::vector<Gate::Id>;
   using Value = std::vector<bool>;
   using In = std::vector<GateIdList>;
   using Out = GateIdList;
-  using ControlEvent = std::pair<Event::Kind, unsigned>;
+  using ControlEvent = std::pair<Event::Kind, Gate::Id>;
   using ControlList = std::vector<ControlEvent>;
 
   Netlist() {
@@ -42,32 +42,32 @@ public:
 
   std::size_t size() const { return _gates.size(); }
   const Gate::List& gates() const { return _gates; }
-  Gate* gate(unsigned id) const { return _storage[id]; }
+  Gate* gate(Gate::Id id) const { return _storage[id]; }
 
   const GateIdList& sources() const { return _sources; }
   const GateIdList& triggers() const { return _triggers; }
 
-  Signal posedge(unsigned id) const { return Signal(Event::POSEDGE, gate(id)); }
-  Signal negedge(unsigned id) const { return Signal(Event::NEGEDGE, gate(id)); }
-  Signal level0(unsigned id) const { return Signal(Event::LEVEL0, gate(id)); }
-  Signal level1(unsigned id) const { return Signal(Event::LEVEL1, gate(id)); }
-  Signal always(unsigned id) const { return Signal(Event::ALWAYS, gate(id)); }
+  Signal posedge(Gate::Id id) const { return Signal(Event::POSEDGE, gate(id)); }
+  Signal negedge(Gate::Id id) const { return Signal(Event::NEGEDGE, gate(id)); }
+  Signal level0(Gate::Id id) const { return Signal(Event::LEVEL0, gate(id)); }
+  Signal level1(Gate::Id id) const { return Signal(Event::LEVEL1, gate(id)); }
+  Signal always(Gate::Id id) const { return Signal(Event::ALWAYS, gate(id)); }
 
   /// Returns the next gate identifier.
-  unsigned next_gate_id() const { return _storage.size(); }
+  Gate::Id next_gate_id() const { return _storage.size(); }
 
   /// Adds a new source and returns its identifier.
-  unsigned add_gate() {
+  Gate::Id add_gate() {
     return add_gate(new Gate(next_gate_id()));
   }
 
   /// Adds a new gate and returns its identifier.
-  unsigned add_gate(GateSymbol kind, const Signal::List &inputs) {
+  Gate::Id add_gate(GateSymbol kind, const Signal::List &inputs) {
     return add_gate(new Gate(next_gate_id(), kind, inputs));
   }
 
   /// Modifies the existing gate.
-  void set_gate(unsigned id, GateSymbol kind, const Signal::List &inputs);
+  void set_gate(Gate::Id id, GateSymbol kind, const Signal::List &inputs);
 
 private:
   unsigned add_gate(Gate *gate) {

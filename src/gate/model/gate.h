@@ -32,9 +32,10 @@ class Gate final {
   friend class eda::rtl::compiler::Compiler;
 
 public:
+  using Id = unsigned;
   using List = std::vector<Gate *>;
 
-  unsigned id() const { return _id; }
+  Id id() const { return _id; }
   GateSymbol kind() const { return _kind; }
   std::size_t arity() const { return _inputs.size(); }
 
@@ -47,10 +48,10 @@ public:
   bool is_gate() const { return !is_source() && !is_trigger(); }
 
 private:
-  Gate(unsigned id):
+  Gate(Id id):
     _id(id), _kind(GateSymbol::NOP), _inputs() {}
 
-  Gate(unsigned id, GateSymbol gate, const Signal::List inputs):
+  Gate(Id id, GateSymbol gate, const Signal::List inputs):
     _id(id), _kind(gate), _inputs(inputs) {}
 
   bool is_sequential() const {
@@ -68,7 +69,7 @@ private:
     _inputs.assign(inputs.begin(), inputs.end());
   }
 
-  const unsigned _id;
+  const Id _id;
 
   GateSymbol _kind;
   Signal::List _inputs;

@@ -57,7 +57,7 @@ std::unique_ptr<Netlist> Compiler::compile(const Net &net) {
   return netlist;
 }
 
-unsigned Compiler::gate_id(const VNode *vnode) const {
+Gate::Id Compiler::gate_id(const VNode *vnode) const {
   const auto i = _gates_id.find(vnode->name());
   if (i != _gates_id.end()) {
     return i->second;
@@ -66,8 +66,8 @@ unsigned Compiler::gate_id(const VNode *vnode) const {
   return -1u;
 }
 
-unsigned Compiler::gate_id(const VNode *vnode, const Netlist &netlist) {
-  const unsigned id = gate_id(vnode);
+Gate::Id Compiler::gate_id(const VNode *vnode, const Netlist &netlist) {
+  const auto id = gate_id(vnode);
   if (id != -1u) {
     return id;
   }
@@ -79,8 +79,8 @@ unsigned Compiler::gate_id(const VNode *vnode, const Netlist &netlist) {
 void Compiler::alloc_gates(const VNode *vnode, Netlist &netlist) {
   assert(vnode != nullptr);
 
-  const unsigned base = gate_id(vnode, netlist);
-  const unsigned size = vnode->var().type().width();
+  const auto base = gate_id(vnode, netlist);
+  const auto size = vnode->var().type().width();
 
   for (unsigned i = 0; i < size; i++) {
     assert(base + i == netlist.size());
@@ -128,8 +128,8 @@ Netlist::In Compiler::in(const VNode *vnode) {
 }
 
 Netlist::Out Compiler::out(const VNode *vnode) {
-  const unsigned base = gate_id(vnode);
-  const unsigned size = vnode->var().type().width();
+  const auto base = gate_id(vnode);
+  const auto size = vnode->var().type().width();
   assert(base != -1u);
 
   Netlist::Out out(size);

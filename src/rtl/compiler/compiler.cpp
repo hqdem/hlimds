@@ -107,9 +107,9 @@ void Compiler::synth_reg(const VNode *vnode, Netlist &netlist) {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
   assert(vnode->esize() == 1 || vnode->esize() == 2);
 
-  Netlist::ControlList control;
+  Signal::List control;
   for (const auto &event: vnode->events()) {
-    control.push_back({ event.kind(), gate_id(event.node()) });
+    control.push_back(Signal(event.kind(), gate_id(event.node())));
   }
 
   _library.synthesize(out(vnode), in(vnode), control, netlist);

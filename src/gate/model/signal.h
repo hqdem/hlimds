@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "gate/model/gate.h"
 #include "rtl/model/event.h"
 
 #include <iostream>
@@ -18,28 +17,40 @@ using namespace eda::rtl::model;
 
 namespace eda::gate::model {
 
-class Gate;
-
 /**
  * \brief Represents a triggering signal.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Signal final {
 public:
+  using GateId = unsigned;
   using List = std::vector<Signal>;
 
-  Signal(Event::Kind kind, Gate *gate):
-    _kind(kind), _gate(gate) {}
+  static Signal posedge(GateId gateId) { return Signal(Event::POSEDGE, gateId); }
+  static Signal negedge(GateId gateId) { return Signal(Event::NEGEDGE, gateId); }
+  static Signal level0 (GateId gateId) { return Signal(Event::LEVEL0,  gateId); }
+  static Signal level1 (GateId gateId) { return Signal(Event::LEVEL1,  gateId); }
+  static Signal always (GateId gateId) { return Signal(Event::ALWAYS,  gateId); }
 
-  bool edge() const { return _kind == Event::POSEDGE || _kind == Event::NEGEDGE; }
-  bool level() const { return _kind == Event::LEVEL0 || _kind == Event::LEVEL1; }
+  Signal(Event::Kind kind, GateId gateId):
+    _kind(kind), _gateId(gateId) {}
+
+  bool edge() const {
+    return _kind == Event::POSEDGE ||
+           _kind == Event::NEGEDGE;
+  }
+
+  bool level() const {
+    return _kind == Event::LEVEL0 ||
+           _kind == Event::LEVEL1;
+  }
 
   Event::Kind kind() const { return _kind; }
-  Gate* gate() const { return _gate; }
+  GateId gateId() const { return _gateId; }
 
 private:
   Event::Kind _kind;
-  Gate *_gate;
+  GateId _gateId;
 };
 
 std::ostream& operator <<(std::ostream &out, const Signal &signal);

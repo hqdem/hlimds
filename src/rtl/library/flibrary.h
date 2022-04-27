@@ -8,14 +8,12 @@
 
 #pragma once
 
+#include "gate/model/netlist.h"
+#include "rtl/model/fsymbol.h"
+
 #include <cassert>
 #include <memory>
 #include <vector>
-
-#include "gate/model/gsymbol.h"
-#include "gate/model/netlist.h"
-#include "gate/model/signal.h"
-#include "rtl/model/fsymbol.h"
 
 using namespace eda::gate::model;
 using namespace eda::rtl::model;
@@ -35,8 +33,6 @@ struct FLibrary {
   using Value = Netlist::Value;
   using In = Netlist::In;
   using Out = Netlist::Out;
-  using ControlEvent = Netlist::ControlEvent;
-  using ControlList = Netlist::ControlList;
 
   /// Checks if the library supports the given function.
   virtual bool supports(FuncSymbol func) const = 0;
@@ -49,7 +45,7 @@ struct FLibrary {
     FuncSymbol func, const Out &out, const In &in, Netlist &net) = 0;
   /// Synthesize the netlist for the given register.
   virtual void synthesize(
-    const Out &out, const In &in, const ControlList &control, Netlist &net) = 0;
+    const Out &out, const In &in, const Signal::List &control, Netlist &net) = 0;
 
   virtual ~FLibrary() {} 
 };
@@ -70,7 +66,7 @@ public:
   void synthesize(
       FuncSymbol func, const Out &out, const In &in, Netlist &net) override;
   void synthesize(
-      const Out &out, const In &in, const ControlList &control, Netlist &net) override;
+      const Out &out, const In &in, const Signal::List &control, Netlist &net) override;
 
 private:
   FLibraryDefault() {}
@@ -84,7 +80,7 @@ private:
   static void synth_adder(unsigned z, unsigned c_out,
     unsigned x, unsigned y, unsigned c_in, Netlist &net);
 
-  static Signal invert_if_negative(const ControlEvent &event, Netlist &net);
+  static Signal invert_if_negative(const Signal &event, Netlist &net);
 
   template<GateSymbol G>
   static void synth_unary_bitwise_op (const Out &out, const In &in, Netlist &net);
@@ -103,7 +99,7 @@ void FLibraryDefault::synth_unary_bitwise_op(const Out &out, const In &in, Netli
   assert(out.size() == x.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = net.always(x[i]);
+    Signal xi = Signal::always(x[i]);
     net.setGate(out[i], G, { xi });
   }
 }
@@ -117,8 +113,8 @@ void FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netl
   assert(x.size() == y.size() && out.size() == x.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = net.always(x[i]);
-    Signal yi = net.always(y[i]);
+    Signal xi = Signal::always(x[i]);
+    Signal yi = Signal::always(y[i]);
     net.setGate(out[i], G, { xi, yi });
   }
 }

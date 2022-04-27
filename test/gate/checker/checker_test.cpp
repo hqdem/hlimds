@@ -18,10 +18,10 @@ using namespace eda::gate::model;
 static bool checkEquivTest(unsigned N,
                            const Netlist &lhs,
                            const Signal::List &lhsInputs,
-                           unsigned lhsOutputId,
+                           Gate::Id lhsOutputId,
                            const Netlist &rhs,
                            const Signal::List &rhsInputs,
-                           unsigned rhsOutputId) {
+                           Gate::Id rhsOutputId) {
   Checker::GateBindList imap, omap;
 
   std::cout << lhs << std::endl;
@@ -29,8 +29,8 @@ static bool checkEquivTest(unsigned N,
 
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {
-    Checker::GateBind binding(lhsInputs[i].gate()->id(),
-                              rhsInputs[i].gate()->id());
+    Checker::GateBind binding(lhsInputs[i].gateId(),
+                              rhsInputs[i].gateId());
     imap.push_back(binding);
   }
 
@@ -44,12 +44,12 @@ static bool checkEquivTest(unsigned N,
 bool checkNorNorTest(unsigned N) {
   // ~(x1 | ... | xN).
   Signal::List lhsInputs;
-  unsigned lhsOutputId;
+  Gate::Id lhsOutputId;
   auto lhs = makeNor(N, lhsInputs, lhsOutputId);
 
   // ~(x1 | ... | xN).
   Signal::List rhsInputs;
-  unsigned rhsOutputId;
+  Gate::Id rhsOutputId;
   auto rhs = makeNor(N, rhsInputs, rhsOutputId);
 
   return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
@@ -59,12 +59,12 @@ bool checkNorNorTest(unsigned N) {
 bool checkNorAndnTest(unsigned N) {
   // ~(x1 | ... | xN).
   Signal::List lhsInputs;
-  unsigned lhsOutputId;
+  Gate::Id lhsOutputId;
   auto lhs = makeNor(N, lhsInputs, lhsOutputId);
 
   // (~x1 & ... & ~xN).
   Signal::List rhsInputs;
-  unsigned rhsOutputId;
+  Gate::Id rhsOutputId;
   auto rhs = makeAndn(N, rhsInputs, rhsOutputId);
 
   return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
@@ -74,12 +74,12 @@ bool checkNorAndnTest(unsigned N) {
 bool checkNorAndTest(unsigned N) {
   // ~(x1 | ... | xN).
   Signal::List lhsInputs;
-  unsigned lhsOutputId;
+  Gate::Id lhsOutputId;
   auto lhs = makeNor(N, lhsInputs, lhsOutputId);
 
   // (x1 & ... & xN).
   Signal::List rhsInputs;
-  unsigned rhsOutputId;
+  Gate::Id rhsOutputId;
   auto rhs = makeAnd(N, rhsInputs, rhsOutputId);
 
   return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,

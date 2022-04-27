@@ -28,7 +28,7 @@ void Gate::setInputs(const Signal::List &inputs) {
 static std::ostream& operator <<(std::ostream &out, const Signal::List &signals) {
   bool separator = false;
   for (const Signal &signal: signals) {
-    out << (separator ? ", " : "") << signal.kind() << "(" << signal.gate()->id() << ")";
+    out << (separator ? ", " : "") << signal.kind() << "(" << signal.gateId() << ")";
     separator = true;
   }
   return out;

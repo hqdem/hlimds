@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <cassert>
-
 #include "gate/model/netlist.h"
 #include "rtl/library/flibrary.h"
+
+#include <cassert>
 
 using namespace eda::gate::model;
 using namespace eda::rtl::model;
@@ -62,26 +62,26 @@ void FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, 
 }
 
 void FLibraryDefault::synthesize(
-    const Out &out, const In &in, const ControlList &control, Netlist &net) {
+    const Out &out, const In &in, const Signal::List &control, Netlist &net) {
   assert(control.size() == 1 || control.size() == 2);
   assert(control.size() == in.size());
 
   Signal clock = invert_if_negative(control[0], net);
   if (control.size() == 1) {
     for (std::size_t i = 0; i < out.size(); i++) {
-      Signal d = net.always(in[0][i]); // stored data
+      Signal d = Signal::always(in[0][i]); // stored data
       net.setGate(out[i], (clock.edge() ? GateSymbol::DFF : GateSymbol::LATCH), { d, clock });
     }
   } else {
     Signal edged = invert_if_negative(control[1], net);
-    Signal reset(Event::ALWAYS, edged.gate());
+    Signal reset(Event::ALWAYS, edged.gateId());
 
     for (std::size_t i = 0; i < out.size(); i++) {
-      Signal d = net.always(in[0][i]); // stored data
-      Signal v = net.always(in[1][i]); // reset value
-      Signal n = net.always(net.addGate(GateSymbol::NOT, { v }));
-      Signal r = net.level1(net.addGate(GateSymbol::AND, { n, reset }));
-      Signal s = net.level1(net.addGate(GateSymbol::AND, { v, reset }));
+      Signal d = Signal::always(in[0][i]); // stored data
+      Signal v = Signal::always(in[1][i]); // reset value
+      Signal n = Signal::always(net.addGate(GateSymbol::NOT, { v }));
+      Signal r = Signal::level1(net.addGate(GateSymbol::AND, { n, reset }));
+      Signal s = Signal::level1(net.addGate(GateSymbol::AND, { v, reset }));
       net.setGate(out[i], GateSymbol::DFFrs, { d, clock, r, s });
     }
   }
@@ -124,18 +124,18 @@ void FLibraryDefault::synth_adder(const Out &out, const In &in, bool plus_one, N
 
 void FLibraryDefault::synth_adder(unsigned z, unsigned c_out,
     unsigned x, unsigned y, unsigned c_in, Netlist &net) {
-  Signal x_wire = net.always(x);
-  Signal y_wire = net.always(y);
-  Signal c_wire = net.always(c_in);
+  Signal x_wire = Signal::always(x);
+  Signal y_wire = Signal::always(y);
+  Signal c_wire = Signal::always(c_in);
 
   // z = (x + y) + c_in (mod 2).
-  Signal x_plus_y = net.always(net.addGate(GateSymbol::XOR, { x_wire, y_wire }));
+  Signal x_plus_y = Signal::always(net.addGate(GateSymbol::XOR, { x_wire, y_wire }));
   net.setGate(z, GateSymbol::XOR, { x_plus_y, c_wire });
 
   if (c_out != -1u) {
     // c_out = (x & y) | (x + y) & c_in.
-    Signal x_and_y = net.always(net.addGate(GateSymbol::AND, { x_wire, y_wire }));
-    Signal x_plus_y_and_c_in = net.always(net.addGate(GateSymbol::AND, { x_plus_y, c_wire }));
+    Signal x_and_y = Signal::always(net.addGate(GateSymbol::AND, { x_wire, y_wire }));
+    Signal x_plus_y_and_c_in = Signal::always(net.addGate(GateSymbol::AND, { x_plus_y, c_wire }));
     net.setGate(c_out, GateSymbol::OR, { x_and_y, x_plus_y_and_c_in });
   }
 }
@@ -153,34 +153,34 @@ void FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
       const GateIdList &x = in[j + n];
       assert(c.size() == 1 && out.size() == x.size());
 
-      Signal cj0 = net.always(c[0]);
-      Signal xji = net.always(x[i]);
-      unsigned id = net.addGate(GateSymbol::AND, { cj0, xji });
+      Signal cj0 = Signal::always(c[0]);
+      Signal xji = Signal::always(x[i]);
+      Gate::Id id = net.addGate(GateSymbol::AND, { cj0, xji });
 
-      temp.push_back(net.always(id));
+      temp.push_back(Signal::always(id));
     }
 
     net.setGate(out[i], GateSymbol::OR, temp);
   }
 }
 
-Signal FLibraryDefault::invert_if_negative(const ControlEvent &event, Netlist &net) {
-  switch (event.first) {
+Signal FLibraryDefault::invert_if_negative(const Signal &event, Netlist &net) {
+  switch (event.kind()) {
   case Event::POSEDGE:
     // Leave the clock signal unchanged.
-    return net.posedge(event.second);
+    return Signal::posedge(event.gateId());
   case Event::NEGEDGE:
     // Invert the clock signal.
-    return net.posedge(net.addGate(GateSymbol::NOT, { net.always(event.second) }));
+    return Signal::posedge(net.addGate(GateSymbol::NOT, { Signal::always(event.gateId()) }));
   case Event::LEVEL0:
     // Invert the enable signal.
-    return net.level1(net.addGate(GateSymbol::NOT, { net.always(event.second) }));
+    return Signal::level1(net.addGate(GateSymbol::NOT, { Signal::always(event.gateId()) }));
   case Event::LEVEL1:
     // Leave the enable signal unchanged.
-    return net.level1(event.second);
+    return Signal::level1(event.gateId());
   default:
     assert(false);
-    return net.posedge(-1);
+    return Signal::posedge(-1);
   }
 }
 

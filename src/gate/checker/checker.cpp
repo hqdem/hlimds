@@ -89,7 +89,7 @@ bool Checker::equiv(const Netlist &lhs,
       const Signal lhsInput = lhsTrigger->input(i);
       const Signal rhsInput = rhsTrigger->input(i);
 
-      omap.push_back({ lhsInput.gate()->id(), rhsInput.gate()->id() });
+      omap.push_back({ lhsInput.gateId(), rhsInput.gateId() });
     }
   }
 
@@ -130,7 +130,7 @@ bool Checker::equiv(const Netlist &lhs,
 
   // Connect the encoder inputs to the LHS-trigger D inputs' drivers.
   for (const auto &[lhsTriId, encInId] : lhsTriEncIn) {
-    connectTo.insert({ encInId, Gate::get(lhsTriId)->input(0).gate()->id() });
+    connectTo.insert({ encInId, Gate::get(lhsTriId)->input(0).gateId() });
   }
 
   // Connect the LHS-trigger outputs to the decoder outputs.
@@ -140,7 +140,7 @@ bool Checker::equiv(const Netlist &lhs,
 
   // Append the encoder outputs and the RHS-trigger inputs to the outputs.
   for (const auto &[rhsTriId, encOutId] : rhsTriEncOut) {
-    omap.push_back({ encOutId, Gate::get(rhsTriId)->input(0).gate()->id() });
+    omap.push_back({ encOutId, Gate::get(rhsTriId)->input(0).gateId() });
   }
 
   // Append the decoder inputs and the RHS-trigger outputs to to the inputs.

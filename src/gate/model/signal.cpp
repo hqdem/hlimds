@@ -14,7 +14,7 @@
 namespace eda::gate::model {
 
 std::ostream& operator <<(std::ostream &out, const Signal &signal) {
-  return out << signal.kind() << "(" << signal.gate()->id() << ")";
+  return out << signal.kind() << "(" << signal.gateId() << ")";
 }
 
 } // namespace eda::gate::model

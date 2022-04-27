@@ -17,24 +17,24 @@ using namespace eda::gate::model;
 // (x1 | ... | xN).
 std::unique_ptr<Netlist> makeOr(unsigned N,
                                 Signal::List &inputs,
-                                unsigned &outputId);
+                                Gate::Id &outputId);
 // (x1 & ... & xN).
 std::unique_ptr<Netlist> makeAnd(unsigned N,
                                  Signal::List &inputs,
-                                 unsigned &outputId);
+                                 Gate::Id &outputId);
 // ~(x1 | ... | xN).
 std::unique_ptr<Netlist> makeNor(unsigned N,
                                  Signal::List &inputs,
-                                 unsigned &outputId);
+                                 Gate::Id &outputId);
 // ~(x1 & ... & xN).
 std::unique_ptr<Netlist> makeNand(unsigned N,
                                   Signal::List &inputs,
-                                  unsigned &outputId);
+                                  Gate::Id &outputId);
 // (~x1 | ... | ~xN).
 std::unique_ptr<Netlist> makeOrn(unsigned N,
                                  Signal::List &inputs,
-                                 unsigned &outputId);
+                                 Gate::Id &outputId);
 // (~x1 & ... & ~xN).
 std::unique_ptr<Netlist> makeAndn(unsigned N,
                                   Signal::List &inputs,
-                                  unsigned &outputId);
+                                  Gate::Id &outputId);

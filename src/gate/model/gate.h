@@ -33,7 +33,7 @@ class Gate final {
   friend class eda::rtl::compiler::Compiler;
 
 public:
-  using Id = unsigned;
+  using Id = Signal::GateId;
   using List = std::vector<Gate*>;
   using Link = std::pair<Id, std::size_t>;
   using LinkList = std::vector<Link>;
@@ -102,14 +102,14 @@ private:
 
   void appendLinks() {
     for (std::size_t i = 0; i < _inputs.size(); i++) {
-      auto *gate = _inputs[i].gate();
+      auto *gate = Gate::get(_inputs[i].gateId());
       gate->appendLink({ _id, i });
     }
   }
 
   void removeLinks() {
     for (std::size_t i = 0; i < _inputs.size(); i++) {
-      auto *gate = _inputs[i].gate();
+      auto *gate = Gate::get(_inputs[i].gateId());
       gate->removeLink({ _id, i });
     }
   }

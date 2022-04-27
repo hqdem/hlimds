@@ -56,7 +56,7 @@ public:
 
   /// Returns a variable id.
   uint64_t var(const Signal &signal, uint16_t version, Mode mode) {
-    return var(*signal.gate(), version, mode);
+    return var(*Gate::get(signal.gateId()), version, mode);
   }
 
   /// Returns a new variable id.

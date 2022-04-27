@@ -33,24 +33,14 @@ public:
   using Value = std::vector<bool>;
   using In = std::vector<GateIdList>;
   using Out = GateIdList;
-  using ControlEvent = std::pair<Event::Kind, Gate::Id>;
-  using ControlList = std::vector<ControlEvent>;
 
-  Netlist() {
-    _gates.reserve(1024*1024);
-  } 
+  Netlist() { _gates.reserve(1024*1024); } 
 
   std::size_t size() const { return _gates.size(); }
   const Gate::List& gates() const { return _gates; }
 
   const GateIdList& sources() const { return _sources; }
   const GateIdList& triggers() const { return _triggers; }
-
-  Signal posedge(Gate::Id gateId) const { return Signal(Event::POSEDGE, Gate::get(gateId)); }
-  Signal negedge(Gate::Id gateId) const { return Signal(Event::NEGEDGE, Gate::get(gateId)); }
-  Signal level0(Gate::Id gateId) const { return Signal(Event::LEVEL0, Gate::get(gateId)); }
-  Signal level1(Gate::Id gateId) const { return Signal(Event::LEVEL1, Gate::get(gateId)); }
-  Signal always(Gate::Id gateId) const { return Signal(Event::ALWAYS, Gate::get(gateId)); }
 
   /// Adds a new source and returns its identifier.
   Gate::Id addGate() {

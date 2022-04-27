@@ -11,6 +11,7 @@
 #include "gate/model/gsymbol.h"
 #include "gate/model/signal.h"
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -60,10 +61,14 @@ public:
   }
 
   bool isTrigger() const {
-    return isSequential();
+    for (const auto &input: _inputs) {
+      if (input.kind() != Event::ALWAYS)
+        return true;
+    }
+    return false;
   }
 
-  bool isGate() const {
+  bool isComb() const {
     return !isSource() && !isTrigger();
   }
 
@@ -76,44 +81,47 @@ private:
       _storage.resize(_id + 1);
       _storage[_id] = this;
     }
-    // Update the links.
-    for (std::size_t i = 0; i < _inputs.size(); i++) {
-      auto *gate = _inputs[i].gate();
-      gate->addLink({ _id, i });
-    }
+    appendLinks();
   }
 
   /// Creates a source gate.
   Gate(): Gate(GateSymbol::NOP, {}) {}
 
-  bool isSequential() const {
-    for (const auto &input: _inputs) {
-      if (input.kind() != Event::ALWAYS) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   void setKind(GateSymbol kind) {
     _kind = kind;
   }
 
-  void setInputs(const Signal::List &inputs) {
-    _inputs.assign(inputs.begin(), inputs.end());
-  }
-
-  void addLink(const Link &link) {
+  void appendLink(const Link &link) {
     _links.push_back(link);
   }
 
-  const Id _id;
+  void removeLink(const Link &link) {
+    auto i = std::remove(_links.begin(), _links.end(), link);
+    _links.erase(i, _links.end());
+  }
 
+  void appendLinks() {
+    for (std::size_t i = 0; i < _inputs.size(); i++) {
+      auto *gate = _inputs[i].gate();
+      gate->appendLink({ _id, i });
+    }
+  }
+
+  void removeLinks() {
+    for (std::size_t i = 0; i < _inputs.size(); i++) {
+      auto *gate = _inputs[i].gate();
+      gate->removeLink({ _id, i });
+    }
+  }
+
+  void setInputs(const Signal::List &inputs);
+
+  const Id _id;
   GateSymbol _kind;
   Signal::List _inputs;
   LinkList _links;
 
-  /// Common gate storage
+  /// Common gate storage.
   static Gate::List _storage;
 };
 

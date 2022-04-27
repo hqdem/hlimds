@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "gate/model/gate.h"
+#include "rtl/model/event.h"
+
 #include <iostream>
 #include <utility>
 #include <vector>
-
-#include "gate/model/gate.h"
-#include "rtl/model/event.h"
 
 namespace eda::rtl::compiler {
   class Compiler;
@@ -46,32 +46,32 @@ public:
   const GateIdList& sources() const { return _sources; }
   const GateIdList& triggers() const { return _triggers; }
 
-  Signal posedge(Gate::Id id) const { return Signal(Event::POSEDGE, Gate::get(id)); }
-  Signal negedge(Gate::Id id) const { return Signal(Event::NEGEDGE, Gate::get(id)); }
-  Signal level0(Gate::Id id) const { return Signal(Event::LEVEL0, Gate::get(id)); }
-  Signal level1(Gate::Id id) const { return Signal(Event::LEVEL1, Gate::get(id)); }
-  Signal always(Gate::Id id) const { return Signal(Event::ALWAYS, Gate::get(id)); }
+  Signal posedge(Gate::Id gateId) const { return Signal(Event::POSEDGE, Gate::get(gateId)); }
+  Signal negedge(Gate::Id gateId) const { return Signal(Event::NEGEDGE, Gate::get(gateId)); }
+  Signal level0(Gate::Id gateId) const { return Signal(Event::LEVEL0, Gate::get(gateId)); }
+  Signal level1(Gate::Id gateId) const { return Signal(Event::LEVEL1, Gate::get(gateId)); }
+  Signal always(Gate::Id gateId) const { return Signal(Event::ALWAYS, Gate::get(gateId)); }
 
   /// Adds a new source and returns its identifier.
-  Gate::Id add_gate() {
-    return add_gate(new Gate());
+  Gate::Id addGate() {
+    return addGate(new Gate());
   }
 
   /// Adds a new gate and returns its identifier.
-  Gate::Id add_gate(GateSymbol kind, const Signal::List &inputs) {
-    return add_gate(new Gate(kind, inputs));
+  Gate::Id addGate(GateSymbol kind, const Signal::List &inputs) {
+    return addGate(new Gate(kind, inputs));
   }
 
   /// Modifies the existing gate.
-  void set_gate(Gate::Id id, GateSymbol kind, const Signal::List &inputs);
+  void setGate(Gate::Id id, GateSymbol kind, const Signal::List &inputs);
 
 private:
-  unsigned add_gate(Gate *gate) {
+  Gate::Id addGate(Gate *gate) {
     _gates.push_back(gate);
 
-    if (gate->is_source()) {
+    if (gate->isSource()) {
       _sources.push_back(gate->id());
-    } else if (gate->is_trigger()) {
+    } else if (gate->isTrigger()) {
       _triggers.push_back(gate->id());
     }
 

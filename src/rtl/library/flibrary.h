@@ -104,7 +104,7 @@ void FLibraryDefault::synth_unary_bitwise_op(const Out &out, const In &in, Netli
 
   for (std::size_t i = 0; i < out.size(); i++) {
     Signal xi = net.always(x[i]);
-    net.set_gate(out[i], G, { xi });
+    net.setGate(out[i], G, { xi });
   }
 }
 
@@ -119,7 +119,7 @@ void FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netl
   for (std::size_t i = 0; i < out.size(); i++) {
     Signal xi = net.always(x[i]);
     Signal yi = net.always(y[i]);
-    net.set_gate(out[i], G, { xi, yi });
+    net.setGate(out[i], G, { xi, yi });
   }
 }
 

@@ -49,7 +49,7 @@ public:
 
   /// Returns a variable id.
   uint64_t var(const Gate &gate, uint16_t version, Mode mode) {
-    return (mode == GET && gate.is_trigger() && version > 0)
+    return (mode == GET && gate.isTrigger() && version > 0)
       ? var(gate.id(), version - 1)
       : var(gate.id(), version);
   }

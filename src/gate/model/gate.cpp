@@ -29,11 +29,12 @@ static std::ostream& operator <<(std::ostream &out, const Signal::List &signals)
 }
 
 std::ostream& operator <<(std::ostream &out, const Gate &gate) {
-  if (gate.is_source()) {
-    return out << "S{" << gate.id() << "}";
+  if (gate.isSource()) {
+    out << "S{" << gate.id() << "}";
   } else {
-    return out << "G{" << gate.id() << " <= " << gate.kind() << "(" << gate.inputs() << ")}";
+    out << "G{" << gate.id() << " <= " << gate.kind() << "(" << gate.inputs() << ")}";
   }
+  return out << "[fo=" << gate.fanout() << "]";
 }
 
 } // namespace eda::gate::model

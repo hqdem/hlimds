@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <iostream>
-
 #include "gate/model/gate.h"
 #include "gate/model/signal.h"
+
+#include <iostream>
 
 namespace eda::gate::model {
 

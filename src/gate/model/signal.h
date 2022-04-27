@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <cassert>
+#include "gate/model/gate.h"
+#include "rtl/model/event.h"
+
 #include <iostream>
 #include <vector>
-
-#include "rtl/model/event.h"
 
 using namespace eda::rtl::model;
 
@@ -28,20 +28,18 @@ class Signal final {
 public:
   using List = std::vector<Signal>;
 
-  Signal(Event::Kind kind, const Gate *gate):
-      _kind(kind), _gate(gate) {
-    assert(gate != nullptr);
-  }
+  Signal(Event::Kind kind, Gate *gate):
+    _kind(kind), _gate(gate) {}
 
   bool edge() const { return _kind == Event::POSEDGE || _kind == Event::NEGEDGE; }
   bool level() const { return _kind == Event::LEVEL0 || _kind == Event::LEVEL1; }
 
   Event::Kind kind() const { return _kind; }
-  const Gate* gate() const { return _gate; }
+  Gate* gate() const { return _gate; }
 
 private:
   Event::Kind _kind;
-  const Gate *_gate;
+  Gate *_gate;
 };
 
 std::ostream& operator <<(std::ostream &out, const Signal &signal);

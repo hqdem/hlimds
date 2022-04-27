@@ -85,7 +85,7 @@ bool Checker::equiv(const Netlist &lhs,
     imap.push_back({ lhsTrigger->id(), rhsTrigger->id() });
 
     assert(lhsTrigger->arity() == rhsTrigger->arity());
-    for (unsigned i = 0; i < lhsTrigger->arity(); i++) {
+    for (std::size_t i = 0; i < lhsTrigger->arity(); i++) {
       const Signal lhsInput = lhsTrigger->input(i);
       const Signal rhsInput = rhsTrigger->input(i);
 

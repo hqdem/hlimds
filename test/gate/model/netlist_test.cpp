@@ -20,12 +20,12 @@ static std::unique_ptr<Netlist> makeNet(GateSymbol gate,
   auto net = std::make_unique<Netlist>();
 
   for (unsigned i = 0; i < N; i++) {
-    const unsigned inputId = net->add_gate();
+    const unsigned inputId = net->addGate();
     const Signal input = net->always(inputId);
     inputs.push_back(input);
   }
 
-  outputId = net->add_gate(gate, inputs);
+  outputId = net->addGate(gate, inputs);
   return net;
 }
 
@@ -38,16 +38,16 @@ static std::unique_ptr<Netlist> makeNetn(GateSymbol gate,
 
   Signal::List andInputs;
   for (unsigned i = 0; i < N; i++) {
-    const unsigned inputId = net->add_gate();
+    const unsigned inputId = net->addGate();
     const Signal input = net->always(inputId);
     inputs.push_back(input);
 
-    const unsigned notGateId = net->add_gate(GateSymbol::NOT, { input });
+    const unsigned notGateId = net->addGate(GateSymbol::NOT, { input });
     const Signal andInput = net->always(notGateId);
     andInputs.push_back(andInput);
   }
 
-  outputId = net->add_gate(gate, andInputs);
+  outputId = net->addGate(gate, andInputs);
   return net;
 }
 

@@ -35,6 +35,9 @@ public:
   using Id = unsigned;
   using List = std::vector<Gate *>;
 
+  /// Returns the gate from the storage.
+  static Gate* get(Gate::Id id) { return _storage[id]; }
+
   Id id() const { return _id; }
   GateSymbol kind() const { return _kind; }
   std::size_t arity() const { return _inputs.size(); }
@@ -48,11 +51,16 @@ public:
   bool is_gate() const { return !is_source() && !is_trigger(); }
 
 private:
-  Gate(Id id):
-    _id(id), _kind(GateSymbol::NOP), _inputs() {}
+  Gate(GateSymbol gate, const Signal::List inputs):
+    _id(next_id()), _kind(gate), _inputs(inputs) {
+    // Register the gate in the storage.
+    if (_id >= _storage.size()) {
+      _storage.resize(_id + 1);
+      _storage[_id] = this;
+    }
+  }
 
-  Gate(Id id, GateSymbol gate, const Signal::List inputs):
-    _id(id), _kind(gate), _inputs(inputs) {}
+  Gate(): Gate(GateSymbol::NOP, {}) {}
 
   bool is_sequential() const {
     for (const auto &input: _inputs) {
@@ -73,6 +81,12 @@ private:
 
   GateSymbol _kind;
   Signal::List _inputs;
+
+  /// Returns the next gate identifier.
+  static Gate::Id next_id() { return _storage.size(); }
+
+  /// Common gate storage
+  static Gate::List _storage;
 };
 
 std::ostream& operator <<(std::ostream &out, const Gate &gate);

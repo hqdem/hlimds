@@ -75,8 +75,8 @@ bool Checker::equiv(const Netlist &lhs,
 
   // Cut triggers.
   for (const auto &[lhsTriggerId, rhsTriggerId] : tbind) {
-    const Gate *lhsTrigger = lhs.gate(lhsTriggerId);
-    const Gate *rhsTrigger = rhs.gate(rhsTriggerId);
+    const Gate *lhsTrigger = Gate::get(lhsTriggerId);
+    const Gate *rhsTrigger = Gate::get(rhsTriggerId);
 
     if (lhsTrigger->kind() != rhsTrigger->kind()) {
       return false;
@@ -130,7 +130,7 @@ bool Checker::equiv(const Netlist &lhs,
 
   // Connect the encoder inputs to the LHS-trigger D inputs' drivers.
   for (const auto &[lhsTriId, encInId] : lhsTriEncIn) {
-    connectTo.insert({ encInId, lhs.gate(lhsTriId)->input(0).gate()->id() });
+    connectTo.insert({ encInId, Gate::get(lhsTriId)->input(0).gate()->id() });
   }
 
   // Connect the LHS-trigger outputs to the decoder outputs.
@@ -140,7 +140,7 @@ bool Checker::equiv(const Netlist &lhs,
 
   // Append the encoder outputs and the RHS-trigger inputs to the outputs.
   for (const auto &[rhsTriId, encOutId] : rhsTriEncOut) {
-    omap.push_back({ encOutId, rhs.gate(rhsTriId)->input(0).gate()->id() });
+    omap.push_back({ encOutId, Gate::get(rhsTriId)->input(0).gate()->id() });
   }
 
   // Append the decoder inputs and the RHS-trigger outputs to to the inputs.

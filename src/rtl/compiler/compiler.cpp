@@ -79,12 +79,9 @@ Gate::Id Compiler::gate_id(const VNode *vnode, const Netlist &netlist) {
 void Compiler::alloc_gates(const VNode *vnode, Netlist &netlist) {
   assert(vnode != nullptr);
 
-  const auto base = gate_id(vnode, netlist);
   const auto size = vnode->var().type().width();
-
   for (unsigned i = 0; i < size; i++) {
-    assert(base + i == netlist.size());
-    netlist.add_gate(new Gate(base + i));
+    netlist.add_gate(new Gate());
   }
 }
 

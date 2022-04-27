@@ -12,30 +12,23 @@
 
 namespace eda::gate::model {
 
-Gate::List Netlist::_storage = []{
-  Gate::List storage;
-
-  storage.reserve(1024*1024);
-  return storage;
-}();
-
 void Netlist::set_gate(Gate::Id id, GateSymbol kind, const Signal::List &inputs) {
-  Gate *g = gate(id);
+  auto *gate = Gate::get(id);
 
-  if (g->is_source()) {
+  if (gate->is_source()) {
     auto i = std::find(_sources.begin(), _sources.end(), id);
     _sources.erase(i);
-  } else if (g->is_trigger()) {
+  } else if (gate->is_trigger()) {
     auto i = std::find(_triggers.begin(), _triggers.end(), id);
     _triggers.erase(i);
   }
 
-  g->set_kind(kind);
-  g->set_inputs(inputs);
+  gate->set_kind(kind);
+  gate->set_inputs(inputs);
 
-  if (g->is_source()) {
+  if (gate->is_source()) {
     _sources.push_back(id);
-  } else if (g->is_trigger()) {
+  } else if (gate->is_trigger()) {
     _triggers.push_back(id);
   }
 }

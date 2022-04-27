@@ -6,11 +6,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <iostream>
-
 #include "gate/model/gate.h"
 
+#include <iostream>
+
 namespace eda::gate::model {
+
+Gate::List Gate::_storage = []{
+  Gate::List storage;
+
+  storage.reserve(1024*1024);
+  return storage;
+}();
 
 static std::ostream& operator <<(std::ostream &out, const Signal::List &signals) {
   bool separator = false;

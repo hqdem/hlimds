@@ -42,28 +42,24 @@ public:
 
   std::size_t size() const { return _gates.size(); }
   const Gate::List& gates() const { return _gates; }
-  Gate* gate(Gate::Id id) const { return _storage[id]; }
 
   const GateIdList& sources() const { return _sources; }
   const GateIdList& triggers() const { return _triggers; }
 
-  Signal posedge(Gate::Id id) const { return Signal(Event::POSEDGE, gate(id)); }
-  Signal negedge(Gate::Id id) const { return Signal(Event::NEGEDGE, gate(id)); }
-  Signal level0(Gate::Id id) const { return Signal(Event::LEVEL0, gate(id)); }
-  Signal level1(Gate::Id id) const { return Signal(Event::LEVEL1, gate(id)); }
-  Signal always(Gate::Id id) const { return Signal(Event::ALWAYS, gate(id)); }
-
-  /// Returns the next gate identifier.
-  Gate::Id next_gate_id() const { return _storage.size(); }
+  Signal posedge(Gate::Id id) const { return Signal(Event::POSEDGE, Gate::get(id)); }
+  Signal negedge(Gate::Id id) const { return Signal(Event::NEGEDGE, Gate::get(id)); }
+  Signal level0(Gate::Id id) const { return Signal(Event::LEVEL0, Gate::get(id)); }
+  Signal level1(Gate::Id id) const { return Signal(Event::LEVEL1, Gate::get(id)); }
+  Signal always(Gate::Id id) const { return Signal(Event::ALWAYS, Gate::get(id)); }
 
   /// Adds a new source and returns its identifier.
   Gate::Id add_gate() {
-    return add_gate(new Gate(next_gate_id()));
+    return add_gate(new Gate());
   }
 
   /// Adds a new gate and returns its identifier.
   Gate::Id add_gate(GateSymbol kind, const Signal::List &inputs) {
-    return add_gate(new Gate(next_gate_id(), kind, inputs));
+    return add_gate(new Gate(kind, inputs));
   }
 
   /// Modifies the existing gate.
@@ -71,7 +67,6 @@ public:
 
 private:
   unsigned add_gate(Gate *gate) {
-    _storage.push_back(gate);
     _gates.push_back(gate);
 
     if (gate->is_source()) {
@@ -88,9 +83,6 @@ private:
 
   GateIdList _sources;
   GateIdList _triggers;
-
-  /// Common gate storage
-  static Gate::List _storage;
 };
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist);

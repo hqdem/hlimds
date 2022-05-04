@@ -11,8 +11,9 @@
 #include "gate/model/gate.h"
 #include "rtl/model/event.h"
 
+#include <cassert>
 #include <iostream>
-#include <utility>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::rtl::compiler {
@@ -28,51 +29,75 @@ namespace eda::gate::model {
 class Netlist final {
   friend class eda::rtl::compiler::Compiler;
 
+  #pragma pack(push,1)
+  struct GateFlags {
+    unsigned source : 1;  // If the gate is output
+    unsigned target : 1;  // If the gate is input
+    unsigned subnet : 30; // Subnet index plus one
+  };
+  #pragma pack(pop)
+
 public:
+  using List = std::vector<Netlist*>;
   using GateIdList = std::vector<Gate::Id>;
   using Value = std::vector<bool>;
   using In = std::vector<GateIdList>;
   using Out = GateIdList;
 
-  Netlist() { _gates.reserve(1024*1024); } 
+  Netlist() {
+    const std::size_t N = 1024*1024;
+
+    _gates.reserve(N);
+    _flags.reserve(N);
+  } 
 
   std::size_t size() const { return _gates.size(); }
   const Gate::List& gates() const { return _gates; }
 
-  const GateIdList& sources() const { return _sources; }
-  const GateIdList& triggers() const { return _triggers; }
+  bool isSource(Gate::Id id) const { return getFlags(id).source; }
+  bool isTarget(Gate::Id id) const { return getFlags(id).target; }
+
+  void setSource(Gate::Id id, bool value) { getFlags(id).source = value; }
+  void setTarget(Gate::Id id, bool value) { getFlags(id).target = value; }
 
   /// Adds a new source and returns its identifier.
   Gate::Id addGate() {
-    return addGate(new Gate());
+    return addGate(new Gate(), {});
   }
 
   /// Adds a new gate and returns its identifier.
   Gate::Id addGate(GateSymbol kind, const Signal::List &inputs) {
-    return addGate(new Gate(kind, inputs));
+    return addGate(new Gate(kind, inputs), {});
   }
 
   /// Modifies the existing gate.
-  void setGate(Gate::Id id, GateSymbol kind, const Signal::List &inputs);
-
-private:
-  Gate::Id addGate(Gate *gate) {
-    _gates.push_back(gate);
-
-    if (gate->isSource()) {
-      _sources.push_back(gate->id());
-    } else if (gate->isTrigger()) {
-      _triggers.push_back(gate->id());
-    }
-
-    return gate->id();
+  void setGate(Gate::Id id, GateSymbol kind, const Signal::List &inputs) {
+    auto *gate = Gate::get(id);
+    gate->setKind(kind);
+    gate->setInputs(inputs);
   }
 
-  /// Pointers to the common storage (see below).
-  Gate::List _gates;
+  /// Returns the gate flags.
+  GateFlags getFlags(Gate::Id id) const {
+    return _flags.find(id)->second;
+  }
 
-  GateIdList _sources;
-  GateIdList _triggers;
+  /// Returns the gate flags.
+  GateFlags& getFlags(Gate::Id id) {
+    return _flags.find(id)->second;
+  }
+
+private:
+  Gate::Id addGate(Gate *gate, GateFlags flags);
+  void addSubnet(Netlist *subnet);
+
+  /// Gates.
+  Gate::List _gates;
+  /// Flags.
+  std::unordered_map<Gate::Id, GateFlags> _flags;
+
+  /// Hierarchy.
+  List _subnets;
 };
 
 std::ostream& operator <<(std::ostream &out, const Netlist &netlist);

@@ -81,7 +81,7 @@ void Compiler::alloc_gates(const VNode *vnode, Netlist &netlist) {
 
   const auto size = vnode->var().type().width();
   for (unsigned i = 0; i < size; i++) {
-    netlist.addGate(new Gate());
+    netlist.addGate();
   }
 }
 

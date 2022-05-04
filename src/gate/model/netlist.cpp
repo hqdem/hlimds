@@ -12,24 +12,19 @@
 
 namespace eda::gate::model {
 
-void Netlist::setGate(Gate::Id id, GateSymbol kind, const Signal::List &inputs) {
-  auto *gate = Gate::get(id);
+Gate::Id Netlist::addGate(Gate *gate, GateFlags flags) {
+  _gates.push_back(gate);
+  _flags.insert({ gate->id(), flags });
 
-  if (gate->isSource()) {
-    auto i = std::find(_sources.begin(), _sources.end(), id);
-    _sources.erase(i);
-  } else if (gate->isTrigger()) {
-    auto i = std::find(_triggers.begin(), _triggers.end(), id);
-    _triggers.erase(i);
-  }
+  return gate->id();
+}
 
-  gate->setKind(kind);
-  gate->setInputs(inputs);
+void Netlist::addSubnet(Netlist *subnet) {
+  _subnets.push_back(subnet);
 
-  if (gate->isSource()) {
-    _sources.push_back(id);
-  } else if (gate->isTrigger()) {
-    _triggers.push_back(id);
+  GateFlags flags{ 0, 0, static_cast<unsigned>(_subnets.size()) };
+  for (auto *gate : subnet->gates()) {
+    addGate(gate, flags);
   }
 }
 

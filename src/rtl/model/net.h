@@ -26,9 +26,11 @@ namespace eda::rtl::model {
 class Net final {
 public:
   Net(): _created(false) {
-    _vnodes.reserve(1024*1024);
-    _pnodes.reserve(1024*1024);
-    _vnodes_temp.reserve(1024*1024);
+    const std::size_t N = 1024*1024;
+
+    _vnodes.reserve(N);
+    _pnodes.reserve(N);
+    _vnodes_temp.reserve(N);
   } 
 
   std::size_t vsize() const { return _vnodes.size(); }
@@ -114,7 +116,7 @@ private:
   PNode::List _pnodes;
  
   /// Maps a variable x to the <phi(x), {def(x), ..., def(x)}> structure.
-  std::unordered_map<std::string, std::pair<VNode *, VNode::List>> _vnodes_temp;
+  std::unordered_map<std::string, std::pair<VNode*, VNode::List>> _vnodes_temp;
 
   bool _created;
 };

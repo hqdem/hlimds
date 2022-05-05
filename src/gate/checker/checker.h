@@ -29,40 +29,41 @@ public:
   using GateBindList = std::vector<GateBind>;
   using GateIdMap = Context::GateIdMap;
 
-  /// Checks logic equivalence of two combinational nets.
-  bool equiv(const std::vector<GNet> &nets,
-             const GateIdMap *connectTo,
-	     const GateBindList &ibind,
-	     const GateBindList &obind) const;
+  /// Checks logic equivalence of two flat combinational nets.
+  bool areEqual(const GNet &lhs,
+                const GNet &rhs,
+	        const GateBindList &ibind,
+	        const GateBindList &obind) const;
 
-  /// Checks logic equivalence of two combinational nets.
-  bool equiv(const GNet &lhs,
-             const GNet &rhs,
-	     const GateBindList &ibind,
-	     const GateBindList &obind) const;
-
-  /// Checks logic equivalence of two sequential nets
+  /// Checks logic equivalence of two flat sequential nets
   /// with one-to-one correspondence of triggers.
-  bool equiv(const GNet &lhs,
-             const GNet &rhs,
-             const GateBindList &ibind,
-             const GateBindList &obind,
-             const GateBindList &tbind) const;
+  bool areEqual(const GNet &lhs,
+                const GNet &rhs,
+                const GateBindList &ibind,
+                const GateBindList &obind,
+                const GateBindList &tbind) const;
 
-  /// Checks logic equivalence of two sequential nets
+  /// Checks logic equivalence of two flat sequential nets
   /// with given correspondence of state encodings.
-  bool equiv(const GNet &lhs,
-             const GNet &rhs,
-             const GNet &enc,
-             const GNet &dec,
-             const GateBindList &ibind,
-             const GateBindList &obind,
-             const GateBindList &lhsTriEncIn,
-             const GateBindList &lhsTriDecOut,
-             const GateBindList &rhsTriEncOut,
-             const GateBindList &rhsTriDecIn) const;
+  bool areEqual(const GNet &lhs,
+                const GNet &rhs,
+                const GNet &enc,
+                const GNet &dec,
+                const GateBindList &ibind,
+                const GateBindList &obind,
+                const GateBindList &lhsTriEncIn,
+                const GateBindList &lhsTriDecOut,
+                const GateBindList &rhsTriEncOut,
+                const GateBindList &rhsTriDecIn) const;
 
 private:
+  /// Checks logic equivalence of two combinational nets.
+  bool areEqual(const std::vector<GNet> &nets,
+                const GateIdMap *connectTo,
+	        const GateBindList &ibind,
+	        const GateBindList &obind) const;
+
+  /// Handles an error (prints the diagnostics, etc.).
   void error(Context &context,
 	     const GateBindList &ibind,
 	     const GateBindList &obind) const;

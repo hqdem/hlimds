@@ -38,7 +38,7 @@ static bool checkEquivTest(unsigned N,
   omap.push_back({ lhsOutputId, rhsOutputId });
 
   Checker checker;
-  return checker.equiv(lhs, rhs, imap, omap); 
+  return checker.areEqual(lhs, rhs, imap, omap); 
 }
 
 bool checkNorNorTest(unsigned N) {

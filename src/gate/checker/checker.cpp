@@ -15,10 +15,10 @@ using namespace eda::gate::encoder;
 
 namespace eda::gate::checker {
 
-bool Checker::equiv(const std::vector<GNet> &nets,
-                    const Checker::GateIdMap *connectTo,
-                    const Checker::GateBindList &ibind,
-                    const Checker::GateBindList &obind) const {
+bool Checker::areEqual(const std::vector<GNet> &nets,
+                       const Checker::GateIdMap *connectTo,
+                       const Checker::GateBindList &ibind,
+                       const Checker::GateBindList &obind) const {
   Encoder encoder;
   encoder.setConnectTo(connectTo);
 
@@ -58,18 +58,18 @@ bool Checker::equiv(const std::vector<GNet> &nets,
   return verdict;
 }
 
-bool Checker::equiv(const GNet &lhs,
-                    const GNet &rhs,
-                    const Checker::GateBindList &ibind,
-                    const Checker::GateBindList &obind) const {
-  return equiv({ lhs, rhs }, nullptr, ibind, obind);
+bool Checker::areEqual(const GNet &lhs,
+                       const GNet &rhs,
+                       const Checker::GateBindList &ibind,
+                       const Checker::GateBindList &obind) const {
+  return areEqual({ lhs, rhs }, nullptr, ibind, obind);
 }
 
-bool Checker::equiv(const GNet &lhs,
-                    const GNet &rhs,
-                    const GateBindList &ibind,
-                    const GateBindList &obind,
-                    const GateBindList &tbind) const {
+bool Checker::areEqual(const GNet &lhs,
+                       const GNet &rhs,
+                       const GateBindList &ibind,
+                       const GateBindList &obind,
+                       const GateBindList &tbind) const {
   GateBindList imap(ibind);
   GateBindList omap(obind);
 
@@ -93,19 +93,19 @@ bool Checker::equiv(const GNet &lhs,
     }
   }
 
-  return equiv(lhs, rhs, imap, omap);
+  return areEqual(lhs, rhs, imap, omap);
 }
 
-bool Checker::equiv(const GNet &lhs,
-                    const GNet &rhs,
-                    const GNet &enc,
-                    const GNet &dec,
-                    const GateBindList &ibind,
-                    const GateBindList &obind,
-                    const GateBindList &lhsTriEncIn,
-                    const GateBindList &lhsTriDecOut,
-                    const GateBindList &rhsTriEncOut,
-                    const GateBindList &rhsTriDecIn) const {
+bool Checker::areEqual(const GNet &lhs,
+                       const GNet &rhs,
+                       const GNet &enc,
+                       const GNet &dec,
+                       const GateBindList &ibind,
+                       const GateBindList &obind,
+                       const GateBindList &lhsTriEncIn,
+                       const GateBindList &lhsTriDecOut,
+                       const GateBindList &rhsTriEncOut,
+                       const GateBindList &rhsTriDecIn) const {
   
   //=========================================//
   //                                         //
@@ -148,7 +148,7 @@ bool Checker::equiv(const GNet &lhs,
     imap.push_back({ decInId, rhsTriId });
   }
 
-  return equiv({ lhs, rhs, enc, dec }, &connectTo, imap, omap);
+  return areEqual({ lhs, rhs, enc, dec }, &connectTo, imap, omap);
 }
 
 void Checker::error(Context &context,

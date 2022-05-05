@@ -28,28 +28,28 @@ namespace eda::rtl::compiler {
 std::unique_ptr<GNet> Compiler::compile(const Net &net) {
   auto gnet = std::make_unique<GNet>();
 
-  _gates_id.clear();
+  _gateIds.clear();
 
   for (const auto *vnode: net.vnodes()) {
-    alloc_gates(vnode, *gnet);
+    allocGates(vnode, *gnet);
   }
 
   for (const auto *vnode: net.vnodes()) {
     switch (vnode->kind()) {
     case VNode::SRC:
-      synth_src(vnode, *gnet);
+      synthSrc(vnode, *gnet);
       break;
     case VNode::VAL:
-      synth_val(vnode, *gnet);
+      synthVal(vnode, *gnet);
       break;
     case VNode::FUN:
-      synth_fun(vnode, *gnet);
+      synthFun(vnode, *gnet);
       break;
     case VNode::MUX:
-      synth_mux(vnode, *gnet);
+      synthMux(vnode, *gnet);
       break;
     case VNode::REG:
-      synth_reg(vnode, *gnet);
+      synthReg(vnode, *gnet);
       break;
     }
   }
@@ -57,26 +57,26 @@ std::unique_ptr<GNet> Compiler::compile(const Net &net) {
   return gnet;
 }
 
-Gate::Id Compiler::gate_id(const VNode *vnode) const {
-  const auto i = _gates_id.find(vnode->name());
-  if (i != _gates_id.end()) {
+Gate::Id Compiler::gateId(const VNode *vnode) const {
+  const auto i = _gateIds.find(vnode->name());
+  if (i != _gateIds.end()) {
     return i->second;
   }
 
-  return -1u;
+  return Gate::Invalid;
 }
 
-Gate::Id Compiler::gate_id(const VNode *vnode, const GNet &net) {
-  const auto id = gate_id(vnode);
-  if (id != -1u) {
+Gate::Id Compiler::gateId(const VNode *vnode, const GNet &net) {
+  const auto id = gateId(vnode);
+  if (id != Gate::Invalid) {
     return id;
   }
 
-  _gates_id.insert({ vnode->name(), net.size() });
+  _gateIds.insert({ vnode->name(), net.size() });
   return net.size();
 }
 
-void Compiler::alloc_gates(const VNode *vnode, GNet &net) {
+void Compiler::allocGates(const VNode *vnode, GNet &net) {
   assert(vnode != nullptr);
 
   const auto size = vnode->var().type().width();
@@ -85,34 +85,34 @@ void Compiler::alloc_gates(const VNode *vnode, GNet &net) {
   }
 }
 
-void Compiler::synth_src(const VNode *vnode, GNet &net) {
+void Compiler::synthSrc(const VNode *vnode, GNet &net) {
   // Do nothing.
 }
 
-void Compiler::synth_val(const VNode *vnode, GNet &net) {
-  _library.synthesize(out(vnode), vnode->value(), net);
+void Compiler::synthVal(const VNode *vnode, GNet &net) {
+  _library.synth(out(vnode), vnode->value(), net);
 }
 
-void Compiler::synth_fun(const VNode *vnode, GNet &net) {
+void Compiler::synthFun(const VNode *vnode, GNet &net) {
   assert(_library.supports(vnode->func()));
-  _library.synthesize(vnode->func(), out(vnode), in(vnode), net);
+  _library.synth(vnode->func(), out(vnode), in(vnode), net);
 }
 
-void Compiler::synth_mux(const VNode *vnode, GNet &net) {
+void Compiler::synthMux(const VNode *vnode, GNet &net) {
   assert(_library.supports(FuncSymbol::MUX));
-  _library.synthesize(FuncSymbol::MUX, out(vnode), in(vnode), net);
+  _library.synth(FuncSymbol::MUX, out(vnode), in(vnode), net);
 }
 
-void Compiler::synth_reg(const VNode *vnode, GNet &net) {
+void Compiler::synthReg(const VNode *vnode, GNet &net) {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
   assert(vnode->esize() == 1 || vnode->esize() == 2);
 
   Signal::List control;
   for (const auto &event: vnode->events()) {
-    control.push_back(Signal(event.kind(), gate_id(event.node())));
+    control.push_back(Signal(event.kind(), gateId(event.node())));
   }
 
-  _library.synthesize(out(vnode), in(vnode), control, net);
+  _library.synth(out(vnode), in(vnode), control, net);
 }
 
 GNet::In Compiler::in(const VNode *vnode) {
@@ -125,9 +125,9 @@ GNet::In Compiler::in(const VNode *vnode) {
 }
 
 GNet::Out Compiler::out(const VNode *vnode) {
-  const auto base = gate_id(vnode);
+  const auto base = gateId(vnode);
   const auto size = vnode->var().type().width();
-  assert(base != -1u);
+  assert(base != Gate::Invalid);
 
   GNet::Out out(size);
   for (unsigned i = 0; i < size; i++) {

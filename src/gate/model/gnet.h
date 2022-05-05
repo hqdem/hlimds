@@ -31,9 +31,9 @@ class GNet final {
 
   #pragma pack(push,1)
   struct GateFlags {
-    unsigned source : 1;  // If the gate is output
-    unsigned target : 1;  // If the gate is input
-    unsigned subnet : 30; // Subnet index plus one
+    unsigned source : 1;  // Gate is output
+    unsigned target : 1;  // Gate is input
+    unsigned subnet : 30; // Subnet index plus 1
   };
   #pragma pack(pop)
 
@@ -45,14 +45,20 @@ public:
   using Out = GateIdList;
 
   GNet() {
-    const std::size_t N = 1024*1024;
+    const std::size_t M = 1024;
+    const std::size_t N = M*M;
 
     _gates.reserve(N);
     _flags.reserve(N);
-  } 
+
+    _subnets.reserve(M);
+  }
 
   std::size_t size() const { return _gates.size(); }
   const Gate::List& gates() const { return _gates; }
+
+  std::size_t nSubnets() const { return _subnets.size(); }
+  const List& subnets() const {return _subnets; }
 
   bool isSource(Gate::Id id) const { return getFlags(id).source; }
   bool isTarget(Gate::Id id) const { return getFlags(id).target; }

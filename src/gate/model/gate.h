@@ -38,6 +38,8 @@ public:
   using Link = std::pair<Id, std::size_t>;
   using LinkList = std::vector<Link>;
 
+  static constexpr Id Invalid = -1u; 
+
   /// Returns the gate w/ the given id from the storage.
   static Gate* get(Gate::Id id) { return _storage[id]; }
 

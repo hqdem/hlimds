@@ -38,14 +38,21 @@ struct FLibrary {
   virtual bool supports(FuncSymbol func) const = 0;
 
   /// Synthesize the net for the given value.
-  virtual void synthesize(
-    const Out &out, const Value &value, GNet &net) = 0;
+  virtual void synth(const Out &out,
+                     const Value &value,
+                     GNet &net) = 0;
+
   /// Synthesize the net for the given function.
-  virtual void synthesize(
-    FuncSymbol func, const Out &out, const In &in, GNet &net) = 0;
+  virtual void synth(FuncSymbol func,
+                     const Out &out,
+                     const In &in,
+                     GNet &net) = 0;
+
   /// Synthesize the net for the given register.
-  virtual void synthesize(
-    const Out &out, const In &in, const Signal::List &control, GNet &net) = 0;
+  virtual void synth(const Out &out,
+                     const In &in,
+                     const Signal::List &control,
+                     GNet &net) = 0;
 
   virtual ~FLibrary() {} 
 };
@@ -53,68 +60,80 @@ struct FLibrary {
 class FLibraryDefault final: public FLibrary {
 public:
   static FLibrary& get() {
-    if (_instance == nullptr) {
-      _instance = std::unique_ptr<FLibrary>(new FLibraryDefault());
-    }
-    return *_instance;
+    static auto instance = std::unique_ptr<FLibrary>(new FLibraryDefault());
+    return *instance;
   }
 
   bool supports(FuncSymbol func) const override;
 
-  void synthesize(
-      const Out &out, const Value &value, GNet &net) override;
-  void synthesize(
-      FuncSymbol func, const Out &out, const In &in, GNet &net) override;
-  void synthesize(
-      const Out &out, const In &in, const Signal::List &control, GNet &net) override;
+  void synth(const Out &out,
+             const Value &value,
+             GNet &net) override;
+
+  void synth(FuncSymbol func,
+             const Out &out,
+             const In &in,
+             GNet &net) override;
+
+  void synth(const Out &out,
+             const In &in,
+             const Signal::List &control,
+             GNet &net) override;
 
 private:
   FLibraryDefault() {}
   ~FLibraryDefault() override {}
 
-  static void synth_add(const Out &out, const In &in, GNet &net);
-  static void synth_sub(const Out &out, const In &in, GNet &net);
-  static void synth_mux(const Out &out, const In &in, GNet &net);
+  static void synthAdd(const Out &out, const In &in, GNet &net);
+  static void synthSub(const Out &out, const In &in, GNet &net);
+  static void synthMux(const Out &out, const In &in, GNet &net);
 
-  static void synth_adder(const Out &out, const In &in, bool plus_one, GNet &net);
-  static void synth_adder(unsigned z, unsigned c_out,
-    unsigned x, unsigned y, unsigned c_in, GNet &net);
+  static void synthAdder(const Out &out, const In &in, bool plusOne, GNet &net);
 
-  static Signal invert_if_negative(const Signal &event, GNet &net);
+  static void synthAdder(Gate::Id z,
+                         Gate::Id carryOut,
+                         Gate::Id x,
+                         Gate::Id y,
+                         Gate::Id carryIn,
+                         GNet &net);
+
+  static Signal invertIfNegative(const Signal &event, GNet &net);
 
   template<GateSymbol G>
-  static void synth_unary_bitwise_op (const Out &out, const In &in, GNet &net);
+  static void synthUnaryBitwiseOp(const Out &out, const In &in, GNet &net);
 
   template<GateSymbol G>
-  static void synth_binary_bitwise_op(const Out &out, const In &in, GNet &net);
-
-  static std::unique_ptr<FLibrary> _instance;
+  static void synthBinaryBitwiseOp(const Out &out, const In &in, GNet &net);
 };
 
 template<GateSymbol G>
-void FLibraryDefault::synth_unary_bitwise_op(const Out &out, const In &in, GNet &net) {
+void FLibraryDefault::synthUnaryBitwiseOp(const Out &out,
+                                          const In &in,
+                                          GNet &net) {
   assert(in.size() == 1);
 
-  const GateIdList &x = in[0];
+  const auto &x = in[0];
   assert(out.size() == x.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = Signal::always(x[i]);
+    auto xi = Signal::always(x[i]);
     net.setGate(out[i], G, { xi });
   }
 }
 
 template<GateSymbol G>
-void FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, GNet &net) {
+void FLibraryDefault::synthBinaryBitwiseOp(const Out &out,
+                                           const In &in,
+                                           GNet &net) {
   assert(in.size() == 2);
 
-  const GateIdList &x = in[0];
-  const GateIdList &y = in[1];
+  const auto &x = in[0];
+  const auto &y = in[1];
   assert(x.size() == y.size() && out.size() == x.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = Signal::always(x[i]);
-    Signal yi = Signal::always(y[i]);
+    auto xi = Signal::always(x[i]);
+    auto yi = Signal::always(y[i]);
     net.setGate(out[i], G, { xi, yi });
   }
 }

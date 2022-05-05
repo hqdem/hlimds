@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/encoder/context.h"
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 
 #include "minisat/core/Solver.h"
 
@@ -26,7 +26,7 @@ namespace eda::gate::encoder {
  */
 class Encoder final {
 public:
-  void encode(const Netlist &net, uint16_t version);
+  void encode(const GNet &net, uint16_t version);
   void encode(const Gate &gate, uint16_t version);
 
   // Combinational gates.

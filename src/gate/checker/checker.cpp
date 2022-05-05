@@ -15,7 +15,7 @@ using namespace eda::gate::encoder;
 
 namespace eda::gate::checker {
 
-bool Checker::equiv(const std::vector<Netlist> &nets,
+bool Checker::equiv(const std::vector<GNet> &nets,
                     const Checker::GateIdMap *connectTo,
                     const Checker::GateBindList &ibind,
                     const Checker::GateBindList &obind) const {
@@ -30,7 +30,7 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
     encoder.encodeBuf(y, x, true);
   }
 
-  // Encode the netlists.
+  // Encode the nets.
   for (const auto &net : nets) {
     encoder.encode(net, 0);
   }
@@ -58,15 +58,15 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
   return verdict;
 }
 
-bool Checker::equiv(const Netlist &lhs,
-                    const Netlist &rhs,
+bool Checker::equiv(const GNet &lhs,
+                    const GNet &rhs,
                     const Checker::GateBindList &ibind,
                     const Checker::GateBindList &obind) const {
   return equiv({ lhs, rhs }, nullptr, ibind, obind);
 }
 
-bool Checker::equiv(const Netlist &lhs,
-                    const Netlist &rhs,
+bool Checker::equiv(const GNet &lhs,
+                    const GNet &rhs,
                     const GateBindList &ibind,
                     const GateBindList &obind,
                     const GateBindList &tbind) const {
@@ -96,10 +96,10 @@ bool Checker::equiv(const Netlist &lhs,
   return equiv(lhs, rhs, imap, omap);
 }
 
-bool Checker::equiv(const Netlist &lhs,
-                    const Netlist &rhs,
-                    const Netlist &enc,
-                    const Netlist &dec,
+bool Checker::equiv(const GNet &lhs,
+                    const GNet &rhs,
+                    const GNet &enc,
+                    const GNet &dec,
                     const GateBindList &ibind,
                     const GateBindList &obind,
                     const GateBindList &lhsTriEncIn,

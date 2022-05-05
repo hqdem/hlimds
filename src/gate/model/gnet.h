@@ -23,10 +23,10 @@ namespace eda::rtl::compiler {
 namespace eda::gate::model {
 
 /**
- * \brief Represents a gate-level netlist.
+ * \brief Represents a gate-level net.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
-class Netlist final {
+class GNet final {
   friend class eda::rtl::compiler::Compiler;
 
   #pragma pack(push,1)
@@ -38,13 +38,13 @@ class Netlist final {
   #pragma pack(pop)
 
 public:
-  using List = std::vector<Netlist*>;
+  using List = std::vector<GNet*>;
   using GateIdList = std::vector<Gate::Id>;
   using Value = std::vector<bool>;
   using In = std::vector<GateIdList>;
   using Out = GateIdList;
 
-  Netlist() {
+  GNet() {
     const std::size_t N = 1024*1024;
 
     _gates.reserve(N);
@@ -89,7 +89,7 @@ public:
 
 private:
   Gate::Id addGate(Gate *gate, GateFlags flags);
-  void addSubnet(Netlist *subnet);
+  void addSubnet(GNet *subnet);
 
   /// Gates.
   Gate::List _gates;
@@ -100,6 +100,6 @@ private:
   List _subnets;
 };
 
-std::ostream& operator <<(std::ostream &out, const Netlist &netlist);
+std::ostream& operator <<(std::ostream &out, const GNet &net);
 
 } // namespace eda::gate::model

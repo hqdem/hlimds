@@ -6,20 +6,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/netlist.h"
-
-#include <algorithm>
+#include "gate/model/gnet.h"
 
 namespace eda::gate::model {
 
-Gate::Id Netlist::addGate(Gate *gate, GateFlags flags) {
+Gate::Id GNet::addGate(Gate *gate, GateFlags flags) {
   _gates.push_back(gate);
   _flags.insert({ gate->id(), flags });
 
   return gate->id();
 }
 
-void Netlist::addSubnet(Netlist *subnet) {
+void GNet::addSubnet(GNet *subnet) {
   _subnets.push_back(subnet);
 
   GateFlags flags{ 0, 0, static_cast<unsigned>(_subnets.size()) };
@@ -28,8 +26,8 @@ void Netlist::addSubnet(Netlist *subnet) {
   }
 }
 
-std::ostream& operator <<(std::ostream &out, const Netlist &netlist) {
-  for (const auto *gate: netlist.gates()) {
+std::ostream& operator <<(std::ostream &out, const GNet &net) {
+  for (const auto *gate: net.gates()) {
     out << *gate << std::endl;
   }
   return out;

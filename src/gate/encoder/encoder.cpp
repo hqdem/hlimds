@@ -12,7 +12,7 @@
 
 namespace eda::gate::encoder {
 
-void Encoder::encode(const Netlist &net, uint16_t version) {
+void Encoder::encode(const GNet &net, uint16_t version) {
   for (const auto *gate: net.gates()) {
     encode(*gate, version);
   }

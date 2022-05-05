@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 #include "rtl/library/flibrary.h"
 
 #include <cassert>
@@ -22,7 +22,7 @@ bool FLibraryDefault::supports(FuncSymbol func) const {
   return true;
 }
 
-void FLibraryDefault::synthesize(const Out &out, const Value &value, Netlist &net) {
+void FLibraryDefault::synthesize(const Out &out, const Value &value, GNet &net) {
   assert(out.size() == value.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
@@ -30,7 +30,7 @@ void FLibraryDefault::synthesize(const Out &out, const Value &value, Netlist &ne
   }
 }
 
-void FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, GNet &net) {
   switch (func) {
   case FuncSymbol::NOP:
     synth_unary_bitwise_op<GateSymbol::NOP>(out, in, net);
@@ -62,7 +62,7 @@ void FLibraryDefault::synthesize(FuncSymbol func, const Out &out, const In &in, 
 }
 
 void FLibraryDefault::synthesize(
-    const Out &out, const In &in, const Signal::List &control, Netlist &net) {
+    const Out &out, const In &in, const Signal::List &control, GNet &net) {
   assert(control.size() == 1 || control.size() == 2);
   assert(control.size() == in.size());
 
@@ -87,11 +87,11 @@ void FLibraryDefault::synthesize(
   }
 }
 
-void FLibraryDefault::synth_add(const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synth_add(const Out &out, const In &in, GNet &net) {
   synth_adder(out, in, false, net);
 }
 
-void FLibraryDefault::synth_sub(const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synth_sub(const Out &out, const In &in, GNet &net) {
   // The two's complement code: (x - y) == (x + ~y + 1).
   const GateIdList &x = in[0];
   const GateIdList &y = in[1];
@@ -105,7 +105,7 @@ void FLibraryDefault::synth_sub(const Out &out, const In &in, Netlist &net) {
   synth_adder(out, { x, temp }, true, net);
 }
 
-void FLibraryDefault::synth_adder(const Out &out, const In &in, bool plus_one, Netlist &net) {
+void FLibraryDefault::synth_adder(const Out &out, const In &in, bool plus_one, GNet &net) {
   assert(in.size() == 2);
 
   const GateIdList &x = in[0];
@@ -123,7 +123,7 @@ void FLibraryDefault::synth_adder(const Out &out, const In &in, bool plus_one, N
 }
 
 void FLibraryDefault::synth_adder(unsigned z, unsigned c_out,
-    unsigned x, unsigned y, unsigned c_in, Netlist &net) {
+    unsigned x, unsigned y, unsigned c_in, GNet &net) {
   Signal x_wire = Signal::always(x);
   Signal y_wire = Signal::always(y);
   Signal c_wire = Signal::always(c_in);
@@ -140,7 +140,7 @@ void FLibraryDefault::synth_adder(unsigned z, unsigned c_out,
   }
 }
 
-void FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synth_mux(const Out &out, const In &in, GNet &net) {
   assert(in.size() >= 4 && (in.size() & 1) == 0);
   const std::size_t n = in.size() / 2;
 
@@ -164,7 +164,7 @@ void FLibraryDefault::synth_mux(const Out &out, const In &in, Netlist &net) {
   }
 }
 
-Signal FLibraryDefault::invert_if_negative(const Signal &event, Netlist &net) {
+Signal FLibraryDefault::invert_if_negative(const Signal &event, GNet &net) {
   switch (event.kind()) {
   case Event::POSEDGE:
     // Leave the clock signal unchanged.

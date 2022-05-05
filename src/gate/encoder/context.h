@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 
 #include "minisat/core/Solver.h"
 
@@ -20,7 +20,7 @@ using namespace eda::gate::model;
 namespace eda::gate::encoder {
 
 /**
- * \brief Logic formula representing a gate-level netlist.
+ * \brief Logic formula representing a gate-level net.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Context final {

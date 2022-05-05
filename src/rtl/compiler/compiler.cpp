@@ -6,17 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <cassert>
-#include <cstddef>
-#include <memory>
-
 #include "gate/model/gate.h"
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
 #include "rtl/model/vnode.h"
 #include "util/string.h"
+
+#include <cassert>
+#include <cstddef>
+#include <memory>
 
 using namespace eda::gate::model;
 using namespace eda::rtl::library;
@@ -25,36 +25,36 @@ using namespace eda::utils;
 
 namespace eda::rtl::compiler {
 
-std::unique_ptr<Netlist> Compiler::compile(const Net &net) {
-  std::unique_ptr<Netlist> netlist = std::make_unique<Netlist>();
+std::unique_ptr<GNet> Compiler::compile(const Net &net) {
+  auto gnet = std::make_unique<GNet>();
 
   _gates_id.clear();
 
   for (const auto *vnode: net.vnodes()) {
-    alloc_gates(vnode, *netlist);
+    alloc_gates(vnode, *gnet);
   }
 
   for (const auto *vnode: net.vnodes()) {
     switch (vnode->kind()) {
     case VNode::SRC:
-      synth_src(vnode, *netlist);
+      synth_src(vnode, *gnet);
       break;
     case VNode::VAL:
-      synth_val(vnode, *netlist);
+      synth_val(vnode, *gnet);
       break;
     case VNode::FUN:
-      synth_fun(vnode, *netlist);
+      synth_fun(vnode, *gnet);
       break;
     case VNode::MUX:
-      synth_mux(vnode, *netlist);
+      synth_mux(vnode, *gnet);
       break;
     case VNode::REG:
-      synth_reg(vnode, *netlist);
+      synth_reg(vnode, *gnet);
       break;
     }
   }
 
-  return netlist;
+  return gnet;
 }
 
 Gate::Id Compiler::gate_id(const VNode *vnode) const {
@@ -66,44 +66,44 @@ Gate::Id Compiler::gate_id(const VNode *vnode) const {
   return -1u;
 }
 
-Gate::Id Compiler::gate_id(const VNode *vnode, const Netlist &netlist) {
+Gate::Id Compiler::gate_id(const VNode *vnode, const GNet &net) {
   const auto id = gate_id(vnode);
   if (id != -1u) {
     return id;
   }
 
-  _gates_id.insert({ vnode->name(), netlist.size() });
-  return netlist.size();
+  _gates_id.insert({ vnode->name(), net.size() });
+  return net.size();
 }
 
-void Compiler::alloc_gates(const VNode *vnode, Netlist &netlist) {
+void Compiler::alloc_gates(const VNode *vnode, GNet &net) {
   assert(vnode != nullptr);
 
   const auto size = vnode->var().type().width();
   for (unsigned i = 0; i < size; i++) {
-    netlist.addGate();
+    net.addGate();
   }
 }
 
-void Compiler::synth_src(const VNode *vnode, Netlist &netlist) {
+void Compiler::synth_src(const VNode *vnode, GNet &net) {
   // Do nothing.
 }
 
-void Compiler::synth_val(const VNode *vnode, Netlist &netlist) {
-  _library.synthesize(out(vnode), vnode->value(), netlist);
+void Compiler::synth_val(const VNode *vnode, GNet &net) {
+  _library.synthesize(out(vnode), vnode->value(), net);
 }
 
-void Compiler::synth_fun(const VNode *vnode, Netlist &netlist) {
+void Compiler::synth_fun(const VNode *vnode, GNet &net) {
   assert(_library.supports(vnode->func()));
-  _library.synthesize(vnode->func(), out(vnode), in(vnode), netlist);
+  _library.synthesize(vnode->func(), out(vnode), in(vnode), net);
 }
 
-void Compiler::synth_mux(const VNode *vnode, Netlist &netlist) {
+void Compiler::synth_mux(const VNode *vnode, GNet &net) {
   assert(_library.supports(FuncSymbol::MUX));
-  _library.synthesize(FuncSymbol::MUX, out(vnode), in(vnode), netlist);
+  _library.synthesize(FuncSymbol::MUX, out(vnode), in(vnode), net);
 }
 
-void Compiler::synth_reg(const VNode *vnode, Netlist &netlist) {
+void Compiler::synth_reg(const VNode *vnode, GNet &net) {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
   assert(vnode->esize() == 1 || vnode->esize() == 2);
 
@@ -112,11 +112,11 @@ void Compiler::synth_reg(const VNode *vnode, Netlist &netlist) {
     control.push_back(Signal(event.kind(), gate_id(event.node())));
   }
 
-  _library.synthesize(out(vnode), in(vnode), control, netlist);
+  _library.synthesize(out(vnode), in(vnode), control, net);
 }
 
-Netlist::In Compiler::in(const VNode *vnode) {
-  Netlist::In in(vnode->arity());
+GNet::In Compiler::in(const VNode *vnode) {
+  GNet::In in(vnode->arity());
   for (std::size_t i = 0; i < vnode->arity(); i++) {
     in[i] = out(vnode->input(i));
   }
@@ -124,12 +124,12 @@ Netlist::In Compiler::in(const VNode *vnode) {
   return in;
 }
 
-Netlist::Out Compiler::out(const VNode *vnode) {
+GNet::Out Compiler::out(const VNode *vnode) {
   const auto base = gate_id(vnode);
   const auto size = vnode->var().type().width();
   assert(base != -1u);
 
-  Netlist::Out out(size);
+  GNet::Out out(size);
   for (unsigned i = 0; i < size; i++) {
     out[i] = base + i;
   }

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/encoder/encoder.h"
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 
 #include <vector>
 
@@ -24,37 +24,37 @@ namespace eda::gate::checker {
  */
 class Checker final {
 public:
-  using GateIdList = Netlist::GateIdList;
+  using GateIdList = GNet::GateIdList;
   using GateBind = std::pair<Gate::Id, Gate::Id>;
   using GateBindList = std::vector<GateBind>;
   using GateIdMap = Context::GateIdMap;
 
-  /// Checks logic equivalence of two combinational netlists.
-  bool equiv(const std::vector<Netlist> &nets,
+  /// Checks logic equivalence of two combinational nets.
+  bool equiv(const std::vector<GNet> &nets,
              const GateIdMap *connectTo,
 	     const GateBindList &ibind,
 	     const GateBindList &obind) const;
 
-  /// Checks logic equivalence of two combinational netlists.
-  bool equiv(const Netlist &lhs,
-             const Netlist &rhs,
+  /// Checks logic equivalence of two combinational nets.
+  bool equiv(const GNet &lhs,
+             const GNet &rhs,
 	     const GateBindList &ibind,
 	     const GateBindList &obind) const;
 
-  /// Checks logic equivalence of two sequential netlists
+  /// Checks logic equivalence of two sequential nets
   /// with one-to-one correspondence of triggers.
-  bool equiv(const Netlist &lhs,
-             const Netlist &rhs,
+  bool equiv(const GNet &lhs,
+             const GNet &rhs,
              const GateBindList &ibind,
              const GateBindList &obind,
              const GateBindList &tbind) const;
 
-  /// Checks logic equivalence of two sequential netlists
+  /// Checks logic equivalence of two sequential nets
   /// with given correspondence of state encodings.
-  bool equiv(const Netlist &lhs,
-             const Netlist &rhs,
-             const Netlist &enc,
-             const Netlist &dec,
+  bool equiv(const GNet &lhs,
+             const GNet &rhs,
+             const GNet &enc,
+             const GNet &dec,
              const GateBindList &ibind,
              const GateBindList &obind,
              const GateBindList &lhsTriEncIn,

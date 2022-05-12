@@ -17,7 +17,7 @@
 
 using namespace eda::gate::model;
 
-namespace eda::gate::encoder {
+namespace eda::gate::debugger {
 
 /**
  * \brief Logic formula representing a gate-level net.
@@ -128,4 +128,4 @@ private:
   Solver _solver;
 };
 
-} // namespace eda::gate::encoder
+} // namespace eda::gate::debugger

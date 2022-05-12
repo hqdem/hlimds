@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/encoder/context.h"
+#include "gate/debugger/context.h"
 #include "gate/model/gnet.h"
 
 #include "minisat/core/Solver.h"
@@ -18,7 +18,7 @@
 
 using namespace eda::gate::model;
 
-namespace eda::gate::encoder {
+namespace eda::gate::debugger {
 
 /**
  * \brief Implements a Tseitin encoder of a gate-level netlist.
@@ -94,4 +94,4 @@ private:
   Context _context;
 };
 
-} // namespace eda::gate::encoder
+} // namespace eda::gate::debugger

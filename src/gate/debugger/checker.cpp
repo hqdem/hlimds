@@ -6,14 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/encoder/encoder.h"
-#include "gate/checker/checker.h"
+#include "gate/debugger/checker.h"
+#include "gate/debugger/encoder.h"
 
 #include <cassert>
 
-using namespace eda::gate::encoder;
-
-namespace eda::gate::checker {
+namespace eda::gate::debugger {
 
 bool Checker::areEqual(const std::vector<GNet> &nets,
                        const Checker::GateIdMap *connectTo,
@@ -180,4 +178,4 @@ void Checker::error(Context &context,
   std::cout << std::endl;
 }
 
-} // namespace eda::gate::checker
+} // namespace eda::gate::debugger

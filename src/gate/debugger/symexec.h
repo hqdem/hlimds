@@ -8,13 +8,12 @@
 
 #pragma once
 
-#include "gate/encoder/context.h"
+#include "gate/debugger/context.h"
 #include "gate/model/gnet.h"
 
-using namespace eda::gate::encoder;
 using namespace eda::gate::model;
 
-namespace eda::gate::symexec {
+namespace eda::gate::debugger {
 
 /**
  * \brief Implements a symbolic executor of gate-level nets.
@@ -37,4 +36,4 @@ private:
   Encoder _encoder;
 };
 
-} // namespace eda::gate::symexec
+} // namespace eda::gate::debugger

@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include "gate/encoder/encoder.h"
+#include "gate/debugger/encoder.h"
 #include "gate/model/gnet.h"
 
 #include <vector>
 
-using namespace eda::gate::encoder;
 using namespace eda::gate::model;
 
-namespace eda::gate::checker {
+namespace eda::gate::debugger {
 
 /**
  * \brief Implements a logic equivalence checker (LEC).
@@ -69,4 +68,4 @@ private:
 	     const GateBindList &obind) const;
 };
 
-} // namespace eda::gate::checker
+} // namespace eda::gate::debugger

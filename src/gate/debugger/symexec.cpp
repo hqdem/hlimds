@@ -6,14 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/encoder/encoder.h"
-#include "gate/symexec/symexec.h"
+#include "gate/debugger/encoder.h"
+#include "gate/debugger/symexec.h"
 
 #include <cassert>
 
-using namespace eda::gate::encoder;
-
-namespace eda::gate::symexec {
+namespace eda::gate::debugger {
 
 void SymbolicExecutor::exec(const GNet &net) {
   _encoder.encode(net, _cycle);
@@ -26,4 +24,4 @@ void SymbolicExecutor::exec(const GNet &net, unsigned cycles) {
   }
 }
 
-} // namespace eda::gate::symexec
+} // namespace eda::gate::debugger

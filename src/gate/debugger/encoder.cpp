@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/encoder/encoder.h"
+#include "gate/debugger/encoder.h"
 
 #include <cassert>
 
-namespace eda::gate::encoder {
+namespace eda::gate::debugger {
 
 void Encoder::encode(const GNet &net, uint16_t version) {
   for (const auto *gate: net.gates()) {
@@ -213,4 +213,4 @@ void Encoder::encodeMux(uint64_t y, uint64_t c, uint64_t x1, uint64_t x2, bool s
   encodeAnd(t2, c, x2, true, false, true);
 }
 
-} // namespace eda::gate::encoder
+} // namespace eda::gate::debugger

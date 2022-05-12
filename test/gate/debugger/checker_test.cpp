@@ -8,11 +8,11 @@
 
 #include "gtest/gtest.h"
 
-#include "gate/checker/checker.h"
+#include "gate/debugger/checker.h"
 
 #include "gate/model/gnet_test.h"
 
-using namespace eda::gate::checker;
+using namespace eda::gate::debugger;
 using namespace eda::gate::model;
 
 static bool checkEquivTest(unsigned N,

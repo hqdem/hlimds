@@ -31,9 +31,11 @@ enum FuncSymbol {
   ADD,
   /// Subtraction: OUT = X - Y.
   SUB,
-  // TODO: Add more functions.
   /// Multiplexor: OUT = MUX(C[1], ..., C[n]; X[1], ..., X[n]).
   MUX
+
+  // TODO: Add more built-in functions.
+  // TODO: Add user-defined (library) functions.
 };
 
 std::ostream& operator <<(std::ostream &out, FuncSymbol func);

@@ -8,24 +8,23 @@
 
 #pragma once
 
-#include "gate/encoder/context.h"
-#include "gate/model/netlist.h"
+#include "gate/debugger/context.h"
+#include "gate/model/gnet.h"
 
-using namespace eda::gate::encoder;
 using namespace eda::gate::model;
 
-namespace eda::gate::symexec {
+namespace eda::gate::debugger {
 
 /**
- * \brief Implements a symbolic executor of gate-level netlists.
+ * \brief Implements a symbolic executor of gate-level nets.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class SymbolicExecutor final {
 public:
   SymbolicExecutor(): _cycle(1 /* should be positive */) {}
 
-  void exec(const Netlist &net);
-  void exec(const Netlist &net, unsigned cycles);
+  void exec(const GNet &net);
+  void exec(const GNet &net, unsigned cycles);
 
   void tick() { _cycle++; }
 
@@ -37,4 +36,4 @@ private:
   Encoder _encoder;
 };
 
-} // namespace eda::gate::symexec
+} // namespace eda::gate::debugger

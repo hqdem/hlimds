@@ -21,7 +21,7 @@ namespace eda::rtl::compiler {
 
 namespace eda::gate::model {
 
-class Netlist;
+class GNet;
 
 /**
  * \brief Represents a logic gate or a flip-flop/latch.
@@ -29,7 +29,7 @@ class Netlist;
  */
 class Gate final {
   // To create gates when synthesizing netlists.
-  friend class Netlist;
+  friend class GNet;
   friend class eda::rtl::compiler::Compiler;
 
 public:
@@ -37,6 +37,8 @@ public:
   using List = std::vector<Gate*>;
   using Link = std::pair<Id, std::size_t>;
   using LinkList = std::vector<Link>;
+
+  static constexpr Id Invalid = -1u; 
 
   /// Returns the gate w/ the given id from the storage.
   static Gate* get(Gate::Id id) { return _storage[id]; }

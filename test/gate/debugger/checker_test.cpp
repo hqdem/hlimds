@@ -8,18 +8,18 @@
 
 #include "gtest/gtest.h"
 
-#include "gate/checker/checker.h"
+#include "gate/debugger/checker.h"
 
-#include "gate/model/netlist_test.h"
+#include "gate/model/gnet_test.h"
 
-using namespace eda::gate::checker;
+using namespace eda::gate::debugger;
 using namespace eda::gate::model;
 
 static bool checkEquivTest(unsigned N,
-                           const Netlist &lhs,
+                           const GNet &lhs,
                            const Signal::List &lhsInputs,
                            Gate::Id lhsOutputId,
-                           const Netlist &rhs,
+                           const GNet &rhs,
                            const Signal::List &rhsInputs,
                            Gate::Id rhsOutputId) {
   Checker::GateBindList imap, omap;
@@ -38,7 +38,7 @@ static bool checkEquivTest(unsigned N,
   omap.push_back({ lhsOutputId, rhsOutputId });
 
   Checker checker;
-  return checker.equiv(lhs, rhs, imap, omap); 
+  return checker.areEqual(lhs, rhs, imap, omap); 
 }
 
 bool checkNorNorTest(unsigned N) {
@@ -86,14 +86,14 @@ bool checkNorAndTest(unsigned N) {
                            *rhs, rhsInputs, rhsOutputId);
 }
 
-TEST(CheckNetlistTest, CheckNorNorTest) {
+TEST(CheckGNetTest, CheckNorNorTest) {
   EXPECT_TRUE(checkNorNorTest(16));
 }
 
-TEST(CheckNetlistTest, CheckNorAndnTest) {
+TEST(CheckGNetTest, CheckNorAndnTest) {
   EXPECT_TRUE(checkNorAndnTest(16));
 }
 
-TEST(CheckNetlistTest, CheckNorAndTest) {
+TEST(CheckGNetTest, CheckNorAndTest) {
   EXPECT_FALSE(checkNorAndTest(16));
 }

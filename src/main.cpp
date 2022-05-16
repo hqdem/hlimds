@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "gate/model/gate.h"
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"

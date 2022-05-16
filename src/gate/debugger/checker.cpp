@@ -6,19 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/encoder/encoder.h"
-#include "gate/checker/checker.h"
+#include "gate/debugger/checker.h"
+#include "gate/debugger/encoder.h"
 
 #include <cassert>
 
-using namespace eda::gate::encoder;
+namespace eda::gate::debugger {
 
-namespace eda::gate::checker {
-
-bool Checker::equiv(const std::vector<Netlist> &nets,
-                    const Checker::GateIdMap *connectTo,
-                    const Checker::GateBindList &ibind,
-                    const Checker::GateBindList &obind) const {
+bool Checker::areEqual(const std::vector<GNet> &nets,
+                       const Checker::GateIdMap *connectTo,
+                       const Checker::GateBindList &ibind,
+                       const Checker::GateBindList &obind) const {
   Encoder encoder;
   encoder.setConnectTo(connectTo);
 
@@ -30,7 +28,7 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
     encoder.encodeBuf(y, x, true);
   }
 
-  // Encode the netlists.
+  // Encode the nets.
   for (const auto &net : nets) {
     encoder.encode(net, 0);
   }
@@ -58,18 +56,18 @@ bool Checker::equiv(const std::vector<Netlist> &nets,
   return verdict;
 }
 
-bool Checker::equiv(const Netlist &lhs,
-                    const Netlist &rhs,
-                    const Checker::GateBindList &ibind,
-                    const Checker::GateBindList &obind) const {
-  return equiv({ lhs, rhs }, nullptr, ibind, obind);
+bool Checker::areEqual(const GNet &lhs,
+                       const GNet &rhs,
+                       const Checker::GateBindList &ibind,
+                       const Checker::GateBindList &obind) const {
+  return areEqual({ lhs, rhs }, nullptr, ibind, obind);
 }
 
-bool Checker::equiv(const Netlist &lhs,
-                    const Netlist &rhs,
-                    const GateBindList &ibind,
-                    const GateBindList &obind,
-                    const GateBindList &tbind) const {
+bool Checker::areEqual(const GNet &lhs,
+                       const GNet &rhs,
+                       const GateBindList &ibind,
+                       const GateBindList &obind,
+                       const GateBindList &tbind) const {
   GateBindList imap(ibind);
   GateBindList omap(obind);
 
@@ -93,19 +91,19 @@ bool Checker::equiv(const Netlist &lhs,
     }
   }
 
-  return equiv(lhs, rhs, imap, omap);
+  return areEqual(lhs, rhs, imap, omap);
 }
 
-bool Checker::equiv(const Netlist &lhs,
-                    const Netlist &rhs,
-                    const Netlist &enc,
-                    const Netlist &dec,
-                    const GateBindList &ibind,
-                    const GateBindList &obind,
-                    const GateBindList &lhsTriEncIn,
-                    const GateBindList &lhsTriDecOut,
-                    const GateBindList &rhsTriEncOut,
-                    const GateBindList &rhsTriDecIn) const {
+bool Checker::areEqual(const GNet &lhs,
+                       const GNet &rhs,
+                       const GNet &enc,
+                       const GNet &dec,
+                       const GateBindList &ibind,
+                       const GateBindList &obind,
+                       const GateBindList &lhsTriEncIn,
+                       const GateBindList &lhsTriDecOut,
+                       const GateBindList &rhsTriEncOut,
+                       const GateBindList &rhsTriDecIn) const {
   
   //=========================================//
   //                                         //
@@ -148,7 +146,7 @@ bool Checker::equiv(const Netlist &lhs,
     imap.push_back({ decInId, rhsTriId });
   }
 
-  return equiv({ lhs, rhs, enc, dec }, &connectTo, imap, omap);
+  return areEqual({ lhs, rhs, enc, dec }, &connectTo, imap, omap);
 }
 
 void Checker::error(Context &context,
@@ -180,4 +178,4 @@ void Checker::error(Context &context,
   std::cout << std::endl;
 }
 
-} // namespace eda::gate::checker
+} // namespace eda::gate::debugger

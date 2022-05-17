@@ -20,6 +20,8 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ## System Requirements
 
+The following requirements are presented for the case of Ubuntu-based OS (20.04 is preferable).
+
 ### Ubuntu 20.04:
 
 * `autoconf`

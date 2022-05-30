@@ -18,9 +18,26 @@ And produces the following outputs:
 
 Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
+## General Notes
+
+Several environment variables should be set during the Utopia building.
+To keep the value of the environment variable in your system permanenly, add the 
+appropriate command to either `.profile` or `.bashrc` file. For example, to set 
+the `/usr` value to the `SOME_DIR` variable, the command should be as follows:
+```
+export SOME_DIR=/usr
+```
+To check if value is set, use `echo $SOME_DIR` command.
+
+In this guide `<workdir>` path appears several times. This string denotes
+a path to user's working directory (e.g. `~/work`, `~/projects`). It is not 
+necessary for the project's building to have the same `<workdir>` all the
+times it is used in this guide.
+
 ## System Requirements
 
-### Ubuntu 20.04:
+The recommended operating system for Utopia is Ubuntu 20.04. The package names
+below are specific to this operating system:
 
 * `autoconf`
 * `bison`
@@ -38,8 +55,7 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 * `zlib1g`
 * `zlib1g-dev`
 
-### Command:
-
+To install them, do the following:
 ```
 sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55-dev libtool lld make ninja-build python zlib1g zlib1g-dev
 ```
@@ -51,7 +67,8 @@ sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55
 ```
 git clone --recursive https://github.com/circt/circt.git
 cd circt
-git checkout 6de88ef
+git checkout 6de88ef7
+git submodule update
 ```
 
 #### Build and test LLVM/MLIR

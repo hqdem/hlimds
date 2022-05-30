@@ -24,7 +24,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <math.h>
 #include <string>
 
 INITIALIZE_EASYLOGGINGPP
@@ -72,11 +71,11 @@ int hls_main(const std::string &filename) {
   // Optimization criterion and constraints.
   eda::hls::scheduler::Criteria criteria(
     Throughput,
-    Constraint(1000, 500000),                               // Frequency (kHz)
-    Constraint(1000, 500000),                               // Throughput (=frequency)
+    Constraint(1000, 500000),                                // Frequency (kHz)
+    Constraint(1000, 500000),                                // Throughput (=frequency)
     Constraint(0,    1000),                                  // Latency (cycles)
-    Constraint(0,    std::numeric_limits<unsigned>::max()), // Power (does not matter)
-    Constraint(1,    5000));                              // Area (number of LUTs)
+    Constraint(0,    std::numeric_limits<unsigned>::max()),  // Power (does not matter)
+    Constraint(1,    5000));                                 // Area (number of LUTs)
 
   model->save();
 

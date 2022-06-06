@@ -40,7 +40,6 @@ private:
   FLibrary &_library;
 
   Gate::Id gateId(const VNode *vnode) const;
-  Gate::Id gateId(const VNode *vnode, const GNet &net);
 
   void allocGates(const VNode *vnode, GNet &net);
 

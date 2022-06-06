@@ -66,18 +66,13 @@ Gate::Id Compiler::gateId(const VNode *vnode) const {
   return Gate::Invalid;
 }
 
-Gate::Id Compiler::gateId(const VNode *vnode, const GNet &net) {
-  const auto id = gateId(vnode);
-  if (id != Gate::Invalid) {
-    return id;
-  }
-
-  _gateIds.insert({ vnode->name(), net.size() });
-  return net.size();
-}
-
 void Compiler::allocGates(const VNode *vnode, GNet &net) {
   assert(vnode != nullptr);
+
+  const auto i = _gateIds.find(vnode->name());
+  if (i == _gateIds.end()) {
+    _gateIds.insert({ vnode->name(), net.size() });
+  }
 
   const auto size = vnode->var().type().width();
   for (unsigned i = 0; i < size; i++) {

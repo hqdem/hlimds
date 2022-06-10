@@ -82,7 +82,7 @@ int hls_main(const std::string &filename) {
   model->save();
 
   // Map model nodes to meta elements.
-  eda::hls::mapper::Mapper::get().map(*model, Library::get());
+  eda::hls::mapper::Mapper::get().map(*model, eda::hls::library::Library::get());
 
   Indicators indicators;
   std::map<std::string, Parameters> params =

@@ -9,6 +9,7 @@
 #include "config.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
+#include "hls/compiler/compiler.h"
 #include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
@@ -30,12 +31,6 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-using namespace eda::gate::model;
-using namespace eda::rtl::compiler;
-using namespace eda::rtl::library;
-using namespace eda::rtl::model;
-using namespace eda::utils;
-
 int rtl_main(const std::string &filename) {
   LOG(INFO) << "Starting rtl_main " << filename;
 
@@ -49,7 +44,7 @@ int rtl_main(const std::string &filename) {
   std::cout << "------ p/v-nets ------" << std::endl;
   std::cout << *model << std::endl;
 
-  Compiler compiler(FLibraryDefault::get());
+  eda::rtl::compiler::Compiler compiler(eda::rtl::library::FLibraryDefault::get());
   auto netlist = compiler.compile(*model);
 
   std::cout << "------ netlist ------" << std::endl;
@@ -73,19 +68,19 @@ int hls_main(const std::string &filename) {
   // Optimization criterion and constraints.
   eda::hls::scheduler::Criteria criteria(
     PERF,
-    Constraint(1000, 500000),                                // Frequency (kHz)
-    Constraint(1000, 500000),                                // Performance (=frequency)
-    Constraint(0,    1000),                                  // Latency (cycles)
-    Constraint(0,    std::numeric_limits<unsigned>::max()),  // Power (does not matter)
-    Constraint(1,    5000));                                 // Area (number of LUTs)
+    eda::hls::model::Constraint(1000, 500000),                                // Frequency (kHz)
+    eda::hls::model::Constraint(1000, 500000),                                // Performance (=frequency)
+    eda::hls::model::Constraint(0,    1000),                                  // Latency (cycles)
+    eda::hls::model::Constraint(0,    std::numeric_limits<unsigned>::max()),  // Power (does not matter)
+    eda::hls::model::Constraint(1,    5000));                                 // Area (number of LUTs)
 
   model->save();
 
   // Map model nodes to meta elements.
   eda::hls::mapper::Mapper::get().map(*model, eda::hls::library::Library::get());
 
-  Indicators indicators;
-  std::map<std::string, Parameters> params =
+  eda::hls::model::Indicators indicators;
+  std::map<std::string, eda::hls::model::Parameters> params =
     eda::hls::scheduler::ParametersOptimizer::get().optimize(criteria, *model, indicators);
 
   model->save();
@@ -100,8 +95,15 @@ int hls_main(const std::string &filename) {
   std::cout << *model;
 
   std::ofstream output(filename + ".dot");
-  printDot(output, *model);
+  eda::hls::model::printDot(output, *model);
   output.close();
+
+  auto compiler = std::make_unique<eda::hls::compiler::Compiler>(*model);
+  auto circuit = compiler->constructCircuit("main");
+  std::string outputDirName = "./output/";
+  compiler->printFiles("outputFirrtlIdct.mlir", "outputVerilogIdct.v", outputDirName);
+  compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
+  eda::hls::library::Library::get().finalize();
 
   return 0;
 }
@@ -138,4 +140,3 @@ int main(int argc, char **argv) {
 
   return result;
 }
-

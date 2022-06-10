@@ -9,6 +9,7 @@
 #include "config.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
+#include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
@@ -79,6 +80,9 @@ int hls_main(const std::string &filename) {
     Constraint(1,    5000));                                 // Area (number of LUTs)
 
   model->save();
+
+  // Map model nodes to meta elements.
+  eda::hls::mapper::Mapper::get().map(*model, Library::get());
 
   Indicators indicators;
   std::map<std::string, Parameters> params =

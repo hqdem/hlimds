@@ -8,20 +8,18 @@
 
 #pragma once
 
+#include "gate/model/gnet.h"
+#include "rtl/model/fsymbol.h"
+
 #include <cassert>
 #include <memory>
 #include <vector>
-
-#include "gate/model/gsymbol.h"
-#include "gate/model/netlist.h"
-#include "gate/model/signal.h"
-#include "rtl/model/fsymbol.h"
 
 using namespace eda::gate::model;
 using namespace eda::rtl::model;
 
 namespace eda::gate::model {
-  class Netlist;
+  class GNet;
 } // namespace eda::gate::model
 
 namespace eda::rtl::library {
@@ -31,25 +29,30 @@ namespace eda::rtl::library {
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>.
  */
 struct FLibrary {
-  using GateIdList = Netlist::GateIdList;
-  using Value = Netlist::Value;
-  using In = Netlist::In;
-  using Out = Netlist::Out;
-  using ControlEvent = Netlist::ControlEvent;
-  using ControlList = Netlist::ControlList;
+  using GateIdList = GNet::GateIdList;
+  using Value = GNet::Value;
+  using In = GNet::In;
+  using Out = GNet::Out;
 
   /// Checks if the library supports the given function.
   virtual bool supports(FuncSymbol func) const = 0;
 
-  /// Synthesize the netlist for the given value.
-  virtual void synthesize(
-    const Out &out, const Value &value, Netlist &net) = 0;
-  /// Synthesize the netlist for the given function.
-  virtual void synthesize(
-    FuncSymbol func, const Out &out, const In &in, Netlist &net) = 0;
-  /// Synthesize the netlist for the given register.
-  virtual void synthesize(
-    const Out &out, const In &in, const ControlList &control, Netlist &net) = 0;
+  /// Synthesize the net for the given value.
+  virtual void synth(const Out &out,
+                     const Value &value,
+                     GNet &net) = 0;
+
+  /// Synthesize the net for the given function.
+  virtual void synth(FuncSymbol func,
+                     const Out &out,
+                     const In &in,
+                     GNet &net) = 0;
+
+  /// Synthesize the net for the given register.
+  virtual void synth(const Out &out,
+                     const In &in,
+                     const Signal::List &control,
+                     GNet &net) = 0;
 
   virtual ~FLibrary() {} 
 };
@@ -57,69 +60,81 @@ struct FLibrary {
 class FLibraryDefault final: public FLibrary {
 public:
   static FLibrary& get() {
-    if (_instance == nullptr) {
-      _instance = std::unique_ptr<FLibrary>(new FLibraryDefault());
-    }
-    return *_instance;
+    static auto instance = std::unique_ptr<FLibrary>(new FLibraryDefault());
+    return *instance;
   }
 
   bool supports(FuncSymbol func) const override;
 
-  void synthesize(
-      const Out &out, const Value &value, Netlist &net) override;
-  void synthesize(
-      FuncSymbol func, const Out &out, const In &in, Netlist &net) override;
-  void synthesize(
-      const Out &out, const In &in, const ControlList &control, Netlist &net) override;
+  void synth(const Out &out,
+             const Value &value,
+             GNet &net) override;
+
+  void synth(FuncSymbol func,
+             const Out &out,
+             const In &in,
+             GNet &net) override;
+
+  void synth(const Out &out,
+             const In &in,
+             const Signal::List &control,
+             GNet &net) override;
 
 private:
   FLibraryDefault() {}
   ~FLibraryDefault() override {}
 
-  static void synth_add(const Out &out, const In &in, Netlist &net);
-  static void synth_sub(const Out &out, const In &in, Netlist &net);
-  static void synth_mux(const Out &out, const In &in, Netlist &net);
+  static void synthAdd(const Out &out, const In &in, GNet &net);
+  static void synthSub(const Out &out, const In &in, GNet &net);
+  static void synthMux(const Out &out, const In &in, GNet &net);
 
-  static void synth_adder(const Out &out, const In &in, bool plus_one, Netlist &net);
-  static void synth_adder(unsigned z, unsigned c_out,
-    unsigned x, unsigned y, unsigned c_in, Netlist &net);
+  static void synthAdder(const Out &out, const In &in, bool plusOne, GNet &net);
 
-  static Signal invert_if_negative(const ControlEvent &event, Netlist &net);
+  static void synthAdder(Gate::Id z,
+                         Gate::Id carryOut,
+                         Gate::Id x,
+                         Gate::Id y,
+                         Gate::Id carryIn,
+                         GNet &net);
+
+  static Signal invertIfNegative(const Signal &event, GNet &net);
 
   template<GateSymbol G>
-  static void synth_unary_bitwise_op (const Out &out, const In &in, Netlist &net);
+  static void synthUnaryBitwiseOp(const Out &out, const In &in, GNet &net);
 
   template<GateSymbol G>
-  static void synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net);
-
-  static std::unique_ptr<FLibrary> _instance;
+  static void synthBinaryBitwiseOp(const Out &out, const In &in, GNet &net);
 };
 
 template<GateSymbol G>
-void FLibraryDefault::synth_unary_bitwise_op(const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synthUnaryBitwiseOp(const Out &out,
+                                          const In &in,
+                                          GNet &net) {
   assert(in.size() == 1);
 
-  const GateIdList &x = in[0];
+  const auto &x = in[0];
   assert(out.size() == x.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = net.always(x[i]);
-    net.set_gate(out[i], G, { xi });
+    auto xi = Signal::always(x[i]);
+    net.setGate(out[i], G, { xi });
   }
 }
 
 template<GateSymbol G>
-void FLibraryDefault::synth_binary_bitwise_op(const Out &out, const In &in, Netlist &net) {
+void FLibraryDefault::synthBinaryBitwiseOp(const Out &out,
+                                           const In &in,
+                                           GNet &net) {
   assert(in.size() == 2);
 
-  const GateIdList &x = in[0];
-  const GateIdList &y = in[1];
+  const auto &x = in[0];
+  const auto &y = in[1];
   assert(x.size() == y.size() && out.size() == x.size());
 
   for (std::size_t i = 0; i < out.size(); i++) {
-    Signal xi = net.always(x[i]);
-    Signal yi = net.always(y[i]);
-    net.set_gate(out[i], G, { xi, yi });
+    auto xi = Signal::always(x[i]);
+    auto yi = Signal::always(y[i]);
+    net.setGate(out[i], G, { xi, yi });
   }
 }
 

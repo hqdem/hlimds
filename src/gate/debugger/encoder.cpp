@@ -6,20 +6,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/encoder/encoder.h"
+#include "gate/debugger/encoder.h"
 
 #include <cassert>
 
-namespace eda::gate::encoder {
+namespace eda::gate::debugger {
 
-void Encoder::encode(const Netlist &net, uint16_t version) {
+void Encoder::encode(const GNet &net, uint16_t version) {
   for (const auto *gate: net.gates()) {
     encode(*gate, version);
   }
 }
 
 void Encoder::encode(const Gate &gate, uint16_t version) {
-  if (gate.is_source())
+  if (gate.isSource())
     return;
 
   switch (gate.kind()) {
@@ -117,7 +117,7 @@ void Encoder::encodeXor(const Gate &gate, bool sign, uint16_t version) {
   }
 
   auto y = _context.var(gate, version, Context::SET);
-  for (unsigned i = 0; i < gate.arity() - 1; i++) {
+  for (std::size_t i = 0; i < gate.arity() - 1; i++) {
     const auto x1 = _context.var(gate.input(i), version, Context::GET);
     const auto x2 = (i == gate.arity() - 2)
       ? _context.var(gate.input(i + 1), version, Context::GET)
@@ -213,4 +213,4 @@ void Encoder::encodeMux(uint64_t y, uint64_t c, uint64_t x1, uint64_t x2, bool s
   encodeAnd(t2, c, x2, true, false, true);
 }
 
-} // namespace eda::gate::encoder
+} // namespace eda::gate::debugger

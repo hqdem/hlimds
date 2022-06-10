@@ -6,17 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <iostream>
-#include <memory>
-
-#include "gtest/gtest.h"
-
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
 #include "rtl/parser/ril/builder.h"
 #include "rtl/parser/ril/parser.h"
+
+#include "gtest/gtest.h"
+
+#include <iostream>
+#include <memory>
 
 using namespace eda::gate::model;
 using namespace eda::rtl::compiler;
@@ -31,10 +31,10 @@ int rilTest(const std::string &filename) {
   std::cout << *model << std::endl;
 
   Compiler compiler(FLibraryDefault::get());
-  auto netlist = compiler.compile(*model);
+  auto gnet = compiler.compile(*model);
 
-  std::cout << "------ netlist ------" << std::endl;
-  std::cout << *netlist;
+  std::cout << "------ g-net ------" << std::endl;
+  std::cout << *gnet;
 
   return 0;
 }

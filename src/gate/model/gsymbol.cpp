@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <iostream>
-
 #include "gate/model/gsymbol.h"
+
+#include <iostream>
 
 namespace eda::gate::model {
 

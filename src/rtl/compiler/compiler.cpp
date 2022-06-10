@@ -6,17 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <cassert>
-#include <cstddef>
-#include <memory>
-
 #include "gate/model/gate.h"
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
 #include "rtl/model/vnode.h"
 #include "util/string.h"
+
+#include <cassert>
+#include <cstddef>
+#include <memory>
 
 using namespace eda::gate::model;
 using namespace eda::rtl::library;
@@ -25,101 +25,93 @@ using namespace eda::utils;
 
 namespace eda::rtl::compiler {
 
-std::unique_ptr<Netlist> Compiler::compile(const Net &net) {
-  std::unique_ptr<Netlist> netlist = std::make_unique<Netlist>();
+std::unique_ptr<GNet> Compiler::compile(const Net &net) {
+  auto gnet = std::make_unique<GNet>();
 
-  _gates_id.clear();
+  _gateIds.clear();
 
   for (const auto *vnode: net.vnodes()) {
-    alloc_gates(vnode, *netlist);
+    allocGates(vnode, *gnet);
   }
 
   for (const auto *vnode: net.vnodes()) {
     switch (vnode->kind()) {
     case VNode::SRC:
-      synth_src(vnode, *netlist);
+      synthSrc(vnode, *gnet);
       break;
     case VNode::VAL:
-      synth_val(vnode, *netlist);
+      synthVal(vnode, *gnet);
       break;
     case VNode::FUN:
-      synth_fun(vnode, *netlist);
+      synthFun(vnode, *gnet);
       break;
     case VNode::MUX:
-      synth_mux(vnode, *netlist);
+      synthMux(vnode, *gnet);
       break;
     case VNode::REG:
-      synth_reg(vnode, *netlist);
+      synthReg(vnode, *gnet);
       break;
     }
   }
 
-  return netlist;
+  return gnet;
 }
 
-unsigned Compiler::gate_id(const VNode *vnode) const {
-  const auto i = _gates_id.find(vnode->name());
-  if (i != _gates_id.end()) {
+Gate::Id Compiler::gateId(const VNode *vnode) const {
+  const auto i = _gateIds.find(vnode->name());
+  if (i != _gateIds.end()) {
     return i->second;
   }
 
-  return -1u;
+  return Gate::Invalid;
 }
 
-unsigned Compiler::gate_id(const VNode *vnode, const Netlist &netlist) {
-  const unsigned id = gate_id(vnode);
-  if (id != -1u) {
-    return id;
-  }
-
-  _gates_id.insert({ vnode->name(), netlist.size() });
-  return netlist.size();
-}
-
-void Compiler::alloc_gates(const VNode *vnode, Netlist &netlist) {
+void Compiler::allocGates(const VNode *vnode, GNet &net) {
   assert(vnode != nullptr);
 
-  const unsigned base = gate_id(vnode, netlist);
-  const unsigned size = vnode->var().type().width();
+  const auto i = _gateIds.find(vnode->name());
+  if (i == _gateIds.end()) {
+    _gateIds.insert({ vnode->name(), net.size() });
+  }
 
+  const auto size = vnode->var().type().width();
   for (unsigned i = 0; i < size; i++) {
-    assert(base + i == netlist.size());
-    netlist.add_gate(new Gate(base + i));
+    net.addGate();
   }
 }
 
-void Compiler::synth_src(const VNode *vnode, Netlist &netlist) {
+void Compiler::synthSrc(const VNode *vnode, GNet &net) {
   // Do nothing.
 }
 
-void Compiler::synth_val(const VNode *vnode, Netlist &netlist) {
-  _library.synthesize(out(vnode), vnode->value(), netlist);
+void Compiler::synthVal(const VNode *vnode, GNet &net) {
+  _library.synth(out(vnode), vnode->value(), net);
 }
 
-void Compiler::synth_fun(const VNode *vnode, Netlist &netlist) {
+void Compiler::synthFun(const VNode *vnode, GNet &net) {
   assert(_library.supports(vnode->func()));
-  _library.synthesize(vnode->func(), out(vnode), in(vnode), netlist);
+  _library.synth(vnode->func(), out(vnode), in(vnode), net);
 }
 
-void Compiler::synth_mux(const VNode *vnode, Netlist &netlist) {
+void Compiler::synthMux(const VNode *vnode, GNet &net) {
   assert(_library.supports(FuncSymbol::MUX));
-  _library.synthesize(FuncSymbol::MUX, out(vnode), in(vnode), netlist);
+  _library.synth(FuncSymbol::MUX, out(vnode), in(vnode), net);
 }
 
-void Compiler::synth_reg(const VNode *vnode, Netlist &netlist) {
+void Compiler::synthReg(const VNode *vnode, GNet &net) {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
   assert(vnode->esize() == 1 || vnode->esize() == 2);
 
-  Netlist::ControlList control;
+  Signal::List control;
   for (const auto &event: vnode->events()) {
-    control.push_back({ event.kind(), gate_id(event.node()) });
+    control.push_back(Signal(event.kind(), gateId(event.node())));
   }
 
-  _library.synthesize(out(vnode), in(vnode), control, netlist);
+  _library.synth(out(vnode), in(vnode), control, net);
 }
 
-Netlist::In Compiler::in(const VNode *vnode) {
-  Netlist::In in(vnode->arity());
+GNet::In Compiler::in(const VNode *vnode) {
+  GNet::In in(vnode->arity());
   for (std::size_t i = 0; i < vnode->arity(); i++) {
     in[i] = out(vnode->input(i));
   }
@@ -127,12 +119,12 @@ Netlist::In Compiler::in(const VNode *vnode) {
   return in;
 }
 
-Netlist::Out Compiler::out(const VNode *vnode) {
-  const unsigned base = gate_id(vnode);
-  const unsigned size = vnode->var().type().width();
-  assert(base != -1u);
+GNet::Out Compiler::out(const VNode *vnode) {
+  const auto base = gateId(vnode);
+  const auto size = vnode->var().type().width();
+  assert(base != Gate::Invalid);
 
-  Netlist::Out out(size);
+  GNet::Out out(size);
   for (unsigned i = 0; i < size; i++) {
     out[i] = base + i;
   }

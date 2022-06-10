@@ -8,12 +8,13 @@
 
 #include "config.h"
 #include "gate/model/gate.h"
-#include "gate/model/netlist.h"
+#include "gate/model/gnet.h"
 #include "hls/model/model.h"
 #include "hls/model/printer.h"
 #include "hls/parser/hil/parser.h"
-#include "hls/scheduler/param_optimizer.h"
 #include "hls/scheduler/latency_solver.h"
+#include "hls/scheduler/optimizers/simulated_annealing_optimizer.h"
+#include "hls/scheduler/param_optimizer.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
@@ -24,7 +25,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <math.h>
 #include <string>
 
 INITIALIZE_EASYLOGGINGPP
@@ -71,12 +71,12 @@ int hls_main(const std::string &filename) {
 
   // Optimization criterion and constraints.
   eda::hls::scheduler::Criteria criteria(
-    Throughput,
-    Constraint(1000, 500000),                               // Frequency (kHz)
-    Constraint(1000, 500000),                               // Throughput (=frequency)
+    PERF,
+    Constraint(1000, 500000),                                // Frequency (kHz)
+    Constraint(1000, 500000),                                // Performance (=frequency)
     Constraint(0,    1000),                                  // Latency (cycles)
-    Constraint(0,    std::numeric_limits<unsigned>::max()), // Power (does not matter)
-    Constraint(1,    5000));                              // Area (number of LUTs)
+    Constraint(0,    std::numeric_limits<unsigned>::max()),  // Power (does not matter)
+    Constraint(1,    5000));                                 // Area (number of LUTs)
 
   model->save();
 

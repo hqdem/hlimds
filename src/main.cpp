@@ -71,7 +71,7 @@ int hls_main(const std::string &filename) {
     eda::hls::model::Constraint(1000, 500000),                                // Performance (=frequency)
     eda::hls::model::Constraint(0,    1000),                                  // Latency (cycles)
     eda::hls::model::Constraint(0,    std::numeric_limits<unsigned>::max()),  // Power (does not matter)
-    eda::hls::model::Constraint(1,    5000));                                 // Area (number of LUTs)
+    eda::hls::model::Constraint(1,    3000000));                                 // Area (number of LUTs)
 
   model->save();
 

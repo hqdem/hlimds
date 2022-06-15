@@ -97,11 +97,11 @@ int hls_main(const std::string &filename) {
   eda::hls::model::printDot(output, *model);
   output.close();
 
-  auto compiler = std::make_unique<eda::hls::compiler::Compiler>(*model);
-  auto circuit = compiler->constructCircuit("main");
+  auto compiler = std::make_unique<eda::hls::compiler::Compiler>();
+  auto circuit = compiler->constructCircuit(*model, "main");
   std::string outputDirName = "./output/";
-  compiler->printFiles("outputFirrtlIdct.mlir", "outputVerilogIdct.v", outputDirName);
-  compiler->printRndVlogTest(outputDirName + "testbench.v", 10);
+  circuit->printFiles("outputFirrtlIdct.mlir", "outputVerilogIdct.v", outputDirName);
+  circuit->printRndVlogTest(*model, outputDirName + "testbench.v", model->ind.ticks, 10);
   eda::hls::library::Library::get().finalize();
 
   return 0;

@@ -116,11 +116,11 @@ std::unique_ptr<Net> Builder::create() {
 
 	  inputs.push_back(cnode);
           break;
-        } else {
-          auto i = use_nodes.find(in);
-          assert(i != use_nodes.end());
-          inputs.push_back(i->second);
         }
+
+        auto i = use_nodes.find(in);
+        assert(i != use_nodes.end());
+        inputs.push_back(i->second);
       }
 
       VNode *vnode = nullptr;

@@ -16,6 +16,7 @@
 #include "hls/parser/hil/parser.h"
 #include "hls/scheduler/latency_solver.h"
 #include "hls/scheduler/param_optimizer.h"
+#include "options.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
@@ -26,11 +27,12 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 INITIALIZE_EASYLOGGINGPP
 
-int rtl_main(const std::string &filename) {
+int rtl_main(const std::string &filename, const RtlOptions &options) {
   LOG(INFO) << "Starting rtl_main " << filename;
 
   auto model = eda::rtl::parser::ril::parse(filename);
@@ -52,7 +54,7 @@ int rtl_main(const std::string &filename) {
   return 0;
 }
 
-int hls_main(const std::string &filename) {
+int hls_main(const std::string &filename, const HlsOptions &options) {
   LOG(INFO) << "Starting hls_main " << filename;
 
   auto model = eda::hls::parser::hil::parse(filename);
@@ -99,9 +101,12 @@ int hls_main(const std::string &filename) {
 
   auto compiler = std::make_unique<eda::hls::compiler::Compiler>();
   auto circuit = compiler->constructCircuit(*model, "main");
-  std::string outputDirName = "./output/";
-  circuit->printFiles("outputFirrtlIdct.mlir", "outputVerilogIdct.v", outputDirName);
-  circuit->printRndVlogTest(*model, outputDirName + "testbench.v", model->ind.ticks, 10);
+  circuit->printFiles(options.outMlir, options.outVlog, options.outDir);
+
+  if (!options.outTest.empty()) {
+    circuit->printRndVlogTest(*model, options.outDir + "/" + options.outTest, model->ind.ticks, 10);
+  }
+
   eda::hls::library::Library::get().finalize();
 
   return 0;
@@ -110,31 +115,25 @@ int hls_main(const std::string &filename) {
 int main(int argc, char **argv) {
   START_EASYLOGGINGPP(argc, argv);
 
-  std::cout << "Utopia EDA ";
-  std::cout << VERSION_MAJOR << "." << VERSION_MINOR << " | ";
-  std::cout << "Copyright (c) 2021 ISPRAS" << std::endl;
+  std::stringstream title;
+  std::stringstream version;
 
-  if (argc <= 1) {
-    std::cout << "Usage: " << argv[0] << " <input-file(s)>" << std::endl;
-    std::cout << "Synthesis terminated." << std::endl;
-    return -1;
-  }
+  version << VERSION_MAJOR << "." << VERSION_MINOR;
+
+  title << "Utopia EDA " << version.str() << " | ";
+  title << "Copyright (c) 2021-2022 ISPRAS";
+
+  Options options(title.str(), version.str(), argc, argv);
+  std::cout << title.str() << std::endl;
 
   int result = 0;
-  for (int i = 1; i < argc; i++) {
-    const std::string filename = argv[i];
 
-    int status = -1;
-    if (ends_with(filename, ".ril")) {
-      status = rtl_main(filename);
-    } else if (ends_with(filename, ".hil")) {
-      status = hls_main(filename);
-    } else {
-      std::cout << "Unknown format: " << filename << std::endl;
-      status = -1;
-    }
+  for (auto file : options.rtl.files()) {
+    result |= rtl_main(file, options.rtl);
+  }
 
-    result = (result == 0 ? status : result);
+  for (auto file : options.hls.files()) {
+    result |= hls_main(file, options.hls);
   }
 
   return result;

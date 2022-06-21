@@ -32,12 +32,12 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-int rtl_main(const std::string &filename, const RtlOptions &options) {
-  LOG(INFO) << "Starting rtl_main " << filename;
+int rtl_main(const std::string &file, const RtlOptions &options) {
+  LOG(INFO) << "Starting rtl_main " << file;
 
-  auto model = eda::rtl::parser::ril::parse(filename);
+  auto model = eda::rtl::parser::ril::parse(file);
   if (model == nullptr) {
-    std::cout << "Could not parse " << filename << std::endl;
+    std::cout << "Could not parse " << file << std::endl;
     std::cout << "Synthesis terminated." << std::endl;
     return -1;
   }
@@ -54,12 +54,12 @@ int rtl_main(const std::string &filename, const RtlOptions &options) {
   return 0;
 }
 
-int hls_main(const std::string &filename, const HlsOptions &options) {
-  LOG(INFO) << "Starting hls_main " << filename;
+int hls_main(const std::string &file, const HlsOptions &options) {
+  LOG(INFO) << "Starting hls_main " << file;
 
-  auto model = eda::hls::parser::hil::parse(filename);
+  auto model = eda::hls::parser::hil::parse(file);
   if (model == nullptr) {
-    std::cout << "Could not parse " << filename << std::endl;
+    std::cout << "Could not parse " << file << std::endl;
     std::cout << "Synthesis terminated." << std::endl;
     return -1;
   }
@@ -95,9 +95,11 @@ int hls_main(const std::string &filename, const HlsOptions &options) {
   std::cout << "Balancing done.\n";
   std::cout << *model;
 
-  std::ofstream output(filename + ".dot");
-  eda::hls::model::printDot(output, *model);
-  output.close();
+  if (!options.outDot.empty()) {
+    std::ofstream output(options.outDir + "/" + options.outDot);
+    eda::hls::model::printDot(output, *model);
+    output.close();
+  }
 
   auto compiler = std::make_unique<eda::hls::compiler::Compiler>();
   auto circuit = compiler->constructCircuit(*model, "main");

@@ -32,7 +32,7 @@
 
 INITIALIZE_EASYLOGGINGPP
 
-int rtl_main(const std::string &file, const RtlOptions &options) {
+int rtlMain(const std::string &file, const RtlOptions &options) {
   LOG(INFO) << "Starting rtl_main " << file;
 
   auto model = eda::rtl::parser::ril::parse(file);
@@ -54,7 +54,7 @@ int rtl_main(const std::string &file, const RtlOptions &options) {
   return 0;
 }
 
-int hls_main(const std::string &file, const HlsOptions &options) {
+int hlsMain(const std::string &file, const HlsOptions &options) {
   LOG(INFO) << "Starting hls_main " << file;
 
   auto model = eda::hls::parser::hil::parse(file);
@@ -125,17 +125,17 @@ int main(int argc, char **argv) {
   title << "Utopia EDA " << version.str() << " | ";
   title << "Copyright (c) 2021-2022 ISPRAS";
 
-  Options options(title.str(), version.str(), argc, argv);
+  Options options(title.str(), version.str(), "config.json", argc, argv);
   std::cout << title.str() << std::endl;
 
   int result = 0;
 
   for (auto file : options.rtl.files()) {
-    result |= rtl_main(file, options.rtl);
+    result |= rtlMain(file, options.rtl);
   }
 
   for (auto file : options.hls.files()) {
-    result |= hls_main(file, options.hls);
+    result |= hlsMain(file, options.hls);
   }
 
   return result;

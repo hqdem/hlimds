@@ -67,7 +67,7 @@ int hls_main(const std::string &file, const HlsOptions &options) {
   std::cout << *model;
 
   // Optimization criterion and constraints.
-  eda::hls::scheduler::Criteria criteria(
+  eda::hls::model::Criteria criteria(
     PERF,
     eda::hls::model::Constraint(40000, 500000),                                // Frequency (kHz)
     eda::hls::model::Constraint(1000,  500000),                                // Performance (=frequency)

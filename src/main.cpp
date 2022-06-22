@@ -33,7 +33,7 @@
 INITIALIZE_EASYLOGGINGPP
 
 int rtlMain(const std::string &file, const RtlOptions &options) {
-  LOG(INFO) << "Starting rtl_main " << file;
+  LOG(INFO) << "Starting rtlMain " << file;
 
   auto model = eda::rtl::parser::ril::parse(file);
   if (model == nullptr) {
@@ -45,7 +45,8 @@ int rtlMain(const std::string &file, const RtlOptions &options) {
   std::cout << "------ p/v-nets ------" << std::endl;
   std::cout << *model << std::endl;
 
-  eda::rtl::compiler::Compiler compiler(eda::rtl::library::FLibraryDefault::get());
+  eda::rtl::compiler::Compiler compiler(
+      eda::rtl::library::FLibraryDefault::get());
   auto netlist = compiler.compile(*model);
 
   std::cout << "------ netlist ------" << std::endl;
@@ -55,7 +56,7 @@ int rtlMain(const std::string &file, const RtlOptions &options) {
 }
 
 int hlsMain(const std::string &file, const HlsOptions &options) {
-  LOG(INFO) << "Starting hls_main " << file;
+  LOG(INFO) << "Starting hlsMain " << file;
 
   auto model = eda::hls::parser::hil::parse(file);
   if (model == nullptr) {
@@ -78,11 +79,14 @@ int hlsMain(const std::string &file, const HlsOptions &options) {
   model->save();
 
   // Map model nodes to meta elements.
-  eda::hls::mapper::Mapper::get().map(*model, eda::hls::library::Library::get());
+  eda::hls::mapper::Mapper::get().map(
+      *model, eda::hls::library::Library::get());
 
   eda::hls::model::Indicators indicators;
   std::map<std::string, eda::hls::model::Parameters> params =
-    eda::hls::scheduler::ParametersOptimizer::get().optimize(criteria, *model, indicators);
+    eda::hls::scheduler::ParametersOptimizer::get().optimize(criteria,
+                                                             *model,
+                                                             indicators);
 
   model->save();
 
@@ -103,10 +107,17 @@ int hlsMain(const std::string &file, const HlsOptions &options) {
 
   auto compiler = std::make_unique<eda::hls::compiler::Compiler>();
   auto circuit = compiler->constructCircuit(*model, "main");
-  circuit->printFiles(options.outMlir, options.outVlog, options.outDir);
+  circuit->printFiles(options.outMlir,
+                      options.outLib,
+                      options.outTop,
+                      options.outDir);
 
   if (!options.outTest.empty()) {
-    circuit->printRndVlogTest(*model, options.outDir + "/" + options.outTest, model->ind.ticks, 10);
+    circuit->printRndVlogTest(*model,
+                              options.outDir,
+                              options.outTest,
+                              model->ind.ticks,
+                              10);
   }
 
   eda::hls::library::Library::get().finalize();

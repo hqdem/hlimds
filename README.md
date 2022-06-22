@@ -21,8 +21,8 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 ## General Notes
 
 Several environment variables should be set during the Utopia building.
-To keep the value of the environment variable in your system permanenly, add the 
-appropriate command to either `.profile` or `.bashrc` file. For example, to set 
+To keep the value of the environment variable in your system permanenly, add the
+appropriate command to either `.profile` or `.bashrc` file. For example, to set
 the `/usr` value to the `SOME_DIR` variable, the command should be as follows:
 ```
 export SOME_DIR=/usr
@@ -30,7 +30,7 @@ export SOME_DIR=/usr
 To check if value is set, use `echo $SOME_DIR` command.
 
 In this guide `<workdir>` path appears several times. This string denotes
-a path to user's working directory (e.g. `~/work`, `~/projects`). It is not 
+a path to user's working directory (e.g. `~/work`, `~/projects`). It is not
 necessary for the project's building to have the same `<workdir>` all the
 times it is used in this guide.
 
@@ -169,7 +169,7 @@ cmake --build build
 ### Running Utopia EDA
 
 ```
-./build/umain <file(s)>
+./build/src/umain hls <file(s)>
 ```
 
 ### Building Project w/ Tests

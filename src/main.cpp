@@ -136,8 +136,13 @@ int main(int argc, char **argv) {
   title << "Utopia EDA " << version.str() << " | ";
   title << "Copyright (c) 2021-2022 ISPRAS";
 
-  Options options(title.str(), version.str(), "config.json", argc, argv);
-  std::cout << title.str() << std::endl;
+  Options options(title.str(), version.str());
+
+  try {
+    options.initialize("config.json", argc, argv);
+  } catch(const CLI::ParseError &e) {
+    return options.exit(e);
+  }
 
   int result = 0;
 

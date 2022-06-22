@@ -69,11 +69,11 @@ int hlsMain(const std::string &file, const HlsOptions &options) {
   // Optimization criterion and constraints.
   eda::hls::model::Criteria criteria(
     PERF,
-    eda::hls::model::Constraint(40000, 500000),                                // Frequency (kHz)
-    eda::hls::model::Constraint(1000,  500000),                                // Performance (=frequency)
-    eda::hls::model::Constraint(0,     1000),                                  // Latency (cycles)
-    eda::hls::model::Constraint(0,     std::numeric_limits<unsigned>::max()),  // Power (does not matter)
-    eda::hls::model::Constraint(1,     10000000));                             // Area (number of LUTs)
+    eda::hls::model::Constraint<unsigned>(40000, 500000),    // Frequency (kHz)
+    eda::hls::model::Constraint<unsigned>(1000,  500000),    // Performance (=frequency)
+    eda::hls::model::Constraint<unsigned>(0,     1000),      // Latency (cycles)
+    eda::hls::model::Constraint<unsigned>(),                 // Power (does not matter)
+    eda::hls::model::Constraint<unsigned>(1,     10000000)); // Area (number of LUTs)
 
   model->save();
 

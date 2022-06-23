@@ -104,7 +104,7 @@ void FLibraryDefault::synthSub(const Out &out, const In &in, GNet &net) {
 
   Out temp(y.size());
   for (std::size_t i = 0; i < y.size(); i++) {
-    temp[i] = net.addGate();
+    temp[i] = net.newGate();
   }
 
   synthUnaryBitwiseOp<GateSymbol::NOT>(temp, { y }, net);
@@ -123,7 +123,7 @@ void FLibraryDefault::synthAdder(const Out &out, const In &in, bool plusOne, GNe
 
   for (std::size_t i = 0; i < out.size(); i++) {
     carryIn = carryOut;
-    carryOut = (i != out.size() - 1 ? net.addGate() : Gate::Invalid);
+    carryOut = (i != out.size() - 1 ? net.newGate() : Gate::Invalid);
     synthAdder(out[i], carryOut, x[i], y[i], carryIn, net);
   }
 }

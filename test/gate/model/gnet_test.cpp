@@ -20,7 +20,7 @@ static std::unique_ptr<GNet> makeNet(GateSymbol gate,
   auto net = std::make_unique<GNet>();
 
   for (unsigned i = 0; i < N; i++) {
-    const Gate::Id inputId = net->addGate();
+    const Gate::Id inputId = net->newGate();
     const Signal input = Signal::always(inputId);
     inputs.push_back(input);
   }
@@ -38,7 +38,7 @@ static std::unique_ptr<GNet> makeNetn(GateSymbol gate,
 
   Signal::List andInputs;
   for (unsigned i = 0; i < N; i++) {
-    const Gate::Id inputId = net->addGate();
+    const Gate::Id inputId = net->newGate();
     const Signal input = Signal::always(inputId);
     inputs.push_back(input);
 

@@ -65,6 +65,7 @@ sudo apt-get install autoconf bison clang clang-tidy cmake flex gcc liblpsolve55
 #### Check out LLVM and CIRCT repos
 
 ```
+cd <workdir>
 git clone --recursive https://github.com/circt/circt.git
 cd circt
 git checkout 6de88ef7
@@ -143,6 +144,7 @@ and set `CT_DIR` environment variable to it too.
 ### Xerces-C++ XML Parser Installation
 
 ```
+cd <workdir>
 wget https://dlcdn.apache.org//xerces/c/3/sources/xerces-c-3.2.3.tar.gz
 tar xf xerces-c-3.2.3.tar.gz
 cd xerces-c-3.2.3

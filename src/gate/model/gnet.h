@@ -35,6 +35,7 @@ public:
   using List = std::vector<GNet*>;
   using GateId = Gate::Id;
   using GateIdList = std::vector<GateId>;
+  using GateIdSet = std::unordered_set<GateId>;
   using SubnetId = unsigned;
   using SubnetIdSet = std::set<SubnetId>;
   using Value = std::vector<bool>;
@@ -48,25 +49,31 @@ public:
 
   #pragma pack(push,1)
   struct GateFlags {
-    /// Shows if the gate is a subnet input.
-    unsigned source : 1;
-    /// Shows if the gate is a subnet output.
-    unsigned target : 1;
+    /// Gate flags (reserved).
+    unsigned gflags : 12;
     /// Local index of the gate subnet.
-    unsigned subnet : 30;
+    unsigned subnet : 20;
     /// Local index of the gate in this net.
     unsigned gindex : 32;
   };
   #pragma pack(pop)
 
-  GNet() {
-    const std::size_t M = 1024;
-    const std::size_t N = M*M;
+  GNet(unsigned level = 0): _level(0) {
+    const std::size_t N = std::max(1024*1024 >> (5*level), 64);
+    const std::size_t M = std::max(1024 >> level, 64);
 
     _gates.reserve(N);
     _flags.reserve(N);
 
+    _sources.reserve(M);
+    _targets.reserve(M);
+
     _subnets.reserve(M);
+  }
+
+  /// Checks whether the net is top-level.
+  bool isTop() const {
+    return _level == 0;
   }
 
   /// Checks whether the net is flat.
@@ -74,20 +81,24 @@ public:
     return _subnets.empty();
   }
 
-  /// Checks whether the net is well-structured.
-  bool isGood() const {
-    // The net is flat.
-    if (_subnets.empty())
-      return true;
-    // All gates are partitioned into subnets
-    return _nGatesInSubnets == _gates.size()
-    // and there are no empty subnets.
-        && _emptySubnets.empty();
-  }
-
   /// Checks whether the net is empty.
   bool isEmpty() const {
     return _gates.empty();
+  }
+
+  /// Checks whether the net has orphans.
+  bool hasOrphans() const {
+    return _nGatesInSubnets < _gates.size();
+  }
+
+  /// Checks whether the net has empty subnets.
+  bool hasEmptySubnets() const {
+    return !_emptySubnets.empty();
+  }
+
+  /// Checks whether the net is well-formed.
+  bool isWellFormed() const {
+    return isFlat() || (!hasOrphans() && !hasEmptySubnets());
   }
 
   /// Returns the number of gates.
@@ -105,34 +116,49 @@ public:
     return _gates[index];
   }
 
+  /// Checks whether the net contains the gate.
+  bool contains(GateId gid) const {
+    return _flags.find(gid) != _flags.end();
+  }
+
+  /// Checks whether the gate is source.
+  bool isSource(GateId gid) const {
+    return _sources.find(gid) != _sources.end();
+  }
+
+  /// Checks whether the gate is target.
+  bool isTarget(GateId gid) const {
+    return _targets.find(gid) != _targets.end();
+  }
+
   /// Adds a new empty gate (source) and returns its identifier.
   GateId newGate() {
-    return addGate(new Gate(), {});
+    return addGate(new Gate());
   }
 
   /// Adds a new gate and returns its identifier.
   GateId addGate(GateSymbol kind, const Signal::List &inputs) {
-    return addGate(new Gate(kind, inputs), {});
+    return addGate(new Gate(kind, inputs));
   }
 
   /// Modifies the existing gate.
-  void setGate(GateId id, GateSymbol kind, const Signal::List &inputs) {
-    auto *gate = Gate::get(id);
+  void setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
+    auto *gate = Gate::get(gid);
     gate->setKind(kind);
     gate->setInputs(inputs);
   }
 
   /// Removes the gate from the net.
-  void removeGate(GateId id);
+  void removeGate(GateId gid);
 
   /// Returns a copy of the gate flags.
-  GateFlags getFlags(GateId id) const {
-    return _flags.find(id)->second;
+  GateFlags getFlags(GateId gid) const {
+    return _flags.find(gid)->second;
   }
 
   /// Returns the reference to the gate flags.
-  GateFlags &getFlags(GateId id) {
-    return _flags.find(id)->second;
+  GateFlags &getFlags(GateId gid) {
+    return _flags.find(gid)->second;
   }
 
   /// Returns the number of subnets.
@@ -150,19 +176,30 @@ public:
     return _subnets[index];
   }
 
-  /// Adds a new empty subnet and returns its identifier.
-  SubnetId newSubnet() {
-    return addSubnet(new GNet());
+  /// Returns the subnet the given gate belongs to.
+  SubnetId getGateSubnet(GateId gid) const {
+    return getFlags(gid).subnet;
   }
 
+  /// Checks whether the gate is orphan (does not belong to any subnet).
+  bool isOrphan(GateId gid) const {
+    return getFlags(gid).subnet == INV_SUBNET;
+  }
+
+  /// Adds a new empty subnet and returns its identifier.
+  SubnetId newSubnet();
+
   /// Adds the content of the given net.
-  void addNet(const GNet *net);
+  void addNet(const GNet &net);
 
   /// Moves the gate to the given subnet.
-  void moveGate(GateId id, SubnetId to);
+  void moveGate(GateId gid, SubnetId dst);
 
   /// Merges two subnets and returns the identifier of the joint subnet.
   SubnetId mergeSubnets(SubnetId lhs, SubnetId rhs);
+
+  /// Combines all orphan gates into a subnet.
+  SubnetId groupOrphans();
 
   /// Flattens the net (removes the hierarchy).
   void flatten();
@@ -170,11 +207,22 @@ public:
   /// Removes the empty subnets.
   void removeEmptySubnets();
 
+  /// Clears the net.
+  void clear();
+
 private:
   /// Adds the gate.
-  GateId addGate(Gate *gate, GateFlags flags);
+  GateId addGate(Gate *gate);
   /// Adds the subnet.
   SubnetId addSubnet(GNet *subnet);
+
+  /// Checks whether the gate is source.
+  bool checkIfSource(GateId gid) const;
+  /// Checks whether the gate is target.
+  bool checkIfTarget(GateId gid) const;
+
+  /// Level (0 = top level).
+  const unsigned _level;
 
   /// Gates of the net.
   Gate::List _gates;
@@ -183,9 +231,9 @@ private:
   std::unordered_map<GateId, GateFlags> _flags;
 
   /// Input gates of the net.
-  std::unordered_set<GateId> _sources;
+  GateIdSet _sources;
   /// Output gates of the net.
-  std::unordered_set<GateId> _targets;
+  GateIdSet _targets;
 
   /// All subnets including the empty ones.
   List _subnets;

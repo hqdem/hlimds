@@ -20,6 +20,8 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ## General Notes
 
+### Environment variables
+
 Several environment variables should be set during the Utopia building.
 To keep the value of the environment variable in your system permanenly, add the
 appropriate command to either `.profile` or `.bashrc` file. For example, to set
@@ -29,10 +31,23 @@ export SOME_DIR=/usr
 ```
 To check if value is set, use `echo $SOME_DIR` command.
 
+### Working directory
+
 In this guide `<workdir>` path appears several times. This string denotes
 a path to user's working directory (e.g. `~/work`, `~/projects`). It is not
 necessary for the project's building to have the same `<workdir>` all the
 times it is used in this guide.
+
+### Parallelization
+
+To speed up building, several tools like `make` or `ninja` provide options
+that aimed at running multiple jobs in parallel. For example, to run `make`
+in 4 threads do the following:
+```
+make -j4
+```
+It is recommended to use such options upon building the project dependencies
+(like CIRCT/LLVM), due to significant reduction of the compilation time.
 
 ## System Requirements
 

@@ -59,7 +59,8 @@ public:
   #pragma pack(pop)
 
   /// Creates an empty net (level=0 stands for the top level).
-  GNet(unsigned level = 0): _level(0) {
+  GNet(unsigned level = 0):
+      _level(0), _nTriggers(0), _nGatesInSubnets(0) {
     const std::size_t N = std::max(1024*1024 >> (5*level), 64);
     const std::size_t M = std::max(1024 >> level, 64);
 
@@ -105,6 +106,21 @@ public:
   /// Returns the number of gates in the net.
   std::size_t nGates() const {
     return _gates.size();
+  }
+
+  /// Returns the number of the net's inputs.
+  std::size_t nSources() const {
+    return _sources.size();
+  }
+
+  /// Returns the number of the net's outputs.
+  std::size_t nTargets() const {
+    return _targets.size();
+  }
+
+  /// Returns the number of the net's triggers.
+  std::size_t nTriggers() const {
+    return _nTriggers;
   }
 
   /// Returns the collection of the net's gates.
@@ -232,6 +248,9 @@ private:
   GateIdSet _sources;
   /// Output gates of the net.
   GateIdSet _targets;
+
+  /// The number of triggers.
+  std::size_t _nTriggers;
 
   /// All subnets including the empty ones.
   List _subnets;

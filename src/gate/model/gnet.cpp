@@ -46,6 +46,10 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
     }
   }
 
+  if (gate->isTrigger()) {
+    _nTriggers++;
+  }
+
   return gate->id();
 }
 
@@ -112,6 +116,10 @@ void GNet::removeGate(GateId gid) {
     if (!isSource(out) && checkIfSource(out)) {
       _sources.insert(out);
     }
+  }
+
+  if (gate->isTrigger()) {
+    _nTriggers--;
   }
 
   _flags.erase(i);

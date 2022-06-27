@@ -13,61 +13,40 @@
 
 namespace eda::gate::debugger {
 
-bool Checker::areEqual(const std::vector<GNet> &nets,
-                       const Checker::GateIdMap *connectTo,
-                       const Checker::GateBindList &ibind,
-                       const Checker::GateBindList &obind) const {
-  Encoder encoder;
-  encoder.setConnectTo(connectTo);
-
-  // Equate the inputs.
-  for (const auto &[lhsGateId, rhsGateId] : ibind) {
-    const auto x = encoder.var(lhsGateId, 0);
-    const auto y = encoder.var(rhsGateId, 0);
-
-    encoder.encodeBuf(y, x, true);
-  }
-
-  // Encode the nets.
-  for (const auto &net : nets) {
-    encoder.encode(net, 0);
-  }
-
-  // Compare the outputs.
-  Context::Clause existsDiff;
-  for (const auto &[lhsGateId, rhsGateId] : obind) {
-    const auto y  = encoder.newVar();
-    const auto x1 = encoder.var(lhsGateId, 0);
-    const auto x2 = encoder.var(rhsGateId, 0);
-
-    encoder.encodeXor(y, x1, x2, true, true, true);
-    existsDiff.push(Context::lit(y, true));
-  }
-
-  // (lOut[1] != rOut[1]) || ... || (lOut[m] != rOut[m]).
-  encoder.encode(existsDiff);
-
-  const auto verdict = !encoder.solve();
-
-  if (!verdict) {
-    error(encoder.context(), ibind, obind);
-  }
-
-  return verdict;
-}
-
-bool Checker::areEqual(const GNet &lhs,
-                       const GNet &rhs,
-                       const Checker::GateBindList &ibind,
-                       const Checker::GateBindList &obind) const {
-  return areEqual({ lhs, rhs }, nullptr, ibind, obind);
-}
-
 bool Checker::areEqual(const GNet &lhs,
                        const GNet &rhs,
                        const GateBindList &ibind,
                        const GateBindList &obind,
-                       const GateBindList &tbind) const {
+                       const Hints &hints) const {
+
+  if (lhs.nSources() != rhs.nSources() ||
+      lhs.nTargets() != rhs.nTargets()) {
+    return false;
+  }
+
+  assert(lhs.nSources() == ibind.size());
+  assert(rhs.nTargets() == obind.size());
+
+  if (lhs.isComb() && rhs.isComb()) {
+    return areEqualComb(lhs, rhs, ibind, obind);
+  }
+
+  // TODO:
+  return false;
+}
+
+bool Checker::areEqualComb(const GNet &lhs,
+                           const GNet &rhs,
+                           const Checker::GateBindList &ibind,
+                           const Checker::GateBindList &obind) const {
+  return areEqualComb({ &lhs, &rhs }, nullptr, ibind, obind);
+}
+
+bool Checker::areEqualSeq(const GNet &lhs,
+                          const GNet &rhs,
+                          const GateBindList &ibind,
+                          const GateBindList &obind,
+                          const GateBindList &tbind) const {
   GateBindList imap(ibind);
   GateBindList omap(obind);
 
@@ -91,19 +70,19 @@ bool Checker::areEqual(const GNet &lhs,
     }
   }
 
-  return areEqual(lhs, rhs, imap, omap);
+  return areEqualComb(lhs, rhs, imap, omap);
 }
 
-bool Checker::areEqual(const GNet &lhs,
-                       const GNet &rhs,
-                       const GNet &enc,
-                       const GNet &dec,
-                       const GateBindList &ibind,
-                       const GateBindList &obind,
-                       const GateBindList &lhsTriEncIn,
-                       const GateBindList &lhsTriDecOut,
-                       const GateBindList &rhsTriEncOut,
-                       const GateBindList &rhsTriDecIn) const {
+bool Checker::areEqualSeq(const GNet &lhs,
+                          const GNet &rhs,
+                          const GNet &enc,
+                          const GNet &dec,
+                          const GateBindList &ibind,
+                          const GateBindList &obind,
+                          const GateBindList &lhsTriEncIn,
+                          const GateBindList &lhsTriDecOut,
+                          const GateBindList &rhsTriEncOut,
+                          const GateBindList &rhsTriDecIn) const {
   
   //=========================================//
   //                                         //
@@ -146,7 +125,58 @@ bool Checker::areEqual(const GNet &lhs,
     imap.push_back({ decInId, rhsTriId });
   }
 
-  return areEqual({ lhs, rhs, enc, dec }, &connectTo, imap, omap);
+  return areEqualComb({ &lhs, &rhs, &enc, &dec }, &connectTo, imap, omap);
+}
+
+bool Checker::areEqualComb(const std::vector<const GNet*> &nets,
+                           const Checker::GateIdMap *connectTo,
+                           const Checker::GateBindList &ibind,
+                           const Checker::GateBindList &obind) const {
+  Encoder encoder;
+  encoder.setConnectTo(connectTo);
+
+  // Equate the inputs.
+  for (const auto &[lhsGateId, rhsGateId] : ibind) {
+    const auto x = encoder.var(lhsGateId, 0);
+    const auto y = encoder.var(rhsGateId, 0);
+
+    encoder.encodeBuf(y, x, true);
+  }
+
+  // Encode the nets.
+  for (const auto *net : nets) {
+    encoder.encode(*net, 0);
+  }
+
+  // Compare the outputs.
+  Context::Clause existsDiff;
+  for (const auto &[lhsGateId, rhsGateId] : obind) {
+    const auto y  = encoder.newVar();
+    const auto x1 = encoder.var(lhsGateId, 0);
+    const auto x2 = encoder.var(rhsGateId, 0);
+
+    encoder.encodeXor(y, x1, x2, true, true, true);
+    existsDiff.push(Context::lit(y, true));
+  }
+
+  // (lOut[1] != rOut[1]) || ... || (lOut[m] != rOut[m]).
+  encoder.encode(existsDiff);
+
+  const auto verdict = !encoder.solve();
+
+  if (!verdict) {
+    error(encoder.context(), ibind, obind);
+  }
+
+  return verdict;
+}
+
+bool Checker::areIsomorphic(const GNet &lhs,
+                            const GNet &rhs,
+                            const GateBindList &ibind,
+                            const GateBindList &obind) const {
+  // TODO:
+  return false;
 }
 
 void Checker::error(Context &context,

@@ -103,6 +103,11 @@ public:
     return isFlat() || (!hasOrphans() && !hasEmptySubnets());
   }
 
+  /// Checks whether the net is combinational.
+  bool isComb() const {
+    return _nTriggers == 0;
+  }
+
   /// Returns the number of gates in the net.
   std::size_t nGates() const {
     return _gates.size();

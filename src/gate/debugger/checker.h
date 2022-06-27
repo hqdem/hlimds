@@ -18,6 +18,14 @@ using namespace eda::gate::model;
 namespace eda::gate::debugger {
 
 /**
+ * \brief Represents hints for logic equivalence checking (LEC).
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
+struct Hints {
+  // TODO:
+};
+
+/**
  * \brief Implements a logic equivalence checker (LEC).
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
@@ -28,39 +36,52 @@ public:
   using GateBindList = std::vector<GateBind>;
   using GateIdMap = Context::GateIdMap;
 
-  /// Checks logic equivalence of two flat combinational nets.
+  /// Checks logic equivalence of two nets.
   bool areEqual(const GNet &lhs,
                 const GNet &rhs,
-	        const GateBindList &ibind,
-	        const GateBindList &obind) const;
+                const GateBindList &ibind,
+                const GateBindList &obind,
+                const Hints &hints) const;
+
+  /// Checks logic equivalence of two flat combinational nets.
+  bool areEqualComb(const GNet &lhs,
+                    const GNet &rhs,
+	            const GateBindList &ibind,
+	            const GateBindList &obind) const;
 
   /// Checks logic equivalence of two flat sequential nets
   /// with one-to-one correspondence of triggers.
-  bool areEqual(const GNet &lhs,
-                const GNet &rhs,
-                const GateBindList &ibind,
-                const GateBindList &obind,
-                const GateBindList &tbind) const;
+  bool areEqualSeq(const GNet &lhs,
+                   const GNet &rhs,
+                   const GateBindList &ibind,
+                   const GateBindList &obind,
+                   const GateBindList &tbind) const;
 
   /// Checks logic equivalence of two flat sequential nets
   /// with given correspondence of state encodings.
-  bool areEqual(const GNet &lhs,
-                const GNet &rhs,
-                const GNet &enc,
-                const GNet &dec,
-                const GateBindList &ibind,
-                const GateBindList &obind,
-                const GateBindList &lhsTriEncIn,
-                const GateBindList &lhsTriDecOut,
-                const GateBindList &rhsTriEncOut,
-                const GateBindList &rhsTriDecIn) const;
+  bool areEqualSeq(const GNet &lhs,
+                   const GNet &rhs,
+                   const GNet &enc,
+                   const GNet &dec,
+                   const GateBindList &ibind,
+                   const GateBindList &obind,
+                   const GateBindList &lhsTriEncIn,
+                   const GateBindList &lhsTriDecOut,
+                   const GateBindList &rhsTriEncOut,
+                   const GateBindList &rhsTriDecIn) const;
+
+  /// Checks isomorphism of two nets.
+  bool areIsomorphic(const GNet &lhs,
+                     const GNet &rhs,
+                     const GateBindList &ibind,
+                     const GateBindList &obind) const;
 
 private:
-  /// Checks logic equivalence of two combinational nets.
-  bool areEqual(const std::vector<GNet> &nets,
-                const GateIdMap *connectTo,
-	        const GateBindList &ibind,
-	        const GateBindList &obind) const;
+  /// Checks logic equivalence of two flat combinational nets.
+  bool areEqualComb(const std::vector<const GNet*> &nets,
+                    const GateIdMap *connectTo,
+	            const GateBindList &ibind,
+	            const GateBindList &obind) const;
 
   /// Handles an error (prints the diagnostics, etc.).
   void error(Context &context,

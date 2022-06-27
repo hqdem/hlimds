@@ -49,6 +49,20 @@ GNet::GateId GNet::addGate(Gate *gate) {
   return gate->id();
 }
 
+void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
+  auto *gate = Gate::get(gid);
+
+  gate->setKind(kind);
+  gate->setInputs(inputs);
+
+  // Update the source flag (the target flag does not change).
+  if (checkIfSource(gid)) {
+    _sources.insert(gid);
+  } else {
+    _sources.erase(gid);
+  }  
+}
+
 void GNet::removeGate(GateId gid) {
   auto i = _flags.find(gid);
   assert(i != _flags.end());

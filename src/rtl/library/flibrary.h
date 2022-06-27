@@ -57,6 +57,10 @@ struct FLibrary {
   virtual ~FLibrary() {} 
 };
 
+/**
+ * \brief Functional library default implementation.
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
 class FLibraryDefault final: public FLibrary {
 public:
   static FLibrary& get() {

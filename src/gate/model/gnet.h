@@ -143,11 +143,7 @@ public:
   }
 
   /// Modifies the existing gate.
-  void setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
-    auto *gate = Gate::get(gid);
-    gate->setKind(kind);
-    gate->setInputs(inputs);
-  }
+  void setGate(GateId gid, GateSymbol kind, const Signal::List &inputs);
 
   /// Removes the gate from the net.
   void removeGate(GateId gid);

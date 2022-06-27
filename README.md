@@ -49,6 +49,8 @@ below are specific to this operating system:
 * `gcc`
 * `liblpsolve55-dev`
 * `libtool`
+* `libxerces-c3.2`
+* `libxerces-c-dev`
 * `lld`
 * `make`
 * `ninja-build`
@@ -58,7 +60,7 @@ below are specific to this operating system:
 
 To install them, do the following:
 ```
-sudo apt-get install autoconf bison clang clang-tidy cmake flex g++ gcc liblpsolve55-dev libtool lld make ninja-build python zlib1g zlib1g-dev
+sudo apt-get install autoconf bison clang clang-tidy cmake flex g++ gcc liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld make ninja-build python zlib1g zlib1g-dev
 ```
 
 ### CIRCT Installation
@@ -141,23 +143,6 @@ sudo make install
 If you would like to install CTemplate to a non-standard location,
 please specify `--prefix` option of `configure` script to installation directory you want
 and set `CT_DIR` environment variable to it too.
-
-### Xerces-C++ XML Parser Installation
-
-```
-cd <workdir>
-wget https://dlcdn.apache.org//xerces/c/3/sources/xerces-c-3.2.3.tar.gz
-tar xf xerces-c-3.2.3.tar.gz
-cd xerces-c-3.2.3
-mkdir build
-cd build
-../configure
-make
-sudo make install
-```
-If you would like to install Xerces-C++ XML Parser to a non-standard location,
-please specify `--prefix` option of `configure` script to installation directory you want
-and set `XERCES_DIR` environment variable to it too.
 
 ## Working in Command Line
 

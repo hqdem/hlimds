@@ -208,9 +208,10 @@ public:
   void clear();
 
 private:
-  /// Adds the gate.
-  GateId addGate(Gate *gate);
-  /// Adds the subnet.
+  /// Adds the gate to the net and sets the subnet index.
+  /// The subnet is not modified.
+  GateId addGate(Gate *gate, SubnetId sid = INV_SUBNET);
+  /// Adds the subnet to the net.
   SubnetId addSubnet(GNet *subnet);
 
   /// Checks whether the gate is source.

@@ -15,14 +15,14 @@ using namespace eda::utils;
 
 namespace eda::gate::model {
 
-GNet::GateId GNet::addGate(Gate *gate) {
+GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   const auto gid = gate->id();
   assert(_flags.find(gid) == _flags.end());
 
   unsigned gindex = _gates.size();
   _gates.push_back(gate);
 
-  GateFlags flags{0, INV_SUBNET, gindex};
+  GateFlags flags{0, sid, gindex};
   _flags.insert({gid, flags});
 
   if (checkIfSource(gid)) _sources.insert(gid);
@@ -201,11 +201,7 @@ GNet::SubnetId GNet::addSubnet(GNet *subnet) {
     _emptySubnets.insert(sid);
   } else {
     for (auto *gate : subnet->gates()) {
-      unsigned idx = _gates.size();
-      addGate(gate);
-
-      GateFlags flags{0, sid, idx};
-      _flags.insert({gate->id(), flags});
+      addGate(gate, sid);
     }
   }
 

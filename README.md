@@ -31,13 +31,6 @@ export SOME_DIR=/usr
 ```
 To check if value is set, use `echo $SOME_DIR` command.
 
-### Working directory
-
-In this guide `<workdir>` path appears several times. This string denotes
-a path to user's working directory (e.g. `~/work`, `~/projects`). It is not
-necessary for the project's building to have the same `<workdir>` all the
-times it is used in this guide.
-
 ### Parallelization
 
 To speed up building, several tools like `make` or `ninja` provide options
@@ -48,6 +41,13 @@ make -j4
 ```
 It is recommended to use such options upon building the project dependencies
 (like CIRCT/LLVM), due to significant reduction of the compilation time.
+
+### Working directory
+
+In this guide `<workdir>` path appears several times. This string denotes
+a path to user's working directory (e.g. `~/work`, `~/projects`). It is not
+necessary for the project's building to have the same `<workdir>` all the
+times it is used in this guide.
 
 ## System Requirements
 

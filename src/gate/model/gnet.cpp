@@ -56,8 +56,10 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
 void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
   auto *gate = Gate::get(gid);
 
+  if (gate->isTrigger()) _nTriggers--;
   gate->setKind(kind);
   gate->setInputs(inputs);
+  if (gate->isTrigger()) _nTriggers++;
 
   // Update the source flag (the target flag does not change).
   if (checkIfSource(gid)) {

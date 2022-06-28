@@ -155,9 +155,9 @@ cd ctemplate
 make
 sudo make install
 ```
-If you would like to install CTemplate to a non-standard location,
-please specify `--prefix` option of `configure` script to installation directory you want
-and set `CT_DIR` environment variable to it too.
+If you would like to install CTemplate to a non-standard location, please
+specify `--prefix` option of `configure` script to installation directory
+you want and set `CT_DIR` environment variable to it too.
 
 ## Working in Command Line
 

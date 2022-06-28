@@ -161,6 +161,17 @@ and set `CT_DIR` environment variable to it too.
 
 ## Working in Command Line
 
+### Building Project w/ Tests
+
+```
+cmake -S . -B build -G Ninja
+cmake --build build
+```
+or simply run the following script:
+```
+./build.sh
+```
+
 ### Building Project w/o Tests
 
 ```
@@ -173,13 +184,6 @@ cmake --build build
 
 ```
 ./build/src/umain hls <file(s)>
-```
-
-### Building Project w/ Tests
-
-```
-cmake -S . -B build -G Ninja
-cmake --build build
 ```
 
 ### Running Tests

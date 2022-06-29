@@ -29,6 +29,12 @@ the `/usr` value to the `SOME_DIR` variable, the command should be as follows:
 ```
 export SOME_DIR=/usr
 ```
+To make this variable-value pair active in your terminal session you need either
+to reboot your operating system or run the following command (it is supposed
+that `export` command was written in `.profile`):
+```
+source ~/.profile
+```
 To check if value is set, use `echo $SOME_DIR` command.
 
 ### Parallelization
@@ -75,7 +81,9 @@ below are specific to this operating system:
 
 To install them, do the following:
 ```
-sudo apt-get install autoconf bison clang clang-tidy cmake flex g++ gcc liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld make ninja-build python zlib1g zlib1g-dev
+sudo apt-get install autoconf bison clang clang-tidy cmake flex g++ gcc \
+    liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld make \
+    ninja-build python zlib1g zlib1g-dev
 ```
 
 ### CIRCT Installation
@@ -90,19 +98,19 @@ git checkout 6de88ef7
 git submodule update
 ```
 
-#### Build and test LLVM/MLIR
+#### LLVM/MLIR Installation
 
 ```
 cd circt
 mkdir llvm/build
 cd llvm/build
 cmake -G Ninja ../llvm \
-   -DLLVM_ENABLE_PROJECTS=mlir \
-   -DLLVM_BUILD_EXAMPLES=ON \
-   -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" \
-   -DCMAKE_BUILD_TYPE=Release \
-   -DLLVM_ENABLE_ASSERTIONS=ON \
-   -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON
+    -DLLVM_ENABLE_PROJECTS=mlir \
+    -DLLVM_BUILD_EXAMPLES=ON \
+    -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_ENABLE_ASSERTIONS=ON \
+    -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON
 ninja
 ```
 Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
@@ -110,18 +118,18 @@ Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
 export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
 
-#### Build CIRCT
+#### CIRCT Installation
 
 ```
 cd <workdir>/circt
 mkdir build
 cd build
 cmake -G Ninja .. \
-   -DCMAKE_BUILD_TYPE=Release \
-   -DLLVM_ENABLE_ASSERTIONS=ON \
-   -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
-   -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
-   -DVERILATOR_DISABLE=ON
+    -DCMAKE_BUILD_TYPE=Release \
+    -DLLVM_ENABLE_ASSERTIONS=ON \
+    -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
+    -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
+    -DVERILATOR_DISABLE=ON
 ninja
 ```
 Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
@@ -192,7 +200,6 @@ cmake --build build
 
 ```
 ./build/test/utest
-
 ```
 
 #### Run Specific Tests

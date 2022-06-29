@@ -15,40 +15,112 @@ namespace eda::gate::debugger {
 
 bool Checker::areEqual(const GNet &lhs,
                        const GNet &rhs,
-                       const GateBindList &ibind,
-                       const GateBindList &obind,
                        const Hints &hints) const {
+  const unsigned flatCheckBound = 64 * 1024;
 
   if (lhs.nSources() != rhs.nSources() ||
       lhs.nTargets() != rhs.nTargets()) {
     return false;
   }
 
-  assert(lhs.nSources() == ibind.size());
-  assert(rhs.nTargets() == obind.size());
+  assert(hints.isKnownIoPortBinding());
+  assert(lhs.nSources() == hints.sourceBinding->size());
+  assert(rhs.nTargets() == hints.targetBinding->size());
 
-  if (lhs.isComb() && rhs.isComb()) {
-    return areEqualComb(lhs, rhs, ibind, obind);
+  if (hints.isKnownSubnetBinding() &&
+      lhs.nGates() + rhs.nGates() > 2 * flatCheckBound) {
+    return areEqualHier(lhs, rhs, hints);
   }
 
-  // TODO:
+  assert(lhs.isComb() == rhs.isComb());
+
+  if (lhs.isComb() && rhs.isComb()) {
+    return areEqualComb(lhs, rhs,
+                       *hints.sourceBinding,
+                       *hints.targetBinding);
+  }
+
+  if (hints.isKnownTriggerBinding()) {
+    return areEqualSeq(lhs, rhs,
+                      *hints.sourceBinding,
+                      *hints.targetBinding,
+                      *hints.triggerBinding);
+  }
+
+  if (hints.isKnownStateEncoding()) {
+    return areEqualSeq(lhs, rhs,
+                      *hints.encoder,
+                      *hints.decoder,
+                      *hints.sourceBinding,
+                      *hints.targetBinding,
+                      *hints.lhsTriEncIn,
+                      *hints.lhsTriDecOut,
+                      *hints.rhsTriEncOut,
+                      *hints.rhsTriDecIn);
+  }
+
+  assert(false && "Unimplemented LEC");
   return false;
+}
+
+bool Checker::areEqualHier(const GNet &lhs,
+                           const GNet &rhs,
+                           const Hints &hints) const {
+  assert(!lhs.isFlat() && !rhs.isFlat());
+  assert(lhs.nSubnets() == rhs.nSubnets());
+  assert(lhs.nSubnets() == hints.subnetBinding->size());
+  assert(hints.isKnownInnerBinding());
+
+  for (const auto &[lhsSubnetId, rhsSubnetId] : *hints.subnetBinding) {
+    const auto *lhsSubnet = lhs.subnet(lhsSubnetId);
+    const auto *rhsSubnet = rhs.subnet(rhsSubnetId);
+
+
+    GateBinding imap;
+    for (auto lhsGateId : lhsSubnet->sources()) {
+      const auto &binding = lhs.isSource(lhsGateId) ? *hints.sourceBinding
+                                                    : *hints.innerBinding;
+      auto i = binding.find(lhsGateId);
+      assert(i != binding.end());
+      imap.insert({lhsGateId, i->second});
+    }
+
+    GateBinding omap;
+    for (auto lhsGateId : lhsSubnet->targets()) {
+      const auto &binding = lhs.isTarget(lhsGateId) ? *hints.targetBinding
+                                                    : *hints.innerBinding;
+      auto i = binding.find(lhsGateId);
+      assert(i != binding.end());
+      imap.insert({lhsGateId, i->second});
+    }
+
+    Hints hintsSubnets;
+    hintsSubnets.sourceBinding = std::make_shared<GateBinding>(std::move(imap));
+    hintsSubnets.targetBinding = std::make_shared<GateBinding>(std::move(omap));
+    hintsSubnets.innerBinding  = hints.innerBinding;
+
+    if (!areEqual(*lhsSubnet, *rhsSubnet, hintsSubnets)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool Checker::areEqualComb(const GNet &lhs,
                            const GNet &rhs,
-                           const Checker::GateBindList &ibind,
-                           const Checker::GateBindList &obind) const {
+                           const GateBinding &ibind,
+                           const GateBinding &obind) const {
   return areEqualComb({ &lhs, &rhs }, nullptr, ibind, obind);
 }
 
 bool Checker::areEqualSeq(const GNet &lhs,
                           const GNet &rhs,
-                          const GateBindList &ibind,
-                          const GateBindList &obind,
-                          const GateBindList &tbind) const {
-  GateBindList imap(ibind);
-  GateBindList omap(obind);
+                          const GateBinding &ibind,
+                          const GateBinding &obind,
+                          const GateBinding &tbind) const {
+  GateBinding imap(ibind);
+  GateBinding omap(obind);
 
   // Cut triggers.
   for (const auto &[lhsTriggerId, rhsTriggerId] : tbind) {
@@ -59,14 +131,14 @@ bool Checker::areEqualSeq(const GNet &lhs,
       return false;
     }
 
-    imap.push_back({ lhsTrigger->id(), rhsTrigger->id() });
+    imap.insert({lhsTrigger->id(), rhsTrigger->id()});
 
     assert(lhsTrigger->arity() == rhsTrigger->arity());
     for (std::size_t i = 0; i < lhsTrigger->arity(); i++) {
       const Signal lhsInput = lhsTrigger->input(i);
       const Signal rhsInput = rhsTrigger->input(i);
 
-      omap.push_back({ lhsInput.gateId(), rhsInput.gateId() });
+      omap.insert({lhsInput.gateId(), rhsInput.gateId()});
     }
   }
 
@@ -77,12 +149,12 @@ bool Checker::areEqualSeq(const GNet &lhs,
                           const GNet &rhs,
                           const GNet &enc,
                           const GNet &dec,
-                          const GateBindList &ibind,
-                          const GateBindList &obind,
-                          const GateBindList &lhsTriEncIn,
-                          const GateBindList &lhsTriDecOut,
-                          const GateBindList &rhsTriEncOut,
-                          const GateBindList &rhsTriDecIn) const {
+                          const GateBinding &ibind,
+                          const GateBinding &obind,
+                          const GateBinding &lhsTriEncIn,
+                          const GateBinding &lhsTriDecOut,
+                          const GateBinding &rhsTriEncOut,
+                          const GateBinding &rhsTriDecIn) const {
   
   //=========================================//
   //                                         //
@@ -102,36 +174,36 @@ bool Checker::areEqualSeq(const GNet &lhs,
 
   Context::GateIdMap connectTo;
 
-  GateBindList imap(ibind);
-  GateBindList omap(obind);
+  GateBinding imap(ibind);
+  GateBinding omap(obind);
 
   // Connect the encoder inputs to the LHS-trigger D inputs' drivers.
   for (const auto &[lhsTriId, encInId] : lhsTriEncIn) {
-    connectTo.insert({ encInId, Gate::get(lhsTriId)->input(0).gateId() });
+    connectTo.insert({encInId, Gate::get(lhsTriId)->input(0).gateId()});
   }
 
   // Connect the LHS-trigger outputs to the decoder outputs.
   for (const auto &[lhsTriId, decOutId] : lhsTriDecOut) {
-    connectTo.insert({ lhsTriId, decOutId });
+    connectTo.insert({lhsTriId, decOutId});
   }
 
   // Append the encoder outputs and the RHS-trigger inputs to the outputs.
   for (const auto &[rhsTriId, encOutId] : rhsTriEncOut) {
-    omap.push_back({ encOutId, Gate::get(rhsTriId)->input(0).gateId() });
+    omap.insert({encOutId, Gate::get(rhsTriId)->input(0).gateId()});
   }
 
   // Append the decoder inputs and the RHS-trigger outputs to to the inputs.
   for (const auto &[rhsTriId, decInId] : rhsTriDecIn) {
-    imap.push_back({ decInId, rhsTriId });
+    imap.insert({decInId, rhsTriId});
   }
 
-  return areEqualComb({ &lhs, &rhs, &enc, &dec }, &connectTo, imap, omap);
+  return areEqualComb({&lhs, &rhs, &enc, &dec}, &connectTo, imap, omap);
 }
 
 bool Checker::areEqualComb(const std::vector<const GNet*> &nets,
                            const Checker::GateIdMap *connectTo,
-                           const Checker::GateBindList &ibind,
-                           const Checker::GateBindList &obind) const {
+                           const Checker::GateBinding &ibind,
+                           const Checker::GateBinding &obind) const {
   Encoder encoder;
   encoder.setConnectTo(connectTo);
 
@@ -171,17 +243,9 @@ bool Checker::areEqualComb(const std::vector<const GNet*> &nets,
   return verdict;
 }
 
-bool Checker::areIsomorphic(const GNet &lhs,
-                            const GNet &rhs,
-                            const GateBindList &ibind,
-                            const GateBindList &obind) const {
-  // TODO:
-  return false;
-}
-
 void Checker::error(Context &context,
-                    const GateBindList &ibind,
-                    const GateBindList &obind) const {
+                    const GateBinding &ibind,
+                    const GateBinding &obind) const {
   bool comma;
   context.dump("miter.cnf");
 

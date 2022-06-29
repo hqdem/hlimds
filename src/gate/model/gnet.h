@@ -153,6 +153,16 @@ public:
     return _targets.find(gid) != _targets.end();
   }
 
+  /// Returns input gates of the net.
+  const GateIdSet &sources() const {
+    return _sources;
+  }
+
+  /// Returns output gates of the net.
+  const GateIdSet &targets() const {
+    return _targets;
+  }
+
   /// Adds a new (empty) gate and returns its identifier.
   GateId newGate() {
     return addGate(new Gate());

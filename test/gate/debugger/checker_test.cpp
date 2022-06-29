@@ -22,24 +22,27 @@ static bool checkEquivTest(unsigned N,
                            const GNet &rhs,
                            const Signal::List &rhsInputs,
                            Gate::Id rhsOutputId) {
-  Checker::GateBindList imap, omap;
+  using GateBinding = Checker::GateBinding;
+
+  Checker checker;
+  GateBinding imap, omap;
 
   std::cout << lhs << std::endl;
   std::cout << rhs << std::endl;
 
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {
-    Checker::GateBind binding(lhsInputs[i].gateId(),
-                              rhsInputs[i].gateId());
-    imap.push_back(binding);
+    imap.insert({lhsInputs[i].gateId(), rhsInputs[i].gateId()});
   }
 
   // Output bindings.
-  omap.push_back({ lhsOutputId, rhsOutputId });
+  omap.insert({lhsOutputId, rhsOutputId});
 
-  Hints hints;
-  Checker checker;
-  return checker.areEqual(lhs, rhs, imap, omap, hints); 
+  Checker::Hints hints;
+  hints.sourceBinding = std::make_shared<GateBinding>(std::move(imap));
+  hints.targetBinding = std::make_shared<GateBinding>(std::move(omap));
+
+  return checker.areEqual(lhs, rhs, hints); 
 }
 
 bool checkNorNorTest(unsigned N) {

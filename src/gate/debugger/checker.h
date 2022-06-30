@@ -25,7 +25,6 @@ namespace eda::gate::debugger {
 class Checker final {
 public:
   using GateBinding = std::unordered_map<GNet::GateId, GNet::GateId>;
-  using GateIdMap = Context::GateIdMap;
   using SubnetBinding = std::unordered_map<GNet::SubnetId, GNet::SubnetId>;
 
   /// Represents LEC hints.
@@ -112,7 +111,7 @@ private:
 
   /// Checks logic equivalence of two flat combinational nets.
   bool areEqualComb(const std::vector<const GNet*> &nets,
-                    const GateIdMap *connectTo,
+                    const GateBinding *connectTo,
 	            const GateBinding &ibind,
 	            const GateBinding &obind) const;
 

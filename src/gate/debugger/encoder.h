@@ -74,7 +74,7 @@ public:
     return _context;
   }
 
-  void setConnectTo(const Context::GateIdMap *connectTo) {
+  void setConnectTo(const Context::GateBinding *connectTo) {
     _context.setConnectTo(connectTo);
   }
 

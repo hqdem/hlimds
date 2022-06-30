@@ -172,8 +172,7 @@ bool Checker::areEqualSeq(const GNet &lhs,
   //                                         //
   //=========================================//
 
-  Context::GateIdMap connectTo;
-
+  GateBinding connectTo;
   GateBinding imap(ibind);
   GateBinding omap(obind);
 
@@ -201,9 +200,9 @@ bool Checker::areEqualSeq(const GNet &lhs,
 }
 
 bool Checker::areEqualComb(const std::vector<const GNet*> &nets,
-                           const Checker::GateIdMap *connectTo,
-                           const Checker::GateBinding &ibind,
-                           const Checker::GateBinding &obind) const {
+                           const GateBinding *connectTo,
+                           const GateBinding &ibind,
+                           const GateBinding &obind) const {
   Encoder encoder;
   encoder.setConnectTo(connectTo);
 

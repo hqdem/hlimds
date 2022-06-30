@@ -42,6 +42,8 @@ public:
   using GateIdSet   = std::unordered_set<GateId>;
   using SubnetId    = unsigned;
   using SubnetIdSet = std::set<SubnetId>;
+  using Link        = Gate::Link;
+  using LinkList    = Gate::LinkList;
   using Value       = std::vector<bool>;
   using In          = std::vector<GateIdList>;
   using Out         = GateIdList;
@@ -251,9 +253,38 @@ public:
   /// Clears the net.
   void clear();
 
+  //===--------------------------------------------------------------------===//
+  // Graph Interface: G(V=GateId, E=Link)
+  //===--------------------------------------------------------------------===//
+
+  /// Returns the number of nodes.
+  std::size_t nNodes() const {
+    return nGates();
+  }
+
+  /// Returns the number of edges.
+  std::size_t nEdges() const {
+    return nConnects();
+  }
+
+  /// Returns the graph sources.
+  const GateIdSet &getSources() const {
+    return sources();
+  }
+
+  /// Returns the outgoing edges of the node.
+  const LinkList &getOutEdges(GateId v) const {
+    return Gate::get(v)->links();
+  }
+
+  /// Returns the end of the edge.
+  GateId leadsTo(const Link &e) const {
+    return e.first;
+  }
+
 private:
   //===--------------------------------------------------------------------===//
-  // Internal Methods 
+  // Internal Methods
   //===--------------------------------------------------------------------===//
 
   /// Adds the gate to the net and sets the subnet index.
@@ -290,7 +321,7 @@ private:
   }
 
   //===--------------------------------------------------------------------===//
-  // Internal Fields 
+  // Internal Fields
   //===--------------------------------------------------------------------===//
 
   /// Level (0 = top level).

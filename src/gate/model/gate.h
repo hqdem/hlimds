@@ -51,7 +51,7 @@ public:
   const Signal::List& inputs() const { return _inputs; }
   const Signal& input(std::size_t i) const { return _inputs[i]; }
 
-  const LinkList links() const { return _links; }
+  const LinkList& links() const { return _links; }
   const Link& link(std::size_t i) const { return _links[i]; }
 
   bool isSource() const {

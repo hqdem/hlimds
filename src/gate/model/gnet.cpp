@@ -15,6 +15,28 @@ using namespace eda::utils;
 
 namespace eda::gate::model {
 
+//===----------------------------------------------------------------------===//
+// Constructors/Destructors 
+//===----------------------------------------------------------------------===//
+
+GNet::GNet(unsigned level):
+    _level(level), _nTriggers(0), _nGatesInSubnets(0) {
+  const std::size_t N = std::max(1024*1024 >> (5*level), 64);
+  const std::size_t M = std::max(1024 >> level, 64);
+
+  _gates.reserve(N);
+  _flags.reserve(N);
+
+  _sources.reserve(M);
+  _targets.reserve(M);
+
+  _subnets.reserve(M);
+}
+
+//===----------------------------------------------------------------------===//
+// Gates 
+//===----------------------------------------------------------------------===//
+
 GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   const auto gid = gate->id();
   assert(_flags.find(gid) == _flags.end());
@@ -162,6 +184,10 @@ bool GNet::checkIfTarget(GateId gid) const {
   // All out-gates are inside the net.
   return false;
 }
+
+//===----------------------------------------------------------------------===//
+// Subnets 
+//===----------------------------------------------------------------------===//
 
 GNet::SubnetId GNet::newSubnet() {
   if (!_emptySubnets.empty())
@@ -350,6 +376,10 @@ void GNet::clear() {
   _emptySubnets.clear();
   _nGatesInSubnets = 0;
 }
+
+//===----------------------------------------------------------------------===//
+// Output 
+//===----------------------------------------------------------------------===//
 
 std::ostream& operator <<(std::ostream &out, const GNet &net) {
   for (const auto *gate: net.gates()) {

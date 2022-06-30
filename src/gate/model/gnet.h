@@ -32,20 +32,19 @@ class GNet final {
   friend class eda::rtl::compiler::Compiler;
 
 public:
-  using List = std::vector<GNet*>;
-  using GateId = Gate::Id;
-  using GateIdList = std::vector<GateId>;
-  using GateIdSet = std::unordered_set<GateId>;
-  using SubnetId = unsigned;
-  using SubnetIdSet = std::set<SubnetId>;
-  using Value = std::vector<bool>;
-  using In = std::vector<GateIdList>;
-  using Out = GateIdList;
+  //===--------------------------------------------------------------------===//
+  // Types
+  //===--------------------------------------------------------------------===//
 
-  /// Invalid subnet index.
-  static const unsigned INV_SUBNET = (1u << 20) - 1;
-  /// Maximum subnet index (max. 2^20 - 1 subnets).
-  static const unsigned MAX_SUBNET = INV_SUBNET - 1;
+  using List        = std::vector<GNet*>;
+  using GateId      = Gate::Id;
+  using GateIdList  = std::vector<GateId>;
+  using GateIdSet   = std::unordered_set<GateId>;
+  using SubnetId    = unsigned;
+  using SubnetIdSet = std::set<SubnetId>;
+  using Value       = std::vector<bool>;
+  using In          = std::vector<GateIdList>;
+  using Out         = GateIdList;
 
   #pragma pack(push,1)
   struct GateFlags {
@@ -58,20 +57,27 @@ public:
   };
   #pragma pack(pop)
 
-  /// Creates an empty net (level=0 stands for the top level).
-  GNet(unsigned level = 0):
-      _level(0), _nTriggers(0), _nGatesInSubnets(0) {
-    const std::size_t N = std::max(1024*1024 >> (5*level), 64);
-    const std::size_t M = std::max(1024 >> level, 64);
+  //===--------------------------------------------------------------------===//
+  // Constants
+  //===--------------------------------------------------------------------===//
 
-    _gates.reserve(N);
-    _flags.reserve(N);
+  /// Invalid subnet index.
+  static const unsigned INV_SUBNET = (1u << 20) - 1;
+  /// Maximum subnet index (max. 2^20 - 1 subnets).
+  static const unsigned MAX_SUBNET = INV_SUBNET - 1;
 
-    _sources.reserve(M);
-    _targets.reserve(M);
+  //===--------------------------------------------------------------------===//
+  // Constructors/Destructors
+  //===--------------------------------------------------------------------===//
 
-    _subnets.reserve(M);
-  }
+  /// Constructs an empty net (level=0 stands for the top level).
+  explicit GNet(unsigned level = 0);
+  /// Destructs the net.
+  ~GNet() = default;
+
+  //===--------------------------------------------------------------------===//
+  // Properties 
+  //===--------------------------------------------------------------------===//
 
   /// Checks whether the net is top-level.
   bool isTop() const {
@@ -108,6 +114,10 @@ public:
     return _nTriggers == 0;
   }
 
+  //===--------------------------------------------------------------------===//
+  // Statistics 
+  //===--------------------------------------------------------------------===//
+
   /// Returns the number of gates in the net.
   std::size_t nGates() const {
     return _gates.size();
@@ -128,9 +138,28 @@ public:
     return _nTriggers;
   }
 
+  /// Returns the number of subnets in the net.
+  std::size_t nSubnets() const {
+    return _subnets.size();
+  }
+
+  //===--------------------------------------------------------------------===//
+  // Gates 
+  //===--------------------------------------------------------------------===//
+
   /// Returns the collection of the net's gates.
   const Gate::List &gates() const {
     return _gates;
+  }
+
+  /// Returns input gates of the net.
+  const GateIdSet &sources() const {
+    return _sources;
+  }
+
+  /// Returns output gates of the net.
+  const GateIdSet &targets() const {
+    return _targets;
   }
 
   /// Gets a gate by index.
@@ -153,16 +182,6 @@ public:
     return _targets.find(gid) != _targets.end();
   }
 
-  /// Returns input gates of the net.
-  const GateIdSet &sources() const {
-    return _sources;
-  }
-
-  /// Returns output gates of the net.
-  const GateIdSet &targets() const {
-    return _targets;
-  }
-
   /// Adds a new (empty) gate and returns its identifier.
   GateId newGate() {
     return addGate(new Gate());
@@ -179,20 +198,9 @@ public:
   /// Removes the gate from the net.
   void removeGate(GateId gid);
 
-  /// Returns a copy of the gate flags.
-  GateFlags getFlags(GateId gid) const {
-    return _flags.find(gid)->second;
-  }
-
-  /// Returns the reference to the gate flags.
-  GateFlags &getFlags(GateId gid) {
-    return _flags.find(gid)->second;
-  }
-
-  /// Returns the number of subnets in the net.
-  std::size_t nSubnets() const {
-    return _subnets.size();
-  }
+  //===--------------------------------------------------------------------===//
+  // Subnets 
+  //===--------------------------------------------------------------------===//
 
   /// Returns the collection of the net's subnets.
   const List &subnets() const {
@@ -204,14 +212,14 @@ public:
     return _subnets[index];
   }
 
-  /// Returns the subnet the given gate belongs to.
-  SubnetId getGateSubnet(GateId gid) const {
-    return getFlags(gid).subnet;
-  }
-
   /// Checks whether the gate is an orphan (does not belong to any subnet).
   bool isOrphan(GateId gid) const {
     return getFlags(gid).subnet == INV_SUBNET;
+  }
+
+  /// Returns the subnet the given gate belongs to.
+  SubnetId getGateSubnet(GateId gid) const {
+    return getFlags(gid).subnet;
   }
 
   /// Adds a new (empty) subnet and returns its identifier.
@@ -239,16 +247,34 @@ public:
   void clear();
 
 private:
+  //===--------------------------------------------------------------------===//
+  // Internal Methods 
+  //===--------------------------------------------------------------------===//
+
   /// Adds the gate to the net and sets the subnet index.
   /// The subnet is not modified.
   GateId addGate(Gate *gate, SubnetId sid = INV_SUBNET);
   /// Adds the subnet to the net.
   SubnetId addSubnet(GNet *subnet);
 
+  /// Returns a copy of the gate flags.
+  GateFlags getFlags(GateId gid) const {
+    return _flags.find(gid)->second;
+  }
+
+  /// Returns the reference to the gate flags.
+  GateFlags &getFlags(GateId gid) {
+    return _flags.find(gid)->second;
+  }
+
   /// Checks whether the gate is source.
   bool checkIfSource(GateId gid) const;
   /// Checks whether the gate is target.
   bool checkIfTarget(GateId gid) const;
+
+  //===--------------------------------------------------------------------===//
+  // Internal Fields 
+  //===--------------------------------------------------------------------===//
 
   /// Level (0 = top level).
   const unsigned _level;
@@ -276,6 +302,7 @@ private:
   std::size_t _nGatesInSubnets;
 };
 
+/// Outputs the net.
 std::ostream& operator <<(std::ostream &out, const GNet &net);
 
 } // namespace eda::gate::model

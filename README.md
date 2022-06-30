@@ -31,7 +31,7 @@ export SOME_DIR=/usr
 ```
 To make this variable-value pair active in your terminal session you need either
 to reboot your operating system or run the following command (it is supposed
-that `export` command was written in `.profile`):
+that the variable was established in `.profile`):
 ```
 source ~/.profile
 ```
@@ -101,7 +101,7 @@ git submodule update
 #### LLVM/MLIR Installation
 
 ```
-cd circt
+cd <workdir>/circt
 mkdir llvm/build
 cd llvm/build
 cmake -G Ninja ../llvm \
@@ -179,6 +179,8 @@ or simply run the following script:
 ```
 ./build.sh
 ```
+If you've modified some of the project files, you can use `rebuild.sh` script
+for incremental build.
 
 ### Building Project w/o Tests
 
@@ -201,7 +203,10 @@ cmake --build build
 ```
 ./build/test/utest
 ```
-
+or
+```
+./run-tests.sh
+```
 #### Run Specific Tests
 
 ```

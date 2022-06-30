@@ -225,7 +225,7 @@ public:
   }
 
   /// Returns the subnet the given gate belongs to.
-  SubnetId getGateSubnet(GateId gid) const {
+  SubnetId getSubnetId(GateId gid) const {
     return getFlags(gid).subnet;
   }
 
@@ -254,8 +254,11 @@ public:
   void clear();
 
   //===--------------------------------------------------------------------===//
-  // Graph Interface: G(V=GateId, E=Link)
+  // Graph Interface
   //===--------------------------------------------------------------------===//
+
+  using V = GateId;
+  using E = Link;
 
   /// Returns the number of nodes.
   std::size_t nNodes() const {
@@ -281,6 +284,13 @@ public:
   GateId leadsTo(const Link &e) const {
     return e.first;
   }
+
+  //===--------------------------------------------------------------------===//
+  // Transforms
+  //===--------------------------------------------------------------------===//
+
+  /// Sorts the gates in topological order.
+  void sortTopologically();
 
 private:
   //===--------------------------------------------------------------------===//

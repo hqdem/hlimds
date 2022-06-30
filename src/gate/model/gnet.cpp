@@ -7,11 +7,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/gnet.h"
+#include "util/graph.h"
 #include "util/set.h"
 
 #include <algorithm>
 
 using namespace eda::utils;
+using namespace eda::utils::graph;
 
 namespace eda::gate::model {
 
@@ -373,6 +375,113 @@ void GNet::clear() {
 }
 
 //===----------------------------------------------------------------------===//
+// Transforms
+//===----------------------------------------------------------------------===//
+
+/// Subnet-level graph of the net.
+struct Subgraph final {
+  using V = GNet*;
+  using E = V;
+
+  Subgraph(GNet &net): nV(net.nSubnets()), nE(0) {
+    sources.reserve(nV);
+
+    for (auto *subnet : net.subnets()) {
+      // Collect sources.
+      for (auto source : subnet->sources()) {
+        if (net.isSource(source)) {
+          sources.push_back(subnet);
+          break;
+        }
+      }
+
+      // Identify edges.
+      auto &outEdges = edges[subnet];
+      for (auto target : subnet->targets()) {
+        auto *gate = Gate::get(target);
+        if (gate->isTrigger()) continue;
+
+        for (auto link : gate->links()) {
+          auto  sid = net.getSubnetId(link.first);
+          auto *end = const_cast<GNet*>(net.subnet(sid));
+
+          if (end != subnet) {
+            outEdges.insert(end);
+          }
+        }
+      }
+
+      nE += outEdges.size();
+    }
+  }
+
+  std::size_t nNodes() const { return nV; }
+  std::size_t nEdges() const { return nE; }
+
+  const std::vector<V> &getSources() const {
+    return sources;
+  }
+
+  const std::unordered_set<E> &getOutEdges(V v) const {
+    return edges.find(v)->second;
+  }
+
+  V leadsTo(E e) const {
+    return e;
+  }
+
+  std::size_t nV;
+  std::size_t nE;
+
+  std::vector<V> sources;
+  std::unordered_map<V, std::unordered_set<E>> edges;
+};
+
+void GNet::sortTopologically() {
+  assert(isWellFormed());
+
+  // If the net is flat, sort the gates and update the indices.
+  if (isFlat()) {
+    auto gates = topologicalSort<GNet>(*this);
+
+    for (std::size_t i = 0; i < gates.size(); i++) {
+      auto gid = gates[i];
+
+      _gates[i] = Gate::get(gid);
+      getFlags(gid).gindex = i;
+    }
+
+    return;
+  }
+
+  // If the net is hierarchical, sort the subnets.
+  Subgraph subgraph(*this);
+
+  using G = Subgraph;
+  using E = G::E;
+  auto subnets = topologicalSort<G, std::unordered_set<E>>(subgraph);
+
+  // Sort each subnet.
+  for (auto *subnet : subnets) {
+    subnet->sortTopologically();
+  }
+
+  // Sort the gates and update the indices.
+  std::size_t offset = 0;
+  for (auto *subnet : subnets) {
+    for (std::size_t i = 0; i < subnet->nGates(); i++) {
+      auto gid = subnet->gate(i)->id();
+      auto j = offset + i;
+
+      _gates[j] = Gate::get(gid);
+      getFlags(gid).gindex = j;
+    }
+
+    offset += subnet->nGates();
+  }
+}
+
+//===----------------------------------------------------------------------===//
 // Output 
 //===----------------------------------------------------------------------===//
 
@@ -382,5 +491,5 @@ std::ostream& operator <<(std::ostream &out, const GNet &net) {
   }
   return out;
 }
- 
+
 } // namespace eda::gate::model

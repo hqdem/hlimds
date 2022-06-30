@@ -118,27 +118,32 @@ public:
   // Statistics 
   //===--------------------------------------------------------------------===//
 
-  /// Returns the number of gates in the net.
+  /// Returns the number of gates.
   std::size_t nGates() const {
     return _gates.size();
   }
 
-  /// Returns the number of the net's inputs.
+  /// Returns the number of inputs.
   std::size_t nSources() const {
     return _sources.size();
   }
 
-  /// Returns the number of the net's outputs.
+  /// Returns the number of outputs.
   std::size_t nTargets() const {
     return _targets.size();
   }
 
-  /// Returns the number of the net's triggers.
+  /// Returns the number of triggers.
   std::size_t nTriggers() const {
     return _nTriggers;
   }
 
-  /// Returns the number of subnets in the net.
+  /// Returns the number of connections.
+  std::size_t nConnects() const {
+    return _nConnects;
+  }
+
+  /// Returns the number of subnets.
   std::size_t nSubnets() const {
     return _subnets.size();
   }
@@ -147,17 +152,17 @@ public:
   // Gates 
   //===--------------------------------------------------------------------===//
 
-  /// Returns the collection of the net's gates.
+  /// Returns the collection of gates.
   const Gate::List &gates() const {
     return _gates;
   }
 
-  /// Returns input gates of the net.
+  /// Returns the collection input gates.
   const GateIdSet &sources() const {
     return _sources;
   }
 
-  /// Returns output gates of the net.
+  /// Returns the collection of output gates.
   const GateIdSet &targets() const {
     return _targets;
   }
@@ -172,12 +177,12 @@ public:
     return _flags.find(gid) != _flags.end();
   }
 
-  /// Checks whether the gate is source.
+  /// Checks whether the gate is an input.
   bool isSource(GateId gid) const {
     return _sources.find(gid) != _sources.end();
   }
 
-  /// Checks whether the gate is target.
+  /// Checks whether the gate is an output.
   bool isTarget(GateId gid) const {
     return _targets.find(gid) != _targets.end();
   }
@@ -202,7 +207,7 @@ public:
   // Subnets 
   //===--------------------------------------------------------------------===//
 
-  /// Returns the collection of the net's subnets.
+  /// Returns the collection of subnets.
   const List &subnets() const {
     return _subnets;
   }
@@ -231,7 +236,7 @@ public:
   /// Moves the gate to the given subnet.
   void moveGate(GateId gid, SubnetId dst);
 
-  /// Merges two subnets and returns the identifier of the joint subnet.
+  /// Merges the subnets and returns the identifier of the joint subnet.
   SubnetId mergeSubnets(SubnetId lhs, SubnetId rhs);
 
   /// Combines all orphan gates into a subnet.
@@ -267,10 +272,22 @@ private:
     return _flags.find(gid)->second;
   }
 
-  /// Checks whether the gate is source.
+  /// Checks whether the gate is an input.
   bool checkIfSource(GateId gid) const;
-  /// Checks whether the gate is target.
+  /// Checks whether the gate is an output.
   bool checkIfTarget(GateId gid) const;
+
+  /// Updates counters when adding a gate.
+  void onAddGate(Gate *gate) {
+    if (gate->isTrigger()) _nTriggers++;
+    _nConnects += gate->arity();
+  }
+
+  /// Updates counters when removing a gate.
+  void onRemoveGate(Gate *gate) {
+    if (gate->isTrigger()) _nTriggers--;
+    _nConnects -= gate->arity();
+  }
 
   //===--------------------------------------------------------------------===//
   // Internal Fields 
@@ -290,15 +307,17 @@ private:
   /// Output gates of the net.
   GateIdSet _targets;
 
-  /// The number of triggers.
+  /// Number of triggers.
   std::size_t _nTriggers;
+  /// Number of connections.
+  std::size_t _nConnects;
 
   /// All subnets including the empty ones.
   List _subnets;
   /// Indices of the empty subnets.
   SubnetIdSet _emptySubnets;
 
-  /// The number of gates that belong to subnets.
+  /// Number of gates that belong to subnets.
   std::size_t _nGatesInSubnets;
 };
 

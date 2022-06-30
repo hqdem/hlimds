@@ -20,7 +20,7 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 
 GNet::GNet(unsigned level):
-    _level(level), _nTriggers(0), _nGatesInSubnets(0) {
+    _level(level), _nTriggers(0), _nConnects(0), _nGatesInSubnets(0) {
   const std::size_t N = std::max(1024*1024 >> (5*level), 64);
   const std::size_t M = std::max(1024 >> level, 64);
 
@@ -68,20 +68,17 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
     }
   }
 
-  if (gate->isTrigger()) {
-    _nTriggers++;
-  }
-
+  onAddGate(gate);
   return gate->id();
 }
 
 void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
   auto *gate = Gate::get(gid);
 
-  if (gate->isTrigger()) _nTriggers--;
+  onRemoveGate(gate);
   gate->setKind(kind);
   gate->setInputs(inputs);
-  if (gate->isTrigger()) _nTriggers++;
+  onAddGate(gate);
 
   // Update the source flag (the target flag does not change).
   if (checkIfSource(gid)) {
@@ -142,10 +139,7 @@ void GNet::removeGate(GateId gid) {
     }
   }
 
-  if (gate->isTrigger()) {
-    _nTriggers--;
-  }
-
+  onRemoveGate(gate);
   _flags.erase(i);
 }
 
@@ -368,13 +362,14 @@ void GNet::removeEmptySubnets() {
 }
 
 void GNet::clear() {
+  _nTriggers = _nConnects = _nGatesInSubnets = 0;
+
   _gates.clear();
   _flags.clear();
   _sources.clear();
   _targets.clear();
   _subnets.clear();
   _emptySubnets.clear();
-  _nGatesInSubnets = 0;
 }
 
 //===----------------------------------------------------------------------===//

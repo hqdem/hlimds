@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/debugger/context.h"
 #include "gate/debugger/encoder.h"
 #include "gate/model/gnet.h"
 
@@ -24,8 +25,9 @@ namespace eda::gate::debugger {
  */
 class Checker final {
 public:
-  using GateBinding = std::unordered_map<GNet::GateId, GNet::GateId>;
+  using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
   using SubnetBinding = std::unordered_map<GNet::SubnetId, GNet::SubnetId>;
+  using GateConnect = Context::GateConnect;
 
   /// Represents LEC hints.
   struct Hints final {
@@ -111,7 +113,7 @@ private:
 
   /// Checks logic equivalence of two flat combinational nets.
   bool areEqualComb(const std::vector<const GNet*> &nets,
-                    const GateBinding *connectTo,
+                    const GateConnect *connectTo,
 	            const GateBinding &ibind,
 	            const GateBinding &obind) const;
 

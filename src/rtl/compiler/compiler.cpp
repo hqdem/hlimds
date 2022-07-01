@@ -63,7 +63,7 @@ Gate::Id Compiler::gateId(const VNode *vnode) const {
     return i->second;
   }
 
-  return Gate::Invalid;
+  return Gate::INVALID;
 }
 
 void Compiler::allocGates(const VNode *vnode, GNet &net) {
@@ -122,7 +122,7 @@ GNet::In Compiler::in(const VNode *vnode) {
 GNet::Out Compiler::out(const VNode *vnode) {
   const auto base = gateId(vnode);
   const auto size = vnode->var().type().width();
-  assert(base != Gate::Invalid);
+  assert(base != Gate::INVALID);
 
   GNet::Out out(size);
   for (unsigned i = 0; i < size; i++) {

@@ -22,6 +22,7 @@ static bool checkEquivTest(unsigned N,
                            const GNet &rhs,
                            const Signal::List &rhsInputs,
                            Gate::Id rhsOutputId) {
+  using Link = Gate::Link;
   using GateBinding = Checker::GateBinding;
 
   Checker checker;
@@ -30,13 +31,18 @@ static bool checkEquivTest(unsigned N,
   std::cout << lhs << std::endl;
   std::cout << rhs << std::endl;
 
+  std::cout << lhs.nSourceLinks() << ", "
+            << lhs.nTargetLinks() << std::endl;
+  std::cout << rhs.nSourceLinks() << ", "
+            << rhs.nTargetLinks() << std::endl;
+
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {
-    imap.insert({lhsInputs[i].gateId(), rhsInputs[i].gateId()});
+    imap.insert({Link(lhsInputs[i]), Link(rhsInputs[i])});
   }
 
   // Output bindings.
-  omap.insert({lhsOutputId, rhsOutputId});
+  omap.insert({Link(lhsOutputId), Link(rhsOutputId)});
 
   Checker::Hints hints;
   hints.sourceBinding = std::make_shared<GateBinding>(std::move(imap));

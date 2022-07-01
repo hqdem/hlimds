@@ -33,26 +33,64 @@ class Gate final {
   friend class eda::rtl::compiler::Compiler;
 
 public:
+  //===--------------------------------------------------------------------===//
+  // Types
+  //===--------------------------------------------------------------------===//
+
   using Id = Signal::GateId;
   using List = std::vector<Gate*>;
-  using Link = std::pair<Id, std::size_t>;
+
+  /// Represents a connection between two gates.
+  struct Link final {
+    // General link.
+    Link(Id source, Id target, std::size_t input):
+      source(source), target(target), input(input) {}
+
+    // Self-link (a port).
+    explicit Link(Id gid): Link(gid, gid, 0) {}
+
+    // Self-link (a port).
+    explicit Link(Signal signal): Link(signal.gateId()) {}
+
+    bool isPort() const {
+      return source == target;
+    }
+
+    bool operator ==(const Link &rhs) const {
+      return source == rhs.source && target == rhs.target && input == rhs.input;
+    }
+
+    /// Source gate.
+    Id source;
+    /// Target gate.
+    Id target;
+    /// Target input.
+    std::size_t input;
+  };
+
   using LinkList = std::vector<Link>;
 
-  static constexpr Id Invalid = -1u; 
+  //===--------------------------------------------------------------------===//
+  // Constants
+  //===--------------------------------------------------------------------===//
+
+  static constexpr Id INVALID = -1u;
+
+  //===--------------------------------------------------------------------===//
+  // Accessor
+  //===--------------------------------------------------------------------===//
 
   /// Returns the gate w/ the given id from the storage.
   static Gate* get(Gate::Id id) { return _storage[id]; }
+
+  //===--------------------------------------------------------------------===//
+  // Properties
+  //===--------------------------------------------------------------------===//
 
   Id id() const { return _id; }
   GateSymbol kind() const { return _kind; }
   std::size_t arity() const { return _inputs.size(); }
   std::size_t fanout() const { return _links.size(); }
-
-  const Signal::List& inputs() const { return _inputs; }
-  const Signal& input(std::size_t i) const { return _inputs[i]; }
-
-  const LinkList& links() const { return _links; }
-  const Link& link(std::size_t i) const { return _links[i]; }
 
   bool isSource() const {
     return _kind == GateSymbol::NOP && _inputs.empty();
@@ -74,6 +112,16 @@ public:
     return !isSource() && !isTrigger();
   }
 
+  //===--------------------------------------------------------------------===//
+  // Connections
+  //===--------------------------------------------------------------------===//
+
+  const Signal::List &inputs() const { return _inputs; }
+  const Signal &input(std::size_t i) const { return _inputs[i]; }
+
+  const LinkList &links() const { return _links; }
+  const Link &link(std::size_t i) const { return _links[i]; }
+
 private:
   /// Creates a gate w/ the given operation and the inputs.
   Gate(GateSymbol kind, const Signal::List inputs):
@@ -93,11 +141,13 @@ private:
     _kind = kind;
   }
 
-  void appendLink(const Link &link) {
+  void appendLink(Id to, std::size_t i) {
+    Link link(_id, to, i);
     _links.push_back(link);
   }
 
-  void removeLink(const Link &link) {
+  void removeLink(Id to, std::size_t input) {
+    Link link(_id, to, input);
     auto i = std::remove(_links.begin(), _links.end(), link);
     _links.erase(i, _links.end());
   }
@@ -105,14 +155,14 @@ private:
   void appendLinks() {
     for (std::size_t i = 0; i < _inputs.size(); i++) {
       auto *gate = Gate::get(_inputs[i].gateId());
-      gate->appendLink({ _id, i });
+      gate->appendLink(_id, i);
     }
   }
 
   void removeLinks() {
     for (std::size_t i = 0; i < _inputs.size(); i++) {
       auto *gate = Gate::get(_inputs[i].gateId());
-      gate->removeLink({ _id, i });
+      gate->removeLink(_id, i);
     }
   }
 
@@ -127,6 +177,33 @@ private:
   static Gate::List _storage;
 };
 
-std::ostream& operator <<(std::ostream &out, const Gate &gate);
+//===----------------------------------------------------------------------===//
+// Output
+//===----------------------------------------------------------------------===//
+
+std::ostream &operator <<(std::ostream &out, const Gate &gate);
 
 } // namespace eda::gate::model
+
+//===----------------------------------------------------------------------===//
+// Hash
+//===----------------------------------------------------------------------===//
+
+namespace std {
+
+/// Hash for Gate::Link.
+template <>
+struct hash<eda::gate::model::Gate::Link> {
+  std::size_t operator()(const eda::gate::model::Gate::Link &link) const {
+    std::size_t hash = link.source;
+    hash *= 37;
+    hash += link.target;
+    hash *= 37;
+    hash += link.input;
+    return hash;
+  }
+};
+
+} // namespace std
+
+

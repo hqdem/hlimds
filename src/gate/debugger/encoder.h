@@ -74,7 +74,7 @@ public:
     return _context;
   }
 
-  void setConnectTo(const Context::GateBinding *connectTo) {
+  void setConnectTo(const Context::GateConnect *connectTo) {
     _context.setConnectTo(connectTo);
   }
 

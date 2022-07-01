@@ -25,7 +25,7 @@ void Gate::setInputs(const Signal::List &inputs) {
   appendLinks();
 }
 
-static std::ostream& operator <<(std::ostream &out, const Signal::List &signals) {
+static std::ostream &operator <<(std::ostream &out, const Signal::List &signals) {
   bool separator = false;
   for (const Signal &signal: signals) {
     out << (separator ? ", " : "") << signal.kind() << "(" << signal.gateId() << ")";
@@ -34,7 +34,7 @@ static std::ostream& operator <<(std::ostream &out, const Signal::List &signals)
   return out;
 }
 
-std::ostream& operator <<(std::ostream &out, const Gate &gate) {
+std::ostream &operator <<(std::ostream &out, const Gate &gate) {
   if (gate.isSource()) {
     out << "S{" << gate.id() << "}";
   } else {

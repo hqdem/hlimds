@@ -118,12 +118,12 @@ void FLibraryDefault::synthAdder(const Out &out, const In &in, bool plusOne, GNe
   const auto &y = in[1];
   assert(x.size() == y.size() && out.size() == x.size());
 
-  auto carryIn = Gate::Invalid;
+  auto carryIn = Gate::INVALID;
   auto carryOut = net.addGate(plusOne ? GateSymbol::ONE : GateSymbol::ZERO, {});
 
   for (std::size_t i = 0; i < out.size(); i++) {
     carryIn = carryOut;
-    carryOut = (i != out.size() - 1 ? net.newGate() : Gate::Invalid);
+    carryOut = (i != out.size() - 1 ? net.newGate() : Gate::INVALID);
     synthAdder(out[i], carryOut, x[i], y[i], carryIn, net);
   }
 }
@@ -142,7 +142,7 @@ void FLibraryDefault::synthAdder(Gate::Id z,
   auto xPlusY = Signal::always(net.addGate(GateSymbol::XOR, { xWire, yWire }));
   net.setGate(z, GateSymbol::XOR, { xPlusY, cWire });
 
-  if (carryOut != Gate::Invalid) {
+  if (carryOut != Gate::INVALID) {
     // carryOut = (x & y) | (x + y) & carryIn.
     auto carryOutLhs = Signal::always(net.addGate(GateSymbol::AND,
                                                   { xWire, yWire }));
@@ -194,7 +194,7 @@ Signal FLibraryDefault::invertIfNegative(const Signal &event, GNet &net) {
     return Signal::level1(event.gateId());
   default:
     assert(false);
-    return Signal::posedge(Gate::Invalid);
+    return Signal::posedge(Gate::INVALID);
   }
 }
 

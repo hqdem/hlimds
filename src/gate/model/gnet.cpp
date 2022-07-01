@@ -11,6 +11,7 @@
 #include "util/set.h"
 
 #include <algorithm>
+#include <cassert>
 
 using namespace eda::utils;
 using namespace eda::utils::graph;
@@ -29,8 +30,8 @@ GNet::GNet(unsigned level):
   _gates.reserve(N);
   _flags.reserve(N);
 
-  _sources.reserve(M);
-  _targets.reserve(M);
+  _sourceLinks.reserve(M);
+  _targetLinks.reserve(M);
 
   _subnets.reserve(M);
 }
@@ -49,45 +50,17 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   GateFlags flags{0, sid, gindex};
   _flags.insert({gid, flags});
 
-  if (checkIfSource(gid)) _sources.insert(gid);
-  if (checkIfTarget(gid)) _targets.insert(gid);
-
-  // Modifies the target flags of the in-gates.
-  for (auto signal : gate->inputs()) {
-    const auto in = signal.gateId();
-
-    if (isTarget(in) && !checkIfTarget(in)) {
-      _targets.erase(in);
-    }
-  }
-
-  // Modifies the source flags of the out-gates.
-  for (auto link : gate->links()) {
-    const auto out = link.first;
-
-    if (isSource(out) && !checkIfSource(out)) {
-      _sources.erase(out);
-    }
-  }
-
-  onAddGate(gate);
+  onAddGate(gate, false);
   return gate->id();
 }
 
 void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
   auto *gate = Gate::get(gid);
 
-  onRemoveGate(gate);
+  onRemoveGate(gate, true);
   gate->setKind(kind);
   gate->setInputs(inputs);
-  onAddGate(gate);
-
-  // Update the source flag (the target flag does not change).
-  if (checkIfSource(gid)) {
-    _sources.insert(gid);
-  } else {
-    _sources.erase(gid);
-  }  
+  onAddGate(gate, true);
 }
 
 void GNet::removeGate(GateId gid) {
@@ -120,65 +93,88 @@ void GNet::removeGate(GateId gid) {
   _gates.erase(std::end(_gates) - 1, std::end(_gates));
   getFlags(last->id()).gindex = flags.gindex;
 
-  _sources.erase(gid);
-  _targets.erase(gid);
-
-  // Modifies the target flags of the in-gates.
-  for (auto signal : gate->inputs()) {
-    const auto in = signal.gateId();
-
-    if (!isTarget(in) && checkIfTarget(in)) {
-      _targets.insert(in);
-    }
-  }
-
-  // Modifies the source flags of the out-gates.
-  for (auto link : gate->links()) {
-    const auto out = link.first;
-
-    if (!isSource(out) && checkIfSource(out)) {
-      _sources.insert(out);
-    }
-  }
-
-  onRemoveGate(gate);
+  onRemoveGate(gate, false);
   _flags.erase(i);
 }
 
-bool GNet::checkIfSource(GateId gid) const {
-  // ASSERT: the gate is in this net.
-  const auto *gate = Gate::get(gid);
+void GNet::onAddGate(Gate *gate, bool reconnect) {
+  const auto gid = gate->id();
 
-  // Real source.
-  if (gate->inputs().empty())
-    return true;
-
-  for (auto signal : gate->inputs()) {
-    // There is an external in-gate.
-    if (!contains(signal.gateId()))
-      return true;
+  if (gate->arity() == 0) {
+    // If the gate is a pure source, add the link.
+    _sourceLinks.insert(Link(gid));
+  } else {
+    // Add the newly appeared cuts.
+    for (std::size_t i = 0; i < gate->arity(); i++) {
+      const auto source = gate->input(i).gateId();
+      if (!contains(source)) {
+        _sourceLinks.insert(Link(source, gid, i));
+      }
+    }
   }
 
-  // All in-gates are inside the net.
-  return false;
+  // Add the newly appeared cuts.
+  for (auto link : gate->links()) {
+    const auto target = link.target;
+    if (!contains(target)) {
+      _targetLinks.insert(link);
+    }
+  }
+
+  // Remove the previously existing cuts.
+  if (!reconnect) {
+    for (auto link : gate->links()) {
+      _sourceLinks.erase(link);
+    }
+
+    for (std::size_t i = 0; i < gate->arity(); i++) {
+      const auto source = gate->input(i).gateId();
+      _targetLinks.erase(Link(source, gid, i));
+    }
+  }
+
+  if (gate->isTrigger()) _nTriggers++;
+  _nConnects += gate->arity();
 }
 
-bool GNet::checkIfTarget(GateId gid) const {
-  // ASSERT: the gate is in this net.
-  const auto *gate = Gate::get(gid);
+void GNet::onRemoveGate(Gate *gate, bool reconnect) {
+  const auto gid = gate->id();
 
-  // Real target.
-  if (gate->links().empty())
-    return true;
-
-  for (auto link : gate->links()) {
-    // There is an external out-gate.
-    if (!contains(link.first))
-      return true;
+  if (gate->arity() == 0) {
+    // If the gate is a pure source, remove the link.
+    _sourceLinks.erase(Link(gid));
+  } else {
+    // Remove the previously existing cuts.
+    for (std::size_t i = 0; i < gate->arity(); i++) {
+      const auto source = gate->input(i).gateId();
+      _sourceLinks.erase(Link(source, gid, i));
+    }
   }
 
-  // All out-gates are inside the net.
-  return false;
+  // Remove the previously existing cuts.
+  for (auto link : gate->links()) {
+    _targetLinks.erase(link);
+  }
+
+  // Add the newly appeared cuts.
+  if (!reconnect) {
+    for (auto link : gate->links()) {
+      const auto target = link.target;
+      if (contains(target)) {
+        _sourceLinks.insert(link);
+      }
+    }
+
+    for (std::size_t i = 0; i < gate->arity(); i++) {
+      const auto source = gate->input(i).gateId();
+      if (contains(source)) {
+        _targetLinks.insert(Link(source, gid, i));
+      }
+    }
+  }
+
+  if (gate->isTrigger()) _nTriggers--;
+  _nConnects -= gate->arity();
 }
 
 //===----------------------------------------------------------------------===//
@@ -205,13 +201,25 @@ void GNet::addNet(const GNet &net) {
   _emptySubnets.insert(
     std::begin(net._emptySubnets), std::end(net._emptySubnets));
 
+  _nTriggers += net._nTriggers;
+  _nConnects += net._nConnects;
   _nGatesInSubnets += net._nGatesInSubnets;
 
-  _sources.insert(std::begin(net._sources), std::end(net._sources));
-  discard_if(_sources, [this](GateId gid) { return !checkIfSource(gid); });
+  discard_if(_sourceLinks,
+    [this](Link link) { return !checkSourceLink(link); });
+  for (auto link : net._sourceLinks) {
+    if (checkSourceLink(link)) {
+      _sourceLinks.insert(link);
+    }
+  }
 
-  _targets.insert(std::begin(net._targets), std::end(net._targets));
-  discard_if(_targets, [this](GateId gid) { return !checkIfTarget(gid); });
+  discard_if(_targetLinks,
+    [this](Link link) { return !checkTargetLink(link); });
+  for (auto link : net._targetLinks) {
+    if (checkTargetLink(link)) {
+      _targetLinks.insert(link);
+    }
+  }
 
   for (const auto &[gid, flags] : net._flags) {
     auto newFlags = flags;
@@ -368,8 +376,8 @@ void GNet::clear() {
 
   _gates.clear();
   _flags.clear();
-  _sources.clear();
-  _targets.clear();
+  _sourceLinks.clear();
+  _targetLinks.clear();
   _subnets.clear();
   _emptySubnets.clear();
 }
@@ -388,8 +396,8 @@ struct Subgraph final {
 
     for (auto *subnet : net.subnets()) {
       // Collect sources.
-      for (auto source : subnet->sources()) {
-        if (net.isSource(source)) {
+      for (auto sourceLink : subnet->sourceLinks()) {
+        if (net.hasSourceLink(sourceLink)) {
           sources.push_back(subnet);
           break;
         }
@@ -397,12 +405,12 @@ struct Subgraph final {
 
       // Identify edges.
       auto &outEdges = edges[subnet];
-      for (auto target : subnet->targets()) {
-        auto *gate = Gate::get(target);
+      for (auto targetLink : subnet->targetLinks()) {
+        auto *gate = Gate::get(targetLink.source);
         if (gate->isTrigger()) continue;
 
         for (auto link : gate->links()) {
-          auto  sid = net.getSubnetId(link.first);
+          auto  sid = net.getSubnetId(link.target);
           auto *end = const_cast<GNet*>(net.subnet(sid));
 
           if (end != subnet) {

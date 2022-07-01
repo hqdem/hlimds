@@ -11,7 +11,7 @@
 #include "gate/model/gate.h"
 #include "rtl/model/event.h"
 
-#include <cassert>
+#include <functional>
 #include <iostream>
 #include <set>
 #include <unordered_map>
@@ -44,6 +44,7 @@ public:
   using SubnetIdSet = std::set<SubnetId>;
   using Link        = Gate::Link;
   using LinkList    = Gate::LinkList;
+  using LinkSet     = std::unordered_set<Link>;
   using Value       = std::vector<bool>;
   using In          = std::vector<GateIdList>;
   using Out         = GateIdList;
@@ -64,9 +65,9 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Invalid subnet index.
-  static const unsigned INV_SUBNET = (1u << 20) - 1;
+  static constexpr SubnetId INV_SUBNET = (1u << 20) - 1;
   /// Maximum subnet index (max. 2^20 - 1 subnets).
-  static const unsigned MAX_SUBNET = INV_SUBNET - 1;
+  static constexpr SubnetId MAX_SUBNET = INV_SUBNET - 1;
 
   //===--------------------------------------------------------------------===//
   // Constructors/Destructors
@@ -125,14 +126,14 @@ public:
     return _gates.size();
   }
 
-  /// Returns the number of inputs.
-  std::size_t nSources() const {
-    return _sources.size();
+  /// Returns the number of input links.
+  std::size_t nSourceLinks() const {
+    return _sourceLinks.size();
   }
 
-  /// Returns the number of outputs.
-  std::size_t nTargets() const {
-    return _targets.size();
+  /// Returns the number of output links.
+  std::size_t nTargetLinks() const {
+    return _targetLinks.size();
   }
 
   /// Returns the number of triggers.
@@ -159,14 +160,14 @@ public:
     return _gates;
   }
 
-  /// Returns the collection input gates.
-  const GateIdSet &sources() const {
-    return _sources;
+  /// Returns the collection input links.
+  const LinkSet &sourceLinks() const {
+    return _sourceLinks;
   }
 
-  /// Returns the collection of output gates.
-  const GateIdSet &targets() const {
-    return _targets;
+  /// Returns the collection of output links.
+  const LinkSet &targetLinks() const {
+    return _targetLinks;
   }
 
   /// Gets a gate by index.
@@ -179,14 +180,14 @@ public:
     return _flags.find(gid) != _flags.end();
   }
 
-  /// Checks whether the gate is an input.
-  bool isSource(GateId gid) const {
-    return _sources.find(gid) != _sources.end();
+  /// Checks whether the net has the source link.
+  bool hasSourceLink(const Link &link) const {
+    return _sourceLinks.find(link) != _sourceLinks.end();
   }
 
-  /// Checks whether the gate is an output.
-  bool isTarget(GateId gid) const {
-    return _targets.find(gid) != _targets.end();
+  /// Checks whether the net has the target link.
+  bool hasTargetLink(const Link &link) const {
+    return _targetLinks.find(link) != _targetLinks.end();
   }
 
   /// Adds a new (empty) gate and returns its identifier.
@@ -271,18 +272,22 @@ public:
   }
 
   /// Returns the graph sources.
-  const GateIdSet &getSources() const {
-    return sources();
+  GateIdSet getSources() const {
+    GateIdSet sources;
+    for (auto link : _sourceLinks) {
+      sources.insert(link.source);
+    }
+    return sources;
   }
 
   /// Returns the outgoing edges of the node.
-  const LinkList &getOutEdges(GateId v) const {
-    return Gate::get(v)->links();
+  const LinkList &getOutEdges(GateId gid) const {
+    return Gate::get(gid)->links();
   }
 
   /// Returns the end of the edge.
-  GateId leadsTo(const Link &e) const {
-    return e.first;
+  GateId leadsTo(const Link &link) const {
+    return link.target;
   }
 
   //===--------------------------------------------------------------------===//
@@ -313,22 +318,20 @@ private:
     return _flags.find(gid)->second;
   }
 
-  /// Checks whether the gate is an input.
-  bool checkIfSource(GateId gid) const;
-  /// Checks whether the gate is an output.
-  bool checkIfTarget(GateId gid) const;
-
-  /// Updates counters when adding a gate.
-  void onAddGate(Gate *gate) {
-    if (gate->isTrigger()) _nTriggers++;
-    _nConnects += gate->arity();
+  /// Checks whether the link is a source link.
+  bool checkSourceLink(const Link &link) const {
+    return link.isPort() || !contains(link.source);
   }
 
-  /// Updates counters when removing a gate.
-  void onRemoveGate(Gate *gate) {
-    if (gate->isTrigger()) _nTriggers--;
-    _nConnects -= gate->arity();
+  /// Checks whether the link is a target link.
+  bool checkTargetLink(const Link &link) const {
+    return link.isPort() || !contains(link.target);
   }
+
+  /// Updates state when adding a gate (called after the gate is added).
+  void onAddGate(Gate *gate, bool reconnect);
+  /// Updates state when removing a gate (called after the gate is removed).
+  void onRemoveGate(Gate *gate, bool reconnect);
 
   //===--------------------------------------------------------------------===//
   // Internal Fields
@@ -343,10 +346,10 @@ private:
   /// Gate flags.
   std::unordered_map<GateId, GateFlags> _flags;
 
-  /// Input gates of the net.
-  GateIdSet _sources;
-  /// Output gates of the net.
-  GateIdSet _targets;
+  /// Input links: {(external gate, internal gate, internal input)}.
+  LinkSet _sourceLinks;
+  /// Output links: {(internal gate, external gate, external input)}.
+  LinkSet _targetLinks;
 
   /// Number of triggers.
   std::size_t _nTriggers;

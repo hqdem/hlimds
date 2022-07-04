@@ -60,7 +60,6 @@ void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
 
   std::vector<GNet*> subnets;
   for (auto *subnet = this; subnet != nullptr;) {
-    assert(isWellFormed());
     subnets.push_back(subnet);
 
     auto sid = subnet->getSubnetId(gid);
@@ -204,9 +203,6 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
 //===----------------------------------------------------------------------===//
 
 GNet::SubnetId GNet::newSubnet() {
-  if (!_emptySubnets.empty())
-    return *_emptySubnets.begin();
-
   return addSubnet(new GNet(_level + 1));
 }
 

@@ -10,6 +10,9 @@
 
 #include "gate/model/gnet_test.h"
 
+#include <cassert>
+#include <random>
+
 using namespace eda::gate::model;
 
 // gate(x1, ..., xN).
@@ -95,6 +98,79 @@ std::unique_ptr<GNet> makeAndn(unsigned N,
   return makeNetn(GateSymbol::AND, N, inputs, outputId);
 }
 
+// Random hierarchical network.
+static std::unique_ptr<GNet> makeRand(std::size_t nGates,
+                                      std::size_t nSubnets) {
+  assert(nGates >= 2);
+  auto net = std::make_unique<GNet>();
+
+  // Create subnets.
+  for (std::size_t i = 0; i < nSubnets; i++) {
+    net->newSubnet();
+  }
+
+  // Create empty gates.
+  const auto minGateId = net->newGate();
+  for (std::size_t i = 0; i < nGates - 2; i++) {
+    net->newGate();
+  }
+  const auto maxGateId = net->newGate();
+
+
+  std::mt19937 gen(0);
+  std::uniform_int_distribution<Gate::Id> snetDist(0, nSubnets - 1);
+  std::uniform_int_distribution<Gate::Id> gateDist(minGateId, maxGateId);
+  std::uniform_int_distribution<std::size_t> arityDist(0, 7);
+
+  for (std::size_t n = 0; n < 4; n++) {
+    // Create subnets.
+    for (std::size_t i = 0; i < nSubnets; i++) {
+      net->newSubnet();
+    }
+
+    // Randomly distributes the gates among the subnets.
+    for (std::size_t i = 0; i < nGates; i++) {
+      const auto gid = gateDist(gen);
+      const auto dst = snetDist(gen);
+
+      if (net->contains(gid)) {
+        net->moveGate(gid, dst);
+      }
+    }
+
+    // Randomly modify/connect the gates.
+    for (std::size_t i = 0; i < nGates; i++) {
+      const auto gid = gateDist(gen);
+
+      if (net->contains(gid)) {
+        Signal::List inputs;
+
+        const std::size_t arity = arityDist(gen);
+        for (std::size_t j = 0; j < arity; j++) {
+          const auto inputId = gateDist(gen);
+          const auto input = Signal::always(inputId);
+          inputs.push_back(input);
+        }
+
+        net->setGate(gid, GateSymbol::AND, inputs);
+      }
+    }
+
+    // Randomly remove some gates.
+    for (std::size_t i = 0; i < nGates / 16; i++) {
+      const auto gid = gateDist(gen);
+
+      if (net->contains(gid)) {
+        net->removeGate(gid);
+      }
+    }
+
+    net->flatten();
+  }
+
+  return net;
+}
+
 TEST(GNetTest, GNetOrTest) {
   Signal::List inputs;
   Gate::Id outputId;
@@ -134,5 +210,10 @@ TEST(GNetTest, GNetAndnTest) {
   Signal::List inputs;
   Gate::Id outputId;
   auto net = makeAndn(1024, inputs, outputId);
+  EXPECT_TRUE(net != nullptr);
+}
+
+TEST(GNetTest, GNetRandTest) {
+  auto net = makeRand(1024, 256);
   EXPECT_TRUE(net != nullptr);
 }

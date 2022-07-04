@@ -55,12 +55,28 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
 }
 
 void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
+  // ASSERT: Inputs belong to the net (no need to modify the upper nets).
   auto *gate = Gate::get(gid);
 
-  onRemoveGate(gate, true);
+  std::vector<GNet*> subnets;
+  for (auto *subnet = this; subnet != nullptr;) {
+    assert(isWellFormed());
+    subnets.push_back(subnet);
+
+    auto sid = subnet->getSubnetId(gid);
+    subnet = (sid != INV_SUBNET) ? _subnets[sid] : nullptr;
+  }
+
+  std::for_each(subnets.begin(), subnets.end(), [gate](GNet *subnet) {
+    subnet->onRemoveGate(gate, true);
+  });
+
   gate->setKind(kind);
   gate->setInputs(inputs);
-  onAddGate(gate, true);
+
+  std::for_each(subnets.rbegin(), subnets.rend(), [gate](GNet *subnet) {
+    subnet->onAddGate(gate, true);
+  });
 }
 
 void GNet::removeGate(GateId gid) {
@@ -97,14 +113,28 @@ void GNet::removeGate(GateId gid) {
   _flags.erase(i);
 }
 
-void GNet::onAddGate(Gate *gate, bool reconnect) {
+void GNet::onAddGate(Gate *gate, bool withLinks) {
   const auto gid = gate->id();
 
+  // Remove the links that became internal from the boundary.
+  if (!withLinks) {
+    // Update the source boundary.
+    for (auto link : gate->links()) {
+      _sourceLinks.erase(link);
+    }
+    // Update the target boundary.
+    for (std::size_t i = 0; i < gate->arity(); i++) {
+      const auto source = gate->input(i).gateId();
+      _targetLinks.erase(Link(source, gid, i));
+    }
+  }
+
+  // Add the links to the source boundary.
   if (gate->arity() == 0) {
-    // If the gate is a pure source, add the link.
+    // If the gate is a pure source, add the source link.
     _sourceLinks.insert(Link(gid));
   } else {
-    // Add the newly appeared cuts.
+    // Add the newly appeared boundary source links.
     for (std::size_t i = 0; i < gate->arity(); i++) {
       const auto source = gate->input(i).gateId();
       if (!contains(source)) {
@@ -113,7 +143,7 @@ void GNet::onAddGate(Gate *gate, bool reconnect) {
     }
   }
 
-  // Add the newly appeared cuts.
+  // Add the links to the target boundary.
   for (auto link : gate->links()) {
     const auto target = link.target;
     if (!contains(target)) {
@@ -121,50 +151,41 @@ void GNet::onAddGate(Gate *gate, bool reconnect) {
     }
   }
 
-  // Remove the previously existing cuts.
-  if (!reconnect) {
-    for (auto link : gate->links()) {
-      _sourceLinks.erase(link);
-    }
-
-    for (std::size_t i = 0; i < gate->arity(); i++) {
-      const auto source = gate->input(i).gateId();
-      _targetLinks.erase(Link(source, gid, i));
-    }
-  }
-
+  // Update the counters.
   if (gate->isTrigger()) _nTriggers++;
   _nConnects += gate->arity();
 }
 
-void GNet::onRemoveGate(Gate *gate, bool reconnect) {
+void GNet::onRemoveGate(Gate *gate, bool withLinks) {
   const auto gid = gate->id();
 
+  // Remove the links from the source boundary.
   if (gate->arity() == 0) {
-    // If the gate is a pure source, remove the link.
+    // If the gate is a pure source, remove the source link.
     _sourceLinks.erase(Link(gid));
   } else {
-    // Remove the previously existing cuts.
+    // Remove the previously existing boundary source links.
     for (std::size_t i = 0; i < gate->arity(); i++) {
       const auto source = gate->input(i).gateId();
       _sourceLinks.erase(Link(source, gid, i));
     }
   }
 
-  // Remove the previously existing cuts.
+  // Remove the previously existing target links.
   for (auto link : gate->links()) {
     _targetLinks.erase(link);
   }
 
-  // Add the newly appeared cuts.
-  if (!reconnect) {
+  // Add the links that became boundary.
+  if (!withLinks) {
+    // Update the source boundary.
     for (auto link : gate->links()) {
       const auto target = link.target;
       if (contains(target)) {
         _sourceLinks.insert(link);
       }
     }
-
+    // Update the target boundary.
     for (std::size_t i = 0; i < gate->arity(); i++) {
       const auto source = gate->input(i).gateId();
       if (contains(source)) {
@@ -173,6 +194,7 @@ void GNet::onRemoveGate(Gate *gate, bool reconnect) {
     }
   }
 
+  // Update the counters.
   if (gate->isTrigger()) _nTriggers--;
   _nConnects -= gate->arity();
 }

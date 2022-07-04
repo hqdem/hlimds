@@ -325,13 +325,13 @@ private:
 
   /// Checks whether the link is a target link.
   bool checkTargetLink(const Link &link) const {
-    return link.isPort() || !contains(link.target);
+    return !contains(link.target);
   }
 
-  /// Updates state when adding a gate (called after the gate is added).
-  void onAddGate(Gate *gate, bool reconnect);
-  /// Updates state when removing a gate (called after the gate is removed).
-  void onRemoveGate(Gate *gate, bool reconnect);
+  /// Updates the net state when adding a gate.
+  void onAddGate(Gate *gate, bool withLinks);
+  /// Updates the net state when removing a gate.
+  void onRemoveGate(Gate *gate, bool withLinks);
 
   //===--------------------------------------------------------------------===//
   // Internal Fields

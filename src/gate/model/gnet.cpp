@@ -63,7 +63,7 @@ void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
     subnets.push_back(subnet);
 
     auto sid = subnet->getSubnetId(gid);
-    subnet = (sid != INV_SUBNET) ? _subnets[sid] : nullptr;
+    subnet = (sid != INV_SUBNET) ? subnet->_subnets[sid] : nullptr;
   }
 
   std::for_each(subnets.begin(), subnets.end(), [gate](GNet *subnet) {

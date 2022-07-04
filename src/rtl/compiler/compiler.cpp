@@ -71,7 +71,7 @@ void Compiler::allocGates(const VNode *vnode, GNet &net) {
 
   const auto i = _gateIds.find(vnode->name());
   if (i == _gateIds.end()) {
-    _gateIds.insert({ vnode->name(), net.nGates() });
+    _gateIds.insert({ vnode->name(), Gate::nextId() });
   }
 
   const auto size = vnode->var().type().width();

@@ -81,7 +81,9 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Returns the gate w/ the given id from the storage.
-  static Gate* get(Gate::Id id) { return _storage[id]; }
+  static Gate* get(Id id) { return _storage[id]; }
+  /// Returns the next gate identifier.
+  static Id nextId() { return _storage.size(); }
 
   //===--------------------------------------------------------------------===//
   // Properties

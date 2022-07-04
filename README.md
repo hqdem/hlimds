@@ -88,6 +88,9 @@ sudo apt-get install autoconf bison clang clang-tidy cmake flex g++ gcc \
 
 ### CIRCT Installation
 
+LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
+Please take this into account while moving through the guide.
+
 #### Check out LLVM and CIRCT repos
 
 ```

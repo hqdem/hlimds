@@ -172,6 +172,14 @@ you want and set `CT_DIR` environment variable to it too.
 
 ## Working in Command Line
 
+### Clone project repository
+
+```
+cd <workdir>
+git clone --recursive https://forge.ispras.ru/git/utopia.git
+cd utopia
+```
+
 ### Building Project w/ Tests
 
 ```
@@ -243,6 +251,7 @@ Test pattern accepts ```*``` and ```?``` wildcards.
 
 ### Opening/Building Project
 
+* Clone project repository (see above)
 * Click on the `File` and `Open Folder...` menu items
   * Select the `<UTOPIA_HOME>/src` directory (or `<UTOPIA_HOME>`)
   * Press the `I trust the authors` button

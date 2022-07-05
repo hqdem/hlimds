@@ -114,7 +114,7 @@ public:
 
   /// Checks whether the net is combinational.
   bool isComb() const {
-    return _nTriggers == 0;
+    return _triggers.empty();
   }
 
   //===--------------------------------------------------------------------===//
@@ -138,7 +138,7 @@ public:
 
   /// Returns the number of triggers.
   std::size_t nTriggers() const {
-    return _nTriggers;
+    return _triggers.size();
   }
 
   /// Returns the number of connections.
@@ -170,6 +170,11 @@ public:
     return _targetLinks;
   }
 
+  /// Returns the collection of triggers.
+  const GateIdSet &triggers() const {
+    return _triggers;
+  }
+
   /// Gets a gate by index.
   const Gate *gate(std::size_t index) const {
     return _gates[index];
@@ -188,6 +193,11 @@ public:
   /// Checks whether the net has the target link.
   bool hasTargetLink(const Link &link) const {
     return _targetLinks.find(link) != _targetLinks.end();
+  }
+
+  /// Checks whether the net has the trigger.
+  bool hasTrigger(GateId gid) const {
+    return _triggers.find(gid) != _triggers.end();
   }
 
   /// Adds a new (empty) gate and returns its identifier.
@@ -271,12 +281,28 @@ public:
     return nConnects();
   }
 
+  /// Checks whether the graph contains the node.
+  bool hasNode(GateId gid) const {
+    return contains(gid);
+  }
+
+  /// Checks whether the graph contains the edge.
+  bool hasEdge(const Link &link) const {
+    return !hasTrigger(link.target);
+  }
+
   /// Returns the graph sources.
   GateIdSet getSources() const {
     GateIdSet sources;
+    sources.reserve(_sourceLinks.size() + _triggers.size());
+
     for (auto link : _sourceLinks) {
       sources.insert(link.source);
     }
+    for (auto trigger : _triggers) {
+      sources.insert(trigger);
+    }
+
     return sources;
   }
 
@@ -351,8 +377,9 @@ private:
   /// Output links: {(internal gate, external gate, external input)}.
   LinkSet _targetLinks;
 
-  /// Number of triggers.
-  std::size_t _nTriggers;
+  // Triggers.
+  GateIdSet _triggers;
+
   /// Number of connections.
   std::size_t _nConnects;
 

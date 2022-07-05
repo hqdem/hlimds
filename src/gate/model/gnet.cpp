@@ -23,7 +23,7 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 
 GNet::GNet(unsigned level):
-    _level(level), _nTriggers(0), _nConnects(0), _nGatesInSubnets(0) {
+    _level(level), _nConnects(0), _nGatesInSubnets(0) {
   const std::size_t N = std::max(1024*1024 >> (5*level), 64);
   const std::size_t M = std::max(1024 >> level, 64);
 
@@ -150,8 +150,10 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
     }
   }
 
-  // Update the counters.
-  if (gate->isTrigger()) _nTriggers++;
+  if (gate->isTrigger()) {
+    _triggers.insert(gid);
+  }
+
   _nConnects += gate->arity();
 }
 
@@ -193,8 +195,10 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
     }
   }
 
-  // Update the counters.
-  if (gate->isTrigger()) _nTriggers--;
+  if (gate->isTrigger()) {
+    _triggers.erase(gid);
+  }
+
   _nConnects -= gate->arity();
 }
 
@@ -218,8 +222,9 @@ void GNet::addNet(const GNet &net) {
     std::begin(net._subnets), std::end(net._subnets));
   _emptySubnets.insert(
     std::begin(net._emptySubnets), std::end(net._emptySubnets));
+  _triggers.insert(
+    std::begin(net._triggers), std::end(net._triggers));
 
-  _nTriggers += net._nTriggers;
   _nConnects += net._nConnects;
   _nGatesInSubnets += net._nGatesInSubnets;
 
@@ -390,12 +395,13 @@ void GNet::removeEmptySubnets() {
 }
 
 void GNet::clear() {
-  _nTriggers = _nConnects = _nGatesInSubnets = 0;
+  _nConnects = _nGatesInSubnets = 0;
 
   _gates.clear();
   _flags.clear();
   _sourceLinks.clear();
   _targetLinks.clear();
+  _triggers.clear();
   _subnets.clear();
   _emptySubnets.clear();
 }
@@ -413,15 +419,16 @@ struct Subgraph final {
     sources.reserve(nV);
 
     for (auto *subnet : net.subnets()) {
-      // Collect sources.
+      // Collect sources: subnets w/ global sources or trigger-based sources.
       for (auto sourceLink : subnet->sourceLinks()) {
-        if (net.hasSourceLink(sourceLink)) {
+        auto *gate = Gate::get(sourceLink.source);
+        if (net.hasSourceLink(sourceLink) || gate->isTrigger()) {
           sources.push_back(subnet);
           break;
         }
       }
 
-      // Identify edges.
+      // Collect edges.
       auto &outEdges = edges[subnet];
       for (auto targetLink : subnet->targetLinks()) {
         auto *gate = Gate::get(targetLink.source);
@@ -443,6 +450,9 @@ struct Subgraph final {
 
   std::size_t nNodes() const { return nV; }
   std::size_t nEdges() const { return nE; }
+
+  bool hasNode(V v) const { return true; }
+  bool hasEdge(E e) const { return true; }
 
   const std::vector<V> &getSources() const {
     return sources;

@@ -136,7 +136,7 @@ static std::unique_ptr<GNet> makeRand(std::size_t nGates,
       if (net->contains(gid)) {
         net->moveGate(gid, dst);
       }
-    }
+    } // for: moveGate.
 
     // Randomly modify/connect the gates.
     for (std::size_t i = 0; i < nGates; i++) {
@@ -154,7 +154,7 @@ static std::unique_ptr<GNet> makeRand(std::size_t nGates,
 
         net->setGate(gid, GateSymbol::AND, inputs);
       }
-    }
+    } // for: setGate.
 
     // Randomly remove some gates.
     for (std::size_t i = 0; i < nGates / 16; i++) {
@@ -163,10 +163,15 @@ static std::unique_ptr<GNet> makeRand(std::size_t nGates,
       if (net->contains(gid)) {
         net->removeGate(gid);
       }
-    }
+    } // for: removeGate.
+
+    net->groupOrphans();
+    net->removeEmptySubnets();
+
+    net->sortTopologically();
 
     net->flatten();
-  }
+  } // top-level for.
 
   return net;
 }

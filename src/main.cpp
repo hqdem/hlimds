@@ -83,11 +83,9 @@ int hlsMain(const std::string &file, const HlsOptions &options) {
       *model, eda::hls::library::Library::get());
 
   eda::hls::model::Indicators indicators;
-  eda::hls::scheduler::ParametersOptimizer::get().setBalancer(&eda::hls::scheduler::LatencyLpSolver::get());
   std::map<std::string, eda::hls::model::Parameters> params =
-    eda::hls::scheduler::ParametersOptimizer::get().optimize(criteria,
-                                                             *model,
-                                                             indicators);
+    eda::hls::scheduler::ParametersOptimizer<eda::hls::scheduler::LatencyLpSolver>::get()
+      .optimize(criteria, *model, indicators);
 
   model->save();
 

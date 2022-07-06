@@ -23,7 +23,7 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 
 GNet::GNet(unsigned level):
-    _level(level), _nConnects(0), _nGatesInSubnets(0) {
+    _level(level), _nConnects(0), _nGatesInSubnets(0), _isSorted(true) {
   const std::size_t N = std::max(1024*1024 >> (5*level), 64);
   const std::size_t M = std::max(1024 >> level, 64);
 
@@ -155,6 +155,7 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
   }
 
   _nConnects += gate->arity();
+  _isSorted = (_gates.size() <= 1);
 }
 
 void GNet::onRemoveGate(Gate *gate, bool withLinks) {
@@ -200,6 +201,7 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
   }
 
   _nConnects -= gate->arity();
+  _isSorted = (_gates.size() <= 1);
 }
 
 //===----------------------------------------------------------------------===//
@@ -395,8 +397,6 @@ void GNet::removeEmptySubnets() {
 }
 
 void GNet::clear() {
-  _nConnects = _nGatesInSubnets = 0;
-
   _gates.clear();
   _flags.clear();
   _sourceLinks.clear();
@@ -404,6 +404,9 @@ void GNet::clear() {
   _triggers.clear();
   _subnets.clear();
   _emptySubnets.clear();
+
+  _nConnects = _nGatesInSubnets = 0;
+  _isSorted = true;
 }
 
 //===----------------------------------------------------------------------===//
@@ -445,7 +448,7 @@ struct Subgraph final {
       }
 
       nE += outEdges.size();
-    }
+    }   
   }
 
   std::size_t nNodes() const { return nV; }
@@ -475,6 +478,11 @@ struct Subgraph final {
 
 void GNet::sortTopologically() {
   assert(isWellFormed());
+
+  if (_isSorted)
+    return;
+
+  _isSorted = true;
 
   // If the net is flat, sort the gates and update the indices.
   if (isFlat()) {

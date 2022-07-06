@@ -1,0 +1,351 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2022 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+#pragma once
+
+#include "gate/model/gnet.h"
+
+#include <cassert>
+#include <functional>
+#include <vector>
+
+using namespace eda::gate::model;
+
+namespace eda::gate::simulator {
+
+/**
+ * \brief Implements a simple simulator of gate-level nets.
+ * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
+ */
+class Simulator final {
+public:
+  /// Representation of a gate-level net optimized for simulation.
+  class Compiled final {
+    friend class Simulator;
+    Compiled(const GNet &net, const GNet::GateIdList &out);
+
+  public:
+    using B  = bool;
+    using BV = std::vector<B>;
+    using I  = std::size_t;
+    using IV = std::vector<I>;
+
+    /// Evaluates the outputs from the inputs.
+    BV simulate(const BV &value);
+
+  private:
+    /// Gate function (operation).
+    using OP = std::function<void(I, IV)>;
+
+    /// Single command.
+    struct Command final {
+      OP op;  // Operation.
+      I  out; // Output.
+      IV in;  // Inputs.
+    };
+
+    /// Returns the gate function.
+    OP getOp(const Gate &gate) const;
+    /// Compiles the command for the given gate.
+    Command getCommand(const GNet &net, const Gate &gate) const;
+
+    /// Compiled program for the given net.
+    std::vector<Command> program;
+    /// Number of the program inputs.
+    I nInputs;
+    /// Program outputs: indices in memory (see below).
+    IV outputs;
+
+    /// Holds the state: first inputs, then internal gates.
+    BV memory;
+
+    /// Postponed assignments (for triggers).
+    std::vector<std::pair<I, B>> postponed;
+    /// Number of postponed assignments.
+    I nPostponed;
+
+    /// Maps source links and gates to memory indices.
+    std::unordered_map<Gate::Link, I> gindex;
+
+    //------------------------------------------------------------------------//
+    // ZERO
+    //------------------------------------------------------------------------//
+
+    const OP opZero = [this](I out, IV in) {
+      memory[out] = 0;
+    };
+
+    OP getZero(I arity) const { return opZero; }
+
+    //------------------------------------------------------------------------//
+    // ONE
+    //------------------------------------------------------------------------//
+
+    const OP opOne = [this](I out, IV in) {
+      memory[out] = 1;
+    };
+
+    OP getOne(I arity) const { return opOne; }
+
+    //------------------------------------------------------------------------//
+    // NOP
+    //------------------------------------------------------------------------//
+
+    const OP opNop = [this](I out, IV in) {
+      memory[out] = memory[in[0]];
+    };
+
+    OP getNop(I arity) const { return opNop; }
+
+    //------------------------------------------------------------------------//
+    // NOT
+    //------------------------------------------------------------------------//
+
+    const OP opNot = [this](I out, IV in) {
+      memory[out] = !memory[in[0]];
+    };
+
+    OP getNot(I arity) const { return opNot; }
+
+    //------------------------------------------------------------------------//
+    // AND
+    //------------------------------------------------------------------------//
+
+    const OP opAnd2 = [this](I out, IV in) {
+      memory[out] = memory[in[0]] && memory[in[1]];
+    };
+
+    const OP opAnd3 = [this](I out, IV in) {
+      memory[out] = memory[in[0]] && memory[in[1]] && memory[in[2]];
+    };
+
+    const OP opAnd = [this](I out, IV in) {
+      for (auto i : in) {
+        if (!memory[i]) {
+          memory[out] = 0;
+          return;
+        }
+      }
+      memory[out] = 1;
+    };
+
+    OP getAnd(I arity) const {
+      switch (arity) {
+      case  1: return opNop;
+      case  2: return opAnd2;
+      case  3: return opAnd3;
+      default: return opAnd;
+      }
+    }
+
+    //------------------------------------------------------------------------//
+    // OR
+    //------------------------------------------------------------------------//
+
+    const OP opOr2 = [this](I out, IV in) {
+      memory[out] = memory[in[0]] || memory[in[1]];
+    };
+
+    const OP opOr3 = [this](I out, IV in) {
+      memory[out] = memory[in[0]] || memory[in[1]] || memory[in[3]];
+    };
+
+    const OP opOr = [this](I out, IV in) {
+      for (auto i : in) {
+        if (memory[i]) {
+          memory[out] = 1;
+          return;
+        }
+      }
+      memory[out] = 0;
+    };
+
+    OP getOr(I arity) const {
+      switch (arity) {
+      case  1: return opNop;
+      case  2: return opOr2;
+      case  3: return opOr3;
+      default: return opOr;
+      }
+    }
+
+    //------------------------------------------------------------------------//
+    // XOR
+    //------------------------------------------------------------------------//
+
+    const OP opXor2 = [this](I out, IV in) {
+      memory[out] = memory[in[0]] ^ memory[in[1]];
+    };
+
+    const OP opXor3 = [this](I out, IV in) {
+      memory[out] = memory[in[0]] ^ memory[in[1]] ^ memory[in[2]];
+    };
+
+    const OP opXor = [this](I out, IV in) {
+      bool result = 0;
+      for (auto i : in) {
+        result ^= memory[i];
+      }
+      memory[out] = result;
+    };
+
+    OP getXor(I arity) const {
+      switch (arity) {
+      case  1: return opNop;
+      case  2: return opXor2;
+      case  3: return opXor3;
+      default: return opXor;
+      }
+    }
+
+    //------------------------------------------------------------------------//
+    // NAND
+    //------------------------------------------------------------------------//
+
+    const OP opNand2 = [this](I out, IV in) {
+      memory[out] = !(memory[in[0]] && memory[in[1]]);
+    };
+
+    const OP opNand3 = [this](I out, IV in) {
+      memory[out] = !(memory[in[0]] && memory[in[1]] && memory[in[2]]);
+    };
+
+    const OP opNand = [this](I out, IV in) {
+      for (auto i : in) {
+        if (!memory[i]) {
+          memory[out] = 1;
+          return;
+        }
+      }
+      memory[out] = 0;
+    };
+
+    OP getNand(I arity) const {
+      switch (arity) {
+      case  1: return opNot;
+      case  2: return opNand2;
+      case  3: return opNand3;
+      default: return opNand;
+      }
+    }
+
+    //------------------------------------------------------------------------//
+    // NOR
+    //------------------------------------------------------------------------//
+
+    const OP opNor2 = [this](I out, IV in) {
+      memory[out] = !(memory[in[0]] || memory[in[1]]);
+    };
+
+    const OP opNor3 = [this](I out, IV in) {
+      memory[out] = !(memory[in[0]] || memory[in[1]] || memory[in[2]]);
+    };
+
+    const OP opNor = [this](I out, IV in) {
+      for (auto i : in) {
+        if (memory[i]) {
+          memory[out] = 0;
+          return;
+        }
+      }
+      memory[out] = 1;
+    };
+
+    OP getNor(I arity) const {
+      switch (arity) {
+      case  1: return opNot;
+      case  2: return opNor2;
+      case  3: return opNor3;
+      default: return opNor;
+      }
+    }
+
+    //------------------------------------------------------------------------//
+    // XNOR
+    //------------------------------------------------------------------------//
+
+    const OP opXnor2 = [this](I out, IV in) {
+      memory[out] = memory[in[0]] == memory[in[1]];
+    };
+
+    const OP opXnor3 = [this](I out, IV in) {
+      memory[out] = !(memory[in[0]] ^ memory[in[1]] ^ memory[in[2]]);
+    };
+
+    const OP opXnor = [this](I out, IV in) {
+      bool result = 1;
+      for (auto i : in) {
+        result ^= memory[i];
+      }
+      memory[out] = result;
+    };
+
+    OP getXnor(I arity) const {
+      switch (arity) {
+      case  1: return opNot;
+      case  2: return opXnor2;
+      case  3: return opXnor3;
+      default: return opXnor;
+      }
+    }
+
+    //------------------------------------------------------------------------//
+    // LATCH
+    //------------------------------------------------------------------------//
+
+    const OP opLatch = [this](I out, IV in) {
+      const bool ena = memory[in[1]];
+      if (ena) {
+        postponed[nPostponed++] = {out, memory[in[0]]};
+      }
+    };
+
+    OP getLatch(I arity) const { return opLatch; }
+
+    //------------------------------------------------------------------------//
+    // DFF
+    //------------------------------------------------------------------------//
+
+    const OP opDff = [this](I out, IV in) {
+      const bool clk = memory[in[1]]; // FIXME: posedge
+      if (clk) {
+        postponed[nPostponed++] = {out, memory[in[0]]};
+      }
+    };
+
+    OP getDff(I arity) const { return opDff; }
+
+    //------------------------------------------------------------------------//
+    // DFFrs
+    //------------------------------------------------------------------------//
+
+    const OP opDffrs = [this](I out, IV in) {
+      const bool clk = memory[in[1]]; // FIXME: posedge
+      const bool rst = memory[in[2]];
+      const bool set = memory[in[3]];
+      assert(!(rst && set));
+
+      if (rst) {
+        postponed[nPostponed++] = {out, 0};
+      } else if (set) {
+        postponed[nPostponed++] = {out, 1};
+      } else if (clk) {
+        postponed[nPostponed++] = {out, memory[in[0]]};
+      }
+    };
+
+    OP getDffrs(I arity) const { return opDffrs; }
+  };
+
+  /// Compiles the given net.
+  Compiled compile(const GNet &net, const GNet::GateIdList &out) {
+    return Compiled(net, out);
+  }
+};
+
+} // namespace eda::gate::simulator

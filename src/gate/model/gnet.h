@@ -117,6 +117,11 @@ public:
     return _triggers.empty();
   }
 
+  /// Checks whether the net is topologically sorted.
+  bool isSorted() const {
+    return _isSorted;
+  }
+
   //===--------------------------------------------------------------------===//
   // Statistics 
   //===--------------------------------------------------------------------===//
@@ -390,6 +395,9 @@ private:
 
   /// Number of gates that belong to subnets.
   std::size_t _nGatesInSubnets;
+
+  /// Flag indicating that the net is topologically sorted.
+  bool _isSorted;
 };
 
 /// Outputs the net.

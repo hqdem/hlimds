@@ -6,11 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gtest/gtest.h"
-
 #include "gate/debugger/checker.h"
-
 #include "gate/model/gnet_test.h"
+
+#include "gtest/gtest.h"
 
 using namespace eda::gate::debugger;
 using namespace eda::gate::model;

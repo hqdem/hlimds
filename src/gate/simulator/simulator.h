@@ -35,10 +35,72 @@ public:
     using I  = std::size_t;
     using IV = std::vector<I>;
 
+    /// Returns the number of inputs.
+    I nSources() const { return nInputs; }
+    /// Returns the number of outputs.
+    I nTargets() const { return outputs.size(); }
+
     /// Evaluates the outputs from the inputs.
-    BV simulate(const BV &value);
+    template <typename T = BV>
+    void simulate(T &out, const T &in) { 
+      setTriggers();
+      setSources(in);
+      execute();
+      getTargets(out);
+    }
 
   private:
+    /// Sets the input values.
+    void setSources(const BV &values) {
+      assert(values.size() == nInputs);
+      for (I i = 0; i < nInputs; i++) {
+        memory[i] = values[i];
+      }
+    }
+
+    /// Sets the input values.
+    void setSources(std::uint64_t values) {
+      assert(nInputs <= 64);
+      for (I i = 0; i < nInputs; i++) {
+        memory[i] = (values >> i) & 1;
+      }
+    }
+
+    /// Executes the postponed assignments.
+    void setTriggers() {
+      while (nPostponed > 0) {
+        const auto assign = postponed[--nPostponed];
+        const auto lhs = assign.first;
+        const auto rhs = assign.second;
+
+        memory[lhs] = rhs;
+      }
+    }
+
+    /// Gets the output values.
+    void getTargets(BV &values) {
+      assert(values.size() == outputs.size());
+      for (I i = 0; i < outputs.size(); i++) {
+        values[i] = memory[outputs[i]];
+      }
+    }
+
+    /// Gets the output values.
+    void getTargets(std::uint64_t &values) {
+      assert(outputs.size() <= 64);
+      values = 0;
+      for (I i = 0; i < outputs.size(); i++) {
+        values |= (memory[outputs[i]] << i);
+      }
+    }
+
+    /// Executes the compiled program.
+    void execute() {
+      for (auto &command : program) {
+        command.op(command.out, command.in);
+      }
+    }
+
     /// Gate function (operation).
     using OP = std::function<void(I, IV)>;
 
@@ -51,7 +113,7 @@ public:
 
     /// Returns the gate function.
     OP getOp(const Gate &gate) const;
-    /// Compiles the command for the given gate.
+    /// Construct the command for the given gate.
     Command getCommand(const GNet &net, const Gate &gate) const;
 
     /// Compiled program for the given net.

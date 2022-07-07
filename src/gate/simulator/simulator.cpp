@@ -37,13 +37,13 @@ Compiled::OP Compiled::getOp(const Gate &gate) const {
 
 Compiled::Command Compiled::getCommand(const GNet &net,
                                        const Gate &gate) const {
+  const auto op = getOp(gate);
+
   const auto target = gate.id();
   Gate::Link outLink(target);
+  const auto out = gindex.find(outLink)->second;
 
-  OP op = getOp(gate);
-  I out = gindex.find(outLink)->second;
   IV in(gate.arity());
-
   for (I i = 0; i < gate.arity(); i++) {
     const auto source = gate.input(i).gateId();
 
@@ -64,62 +64,36 @@ Compiled::Compiled(const GNet &net, const GNet::GateIdList &out):
     memory(net.nSourceLinks() + net.nGates()),
     postponed(net.nTriggers()),
     nPostponed(0) {
-
   assert(net.isSorted() && "Net is not topologically sorted");
   gindex.reserve(net.nSourceLinks() + net.nGates());
 
+  // Map the source links (including source gates) to memory.
   I i = 0;
   for (const auto link : net.sourceLinks()) {
     gindex[link] = i++;
   }
 
+  // Map the non-source gates to memory.
   for (const auto *gate : net.gates()) {
-    if (!gate->isSource()) {
-      Gate::Link link(gate->id());
-      gindex[link] = i++;
-    }
+    if (gate->isSource()) continue;
+    Gate::Link link(gate->id());
+    gindex[link] = i++;
   }
 
+  // Determine the output indices. 
   i = 0;
   for (const auto outId : out) {
     Gate::Link link(outId);
     outputs[i++] = gindex[link];
   }
 
+  // Compose the simulation program.
   i = 0;
   for (const auto *gate : net.gates()) {
+    if (gate->isSource()) continue;
     program[i++] = getCommand(net, *gate);
   }
-}
-
-Compiled::BV Compiled::simulate(const Compiled::BV &value) {
-  // Apply the postponed assignments.
-  while (nPostponed > 0) {
-    const auto assign = postponed[--nPostponed];
-    const auto lhs = assign.first;
-    const auto rhs = assign.second;
-
-    memory[lhs] = rhs;
-  }
-
-  // Assign the input values.
-  assert(value.size() == nInputs);
-  for (std::size_t i = 0; i < value.size(); i++) {
-    memory[i] = value[i];
-  }
-
-  // Execute the commands.
-  for (const auto &command : program) {
-    command.op(command.out, command.in);
-  }
-
-  // Extract the output values.
-  BV result(outputs.size());
-  for (std::size_t i = 0; i < outputs.size(); i++) {
-    result[i] = memory[outputs[i]];
-  }
-
-  return result;
+  program.resize(i);
 }
 
 } // namespace eda::gate::simulator

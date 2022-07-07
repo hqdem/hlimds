@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gtest/gtest.h"
-
 #include "gate/model/gnet_test.h"
+
+#include "gtest/gtest.h"
 
 #include <cassert>
 #include <random>

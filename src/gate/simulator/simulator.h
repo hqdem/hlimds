@@ -27,7 +27,10 @@ public:
   /// Representation of a gate-level net optimized for simulation.
   class Compiled final {
     friend class Simulator;
-    Compiled(const GNet &net, const GNet::GateIdList &out);
+
+    Compiled(const GNet &net,
+             const GNet::LinkList &in,
+             const GNet::LinkList &out);
 
   public:
     using B  = bool;
@@ -405,8 +408,10 @@ public:
   };
 
   /// Compiles the given net.
-  Compiled compile(const GNet &net, const GNet::GateIdList &out) {
-    return Compiled(net, out);
+  Compiled compile(const GNet &net,
+                   const GNet::LinkList &in,
+                   const GNet::LinkList &out) {
+    return Compiled(net, in, out);
   }
 };
 

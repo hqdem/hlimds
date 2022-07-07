@@ -8,6 +8,7 @@
 
 #include "gate/debugger/checker.h"
 #include "gate/debugger/encoder.h"
+#include "gate/simulator/simulator.h"
 
 #include <cassert>
 
@@ -107,7 +108,13 @@ bool Checker::areEqualComb(const GNet &lhs,
                            const GNet &rhs,
                            const GateBinding &ibind,
                            const GateBinding &obind) const {
-  return areEqualComb({ &lhs, &rhs }, nullptr, ibind, obind);
+  const unsigned simCheckBound = 8;
+
+  if (lhs.nSourceLinks() <= simCheckBound) {
+    return areEqualCombSim(lhs, rhs, ibind, obind);
+  }
+
+  return areEqualCombSat({ &lhs, &rhs }, nullptr, ibind, obind);
 }
 
 bool Checker::areEqualSeq(const GNet &lhs,
@@ -192,13 +199,61 @@ bool Checker::areEqualSeq(const GNet &lhs,
     imap.insert({decInLink, rhsTriLink});
   }
 
-  return areEqualComb({&lhs, &rhs, &enc, &dec}, &connectTo, imap, omap);
+  return areEqualCombSat({&lhs, &rhs, &enc, &dec}, &connectTo, imap, omap);
 }
 
-bool Checker::areEqualComb(const std::vector<const GNet*> &nets,
-                           const GateConnect *connectTo,
-                           const GateBinding &ibind,
-                           const GateBinding &obind) const {
+bool Checker::areEqualCombSim(const GNet &lhs,
+                              const GNet &rhs,
+                              const GateBinding &ibind,
+                              const GateBinding &obind) const {
+  assert(lhs.nSourceLinks() == rhs.nSourceLinks());
+  assert(lhs.nSourceLinks() <= 16);
+
+  GNet::LinkList lhsInputs;
+  GNet::LinkList rhsInputs;
+
+  lhsInputs.reserve(ibind.size());
+  rhsInputs.reserve(ibind.size());
+
+  for (const auto &[lhsLink, rhsLink] : ibind) {
+    lhsInputs.push_back(lhsLink);
+    rhsInputs.push_back(rhsLink);
+  }
+
+  GNet::LinkList lhsOutputs;
+  GNet::LinkList rhsOutputs;
+
+  lhsOutputs.reserve(obind.size());
+  rhsOutputs.reserve(obind.size());
+
+  for (const auto &[lhsLink, rhsLink] : obind) {
+    lhsOutputs.push_back(lhsLink);
+    rhsOutputs.push_back(rhsLink);
+  }
+
+  eda::gate::simulator::Simulator simulator;
+
+  auto lhsCompiled = simulator.compile(lhs, lhsInputs, lhsOutputs);
+  auto rhsCompiled = simulator.compile(rhs, rhsInputs, rhsOutputs);
+
+  for (std::uint64_t in = 0; in < (1ull << lhs.nSourceLinks()); in++) {
+    std::uint64_t lhsOut, rhsOut;
+
+    lhsCompiled.simulate(lhsOut, in);
+    rhsCompiled.simulate(rhsOut, in);
+
+    if (lhsOut != rhsOut) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
+                              const GateConnect *connectTo,
+                              const GateBinding &ibind,
+                              const GateBinding &obind) const {
   Encoder encoder;
   encoder.setConnectTo(connectTo);
 

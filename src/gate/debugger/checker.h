@@ -111,11 +111,18 @@ private:
                    const GateBinding &rhsTriEncOut,
                    const GateBinding &rhsTriDecIn) const;
 
-  /// Checks logic equivalence of two flat combinational nets.
-  bool areEqualComb(const std::vector<const GNet*> &nets,
-                    const GateConnect *connectTo,
-	            const GateBinding &ibind,
-	            const GateBinding &obind) const;
+  /// Simulation-based LEC of two small combinational nets by
+  /// applying all possible inputs and checking the outputs.
+  bool areEqualCombSim(const GNet &lhs,
+                       const GNet &rhs,
+                       const GateBinding &ibind,
+                       const GateBinding &obind) const;
+
+  /// SAT-based LEC of two flat combinational nets.
+  bool areEqualCombSat(const std::vector<const GNet*> &nets,
+                       const GateConnect *connectTo,
+	               const GateBinding &ibind,
+	               const GateBinding &obind) const;
 
   /// Handles an error (prints the diagnostics, etc.).
   void error(Context &context,

@@ -30,11 +30,6 @@ static bool checkEquivTest(unsigned N,
   std::cout << lhs << std::endl;
   std::cout << rhs << std::endl;
 
-  std::cout << lhs.nSourceLinks() << ", "
-            << lhs.nTargetLinks() << std::endl;
-  std::cout << rhs.nSourceLinks() << ", "
-            << rhs.nTargetLinks() << std::endl;
-
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {
     imap.insert({Link(lhsInputs[i]), Link(rhsInputs[i])});
@@ -95,14 +90,26 @@ bool checkNorAndTest(unsigned N) {
                            *rhs, rhsInputs, rhsOutputId);
 }
 
+TEST(CheckGNetTest, CheckNorNorSmallTest) {
+  EXPECT_TRUE(checkNorNorTest(8));
+}
+
+TEST(CheckGNetTest, CheckNorAndnSmallTest) {
+  EXPECT_TRUE(checkNorAndnTest(8));
+}
+
+TEST(CheckGNetTest, CheckNorAndSmallTest) {
+  EXPECT_FALSE(checkNorAndTest(8));
+}
+
 TEST(CheckGNetTest, CheckNorNorTest) {
-  EXPECT_TRUE(checkNorNorTest(16));
+  EXPECT_TRUE(checkNorNorTest(256));
 }
 
 TEST(CheckGNetTest, CheckNorAndnTest) {
-  EXPECT_TRUE(checkNorAndnTest(16));
+  EXPECT_TRUE(checkNorAndnTest(256));
 }
 
 TEST(CheckGNetTest, CheckNorAndTest) {
-  EXPECT_FALSE(checkNorAndTest(16));
+  EXPECT_FALSE(checkNorAndTest(256));
 }

@@ -57,19 +57,24 @@ Compiled::Command Compiled::getCommand(const GNet &net,
   return Command{op, out, in};
 }
 
-Compiled::Compiled(const GNet &net, const GNet::GateIdList &out):
+Compiled::Compiled(const GNet &net,
+                   const GNet::LinkList &in,
+                   const GNet::LinkList &out):
     program(net.nGates()),
-    nInputs(net.nSourceLinks()),
+    nInputs(in.size()),
     outputs(out.size()),
     memory(net.nSourceLinks() + net.nGates()),
     postponed(net.nTriggers()),
     nPostponed(0) {
+
   assert(net.isSorted() && "Net is not topologically sorted");
+  assert(net.nSourceLinks() == in.size());
+
   gindex.reserve(net.nSourceLinks() + net.nGates());
 
   // Map the source links (including source gates) to memory.
   I i = 0;
-  for (const auto link : net.sourceLinks()) {
+  for (const auto link : in) {
     gindex[link] = i++;
   }
 
@@ -82,8 +87,7 @@ Compiled::Compiled(const GNet &net, const GNet::GateIdList &out):
 
   // Determine the output indices. 
   i = 0;
-  for (const auto outId : out) {
-    Gate::Link link(outId);
+  for (const auto link : out) {
     outputs[i++] = gindex[link];
   }
 

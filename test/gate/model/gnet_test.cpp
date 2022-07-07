@@ -29,6 +29,8 @@ static std::unique_ptr<GNet> makeNet(GateSymbol gate,
   }
 
   outputId = net->addGate(gate, inputs);
+  net->sortTopologically();
+
   return net;
 }
 
@@ -51,6 +53,8 @@ static std::unique_ptr<GNet> makeNetn(GateSymbol gate,
   }
 
   outputId = net->addGate(gate, andInputs);
+  net->sortTopologically();
+
   return net;
 }
 

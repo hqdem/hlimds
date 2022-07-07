@@ -16,9 +16,20 @@
 using namespace eda::gate::model;
 using namespace eda::gate::simulator;
 
-static bool simulatorTest(std::uint64_t N, const GNet &net, Gate::Id output) {
-  Simulator simulator;
-  Simulator::Compiled compiled = simulator.compile(net, {output});
+static Simulator simulator;
+
+static bool simulatorTest(std::uint64_t N,
+                          const GNet &net,
+                          Signal::List inputs,
+                          Gate::Id output) {
+  GNet::LinkList in;
+  GNet::LinkList out{Gate::Link(output)};
+
+  for (auto input : inputs) {
+    in.push_back(Gate::Link(input));
+  }
+
+  auto compiled = simulator.compile(net, in, out);
 
   std::uint64_t o;
   for (std::uint64_t i = 0; i < N; i++) {
@@ -35,9 +46,8 @@ bool simulatorNorTest(unsigned N) {
   Gate::Id output;
 
   auto net = makeNor(N, inputs, output);
-  net->sortTopologically();
 
-  return simulatorTest(1ull << N, *net, output);
+  return simulatorTest(1ull << N, *net, inputs, output);
 }
 
 bool simulatorAndnTest(unsigned N) {
@@ -46,9 +56,8 @@ bool simulatorAndnTest(unsigned N) {
   Gate::Id output;
 
   auto net = makeAndn(N, inputs, output);
-  net->sortTopologically();
 
-  return simulatorTest(1ull << N, *net, output);
+  return simulatorTest(1ull << N, *net, inputs, output);
 }
 
 TEST(SimulatorGNetTest, SimulatorNorTest) {

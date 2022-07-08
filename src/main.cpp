@@ -99,7 +99,7 @@ int hlsMain(const std::string &file, const HlsOptions &options) {
   }
 
   auto compiler = std::make_unique<eda::hls::compiler::Compiler>();
-  auto circuit = compiler->constructCircuit(*model, "main");
+  auto circuit = compiler->constructFirrtlCircuit(*model, "main");
   circuit->printFiles(options.outMlir,
                       options.outLib,
                       options.outTop,

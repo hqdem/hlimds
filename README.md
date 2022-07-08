@@ -81,7 +81,7 @@ below are specific to this operating system:
 
 To install them, do the following:
 ```
-sudo apt-get install autoconf bison clang clang-tidy cmake flex g++ gcc \
+sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
     liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld make \
     ninja-build python zlib1g zlib1g-dev
 ```

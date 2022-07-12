@@ -109,7 +109,6 @@ int hlsMain(const std::string &file, const HlsOptions &options) {
     circuit->printRndVlogTest(*model,
                               options.outDir,
                               options.outTest,
-                              model->ind.ticks,
                               10);
   }
 

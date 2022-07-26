@@ -178,9 +178,9 @@ you want and set `CT_DIR` environment variable to it too.
 cd <workdir>
 git clone --recursive https://forge.ispras.ru/git/utopia.git
 cd utopia
-export UP_HOME=<workdir>/utopia
+export UTOPIA_HOME=<workdir>/utopia
 ```
-Please keep `UP_HOME` variable and its value in your system permanently.
+Please keep `UTOPIA_HOME` variable and its value in your system permanently.
 ### Building Project w/ Tests
 
 ```

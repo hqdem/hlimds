@@ -19,7 +19,7 @@ using namespace eda::gate::model;
 namespace eda::gate::simulator {
 
 /**
- * \brief Implements a simple simulator of gate-level nets.
+ * \brief Implements a simple simulator of (synchronous) gate-level nets.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Simulator final {
@@ -126,7 +126,7 @@ public:
     /// Program outputs: indices in memory (see below).
     IV outputs;
 
-    /// Holds the state: first inputs, then internal gates.
+    /// Holds the state: first, inputs; then, internal gates.
     BV memory;
 
     /// Postponed assignments (for triggers).
@@ -189,7 +189,7 @@ public:
       memory[out] = memory[in[0]] && memory[in[1]] && memory[in[2]];
     };
 
-    const OP opAnd = [this](I out, IV in) {
+    const OP opAndN = [this](I out, IV in) {
       for (auto i : in) {
         if (!memory[i]) {
           memory[out] = 0;
@@ -204,7 +204,7 @@ public:
       case  1: return opNop;
       case  2: return opAnd2;
       case  3: return opAnd3;
-      default: return opAnd;
+      default: return opAndN;
       }
     }
 
@@ -220,7 +220,7 @@ public:
       memory[out] = memory[in[0]] || memory[in[1]] || memory[in[3]];
     };
 
-    const OP opOr = [this](I out, IV in) {
+    const OP opOrN = [this](I out, IV in) {
       for (auto i : in) {
         if (memory[i]) {
           memory[out] = 1;
@@ -235,7 +235,7 @@ public:
       case  1: return opNop;
       case  2: return opOr2;
       case  3: return opOr3;
-      default: return opOr;
+      default: return opOrN;
       }
     }
 
@@ -251,7 +251,7 @@ public:
       memory[out] = memory[in[0]] ^ memory[in[1]] ^ memory[in[2]];
     };
 
-    const OP opXor = [this](I out, IV in) {
+    const OP opXorN = [this](I out, IV in) {
       bool result = 0;
       for (auto i : in) {
         result ^= memory[i];
@@ -264,7 +264,7 @@ public:
       case  1: return opNop;
       case  2: return opXor2;
       case  3: return opXor3;
-      default: return opXor;
+      default: return opXorN;
       }
     }
 
@@ -280,7 +280,7 @@ public:
       memory[out] = !(memory[in[0]] && memory[in[1]] && memory[in[2]]);
     };
 
-    const OP opNand = [this](I out, IV in) {
+    const OP opNandN = [this](I out, IV in) {
       for (auto i : in) {
         if (!memory[i]) {
           memory[out] = 1;
@@ -295,7 +295,7 @@ public:
       case  1: return opNot;
       case  2: return opNand2;
       case  3: return opNand3;
-      default: return opNand;
+      default: return opNandN;
       }
     }
 
@@ -311,7 +311,7 @@ public:
       memory[out] = !(memory[in[0]] || memory[in[1]] || memory[in[2]]);
     };
 
-    const OP opNor = [this](I out, IV in) {
+    const OP opNorN = [this](I out, IV in) {
       for (auto i : in) {
         if (memory[i]) {
           memory[out] = 0;
@@ -326,7 +326,7 @@ public:
       case  1: return opNot;
       case  2: return opNor2;
       case  3: return opNor3;
-      default: return opNor;
+      default: return opNorN;
       }
     }
 
@@ -342,7 +342,7 @@ public:
       memory[out] = !(memory[in[0]] ^ memory[in[1]] ^ memory[in[2]]);
     };
 
-    const OP opXnor = [this](I out, IV in) {
+    const OP opXnorN = [this](I out, IV in) {
       bool result = 1;
       for (auto i : in) {
         result ^= memory[i];
@@ -355,7 +355,7 @@ public:
       case  1: return opNot;
       case  2: return opXnor2;
       case  3: return opXnor3;
-      default: return opXnor;
+      default: return opXnorN;
       }
     }
 
@@ -377,7 +377,8 @@ public:
     //------------------------------------------------------------------------//
 
     const OP opDff = [this](I out, IV in) {
-      const bool clk = memory[in[1]]; // FIXME: posedge
+      // TODO: posedge(clk).
+      const bool clk = memory[in[1]];
       if (clk) {
         postponed[nPostponed++] = {out, memory[in[0]]};
       }
@@ -390,7 +391,8 @@ public:
     //------------------------------------------------------------------------//
 
     const OP opDffrs = [this](I out, IV in) {
-      const bool clk = memory[in[1]]; // FIXME: posedge
+      // TODO: posedge(clk).
+      const bool clk = memory[in[1]];
       const bool rst = memory[in[2]];
       const bool set = memory[in[3]];
       assert(!(rst && set));

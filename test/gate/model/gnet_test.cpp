@@ -103,8 +103,8 @@ std::unique_ptr<GNet> makeAndn(unsigned N,
 }
 
 // Random hierarchical network.
-static std::unique_ptr<GNet> makeRand(std::size_t nGates,
-                                      std::size_t nSubnets) {
+std::unique_ptr<GNet> makeRand(std::size_t nGates,
+                               std::size_t nSubnets) {
   assert(nGates >= 2);
   auto net = std::make_unique<GNet>();
 
@@ -225,4 +225,26 @@ TEST(GNetTest, GNetAndnTest) {
 TEST(GNetTest, GNetRandTest) {
   auto net = makeRand(1024, 256);
   EXPECT_TRUE(net != nullptr);
+}
+
+TEST(GNetTest, GNetRandTestValid) {
+  auto net = makeRand(1024, 256);
+  std::vector<bool> involvedGates(1024);
+  std::vector<bool> involvedLinks(1024);
+
+  for (eda::gate::model::Gate* gate : net.get()->gates()) {
+    involvedGates[gate->id()] = true;
+  }
+
+  for (eda::gate::model::Gate* gate : net.get()->gates()) {
+    for (const eda::gate::model::Gate::Link& link : gate->links()) {
+      involvedLinks[link.source] = true;
+      involvedLinks[link.target] = true;  
+    }
+  }
+
+  for (size_t i = 0; i < 1024; ++i) {
+    EXPECT_EQ(involvedGates[i], involvedLinks[i]);
+  }
+  
 }

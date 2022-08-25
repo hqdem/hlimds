@@ -38,3 +38,7 @@ std::unique_ptr<GNet> makeOrn(unsigned N,
 std::unique_ptr<GNet> makeAndn(unsigned N,
                                Signal::List &inputs,
                                Gate::Id &outputId);
+
+// Random hierarchical network.
+std::unique_ptr<GNet> makeRand(std::size_t nGates,
+                               std::size_t nSubnets);

@@ -206,6 +206,7 @@ cmake --build build
 ### Running Utopia EDA
 
 ```
+rm -rf $UTOPIA_HOME/output
 ./build/src/umain hls <file(s)>
 ```
 
@@ -214,6 +215,7 @@ cmake --build build
 #### Run All Tests
 
 ```
+rm -rf $UTOPIA_HOME/output
 ./build/test/utest
 ```
 or

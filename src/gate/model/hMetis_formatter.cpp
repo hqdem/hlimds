@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2022 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "hMetis_formatter.h"
 
 FormatterHMetis::FormatterHMetis(const eda::gate::model::GNet &net) {
@@ -32,5 +40,4 @@ FormatterHMetis::FormatterHMetis(const eda::gate::model::GNet &net) {
       }
   }
 }
-
 

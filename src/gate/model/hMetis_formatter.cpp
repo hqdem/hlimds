@@ -40,4 +40,3 @@ FormatterHMetis::FormatterHMetis(const eda::gate::model::GNet &net) {
       }
   }
 }
-

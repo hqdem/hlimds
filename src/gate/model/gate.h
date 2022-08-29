@@ -207,5 +207,3 @@ struct hash<eda::gate::model::Gate::Link> {
 };
 
 } // namespace std
-
-

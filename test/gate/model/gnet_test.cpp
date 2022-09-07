@@ -227,6 +227,11 @@ TEST(GNetTest, GNetRandTest) {
   EXPECT_TRUE(net != nullptr);
 }
 
+TEST(GNetTest, GNetRandTestIssue11877) {
+  auto net = makeRand(7, 5);
+  EXPECT_TRUE(net != nullptr);
+}
+
 TEST(GNetTest, GNetRandTestValid) {
   auto net = makeRand(1024, 256);
   std::vector<bool> involvedGates(1024);
@@ -246,5 +251,4 @@ TEST(GNetTest, GNetRandTestValid) {
   for (size_t i = 0; i < 1024; ++i) {
     EXPECT_EQ(involvedGates[i], involvedLinks[i]);
   }
-  
 }

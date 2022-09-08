@@ -10,6 +10,7 @@
 
 #include "gtest/gtest.h"
 
+#include <algorithm>
 #include <cassert>
 #include <random>
 
@@ -124,7 +125,10 @@ std::unique_ptr<GNet> makeRand(std::size_t nGates,
   std::mt19937 gen(0);
   std::uniform_int_distribution<Gate::Id> snetDist(0, nSubnets - 1);
   std::uniform_int_distribution<Gate::Id> gateDist(minGateId, maxGateId);
-  std::uniform_int_distribution<std::size_t> arityDist(0, 7);
+
+  std::size_t minArity = 0u;
+  std::size_t maxArity = std::min(static_cast<std::size_t>(7), nGates - 1);
+  std::uniform_int_distribution<std::size_t> arityDist(minArity, maxArity);
 
   for (std::size_t n = 0; n < 4; n++) {
     // Create subnets.
@@ -156,7 +160,10 @@ std::unique_ptr<GNet> makeRand(std::size_t nGates,
           inputs.push_back(input);
         }
 
-        net->setGate(gid, GateSymbol::AND, inputs);
+        // Beware of combinational cycles.
+        if (!net->hasCombFlow(gid, inputs)) {
+          net->setGate(gid, GateSymbol::AND, inputs);
+        }
       }
     } // for: setGate.
 

@@ -205,6 +205,9 @@ public:
     return _triggers.find(gid) != _triggers.end();
   }
 
+  /// Checks if any of the given inputs depends on the given gate.
+  bool hasCombFlow(GateId gid, const Signal::List &inputs) const;
+
   /// Adds a new (empty) gate and returns its identifier.
   GateId newGate() {
     return addGate(new Gate());

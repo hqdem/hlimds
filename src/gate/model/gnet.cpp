@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <queue>
 
 using namespace eda::utils;
 using namespace eda::utils::graph;
@@ -40,6 +41,48 @@ GNet::GNet(unsigned level):
 // Gates 
 //===----------------------------------------------------------------------===//
 
+bool GNet::hasCombFlow(GateId gid, const Signal::List &inputs) const {
+  if (inputs.empty()) {
+    return false;
+  }
+
+  std::unordered_set<GateId> targets;
+  targets.reserve(inputs.size());
+
+  std::for_each(inputs.begin(), inputs.end(), [&](const Signal &signal) {
+    targets.insert(signal.gateId());
+  });
+
+  // BFS for checking if some of the inputs are reachable.
+  std::unordered_set<GateId> reached;
+  reached.reserve(_gates.size());
+
+  std::queue<GateId> queue;
+  if (!Gate::get(gid)->isTrigger()) {
+    queue.push(gid);
+  }
+
+  while (!queue.empty()) {
+    const auto *gate = Gate::get(queue.front());
+    queue.pop();
+
+    for (auto link : gate->links()) {
+      const auto target = link.target;
+      const auto status = reached.insert(target);
+
+      if (targets.find(target) != targets.end()) {
+        return true;
+      }
+
+      if (status.second && !Gate::get(target)->isTrigger()) {
+        queue.push(target);
+      }
+    }
+  }
+
+  return false;
+}
+
 GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   const auto gid = gate->id();
   assert(_flags.find(gid) == _flags.end());
@@ -56,6 +99,7 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
 
 void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
   // ASSERT: Inputs belong to the net (no need to modify the upper nets).
+  // ASSERT: Adding the given inputs does not lead to combinational cycles.
   auto *gate = Gate::get(gid);
 
   std::vector<GNet*> subnets;
@@ -156,6 +200,9 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
 
   _nConnects += gate->arity();
   _isSorted = (_gates.size() <= 1);
+
+  // Do some integrity checks.
+  assert(_sourceLinks.empty() == _gates.empty());
 }
 
 void GNet::onRemoveGate(Gate *gate, bool withLinks) {
@@ -202,6 +249,9 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
 
   _nConnects -= gate->arity();
   _isSorted = (_gates.size() <= 1);
+
+  // Do some integrity checks.
+  assert(_sourceLinks.empty() == _gates.empty());
 }
 
 //===----------------------------------------------------------------------===//
@@ -214,7 +264,6 @@ GNet::SubnetId GNet::newSubnet() {
 
 void GNet::addNet(const GNet &net) {
   // ASSERT: this net and the given one are disjoint.
-
   const auto nG = _gates.size();
   const auto nS = _subnets.size();
 

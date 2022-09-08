@@ -49,9 +49,12 @@ bool GNet::hasCombFlow(GateId gid, const Signal::List &inputs) const {
   std::unordered_set<GateId> targets;
   targets.reserve(inputs.size());
 
-  std::for_each(inputs.begin(), inputs.end(), [&](const Signal &signal) {
-    targets.insert(signal.gateId());
-  });
+  for (const auto input : inputs) {
+    if (gid == input.gateId()) {
+      return true;
+    }
+    targets.insert(input.gateId());
+  }
 
   // BFS for checking if some of the inputs are reachable.
   std::unordered_set<GateId> reached;
@@ -94,6 +97,10 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   _flags.insert({gid, flags});
 
   onAddGate(gate, false);
+
+  // Do some integrity checks.
+  assert(!(_sourceLinks.empty() && _triggers.empty()));
+
   return gate->id();
 }
 
@@ -120,6 +127,9 @@ void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
   std::for_each(subnets.rbegin(), subnets.rend(), [gate](GNet *subnet) {
     subnet->onAddGate(gate, true);
   });
+
+  // Do some integrity checks.
+  assert(!(_sourceLinks.empty() && _triggers.empty()));
 }
 
 void GNet::removeGate(GateId gid) {
@@ -154,6 +164,9 @@ void GNet::removeGate(GateId gid) {
 
   onRemoveGate(gate, false);
   _flags.erase(i);
+
+  // Do some integrity checks.
+  assert((_sourceLinks.empty() && _triggers.empty()) == _gates.empty());
 }
 
 void GNet::onAddGate(Gate *gate, bool withLinks) {
@@ -200,9 +213,6 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
 
   _nConnects += gate->arity();
   _isSorted = (_gates.size() <= 1);
-
-  // Do some integrity checks.
-  assert(_sourceLinks.empty() == _gates.empty());
 }
 
 void GNet::onRemoveGate(Gate *gate, bool withLinks) {
@@ -249,9 +259,6 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
 
   _nConnects -= gate->arity();
   _isSorted = (_gates.size() <= 1);
-
-  // Do some integrity checks.
-  assert(_sourceLinks.empty() == _gates.empty());
 }
 
 //===----------------------------------------------------------------------===//

@@ -42,7 +42,7 @@ GNet::GNet(unsigned level):
 //===----------------------------------------------------------------------===//
 
 bool GNet::hasCombFlow(GateId gid, const Signal::List &inputs) const {
-  if (inputs.empty()) {
+  if (inputs.empty() || Gate::get(gid)->isTrigger()) {
     return false;
   }
 
@@ -61,9 +61,7 @@ bool GNet::hasCombFlow(GateId gid, const Signal::List &inputs) const {
   reached.reserve(_gates.size());
 
   std::queue<GateId> queue;
-  if (!Gate::get(gid)->isTrigger()) {
-    queue.push(gid);
-  }
+  queue.push(gid);
 
   while (!queue.empty()) {
     const auto *gate = Gate::get(queue.front());

@@ -6,16 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
+/*
 #include "config.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
-#include "hls/compiler/compiler.h"
-#include "hls/mapper/mapper.h"
-#include "hls/model/model.h"
-#include "hls/model/printer.h"
-#include "hls/parser/hil/parser.h"
-#include "hls/scheduler/latency_solver.h"
-#include "hls/scheduler/param_optimizer.h"
+//#include "hls/compiler/compiler.h"
+//#include "hls/mapper/mapper.h"
+//#include "hls/model/model.h"
+//#include "hls/model/printer.h"
+//#include "hls/parser/hil/parser.h"
+//#include "hls/scheduler/latency_solver.h"
+//#include "hls/scheduler/param_optimizer.h"
 #include "options.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
@@ -116,7 +117,7 @@ int hlsMain(const std::string &file, const HlsOptions &options) {
 
   return 0;
 }
-
+/*
 int main(int argc, char **argv) {
   START_EASYLOGGINGPP(argc, argv);
 
@@ -147,4 +148,10 @@ int main(int argc, char **argv) {
   }
 
   return result;
+}*/
+
+int main() {
+  //  std::cout<<"utopia\n";
+    return 0;
+
 }

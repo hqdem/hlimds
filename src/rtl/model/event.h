@@ -51,7 +51,7 @@ public:
   bool level() const { return _kind == LEVEL0 || _kind == LEVEL1; }
 
   Kind kind() const { return _kind; }
-  const VNode* node() const { return _node; }
+  const VNode *node() const { return _node; }
   std::size_t delay() const { return _delay; }
 
   bool operator ==(const Event &rhs) const {
@@ -71,7 +71,7 @@ private:
   const std::size_t _delay;
 };
 
-std::ostream& operator <<(std::ostream &out, const Event::Kind &kind);
-std::ostream& operator <<(std::ostream &out, const Event &event);
+std::ostream &operator <<(std::ostream &out, const Event::Kind &kind);
+std::ostream &operator <<(std::ostream &out, const Event &event);
 
 } // namespace eda::rtl::model

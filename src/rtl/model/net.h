@@ -34,59 +34,114 @@ public:
   } 
 
   std::size_t vsize() const { return _vnodes.size(); }
-  const VNode::List vnodes() const { return _vnodes; }
+  const VNode::List &vnodes() const { return _vnodes; }
 
   std::size_t psize() const { return _pnodes.size(); }
-  const PNode::List pnodes() const { return _pnodes; }
+  const PNode::List &pnodes() const { return _pnodes; }
 
-  /// Creates and adds an s-node (s = source).
-  VNode* add_src(const Variable &var) {
+  /// Creates and adds a S-node (S = source).
+  VNode *add_src(const Variable &var) {
     return add_vnode(new VNode(VNode::SRC, var, {}, FuncSymbol::NOP, {}, {}));
   }
 
-  /// Creates and adds an c-node (c = constant).
-  VNode* add_val(const Variable &var, const std::vector<bool> value) {
+  /// Creates and adds a C-node (C = constant).
+  VNode *add_val(const Variable &var, const std::vector<bool> value) {
     return add_vnode(new VNode(VNode::VAL, var, {}, FuncSymbol::NOP, {}, value));
   }
 
-  /// Creates and adds an f-node (s = function).
-  VNode* add_fun(const Variable &var, FuncSymbol func, const VNode::List &inputs) {
+  /// Creates and adds an F-node (S = function).
+  VNode *add_fun(const Variable &var, FuncSymbol func, const VNode::List &inputs) {
     return add_vnode(new VNode(VNode::FUN, var, {}, func, inputs, {}));
   }
 
-  /// Creates and adds a phi-node (unspecified multiplexor).
+  /// Creates and adds a Phi-node (unspecified multiplexor).
   VNode *add_phi(const Variable &var) {
     return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP,  {}, {}));
   }
 
-  /// Creates and adds an m-node (m = multiplexor).
-  VNode* add_mux(const Variable &var, const VNode::List &inputs) {
+  /// Creates and adds an M-node (M = multiplexor).
+  VNode *add_mux(const Variable &var, const VNode::List &inputs) {
     return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP, inputs, {}));
   }
 
-  /// Creates and adds an r-node (r = register).
-  VNode* add_reg(const Variable &var, VNode *input) {
+  /// Creates and adds an R-node (R = register).
+  VNode *add_reg(const Variable &var, VNode *input) {
     return add_vnode(new VNode(VNode::REG, var, {}, FuncSymbol::NOP, { input }, {}));
   }
 
-  /// Creates and adds a combinational p-node.
-  PNode* add_cmb(const VNode::List &guard, const VNode::List &action) {
+  /// Creates and adds a combinational P-node.
+  PNode *add_cmb(const VNode::List &guard, const VNode::List &action) {
     return add_pnode(new PNode(guard, action));
   }
 
-  /// Creates and adds a sequential p-node.
-  PNode* add_seq(const Event &event, const VNode::List &guard, const VNode::List &action) {
+  /// Creates and adds a sequential P-node.
+  PNode *add_seq(const Event &event, const VNode::List &guard, const VNode::List &action) {
     return add_pnode(new PNode(event, guard, action));
   }
 
-  /// Updates the given v-node.
+  /// Updates the given V-node.
   void update(VNode *vnode, const VNode::List inputs) {
     vnode->replace_with(vnode->kind(), vnode->var(), vnode->events(),
                         vnode->func(), inputs, vnode->value());
   }
 
-  /// Creates the v-net according to the p-net.
+  /// Creates the V-net according to the P-net
+  /// (after that any changes are prohibited).
   void create();
+
+  //===--------------------------------------------------------------------===//
+  // Graph Interface (only V-Net)
+  //===--------------------------------------------------------------------===//
+
+  /*
+  using V = GateId;
+  using E = Link;
+
+  /// Returns the number of nodes.
+  std::size_t nNodes() const {
+    return nGates();
+  }
+
+  /// Returns the number of edges.
+  std::size_t nEdges() const {
+    return nConnects();
+  }
+
+  /// Checks whether the graph contains the node.
+  bool hasNode(GateId gid) const {
+    return contains(gid);
+  }
+
+  /// Checks whether the graph contains the edge.
+  bool hasEdge(const Link &link) const {
+    return !hasTrigger(link.target);
+  }
+
+  /// Returns the graph sources.
+  GateIdSet getSources() const {
+    GateIdSet sources;
+    sources.reserve(_sourceLinks.size() + _triggers.size());
+
+    for (auto link : _sourceLinks) {
+      sources.insert(link.source);
+    }
+    for (auto trigger : _triggers) {
+      sources.insert(trigger);
+    }
+
+    return sources;
+  }
+
+  /// Returns the outgoing edges of the node.
+  const LinkList &getOutEdges(GateId gid) const {
+    return Gate::get(gid)->links();
+  }
+
+  /// Returns the end of the edge.
+  GateId leadsTo(const Link &link) const {
+    return link.target;
+  }
+  */
 
 private:
   void mux_wire_defines(VNode *phi, const VNode::List &defines);
@@ -95,7 +150,7 @@ private:
   std::vector<std::pair<Event, VNode::List>> group_reg_defines(const VNode::List &defines);
   VNode* create_mux(const Variable &output, const VNode::List &defines);
 
-  VNode* add_vnode(VNode *vnode) {
+  VNode *add_vnode(VNode *vnode) {
     assert(!_created);
     auto &usage = _vnodes_temp[vnode->var().name()];
     if (vnode->kind() == VNode::MUX) {
@@ -106,7 +161,7 @@ private:
     return vnode;
   }
 
-  PNode* add_pnode(PNode *pnode) {
+  PNode *add_pnode(PNode *pnode) {
     assert(!_created);
     _pnodes.push_back(pnode);
     return pnode;

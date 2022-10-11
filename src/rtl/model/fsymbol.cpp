@@ -12,7 +12,7 @@
 
 namespace eda::rtl::model {
 
-std::ostream& operator <<(std::ostream &out, FuncSymbol func) {
+std::ostream &operator <<(std::ostream &out, FuncSymbol func) {
   switch (func) {
   case FuncSymbol::NOP:
     return out << "";

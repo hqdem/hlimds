@@ -13,7 +13,7 @@
 
 namespace eda::rtl::model {
 
-std::ostream& operator <<(std::ostream &out, const Event::Kind &kind) {
+std::ostream &operator <<(std::ostream &out, const Event::Kind &kind) {
   switch (kind) {
   case Event::POSEDGE:
     return out << "posedge";
@@ -31,7 +31,7 @@ std::ostream& operator <<(std::ostream &out, const Event::Kind &kind) {
   return out;
 }
 
-std::ostream& operator <<(std::ostream &out, const Event &event) {
+std::ostream &operator <<(std::ostream &out, const Event &event) {
   if (event.kind() == Event::ALWAYS) {
     return out << "*";
   }

@@ -32,7 +32,7 @@ static bool checkEquivTest(unsigned N,
 
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {
-    imap.insert({Link(lhsInputs[i]), Link(rhsInputs[i])});
+    imap.insert({Link(lhsInputs[i].gateId()), Link(rhsInputs[i].gateId())});
   }
 
   // Output bindings.

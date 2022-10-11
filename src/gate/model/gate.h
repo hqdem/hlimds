@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "base/model/link.h"
 #include "gate/model/gsymbol.h"
 #include "gate/model/signal.h"
 
@@ -39,35 +40,7 @@ public:
 
   using Id = Signal::GateId;
   using List = std::vector<Gate*>;
-
-  /// Represents a connection between two gates.
-  struct Link final {
-    // General link.
-    Link(Id source, Id target, std::size_t input):
-      source(source), target(target), input(input) {}
-
-    // Self-link (a port).
-    explicit Link(Id gid): Link(gid, gid, 0) {}
-
-    // Self-link (a port).
-    explicit Link(Signal signal): Link(signal.gateId()) {}
-
-    bool isPort() const {
-      return source == target;
-    }
-
-    bool operator ==(const Link &rhs) const {
-      return source == rhs.source && target == rhs.target && input == rhs.input;
-    }
-
-    /// Source gate.
-    Id source;
-    /// Target gate.
-    Id target;
-    /// Target input.
-    std::size_t input;
-  };
-
+  using Link = eda::base::model::Link<Id>;
   using LinkList = std::vector<Link>;
 
   //===--------------------------------------------------------------------===//
@@ -81,7 +54,7 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Returns the gate w/ the given id from the storage.
-  static Gate* get(Id id) { return _storage[id]; }
+  static Gate *get(Id id) { return _storage[id]; }
   /// Returns the next gate identifier.
   static Id nextId() { return _storage.size(); }
 
@@ -186,24 +159,3 @@ private:
 std::ostream &operator <<(std::ostream &out, const Gate &gate);
 
 } // namespace eda::gate::model
-
-//===----------------------------------------------------------------------===//
-// Hash
-//===----------------------------------------------------------------------===//
-
-namespace std {
-
-/// Hash for Gate::Link.
-template <>
-struct hash<eda::gate::model::Gate::Link> {
-  std::size_t operator()(const eda::gate::model::Gate::Link &link) const {
-    std::size_t hash = link.source;
-    hash *= 37;
-    hash += link.target;
-    hash *= 37;
-    hash += link.input;
-    return hash;
-  }
-};
-
-} // namespace std

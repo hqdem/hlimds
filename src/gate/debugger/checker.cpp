@@ -139,7 +139,7 @@ bool Checker::areEqualSeq(const GNet &lhs,
       const Signal lhsInput = lhsTrigger->input(i);
       const Signal rhsInput = rhsTrigger->input(i);
 
-      omap.insert({Gate::Link(lhsInput), Gate::Link(rhsInput)});
+      omap.insert({Gate::Link(lhsInput.gateId()), Gate::Link(rhsInput.gateId())});
     }
   }
 

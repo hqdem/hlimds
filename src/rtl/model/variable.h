@@ -68,10 +68,10 @@ public:
   Variable(const Variable &rhs) = default;
   Variable(Variable &&rhs) = default;
 
-  const std::string& name() const { return _name; }
+  const std::string &name() const { return _name; }
   Kind kind() const { return _kind; }
   Bind bind() const { return _bind; }
-  const Type& type() const { return _type; }
+  const Type &type() const { return _type; }
 
 private:
   const std::string _name;
@@ -80,7 +80,7 @@ private:
   const Type _type;
 };
 
-inline std::ostream& operator <<(std::ostream &out, const Variable &variable) {
+inline std::ostream &operator <<(std::ostream &out, const Variable &variable) {
   return out << variable.name();
 }
 

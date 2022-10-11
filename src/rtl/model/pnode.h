@@ -27,14 +27,14 @@ class PNode final {
 public:
   using List = std::vector<PNode *>;
 
-  const Event& event() const { return _event; }
+  const Event &event() const { return _event; }
 
   std::size_t gsize() const { return _guard.size(); }
-  const VNode::List& guard() const { return _guard; }
-  const VNode* guard(std::size_t i) const { return _guard[i]; }
+  const VNode::List &guard() const { return _guard; }
+  const VNode *guard(std::size_t i) const { return _guard[i]; }
 
   std::size_t asize() const { return _action.size(); }
-  const VNode::List& action() const { return _action; }
+  const VNode::List &action() const { return _action; }
   const VNode* action(std::size_t i) const { return _action[i]; }
 
 private:
@@ -59,6 +59,6 @@ private:
   VNode::List _action;
 };
 
-std::ostream& operator <<(std::ostream &out, const PNode &pnode);
+std::ostream &operator <<(std::ostream &out, const PNode &pnode);
 
 } // namespace eda::rtl::model

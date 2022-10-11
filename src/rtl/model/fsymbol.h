@@ -38,6 +38,6 @@ enum FuncSymbol {
   // TODO: Add user-defined (library) functions.
 };
 
-std::ostream& operator <<(std::ostream &out, FuncSymbol func);
+std::ostream &operator <<(std::ostream &out, FuncSymbol func);
 
 } // namespace eda::rtl::model

@@ -26,7 +26,7 @@ static bool simulatorTest(std::uint64_t N,
   GNet::LinkList out{Gate::Link(output)};
 
   for (auto input : inputs) {
-    in.push_back(Gate::Link(input));
+    in.push_back(Gate::Link(input.gateId()));
   }
 
   auto compiled = simulator.compile(net, in, out);

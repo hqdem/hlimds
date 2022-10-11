@@ -152,7 +152,7 @@ std::vector<std::pair<Event, VNode::List>> Net::group_reg_defines(const VNode::L
   return groups;
 }
 
-VNode* Net::create_mux(const Variable &output, const VNode::List &defines) {
+VNode *Net::create_mux(const Variable &output, const VNode::List &defines) {
   const std::size_t n = defines.size();
   assert(n != 0);
 
@@ -178,7 +178,7 @@ VNode* Net::create_mux(const Variable &output, const VNode::List &defines) {
   return new VNode(VNode::MUX, output, {}, FuncSymbol::NOP, inputs, {});
 }
 
-std::ostream& operator <<(std::ostream &out, const Net &net) {
+std::ostream &operator <<(std::ostream &out, const Net &net) {
   for (const auto *pnode: net.pnodes()) {
     out << *pnode << std::endl;
   }

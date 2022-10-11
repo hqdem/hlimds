@@ -13,7 +13,7 @@
 
 namespace eda::rtl::model {
 
-std::ostream& operator <<(std::ostream &out, const PNode &pnode) {
+std::ostream &operator <<(std::ostream &out, const PNode &pnode) {
   out << "always @(" << pnode.event() << ") ";
 
   if (pnode.gsize() > 0) {  

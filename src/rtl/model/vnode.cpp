@@ -12,7 +12,7 @@
 
 namespace eda::rtl::model {
 
-static std::ostream& operator <<(std::ostream &out, const std::vector<bool> &value) {
+static std::ostream &operator <<(std::ostream &out, const std::vector<bool> &value) {
   for (bool bit: value) {
     out << bit;
   }
@@ -20,7 +20,7 @@ static std::ostream& operator <<(std::ostream &out, const std::vector<bool> &val
   return out;
 }
 
-static std::ostream& operator <<(std::ostream &out, const VNode::List &vnodes) {
+static std::ostream &operator <<(std::ostream &out, const VNode::List &vnodes) {
   bool separator = false;
   for (VNode *vnode: vnodes) {
     out << (separator ? ", " : "") << vnode->name();
@@ -30,7 +30,7 @@ static std::ostream& operator <<(std::ostream &out, const VNode::List &vnodes) {
   return out;
 }
 
-std::ostream& operator <<(std::ostream &out, const VNode &vnode) {
+std::ostream &operator <<(std::ostream &out, const VNode &vnode) {
   switch (vnode.kind()) {
   case VNode::SRC:
     return out << "S{" << vnode.var() << "}";

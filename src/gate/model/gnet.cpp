@@ -41,7 +41,7 @@ GNet::GNet(unsigned level):
 // Gates 
 //===----------------------------------------------------------------------===//
 
-bool GNet::hasCombFlow(GateId gid, const Signal::List &inputs) const {
+bool GNet::hasCombFlow(GateId gid, const SignalList &inputs) const {
   if (inputs.empty() || Gate::get(gid)->isTrigger()) {
     return false;
   }
@@ -50,10 +50,10 @@ bool GNet::hasCombFlow(GateId gid, const Signal::List &inputs) const {
   targets.reserve(inputs.size());
 
   for (const auto input : inputs) {
-    if (gid == input.gateId()) {
+    if (gid == input.node()) {
       return true;
     }
-    targets.insert(input.gateId());
+    targets.insert(input.node());
   }
 
   // BFS for checking if some of the inputs are reachable.
@@ -102,7 +102,7 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   return gate->id();
 }
 
-void GNet::setGate(GateId gid, GateSymbol kind, const Signal::List &inputs) {
+void GNet::setGate(GateId gid, GateSymbol kind, const SignalList &inputs) {
   // ASSERT: Inputs belong to the net (no need to modify the upper nets).
   // ASSERT: Adding the given inputs does not lead to combinational cycles.
   auto *gate = Gate::get(gid);
@@ -178,7 +178,7 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
     }
     // Update the target boundary.
     for (std::size_t i = 0; i < gate->arity(); i++) {
-      const auto source = gate->input(i).gateId();
+      const auto source = gate->input(i).node();
       _targetLinks.erase(Link(source, gid, i));
     }
   }
@@ -190,7 +190,7 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
   } else {
     // Add the newly appeared boundary source links.
     for (std::size_t i = 0; i < gate->arity(); i++) {
-      const auto source = gate->input(i).gateId();
+      const auto source = gate->input(i).node();
       if (!contains(source)) {
         _sourceLinks.insert(Link(source, gid, i));
       }
@@ -223,7 +223,7 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
   } else {
     // Remove the previously existing boundary source links.
     for (std::size_t i = 0; i < gate->arity(); i++) {
-      const auto source = gate->input(i).gateId();
+      const auto source = gate->input(i).node();
       _sourceLinks.erase(Link(source, gid, i));
     }
   }
@@ -244,7 +244,7 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
     }
     // Update the target boundary.
     for (std::size_t i = 0; i < gate->arity(); i++) {
-      const auto source = gate->input(i).gateId();
+      const auto source = gate->input(i).node();
       if (contains(source)) {
         _targetLinks.insert(Link(source, gid, i));
       }

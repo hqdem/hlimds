@@ -9,8 +9,8 @@
 #pragma once
 
 #include "base/model/link.h"
+#include "base/model/signal.h"
 #include "gate/model/gsymbol.h"
-#include "gate/model/signal.h"
 
 #include <algorithm>
 #include <iostream>
@@ -38,10 +38,12 @@ public:
   // Types
   //===--------------------------------------------------------------------===//
 
-  using Id = Signal::GateId;
+  using Id = unsigned;
   using List = std::vector<Gate*>;
   using Link = eda::base::model::Link<Id>;
-  using LinkList = std::vector<Link>;
+  using Signal = eda::base::model::Signal<Id>;
+  using LinkList = Link::List;
+  using SignalList = Signal::List;
 
   //===--------------------------------------------------------------------===//
   // Constants
@@ -77,7 +79,7 @@ public:
 
   bool isTrigger() const {
     for (const auto &input: _inputs) {
-      if (input.kind() != Event::ALWAYS)
+      if (!input.isAlways())
         return true;
     }
     return false;
@@ -91,7 +93,7 @@ public:
   // Connections
   //===--------------------------------------------------------------------===//
 
-  const Signal::List &inputs() const { return _inputs; }
+  const SignalList &inputs() const { return _inputs; }
   const Signal &input(std::size_t i) const { return _inputs[i]; }
 
   const LinkList &links() const { return _links; }
@@ -99,7 +101,7 @@ public:
 
 private:
   /// Creates a gate w/ the given operation and the inputs.
-  Gate(GateSymbol kind, const Signal::List inputs):
+  Gate(GateSymbol kind, const SignalList inputs):
     _id(_storage.size()), _kind(kind), _inputs(inputs) {
     // Register the gate in the storage.
     if (_id >= _storage.size()) {
@@ -129,23 +131,23 @@ private:
 
   void appendLinks() {
     for (std::size_t i = 0; i < _inputs.size(); i++) {
-      auto *gate = Gate::get(_inputs[i].gateId());
+      auto *gate = Gate::get(_inputs[i].node());
       gate->appendLink(_id, i);
     }
   }
 
   void removeLinks() {
     for (std::size_t i = 0; i < _inputs.size(); i++) {
-      auto *gate = Gate::get(_inputs[i].gateId());
+      auto *gate = Gate::get(_inputs[i].node());
       gate->removeLink(_id, i);
     }
   }
 
-  void setInputs(const Signal::List &inputs);
+  void setInputs(const SignalList &inputs);
 
   const Id _id;
   GateSymbol _kind;
-  Signal::List _inputs;
+  SignalList _inputs;
   LinkList _links;
 
   /// Common gate storage.

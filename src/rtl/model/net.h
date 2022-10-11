@@ -25,6 +25,8 @@ namespace eda::rtl::model {
  */
 class Net final {
 public:
+  using Event = VNode::Event;
+
   Net(): _created(false) {
     const std::size_t N = 1024*1024;
 

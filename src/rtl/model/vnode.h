@@ -8,16 +8,16 @@
 
 #pragma once
 
+#include "base/model/signal.h"
+#include "rtl/model/fsymbol.h"
+#include "rtl/model/variable.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include "rtl/model/event.h"
-#include "rtl/model/fsymbol.h"
-#include "rtl/model/variable.h"
 
 namespace eda::rtl::model {
 
@@ -36,6 +36,8 @@ class VNode final {
 
 public:
   using List = std::vector<VNode*>;
+  using Event = base::model::Signal<VNode*>;
+  using EventList = Event::List;
 
   enum Kind {
     /// Source node (S-node):
@@ -62,7 +64,7 @@ public:
   const Type &type() const { return _var.type(); }
 
   std::size_t esize() const { return _events.size(); }
-  const Event::List &events() const { return _events; }
+  const EventList &events() const { return _events; }
   const Event &event(std::size_t i) const { return _events[i]; }
 
   FuncSymbol func() const { return _func; }
@@ -79,7 +81,7 @@ public:
 private:
   VNode(Kind kind,
         const Variable &var,
-        const Event::List &events,
+        const EventList &events,
         FuncSymbol func,
         const List &inputs,
         const std::vector<bool> &value):
@@ -100,7 +102,7 @@ private:
 
   void replace_with(Kind kind,
                     const Variable &var,
-                    const Event::List &events,
+                    const EventList &events,
                     FuncSymbol func,
                     const List &inputs,
                     const std::vector<bool> &value) {
@@ -115,7 +117,7 @@ private:
 
   const Kind _kind;
   const Variable _var;
-  const Event::List _events;
+  const EventList _events;
   const FuncSymbol _func;
   const List _inputs;
   const std::vector<bool> _value;

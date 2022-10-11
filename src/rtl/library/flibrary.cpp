@@ -11,6 +11,7 @@
 
 #include <cassert>
 
+using namespace eda::base::model;
 using namespace eda::gate::model;
 using namespace eda::rtl::model;
 
@@ -64,7 +65,7 @@ void FLibraryDefault::synth(FuncSymbol func,
 
 void FLibraryDefault::synth(const Out &out,
                             const In &in,
-                            const Signal::List &control,
+                            const SignalList &control,
                             GNet &net) {
   assert(control.size() == 1 || control.size() == 2);
   assert(control.size() == in.size());
@@ -72,14 +73,14 @@ void FLibraryDefault::synth(const Out &out,
   auto clock = invertIfNegative(control[0], net);
   if (control.size() == 1) {
     for (std::size_t i = 0; i < out.size(); i++) {
-      auto f = (clock.edge() ? GateSymbol::DFF : GateSymbol::LATCH);
+      auto f = (clock.isEdge() ? GateSymbol::DFF : GateSymbol::LATCH);
       auto d = Signal::always(in[0][i]); // stored data
 
       net.setGate(out[i], f, { d, clock });
     }
   } else {
     auto edged = invertIfNegative(control[1], net);
-    auto reset = Signal::always(edged.gateId());
+    auto reset = Signal::always(edged.node());
 
     for (std::size_t i = 0; i < out.size(); i++) {
       auto d = Signal::always(in[0][i]); // stored data
@@ -176,22 +177,22 @@ void FLibraryDefault::synthMux(const Out &out, const In &in, GNet &net) {
   }
 }
 
-Signal FLibraryDefault::invertIfNegative(const Signal &event, GNet &net) {
-  switch (event.kind()) {
-  case Event::POSEDGE:
+FLibrary::Signal FLibraryDefault::invertIfNegative(const Signal &event, GNet &net) {
+  switch (event.event()) {
+  case POSEDGE:
     // Leave the clock signal unchanged.
-    return Signal::posedge(event.gateId());
-  case Event::NEGEDGE:
+    return Signal::posedge(event.node());
+  case NEGEDGE:
     // Invert the clock signal.
     return Signal::posedge(net.addGate(GateSymbol::NOT,
-                                       { Signal::always(event.gateId()) }));
-  case Event::LEVEL0:
+                                       { Signal::always(event.node()) }));
+  case LEVEL0:
     // Invert the enable signal.
     return Signal::level1(net.addGate(GateSymbol::NOT,
-                                      { Signal::always(event.gateId()) }));
-  case Event::LEVEL1:
+                                      { Signal::always(event.node()) }));
+  case LEVEL1:
     // Leave the enable signal unchanged.
-    return Signal::level1(event.gateId());
+    return Signal::level1(event.node());
   default:
     assert(false);
     return Signal::posedge(Gate::INVALID);

@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <cassert>
-#include <cstddef>
-
 #include "rtl/model/net.h"
 #include "util/string.h"
+
+#include <cassert>
+#include <cstddef>
 
 using namespace eda::utils;
 
@@ -114,7 +114,7 @@ void Net::mux_reg_defines(VNode *phi, const VNode::List &defines) {
   _vnodes.push_back(phi);
 }
 
-std::vector<std::pair<Event, VNode::List>> Net::group_reg_defines(const VNode::List &defines) {
+std::vector<std::pair<VNode::Event, VNode::List>> Net::group_reg_defines(const VNode::List &defines) {
   const Event *clock = nullptr;
   const Event *level = nullptr;
 
@@ -126,9 +126,9 @@ std::vector<std::pair<Event, VNode::List>> Net::group_reg_defines(const VNode::L
     assert(vnode != nullptr && vnode->pnode() != nullptr);
 
     const Event &event = vnode->pnode()->event();
-    assert(event.edge() || event.level());
+    assert(event.isEdge() || event.isLevel());
 
-    if (event.edge()) {
+    if (event.isEdge()) {
       // At most one edge-triggered event (clock) is allowed.
       assert(clock == nullptr || *clock == event);
       clock = &event;

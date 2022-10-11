@@ -20,13 +20,13 @@ static Simulator simulator;
 
 static bool simulatorTest(std::uint64_t N,
                           const GNet &net,
-                          Signal::List inputs,
+                          Gate::SignalList inputs,
                           Gate::Id output) {
   GNet::LinkList in;
   GNet::LinkList out{Gate::Link(output)};
 
   for (auto input : inputs) {
-    in.push_back(Gate::Link(input.gateId()));
+    in.push_back(Gate::Link(input.node()));
   }
 
   auto compiled = simulator.compile(net, in, out);
@@ -42,7 +42,7 @@ static bool simulatorTest(std::uint64_t N,
 
 bool simulatorNorTest(unsigned N) {
   // ~(x1 | ... | xN).
-  Signal::List inputs;
+  Gate::SignalList inputs;
   Gate::Id output;
 
   auto net = makeNor(N, inputs, output);
@@ -52,7 +52,7 @@ bool simulatorNorTest(unsigned N) {
 
 bool simulatorAndnTest(unsigned N) {
   // (~x1 & ... & ~xN).
-  Signal::List inputs;
+  Gate::SignalList inputs;
   Gate::Id output;
 
   auto net = makeAndn(N, inputs, output);

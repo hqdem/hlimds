@@ -19,13 +19,13 @@ using namespace eda::gate::model;
 // gate(x1, ..., xN).
 static std::unique_ptr<GNet> makeNet(GateSymbol gate,
                                      unsigned N,
-                                     Signal::List &inputs,
+                                     Gate::SignalList &inputs,
                                      Gate::Id &outputId) {
   auto net = std::make_unique<GNet>();
 
   for (unsigned i = 0; i < N; i++) {
     const Gate::Id inputId = net->newGate();
-    const Signal input = Signal::always(inputId);
+    const Gate::Signal input = Gate::Signal::always(inputId);
     inputs.push_back(input);
   }
 
@@ -38,18 +38,18 @@ static std::unique_ptr<GNet> makeNet(GateSymbol gate,
 // gate(~x1, ..., ~xN).
 static std::unique_ptr<GNet> makeNetn(GateSymbol gate,
                                       unsigned N,
-                                      Signal::List &inputs,
+                                      Gate::SignalList &inputs,
                                       Gate::Id &outputId) {
   auto net = std::make_unique<GNet>();
 
-  Signal::List andInputs;
+  Gate::SignalList andInputs;
   for (unsigned i = 0; i < N; i++) {
     const Gate::Id inputId = net->newGate();
-    const Signal input = Signal::always(inputId);
+    const Gate::Signal input = Gate::Signal::always(inputId);
     inputs.push_back(input);
 
     const Gate::Id notGateId = net->addGate(GateSymbol::NOT, { input });
-    const Signal andInput = Signal::always(notGateId);
+    const Gate::Signal andInput = Gate::Signal::always(notGateId);
     andInputs.push_back(andInput);
   }
 
@@ -61,14 +61,14 @@ static std::unique_ptr<GNet> makeNetn(GateSymbol gate,
 
 // (x1 | ... | xN).
 std::unique_ptr<GNet> makeOr(unsigned N,
-                             Signal::List &inputs,
+                             Gate::SignalList &inputs,
                              Gate::Id &outputId) {
   return makeNet(GateSymbol::OR, N, inputs, outputId);
 }
 
 // (x1 & ... & xN).
 std::unique_ptr<GNet> makeAnd(unsigned N,
-                              Signal::List &inputs,
+                              Gate::SignalList &inputs,
                               Gate::Id &outputId) {
   return makeNet(GateSymbol::AND, N, inputs, outputId);
 }
@@ -76,14 +76,14 @@ std::unique_ptr<GNet> makeAnd(unsigned N,
 
 // ~(x1 | ... | xN).
 std::unique_ptr<GNet> makeNor(unsigned N,
-                              Signal::List &inputs,
+                              Gate::SignalList &inputs,
                               Gate::Id &outputId) {
   return makeNet(GateSymbol::NOR, N, inputs, outputId);
 }
 
 // ~(x1 & ... & xN).
 std::unique_ptr<GNet> makeNand(unsigned N,
-                               Signal::List &inputs,
+                               Gate::SignalList &inputs,
                                Gate::Id &outputId) {
   return makeNet(GateSymbol::NAND, N, inputs, outputId);
 }
@@ -91,14 +91,14 @@ std::unique_ptr<GNet> makeNand(unsigned N,
 
 // (~x1 | ... | ~xN).
 std::unique_ptr<GNet> makeOrn(unsigned N,
-                              Signal::List &inputs,
+                              Gate::SignalList &inputs,
                               Gate::Id &outputId) {
   return makeNetn(GateSymbol::OR, N, inputs, outputId);
 }
 
 // (~x1 & ... & ~xN).
 std::unique_ptr<GNet> makeAndn(unsigned N,
-                               Signal::List &inputs,
+                               Gate::SignalList &inputs,
                                Gate::Id &outputId) {
   return makeNetn(GateSymbol::AND, N, inputs, outputId);
 }
@@ -151,12 +151,12 @@ std::unique_ptr<GNet> makeRand(std::size_t nGates,
       const auto gid = gateDist(gen);
 
       if (net->contains(gid)) {
-        Signal::List inputs;
+        Gate::SignalList inputs;
 
         const std::size_t arity = arityDist(gen);
         for (std::size_t j = 0; j < arity; j++) {
           const auto inputId = gateDist(gen);
-          const auto input = Signal::always(inputId);
+          const auto input = Gate::Signal::always(inputId);
           inputs.push_back(input);
         }
 
@@ -188,42 +188,42 @@ std::unique_ptr<GNet> makeRand(std::size_t nGates,
 }
 
 TEST(GNetTest, GNetOrTest) {
-  Signal::List inputs;
+  Gate::SignalList inputs;
   Gate::Id outputId;
   auto net = makeOr(1024, inputs, outputId);
   EXPECT_TRUE(net != nullptr);
 }
 
 TEST(GNetTest, GNetAndTest) {
-  Signal::List inputs;
+  Gate::SignalList inputs;
   Gate::Id outputId;
   auto net = makeAnd(1024, inputs, outputId);
   EXPECT_TRUE(net != nullptr);
 }
 
 TEST(GNetTest, GNetNorTest) {
-  Signal::List inputs;
+  Gate::SignalList inputs;
   Gate::Id outputId;
   auto net = makeNor(1024, inputs, outputId);
   EXPECT_TRUE(net != nullptr);
 }
 
 TEST(GNetTest, GNetNandTest) {
-  Signal::List inputs;
+  Gate::SignalList inputs;
   Gate::Id outputId;
   auto net = makeNand(1024, inputs, outputId);
   EXPECT_TRUE(net != nullptr);
 }
 
 TEST(GNetTest, GNetOrnTest) {
-  Signal::List inputs;
+  Gate::SignalList inputs;
   Gate::Id outputId;
   auto net = makeOrn(1024, inputs, outputId);
   EXPECT_TRUE(net != nullptr);
 }
 
 TEST(GNetTest, GNetAndnTest) {
-  Signal::List inputs;
+  Gate::SignalList inputs;
   Gate::Id outputId;
   auto net = makeAndn(1024, inputs, outputId);
   EXPECT_TRUE(net != nullptr);

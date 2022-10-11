@@ -12,11 +12,12 @@
 #include <string>
 #include <vector>
 
-#include "rtl/model/event.h"
+#include "base/model/signal.h"
 #include "rtl/model/fsymbol.h"
 #include "rtl/model/net.h"
 #include "rtl/model/variable.h"
 
+using namespace eda::base::model;
 using namespace eda::rtl::model;
 
 namespace eda::rtl::parser::ril {
@@ -48,7 +49,7 @@ struct AstAssign final {
 struct AstProc final {
   AstProc() = default;
 
-  Event::Kind event;
+  Event event;
   std::string signal;
   std::string guard;
   std::vector<AstAssign> action;
@@ -102,7 +103,7 @@ public:
     _model.procs.push_back(_proc);
   }
 
-  void set_event(Event::Kind event, const std::string &signal) {
+  void set_event(Event event, const std::string &signal) {
     _proc.event = event;
     _proc.signal = signal;
   }

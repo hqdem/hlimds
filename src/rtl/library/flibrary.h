@@ -30,6 +30,8 @@ namespace eda::rtl::library {
  */
 struct FLibrary {
   using GateIdList = GNet::GateIdList;
+  using Signal = GNet::Signal;
+  using SignalList = GNet::SignalList;
   using Value = GNet::Value;
   using In = GNet::In;
   using Out = GNet::Out;
@@ -81,7 +83,7 @@ public:
 
   void synth(const Out &out,
              const In &in,
-             const Signal::List &control,
+             const SignalList &control,
              GNet &net) override;
 
 private:

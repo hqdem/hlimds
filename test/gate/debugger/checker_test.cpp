@@ -16,10 +16,10 @@ using namespace eda::gate::model;
 
 static bool checkEquivTest(unsigned N,
                            const GNet &lhs,
-                           const Signal::List &lhsInputs,
+                           const Gate::SignalList &lhsInputs,
                            Gate::Id lhsOutputId,
                            const GNet &rhs,
-                           const Signal::List &rhsInputs,
+                           const Gate::SignalList &rhsInputs,
                            Gate::Id rhsOutputId) {
   using Link = Gate::Link;
   using GateBinding = Checker::GateBinding;
@@ -32,7 +32,7 @@ static bool checkEquivTest(unsigned N,
 
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {
-    imap.insert({Link(lhsInputs[i].gateId()), Link(rhsInputs[i].gateId())});
+    imap.insert({Link(lhsInputs[i].node()), Link(rhsInputs[i].node())});
   }
 
   // Output bindings.
@@ -47,12 +47,12 @@ static bool checkEquivTest(unsigned N,
 
 bool checkNorNorTest(unsigned N) {
   // ~(x1 | ... | xN).
-  Signal::List lhsInputs;
+  Gate::SignalList lhsInputs;
   Gate::Id lhsOutputId;
   auto lhs = makeNor(N, lhsInputs, lhsOutputId);
 
   // ~(x1 | ... | xN).
-  Signal::List rhsInputs;
+  Gate::SignalList rhsInputs;
   Gate::Id rhsOutputId;
   auto rhs = makeNor(N, rhsInputs, rhsOutputId);
 
@@ -62,12 +62,12 @@ bool checkNorNorTest(unsigned N) {
 
 bool checkNorAndnTest(unsigned N) {
   // ~(x1 | ... | xN).
-  Signal::List lhsInputs;
+  Gate::SignalList lhsInputs;
   Gate::Id lhsOutputId;
   auto lhs = makeNor(N, lhsInputs, lhsOutputId);
 
   // (~x1 & ... & ~xN).
-  Signal::List rhsInputs;
+  Gate::SignalList rhsInputs;
   Gate::Id rhsOutputId;
   auto rhs = makeAndn(N, rhsInputs, rhsOutputId);
 
@@ -77,12 +77,12 @@ bool checkNorAndnTest(unsigned N) {
 
 bool checkNorAndTest(unsigned N) {
   // ~(x1 | ... | xN).
-  Signal::List lhsInputs;
+  Gate::SignalList lhsInputs;
   Gate::Id lhsOutputId;
   auto lhs = makeNor(N, lhsInputs, lhsOutputId);
 
   // (x1 & ... & xN).
-  Signal::List rhsInputs;
+  Gate::SignalList rhsInputs;
   Gate::Id rhsOutputId;
   auto rhs = makeAnd(N, rhsInputs, rhsOutputId);
 

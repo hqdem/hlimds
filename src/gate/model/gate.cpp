@@ -19,16 +19,16 @@ Gate::List Gate::_storage = []{
   return storage;
 }();
 
-void Gate::setInputs(const Signal::List &inputs) {
+void Gate::setInputs(const SignalList &inputs) {
   removeLinks();
   _inputs.assign(inputs.begin(), inputs.end());
   appendLinks();
 }
 
-static std::ostream &operator <<(std::ostream &out, const Signal::List &signals) {
+static std::ostream &operator <<(std::ostream &out, const Gate::SignalList &signals) {
   bool separator = false;
-  for (const Signal &signal: signals) {
-    out << (separator ? ", " : "") << signal.kind() << "(" << signal.gateId() << ")";
+  for (const Gate::Signal &signal: signals) {
+    out << (separator ? ", " : "") << signal.event() << "(" << signal.node() << ")";
     separator = true;
   }
   return out;

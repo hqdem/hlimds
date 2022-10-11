@@ -9,7 +9,6 @@
 #pragma once
 
 #include "gate/model/gate.h"
-#include "rtl/model/event.h"
 
 #include <functional>
 #include <iostream>
@@ -45,6 +44,8 @@ public:
   using Link        = Gate::Link;
   using LinkList    = Gate::LinkList;
   using LinkSet     = std::unordered_set<Link>;
+  using Signal      = Gate::Signal;
+  using SignalList  = Gate::SignalList;
   using Value       = std::vector<bool>;
   using In          = std::vector<GateIdList>;
   using Out         = GateIdList;
@@ -206,7 +207,7 @@ public:
   }
 
   /// Checks if any of the given inputs depends on the given gate.
-  bool hasCombFlow(GateId gid, const Signal::List &inputs) const;
+  bool hasCombFlow(GateId gid, const SignalList &inputs) const;
 
   /// Adds a new (empty) gate and returns its identifier.
   GateId newGate() {
@@ -214,12 +215,12 @@ public:
   }
 
   /// Adds a new gate and returns its identifier.
-  GateId addGate(GateSymbol kind, const Signal::List &inputs) {
+  GateId addGate(GateSymbol kind, const SignalList &inputs) {
     return addGate(new Gate(kind, inputs));
   }
 
   /// Modifies the existing gate.
-  void setGate(GateId gid, GateSymbol kind, const Signal::List &inputs);
+  void setGate(GateId gid, GateSymbol kind, const SignalList &inputs);
 
   /// Removes the gate from the net.
   void removeGate(GateId gid);

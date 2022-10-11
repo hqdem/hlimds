@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 
-#include "rtl/model/event.h"
+#include "base/model/signal.h"
 #include "rtl/model/vnode.h"
 
 namespace eda::rtl::model {
@@ -25,7 +25,9 @@ class PNode final {
   friend class Net;
 
 public:
-  using List = std::vector<PNode *>;
+  using List = std::vector<PNode*>;
+  using Event = VNode::Event;
+  using EventList = VNode::EventList;
 
   const Event &event() const { return _event; }
 

@@ -45,7 +45,7 @@ Compiled::Command Compiled::getCommand(const GNet &net,
 
   IV in(gate.arity());
   for (I i = 0; i < gate.arity(); i++) {
-    const auto source = gate.input(i).gateId();
+    const auto source = gate.input(i).node();
 
     Gate::Link inLink = net.contains(source)
                       ? Gate::Link(source)

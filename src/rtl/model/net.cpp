@@ -18,7 +18,7 @@ namespace eda::rtl::model {
  
 void Net::create() {
   // Net cannot be created multiple times.
-  assert(!_created);
+  assert(!_isCreated);
 
   for (auto &[_, usage]: _vnodesTemp) {
     assert(!_.empty());
@@ -45,7 +45,7 @@ void Net::create() {
   }
 
   _vnodesTemp.clear();
-  _created = true;
+  _isCreated = true;
 }
 
 // if (g[1]) { w <= f[1](...) }    w[1] <= f[1](...)
@@ -57,7 +57,9 @@ void Net::muxWireDefines(VNode *phi, const VNode::List &defines) {
 
   // No multiplexing is required.
   if (n == 1) {
-    _vnodes.push_back(defines.front());
+    VNode *vnode = defines.front();
+    _nConnects += vnode->arity();
+    _vnodes.push_back(vnode);
     return;
   }
 
@@ -72,6 +74,7 @@ void Net::muxWireDefines(VNode *phi, const VNode::List &defines) {
 
     // Create a { w[i] <= f[i](...) } node.
     VNode *newVNode = oldVNode->duplicate(unique_name(oldVNode->name()));
+    _nConnects += newVNode->arity();
     _vnodes.push_back(newVNode);
 
     // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
@@ -81,6 +84,7 @@ void Net::muxWireDefines(VNode *phi, const VNode::List &defines) {
 
   // Connect the wire w/ the multiplexor: w <= mux{ g[i] -> w[i] }.
   phi->replaceWith(VNode::MUX, phi->var(), {}, FuncSymbol::NOP, inputs, {});
+  _nConnects += phi->arity();
   _vnodes.push_back(phi);
 }
 
@@ -103,6 +107,7 @@ void Net::muxRegDefines(VNode *phi, const VNode::List &defines) {
 
     // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
     VNode *mux = createMux(wire, defines);
+    _nConnects += mux->arity();
     _vnodes.push_back(mux);
 
     signals.push_back(signal);
@@ -111,6 +116,7 @@ void Net::muxRegDefines(VNode *phi, const VNode::List &defines) {
 
   // Connect the register w/ the multiplexor(s) via the wire(s): r <= w.
   phi->replaceWith(VNode::REG, output, signals, FuncSymbol::NOP, inputs, {});
+  _nConnects += phi->arity();
   _vnodes.push_back(phi);
 }
 

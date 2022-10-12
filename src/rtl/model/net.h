@@ -11,6 +11,7 @@
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -25,12 +26,15 @@ namespace eda::rtl::model {
  */
 class Net final {
 public:
-  using VNodeId = VNode::Id;
+  using VNodeId     = VNode::Id;
   using VNodeIdList = std::vector<VNodeId>;
-  using Signal = VNode::Signal;
-  using SignalList = VNode::SignalList;
+  using VNodeIdSet  = std::unordered_set<VNodeId>;
+  using Link        = VNode::Link;
+  using LinkList    = VNode::LinkList;
+  using Signal      = VNode::Signal;
+  using SignalList  = VNode::SignalList;
 
-  Net(): _created(false) {
+  Net(): _nConnects(0), _isCreated(false) {
     const size_t N = 1024*1024;
 
     _vnodes.reserve(N);
@@ -43,6 +47,9 @@ public:
 
   size_t psize() const { return _pnodes.size(); }
   const PNode::List &pnodes() const { return _pnodes; }
+
+  /// Returns the number of connections (w/o control signals).
+  size_t nConnects() const { return _nConnects; }
 
   /// Creates and adds a S-node (S = source).
   VNodeId addSrc(const Variable &var) {
@@ -102,13 +109,12 @@ public:
   // Graph Interface (only V-Net)
   //===--------------------------------------------------------------------===//
 
-  /*
-  using V = GateId;
+  using V = VNodeId;
   using E = Link;
 
   /// Returns the number of nodes.
   size_t nNodes() const {
-    return nGates();
+    return vsize();
   }
 
   /// Returns the number of edges.
@@ -117,40 +123,38 @@ public:
   }
 
   /// Checks whether the graph contains the node.
-  bool hasNode(GateId gid) const {
-    return contains(gid);
+  bool hasNode(VNodeId gid) const {
+    return true;
   }
 
   /// Checks whether the graph contains the edge.
   bool hasEdge(const Link &link) const {
-    return !hasTrigger(link.target);
+    return VNode::get(link.target)->kind() != VNode::REG;
   }
 
   /// Returns the graph sources.
-  GateIdSet getSources() const {
-    GateIdSet sources;
-    sources.reserve(_sourceLinks.size() + _triggers.size());
+  VNodeIdSet getSources() const {
+    VNodeIdSet sources;
+    sources.reserve(_vnodes.size());
 
-    for (auto link : _sourceLinks) {
-      sources.insert(link.source);
-    }
-    for (auto trigger : _triggers) {
-      sources.insert(trigger);
+    for (auto *vnode : _vnodes) {
+      if (vnode->kind() == VNode::SRC || vnode->kind() == VNode::REG) {
+        sources.insert(vnode->id());
+      }
     }
 
     return sources;
   }
 
   /// Returns the outgoing edges of the node.
-  const LinkList &getOutEdges(GateId gid) const {
-    return Gate::get(gid)->links();
+  const LinkList &getOutEdges(VNodeId gid) const {
+    return VNode::get(gid)->links();
   }
 
   /// Returns the end of the edge.
-  GateId leadsTo(const Link &link) const {
+  VNodeId leadsTo(const Link &link) const {
     return link.target;
   }
-  */
 
 private:
   void muxWireDefines(VNode *phi, const VNode::List &defines);
@@ -171,7 +175,7 @@ private:
   }
  
   VNodeId addVNode(VNode *vnode) {
-    assert(!_created);
+    assert(!_isCreated);
     auto &usage = _vnodesTemp[vnode->var().name()];
     if (vnode->kind() == VNode::MUX) {
       usage.first = vnode;
@@ -182,18 +186,24 @@ private:
   }
 
   PNode *addPNode(PNode *pnode) {
-    assert(!_created);
+    assert(!_isCreated);
     _pnodes.push_back(pnode);
     return pnode;
   }
 
+  /// V-nodes.
   VNode::List _vnodes;
+  /// P-nodes.
   PNode::List _pnodes;
  
   /// Maps a variable x to the <phi(x), {def(x), ..., def(x)}> structure.
   std::unordered_map<std::string, std::pair<VNode*, VNode::List>> _vnodesTemp;
 
-  bool _created;
+  /// Number of connections.
+  size_t _nConnects;
+
+  /// Flag indicating whether the net is created.
+  bool _isCreated;
 };
 
 std::ostream& operator <<(std::ostream &out, const Net &net);

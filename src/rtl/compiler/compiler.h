@@ -39,7 +39,7 @@ public:
 private:
   FLibrary &_library;
 
-  Gate::Id gateId(const VNode *vnode) const;
+  Gate::Id gateId(VNode::Id vnodeId) const;
 
   void allocGates(const VNode *vnode, GNet &net);
 
@@ -53,7 +53,7 @@ private:
   GNet::Out out(const VNode *vnode);
 
   // Maps vnodes to the identifiers of their lower bits' gates.
-  std::unordered_map<std::string, Gate::Id> _gateIds;
+  std::unordered_map<VNode::Id, Gate::Id> _gateIds;
 };
 
 } // namespace eda::rtl::compiler

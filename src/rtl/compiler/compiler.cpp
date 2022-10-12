@@ -57,8 +57,8 @@ std::unique_ptr<GNet> Compiler::compile(const Net &net) {
   return gnet;
 }
 
-Gate::Id Compiler::gateId(const VNode *vnode) const {
-  const auto i = _gateIds.find(vnode->name());
+Gate::Id Compiler::gateId(VNode::Id vnodeId) const {
+  const auto i = _gateIds.find(vnodeId);
   if (i != _gateIds.end()) {
     return i->second;
   }
@@ -69,9 +69,9 @@ Gate::Id Compiler::gateId(const VNode *vnode) const {
 void Compiler::allocGates(const VNode *vnode, GNet &net) {
   assert(vnode != nullptr);
 
-  const auto i = _gateIds.find(vnode->name());
+  const auto i = _gateIds.find(vnode->id());
   if (i == _gateIds.end()) {
-    _gateIds.insert({ vnode->name(), Gate::nextId() });
+    _gateIds.insert({ vnode->id(), Gate::nextId() });
   }
 
   const auto size = vnode->var().type().width();
@@ -112,15 +112,15 @@ void Compiler::synthReg(const VNode *vnode, GNet &net) {
 
 GNet::In Compiler::in(const VNode *vnode) {
   GNet::In in(vnode->arity());
-  for (std::size_t i = 0; i < vnode->arity(); i++) {
-    in[i] = out(vnode->input(i));
+  for (size_t i = 0; i < vnode->arity(); i++) {
+    in[i] = out(VNode::get(vnode->input(i).node()));
   }
 
   return in;
 }
 
 GNet::Out Compiler::out(const VNode *vnode) {
-  const auto base = gateId(vnode);
+  const auto base = gateId(vnode->id());
   const auto size = vnode->var().type().width();
   assert(base != Gate::INVALID);
 

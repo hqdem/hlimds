@@ -64,12 +64,12 @@ std::unique_ptr<Net> Builder::create() {
   }
 
   // Create phi-nodes when required.
-  std::unordered_map<std::string, VNode*> use_nodes;
+  std::unordered_map<std::string, VNode::Id> use_nodes;
 
   for (const auto &decl: _model.decls) {
     if (decl.bind == Variable::INPUT) {
       auto v = variables.find(decl.name);
-      use_nodes[decl.name] = net->add_src(v->second);
+      use_nodes[decl.name] = net->addSrc(v->second);
     }
   }
 
@@ -77,68 +77,69 @@ std::unique_ptr<Net> Builder::create() {
     for (const auto &assign: proc.action) {
       auto v = variables.find(assign.out);
       if (def_count[assign.out] > 1) {
-        use_nodes[assign.out] = net->add_phi(v->second);
+        use_nodes[assign.out] = net->addPhi(v->second);
       } else if (v->second.kind() == Variable::WIRE) {
-        use_nodes[assign.out] = net->add_fun(v->second, assign.func, {});
+        use_nodes[assign.out] = net->addFun(v->second, assign.func, {});
       } else {
-        use_nodes[assign.out] = net->add_reg(v->second, nullptr);
+        use_nodes[assign.out] = net->addReg(v->second, VNode::Signal::always(VNode::INVALID));
       }
     }
   }
  
   // Construct p-nodes.
-  std::unordered_map<std::string, VNode*> val_nodes;
+  std::unordered_map<std::string, VNode::Id> val_nodes;
 
   for (const auto &proc: _model.procs) {
-    VNode::Signal event(proc.event, !proc.signal.empty() ? use_nodes[proc.signal] : nullptr);
+    VNode::Signal event(proc.event, !proc.signal.empty() ? use_nodes[proc.signal] : VNode::INVALID);
 
     VNode::List guard;
     VNode::List action;
 
     if (!proc.guard.empty()) {
-      guard.push_back(use_nodes[proc.guard]);
+      VNode::Id vnodeId = use_nodes[proc.guard];
+      guard.push_back(VNode::get(vnodeId));
     }
  
     for (const auto &assign: proc.action) {
-      std::vector<VNode *> inputs;
+      VNode::SignalList inputs;
 
       for (const auto &in: assign.in) {
         if (in.at(0) == '0') {
-	  VNode *cnode = nullptr;
+	  VNode::Id cnodeId = VNode::INVALID;
           auto i = val_nodes.find(in);
 
 	  if (i != val_nodes.end()) {
-            cnode = i->second;
+            cnodeId = i->second;
           } else {
-            cnode = net->add_val(to_var(in), to_value(in));
-	    val_nodes[in] = cnode;
+            cnodeId = net->addVal(to_var(in), to_value(in));
+	    val_nodes[in] = cnodeId;
           }
 
-	  inputs.push_back(cnode);
+	  inputs.push_back(VNode::Signal::always(cnodeId));
           break;
         }
 
         auto i = use_nodes.find(in);
         assert(i != use_nodes.end());
-        inputs.push_back(i->second);
+        inputs.push_back(VNode::Signal::always(i->second));
       }
 
-      VNode *vnode = nullptr;
+      VNode::Id vnodeId = VNode::INVALID;
       auto v = variables.find(assign.out);
 
       if (def_count[assign.out] == 1) {
-        vnode = use_nodes[assign.out];
-        net->update(vnode, inputs);
+        vnodeId = use_nodes[assign.out];
+        net->update(vnodeId, inputs);
       } else if (v->second.kind() == Variable::WIRE) {
-        vnode = net->add_fun(v->second, assign.func, inputs);
+        vnodeId = net->addFun(v->second, assign.func, inputs);
       } else {
-	vnode = net->add_reg(v->second, inputs.front());
+	vnodeId = net->addReg(v->second, inputs.front());
       }
 
-      action.push_back(vnode);
+      action.push_back(VNode::get(vnodeId));
     }
 
-    net->add_seq(event, guard, action);
+    net->addSeq(event, guard, action);
   }
 
   return net;

@@ -20,9 +20,10 @@ static std::ostream &operator <<(std::ostream &out, const std::vector<bool> &val
   return out;
 }
 
-static std::ostream &operator <<(std::ostream &out, const VNode::List &vnodes) {
+static std::ostream &operator <<(std::ostream &out, const VNode::SignalList &signals) {
   bool separator = false;
-  for (VNode *vnode: vnodes) {
+  for (const auto &signal : signals) {
+    const auto *vnode = VNode::get(signal.node());
     out << (separator ? ", " : "") << vnode->name();
     separator = true;
   }
@@ -37,7 +38,8 @@ std::ostream &operator <<(std::ostream &out, const VNode &vnode) {
   case VNode::VAL:
     return out << "C{" << vnode.var() << " = " << vnode.value()<< "}";
   case VNode::FUN:
-    return out << "F{" << vnode.var() << " = " << vnode.func() << "(" << vnode.inputs() << ")}";
+    return out << "F{" << vnode.var() << " = "
+                       << vnode.func() << "(" << vnode.inputs() << ")}";
   case VNode::MUX:
     return out << "M{" << vnode.var() << " = mux(" << vnode.inputs() << ")}";
   case VNode::REG:
@@ -48,7 +50,8 @@ std::ostream &operator <<(std::ostream &out, const VNode &vnode) {
       if (i < vnode.nSignals()) {
         out << vnode.signal(i) << ": ";
       }
-      out << vnode.var() << " = " << vnode.input(i)->name();
+      const auto *rhs = VNode::get(vnode.input(i).node());
+      out << vnode.var() << " = " << rhs->name();
       separator = true;
     }
     return out << "}";

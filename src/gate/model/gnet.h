@@ -128,32 +128,32 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Returns the number of gates.
-  std::size_t nGates() const {
+  size_t nGates() const {
     return _gates.size();
   }
 
   /// Returns the number of input links.
-  std::size_t nSourceLinks() const {
+  size_t nSourceLinks() const {
     return _sourceLinks.size();
   }
 
   /// Returns the number of output links.
-  std::size_t nTargetLinks() const {
+  size_t nTargetLinks() const {
     return _targetLinks.size();
   }
 
   /// Returns the number of triggers.
-  std::size_t nTriggers() const {
+  size_t nTriggers() const {
     return _triggers.size();
   }
 
   /// Returns the number of connections.
-  std::size_t nConnects() const {
+  size_t nConnects() const {
     return _nConnects;
   }
 
   /// Returns the number of subnets.
-  std::size_t nSubnets() const {
+  size_t nSubnets() const {
     return _subnets.size();
   }
 
@@ -182,7 +182,7 @@ public:
   }
 
   /// Gets a gate by index.
-  const Gate *gate(std::size_t index) const {
+  const Gate *gate(size_t index) const {
     return _gates[index];
   }
 
@@ -235,7 +235,7 @@ public:
   }
 
   /// Gets a subnet by index.
-  const GNet *subnet(std::size_t index) const {
+  const GNet *subnet(size_t index) const {
     return _subnets[index];
   }
 
@@ -281,12 +281,12 @@ public:
   using E = Link;
 
   /// Returns the number of nodes.
-  std::size_t nNodes() const {
+  size_t nNodes() const {
     return nGates();
   }
 
   /// Returns the number of edges.
-  std::size_t nEdges() const {
+  size_t nEdges() const {
     return nConnects();
   }
 
@@ -390,7 +390,7 @@ private:
   GateIdSet _triggers;
 
   /// Number of connections.
-  std::size_t _nConnects;
+  size_t _nConnects;
 
   /// All subnets including the empty ones.
   List _subnets;
@@ -398,7 +398,7 @@ private:
   SubnetIdSet _emptySubnets;
 
   /// Number of gates that belong to subnets.
-  std::size_t _nGatesInSubnets;
+  size_t _nGatesInSubnets;
 
   /// Flag indicating that the net is topologically sorted.
   bool _isSorted;

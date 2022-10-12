@@ -51,7 +51,7 @@ private:
   }
 
   PNode(const VNode::List &guard, const VNode::List &action):
-      PNode(Signal(), guard, action) {}
+      PNode(Signal::always(VNode::INVALID), guard, action) {}
 
   // The execution trigger (posedge, always, etc.).
   const Signal _signal;

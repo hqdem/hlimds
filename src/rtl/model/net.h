@@ -25,65 +25,71 @@ namespace eda::rtl::model {
  */
 class Net final {
 public:
+  using VNodeId = VNode::Id;
+  using VNodeIdList = std::vector<VNodeId>;
   using Signal = VNode::Signal;
   using SignalList = VNode::SignalList;
 
   Net(): _created(false) {
-    const std::size_t N = 1024*1024;
+    const size_t N = 1024*1024;
 
     _vnodes.reserve(N);
     _pnodes.reserve(N);
     _vnodes_temp.reserve(N);
   } 
 
-  std::size_t vsize() const { return _vnodes.size(); }
+  size_t vsize() const { return _vnodes.size(); }
   const VNode::List &vnodes() const { return _vnodes; }
 
-  std::size_t psize() const { return _pnodes.size(); }
+  size_t psize() const { return _pnodes.size(); }
   const PNode::List &pnodes() const { return _pnodes; }
 
   /// Creates and adds a S-node (S = source).
-  VNode *add_src(const Variable &var) {
-    return add_vnode(new VNode(VNode::SRC, var, {}, FuncSymbol::NOP, {}, {}));
+  VNodeId addSrc(const Variable &var) {
+    return addVNode(new VNode(VNode::SRC, var, {}, FuncSymbol::NOP, {}, {}));
   }
 
   /// Creates and adds a C-node (C = constant).
-  VNode *add_val(const Variable &var, const std::vector<bool> value) {
-    return add_vnode(new VNode(VNode::VAL, var, {}, FuncSymbol::NOP, {}, value));
+  VNodeId addVal(const Variable &var, const std::vector<bool> value) {
+    return addVNode(new VNode(VNode::VAL, var, {}, FuncSymbol::NOP, {}, value));
   }
 
   /// Creates and adds an F-node (S = function).
-  VNode *add_fun(const Variable &var, FuncSymbol func, const VNode::List &inputs) {
-    return add_vnode(new VNode(VNode::FUN, var, {}, func, inputs, {}));
+  VNodeId addFun(const Variable &var, FuncSymbol func, const SignalList &inputs) {
+    return addVNode(new VNode(VNode::FUN, var, {}, func, inputs, {}));
   }
 
   /// Creates and adds a Phi-node (unspecified multiplexor).
-  VNode *add_phi(const Variable &var) {
-    return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP,  {}, {}));
+  VNodeId addPhi(const Variable &var) {
+    return addVNode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP,  {}, {}));
   }
 
   /// Creates and adds an M-node (M = multiplexor).
-  VNode *add_mux(const Variable &var, const VNode::List &inputs) {
-    return add_vnode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP, inputs, {}));
+  VNodeId addMux(const Variable &var, const SignalList &inputs) {
+    return addVNode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP, inputs, {}));
   }
 
   /// Creates and adds an R-node (R = register).
-  VNode *add_reg(const Variable &var, VNode *input) {
-    return add_vnode(new VNode(VNode::REG, var, {}, FuncSymbol::NOP, { input }, {}));
+  VNodeId addReg(const Variable &var, const Signal &input) {
+    return addVNode(new VNode(VNode::REG, var, {}, FuncSymbol::NOP, { input }, {}));
   }
 
   /// Creates and adds a combinational P-node.
-  PNode *add_cmb(const VNode::List &guard, const VNode::List &action) {
-    return add_pnode(new PNode(guard, action));
+  PNode *addCmb(const VNode::List &guard,
+                const VNode::List &action) {
+    return addPNode(new PNode(guard, action));
   }
 
   /// Creates and adds a sequential P-node.
-  PNode *add_seq(const Signal &signal, const VNode::List &guard, const VNode::List &action) {
-    return add_pnode(new PNode(signal, guard, action));
+  PNode *addSeq(const Signal &signal,
+                const VNode::List &guard,
+                const VNode::List &action) {
+    return addPNode(new PNode(signal, guard, action));
   }
 
   /// Updates the given V-node.
-  void update(VNode *vnode, const VNode::List inputs) {
+  void update(VNodeId vnodeId, const SignalList &inputs) {
+    auto *vnode = VNode::get(vnodeId);
     vnode->replace_with(vnode->kind(), vnode->var(), vnode->signals(),
                         vnode->func(), inputs, vnode->value());
   }
@@ -101,12 +107,12 @@ public:
   using E = Link;
 
   /// Returns the number of nodes.
-  std::size_t nNodes() const {
+  size_t nNodes() const {
     return nGates();
   }
 
   /// Returns the number of edges.
-  std::size_t nEdges() const {
+  size_t nEdges() const {
     return nConnects();
   }
 
@@ -153,7 +159,7 @@ private:
   std::vector<std::pair<Signal, VNode::List>> group_reg_defines(const VNode::List &defines);
   VNode* create_mux(const Variable &output, const VNode::List &defines);
 
-  VNode *add_vnode(VNode *vnode) {
+  VNodeId addVNode(VNode *vnode) {
     assert(!_created);
     auto &usage = _vnodes_temp[vnode->var().name()];
     if (vnode->kind() == VNode::MUX) {
@@ -161,10 +167,10 @@ private:
     } else {
       usage.second.push_back(vnode);
     }
-    return vnode;
+    return vnode->id();
   }
 
-  PNode *add_pnode(PNode *pnode) {
+  PNode *addPNode(PNode *pnode) {
     assert(!_created);
     _pnodes.push_back(pnode);
     return pnode;

@@ -37,21 +37,10 @@ class Gate final : public GateBase {
   friend class eda::rtl::compiler::Compiler;
 
 public:
-  //===--------------------------------------------------------------------===//
-  // Types
-  //===--------------------------------------------------------------------===//
   using List = std::vector<Gate*>;
  
-  //===--------------------------------------------------------------------===//
-  // Accessor
-  //===--------------------------------------------------------------------===//
-
   /// Returns the gate w/ the given id from the storage.
   static Gate *get(Id id) { return static_cast<Gate*>(GateBase::get(id)); }
-
-  //===--------------------------------------------------------------------===//
-  // Properties
-  //===--------------------------------------------------------------------===//
 
   bool isSource() const {
     return _func == GateSymbol::NOP && _inputs.empty();
@@ -75,7 +64,7 @@ public:
 
 private:
   /// Creates a gate w/ the given operation and the inputs.
-  Gate(GateSymbol func, const SignalList inputs): GateBase(func, inputs) {}
+  Gate(GateSymbol func, const SignalList &inputs): GateBase(func, inputs) {}
 
   /// Creates a source gate.
   Gate(): Gate(GateSymbol::NOP, {}) {}

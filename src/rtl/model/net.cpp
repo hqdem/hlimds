@@ -51,7 +51,7 @@ void Net::create() {
 // ...                          => ...               + w <= mux{ g[i] -> w[i] }
 // if (g[n]) { w <= f[n](...) }    w[n] <= f[n](...)
 void Net::mux_wire_defines(VNode *phi, const VNode::List &defines) {
-  const std::size_t n = defines.size();
+  const size_t n = defines.size();
   assert(n > 0);
 
   // No multiplexing is required.
@@ -61,9 +61,9 @@ void Net::mux_wire_defines(VNode *phi, const VNode::List &defines) {
   }
 
   // Create the { w[i] } nodes and compose the mux inputs: { g[i] -> w[i] }.
-  VNode::List inputs(2 * n);
+  SignalList inputs(2 * n);
 
-  for (std::size_t i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++) {
     VNode *old_vnode = defines[i];
 
     assert(old_vnode->pnode() != nullptr);
@@ -74,8 +74,8 @@ void Net::mux_wire_defines(VNode *phi, const VNode::List &defines) {
     _vnodes.push_back(new_vnode);
 
     // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
-    inputs[i] = old_vnode->pnode()->guard().back();
-    inputs[i + n] = new_vnode;
+    inputs[i] = old_vnode->pnode()->guard().back()->always();
+    inputs[i + n] = new_vnode->always();
   }
 
   // Connect the wire w/ the multiplexor: w <= mux{ g[i] -> w[i] }.
@@ -94,11 +94,12 @@ void Net::mux_reg_defines(VNode *phi, const VNode::List &defines) {
   Variable output = phi->var();
 
   SignalList signals;
-  VNode::List inputs;
+  SignalList inputs;
 
   for (const auto &[signal, defines]: groups) {
     // Create a wire w for the given signal.
-    const std::string name = output.name() + "$" + signal.node()->name();
+    const VNode *vnode = VNode::get(signal.node());
+    const std::string name = output.name() + "$" + vnode->name();
     Variable wire(name, Variable::WIRE, output.type());
 
     // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
@@ -106,7 +107,7 @@ void Net::mux_reg_defines(VNode *phi, const VNode::List &defines) {
     _vnodes.push_back(mux);
 
     signals.push_back(signal);
-    inputs.push_back(mux);
+    inputs.push_back(mux->always());
   }
 
   // Connect the register w/ the multiplexor(s) via the wire(s): r <= w.
@@ -153,7 +154,7 @@ std::vector<std::pair<VNode::Signal, VNode::List>> Net::group_reg_defines(const 
 }
 
 VNode *Net::create_mux(const Variable &output, const VNode::List &defines) {
-  const std::size_t n = defines.size();
+  const size_t n = defines.size();
   assert(n != 0);
 
   // Multiplexor is not required.
@@ -163,14 +164,14 @@ VNode *Net::create_mux(const Variable &output, const VNode::List &defines) {
   }
 
   // Compose the mux inputs { g[i] -> w[i] }.
-  VNode::List inputs(2 * n);
+  SignalList inputs(2 * n);
 
-  for (std::size_t i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++) {
     VNode *vnode = defines[i];
     assert(vnode->pnode() != nullptr);
 
     // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
-    inputs[i] = vnode->pnode()->guard().back();
+    inputs[i] = vnode->pnode()->guard().back()->always();
     inputs[i + n] = vnode->input(0);
   }
 

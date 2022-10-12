@@ -45,8 +45,8 @@ std::ostream &operator <<(std::ostream &out, const VNode &vnode) {
     bool separator = false;
     for (std::size_t i = 0; i < vnode.arity(); i++) {
       out << (separator ? ", " : "");
-      if (i < vnode.esize()) {
-        out << vnode.event(i) << ": ";
+      if (i < vnode.nSignals()) {
+        out << vnode.signal(i) << ": ";
       }
       out << vnode.var() << " = " << vnode.input(i)->name();
       separator = true;

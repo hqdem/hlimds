@@ -30,7 +30,7 @@ void Net::create() {
            (phi == nullptr && defines.size() == 1));
 
     // For registers, the node is updated even for a single definition:
-    // it is supplemented w/ the event triggering the parent p-node.
+    // it is supplemented w/ the signal triggering the parent p-node.
     phi = (phi != nullptr ? phi : defines.front());
 
     switch (phi->var().kind()) {
@@ -85,63 +85,63 @@ void Net::mux_wire_defines(VNode *phi, const VNode::List &defines) {
   _vnodes.push_back(phi);
 }
 
-// @(event): if (g[1]) { r <= w[1] }    w <= mux{ g[i] -> w[i] }
+// @(signal): if (g[1]) { r <= w[1] }    w <= mux{ g[i] -> w[i] }
 // ...                     =>
-// @(event): if (g[n]) { r <= w[n] }    @(event): r <= w
+// @(signal): if (g[n]) { r <= w[n] }    @(signal): r <= w
 void Net::mux_reg_defines(VNode *phi, const VNode::List &defines) {
-  std::vector<std::pair<Event, VNode::List>> groups = group_reg_defines(defines);
+  std::vector<std::pair<Signal, VNode::List>> groups = group_reg_defines(defines);
 
   Variable output = phi->var();
 
-  Event::List events;
+  SignalList signals;
   VNode::List inputs;
 
-  for (const auto &[event, defines]: groups) {
-    // Create a wire w for the given event.
-    const std::string name = output.name() + "$" + event.node()->name();
+  for (const auto &[signal, defines]: groups) {
+    // Create a wire w for the given signal.
+    const std::string name = output.name() + "$" + signal.node()->name();
     Variable wire(name, Variable::WIRE, output.type());
 
     // Create a multiplexor: w <= mux{ g[i] -> w[i] }.
     VNode *mux = create_mux(wire, defines);
     _vnodes.push_back(mux);
 
-    events.push_back(event);
+    signals.push_back(signal);
     inputs.push_back(mux);
   }
 
   // Connect the register w/ the multiplexor(s) via the wire(s): r <= w.
-  phi->replace_with(VNode::REG, output, events, FuncSymbol::NOP, inputs, {});
+  phi->replace_with(VNode::REG, output, signals, FuncSymbol::NOP, inputs, {});
   _vnodes.push_back(phi);
 }
 
-std::vector<std::pair<VNode::Event, VNode::List>> Net::group_reg_defines(const VNode::List &defines) {
-  const Event *clock = nullptr;
-  const Event *level = nullptr;
+std::vector<std::pair<VNode::Signal, VNode::List>> Net::group_reg_defines(const VNode::List &defines) {
+  const Signal *clock = nullptr;
+  const Signal *level = nullptr;
 
   VNode::List clock_defines;
   VNode::List level_defines;
 
-  // Collect all the events triggering the register.
+  // Collect all the signals triggering the register.
   for (VNode *vnode: defines) {
     assert(vnode != nullptr && vnode->pnode() != nullptr);
 
-    const Event &event = vnode->pnode()->event();
-    assert(event.isEdge() || event.isLevel());
+    const Signal &signal = vnode->pnode()->signal();
+    assert(signal.isEdge() || signal.isLevel());
 
-    if (event.isEdge()) {
-      // At most one edge-triggered event (clock) is allowed.
-      assert(clock == nullptr || *clock == event);
-      clock = &event;
+    if (signal.isEdge()) {
+      // At most one edge-triggered signal (clock) is allowed.
+      assert(clock == nullptr || *clock == signal);
+      clock = &signal;
       clock_defines.push_back(vnode);
     } else {
-      // At most one level-triggered event (enable or reset) is allowed.
-      assert(level == nullptr || *level == event);
-      level = &event;
+      // At most one level-triggered signal (enable or reset) is allowed.
+      assert(level == nullptr || *level == signal);
+      level = &signal;
       level_defines.push_back(vnode);
     }
   }
 
-  std::vector<std::pair<Event, VNode::List>> groups;
+  std::vector<std::pair<Signal, VNode::List>> groups;
   if (clock != nullptr) {
     groups.push_back({ *clock, clock_defines });
   }

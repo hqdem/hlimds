@@ -100,10 +100,10 @@ void Compiler::synthMux(const VNode *vnode, GNet &net) {
 
 void Compiler::synthReg(const VNode *vnode, GNet &net) {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
-  assert(vnode->esize() == 1 || vnode->esize() == 2);
+  assert(vnode->nSignals() == 1 || vnode->nSignals() == 2);
 
   GNet::SignalList control;
-  for (const auto &event: vnode->events()) {
+  for (const auto &event: vnode->signals()) {
     control.push_back(GNet::Signal(event.event(), gateId(event.node())));
   }
 

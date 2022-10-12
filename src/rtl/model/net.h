@@ -20,12 +20,13 @@
 namespace eda::rtl::model {
 
 /**
- * \brief An intermediate representation combining p- and v-nets.
+ * \brief An intermediate representation combining P- and V-nets.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class Net final {
 public:
-  using Event = VNode::Event;
+  using Signal = VNode::Signal;
+  using SignalList = VNode::SignalList;
 
   Net(): _created(false) {
     const std::size_t N = 1024*1024;
@@ -77,13 +78,13 @@ public:
   }
 
   /// Creates and adds a sequential P-node.
-  PNode *add_seq(const Event &event, const VNode::List &guard, const VNode::List &action) {
-    return add_pnode(new PNode(event, guard, action));
+  PNode *add_seq(const Signal &signal, const VNode::List &guard, const VNode::List &action) {
+    return add_pnode(new PNode(signal, guard, action));
   }
 
   /// Updates the given V-node.
   void update(VNode *vnode, const VNode::List inputs) {
-    vnode->replace_with(vnode->kind(), vnode->var(), vnode->events(),
+    vnode->replace_with(vnode->kind(), vnode->var(), vnode->signals(),
                         vnode->func(), inputs, vnode->value());
   }
 
@@ -149,16 +150,16 @@ private:
   void mux_wire_defines(VNode *phi, const VNode::List &defines);
 
   void mux_reg_defines(VNode *phi, const VNode::List &defines);
-  std::vector<std::pair<Event, VNode::List>> group_reg_defines(const VNode::List &defines);
+  std::vector<std::pair<Signal, VNode::List>> group_reg_defines(const VNode::List &defines);
   VNode* create_mux(const Variable &output, const VNode::List &defines);
 
   VNode *add_vnode(VNode *vnode) {
     assert(!_created);
     auto &usage = _vnodes_temp[vnode->var().name()];
     if (vnode->kind() == VNode::MUX) {
-       usage.first = vnode;
+      usage.first = vnode;
     } else {
-       usage.second.push_back(vnode);
+      usage.second.push_back(vnode);
     }
     return vnode;
   }

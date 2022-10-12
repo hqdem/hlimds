@@ -26,22 +26,22 @@ class PNode final {
 
 public:
   using List = std::vector<PNode*>;
-  using Event = VNode::Event;
-  using EventList = VNode::EventList;
+  using Signal = VNode::Signal;
+  using SignalList = VNode::SignalList;
 
-  const Event &event() const { return _event; }
+  const Signal &signal() const { return _signal; }
 
-  std::size_t gsize() const { return _guard.size(); }
+  size_t gsize() const { return _guard.size(); }
   const VNode::List &guard() const { return _guard; }
   const VNode *guard(std::size_t i) const { return _guard[i]; }
 
-  std::size_t asize() const { return _action.size(); }
+  size_t asize() const { return _action.size(); }
   const VNode::List &action() const { return _action; }
   const VNode* action(std::size_t i) const { return _action[i]; }
 
 private:
-  PNode(const Event &event, const VNode::List &guard, const VNode::List &action):
-      _event(event), _guard(guard), _action(action) {
+  PNode(const Signal &signal, const VNode::List &guard, const VNode::List &action):
+      _signal(signal), _guard(guard), _action(action) {
     for (auto *vnode: guard) {
       vnode->set_pnode(this);
     }
@@ -51,10 +51,10 @@ private:
   }
 
   PNode(const VNode::List &guard, const VNode::List &action):
-      PNode(Event(), guard, action) {}
+      PNode(Signal(), guard, action) {}
 
   // The execution trigger (posedge, always, etc.).
-  const Event _event;
+  const Signal _signal;
   // The last v-node is the guard bit.
   VNode::List _guard;
   // The non-blocking assignments.

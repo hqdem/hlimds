@@ -9,6 +9,7 @@
 #pragma once
 
 #include "base/model/link.h"
+#include "base/model/node.h"
 #include "base/model/signal.h"
 #include "gate/model/gsymbol.h"
 
@@ -24,11 +25,13 @@ namespace eda::gate::model {
 
 class GNet;
 
+using GateBase = eda::base::model::Node<GateSymbol>;
+
 /**
  * \brief Represents a logic gate or a flip-flop/latch.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
-class Gate final {
+class Gate final : public GateBase {
   // To create gates when synthesizing netlists.
   friend class GNet;
   friend class eda::rtl::compiler::Compiler;
@@ -37,37 +40,18 @@ public:
   //===--------------------------------------------------------------------===//
   // Types
   //===--------------------------------------------------------------------===//
-
-  using Id = unsigned;
   using List = std::vector<Gate*>;
-  using Link = eda::base::model::Link<Id>;
-  using Signal = eda::base::model::Signal<Id>;
-  using LinkList = Link::List;
-  using SignalList = Signal::List;
-
-  //===--------------------------------------------------------------------===//
-  // Constants
-  //===--------------------------------------------------------------------===//
-
-  static constexpr Id INVALID = -1u;
-
+ 
   //===--------------------------------------------------------------------===//
   // Accessor
   //===--------------------------------------------------------------------===//
 
   /// Returns the gate w/ the given id from the storage.
-  static Gate *get(Id id) { return _storage[id]; }
-  /// Returns the next gate identifier.
-  static Id nextId() { return _storage.size(); }
+  static Gate *get(Id id) { return static_cast<Gate*>(GateBase::get(id)); }
 
   //===--------------------------------------------------------------------===//
   // Properties
   //===--------------------------------------------------------------------===//
-
-  Id id() const { return _id; }
-  GateSymbol kind() const { return _kind; }
-  std::size_t arity() const { return _inputs.size(); }
-  std::size_t fanout() const { return _links.size(); }
 
   bool isSource() const {
     return _kind == GateSymbol::NOP && _inputs.empty();
@@ -89,69 +73,12 @@ public:
     return !isSource() && !isTrigger();
   }
 
-  //===--------------------------------------------------------------------===//
-  // Connections
-  //===--------------------------------------------------------------------===//
-
-  const SignalList &inputs() const { return _inputs; }
-  const Signal &input(std::size_t i) const { return _inputs[i]; }
-
-  const LinkList &links() const { return _links; }
-  const Link &link(std::size_t i) const { return _links[i]; }
-
 private:
   /// Creates a gate w/ the given operation and the inputs.
-  Gate(GateSymbol kind, const SignalList inputs):
-    _id(_storage.size()), _kind(kind), _inputs(inputs) {
-    // Register the gate in the storage.
-    if (_id >= _storage.size()) {
-      _storage.resize(_id + 1);
-      _storage[_id] = this;
-    }
-    appendLinks();
-  }
+  Gate(GateSymbol kind, const SignalList inputs): GateBase(kind, inputs) {}
 
   /// Creates a source gate.
   Gate(): Gate(GateSymbol::NOP, {}) {}
-
-  void setKind(GateSymbol kind) {
-    _kind = kind;
-  }
-
-  void appendLink(Id to, std::size_t i) {
-    Link link(_id, to, i);
-    _links.push_back(link);
-  }
-
-  void removeLink(Id to, std::size_t input) {
-    Link link(_id, to, input);
-    auto i = std::remove(_links.begin(), _links.end(), link);
-    _links.erase(i, _links.end());
-  }
-
-  void appendLinks() {
-    for (std::size_t i = 0; i < _inputs.size(); i++) {
-      auto *gate = Gate::get(_inputs[i].node());
-      gate->appendLink(_id, i);
-    }
-  }
-
-  void removeLinks() {
-    for (std::size_t i = 0; i < _inputs.size(); i++) {
-      auto *gate = Gate::get(_inputs[i].node());
-      gate->removeLink(_id, i);
-    }
-  }
-
-  void setInputs(const SignalList &inputs);
-
-  const Id _id;
-  GateSymbol _kind;
-  SignalList _inputs;
-  LinkList _links;
-
-  /// Common gate storage.
-  static Gate::List _storage;
 };
 
 //===----------------------------------------------------------------------===//

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "base/model/link.h"
 #include "base/model/signal.h"
 #include "rtl/model/fsymbol.h"
 #include "rtl/model/variable.h"
@@ -25,7 +26,8 @@ class Net;
 class PNode;
 
 /**
- * \brief Represents a V-node (V = variable), a functional or communication unit of the design.
+ * \brief Represents a V-node (V = variable), which is a functional or
+ *        communication unit of the RTL design.
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class VNode final {
@@ -36,8 +38,10 @@ class VNode final {
 
 public:
   using List = std::vector<VNode*>;
-  using Event = base::model::Signal<VNode*>;
-  using EventList = Event::List;
+  using Link = eda::base::model::Link<VNode*>;
+  using LinkList = Link::List;
+  using Signal = eda::base::model::Signal<VNode*>;
+  using SignalList = Signal::List;
 
   enum Kind {
     /// Source node (S-node):
@@ -63,16 +67,21 @@ public:
   const std::string &name() const { return _var.name(); }
   const Type &type() const { return _var.type(); }
 
-  std::size_t esize() const { return _events.size(); }
-  const EventList &events() const { return _events; }
-  const Event &event(std::size_t i) const { return _events[i]; }
+  size_t nSignals() const { return _signals.size(); }
+  const SignalList &signals() const { return _signals; }
+  const Signal &signal(size_t i) const { return _signals[i]; }
 
   FuncSymbol func() const { return _func; }
-  std::size_t arity() const { return _inputs.size(); }
+  size_t arity() const { return _inputs.size(); }
 
   const List &inputs() const { return _inputs; }
-  const VNode *input(std::size_t i) const { return _inputs[i]; }
-  VNode *input(std::size_t i) { return _inputs[i]; }
+  const VNode *input(size_t i) const { return _inputs[i]; }
+  VNode *input(size_t i) { return _inputs[i]; }
+
+  // FIXME:
+  size_t fanout() const { return _links.size(); }
+  const LinkList &links() const { return _links; }
+  const Link &link(size_t i) const { return _links[i]; }
 
   const std::vector<bool> value() const { return _value; }
 
@@ -81,13 +90,13 @@ public:
 private:
   VNode(Kind kind,
         const Variable &var,
-        const EventList &events,
+        const SignalList &signals,
         FuncSymbol func,
         const List &inputs,
         const std::vector<bool> &value):
       _kind(kind),
       _var(var),
-      _events(events),
+      _signals(signals),
       _func(func),
       _inputs(inputs),
       _value(value),
@@ -97,17 +106,17 @@ private:
 
   VNode *duplicate(const std::string &new_name) {
     Variable var(new_name, _var.kind(), _var.bind(), _var.type());
-    return new VNode(_kind, var, _events, _func, _inputs, _value);
+    return new VNode(_kind, var, _signals, _func, _inputs, _value);
   }
 
   void replace_with(Kind kind,
                     const Variable &var,
-                    const EventList &events,
+                    const SignalList &signals,
                     FuncSymbol func,
                     const List &inputs,
                     const std::vector<bool> &value) {
     this->~VNode();
-    new (this) VNode(kind, var, events, func, inputs, value);
+    new (this) VNode(kind, var, signals, func, inputs, value);
   }
 
   void set_pnode(const PNode *pnode) {
@@ -117,9 +126,10 @@ private:
 
   const Kind _kind;
   const Variable _var;
-  const EventList _events;
+  const SignalList _signals;
   const FuncSymbol _func;
   const List _inputs;
+  const LinkList _links; // FIXME:
   const std::vector<bool> _value;
 
   // Parent p-node (set on p-node creation).

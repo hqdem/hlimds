@@ -12,19 +12,6 @@
 
 namespace eda::gate::model {
 
-Gate::List Gate::_storage = []{
-  Gate::List storage;
-
-  storage.reserve(1024*1024);
-  return storage;
-}();
-
-void Gate::setInputs(const SignalList &inputs) {
-  removeLinks();
-  _inputs.assign(inputs.begin(), inputs.end());
-  appendLinks();
-}
-
 static std::ostream &operator <<(std::ostream &out, const Gate::SignalList &signals) {
   bool separator = false;
   for (const Gate::Signal &signal: signals) {

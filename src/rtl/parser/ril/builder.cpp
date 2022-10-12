@@ -90,7 +90,7 @@ std::unique_ptr<Net> Builder::create() {
   std::unordered_map<std::string, VNode*> val_nodes;
 
   for (const auto &proc: _model.procs) {
-    VNode::Event event(proc.event, !proc.signal.empty() ? use_nodes[proc.signal] : nullptr);
+    VNode::Signal event(proc.event, !proc.signal.empty() ? use_nodes[proc.signal] : nullptr);
 
     VNode::List guard;
     VNode::List action;

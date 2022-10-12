@@ -36,12 +36,14 @@ std::ostream &operator <<(std::ostream &out, const VNode &vnode) {
   case VNode::SRC:
     return out << "S{" << vnode.var() << "}";
   case VNode::VAL:
-    return out << "C{" << vnode.var() << " = " << vnode.value()<< "}";
+    return out << "C{" << vnode.var() << " = "
+                       << vnode.value()<< "}";
   case VNode::FUN:
     return out << "F{" << vnode.var() << " = "
                        << vnode.func() << "(" << vnode.inputs() << ")}";
   case VNode::MUX:
-    return out << "M{" << vnode.var() << " = mux(" << vnode.inputs() << ")}";
+    return out << "M{" << vnode.var() << " = "
+                       << "mux(" << vnode.inputs() << ")}";
   case VNode::REG:
     out << "R{";
     bool separator = false;

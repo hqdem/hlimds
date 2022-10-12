@@ -35,7 +35,7 @@ public:
 
     _vnodes.reserve(N);
     _pnodes.reserve(N);
-    _vnodes_temp.reserve(N);
+    _vnodesTemp.reserve(N);
   } 
 
   size_t vsize() const { return _vnodes.size(); }
@@ -46,32 +46,32 @@ public:
 
   /// Creates and adds a S-node (S = source).
   VNodeId addSrc(const Variable &var) {
-    return addVNode(new VNode(VNode::SRC, var, {}, FuncSymbol::NOP, {}, {}));
+    return addVNode(VNode::SRC, var, {}, FuncSymbol::NOP, {}, {});
   }
 
   /// Creates and adds a C-node (C = constant).
   VNodeId addVal(const Variable &var, const std::vector<bool> value) {
-    return addVNode(new VNode(VNode::VAL, var, {}, FuncSymbol::NOP, {}, value));
+    return addVNode(VNode::VAL, var, {}, FuncSymbol::NOP, {}, value);
   }
 
   /// Creates and adds an F-node (S = function).
   VNodeId addFun(const Variable &var, FuncSymbol func, const SignalList &inputs) {
-    return addVNode(new VNode(VNode::FUN, var, {}, func, inputs, {}));
+    return addVNode(VNode::FUN, var, {}, func, inputs, {});
   }
 
   /// Creates and adds a Phi-node (unspecified multiplexor).
   VNodeId addPhi(const Variable &var) {
-    return addVNode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP,  {}, {}));
+    return addVNode(VNode::MUX, var, {}, FuncSymbol::NOP,  {}, {});
   }
 
   /// Creates and adds an M-node (M = multiplexor).
   VNodeId addMux(const Variable &var, const SignalList &inputs) {
-    return addVNode(new VNode(VNode::MUX, var, {}, FuncSymbol::NOP, inputs, {}));
+    return addVNode(VNode::MUX, var, {}, FuncSymbol::NOP, inputs, {});
   }
 
   /// Creates and adds an R-node (R = register).
   VNodeId addReg(const Variable &var, const Signal &input) {
-    return addVNode(new VNode(VNode::REG, var, {}, FuncSymbol::NOP, { input }, {}));
+    return addVNode(VNode::REG, var, {}, FuncSymbol::NOP, { input }, {});
   }
 
   /// Creates and adds a combinational P-node.
@@ -90,7 +90,7 @@ public:
   /// Updates the given V-node.
   void update(VNodeId vnodeId, const SignalList &inputs) {
     auto *vnode = VNode::get(vnodeId);
-    vnode->replace_with(vnode->kind(), vnode->var(), vnode->signals(),
+    vnode->replaceWith(vnode->kind(), vnode->var(), vnode->signals(),
                         vnode->func(), inputs, vnode->value());
   }
 
@@ -153,15 +153,26 @@ public:
   */
 
 private:
-  void mux_wire_defines(VNode *phi, const VNode::List &defines);
+  void muxWireDefines(VNode *phi, const VNode::List &defines);
 
-  void mux_reg_defines(VNode *phi, const VNode::List &defines);
-  std::vector<std::pair<Signal, VNode::List>> group_reg_defines(const VNode::List &defines);
-  VNode* create_mux(const Variable &output, const VNode::List &defines);
+  void muxRegDefines(VNode *phi, const VNode::List &defines);
 
+  std::vector<std::pair<Signal, VNode::List>> groupRegDefines(const VNode::List &defines);
+
+  VNode *createMux(const Variable &output, const VNode::List &defines);
+
+  VNodeId addVNode(VNode::Kind kind,
+                   const Variable &var,
+                   const SignalList &signals,
+                   FuncSymbol func,
+                   const SignalList &inputs,
+                   const std::vector<bool> &value) {
+    return addVNode(new VNode(kind, var, signals, func, inputs, value));
+  }
+ 
   VNodeId addVNode(VNode *vnode) {
     assert(!_created);
-    auto &usage = _vnodes_temp[vnode->var().name()];
+    auto &usage = _vnodesTemp[vnode->var().name()];
     if (vnode->kind() == VNode::MUX) {
       usage.first = vnode;
     } else {
@@ -180,7 +191,7 @@ private:
   PNode::List _pnodes;
  
   /// Maps a variable x to the <phi(x), {def(x), ..., def(x)}> structure.
-  std::unordered_map<std::string, std::pair<VNode*, VNode::List>> _vnodes_temp;
+  std::unordered_map<std::string, std::pair<VNode*, VNode::List>> _vnodesTemp;
 
   bool _created;
 };

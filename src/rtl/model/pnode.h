@@ -43,21 +43,21 @@ private:
   PNode(const Signal &signal, const VNode::List &guard, const VNode::List &action):
       _signal(signal), _guard(guard), _action(action) {
     for (auto *vnode: guard) {
-      vnode->set_pnode(this);
+      vnode->setPNode(this);
     }
     for (auto *vnode: action) {
-      vnode->set_pnode(this);
+      vnode->setPNode(this);
     }
   }
 
   PNode(const VNode::List &guard, const VNode::List &action):
       PNode(Signal::always(VNode::INVALID), guard, action) {}
 
-  // The execution trigger (posedge, always, etc.).
+  /// The execution trigger (posedge, always, etc.).
   const Signal _signal;
-  // The last v-node is the guard bit.
+  /// The last v-node is the guard bit.
   VNode::List _guard;
-  // The non-blocking assignments.
+  /// The non-blocking assignments.
   VNode::List _action;
 };
 

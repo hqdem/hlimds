@@ -34,9 +34,9 @@ using VNodeBase = eda::base::model::Node<FuncSymbol>;
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 class VNode final : public VNodeBase {
-  // Creation.
+  // Creating a node.
   friend class Net;
-  // Setting the parent p-node.
+  // Setting the parent P-node.
   friend class PNode;
 
 public:
@@ -98,17 +98,17 @@ private:
     return new VNode(_kind, var, _signals, _func, _inputs, _value);
   }
 
-  void replace_with(Kind kind,
-                    const Variable &var,
-                    const SignalList &signals,
-                    FuncSymbol func,
-                    const SignalList &inputs,
-                    const std::vector<bool> &value) {
+  void replaceWith(Kind kind,
+                   const Variable &var,
+                   const SignalList &signals,
+                   FuncSymbol func,
+                   const SignalList &inputs,
+                   const std::vector<bool> &value) {
     this->~VNode();
     new (this) VNode(kind, var, signals, func, inputs, value);
   }
 
-  void set_pnode(const PNode *pnode) {
+  void setPNode(const PNode *pnode) {
     assert(pnode != nullptr);
     _pnode = pnode;
   }
@@ -118,7 +118,7 @@ private:
   const SignalList _signals;
   const std::vector<bool> _value;
 
-  // Parent p-node (set on p-node creation).
+  // Parent P-node (set on P-node creation).
   const PNode *_pnode;
 };
 

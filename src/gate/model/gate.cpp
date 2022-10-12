@@ -25,7 +25,7 @@ std::ostream &operator <<(std::ostream &out, const Gate &gate) {
   if (gate.isSource()) {
     out << "S{" << gate.id() << "}";
   } else {
-    out << "G{" << gate.id() << " <= " << gate.kind() << "(" << gate.inputs() << ")}";
+    out << "G{" << gate.id() << " <= " << gate.func() << "(" << gate.inputs() << ")}";
   }
   return out << "[fo=" << gate.fanout() << "]";
 }

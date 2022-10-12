@@ -54,11 +54,11 @@ public:
   //===--------------------------------------------------------------------===//
 
   bool isSource() const {
-    return _kind == GateSymbol::NOP && _inputs.empty();
+    return _func == GateSymbol::NOP && _inputs.empty();
   }
 
   bool isValue() const {
-    return _kind == GateSymbol::ONE || _kind == GateSymbol::ZERO;
+    return _func == GateSymbol::ONE || _func == GateSymbol::ZERO;
   }
 
   bool isTrigger() const {
@@ -75,7 +75,7 @@ public:
 
 private:
   /// Creates a gate w/ the given operation and the inputs.
-  Gate(GateSymbol kind, const SignalList inputs): GateBase(kind, inputs) {}
+  Gate(GateSymbol func, const SignalList inputs): GateBase(func, inputs) {}
 
   /// Creates a source gate.
   Gate(): Gate(GateSymbol::NOP, {}) {}

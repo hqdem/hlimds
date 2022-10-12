@@ -102,7 +102,7 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   return gate->id();
 }
 
-void GNet::setGate(GateId gid, GateSymbol kind, const SignalList &inputs) {
+void GNet::setGate(GateId gid, GateSymbol func, const SignalList &inputs) {
   // ASSERT: Inputs belong to the net (no need to modify the upper nets).
   // ASSERT: Adding the given inputs does not lead to combinational cycles.
   auto *gate = Gate::get(gid);
@@ -119,7 +119,7 @@ void GNet::setGate(GateId gid, GateSymbol kind, const SignalList &inputs) {
     subnet->onRemoveGate(gate, true);
   });
 
-  gate->setKind(kind);
+  gate->setFunc(func);
   gate->setInputs(inputs);
 
   std::for_each(subnets.rbegin(), subnets.rend(), [gate](GNet *subnet) {

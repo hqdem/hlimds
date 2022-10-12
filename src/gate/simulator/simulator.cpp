@@ -15,7 +15,7 @@ using Compiled = Simulator::Compiled;
 Compiled::OP Compiled::getOp(const Gate &gate) const {
   const auto n = gate.arity();
 
-  switch (gate.kind()) {
+  switch (gate.func()) {
   case  ZERO: return getZero(n);
   case   ONE: return getOne(n);
   case   NOP: return getNop(n);

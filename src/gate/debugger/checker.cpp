@@ -130,7 +130,7 @@ bool Checker::areEqualSeq(const GNet &lhs,
     const Gate *lhsTrigger = Gate::get(lhsLink.source);
     const Gate *rhsTrigger = Gate::get(rhsLink.source);
 
-    assert(lhsTrigger->kind()  == rhsTrigger->kind());
+    assert(lhsTrigger->func()  == rhsTrigger->func());
     assert(lhsTrigger->arity() == rhsTrigger->arity());
 
     imap.insert({Gate::Link(lhsTrigger->id()), Gate::Link(rhsTrigger->id())});

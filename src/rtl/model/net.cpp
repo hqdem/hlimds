@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "rtl/model/net.h"
+#include "util/graph.h"
 #include "util/string.h"
 
 #include <cassert>
@@ -45,6 +46,8 @@ void Net::create() {
   }
 
   _vnodesTemp.clear();
+
+  sortTopologically();
   _isCreated = true;
 }
 
@@ -184,6 +187,16 @@ VNode *Net::createMux(const Variable &output, const VNode::List &defines) {
   return new VNode(VNode::MUX, output, {}, FuncSymbol::NOP, inputs, {});
 }
 
+void Net::sortTopologically() {
+  assert(!_isCreated);
+
+  auto vnodeIds = eda::utils::graph::topologicalSort<Net>(*this);
+  for (size_t i = 0; i < vnodeIds.size(); i++) {
+    auto vnodeId = vnodeIds[i];
+    _vnodes[i] = VNode::get(vnodeId);
+  }
+}
+
 std::ostream &operator <<(std::ostream &out, const Net &net) {
   for (const auto *pnode: net.pnodes()) {
     out << *pnode << std::endl;
@@ -195,5 +208,5 @@ std::ostream &operator <<(std::ostream &out, const Net &net) {
 
   return out;
 }
- 
+
 } // namespace eda::rtl::model

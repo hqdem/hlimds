@@ -25,8 +25,8 @@ namespace eda::gate::model {
 
 GNet::GNet(unsigned level):
     _level(level), _nConnects(0), _nGatesInSubnets(0), _isSorted(true) {
-  const std::size_t N = std::max(1024*1024 >> (5*level), 64);
-  const std::size_t M = std::max(1024 >> level, 64);
+  const size_t N = std::max(1024*1024 >> (5*level), 64);
+  const size_t M = std::max(1024 >> level, 64);
 
   _gates.reserve(N);
   _flags.reserve(N);
@@ -177,7 +177,7 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
       _sourceLinks.erase(link);
     }
     // Update the target boundary.
-    for (std::size_t i = 0; i < gate->arity(); i++) {
+    for (size_t i = 0; i < gate->arity(); i++) {
       const auto source = gate->input(i).node();
       _targetLinks.erase(Link(source, gid, i));
     }
@@ -189,7 +189,7 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
     _sourceLinks.insert(Link(gid));
   } else {
     // Add the newly appeared boundary source links.
-    for (std::size_t i = 0; i < gate->arity(); i++) {
+    for (size_t i = 0; i < gate->arity(); i++) {
       const auto source = gate->input(i).node();
       if (!contains(source)) {
         _sourceLinks.insert(Link(source, gid, i));
@@ -222,7 +222,7 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
     _sourceLinks.erase(Link(gid));
   } else {
     // Remove the previously existing boundary source links.
-    for (std::size_t i = 0; i < gate->arity(); i++) {
+    for (size_t i = 0; i < gate->arity(); i++) {
       const auto source = gate->input(i).node();
       _sourceLinks.erase(Link(source, gid, i));
     }
@@ -243,7 +243,7 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
       }
     }
     // Update the target boundary.
-    for (std::size_t i = 0; i < gate->arity(); i++) {
+    for (size_t i = 0; i < gate->arity(); i++) {
       const auto source = gate->input(i).node();
       if (contains(source)) {
         _targetLinks.insert(Link(source, gid, i));
@@ -505,8 +505,8 @@ struct Subgraph final {
     }   
   }
 
-  std::size_t nNodes() const { return nV; }
-  std::size_t nEdges() const { return nE; }
+  size_t nNodes() const { return nV; }
+  size_t nEdges() const { return nE; }
 
   bool hasNode(V v) const { return true; }
   bool hasEdge(E e) const { return true; }
@@ -523,8 +523,8 @@ struct Subgraph final {
     return e;
   }
 
-  std::size_t nV;
-  std::size_t nE;
+  size_t nV;
+  size_t nE;
 
   std::vector<V> sources;
   std::unordered_map<V, std::unordered_set<E>> edges;
@@ -542,7 +542,7 @@ void GNet::sortTopologically() {
   if (isFlat()) {
     auto gates = topologicalSort<GNet>(*this);
 
-    for (std::size_t i = 0; i < gates.size(); i++) {
+    for (size_t i = 0; i < gates.size(); i++) {
       auto gid = gates[i];
 
       _gates[i] = Gate::get(gid);
@@ -565,9 +565,9 @@ void GNet::sortTopologically() {
   }
 
   // Sort the gates and update the indices.
-  std::size_t offset = 0;
+  size_t offset = 0;
   for (auto *subnet : subnets) {
-    for (std::size_t i = 0; i < subnet->nGates(); i++) {
+    for (size_t i = 0; i < subnet->nGates(); i++) {
       auto gid = subnet->gate(i)->id();
       auto j = offset + i;
 

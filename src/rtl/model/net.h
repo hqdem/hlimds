@@ -98,11 +98,11 @@ public:
   void update(VNodeId vnodeId, const SignalList &inputs) {
     auto *vnode = VNode::get(vnodeId);
     vnode->replaceWith(vnode->kind(), vnode->var(), vnode->signals(),
-                        vnode->func(), inputs, vnode->value());
+                       vnode->func(), inputs, vnode->value());
   }
 
   /// Creates the V-net according to the P-net
-  /// (after that any changes are prohibited).
+  /// (after creation any changes are prohibited).
   void create();
 
   //===--------------------------------------------------------------------===//
@@ -138,7 +138,9 @@ public:
     sources.reserve(_vnodes.size());
 
     for (auto *vnode : _vnodes) {
-      if (vnode->kind() == VNode::SRC || vnode->kind() == VNode::REG) {
+      if (vnode->kind() == VNode::SRC
+       || vnode->kind() == VNode::VAL
+       || vnode->kind() == VNode::REG) {
         sources.insert(vnode->id());
       }
     }
@@ -190,6 +192,8 @@ private:
     _pnodes.push_back(pnode);
     return pnode;
   }
+
+  void sortTopologically();
 
   /// V-nodes.
   VNode::List _vnodes;

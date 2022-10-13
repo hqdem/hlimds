@@ -32,6 +32,7 @@ static std::ostream &operator <<(std::ostream &out, const VNode::SignalList &sig
 }
 
 std::ostream &operator <<(std::ostream &out, const VNode &vnode) {
+  out << vnode.id() << ": ";
   switch (vnode.kind()) {
   case VNode::SRC:
     return out << "S{" << vnode.var() << "}";

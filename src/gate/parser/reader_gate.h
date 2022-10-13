@@ -23,6 +23,8 @@ private:
   };
 
   std::unordered_map<std::string, GateData> gates;
+  std::unordered_map<eda::gate::model::Signal::GateId,
+          eda::gate::model::GNet::GateId> gIds;
   // Wire name / <source, target>
   std::unordered_map<std::string, std::vector<std::string>> links;
 
@@ -53,10 +55,11 @@ public:
   void on_inputs(const std::vector<std::string> &inputs,
                  std::string const &size = "") override {
     if (startParse) {
-      for (const std::string &input : inputs) {
+      for (const std::string &input: inputs) {
         std::string in = "#" + input;
         auto &gate = gates[in];
         gate.id = gnet.newGate();
+        gIds.emplace(gate.id, gates.size() - 1);
         gate.kind = eda::gate::model::GateSymbol::NOP;
         links[input] = {in, ""};
       }
@@ -71,7 +74,7 @@ public:
   void on_wires(const std::vector<std::string> &wires,
                 std::string const &size = "") override {
     if (startParse) {
-      for (auto &name : wires) {
+      for (auto &name: wires) {
         links[name].resize(2);
       }
     }
@@ -88,12 +91,13 @@ public:
    * a signal in instName.
    */
   virtual void on_module_instantiation(
-      std::string const &moduleName, std::vector<std::string> const &params,
-      std::string const &instName,
-      std::vector<std::pair<std::string, std::string>> const &args) override {
+          std::string const &moduleName, std::vector<std::string> const &params,
+          std::string const &instName,
+          std::vector<std::pair<std::string, std::string>> const &args) override {
     if (startParse) {
       auto &gateData = gates[instName];
       gateData.id = gnet.newGate();
+      gIds.emplace(gateData.id, gates.size() - 1);
       gateData.kind = symbol(moduleName);
 
       insertLink(args[0].second, instName, 0);
@@ -109,7 +113,7 @@ public:
   virtual void on_endmodule() override {
     if (startParse) {
       //  Collect links to make inputs arrays.
-      for (auto &[name, links] : links) {
+      for (auto &[name, links]: links) {
         auto source = gates.find(links[0]);
         auto target = gates.find(links[1]);
 
@@ -119,11 +123,11 @@ public:
       }
 
       //  By that moment all gates are created - modifying them.
-      for (const auto &[name, gateData] : gates) {
+      for (const auto &[name, gateData]: gates) {
         std::vector<eda::gate::model::Signal> signals;
         signals.reserve(gateData.inputs.size());
 
-        for (auto input : gateData.inputs) {
+        for (auto input: gateData.inputs) {
           signals.emplace_back(eda::rtl::model::Event::Kind::ALWAYS, input);
         }
 
@@ -133,26 +137,32 @@ public:
   }
 
   void print() const {
-    for (auto &gate : gnet.gates()) {
+    for (auto &gate: gnet.gates()) {
       std::cout << gate->id() << " " << gate->kind() << " :\n";
-      for (auto &link : gate->links()) {
+      for (auto &link: gate->links()) {
         std::cout << "\t( " << link.source << " ) " << link.target << "\n";
       }
     }
   }
 
-  static void print(const eda::gate::model::Gate *gate) {
-    std::cout << gate->kind() << gate->id();
+  void static print(std::ofstream &stream, const eda::gate::model::Gate *gate) {
+    stream << gate->kind() << gate->id();
   }
 
-  void dot(std::ofstream& stream) const {
+  void dotPrint(const std::string &filename) {
+    std::ofstream out(filename);
+    dot(out);
+    out.close();
+  }
+
+  void dot(std::ofstream &stream) const {
     stream << "digraph gnet {\n";
-    for (const auto &gate : gnet.gates()) {
-      for (auto &links : gate->links()) {
+    for (const auto &gate: gnet.gates()) {
+      for (auto &links: gate->links()) {
         stream << "\t";
-        print(gate);
+        print(stream, gate);
         stream << " -> ";
-        print(gnet.gate(links.target));
+        print(stream, gnet.gate(gIds.at(links.target)));
         stream << ";\n";
       }
     }
@@ -188,6 +198,8 @@ private:
       return eda::gate::model::GateSymbol::NOR;
     } else if (s == "xnor") {
       return eda::gate::model::GateSymbol::XNOR;
+    } else if (s == "and") {
+      return eda::gate::model::GateSymbol::AND;
     }
     return eda::gate::model::GateSymbol::ZERO;
   }

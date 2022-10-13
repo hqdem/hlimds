@@ -30,31 +30,34 @@ namespace eda::rtl::library {
  */
 struct FLibrary {
   using GateIdList = GNet::GateIdList;
-  using Signal = GNet::Signal;
+  using Signal     = GNet::Signal;
   using SignalList = GNet::SignalList;
-  using Value = GNet::Value;
-  using In = GNet::In;
-  using Out = GNet::Out;
+  using Value      = GNet::Value;
+  using In         = GNet::In;
+  using Out        = GNet::Out;
 
   /// Checks if the library supports the given function.
   virtual bool supports(FuncSymbol func) const = 0;
 
-  /// Synthesize the net for the given value.
-  virtual void synth(const Out &out,
-                     const Value &value,
-                     GNet &net) = 0;
+  /// Synthesizes the gate-level net for the given value.
+  virtual Out synth(size_t outSize,
+                    const Value &value,
+                    GNet &net) = 0;
 
-  /// Synthesize the net for the given function.
-  virtual void synth(FuncSymbol func,
-                     const Out &out,
-                     const In &in,
-                     GNet &net) = 0;
+  /// Synthesizes the gate-level net for the given function.
+  virtual Out synth(size_t outSize,
+                    FuncSymbol func,
+                    const In &in,
+                    GNet &net) = 0;
 
-  /// Synthesize the net for the given register.
-  virtual void synth(const Out &out,
-                     const In &in,
-                     const Signal::List &control,
-                     GNet &net) = 0;
+  /// Synthesizes the gate-level net for the given register.
+  virtual Out alloc(size_t outSize,
+                    GNet &net) = 0;
+
+  virtual Out synth(const Out &out, // allocated in advance
+                    const In &in,
+                    const SignalList &control,
+                    GNet &net) = 0;
 
   virtual ~FLibrary() {} 
 };
@@ -72,75 +75,82 @@ public:
 
   bool supports(FuncSymbol func) const override;
 
-  void synth(const Out &out,
-             const Value &value,
-             GNet &net) override;
+  Out synth(size_t outSize,
+            const Value &value,
+            GNet &net) override;
 
-  void synth(FuncSymbol func,
-             const Out &out,
-             const In &in,
-             GNet &net) override;
+  Out synth(size_t outSize,
+            FuncSymbol func,
+            const In &in,
+            GNet &net) override;
 
-  void synth(const Out &out,
-             const In &in,
-             const SignalList &control,
-             GNet &net) override;
+  Out alloc(size_t outSize,
+            GNet &net) override;
+
+  Out synth(const Out &out,
+            const In &in,
+            const SignalList &control,
+            GNet &net) override;
 
 private:
   FLibraryDefault() {}
   ~FLibraryDefault() override {}
 
-  static void synthAdd(const Out &out, const In &in, GNet &net);
-  static void synthSub(const Out &out, const In &in, GNet &net);
-  static void synthMux(const Out &out, const In &in, GNet &net);
+  static Out synthAdd(size_t outSize, const In &in, GNet &net);
+  static Out synthSub(size_t outSize, const In &in, GNet &net);
+  static Out synthMux(size_t outSize, const In &in, GNet &net);
 
-  static void synthAdder(const Out &out, const In &in, bool plusOne, GNet &net);
+  static Out synthAdder(size_t size, const In &in, bool plusOne, GNet &net);
 
-  static void synthAdder(Gate::Id z,
-                         Gate::Id carryOut,
-                         Gate::Id x,
-                         Gate::Id y,
-                         Gate::Id carryIn,
-                         GNet &net);
+  /// Returns two-bit output: z and carryOut (if required).
+  static Out synthAdder(Gate::Id x,
+                        Gate::Id y,
+                        Gate::Id carryIn,
+                        bool needsCarryOut,
+                        GNet &net);
 
   static Signal invertIfNegative(const Signal &event, GNet &net);
 
   template<GateSymbol G>
-  static void synthUnaryBitwiseOp(const Out &out, const In &in, GNet &net);
+  static Out synthUnaryBitwiseOp(size_t outSize, const In &in, GNet &net);
 
   template<GateSymbol G>
-  static void synthBinaryBitwiseOp(const Out &out, const In &in, GNet &net);
+  static Out synthBinaryBitwiseOp(size_t outSize, const In &in, GNet &net);
 };
 
 template<GateSymbol G>
-void FLibraryDefault::synthUnaryBitwiseOp(const Out &out,
-                                          const In &in,
-                                          GNet &net) {
+FLibrary::Out FLibraryDefault::synthUnaryBitwiseOp(size_t outSize,
+                                                   const In &in,
+                                                   GNet &net) {
   assert(in.size() == 1);
 
   const auto &x = in[0];
-  assert(out.size() == x.size());
+  assert(outSize == x.size());
 
-  for (std::size_t i = 0; i < out.size(); i++) {
+  Out out(outSize);
+  for (size_t i = 0; i < out.size(); i++) {
     auto xi = Signal::always(x[i]);
-    net.setGate(out[i], G, { xi });
+    out[i] = net.addGate(G, { xi });
   }
+
+  return out;
 }
 
 template<GateSymbol G>
-void FLibraryDefault::synthBinaryBitwiseOp(const Out &out,
-                                           const In &in,
-                                           GNet &net) {
+FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(size_t outSize,
+                                                    const In &in,
+                                                    GNet &net) {
   assert(in.size() == 2);
 
   const auto &x = in[0];
   const auto &y = in[1];
-  assert(x.size() == y.size() && out.size() == x.size());
+  assert(x.size() == y.size() && outSize == x.size());
 
-  for (std::size_t i = 0; i < out.size(); i++) {
+  Out out(outSize);
+  for (size_t i = 0; i < out.size(); i++) {
     auto xi = Signal::always(x[i]);
     auto yi = Signal::always(y[i]);
-    net.setGate(out[i], G, { xi, yi });
+    out[i] = net.addGate(G, { xi, yi });
   }
 }
 

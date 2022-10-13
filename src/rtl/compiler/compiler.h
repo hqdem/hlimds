@@ -30,30 +30,27 @@ namespace eda::rtl::compiler {
 class Compiler final {
 public:
   Compiler(FLibrary &library): _library(library) {
-    _gateIds.reserve(1024*1024);
+    _outputs.reserve(1024*1024);
   }
 
   /// Compiles the gate-level net from the RTL net.
   std::unique_ptr<GNet> compile(const Net &net);
 
 private:
-  FLibrary &_library;
-
-  Gate::Id gateId(VNode::Id vnodeId) const;
-
-  void allocGates(const VNode *vnode, GNet &net);
-
   void synthSrc(const VNode *vnode, GNet &net);
   void synthVal(const VNode *vnode, GNet &net);
   void synthFun(const VNode *vnode, GNet &net);
   void synthMux(const VNode *vnode, GNet &net);
+  void allocReg(const VNode *vnode, GNet &net);
   void synthReg(const VNode *vnode, GNet &net);
 
-  GNet::In in(const VNode *vnode);
-  GNet::Out out(const VNode *vnode);
+  GNet::In in(const VNode *vnode) const;
+  const GNet::Out &out(VNode::Id vnodeId) const;
 
   // Maps vnodes to the identifiers of their lower bits' gates.
-  std::unordered_map<VNode::Id, Gate::Id> _gateIds;
+  std::unordered_map<VNode::Id, GNet::Out> _outputs;
+
+  FLibrary &_library;
 };
 
 } // namespace eda::rtl::compiler

@@ -68,6 +68,7 @@ public:
   const Variable &var() const { return _var; }
   const std::string &name() const { return _var.name(); }
   const Type &type() const { return _var.type(); }
+  size_t width() const { return type().width(); }
 
   size_t nSignals() const { return _signals.size(); }
   const SignalList &signals() const { return _signals; }

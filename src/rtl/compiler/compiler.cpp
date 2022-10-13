@@ -16,6 +16,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <iostream>
 #include <memory>
 
 using namespace eda::gate::model;
@@ -26,15 +27,18 @@ using namespace eda::utils;
 namespace eda::rtl::compiler {
 
 std::unique_ptr<GNet> Compiler::compile(const Net &net) {
+  // Create a new gate-level net.
   auto gnet = std::make_unique<GNet>();
 
-  _gateIds.clear();
+  // Initialize correspondence between vnodes and gates.
+  _outputs.clear();
 
-  for (const auto *vnode: net.vnodes()) {
-    allocGates(vnode, *gnet);
-  }
+  VNode::List registers;
+  registers.reserve(net.vsize());
 
-  for (const auto *vnode: net.vnodes()) {
+  // It is assumed that vnodes are topologically sorted.
+  for (auto *vnode: net.vnodes()) {
+    std::cout << ">>>>>>>>>>>>>>> " << vnode->id() << std::endl;
     switch (vnode->kind()) {
     case VNode::SRC:
       synthSrc(vnode, *gnet);
@@ -49,53 +53,44 @@ std::unique_ptr<GNet> Compiler::compile(const Net &net) {
       synthMux(vnode, *gnet);
       break;
     case VNode::REG:
-      synthReg(vnode, *gnet);
+      allocReg(vnode, *gnet);
+      registers.push_back(vnode);
       break;
     }
+  }
+
+  for (auto *vnode: registers) {
+    synthReg(vnode, *gnet);
   }
 
   return gnet;
 }
 
-Gate::Id Compiler::gateId(VNode::Id vnodeId) const {
-  const auto i = _gateIds.find(vnodeId);
-  if (i != _gateIds.end()) {
-    return i->second;
-  }
-
-  return Gate::INVALID;
-}
-
-void Compiler::allocGates(const VNode *vnode, GNet &net) {
-  assert(vnode != nullptr);
-
-  const auto i = _gateIds.find(vnode->id());
-  if (i == _gateIds.end()) {
-    _gateIds.insert({ vnode->id(), Gate::nextId() });
-  }
-
-  const auto size = vnode->var().type().width();
-  for (unsigned i = 0; i < size; i++) {
-    net.newGate();
-  }
-}
-
 void Compiler::synthSrc(const VNode *vnode, GNet &net) {
-  // Do nothing.
+  auto out = _library.alloc(vnode->width(), net);
+  _outputs.insert({vnode->id(), out});
 }
 
 void Compiler::synthVal(const VNode *vnode, GNet &net) {
-  _library.synth(out(vnode), vnode->value(), net);
+  auto out = _library.synth(vnode->width(), vnode->value(), net);
+  _outputs.insert({vnode->id(), out});
 }
 
 void Compiler::synthFun(const VNode *vnode, GNet &net) {
   assert(_library.supports(vnode->func()));
-  _library.synth(vnode->func(), out(vnode), in(vnode), net);
+  auto out = _library.synth(vnode->width(), vnode->func(), in(vnode), net);
+  _outputs.insert({vnode->id(), out});
 }
 
 void Compiler::synthMux(const VNode *vnode, GNet &net) {
   assert(_library.supports(FuncSymbol::MUX));
-  _library.synth(FuncSymbol::MUX, out(vnode), in(vnode), net);
+  auto out = _library.synth(vnode->width(), FuncSymbol::MUX, in(vnode), net);
+  _outputs.insert({vnode->id(), out});
+}
+
+void Compiler::allocReg(const VNode *vnode, GNet &net) {
+  auto out = _library.alloc(vnode->width(), net);
+  _outputs.insert({vnode->id(), out});
 }
 
 void Compiler::synthReg(const VNode *vnode, GNet &net) {
@@ -103,33 +98,28 @@ void Compiler::synthReg(const VNode *vnode, GNet &net) {
   assert(vnode->nSignals() == 1 || vnode->nSignals() == 2);
 
   GNet::SignalList control;
-  for (const auto &event: vnode->signals()) {
-    control.push_back(GNet::Signal(event.event(), gateId(event.node())));
+  for (const auto &signal: vnode->signals()) {
+    const auto &signalOut = out(signal.node());
+    assert(signalOut.size() == 1);
+    control.push_back(GNet::Signal(signal.event(), signalOut[0]));
   }
 
-  _library.synth(out(vnode), in(vnode), control, net);
+  _library.synth(out(vnode->id()), in(vnode), control, net);
 }
 
-GNet::In Compiler::in(const VNode *vnode) {
+GNet::In Compiler::in(const VNode *vnode) const {
   GNet::In in(vnode->arity());
   for (size_t i = 0; i < vnode->arity(); i++) {
-    in[i] = out(VNode::get(vnode->input(i).node()));
+    in[i] = out(vnode->input(i).node());
   }
 
   return in;
 }
 
-GNet::Out Compiler::out(const VNode *vnode) {
-  const auto base = gateId(vnode->id());
-  const auto size = vnode->var().type().width();
-  assert(base != Gate::INVALID);
-
-  GNet::Out out(size);
-  for (unsigned i = 0; i < size; i++) {
-    out[i] = base + i;
-  }
-
-  return out;
+const GNet::Out &Compiler::out(VNode::Id vnodeId) const {
+  auto i = _outputs.find(vnodeId);
+  assert(i != _outputs.end());
+  return i->second;
 }
 
 } // namespace eda::rtl::compiler

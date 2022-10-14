@@ -152,6 +152,8 @@ FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(size_t outSize,
     auto yi = Signal::always(y[i]);
     out[i] = net.addGate(G, { xi, yi });
   }
+
+  return out;
 }
 
 } // namespace eda::rtl::library

@@ -94,8 +94,24 @@ private:
     assert(std::find(inputs.begin(), inputs.end(), VNode::INVALID) == inputs.end());
   }
 
-  VNode *duplicate(const std::string &new_name) {
-    Variable var(new_name, _var.kind(), _var.bind(), _var.type());
+  VNode(Id id,
+        Kind kind,
+        const Variable &var,
+        const SignalList &signals,
+        FuncSymbol func,
+        const SignalList &inputs,
+        const std::vector<bool> &value):
+      VNodeBase(id, func, inputs),
+      _kind(kind),
+      _var(var),
+      _signals(signals),
+      _value(value),
+      _pnode(nullptr) {
+    assert(std::find(inputs.begin(), inputs.end(), VNode::INVALID) == inputs.end());
+  }
+
+  VNode *duplicate(const std::string &newName) {
+    Variable var(newName, _var.kind(), _var.bind(), _var.type());
     return new VNode(_kind, var, _signals, _func, _inputs, _value);
   }
 
@@ -105,8 +121,9 @@ private:
                    FuncSymbol func,
                    const SignalList &inputs,
                    const std::vector<bool> &value) {
+    Id oldId = _id;
     this->~VNode();
-    new (this) VNode(kind, var, signals, func, inputs, value);
+    new (this) VNode(oldId, kind, var, signals, func, inputs, value);
   }
 
   void setPNode(const PNode *pnode) {

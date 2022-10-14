@@ -16,7 +16,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <iostream>
 #include <memory>
 
 using namespace eda::gate::model;
@@ -33,12 +32,12 @@ std::unique_ptr<GNet> Compiler::compile(const Net &net) {
   // Initialize correspondence between vnodes and gates.
   _outputs.clear();
 
+  // To cut through the cycles, synthesis of registers is postponed.
   VNode::List registers;
   registers.reserve(net.vsize());
 
   // It is assumed that vnodes are topologically sorted.
   for (auto *vnode: net.vnodes()) {
-    std::cout << ">>>>>>>>>>>>>>> " << vnode->id() << std::endl;
     switch (vnode->kind()) {
     case VNode::SRC:
       synthSrc(vnode, *gnet);
@@ -59,6 +58,7 @@ std::unique_ptr<GNet> Compiler::compile(const Net &net) {
     }
   }
 
+  // Synthesize gates for the postponed registers.
   for (auto *vnode: registers) {
     synthReg(vnode, *gnet);
   }

@@ -1,3 +1,5 @@
+mkdir ../input
+mkdir ../output
 shopt -s nullglob
 for v in *.v; do
     echo $v

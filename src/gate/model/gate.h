@@ -25,7 +25,7 @@ namespace eda::gate::model {
 
 class GNet;
 
-using GateBase = eda::base::model::Node<GateSymbol>;
+using GateBase = eda::base::model::Node<GateSymbol, true>;
 
 /**
  * \brief Represents a logic gate or a flip-flop/latch.
@@ -39,8 +39,15 @@ class Gate final : public GateBase {
 public:
   using List = std::vector<Gate*>;
  
-  /// Returns the gate w/ the given id from the storage.
-  static Gate *get(Id id) { return static_cast<Gate*>(GateBase::get(id)); }
+  /// Returns the gate w/ the given id.
+  static Gate *get(Id id) {
+    return static_cast<Gate*>(GateBase::get(id));
+  }
+
+  /// Returns the gate w/ the given function and inputs.
+  static Gate *get(GateSymbol func, const SignalList &inputs) {
+    return static_cast<Gate*>(GateBase::get(func, inputs));
+  }
 
   bool isSource() const {
     return _func == GateSymbol::NOP && _inputs.empty();

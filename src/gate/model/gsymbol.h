@@ -78,7 +78,7 @@ public:
   }
 
   bool isAssociative() const {
-    return _value == AND || _value == OR || _value == XOR;
+    return _value == AND || _value == OR || _value == XOR || _value == XNOR;
   }
 
 private:

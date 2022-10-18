@@ -40,15 +40,15 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
                                      GNet &net) {
   switch (func) {
   case FuncSymbol::NOP:
-    return synthUnaryBitwiseOp<GateSymbol::NOP>(outSize, in, net);
+    return synthUnaryBitwiseOp(GateSymbol::NOP, outSize, in, net);
   case FuncSymbol::NOT:
-    return synthUnaryBitwiseOp<GateSymbol::NOT>(outSize, in, net);
+    return synthUnaryBitwiseOp(GateSymbol::NOT, outSize, in, net);
   case FuncSymbol::AND:
-    return synthBinaryBitwiseOp<GateSymbol::AND>(outSize, in, net);
+    return synthBinaryBitwiseOp(GateSymbol::AND, outSize, in, net);
   case FuncSymbol::OR:
-    return synthBinaryBitwiseOp<GateSymbol::OR>(outSize, in, net);
+    return synthBinaryBitwiseOp(GateSymbol::OR, outSize, in, net);
   case FuncSymbol::XOR:
-    return synthBinaryBitwiseOp<GateSymbol::XOR>(outSize, in, net);
+    return synthBinaryBitwiseOp(GateSymbol::XOR, outSize, in, net);
   case FuncSymbol::ADD:
     return synthAdd(outSize, in, net);
   case FuncSymbol::SUB:
@@ -125,7 +125,7 @@ FLibrary::Out FLibraryDefault::synthSub(size_t outSize,
   const auto &x = in[0];
   const auto &y = in[1];
 
-  Out temp = synthUnaryBitwiseOp<GateSymbol::NOT>(outSize, { y }, net);
+  Out temp = synthUnaryBitwiseOp(GateSymbol::NOT, outSize, { y }, net);
   return synthAdder(outSize, { x, temp }, true, net);
 }
 
@@ -208,6 +208,45 @@ FLibrary::Out FLibraryDefault::synthMux(size_t outSize,
 
   return out;
 }
+
+FLibrary::Out FLibraryDefault::synthUnaryBitwiseOp(GateSymbol func,
+                                                   size_t outSize,
+                                                   const In &in,
+                                                   GNet &net) {
+  assert(in.size() == 1);
+
+  const auto &x = in[0];
+  assert(outSize == x.size());
+
+  Out out(outSize);
+  for (size_t i = 0; i < out.size(); i++) {
+    auto xi = Signal::always(x[i]);
+    out[i] = net.addGate(func, { xi });
+  }
+
+  return out;
+}
+
+FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(GateSymbol func,
+                                                    size_t outSize,
+                                                    const In &in,
+                                                    GNet &net) {
+  assert(in.size() == 2);
+
+  const auto &x = in[0];
+  const auto &y = in[1];
+  assert(x.size() == y.size() && outSize == x.size());
+
+  Out out(outSize);
+  for (size_t i = 0; i < out.size(); i++) {
+    auto xi = Signal::always(x[i]);
+    auto yi = Signal::always(y[i]);
+    out[i] = net.addGate(func, { xi, yi });
+  }
+
+  return out;
+}
+
 
 FLibrary::Signal FLibraryDefault::invertIfNegative(const Signal &event, GNet &net) {
   switch (event.event()) {

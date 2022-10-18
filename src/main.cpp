@@ -52,6 +52,8 @@ int rtlMain(const std::string &file, const RtlOptions &options) {
   std::cout << "------ netlist ------" << std::endl;
   std::cout << *netlist;
 
+  std::cout << "Netlist: nGates=" << netlist->nGates() << std::endl;
+
   return 0;
 }
 

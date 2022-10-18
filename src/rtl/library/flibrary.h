@@ -111,49 +111,10 @@ private:
 
   static Signal invertIfNegative(const Signal &event, GNet &net);
 
-  template<GateSymbol G>
-  static Out synthUnaryBitwiseOp(size_t outSize, const In &in, GNet &net);
-
-  template<GateSymbol G>
-  static Out synthBinaryBitwiseOp(size_t outSize, const In &in, GNet &net);
+  static Out synthUnaryBitwiseOp(
+      GateSymbol func, size_t outSize, const In &in, GNet &net);
+  static Out synthBinaryBitwiseOp(
+      GateSymbol func, size_t outSize, const In &in, GNet &net);
 };
-
-template<GateSymbol G>
-FLibrary::Out FLibraryDefault::synthUnaryBitwiseOp(size_t outSize,
-                                                   const In &in,
-                                                   GNet &net) {
-  assert(in.size() == 1);
-
-  const auto &x = in[0];
-  assert(outSize == x.size());
-
-  Out out(outSize);
-  for (size_t i = 0; i < out.size(); i++) {
-    auto xi = Signal::always(x[i]);
-    out[i] = net.addGate(G, { xi });
-  }
-
-  return out;
-}
-
-template<GateSymbol G>
-FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(size_t outSize,
-                                                    const In &in,
-                                                    GNet &net) {
-  assert(in.size() == 2);
-
-  const auto &x = in[0];
-  const auto &y = in[1];
-  assert(x.size() == y.size() && outSize == x.size());
-
-  Out out(outSize);
-  for (size_t i = 0; i < out.size(); i++) {
-    auto xi = Signal::always(x[i]);
-    auto yi = Signal::always(y[i]);
-    out[i] = net.addGate(G, { xi, yi });
-  }
-
-  return out;
-}
 
 } // namespace eda::rtl::library

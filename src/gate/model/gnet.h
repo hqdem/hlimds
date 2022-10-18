@@ -216,7 +216,18 @@ public:
 
   /// Adds a new gate and returns its identifier.
   GateId addGate(GateSymbol kind, const SignalList &inputs) {
-    return addGate(new Gate(kind, inputs));
+    auto *gate = Gate::get(kind, inputs);
+
+    // Do not create a gate if there is the same gate in the storage.
+    if (gate == nullptr) { 
+      gate = new Gate(kind, inputs);
+    } else {
+      if (contains(gate->id())) {
+        return gate->id();
+      }
+    }
+
+    return addGate(gate);
   }
 
   /// Modifies the existing gate.

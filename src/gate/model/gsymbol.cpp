@@ -12,37 +12,24 @@
 
 namespace eda::gate::model {
 
-std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
-  switch (gate) {
-  case GateSymbol::ZERO:
-    return out << "0";
-  case GateSymbol::ONE:
-    return out << "1";
-  case GateSymbol::NOP:
-    return out << "buf";
-  case GateSymbol::NOT:
-    return out << "not";
-  case GateSymbol::AND:
-    return out << "and";
-  case GateSymbol::OR:
-    return out << "or";
-  case GateSymbol::XOR:
-    return out << "xor";
-  case GateSymbol::NAND:
-    return out << "nand";
-  case GateSymbol::NOR:
-    return out << "nor";
-  case GateSymbol::XNOR:
-    return out << "xnor";
-  case GateSymbol::LATCH:
-    return out << "latch";
-  case GateSymbol::DFF:
-    return out << "dff";
-  case GateSymbol::DFFrs:
-    return out << "dff_rs";
-  }
+GateSymbol::GateDescriptor GateSymbol::_desc[XXX] = {
+  /* ZERO  */ { "0",      1, 0, 0, 0, 0, XXX, XXX  },
+  /* ONE   */ { "1",      1, 0, 0, 0, 0, XXX, XXX  },
+  /* NOP   */ { "buf",    0, 1, 0, 0, 0, XXX, XXX  },
+  /* NOT   */ { "not",    0, 0, 0, 0, 0, XXX, XXX  },
+  /* AND   */ { "and",    0, 0, 1, 1, 1, NOT, NAND },
+  /* OR    */ { "or",     0, 0, 1, 1, 1, NOT, NOR  },
+  /* XOR   */ { "xor",    0, 0, 1, 1, 1, NOT, XNOR },
+  /* NAND  */ { "nand",   0, 0, 1, 0, 1, NOT, AND  },
+  /* NOR   */ { "nor",    0, 0, 1, 0, 1, NOT, OR   },
+  /* XNOR  */ { "xnor",   0, 0, 1, 1, 1, NOT, XOR  },
+  /* LATCH */ { "latch",  0, 0, 0, 0, 0, XXX, XXX  },
+  /* DFF   */ { "dff",    0, 0, 0, 0, 0, XXX, XXX  },
+  /* DFFrs */ { "dff_rs", 0, 0, 0, 0, 0, XXX, XXX  }
+};
 
-  return out;
+std::ostream& operator <<(std::ostream &out, GateSymbol gate) {
+  return out << gate.name();
 }
 
 } // namespace eda::gate::model

@@ -56,33 +56,46 @@ public:
     DFF,
     /// D flip-flop w/ (asynchronous) reset and set (Q, D, CLK, RST, SET):
     /// Q(t) = RST(level1) ? 0 : (SET(level1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
-    DFFrs
+    DFFrs,
+
+    /// Invalid gate = number of gate symbols.
+    XXX
   };
 
+private:
+  struct GateDescriptor {
+    std::string name;
+    bool isConstant;
+    bool isIdentity;
+    bool isCommutative;
+    bool isAssociative;
+    bool isComposite;
+    Value modifier;
+    Value baseGate;
+  };
+
+  constexpr const GateDescriptor &desc() const {
+    return _desc[_value];
+  }
+
+public:
   GateSymbol() = default;
   constexpr GateSymbol(Value value): _value(value) {}
 
-  explicit operator bool() const = delete;        
+  explicit operator bool() const = delete;
   constexpr operator Value() const { return _value; }
 
-  bool isConstant() const {
-    return _value == ZERO || _value == ONE;
-  }
+  constexpr const std::string &name() const { return desc().name; }
 
-  bool isIdentity() const {
-    return _value == NOP;
-  }
-
-  bool isCommutative() const {
-    return _value != LATCH && _value != DFF && _value != DFFrs;
-  }
-
-  bool isAssociative() const {
-    return _value == AND || _value == OR || _value == XOR || _value == XNOR;
-  }
+  constexpr bool isConstant()    const { return desc().isConstant; }
+  constexpr bool isIdentity()    const { return desc().isIdentity; }
+  constexpr bool isCommutative() const { return desc().isCommutative; }
+  constexpr bool isAssociative() const { return desc().isAssociative; }
 
 private:
   Value _value;
+
+  static GateDescriptor _desc[XXX];
 };
 
 std::ostream& operator <<(std::ostream &out, GateSymbol gate);

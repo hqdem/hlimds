@@ -215,23 +215,10 @@ public:
   }
 
   /// Adds a new gate and returns its identifier.
-  GateId addGate(GateSymbol kind, const SignalList &inputs) {
-    auto *gate = Gate::get(kind, inputs);
-
-    // Do not create a gate if there is the same gate in the storage.
-    if (gate == nullptr) { 
-      gate = new Gate(kind, inputs);
-    } else {
-      if (contains(gate->id())) {
-        return gate->id();
-      }
-    }
-
-    return addGate(gate);
-  }
+  GateId addGate(GateSymbol func, const SignalList &inputs);
 
   /// Modifies the existing gate.
-  void setGate(GateId gid, GateSymbol kind, const SignalList &inputs);
+  void setGate(GateId gid, GateSymbol func, const SignalList &inputs);
 
   /// Removes the gate from the net.
   void removeGate(GateId gid);
@@ -351,6 +338,15 @@ private:
   /// Adds the gate to the net and sets the subnet index.
   /// The subnet is not modified.
   GateId addGate(Gate *gate, SubnetId sid = INV_SUBNET);
+
+  /// Adds the gate to the net if the gate is a new one.
+  GateId addGateIfNew(Gate *gate, SubnetId sid = INV_SUBNET) {
+    if (contains(gate->id())) {
+      return gate->id();
+    }
+    return addGate(gate, sid);
+  }
+
   /// Adds the subnet to the net.
   SubnetId addSubnet(GNet *subnet);
 

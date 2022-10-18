@@ -9,6 +9,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 namespace eda::gate::model {
 
@@ -69,9 +70,9 @@ private:
     bool isIdentity;
     bool isCommutative;
     bool isAssociative;
-    bool isComposite;
+    bool isDecomposable;
     Value modifier;
-    Value baseGate;
+    Value function;
   };
 
   constexpr const GateDescriptor &desc() const {
@@ -87,10 +88,14 @@ public:
 
   constexpr const std::string &name() const { return desc().name; }
 
-  constexpr bool isConstant()    const { return desc().isConstant; }
-  constexpr bool isIdentity()    const { return desc().isIdentity; }
-  constexpr bool isCommutative() const { return desc().isCommutative; }
-  constexpr bool isAssociative() const { return desc().isAssociative; }
+  constexpr bool isConstant()     const { return desc().isConstant; }
+  constexpr bool isIdentity()     const { return desc().isIdentity; }
+  constexpr bool isCommutative()  const { return desc().isCommutative; }
+  constexpr bool isAssociative()  const { return desc().isAssociative; }
+  constexpr bool isDecomposable() const { return desc().isDecomposable; }
+
+  constexpr GateSymbol modifier() const { return desc().modifier; }
+  constexpr GateSymbol function() const { return desc().function; }
 
 private:
   Value _value;

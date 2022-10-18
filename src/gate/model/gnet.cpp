@@ -84,6 +84,38 @@ bool GNet::hasCombFlow(GateId gid, const SignalList &inputs) const {
   return false;
 }
 
+GNet::GateId GNet::addGate(GateSymbol func, const SignalList &inputs) {
+  // Search for the same gate.
+  auto *gate = Gate::get(func, inputs);
+
+  // Do not create a gate if there exists the same one.
+  if (gate != nullptr) {
+    return addGateIfNew(gate);
+  }
+
+  // Try to decompose the node.
+  if (func.isDecomposable()) {
+    // For example: NAND(x, y) = NOT-AND(x, y).
+    auto modifier = func.modifier(); // NOT
+    auto baseFunc = func.function(); // AND
+
+    // Search for the base node.
+    auto *base = Gate::get(baseFunc, inputs);
+    if (base != nullptr) {
+      addGateIfNew(base);
+      gate = Gate::get(modifier, {base->id()});
+
+      if (gate != nullptr) {
+        return addGateIfNew(gate);
+      }
+
+      return addGate(new Gate(modifier, {base->id()}));
+    }
+  }
+
+  return addGate(new Gate(func, inputs));
+}
+
 GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   const auto gid = gate->id();
   assert(_flags.find(gid) == _flags.end());

@@ -16,26 +16,36 @@
 
 class ReaderGate : public lorina::verilog_reader {
 private:
-  struct GateData {
-    std::vector<eda::gate::model::GNet::GateId> inputs;
-    eda::gate::model::GNet::GateId id;
-    eda::gate::model::GateSymbol kind;
+  struct ParserData {
+    struct GateData {
+      std::vector<eda::gate::model::GNet::GateId> inputs;
+      eda::gate::model::GNet::GateId id = 0;
+      eda::gate::model::GateSymbol kind = eda::gate::model::GateSymbol::ZERO;
+    };
+
+    std::unordered_map<std::string, GateData> gates;
+    std::unordered_map<eda::gate::model::Signal::GateId,
+            eda::gate::model::GNet::GateId> gIds;
+    // Wire name / <source, target>
+    std::unordered_map<std::string, std::vector<std::string>> links;
+
+    std::string netName;
+    bool startParse = false;
+    eda::gate::model::GNet gnet;
   };
 
-  std::unordered_map<std::string, GateData> gates;
-  std::unordered_map<eda::gate::model::Signal::GateId,
-          eda::gate::model::GNet::GateId> gIds;
-  // Wire name / <source, target>
-  std::unordered_map<std::string, std::vector<std::string>> links;
-
-  std::string netName;
-  bool startParse = false;
-  eda::gate::model::GNet gnet;
+  ParserData *data = new ParserData();
 
 public:
-  ReaderGate(std::string name) : netName(std::move(name)) {}
+  explicit ReaderGate(std::string name) {
+    data->netName = std::move(name);
+  }
 
-  eda::gate::model::GNet *getGnet() { return &gnet; }
+  ~ReaderGate() {
+    delete data;
+  }
+
+  eda::gate::model::GNet *getGnet() { return &data->gnet; }
 
   /*! \brief Callback method for parsed module.
    *
@@ -43,8 +53,8 @@ public:
    * \param inouts Container for input and output names
    */
   void on_module_header(const std::string &moduleName,
-                        const std::vector<std::string> &inputs) override {
-    startParse = moduleName == netName;
+                        const std::vector<std::string> &inputs) const override {
+    data->startParse = moduleName == data->netName;
   }
 
   /*! \brief Callback method for parsed inputs.
@@ -53,15 +63,15 @@ public:
    * \param size Size modifier
    */
   void on_inputs(const std::vector<std::string> &inputs,
-                 std::string const &size = "") override {
-    if (startParse) {
+                 std::string const &size) const override {
+    if (data->startParse) {
       for (const std::string &input: inputs) {
         std::string in = "#" + input;
-        auto &gate = gates[in];
-        gate.id = gnet.newGate();
-        gIds.emplace(gate.id, gates.size() - 1);
+        auto &gate = data->gates[in];
+        gate.id = data->gnet.newGate();
+        data->gIds.emplace(gate.id, data->gates.size() - 1);
         gate.kind = eda::gate::model::GateSymbol::NOP;
-        links[input] = {in, ""};
+        data->links[input] = {in, ""};
       }
     }
   }
@@ -72,10 +82,10 @@ public:
    * \param size Size modifier
    */
   void on_wires(const std::vector<std::string> &wires,
-                std::string const &size = "") override {
-    if (startParse) {
+                std::string const &size) const override {
+    if (data->startParse) {
       for (auto &name: wires) {
-        links[name].resize(2);
+        data->links[name].resize(2);
       }
     }
   }
@@ -90,19 +100,19 @@ public:
    *             a_i is a name of a signals in moduleName and b_i is a name of
    * a signal in instName.
    */
-  virtual void on_module_instantiation(
+   void on_module_instantiation(
           std::string const &moduleName, std::vector<std::string> const &params,
           std::string const &instName,
-          std::vector<std::pair<std::string, std::string>> const &args) override {
-    if (startParse) {
-      auto &gateData = gates[instName];
-      gateData.id = gnet.newGate();
-      gIds.emplace(gateData.id, gates.size() - 1);
+          std::vector<std::pair<std::string, std::string>> const &args) const override {
+    if (data->startParse) {
+      auto &gateData = data->gates[instName];
+      gateData.id = data->gnet.newGate();
+      data->gIds.emplace(gateData.id, data->gates.size() - 1);
       gateData.kind = symbol(moduleName);
 
-      insertLink(args[0].second, instName, 0);
+      insertLink(args[0].second, instName, false);
       for (size_t i = 1; i < args.size(); ++i) {
-        insertLink(args[i].second, instName, 1);
+        insertLink(args[i].second, instName, true);
       }
     }
   }
@@ -110,20 +120,20 @@ public:
   /*! \brief Callback method for parsed endmodule.
    *
    */
-  virtual void on_endmodule() override {
-    if (startParse) {
+  void on_endmodule() const override {
+    if (data->startParse) {
       //  Collect links to make inputs arrays.
-      for (auto &[name, links]: links) {
-        auto source = gates.find(links[0]);
-        auto target = gates.find(links[1]);
+      for (auto &[name, links]: data->links) {
+        auto source = data->gates.find(links[0]);
+        auto target = data->gates.find(links[1]);
 
-        if (source != gates.end() && target != gates.end()) {
+        if (source != data->gates.end() && target != data->gates.end()) {
           target->second.inputs.push_back(source->second.id);
         }
       }
 
       //  By that moment all gates are created - modifying them.
-      for (const auto &[name, gateData]: gates) {
+      for (const auto &[name, gateData]: data->gates) {
         std::vector<eda::gate::model::Signal> signals;
         signals.reserve(gateData.inputs.size());
 
@@ -131,13 +141,13 @@ public:
           signals.emplace_back(eda::rtl::model::Event::Kind::ALWAYS, input);
         }
 
-        gnet.setGate(gateData.id, gateData.kind, signals);
+        data->gnet.setGate(gateData.id, gateData.kind, signals);
       }
     }
   }
 
   void print() const {
-    for (auto &gate: gnet.gates()) {
+    for (auto &gate: data->gnet.gates()) {
       std::cout << gate->id() << " " << gate->kind() << " :\n";
       for (auto &link: gate->links()) {
         std::cout << "\t( " << link.source << " ) " << link.target << "\n";
@@ -149,7 +159,7 @@ public:
     stream << gate->kind() << gate->id();
   }
 
-  void dotPrint(const std::string &filename) {
+  void dotPrint(const std::string &filename) const {
     std::ofstream out(filename);
     dot(out);
     out.close();
@@ -157,12 +167,12 @@ public:
 
   void dot(std::ofstream &stream) const {
     stream << "digraph gnet {\n";
-    for (const auto &gate: gnet.gates()) {
+    for (const auto &gate: data->gnet.gates()) {
       for (auto &links: gate->links()) {
         stream << "\t";
         print(stream, gate);
         stream << " -> ";
-        print(stream, gnet.gate(gIds.at(links.target)));
+        print(stream, data->gnet.gate(data->gIds.at(links.target)));
         stream << ";\n";
       }
     }
@@ -171,16 +181,16 @@ public:
 
 private:
   void insertLink(const std::string &name, const std::string &instName,
-                  bool gate) {
-    auto &link = links[name];
-    if (link[gate] == "") {
+                  bool gate) const {
+    auto &link = data->links[name];
+    if (link[gate].empty()) {
       link[gate] = instName;
     } else {
       std::string nickname = name;
-      while (links.find(nickname) != links.end()) {
+      while (data->links.find(nickname) != data->links.end()) {
         nickname += "#2";
       }
-      auto &link2 = links[nickname] = link;
+      auto &link2 = data->links[nickname] = link;
       link2[gate] = instName;
     }
   }

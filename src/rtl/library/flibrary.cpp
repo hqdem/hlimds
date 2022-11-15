@@ -162,6 +162,7 @@ FLibrary::Out FLibraryDefault::synthAdder(Gate::Id x,
   auto yWire = Signal::always(y);
   auto cWire = Signal::always(carryIn);
 
+  // {z, carryOut}.
   Out out;
 
   // z = (x + y) + carryIn (mod 2).

@@ -15,6 +15,7 @@
 
 #include "gtest/gtest.h"
 
+#include <filesystem>
 #include <iostream>
 #include <memory>
 
@@ -24,8 +25,14 @@ using namespace eda::rtl::library;
 using namespace eda::rtl::model;
 using namespace eda::rtl::parser::ril;
 
-int rilTest(const std::string &filename) {
-  auto model = parse(filename);
+namespace fs = std::filesystem;
+
+int rilTest(const std::string &outSubPath,
+            const std::string &fileName) {
+  fs::path basePath = std::getenv("UTOPIA_HOME"); 
+  fs::path fullPath = basePath / outSubPath / fileName;
+  
+  auto model = parse(fullPath);
 
   std::cout << "------ p/v-nets ------" << std::endl;
   std::cout << *model << std::endl;
@@ -40,5 +47,16 @@ int rilTest(const std::string &filename) {
 }
 
 TEST(RilTest, SingleTest) {
-  EXPECT_EQ(rilTest("test/data/ril/test.ril"), 0);
+  EXPECT_EQ(rilTest("test/data/ril/",
+                    "test.ril"), 0);
+}
+
+TEST(RilTest, SubTest) {
+  EXPECT_EQ(rilTest("test/data/ril/",
+                    "sub.ril"), 0);
+}
+
+TEST(RilTest, AddTest) {
+  EXPECT_EQ(rilTest("test/data/ril/",
+                    "add.ril"), 0);
 }

@@ -239,23 +239,3 @@ TEST(GNetTest, GNetRandTestIssue11877) {
   EXPECT_TRUE(net != nullptr);
 }
 
-TEST(GNetTest, GNetRandTestValid) {
-  auto net = makeRand(1024, 256);
-  std::vector<bool> involvedGates(1024);
-  std::vector<bool> involvedLinks(1024);
-
-  for (eda::gate::model::Gate* gate : net.get()->gates()) {
-    involvedGates[gate->id()] = true;
-  }
-
-  for (eda::gate::model::Gate* gate : net.get()->gates()) {
-    for (const eda::gate::model::Gate::Link& link : gate->links()) {
-      involvedLinks[link.source] = true;
-      involvedLinks[link.target] = true;  
-    }
-  }
-
-  for (size_t i = 0; i < 1024; ++i) {
-    EXPECT_EQ(involvedGates[i], involvedLinks[i]);
-  }
-}

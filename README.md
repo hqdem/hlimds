@@ -216,7 +216,7 @@ rm -rf $UTOPIA_HOME/output
 
 ```
 rm -rf $UTOPIA_HOME/output
-./build/test/utest
+$UTOPIA_HOME/build/test/utest
 ```
 or
 ```

@@ -9,6 +9,7 @@
 #include "config.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
+#include "gate/premapper/aigmapper.h"
 #include "hls/compiler/compiler.h"
 #include "hls/mapper/mapper.h"
 #include "hls/model/model.h"
@@ -47,12 +48,23 @@ int rtlMain(const std::string &file, const RtlOptions &options) {
 
   eda::rtl::compiler::Compiler compiler(
       eda::rtl::library::FLibraryDefault::get());
-  auto netlist = compiler.compile(*model);
+  auto net = compiler.compile(*model);
 
-  std::cout << "------ netlist ------" << std::endl;
-  std::cout << *netlist;
+  net->sortTopologically();
 
-  std::cout << "Netlist: nGates=" << netlist->nGates() << std::endl;
+  std::cout << "------ netlist (original) ------" << std::endl;
+  std::cout << *net;
+
+  std::cout << "Net: nGates=" << net->nGates() << std::endl;
+
+  eda::gate::premapper::PreMapper &premapper =
+      eda::gate::premapper::AigMapper::get();
+  auto premapped = premapper.map(*net);
+
+  std::cout << "------ netlist (premapped) ------" << std::endl;
+  std::cout << *premapped;
+
+  std::cout << "Net: nGates=" << premapped->nGates() << std::endl;
 
   return 0;
 }

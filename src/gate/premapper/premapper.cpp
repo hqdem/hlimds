@@ -13,11 +13,38 @@
 
 namespace eda::gate::premapper {
 
+Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
+                              const PreMapper::GateIdMap &oldToNewGates) {
+  Gate::SignalList newInputs(oldInputs.size());
+
+  for (size_t i = 0; i< oldInputs.size(); i++) {
+    auto oldInput = oldInputs[i];
+    auto newInput = oldToNewGates.find(oldInput.node());
+    assert(newInput != oldToNewGates.end());
+
+    newInputs[i] = Gate::Signal(oldInput.event(), newInput->second);
+  }
+
+  return newInputs;
+}
+
 std::shared_ptr<GNet> PreMapper::map(const GNet &net) const {
   std::unordered_map<Gate::Id, Gate::Id> oldToNewGates;
   oldToNewGates.reserve(net.nGates());
 
   auto *newNet = map(net, oldToNewGates);
+
+  // Connect the triggers' inputs.
+  for (auto oldTriggerId : net.triggers()) {
+    const auto *oldTrigger = Gate::get(oldTriggerId);
+
+    auto newTriggerId = oldToNewGates.find(oldTriggerId);
+    assert(newTriggerId != oldToNewGates.end());
+
+    auto newInputs = getNewInputs(oldTrigger->inputs(), oldToNewGates);
+    newNet->setGate(newTriggerId->second, oldTrigger->func(), newInputs);
+  }
+
   return std::shared_ptr<GNet>(newNet);
 }
 
@@ -51,7 +78,14 @@ GNet *PreMapper::map(const GNet &net, GateIdMap &oldToNewGates) const {
 Gate::Id PreMapper::map(const Gate &oldGate,
                         const GateIdMap &oldToNewGates,
                         GNet &newNet) const {
-  return Gate::INVALID;
+  if (oldGate.isSource() || oldGate.isTrigger()) {
+    // Triggers' inputs will be connected later.
+    return newNet.newGate();
+  }
+
+  // Just clone the given gate.
+  auto newInputs = getNewInputs(oldGate.inputs(), oldToNewGates);
+  return newNet.addGate(oldGate.func(), newInputs);
 }
 
 } // namespace eda::gate::premapper

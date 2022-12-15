@@ -8,14 +8,13 @@
 
 #include "gate/premapper/aigmapper.h"
 
-#include <cassert>
-
 namespace eda::gate::premapper {
 
 Gate::Id AigMapper::map(const Gate &oldGate,
                         const GateIdMap &oldToNewGates,
                         GNet &newNet) const {
-  return Gate::INVALID;
+  // TODO:
+  return PreMapper::map(oldGate, oldToNewGates, newNet);
 }
 
 } // namespace eda::gate::premapper

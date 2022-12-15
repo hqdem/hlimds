@@ -28,6 +28,9 @@ public:
   std::shared_ptr<GNet> map(const GNet &net) const;
 
 protected:
+  PreMapper() {}
+  virtual ~PreMapper() {}
+
   GNet *map(const GNet &net, GateIdMap &oldToNewGates) const;
 
   /// Creates new gates representing the given one and adds them to the net.

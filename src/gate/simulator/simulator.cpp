@@ -15,20 +15,20 @@ using Compiled = Simulator::Compiled;
 Compiled::OP Compiled::getOp(const Gate &gate) const {
   const auto n = gate.arity();
 
-  switch (gate.kind()) {
-  case  ZERO: return getZero(n);
-  case   ONE: return getOne(n);
-  case   NOP: return getNop(n);
-  case   NOT: return getNot(n);
-  case   AND: return getAnd(n);
-  case    OR: return getOr(n);
-  case   XOR: return getXor(n);
-  case  NAND: return getNand(n);
-  case   NOR: return getNor(n);
-  case  XNOR: return getXnor(n);
-  case LATCH: return getLatch(n);
-  case   DFF: return getDff(n);
-  case DFFrs: return getDffrs(n);
+  switch (gate.func()) {
+  case GateSymbol::ZERO  : return getZero(n);
+  case GateSymbol::ONE   : return getOne(n);
+  case GateSymbol::NOP   : return getNop(n);
+  case GateSymbol::NOT   : return getNot(n);
+  case GateSymbol::AND   : return getAnd(n);
+  case GateSymbol::OR    : return getOr(n);
+  case GateSymbol::XOR   : return getXor(n);
+  case GateSymbol::NAND  : return getNand(n);
+  case GateSymbol::NOR   : return getNor(n);
+  case GateSymbol::XNOR  : return getXnor(n);
+  case GateSymbol::LATCH : return getLatch(n);
+  case GateSymbol::DFF   : return getDff(n);
+  case GateSymbol::DFFrs : return getDffrs(n);
   default: assert(false);
   }
 
@@ -45,7 +45,7 @@ Compiled::Command Compiled::getCommand(const GNet &net,
 
   IV in(gate.arity());
   for (I i = 0; i < gate.arity(); i++) {
-    const auto source = gate.input(i).gateId();
+    const auto source = gate.input(i).node();
 
     Gate::Link inLink = net.contains(source)
                       ? Gate::Link(source)

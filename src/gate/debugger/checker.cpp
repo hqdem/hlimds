@@ -130,16 +130,16 @@ bool Checker::areEqualSeq(const GNet &lhs,
     const Gate *lhsTrigger = Gate::get(lhsLink.source);
     const Gate *rhsTrigger = Gate::get(rhsLink.source);
 
-    assert(lhsTrigger->kind()  == rhsTrigger->kind());
+    assert(lhsTrigger->func()  == rhsTrigger->func());
     assert(lhsTrigger->arity() == rhsTrigger->arity());
 
     imap.insert({Gate::Link(lhsTrigger->id()), Gate::Link(rhsTrigger->id())});
 
     for (std::size_t i = 0; i < lhsTrigger->arity(); i++) {
-      const Signal lhsInput = lhsTrigger->input(i);
-      const Signal rhsInput = rhsTrigger->input(i);
+      const Gate::Signal lhsInput = lhsTrigger->input(i);
+      const Gate::Signal rhsInput = rhsTrigger->input(i);
 
-      omap.insert({Gate::Link(lhsInput), Gate::Link(rhsInput)});
+      omap.insert({Gate::Link(lhsInput.node()), Gate::Link(rhsInput.node())});
     }
   }
 
@@ -180,7 +180,7 @@ bool Checker::areEqualSeq(const GNet &lhs,
   // Connect the encoder inputs to the LHS-trigger D inputs' drivers.
   for (const auto &[lhsTriLink, encInLink] : lhsTriEncIn) {
     const auto *lhsTrigger = Gate::get(lhsTriLink.source);
-    connectTo.insert({encInLink.source, lhsTrigger->input(0).gateId()});
+    connectTo.insert({encInLink.source, lhsTrigger->input(0).node()});
   }
 
   // Connect the LHS-trigger outputs to the decoder outputs.
@@ -191,7 +191,7 @@ bool Checker::areEqualSeq(const GNet &lhs,
   // Append the encoder outputs and the RHS-trigger inputs to the outputs.
   for (const auto &[rhsTriLink, encOutLink] : rhsTriEncOut) {
     const auto *rhsTrigger = Gate::get(rhsTriLink.source);
-    omap.insert({encOutLink, Gate::Link(rhsTrigger->input(0).gateId())});
+    omap.insert({encOutLink, Gate::Link(rhsTrigger->input(0).node())});
   }
 
   // Append the decoder inputs and the RHS-trigger outputs to to the inputs.

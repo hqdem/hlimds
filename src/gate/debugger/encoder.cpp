@@ -22,7 +22,7 @@ void Encoder::encode(const Gate &gate, uint16_t version) {
   if (gate.isSource())
     return;
 
-  switch (gate.kind()) {
+  switch (gate.func()) {
   case GateSymbol::ONE:
     encodeFix(gate, true, version);
     break;

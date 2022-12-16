@@ -24,7 +24,7 @@ private:
     };
 
     std::unordered_map<std::string, GateData> gates;
-    std::unordered_map<eda::gate::model::Signal::GateId,
+    std::unordered_map<eda::gate::model::GNet::GateId,
             eda::gate::model::GNet::GateId> gIds;
     // Wire name / <source, target>
     std::unordered_map<std::string, std::vector<std::string>> links;
@@ -134,11 +134,11 @@ public:
 
       //  By that moment all gates are created - modifying them.
       for (const auto &[name, gateData]: data->gates) {
-        std::vector<eda::gate::model::Signal> signals;
+        std::vector<eda::base::model::Signal<eda::gate::model::GNet::GateId>> signals;
         signals.reserve(gateData.inputs.size());
 
         for (auto input: gateData.inputs) {
-          signals.emplace_back(eda::rtl::model::Event::Kind::ALWAYS, input);
+          signals.emplace_back(eda::base::model::Event::ALWAYS, input);
         }
 
         data->gnet.setGate(gateData.id, gateData.kind, signals);
@@ -148,7 +148,7 @@ public:
 
   void print() const {
     for (auto &gate: data->gnet.gates()) {
-      std::cout << gate->id() << " " << gate->kind() << " :\n";
+      std::cout << gate->id() << " :\n"; // << " " << gate->kind()
       for (auto &link: gate->links()) {
         std::cout << "\t( " << link.source << " ) " << link.target << "\n";
       }
@@ -156,7 +156,7 @@ public:
   }
 
   void static print(std::ofstream &stream, const eda::gate::model::Gate *gate) {
-    stream << gate->kind() << gate->id();
+    stream << gate->id(); // << " " << gate->kind()
   }
 
   void dotPrint(const std::string &filename) const {

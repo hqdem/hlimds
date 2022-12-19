@@ -24,6 +24,29 @@ protected:
   Gate::Id map(const Gate &oldGate,
                const GateIdMap &oldToNewGates,
                GNet &newNet) const override;
+
+private:
+  Gate::Id mapVal(bool value, GNet &newNet) const;
+
+  Gate::Id mapNop(const Gate::SignalList &newInputs,
+                  bool sign, GNet &newNet) const;
+  Gate::Id mapNop(const Gate::SignalList &newInputs,
+                  size_t n0, size_t n1, bool sign, GNet &newNet) const;
+
+  Gate::Id mapAnd(const Gate::SignalList &newInputs,
+                  bool sign, GNet &newNet) const;
+  Gate::Id mapAnd(const Gate::SignalList &newInputs,
+                  size_t n0, size_t n1, bool sign, GNet &newNet) const;
+
+  Gate::Id mapOr (const Gate::SignalList &newInputs,
+                  bool sign, GNet &newNet) const;
+  Gate::Id mapOr (const Gate::SignalList &newInputs,
+                  size_t n0, size_t n1, bool sign, GNet &newNet) const;
+
+  Gate::Id mapXor(const Gate::SignalList &newInputs,
+                  bool sign, GNet &newNet) const;
+  Gate::Id mapXor(const Gate::SignalList &newInputs,
+                  size_t n0, size_t n1, bool sign, GNet &newNet) const;
 };
 
 } // namespace eda::gate::premapper

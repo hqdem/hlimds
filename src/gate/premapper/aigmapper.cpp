@@ -9,31 +9,30 @@
 #include "gate/premapper/aigmapper.h"
 
 #include <cassert>
+#include <unordered_set>
 
 namespace eda::gate::premapper {
 
 Gate::SignalList getNewInputs(const Gate &oldGate,
                               const AigMapper::GateIdMap &oldToNewGates,
-                              size_t &n0,
-                              size_t &n1) {
+                              size_t &n0, size_t &n1) {
+  const auto k = oldGate.arity();
+
   Gate::SignalList newInputs;
-  newInputs.reserve(oldGate.arity());
+  newInputs.reserve(k);
 
   n0 = n1 = 0;
   for (auto input : oldGate.inputs()) {
-    const auto oldInputId = input.node();
-    const auto *gate = Gate::get(oldInputId);
-
-    if (gate->isValue()) {
-      const auto isZero = (gate->func() == GateSymbol::ZERO);
-
+    if (model::isValue(input)) {
+      const auto isZero = model::isZero(input);
       n0 += (isZero ? 1 : 0);
       n1 += (isZero ? 0 : 1);
     } else {
-      const auto newInputId = oldToNewGates.find(oldInputId);
-      assert(newInputId != oldToNewGates.end());
+      const auto i = oldToNewGates.find(input.node());
+      assert(i != oldToNewGates.end());
 
-      newInputs.push_back(Gate::Signal::always(newInputId->second));
+      const auto newInputId = i->second;
+      newInputs.push_back(Gate::Signal::always(newInputId));
     }
   }
 
@@ -43,11 +42,6 @@ Gate::SignalList getNewInputs(const Gate &oldGate,
 Gate::Id AigMapper::map(const Gate &oldGate,
                         const GateIdMap &oldToNewGates,
                         GNet &newNet) const {
-  if (oldGate.isValue()) {
-    // Do not clone constants and add them to the net.
-    return oldGate.id();
-  }
-
   if (oldGate.isSource() || oldGate.isTrigger()) {
     // Clone sources and triggers gates w/o changes.
     return PreMapper::map(oldGate, oldToNewGates, newNet);
@@ -88,7 +82,7 @@ Gate::Id AigMapper::mapVal(bool value, GNet &newNet) const {
 Gate::Id AigMapper::mapNop(const Gate::SignalList &newInputs,
                            bool sign, GNet &newNet) const {
   // NOP(x) = x.
-  const auto inputId = newInputs.front().node();
+  const auto inputId = newInputs.at(0).node();
   if (sign) {
     return inputId;
   }
@@ -126,8 +120,22 @@ Gate::Id AigMapper::mapAnd(const Gate::SignalList &newInputs,
   size_t l = 0;
   size_t r = 1;
   while (r < inputs.size()) {
-    auto andGateId = newNet.addGate(GateSymbol::AND, {inputs[l], inputs[r]});
-    inputs.push_back(Gate::Signal::always(andGateId));
+    const auto x = inputs[l];
+    const auto y = inputs[r];
+
+    Gate::Id gateId;
+    if (model::areIdentical(x, y)) {
+      // AND(x,x) = x.
+      gateId = mapNop({x}, sign, newNet);
+    } else if (model::areContrary(x, y)) {
+      // AND(x,NOT(x)) = 0.
+      gateId = mapVal(!sign, newNet);
+    } else {
+      // AND(x,y).
+      gateId = newNet.addGate(GateSymbol::AND, {x, y});
+    }
+
+    inputs.push_back(Gate::Signal::always(gateId));
 
     l += 2;
     r += 2;
@@ -194,7 +202,7 @@ Gate::Id AigMapper::mapXor(const Gate::SignalList &newInputs,
     const auto z2 = mapAnd({Gate::Signal::always(x2), Gate::Signal::always(y2)},
                            false, newNet);
     const auto id = mapAnd({Gate::Signal::always(z1), Gate::Signal::always(z2)},
-                           true, newNet);
+                           true,  newNet);
 
     inputs.push_back(Gate::Signal::always(id));
 
@@ -210,7 +218,7 @@ Gate::Id AigMapper::mapXor(const Gate::SignalList &newInputs,
 Gate::Id AigMapper::mapXor(const Gate::SignalList &newInputs,
                            size_t n0, size_t n1, bool sign, GNet &newNet) const {
   if (n1 > 1) {
-    return mapXor(newInputs, 0, 0, sign ^ (n1 & 1), newNet);
+    return mapXor(newInputs, sign ^ (n1 & 1), newNet);
   }
 
   return mapXor(newInputs, sign, newNet);

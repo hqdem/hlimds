@@ -47,6 +47,7 @@ private:
                   bool sign, GNet &newNet) const;
   Gate::Id mapXor(const Gate::SignalList &newInputs,
                   size_t n0, size_t n1, bool sign, GNet &newNet) const;
+ 
 };
 
 } // namespace eda::gate::premapper

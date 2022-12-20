@@ -129,7 +129,7 @@ void Encoder::encodeXor(const Gate &gate, bool sign, uint16_t version) {
 }
 
 void Encoder::encodeLatch(const Gate &gate, uint16_t version) {
-  assert(version > 0 && "Version 0 is not supported in triggers");
+  if (version == 0) { return; }
 
   // D latch (Q; D, ENA):
   // Q(t) = ENA(level1) ? D : Q(t-1).
@@ -144,7 +144,7 @@ void Encoder::encodeLatch(const Gate &gate, uint16_t version) {
 }
 
 void Encoder::encodeDff(const Gate &gate, uint16_t version) {
-  assert(version > 0 && "Version 0 is not supported in triggers");
+  if (version == 0) { return; }
 
   // D flip-flop (Q; D, CLK):
   // Q(t) = CLK(posedge) ? D : Q(t-1).
@@ -158,7 +158,7 @@ void Encoder::encodeDff(const Gate &gate, uint16_t version) {
 }
 
 void Encoder::encodeDffRs(const Gate &gate, uint16_t version) {
-  assert(version > 0 && "Version 0 is not supported in triggers");
+  if (version == 0) { return; }
 
   // D flip-flop w/ (asynchronous) reset and set (Q; D, CLK, RST, SET):
   // Q(t) = RST(level1) ? 0 : (SET(level1) ? 1 : (CLK(posedge) ? D : Q(t-1))).

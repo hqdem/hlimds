@@ -25,20 +25,29 @@ class PreMapper {
 public:
   using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 
-  std::shared_ptr<GNet> map(const GNet &net) const;
+  /// Maps the given net to a new one and fills the gate correspondence map.
+  std::shared_ptr<GNet> map(const GNet &net, GateIdMap &oldToNewGates) const;
+
+  /// Maps the given net to a new one.
+  std::shared_ptr<GNet> map(const GNet &net) const {
+    GateIdMap oldToNewGates;
+    oldToNewGates.reserve(net.nGates());
+
+    return map(net, oldToNewGates);
+  }
 
 protected:
   PreMapper() {}
   virtual ~PreMapper() {}
 
-  GNet *map(const GNet &net, GateIdMap &oldToNewGates) const;
+  GNet *mapGates(const GNet &net, GateIdMap &oldToNewGates) const;
 
   /// Creates new gates representing the given one and adds them to the net.
   /// Returns the identifier of the new gate corresponding to the old one or
   /// Gate::INVALID if the operation fails.
-  virtual Gate::Id map(const Gate &oldGate,
-                       const GateIdMap &oldToNewGates,
-                       GNet &newNet) const;
+  virtual Gate::Id mapGate(const Gate &oldGate,
+                           const GateIdMap &oldToNewGates,
+                           GNet &newNet) const;
 };
 
 } // namespace eda::gate::premapper

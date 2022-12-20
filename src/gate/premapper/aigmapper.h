@@ -21,9 +21,9 @@ class AigMapper final : public PreMapper, public util::Singleton<AigMapper> {
   friend class util::Singleton<AigMapper>;
 
 protected:
-  Gate::Id map(const Gate &oldGate,
-               const GateIdMap &oldToNewGates,
-               GNet &newNet) const override;
+  Gate::Id mapGate(const Gate &oldGate,
+                   const GateIdMap &oldToNewGates,
+                   GNet &newNet) const override;
 
 private:
   Gate::Id mapVal(bool value, GNet &newNet) const;

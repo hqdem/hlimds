@@ -28,11 +28,9 @@ Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
   return newInputs;
 }
 
-std::shared_ptr<GNet> PreMapper::map(const GNet &net) const {
-  std::unordered_map<Gate::Id, Gate::Id> oldToNewGates;
-  oldToNewGates.reserve(net.nGates());
-
-  auto *newNet = map(net, oldToNewGates);
+std::shared_ptr<GNet> PreMapper::map(const GNet &net,
+                                     GateIdMap &oldToNewGates) const {
+  auto *newNet = mapGates(net, oldToNewGates);
 
   // Connect the triggers' inputs.
   for (auto oldTriggerId : net.triggers()) {
@@ -48,7 +46,7 @@ std::shared_ptr<GNet> PreMapper::map(const GNet &net) const {
   return std::shared_ptr<GNet>(newNet);
 }
 
-GNet *PreMapper::map(const GNet &net, GateIdMap &oldToNewGates) const {
+GNet *PreMapper::mapGates(const GNet &net, GateIdMap &oldToNewGates) const {
   assert(net.isWellFormed() && net.isSorted());
 
   auto *newNet = new GNet(net.getLevel());
@@ -58,7 +56,7 @@ GNet *PreMapper::map(const GNet &net, GateIdMap &oldToNewGates) const {
       const auto oldGateId = oldGate->id();
       assert(oldToNewGates.find(oldGateId) == oldToNewGates.end());
 
-      const auto newGateId = map(*oldGate, oldToNewGates, *newNet);
+      const auto newGateId = mapGate(*oldGate, oldToNewGates, *newNet);
       assert(newGateId != Gate::INVALID);
 
       oldToNewGates.insert({oldGateId, newGateId});
@@ -68,16 +66,16 @@ GNet *PreMapper::map(const GNet &net, GateIdMap &oldToNewGates) const {
   }
 
   for (const auto *oldSubnet : net.subnets()) {
-    auto *newSubnet = map(*oldSubnet, oldToNewGates);
+    auto *newSubnet = mapGates(*oldSubnet, oldToNewGates);
     newNet->addSubnet(newSubnet);
   }
 
   return newNet;
 }
 
-Gate::Id PreMapper::map(const Gate &oldGate,
-                        const GateIdMap &oldToNewGates,
-                        GNet &newNet) const {
+Gate::Id PreMapper::mapGate(const Gate &oldGate,
+                            const GateIdMap &oldToNewGates,
+                            GNet &newNet) const {
   if (oldGate.isSource() || oldGate.isTrigger()) {
     // Triggers' inputs will be connected later.
     return newNet.newGate();

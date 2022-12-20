@@ -39,20 +39,20 @@ Gate::SignalList getNewInputs(const Gate &oldGate,
   return newInputs;
 }
 
-Gate::Id AigMapper::map(const Gate &oldGate,
-                        const GateIdMap &oldToNewGates,
-                        GNet &newNet) const {
+Gate::Id AigMapper::mapGate(const Gate &oldGate,
+                            const GateIdMap &oldToNewGates,
+                            GNet &newNet) const {
   if (oldGate.isSource() || oldGate.isTrigger()) {
     // Clone sources and triggers gates w/o changes.
-    return PreMapper::map(oldGate, oldToNewGates, newNet);
+    return PreMapper::mapGate(oldGate, oldToNewGates, newNet);
   }
 
   size_t n0, n1;
   auto newInputs = getNewInputs(oldGate, oldToNewGates, n0, n1);
 
   switch (oldGate.func()) {
-  case GateSymbol::ZERO : return mapVal(false, newNet);
-  case GateSymbol::ONE  : return mapVal(true,  newNet);
+  case GateSymbol::ZERO : return mapVal(                   false, newNet);
+  case GateSymbol::ONE  : return mapVal(                   true,  newNet);
   case GateSymbol::NOP  : return mapNop(newInputs, n0, n1, true,  newNet);
   case GateSymbol::NOT  : return mapNop(newInputs, n0, n1, false, newNet);
   case GateSymbol::AND  : return mapAnd(newInputs, n0, n1, true,  newNet);

@@ -377,7 +377,7 @@ private:
 
   /// Checks whether the link is a target link.
   bool checkTargetLink(const Link &link) const {
-    return !contains(link.target);
+    return link.isPort() || !contains(link.target);
   }
 
   /// Updates the net state when adding a gate.

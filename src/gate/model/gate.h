@@ -55,7 +55,11 @@ public:
   }
 
   bool isSource() const {
-    return _func == GateSymbol::NOP && _inputs.empty();
+    return _func == GateSymbol::IN;
+  }
+
+  bool isTarget() const {
+    return _func == GateSymbol::OUT;
   }
 
   bool isValue() const {
@@ -71,7 +75,7 @@ public:
   }
 
   bool isComb() const {
-    return !isSource() && !isTrigger();
+    return !isSource() && !isTarget() && !isTrigger();
   }
 
 private:
@@ -79,7 +83,7 @@ private:
   Gate(GateSymbol func, const SignalList &inputs): GateBase(func, inputs) {}
 
   /// Creates a source gate.
-  Gate(): Gate(GateSymbol::NOP, {}) {}
+  Gate(): Gate(GateSymbol::IN, {}) {}
 };
 
 //===----------------------------------------------------------------------===//

@@ -129,7 +129,7 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   onAddGate(gate, false);
 
   // Do some integrity checks.
-  assert(!(_sourceLinks.empty() && _triggers.empty()));
+  assert(!(_sourceLinks.empty() && _targetLinks.empty() && _triggers.empty()));
 
   // Structural hashing.
   Gate::add(gate);
@@ -162,7 +162,7 @@ void GNet::setGate(GateId gid, GateSymbol func, const SignalList &inputs) {
   });
 
   // Do some integrity checks.
-  assert(!(_sourceLinks.empty() && _triggers.empty()));
+  assert(!(_sourceLinks.empty() && _targetLinks.empty() && _triggers.empty()));
 }
 
 void GNet::removeGate(GateId gid) {
@@ -199,7 +199,8 @@ void GNet::removeGate(GateId gid) {
   _flags.erase(i);
 
   // Do some integrity checks.
-  assert((_sourceLinks.empty() && _triggers.empty()) == _gates.empty());
+  assert((_sourceLinks.empty() &&
+          _targetLinks.empty() && _triggers.empty()) == _gates.empty());
 }
 
 void GNet::onAddGate(Gate *gate, bool withLinks) {
@@ -219,7 +220,7 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
   }
 
   // Add the links to the source boundary.
-  if (gate->arity() == 0) {
+  if (gate->isSource() || gate->isValue()) {
     // If the gate is a pure source, add the source link.
     _sourceLinks.insert(Link(gid));
   } else {
@@ -233,10 +234,16 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
   }
 
   // Add the links to the target boundary.
-  for (auto link : gate->links()) {
-    const auto target = link.target;
-    if (!contains(target)) {
-      _targetLinks.insert(link);
+  if (gate->isTarget()) {
+    // If the gate is a pure target, add the target link.
+    _targetLinks.insert(Link(gid));
+  } else {
+    // Add the newly appeared boundary target links.
+    for (auto link : gate->links()) {
+      const auto target = link.target;
+      if (!contains(target)) {
+        _targetLinks.insert(link);
+      }
     }
   }
 
@@ -252,7 +259,7 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
   const auto gid = gate->id();
 
   // Remove the links from the source boundary.
-  if (gate->arity() == 0) {
+  if (gate->isSource() || gate->isValue()) {
     // If the gate is a pure source, remove the source link.
     _sourceLinks.erase(Link(gid));
   } else {
@@ -263,9 +270,15 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
     }
   }
 
-  // Remove the previously existing target links.
-  for (auto link : gate->links()) {
-    _targetLinks.erase(link);
+  // Remove the links from the target boundary.
+  if (gate->isTarget()) {
+    // If the gate is a pure target, remove the target link.
+    _targetLinks.erase(Link(gid));
+  } else {
+    // Remove the previously existing boundary target links.
+    for (auto link : gate->links()) {
+      _targetLinks.erase(link);
+    }
   }
 
   // Add the links that became boundary.

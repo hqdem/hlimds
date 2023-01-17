@@ -45,13 +45,13 @@ public:
   }
 
   /// Returns the gate w/ the given function and inputs.
-  static Gate *get(GateSymbol func, const SignalList &inputs) {
-    return static_cast<Gate*>(GateBase::get(func, inputs));
+  static Gate *get(uint32_t netId, GateSymbol func, const SignalList &inputs) {
+    return static_cast<Gate*>(GateBase::get(netId, func, inputs));
   }
 
   /// Saves the gate in the hash table.
-  static void add(Gate *gate) {
-    GateBase::add(gate);
+  static void add(uint32_t netId, Gate *gate) {
+    GateBase::add(netId, gate);
   }
 
   bool isSource() const {

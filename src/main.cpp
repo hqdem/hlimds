@@ -43,7 +43,8 @@ INITIALIZE_EASYLOGGINGPP
 struct RtlContext {
   using VNet = eda::rtl::model::Net;
   using GNet = eda::gate::model::GNet;
-  using Link = eda::gate::model::Gate::Link;
+  using Gate = eda::gate::model::Gate;
+  using Link = Gate::Link;
 
   using Library = eda::rtl::library::FLibraryDefault;
   using Compiler = eda::rtl::compiler::Compiler;
@@ -65,6 +66,24 @@ struct RtlContext {
 
   bool equal;
 };
+
+void dump(const GNet &net) {
+  std::cout << net << std::endl;
+
+  for (auto source : net.sourceLinks()) {
+    const auto *gate = RtlContext::Gate::get(source.target);
+    std::cout << *gate << std::endl;
+  }
+  for (auto target : net.targetLinks()) {
+    const auto *gate = RtlContext::Gate::get(target.source);
+    std::cout << *gate << std::endl;
+  }
+
+  std::cout << std::endl;
+  std::cout << "N=" << net.nGates() << std::endl;
+  std::cout << "I=" << net.nSourceLinks() << std::endl;
+  std::cout << "O=" << net.nTargetLinks() << std::endl;
+}
 
 bool parse(RtlContext &context) {
   LOG(INFO) << "RTL parse: " << context.file;
@@ -96,8 +115,7 @@ bool compile(RtlContext &context) {
   context.gnet0->sortTopologically();
 
   std::cout << "------ G-net #0 ------" << std::endl;
-  std::cout << *context.gnet0 << std::endl;
-  std::cout << "nodes=" << context.gnet0->nGates() << std::endl;
+  dump(*context.gnet0);
 
   return true;
 }
@@ -109,8 +127,7 @@ bool premap(RtlContext &context) {
   context.gnet1 = premapper.map(*context.gnet0, context.gmap);
 
   std::cout << "------ G-net #1 ------" << std::endl;
-  std::cout << *context.gnet1 << std::endl;
-  std::cout << "nodes=" << context.gnet1->nGates() << std::endl;
+  dump(*context.gnet1);
 
   return true;
 }
@@ -122,34 +139,33 @@ bool check(RtlContext &context) {
   LOG(INFO) << "RTL check";
 
   RtlContext::Checker checker;
-  GateBinding imap, omap, tmap;
+  GateBinding ibind, obind, tbind;
 
+  assert(context.gnet0->nSourceLinks() == context.gnet1->nSourceLinks());
+  assert(context.gnet0->nTargetLinks() == context.gnet1->nTargetLinks());
+
+  // Input-to-input correspondence.
   for (auto oldSourceLink : context.gnet0->sourceLinks()) {
     auto newSourceId = context.gmap[oldSourceLink.target];
-    imap.insert({oldSourceLink, Link(newSourceId)});
+    ibind.insert({oldSourceLink, Link(newSourceId)});
   }
 
-  for (auto oldTriggerId : context.gnet0->triggers()) {
-    auto newTriggerId = context.gmap[oldTriggerId];
-    tmap.insert({Link(oldTriggerId), Link(newTriggerId)});
+  // Output-to-output correspondence.
+  for (auto oldTargetLink : context.gnet0->targetLinks()) {
+    auto newTargetId = context.gmap[oldTargetLink.source];
+    obind.insert({oldTargetLink, Link(newTargetId)});
   }
 
-  // TODO: Here are only triggers.
+  // Trigger-to-trigger correspondence.
   for (auto oldTriggerId : context.gnet0->triggers()) {
     auto newTriggerId = context.gmap[oldTriggerId];
-    auto *oldTrigger = Gate::get(oldTriggerId);
-    auto *newTrigger = Gate::get(newTriggerId);
-
-    auto oldDataId = oldTrigger->input(0).node();
-    auto newDataId = newTrigger->input(0).node();
-
-    omap.insert({Link(oldDataId), Link(newDataId)});
+    tbind.insert({Link(oldTriggerId), Link(newTriggerId)});
   }
 
   RtlContext::Checker::Hints hints;
-  hints.sourceBinding = std::make_shared<GateBinding>(std::move(imap));
-  hints.targetBinding = std::make_shared<GateBinding>(std::move(omap));
-  hints.triggerBinding = std::make_shared<GateBinding>(std::move(tmap));
+  hints.sourceBinding  = std::make_shared<GateBinding>(std::move(ibind));
+  hints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
+  hints.triggerBinding = std::make_shared<GateBinding>(std::move(tbind));
 
   context.equal = checker.areEqual(*context.gnet0, *context.gnet1, hints);
   std::cout << "equivalent=" << context.equal << std::endl;

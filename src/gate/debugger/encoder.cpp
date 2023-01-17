@@ -19,10 +19,11 @@ void Encoder::encode(const GNet &net, uint16_t version) {
 }
 
 void Encoder::encode(const Gate &gate, uint16_t version) {
-  if (gate.isSource())
-    return;
-
   switch (gate.func()) {
+  case GateSymbol::IN:
+  case GateSymbol::OUT:
+    // Ignore input and output gates.
+    break;
   case GateSymbol::ONE:
     encodeFix(gate, true, version);
     break;

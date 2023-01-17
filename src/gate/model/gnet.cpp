@@ -220,7 +220,7 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
   }
 
   // Add the links to the source boundary.
-  if (gate->isSource() || gate->isValue()) {
+  if (gate->arity() == 0 /* Source, value, etc. */) {
     // If the gate is a pure source, add the source link.
     _sourceLinks.insert(Link(gid));
   } else {
@@ -259,7 +259,7 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
   const auto gid = gate->id();
 
   // Remove the links from the source boundary.
-  if (gate->isSource() || gate->isValue()) {
+  if (gate->arity() == 0 /* Source, value, etc. */) {
     // If the gate is a pure source, remove the source link.
     _sourceLinks.erase(Link(gid));
   } else {

@@ -33,7 +33,7 @@ TEST(ParserVTest, all) {
   const std::filesystem::path prefixPath = homePath / subCatalog;
   const std::filesystem::path prefixPathIn = prefixPath / "input";
   const std::filesystem::path prefixPathOut = prefixPath / "output";
-  std::string filenames = prefixPath / "verilog_filenames.txt";
+  const std::string filenames = prefixPath / "verilog_filenames.txt";
 
   std::ifstream in(filenames);
   std::string infile;

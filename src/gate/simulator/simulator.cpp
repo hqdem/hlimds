@@ -16,6 +16,7 @@ Compiled::OP Compiled::getOp(const Gate &gate) const {
   const auto n = gate.arity();
 
   switch (gate.func()) {
+  case GateSymbol::OUT   : return getNop(n);
   case GateSymbol::ZERO  : return getZero(n);
   case GateSymbol::ONE   : return getOne(n);
   case GateSymbol::NOP   : return getNop(n);

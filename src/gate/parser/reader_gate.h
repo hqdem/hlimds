@@ -70,7 +70,7 @@ public:
         auto &gate = data->gates[in];
         gate.id = data->gnet.newGate();
         data->gIds.emplace(gate.id, data->gates.size() - 1);
-        gate.kind = eda::gate::model::GateSymbol::NOP;
+        gate.kind = eda::gate::model::GateSymbol::IN;
         data->links[input] = {in, ""};
       }
     }
@@ -141,6 +141,7 @@ public:
           signals.emplace_back(eda::base::model::Event::ALWAYS, input);
         }
 
+        assert(!signals.empty());
         data->gnet.setGate(gateData.id, gateData.kind, signals);
       }
     }

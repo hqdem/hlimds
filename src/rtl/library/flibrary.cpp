@@ -45,7 +45,7 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
   }
 
   return targets;
-} 
+}
 
 FLibrary::Out FLibraryDefault::synth(size_t outSize,
                                      FuncSymbol func,
@@ -260,7 +260,6 @@ FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(GateSymbol func,
 
   return out;
 }
-
 
 FLibrary::Signal FLibraryDefault::invertIfNegative(const Signal &event, GNet &net) {
   switch (event.event()) {

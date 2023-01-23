@@ -28,7 +28,7 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
 
   Out out(outSize);
   for (size_t i = 0; i < out.size(); i++) {
-    out[i] = net.addGate((value[i] ? GateSymbol::ONE : GateSymbol::ZERO), {});
+    out[i] = value[i] ? net.addOne() : net.addZero();
   }
 
   return out;
@@ -41,7 +41,7 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
 
   Out targets(outSize);
   for (size_t i = 0; i < out.size(); i++) {
-    targets[i] = net.addGate(GateSymbol::OUT, {Signal::always(out[i])});
+    targets[i] = net.addOut(out[i]);
   }
 
   return targets;
@@ -97,27 +97,23 @@ FLibrary::Out FLibraryDefault::synth(const Out &out,
     assert(out.size() == x.size());
 
     for (size_t i = 0; i < out.size(); i++) {
-      auto f = (clock.isEdge() ? GateSymbol::DFF : GateSymbol::LATCH);
-      auto d = Signal::always(x[i]); // stored data
-
-      net.setGate(out[i], f, { d, clock });
+      auto func = (clock.isEdge() ? GateSymbol::DFF : GateSymbol::LATCH);
+      net.setGate(out[i], func, x[i] /* stored data */, clock.node());
     }
   } else {
     const auto &x = in[0];
     const auto &y = in[1];
     assert(x.size() == y.size() && out.size() == x.size());
 
-    auto edged = invertIfNegative(control[1], net);
-    auto reset = Signal::always(edged.node());
+    auto reset = invertIfNegative(control[1], net);
 
     for (size_t i = 0; i < out.size(); i++) {
-      auto d = Signal::always(x[i]); // stored data
-      auto v = Signal::always(y[i]); // reset value
-      auto n = Signal::always(net.addGate(GateSymbol::NOT, { v }));
-      auto r = Signal::level1(net.addGate(GateSymbol::AND, { n, reset }));
-      auto s = Signal::level1(net.addGate(GateSymbol::AND, { v, reset }));
+      auto val = y[i]; // reset value
+      auto neg = net.addNot(val);
+      auto rst = net.addAnd(neg, reset.node());
+      auto set = net.addAnd(val, reset.node());
 
-      net.setGate(out[i], GateSymbol::DFFrs, { d, clock, r, s });
+      net.setDffrs(out[i], x[i] /* stored data */, clock.node(), rst, set);
     }
   }
 
@@ -171,24 +167,18 @@ FLibrary::Out FLibraryDefault::synthAdder(Gate::Id x,
                                           Gate::Id carryIn,
                                           bool needsCarryOut,
                                           GNet &net) {
-  auto xWire = Signal::always(x);
-  auto yWire = Signal::always(y);
-  auto cWire = Signal::always(carryIn);
-
   // {z, carryOut}.
   Out out;
 
   // z = (x + y) + carryIn (mod 2).
-  auto xPlusY = Signal::always(net.addGate(GateSymbol::XOR, { xWire, yWire }));
-  out.push_back(net.addGate(GateSymbol::XOR, { xPlusY, cWire }));
+  auto xPlusY = net.addXor(x, y);
+  out.push_back(net.addXor(xPlusY, carryIn));
 
   if (needsCarryOut) {
     // carryOut = (x & y) | (x + y) & carryIn.
-    auto carryOutLhs = Signal::always(net.addGate(GateSymbol::AND,
-                                                  { xWire, yWire }));
-    auto carryOutRhs = Signal::always(net.addGate(GateSymbol::AND,
-                                                  { xPlusY, cWire }));
-    out.push_back(net.addGate(GateSymbol::OR, { carryOutLhs, carryOutRhs }));
+    auto carryOutLhs = net.addAnd(x, y);
+    auto carryOutRhs = net.addAnd(xPlusY, carryIn);
+    out.push_back(net.addOr(carryOutLhs, carryOutRhs));
   }
 
   return out;
@@ -210,10 +200,7 @@ FLibrary::Out FLibraryDefault::synthMux(size_t outSize,
       const GateIdList &x = in[j + n];
       assert(c.size() == 1 && out.size() == x.size());
 
-      auto cj0 = Signal::always(c[0]);
-      auto xji = Signal::always(x[i]);
-      auto id = net.addGate(GateSymbol::AND, { cj0, xji });
-
+      auto id = net.addAnd(c[0], x[i]);
       temp.push_back(Signal::always(id));
     }
 
@@ -234,8 +221,7 @@ FLibrary::Out FLibraryDefault::synthUnaryBitwiseOp(GateSymbol func,
 
   Out out(outSize);
   for (size_t i = 0; i < out.size(); i++) {
-    auto xi = Signal::always(x[i]);
-    out[i] = net.addGate(func, { xi });
+    out[i] = net.addGate(func, x[i]);
   }
 
   return out;
@@ -253,9 +239,7 @@ FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(GateSymbol func,
 
   Out out(outSize);
   for (size_t i = 0; i < out.size(); i++) {
-    auto xi = Signal::always(x[i]);
-    auto yi = Signal::always(y[i]);
-    out[i] = net.addGate(func, { xi, yi });
+    out[i] = net.addGate(func, x[i], y[i]);
   }
 
   return out;
@@ -268,12 +252,10 @@ FLibrary::Signal FLibraryDefault::invertIfNegative(const Signal &event, GNet &ne
     return Signal::posedge(event.node());
   case NEGEDGE:
     // Invert the clock signal.
-    return Signal::posedge(net.addGate(GateSymbol::NOT,
-                                       { Signal::always(event.node()) }));
+    return Signal::posedge(net.addNot(event.node()));
   case LEVEL0:
     // Invert the enable signal.
-    return Signal::level1(net.addGate(GateSymbol::NOT,
-                                      { Signal::always(event.node()) }));
+    return Signal::level1(net.addNot(event.node()));
   case LEVEL1:
     // Leave the enable signal unchanged.
     return Signal::level1(event.node());

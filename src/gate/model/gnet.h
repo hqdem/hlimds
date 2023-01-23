@@ -253,6 +253,200 @@ public:
   void removeGate(GateId gid);
 
   //===--------------------------------------------------------------------===//
+  // Convenience Methods
+  //===--------------------------------------------------------------------===//
+
+  /// Adds a gate w/o inputs.
+  GateId addGate(GateSymbol func) {
+    return addGate(func, SignalList{});
+  }
+
+  /// Changes the given gate to the gate w/o inputs.
+  void setGate(GateId gid, GateSymbol func) {
+    setGate(gid, func, SignalList{});
+  }
+
+  /// Adds a single-input gate.
+  GateId addGate(GateSymbol func, GateId arg) {
+    return addGate(func, {Signal::always(arg)});
+  }
+
+  /// Changes the given gate to the single-input gate.
+  void setGate(GateId gid, GateSymbol func, GateId arg) {
+    setGate(gid, func, {Signal::always(arg)});
+  }
+
+  /// Adds a two-inputs gate.
+  GateId addGate(GateSymbol func, GateId lhs, GateId rhs) {
+    return addGate(func, {Signal::always(lhs), Signal::always(rhs)});
+  }
+
+  /// Changes the given gate to the two-inputs gate.
+  void setGate(GateId gid, GateSymbol func, GateId lhs, GateId rhs) {
+    setGate(gid, func, {Signal::always(lhs), Signal::always(rhs)});
+  }
+
+  /// Adds an IN gate.
+  GateId addIn() {
+    return addGate(GateSymbol::IN);
+  }
+
+  /// Changes the given gate to IN.
+  void setIn(GateId gid) {
+    setGate(gid, GateSymbol::IN);
+  }
+
+  /// Adds an OUT gate.
+  GateId addOut(GateId arg) {
+    return addGate(GateSymbol::OUT, arg);
+  }
+
+  /// Changes the given gate to OUT.
+  void setOut(GateId gid, GateId arg) {
+    setGate(gid, GateSymbol::OUT, arg);
+  }
+
+  /// Adds a ZERO gate.
+  GateId addZero() {
+    return addGate(GateSymbol::ZERO);
+  }
+
+  /// Changes the given gate to ZERO.
+  void setZero(GateId gid) {
+    setGate(gid, GateSymbol::ZERO);
+  }
+
+  /// Adds a ONE gate.
+  GateId addOne() {
+    return addGate(GateSymbol::ONE);
+  }
+
+  /// Changes the given gate to ONE.
+  void setOne(GateId gid) {
+    setGate(gid, GateSymbol::ONE);
+  }
+
+  /// Adds a NOP gate.
+  GateId addNop(GateId arg) {
+    return addGate(GateSymbol::NOP, arg);
+  }
+
+  /// Changes the given gate to NOP.
+  void setNop(GateId gid, GateId arg) {
+    setGate(gid, GateSymbol::NOP, arg);
+  }
+
+  /// Adds a NOT gate.
+  GateId addNot(GateId arg) {
+    return addGate(GateSymbol::NOT, arg);
+  }
+
+  /// Changes the given gate to NOT.
+  void setNot(GateId gid, GateId arg) {
+    setGate(gid, GateSymbol::NOT, arg);
+  }
+
+  /// Adds an AND gate.
+  GateId addAnd(GateId lhs, GateId rhs) {
+    return addGate(GateSymbol::AND, lhs, rhs);
+  }
+
+  /// Changes the given gate to AND.
+  void setAnd(GateId gid, GateId lhs, GateId rhs) {
+    setGate(gid, GateSymbol::AND, lhs, rhs);
+  }
+
+  /// Adds an OR gate.
+  GateId addOr(GateId lhs, GateId rhs) {
+    return addGate(GateSymbol::OR, lhs, rhs);
+  }
+
+  /// Changes the given gate to OR.
+  void setOr(GateId gid, GateId lhs, GateId rhs) {
+    setGate(gid, GateSymbol::OR, lhs, rhs);
+  }
+
+  /// Adds an XOR gate.
+  GateId addXor(GateId lhs, GateId rhs) {
+    return addGate(GateSymbol::XOR, lhs, rhs);
+  }
+
+  /// Changes the given gate to XOR.
+  void setXor(GateId gid, GateId lhs, GateId rhs) {
+    setGate(gid, GateSymbol::XOR, lhs, rhs);
+  }
+
+  /// Adds a NAND gate.
+  GateId addNand(GateId lhs, GateId rhs) {
+    return addGate(GateSymbol::NAND, lhs, rhs);
+  }
+
+  /// Changes the given gate to NAND.
+  void setNand(GateId gid, GateId lhs, GateId rhs) {
+    setGate(gid, GateSymbol::NAND, lhs, rhs);
+  }
+
+  /// Adds a NOR gate.
+  GateId addNor(GateId lhs, GateId rhs) {
+    return addGate(GateSymbol::NOR, lhs, rhs);
+  }
+
+  /// Changes the given gate to NOR.
+  void setNor(GateId gid, GateId lhs, GateId rhs) {
+    setGate(gid, GateSymbol::NOR, lhs, rhs);
+  }
+
+  /// Adds an XNOR gate.
+  GateId addXnor(GateId lhs, GateId rhs) {
+    return addGate(GateSymbol::XNOR, lhs, rhs);
+  }
+
+  /// Changes the given gate to XNOR.
+  void setXnor(GateId gid, GateId lhs, GateId rhs) {
+    setGate(gid, GateSymbol::XNOR, lhs, rhs);
+  }
+
+  /// Adds a LATCH gate.
+  GateId addLatch(GateId d, GateId ena) {
+    return addGate(GateSymbol::LATCH, {Signal::always(d), Signal::level1(ena)});
+  }
+
+  /// Changes the given gate to LATCH.
+  void setLatch(GateId gid, GateId d, GateId ena) {
+    setGate(gid, GateSymbol::LATCH, {Signal::always(d), Signal::level1(ena)});
+  }
+
+  /// Adds a DFF gate.
+  GateId addDff(GateId d, GateId clk) {
+    return addGate(GateSymbol::DFF, {Signal::always(d), Signal::posedge(clk)});
+  }
+
+  /// Changes the given gate to DFF.
+  void setDff(GateId gid, GateId d, GateId clk) {
+    setGate(gid, GateSymbol::DFF, {Signal::always(d), Signal::posedge(clk)});
+  }
+
+  /// Adds a DFFrs gate.
+  GateId addDffrs(GateId d, GateId clk, GateId rst, GateId set) {
+    return addGate(GateSymbol::DFFrs, {
+               Signal::always(d),
+               Signal::posedge(clk),
+               Signal::level1(rst),
+               Signal::level1(set)
+           });
+  }
+
+  /// Changes the given gate to DFFrs.
+  void setDffrs(GateId gid, GateId d, GateId clk, GateId rst, GateId set) {
+    setGate(gid, GateSymbol::DFFrs, {
+        Signal::always(d),
+        Signal::posedge(clk),
+        Signal::level1(rst),
+        Signal::level1(set)
+    });
+  }
+
+  //===--------------------------------------------------------------------===//
   // Subnets 
   //===--------------------------------------------------------------------===//
 

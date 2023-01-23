@@ -24,13 +24,12 @@ static std::unique_ptr<GNet> makeNet(GateSymbol gate,
   auto net = std::make_unique<GNet>();
 
   for (unsigned i = 0; i < N; i++) {
-    const Gate::Id inputId = net->newGate();
-    const Gate::Signal input = Gate::Signal::always(inputId);
-    inputs.push_back(input);
+    const Gate::Id inputId = net->addIn();
+    inputs.push_back(Gate::Signal::always(inputId));
   }
 
   auto gateId = net->addGate(gate, inputs);
-  outputId = net->addGate(GateSymbol::OUT, {Gate::Signal::always(gateId)});
+  outputId = net->addOut(gateId);
 
   net->sortTopologically();
   return net;
@@ -45,17 +44,15 @@ static std::unique_ptr<GNet> makeNetn(GateSymbol gate,
 
   Gate::SignalList andInputs;
   for (unsigned i = 0; i < N; i++) {
-    const Gate::Id inputId = net->newGate();
-    const Gate::Signal input = Gate::Signal::always(inputId);
-    inputs.push_back(input);
+    const Gate::Id inputId = net->addIn();
+    inputs.push_back(Gate::Signal::always(inputId));
 
-    const Gate::Id notGateId = net->addGate(GateSymbol::NOT, {input});
-    const Gate::Signal andInput = Gate::Signal::always(notGateId);
-    andInputs.push_back(andInput);
+    const Gate::Id notGateId = net->addNot(inputId);
+    andInputs.push_back(Gate::Signal::always(notGateId));
   }
 
   auto gateId = net->addGate(gate, inputs);
-  outputId = net->addGate(GateSymbol::OUT, {Gate::Signal::always(gateId)});
+  outputId = net->addOut(gateId);
 
   net->sortTopologically();
   return net;
@@ -200,7 +197,7 @@ std::unique_ptr<GNet> makeRand(std::size_t nGates,
         // If a gate depends solely on the gate being removed,
         // it will have no inputs (became an input).
         if (allFromSource) {
-          net->setGate(target->id(), GateSymbol::IN, {});
+          net->setIn(target->id());
         }
       } // for: source links.
 

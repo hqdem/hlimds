@@ -17,6 +17,43 @@
 #include <unordered_set>
 #include <vector>
 
+/// Defines the add/set methods for a gate.
+#define DEFINE_GATE_METHODS(gateSymbol, addMethod, setMethod)\
+  GateId addMethod(const SignalList &args) {\
+    return addGate(gateSymbol, args);\
+  }\
+  void setMethod(GateId gid, const SignalList &args) {\
+    setGate(gid, gateSymbol, args);\
+  }
+
+/// Defines the add/set methods for a nullary gate.
+#define DEFINE_GATE0_METHODS(gateSymbol, addMethod, setMethod)\
+  GateId addMethod() {\
+    return addGate(gateSymbol);\
+  }\
+  void setMethod(GateId gid) {\
+    setGate(gid, gateSymbol);\
+  }
+
+/// Defines the add/set methods for a unary gate.
+#define DEFINE_GATE1_METHODS(gateSymbol, addMethod, setMethod)\
+  template<typename T> GateId addMethod(const T &arg) {\
+    return addGate(gateSymbol, arg);\
+  }\
+  template<typename T> void setMethod(GateId gid, const T &arg) {\
+    setGate(gid, gateSymbol, arg);\
+  }
+
+/// Defines the add/set methods for a binary gate.
+#define DEFINE_GATE2_METHODS(gateSymbol, addMethod, setMethod)\
+  DEFINE_GATE_METHODS(gateSymbol, addMethod, setMethod)\
+  template<typename T> GateId addMethod(const T &lhs, const T &rhs) {\
+    return addGate(gateSymbol, lhs, rhs);\
+  }\
+  template<typename T> void setMethod(GateId gid, const T &lhs, const T &rhs) {\
+    setGate(gid, gateSymbol, lhs, rhs);\
+  }
+
 namespace eda::gate::premapper {
   class PreMapper;
 } // namespace eda::gate::premapper
@@ -267,144 +304,57 @@ public:
   }
 
   /// Adds a single-input gate.
+  GateId addGate(GateSymbol func, const Signal &arg) {
+    return addGate(func, SignalList{arg});
+  }
+
+  /// Adds a single-input gate.
   GateId addGate(GateSymbol func, GateId arg) {
-    return addGate(func, {Signal::always(arg)});
+    return addGate(func, Signal::always(arg));
+  }
+
+  /// Changes the given gate to the single-input gate.
+  void setGate(GateId gid, GateSymbol func, const Signal &arg) {
+    setGate(gid, func, SignalList{arg});
   }
 
   /// Changes the given gate to the single-input gate.
   void setGate(GateId gid, GateSymbol func, GateId arg) {
-    setGate(gid, func, {Signal::always(arg)});
+    setGate(gid, func, Signal::always(arg));
+  }
+
+  /// Adds a two-inputs gate.
+  GateId addGate(GateSymbol func, const Signal &lhs, const Signal &rhs) {
+    return addGate(func, SignalList{lhs, rhs});
   }
 
   /// Adds a two-inputs gate.
   GateId addGate(GateSymbol func, GateId lhs, GateId rhs) {
-    return addGate(func, {Signal::always(lhs), Signal::always(rhs)});
+    return addGate(func, Signal::always(lhs), Signal::always(rhs));
+  }
+
+  /// Changes the given gate to the two-inputs gate.
+  void setGate(GateId gid, GateSymbol func, const Signal &lhs, const Signal &rhs) {
+    setGate(gid, func, SignalList{lhs, rhs});
   }
 
   /// Changes the given gate to the two-inputs gate.
   void setGate(GateId gid, GateSymbol func, GateId lhs, GateId rhs) {
-    setGate(gid, func, {Signal::always(lhs), Signal::always(rhs)});
+    setGate(gid, func, Signal::always(lhs), Signal::always(rhs));
   }
 
-  /// Adds an IN gate.
-  GateId addIn() {
-    return addGate(GateSymbol::IN);
-  }
-
-  /// Changes the given gate to IN.
-  void setIn(GateId gid) {
-    setGate(gid, GateSymbol::IN);
-  }
-
-  /// Adds an OUT gate.
-  GateId addOut(GateId arg) {
-    return addGate(GateSymbol::OUT, arg);
-  }
-
-  /// Changes the given gate to OUT.
-  void setOut(GateId gid, GateId arg) {
-    setGate(gid, GateSymbol::OUT, arg);
-  }
-
-  /// Adds a ZERO gate.
-  GateId addZero() {
-    return addGate(GateSymbol::ZERO);
-  }
-
-  /// Changes the given gate to ZERO.
-  void setZero(GateId gid) {
-    setGate(gid, GateSymbol::ZERO);
-  }
-
-  /// Adds a ONE gate.
-  GateId addOne() {
-    return addGate(GateSymbol::ONE);
-  }
-
-  /// Changes the given gate to ONE.
-  void setOne(GateId gid) {
-    setGate(gid, GateSymbol::ONE);
-  }
-
-  /// Adds a NOP gate.
-  GateId addNop(GateId arg) {
-    return addGate(GateSymbol::NOP, arg);
-  }
-
-  /// Changes the given gate to NOP.
-  void setNop(GateId gid, GateId arg) {
-    setGate(gid, GateSymbol::NOP, arg);
-  }
-
-  /// Adds a NOT gate.
-  GateId addNot(GateId arg) {
-    return addGate(GateSymbol::NOT, arg);
-  }
-
-  /// Changes the given gate to NOT.
-  void setNot(GateId gid, GateId arg) {
-    setGate(gid, GateSymbol::NOT, arg);
-  }
-
-  /// Adds an AND gate.
-  GateId addAnd(GateId lhs, GateId rhs) {
-    return addGate(GateSymbol::AND, lhs, rhs);
-  }
-
-  /// Changes the given gate to AND.
-  void setAnd(GateId gid, GateId lhs, GateId rhs) {
-    setGate(gid, GateSymbol::AND, lhs, rhs);
-  }
-
-  /// Adds an OR gate.
-  GateId addOr(GateId lhs, GateId rhs) {
-    return addGate(GateSymbol::OR, lhs, rhs);
-  }
-
-  /// Changes the given gate to OR.
-  void setOr(GateId gid, GateId lhs, GateId rhs) {
-    setGate(gid, GateSymbol::OR, lhs, rhs);
-  }
-
-  /// Adds an XOR gate.
-  GateId addXor(GateId lhs, GateId rhs) {
-    return addGate(GateSymbol::XOR, lhs, rhs);
-  }
-
-  /// Changes the given gate to XOR.
-  void setXor(GateId gid, GateId lhs, GateId rhs) {
-    setGate(gid, GateSymbol::XOR, lhs, rhs);
-  }
-
-  /// Adds a NAND gate.
-  GateId addNand(GateId lhs, GateId rhs) {
-    return addGate(GateSymbol::NAND, lhs, rhs);
-  }
-
-  /// Changes the given gate to NAND.
-  void setNand(GateId gid, GateId lhs, GateId rhs) {
-    setGate(gid, GateSymbol::NAND, lhs, rhs);
-  }
-
-  /// Adds a NOR gate.
-  GateId addNor(GateId lhs, GateId rhs) {
-    return addGate(GateSymbol::NOR, lhs, rhs);
-  }
-
-  /// Changes the given gate to NOR.
-  void setNor(GateId gid, GateId lhs, GateId rhs) {
-    setGate(gid, GateSymbol::NOR, lhs, rhs);
-  }
-
-  /// Adds an XNOR gate.
-  GateId addXnor(GateId lhs, GateId rhs) {
-    return addGate(GateSymbol::XNOR, lhs, rhs);
-  }
-
-  /// Changes the given gate to XNOR.
-  void setXnor(GateId gid, GateId lhs, GateId rhs) {
-    setGate(gid, GateSymbol::XNOR, lhs, rhs);
-  }
+  DEFINE_GATE0_METHODS(GateSymbol::IN,   addIn,   setIn)
+  DEFINE_GATE1_METHODS(GateSymbol::OUT,  addOut,  setOut)
+  DEFINE_GATE0_METHODS(GateSymbol::ZERO, addZero, setZero)
+  DEFINE_GATE0_METHODS(GateSymbol::ONE,  addOne,  setOne)
+  DEFINE_GATE1_METHODS(GateSymbol::NOP,  addNop,  setNop)
+  DEFINE_GATE1_METHODS(GateSymbol::NOT,  addNot,  setNot)
+  DEFINE_GATE2_METHODS(GateSymbol::AND,  addAnd,  setAnd)
+  DEFINE_GATE2_METHODS(GateSymbol::OR,   addOr,   setOr)
+  DEFINE_GATE2_METHODS(GateSymbol::XOR,  addXor,  setXor)
+  DEFINE_GATE2_METHODS(GateSymbol::NAND, addNand, setNand)
+  DEFINE_GATE2_METHODS(GateSymbol::NOR,  addNor,  setNor)
+  DEFINE_GATE2_METHODS(GateSymbol::XNOR, addXnor, setXnor)
 
   /// Adds a LATCH gate.
   GateId addLatch(GateId d, GateId ena) {

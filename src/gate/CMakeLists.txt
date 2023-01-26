@@ -5,9 +5,9 @@ add_library(Gate OBJECT
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
-  model/hMetis_formatter.cpp
   premapper/aigmapper.cpp
   premapper/premapper.cpp
+  printer/hMetisPrinter.cpp
   simulator/simulator.cpp
 )
 add_library(Utopia::Gate ALIAS Gate)

@@ -17,7 +17,7 @@
 
 #include "gtest/gtest.h"
 
-#include "gate/model/hMetis_formatter.h"
+#include "gate/printer/hMetisPrinter.h"
 #include "util/partition_hgraph.h"
 
 using namespace lorina;
@@ -53,7 +53,7 @@ TEST(ParserVTest, all) {
     reader.dotPrint(outFilename);
     //reader.print();
 
-    FormatterHMetis metis(*reader.getGnet());
+    HMetisPrinter metis(*reader.getGnet());
     HyperGraph graph(metis.getWeights(), metis.getEptr(),
                      metis.getEind());
     graph.graphOutput(outBaseFilename);

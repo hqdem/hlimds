@@ -9,6 +9,7 @@
 #pragma once
 
 #include <fstream>
+#include <iostream>
 
 #include <lorina/verilog.hpp>
 
@@ -25,7 +26,7 @@ private:
 
     std::unordered_map<std::string, GateData> gates;
     std::unordered_map<eda::gate::model::GNet::GateId,
-            eda::gate::model::GNet::GateId> gIds;
+      eda::gate::model::GNet::GateId> gIds;
     // Wire name / <source, target>
     std::unordered_map<std::string, std::vector<std::string>> links;
 
@@ -85,7 +86,9 @@ public:
                 std::string const &size) const override {
     if (data->startParse) {
       for (auto &name: wires) {
-        data->links[name].resize(2);
+        auto &gates = data->links[name];
+        gates.reserve(3);
+        gates.resize(1);
       }
     }
   }
@@ -100,10 +103,10 @@ public:
    *             a_i is a name of a signals in moduleName and b_i is a name of
    * a signal in instName.
    */
-   void on_module_instantiation(
-          std::string const &moduleName, std::vector<std::string> const &params,
-          std::string const &instName,
-          std::vector<std::pair<std::string, std::string>> const &args) const override {
+  void on_module_instantiation(
+    std::string const &moduleName, std::vector<std::string> const &params,
+    std::string const &instName,
+    std::vector<std::pair<std::string, std::string>> const &args) const override {
     if (data->startParse) {
       auto &gateData = data->gates[instName];
       gateData.id = data->gnet.newGate();
@@ -125,23 +128,25 @@ public:
       //  Collect links to make inputs arrays.
       for (auto &[name, links]: data->links) {
         auto source = data->gates.find(links[0]);
-        auto target = data->gates.find(links[1]);
 
-        if (source != data->gates.end() && target != data->gates.end()) {
-          target->second.inputs.push_back(source->second.id);
+        for (size_t i = 1; i < links.size(); ++i) {
+          auto target = data->gates.find(links[i]);
+          if (source != data->gates.end() && target != data->gates.end()) {
+            target->second.inputs.push_back(source->second.id);
+          }
         }
-      }
 
-      //  By that moment all gates are created - modifying them.
+      }
+      //  All gates are created - modifying them.
       for (const auto &[name, gateData]: data->gates) {
-        std::vector<eda::base::model::Signal<eda::gate::model::GNet::GateId>> signals;
+        std::vector<eda::base::model::Signal < eda::gate::model::GNet::GateId>>
+        signals;
         signals.reserve(gateData.inputs.size());
 
         for (auto input: gateData.inputs) {
           signals.emplace_back(eda::base::model::Event::ALWAYS, input);
         }
 
-        assert(!signals.empty());
         data->gnet.setGate(gateData.id, gateData.kind, signals);
       }
     }
@@ -182,17 +187,13 @@ public:
 
 private:
   void insertLink(const std::string &name, const std::string &instName,
-                  bool gate) const {
+                  bool out) const {
     auto &link = data->links[name];
-    if (link[gate].empty()) {
-      link[gate] = instName;
+    if (out) {
+      link.emplace_back(instName);
     } else {
-      std::string nickname = name;
-      while (data->links.find(nickname) != data->links.end()) {
-        nickname += "#2";
-      }
-      auto &link2 = data->links[nickname] = link;
-      link2[gate] = instName;
+      assert(link[0].empty());
+      link[0] = instName;
     }
   }
 

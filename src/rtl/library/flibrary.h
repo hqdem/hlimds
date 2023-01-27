@@ -42,27 +42,27 @@ struct FLibrary {
   /// Synthesizes the gate-level net for the given value.
   virtual Out synth(size_t outSize,
                     const Value &value,
-                    GNet &net) = 0;
+                    GNet &net) const = 0;
 
   /// Synthesizes the gate-level net for the given output.
   virtual Out synth(size_t outSize,
                     const Out &out,
-                    GNet &net) = 0;
+                    GNet &net) const = 0;
 
   /// Synthesizes the gate-level net for the given function.
   virtual Out synth(size_t outSize,
                     FuncSymbol func,
                     const In &in,
-                    GNet &net) = 0;
+                    GNet &net) const = 0;
 
   /// Synthesizes the gate-level net for the given register.
   virtual Out alloc(size_t outSize,
-                    GNet &net) = 0;
+                    GNet &net) const = 0;
 
   virtual Out synth(const Out &out, // allocated in advance
                     const In &in,
                     const SignalList &control,
-                    GNet &net) = 0;
+                    GNet &net) const = 0;
 
   virtual ~FLibrary() {} 
 };
@@ -82,24 +82,24 @@ public:
 
   Out synth(size_t outSize,
             const Value &value,
-            GNet &net) override;
+            GNet &net) const override;
 
   Out synth(size_t outSize,
             const Out &out,
-            GNet &net) override;
+            GNet &net) const override;
 
   Out synth(size_t outSize,
             FuncSymbol func,
             const In &in,
-            GNet &net) override;
+            GNet &net) const override;
 
   Out alloc(size_t outSize,
-            GNet &net) override;
+            GNet &net) const override;
 
   Out synth(const Out &out,
             const In &in,
             const SignalList &control,
-            GNet &net) override;
+            GNet &net) const override;
 
 private:
   FLibraryDefault() {}

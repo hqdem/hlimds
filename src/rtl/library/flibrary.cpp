@@ -23,7 +23,7 @@ bool FLibraryDefault::supports(FuncSymbol func) const {
 
 FLibrary::Out FLibraryDefault::synth(size_t outSize,
                                      const Value &value,
-                                     GNet &net) {
+                                     GNet &net) const {
   assert(outSize == value.size());
 
   Out out(outSize);
@@ -36,7 +36,7 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
 
 FLibrary::Out FLibraryDefault::synth(size_t outSize,
                                      const Out &out,
-                                     GNet &net) {
+                                     GNet &net) const {
   assert(outSize == out.size());
 
   Out targets(outSize);
@@ -50,7 +50,7 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
 FLibrary::Out FLibraryDefault::synth(size_t outSize,
                                      FuncSymbol func,
                                      const In &in,
-                                     GNet &net) {
+                                     GNet &net) const {
   switch (func) {
   case FuncSymbol::NOP:
     return synthUnaryBitwiseOp(GateSymbol::NOP, outSize, in, net);
@@ -74,7 +74,7 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
   }
 }
 
-FLibrary::Out FLibraryDefault::alloc(size_t outSize, GNet &net) {
+FLibrary::Out FLibraryDefault::alloc(size_t outSize, GNet &net) const {
   Out out(outSize);
   for (size_t i = 0; i < out.size(); i++) {
     out[i] = net.newGate();
@@ -86,7 +86,7 @@ FLibrary::Out FLibraryDefault::alloc(size_t outSize, GNet &net) {
 FLibrary::Out FLibraryDefault::synth(const Out &out,
                                      const In &in,
                                      const SignalList &control,
-                                     GNet &net) {
+                                     GNet &net) const {
   assert(control.size() == 1 || control.size() == 2);
   assert(control.size() == in.size());
 

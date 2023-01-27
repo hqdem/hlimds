@@ -25,12 +25,13 @@ using namespace eda::utils;
 
 namespace eda::rtl::compiler {
 
-std::unique_ptr<GNet> Compiler::compile(const Net &net) {
+std::unique_ptr<GNet> Compiler::compile(const Net &net) const {
+  // Initialize correspondence between vnodes and gates.
+  VNodeIdMap map;
+  map.reserve(1024*1024);
+
   // Create a new gate-level net.
   auto gnet = std::make_unique<GNet>();
-
-  // Initialize correspondence between vnodes and gates.
-  _outputs.clear();
 
   // To cut through the cycles, synthesis of registers is postponed.
   VNode::List registers;
@@ -40,98 +41,105 @@ std::unique_ptr<GNet> Compiler::compile(const Net &net) {
   for (auto *vnode: net.vnodes()) {
     switch (vnode->kind()) {
     case VNode::SRC:
-      synthSrc(vnode, *gnet);
+      synthSrc(vnode, *gnet, map);
       break;
     case VNode::VAL:
-      synthVal(vnode, *gnet);
+      synthVal(vnode, *gnet, map);
       break;
     case VNode::FUN:
-      synthFun(vnode, *gnet);
+      synthFun(vnode, *gnet, map);
       break;
     case VNode::MUX:
-      synthMux(vnode, *gnet);
+      synthMux(vnode, *gnet, map);
       break;
     case VNode::REG:
-      allocReg(vnode, *gnet);
+      allocReg(vnode, *gnet, map);
       registers.push_back(vnode);
       break;
     }
 
     if (vnode->isOutput()) {
       // Allocate output pseudo gates.
-      synthOut(vnode, *gnet);
+      synthOut(vnode, *gnet, map);
     }
   }
 
   // Synthesize gates for the postponed registers.
   for (auto *vnode: registers) {
-    synthReg(vnode, *gnet);
+    synthReg(vnode, *gnet, map);
   }
 
   return gnet;
 }
 
-void Compiler::synthSrc(const VNode *vnode, GNet &net) {
-  auto out = _library.alloc(vnode->width(), net);
-  _outputs.insert({vnode->id(), out});
+void Compiler::synthSrc(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
+  auto outputs = _library.alloc(vnode->width(), net);
+  map.emplace(vnode->id(), outputs);
 }
 
-void Compiler::synthVal(const VNode *vnode, GNet &net) {
-  auto out = _library.synth(vnode->width(), vnode->value(), net);
-  _outputs.insert({vnode->id(), out});
+void Compiler::synthVal(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
+  auto outputs = _library.synth(vnode->width(), vnode->value(), net);
+  map.emplace(vnode->id(), outputs);
 }
 
-void Compiler::synthOut(const VNode *vnode, GNet &net) {
-  _library.synth(vnode->width(), out(vnode), net);
+void Compiler::synthOut(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
+  auto outputs = out(vnode, map);
+  _library.synth(vnode->width(), outputs, net);
 }
 
-void Compiler::synthFun(const VNode *vnode, GNet &net) {
+void Compiler::synthFun(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
   assert(_library.supports(vnode->func()));
-  auto out = _library.synth(vnode->width(), vnode->func(), in(vnode), net);
-  _outputs.insert({vnode->id(), out});
+
+  auto inputs = in(vnode, map);
+  auto outputs = _library.synth(vnode->width(), vnode->func(), inputs, net);
+  map.emplace(vnode->id(), outputs);
 }
 
-void Compiler::synthMux(const VNode *vnode, GNet &net) {
+void Compiler::synthMux(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
   assert(_library.supports(FuncSymbol::MUX));
-  auto out = _library.synth(vnode->width(), FuncSymbol::MUX, in(vnode), net);
-  _outputs.insert({vnode->id(), out});
+
+  auto inputs = in(vnode, map);
+  auto outputs = _library.synth(vnode->width(), FuncSymbol::MUX, inputs, net);
+  map.emplace(vnode->id(), outputs);
 }
 
-void Compiler::allocReg(const VNode *vnode, GNet &net) {
-  auto out = _library.alloc(vnode->width(), net);
-  _outputs.insert({vnode->id(), out});
+void Compiler::allocReg(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
+  auto outputs = _library.alloc(vnode->width(), net);
+  map.emplace(vnode->id(), outputs);
 }
 
-void Compiler::synthReg(const VNode *vnode, GNet &net) {
+void Compiler::synthReg(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
   assert(vnode->nSignals() == 1 || vnode->nSignals() == 2);
 
   GNet::SignalList control;
   for (const auto &signal: vnode->signals()) {
-    const auto &signalOut = out(signal.node());
+    const auto &signalOut = out(signal.node(), map);
     assert(signalOut.size() == 1);
     control.push_back(GNet::Signal(signal.event(), signalOut[0]));
   }
 
-  _library.synth(out(vnode), in(vnode), control, net);
+  auto inputs = in(vnode, map);
+  auto outputs = out(vnode, map);
+  _library.synth(outputs, inputs, control, net);
 }
 
-GNet::In Compiler::in(const VNode *vnode) const {
+GNet::In Compiler::in(const VNode *vnode, const VNodeIdMap &map) const {
   GNet::In in(vnode->arity());
   for (size_t i = 0; i < vnode->arity(); i++) {
-    in[i] = out(vnode->input(i).node());
+    in[i] = out(vnode->input(i).node(), map);
   }
 
   return in;
 }
 
-const GNet::Out &Compiler::out(const VNode *vnode) const {
-  return out(vnode->id());
+const GNet::Out &Compiler::out(const VNode *vnode, const VNodeIdMap &map) const {
+  return out(vnode->id(), map);
 }
 
-const GNet::Out &Compiler::out(VNode::Id vnodeId) const {
-  auto i = _outputs.find(vnodeId);
-  assert(i != _outputs.end());
+const GNet::Out &Compiler::out(VNode::Id vnodeId, const VNodeIdMap &map) const {
+  auto i = map.find(vnodeId);
+  assert(i != map.end());
   return i->second;
 }
 

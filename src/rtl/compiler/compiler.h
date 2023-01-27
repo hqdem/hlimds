@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "base/engine/engine.h"
 #include "gate/model/gnet.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
@@ -27,32 +28,45 @@ namespace eda::rtl::compiler {
  * \brief Implements a gate-level net compiler (logic synthesizer).
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
-class Compiler final {
+class Compiler final : public eda::base::engine::Engine {
+  using Context = eda::base::engine::Context;
+  using Engine = eda::base::engine::Engine;
+  using Status = eda::base::engine::Status;
+  using VNodeIdMap = std::unordered_map<VNode::Id, GNet::Out>;
+
 public:
-  Compiler(FLibrary &library): _library(library) {
-    _outputs.reserve(1024*1024);
+  static constexpr auto ID = "rtl.compiler";
+
+  Compiler(FLibrary &library):
+      Engine(ID), _library(library) {}
+
+  /// Executes the engine.
+  Status execute(const Context &context) const override {
+    const auto &net = context.store.get<Net>("vnet");
+
+    auto gnet = compile(net);
+    context.store.add<std::unique_ptr<GNet>>("gnet0", std::move(gnet));
+
+    return Status::SUCCESS;
   }
 
   /// Compiles the gate-level net from the RTL net.
-  std::unique_ptr<GNet> compile(const Net &net);
+  std::unique_ptr<GNet> compile(const Net &net) const;
 
 private:
-  void synthSrc(const VNode *vnode, GNet &net);
-  void synthVal(const VNode *vnode, GNet &net);
-  void synthOut(const VNode *vnode, GNet &net);
-  void synthFun(const VNode *vnode, GNet &net);
-  void synthMux(const VNode *vnode, GNet &net);
-  void allocReg(const VNode *vnode, GNet &net);
-  void synthReg(const VNode *vnode, GNet &net);
+  void synthSrc(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
+  void synthVal(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
+  void synthOut(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
+  void synthFun(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
+  void synthMux(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
+  void allocReg(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
+  void synthReg(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
 
-  GNet::In in(const VNode *vnode) const;
-  const GNet::Out &out(const VNode *vnode) const;
-  const GNet::Out &out(VNode::Id vnodeId) const;
+  GNet::In in(const VNode *vnode, const VNodeIdMap &map) const;
+  const GNet::Out &out(const VNode *vnode, const VNodeIdMap &map) const;
+  const GNet::Out &out(VNode::Id vnodeId, const VNodeIdMap &map) const;
 
-  // Maps vnodes to the identifiers of their lower bits' gates.
-  std::unordered_map<VNode::Id, GNet::Out> _outputs;
-
-  FLibrary &_library;
+  const FLibrary &_library;
 };
 
 } // namespace eda::rtl::compiler

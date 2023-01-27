@@ -17,7 +17,7 @@
 
 #include "gtest/gtest.h"
 
-#include "gate/printer/hMetisPrinter.h"
+#include "gate/printer/hmetis_printer.h"
 #include "util/partition_hgraph.h"
 
 using namespace lorina;

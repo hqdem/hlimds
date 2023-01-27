@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "hMetisPrinter.h"
+#include "hmetis_printer.h"
 
 HMetisPrinter::HMetisPrinter(const eda::gate::model::GNet &net) {
 

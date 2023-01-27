@@ -21,9 +21,8 @@ bool FLibraryDefault::supports(FuncSymbol func) const {
   return true;
 }
 
-FLibrary::Out FLibraryDefault::synth(size_t outSize,
-                                     const Value &value,
-                                     GNet &net) const {
+FLibrary::Out FLibraryDefault::synth(
+    size_t outSize, const Value &value, GNet &net) const {
   assert(outSize == value.size());
 
   Out out(outSize);
@@ -34,9 +33,8 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
   return out;
 }
 
-FLibrary::Out FLibraryDefault::synth(size_t outSize,
-                                     const Out &out,
-                                     GNet &net) const {
+FLibrary::Out FLibraryDefault::synth(
+    size_t outSize, const Out &out, GNet &net) const {
   assert(outSize == out.size());
 
   Out targets(outSize);
@@ -47,10 +45,8 @@ FLibrary::Out FLibraryDefault::synth(size_t outSize,
   return targets;
 }
 
-FLibrary::Out FLibraryDefault::synth(size_t outSize,
-                                     FuncSymbol func,
-                                     const In &in,
-                                     GNet &net) const {
+FLibrary::Out FLibraryDefault::synth(
+    size_t outSize, FuncSymbol func, const In &in, GNet &net) const {
   switch (func) {
   case FuncSymbol::NOP:
     return synthUnaryBitwiseOp(GateSymbol::NOP, outSize, in, net);
@@ -83,10 +79,8 @@ FLibrary::Out FLibraryDefault::alloc(size_t outSize, GNet &net) const {
   return out;
 }
 
-FLibrary::Out FLibraryDefault::synth(const Out &out,
-                                     const In &in,
-                                     const SignalList &control,
-                                     GNet &net) const {
+FLibrary::Out FLibraryDefault::synth(
+    const Out &out, const In &in, const SignalList &control, GNet &net) const {
   assert(control.size() == 1 || control.size() == 2);
   assert(control.size() == in.size());
 
@@ -121,15 +115,13 @@ FLibrary::Out FLibraryDefault::synth(const Out &out,
   return out;
 }
 
-FLibrary::Out FLibraryDefault::synthAdd(size_t outSize,
-                                        const In &in,
-                                        GNet &net) {
+FLibrary::Out FLibraryDefault::synthAdd(
+    size_t outSize, const In &in, GNet &net) {
   return synthAdder(outSize, in, false, net);
 }
 
-FLibrary::Out FLibraryDefault::synthSub(size_t outSize,
-                                        const In &in,
-                                        GNet &net) {
+FLibrary::Out FLibraryDefault::synthSub(
+    size_t outSize, const In &in, GNet &net) {
   // The two's complement code: (x - y) == (x + ~y + 1).
   const auto &x = in[0];
   const auto &y = in[1];
@@ -138,17 +130,15 @@ FLibrary::Out FLibraryDefault::synthSub(size_t outSize,
   return synthAdder(outSize, { x, temp }, true, net);
 }
 
-FLibrary::Out FLibraryDefault::synthAdder(size_t outSize,
-                                          const In &in,
-                                          bool plusOne,
-                                          GNet &net) {
+FLibrary::Out FLibraryDefault::synthAdder(
+    size_t outSize, const In &in, bool plusOne, GNet &net) {
   assert(in.size() == 2);
 
   const auto &x = in[0];
   const auto &y = in[1];
   assert(x.size() == y.size() && outSize == x.size());
 
-  auto carryIn = net.addGate(plusOne ? GateSymbol::ONE : GateSymbol::ZERO, {});
+  auto carryIn = plusOne ? net.addOne() : net.addZero();
 
   Out out(outSize);
   for (size_t i = 0; i < out.size(); i++) {
@@ -162,11 +152,8 @@ FLibrary::Out FLibraryDefault::synthAdder(size_t outSize,
   return out;
 }
 
-FLibrary::Out FLibraryDefault::synthAdder(Gate::Id x,
-                                          Gate::Id y,
-                                          Gate::Id carryIn,
-                                          bool needsCarryOut,
-                                          GNet &net) {
+FLibrary::Out FLibraryDefault::synthAdder(
+    Gate::Id x, Gate::Id y, Gate::Id carryIn, bool needsCarryOut, GNet &net) {
   // {z, carryOut}.
   Out out;
 
@@ -184,9 +171,8 @@ FLibrary::Out FLibraryDefault::synthAdder(Gate::Id x,
   return out;
 }
 
-FLibrary::Out FLibraryDefault::synthMux(size_t outSize,
-                                        const In &in,
-                                        GNet &net) {
+FLibrary::Out FLibraryDefault::synthMux(
+    size_t outSize, const In &in, GNet &net) {
   assert(in.size() >= 4 && (in.size() & 1) == 0);
   const size_t n = in.size() / 2;
 
@@ -210,10 +196,8 @@ FLibrary::Out FLibraryDefault::synthMux(size_t outSize,
   return out;
 }
 
-FLibrary::Out FLibraryDefault::synthUnaryBitwiseOp(GateSymbol func,
-                                                   size_t outSize,
-                                                   const In &in,
-                                                   GNet &net) {
+FLibrary::Out FLibraryDefault::synthUnaryBitwiseOp(
+    GateSymbol func, size_t outSize, const In &in, GNet &net) {
   assert(in.size() == 1);
 
   const auto &x = in[0];
@@ -227,10 +211,8 @@ FLibrary::Out FLibraryDefault::synthUnaryBitwiseOp(GateSymbol func,
   return out;
 }
 
-FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(GateSymbol func,
-                                                    size_t outSize,
-                                                    const In &in,
-                                                    GNet &net) {
+FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(
+    GateSymbol func, size_t outSize, const In &in, GNet &net) {
   assert(in.size() == 2);
 
   const auto &x = in[0];
@@ -245,7 +227,8 @@ FLibrary::Out FLibraryDefault::synthBinaryBitwiseOp(GateSymbol func,
   return out;
 }
 
-FLibrary::Signal FLibraryDefault::invertIfNegative(const Signal &event, GNet &net) {
+FLibrary::Signal FLibraryDefault::invertIfNegative(
+    const Signal &event, GNet &net) {
   switch (event.event()) {
   case POSEDGE:
     // Leave the clock signal unchanged.

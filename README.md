@@ -18,6 +18,10 @@ And produces the following outputs:
 
 Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
+## Coding Style
+
+We use [LLVM Coding Conventions](https://llvm.org/docs/CodingStandards.html) with some project-specific refinements.
+
 ## General Notes
 
 ### Environment variables

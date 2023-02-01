@@ -14,11 +14,9 @@
 #include <lorina/verilog.hpp>
 
 #include "gate/parser/reader_gate.h"
-
-#include "gtest/gtest.h"
-
-#include "util/partition_hgraph.h"
 #include "gate/transformer/hmetis.h"
+#include "gtest/gtest.h"
+#include "util/partition_hgraph.h"
 
 using namespace lorina;
 
@@ -29,7 +27,7 @@ TEST(ParserVTest, all) {
   }*/
 
   const std::filesystem::path subCatalog = "test/data/gate/parser";
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME")); 
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path prefixPath = homePath / subCatalog;
   const std::filesystem::path prefixPathIn = prefixPath / "input";
   const std::filesystem::path prefixPathOut = prefixPath / "output";

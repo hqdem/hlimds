@@ -101,7 +101,7 @@ public:
    * \param instName Name of the instantiation
    * \param args List (a_1,b_1), ..., (a_n,b_n) of name pairs, where
    *             a_i is a name of a signals in moduleName and b_i is a name of
-   * a signal in instName.
+   *             a signal in instName.
    */
   void on_module_instantiation(
     std::string const &moduleName, std::vector<std::string> const &params,
@@ -135,9 +135,8 @@ public:
             target->second.inputs.push_back(source->second.id);
           }
         }
-
       }
-      //  All gates are created - modifying them.
+      //  All gates are created -- modifying them.
       for (const auto &[name, gateData]: data->gates) {
         std::vector<eda::base::model::Signal < eda::gate::model::GNet::GateId>>
         signals;

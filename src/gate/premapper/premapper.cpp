@@ -13,7 +13,7 @@
 
 namespace eda::gate::premapper {
 
-Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
+Gate::SignalList PreMapper::getNewInputs(const Gate::SignalList &oldInputs,
                               const PreMapper::GateIdMap &oldToNewGates) {
   Gate::SignalList newInputs(oldInputs.size());
 
@@ -23,6 +23,32 @@ Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
     assert(newInput != oldToNewGates.end());
 
     newInputs[i] = Gate::Signal(oldInput.event(), newInput->second);
+  }
+
+  return newInputs;
+}
+
+Gate::SignalList PreMapper::getNewInputs(const Gate &oldGate,
+                              const PreMapper::GateIdMap &oldToNewGates,
+                              size_t &n0, size_t &n1) {
+  const auto k = oldGate.arity();
+
+  Gate::SignalList newInputs;
+  newInputs.reserve(k);
+
+  n0 = n1 = 0;
+  for (auto input : oldGate.inputs()) {
+    if (model::isValue(input)) {
+      const auto isZero = model::isZero(input);
+      n0 += (isZero ? 1 : 0);
+      n1 += (isZero ? 0 : 1);
+    } else {
+      const auto i = oldToNewGates.find(input.node());
+      assert(i != oldToNewGates.end());
+
+      const auto newInputId = i->second;
+      newInputs.push_back(Gate::Signal::always(newInputId));
+    }
   }
 
   return newInputs;

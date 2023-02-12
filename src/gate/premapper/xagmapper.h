@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/premapper/premapper.h"
+#include "gate/premapper/aigmapper.h"
 #include "util/singleton.h"
 
 namespace eda::gate::premapper {
@@ -19,40 +19,12 @@ namespace eda::gate::premapper {
  *
  * Pre-mapper transforms netlist to XAG (Xor-And-Inverter Graph) basis.
  */
-class XagMapper final : public PreMapper, public util::Singleton<XagMapper> {
+class XagMapper : public AigMapper, public util::Singleton<XagMapper> {
   friend class util::Singleton<XagMapper>;
 
 protected:
-  Gate::Id mapGate(const Gate &oldGate,
-                   const GateIdMap &oldToNewGates,
-                   GNet &newNet) const override;
-
-private:
-  Gate::Id mapIn (GNet &newNet) const;
-  Gate::Id mapOut(const Gate::SignalList &newInputs,
-                  size_t n0, size_t n1, GNet &newNet) const;
-
-  Gate::Id mapVal(bool value, GNet &newNet) const;
-
-  Gate::Id mapNop(const Gate::SignalList &newInputs,
-                  bool sign, GNet &newNet) const;
-  Gate::Id mapNop(const Gate::SignalList &newInputs,
-                  size_t n0, size_t n1, bool sign, GNet &newNet) const;
-
-  Gate::Id mapAnd(const Gate::SignalList &newInputs,
-                  bool sign, GNet &newNet) const;
-  Gate::Id mapAnd(const Gate::SignalList &newInputs,
-                  size_t n0, size_t n1, bool sign, GNet &newNet) const;
-
-  Gate::Id mapOr (const Gate::SignalList &newInputs,
-                  bool sign, GNet &newNet) const;
-  Gate::Id mapOr (const Gate::SignalList &newInputs,
-                  size_t n0, size_t n1, bool sign, GNet &newNet) const;
-
   Gate::Id mapXor(const Gate::SignalList &newInputs,
-                  bool sign, GNet &newNet) const;
-  Gate::Id mapXor(const Gate::SignalList &newInputs,
-                  size_t n0, size_t n1, bool sign, GNet &newNet) const;
+                  bool sign, GNet &newNet) const override;
 };
 
 } // namespace eda::gate::premapper

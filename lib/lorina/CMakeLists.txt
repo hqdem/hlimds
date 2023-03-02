@@ -27,6 +27,7 @@ elseif (WIN32)
 endif()
 
 add_subdirectory(include)
+add_subdirectory(lib)
 
 if(LORINA_TEST)
   add_subdirectory(test)

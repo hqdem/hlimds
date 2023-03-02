@@ -5,6 +5,7 @@ add_library(Gate OBJECT
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
+  parser/gate_verilog_parser.cpp
   premapper/aigmapper.cpp
   premapper/premapper.cpp
   simulator/simulator.cpp

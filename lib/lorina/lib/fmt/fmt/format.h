@@ -45,6 +45,9 @@
 
 #include "core.h"
 
+#define FMT_HEADER_ONLY
+#include "fmt/format.h"
+
 #ifdef __INTEL_COMPILER
 #  define FMT_ICC_VERSION __INTEL_COMPILER
 #elif defined(__ICL)

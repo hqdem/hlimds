@@ -89,14 +89,6 @@ public:
    */
   void on_endmodule() const override;
 
-  void print() const;
-
-  void static print(std::ofstream &stream, const eda::gate::model::Gate *gate);
-
-  void dotPrint(const std::string &filename) const;
-
-  void dot(std::ofstream &stream) const;
-
 private:
   void insertLink(const std::string &name, const std::string &instName,
                   bool out) const;

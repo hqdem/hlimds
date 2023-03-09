@@ -5,9 +5,14 @@ add_library(Gate OBJECT
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
+  optimizer/check_cut.cpp
+  optimizer/cuts_finder_visitor.cpp
+  optimizer/optimizer.cpp
+  optimizer/walker.cpp
   parser/gate_verilog_parser.cpp
   premapper/aigmapper.cpp
   premapper/premapper.cpp
+  printer/dot.cpp
   simulator/simulator.cpp
   transformer/hmetis.cpp
 )

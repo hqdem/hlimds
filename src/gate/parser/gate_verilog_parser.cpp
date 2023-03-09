@@ -99,40 +99,6 @@ void GateVerilogParser::on_endmodule() const {
   }
 }
 
-void GateVerilogParser::print() const {
-  for (const auto &gate: data->gnet->gates()) {
-    std::cout << gate->id() << " :\n"; // << " " << gate->kind()
-    for (const auto &link: gate->links()) {
-      std::cout << "\t( " << link.source << " ) " << link.target << "\n";
-    }
-  }
-}
-
-void GateVerilogParser::print(std::ofstream &stream,
-                              const eda::gate::model::Gate *gate) {
-  stream << gate->id();
-}
-
-void GateVerilogParser::dotPrint(const std::string &filename) const {
-  std::ofstream out(filename);
-  dot(out);
-  out.close();
-}
-
-void GateVerilogParser::dot(std::ofstream &stream) const {
-  stream << "digraph gnet {\n";
-  for (const auto &gate: data->gnet->gates()) {
-    for (const auto &links: gate->links()) {
-      stream << "\t";
-      print(stream, gate);
-      stream << " -> ";
-      print(stream, data->gnet->gate(data->gIds.at(links.target)));
-      stream << ";\n";
-    }
-  }
-  stream << "}" << std::endl;
-}
-
 void GateVerilogParser::insertLink(const std::string &name,
                                    const std::string &instName,
                                    bool out) const {

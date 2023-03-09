@@ -7,11 +7,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/parser/gate_verilog_parser.h"
-#include "gate/transformer/hmetis.h"
+#include "gate/printer/dot.h"
 #include "gtest/gtest.h"
-#include "util/partition_hgraph.h"
 
-#define FMT_HEADER_ONLY
 #include <lorina/diagnostics.hpp>
 #include <lorina/verilog.hpp>
 
@@ -34,7 +32,6 @@ void parse(const std::string &infile) {
 
   std::string filename = prefixPathIn / (infile + ".v");
   std::string outFilename = prefixPathOut / (infile + ".dot");
-  std::string outBaseFilename = prefixPathOut / ("base" + infile + ".dot");
 
   text_diagnostics consumer;
   diagnostic_engine diag(&consumer);
@@ -43,12 +40,9 @@ void parse(const std::string &infile) {
 
   return_code result = read_verilog(filename, parser, &diag);
   EXPECT_EQ(result, return_code::success);
-  parser.dotPrint(outFilename);
 
-  HMetisPrinter metis(*parser.getGnet());
-  HyperGraph graph(metis.getWeights(), metis.getEptr(),
-                   metis.getEind());
-  graph.graphOutput(outBaseFilename);
+  Dot dot(parser.getGnet());
+  dot.print(outFilename);
 }
 
 TEST(ParserVTest, adder) {

@@ -29,7 +29,7 @@ void parse(const std::string &infile) {
   const std::filesystem::path subCatalog = "test/data/gate/parser";
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path prefixPath = homePath / subCatalog;
-  const std::filesystem::path prefixPathIn = prefixPath / "input";
+  const std::filesystem::path prefixPathIn = prefixPath / "verilog";
   const std::filesystem::path prefixPathOut = prefixPath / "output";
 
   std::string filename = prefixPathIn / (infile + ".v");

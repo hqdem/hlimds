@@ -177,7 +177,7 @@ you want and set `CT_DIR` environment variable to it too.
 
 ## Working in Command Line
 
-### Clone project repository and set environment variable
+### Clone Project Repository and Set Environment Variable
 
 ```
 cd <workdir>

@@ -14,6 +14,7 @@ add_library(Gate OBJECT
   premapper/premapper.cpp
   printer/dot.cpp
   simulator/simulator.cpp
+  transformer/bdd.cpp
   transformer/hmetis.cpp
 )
 add_library(Utopia::Gate ALIAS Gate)
@@ -22,6 +23,7 @@ target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(Gate
   PUBLIC
     minisat-lib-static
+    Cudd::Cudd
 
   PRIVATE
     Utopia::Util

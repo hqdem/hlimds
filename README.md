@@ -175,6 +175,29 @@ If you would like to install CTemplate to a non-standard location, please
 specify `--prefix` option of `configure` script to installation directory
 you want and set `CT_DIR` environment variable to it too.
 
+
+### CUDD Installation
+
+```
+cd <workdir>
+git clone https://github.com/ivmai/cudd
+cd cudd
+touch aclocal.m4 configure
+touch Makefile.am configure
+touch Makefile.in configure
+./configure --enable-obj
+make
+sudo make install
+```
+
+If you installed `CUDD` not in default directory then building `Utopia EDA`
+will require environment variable `CUDD_DIR` to contain the path to the
+`CUDD` installation directory.
+
+```
+export CUDD_DIR=<cudd-installation-dir>
+```
+
 ## Working in Command Line
 
 ### Clone Project Repository and Set Environment Variable

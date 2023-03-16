@@ -177,7 +177,7 @@ you want and set `CT_DIR` environment variable to it too.
 
 ## Working in Command Line
 
-### Clone project repository and set environment variable
+### Clone Project Repository and Set Environment Variable
 
 ```
 cd <workdir>
@@ -186,7 +186,7 @@ cd utopia
 export UTOPIA_HOME=<workdir>/utopia
 ```
 Please keep `UTOPIA_HOME` variable and its value in your system permanently.
-### Building Project w/ Tests
+### Building Project
 
 ```
 cmake -S . -B build -G Ninja
@@ -198,14 +198,6 @@ or simply run the following script:
 ```
 If you've modified some of the project files, you can use `rebuild.sh` script
 for incremental build.
-
-### Building Project w/o Tests
-
-```
-cd src
-cmake -S . -B build -G Ninja
-cmake --build build
-```
 
 ### Running Utopia EDA
 

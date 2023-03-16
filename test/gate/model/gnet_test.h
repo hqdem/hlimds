@@ -38,6 +38,10 @@ std::shared_ptr<GNet> makeOrn(unsigned N,
 std::shared_ptr<GNet> makeAndn(unsigned N,
                                Gate::SignalList &inputs,
                                Gate::Id &outputId);
+// Maj(x1, x2, ..., xN).
+std::shared_ptr<GNet> makeMaj(unsigned N,
+                              Gate::SignalList &inputs,
+                              Gate::Id &outputId);
 
 // Random hierarchical network.
 std::shared_ptr<GNet> makeRand(std::size_t nGates,

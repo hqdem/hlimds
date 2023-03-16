@@ -266,4 +266,3 @@ TEST(GNetTest, GNetRandTestIssue11877) {
   auto net = makeRand(7, 5);
   EXPECT_TRUE(net != nullptr);
 }
-

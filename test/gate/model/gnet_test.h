@@ -46,3 +46,5 @@ std::shared_ptr<GNet> makeMaj(unsigned N,
 // Random hierarchical network.
 std::shared_ptr<GNet> makeRand(std::size_t nGates,
                                std::size_t nSubnets);
+
+void dump(const GNet &net);

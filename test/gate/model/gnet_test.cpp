@@ -222,6 +222,13 @@ std::shared_ptr<GNet> makeRand(std::size_t nGates,
   return net;
 }
 
+void dump(const GNet &net) {
+  std::cout << net << '\n';
+  std::cout << "N=" << net.nGates() << '\n';
+  std::cout << "I=" << net.nSourceLinks() << '\n';
+  std::cout << "O=" << net.nTargetLinks() << '\n';
+}
+
 TEST(GNetTest, GNetOrTest) {
   Gate::SignalList inputs;
   Gate::Id outputId;

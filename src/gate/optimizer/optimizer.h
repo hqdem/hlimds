@@ -24,7 +24,6 @@ class Optimizer {
 public:
   Optimizer(GNet *gNet);
   void optimize(int cutSize);
-  // bool isCut(const Vertex gate, const Cut &cut, Vertex &failed);
 
   const CutStorage& getCutStorage() {
     return cutStorage;

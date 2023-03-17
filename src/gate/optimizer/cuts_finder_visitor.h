@@ -19,6 +19,7 @@ class CutsFindVisitor : public Visitor {
 public:
 
   CutsFindVisitor(int cutSize, CutStorage *cutStorage);
-  void onGate(const Vertex&) override;
+  void onNodeBegin(const Node&) override;
+  void onNodeEnd(const Node&) override;
   void onCut(const Cut&) override;
 };

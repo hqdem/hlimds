@@ -22,6 +22,6 @@ class Walker {
 public:
   Walker(GNet *gNet, Visitor *visitor, CutStorage* cutStorage);
 
-  void walk();
+  void walk(bool forward);
 };
 

@@ -19,7 +19,7 @@ CutsFindVisitor::CutsFindVisitor(int cutSize, CutStorage *cutStorage) :
 
 void CutsFindVisitor::onCut(const Visitor::Cut &) {}
 
-void CutsFindVisitor::onGate(const Visitor::Vertex &vertex) {
+void CutsFindVisitor::onNodeBegin(const Visitor::Node &vertex) {
   Gate *gate = Gate::get(vertex);
   auto *cuts = &cutStorage->cuts[vertex];
 
@@ -74,3 +74,5 @@ void CutsFindVisitor::onGate(const Visitor::Vertex &vertex) {
     }
   }
 }
+
+void CutsFindVisitor::onNodeEnd(const Visitor::Node &) {}

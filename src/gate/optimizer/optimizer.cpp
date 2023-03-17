@@ -25,5 +25,5 @@ void Optimizer::optimize(int cutSize) {
   CutsFindVisitor visitor(cutSize, &cutStorage);
   Walker firstFind(gNet, &visitor, &cutStorage);
   // Find cuts on the first iteration.
-  firstFind.walk();
+  firstFind.walk(true);
 }

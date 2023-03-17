@@ -48,5 +48,7 @@ TEST(OptimizerTest, c17) {
       }
     }
   }
+
+  delete parser.getGnet();
 }
 

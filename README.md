@@ -18,6 +18,10 @@ And produces the following outputs:
 
 Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
+## Coding Style
+
+See `CODE_STYLE.md` for more details.
+
 ## General Notes
 
 ### Environment variables
@@ -171,9 +175,32 @@ If you would like to install CTemplate to a non-standard location, please
 specify `--prefix` option of `configure` script to installation directory
 you want and set `CT_DIR` environment variable to it too.
 
+
+### CUDD Installation
+
+```
+cd <workdir>
+git clone https://github.com/ivmai/cudd
+cd cudd
+touch aclocal.m4 configure
+touch Makefile.am configure
+touch Makefile.in configure
+./configure --enable-obj
+make
+sudo make install
+```
+
+If you installed `CUDD` not in default directory then building `Utopia EDA`
+will require environment variable `CUDD_DIR` to contain the path to the
+`CUDD` installation directory.
+
+```
+export CUDD_DIR=<cudd-installation-dir>
+```
+
 ## Working in Command Line
 
-### Clone project repository and set environment variable
+### Clone Project Repository and Set Environment Variable
 
 ```
 cd <workdir>
@@ -182,7 +209,7 @@ cd utopia
 export UTOPIA_HOME=<workdir>/utopia
 ```
 Please keep `UTOPIA_HOME` variable and its value in your system permanently.
-### Building Project w/ Tests
+### Building Project
 
 ```
 cmake -S . -B build -G Ninja
@@ -194,14 +221,6 @@ or simply run the following script:
 ```
 If you've modified some of the project files, you can use `rebuild.sh` script
 for incremental build.
-
-### Building Project w/o Tests
-
-```
-cd src
-cmake -S . -B build -G Ninja
-cmake --build build
-```
 
 ### Running Utopia EDA
 

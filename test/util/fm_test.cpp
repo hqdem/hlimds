@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/gnet_test.h"
-#include "gate/printer/hmetis_printer.h"
+#include "gate/transformer/hmetis.h"
 #include "util/fm.h"
 #include "util/partition_hgraph.h"
 

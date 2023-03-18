@@ -13,6 +13,8 @@ namespace eda::gate::simulator {
 using Compiled = Simulator::Compiled;
 
 Compiled::OP Compiled::getOp(const Gate &gate) const {
+  using GateSymbol = eda::gate::model::GateSymbol;
+
   const auto n = gate.arity();
 
   switch (gate.func()) {

@@ -16,6 +16,8 @@ namespace eda::gate::premapper {
 Gate::Id AigMapper::mapGate(const Gate &oldGate,
                             const GateIdMap &oldToNewGates,
                             GNet &newNet) const {
+  using GateSymbol = eda::gate::model::GateSymbol;
+
   if (oldGate.isSource() || oldGate.isTrigger()) {
     // Clone sources and triggers gates w/o changes.
     return PreMapper::mapGate(oldGate, oldToNewGates, newNet);
@@ -86,7 +88,7 @@ Gate::Id AigMapper::mapNop(const Gate::SignalList &newInputs,
 
   // NOT(NOT(x)) = x.
   const auto *inputGate = Gate::get(inputId);
-  if (inputGate->func() == GateSymbol::NOT) {
+  if (inputGate->func() == eda::gate::model::GateSymbol::NOT) {
     return inputGate->input(0).node();
   }
 

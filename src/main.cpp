@@ -191,7 +191,8 @@ struct HlsContext {
   using Indicators = eda::hls::model::Indicators;
   using Parameters = eda::hls::model::Parameters;
   using Criteria = eda::hls::model::Criteria;
-  using Constraint = eda::hls::model::Constraint<unsigned>;
+  template<typename T>
+  using Constraint = eda::hls::model::Constraint<T>;
 
   using Mapper = eda::hls::mapper::Mapper;
   using Library = eda::hls::library::Library;
@@ -203,12 +204,12 @@ struct HlsContext {
     file(file),
     options(options),
     criteria(
-        PERF,
-        Constraint(40000, 500000), // Frequency (kHz)
-        Constraint(1000, 500000),  // Performance (=frequency)
-        Constraint(0, 1000),       // Latency (cycles)
-        Constraint(),              // Power (does not matter)
-        Constraint(1, 10000000))   // Area (number of LUTs)
+        Indicator::PERF,
+        Constraint<unsigned>(40000, 500000), // Frequency (kHz)
+        Constraint<unsigned>(1000, 500000),  // Performance (=frequency)
+        Constraint<unsigned>(0, 1000),       // Latency (cycles)
+        Constraint<unsigned>(),              // Power (does not matter)
+        Constraint<unsigned>(1, 10000000))   // Area (number of LUTs)
     {}
 
   const std::string file;

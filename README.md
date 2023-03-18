@@ -73,6 +73,7 @@ below are specific to this operating system:
 * `g++`
 * `gcc`
 * `iverilog`
+* `libfmt-dev`
 * `liblpsolve55-dev`
 * `libtool`
 * `libxerces-c3.2`

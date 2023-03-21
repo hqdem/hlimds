@@ -1,6 +1,8 @@
 #include "gate/debugger/checker.h"
 #include "gate/model/gnet_test.h"
 
+#include "gate/premapper/migmapper.h"
+
 #include "gtest/gtest.h"
 
 #include <algorithm>
@@ -15,7 +17,7 @@ using Link = eda::gate::model::Gate::Link;
 using MigMapper = eda::gate::premapper::MigMapper;
 
 bool equivalenceCheck(const std::shared_ptr<GNet> &net,
-                 const std::shared_ptr<GNet> &migMapped) {
+                      const std::shared_ptr<GNet> &migMapped) {
   Checker checker;
   GateIdMap oldToNewGates;
   GateBinding inputBind;

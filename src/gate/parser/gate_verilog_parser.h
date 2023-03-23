@@ -15,6 +15,10 @@
 #include <fstream>
 #include <iostream>
 
+/**
+ * \brief Verilog parser based on Lorina.
+ * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ */
 class GateVerilogParser : public lorina::verilog_reader {
 private:
   struct ParserData {

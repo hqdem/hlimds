@@ -8,6 +8,7 @@ add_library(Gate OBJECT
   optimizer/check_cut.cpp
   optimizer/cuts_finder_visitor.cpp
   optimizer/optimizer.cpp
+  optimizer/rwdatabase.cpp
   optimizer/walker.cpp
   parser/gate_verilog_parser.cpp
   premapper/aigmapper.cpp
@@ -24,6 +25,7 @@ target_link_libraries(Gate
   PUBLIC
     minisat-lib-static
     Cudd::Cudd
+    sqlite3
 
   PRIVATE
     Utopia::Util

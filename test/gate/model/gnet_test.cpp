@@ -51,7 +51,7 @@ static std::shared_ptr<GNet> makeNetn(GateSymbol gate,
     andInputs.push_back(Gate::Signal::always(notGateId));
   }
 
-  auto gateId = net->addGate(gate, inputs);
+  auto gateId = net->addGate(gate, andInputs);
   outputId = net->addOut(gateId);
 
   net->sortTopologically();
@@ -266,3 +266,4 @@ TEST(GNetTest, GNetRandTestIssue11877) {
   auto net = makeRand(7, 5);
   EXPECT_TRUE(net != nullptr);
 }
+

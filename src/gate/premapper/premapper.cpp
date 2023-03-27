@@ -13,6 +13,10 @@
 
 namespace eda::gate::premapper {
 
+using Gate = eda::gate::model::Gate;
+using GNet = eda::gate::model::GNet;
+using SignalList = model::Gate::SignalList;
+
 Gate::SignalList PreMapper::getNewInputs(const Gate::SignalList &oldInputs,
                               const PreMapper::GateIdMap &oldToNewGates) {
   Gate::SignalList newInputs(oldInputs.size());

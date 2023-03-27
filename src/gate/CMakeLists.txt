@@ -13,7 +13,7 @@ add_library(Gate OBJECT
   premapper/aigmapper.cpp
   premapper/xagmapper.cpp
   premapper/premapper.cpp
-  printer/hmetis_printer.cpp
+#  printer/hmetis_printer.cpp
   printer/dot.cpp
   simulator/simulator.cpp 
   simulator/simulator.cpp

@@ -13,6 +13,9 @@
 
 namespace eda::gate::premapper {
 
+using Gate = eda::gate::model::Gate;
+using GNet = eda::gate::model::GNet;
+
 Gate::Id AigMapper::mapGate(const Gate &oldGate,
                             const GateIdMap &oldToNewGates,
                             GNet &newNet) const {

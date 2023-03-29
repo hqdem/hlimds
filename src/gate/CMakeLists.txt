@@ -16,7 +16,7 @@ add_library(Gate OBJECT
   simulator/simulator.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
-)
+        optimizer/cone_visitor.cpp  optimizer/links_clean.cpp  optimizer/optimizer_visitor.cpp optimizer/util.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 
 target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src)

@@ -26,15 +26,6 @@ namespace eda::gate::optimizer {
   CutStorage findCuts(int cutSize, GNet *net) {
     CutStorage cutStorage;
 
-    const auto &sources = net->getSources();
-
-    for (const auto &source: sources) {
-      Cut cut;
-
-      cut.emplace(source);
-      cutStorage.cuts[source].emplace(cut);
-    }
-
     CutsFindVisitor visitor(cutSize, &cutStorage);
     Walker firstFind(net, &visitor, &cutStorage);
     // Find cuts on the first iteration.

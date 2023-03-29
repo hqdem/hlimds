@@ -77,12 +77,12 @@ namespace eda::gate::optimizer {
     }
   }
 
-  /*
-  bool fakeSubstitute(GateId cutFor, const Cut &cut, GNet *subsNet, GNet *net) {
-    return false;
+  bool fakeSubstitute(GateID cutFor, const Cut &cut, GNet *subsNet, GNet *net) {
+    return true;
   }
 
-  uint64_t getTruthTable(GateId cutFor, const Cut &cut, GNet *net) {
+  uint64_t getTruthTable(GateID cutFor, const Cut &cut, GNet *net) {
+    return 0;
     GNet::LinkList out{Gate::Link(cutFor)};
     GNet::LinkList in;
 
@@ -104,5 +104,5 @@ namespace eda::gate::optimizer {
       res |= o;
     }
     return res;
-  }*/
+  }
 } // namespace eda::gate::optimizer

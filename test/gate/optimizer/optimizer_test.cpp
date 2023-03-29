@@ -159,9 +159,36 @@ namespace eda::gate::optimizer {
     }
   }
 
+  void rewritePrint(const std::filesystem::path &subCatalog, GNet *net) {
+    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+    const std::filesystem::path outputPath = homePath / subCatalog;
+
+    std::string filenameBefore = outputPath / "gnet.dot";
+    std::string filenameAfter = outputPath / "gnet_rewritten.dot";
+
+    Dot dot(net);
+    dot.print(filenameBefore);
+
+    optimize(net, 4);
+
+    dot.print(filenameAfter);
+  }
+
 // TODO: move std::vector<Vertex> g to each test to provide correct mapping with node id.
 //===----------------------------------------------------------------------===//
 // Tests
+//===----------------------------------------------------------------------===//
+
+  TEST(OptimizerTest, optimizeToZeroNet) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    gnet2(net);
+    rewritePrint("test/data/gate/optimizer/output/rewrite0", &net);
+  }
+
 //===----------------------------------------------------------------------===//
 
   TEST(OptimizerTest, simulatorTestCone) {
@@ -182,7 +209,7 @@ namespace eda::gate::optimizer {
     simulatorPrint(&net, {0, 1, 2, 3}, {6});
   }
 
-//===----------------------------------------------------------------------===//-
+//===----------------------------------------------------------------------===//
 
   TEST(OptimizerTest, findCone) {
     if (!getenv("UTOPIA_HOME")) {

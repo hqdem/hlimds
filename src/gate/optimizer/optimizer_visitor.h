@@ -9,10 +9,10 @@
 #pragma once
 
 #include "gate/optimizer/links_clean.h"
+#include "gate/optimizer/util.h"
 #include "gate/optimizer/visitor.h"
 #include "gate/optimizer/walker.h"
 #include "gate/simulator/simulator.h"
-#include "gate/optimizer/util.h"
 
 #include <queue>
 
@@ -39,14 +39,6 @@ namespace eda::gate::optimizer {
     GNet::V lastNode;
 
     GNet *getSubnet(uint64_t func);
-
-    // TODO: move to separate file.
-  public:
-
-    bool
-    fakeSubstitute(GateID cutFor, const Cut &cut, GNet *subsNet, GNet *net);
-
-    uint64_t getTruthTable(GateID cutFor, const Cut &cut, GNet *net);
   };
 
 } // namespace eda::gate::optimizer

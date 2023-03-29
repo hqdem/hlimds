@@ -8,22 +8,27 @@
 
 #pragma once
 
-#include "gate/optimizer/cuts_finder_visitor.h"
+#include "gate/model/gnet.h"
 #include "gate/optimizer/links_clean.h"
-#include "gate/optimizer/optimizer_visitor.h"
 #include "gate/optimizer/walker.h"
 #include "gate/simulator/simulator.h"
 
-#include <queue>
-
+/**
+ * \brief Method used for rewriting.
+ * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ */
 namespace eda::gate::optimizer {
 
   using GNet = eda::gate::model::GNet;
   using GateID = eda::gate::model::GNet::GateId;
   using Gate = eda::gate::model::Gate;
-  using Cut = std::unordered_set<GateID>;
+  using Cut = CutStorage::Cut;
+  using Simulator = simulator::Simulator;
 
-  void optimize(GNet *net, int cutSize);
+  void substitute(GateID cutFor, const CutStorage::Cut &cut, GNet *subsNet, GNet *net);
 
-  CutStorage findCuts(int cutSize, GNet *net);
+  // bool fakeSubstitute(Vertex cutFor, const Cut &cut, GNet *subsNet, GNet *net);
+
+  // uint64_t getTruthTable(Vertex cutFor, const Cut &cut, GNet *net);
 } // namespace eda::gate::optimizer
+

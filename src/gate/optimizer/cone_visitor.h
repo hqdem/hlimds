@@ -14,22 +14,30 @@
 namespace eda::gate::optimizer {
 /**
  * \brief Realization of interface Visitor.
- * \ Finds cuts in given net.
+ * \ Finds cone for given node and its cut.
  * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
  */
-  class CutsFindVisitor : public Visitor {
-
-    int cutSize;
-    CutStorage *cutStorage;
-
+  class ConeVisitor : public Visitor {
   public:
 
-    CutsFindVisitor(int cutSize, CutStorage *cutStorage);
+    using Gate = eda::gate::model::Gate;
+
+    ConeVisitor(const Cut &cut, GNet *sourceNet);
+
+    ~ConeVisitor();
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
     VisitorFlags onNodeEnd(const GateID &) override;
 
     VisitorFlags onCut(const Cut &) override;
+
+    GNet *getGNet();
+
+  private:
+    GNet::SubnetId subnetId;
+    const Cut &cut;
+    Cut resultCut;
+    GNet *sourceNet;
   };
 } // namespace eda::gate::optimizer

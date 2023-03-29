@@ -9,11 +9,20 @@
 #pragma once
 
 #include "gate/model/gnet.h"
+#include "gate/optimizer/cut_storage.h"
 
 #include <queue>
 
-using Vertex =  eda::gate::model::GNet::V;
-using Gate =  eda::gate::model::Gate;
-using Cut = std::unordered_set<Vertex>;
+namespace eda::gate::optimizer {
 
-bool isCut(const Vertex gate, const Cut &cut, Vertex &failed);
+  using GateID = eda::gate::model::GNet::GateId;
+  using Gate = eda::gate::model::Gate;
+  using Cut = CutStorage::Cut;
+
+  /**
+ * \brief Checking that a given cut is indeed a cut for a given vertex x.
+ * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ */
+  bool isCut(const GateID &gate, const Cut &cut, GateID &failed);
+
+} // namespace eda::gate::optimizer

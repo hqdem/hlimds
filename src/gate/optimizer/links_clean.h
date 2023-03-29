@@ -8,28 +8,34 @@
 
 #pragma once
 
-#include "gate/optimizer/cut_storage.h"
+#include "gate/model/gnet.h"
 #include "gate/optimizer/visitor.h"
 
 namespace eda::gate::optimizer {
 /**
  * \brief Realization of interface Visitor.
- * \ Finds cuts in given net.
+ * \ Removes all gates with zero fanout starting from some given node.
  * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
  */
-  class CutsFindVisitor : public Visitor {
-
-    int cutSize;
-    CutStorage *cutStorage;
+  class LinkCleanVisitor : public Visitor {
 
   public:
+    using Gate = eda::gate::model::Gate;
+    using GateSymbol = eda::gate::model::GateSymbol;
+    using Signal = base::model::Signal<GNet::GateId>;
 
-    CutsFindVisitor(int cutSize, CutStorage *cutStorage);
+    LinkCleanVisitor(GateID node, GNet *gNet,
+                     const std::vector<Signal> &newSignals);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
     VisitorFlags onNodeEnd(const GateID &) override;
 
     VisitorFlags onCut(const Cut &) override;
+
+  private:
+    GateID node;
+    const std::vector<Signal> &newSignals;
+    GNet *gNet;
   };
 } // namespace eda::gate::optimizer

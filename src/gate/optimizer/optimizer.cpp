@@ -8,22 +8,39 @@
 
 #include "gate/optimizer/optimizer.h"
 
-using Cut = CutStorage::Cut;
+namespace eda::gate::optimizer {
 
-Optimizer::Optimizer(Optimizer::GNet *gNet) : gNet(gNet) {}
+  void optimize(GNet *net, int cutSize) {
+    CutStorage cutStorage = findCuts(cutSize, net);
 
-void Optimizer::optimize(int cutSize) {
-  const auto& sources = gNet->getSources();
+    OptimizerVisitor optimizerVisitor(&cutStorage, net);
+    Walker walker(net, &optimizerVisitor, &cutStorage);
 
-  for(const auto& source : sources) {
-    Cut cut;
-
-    cut.emplace(source);
-    cutStorage.cuts[source].emplace(cut);
+    // TODO: change for normal condition.
+    while(true) {
+      walker.walk(true);
+      break;
+    }
   }
 
-  CutsFindVisitor visitor(cutSize, &cutStorage);
-  Walker firstFind(gNet, &visitor, &cutStorage);
-  // Find cuts on the first iteration.
-  firstFind.walk(true);
-}
+  CutStorage findCuts(int cutSize, GNet *net) {
+    CutStorage cutStorage;
+
+    const auto &sources = net->getSources();
+
+    for (const auto &source: sources) {
+      Cut cut;
+
+      cut.emplace(source);
+      cutStorage.cuts[source].emplace(cut);
+    }
+
+    CutsFindVisitor visitor(cutSize, &cutStorage);
+    Walker firstFind(net, &visitor, &cutStorage);
+    // Find cuts on the first iteration.
+    firstFind.walk(true);
+
+    return cutStorage;
+  }
+
+} // namespace eda::gate::optimizer

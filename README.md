@@ -183,9 +183,7 @@ you want and set `CT_DIR` environment variable to it too.
 cd <workdir>
 git clone https://github.com/ivmai/cudd
 cd cudd
-touch aclocal.m4 configure
-touch Makefile.am configure
-touch Makefile.in configure
+touch aclocal.m4 Makefile.am Makefile.in configure
 ./configure --enable-obj
 make
 sudo make install

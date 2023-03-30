@@ -37,6 +37,6 @@ namespace eda::gate::optimizer {
     using Cut = std::unordered_set<GateID>;
     using Cuts = std::unordered_set<Cut, HashFunction>;
 
-    std::unordered_map<GNet::V, Cuts> cuts;
+    std::unordered_map<GateID, Cuts> cuts;
   };
 } // namespace eda::gate::optimizer

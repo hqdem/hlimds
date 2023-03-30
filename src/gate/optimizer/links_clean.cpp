@@ -16,8 +16,6 @@ namespace eda::gate::optimizer {
             gNet(gNet) {}
 
   VisitorFlags LinkCleanVisitor::onNodeBegin(const GateID &node) {
-    // TODO: delete
-    std::cout << "onNodeBegin " << node << std::endl;
 
     if (this->node == node) {
       gNet->setGate(node, Gate::get(node)->func(), newSignals);

@@ -41,7 +41,6 @@ namespace eda::gate::optimizer {
             finished = false;
           }
         }
-        ///////
         if (finished) {
           std::vector<eda::base::model::Signal<GNet::GateId>> signals;
 
@@ -54,7 +53,6 @@ namespace eda::gate::optimizer {
             assert(nodes.size() == subsNet->nGates());
 
             if (Gate::get(cutFor)->inputs() != signals) {
-              // TODO: add links from cutFor node.
               // Deleting links.
               LinkCleanVisitor visitor(cutFor, net, signals);
               Walker walker(net, &visitor, nullptr);
@@ -71,7 +69,6 @@ namespace eda::gate::optimizer {
           }
 
         }
-        ///////
       }
       bfs.pop();
     }

@@ -10,21 +10,11 @@
 
 namespace eda::gate::optimizer {
 
-  ConeVisitor::ConeVisitor(const Cut &cut, GNet *sourceNet)
-          : cut(cut), sourceNet(sourceNet) {
-    subnetId = sourceNet->newSubnet();
-  }
-
-  ConeVisitor::~ConeVisitor() {
-    // TODO: delete created gnet here?
+  ConeVisitor::ConeVisitor(const Cut &cut) : cut(cut) {
   }
 
   VisitorFlags ConeVisitor::onNodeBegin(const GateID &node) {
-
-    // TODO: delete print.
-    std::cout << "onNodeBegin " << node << std::endl;
-
-    sourceNet->moveGate(node, subnetId);
+    visited.push(node);
     if (cut.find(node) != cut.end()) {
       resultCut.emplace(node);
       return FINISH_THIS;
@@ -41,6 +31,30 @@ namespace eda::gate::optimizer {
   }
 
   ConeVisitor::GNet *ConeVisitor::getGNet() {
-    return sourceNet->subnets()[subnetId];
+    GNet *coneNet = new GNet();
+
+    while (!visited.empty()) {
+
+      auto cur = visited.top();
+      std::vector<base::model::Signal<GateID>> signals;
+      const Gate *curGate = Gate::get(cur);
+      const auto &inputs = curGate->inputs();
+      visited.pop();
+
+      for (const auto &signal: inputs) {
+        auto found = newGates.find(signal.node());
+        if (found != newGates.end()) {
+          signals.emplace_back(base::model::Event::ALWAYS, found->second);
+        }
+      }
+      if (resultCut.find(cur) != resultCut.end() && signals.empty()) {
+        newGates[cur] = coneNet->addGate(GateSymbol::IN);
+      } else {
+        assert(!signals.empty() && "Gate not from cut with empty input.");
+        newGates[cur] = coneNet->addGate(curGate->func(), signals);
+      }
+    }
+
+    return coneNet;
   }
 } // namespace eda::gate::optimizer

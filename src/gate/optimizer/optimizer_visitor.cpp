@@ -12,7 +12,6 @@ namespace eda::gate::optimizer {
 
   using GNet = eda::gate::model::GNet;
   using Gate = eda::gate::model::Gate;
-  using Vertex = GNet::V;
   using Simulator = eda::gate::simulator::Simulator;
 
   OptimizerVisitor::OptimizerVisitor(CutStorage *cutStorage,
@@ -21,19 +20,20 @@ namespace eda::gate::optimizer {
 
   VisitorFlags OptimizerVisitor::onNodeBegin(const GateID &node) {
     if (!net->contains(node)) {
-      cutStorage->cuts.erase(node);
-      return FINISH_THIS;
+      // If node is not in cutStorage - means, that it is a new node.
+      // So we recount cuts for that node.
+      CutsFindVisitor finder(4, cutStorage);
+      finder.onNodeBegin(node);
     }
     lastNode = node;
+    lastCuts = &(cutStorage->cuts[node]);
     return SUCCESS;
   }
 
   VisitorFlags OptimizerVisitor::onCut(const Visitor::Cut &cut) {
     for (auto node: cut) {
       if (!net->contains(node)) {
-        auto &cuts = cutStorage->cuts[lastNode];
-        auto toErase = cuts.find(cut);
-        cuts.erase(toErase);
+        toRemove.emplace_back(&cut);
         return SUCCESS;
       // Discard trivial cuts.
       } else if(node == lastNode) {
@@ -45,8 +45,6 @@ namespace eda::gate::optimizer {
     // TODO: implement getSubnet method.
     auto *subNet =  getSubnet(func);
     if(fakeSubstitute(lastNode, cut, subNet, net)) {
-      auto temp = lastNode;
-      std::cout << temp << "temp\n"<<std::endl;
       substitute(lastNode, cut, subNet, net);
       delete subNet;
       // TODO: we can return finish all here.
@@ -57,6 +55,11 @@ namespace eda::gate::optimizer {
   }
 
   VisitorFlags OptimizerVisitor::onNodeEnd(const GateID &) {
+    // Removing invalid nodes.
+    for(const auto& it : toRemove) {
+      lastCuts->erase(*it);
+    }
+    toRemove.clear();
     return SUCCESS;
   }
 

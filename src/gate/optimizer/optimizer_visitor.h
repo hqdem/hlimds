@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "gate/optimizer/cuts_finder_visitor.h"
 #include "gate/optimizer/links_clean.h"
 #include "gate/optimizer/util.h"
 #include "gate/optimizer/visitor.h"
-#include "gate/optimizer/walker.h"
 #include "gate/simulator/simulator.h"
 
 #include <queue>
@@ -37,6 +37,8 @@ namespace eda::gate::optimizer {
     CutStorage *cutStorage;
     GNet *net;
     GNet::V lastNode;
+    CutStorage::Cuts *lastCuts;
+    std::vector<const CutStorage::Cut *> toRemove;
 
     GNet *getSubnet(uint64_t func);
   };

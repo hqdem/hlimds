@@ -28,6 +28,8 @@ namespace eda::gate::optimizer {
           return;
         case FINISH_THIS:
           continue;
+        case SUCCESS:
+          break;
       }
     }
   }
@@ -70,6 +72,8 @@ namespace eda::gate::optimizer {
             case FINISH_THIS:
               bfs.pop();
               continue;
+            case SUCCESS:
+              break;
           }
 
           for (auto node: next) {

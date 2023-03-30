@@ -19,7 +19,7 @@ namespace eda::gate::optimizer {
           cutSize(cutSize), cutStorage(cutStorage) {}
 
   VisitorFlags CutsFindVisitor::onCut(const Visitor::Cut &cut) {
-    return VisitorFlags::FINISH_ALL;
+    return VisitorFlags::FINISH_THIS;
   }
 
   VisitorFlags CutsFindVisitor::onNodeBegin(const GateID &vertex) {

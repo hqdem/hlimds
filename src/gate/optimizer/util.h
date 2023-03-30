@@ -27,8 +27,8 @@ namespace eda::gate::optimizer {
 
   void substitute(GateID cutFor, const CutStorage::Cut &cut, GNet *subsNet, GNet *net);
 
-  // bool fakeSubstitute(Vertex cutFor, const Cut &cut, GNet *subsNet, GNet *net);
+  bool fakeSubstitute(GateID cutFor, const Cut &cut, GNet *subsNet, GNet *net);
 
-  // uint64_t getTruthTable(Vertex cutFor, const Cut &cut, GNet *net);
+  uint64_t getTruthTable(GateID cutFor, const Cut &cut, GNet *net);
 } // namespace eda::gate::optimizer
 

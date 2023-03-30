@@ -11,6 +11,7 @@
 #include "gate/optimizer/cuts_finder_visitor.h"
 #include "gate/optimizer/links_clean.h"
 #include "gate/optimizer/optimizer_visitor.h"
+#include "gate/optimizer/tracker_visitor.h"
 #include "gate/optimizer/walker.h"
 #include "gate/simulator/simulator.h"
 
@@ -24,6 +25,8 @@ namespace eda::gate::optimizer {
   using Cut = std::unordered_set<GateID>;
 
   void optimize(GNet *net, int cutSize);
+
+  void optimizePrint(GNet *net, int cutSize, const std::filesystem::path &subCatalog);
 
   CutStorage findCuts(int cutSize, GNet *net);
 } // namespace eda::gate::optimizer

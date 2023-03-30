@@ -14,7 +14,7 @@
 namespace eda::gate::optimizer {
 /**
  * \brief Realization of interface Visitor.
- * \ Removes all gates with zero fanout starting from some given node.
+ * Removes all gates that get zero fanout after removing links from given node.
  * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
  */
   class LinkCleanVisitor : public Visitor {

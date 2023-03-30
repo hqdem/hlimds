@@ -41,7 +41,6 @@ namespace eda::gate::optimizer {
             finished = false;
           }
         }
-        ///////
         if (finished) {
           std::vector<eda::base::model::Signal<GNet::GateId>> signals;
 
@@ -54,7 +53,6 @@ namespace eda::gate::optimizer {
             assert(nodes.size() == subsNet->nGates());
 
             if (Gate::get(cutFor)->inputs() != signals) {
-              // TODO: add links from cutFor node.
               // Deleting links.
               LinkCleanVisitor visitor(cutFor, net, signals);
               Walker walker(net, &visitor, nullptr);
@@ -71,18 +69,17 @@ namespace eda::gate::optimizer {
           }
 
         }
-        ///////
       }
       bfs.pop();
     }
   }
 
-  /*
-  bool fakeSubstitute(GateId cutFor, const Cut &cut, GNet *subsNet, GNet *net) {
-    return false;
+  bool fakeSubstitute(GateID cutFor, const Cut &cut, GNet *subsNet, GNet *net) {
+    return true;
   }
 
-  uint64_t getTruthTable(GateId cutFor, const Cut &cut, GNet *net) {
+  uint64_t getTruthTable(GateID cutFor, const Cut &cut, GNet *net) {
+    return 0;
     GNet::LinkList out{Gate::Link(cutFor)};
     GNet::LinkList in;
 
@@ -104,5 +101,5 @@ namespace eda::gate::optimizer {
       res |= o;
     }
     return res;
-  }*/
+  }
 } // namespace eda::gate::optimizer

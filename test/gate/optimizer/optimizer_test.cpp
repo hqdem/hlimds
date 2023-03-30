@@ -20,54 +20,55 @@
 #include <string>
 
 namespace eda::gate::optimizer {
-  using GNet = eda::gate::model::GNet;
-  using Vertex = eda::gate::model::GNet::V;
   using Simulator = eda::gate::simulator::Simulator;
 
-  Vertex createLink(eda::gate::model::GNet &gNet, const std::vector<Vertex> &g,
-                    const std::vector<Vertex> &input,
-                    eda::gate::model::GateSymbol func = eda::gate::model::GateSymbol::Value::AND) {
-    std::vector<eda::base::model::Signal<GNet::GateId>> signals;
-    for (Vertex gate: input) {
-      signals.emplace_back(eda::base::model::Event::ALWAYS, g[gate]);
+  GateID createLink(GNet &gNet, const std::vector<GateID> &g,
+                    const std::vector<GateID> &input,
+                    model::GateSymbol func = model::GateSymbol::Value::AND) {
+    std::vector<base::model::Signal<GNet::GateId>> signals;
+    for (GateID gate: input) {
+      signals.emplace_back(base::model::Event::ALWAYS, g[gate]);
     }
     return gNet.addGate(func, signals);
   }
 
-  static void gnet1(eda::gate::model::GNet &gNet) {
-    std::vector<Vertex> g(4);
-    for (Vertex &el: g) {
-      el = gNet.newGate();
-    }
-    g.push_back(createLink(gNet, g, {0, 1}));
-    g.push_back(createLink(gNet, g, {4, 2}));
-    createLink(gNet, g, {5, 3});
-  }
-
-  static void gnet1Exteded(eda::gate::model::GNet &gNet) {
-    std::vector<Vertex> g(4);
-    for (Vertex &el: g) {
+  static std::vector<GateID> gnet1(GNet &gNet) {
+    std::vector<GateID> g(4);
+    for (GateID &el: g) {
       el = gNet.newGate();
     }
     g.push_back(createLink(gNet, g, {0, 1}));
     g.push_back(createLink(gNet, g, {4, 2}));
     g.push_back(createLink(gNet, g, {5, 3}));
-    createLink(gNet, g, {5, 6}, eda::gate::model::GateSymbol::Value::OUT);
+    return g;
   }
 
-  static void gnet2(eda::gate::model::GNet &gNet) {
-    std::vector<Vertex> g(4);
-    for (Vertex &el: g) {
+  static std::vector<GateID> gnet1Exteded(GNet &gNet) {
+    std::vector<GateID> g(4);
+    for (GateID &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {0, 1}));
+    g.push_back(createLink(gNet, g, {4, 2}));
+    g.push_back(createLink(gNet, g, {5, 3}));
+    g.push_back(createLink(gNet, g, {5, 6}, model::GateSymbol::Value::OUT));
+    return g;
+  }
+
+  static std::vector<GateID> gnet2(GNet &gNet) {
+    std::vector<GateID> g(4);
+    for (GateID &el: g) {
       el = gNet.newGate();
     }
     g.push_back(createLink(gNet, g, {0, 1}));
     g.push_back(createLink(gNet, g, {3, 2}));
-    createLink(gNet, g, {5, 4});
+    g.push_back(createLink(gNet, g, {5, 4}));
+    return g;
   }
 
-  static void gnet3(eda::gate::model::GNet &gNet) {
-    std::vector<Vertex> g(7);
-    for (Vertex &el: g) {
+  static std::vector<GateID> gnet3(GNet &gNet) {
+    std::vector<GateID> g(7);
+    for (GateID &el: g) {
       el = gNet.newGate();
     }
     g.push_back(createLink(gNet, g, {0, 1}));
@@ -78,15 +79,16 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {8, 7}));
     g.push_back(createLink(gNet, g, {9, 10}));
     g.push_back(createLink(gNet, g, {9, 7, 6}));
-
-
-    createLink(gNet, g, {11, 12, 14});
+    g.push_back(createLink(gNet, g, {11, 12, 14}));
+    return g;
   }
 
   GNet *findConePrint(const std::filesystem::path &subCatalog, GNet *net,
                       const std::vector<GNet::V> &cuNodes, GNet::V start) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path outputPath = homePath / subCatalog;
+
+    system(std::string("mkdir -p ").append(outputPath).c_str());
 
     std::string filename1 = outputPath / "cone0.dot";
     std::string filename2 = outputPath / "cone.dot";
@@ -99,14 +101,11 @@ namespace eda::gate::optimizer {
       cut.emplace(node);
     }
 
-    ConeVisitor coneVisitor(cut, net);
+    ConeVisitor coneVisitor(cut);
     Walker walker(net, &coneVisitor, nullptr);
     walker.walk(start, false);
 
     GNet *subnet = coneVisitor.getGNet();
-    // TODO: delete?
-    std::cout << "gates size " << subnet->nGates() << std::endl;
-    std::cout << "origin gates size " << net->nGates() << std::endl;
 
     printer = Dot(subnet);
     printer.print(filename2);
@@ -115,10 +114,12 @@ namespace eda::gate::optimizer {
   }
 
   void substitutePrint(const std::filesystem::path &subCatalog,
-                       GNet *net, GNet *subNet,
+                       GNet *net, GNet *subNet, GateID cutFor,
                        const std::unordered_set<GNet::V> &cut) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path outputPath = homePath / subCatalog;
+
+    system(std::string("mkdir -p ").append(outputPath).c_str());
 
     std::string filename1 = outputPath / "gnet1.dot";
     std::string filename2 = outputPath / "gnet2.dot";
@@ -130,7 +131,7 @@ namespace eda::gate::optimizer {
     mainGnetDot.print(filename1);
     subGnetDot.print(filename2);
 
-    substitute(6, cut, subNet, net);
+    substitute(cutFor, cut, subNet, net);
 
     mainGnetDot.print(filename12);
   }
@@ -159,30 +160,79 @@ namespace eda::gate::optimizer {
     }
   }
 
-// TODO: move std::vector<Vertex> g to each test to provide correct mapping with node id.
+  void rewritePrint(const std::filesystem::path &subCatalog, GNet *net) {
+    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+    const std::filesystem::path outputPath = homePath / subCatalog;
+
+    system(std::string("mkdir -p ").append(outputPath).c_str());
+
+    std::string filenameBefore = outputPath / "gnet.dot";
+    std::string filenameAfter = outputPath / "gnet_rewritten.dot";
+
+    Dot dot(net);
+    dot.print(filenameBefore);
+
+    optimize(net, 4);
+
+    dot.print(filenameAfter);
+  }
+
+// TODO: move std::vector<GateID> g to each test to provide correct mapping with node id.
 //===----------------------------------------------------------------------===//
 // Tests
 //===----------------------------------------------------------------------===//
 
-  TEST(OptimizerTest, simulatorTestCone) {
+  TEST(OptimizerTest, optimizeToZeroNetGnet1) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
     GNet net;
     gnet1(net);
-
-    auto subnet = findConePrint("test/data/gate/optimizer/output/simulator",
-                                &net, {2, 4}, 5);
-
-    // simulatorPrint(subnet, {2, 4}, {5});
+    rewritePrint("test/data/gate/optimizer/output/rewrite1", &net);
   }
+
+  TEST(OptimizerTest, optimizeToZeroNetGnet1Extended) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    gnet1Exteded(net);
+    rewritePrint("test/data/gate/optimizer/output/rewrite1ex", &net);
+  }
+
+  TEST(OptimizerTest, optimizeToZeroNetGnet2) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    gnet2(net);
+    rewritePrint("test/data/gate/optimizer/output/rewrite2", &net);
+  }
+
+  TEST(OptimizerTest, optimizeToZeroNetGnet3) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    gnet3(net);
+    optimizePrint(&net, 4, "test/data/gate/optimizer/output/rewrite3");
+  }
+
+//===----------------------------------------------------------------------===//
 
   TEST(OptimizerTest, simulatorUse) {
     GNet net;
 
-    gnet2(net);
+    auto g = gnet2(net);
 
-    simulatorPrint(&net, {0, 1, 2, 3}, {6});
+    simulatorPrint(&net, {g[0], g[1], g[2], g[3]}, {g[6]});
   }
 
-//===----------------------------------------------------------------------===//-
+//===----------------------------------------------------------------------===//
 
   TEST(OptimizerTest, findCone) {
     if (!getenv("UTOPIA_HOME")) {
@@ -190,9 +240,12 @@ namespace eda::gate::optimizer {
     }
 
     GNet net;
-    gnet1(net);
+    auto g = gnet1(net);
 
-    findConePrint("test/data/gate/optimizer/output/findCone1", &net, {2, 4}, 5);
+    auto *cone = findConePrint("test/data/gate/optimizer/output/findCone1",
+                               &net, {g[2], g[4]}, g[5]);
+    EXPECT_EQ(3, cone->nGates());
+    delete cone;
   }
 
   TEST(OptimizerTest, findCone2) {
@@ -201,10 +254,57 @@ namespace eda::gate::optimizer {
     }
 
     GNet net;
-    gnet3(net);
+    auto g = gnet3(net);
 
-    findConePrint("test/data/gate/optimizer/output/findCone3", &net, {0, 3, 7},
-                  8);
+    auto cone = findConePrint("test/data/gate/optimizer/output/findCone2", &net,
+                              {g[2], g[3], g[4], g[6], g[7]}, g[14]);
+    EXPECT_EQ(7, cone->nGates());
+    delete cone;
+  }
+
+  TEST(OptimizerTest, findCone3) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    auto g = gnet3(net);
+
+    auto cone = findConePrint("test/data/gate/optimizer/output/findCone3", &net,
+                              {g[0], g[3], g[7]}, g[8]);
+    EXPECT_EQ(4, cone->nGates());
+    EXPECT_EQ(2, cone->nSourceLinks());
+    delete cone;
+  }
+
+  TEST(OptimizerTest, findConeExessiveCut) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    auto g = gnet1(net);
+
+    auto cone = findConePrint(
+            "test/data/gate/optimizer/output/findConeExessiveCut", &net,
+            {g[0], g[1], g[2], g[4]}, g[5]);
+    EXPECT_EQ(3, cone->nGates());
+    EXPECT_EQ(2, cone->nSourceLinks());
+    delete cone;
+  }
+
+  TEST(OptimizerTest, findConeTrivial) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    auto g = gnet1(net);
+
+    auto cone = findConePrint("test/data/gate/optimizer/output/findConeTrivial",
+                              &net, {g[5]}, g[5]);
+    EXPECT_EQ(1, cone->nGates());
+    delete cone;
   }
 
 //===----------------------------------------------------------------------===//
@@ -216,11 +316,11 @@ namespace eda::gate::optimizer {
     GNet mainGnet;
     GNet subGnet;
 
-    gnet1(mainGnet);
+    auto g = gnet1(mainGnet);
     gnet2(subGnet);
 
     substitutePrint("test/data/gate/optimizer/output/substitute", &mainGnet,
-                    &subGnet, mainGnet.getSources());
+                    &subGnet, g[6], mainGnet.getSources());
     EXPECT_EQ(mainGnet.nGates(), subGnet.nGates());
   }
 
@@ -231,11 +331,11 @@ namespace eda::gate::optimizer {
 
     GNet mainGnet;
     GNet subGnet;
-    gnet1Exteded(mainGnet);
+    auto g = gnet1Exteded(mainGnet);
     gnet2(subGnet);
 
     substitutePrint("test/data/gate/optimizer/output/substitute2", &mainGnet,
-                    &subGnet, mainGnet.getSources());
+                    &subGnet, g[6], mainGnet.getSources());
   }
 
 //===----------------------------------------------------------------------===//
@@ -262,7 +362,7 @@ namespace eda::gate::optimizer {
 
     for (auto &[v, cs]: storage.cuts) {
       for (const auto &c: cs) {
-        Vertex failed;
+        GateID failed;
 
         if (!isCut(v, c, failed)) {
           FAIL() << "Wrong cut for v " << v << "; failed " << failed << "\n";

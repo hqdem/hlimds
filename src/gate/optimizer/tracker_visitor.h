@@ -8,24 +8,16 @@
 
 #pragma once
 
-#include "gate/optimizer/cut_storage.h"
 #include "gate/optimizer/visitor.h"
+#include "gate/printer/dot.h"
 
-#include <stack>
+#include <filesystem>
 
 namespace eda::gate::optimizer {
-/**
- * \brief Realization of interface Visitor.
- * \ Finds cone for given node and its cut.
- * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
- */
-  class ConeVisitor : public Visitor {
+  class TrackerVisitor : public Visitor {
   public:
 
-    using Gate = eda::gate::model::Gate;
-    using GateSymbol = eda::gate::model::GateSymbol;
-
-    explicit ConeVisitor(const Cut &cut);
+    TrackerVisitor(const std::filesystem::path &subCatalog, const GNet *net, Visitor* visitor);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -33,12 +25,10 @@ namespace eda::gate::optimizer {
 
     VisitorFlags onCut(const Cut &) override;
 
-    GNet *getGNet();
-
   private:
-    const Cut &cut;
-    std::stack<GateID> visited;
-    std::unordered_map<GateID, GateID> newGates;
-    Cut resultCut;
+    std::filesystem::path subCatalog;
+    Visitor *visitor;
+    Dot dot;
+    int counter = 0;
   };
 } // namespace eda::gate::optimizer

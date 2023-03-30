@@ -28,6 +28,8 @@ namespace eda::gate::optimizer {
           return;
         case FINISH_THIS:
           continue;
+        case SUCCESS:
+          break;
       }
     }
   }
@@ -70,6 +72,8 @@ namespace eda::gate::optimizer {
             case FINISH_THIS:
               bfs.pop();
               continue;
+            case SUCCESS:
+              break;
           }
 
           for (auto node: next) {
@@ -98,11 +102,9 @@ namespace eda::gate::optimizer {
     if (cutStorage) {
       auto &cuts = cutStorage->cuts[node];
       for (const auto &cut: cuts) {
-        switch (visitor->onCut(cut)) {
-          case FINISH_ALL:
-            return FINISH_ALL;
-          case FINISH_THIS:
-            continue;
+        auto status = visitor->onCut(cut);
+        if(status != SUCCESS) {
+          return status;
         }
       }
     }

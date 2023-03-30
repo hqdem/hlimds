@@ -22,8 +22,9 @@ namespace eda::gate::optimizer {
       return SUCCESS;
     } else if (Gate::get(node)->fanout() == 0) {
       std::vector<eda::base::model::Signal<GNet::GateId>> signals;
-      gNet->setGate(node, GateSymbol::IN, signals);
-      gNet->removeGate(node);
+      // gNet->setGate(node, GateSymbol::IN, signals);
+      // gNet->removeGate(node);
+      gNet->eraseGate(node);
       return SUCCESS;
     } else {
       return FINISH_THIS;

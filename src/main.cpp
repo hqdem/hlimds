@@ -296,7 +296,7 @@ int main(int argc, char **argv) {
   version << VERSION_MAJOR << "." << VERSION_MINOR;
 
   title << "Utopia EDA " << version.str() << " | ";
-  title << "Copyright (c) 2021-2022 ISPRAS";
+  title << "Copyright (c) " << YEAR_STARTED << "-" << YEAR_CURRENT << " ISPRAS";
 
   Options options(title.str(), version.str());
 
@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
     options.initialize("config.json", argc, argv);
 
     if (options.rtl.files().empty() && options.hls.files().empty()) {
-      throw CLI::CallForHelp();
+      throw CLI::CallForAllHelp();
     }
   } catch(const CLI::ParseError &e) {
     return options.exit(e);

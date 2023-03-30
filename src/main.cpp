@@ -302,6 +302,10 @@ int main(int argc, char **argv) {
 
   try {
     options.initialize("config.json", argc, argv);
+
+    if (options.rtl.files().empty() && options.hls.files().empty()) {
+      throw CLI::CallForHelp();
+    }
   } catch(const CLI::ParseError &e) {
     return options.exit(e);
   }

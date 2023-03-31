@@ -289,11 +289,19 @@ public:
   /// Moves the gate outside the net keeping the links unchanged.
   void removeGate(GateId gid);
 
+  //===--------------------------------------------------------------------===//
+  // Modification Methods
+  //===--------------------------------------------------------------------===//
+
+  /// Disconnect the gate's inputs from their drivers.
+  void disconnectInputs(GateId gid) {
+    setGate(gid, GateSymbol::IN, SignalList{});
+  }
+
   /// Erases the gate w/ zero fanout from the net including the related links.
   void eraseGate(GateId gid) {
-    const auto *gate = Gate::get(gid);
-    assert(gate->fanout() == 0);
-    setGate(gid, GateSymbol::IN, SignalList{}); 
+    assert(Gate::get(gid)->fanout() == 0);
+    disconnectInputs(gid);
     removeGate(gid);
   }
 
@@ -525,10 +533,7 @@ private:
 
   /// Adds the gate to the net if the gate is a new one.
   GateId addGateIfNew(Gate *gate, SubnetId sid = INV_SUBNET) {
-    if (contains(gate->id())) {
-      return gate->id();
-    }
-    return addGate(gate, sid);
+    return contains(gate->id()) ? gate->id() : addGate(gate, sid);
   }
 
   /// Adds the subnet to the net.

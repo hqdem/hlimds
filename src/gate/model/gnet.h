@@ -247,6 +247,11 @@ public:
     return _gates[index];
   }
 
+  /// Gets a gate w/ the given function and inputs (or nullptr).
+  const Gate *gate(GateSymbol func, const SignalList &inputs) const {
+    return Gate::get(_id, func, inputs);
+  }
+
   /// Checks whether the net contains the gate.
   bool contains(GateId gid) const {
     return _flags.find(gid) != _flags.end();

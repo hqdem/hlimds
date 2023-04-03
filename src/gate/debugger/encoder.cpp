@@ -23,8 +23,9 @@ void Encoder::encode(const Gate &gate, uint16_t version) {
 
   switch (gate.func()) {
   case GateSymbol::IN:
+    break;
   case GateSymbol::OUT:
-    // Ignore input and output gates.
+    encodeBuf(gate, true, version);
     break;
   case GateSymbol::ONE:
     encodeFix(gate, true, version);

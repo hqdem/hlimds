@@ -20,6 +20,7 @@ add_library(Gate OBJECT
   premapper/aigmapper.cpp
   premapper/migmapper.cpp
   premapper/premapper.cpp
+  premapper/xmgmapper.cpp
   printer/dot.cpp
   simulator/simulator.cpp
   transformer/bdd.cpp

@@ -11,6 +11,7 @@ add_library(Gate OBJECT
   optimizer/walker.cpp
   parser/gate_verilog_parser.cpp
   premapper/aigmapper.cpp
+  premapper/migmapper.cpp
   premapper/premapper.cpp
   printer/dot.cpp
   simulator/simulator.cpp

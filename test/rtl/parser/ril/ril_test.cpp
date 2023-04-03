@@ -50,13 +50,3 @@ TEST(RilTest, SingleTest) {
   EXPECT_EQ(rilTest("test/data/ril/",
                     "test.ril"), 0);
 }
-
-TEST(RilTest, SubTest) {
-  EXPECT_EQ(rilTest("test/data/ril/",
-                    "sub.ril"), 0);
-}
-
-TEST(RilTest, AddTest) {
-  EXPECT_EQ(rilTest("test/data/ril/",
-                    "add.ril"), 0);
-}

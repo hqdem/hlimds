@@ -50,3 +50,8 @@ TEST(RilTest, SingleTest) {
   EXPECT_EQ(rilTest("test/data/ril/",
                     "test.ril"), 0);
 }
+
+TEST(RilTest, FuncTest) {
+  EXPECT_EQ(rilTest("test/data/ril/",
+                    "func.ril"), 0);
+}

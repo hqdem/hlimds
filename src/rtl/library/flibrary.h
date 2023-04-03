@@ -107,6 +107,7 @@ private:
 
   static Out synthAdd(size_t outSize, const In &in, GNet &net);
   static Out synthSub(size_t outSize, const In &in, GNet &net);
+  static Out synthMul(size_t outSize, const In &in, GNet &net);
   static Out synthMux(size_t outSize, const In &in, GNet &net);
 
   static Out synthAdder(size_t size, const In &in, bool plusOne, GNet &net);

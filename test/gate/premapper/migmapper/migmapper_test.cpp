@@ -63,9 +63,9 @@ void migMap(const std::shared_ptr<GNet> &net) {
   migMapped->sortTopologically();
 
   // equivalence
-  // bool isEqual = equivalenceCheck(net, migMapped);
-  // std::cout << "equivalence: " << isEqual << '\n';
-  // EXPECT_TRUE(isEqual);
+  bool isEqual = equivalenceCheck(net, migMapped);
+  std::cout << "equivalence: " << isEqual << '\n';
+  EXPECT_TRUE(isEqual);
 }
 
 TEST(MigMapperTest, MigMapperOrTest) {

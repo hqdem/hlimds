@@ -43,6 +43,8 @@ void parse(const std::string &infile) {
 
   Dot dot(parser.getGnet());
   dot.print(outFilename);
+
+  delete parser.getGnet();
 }
 
 TEST(ParserVTest, adder) {

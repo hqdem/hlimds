@@ -42,16 +42,16 @@ static std::shared_ptr<GNet> makeNetn(GateSymbol gate,
                                       Gate::Id &outputId) {
   auto net = std::make_shared<GNet>();
 
-  Gate::SignalList andInputs;
+  Gate::SignalList gateInputs;
   for (unsigned i = 0; i < N; i++) {
     const Gate::Id inputId = net->addIn();
     inputs.push_back(Gate::Signal::always(inputId));
 
     const Gate::Id notGateId = net->addNot(inputId);
-    andInputs.push_back(Gate::Signal::always(notGateId));
+    gateInputs.push_back(Gate::Signal::always(notGateId));
   }
 
-  auto gateId = net->addGate(gate, inputs);
+  auto gateId = net->addGate(gate, gateInputs);
   outputId = net->addOut(gateId);
 
   net->sortTopologically();

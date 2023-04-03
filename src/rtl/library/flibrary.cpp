@@ -62,6 +62,8 @@ FLibrary::Out FLibraryDefault::synth(
     return synthAdd(outSize, in, net);
   case FuncSymbol::SUB:
     return synthSub(outSize, in, net);
+  case FuncSymbol::MUL:
+    return synthMul(outSize, in, net);
   case FuncSymbol::MUX:
     return synthMux(outSize, in, net);
   default:
@@ -128,6 +130,18 @@ FLibrary::Out FLibraryDefault::synthSub(
 
   Out temp = synthUnaryBitwiseOp(GateSymbol::NOT, outSize, { y }, net);
   return synthAdder(outSize, { x, temp }, true, net);
+}
+
+FLibrary::Out FLibraryDefault::synthMul(
+    size_t outSize, const In &in, GNet &net) {
+  Out out(outSize);
+
+  // TODO: Add multiplication implementation here.
+  for (size_t i = 0; i < out.size(); i++) {
+    out[i] = net.addGate(GateSymbol::NOP, in[0][0]);
+  }
+
+  return out;
 }
 
 FLibrary::Out FLibraryDefault::synthAdder(

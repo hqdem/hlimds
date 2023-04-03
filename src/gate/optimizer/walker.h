@@ -13,15 +13,36 @@
 #include "gate/optimizer/visitor.h"
 #include "util/graph.h"
 
-class Walker {
-  using GNet = eda::gate::model::GNet;
+#include <queue>
 
-  GNet *gNet;
-  Visitor *visitor;
-  CutStorage *cutStorage;
-public:
-  Walker(GNet *gNet, Visitor *visitor, CutStorage* cutStorage);
+namespace eda::gate::optimizer {
+/**
+ * \brief Class traces nodes in topological order.
+ * \ Calls visitor to handle each node or cut.
+ * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ */
+  class Walker {
+    using GNet = eda::gate::model::GNet;
+    using Gate = eda::gate::model::Gate;
+    using GateID = GNet::GateId;
 
-  void walk();
-};
+    GNet *gNet;
+    Visitor *visitor;
+    CutStorage *cutStorage;
 
+    bool checkVisited(std::unordered_set<GateID> &visited, GateID node,
+                      bool forward);
+
+    std::vector<GateID> getNext(GateID node, bool forward);
+
+
+    VisitorFlags callVisitor(GateID node);
+
+  public:
+    Walker(GNet *gNet, Visitor *visitor, CutStorage *cutStorage);
+
+    void walk(bool forward);
+
+    void walk(GateID start, bool forward);
+  };
+} // namespace eda::gate::optimizer

@@ -10,13 +10,28 @@
 
 #include "gate/optimizer/cut_storage.h"
 
-class Visitor {
+namespace eda::gate::optimizer {
+  enum VisitorFlags {
+    SUCCESS,
+    FINISH_ALL,
+    FINISH_THIS
+  };
 
-public:
+/**
+ * \brief Interface to handle node and its cuts.
+ * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ */
+  class Visitor {
+  public:
 
-  using Vertex = eda::gate::model::GNet::V;
-  using Cut = CutStorage::Cut;
+    using GNet = eda::gate::model::GNet;
+    using GateID = GNet::GateId;
+    using Cut = CutStorage::Cut;
 
-  virtual void onGate(const Vertex&) = 0;
-  virtual void onCut(const Cut&) = 0;
-};
+    virtual VisitorFlags onNodeBegin(const GateID &) = 0;
+
+    virtual VisitorFlags onNodeEnd(const GateID &) = 0;
+
+    virtual VisitorFlags onCut(const Cut &) = 0;
+  };
+} // namespace eda::gate::optimizer

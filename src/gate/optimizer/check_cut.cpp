@@ -8,21 +8,25 @@
 
 #include "gate/optimizer/check_cut.h"
 
-bool isCut(const Vertex gate, const Cut &cut, Vertex &failed) {
-  std::queue<Vertex> bfs;
-  bfs.push(gate);
-  while (!bfs.empty()) {
-    Gate *cur = Gate::get(bfs.front());
-    if (cut.find(cur->id()) == cut.end()) {
-      if (cur->isSource()) {
-        failed = cur->id();
-        return false;
+namespace eda::gate::optimizer {
+
+  bool isCut(const GateID &gate, const Cut &cut, GateID &failed) {
+    std::queue<GateID> bfs;
+    bfs.push(gate);
+    while (!bfs.empty()) {
+      Gate *cur = Gate::get(bfs.front());
+      if (cut.find(cur->id()) == cut.end()) {
+        if (cur->isSource()) {
+          failed = cur->id();
+          return false;
+        }
+        for (auto input: cur->inputs()) {
+          bfs.push(input.node());
+        }
       }
-      for (auto input: cur->inputs()) {
-        bfs.push(input.node());
-      }
+      bfs.pop();
     }
-    bfs.pop();
+    return true;
   }
-  return true;
-}
+
+} // namespace eda::gate::optimizer

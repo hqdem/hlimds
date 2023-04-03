@@ -9,24 +9,24 @@
 #pragma once
 
 #include "gate/optimizer/cuts_finder_visitor.h"
+#include "gate/optimizer/links_clean.h"
+#include "gate/optimizer/optimizer_visitor.h"
+#include "gate/optimizer/tracker_visitor.h"
 #include "gate/optimizer/walker.h"
+#include "gate/simulator/simulator.h"
 
 #include <queue>
 
-class Optimizer {
+namespace eda::gate::optimizer {
+
   using GNet = eda::gate::model::GNet;
-  using Vertex =  eda::gate::model::GNet::V;
-  using Gate =  eda::gate::model::Gate;
-  using Cut = std::unordered_set<Vertex>;
+  using GateID = eda::gate::model::GNet::GateId;
+  using Gate = eda::gate::model::Gate;
+  using Cut = std::unordered_set<GateID>;
 
-  GNet *gNet;
-  CutStorage cutStorage;
-public:
-  Optimizer(GNet *gNet);
-  void optimize(int cutSize);
-  // bool isCut(const Vertex gate, const Cut &cut, Vertex &failed);
+  void optimize(GNet *net, int cutSize);
 
-  const CutStorage& getCutStorage() {
-    return cutStorage;
-  }
-};
+  void optimizePrint(GNet *net, int cutSize, const std::filesystem::path &subCatalog);
+
+  CutStorage findCuts(int cutSize, GNet *net);
+} // namespace eda::gate::optimizer

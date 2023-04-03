@@ -1,0 +1,22 @@
+input  u:1 clock;
+input  u:1 reset;
+
+input  s:1024 x;
+input  s:1024 y;
+output s:1024 z_not;
+output s:1024 z_or;
+output s:1024 z_and;
+output s:1024 z_xor;
+output s:1024 z_add;
+output s:1024 z_sub;
+output s:2048 z_mul;
+
+@(*) {
+  z_not = ~x;
+  z_or  =  x | y;
+  z_and =  x & y;
+  z_xor =  x ^ y;
+  z_add =  x + y;
+  z_sub =  x - y;
+  z_mul =  x * y;
+}

@@ -51,12 +51,7 @@ TEST(RilTest, SingleTest) {
                     "test.ril"), 0);
 }
 
-TEST(RilTest, SubTest) {
+TEST(RilTest, FuncTest) {
   EXPECT_EQ(rilTest("test/data/ril/",
-                    "sub.ril"), 0);
-}
-
-TEST(RilTest, AddTest) {
-  EXPECT_EQ(rilTest("test/data/ril/",
-                    "add.ril"), 0);
+                    "func.ril"), 0);
 }

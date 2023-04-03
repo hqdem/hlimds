@@ -132,7 +132,7 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
   GateFlags flags{0, sid, gindex};
   _flags.insert({gid, flags});
 
-  onAddGate(gate, false);
+  onAddGate(gate, true, false);
 
   // Do some integrity checks.
   assert(!(_sourceLinks.empty() &&
@@ -159,16 +159,16 @@ void GNet::setGate(GateId gid, GateSymbol func, const SignalList &inputs) {
     subnet = (sid != INV_SUBNET) ? subnet->_subnets[sid] : nullptr;
   }
 
-  std::for_each(subnets.begin(), subnets.end(), [gate](GNet *subnet) {
-    subnet->onRemoveGate(gate, true);
+  std::for_each(subnets.begin(), subnets.end(), [=](GNet *subnet) {
+    subnet->onRemoveGate(gate, true, true);
   });
 
   gate->setFunc(func);
   gate->setInputs(inputs);
   assert(gate->invariant());
 
-  std::for_each(subnets.rbegin(), subnets.rend(), [gate](GNet *subnet) {
-    subnet->onAddGate(gate, true);
+  std::for_each(subnets.rbegin(), subnets.rend(), [=](GNet *subnet) {
+    subnet->onAddGate(gate, true, true);
   });
 
   // Do some integrity checks.
@@ -208,7 +208,7 @@ void GNet::removeGate(GateId gid) {
   _gates.erase(std::end(_gates) - 1, std::end(_gates));
   getFlags(last->id()).gindex = flags.gindex;
 
-  onRemoveGate(gate, false);
+  onRemoveGate(gate, true, false);
   _flags.erase(i);
 
   // Do some integrity checks.
@@ -218,7 +218,41 @@ void GNet::removeGate(GateId gid) {
           _triggers.empty()) == _gates.empty());
 }
 
-void GNet::onAddGate(Gate *gate, bool withLinks) {
+void GNet::onAddGate(Gate *gate, bool updateBoundary, bool withLinks) {
+  const auto gid = gate->id();
+
+  if (updateBoundary) {
+    updateBoundaryLinksOnAdd(gate, withLinks);
+  }
+
+  if (gate->isValue()) {
+    _constants.insert(gid);
+  } else if (gate->isTrigger()) {
+    _triggers.insert(gid);
+  }
+
+  _nConnects += gate->arity();
+  _isSorted = (_gates.size() <= 1);
+}
+
+void GNet::onRemoveGate(Gate *gate, bool updateBoundary, bool withLinks) {
+  const auto gid = gate->id();
+
+  if (updateBoundary) {
+    updateBoundaryLinksOnRemove(gate, withLinks);
+  }
+
+  if (gate->isValue()) {
+    _constants.erase(gid);
+  } else if (gate->isTrigger()) {
+    _triggers.erase(gid);
+  }
+
+  _nConnects -= gate->arity();
+  _isSorted = (_gates.size() <= 1);
+}
+
+void GNet::updateBoundaryLinksOnAdd(Gate *gate, bool withLinks) {
   const auto gid = gate->id();
 
   // Remove the links that became internal from the boundary.
@@ -261,18 +295,9 @@ void GNet::onAddGate(Gate *gate, bool withLinks) {
       }
     }
   }
-
-  if (gate->isValue()) {
-    _constants.insert(gid);
-  } else if (gate->isTrigger()) {
-    _triggers.insert(gid);
-  }
-
-  _nConnects += gate->arity();
-  _isSorted = (_gates.size() <= 1);
 }
 
-void GNet::onRemoveGate(Gate *gate, bool withLinks) {
+void GNet::updateBoundaryLinksOnRemove(Gate *gate, bool withLinks) {
   const auto gid = gate->id();
 
   // Remove the links from the source boundary.
@@ -315,15 +340,6 @@ void GNet::onRemoveGate(Gate *gate, bool withLinks) {
       }
     }
   }
-
-  if (gate->isValue()) {
-    _constants.erase(gid);
-  } else if (gate->isTrigger()) {
-    _triggers.erase(gid);
-  }
-
-  _nConnects -= gate->arity();
-  _isSorted = (_gates.size() <= 1);
 }
 
 //===----------------------------------------------------------------------===//

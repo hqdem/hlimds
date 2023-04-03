@@ -247,6 +247,11 @@ public:
     return _gates[index];
   }
 
+  /// Gets a gate w/ the given function and inputs (or nullptr).
+  const Gate *gate(GateSymbol func, const SignalList &inputs) const {
+    return Gate::get(_id, func, inputs);
+  }
+
   /// Checks whether the net contains the gate.
   bool contains(GateId gid) const {
     return _flags.find(gid) != _flags.end();
@@ -286,8 +291,24 @@ public:
   /// Modifies the existing gate.
   void setGate(GateId gid, GateSymbol func, const SignalList &inputs);
 
-  /// Removes the gate from the net.
+  /// Moves the gate outside the net keeping the links unchanged.
   void removeGate(GateId gid);
+
+  //===--------------------------------------------------------------------===//
+  // Modification Methods
+  //===--------------------------------------------------------------------===//
+
+  /// Disconnect the gate's inputs from their drivers.
+  void disconnectInputs(GateId gid) {
+    setGate(gid, GateSymbol::IN, SignalList{});
+  }
+
+  /// Erases the gate w/ zero fanout from the net including the related links.
+  void eraseGate(GateId gid) {
+    assert(Gate::get(gid)->fanout() == 0);
+    disconnectInputs(gid);
+    removeGate(gid);
+  }
 
   //===--------------------------------------------------------------------===//
   // Convenience Methods
@@ -544,10 +565,7 @@ private:
 
   /// Adds the gate to the net if the gate is a new one.
   GateId addGateIfNew(Gate *gate, SubnetId sid = INV_SUBNET) {
-    if (contains(gate->id())) {
-      return gate->id();
-    }
-    return addGate(gate, sid);
+    return contains(gate->id()) ? gate->id() : addGate(gate, sid);
   }
 
   /// Adds the subnet to the net.
@@ -574,9 +592,14 @@ private:
   }
 
   /// Updates the net state when adding a gate.
-  void onAddGate(Gate *gate, bool withLinks);
+  void onAddGate(Gate *gate, bool updateBoundary, bool withLinks);
   /// Updates the net state when removing a gate.
-  void onRemoveGate(Gate *gate, bool withLinks);
+  void onRemoveGate(Gate *gate, bool updateBoundary, bool withLinks);
+
+  /// Updates the source/target links when adding a gate.
+  void updateBoundaryLinksOnAdd(Gate *gate, bool withLinks);
+  /// Updates the source/target links when removing a gate.
+  void updateBoundaryLinksOnRemove(Gate *gate, bool withLinks);
 
   //===--------------------------------------------------------------------===//
   // Internal Fields

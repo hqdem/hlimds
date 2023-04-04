@@ -17,32 +17,6 @@ using GNet = eda::gate::model::GNet;
 
 namespace eda::gate::premapper {
 
-Gate::SignalList getNewInputs(const Gate &oldGate,
-                              const MigMapper::GateIdMap &oldToNewGates,
-                              size_t &n0, size_t &n1) {
-  const auto k = oldGate.arity();
-
-  Gate::SignalList newInputs;
-  newInputs.reserve(k);
-
-  n0 = n1 = 0;
-  for (auto input : oldGate.inputs()) {
-    if (model::isValue(input)) {
-      const auto isZero = model::isZero(input);
-      n0 += (isZero ? 1 : 0);
-      n1 += (isZero ? 0 : 1);
-    } else {
-      const auto i = oldToNewGates.find(input.node());
-      assert((i != oldToNewGates.end()) && "Input node at the end\n");
-
-      const auto newInputId = i->second;
-      newInputs.push_back(Gate::Signal::always(newInputId));
-    }
-  }
-
-  return newInputs;
-}
-
 Gate::Id MigMapper::mapGate(const Gate &oldGate,
                             const GateIdMap &oldToNewGates,
                             GNet &newNet) const {

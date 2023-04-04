@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/premapper/aigmapper.h"
+#include "gate/premapper/migmapper.h"
 #include "util/singleton.h"
 
 namespace eda::gate::premapper {

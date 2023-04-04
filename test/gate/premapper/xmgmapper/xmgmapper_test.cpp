@@ -16,7 +16,7 @@ using Hints = Checker::Hints;
 using Link = eda::gate::model::Gate::Link;
 using XmgMapper = eda::gate::premapper::XmgMapper;
 
-bool equivalenceCheck(const std::shared_ptr<GNet> &net,
+bool xmgEquivalenceCheck(const std::shared_ptr<GNet> &net,
                       const std::shared_ptr<GNet> &xmgMapped) {
   Checker checker;
   GateIdMap oldToNewGates;
@@ -63,7 +63,7 @@ void xmgMap(const std::shared_ptr<GNet> &net) {
   xmgMapped->sortTopologically();
 
   // equivalence
-  bool isEqual = equivalenceCheck(net, xmgMapped);
+  bool isEqual = xmgEquivalenceCheck(net, xmgMapped);
   std::cout << "equivalence: " << isEqual << '\n';
   EXPECT_TRUE(isEqual);
 }

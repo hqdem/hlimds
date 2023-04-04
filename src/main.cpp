@@ -10,6 +10,7 @@
 #include "gate/debugger/checker.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
+#include "gate/optimizer/rwmanager.h"
 #include "gate/premapper/aigmapper.h"
 #include "hls/compiler/compiler.h"
 #include "hls/mapper/mapper.h"
@@ -50,6 +51,7 @@ struct RtlContext {
   using Compiler = eda::rtl::compiler::Compiler;
   using PreMapper = eda::gate::premapper::PreMapper;
   using AigMapper = eda::gate::premapper::AigMapper;
+  using RwManager = eda::gate::optimizer::RewriteManager;
   using Checker = eda::gate::debugger::Checker;
 
   RtlContext(const std::string &file, const RtlOptions &options):
@@ -83,6 +85,13 @@ void dump(const GNet &net) {
   std::cout << "N=" << net.nGates() << std::endl;
   std::cout << "I=" << net.nSourceLinks() << std::endl;
   std::cout << "O=" << net.nTargetLinks() << std::endl;
+}
+
+bool initialize(RtlContext &context) {
+  LOG(INFO) << "RTL initialize";
+
+  RtlContext::RwManager::get().initialize(context.options.preLib);
+  return true;
 }
 
 bool parse(RtlContext &context) {
@@ -174,10 +183,11 @@ bool check(RtlContext &context) {
 }
 
 int rtlMain(RtlContext &context) {
-  if (!parse(context))   { return -1; }
-  if (!compile(context)) { return -1; }
-  if (!premap(context))  { return -1; }
-  if (!check(context))   { return -1; }
+  if (!initialize(context)) { return -1; }
+  if (!parse(context))      { return -1; }
+  if (!compile(context))    { return -1; }
+  if (!premap(context))     { return -1; }
+  if (!check(context))      { return -1; }
 
   return 0;
 }

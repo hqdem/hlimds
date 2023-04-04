@@ -5,6 +5,8 @@ add_library(Gate OBJECT
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
+  optimizer/database/abc/rwrUtil.c
+  optimizer/database/abc.cpp
   optimizer/check_cut.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp
@@ -12,6 +14,7 @@ add_library(Gate OBJECT
   optimizer/optimizer.cpp
   optimizer/optimizer_visitor.cpp
   optimizer/rwdatabase.cpp
+  optimizer/rwmanager.cpp
   optimizer/tracker_visitor.cpp
   optimizer/tracker_visitor.h
   optimizer/util.cpp

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/debugger/checker.h"
 #include "gate/model/gnet.h"
 
 #include <memory>

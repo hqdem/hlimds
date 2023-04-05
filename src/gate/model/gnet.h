@@ -122,7 +122,7 @@ public:
   ~GNet() = default;
 
   //===--------------------------------------------------------------------===//
-  // Properties 
+  // Properties
   //===--------------------------------------------------------------------===//
 
   /// Checks whether the net is top-level.
@@ -166,7 +166,7 @@ public:
   }
 
   //===--------------------------------------------------------------------===//
-  // Statistics 
+  // Statistics
   //===--------------------------------------------------------------------===//
 
   unsigned id() const {
@@ -214,7 +214,7 @@ public:
   }
 
   //===--------------------------------------------------------------------===//
-  // Gates 
+  // Gates
   //===--------------------------------------------------------------------===//
 
   /// Returns the collection of gates.
@@ -445,7 +445,7 @@ public:
   }
 
   //===--------------------------------------------------------------------===//
-  // Subnets 
+  // Subnets
   //===--------------------------------------------------------------------===//
 
   /// Returns the collection of subnets.
@@ -553,6 +553,20 @@ public:
 
   /// Sorts the gates in topological order.
   void sortTopologically();
+
+  //===--------------------------------------------------------------------===//
+  // Cloning
+  //===--------------------------------------------------------------------===//
+
+  GNet* clone();
+
+  /** Clones the net.
+   *  The input map provides correspondence between gates of the original
+   *  net and gates of the cloned one.
+   *  @param oldToNewId Stores correspondence between gates.
+   *  @return The clone of this net.
+   */
+  GNet* clone(std::unordered_map<Gate::Id, Gate::Id> &oldToNewId);
 
 private:
   //===--------------------------------------------------------------------===//

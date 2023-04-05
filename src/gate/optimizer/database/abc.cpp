@@ -9,6 +9,7 @@
 #include "gate/model/gnet.h"
 #include "gate/optimizer/rwdatabase.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <unordered_set>
 #include <vector>
@@ -122,13 +123,140 @@ static BoundGNet getCircuit(GateId gid, const BoundGNet &boundNet) {
   circuit->addOut(oldToNewGates[gid]);
 
   GateBindings bindings;
+  InputId inputId = 0;
   for (const auto &[id, gid] : boundNet.bindings) {
     if (oldToNewGates.find(gid) != oldToNewGates.end()) {
-       bindings[id] = oldToNewGates[gid];
+      bindings[/*id*/inputId++] = oldToNewGates[gid]; // FIXME: There are holes in ids.
     }
   }
 
   return {circuit, bindings};
+}
+
+static TruthTable convertTruthTable(
+    TruthTable table, size_t perm[], unsigned neg) {
+  const unsigned k = 4;
+  const unsigned size = (1 << k);
+  const TruthTable x0 = 0xAAAA;
+  const TruthTable x1 = 0xCCCC;
+  const TruthTable x2 = 0xF0F0;
+  const TruthTable x3 = 0xFF00;
+
+  TruthTable x[k];
+  TruthTable func = (neg & (1 << k)) ? ~table : table;
+
+  x[perm[0]] = ((neg & (1 << 0)) ? ~x0 : x0);
+  x[perm[1]] = ((neg & (1 << 1)) ? ~x1 : x1);
+  x[perm[2]] = ((neg & (1 << 2)) ? ~x2 : x2);
+  x[perm[3]] = ((neg & (1 << 3)) ? ~x3 : x3);
+
+  unsigned array[size];
+  for (unsigned i = 0; i < size; i++) {
+    array[i] = ((func >> i) & 1) << 0
+             | ((x[0] >> i) & 1) << 1
+             | ((x[1] >> i) & 1) << 2
+             | ((x[2] >> i) & 1) << 3
+             | ((x[3] >> i) & 1) << 4;
+  }
+
+  std::sort(array, array + size);
+
+  TruthTable result = 0;
+  for (unsigned i = 0; i < size; i++) {
+    result |= (array[i] & 1) << i;
+  }
+
+  return result;
+}
+
+static unsigned factorial(unsigned k) {
+  return k == 0 ? 1 : k * factorial(k - 1);
+}
+
+static BoundGNet clone(const BoundGNet &circuit) {
+  BoundGNet newCircuit;
+
+  GateIdMap oldToNewGates;
+  newCircuit.net = std::shared_ptr<GNet>(circuit.net->clone(oldToNewGates));
+
+  for (const auto &[inputId, oldGateId] : circuit.bindings) {
+    const auto newGateId = oldToNewGates[oldGateId];
+    assert(newGateId != 0);
+
+    newCircuit.bindings[inputId] = newGateId;
+    std::cout << "inputId " << inputId << "->" << newGateId << std::endl;
+  }
+
+  return newCircuit;
+}
+
+static void generateNpnClasses(
+    TruthTable table, const BoundGNet &boundNet, RWDatabase &database) {
+  static size_t perm[24][4] = {
+    {0, 1, 2, 3},
+    {1, 0, 2, 3},
+    {2, 0, 1, 3},
+    {0, 2, 1, 3},
+    {1, 2, 0, 3},
+    {2, 1, 0, 3},
+    {2, 1, 3, 0},
+    {1, 2, 3, 0},
+    {3, 2, 1, 0},
+    {2, 3, 1, 0},
+    {1, 3, 2, 0},
+    {3, 1, 2, 0},
+    {3, 0, 2, 1},
+    {0, 3, 2, 1},
+    {2, 3, 0, 1},
+    {3, 2, 0, 1},
+    {0, 2, 3, 1},
+    {2, 0, 3, 1},
+    {1, 0, 3, 2},
+    {0, 1, 3, 2},
+    {3, 1, 0, 2},
+    {1, 3, 0, 2},
+    {0, 3, 1, 2},
+    {3, 0, 1, 2}
+  };
+
+  const size_t k = boundNet.bindings.size();
+  const size_t N = 1 << (k + 1);
+  const size_t P = factorial(k);
+
+  for (unsigned n = 0; n < N; n++) {
+    // Clone the net consistently w/ the bindings.
+    auto circuit = clone(boundNet);
+
+    // Negate the inputs.
+    for (unsigned i = 0; i < k; i++) {
+      if ((n >> i) & 1) {
+        auto oldInputId = circuit.bindings[i];
+        auto newInputId = circuit.net->addIn();
+        circuit.net->setNot(oldInputId, newInputId);
+        circuit.bindings[i] = newInputId;
+      }
+    }
+
+    // Negate the output.
+    if ((n >> k) & 1) {
+      auto oldOutputId = circuit.net->targetLinks().begin()->source; // TODO:
+      auto *gate = Gate::get(oldOutputId);
+      circuit.net->setNot(oldOutputId, gate->input(0));
+      circuit.net->addOut(oldOutputId);
+    }
+
+    for (unsigned p = 0; p < P; p++) {
+      for (unsigned i = 0; i < k; i++) {
+        circuit.bindings[i] = perm[p][i];
+      }
+
+      const auto newTable = convertTruthTable(table, perm[p], n);
+      std::cout << "Table: " << std::hex << newTable << std::endl;
+      std::cout << std::dec << *circuit.net << std::endl;
+
+      database.set(newTable, {circuit});
+    }
+  }
 }
 
 void initializeAbcRwDatabase(RWDatabase &database) {
@@ -144,14 +272,16 @@ void initializeAbcRwDatabase(RWDatabase &database) {
     practical.emplace(classes[i]);
   }
 
+  std::unordered_set<TruthTable> processed;
+  processed.reserve(practical.size());
+
   for (const auto &[gid, table] : gates) {
-    if (practical.find(table) != practical.end()) {
+    if (practical.find(table) != practical.end() &&
+        processed.find(table) == processed.end()) {
       auto circuit = getCircuit(gid, net);
 
-      std::cout << "Table: " << std::hex << table << std::endl;
-      std::cout << std::dec << *circuit.net << std::endl;
-
-      database.set(table, {circuit});
+      generateNpnClasses(table, circuit, database);
+      processed.emplace(table);
     }
   }
 }

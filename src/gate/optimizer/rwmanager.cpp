@@ -19,6 +19,7 @@ void RewriteManager::initialize(const std::string &library) {
   if (library == DEFAULT) {
     auto database = std::make_shared<RWDatabase>();
     initializeAbcRwDatabase(*database);
+    db.emplace(library, database);
   }
 }
 

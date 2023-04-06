@@ -12,25 +12,31 @@
 
 #include <unordered_map>
 
-struct CutStorage {
-  using GNet = eda::gate::model::GNet;
-  using Vertex = GNet::V;
+namespace eda::gate::optimizer {
+/**
+ * \brief Class for storing cuts.
+ * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ */
+  struct CutStorage {
+    using GNet = eda::gate::model::GNet;
+    using GateID = GNet::GateId;
 
-  struct HashFunction {
-    size_t operator()(const std::unordered_set<Vertex>& set) const {
-      std::hash<int> hasher;
-      size_t answer = 0;
+    struct HashFunction {
+      size_t operator()(const std::unordered_set<GateID> &set) const {
+        std::hash<int> hasher;
+        size_t answer = 0;
 
-      for (int i: set) {
-        answer ^= hasher(i) + 0x9e3779b9 +
-                  (answer << 6) + (answer >> 2);
+        for (int i: set) {
+          answer ^= hasher(i) + 0x9e3779b9 +
+                    (answer << 6) + (answer >> 2);
+        }
+        return answer;
       }
-      return answer;
-    }
+    };
+
+    using Cut = std::unordered_set<GateID>;
+    using Cuts = std::unordered_set<Cut, HashFunction>;
+
+    std::unordered_map<GateID, Cuts> cuts;
   };
-
-  using Cut = std::unordered_set<Vertex>;
-  using Cuts = std::unordered_set<Cut, HashFunction>;
-
-  std::unordered_map<GNet::V, Cuts> cuts;
-};
+} // namespace eda::gate::optimizer

@@ -36,6 +36,7 @@ public:
   void encodeAnd(const Gate &gate, bool sign, uint16_t version);
   void encodeOr (const Gate &gate, bool sign, uint16_t version);
   void encodeXor(const Gate &gate, bool sign, uint16_t version);
+  void encodeMaj(const Gate &gate, bool sign, uint16_t version);
 
   // Latches and flip-flops.
   void encodeLatch(const Gate &gate, uint16_t version);
@@ -46,13 +47,19 @@ public:
   void encodeFix(uint64_t y, bool s);
   /// Encodes the equality y^s == x.
   void encodeBuf(uint64_t y, uint64_t x, bool s);
-  /// Encodes the equality y^s == x1^s1 | x2^s2.
-  void encodeAnd(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2);
-  /// Encodes the equality y^s == x1^s1 | x2^s2.
-  void encodeOr (uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2);
-  /// Encodes the equality y^s == x1^s1 ^ x2^s2.
-  void encodeXor(uint64_t y, uint64_t x1, uint64_t x2, bool s, bool s1, bool s2);
-  /// Encodes the equality y^s == c ? x1 : x2.
+  /// Encodes the equality y^s == and(x1^s1, x2^s2).
+  void encodeAnd(uint64_t y, uint64_t x1, uint64_t x2,
+                 bool s, bool s1, bool s2);
+  /// Encodes the equality y^s == or(x1^s1, x2^s2).
+  void encodeOr (uint64_t y, uint64_t x1, uint64_t x2,
+                 bool s, bool s1, bool s2);
+  /// Encodes the equality y^s == xor(x1^s1, x2^s2).
+  void encodeXor(uint64_t y, uint64_t x1, uint64_t x2,
+                 bool s, bool s1, bool s2);
+  /// Encodes the equality y^s == maj(x1^s1, x2^s2, x3^s3).
+  void encodeMaj(uint64_t y, uint64_t x1, uint64_t x2, uint64_t x3,
+                 bool s, bool s1, bool s2, bool s3);
+  /// Encodes the equality y^s == mux(c; x1, x2).
   void encodeMux(uint64_t y, uint64_t c, uint64_t x1, uint64_t x2, bool s);
 
   void encode(Context::Lit lit) {

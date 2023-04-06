@@ -42,16 +42,16 @@ static std::shared_ptr<GNet> makeNetn(GateSymbol gate,
                                       Gate::Id &outputId) {
   auto net = std::make_shared<GNet>();
 
-  Gate::SignalList andInputs;
+  Gate::SignalList gateInputs;
   for (unsigned i = 0; i < N; i++) {
     const Gate::Id inputId = net->addIn();
     inputs.push_back(Gate::Signal::always(inputId));
 
     const Gate::Id notGateId = net->addNot(inputId);
-    andInputs.push_back(Gate::Signal::always(notGateId));
+    gateInputs.push_back(Gate::Signal::always(notGateId));
   }
 
-  auto gateId = net->addGate(gate, andInputs);
+  auto gateId = net->addGate(gate, gateInputs);
   outputId = net->addOut(gateId);
 
   net->sortTopologically();
@@ -100,6 +100,13 @@ std::shared_ptr<GNet> makeAndn(unsigned N,
                                Gate::SignalList &inputs,
                                Gate::Id &outputId) {
   return makeNetn(GateSymbol::AND, N, inputs, outputId);
+}
+
+// Maj(x1, x2, ..., xN).
+std::shared_ptr<GNet> makeMaj(unsigned N,
+                              Gate::SignalList &inputs,
+                              Gate::Id &outputId) {
+  return makeNet(GateSymbol::MAJ, N, inputs, outputId);
 }
 
 // Random hierarchical network.
@@ -215,6 +222,13 @@ std::shared_ptr<GNet> makeRand(std::size_t nGates,
   return net;
 }
 
+void dump(const GNet &net) {
+  std::cout << net << '\n';
+  std::cout << "N=" << net.nGates() << '\n';
+  std::cout << "I=" << net.nSourceLinks() << '\n';
+  std::cout << "O=" << net.nTargetLinks() << '\n';
+}
+
 TEST(GNetTest, GNetOrTest) {
   Gate::SignalList inputs;
   Gate::Id outputId;
@@ -265,5 +279,23 @@ TEST(GNetTest, GNetRandTest) {
 TEST(GNetTest, GNetRandTestIssue11877) {
   auto net = makeRand(7, 5);
   EXPECT_TRUE(net != nullptr);
+}
+
+TEST(GNetTest, GNetWithCheckerTest) {
+  eda::gate::debugger::Checker checker;
+  auto net = makeRand(7, 5);
+  std::unordered_map<Gate::Id, Gate::Id> testMap = {};
+  auto netCloned = net.get()->clone(testMap);
+  EXPECT_TRUE(checker.areEqual(*net, *netCloned, testMap));
+}
+
+TEST(GNetTest, GNetEdgesTest) {
+  auto net = makeRand(7, 5);
+  EXPECT_TRUE(net.get()->clone()->nEdges() == net.get()->nEdges());
+}
+
+TEST(GNetTest, GNetAddressTest) {
+  auto net = makeRand(7, 5);
+  EXPECT_TRUE(net.get()->clone() != net.get());
 }
 

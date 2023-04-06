@@ -17,6 +17,7 @@ using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 using SignalList = model::Gate::SignalList;
 
+
 Gate::SignalList PreMapper::getNewInputs(
     const Gate::SignalList &oldInputs,
     const PreMapper::GateIdMap &oldToNewGates) {
@@ -44,7 +45,8 @@ Gate::SignalList PreMapper::getNewInputs(
   Gate::SignalList newInputs;
   newInputs.reserve(k);
 
-  n0 = n1 = 0;
+  n0 = 0;
+  n1 = 0;
   for (const auto input : oldGate.inputs()) {
     if (model::isValue(input)) {
       const auto isZero = model::isZero(input);
@@ -52,8 +54,12 @@ Gate::SignalList PreMapper::getNewInputs(
       n1 += (isZero ? 0 : 1);
     } else {
       const auto i = oldToNewGates.find(input.node());
+<<<<<<< HEAD
       assert("Points one past the last element" &&
               (i != oldToNewGates.end()));
+=======
+      assert(i != oldToNewGates.end());
+>>>>>>> 523867b7910603532e01602fb47a696b39be2379
 
       const auto newInputId = i->second;
       newInputs.push_back(Gate::Signal::always(newInputId));

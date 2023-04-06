@@ -38,20 +38,33 @@ public:
     return map(net, oldToNewGates);
   }
 
+<<<<<<< HEAD
   static Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
                                        const PreMapper::GateIdMap &oldToNewGates);
   static Gate::SignalList getNewInputs(const Gate &oldGate,
                                 const PreMapper::GateIdMap &oldToNewGates,
                                 size_t &n0, size_t &n1);
+=======
+static Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
+                                     const PreMapper::GateIdMap &oldToNewGates);
+static Gate::SignalList getNewInputs(const Gate &oldGate,
+                                     const PreMapper::GateIdMap &oldToNewGates,
+                                     size_t &n0, size_t &n1);
+>>>>>>> 523867b7910603532e01602fb47a696b39be2379
 
 protected:
   virtual Gate::Id mapIn (GNet &newNet) const = 0;
   virtual Gate::Id mapOut(const Gate::SignalList &newInputs,
+<<<<<<< HEAD
                   size_t n0, size_t n1, GNet &newNet) const = 0;
+=======
+                          size_t n0, size_t n1, GNet &newNet) const = 0;
+>>>>>>> 523867b7910603532e01602fb47a696b39be2379
 
   virtual Gate::Id mapVal(bool value, GNet &newNet) const = 0;
 
   virtual Gate::Id mapNop(const Gate::SignalList &newInputs,
+<<<<<<< HEAD
                   bool sign, GNet &newNet) const = 0;
   virtual Gate::Id mapNop(const Gate::SignalList &newInputs,
                   size_t n0, size_t n1, bool sign, GNet &newNet) const = 0;
@@ -70,6 +83,30 @@ protected:
                   bool sign, GNet &newNet) const = 0;
   virtual Gate::Id mapXor(const Gate::SignalList &newInputs,
                   size_t n0, size_t n1, bool sign, GNet &newNet) const = 0;
+=======
+                          bool sign, GNet &newNet) const = 0;
+  virtual Gate::Id mapNop(const Gate::SignalList &newInputs,
+                          size_t n0, size_t n1,
+                          bool sign, GNet &newNet) const = 0;
+
+  virtual Gate::Id mapAnd(const Gate::SignalList &newInputs,
+                          bool sign, GNet &newNet) const = 0;
+  virtual Gate::Id mapAnd(const Gate::SignalList &newInputs,
+                          size_t n0, size_t n1,
+                          bool sign, GNet &newNet) const = 0;
+
+  virtual Gate::Id mapOr (const Gate::SignalList &newInputs,
+                          bool sign, GNet &newNet) const = 0;
+  virtual Gate::Id mapOr (const Gate::SignalList &newInputs,
+                          size_t n0, size_t n1,
+                          bool sign, GNet &newNet) const = 0;
+
+  virtual Gate::Id mapXor(const Gate::SignalList &newInputs,
+                          bool sign, GNet &newNet) const = 0;
+  virtual Gate::Id mapXor(const Gate::SignalList &newInputs,
+                          size_t n0, size_t n1,
+                          bool sign, GNet &newNet) const = 0;
+>>>>>>> 523867b7910603532e01602fb47a696b39be2379
 
   PreMapper() {}
   virtual ~PreMapper() {}

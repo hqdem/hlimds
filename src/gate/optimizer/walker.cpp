@@ -8,21 +8,145 @@
 
 #include "gate/optimizer/walker.h"
 
-Walker::Walker(Walker::GNet *gNet, Visitor *visitor, CutStorage *cutStorage) :
-        gNet(gNet), visitor(visitor), cutStorage(cutStorage) {}
+namespace eda::gate::optimizer {
 
-void Walker::walk(bool forward) {
+  using GNet = eda::gate::model::GNet;
 
-  auto nodes = eda::utils::graph::topologicalSort(*gNet);
-  if (!forward) {
-    std::reverse(nodes.begin(), nodes.end());
-  }
+  Walker::Walker(Walker::GNet *gNet, Visitor *visitor, CutStorage *cutStorage) :
+          gNet(gNet), visitor(visitor), cutStorage(cutStorage) {}
 
-  for (auto &node: nodes) {
-    visitor->onNodeBegin(node);
-    auto &cuts = cutStorage->cuts[node];
-    for (const auto &cut: cuts) {
-      visitor->onCut(cut);
+  void Walker::walk(bool forward) {
+
+    auto nodes = eda::utils::graph::topologicalSort(*gNet);
+    if (!forward) {
+      std::reverse(nodes.begin(), nodes.end());
+    }
+
+    for (auto &node: nodes) {
+      switch (callVisitor(node)) {
+        case FINISH_ALL:
+          return;
+        case FINISH_THIS:
+          continue;
+        case SUCCESS:
+          break;
+      }
     }
   }
-}
+
+  void Walker::walk(GateID start, bool forward) {
+    std::queue<GateID> bfs;
+    bfs.push(start);
+
+    std::unordered_set<GateID> accessed;
+
+    // First trace to define needed nodes.
+    while (!bfs.empty()) {
+      GateID cur = bfs.front();
+      accessed.emplace(cur);
+      auto next = getNext(cur, forward);
+      for (auto node: next) {
+        bfs.push(node);
+      }
+      bfs.pop();
+    }
+
+    bfs.push(start);
+
+    // Second trace to visit needed nodes in topological order.
+    while (!bfs.empty()) {
+      GateID cur = bfs.front();
+
+      // TODO: delete print.
+      std::cout << "bfs: " << cur << std::endl;
+
+      if (accessed.find(cur) != accessed.end()) {
+        if (checkVisited(accessed, cur, forward)) {
+
+          accessed.erase(cur);
+          auto next = getNext(cur, forward);
+
+          switch (callVisitor(cur)) {
+            case FINISH_ALL:
+              return;
+            case FINISH_THIS:
+              bfs.pop();
+              continue;
+            case SUCCESS:
+              break;
+          }
+
+          for (auto node: next) {
+            bfs.push(node);
+          }
+        } else {
+          auto prev = getNext(cur, !forward);
+          for (auto node: prev) {
+            if (accessed.find(node) != accessed.end()) {
+              bfs.push(node);
+            }
+          }
+          bfs.push(cur);
+        }
+      }
+      bfs.pop();
+    }
+  }
+
+  VisitorFlags Walker::callVisitor(GateID node) {
+    auto flag = visitor->onNodeBegin(node);
+    if (flag != VisitorFlags::SUCCESS) {
+      return flag;
+    }
+
+    if (cutStorage) {
+      auto &cuts = cutStorage->cuts[node];
+      for (const auto &cut: cuts) {
+        auto status = visitor->onCut(cut);
+        if(status != SUCCESS) {
+          return status;
+        }
+      }
+    }
+
+    return visitor->onNodeEnd(node);
+  }
+
+  bool Walker::checkVisited(std::unordered_set<GateID> &accessed,
+                            GateID node, bool forward) {
+    if (forward) {
+      const auto &inputs = Gate::get(node)->inputs();
+      for (const auto &in: inputs) {
+        if (accessed.find(in.node()) != accessed.end()) {
+          return false;
+        }
+      }
+    } else {
+      const auto &outputs = Gate::get(node)->links();
+      for (const auto &out: outputs) {
+        if (accessed.find(out.target) != accessed.end()) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  std::vector<GNet::GateId> Walker::getNext(GateID node, bool forward) {
+    std::vector<GNet::GateId> next;
+    if (forward) {
+      const auto &outputs = Gate::get(node)->links();
+      next.reserve(outputs.size());
+      for (const auto &out: outputs) {
+        next.emplace_back(out.target);
+      }
+    } else {
+      const auto &inputs = Gate::get(node)->inputs();
+      next.reserve(inputs.size());
+      for (const auto &in: inputs) {
+        next.emplace_back(in.node());
+      }
+    }
+    return next;
+  }
+} // namespace eda::gate::optimizer

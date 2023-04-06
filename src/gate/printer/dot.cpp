@@ -12,13 +12,22 @@ Dot::Dot(const Dot::GNet *gNet) : gNet(gNet) {}
 
 void Dot::print(const std::string &filename) const {
   std::ofstream out(filename);
-  print(out);
-  out.close();
+  if (out.is_open()) {
+    print(out);
+    out.close();
+  } else {
+    std::cerr << "Failed to create file : " << filename << std::endl;
+  }
 }
 
 void Dot::print(std::ofstream &stream) const {
-  stream << "digraph gNet {\n";
+  stream << "digraph subNet {\n";
   for (const auto &gate: gNet->gates()) {
+    if(gate->links().empty()) {
+      stream << "\t";
+      print(stream, gate);
+      stream << ";\n";
+    }
     for (const auto &links: gate->links()) {
       stream << "\t";
       print(stream, gate);
@@ -30,6 +39,7 @@ void Dot::print(std::ofstream &stream) const {
   stream << "}" << std::endl;
 }
 
-void Dot::print(std::ofstream &stream, const eda::gate::model::Gate *gate) const {
+void
+Dot::print(std::ofstream &stream, const eda::gate::model::Gate *gate) const {
   stream << gate->id();
 }

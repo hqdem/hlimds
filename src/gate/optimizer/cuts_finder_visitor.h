@@ -11,15 +11,25 @@
 #include "gate/optimizer/cut_storage.h"
 #include "gate/optimizer/visitor.h"
 
-class CutsFindVisitor : public Visitor {
+namespace eda::gate::optimizer {
+/**
+ * \brief Realization of interface Visitor.
+ * \ Finds cuts in given net.
+ * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ */
+  class CutsFindVisitor : public Visitor {
 
-  int cutSize;
-  CutStorage *cutStorage;
+    int cutSize;
+    CutStorage *cutStorage;
 
-public:
+  public:
 
-  CutsFindVisitor(int cutSize, CutStorage *cutStorage);
-  void onNodeBegin(const Node&) override;
-  void onNodeEnd(const Node&) override;
-  void onCut(const Cut&) override;
-};
+    CutsFindVisitor(int cutSize, CutStorage *cutStorage);
+
+    VisitorFlags onNodeBegin(const GateID &) override;
+
+    VisitorFlags onNodeEnd(const GateID &) override;
+
+    VisitorFlags onCut(const Cut &) override;
+  };
+} // namespace eda::gate::optimizer

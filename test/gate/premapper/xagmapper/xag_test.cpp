@@ -32,7 +32,8 @@ void dump(const GNet &net) {
 }
 
 // gate(x1, ..., xN).
-std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate, unsigned N) {
+std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate,
+                                        const unsigned N) {
   std::shared_ptr<GNet> net = std::make_shared<GNet>();
 
   Gate::SignalList inputs;
@@ -47,13 +48,14 @@ std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate, unsigned N) {
   outputId = net->addOut(gateId);
 
   net->sortTopologically();
-  dump(*net);
-  std::cout << "---------" << std::endl;
+//  dump(*net);
+//  std::cout << "---------" << std::endl;
   return net;
 }
 
 // gate(~x1, ..., ~xN).
-std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate, unsigned N) {
+std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate,
+                                         const unsigned N) {
   std::shared_ptr<GNet> net = std::make_shared<GNet>();
 
   Gate::SignalList inputs;
@@ -72,20 +74,23 @@ std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate, unsigned N) {
   outputId = net->addOut(gateId);
 
   net->sortTopologically();
-  dump(*net);
-  std::cout << "---------" << std::endl;
+//  dump(*net);
+//  std::cout << "---------" << std::endl;
   return net;
 }
 
-void initializeBinds(GNet &net, GateIdMap &gmap, GateBinding &ibind, GateBinding &obind) {
+void initializeBinds(const GNet &net,
+                     GateIdMap &gmap,
+                     GateBinding &ibind,
+                     GateBinding &obind) {
   // Input-to-input correspondence.
-  for (auto oldSourceLink : net.sourceLinks()) {
+  for (const auto oldSourceLink : net.sourceLinks()) {
     auto newSourceId = gmap[oldSourceLink.target];
     ibind.insert({oldSourceLink, Link(newSourceId)});
   }
 
   // Output-to-output correspondence.
-  for (auto oldTargetLink : net.targetLinks()) {
+  for (const auto oldTargetLink : net.targetLinks()) {
     auto newTargetId = gmap[oldTargetLink.source];
     obind.insert({oldTargetLink, Link(newTargetId)});
   }
@@ -95,11 +100,13 @@ std::shared_ptr<GNet> premap(std::shared_ptr<GNet> net, GateIdMap &gmap) {
   eda::gate::premapper::XagMapper premapper;
   std::shared_ptr<GNet> premapped = premapper.map(*net, gmap);
   premapped->sortTopologically();
-  dump(*premapped);
+//  dump(*premapped);
   return premapped;
 }
 
-bool checkEquivalence(std::shared_ptr<GNet> net, std::shared_ptr<GNet> premapped, GateIdMap &gmap) {
+bool checkEquivalence(const std::shared_ptr<GNet> net,
+                      const std::shared_ptr<GNet> premapped,
+                      GateIdMap &gmap) {
   // Initialize binds
   GateBinding ibind, obind;
   initializeBinds(*net, gmap, ibind, obind);

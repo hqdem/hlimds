@@ -28,10 +28,6 @@ using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 using Link = Gate::Link;
 
 TEST(XagPremapperVerilogTest, FirstTest) {
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
-  }
-
   const std::filesystem::path subCatalog = "test/gate/premapper/xagmapper";
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path prefixPath = homePath / subCatalog;

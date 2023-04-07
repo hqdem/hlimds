@@ -8,17 +8,17 @@
 
 #pragma once
 
+#include "gate/optimizer/links_clean.h"
 #include "gate/optimizer/visitor.h"
-#include "gate/printer/dot.h"
-
-#include <filesystem>
+#include "gate/optimizer/walker.h"
 
 namespace eda::gate::optimizer {
-  class TrackerVisitor : public Visitor {
-  public:
 
-    TrackerVisitor(const std::filesystem::path &subCatalog, const GNet *net,
-                   Visitor *visitor);
+  class SubstituteVisitor : public Visitor {
+  public:
+    using Gate = model::Gate;
+
+    SubstituteVisitor(GateID cutFor, const std::unordered_map<GateID, GateID> &map, GNet *subsNet, GNet *net);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -27,10 +27,13 @@ namespace eda::gate::optimizer {
     VisitorFlags onCut(const Cut &) override;
 
   private:
-    std::filesystem::path subCatalog;
-    Visitor *visitor;
-    Dot dot;
-    int counter = 0;
+    GateID cutFor;
+    /// subNetGateId -> sourceNetGaeId
+    const std::unordered_map<GateID, GateID> &map;
+    GNet *subsNet;
+    GNet *net;
+
+    std::unordered_map<GateID, GateID> nodes;
   };
 
 } // namespace eda::gate::optimizer

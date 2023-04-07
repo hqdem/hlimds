@@ -24,9 +24,10 @@ namespace eda::gate::optimizer {
   using Gate = eda::gate::model::Gate;
   using Cut = std::unordered_set<GateID>;
 
-  void optimize(GNet *net, int cutSize);
+  void optimize(GNet *net, int cutSize, OptimizerVisitor&& optimizer);
 
-  void optimizePrint(GNet *net, int cutSize, const std::filesystem::path &subCatalog);
+  void optimizePrint(GNet *net, int cutSize, const std::filesystem::path &subCatalog,
+                     OptimizerVisitor&& optimizer);
 
   CutStorage findCuts(int cutSize, GNet *net);
 } // namespace eda::gate::optimizer

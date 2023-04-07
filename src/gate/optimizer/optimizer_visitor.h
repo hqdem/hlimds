@@ -25,7 +25,34 @@ namespace eda::gate::optimizer {
   class OptimizerVisitor : public Visitor {
   public:
 
-    OptimizerVisitor(CutStorage *cutStorage, GNet *net);
+    using Order = std::vector<GateID>;
+
+    struct SwapOption {
+      GNet *subsNet = nullptr;
+      Order order;
+
+      SwapOption(GNet *subsNet, Order &order) : subsNet(subsNet), order(std::move(order)){
+        std::cout << "Regular constructor " << std::endl;
+      }
+
+      SwapOption(SwapOption &&src)  noexcept {
+        std::cout << "Move constructor " << std::endl;
+
+        this->subsNet = src.subsNet;
+        src.subsNet = nullptr;
+        std::cout << "Move constructor is called for " << (subsNet ? subsNet->id() : 666) << std::endl;
+      }
+
+      ~SwapOption() {
+        std::cout << "Destructor is called for " << (subsNet ? subsNet->id() : 6666) << std::endl;
+        std::cout << "Order size: " << order.size() << "\n\n";
+        delete subsNet;
+      }
+    };
+
+    OptimizerVisitor();
+
+    void set(CutStorage *cutStorage, GNet *net, int cutSize);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -35,12 +62,27 @@ namespace eda::gate::optimizer {
 
   private:
     CutStorage *cutStorage;
-    GNet *net;
-    GNet::V lastNode;
+
     CutStorage::Cuts *lastCuts;
     std::vector<const CutStorage::Cut *> toRemove;
 
-    GNet *getSubnet(uint64_t func);
+    bool checkValidCut(const Cut &cut);
+
+  protected:
+    GNet *net;
+    GateID lastNode;
+    int cutSize;
+
+    virtual bool checkOptimize(const Cut &cut, const SwapOption &option,
+                               const std::unordered_map<GateID, GateID> &map) = 0;
+
+    /// учесть оптимизацию.
+    virtual VisitorFlags
+    considerOptimization(const Cut &cut, const SwapOption &option,
+                         const std::unordered_map<GateID, GateID> &map) = 0;
+
+    virtual std::vector<SwapOption> getSubnets(uint64_t func) = 0;
+
   };
 
 } // namespace eda::gate::optimizer

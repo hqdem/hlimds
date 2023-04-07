@@ -103,7 +103,9 @@ namespace eda::gate::optimizer {
       auto &cuts = cutStorage->cuts[node];
       for (const auto &cut: cuts) {
         auto status = visitor->onCut(cut);
-        if(status != SUCCESS) {
+        if (status == FINISH_THIS) {
+          break;
+        } else if (status != SUCCESS) {
           return status;
         }
       }

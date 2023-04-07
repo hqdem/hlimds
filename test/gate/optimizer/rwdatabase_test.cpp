@@ -6,82 +6,38 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/transformer/bdd.h"
+#include "gate/model/gnet_test.h"
 #include "gate/optimizer/rwdatabase.h"
+#include "gate/transformer/bdd.h"
 
 #include "gtest/gtest.h"
 
-using BDDList = eda::gate::transformer::GNetBDDConverter::BDDList;
-using Gate = eda::gate::model::Gate;
-using GateBDDMap = eda::gate::transformer::GNetBDDConverter::GateBDDMap;
+using namespace eda::gate::model;
+using namespace eda::gate::optimizer;
+using namespace eda::gate::transformer;
+
+using BDDList = GNetBDDConverter::BDDList;
+using GateBDDMap = GNetBDDConverter::GateBDDMap;
 using GateList = std::vector<Gate::Id>;
-using GateSymbol = eda::gate::model::GateSymbol;
-using GateUintMap = eda::gate::transformer::GNetBDDConverter::GateUintMap;
-using GNet = eda::gate::model::GNet;
-using GNetBDDConverter = eda::gate::transformer::GNetBDDConverter;
-using RWDatabase = eda::gate::optimizer::RWDatabase;
-using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
+using GateUintMap = GNetBDDConverter::GateUintMap;
 
-static std::unique_ptr<GNet> makeAnd2(Gate::SignalList
-                                      &inputs,
-                                      Gate::Id &outputId,
-                                      GateList &varList) {
-  auto net = std::make_unique<GNet>();
-
-  Gate::Id x0Id = net->newGate(), x1Id = net->newGate();
-  Gate::SignalList and0Inputs = {Gate::Signal::always(x0Id),
-                                 Gate::Signal::always(x1Id)};
-
-  inputs = and0Inputs;
-  Gate::Id andOutputId = net->addGate(GateSymbol::AND, and0Inputs);
-  outputId = net->addGate(GateSymbol::OUT,
-                          {Gate::Signal::always(andOutputId)});
-  varList = {x0Id, x1Id};
-
-  net->sortTopologically();
-
-  return net;
-}
-
-static std::unique_ptr<GNet> makeOr2(Gate::SignalList &inputs,
-                                     Gate::Id &outputId,
-                                     GateList &varList) {
-  auto net = std::make_unique<GNet>();
-
-  Gate::Id x0Id = net->newGate(), x1Id = net->newGate();
-  Gate::SignalList or0Inputs = {Gate::Signal::always(x0Id),
-                                Gate::Signal::always(x1Id)};
-
-  inputs = or0Inputs;
-  Gate::Id orOutputId = net->addGate(GateSymbol::OR, or0Inputs);
-  outputId = net->addGate(GateSymbol::OUT,
-                          {Gate::Signal::always(orOutputId)});
-  varList = {x0Id, x1Id};
-
-  net->sortTopologically();
-
-  return net;
-}
-
-bool areEquivalent(RWDatabase::BoundGNet bgnet1, RWDatabase::BoundGNet bgnet2) {
+bool areEquivalent(BoundGNet bgnet1, BoundGNet bgnet2) {
   Cudd manager(0, 0);
   BDDList x = { manager.bddVar(), manager.bddVar() };
   GateBDDMap varMap1, varMap2;
 
-  for (auto p : bgnet1.bindings) {
-    varMap1[p.second] = x[p.first];
+  for (size_t i = 0; i < bgnet1.inputs.size(); i++) {
+    varMap1[bgnet1.inputs[i]] = x[i];
   }
-  for (auto p : bgnet2.bindings) {
-    varMap2[p.second] = x[p.first];
+  for (size_t i = 0; i < bgnet2.inputs.size(); i++) {
+    varMap2[bgnet2.inputs[i]] = x[i];
   }
 
   BDD bdd1 = GNetBDDConverter::convert(*bgnet1.net,
-                                       bgnet1.net->
-                                       targetLinks().begin()->target,
+                                       bgnet1.outputs[0],
                                        varMap1, manager);
   BDD bdd2 = GNetBDDConverter::convert(*bgnet2.net,
-                                       bgnet2.net->
-                                       targetLinks().begin()->target,
+                                       bgnet2.outputs[0],
                                        varMap2, manager);
 
   return bdd1 == bdd2;
@@ -92,12 +48,13 @@ bool basicTest() {
   bool result = true;
 
   std::shared_ptr<GNet> dummy = std::make_shared<GNet>();
-  RWDatabase::GateBindings bindings = {{0, 1}, {1, 3}};
-  RWDatabase::TruthTable truthTable = 8;
+  TruthTable truthTable = TruthTable(1);
 
-  rwdb.set(truthTable, {{dummy, bindings}});
-  result = result && ((rwdb.get(truthTable)[0].net == dummy) &&
-           (rwdb.get(truthTable)[0].bindings == bindings));
+  rwdb.set(truthTable, {{dummy, {1, 2, 3}, {4, 5}}});
+  result = result && (rwdb.get(truthTable)[0].net == dummy) &&
+           (rwdb.get(truthTable)[0].inputs == std::vector<Gate::Id>({1, 2, 3}))
+           && (rwdb.get(truthTable)[0].outputs == std::vector<Gate::Id>
+           ({4, 5}));
 
   result = result && !rwdb.empty();
   rwdb.erase(truthTable);
@@ -115,28 +72,25 @@ bool insertGetARWDBTest() {
     arwdb.linkDB(dbPath);
     arwdb.openDB();
 
-    RWDatabase::TruthTable truthTable = 1;
+    TruthTable truthTable = TruthTable(1);
 
-    Gate::SignalList inputs1;
+    Gate::SignalList inputs;
     Gate::Id outputId1;
-    GateList varList1;
-    std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
-                                   (*makeAnd2(inputs1, outputId1, varList1));
-    RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
-                                          {1, inputs1[1].node()}};
+    std::shared_ptr<GNet> dummy1 = makeAnd(2, inputs, outputId1);
+    std::vector<Gate::Id> inputs1 = {inputs[0].node(), inputs[1].node()};
+    std::vector<Gate::Id> outputs1 = {outputId1};
 
-    Gate::SignalList inputs2;
     Gate::Id outputId2;
-    GateList varList2;
-    std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
-                                   (*makeOr2(inputs2, outputId2, varList2));
-    RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
-                                          {1, inputs2[1].node()}};
+    inputs.clear();
+    std::shared_ptr<GNet> dummy2 = makeOr(2, inputs, outputId2);
+    std::vector<Gate::Id> inputs2 = {inputs[0].node(), inputs[1].node()};
+    std::vector<Gate::Id> outputs2 = {outputId2};
 
     dummy1->sortTopologically();
     dummy2->sortTopologically();
 
-    RWDatabase::BoundGNetList bgl = {{dummy1, bindings1}, {dummy2, bindings2}};
+    RWDatabase::BoundGNetList bgl = {{dummy1, inputs1, outputs1},
+                                     {dummy2, inputs2, outputs2}};
 
     arwdb.insertIntoDB(truthTable, bgl);
 
@@ -162,33 +116,31 @@ bool updateARWDBTest() {
     arwdb.linkDB(dbPath);
     arwdb.openDB();
 
-    RWDatabase::TruthTable truthTable = 1;
+    TruthTable truthTable = TruthTable(1);
 
-    Gate::SignalList inputs1;
+    Gate::SignalList inputs;
     Gate::Id outputId1;
-    GateList varList1;
     std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
-                                   (*makeAnd2(inputs1, outputId1, varList1));
-    RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
-                                          {1, inputs1[1].node()}};
+                                   (*makeAnd(2, inputs, outputId1));
+    std::vector<Gate::Id> inputs1 = {inputs[0].node(), inputs[1].node()};
+    std::vector<Gate::Id> outputs1 = {outputId1};
 
-    Gate::SignalList inputs2;
+    inputs.clear();
     Gate::Id outputId2;
-    GateList varList2;
     std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
-                                   (*makeOr2(inputs2, outputId2, varList2));
-    RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
-                                          {1, inputs2[1].node()}};
+                                   (*makeOr(2, inputs, outputId2));
+    std::vector<Gate::Id> inputs2 = {inputs[0].node(), inputs[1].node()};
+    std::vector<Gate::Id> outputs2 = {outputId2};
 
     dummy1->sortTopologically();
     dummy2->sortTopologically();
 
-    RWDatabase::BoundGNetList bgl = {{dummy1, bindings1}};
-    RWDatabase::BoundGNetList newBgl = {{dummy2, bindings2}};
+    RWDatabase::BoundGNetList bgl = {{dummy1, inputs1, outputs1}};
+    RWDatabase::BoundGNetList newBgl = {{dummy2, inputs2, outputs2}};
 
     arwdb.insertIntoDB(truthTable, bgl);
 
-    arwdb.updateInDB(truthTable, {{dummy2, bindings2}});
+    arwdb.updateInDB(truthTable, newBgl);
 
     auto gottenBgl = arwdb.get(truthTable);
 
@@ -211,28 +163,27 @@ bool deleteARWDBTest() {
     arwdb.linkDB(dbPath);
     arwdb.openDB();
 
-    RWDatabase::TruthTable truthTable = 1;
+    TruthTable truthTable = TruthTable(1);
 
-    Gate::SignalList inputs1;
+    Gate::SignalList inputs;
     Gate::Id outputId1;
-    GateList varList1;
     std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
-                                   (*makeAnd2(inputs1, outputId1, varList1));
-    RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
-                                          {1, inputs1[1].node()}};
+                                   (*makeAnd(2, inputs, outputId1));
+    std::vector<Gate::Id> inputs1 = {inputs[0].node(), inputs[1].node()};
+    std::vector<Gate::Id> outputs1 = {outputId1};
 
-    Gate::SignalList inputs2;
+    inputs.clear();
     Gate::Id outputId2;
-    GateList varList2;
     std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
-                                   (*makeOr2(inputs2, outputId2, varList2));
-    RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
-                                          {1, inputs2[1].node()}};
+                                   (*makeOr(2, inputs, outputId2));
+    std::vector<Gate::Id> inputs2 = {inputs[0].node(), inputs[1].node()};
+    std::vector<Gate::Id> outputs2 = {outputId2};
 
     dummy1->sortTopologically();
     dummy2->sortTopologically();
 
-    RWDatabase::BoundGNetList bgl = {{dummy1, bindings1}, {dummy2, bindings2}};
+    RWDatabase::BoundGNetList bgl = {{dummy1, inputs1, outputs1},
+                                     {dummy2, inputs2, outputs2}};
 
     arwdb.insertIntoDB(truthTable, bgl);
     arwdb.deleteFromDB(truthTable);

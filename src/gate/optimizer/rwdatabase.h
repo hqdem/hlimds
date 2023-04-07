@@ -10,6 +10,8 @@
 
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
+#include "gate/optimizer/bgnet.h"
+#include "gate/optimizer/truthtable.h"
 
 #include "sqlite3-bind.h"
 #include "sqlite3.h"
@@ -29,54 +31,42 @@ namespace eda::gate::optimizer {
 class RWDatabase {
 
 public:
+  using BoundGNetList = std::vector<BoundGNet>;
   using Gate = eda::gate::model::Gate;
   using GateMap = std::unordered_map<Gate::Id, Gate::Id>;
   using GateSymbol = eda::gate::model::GateSymbol;
   using GNet = eda::gate::model::GNet;
 
-  // "Virtual" input gate ID.
-  using InputId = uint32_t;
-  // Contain value vector of boolean function.
-  // Represents boolean function of 6 variables.
-  using TruthTable = uint64_t;
-
-  // Binds "virtual" input IDs to real primary input IDs of GNet.
-  using GateBindings = std::unordered_map<InputId, Gate::Id>;
-  using ReversedGateBindings = std::unordered_map<Gate::Id, InputId>;
-
-  struct BoundGNet {
-    std::shared_ptr<GNet> net;
-    GateBindings bindings;
-  };
-
-  using BoundGNetList = std::vector<BoundGNet>;
+  using rawTT = uint64_t;
 
   // Basic interface.
-  virtual bool contains(const TruthTable &key) {
-    return (_storage.find(key) != _storage.end());
+  virtual bool contains(const TruthTable key) {
+    return (_storage.find(key.raw()) != _storage.end());
   }
 
-  virtual BoundGNetList get(const TruthTable &key) {
+  virtual BoundGNetList get(const TruthTable key) {
     if (!contains(key)) {
       return BoundGNetList();
     }
-    return _storage[key];
+    return _storage[key.raw()];
   }
 
-  virtual void set(const TruthTable &key, const BoundGNetList &value) {
-    _storage[key] = value;
+  virtual void set(const TruthTable key, const BoundGNetList &value) {
+    _storage[key.raw()] = value;
   }
 
-  virtual void erase(const TruthTable &key) {
-    _storage.erase(key);
+  virtual void erase(const TruthTable key) {
+    _storage.erase(key.raw());
   }
 
   virtual bool empty() {
     return _storage.empty();
   }
 
+  virtual ~RWDatabase() { }
+
 protected:
-  std::unordered_map<TruthTable, BoundGNetList> _storage;
+  std::unordered_map<rawTT, BoundGNetList> _storage;
 
 };
 
@@ -105,21 +95,21 @@ public:
   // Basic interface
 
   // Find for the key in the local storage and in the database.
-  virtual bool contains(const TruthTable &key);
+  virtual bool contains(const TruthTable key);
 
   // Get element from the local storage or from the database.
-  virtual BoundGNetList get(const TruthTable &key);
+  virtual BoundGNetList get(const TruthTable key);
 
   // Database interface.
 
   // Inserts new value into DB.
-  void insertIntoDB(const TruthTable &key, const BoundGNetList &value);
+  void insertIntoDB(const TruthTable key, const BoundGNetList &value);
 
   // Update value in DB.
-  void updateInDB(const TruthTable &key, const BoundGNetList &value);
+  void updateInDB(const TruthTable key, const BoundGNetList &value);
 
   // Delete value from DB.
-  void deleteFromDB(const TruthTable &key);
+  void deleteFromDB(const TruthTable key);
 
 private:
 

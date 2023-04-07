@@ -17,6 +17,7 @@ add_library(Gate OBJECT
   optimizer/rwmanager.cpp
   optimizer/tracker_visitor.cpp
   optimizer/tracker_visitor.h
+  optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
   parser/gate_verilog_parser.cpp

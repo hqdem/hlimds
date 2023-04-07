@@ -24,13 +24,6 @@ using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 using Link = Gate::Link;
 
-void dump(const GNet &net) {
-  std::cout << net << std::endl;
-  std::cout << "N=" << net.nGates() << std::endl;
-  std::cout << "I=" << net.nSourceLinks() << std::endl;
-  std::cout << "O=" << net.nTargetLinks() << std::endl;
-}
-
 // gate(x1, ..., xN).
 std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate,
                                         const unsigned N) {

@@ -21,17 +21,12 @@ add_library(Gate OBJECT
   optimizer/walker.cpp
   parser/gate_verilog_parser.cpp
   premapper/aigmapper.cpp
-<<<<<<< HEAD
-  premapper/xagmapper.cpp
-  premapper/premapper.cpp
-#  printer/hmetis_printer.cpp
-=======
   premapper/migmapper.cpp
   premapper/premapper.cpp
+  premapper/xagmapper.cpp
   premapper/xmgmapper.cpp
->>>>>>> 523867b7910603532e01602fb47a696b39be2379
   printer/dot.cpp
-  simulator/simulator.cpp 
+  simulator/simulator.cpp
   simulator/simulator.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)

@@ -54,12 +54,7 @@ Gate::SignalList PreMapper::getNewInputs(
       n1 += (isZero ? 0 : 1);
     } else {
       const auto i = oldToNewGates.find(input.node());
-<<<<<<< HEAD
-      assert("Points one past the last element" &&
-              (i != oldToNewGates.end()));
-=======
       assert(i != oldToNewGates.end());
->>>>>>> 523867b7910603532e01602fb47a696b39be2379
 
       const auto newInputId = i->second;
       newInputs.push_back(Gate::Signal::always(newInputId));
@@ -107,7 +102,7 @@ GNet *PreMapper::mapGates(const GNet &net,
       oldToNewGates.emplace(oldGateId, newGateId);
     }
 
-    return newNet; 
+    return newNet;
   }
 
   for (const auto *oldSubnet : net.subnets()) {

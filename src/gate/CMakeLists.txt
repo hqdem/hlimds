@@ -9,6 +9,7 @@ add_library(Gate OBJECT
   optimizer/cuts_finder_visitor.cpp
   optimizer/optimizer.cpp
   optimizer/rwdatabase.cpp
+  optimizer/truthtable.cpp
   optimizer/walker.cpp
   parser/gate_verilog_parser.cpp
   premapper/aigmapper.cpp

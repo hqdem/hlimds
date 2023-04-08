@@ -6,62 +6,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/transformer/bdd.h"
+#include "gate/model/gnet_test.h"
 #include "gate/optimizer/rwdatabase.h"
+#include "gate/transformer/bdd.h"
 
 #include "gtest/gtest.h"
 
-using BDDList = eda::gate::transformer::GNetBDDConverter::BDDList;
-using Gate = eda::gate::model::Gate;
-using GateBDDMap = eda::gate::transformer::GNetBDDConverter::GateBDDMap;
+using namespace eda::gate::model;
+using namespace eda::gate::optimizer;
+using namespace eda::gate::transformer;
+
+using BDDList = GNetBDDConverter::BDDList;
+using GateBDDMap = GNetBDDConverter::GateBDDMap;
 using GateList = std::vector<Gate::Id>;
-using GateSymbol = eda::gate::model::GateSymbol;
-using GateUintMap = eda::gate::transformer::GNetBDDConverter::GateUintMap;
-using GNet = eda::gate::model::GNet;
-using GNetBDDConverter = eda::gate::transformer::GNetBDDConverter;
-using RWDatabase = eda::gate::optimizer::RWDatabase;
-using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
+using GateUintMap = GNetBDDConverter::GateUintMap;
 
-static std::unique_ptr<GNet> makeAnd2(Gate::SignalList
-                                      &inputs,
-                                      Gate::Id &outputId,
-                                      GateList &varList) {
-  auto net = std::make_unique<GNet>();
-
-  Gate::Id x0Id = net->newGate(), x1Id = net->newGate();
-  Gate::SignalList and0Inputs = {Gate::Signal::always(x0Id),
-                                 Gate::Signal::always(x1Id)};
-
-  inputs = and0Inputs;
-  Gate::Id andOutputId = net->addGate(GateSymbol::AND, and0Inputs);
-  outputId = net->addGate(GateSymbol::OUT,
-                          {Gate::Signal::always(andOutputId)});
-  varList = {x0Id, x1Id};
-
-  net->sortTopologically();
-
-  return net;
-}
-
-static std::unique_ptr<GNet> makeOr2(Gate::SignalList &inputs,
-                                     Gate::Id &outputId,
-                                     GateList &varList) {
-  auto net = std::make_unique<GNet>();
-
-  Gate::Id x0Id = net->newGate(), x1Id = net->newGate();
-  Gate::SignalList or0Inputs = {Gate::Signal::always(x0Id),
-                                Gate::Signal::always(x1Id)};
-
-  inputs = or0Inputs;
-  Gate::Id orOutputId = net->addGate(GateSymbol::OR, or0Inputs);
-  outputId = net->addGate(GateSymbol::OUT,
-                          {Gate::Signal::always(orOutputId)});
-  varList = {x0Id, x1Id};
-
-  net->sortTopologically();
-
-  return net;
-}
 
 bool areEquivalent(RWDatabase::BoundGNet bgnet1, RWDatabase::BoundGNet bgnet2) {
   Cudd manager(0, 0);
@@ -86,6 +45,7 @@ bool areEquivalent(RWDatabase::BoundGNet bgnet1, RWDatabase::BoundGNet bgnet2) {
 
   return bdd1 == bdd2;
 }
+
 
 bool basicTest() {
   RWDatabase rwdb;
@@ -119,17 +79,13 @@ bool insertGetARWDBTest() {
 
     Gate::SignalList inputs1;
     Gate::Id outputId1;
-    GateList varList1;
-    std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
-                                   (*makeAnd2(inputs1, outputId1, varList1));
+    std::shared_ptr<GNet> dummy1 = makeAnd(2, inputs1, outputId1);
     RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
                                           {1, inputs1[1].node()}};
 
     Gate::SignalList inputs2;
     Gate::Id outputId2;
-    GateList varList2;
-    std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
-                                   (*makeOr2(inputs2, outputId2, varList2));
+    std::shared_ptr<GNet> dummy2 = makeOr(2, inputs2, outputId2);
     RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
                                           {1, inputs2[1].node()}};
 
@@ -166,17 +122,13 @@ bool updateARWDBTest() {
 
     Gate::SignalList inputs1;
     Gate::Id outputId1;
-    GateList varList1;
-    std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
-                                   (*makeAnd2(inputs1, outputId1, varList1));
+    std::shared_ptr<GNet> dummy1 = makeAnd(2, inputs1, outputId1);
     RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
                                           {1, inputs1[1].node()}};
 
     Gate::SignalList inputs2;
     Gate::Id outputId2;
-    GateList varList2;
-    std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
-                                   (*makeOr2(inputs2, outputId2, varList2));
+    std::shared_ptr<GNet> dummy2 = makeOr(2, inputs2, outputId2);
     RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
                                           {1, inputs2[1].node()}};
 
@@ -215,17 +167,13 @@ bool deleteARWDBTest() {
 
     Gate::SignalList inputs1;
     Gate::Id outputId1;
-    GateList varList1;
-    std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
-                                   (*makeAnd2(inputs1, outputId1, varList1));
+    std::shared_ptr<GNet> dummy1 = makeAnd(2, inputs1, outputId1);
     RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
                                           {1, inputs1[1].node()}};
 
     Gate::SignalList inputs2;
     Gate::Id outputId2;
-    GateList varList2;
-    std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
-                                   (*makeOr2(inputs2, outputId2, varList2));
+    std::shared_ptr<GNet> dummy2 = makeOr(2, inputs2, outputId2);
     RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
                                           {1, inputs2[1].node()}};
 

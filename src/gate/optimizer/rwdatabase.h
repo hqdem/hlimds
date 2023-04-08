@@ -75,6 +75,8 @@ public:
     return _storage.empty();
   }
 
+  virtual ~RWDatabase() { }
+
 protected:
   std::unordered_map<TruthTable, BoundGNetList> _storage;
 

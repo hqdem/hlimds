@@ -54,7 +54,7 @@ namespace eda::gate::optimizer {
 
     auto *cone = findConePrint("test/data/gate/optimizer/output/findCone1",
                                &net, {g[2], g[4]}, g[5]);
-    EXPECT_EQ(3, cone->nGates());
+    EXPECT_EQ(4, cone->nGates());
     delete cone;
   }
 
@@ -68,7 +68,7 @@ namespace eda::gate::optimizer {
 
     auto cone = findConePrint("test/data/gate/optimizer/output/findCone2", &net,
                               {g[2], g[3], g[4], g[6], g[7]}, g[14]);
-    EXPECT_EQ(7, cone->nGates());
+    EXPECT_EQ(8, cone->nGates());
     delete cone;
   }
 
@@ -83,7 +83,7 @@ namespace eda::gate::optimizer {
     auto cone = findConePrint("test/data/gate/optimizer/output/findCone3_0",
                               &net,
                               {g[0], g[3], g[7]}, g[8]);
-    EXPECT_EQ(4, cone->nGates());
+    EXPECT_EQ(5, cone->nGates());
     EXPECT_EQ(2, cone->nSourceLinks());
     delete cone;
   }
@@ -99,7 +99,7 @@ namespace eda::gate::optimizer {
     auto cone = findConePrint("test/data/gate/optimizer/output/findCone3_1",
                               &net,
                               {g[0], g[3], g[7]}, g[12]);
-    EXPECT_EQ(5, cone->nGates());
+    EXPECT_EQ(6, cone->nGates());
     EXPECT_EQ(2, cone->nSourceLinks());
     delete cone;
   }
@@ -115,7 +115,7 @@ namespace eda::gate::optimizer {
     auto cone = findConePrint(
             "test/data/gate/optimizer/output/findConeExessiveCut", &net,
             {g[0], g[1], g[2], g[4]}, g[5]);
-    EXPECT_EQ(3, cone->nGates());
+    EXPECT_EQ(4, cone->nGates());
     EXPECT_EQ(2, cone->nSourceLinks());
     delete cone;
   }
@@ -130,7 +130,7 @@ namespace eda::gate::optimizer {
 
     auto cone = findConePrint("test/data/gate/optimizer/output/findConeTrivial",
                               &net, {g[5]}, g[5]);
-    EXPECT_EQ(1, cone->nGates());
+    EXPECT_EQ(2, cone->nGates());
     delete cone;
   }
 

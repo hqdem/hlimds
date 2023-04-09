@@ -11,7 +11,7 @@
 #include "gate/optimizer/cut_storage.h"
 #include "gate/optimizer/visitor.h"
 
-#include <stack>
+#include <deque>
 
 namespace eda::gate::optimizer {
 /**
@@ -41,7 +41,7 @@ namespace eda::gate::optimizer {
 
   private:
     const Cut &cut;
-    std::stack<GateID> visited;
+    std::deque<GateID> visited;
     std::unordered_map<GateID, GateID> newGates;
     std::unordered_map<GateID, GateID> resultCut;
   };

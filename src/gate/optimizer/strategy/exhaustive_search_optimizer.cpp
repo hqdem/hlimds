@@ -13,15 +13,19 @@ namespace eda::gate::optimizer {
 
   bool ExhausitiveSearchOptimizer::checkOptimize(const BoundGNet &option,
                                                  const std::unordered_map<GateID, GateID> &map) {
-    return fakeSubstitute(lastNode, map, option.net.get(), net) < 0;
+    int reduce = fakeSubstitute(lastNode, map, option.net.get(), net);
+    if (reduce < bestReduce) {
+      bestReduce = reduce;
+      return true;
+    }
+    return false;
   }
 
   VisitorFlags
-  ExhausitiveSearchOptimizer::considerOptimization(const BoundGNet &option,
-                                                   const std::unordered_map<GateID, GateID> &map) {
-    substitute(lastNode, map, option.net.get(), net);
-    // TODO: we can return finish all here.
-    // TODO: we can make list with nets and their profit.
+  ExhausitiveSearchOptimizer::considerOptimization(BoundGNet &option,
+                                                   std::unordered_map<GateID, GateID> &map) {
+    bestOption = std::move(option);
+    bestOptionMap = std::move(map);
     return SUCCESS;
   }
 
@@ -29,4 +33,12 @@ namespace eda::gate::optimizer {
   ExhausitiveSearchOptimizer::getSubnets(uint64_t func) {
     return rwdb.get(func);
   }
+
+  void ExhausitiveSearchOptimizer::finishOptimization() {
+    if(bestReduce <= 0) {
+      substitute(lastNode, bestOptionMap, bestOption.net.get(), net);
+    }
+    bestReduce = 1;
+  }
+
 } // namespace eda::gate::optimizer

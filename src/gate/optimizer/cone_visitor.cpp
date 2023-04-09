@@ -14,7 +14,7 @@ namespace eda::gate::optimizer {
   }
 
   VisitorFlags ConeVisitor::onNodeBegin(const GateID &node) {
-    visited.push(node);
+    visited.push_back(node);
     if (cut.find(node) != cut.end()) {
       resultCut.emplace(node, Gate::INVALID);
       return FINISH_THIS;
@@ -33,13 +33,15 @@ namespace eda::gate::optimizer {
   ConeVisitor::GNet *ConeVisitor::getGNet() {
     GNet *coneNet = new GNet();
 
+    GateID first = visited.front();
+
     while (!visited.empty()) {
 
-      auto cur = visited.top();
+      auto cur = visited.back();
       std::vector<base::model::Signal<GateID>> signals;
       const Gate *curGate = Gate::get(cur);
       const auto &inputs = curGate->inputs();
-      visited.pop();
+      visited.pop_back();
 
       for (const auto &signal: inputs) {
         auto found = newGates.find(signal.node());
@@ -56,6 +58,11 @@ namespace eda::gate::optimizer {
       } else {
         newGates[cur] = coneNet->addGate(curGate->func(), signals);
       }
+    }
+
+    // Adding target gate.
+    if(Gate::get(first)->func() != GateSymbol::OUT) {
+      coneNet->addGate(GateSymbol::OUT, newGates[first]);
     }
 
     return coneNet;

@@ -54,10 +54,11 @@ namespace eda::gate::optimizer {
     virtual bool checkOptimize(const BoundGNet &option,
                                const std::unordered_map<GateID, GateID> &map) = 0;
 
-    /// учесть оптимизацию.
     virtual VisitorFlags
-    considerOptimization(const BoundGNet &option,
-                         const std::unordered_map<GateID, GateID> &map) = 0;
+    considerOptimization(BoundGNet &option,
+                         std::unordered_map<GateID, GateID> &map) = 0;
+
+    virtual void finishOptimization() {}
 
     virtual BoundGNetList getSubnets(uint64_t func) = 0;
 

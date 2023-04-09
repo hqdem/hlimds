@@ -9,6 +9,7 @@
 #include "gate/parser/gate_verilog_parser.h"
 #include "gate/printer/dot.h"
 #include "gate/optimizer/optimizer.h"
+#include "gate/optimizer/strategy/apply_search_optimizer.h"
 #include "gate/optimizer/strategy/exhaustive_search_optimizer.h"
 #include "gtest/gtest.h"
 #include "gate/optimizer/examples.h"
@@ -84,7 +85,8 @@ namespace eda::gate::optimizer {
 
     auto net = getNet("c17");
 
-    optimizePrint(net, 4, getPath("c17_rewrite"), ExhausitiveSearchOptimizer());
+    optimizePrint(net, 6, getPath("c17_rewrite_e"), ExhausitiveSearchOptimizer());
+    optimizePrint(net, 6, getPath("c17_rewrite_a"), ApplySearchOptimizer());
 
     delete net;
   }

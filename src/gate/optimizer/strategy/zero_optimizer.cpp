@@ -17,8 +17,8 @@ namespace eda::gate::optimizer {
   }
 
   VisitorFlags
-  ZeroOptimizer::considerOptimization(const BoundGNet &option,
-                                      const std::unordered_map<GateID, GateID> &map) {
+  ZeroOptimizer::considerOptimization(BoundGNet &option,
+                                      std::unordered_map<GateID, GateID> &map) {
     substitute(lastNode, map, option.net.get(), net);
     return FINISH_THIS;
   }

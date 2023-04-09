@@ -36,8 +36,6 @@ namespace eda::gate::optimizer {
 
   VisitorFlags OptimizerVisitor::onCut(const Cut &cut) {
     if (checkValidCut(cut)) {
-      // TODO: remove cloning.
-      std::vector<GateID> orderedCut;
 
       // Finding cone.
       ConeVisitor coneVisitor(cut);
@@ -56,7 +54,7 @@ namespace eda::gate::optimizer {
       auto func = TTBuilder::build(boundGNet);
 
       auto list = getSubnets(func);
-      for(const auto &option : list) {
+      for(auto &option : list) {
 
         // Creating correspondence map for subNet sources and cut.
         std::unordered_map<GateID, GateID> map;
@@ -88,6 +86,7 @@ namespace eda::gate::optimizer {
           return considerOptimization(option, map);
         }
       }
+      finishOptimization();
     }
     return SUCCESS;
   }

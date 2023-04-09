@@ -13,20 +13,15 @@
 
 namespace eda::gate::optimizer {
 
-  class ExhausitiveSearchOptimizer : public OptimizerVisitor {
+  class ApplySearchOptimizer : public OptimizerVisitor {
   public:
-    ExhausitiveSearchOptimizer() {
+      ApplySearchOptimizer() {
       RewriteManager rewriteManager;
       rewriteManager.initialize();
       rwdb = rewriteManager.getDatabase();
     }
   protected:
     RWDatabase rwdb;
-
-    BoundGNet bestOption;
-    std::unordered_map<GateID, GateID> bestOptionMap;
-    int bestReduce = 1;
-
     bool checkOptimize(const BoundGNet &option,
                        const std::unordered_map<GateID, GateID> &map) override;
 
@@ -34,8 +29,6 @@ namespace eda::gate::optimizer {
                                       std::unordered_map<GateID, GateID> &map) override;
 
     BoundGNetList getSubnets(uint64_t func) override;
-
-    void finishOptimization() override;
   };
 } // namespace eda::gate::optimizer
 

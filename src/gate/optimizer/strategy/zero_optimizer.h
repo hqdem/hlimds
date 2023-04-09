@@ -18,8 +18,8 @@ namespace eda::gate::optimizer {
     bool checkOptimize(const BoundGNet &option,
                        const std::unordered_map<GateID, GateID> &map) override;
 
-    VisitorFlags considerOptimization(const BoundGNet &option,
-                                      const std::unordered_map<GateID, GateID> &map) override;
+    VisitorFlags considerOptimization(BoundGNet &option,
+                                      std::unordered_map<GateID, GateID> &map) override;
 
     BoundGNetList getSubnets(uint64_t func) override;
   };

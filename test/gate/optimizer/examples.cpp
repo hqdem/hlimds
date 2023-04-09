@@ -39,7 +39,7 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {0, 1}));
     g.push_back(createLink(gNet, g, {4, 2}));
     g.push_back(createLink(gNet, g, {5, 3}));
-    g.push_back(createLink(gNet, g, {5, 6}, model::GateSymbol::Value::OUT));
+    g.push_back(createLink(gNet, g, {5, 6}));
     return g;
   }
 

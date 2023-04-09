@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
 using BoundGNetList = eda::gate::optimizer::RWDatabase::BoundGNetList;
 using Gate = eda::gate::model::Gate;
 using GateList = std::vector<Gate::Id>;
@@ -27,21 +28,15 @@ std::string SQLiteRWDatabase::serialize(const BoundGNetList &list) {
   std::stringstream ss;
   ss << list.size() << ' ';
   for (const auto &bGNet : list) {
-    auto inputs = bGNet.inputs;
-    auto outputs = bGNet.outputs;
+    auto bindings = bGNet.bindings;
     auto net = bGNet.net;
     if (!net->isSorted()) {
       throw "Net isn't topologically sorted.";
     }
 
-    ss << inputs.size() << ' ';
-    for (auto &inputId : inputs) {
-      ss << inputId << ' ';
-    }
-
-    ss << outputs.size() << ' ';
-    for (auto &outputId : outputs) {
-      ss << outputId << ' ';
+    ss << bindings.size() << ' ';
+    for (auto &binding : bindings) {
+      ss << binding.first << ' ' << binding.second << ' ';
     }
 
     ss << net->gates().size() << ' ';
@@ -65,27 +60,23 @@ BoundGNetList SQLiteRWDatabase::deserialize(const std::string &str) {
   for (size_t i = 0; i < size; i++) {
     BoundGNet bGNet;
 
-    size_t inputsSize;
-    size_t outputsSize;
+    size_t bindingsSize;
+    ss >> bindingsSize;
 
-    ss >> inputsSize;
-    std::map<Gate::Id, uint32_t> rInputs;
+    bGNet.bindings = GateBindings();
+    auto reversedBindings = ReversedGateBindings();
 
-    for (size_t j = 0; j < inputsSize; j++) {
-      Gate::Id gateId;
-      ss >> gateId;
-      bGNet.inputs.push_back(gateId);
-      rInputs[gateId] = j;
-    }
+    for (size_t j = 0; j < bindingsSize; j++) {
+      InputId key;
+      Gate::Id value;
 
-    ss >> outputsSize;
-    std::map<Gate::Id, uint32_t> rOutputs;
-
-    for (size_t j = 0; j < outputsSize; j++) {
-      Gate::Id gateId;
-      ss >> gateId;
-      bGNet.outputs.push_back(gateId);
-      rOutputs[gateId] = j;
+      ss >> key >> value;
+      bGNet.bindings.insert(std::make_pair<InputId, Gate::Id>
+                            (std::forward<InputId>(key),
+                             std::forward<Gate::Id>(value)));
+      reversedBindings.insert(std::make_pair<Gate::Id, InputId>
+                              (std::forward<Gate::Id>(value),
+                               std::forward<InputId>(key)));
     }
 
     size_t gateCount;
@@ -104,7 +95,6 @@ BoundGNetList SQLiteRWDatabase::deserialize(const std::string &str) {
       ss >> intFunc >> id >> inputCount;
       func = (GateSymbol::Value)intFunc;
 
-      Gate::Id newId;
       if (inputCount) {
         for (size_t k = 0; k < inputCount; k++) {
           Gate::Id inputId;
@@ -112,16 +102,12 @@ BoundGNetList SQLiteRWDatabase::deserialize(const std::string &str) {
           Gate::Id newInputId = oldNewMap[inputId];
           inputs.push_back(Gate::Signal::always(newInputId));
         }
-        newId = net->addGate(func, inputs);
+        Gate::Id newId = net->addGate(func, inputs);
         oldNewMap[id] = newId;
       } else {
-        newId = net->addGate(func, inputs);
+        Gate::Id newId = net->addGate(func, inputs);
         oldNewMap[id] = newId;
-        bGNet.inputs[rInputs[id]] = newId;
-      }
-
-      if (func == GateSymbol::OUT) {
-        bGNet.outputs[rOutputs[id]] = newId;
+        bGNet.bindings[reversedBindings[id]] = newId;
       }
     }
     bGNet.net = net;
@@ -190,8 +176,8 @@ void SQLiteRWDatabase::closeDB() {
   _isOpened = false;
 }
 
-bool SQLiteRWDatabase::contains(const TruthTable key) {
-  if (_storage.find(key.raw()) != _storage.end()) {
+bool SQLiteRWDatabase::contains(const TruthTable &key) {
+  if (_storage.find(key) != _storage.end()) {
     return true;
   }
   if (_isOpened) {
@@ -200,7 +186,7 @@ bool SQLiteRWDatabase::contains(const TruthTable key) {
                       "WHERE " + _dbKeyName + "=?";
     _rc = sqlite3_bind_exec(_db, sql.c_str(), selectSQLCallback,
                             (void*)(&_selectResult),
-                            SQLITE_BIND_INT64(key.raw()),
+                            SQLITE_BIND_INT64(key),
                             SQLITE_BIND_END);
     if (_rc != SQLITE_OK) {
       std::cout << sqlite3_errmsg(_db) << '\n';
@@ -211,9 +197,9 @@ bool SQLiteRWDatabase::contains(const TruthTable key) {
   return false;
 }
 
-BoundGNetList SQLiteRWDatabase::get(const TruthTable key) {
-  if (_storage.find(key.raw()) != _storage.end()) {
-    return _storage[key.raw()];
+BoundGNetList SQLiteRWDatabase::get(const TruthTable &key) {
+  if (_storage.find(key) != _storage.end()) {
+    return _storage[key];
   }
   if (_isOpened) {
     _selectResult.clear();
@@ -221,7 +207,7 @@ BoundGNetList SQLiteRWDatabase::get(const TruthTable key) {
                       _dbKeyName + "=?";
     _rc = sqlite3_bind_exec(_db, sql.c_str(), selectSQLCallback,
                             (void*)(&_selectResult),
-                            SQLITE_BIND_INT64(key.raw()),
+                            SQLITE_BIND_INT64(key),
                             SQLITE_BIND_END);
     if (_rc != SQLITE_OK) {
       std::cout << sqlite3_errmsg(_db) << '\n';
@@ -236,7 +222,7 @@ BoundGNetList SQLiteRWDatabase::get(const TruthTable key) {
   return BoundGNetList();
 }
 
-void SQLiteRWDatabase::insertIntoDB(const TruthTable key,
+void SQLiteRWDatabase::insertIntoDB(const TruthTable &key,
                                     const BoundGNetList &value) {
   assert(_isOpened);
   std::string ser = serialize(value);
@@ -245,7 +231,7 @@ void SQLiteRWDatabase::insertIntoDB(const TruthTable key,
                     _dbKeyName + ", " + _dbValueName + ") " +
                     "VALUES (?,?)";
   _rc = sqlite3_bind_exec(_db, sql.c_str(), nullptr, nullptr,
-                          SQLITE_BIND_INT64(key.raw()),
+                          SQLITE_BIND_INT64(key),
                           SQLITE_BIND_TEXT(ser.c_str()),
                           SQLITE_BIND_END);
   if (_rc != SQLITE_OK) {
@@ -254,7 +240,7 @@ void SQLiteRWDatabase::insertIntoDB(const TruthTable key,
   }
 }
 
-void SQLiteRWDatabase::updateInDB(const TruthTable key,
+void SQLiteRWDatabase::updateInDB(const TruthTable &key,
                                   const BoundGNetList &value) {
   assert(_isOpened);
   std::string ser = serialize(value);
@@ -262,7 +248,7 @@ void SQLiteRWDatabase::updateInDB(const TruthTable key,
                     "=? WHERE " + _dbKeyName + "=?";
   _rc = sqlite3_bind_exec(_db, sql.c_str(), nullptr, nullptr,
                           SQLITE_BIND_TEXT(ser.c_str()),
-                          SQLITE_BIND_INT64(key.raw()),
+                          SQLITE_BIND_INT64(key),
                           SQLITE_BIND_END);
   if (_rc != SQLITE_OK) {
     std::cout << sqlite3_errmsg(_db) << '\n';
@@ -270,11 +256,11 @@ void SQLiteRWDatabase::updateInDB(const TruthTable key,
   }
 }
 
-void SQLiteRWDatabase::deleteFromDB(const TruthTable key) {
+void SQLiteRWDatabase::deleteFromDB(const TruthTable &key) {
   assert(_isOpened);
   std::string sql = "DELETE FROM " + _dbTableName + " WHERE " + _dbKeyName + "=?";
   _rc = sqlite3_bind_exec(_db, sql.c_str(), nullptr, nullptr,
-                          SQLITE_BIND_INT64(key.raw()),
+                          SQLITE_BIND_INT64(key),
                           SQLITE_BIND_END);
   if (_rc != SQLITE_OK) {
     std::cout << sqlite3_errmsg(_db) << '\n';

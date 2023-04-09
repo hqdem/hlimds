@@ -10,8 +10,6 @@
 
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
-#include "gate/optimizer/bgnet.h"
-#include "gate/optimizer/truthtable.h"
 
 #include "sqlite3-bind.h"
 #include "sqlite3.h"
@@ -28,117 +26,131 @@ namespace eda::gate::optimizer {
 * \brief Implements storage that contains GNets for rewriting.
 * \author <a href="mailto:mrpepelulka@gmail.com">Rustamkhan Ramaldanov</a>
 */
-class RWDatabase {
+  class RWDatabase {
 
-public:
-  using BoundGNetList = std::vector<BoundGNet>;
-  using Gate = eda::gate::model::Gate;
-  using GateMap = std::unordered_map<Gate::Id, Gate::Id>;
-  using GateSymbol = eda::gate::model::GateSymbol;
-  using GNet = eda::gate::model::GNet;
+  public:
+    using Gate = eda::gate::model::Gate;
+    using GateMap = std::unordered_map<Gate::Id, Gate::Id>;
+    using GateSymbol = eda::gate::model::GateSymbol;
+    using GNet = eda::gate::model::GNet;
 
-  using rawTT = uint64_t;
+    // "Virtual" input gate ID.
+    using InputId = uint32_t;
+    // Contain value vector of boolean function.
+    // Represents boolean function of 6 variables.
+    using TruthTable = uint64_t;
 
-  // Basic interface.
-  virtual bool contains(const TruthTable key) {
-    return (_storage.find(key.raw()) != _storage.end());
-  }
+    // Binds "virtual" input IDs to real primary input IDs of GNet.
+    using GateBindings = std::unordered_map<InputId, Gate::Id>;
+    using ReversedGateBindings = std::unordered_map<Gate::Id, InputId>;
 
-  virtual BoundGNetList get(const TruthTable key) {
-    if (!contains(key)) {
-      return BoundGNetList();
+    struct BoundGNet {
+      std::shared_ptr<GNet> net;
+      GateBindings bindings;
+    };
+
+    using BoundGNetList = std::vector<BoundGNet>;
+
+    // Basic interface.
+    virtual bool contains(const TruthTable &key) {
+      return (_storage.find(key) != _storage.end());
     }
-    return _storage[key.raw()];
-  }
 
-  virtual void set(const TruthTable key, const BoundGNetList &value) {
-    _storage[key.raw()] = value;
-  }
+    virtual BoundGNetList get(const TruthTable &key) {
+      if (!contains(key)) {
+        return BoundGNetList();
+      }
+      return _storage[key];
+    }
 
-  virtual void erase(const TruthTable key) {
-    _storage.erase(key.raw());
-  }
+    virtual void set(const TruthTable &key, const BoundGNetList &value) {
+      _storage[key] = value;
+    }
 
-  virtual bool empty() {
-    return _storage.empty();
-  }
+    virtual void erase(const TruthTable &key) {
+      _storage.erase(key);
+    }
 
-  virtual ~RWDatabase() { }
+    virtual bool empty() {
+      return _storage.empty();
+    }
 
-protected:
-  std::unordered_map<rawTT, BoundGNetList> _storage;
+    virtual ~RWDatabase() { }
 
-};
+  protected:
+    std::unordered_map<TruthTable, BoundGNetList> _storage;
+
+  };
 
 /**
 * \brief Implements storage that contains GNets for rewriting using sqlite3.
 * \author <a href="mailto:mrpepelulka@gmail.com">Rustamkhan Ramaldanov</a>
 */
-class SQLiteRWDatabase : public RWDatabase {
-public:
-  // Serializes BoundGNetList object to string.
-  static std::string serialize(const BoundGNetList &list);
+  class SQLiteRWDatabase : public RWDatabase {
+  public:
+    // Serializes BoundGNetList object to string.
+    static std::string serialize(const BoundGNetList &list);
 
-  // Deserializes BoundGNetList object from string.
-  static BoundGNetList deserialize(const std::string &str);
+    // Deserializes BoundGNetList object from string.
+    static BoundGNetList deserialize(const std::string &str);
 
-  // Checks whether you can open DB that located in path. If you can it creates
-  // RWDatabase table in the DB. And saves the path as default path to DB.
-  void linkDB(const std::string &path);
+    // Checks whether you can open DB that located in path. If you can it creates
+    // RWDatabase table in the DB. And saves the path as default path to DB.
+    void linkDB(const std::string &path);
 
-  // Opens connection to DB. You must call it before you use SQLiteRWDatabase.
-  void openDB();
+    // Opens connection to DB. You must call it before you use SQLiteRWDatabase.
+    void openDB();
 
-  // Closes connection to DB. You must call it after using SQLiteRWDatabase.
-  void closeDB();
+    // Closes connection to DB. You must call it after using SQLiteRWDatabase.
+    void closeDB();
 
-  // Basic interface
+    // Basic interface
 
-  // Find for the key in the local storage and in the database.
-  virtual bool contains(const TruthTable key);
+    // Find for the key in the local storage and in the database.
+    virtual bool contains(const TruthTable &key);
 
-  // Get element from the local storage or from the database.
-  virtual BoundGNetList get(const TruthTable key);
+    // Get element from the local storage or from the database.
+    virtual BoundGNetList get(const TruthTable &key);
 
-  // Database interface.
+    // Database interface.
 
-  // Inserts new value into DB.
-  void insertIntoDB(const TruthTable key, const BoundGNetList &value);
+    // Inserts new value into DB.
+    void insertIntoDB(const TruthTable &key, const BoundGNetList &value);
 
-  // Update value in DB.
-  void updateInDB(const TruthTable key, const BoundGNetList &value);
+    // Update value in DB.
+    void updateInDB(const TruthTable &key, const BoundGNetList &value);
 
-  // Delete value from DB.
-  void deleteFromDB(const TruthTable key);
+    // Delete value from DB.
+    void deleteFromDB(const TruthTable &key);
 
-private:
+  private:
 
-  bool dbContainsRWTable();
+    bool dbContainsRWTable();
 
-  static int selectSQLCallback(void *selectResultPointer,
-                               int argc,
-                               char **argv,
-                               char **azColName) {
-    std::string arg1 = std::string(argv[0] == nullptr ? "NULL" : argv[0]);
-    std::string arg2 = std::string(argv[1] == nullptr ? "NULL" : argv[1]);
-    ((std::vector<std::pair<std::string, std::string> >*)selectResultPointer)
-      ->push_back(std::pair<std::string, std::string>(arg1, arg2));
-    return 0;
-  }
+    static int selectSQLCallback(void *selectResultPointer,
+                                 int argc,
+                                 char **argv,
+                                 char **azColName) {
+      std::string arg1 = std::string(argv[0] == nullptr ? "NULL" : argv[0]);
+      std::string arg2 = std::string(argv[1] == nullptr ? "NULL" : argv[1]);
+      ((std::vector<std::pair<std::string, std::string> >*)selectResultPointer)
+              ->push_back(std::pair<std::string, std::string>(arg1, arg2));
+      return 0;
+    }
 
-  std::string _dbTableName = "RWDatabase";
-  std::string _dbKeyName = "TruthTable";
-  std::string _dbValueName = "BGNetList";
-  std::string _dbKeyType = "BIGINT";
-  std::string _dbValueType = "TEXT";
+    std::string _dbTableName = "RWDatabase";
+    std::string _dbKeyName = "TruthTable";
+    std::string _dbValueName = "BGNetList";
+    std::string _dbKeyType = "BIGINT";
+    std::string _dbValueType = "TEXT";
 
-  bool _isLinked = false;
-  bool _isOpened = false;
-  std::string _pathDB;
-  sqlite3 *_db;
-  char* _zErrMsg = 0;
-  int _rc;
-  std::vector<std::pair<std::string, std::string> > _selectResult;
-};
+    bool _isLinked = false;
+    bool _isOpened = false;
+    std::string _pathDB;
+    sqlite3 *_db;
+    char* _zErrMsg = 0;
+    int _rc;
+    std::vector<std::pair<std::string, std::string> > _selectResult;
+  };
 
 } // namespace eda::gate::optimizer

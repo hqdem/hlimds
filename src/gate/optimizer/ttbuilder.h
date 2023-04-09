@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#pragma once
+
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
 #include "gate/optimizer/rwdatabase.h"

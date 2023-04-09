@@ -35,7 +35,7 @@ public:
   using TruthTableList = std::vector<TruthTable>;
 
   // Function builds truth table this way:
-  // x1 x2 x3 x4 x5 x6  F
+  // x5 x4 x3 x2 x1 x0  F
   //  0  0  0  0  0  0  a0  - 0th bit of TruthTable
   //  0  0  0  0  0  1  a1  - 1st bit of TruthTable
   //  0  0  0  0  1  0  a2  - 2nd bit of TruthTable

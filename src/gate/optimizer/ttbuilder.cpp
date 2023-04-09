@@ -123,7 +123,7 @@ TTBuilder::TruthTable TTBuilder::build(const BoundGNet &bgnet) {
 
 uint64_t TTBuilder::buildNthVar(int n) {
   uint64_t result = 0;
-  int div = (1 << (5 - n));
+  int div = (1 << n);
   for (uint64_t i = 0; i < 64; i++) {
     if ((i / div) % 2 == 1) {
       result = result | (1ull << i);

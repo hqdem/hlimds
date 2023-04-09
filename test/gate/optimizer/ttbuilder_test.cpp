@@ -16,8 +16,8 @@ namespace eda::gate::optimizer {
   using BoundGNet = RWDatabase::BoundGNet;
   using GateList = std::vector<Gate::Id>;
 
-  const uint64_t AND2_TRUTH_TABLE = 18446462598732840960ull;
-  const uint64_t NOR2_TRUTH_TABLE = 65535ull;
+  const uint64_t AND2_TRUTH_TABLE = 9838263505978427528ull;
+  const uint64_t NOR2_TRUTH_TABLE = 1229782938247303441ull;
   const uint64_t AND6_TRUTH_TABLE = 9223372036854775808ull;
 
   bool twoVarsBuildTest() {

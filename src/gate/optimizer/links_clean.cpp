@@ -21,7 +21,8 @@ namespace eda::gate::optimizer {
       gNet->setGate(node, Gate::get(node)->func(), newSignals);
       return SUCCESS;
     } else if (Gate::get(node)->fanout() == 0) {
-      std::vector<eda::base::model::Signal<GNet::GateId>> signals;
+      // TODO: delete
+      // std::vector<eda::base::model::Signal<GNet::GateId>> signals;
       // gNet->setGate(node, GateSymbol::IN, signals);
       // gNet->removeGate(node);
       gNet->eraseGate(node);
@@ -35,7 +36,7 @@ namespace eda::gate::optimizer {
     return SUCCESS;
   }
 
-  VisitorFlags LinkCleanVisitor::onCut(const Visitor::Cut &) {
+  VisitorFlags LinkCleanVisitor::onCut(const Cut &) {
     return SUCCESS;
   }
 } // namespace eda::gate::optimizer

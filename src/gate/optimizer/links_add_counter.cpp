@@ -59,7 +59,7 @@ namespace eda::gate::optimizer {
     return SUCCESS;
   }
 
-  VisitorFlags LinkAddCounter::onCut(const Visitor::Cut &) {
+  VisitorFlags LinkAddCounter::onCut(const Cut &) {
     return SUCCESS;
   }
 

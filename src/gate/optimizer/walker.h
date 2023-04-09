@@ -25,6 +25,7 @@ namespace eda::gate::optimizer {
     using GNet = eda::gate::model::GNet;
     using Gate = eda::gate::model::Gate;
     using GateID = GNet::GateId;
+    using Cut = CutStorage::Cut;
 
     GNet *gNet;
     Visitor *visitor;
@@ -42,6 +43,8 @@ namespace eda::gate::optimizer {
     Walker(GNet *gNet, Visitor *visitor, CutStorage *cutStorage);
 
     void walk(bool forward);
+
+    void walk(GateID start, const Cut &cut, bool forward);
 
     void walk(GateID start, bool forward);
   };

@@ -16,7 +16,7 @@ namespace eda::gate::optimizer {
   VisitorFlags ConeVisitor::onNodeBegin(const GateID &node) {
     visited.push(node);
     if (cut.find(node) != cut.end()) {
-      resultCut.emplace(node);
+      resultCut.emplace(node, Gate::INVALID);
       return FINISH_THIS;
     }
     return SUCCESS;
@@ -26,7 +26,7 @@ namespace eda::gate::optimizer {
     return SUCCESS;
   }
 
-  VisitorFlags ConeVisitor::onCut(const Visitor::Cut &) {
+  VisitorFlags ConeVisitor::onCut(const Cut &) {
     return SUCCESS;
   }
 
@@ -47,10 +47,13 @@ namespace eda::gate::optimizer {
           signals.emplace_back(base::model::Event::ALWAYS, found->second);
         }
       }
-      if (resultCut.find(cur) != resultCut.end() && signals.empty()) {
-        newGates[cur] = coneNet->addGate(GateSymbol::IN);
+      if(resultCut.find(cur) != resultCut.end()) {
+        if(signals.empty()) {
+          resultCut[cur] = newGates[cur] = coneNet->addGate(GateSymbol::IN);
+        } else {
+          resultCut[cur] = newGates[cur] = coneNet->addGate(curGate->func(),signals);
+        }
       } else {
-        assert(!signals.empty() && "Gate not from cut with empty input.");
         newGates[cur] = coneNet->addGate(curGate->func(), signals);
       }
     }

@@ -34,7 +34,7 @@ namespace eda::gate::optimizer {
     }
   }
 
-  void Walker::walk(GateID start, bool forward) {
+  void Walker::walk(GateID start, const Cut &cut, bool forward) {
     std::queue<GateID> bfs;
     bfs.push(start);
 
@@ -43,12 +43,71 @@ namespace eda::gate::optimizer {
     // First trace to define needed nodes.
     while (!bfs.empty()) {
       GateID cur = bfs.front();
+      bfs.pop();
+      accessed.emplace(cur);
+      if (cut.find(cur) != cut.end()) {
+        continue;
+      }
+      auto next = getNext(cur, forward);
+      for (auto node: next) {
+        bfs.push(node);
+      }
+    }
+
+    bfs.push(start);
+
+    // Second trace to visit needed nodes in topological order.
+    while (!bfs.empty()) {
+      GateID cur = bfs.front();
+
+      if (accessed.find(cur) != accessed.end()) {
+        if (checkVisited(accessed, cur, forward)) {
+
+          accessed.erase(cur);
+          auto next = getNext(cur, forward);
+
+          switch (callVisitor(cur)) {
+            case FINISH_ALL:
+              return;
+            case FINISH_THIS:
+              bfs.pop();
+              continue;
+            case SUCCESS:
+              break;
+          }
+
+          for (auto node: next) {
+            bfs.push(node);
+          }
+        } else {
+          auto prev = getNext(cur, !forward);
+          for (auto node: prev) {
+            if (accessed.find(node) != accessed.end()) {
+              bfs.push(node);
+            }
+          }
+          bfs.push(cur);
+        }
+      }
+      bfs.pop();
+    }
+  }
+
+  void Walker::walk(Walker::GateID start, bool forward) {
+    std::queue<GateID> bfs;
+    bfs.push(start);
+
+    std::unordered_set<GateID> accessed;
+
+    // First trace to define needed nodes.
+    while (!bfs.empty()) {
+      GateID cur = bfs.front();
+      bfs.pop();
       accessed.emplace(cur);
       auto next = getNext(cur, forward);
       for (auto node: next) {
         bfs.push(node);
       }
-      bfs.pop();
     }
 
     bfs.push(start);
@@ -58,7 +117,11 @@ namespace eda::gate::optimizer {
       GateID cur = bfs.front();
 
       // TODO: delete print.
-      std::cout << "bfs: " << cur << std::endl;
+      std::cout << "WALKER: bfs: " << cur << std::endl;
+      std::cout << this->gNet->nGates() << std::endl;
+      if(cur == 70403) {
+        int a = 0;
+      }
 
       if (accessed.find(cur) != accessed.end()) {
         if (checkVisited(accessed, cur, forward)) {
@@ -151,4 +214,5 @@ namespace eda::gate::optimizer {
     }
     return next;
   }
+
 } // namespace eda::gate::optimizer

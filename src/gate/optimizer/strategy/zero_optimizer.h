@@ -15,13 +15,13 @@ namespace eda::gate::optimizer {
   class ZeroOptimizer : public OptimizerVisitor{
   protected:
 
-    bool checkOptimize(const Cut &cut, const SwapOption &option,
+    bool checkOptimize(const BoundGNet &option,
                        const std::unordered_map<GateID, GateID> &map) override;
 
-    VisitorFlags considerOptimization(const Cut &cut, const SwapOption &option,
+    VisitorFlags considerOptimization(const BoundGNet &option,
                                       const std::unordered_map<GateID, GateID> &map) override;
 
-    std::vector<SwapOption> getSubnets(uint64_t func) override;
+    BoundGNetList getSubnets(uint64_t func) override;
   };
 } // namespace eda::gate::optimizer
 

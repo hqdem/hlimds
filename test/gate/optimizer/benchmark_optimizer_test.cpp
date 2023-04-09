@@ -9,8 +9,9 @@
 #include "gate/parser/gate_verilog_parser.h"
 #include "gate/printer/dot.h"
 #include "gate/optimizer/optimizer.h"
-#include "gate/optimizer/strategy/zero_optimizer.h"
+#include "gate/optimizer/strategy/exhaustive_search_optimizer.h"
 #include "gtest/gtest.h"
+#include "gate/optimizer/examples.h"
 
 namespace eda::gate::optimizer {
 
@@ -43,6 +44,39 @@ namespace eda::gate::optimizer {
     return outputPath;
   }
 
+  TEST(RewriteTest, gnet1) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    gnet1(net);
+
+    optimizePrint(&net, 4, getPath("gnet1_rewrite"), ExhausitiveSearchOptimizer());
+  }
+
+  TEST(RewriteTest, gnet2) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    gnet2(net);
+
+    optimizePrint(&net, 4, getPath("gnet2_rewrite"), ExhausitiveSearchOptimizer());
+  }
+
+  TEST(RewriteTest, gnet3) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    GNet net;
+    gnet3(net);
+
+    optimizePrint(&net, 4, getPath("gnet3_rewrite"), ExhausitiveSearchOptimizer());
+  }
+
   TEST(RewriteTest, c17) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
@@ -50,7 +84,19 @@ namespace eda::gate::optimizer {
 
     auto net = getNet("c17");
 
-    optimizePrint(net, 4, getPath("c17_rewrite_zero"), ZeroOptimizer());
+    optimizePrint(net, 4, getPath("c17_rewrite"), ExhausitiveSearchOptimizer());
+
+    delete net;
+  }
+
+  TEST(RewriteTest, c432) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    auto net = getNet("c432");
+
+    optimizePrint(net, 6, getPath("c432_rewrite"), ExhausitiveSearchOptimizer());
 
     delete net;
   }

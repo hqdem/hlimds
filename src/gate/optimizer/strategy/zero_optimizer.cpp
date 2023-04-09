@@ -9,30 +9,31 @@
 #include "zero_optimizer.h"
 
 namespace eda::gate::optimizer {
-  using SwapOption = OptimizerVisitor::SwapOption;
+  using BoundGNetList = RWDatabase::BoundGNetList;
 
-  bool ZeroOptimizer::checkOptimize(const Cut &, const SwapOption &,
+  bool ZeroOptimizer::checkOptimize(const BoundGNet &,
                                     const std::unordered_map<GateID, GateID> &map) {
     return true;
   }
 
   VisitorFlags
-  ZeroOptimizer::considerOptimization(const Cut &cut, const SwapOption &option,
+  ZeroOptimizer::considerOptimization(const BoundGNet &option,
                                       const std::unordered_map<GateID, GateID> &map) {
-    substitute(lastNode, map, option.subsNet, net);
+    substitute(lastNode, map, option.net.get(), net);
     return FINISH_THIS;
   }
 
-  std::vector<SwapOption> ZeroOptimizer::getSubnets(uint64_t func) {
+  // TODO: correct method.
+  BoundGNetList ZeroOptimizer::getSubnets(uint64_t func) {
+    BoundGNet rez;
     GNet *subsNet = new GNet();
-    std::vector<SwapOption> rez;
-
-    std::vector<GateID> order = {subsNet->addGate(model::GateSymbol::IN)};
-    order.emplace_back(subsNet->addGate(model::GateSymbol::OUT,
-                                        base::model::Signal{
-                                                base::model::Event::ALWAYS,
-                                                order.back()}));
-    rez.emplace_back(subsNet, order);
-    return rez;
+    rez.net = std::shared_ptr<GNet>(subsNet);
+    GateID sourceNode = subsNet->addGate(model::GateSymbol::IN);
+    rez.bindings.emplace(1, sourceNode);
+    subsNet->addGate(model::GateSymbol::OUT,
+                     base::model::Signal{
+                             base::model::Event::ALWAYS,
+                             sourceNode});
+    return {rez};
   }
 } // namespace eda::gate::optimizer

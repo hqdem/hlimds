@@ -24,28 +24,10 @@ namespace eda::gate::optimizer {
 
     LinksRemoveCounter removeCounter(cutFor, addCounter.getUsed());
     walker = Walker(net, &removeCounter, nullptr);
+    // TODO Change to found earlier cone.
     walker.walk(cutFor, false);
 
     return addCounter.getNAdded() - removeCounter.getNRemoved();
   }
 
-  uint64_t getTruthTable(GateID cutFor, const Cut &cut, GNet *net) {
-    return 0;
-    // Finding cone.
-    ConeVisitor coneVisitor(cut);
-    Walker walker(net, &coneVisitor, nullptr);
-    walker.walk(cutFor, false);
-
-    GNet *subnet = coneVisitor.getGNet();
-    // Make binding.
-    RWDatabase::GateBindings order;
-    RWDatabase::InputId i = 0;
-    for(auto gate : cut) {
-      order[i++] = gate;
-    }
-    // TODO: implement via shared ptr.
-    // BoundGNet boundGNet = {net, order};
-
-    // call function.
-  }
 } // namespace eda::gate::optimizer

@@ -9,25 +9,24 @@
 #include "exhaustive_search_optimizer.h"
 
 namespace eda::gate::optimizer {
-  using SwapOption = OptimizerVisitor::SwapOption;
+  using BoundGNetList = RWDatabase::BoundGNetList;
 
-  bool ExhausitiveSearchOptimizer::checkOptimize(const Cut &cut,
-                                                 const SwapOption &option,
+  bool ExhausitiveSearchOptimizer::checkOptimize(const BoundGNet &option,
                                                  const std::unordered_map<GateID, GateID> &map) {
-    return fakeSubstitute(lastNode, map, option.subsNet, net) < 0;
+    return fakeSubstitute(lastNode, map, option.net.get(), net) < 0;
   }
 
-  VisitorFlags ExhausitiveSearchOptimizer::considerOptimization(const Cut &cut,
-                                                                const SwapOption &option,
-                                                                const std::unordered_map<GateID, GateID> &map) {
-    substitute(lastNode, map, option.subsNet, net);
+  VisitorFlags
+  ExhausitiveSearchOptimizer::considerOptimization(const BoundGNet &option,
+                                                   const std::unordered_map<GateID, GateID> &map) {
+    substitute(lastNode, map, option.net.get(), net);
     // TODO: we can return finish all here.
     // TODO: we can make list with nets and their profit.
     return SUCCESS;
   }
 
-  std::vector<SwapOption>
+  BoundGNetList
   ExhausitiveSearchOptimizer::getSubnets(uint64_t func) {
-    return {};
+    return rwdb.get(func);
   }
 } // namespace eda::gate::optimizer

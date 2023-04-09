@@ -18,7 +18,7 @@ namespace eda::gate::optimizer {
  * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
  */
   struct CutStorage {
-    using GNet = eda::gate::model::GNet;
+    using GNet = model::GNet;
     using GateID = GNet::GateId;
 
     struct HashFunction {

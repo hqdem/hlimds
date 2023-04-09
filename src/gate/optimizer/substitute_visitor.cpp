@@ -50,6 +50,7 @@ namespace eda::gate::optimizer {
           // Deleting links.
           LinkCleanVisitor visitor(cutFor, net, signals);
           Walker walker(net, &visitor, nullptr);
+          // TODO Change to found earlier cone.
           walker.walk(cutFor, false);
         }
 
@@ -70,7 +71,7 @@ namespace eda::gate::optimizer {
     return SUCCESS;
   }
 
-  VisitorFlags SubstituteVisitor::onCut(const Visitor::Cut &) {
+  VisitorFlags SubstituteVisitor::onCut(const Cut &) {
     return SUCCESS;
   }
 } // namespace eda::gate::optimizer

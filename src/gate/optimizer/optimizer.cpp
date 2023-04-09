@@ -26,6 +26,8 @@ namespace eda::gate::optimizer {
   void optimizePrint(GNet *net, int cutSize, const std::filesystem::path &subCatalog, OptimizerVisitor&& optimizer) {
     CutStorage cutStorage = findCuts(cutSize, net);
 
+    std::cout << "cuts found " << std::endl;
+
     optimizer.set(&cutStorage, net, cutSize);
     TrackerVisitor trackerVisitor(subCatalog, net, &optimizer);
     Walker walker(net, &trackerVisitor, &cutStorage);

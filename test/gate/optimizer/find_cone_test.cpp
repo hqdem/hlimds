@@ -15,7 +15,7 @@
 namespace eda::gate::optimizer {
 
   GNet *findConePrint(const std::filesystem::path &subCatalog, GNet *net,
-                      const std::vector<GNet::V> &cuNodes, GNet::V start) {
+                      const std::vector<GateID> &cuNodes, GNet::V start) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path outputPath = homePath / subCatalog;
 
@@ -34,7 +34,7 @@ namespace eda::gate::optimizer {
 
     ConeVisitor coneVisitor(cut);
     Walker walker(net, &coneVisitor, nullptr);
-    walker.walk(start, false);
+    walker.walk(start, cut,  false);
 
     GNet *subnet = coneVisitor.getGNet();
 

@@ -40,7 +40,7 @@ namespace eda::gate::optimizer {
     return SUCCESS;
   }
 
-  VisitorFlags LinksRemoveCounter::onCut(const Visitor::Cut &cut) {
+  VisitorFlags LinksRemoveCounter::onCut(const Cut &cut) {
     return SUCCESS;
   }
 } // namespace eda::gate::optimizer

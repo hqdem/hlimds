@@ -35,10 +35,14 @@ namespace eda::gate::optimizer {
 
     GNet *getGNet();
 
+    const std::unordered_map<GateID, GateID> &getResultCut() const {
+      return resultCut;
+    }
+
   private:
     const Cut &cut;
     std::stack<GateID> visited;
     std::unordered_map<GateID, GateID> newGates;
-    Cut resultCut;
+    std::unordered_map<GateID, GateID> resultCut;
   };
 } // namespace eda::gate::optimizer

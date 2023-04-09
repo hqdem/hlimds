@@ -10,9 +10,9 @@
 
 #include "gate/optimizer/cuts_finder_visitor.h"
 #include "gate/optimizer/links_clean.h"
+#include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/util.h"
 #include "gate/optimizer/visitor.h"
-#include "gate/simulator/simulator.h"
 
 #include <queue>
 
@@ -25,30 +25,8 @@ namespace eda::gate::optimizer {
   class OptimizerVisitor : public Visitor {
   public:
 
-    using Order = std::vector<GateID>;
-
-    struct SwapOption {
-      GNet *subsNet = nullptr;
-      Order order;
-
-      SwapOption(GNet *subsNet, Order &order) : subsNet(subsNet), order(std::move(order)){
-        std::cout << "Regular constructor " << std::endl;
-      }
-
-      SwapOption(SwapOption &&src)  noexcept {
-        std::cout << "Move constructor " << std::endl;
-
-        this->subsNet = src.subsNet;
-        src.subsNet = nullptr;
-        std::cout << "Move constructor is called for " << (subsNet ? subsNet->id() : 666) << std::endl;
-      }
-
-      ~SwapOption() {
-        std::cout << "Destructor is called for " << (subsNet ? subsNet->id() : 6666) << std::endl;
-        std::cout << "Order size: " << order.size() << "\n\n";
-        delete subsNet;
-      }
-    };
+    using BoundGNetList = RWDatabase::BoundGNetList;
+    using BoundGNet = RWDatabase::BoundGNet;
 
     OptimizerVisitor();
 
@@ -73,15 +51,15 @@ namespace eda::gate::optimizer {
     GateID lastNode;
     int cutSize;
 
-    virtual bool checkOptimize(const Cut &cut, const SwapOption &option,
+    virtual bool checkOptimize(const BoundGNet &option,
                                const std::unordered_map<GateID, GateID> &map) = 0;
 
     /// учесть оптимизацию.
     virtual VisitorFlags
-    considerOptimization(const Cut &cut, const SwapOption &option,
+    considerOptimization(const BoundGNet &option,
                          const std::unordered_map<GateID, GateID> &map) = 0;
 
-    virtual std::vector<SwapOption> getSubnets(uint64_t func) = 0;
+    virtual BoundGNetList getSubnets(uint64_t func) = 0;
 
   };
 

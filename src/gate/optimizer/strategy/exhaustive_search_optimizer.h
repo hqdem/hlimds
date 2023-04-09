@@ -9,18 +9,26 @@
 #pragma once
 
 #include "gate/optimizer/optimizer_visitor.h"
+#include "gate/optimizer/rwmanager.h"
 
 namespace eda::gate::optimizer {
 
   class ExhausitiveSearchOptimizer : public OptimizerVisitor {
+  public:
+    ExhausitiveSearchOptimizer() {
+      RewriteManager rewriteManager;
+      rewriteManager.initialize();
+      rwdb = rewriteManager.getDatabase();
+    }
   protected:
-    bool checkOptimize(const Cut &cut, const SwapOption &option,
+    RWDatabase rwdb;
+    bool checkOptimize(const BoundGNet &option,
                        const std::unordered_map<GateID, GateID> &map) override;
 
-    VisitorFlags considerOptimization(const Cut &cut, const SwapOption &option,
+    VisitorFlags considerOptimization(const BoundGNet &option,
                                       const std::unordered_map<GateID, GateID> &map) override;
 
-    std::vector<SwapOption> getSubnets(uint64_t func) override;
+    BoundGNetList getSubnets(uint64_t func) override;
   };
 } // namespace eda::gate::optimizer
 

@@ -36,24 +36,56 @@ namespace eda::gate::optimizer {
 
   VisitorFlags OptimizerVisitor::onCut(const Cut &cut) {
     if (checkValidCut(cut)) {
-      auto func = getTruthTable(lastNode, cut, net);
+      // TODO: remove cloning.
+      std::vector<GateID> orderedCut;
+
+      // Finding cone.
+      ConeVisitor coneVisitor(cut);
+      Walker walker(net, &coneVisitor, nullptr);
+      walker.walk(lastNode, cut, false);
+
+      // Make binding.
+      RWDatabase::BoundGNet boundGNet;
+      boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
+
+      const auto & cutConeMap = coneVisitor.getResultCut();
+      for(const auto &[gateSource, gateCone] : cutConeMap) {
+        boundGNet.bindings[boundGNet.bindings.size()] = gateCone;
+      }
+
+      auto func = TTBuilder::build(boundGNet);
+
       auto list = getSubnets(func);
       for(const auto &option : list) {
 
         // Creating correspondence map for subNet sources and cut.
         std::unordered_map<GateID, GateID> map;
 
-        auto it = cut.begin();
-        for(GateID gateId : option.order) {
-          if(it == cut.end()) {
+        // If bindings were not empty.
+        /*
+        GateID i = 0;
+        for(const auto & [k, v] : cutConeMap) {
+          auto found = option.bindings.find(i++);
+          if(found != option.bindings.end()) {
+            map[found->second] = k;
+          } else {
             break;
           }
-          map[gateId] = *it;
+        }*/
+
+        const auto& sources = option.net->getSources();
+        auto it = sources.begin();
+        for(const auto & [k, v] : cutConeMap) {
+          if(it != sources.end()) {
+            map[*it] = k;
+          } else {
+            break;
+          }
           ++it;
         }
 
-        if (checkOptimize(cut, option, map)) {
-          return considerOptimization(cut, option, map);
+        if (checkOptimize(option, map)) {
+          return considerOptimization(option, map);
         }
       }
     }

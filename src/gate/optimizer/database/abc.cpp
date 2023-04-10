@@ -9,6 +9,7 @@
 #include "gate/model/gnet.h"
 #include "gate/model/utils.h"
 #include "gate/optimizer/rwdatabase.h"
+#include "util/math.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -155,10 +156,6 @@ static TruthTable convertTruthTable(
   return result;
 }
 
-static unsigned factorial(unsigned k) {
-  return k == 0 ? 1 : k * factorial(k - 1);
-}
-
 static BoundGNet clone(const BoundGNet &circuit) {
   BoundGNet newCircuit;
 
@@ -207,7 +204,7 @@ static void generateNpnClasses(
 
   const size_t k = boundNet.bindings.size();
   const size_t N = 1 << (k + 1);
-  const size_t P = factorial(k);
+  const size_t P = utils::factorial(k);
 
   for (unsigned n = 0; n < N; n++) {
     // Clone the net consistently w/ the bindings.

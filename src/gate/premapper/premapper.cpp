@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/utils.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/premapper/migmapper.h"
 #include "gate/premapper/premapper.h"
@@ -30,52 +31,6 @@ PreMapper &getPreMapper(PreBasis basis) {
   }
 }
 
-Gate::SignalList PreMapper::getNewInputs(
-    const Gate::SignalList &oldInputs,
-    const PreMapper::GateIdMap &oldToNewGates) {
-  Gate::SignalList newInputs(oldInputs.size());
-
-  for (size_t i = 0; i < oldInputs.size(); i++) {
-    auto oldInput = oldInputs[i];
-    auto newInput = oldToNewGates.find(oldInput.node());
-    assert("Points one past the last element" &&
-            newInput != oldToNewGates.end());
-
-    newInputs[i] = Gate::Signal(oldInput.event(), newInput->second);
-  }
-
-  return newInputs;
-}
-
-Gate::SignalList PreMapper::getNewInputs(
-    const Gate &oldGate,
-    const PreMapper::GateIdMap &oldToNewGates,
-    size_t &n0,
-    size_t &n1) {
-  const auto k = oldGate.arity();
-
-  Gate::SignalList newInputs;
-  newInputs.reserve(k);
-
-  n0 = 0;
-  n1 = 0;
-  for (const auto input : oldGate.inputs()) {
-    if (model::isValue(input)) {
-      const auto isZero = model::isZero(input);
-      n0 += (isZero ? 1 : 0);
-      n1 += (isZero ? 0 : 1);
-    } else {
-      const auto i = oldToNewGates.find(input.node());
-      assert(i != oldToNewGates.end());
-
-      const auto newInputId = i->second;
-      newInputs.push_back(Gate::Signal::always(newInputId));
-    }
-  }
-
-  return newInputs;
-}
-
 std::shared_ptr<GNet> PreMapper::map(const GNet &net,
                                      GateIdMap &oldToNewGates) const {
   auto *newNet = mapGates(net, oldToNewGates);
@@ -88,7 +43,7 @@ std::shared_ptr<GNet> PreMapper::map(const GNet &net,
     assert("Points one past the last element" &&
             (newTriggerId != oldToNewGates.end()));
 
-    auto newInputs = getNewInputs(oldTrigger->inputs(), oldToNewGates);
+    auto newInputs = model::getNewInputs(oldTrigger->inputs(), oldToNewGates);
     newNet->setGate(newTriggerId->second, oldTrigger->func(), newInputs);
   }
 
@@ -134,7 +89,7 @@ Gate::Id PreMapper::mapGate(const Gate &oldGate,
   }
 
   // Just clone the given gate.
-  auto newInputs = getNewInputs(oldGate.inputs(), oldToNewGates);
+  auto newInputs = model::getNewInputs(oldGate.inputs(), oldToNewGates);
   return newNet.addGate(oldGate.func(), newInputs);
 }
 

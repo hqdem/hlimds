@@ -38,12 +38,6 @@ public:
     return map(net, oldToNewGates);
   }
 
-static Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
-                                     const PreMapper::GateIdMap &oldToNewGates);
-static Gate::SignalList getNewInputs(const Gate &oldGate,
-                                     const PreMapper::GateIdMap &oldToNewGates,
-                                     size_t &n0, size_t &n1);
-
 protected:
   virtual Gate::Id mapIn (GNet &newNet) const = 0;
   virtual Gate::Id mapOut(const Gate::SignalList &newInputs,

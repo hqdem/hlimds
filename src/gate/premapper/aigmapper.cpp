@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/utils.h"
 #include "gate/premapper/aigmapper.h"
 
 #include <cassert>
@@ -27,7 +28,7 @@ Gate::Id AigMapper::mapGate(const Gate &oldGate,
   }
 
   size_t n0, n1;
-  auto newInputs = getNewInputs(oldGate, oldToNewGates, n0, n1);
+  auto newInputs = model::getNewInputs(oldGate, oldToNewGates, n0, n1);
 
   switch (oldGate.func()) {
   case GateSymbol::IN   : return mapIn (                          newNet);
@@ -60,7 +61,7 @@ Gate::Id AigMapper::mapOut(const Gate::SignalList &newInputs,
                            const size_t n0,
                            const size_t n1,
                            GNet &newNet) const {
-  assert(("Should be single source or input", (newInputs.size() + n0 + n1) == 1));
+  assert((newInputs.size() + n0 + n1) == 1 && "Only single input is allowed");
 
   // Constant output.
   if (n0 > 0 || n1 > 0) {
@@ -106,8 +107,7 @@ Gate::Id AigMapper::mapNop(const Gate::SignalList &newInputs,
                            const size_t n1,
                            const bool sign,
                            GNet &newNet) const {
-  assert(("Should be single source or input",
-          (newInputs.size() + n0 + n1) == 1));
+  assert((newInputs.size() + n0 + n1) == 1 && "Only single input is allowed");
 
   if (n0 > 0 || n1 > 0) {
     return mapVal((n0 > 0) ^ sign, newNet);

@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/gnet.h"
+#include "gate/model/utils.h"
 #include "gate/optimizer/rwdatabase.h"
 
 #include <algorithm>
@@ -80,21 +81,6 @@ static BoundGNet getAbcRwDatabase(
   return {net, bindings};
 }
 
-static Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
-                                     const GateIdMap &oldToNewGates) {
-  Gate::SignalList newInputs(oldInputs.size());
-
-  for (size_t i = 0; i < oldInputs.size(); i++) {
-    auto oldInput = oldInputs[i];
-    auto newInput = oldToNewGates.find(oldInput.node());
-    assert(newInput != oldToNewGates.end());
-
-    newInputs[i] = Gate::Signal(oldInput.event(), newInput->second);
-  }
-
-  return newInputs;
-}
-
 static BoundGNet getCircuit(GateId gid, const BoundGNet &boundNet) {
   std::vector<GateId> gates;
   gates.push_back(gid);
@@ -114,7 +100,7 @@ static BoundGNet getCircuit(GateId gid, const BoundGNet &boundNet) {
   for (auto i = gates.rbegin(); i != gates.rend(); i++) {
     if (oldToNewGates.find(*i) == oldToNewGates.end()) {
       const auto *gate = Gate::get(*i);
-      const auto newInputs = getNewInputs(gate->inputs(), oldToNewGates);
+      const auto newInputs = model::getNewInputs(gate->inputs(), oldToNewGates);
       const auto newGateId = circuit->addGate(gate->func(), newInputs);
       oldToNewGates[*i] = newGateId;
     }

@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/utils.h"
 #include "gate/premapper/migmapper.h"
 
 #include <cassert>
@@ -27,7 +28,7 @@ Gate::Id MigMapper::mapGate(const Gate &oldGate,
 
   size_t n0;
   size_t n1;
-  auto newInputs = getNewInputs(oldGate, oldToNewGates, n0, n1);
+  auto newInputs = model::getNewInputs(oldGate, oldToNewGates, n0, n1);
 
   switch (oldGate.func()) {
   case GateSymbol::IN   : return mapIn (                          newNet);

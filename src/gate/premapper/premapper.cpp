@@ -2,11 +2,15 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/premapper/aigmapper.h"
+#include "gate/premapper/migmapper.h"
 #include "gate/premapper/premapper.h"
+#include "gate/premapper/xagmapper.h"
+#include "gate/premapper/xmgmapper.h"
 
 #include <cassert>
 #include <unordered_map>
@@ -17,6 +21,14 @@ using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 using SignalList = model::Gate::SignalList;
 
+PreMapper &getPreMapper(PreBasis basis) {
+  switch(basis) {
+  case PreBasis::MIG: return MigMapper::get();
+  case PreBasis::XAG: return XagMapper::Singleton<XagMapper>::get();
+  case PreBasis::XMG: return XmgMapper::Singleton<XmgMapper>::get();
+  default: return AigMapper::get();
+  }
+}
 
 Gate::SignalList PreMapper::getNewInputs(
     const Gate::SignalList &oldInputs,

@@ -20,7 +20,7 @@ namespace eda::gate::optimizer {
   using lorina::diagnostic_engine;
   using lorina::return_code;
 
-  GNet *getNet(const std::string& infile) {
+  GNet *getNet(const std::string &infile) {
     const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path prefixPath = homePath / subCatalog;
@@ -38,9 +38,10 @@ namespace eda::gate::optimizer {
     return parser.getGnet();
   }
 
-  std::string getPath(const std::string& nameDir) {
+  std::string getPath(const std::string &nameDir) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-    const std::filesystem::path outputPath = homePath / "test/data/gate/optimizer/output" / nameDir;
+    const std::filesystem::path outputPath =
+            homePath / "test/data/gate/optimizer/output" / nameDir;
     system(std::string("mkdir -p ").append(outputPath).c_str());
     return outputPath;
   }
@@ -53,7 +54,8 @@ namespace eda::gate::optimizer {
     GNet net;
     gnet1(net);
 
-    optimizePrint(&net, 4, getPath("gnet1_rewrite"), ExhausitiveSearchOptimizer());
+    optimizePrint(&net, 4, getPath("gnet1_rewrite"),
+                  ExhausitiveSearchOptimizer());
   }
 
   TEST(RewriteTest, gnet2) {
@@ -64,7 +66,8 @@ namespace eda::gate::optimizer {
     GNet net;
     gnet2(net);
 
-    optimizePrint(&net, 4, getPath("gnet2_rewrite"), ExhausitiveSearchOptimizer());
+    optimizePrint(&net, 4, getPath("gnet2_rewrite"),
+                  ExhausitiveSearchOptimizer());
   }
 
   TEST(RewriteTest, gnet3) {
@@ -75,7 +78,8 @@ namespace eda::gate::optimizer {
     GNet net;
     gnet3(net);
 
-    optimizePrint(&net, 4, getPath("gnet3_rewrite"), ExhausitiveSearchOptimizer());
+    optimizePrint(&net, 4, getPath("gnet3_rewrite"),
+                  ExhausitiveSearchOptimizer());
   }
 
   TEST(RewriteTest, c17) {
@@ -85,8 +89,11 @@ namespace eda::gate::optimizer {
 
     auto net = getNet("c17");
 
-    optimizePrint(net, 6, getPath("c17_rewrite_e"), ExhausitiveSearchOptimizer());
-    optimizePrint(net, 6, getPath("c17_rewrite_a"), ApplySearchOptimizer());
+    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+
+    optimize(net, 6, ExhausitiveSearchOptimizer());
+
+    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 
     delete net;
   }
@@ -98,7 +105,27 @@ namespace eda::gate::optimizer {
 
     auto net = getNet("c432");
 
-    optimizePrint(net, 6, getPath("c432_rewrite"), ExhausitiveSearchOptimizer());
+    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+
+    optimize(net, 4, ApplySearchOptimizer());
+
+    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+
+    delete net;
+  }
+
+  TEST(RewriteTest, adder) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    auto net = getNet("adder");
+
+    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+
+    optimize(net, 4, ApplySearchOptimizer());
+
+    std::cout << "Gates number after rewrite : " << net->nGates() << '\n';
 
     delete net;
   }

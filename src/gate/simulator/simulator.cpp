@@ -33,7 +33,8 @@ Compiled::OP Compiled::getOp(const Gate &gate) const {
   case GateSymbol::LATCH : return getLatch(n);
   case GateSymbol::DFF   : return getDff(n);
   case GateSymbol::DFFrs : return getDffrs(n);
-  default: uassert(false, "Unsupported func symbol: " << gate.func() << std::endl);
+  default: uassert(false,
+                   "Unsupported func symbol: " << gate.func() << std::endl);
   }
 
   return getZero(0);

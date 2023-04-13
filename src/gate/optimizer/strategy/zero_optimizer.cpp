@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "zero_optimizer.h"
+#include "gate/optimizer/strategy/zero_optimizer.h"
 
 namespace eda::gate::optimizer {
   using BoundGNetList = RWDatabase::BoundGNetList;
@@ -16,11 +16,10 @@ namespace eda::gate::optimizer {
     return true;
   }
 
-  VisitorFlags
+  void
   ZeroOptimizer::considerOptimization(BoundGNet &option,
                                       std::unordered_map<GateID, GateID> &map) {
     substitute(lastNode, map, option.net.get(), net);
-    return FINISH_THIS;
   }
 
   // TODO: correct method.

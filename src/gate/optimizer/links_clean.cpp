@@ -16,20 +16,28 @@ namespace eda::gate::optimizer {
             gNet(gNet) {}
 
   VisitorFlags LinkCleanVisitor::onNodeBegin(const GateID &node) {
-
     if (this->node == node) {
-      gNet->setGate(node, Gate::get(node)->func(), newSignals);
-      return SUCCESS;
-    } else if (Gate::get(node)->fanout() == 0) {
-      // TODO: delete
-      // std::vector<eda::base::model::Signal<GNet::GateId>> signals;
-      // gNet->setGate(node, GateSymbol::IN, signals);
-      // gNet->removeGate(node);
+        gNet->setGate(node, Gate::get(node)->func(), newSignals);
+      }  else if (Gate::get(node)->fanout() == 0) {
       gNet->eraseGate(node);
-      return SUCCESS;
-    } else {
-      return FINISH_THIS;
     }
+    /*
+     * else {
+        Gate *oldGate = Gate::get(oldOut);
+        Gate *newGate = Gate::get(newOut);
+        // Removing links from outputs of oldGate and
+        // connecting links of old gate to the new gate.
+        for(const auto & out : oldGate->links()) {
+          Gate *outGate = Gate::get(out.target);
+          auto inputs = outGate->inputs();
+          auto it = std::find(inputs.begin(), inputs.end(), oldOut);
+          *it = newOut;
+          gNet->setGate(out.target, outGate->func(), inputs);
+        }
+      }
+    }
+     */
+    return SUCCESS;
   }
 
   VisitorFlags LinkCleanVisitor::onNodeEnd(const GateID &) {

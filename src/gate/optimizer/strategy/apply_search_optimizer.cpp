@@ -13,14 +13,13 @@ namespace eda::gate::optimizer {
 
   bool ApplySearchOptimizer::checkOptimize(const BoundGNet &option,
                                                  const std::unordered_map<GateID, GateID> &map) {
-    return fakeSubstitute(lastNode, map, option.net.get(), net) < 0;
+    return fakeSubstitute(lastNode, map, option.net.get(), net) <= 0;
   }
 
-  VisitorFlags
+  void
   ApplySearchOptimizer::considerOptimization(BoundGNet &option,
                                              std::unordered_map<GateID, GateID> &map) {
     substitute(lastNode, map, option.net.get(), net);
-    return SUCCESS;
   }
 
   BoundGNetList

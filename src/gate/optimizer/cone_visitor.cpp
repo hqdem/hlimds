@@ -49,6 +49,7 @@ namespace eda::gate::optimizer {
           signals.emplace_back(base::model::Event::ALWAYS, found->second);
         }
       }
+
       if(resultCut.find(cur) != resultCut.end()) {
         if(signals.empty()) {
           resultCut[cur] = newGates[cur] = coneNet->addGate(GateSymbol::IN);
@@ -56,7 +57,11 @@ namespace eda::gate::optimizer {
           resultCut[cur] = newGates[cur] = coneNet->addGate(curGate->func(),signals);
         }
       } else {
-        newGates[cur] = coneNet->addGate(curGate->func(), signals);
+        if(signals.empty()) {
+          resultCut[cur] = newGates[cur] = coneNet->addGate(GateSymbol::IN);
+        } else {
+          newGates[cur] = coneNet->addGate(curGate->func(), signals);
+        }
       }
     }
 

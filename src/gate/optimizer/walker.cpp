@@ -116,13 +116,6 @@ namespace eda::gate::optimizer {
     while (!bfs.empty()) {
       GateID cur = bfs.front();
 
-      // TODO: delete print.
-      std::cout << "WALKER: bfs: " << cur << std::endl;
-      std::cout << this->gNet->nGates() << std::endl;
-      if(cur == 70403) {
-        int a = 0;
-      }
-
       if (accessed.find(cur) != accessed.end()) {
         if (checkVisited(accessed, cur, forward)) {
 

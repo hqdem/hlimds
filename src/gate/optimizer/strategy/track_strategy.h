@@ -9,20 +9,20 @@
 #pragma once
 
 #include "gate/optimizer/optimizer_visitor.h"
-#include "gate/optimizer/rwmanager.h"
+#include "gate/printer/dot.h"
+
+#include <filesystem>
 
 namespace eda::gate::optimizer {
-
-  class ApplySearchOptimizer : public OptimizerVisitor {
+  class TrackStrategy : public OptimizerVisitor {
 
   public:
-      ApplySearchOptimizer() {
-      RewriteManager rewriteManager;
-      rewriteManager.initialize();
-      rwdb = rewriteManager.getDatabase();
-    }
 
-    RWDatabase rwdb;
+    VisitorFlags onNodeBegin(const GateID &) override;
+
+    TrackStrategy(const std::filesystem::path &subCatalog,
+                  OptimizerVisitor *visitor);
+
     bool checkOptimize(const BoundGNet &option,
                        const std::unordered_map<GateID, GateID> &map) override;
 
@@ -30,6 +30,13 @@ namespace eda::gate::optimizer {
                               std::unordered_map<GateID, GateID> &map) override;
 
     BoundGNetList getSubnets(uint64_t func) override;
+
+    VisitorFlags finishOptimization() override;
+
+  private:
+    std::filesystem::path subCatalog;
+    OptimizerVisitor *visitor;
+    int counter = 0;
   };
 } // namespace eda::gate::optimizer
 

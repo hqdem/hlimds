@@ -276,6 +276,19 @@ TEST(GNetTest, GNetRandTest) {
   EXPECT_TRUE(net != nullptr);
 }
 
+TEST(GNetTest, GNetAddTest) {
+  Gate::SignalList inputs1;
+  Gate::Id outputId1;
+  auto net1 = makeOr(16, inputs1, outputId1);
+
+  auto net = std::make_shared<GNet>();
+  net->addNet(*net1);
+
+  for (auto *gate : net1->gates()) {
+    EXPECT_TRUE(net->contains(gate->id()));
+  }
+}
+
 TEST(GNetTest, GNetRandTestIssue11877) {
   auto net = makeRand(7, 5);
   EXPECT_TRUE(net != nullptr);

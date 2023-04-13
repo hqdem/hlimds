@@ -149,6 +149,8 @@ GNet::GateId GNet::addGate(Gate *gate, SubnetId sid) {
 void GNet::setGate(GateId gid, GateSymbol func, const SignalList &inputs) {
   // ASSERT: All inputs belong to the net (no need to modify the upper nets).
   // ASSERT: Adding the given inputs does not lead to combinational cycles.
+  assert(contains(gid));
+
   auto *gate = Gate::get(gid);
 
   std::vector<GNet*> subnets;
@@ -356,29 +358,31 @@ void GNet::addNet(const GNet &net) {
   const auto nS = _subnets.size();
 
   _gates.insert(std::end(_gates),
-    std::begin(net._gates), std::end(net._gates));
+      std::begin(net._gates), std::end(net._gates));
   _subnets.insert(std::end(_subnets),
-    std::begin(net._subnets), std::end(net._subnets));
+      std::begin(net._subnets), std::end(net._subnets));
   _emptySubnets.insert(
-    std::begin(net._emptySubnets), std::end(net._emptySubnets));
+      std::begin(net._emptySubnets), std::end(net._emptySubnets));
   _constants.insert(
-    std::begin(net._constants), std::end(net._constants));
+      std::begin(net._constants), std::end(net._constants));
   _triggers.insert(
-    std::begin(net._triggers), std::end(net._triggers));
+      std::begin(net._triggers), std::end(net._triggers));
 
   _nConnects += net._nConnects;
   _nGatesInSubnets += net._nGatesInSubnets;
 
-  discard_if(_sourceLinks,
-    [this](Link link) { return !checkSourceLink(link); });
+  discard_if(_sourceLinks, [this](Link link) {
+    return !checkSourceLink(link);
+  });
   for (auto link : net._sourceLinks) {
     if (checkSourceLink(link)) {
       _sourceLinks.insert(link);
     }
   }
 
-  discard_if(_targetLinks,
-    [this](Link link) { return !checkTargetLink(link); });
+  discard_if(_targetLinks, [this](Link link) {
+    return !checkTargetLink(link);
+  });
   for (auto link : net._targetLinks) {
     if (checkTargetLink(link)) {
       _targetLinks.insert(link);

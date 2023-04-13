@@ -19,6 +19,7 @@ add_library(Gate OBJECT
   optimizer/rwmanager.cpp
   optimizer/strategy/apply_search_optimizer.cpp
   optimizer/strategy/exhaustive_search_optimizer.cpp
+  optimizer/strategy/track_strategy.cpp
   optimizer/strategy/zero_optimizer.cpp
   optimizer/substitute_visitor.cpp
   optimizer/tracker_visitor.cpp

@@ -15,7 +15,6 @@
 namespace eda::gate::printer {
 
 void printerTest() {
-  using GNet = eda::gate::model::GNet;
   using Gate = eda::gate::model::Gate;
 
   Gate::SignalList inputs;

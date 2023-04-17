@@ -26,7 +26,8 @@ public:
 
   void print(std::ostream &out, const GNet &net) const;
 
-  static inline const std::string templatePath = "src/data/ctemplate/gate_verilog.tpl";
+  static inline const std::string templatePath 
+    = "src/data/ctemplate/gate_verilog.tpl";
 
 private:
   // Template file markers & constants
@@ -34,6 +35,8 @@ private:
   static inline const std::string NET_NAME_PREFIX = "net_";
   // Header
   static inline const std::string GEN_TIME = "GEN_TIME";
+  // Module
+  static inline const std::string MODULES = "MODULES";
   static inline const std::string MODULE_NAME = "MODULE_NAME";
   // Module inputs
   static inline const std::string INS = "INS";

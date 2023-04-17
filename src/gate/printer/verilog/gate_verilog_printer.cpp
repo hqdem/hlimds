@@ -10,85 +10,104 @@
 #include "util/assert.h"
 
 #include "ctemplate/template.h"
+#include <chrono>
+#include <ctime>
 #include <vector>
 
 namespace eda::gate::printer {
 
 void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
+  using time = std::chrono::system_clock;
   if (net.isWellFormed()) {
     std::string netName = NET_NAME_PREFIX + std::to_string(net.id());
     ctemplate::TemplateDictionary dictionary(DICTIONARY_NAME);
-    dictionary.SetValue(GEN_TIME, "");
-    dictionary.SetValue(MODULE_NAME, netName);
+    const auto now = time::to_time_t(time::now());
+    std::string dateTime(std::ctime(&now));
+    dictionary.SetValue(GEN_TIME, dateTime);
+    // Print top module
+    auto *moduleDict = dictionary.AddSectionDictionary(MODULES);
+    moduleDict->SetValue(MODULE_NAME, netName);
 
     std::vector<std::string> wires;
-    std::vector<const Gate*> inputs;
-    std::vector<const Gate*> outputs;
+    std::vector<const Gate*> moduleInputs;
+    std::vector<const Gate*> moduleOutputs;
 
     for (const auto *gate : net.gates()) {
       if (gate->isSource()) {
-        //auto *gateDict = dictionary.AddSectionDictionary(INS);
-        inputs.push_back(gate);
+        moduleInputs.push_back(gate);
       } else if (gate->isTarget()) {
-        outputs.push_back(gate);
+        moduleOutputs.push_back(gate);
       } else if (gate->isValue()) {
         // TODO
       } else {
-        auto *gateDict = dictionary.AddSectionDictionary(GATES);
+        // Print gate
+        const auto &gateInputs = gate->inputs();
+        const auto size = gateInputs.size();
+        // Check if we need a stub
+        /*if (size != 2) {
+          // Print stub
+          auto *stubDict = dictionary.AddSectionDictionary(MODULES);
+          stubDict->SetValue(MODULE_NAME, netName);
+          auto *outDict = stubDict->AddSectionDictionary(OUTS);
+          outDict->SetValue(OUTPUT, "out");
+          outDict->SetValue(SEPARATOR, ",");
+          for (unsigned int i = 1; i <= size; i++) {
+            const std::string separator = (i < size) ? "," : "";
+            auto *inDict = moduleDict->AddSectionDictionary(INS);
+            inDict->SetValue(INPUT, "in" + std::to_string(i));
+            inDict->SetValue(SEPARATOR, separator);
+          }
+        }*/
+        const auto id = gate->id();
         const auto gateType = gate->func().name();
-        const auto gateId = std::to_string(gate->id());
-        const auto gateName = GATE_NAME_PREFIX + gateId;
-        const auto gateOutName = wire(gate->id());
-        gateDict->SetValue(GATE_TYPE, gateType);
-        gateDict->SetValue(GATE_NAME, gateName);
+        const auto gateOutName = wire(id);
+        auto *gateDict = moduleDict->AddSectionDictionary(GATES);
+        gateDict->SetValue(GATE_TYPE, gate->func().name());
+        gateDict->SetValue(GATE_NAME, GATE_NAME_PREFIX + std::to_string(id));
         gateDict->SetValue(GATE_OUT, gateOutName);
         wires.push_back(gateOutName);
-
-        unsigned int portCount = 0;
-        const auto &inputs = gate->inputs();
-        for (const auto &signal : inputs) {
-          auto *portDictionary = dictionary.AddSectionDictionary(G_INS);
-          const auto name = wire(signal.node());
-          const std::string separator = 
-            (portCount < inputs.size() - 1) ? "," : "";
-          portDictionary->SetValue(GATE_IN, name);
-          portDictionary->SetValue(SEPARATOR, separator);
-          portCount++;
+        
+        // Print gate inputs
+        for (unsigned int i = 0; i < size; i++) {
+          //const std::string separator = (i < size - 1) ? "," : "";
+          auto *portDictionary = moduleDict->AddSectionDictionary(G_INS);
+          portDictionary->SetValue(GATE_IN, wire(gateInputs.at(i).node()));
+          //portDictionary->SetValue(SEPARATOR, separator);
         }
       }
     }
 
+    // Print wires
     for (const auto &wireName : wires) {
-      auto *wireDictionary = dictionary.AddSectionDictionary(WIRES);
-      wireDictionary->SetValue(WIRE_NAME, wireName);
+      moduleDict->AddSectionDictionary(WIRES)->SetValue(WIRE_NAME, wireName);
     }
 
-    unsigned int inputCount = 0;
-    for (const auto *input : inputs) {
-      const auto inputName = wire(input->id());
-      const std::string separator = (inputCount < inputs.size() - 1) ? "," : 
-        (outputs.size() != 0) ? "," : "";
-      inputCount++;
-
-      auto *gateDict = dictionary.AddSectionDictionary(INS);
-      gateDict->SetValue(INPUT, inputName);
+    // Print module inputs
+    const auto numInputs = moduleInputs.size();
+    for (unsigned i = 0; i < numInputs; i++) {
+      const std::string separator = (i != numInputs - 1) ? "," : "";
+      auto *gateDict = moduleDict->AddSectionDictionary(INS);
+      gateDict->SetValue(INPUT, wire(moduleInputs.at(i)->id()));
       gateDict->SetValue(SEPARATOR, separator);
     }
 
-    unsigned int outputCount = 0;
-    for (const auto *output : outputs) {
+    // Print module outputs
+    const auto numOutputs = moduleOutputs.size();
+    for (unsigned i = 0; i < numOutputs; i++) {
+      const auto *output = moduleOutputs.at(i);
       const auto outputName = wire(output->id());
       const std::string separator = 
-        (outputCount < outputs.size() - 1) ? "," : "";
-      outputCount++;
-      auto *gateDict = dictionary.AddSectionDictionary(OUTS);
+        (i != numOutputs - 1) ? "," : (numInputs != 0) ? "," : "";
+
+      auto *gateDict = moduleDict->AddSectionDictionary(OUTS);
       gateDict->SetValue(OUTPUT, outputName);
       gateDict->SetValue(SEPARATOR, separator);
       
-      // TODO: check this is true
       uassert(output->arity() == 1, "Arity of the output is expected to be 1!");
+      
+      // Print output assignment
       const auto driverName = wire(output->input(0).node());
-      auto *assignDict = dictionary.AddSectionDictionary(ASSIGNS);
+      auto *assignDict = moduleDict->AddSectionDictionary(ASSIGNS);
       assignDict->SetValue(LHS, outputName);
       assignDict->SetValue(RHS, driverName);
     }

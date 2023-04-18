@@ -110,27 +110,36 @@ void Compiler::allocReg(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
 
 void Compiler::synthReg(const VNode *vnode, GNet &net, VNodeIdMap &map) const {
   // Level (latch), edge (flip-flop), or edge and level (flip-flop /w set/reset).
-  assert(vnode->nSignals() == 1 || vnode->nSignals() == 2);
+  const size_t n = vnode->arity();
+  assert(n == 2 /* CLK, W */ || n == 4 /* CLK, RST, W, R */);
 
   GNet::SignalList control;
-  for (const auto &signal: vnode->signals()) {
+  for (size_t i = 0; i < (n >> 1); i++) {
+    const auto &signal = vnode->input(i);
     const auto &signalOut = out(signal.node(), map);
     assert(signalOut.size() == 1);
     control.push_back(GNet::Signal(signal.event(), signalOut[0]));
   }
 
-  auto inputs = in(vnode, map);
+  auto inputs = in(vnode, map, (n >> 1), n - 1);
   auto outputs = out(vnode, map);
   _library.synth(outputs, inputs, control, net);
 }
 
-GNet::In Compiler::in(const VNode *vnode, const VNodeIdMap &map) const {
-  GNet::In in(vnode->arity());
-  for (size_t i = 0; i < vnode->arity(); i++) {
-    in[i] = out(vnode->input(i).node(), map);
+GNet::In Compiler::in(const VNode *vnode, const VNodeIdMap &map,
+                      size_t beginIndex, size_t endIndex) const {
+  assert(beginIndex <= endIndex && endIndex < vnode->arity());
+
+  GNet::In in(endIndex - beginIndex + 1);
+  for (size_t i = beginIndex; i <= endIndex; i++) {
+    in[i - beginIndex] = out(vnode->input(i).node(), map);
   }
 
   return in;
+}
+
+GNet::In Compiler::in(const VNode *vnode, const VNodeIdMap &map) const {
+  return in(vnode, map, 0, vnode->arity() - 1);
 }
 
 const GNet::Out &Compiler::out(const VNode *vnode, const VNodeIdMap &map) const {

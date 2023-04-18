@@ -1,0 +1,13 @@
+input u:1 C;
+input u:1 D;
+output u:1 Q;
+
+reg u:1 FF;
+
+@(*) {
+  Q = FF;
+}
+
+@(posedge(C)) {
+  FF = D;
+}

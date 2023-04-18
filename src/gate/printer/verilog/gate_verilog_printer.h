@@ -13,6 +13,7 @@
 
 #include <ostream>
 #include <string>
+#include <unordered_set>
 
 namespace eda::gate::printer {
 
@@ -25,11 +26,22 @@ public:
   using LinkSet = GNet::LinkSet;
 
   void print(std::ostream &out, const GNet &net) const;
+  void print(const std::string &filename, const GNet &net) const;
 
-  static inline const std::string templatePath 
-    = "src/data/ctemplate/gate_verilog.tpl";
+  static inline const std::string TEMPLATE_PATH = 
+    "src/data/ctemplate/gate_verilog.tpl";
 
 private:
+  // Built-in Verilog gates as in IEEE 1264-2005
+  std::unordered_set<std::string> builtInGates = {"and", 
+                                                  "nand", 
+                                                  "or", 
+                                                  "nor",
+                                                  "xor",
+                                                  "xnor",
+                                                  "buf",
+                                                  "not"};
+
   // Template file markers & constants
   static inline const std::string DICTIONARY_NAME = "gate_verilog";
   static inline const std::string NET_NAME_PREFIX = "net_";

@@ -12,6 +12,8 @@
 #include "ctemplate/template.h"
 #include <chrono>
 #include <ctime>
+#include <filesystem>
+#include <fstream>
 #include <vector>
 
 namespace eda::gate::printer {
@@ -38,41 +40,45 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
       } else if (gate->isTarget()) {
         moduleOutputs.push_back(gate);
       } else if (gate->isValue()) {
-        // TODO
+        // Print constant
+        const auto name = wire(gate->id());
+        wires.push_back(name);
+        auto *assignDict = moduleDict->AddSectionDictionary(ASSIGNS);
+        assignDict->SetValue(LHS, name);
+        assignDict->SetValue(RHS, gate->func().name());
       } else {
         // Print gate
+        const auto id = gate->id();
+        const auto gateOutName = wire(id);
+        const auto gateType = gate->func().name();
+        auto *gateDict = moduleDict->AddSectionDictionary(GATES);
+        gateDict->SetValue(GATE_TYPE, gateType);
+        gateDict->SetValue(GATE_NAME, GATE_NAME_PREFIX + std::to_string(id));
+        gateDict->SetValue(GATE_OUT, gateOutName);
+        wires.push_back(gateOutName);
+
+        // Print gate inputs
         const auto &gateInputs = gate->inputs();
         const auto size = gateInputs.size();
-        // Check if we need a stub
-        /*if (size != 2) {
-          // Print stub
+        for (unsigned int i = 0; i < size; i++) {
+          moduleDict->AddSectionDictionary(G_INS)->
+            SetValue(GATE_IN, wire(gateInputs.at(i).node()));
+        }
+
+        // Check if we need a stub module
+        if (builtInGates.count(gateType) == 0) {
+          // Print stub module
           auto *stubDict = dictionary.AddSectionDictionary(MODULES);
-          stubDict->SetValue(MODULE_NAME, netName);
+          stubDict->SetValue(MODULE_NAME, gateType);
           auto *outDict = stubDict->AddSectionDictionary(OUTS);
           outDict->SetValue(OUTPUT, "out");
           outDict->SetValue(SEPARATOR, ",");
           for (unsigned int i = 1; i <= size; i++) {
             const std::string separator = (i < size) ? "," : "";
-            auto *inDict = moduleDict->AddSectionDictionary(INS);
+            auto *inDict = stubDict->AddSectionDictionary(INS);
             inDict->SetValue(INPUT, "in" + std::to_string(i));
             inDict->SetValue(SEPARATOR, separator);
           }
-        }*/
-        const auto id = gate->id();
-        const auto gateType = gate->func().name();
-        const auto gateOutName = wire(id);
-        auto *gateDict = moduleDict->AddSectionDictionary(GATES);
-        gateDict->SetValue(GATE_TYPE, gate->func().name());
-        gateDict->SetValue(GATE_NAME, GATE_NAME_PREFIX + std::to_string(id));
-        gateDict->SetValue(GATE_OUT, gateOutName);
-        wires.push_back(gateOutName);
-        
-        // Print gate inputs
-        for (unsigned int i = 0; i < size; i++) {
-          //const std::string separator = (i < size - 1) ? "," : "";
-          auto *portDictionary = moduleDict->AddSectionDictionary(G_INS);
-          portDictionary->SetValue(GATE_IN, wire(gateInputs.at(i).node()));
-          //portDictionary->SetValue(SEPARATOR, separator);
         }
       }
     }
@@ -96,14 +102,15 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
     for (unsigned i = 0; i < numOutputs; i++) {
       const auto *output = moduleOutputs.at(i);
       const auto outputName = wire(output->id());
-      const std::string separator = 
+      const std::string separator =
         (i != numOutputs - 1) ? "," : (numInputs != 0) ? "," : "";
 
       auto *gateDict = moduleDict->AddSectionDictionary(OUTS);
       gateDict->SetValue(OUTPUT, outputName);
       gateDict->SetValue(SEPARATOR, separator);
       
-      uassert(output->arity() == 1, "Arity of the output is expected to be 1!");
+      uassert(output->arity() == 1, 
+        "Arity of the output is expected to be 1!\n");
       
       // Print output assignment
       const auto driverName = wire(output->input(0).node());
@@ -113,12 +120,24 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
     }
 
     std::string buffer;
-    ctemplate::ExpandTemplate(templatePath, ctemplate::DO_NOT_STRIP, 
-      &dictionary, &buffer);
+    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+    std::filesystem::path templatePath = homePath / TEMPLATE_PATH;
+    ctemplate::ExpandTemplate(templatePath.string(), 
+      ctemplate::DO_NOT_STRIP, &dictionary, &buffer);
     out << buffer;
   } else {
     // TODO
   }
+}
+
+void GateVerilogPrinter::print(const std::string &filename, 
+    const GNet &net) const {
+  std::ofstream outFile(filename);
+  uassert(outFile.is_open(), "Could not create a file!\n");
+  if (outFile.is_open()) {
+    print(outFile, net);
+  }
+  outFile.close();
 }
 
 } // namespace eda::gate::printer

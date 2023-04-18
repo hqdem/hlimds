@@ -228,6 +228,27 @@ private:
     _vnodes.push_back(vnode);
   }
 
+  /// Schedules release of the given node.
+  void scheduleRelease(VNode *vnode) {
+    _released.push_back(vnode);
+  }
+
+  /// Releases the given node.
+  void release(VNode *vnode) {
+    // Disconnect the node from the v-net.
+    vnode->setInputs({});
+    // Removal can be done here.
+    assert(vnode->fanout() == 0);
+  }
+
+  /// Releases the scheduled nodes.
+  void applyRelease() {
+    for (auto *vnode : _released) {
+      release(vnode);
+    }
+    _released.clear();
+  }
+
   void sortTopologically();
 
   //===--------------------------------------------------------------------===//
@@ -246,6 +267,9 @@ private:
 
   /// Maps a variable x to the <phi(x), {def(x), ..., def(x)}> structure.
   std::unordered_map<std::string, std::pair<VNode*, VNode::List>> _vnodesTemp;
+
+  /// Nodes to be released (not used anymore).
+  VNode::List _released;
 
   /// Number of connections.
   size_t _nConnects;

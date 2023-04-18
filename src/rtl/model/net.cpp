@@ -20,7 +20,6 @@ namespace eda::rtl::model {
 void Net::create() {
   // Net cannot be created multiple times.
   assert(!_isCreated);
-  std::cout << *this << std::endl;
 
   for (auto &[_, usage]: _vnodesTemp) {
     assert(!_.empty());
@@ -47,8 +46,8 @@ void Net::create() {
   }
 
   _vnodesTemp.clear();
+  _pnodes.clear();
 
-  std::cout << *this << std::endl;
   sortTopologically();
   _isCreated = true;
 }

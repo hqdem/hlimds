@@ -115,8 +115,12 @@ private:
                    FuncSymbol func,
                    const SignalList &inputs,
                    const std::vector<bool> &value) {
+    // Save the identifier and the links.
     Id oldId = _id;
     LinkList oldLinks = _links;
+    // Disconnect from the drivers.
+    this->setInputs({});
+    // Replace the node w/ a new one.
     this->~VNode();
     new (this) VNode(oldId, kind, var, func, inputs, value, oldLinks);
   }

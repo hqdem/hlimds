@@ -95,8 +95,9 @@ private:
         const Variable &var,
         FuncSymbol func,
         const SignalList &inputs,
-        const std::vector<bool> &value):
-      VNodeBase(id, func, inputs),
+        const std::vector<bool> &value,
+        const LinkList &links):
+      VNodeBase(id, func, inputs, links),
       _kind(kind),
       _var(var),
       _value(value),
@@ -115,8 +116,9 @@ private:
                    const SignalList &inputs,
                    const std::vector<bool> &value) {
     Id oldId = _id;
+    LinkList oldLinks = _links;
     this->~VNode();
-    new (this) VNode(oldId, kind, var, func, inputs, value);
+    new (this) VNode(oldId, kind, var, func, inputs, value, oldLinks);
   }
 
   void setPNode(const PNode *pnode) {

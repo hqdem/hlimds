@@ -30,7 +30,6 @@ std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate,
   std::shared_ptr<GNet> net = std::make_shared<GNet>();
 
   Gate::SignalList inputs;
-  Gate::Id outputId;
 
   for (unsigned i = 0; i < N; i++) {
     const Gate::Id inputId = net->addIn();
@@ -38,7 +37,7 @@ std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate,
   }
 
   auto gateId = net->addGate(gate, inputs);
-  outputId = net->addOut(gateId);
+  net->addOut(gateId);
 
   net->sortTopologically();
 //  dump(*net);
@@ -52,9 +51,8 @@ std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate,
   std::shared_ptr<GNet> net = std::make_shared<GNet>();
 
   Gate::SignalList inputs;
-  Gate::Id outputId;
-  Gate::SignalList andInputs;
 
+  Gate::SignalList andInputs;
   for (unsigned i = 0; i < N; i++) {
     const Gate::Id inputId = net->addIn();
     inputs.push_back(Gate::Signal::always(inputId));
@@ -64,7 +62,7 @@ std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate,
   }
 
   auto gateId = net->addGate(gate, andInputs);
-  outputId = net->addOut(gateId);
+  net->addOut(gateId);
 
   net->sortTopologically();
 //  dump(*net);

@@ -9,8 +9,8 @@
 #include "gate_verilog_printer.h"
 #include "util/assert.h"
 
-#include "ctemplate/template.h"
 #include <chrono>
+#include <ctemplate/template.h>
 #include <ctime>
 #include <filesystem>
 #include <fstream>

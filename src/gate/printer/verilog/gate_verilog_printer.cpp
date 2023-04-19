@@ -33,7 +33,9 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
     std::vector<std::string> wires;
     std::vector<const Gate*> moduleInputs;
     std::vector<const Gate*> moduleOutputs;
+    std::unordered_set<std::string> stubs;
 
+    // Print gates
     for (const auto *gate : net.gates()) {
       if (gate->isSource()) {
         moduleInputs.push_back(gate);
@@ -66,7 +68,7 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
         }
 
         // Check if we need a stub module
-        if (builtInGates.count(gateType) == 0) {
+        if (builtInGates.count(gateType) == 0 && stubs.count(gateType) == 0) {
           // Print stub module
           auto *stubDict = dictionary.AddSectionDictionary(MODULES);
           stubDict->SetValue(MODULE_NAME, gateType);
@@ -79,6 +81,7 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
             inDict->SetValue(INPUT, "in" + std::to_string(i));
             inDict->SetValue(SEPARATOR, separator);
           }
+          stubs.insert(gateType);
         }
       }
     }

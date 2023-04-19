@@ -7,10 +7,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/gnet_test.h"
-#include "gate/optimizer/examples.h"
+#include "gate/parser/gate_verilog_parser.h"
 #include "gate/printer/verilog/gate_verilog_printer.h"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+#include <lorina/diagnostics.hpp>
+#include <lorina/verilog.hpp>
 
 #include <cstdlib>
 #include <filesystem>
@@ -44,7 +46,8 @@ void printerTest(std::function
 void printerTest(const std::string &filename, const GNet &net) {
   namespace fs = std::filesystem;
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
-  fs::path file = homePath / filename;
+  const fs::path outputPath = "output/test/gate_verilog_printer";
+  fs::path file = homePath / outputPath / filename;
   fs::path dir = file.parent_path();
   if (!fs::exists(dir)) {
     fs::create_directories(dir);
@@ -61,12 +64,37 @@ void printerTest(const std::string &filename, std::function
   printerTest(filename, *getNet(generator));
 }
 
+GNet *parse(const std::string &infile) {
+  const std::filesystem::path subCatalog = "test/data/gate/parser";
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path prefixPath = homePath / subCatalog;
+  const std::filesystem::path prefixPathIn = prefixPath / "verilog";
+
+  std::string filename = prefixPathIn / (infile + ".v");
+
+  lorina::text_diagnostics consumer;
+  lorina::diagnostic_engine diag(&consumer);
+
+  GateVerilogParser parser(infile);
+
+  lorina::return_code result = read_verilog(filename, parser, &diag);
+  EXPECT_EQ(result, lorina::return_code::success);
+
+  return parser.getGnet();
+}
+
+void printerParserTest(const std::string designName) {
+  const auto *net = parse(designName);
+  printerTest(designName + "_gate.v", *net);
+  delete net;
+}
+
 TEST(GateVerilogPrinter, OrCoutTest) {
   printerTest(makeOr);
 }
 
 TEST(GateVerilogPrinter, OrFileTest) {
-  printerTest("output/test/gate_verilog_printer/or_gate.v", makeOr);
+  printerTest("or_gate.v", makeOr);
 }
 
 TEST(GateVerilogPrinter, MajCoutTest) {
@@ -74,19 +102,107 @@ TEST(GateVerilogPrinter, MajCoutTest) {
 }
 
 TEST(GateVerilogPrinter, MajFileTest) {
-  printerTest("output/test/gate_verilog_printer/maj_gate.v", makeMaj);
+  printerTest("maj_gate.v", makeMaj);
 }
 
-TEST(GateVerilogPrinter, Gnet1CoutTest) {
-    GNet net;
-    eda::gate::optimizer::gnet1(net);
-    GateVerilogPrinter::get().print(std::cout, net);
+TEST(GateVerilogPrinter, adder) {
+  printerParserTest("adder");
 }
 
-TEST(GateVerilogPrinter, Gnet1FileTest) {
-    GNet net;
-    eda::gate::optimizer::gnet1(net);
-    printerTest("output/test/gate_verilog_printer/gnet1.v", net);
+TEST(GateVerilogPrinter, c17) {
+  printerParserTest("c17");
+}
+
+TEST(GateVerilogPrinter, arbiter) {
+  printerParserTest("arbiter");
+}
+
+TEST(GateVerilogPrinter, bar) {
+  printerParserTest("bar");
+}
+
+TEST(GateVerilogPrinter, c1355) {
+  printerParserTest("c1355");
+}
+
+TEST(GateVerilogPrinter, c1908) {
+  printerParserTest("c1908");
+}
+
+TEST(GateVerilogPrinter, c3540) {
+  printerParserTest("c3540");
+}
+
+TEST(GateVerilogPrinter, c432) {
+  printerParserTest("c432");
+}
+
+TEST(GateVerilogPrinter, c499) {
+  printerParserTest("c499");
+}
+
+TEST(GateVerilogPrinter, c6288) {
+  printerParserTest("c6288");
+}
+
+TEST(GateVerilogPrinter, c880) {
+  printerParserTest("c880");
+}
+
+TEST(GateVerilogPrinter, cavlc) {
+  printerParserTest("cavlc");
+}
+
+TEST(GateVerilogPrinter, ctrl) {
+  printerParserTest("ctrl");
+}
+
+TEST(GateVerilogPrinter, dec) {
+  printerParserTest("dec");
+}
+
+TEST(GateVerilogPrinter, div) {
+  printerParserTest("div");
+}
+
+TEST(GateVerilogPrinter, i2c) {
+  printerParserTest("i2c");
+}
+
+TEST(GateVerilogPrinter, int2float) {
+  printerParserTest("int2float");
+}
+
+TEST(GateVerilogPrinter, log2) {
+  printerParserTest("log2");
+}
+
+TEST(GateVerilogPrinter, max) {
+  printerParserTest("max");
+}
+
+TEST(GateVerilogPrinter, multiplier) {
+  printerParserTest("multiplier");
+}
+
+TEST(GateVerilogPrinter, router) {
+  printerParserTest("router");
+}
+
+TEST(GateVerilogPrinter, sin) {
+  printerParserTest("sin");
+}
+
+TEST(GateVerilogPrinter, sqrt) {
+  printerParserTest("sqrt");
+}
+
+TEST(GateVerilogPrinter, square) {
+  printerParserTest("square");
+}
+
+TEST(GateVerilogPrinter, voter) {
+  printerParserTest("voter");
 }
 
 } // namespace eda::gate::printer

@@ -61,7 +61,7 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
         const auto &gateInputs = gate->inputs();
         const auto size = gateInputs.size();
         for (unsigned int i = 0; i < size; i++) {
-          moduleDict->AddSectionDictionary(G_INS)->
+          gateDict->AddSectionDictionary(G_INS)->
             SetValue(GATE_IN, wire(gateInputs.at(i).node()));
         }
 
@@ -137,7 +137,6 @@ void GateVerilogPrinter::print(const std::string &filename,
   if (outFile.is_open()) {
     print(outFile, net);
   }
-  outFile.close();
 }
 
 } // namespace eda::gate::printer

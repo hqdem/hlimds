@@ -44,6 +44,7 @@ target_link_libraries(Gate
   minisat-lib-static
   Cudd::Cudd
   sqlite3
+  CTemplate::nothreads
 
   PRIVATE
   Utopia::Util

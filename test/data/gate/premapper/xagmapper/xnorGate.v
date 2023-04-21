@@ -1,4 +1,4 @@
-module xnorGate(cOut,x0,x1);
+module xnorGate(cOut, x0, x1);
   input x0, x1;
   output cOut;
   wire cOut;

@@ -1,7 +1,7 @@
-module nandGate(cOut,x0,x1);
+module norGate(cOut, x0, x1);
   input x0, x1;
   output cOut;
   wire cOut;
 
-  nand g1 (cOut, x0, x1);
+  nor g4 (cOut, x0, x1);
 endmodule

@@ -5,26 +5,34 @@ add_library(Gate OBJECT
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
-  optimizer/database/abc/rwrUtil.c
-  optimizer/database/abc.cpp
   optimizer/check_cut.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp
+  optimizer/database/abc.cpp
+  optimizer/database/abc/rwrUtil.c
+  optimizer/links_add_counter.cpp
   optimizer/links_clean.cpp
+  optimizer/links_clean_counter.cpp
   optimizer/optimizer.cpp
   optimizer/optimizer_visitor.cpp
   optimizer/rwdatabase.cpp
   optimizer/rwmanager.cpp
+  optimizer/strategy/apply_search_optimizer.cpp
+  optimizer/strategy/exhaustive_search_optimizer.cpp
+  optimizer/strategy/zero_optimizer.cpp
+  optimizer/substitute_visitor.cpp
   optimizer/tracker_visitor.cpp
-  optimizer/tracker_visitor.h
+  optimizer/ttbuilder.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
   parser/gate_verilog_parser.cpp
   premapper/aigmapper.cpp
   premapper/migmapper.cpp
   premapper/premapper.cpp
+  premapper/xagmapper.cpp
   premapper/xmgmapper.cpp
   printer/dot.cpp
+  printer/verilog/gate_verilog_printer.cpp
   simulator/simulator.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)
@@ -33,10 +41,11 @@ add_library(Utopia::Gate ALIAS Gate)
 target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(Gate
   PUBLIC
-    minisat-lib-static
-    Cudd::Cudd
-    sqlite3
+  minisat-lib-static
+  Cudd::Cudd
+  sqlite3
+  CTemplate::nothreads
 
   PRIVATE
-    Utopia::Util
+  Utopia::Util
 )

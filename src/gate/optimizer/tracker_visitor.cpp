@@ -11,19 +11,21 @@
 namespace eda::gate::optimizer {
 
   TrackerVisitor::TrackerVisitor(const std::filesystem::path &subCatalog,
-        const GNet *net,
-        Visitor *visitor) : visitor(visitor), dot(net) {
+                                 const GNet *net,
+                                 Visitor *visitor) : visitor(visitor),
+                                                     dot(net) {
 
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     this->subCatalog = homePath / subCatalog;
-}
+  }
 
   VisitorFlags TrackerVisitor::onNodeBegin(const GateID &gateId) {
     return visitor->onNodeBegin(gateId);
   }
 
   VisitorFlags TrackerVisitor::onNodeEnd(const GateID &gateId) {
-    dot.print(subCatalog/ ("onNodeEnd" + std::to_string(counter) + "_" + std::to_string(gateId) + ".dot"));
+    dot.print(subCatalog / ("onNodeEnd" + std::to_string(counter) + "_" +
+                            std::to_string(gateId) + ".dot"));
     ++counter;
     return visitor->onNodeEnd(gateId);
   }

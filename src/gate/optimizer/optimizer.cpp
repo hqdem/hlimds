@@ -10,11 +10,11 @@
 
 namespace eda::gate::optimizer {
 
-  void optimize(GNet *net, int cutSize) {
+  void optimize(GNet *net, int cutSize, OptimizerVisitor &&optimizer) {
     CutStorage cutStorage = findCuts(cutSize, net);
 
-    OptimizerVisitor optimizerVisitor(&cutStorage, net);
-    Walker walker(net, &optimizerVisitor, &cutStorage);
+    optimizer.set(&cutStorage, net, cutSize);
+    Walker walker(net, &optimizer, &cutStorage);
 
     // TODO: change for normal condition.
     while(true) {
@@ -23,11 +23,13 @@ namespace eda::gate::optimizer {
     }
   }
 
-  void optimizePrint(GNet *net, int cutSize, const std::filesystem::path &subCatalog) {
+  void optimizePrint(GNet *net, int cutSize, const std::filesystem::path &subCatalog, OptimizerVisitor&& optimizer) {
     CutStorage cutStorage = findCuts(cutSize, net);
 
-    OptimizerVisitor optimizerVisitor(&cutStorage, net);
-    TrackerVisitor trackerVisitor(subCatalog, net, &optimizerVisitor);
+    std::cout << "cuts found " << std::endl;
+
+    optimizer.set(&cutStorage, net, cutSize);
+    TrackerVisitor trackerVisitor(subCatalog, net, &optimizer);
     Walker walker(net, &trackerVisitor, &cutStorage);
 
     // TODO: change for normal condition.

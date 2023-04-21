@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/gnet.h"
+#include "gate/model/gsymbol.h"
 
 #include <fstream>
 
@@ -16,6 +17,7 @@ class Dot {
 public:
   using GNet = eda::gate::model::GNet;
   using Gate = eda::gate::model::Gate;
+  using GateSymbol = eda::gate::model::GateSymbol;
 
   Dot(const GNet *gNet);
   void print(const std::string &filename) const;
@@ -23,6 +25,7 @@ public:
 
 private:
   const GNet *gNet;
-  void print(std::ofstream &stream, const eda::gate::model::Gate *gate) const;
+  void print(std::ofstream &stream, const Gate *gate) const;
+  static std::vector<std::string> funcNames;
 };
 

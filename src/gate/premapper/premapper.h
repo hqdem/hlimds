@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -37,12 +37,6 @@ public:
 
     return map(net, oldToNewGates);
   }
-
-static Gate::SignalList getNewInputs(const Gate::SignalList &oldInputs,
-                                     const PreMapper::GateIdMap &oldToNewGates);
-static Gate::SignalList getNewInputs(const Gate &oldGate,
-                                     const PreMapper::GateIdMap &oldToNewGates,
-                                     size_t &n0, size_t &n1);
 
 protected:
   virtual Gate::Id mapIn (GNet &newNet) const = 0;
@@ -87,5 +81,23 @@ protected:
                            const GateIdMap &oldToNewGates,
                            GNet &newNet) const;
 };
+
+/**
+ * \brief Defines functional bases are supported by pre-mappers.
+ * \author <a href="mailto:smolov@ispras.ru">Sergey Smolov</a>
+ */
+enum PreBasis {
+  /// And-Inverter Graph
+  AIG,
+  /// Maj-Inverter Graph
+  MIG,
+  /// Xor-And-Inverter Graph
+  XAG,
+  /// Xor-Majority-Inverter Graph
+  XMG
+};
+
+/// Returns pre-mapper for the specified functional basis.
+PreMapper &getPreMapper(PreBasis basis);
 
 } // namespace eda::gate::premapper

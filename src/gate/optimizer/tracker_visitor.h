@@ -17,7 +17,8 @@ namespace eda::gate::optimizer {
   class TrackerVisitor : public Visitor {
   public:
 
-    TrackerVisitor(const std::filesystem::path &subCatalog, const GNet *net, Visitor* visitor);
+    TrackerVisitor(const std::filesystem::path &subCatalog, const GNet *net,
+                   Visitor *visitor);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -31,4 +32,5 @@ namespace eda::gate::optimizer {
     Dot dot;
     int counter = 0;
   };
+
 } // namespace eda::gate::optimizer

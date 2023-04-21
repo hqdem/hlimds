@@ -10,9 +10,9 @@
 
 #include "gate/optimizer/cuts_finder_visitor.h"
 #include "gate/optimizer/links_clean.h"
+#include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/util.h"
 #include "gate/optimizer/visitor.h"
-#include "gate/simulator/simulator.h"
 
 #include <queue>
 
@@ -25,7 +25,12 @@ namespace eda::gate::optimizer {
   class OptimizerVisitor : public Visitor {
   public:
 
-    OptimizerVisitor(CutStorage *cutStorage, GNet *net);
+    using BoundGNetList = RWDatabase::BoundGNetList;
+    using BoundGNet = RWDatabase::BoundGNet;
+
+    OptimizerVisitor();
+
+    void set(CutStorage *cutStorage, GNet *net, int cutSize);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -35,12 +40,28 @@ namespace eda::gate::optimizer {
 
   private:
     CutStorage *cutStorage;
-    GNet *net;
-    GNet::V lastNode;
+
     CutStorage::Cuts *lastCuts;
     std::vector<const CutStorage::Cut *> toRemove;
 
-    GNet *getSubnet(uint64_t func);
+    bool checkValidCut(const Cut &cut);
+
+  protected:
+    GNet *net;
+    GateID lastNode;
+    int cutSize;
+
+    virtual bool checkOptimize(const BoundGNet &option,
+                               const std::unordered_map<GateID, GateID> &map) = 0;
+
+    virtual VisitorFlags
+    considerOptimization(BoundGNet &option,
+                         std::unordered_map<GateID, GateID> &map) = 0;
+
+    virtual void finishOptimization() {}
+
+    virtual BoundGNetList getSubnets(uint64_t func) = 0;
+
   };
 
 } // namespace eda::gate::optimizer

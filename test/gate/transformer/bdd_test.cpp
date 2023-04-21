@@ -6,80 +6,22 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/gnet_test.h"
 #include "gate/transformer/bdd.h"
 
 #include "gtest/gtest.h"
 
-using BDDList = eda::gate::transformer::GNetBDDConverter::BDDList;
-using Gate = eda::gate::model::Gate;
-using GateBDDMap = eda::gate::transformer::GNetBDDConverter::GateBDDMap;
-using GateList = eda::gate::transformer::GNetBDDConverter::GateList;
-using GateSymbol = eda::gate::model::GateSymbol;
-using GateUintMap = eda::gate::transformer::GNetBDDConverter::GateUintMap;
-using GNet = eda::gate::model::GNet;
-using GNetBDDConverter = eda::gate::transformer::GNetBDDConverter;
+using namespace eda::gate::model;
+using namespace eda::gate::transformer;
 
-// x0 & x1
-static std::unique_ptr<GNet> makeAnd2(Gate::SignalList
-                                      &inputs,
-                                      Gate::Id &outputId,
-                                      GateList &varList) {
-  auto net = std::make_unique<GNet>();
-
-  Gate::Id x0Id = net->newGate(), x1Id = net->newGate();
-  Gate::SignalList and0Inputs = {Gate::Signal::always(x0Id),
-                                 Gate::Signal::always(x1Id)};
-
-  inputs = and0Inputs;
-  outputId = net->addGate(GateSymbol::AND, and0Inputs);
-  varList = {x0Id, x1Id};
-
-  net->sortTopologically();
-
-  return net;
-}
-
-// x0 | x1
-static std::unique_ptr<GNet> makeOr2(Gate::SignalList &inputs,
-                                     Gate::Id &outputId,
-                                     GateList &varList) {
-  auto net = std::make_unique<GNet>();
-
-  Gate::Id x0Id = net->newGate(), x1Id = net->newGate();
-  Gate::SignalList or0Inputs = {Gate::Signal::always(x0Id),
-                                Gate::Signal::always(x1Id)};
-
-  inputs = or0Inputs;
-  outputId = net->addGate(GateSymbol::OR, or0Inputs);
-  varList = {x0Id, x1Id};
-
-  net->sortTopologically();
-
-  return net;
-}
-
-// x0 ^ x1
-static std::unique_ptr<GNet> makeXor2(Gate::SignalList &inputs,
-                                      Gate::Id &outputId,
-                                      GateList &varList) {
-  auto net = std::make_unique<GNet>();
-
-  Gate::Id x0Id = net->newGate(), x1Id = net->newGate();
-  Gate::SignalList xor0Inputs = {Gate::Signal::always(x0Id),
-                                 Gate::Signal::always(x1Id)};
-
-  inputs = xor0Inputs;
-  outputId = net->addGate(GateSymbol::XOR, xor0Inputs);
-  varList = {x0Id, x1Id};
-
-  net->sortTopologically();
-
-  return net;
-}
+using BDDList = GNetBDDConverter::BDDList;
+using GateBDDMap = GNetBDDConverter::GateBDDMap;
+using GateList = GNetBDDConverter::GateList;
+using GateUintMap = GNetBDDConverter::GateUintMap;
 
 bool transformerAndTest() {
-  Gate::SignalList inputs; Gate::Id outputId; GateList varList;
-  std::unique_ptr<GNet> net = makeAnd2(inputs, outputId, varList);
+  Gate::SignalList inputs; Gate::Id outputId;
+  std::shared_ptr<GNet> net = makeAnd(2, inputs, outputId);
 
   Cudd manager(0, 0);
   BDDList x = { manager.bddVar(), manager.bddVar() };
@@ -95,8 +37,8 @@ bool transformerAndTest() {
 }
 
 bool transformerOrTest() {
-  Gate::SignalList inputs; Gate::Id outputId; GateList varList;
-  std::unique_ptr<GNet> net = makeXor2(inputs, outputId, varList);
+  Gate::SignalList inputs; Gate::Id outputId;
+  std::shared_ptr<GNet> net = makeOr(2, inputs, outputId);
 
   Cudd manager(0, 0);
   BDDList x = { manager.bddVar(), manager.bddVar() };
@@ -106,14 +48,14 @@ bool transformerOrTest() {
   }
 
   BDD netBDD = GNetBDDConverter::convert(*net, outputId, varMap, manager);
-  BDD xorBDD = x[0] ^ x[1];
+  BDD orBDD = x[0] | x[1];
 
-  return netBDD == xorBDD;
+  return netBDD == orBDD;
 }
 
 bool transformerNorTest() {
-  Gate::SignalList inputs; Gate::Id outputId1; GateList varList;
-  std::unique_ptr<GNet> net = makeOr2(inputs, outputId1, varList);
+  Gate::SignalList inputs; Gate::Id outputId1;
+  std::shared_ptr<GNet> net = makeOr(2, inputs, outputId1);
 
   Cudd manager(0, 0);
   BDDList x = { manager.bddVar(), manager.bddVar() };

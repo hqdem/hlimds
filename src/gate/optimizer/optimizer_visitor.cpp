@@ -12,17 +12,21 @@ namespace eda::gate::optimizer {
 
   using GNet = eda::gate::model::GNet;
   using Gate = eda::gate::model::Gate;
-  using Simulator = eda::gate::simulator::Simulator;
 
-  OptimizerVisitor::OptimizerVisitor(CutStorage *cutStorage,
-                                     GNet *net) : cutStorage(
-          cutStorage), net(net) {}
+  OptimizerVisitor::OptimizerVisitor()  {}
+
+  void OptimizerVisitor::set(CutStorage *cutStorage,
+                             GNet *net, int cutSize) {
+    this->cutStorage = cutStorage;
+    this->net = net;
+    this->cutSize = cutSize;
+  }
 
   VisitorFlags OptimizerVisitor::onNodeBegin(const GateID &node) {
-    if (!net->contains(node)) {
+    if (cutStorage->cuts.find(node) == cutStorage->cuts.end()) {
       // If node is not in cutStorage - means, that it is a new node.
       // So we recount cuts for that node.
-      CutsFindVisitor finder(4, cutStorage);
+      CutsFindVisitor finder(cutSize, cutStorage);
       finder.onNodeBegin(node);
     }
     lastNode = node;
@@ -30,47 +34,83 @@ namespace eda::gate::optimizer {
     return SUCCESS;
   }
 
-  VisitorFlags OptimizerVisitor::onCut(const Visitor::Cut &cut) {
-    for (auto node: cut) {
-      if (!net->contains(node)) {
-        toRemove.emplace_back(&cut);
-        return SUCCESS;
-      // Discard trivial cuts.
-      } else if(node == lastNode) {
-        return SUCCESS;
+  VisitorFlags OptimizerVisitor::onCut(const Cut &cut) {
+    if (checkValidCut(cut)) {
+
+      // Finding cone.
+      ConeVisitor coneVisitor(cut);
+      Walker walker(net, &coneVisitor, nullptr);
+      walker.walk(lastNode, cut, false);
+
+      // Make binding.
+      RWDatabase::BoundGNet boundGNet;
+      boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
+
+      const auto & cutConeMap = coneVisitor.getResultCut();
+      for(const auto &[gateSource, gateCone] : cutConeMap) {
+        boundGNet.bindings[boundGNet.bindings.size()] = gateCone;
       }
-    }
 
-    auto func = getTruthTable(lastNode, cut, net);
-    // TODO: implement getSubnet method.
-    auto *subNet =  getSubnet(func);
-    if(fakeSubstitute(lastNode, cut, subNet, net)) {
-      substitute(lastNode, cut, subNet, net);
-      delete subNet;
-      // TODO: we can return finish all here.
-      // TODO: we can make list with nets and their profit.
-    }
+      auto func = TTBuilder::build(boundGNet);
 
+      auto list = getSubnets(func);
+      for(auto &option : list) {
+
+        // Creating correspondence map for subNet sources and cut.
+        std::unordered_map<GateID, GateID> map;
+
+        // If bindings were not empty.
+        /*
+        GateID i = 0;
+        for(const auto & [k, v] : cutConeMap) {
+          auto found = option.bindings.find(i++);
+          if(found != option.bindings.end()) {
+            map[found->second] = k;
+          } else {
+            break;
+          }
+        }*/
+
+        const auto& sources = option.net->getSources();
+        auto it = sources.begin();
+        for(const auto & [k, v] : cutConeMap) {
+          if(it != sources.end()) {
+            map[*it] = k;
+          } else {
+            break;
+          }
+          ++it;
+        }
+
+        if (checkOptimize(option, map)) {
+          return considerOptimization(option, map);
+        }
+      }
+      finishOptimization();
+    }
     return SUCCESS;
   }
 
   VisitorFlags OptimizerVisitor::onNodeEnd(const GateID &) {
     // Removing invalid nodes.
-    for(const auto& it : toRemove) {
+    for (const auto &it: toRemove) {
       lastCuts->erase(*it);
     }
     toRemove.clear();
     return SUCCESS;
   }
 
-  GNet *OptimizerVisitor::getSubnet(uint64_t func) {
-    GNet* subNet = new GNet();
-
-    std::vector<eda::base::model::Signal<GNet::GateId>> signals;
-    signals.emplace_back(eda::base::model::Event::ALWAYS, subNet->newGate());
-
-    subNet->addGate(model::GateSymbol::Value::AND, signals);
-    return subNet;
+  bool OptimizerVisitor::checkValidCut(const Cut &cut) {
+    for (auto node: cut) {
+      if (!net->contains(node)) {
+        toRemove.emplace_back(&cut);
+        return false;
+        // Discard trivial cuts.
+      } else if (node == lastNode) {
+        return false;
+      }
+    }
+    return true;
   }
 
 } // namespace eda::gate::optimizer

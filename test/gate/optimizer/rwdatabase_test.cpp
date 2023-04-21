@@ -12,6 +12,8 @@
 
 #include "gtest/gtest.h"
 
+#include <cmath>
+
 using namespace eda::gate::model;
 using namespace eda::gate::optimizer;
 using namespace eda::gate::transformer;
@@ -92,7 +94,8 @@ bool insertGetARWDBTest() {
     dummy1->sortTopologically();
     dummy2->sortTopologically();
 
-    RWDatabase::BoundGNetList bgl = {{dummy1, bindings1}, {dummy2, bindings2}};
+    RWDatabase::BoundGNetList bgl = {{dummy1, bindings1},
+                                     {dummy2, bindings2}};
 
     arwdb.insertIntoDB(truthTable, bgl);
 
@@ -195,8 +198,30 @@ bool deleteARWDBTest() {
   return result;
 }
 
+bool serializeTest() {
+  Gate::SignalList inputs;
+  Gate::Id outputId;
+  RWDatabase::BoundGNet bGNet;
+
+  bGNet.net = makeAnd(2, inputs, outputId);
+  bGNet.bindings = {{0, inputs[0].node()},
+                    {1, inputs[1].node()}};
+  bGNet.inputsDelay = {{0, exp(-100)},
+                       {1, exp(100)}};
+
+  std::string ser = SQLiteRWDatabase::serialize({bGNet});
+  RWDatabase::BoundGNet newBGNet = SQLiteRWDatabase::deserialize(ser)[0];
+
+  return areEquivalent(bGNet, newBGNet) &&
+         bGNet.inputsDelay == newBGNet.inputsDelay;
+}
+
 TEST(RWDatabaseTest, BasicTest) {
   EXPECT_TRUE(basicTest());
+}
+
+TEST(RWDatabaseTest, SerializeTest) {
+  EXPECT_TRUE(serializeTest());
 }
 
 TEST(RWDatabaseTest, InsertGetARWDBTest) {

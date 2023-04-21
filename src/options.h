@@ -172,7 +172,7 @@ struct RtlOptions final : public AppOptions {
     get(json, PREMAP_LIB, preLib);
   }
 
-  eda::gate::premapper::PreBasis preBasis = PreBasis::AIG;
+  PreBasis preBasis = PreBasis::AIG;
   std::string preLib;
 };
 

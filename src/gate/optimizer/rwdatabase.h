@@ -44,9 +44,12 @@ namespace eda::gate::optimizer {
     using GateBindings = std::unordered_map<InputId, Gate::Id>;
     using ReversedGateBindings = std::unordered_map<Gate::Id, InputId>;
 
+    using InputIdDoubleMap = std::unordered_map<InputId, double>;
+
     struct BoundGNet {
       std::shared_ptr<GNet> net;
       GateBindings bindings;
+      InputIdDoubleMap inputsDelay;
     };
 
     using BoundGNetList = std::vector<BoundGNet>;

@@ -32,6 +32,7 @@ add_library(Gate OBJECT
   premapper/xagmapper.cpp
   premapper/xmgmapper.cpp
   printer/dot.cpp
+  printer/verilog/gate_verilog_printer.cpp
   simulator/simulator.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)
@@ -43,6 +44,7 @@ target_link_libraries(Gate
   minisat-lib-static
   Cudd::Cudd
   sqlite3
+  CTemplate::nothreads
 
   PRIVATE
   Utopia::Util

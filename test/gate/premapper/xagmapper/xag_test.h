@@ -12,11 +12,11 @@
 
 
 using Gate = eda::gate::model::Gate;
-using GNet = eda::gate::model::GNet;
 using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
-using Link = Gate::Link;
 using GateSymbol = eda::gate::model::GateSymbol;
+using GNet = eda::gate::model::GNet;
+using Link = Gate::Link;
 
 void dump(const GNet &net);
 

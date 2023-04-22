@@ -12,16 +12,15 @@
 
 #include <algorithm>
 #include <cassert>
-#include <random>
 #include <memory>
+#include <random>
 
 using namespace eda::gate::premapper;
 
 using Gate = eda::gate::model::Gate;
-using GNet = eda::gate::model::GNet;
-
 using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
+using GNet = eda::gate::model::GNet;
 using Link = Gate::Link;
 
 // gate(x1, ..., xN).
@@ -40,8 +39,6 @@ std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate,
   net->addOut(gateId);
 
   net->sortTopologically();
-//  dump(*net);
-//  std::cout << "---------" << std::endl;
   return net;
 }
 
@@ -65,8 +62,6 @@ std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate,
   net->addOut(gateId);
 
   net->sortTopologically();
-//  dump(*net);
-//  std::cout << "---------" << std::endl;
   return net;
 }
 
@@ -91,7 +86,6 @@ std::shared_ptr<GNet> premap(std::shared_ptr<GNet> net, GateIdMap &gmap) {
   eda::gate::premapper::XagMapper premapper;
   std::shared_ptr<GNet> premapped = premapper.map(*net, gmap);
   premapped->sortTopologically();
-//  dump(*premapped);
   return premapped;
 }
 

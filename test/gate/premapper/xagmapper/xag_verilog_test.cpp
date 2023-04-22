@@ -20,19 +20,19 @@
 #include <unordered_map>
 
 using namespace eda::gate::premapper;
-using namespace lorina;
 using namespace eda::gate::model;
+using namespace lorina;
 
 using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 using Link = Gate::Link;
 
-const std::filesystem::path subCatalog = "test/gate/premapper/xagmapper";
+const std::filesystem::path subCatalog = "test/data/gate/premapper/xagmapper";
 const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
 const std::filesystem::path prefixPath = homePath / subCatalog;
 const std::filesystem::path prefixPathIn = prefixPath;
 
-bool parceFile(const std::string g) {
+bool parseFile(const std::string g) {
   std::string infile = g;
   std::string filename = prefixPathIn / (infile + ".v");
   text_diagnostics consumer;
@@ -45,37 +45,35 @@ bool parceFile(const std::string g) {
   net->sortTopologically();
   GateIdMap gmap;
 
-//  dump(*parser.getGnet());
   std::shared_ptr<GNet> premapped = premap(net, gmap);
-//  dump(*premapped);
   delete parser.getGnet();
   return checkEquivalence(net, premapped, gmap);
 }
 
 TEST(XagPremapperVerilogTest, orGateTest) {
-  parceFile("orGate");
+  parseFile("orGate");
 }
 
 TEST(XagPremapperVerilogTest, xorGateTest) {
-  parceFile("xorGate");
+  parseFile("xorGate");
 }
 
 TEST(XagPremapperVerilogTest, xnorGateTest) {
-  parceFile("xnorGate");
+  parseFile("xnorGate");
 }
 
 TEST(XagPremapperVerilogTest, norGateTest) {
-  parceFile("norGate");
+  parseFile("norGate");
 }
 
 TEST(XagPremapperVerilogTest, nandGateTest) {
-  parceFile("nandGate");
+  parseFile("nandGate");
 }
 
 TEST(XagPremapperVerilogTest, MultiplexerTest) {
-  parceFile("multiplexer");
+  parseFile("multiplexer");
 }
 
-TEST(XagPremapperVerilogTest, halfSubstracterTest) {
-  parceFile("halfSubstracter");
+TEST(XagPremapperVerilogTest, halfSubtractorTest) {
+  parseFile("halfSubtractor");
 }

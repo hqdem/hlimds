@@ -25,6 +25,7 @@
 #include "hls/scheduler/param_optimizer.h"
 #include "options.h"
 #include "rtl/compiler/compiler.h"
+#include "rtl/library/arithmetic.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
 #include "rtl/parser/ril/parser.h"
@@ -54,7 +55,7 @@ struct RtlContext {
   using AigMapper = eda::gate::premapper::AigMapper;
   using Checker = eda::gate::debugger::Checker;
   using Compiler = eda::rtl::compiler::Compiler;
-  using Library = eda::rtl::library::FLibraryDefault;
+  using Library = eda::rtl::library::ArithmeticLibrary;
   using MigMapper = eda::gate::premapper::MigMapper;
   using PreBasis = eda::gate::premapper::PreBasis;
   using PreMapper = eda::gate::premapper::PreMapper;

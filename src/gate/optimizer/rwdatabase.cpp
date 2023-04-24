@@ -28,15 +28,15 @@ std::string SQLiteRWDatabase::serialize(const BoundGNetList &list) {
   std::stringstream ss;
   ss << list.size() << ' ';
   for (const auto &bGNet : list) {
-    auto &inputsDelay = bGNet.inputsDelay;
-    auto &bindings = bGNet.bindings;
+    const auto &inputsDelay = bGNet.inputsDelay;
+    const auto &bindings = bGNet.bindings;
     auto net = bGNet.net;
     if (!net->isSorted()) {
       throw "Net isn't topologically sorted.";
     }
 
     ss << bindings.size() << ' ';
-    for (auto &binding : bindings) {
+    for (const auto &binding : bindings) {
       ss << binding.first << ' ' << binding.second << ' ';
     }
 

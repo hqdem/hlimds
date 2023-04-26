@@ -17,6 +17,45 @@ using namespace eda::rtl::model;
 
 namespace eda::rtl::library {
 
+void fillWithZeros(const size_t size,
+                   GNet::GateIdList &in,
+                   GNet &net) {
+  while (size > in.size()) {
+    in.push_back(net.addZero());
+  }
+}
+
+void makeInputsEqual(const size_t outSize,
+                     GNet::GateIdList &x,
+                     GNet::GateIdList &y,
+                     GNet &net) {
+  if ((outSize >= x.size()) && (outSize >= y.size())) {
+    // Make x.size() and y.size() equal to the maximum of them
+    fillWithZeros(x.size(), {y}, net);
+    fillWithZeros(y.size(), {x}, net);
+  } else {
+    // Make x.size() and y.size() equal to the outSize
+    fillWithZeros(outSize, {x}, net);
+    fillWithZeros(outSize, {y}, net);
+    x.resize(outSize);
+    y.resize(outSize);
+  }
+}
+
+GNet::GateIdList leftShiftForGateIdList(const GNet::GateIdList &x,
+                                        const size_t shift,
+                                        GNet &net) {
+  GNet::GateIdList list(x.size() + shift);
+  size_t i;
+  for (i = 0; i < shift; i++) {
+    list[i] = net.addZero();
+  }
+  for (; i < list.size(); i++) {
+    list[i] = x[i - shift];
+  }
+  return list;
+}
+
 bool FLibraryDefault::supports(FuncSymbol func) const {
   return true;
 }
@@ -119,29 +158,29 @@ FLibrary::Out FLibraryDefault::synth(
 
 FLibrary::Out FLibraryDefault::synthAdd(
     size_t outSize, const In &in, GNet &net) {
-  return synthAdder(outSize, in, false, net);
+  auto x = in[0];
+  auto y = in[1];
+
+  makeInputsEqual(outSize, x, y, net);
+
+  return synthAdder(outSize, {x, y}, false, net);
 }
 
 FLibrary::Out FLibraryDefault::synthSub(
     size_t outSize, const In &in, GNet &net) {
   // The two's complement code: (x - y) == (x + ~y + 1).
-  const auto &x = in[0];
-  const auto &y = in[1];
+  auto x = in[0];
+  auto y = in[1];
 
-  Out temp = synthUnaryBitwiseOp(GateSymbol::NOT, outSize, { y }, net);
+  makeInputsEqual(outSize, x, y, net);
+
+  Out temp = synthUnaryBitwiseOp(GateSymbol::NOT, y.size(), { y }, net);
   return synthAdder(outSize, { x, temp }, true, net);
 }
 
 FLibrary::Out FLibraryDefault::synthMul(
     size_t outSize, const In &in, GNet &net) {
-  Out out(outSize);
-
-  // TODO: Add multiplication implementation here.
-  for (size_t i = 0; i < out.size(); i++) {
-    out[i] = net.addGate(GateSymbol::NOP, in[0][0]);
-  }
-
-  return out;
+  return synthMultiplier(outSize, in, net);
 }
 
 FLibrary::Out FLibraryDefault::synthAdder(
@@ -150,20 +189,30 @@ FLibrary::Out FLibraryDefault::synthAdder(
 
   const auto &x = in[0];
   const auto &y = in[1];
-  assert(x.size() == y.size() && outSize == x.size());
+  
+  assert(x.size() == y.size());
 
+  const bool needsCarryOut = ((outSize > x.size()) && (!plusOne));
+  const size_t sumSize = needsCarryOut ? (x.size() + 1) : x.size();
   auto carryIn = plusOne ? net.addOne() : net.addZero();
 
-  Out out(outSize);
-  for (size_t i = 0; i < out.size(); i++) {
-    const auto needsCarryOut = (i != out.size() - 1);
+  Out out(x.size());
+  for (size_t i = 0; i < x.size(); i++) {
+    const auto needsCarryOut = (i != sumSize - 1);
     auto zCarryOut = synthAdder(x[i], y[i], carryIn, needsCarryOut, net);
 
     out[i] = zCarryOut[0];
     carryIn = needsCarryOut ? zCarryOut[1] : Gate::INVALID;
   }
 
+  if (carryIn != Gate::INVALID) {
+    out.push_back(carryIn);
+  }
+
+  fillWithZeros(outSize, {out}, net);
+
   return out;
+
 }
 
 FLibrary::Out FLibraryDefault::synthAdder(
@@ -182,6 +231,40 @@ FLibrary::Out FLibraryDefault::synthAdder(
     out.push_back(net.addOr(carryOutLhs, carryOutRhs));
   }
 
+  return out;
+}
+
+FLibrary::Out FLibraryDefault::synthMultiplier(const size_t outSize,
+                                               const In &in,
+                                               GNet &net) {
+  const auto &x = in[0];
+  const auto &y = in[1];
+
+  size_t min1 = std::min(y.size(), outSize);
+  size_t min2 = std::min(x.size(), outSize);
+
+  auto out = synthMultiplier(min2, x, y[0], net);
+  for (size_t i = 1; i < min1; i++) {
+    min2 = std::min((x.size() + i), outSize);
+    auto temp1 = synthMultiplier((min2 - i), x, y[i], net);
+    GateIdList temp2 = leftShiftForGateIdList(temp1, i, net);
+    size_t min3 = std::min((temp2.size() + 1), outSize);
+    out = synthAdd(min3, {temp2, out}, net);
+  }
+  fillWithZeros(outSize, {out}, net);
+  return out;
+}
+
+FLibrary::Out FLibraryDefault::synthMultiplier(const size_t outSize,
+                                               const GateIdList &x,
+                                               const GateId &y,
+                                               GNet &net) {
+  Out out;
+  size_t mulSize = std::min(outSize, x.size());
+  for (size_t i = 0; i < mulSize; i++) {
+    out.push_back(net.addGate(GateSymbol::AND, x[i], y));
+  }
+  fillWithZeros(outSize, {out}, net);
   return out;
 }
 

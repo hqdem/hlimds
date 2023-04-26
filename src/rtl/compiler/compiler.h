@@ -62,7 +62,10 @@ private:
   void allocReg(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
   void synthReg(const VNode *vnode, GNet &net, VNodeIdMap &map) const;
 
+  GNet::In in(const VNode *vnode, const VNodeIdMap &map,
+              size_t beginIndex, size_t endIndex) const;
   GNet::In in(const VNode *vnode, const VNodeIdMap &map) const;
+
   const GNet::Out &out(const VNode *vnode, const VNodeIdMap &map) const;
   const GNet::Out &out(VNode::Id vnodeId, const VNodeIdMap &map) const;
 

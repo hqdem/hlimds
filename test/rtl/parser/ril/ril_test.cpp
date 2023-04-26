@@ -46,12 +46,14 @@ int rilTest(const std::string &outSubPath,
   return 0;
 }
 
+TEST(RilTest, DffTest) {
+  EXPECT_EQ(rilTest("test/data/ril/", "dff.ril"), 0);
+}
+
 TEST(RilTest, SingleTest) {
-  EXPECT_EQ(rilTest("test/data/ril/",
-                    "test.ril"), 0);
+  EXPECT_EQ(rilTest("test/data/ril/", "test.ril"), 0);
 }
 
 TEST(RilTest, FuncTest) {
-  EXPECT_EQ(rilTest("test/data/ril/",
-                    "func.ril"), 0);
+  EXPECT_EQ(rilTest("test/data/ril/", "func.ril"), 0);
 }

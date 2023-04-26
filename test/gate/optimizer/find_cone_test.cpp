@@ -17,7 +17,7 @@ namespace eda::gate::optimizer {
   GNet *findConePrint(const std::filesystem::path &subCatalog, GNet *net,
                       const std::vector<GateID> &cuNodes, GNet::V start) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-    const std::filesystem::path outputPath = homePath / subCatalog;
+    const std::filesystem::path outputPath = homePath / "build" / subCatalog;
 
     system(std::string("mkdir -p ").append(outputPath).c_str());
 

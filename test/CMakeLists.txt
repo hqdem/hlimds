@@ -32,8 +32,8 @@ add_executable(${TEST_TARGET}
   gate/optimizer/benchmark_optimizer_test.cpp
   gate/optimizer/examples.cpp
   gate/optimizer/find_cone_test.cpp
+  gate/optimizer/find_cut_test.cpp
   gate/optimizer/optimization_count_test.cpp
-  gate/optimizer/optimizer_test.cpp
   gate/optimizer/rwdatabase_test.cpp
   gate/optimizer/substitute_test.cpp
   gate/optimizer/ttbuilder_test.cpp

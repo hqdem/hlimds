@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "gate/debugger/checker.h"
 #include "gate/model/gnet_test.h"
 
@@ -17,9 +25,9 @@ using Link = eda::gate::model::Gate::Link;
 using MigMapper = eda::gate::premapper::MigMapper;
 
 void initializeMigBinds(const GNet &net,
-                     GateIdMap &gmap,
-                     GateBinding &ibind,
-                     GateBinding &obind) {
+                        GateIdMap &gmap,
+                        GateBinding &ibind,
+                        GateBinding &obind) {
   // Input-to-input correspondence.
   for (const auto oldSourceLink : net.sourceLinks()) {
     auto newSourceId = gmap[oldSourceLink.target];
@@ -43,8 +51,8 @@ std::shared_ptr<GNet> migMap(std::shared_ptr<GNet> net, GateIdMap &gmap) {
 }
 
 bool checkMigEquivalence(const std::shared_ptr<GNet> net,
-                      const std::shared_ptr<GNet> migMapped,
-                      GateIdMap &gmap) {
+                         const std::shared_ptr<GNet> migMapped,
+                         GateIdMap &gmap) {
   // Initialize binds
   GateBinding ibind, obind;
   initializeMigBinds(*net, gmap, ibind, obind);

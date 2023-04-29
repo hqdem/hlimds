@@ -93,7 +93,7 @@ enum PreBasis {
   MIG,
   /// Xor-And-Inverter Graph
   XAG,
-  /// Xor-Majority-Inverter Graph
+  /// Xor-Maj-Inverter Graph
   XMG
 };
 

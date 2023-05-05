@@ -39,7 +39,7 @@ public:
   }
 
 protected:
-  virtual Gate::Id mapIn (GNet &newNet) const = 0;
+  virtual Gate::Id mapIn(GNet &newNet) const = 0;
   virtual Gate::Id mapOut(const Gate::SignalList &newInputs,
                           size_t n0, size_t n1, GNet &newNet) const = 0;
 
@@ -57,11 +57,11 @@ protected:
                           size_t n0, size_t n1,
                           bool sign, GNet &newNet) const = 0;
 
-  virtual Gate::Id mapOr (const Gate::SignalList &newInputs,
-                          bool sign, GNet &newNet) const = 0;
-  virtual Gate::Id mapOr (const Gate::SignalList &newInputs,
-                          size_t n0, size_t n1,
-                          bool sign, GNet &newNet) const = 0;
+  virtual Gate::Id mapOr(const Gate::SignalList &newInputs,
+                         bool sign, GNet &newNet) const = 0;
+  virtual Gate::Id mapOr(const Gate::SignalList &newInputs,
+                         size_t n0, size_t n1,
+                         bool sign, GNet &newNet) const = 0;
 
   virtual Gate::Id mapXor(const Gate::SignalList &newInputs,
                           bool sign, GNet &newNet) const = 0;

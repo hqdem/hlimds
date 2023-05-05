@@ -84,7 +84,7 @@ struct FLibrary {
                     const SignalList &control,
                     GNet &net) const = 0;
 
-  virtual ~FLibrary() {} 
+  virtual ~FLibrary() {}
 };
 
 /**
@@ -140,8 +140,8 @@ private:
                         GNet &net);
 
   static Out synthMultiplier(const size_t outSize,
-                            const In &in,
-                            GNet &net);
+                             const In &in,
+                             GNet &net);
 
   static Out synthMultiplier(const size_t outSize,
                              const GateIdList &x,

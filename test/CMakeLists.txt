@@ -30,13 +30,14 @@ add_executable(${TEST_TARGET}
   gate/debugger/checker_test.cpp
   gate/model/gnet_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp
+  gate/optimizer/bgnet_test.cpp
   gate/optimizer/examples.cpp
   gate/optimizer/find_cone_test.cpp
+  gate/optimizer/rwdatabase_test.cpp
   gate/optimizer/optimization_count_test.cpp
   gate/optimizer/optimizer_test.cpp
-  gate/optimizer/rwdatabase_test.cpp
   gate/optimizer/substitute_test.cpp
-  gate/optimizer/ttbuilder_test.cpp
+  gate/optimizer/truthtable_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/migmapper/migmapper_test.cpp
   gate/premapper/xagmapper/xag_test.cpp

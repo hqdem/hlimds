@@ -25,8 +25,7 @@ namespace eda::gate::optimizer {
   class OptimizerVisitor : public Visitor {
   public:
 
-    using BoundGNetList = RWDatabase::BoundGNetList;
-    using BoundGNet = RWDatabase::BoundGNet;
+    using BoundGNetList = BoundGNet::BoundGNetList;
 
     OptimizerVisitor();
 

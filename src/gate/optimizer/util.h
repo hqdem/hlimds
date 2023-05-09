@@ -14,7 +14,7 @@
 #include "gate/optimizer/links_clean.h"
 #include "gate/optimizer/links_clean_counter.h"
 #include "gate/optimizer/substitute_visitor.h"
-#include "gate/optimizer/ttbuilder.h"
+// #include "gate/optimizer/ttbuilder.h"
 #include "gate/optimizer/walker.h"
 
 /**

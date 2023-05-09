@@ -9,7 +9,7 @@
 #include "zero_optimizer.h"
 
 namespace eda::gate::optimizer {
-  using BoundGNetList = RWDatabase::BoundGNetList;
+  using BoundGNetList = BoundGNet::BoundGNetList;
 
   bool ZeroOptimizer::checkOptimize(const BoundGNet &,
                                     const std::unordered_map<GateID, GateID> &map) {
@@ -29,7 +29,7 @@ namespace eda::gate::optimizer {
     GNet *subsNet = new GNet();
     rez.net = std::shared_ptr<GNet>(subsNet);
     GateID sourceNode = subsNet->addGate(model::GateSymbol::IN);
-    rez.bindings.emplace(1, sourceNode);
+    rez.inputBindings = {sourceNode};
     subsNet->addGate(model::GateSymbol::OUT,
                      base::model::Signal{
                              base::model::Event::ALWAYS,

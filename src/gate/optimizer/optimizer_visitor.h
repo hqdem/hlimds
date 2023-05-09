@@ -37,6 +37,17 @@ namespace eda::gate::optimizer {
 
     VisitorFlags onCut(const Cut &) override;
 
+    virtual bool checkOptimize(const BoundGNet &option,
+                               const std::unordered_map<GateID, GateID> &map) = 0;
+
+    virtual void
+    considerOptimization(BoundGNet &option,
+                         std::unordered_map<GateID, GateID> &map) = 0;
+
+    virtual VisitorFlags finishOptimization() { return SUCCESS; }
+
+    virtual BoundGNetList getSubnets(uint64_t func) = 0;
+
   private:
     CutStorage *cutStorage;
 
@@ -49,18 +60,6 @@ namespace eda::gate::optimizer {
     GNet *net;
     GateID lastNode;
     int cutSize;
-
-    virtual bool checkOptimize(const BoundGNet &option,
-                               const std::unordered_map<GateID, GateID> &map) = 0;
-
-    virtual VisitorFlags
-    considerOptimization(BoundGNet &option,
-                         std::unordered_map<GateID, GateID> &map) = 0;
-
-    virtual void finishOptimization() {}
-
-    virtual BoundGNetList getSubnets(uint64_t func) = 0;
-
   };
 
 } // namespace eda::gate::optimizer

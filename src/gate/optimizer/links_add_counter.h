@@ -29,6 +29,8 @@ namespace eda::gate::optimizer {
 
     int getNAdded() const { return added; };
 
+    bool checkOutGate(const Gate *gate) const;
+
   private:
     GNet *net;
     const std::unordered_map<GateID, GateID> &map;

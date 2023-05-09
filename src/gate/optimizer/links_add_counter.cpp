@@ -10,7 +10,8 @@
 
 namespace eda::gate::optimizer {
 
-  LinkAddCounter::LinkAddCounter(GNet *net, const std::unordered_map<GateID, GateID> &map)
+  LinkAddCounter::LinkAddCounter(GNet *net,
+                                 const std::unordered_map<GateID, GateID> &map)
           : net(net), map(map) {}
 
   VisitorFlags LinkAddCounter::onNodeBegin(const GateID &id) {
@@ -28,9 +29,10 @@ namespace eda::gate::optimizer {
         ++added;
       }
 
-      // TODO: delete print.
-      std::cout << id << " " << substitute[id] << std::endl;
-    } else if(!gate->links().empty()) {
+      // Handling out gate.
+    } else if (checkOutGate(gate)) {
+      return FINISH_ALL;
+    } else if (!gate->links().empty()) {
       std::vector<Signal> signals;
       // Mapping signals.
       for (const auto &input: gate->inputs()) {
@@ -46,8 +48,6 @@ namespace eda::gate::optimizer {
       if (subGate) {
         used.emplace(subGate->id());
         substitute[id] = subGate->id();
-        // TODO: delete print.
-        std::cout << id << " " << subGate->id() << std::endl;
       } else {
         ++added;
       }
@@ -61,6 +61,21 @@ namespace eda::gate::optimizer {
 
   VisitorFlags LinkAddCounter::onCut(const Cut &) {
     return SUCCESS;
+  }
+
+  bool LinkAddCounter::checkOutGate(const Gate *gate) const {
+    // Output gate has either more than 2 inputs
+    // or net consists only of inputs and targets.
+    assert(!gate->isTarget() && "Rewriting input net error.");
+
+    if (gate->links().empty()) {
+      return true;
+    }
+    if (gate->links().size() == 1) {
+      Gate *next = Gate::get(gate->links().front().target);
+      return next->isTarget();
+    }
+    return false;
   }
 
 } // namespace eda::gate::optimizer

@@ -12,16 +12,15 @@
 
 #include <algorithm>
 #include <cassert>
-#include <random>
 #include <memory>
+#include <random>
 
 using namespace eda::gate::premapper;
 
 using Gate = eda::gate::model::Gate;
-using GNet = eda::gate::model::GNet;
-
 using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
+using GNet = eda::gate::model::GNet;
 using Link = Gate::Link;
 
 // gate(x1, ..., xN).
@@ -30,7 +29,6 @@ std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate,
   std::shared_ptr<GNet> net = std::make_shared<GNet>();
 
   Gate::SignalList inputs;
-  Gate::Id outputId;
 
   for (unsigned i = 0; i < N; i++) {
     const Gate::Id inputId = net->addIn();
@@ -38,11 +36,9 @@ std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate,
   }
 
   auto gateId = net->addGate(gate, inputs);
-  outputId = net->addOut(gateId);
+  net->addOut(gateId);
 
   net->sortTopologically();
-//  dump(*net);
-//  std::cout << "---------" << std::endl;
   return net;
 }
 
@@ -52,9 +48,8 @@ std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate,
   std::shared_ptr<GNet> net = std::make_shared<GNet>();
 
   Gate::SignalList inputs;
-  Gate::Id outputId;
-  Gate::SignalList andInputs;
 
+  Gate::SignalList andInputs;
   for (unsigned i = 0; i < N; i++) {
     const Gate::Id inputId = net->addIn();
     inputs.push_back(Gate::Signal::always(inputId));
@@ -64,11 +59,9 @@ std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate,
   }
 
   auto gateId = net->addGate(gate, andInputs);
-  outputId = net->addOut(gateId);
+  net->addOut(gateId);
 
   net->sortTopologically();
-//  dump(*net);
-//  std::cout << "---------" << std::endl;
   return net;
 }
 
@@ -93,7 +86,6 @@ std::shared_ptr<GNet> premap(std::shared_ptr<GNet> net, GateIdMap &gmap) {
   eda::gate::premapper::XagMapper premapper;
   std::shared_ptr<GNet> premapped = premapper.map(*net, gmap);
   premapped->sortTopologically();
-//  dump(*premapped);
   return premapped;
 }
 

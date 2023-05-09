@@ -21,12 +21,11 @@ namespace eda::gate::optimizer {
     return false;
   }
 
-  VisitorFlags
+  void
   ExhausitiveSearchOptimizer::considerOptimization(BoundGNet &option,
                                                    std::unordered_map<GateID, GateID> &map) {
     bestOption = std::move(option);
     bestOptionMap = std::move(map);
-    return SUCCESS;
   }
 
   BoundGNetList
@@ -34,11 +33,12 @@ namespace eda::gate::optimizer {
     return rwdb.get(func);
   }
 
-  void ExhausitiveSearchOptimizer::finishOptimization() {
+  VisitorFlags ExhausitiveSearchOptimizer::finishOptimization() {
     if(bestReduce <= 0) {
       substitute(lastNode, bestOptionMap, bestOption.net.get(), net);
     }
     bestReduce = 1;
+    return SUCCESS;
   }
 
 } // namespace eda::gate::optimizer

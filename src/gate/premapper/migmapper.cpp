@@ -59,8 +59,9 @@ Gate::Id MigMapper::mapIn(GNet &newNet) const {
 }
 
 Gate::Id MigMapper::mapOut(const Gate::SignalList &newInputs,
-                           size_t n0, size_t n1, GNet &newNet) const {
-  assert(newInputs.size() + n0 + n1 == 1 && "Input size error of mapOut\n");
+                           const size_t n0, const size_t n1,
+                           GNet &newNet) const {
+  assert((newInputs.size() + n0 + n1 == 1) && "Only single input is allowed");
 
   // Constant output.
   if (n0 > 0 || n1 > 0) {
@@ -75,7 +76,7 @@ Gate::Id MigMapper::mapOut(const Gate::SignalList &newInputs,
 // ZERO/NOT(ZERO)
 //===----------------------------------------------------------------------===//
 
-Gate::Id MigMapper::mapVal(bool value, GNet &newNet) const {
+Gate::Id MigMapper::mapVal(const bool value, GNet &newNet) const {
   const auto gateId = newNet.addZero();
   if (value) {
     return newNet.addNot(Gate::Signal::always(gateId));
@@ -88,7 +89,7 @@ Gate::Id MigMapper::mapVal(bool value, GNet &newNet) const {
 //===----------------------------------------------------------------------===//
 
 Gate::Id MigMapper::mapNop(const Gate::SignalList &newInputs,
-                           bool sign, GNet &newNet) const {
+                           const bool sign, GNet &newNet) const {
   // NOP(x) = x.
   const auto inputId = newInputs.at(0).node();
   if (sign) {
@@ -106,9 +107,9 @@ Gate::Id MigMapper::mapNop(const Gate::SignalList &newInputs,
 }
 
 Gate::Id MigMapper::mapNop(const Gate::SignalList &newInputs,
-                           size_t n0, size_t n1,
-                           bool sign, GNet &newNet) const {
-  assert((newInputs.size() + n0 + n1 == 1) && "Too many sources for nop\n");
+                           const size_t n0, const size_t n1,
+                           const bool sign, GNet &newNet) const {
+  assert((newInputs.size() + n0 + n1 == 1) && "Only single input is allowed");
 
   if (n0 > 0 || n1 > 0) {
     return mapVal((n0 > 0) ^ sign, newNet);
@@ -122,7 +123,7 @@ Gate::Id MigMapper::mapNop(const Gate::SignalList &newInputs,
 //===----------------------------------------------------------------------===//
 
 Gate::Id MigMapper::mapAnd(const Gate::SignalList &newInputs,
-                           bool sign, GNet &newNet) const {
+                           const bool sign, GNet &newNet) const {
   Gate::SignalList inputs(newInputs.begin(), newInputs.end());
   inputs.reserve(2 * newInputs.size() - 1);
   const auto valId = newNet.addZero();
@@ -155,8 +156,8 @@ Gate::Id MigMapper::mapAnd(const Gate::SignalList &newInputs,
 }
 
 Gate::Id MigMapper::mapAnd(const Gate::SignalList &newInputs,
-                           size_t n0, size_t n1, 
-                           bool sign, GNet &newNet) const {
+                           const size_t n0, const size_t n1, 
+                           const bool sign, GNet &newNet) const {
   if (n0 > 0) {
     return mapVal(!sign, newNet);
   }
@@ -169,7 +170,7 @@ Gate::Id MigMapper::mapAnd(const Gate::SignalList &newInputs,
 //===----------------------------------------------------------------------===//
 
 Gate::Id MigMapper::mapOr(const Gate::SignalList &newInputs,
-                          bool sign, GNet &newNet) const {
+                          const bool sign, GNet &newNet) const {
     Gate::SignalList inputs(newInputs.begin(), newInputs.end());
     inputs.reserve(2 * newInputs.size() - 1);
     const auto valId = mapVal(true, newNet);
@@ -202,8 +203,8 @@ Gate::Id MigMapper::mapOr(const Gate::SignalList &newInputs,
 }
 
 Gate::Id MigMapper::mapOr(const Gate::SignalList &newInputs,
-                          size_t n0, size_t n1,
-                          bool sign, GNet &newNet) const {
+                          const size_t n0, const size_t n1,
+                          const bool sign, GNet &newNet) const {
   if (n1 > 0) {
     return mapVal(sign, newNet);
   }
@@ -252,8 +253,8 @@ Gate::Id MigMapper::mapXor(const Gate::SignalList &newInputs,
 }
 
 Gate::Id MigMapper::mapXor(const Gate::SignalList &newInputs,
-                           size_t n0, size_t n1,
-                           bool sign, GNet &newNet) const {
+                           const size_t n0, const size_t n1,
+                           const bool sign, GNet &newNet) const {
   if (n1 > 1) {
     return mapXor(newInputs, sign ^ (n1 & 1), newNet);
   }
@@ -304,11 +305,12 @@ Gate::Id majorityOfSeven(const Gate::SignalList &newInputs, GNet &newNet) {
                        Gate::Signal::always(tufrxztId));
 }
 
-Gate::Id MigMapper::mapMaj(const Gate::SignalList &newInputs, size_t n0, 
-                           size_t n1, GNet &newNet) const {
+Gate::Id MigMapper::mapMaj(const Gate::SignalList &newInputs,
+                           const size_t n0, const size_t n1,
+                           GNet &newNet) const {
   size_t inputSize = newInputs.size();
   assert(((inputSize + n0 + n1) % 2 == 1) && (inputSize + n0 + n1 >= 3)
-                                          && "Invalid number of inputs\n");
+                                          && "Invalid number of inputs");
 
   if (inputSize == 0) {
     return mapVal((n1 > n0), newNet);
@@ -358,23 +360,25 @@ Gate::Id MigMapper::mapMaj(const Gate::SignalList &newInputs, size_t n0,
   }
   const size_t halfQuan = (quantity + 1) / 2;
 
-  // Majority of n to several majority of 3
-  // Example of "rhombus" for majority function of 9:
-  //              1.1
-  //              / \ 
-  //           2.1  2.2
-  //           / \  / \ 
-  //         3.1  3.2  3.3
-  //         / \  / \  / \ 
-  //       4.1  4.2  4.3  4.4
-  //       / \  / \  / \  / \ 
-  // |--5.1  5.2  5.3  5.4  5.5--|
-  // |     \ /  \ /  \ /  \ /    |
-  // |-----6.1  6.2  6.3  6.4----|
-  // |        \ /  \ /  \ /      |
-  // F--------7.1  7.2  7.3------T
-  //             \      /
-  //          <-7x, 8x, 9x>
+  /** 
+  * Majority of n to several majority of 3
+  * Example of "rhombus" for majority function of 9:
+  *              1.1
+  *              / \ 
+  *           2.1  2.2
+  *           / \  / \ 
+  *         3.1  3.2  3.3
+  *         / \  / \  / \ 
+  *       4.1  4.2  4.3  4.4
+  *       / \  / \  / \  / \ 
+  * |--5.1  5.2  5.3  5.4  5.5--|
+  * |     \ /  \ /  \ /  \ /    |
+  * |-----6.1  6.2  6.3  6.4----|
+  * |        \ /  \ /  \ /      |
+  * F--------7.1  7.2  7.3------T
+  *             \      /
+  *          <-7x, 8x, 9x>     
+  */
   Gate::SignalList toFitIn(halfQuan);
   Gate::SignalList toTakeFrom(halfQuan);
   const size_t nLastArg = quantity - 1;

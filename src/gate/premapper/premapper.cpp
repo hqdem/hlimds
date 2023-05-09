@@ -40,8 +40,7 @@ std::shared_ptr<GNet> PreMapper::map(const GNet &net,
     const auto *oldTrigger = Gate::get(oldTriggerId);
 
     auto newTriggerId = oldToNewGates.find(oldTriggerId);
-    assert("Points one past the last element" &&
-            (newTriggerId != oldToNewGates.end()));
+    assert(newTriggerId != oldToNewGates.end());
 
     auto newInputs = model::getNewInputs(oldTrigger->inputs(), oldToNewGates);
     newNet->setGate(newTriggerId->second, oldTrigger->func(), newInputs);
@@ -52,19 +51,17 @@ std::shared_ptr<GNet> PreMapper::map(const GNet &net,
 
 GNet *PreMapper::mapGates(const GNet &net,
                           GateIdMap &oldToNewGates) const {
-  assert("Orphans, empty subnets, network is not flat or sorted" &&
-          (net.isWellFormed() && net.isSorted()));
+  assert(net.isWellFormed() && net.isSorted());
 
   auto *newNet = new GNet(net.getLevel());
 
   if (net.isFlat()) {
     for (const auto *oldGate : net.gates()) {
       const auto oldGateId = oldGate->id();
-      assert("Points one past the last element" &&
-             (oldToNewGates.find(oldGateId) == oldToNewGates.end()));
+      assert(oldToNewGates.find(oldGateId) == oldToNewGates.end());
 
       const auto newGateId = mapGate(*oldGate, oldToNewGates, *newNet);
-      assert("Invalid gate used" && (newGateId != Gate::INVALID));
+      assert(newGateId != Gate::INVALID);
 
       oldToNewGates.emplace(oldGateId, newGateId);
     }

@@ -26,7 +26,6 @@ namespace eda::gate::optimizer {
     walker = Walker(net, &removeCounter, nullptr);
     // TODO Change to found earlier cone.
     walker.walk(cutFor, false);
-
     return addCounter.getNAdded() - removeCounter.getNRemoved();
   }
 

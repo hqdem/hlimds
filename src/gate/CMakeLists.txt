@@ -19,6 +19,7 @@ add_library(Gate OBJECT
   optimizer/rwmanager.cpp
   optimizer/strategy/apply_search_optimizer.cpp
   optimizer/strategy/exhaustive_search_optimizer.cpp
+  optimizer/strategy/track_strategy.cpp
   optimizer/strategy/zero_optimizer.cpp
   optimizer/substitute_visitor.cpp
   optimizer/tracker_visitor.cpp
@@ -32,6 +33,7 @@ add_library(Gate OBJECT
   premapper/xagmapper.cpp
   premapper/xmgmapper.cpp
   printer/dot.cpp
+  printer/verilog/gate_verilog_printer.cpp
   simulator/simulator.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)
@@ -43,6 +45,7 @@ target_link_libraries(Gate
   minisat-lib-static
   Cudd::Cudd
   sqlite3
+  CTemplate::nothreads
 
   PRIVATE
   Utopia::Util

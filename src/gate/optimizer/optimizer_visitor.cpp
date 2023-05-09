@@ -46,6 +46,10 @@ namespace eda::gate::optimizer {
       BoundGNet boundGNet;
       boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
 
+      if(coneVisitor.getResultCut().size() > 6) {
+        return SUCCESS;
+      }
+
       const auto & cutConeMap = coneVisitor.getResultCut();
       for(const auto &[gateSource, gateCone] : cutConeMap) {
         boundGNet.inputBindings.push_back(gateCone);
@@ -58,19 +62,6 @@ namespace eda::gate::optimizer {
 
         // Creating correspondence map for subNet sources and cut.
         std::unordered_map<GateID, GateID> map;
-
-        // If bindings were not empty.
-        /*
-        GateID i = 0;
-        for(const auto & [k, v] : cutConeMap) {
-          auto found = option.bindings.find(i++);
-          if(found != option.bindings.end()) {
-            map[found->second] = k;
-          } else {
-            break;
-          }
-        }*/
-
         const auto& sources = option.net->getSources();
         auto it = sources.begin();
         for(const auto & [k, v] : cutConeMap) {
@@ -83,10 +74,10 @@ namespace eda::gate::optimizer {
         }
 
         if (checkOptimize(option, map)) {
-          return considerOptimization(option, map);
+          considerOptimization(option, map);
+          return FINISH_THIS;
         }
       }
-      finishOptimization();
     }
     return SUCCESS;
   }
@@ -97,7 +88,7 @@ namespace eda::gate::optimizer {
       lastCuts->erase(*it);
     }
     toRemove.clear();
-    return SUCCESS;
+    return finishOptimization();;
   }
 
   bool OptimizerVisitor::checkValidCut(const Cut &cut) {

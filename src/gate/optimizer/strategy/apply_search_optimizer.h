@@ -14,19 +14,20 @@
 namespace eda::gate::optimizer {
 
   class ApplySearchOptimizer : public OptimizerVisitor {
+
   public:
       ApplySearchOptimizer() {
       RewriteManager rewriteManager;
       rewriteManager.initialize();
       rwdb = rewriteManager.getDatabase();
     }
-  protected:
+
     RWDatabase rwdb;
     bool checkOptimize(const BoundGNet &option,
                        const std::unordered_map<GateID, GateID> &map) override;
 
-    VisitorFlags considerOptimization(BoundGNet &option,
-                                      std::unordered_map<GateID, GateID> &map) override;
+    void considerOptimization(BoundGNet &option,
+                              std::unordered_map<GateID, GateID> &map) override;
 
     BoundGNetList getSubnets(uint64_t func) override;
   };

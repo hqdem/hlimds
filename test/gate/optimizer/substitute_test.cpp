@@ -18,7 +18,7 @@ namespace eda::gate::optimizer {
                        GNet *net, GNet *subNet, GateID cutFor,
                        const Cut &cut) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-    const std::filesystem::path outputPath = homePath / subCatalog;
+    const std::filesystem::path outputPath = homePath / "build" / subCatalog;
 
     system(std::string("mkdir -p ").append(outputPath).c_str());
 

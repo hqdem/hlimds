@@ -116,7 +116,7 @@ bool arithmeticTest(const FuncSymbol func,
   bool flag = true;
   size_t checkSize = out.size() <= result.size() ? out.size() : result.size();
   for(size_t i = 0; i < checkSize; i++) {
-    flag *= (out[i] == result[i]);
+    flag && (out[i] == result[i]);
   }
   return flag;
 }
@@ -129,7 +129,8 @@ size_t getDigit() {
 TEST(ArithmeticTest, AddTest) {
   bool flag = true;
   for (size_t i = 0; i < 100; i++) {
-    flag *= arithmeticTest(FuncSymbol::ADD, getDigit(), getDigit(), getDigit());
+    flag = flag &&
+        arithmeticTest(FuncSymbol::ADD, getDigit(), getDigit(), getDigit());
   }
   EXPECT_TRUE(flag);
 }
@@ -137,16 +138,17 @@ TEST(ArithmeticTest, AddTest) {
 TEST(ArithmeticTest, SubTest) {
   bool flag = true;
   for (size_t i = 0; i < 10; i++) {
-    flag *= arithmeticTest(FuncSymbol::SUB, 10, 10, 11);
+    flag = flag &&
+        arithmeticTest(FuncSymbol::SUB, 10, 10, 11);
   }
   EXPECT_TRUE(flag);
 }
 
-
 TEST(ArithmeticTest, MulTest) {
   bool flag = true;
   for (size_t i = 0; i < 50; i++) {
-    flag *= arithmeticTest(FuncSymbol::MUL, getDigit(), getDigit(), getDigit());
+    flag = flag &&
+        arithmeticTest(FuncSymbol::MUL, getDigit(), getDigit(), getDigit());
   }
   EXPECT_TRUE(flag);
 }

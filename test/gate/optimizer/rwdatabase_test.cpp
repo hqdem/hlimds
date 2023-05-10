@@ -23,26 +23,25 @@ using GateBDDMap = GNetBDDConverter::GateBDDMap;
 using GateList = std::vector<Gate::Id>;
 using GateUintMap = GNetBDDConverter::GateUintMap;
 
+using GateBindings = BoundGNet::GateBindings;
 
-bool areEquivalent(RWDatabase::BoundGNet bgnet1, RWDatabase::BoundGNet bgnet2) {
+bool areEquivalent(BoundGNet bgnet1, BoundGNet bgnet2) {
   Cudd manager(0, 0);
   BDDList x = { manager.bddVar(), manager.bddVar() };
   GateBDDMap varMap1, varMap2;
 
-  for (auto p : bgnet1.bindings) {
-    varMap1[p.second] = x[p.first];
+  for (size_t i = 0; i < bgnet1.inputBindings.size(); i++) {
+    varMap1[bgnet1.inputBindings[i]] = x[i];
   }
-  for (auto p : bgnet2.bindings) {
-    varMap2[p.second] = x[p.first];
+  for (size_t i = 0; i < bgnet2.inputBindings.size(); i++) {
+    varMap2[bgnet2.inputBindings[i]] = x[i];
   }
 
   BDD bdd1 = GNetBDDConverter::convert(*bgnet1.net,
-                                       bgnet1.net->
-                                       targetLinks().begin()->target,
+                                       bgnet1.outputBindings[0],
                                        varMap1, manager);
   BDD bdd2 = GNetBDDConverter::convert(*bgnet2.net,
-                                       bgnet2.net->
-                                       targetLinks().begin()->target,
+                                       bgnet2.outputBindings[0],
                                        varMap2, manager);
 
   return bdd1 == bdd2;
@@ -54,12 +53,13 @@ bool basicTest() {
   bool result = true;
 
   std::shared_ptr<GNet> dummy = std::make_shared<GNet>();
-  RWDatabase::GateBindings bindings = {{0, 1}, {1, 3}};
-  RWDatabase::TruthTable truthTable = 8;
+  TruthTable truthTable = TruthTable(1);
 
-  rwdb.set(truthTable, {{dummy, bindings}});
-  result = result && ((rwdb.get(truthTable)[0].net == dummy) &&
-           (rwdb.get(truthTable)[0].bindings == bindings));
+  rwdb.set(truthTable, {{dummy, {1, 2, 3}, {4, 5}}});
+  result = result && (rwdb.get(truthTable)[0].net == dummy) &&
+           (rwdb.get(truthTable)[0].inputBindings == GateBindings({1, 2, 3}))
+           && (rwdb.get(truthTable)[0].outputBindings == GateBindings
+           ({4, 5}));
 
   result = result && !rwdb.empty();
   rwdb.erase(truthTable);
@@ -68,130 +68,183 @@ bool basicTest() {
   return result;
 }
 
-bool insertGetARWDBTest() {
-  SQLiteRWDatabase arwdb;
+bool insertGetSQLiteRWDBTest() {
+  SQLiteRWDatabase db;
   std::string dbPath = "rwtest.db";
   bool result;
 
   try {
-    arwdb.linkDB(dbPath);
-    arwdb.openDB();
+    db.linkDB(dbPath);
+    db.openDB();
 
-    RWDatabase::TruthTable truthTable = 1;
+    TruthTable truthTable = TruthTable(1);
 
-    Gate::SignalList inputs1;
+    Gate::SignalList inputs;
     Gate::Id outputId1;
-    std::shared_ptr<GNet> dummy1 = makeAnd(2, inputs1, outputId1);
-    RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
-                                          {1, inputs1[1].node()}};
+    std::shared_ptr<GNet> dummy1 = makeAnd(2, inputs, outputId1);
+    GateBindings inputs1 = {inputs[0].node(), inputs[1].node()};
+    GateBindings outputs1 = {outputId1};
 
-    Gate::SignalList inputs2;
     Gate::Id outputId2;
-    std::shared_ptr<GNet> dummy2 = makeOr(2, inputs2, outputId2);
-    RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
-                                          {1, inputs2[1].node()}};
+    inputs.clear();
+    std::shared_ptr<GNet> dummy2 = makeOr(2, inputs, outputId2);
+    GateBindings inputs2 = {inputs[0].node(), inputs[1].node()};
+    GateBindings outputs2 = {outputId2};
 
     dummy1->sortTopologically();
     dummy2->sortTopologically();
 
-    RWDatabase::BoundGNetList bgl = {{dummy1, bindings1},
-                                     {dummy2, bindings2}};
+    BoundGNet::BoundGNetList bgl = {{dummy1, inputs1, outputs1},
+                                    {dummy2, inputs2, outputs2}};
 
-    arwdb.insertIntoDB(truthTable, bgl);
+    db.insertIntoDB(truthTable, bgl);
 
-    auto newBgl = arwdb.get(truthTable);
+    auto newBgl = db.get(truthTable);
 
     result = areEquivalent(bgl[0], newBgl[0]) &&
              areEquivalent(bgl[1], newBgl[1]);
 
-    arwdb.closeDB();
+    db.closeDB();
   } catch (const char* msg) {
+    result = false;
     std::cout << msg << std::endl;
   }
   remove(dbPath.c_str());
   return result;
 }
 
-bool updateARWDBTest() {
-  SQLiteRWDatabase arwdb;
+bool updateSQLiteRWDBTest() {
+  SQLiteRWDatabase db;
   std::string dbPath = "rwtest.db";
   bool result;
 
   try {
-    arwdb.linkDB(dbPath);
-    arwdb.openDB();
+    db.linkDB(dbPath);
+    db.openDB();
 
-    RWDatabase::TruthTable truthTable = 1;
+    TruthTable truthTable = TruthTable(1);
 
-    Gate::SignalList inputs1;
+    Gate::SignalList inputs;
     Gate::Id outputId1;
-    std::shared_ptr<GNet> dummy1 = makeAnd(2, inputs1, outputId1);
-    RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
-                                          {1, inputs1[1].node()}};
+    std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
+                                   (*makeAnd(2, inputs, outputId1));
+    GateBindings inputs1 = {inputs[0].node(), inputs[1].node()};
+    GateBindings outputs1 = {outputId1};
 
-    Gate::SignalList inputs2;
+    inputs.clear();
     Gate::Id outputId2;
-    std::shared_ptr<GNet> dummy2 = makeOr(2, inputs2, outputId2);
-    RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
-                                          {1, inputs2[1].node()}};
+    std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
+                                   (*makeOr(2, inputs, outputId2));
+    GateBindings inputs2 = {inputs[0].node(), inputs[1].node()};
+    GateBindings outputs2 = {outputId2};
 
     dummy1->sortTopologically();
     dummy2->sortTopologically();
 
-    RWDatabase::BoundGNetList bgl = {{dummy1, bindings1}};
-    RWDatabase::BoundGNetList newBgl = {{dummy2, bindings2}};
+    BoundGNet::BoundGNetList bgl = {{dummy1, inputs1, outputs1}};
+    BoundGNet::BoundGNetList newBgl = {{dummy2, inputs2, outputs2}};
 
-    arwdb.insertIntoDB(truthTable, bgl);
+    db.insertIntoDB(truthTable, bgl);
 
-    arwdb.updateInDB(truthTable, {{dummy2, bindings2}});
+    db.updateInDB(truthTable, newBgl);
 
-    auto gottenBgl = arwdb.get(truthTable);
+    auto gottenBgl = db.get(truthTable);
 
     result = areEquivalent(gottenBgl[0], newBgl[0]);
 
-    arwdb.closeDB();
+    db.closeDB();
   } catch (const char* msg) {
+    result = false;
     std::cout << msg << std::endl;
   }
   remove(dbPath.c_str());
   return result;
 }
 
-bool deleteARWDBTest() {
-  SQLiteRWDatabase arwdb;
+bool deleteSQLiteRWDBTest() {
+  SQLiteRWDatabase db;
   std::string dbPath = "rwtest.db";
   bool result;
 
   try {
-    arwdb.linkDB(dbPath);
-    arwdb.openDB();
+    db.linkDB(dbPath);
+    db.openDB();
 
-    RWDatabase::TruthTable truthTable = 1;
+    TruthTable truthTable = TruthTable(1);
 
-    Gate::SignalList inputs1;
+    Gate::SignalList inputs;
     Gate::Id outputId1;
-    std::shared_ptr<GNet> dummy1 = makeAnd(2, inputs1, outputId1);
-    RWDatabase::GateBindings bindings1 = {{0, inputs1[0].node()},
-                                          {1, inputs1[1].node()}};
+    std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
+                                   (*makeAnd(2, inputs, outputId1));
+    GateBindings inputs1 = {inputs[0].node(), inputs[1].node()};
+    GateBindings outputs1 = {outputId1};
 
-    Gate::SignalList inputs2;
+    inputs.clear();
     Gate::Id outputId2;
-    std::shared_ptr<GNet> dummy2 = makeOr(2, inputs2, outputId2);
-    RWDatabase::GateBindings bindings2 = {{0, inputs2[0].node()},
-                                          {1, inputs2[1].node()}};
+    std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
+                                   (*makeOr(2, inputs, outputId2));
+    GateBindings inputs2 = {inputs[0].node(), inputs[1].node()};
+    GateBindings outputs2 = {outputId2};
 
     dummy1->sortTopologically();
     dummy2->sortTopologically();
 
-    RWDatabase::BoundGNetList bgl = {{dummy1, bindings1}, {dummy2, bindings2}};
+    BoundGNet::BoundGNetList bgl = {{dummy1, inputs1, outputs1},
+                                    {dummy2, inputs2, outputs2}};
 
-    arwdb.insertIntoDB(truthTable, bgl);
-    arwdb.deleteFromDB(truthTable);
+    db.insertIntoDB(truthTable, bgl);
+    db.deleteFromDB(truthTable);
 
-    result = !arwdb.contains(truthTable);
+    result = !db.contains(truthTable);
 
-    arwdb.closeDB();
+    db.closeDB();
   } catch (const char* msg) {
+    result = false;
+    std::cout << msg << std::endl;
+  }
+  remove(dbPath.c_str());
+  return result;
+}
+
+bool pushSQLiteRWDBTest() {
+  SQLiteRWDatabase db;
+  std::string dbPath = "rwtest.db";
+  bool result = true;
+
+  try {
+    db.linkDB(dbPath);
+    db.openDB();
+
+    TruthTable truthTable = TruthTable(1);
+
+    Gate::SignalList inputs;
+    Gate::Id outputId1;
+    std::shared_ptr<GNet> dummy1 = std::make_shared<GNet>
+                                   (*makeAnd(2, inputs, outputId1));
+    GateBindings inputs1 = {inputs[0].node(), inputs[1].node()};
+    GateBindings outputs1 = {outputId1};
+    BoundGNet bnet1 = {dummy1, inputs1, outputs1};
+
+    inputs.clear();
+    Gate::Id outputId2;
+    std::shared_ptr<GNet> dummy2 = std::make_shared<GNet>
+                                   (*makeOr(2, inputs, outputId2));
+    GateBindings inputs2 = {inputs[0].node(), inputs[1].node()};
+    GateBindings outputs2 = {outputId2};
+    BoundGNet bnet2 = {dummy2, inputs2, outputs2};
+
+    dummy1->sortTopologically();
+    dummy2->sortTopologically();
+
+    db.pushInDB(truthTable, bnet1);
+    result = result && db.dbContains(truthTable);
+    db.pushInDB(truthTable, bnet2);
+
+    BoundGNet::BoundGNetList bgl = db.getFromDB(truthTable);
+    result = result && areEquivalent(bnet1, bgl[0]) && areEquivalent(bnet2, bgl[1]);
+    db.closeDB();
+  } catch (const char* msg) {
+    result = false;
     std::cout << msg << std::endl;
   }
   remove(dbPath.c_str());
@@ -201,19 +254,19 @@ bool deleteARWDBTest() {
 bool serializeTest() {
   Gate::SignalList inputs;
   Gate::Id outputId;
-  RWDatabase::BoundGNet bGNet;
+  BoundGNet bGNet;
 
-  bGNet.net = makeAnd(2, inputs, outputId);
-  bGNet.bindings = {{0, inputs[0].node()},
-                    {1, inputs[1].node()}};
-  bGNet.inputsDelay = {{0, exp(-100)},
-                       {1, exp(100)}};
+  bGNet.net = std::make_shared<GNet>
+                (*makeAnd(2, inputs, outputId));
+  bGNet.inputBindings = {inputs[0].node(), inputs[1].node()};
+  bGNet.outputBindings = {outputId};
+  bGNet.inputDelays = {exp(-100), exp(100)};
 
   std::string ser = SQLiteRWDatabase::serialize({bGNet});
-  RWDatabase::BoundGNet newBGNet = SQLiteRWDatabase::deserialize(ser)[0];
+  BoundGNet newBGNet = SQLiteRWDatabase::deserialize(ser)[0];
 
   return areEquivalent(bGNet, newBGNet) &&
-         bGNet.inputsDelay == newBGNet.inputsDelay;
+         bGNet.inputDelays == newBGNet.inputDelays;
 }
 
 TEST(RWDatabaseTest, BasicTest) {
@@ -224,14 +277,18 @@ TEST(RWDatabaseTest, SerializeTest) {
   EXPECT_TRUE(serializeTest());
 }
 
-TEST(RWDatabaseTest, InsertGetARWDBTest) {
-  EXPECT_TRUE(insertGetARWDBTest());
+TEST(RWDatabaseTest, InsertGetSQLiteRWDBTest) {
+  EXPECT_TRUE(insertGetSQLiteRWDBTest());
 }
 
-TEST(RWDatabaseTest, UpdateARWDBTest) {
-  EXPECT_TRUE(updateARWDBTest());
+TEST(RWDatabaseTest, UpdateSQLiteRWDBTest) {
+  EXPECT_TRUE(updateSQLiteRWDBTest());
 }
 
-TEST(RWDatabaseTest, DeleteARWDBTest) {
-  EXPECT_TRUE(deleteARWDBTest());
+TEST(RWDatabaseTest, DeleteSQLiteRWDBTest) {
+  EXPECT_TRUE(deleteSQLiteRWDBTest());
+}
+
+TEST(RWDatabaseTest, PushSQLiteRWDBTest) {
+  EXPECT_TRUE(pushSQLiteRWDBTest());
 }

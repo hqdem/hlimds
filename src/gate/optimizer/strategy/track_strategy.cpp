@@ -16,7 +16,7 @@ namespace eda::gate::optimizer {
     this->subCatalog = homePath / subCatalog;
   }
 
-  bool TrackStrategy::checkOptimize(const OptimizerVisitor::BoundGNet &option,
+  bool TrackStrategy::checkOptimize(const BoundGNet &option,
                                     const std::unordered_map<GateID, GateID> &map) {
 
     bool result = visitor->checkOptimize(option, map);
@@ -31,7 +31,7 @@ namespace eda::gate::optimizer {
   }
 
   void
-  TrackStrategy::considerOptimization(OptimizerVisitor::BoundGNet &option,
+  TrackStrategy::considerOptimization(BoundGNet &option,
                                       std::unordered_map<GateID, GateID> &map) {
     visitor->considerOptimization(option, map);
   }

@@ -9,7 +9,6 @@
 #include "gate/model/gnet.h"
 #include "gate/model/utils.h"
 #include "gate/optimizer/rwdatabase.h"
-#include "gate/optimizer/ttbuilder.h"
 #include "util/math.h"
 
 #include <algorithm>
@@ -26,10 +25,7 @@ using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 using GateId = Gate::Id;
 using GateIdMap = GNet::GateIdMap;
-using InputId = RWDatabase::InputId;
-using TruthTable = RWDatabase::TruthTable;
-using GateBindings = RWDatabase::GateBindings;
-using BoundGNet = RWDatabase::BoundGNet;
+using GateBindings = BoundGNet::GateBindings;
 
 /// The code below is based on ABC.
 static BoundGNet getAbcNet(std::vector<std::pair<GateId, TruthTable>> &gates) {
@@ -43,11 +39,8 @@ static BoundGNet getAbcNet(std::vector<std::pair<GateId, TruthTable>> &gates) {
   gates.push_back({net->addIn(),   0xF0F0}); // Variable x2
   gates.push_back({net->addIn(),   0xFF00}); // Varaible x3
 
-  GateBindings bindings;
-  bindings[0] = gates[1].first;
-  bindings[1] = gates[2].first;
-  bindings[2] = gates[3].first;
-  bindings[3] = gates[4].first;
+  GateBindings inputBindings;
+  inputBindings = {gates[1].first, gates[2].first, gates[3].first, gates[4].first};
 
   // Reconstruct the forest.
   for (size_t i = 0;; i++) {
@@ -79,7 +72,7 @@ static BoundGNet getAbcNet(std::vector<std::pair<GateId, TruthTable>> &gates) {
     gates.push_back({gid, table});
   }
 
-  return BoundGNet{net, bindings};
+  return BoundGNet{net, inputBindings};
 }
 
 static BoundGNet getCircuit(GateId gid, const BoundGNet &bnet) {
@@ -109,15 +102,14 @@ static BoundGNet getCircuit(GateId gid, const BoundGNet &bnet) {
 
   circuit->addOut(oldToNewGates[gid]);
 
-  GateBindings bindings;
-  InputId inputId = 0;
-  for (const auto &[id, gid] : bnet.bindings) {
+  GateBindings inputBindings;
+  for (const auto &gid : bnet.inputBindings) {
     if (oldToNewGates.find(gid) != oldToNewGates.end()) {
-      bindings[inputId++ /* No holes */] = oldToNewGates[gid];
+      inputBindings.push_back(oldToNewGates[gid]);
     }
   }
 
-  return BoundGNet{circuit, bindings};
+  return BoundGNet{circuit, inputBindings};
 }
 
 static BoundGNet clone(const BoundGNet &circuit) {
@@ -126,12 +118,12 @@ static BoundGNet clone(const BoundGNet &circuit) {
   GateIdMap oldToNewGates;
   newCircuit.net = std::shared_ptr<GNet>(circuit.net->clone(oldToNewGates));
 
-  for (const auto &[inputId, oldGateId] : circuit.bindings) {
+  int inputId = 0;
+  for (const auto &oldGateId : circuit.inputBindings) {
     const auto newGateId = oldToNewGates[oldGateId];
-    assert(newGateId != 0);
+    newCircuit.inputBindings.push_back(newGateId);
 
-    newCircuit.bindings[inputId] = newGateId;
-    std::cout << "inputId " << inputId << "->" << newGateId << std::endl;
+    std::cout << "inputId " << inputId++ << "->" << newGateId << std::endl;
   }
 
   return newCircuit;
@@ -165,7 +157,7 @@ static void generateNpnInstances(const BoundGNet &bnet, RWDatabase &database) {
     {3, 0, 1, 2}
   };
 
-  const size_t k = bnet.bindings.size();
+  const size_t k = bnet.inputBindings.size();
   const size_t N = 1 << (k + 1);
   const size_t P = utils::factorial(k);
 
@@ -176,10 +168,10 @@ static void generateNpnInstances(const BoundGNet &bnet, RWDatabase &database) {
     // Negate the inputs.
     for (unsigned i = 0; i < k; i++) {
       if ((n >> i) & 1) {
-        auto oldInputId = circuit.bindings[i];
+        auto oldInputId = circuit.inputBindings[i];
         auto newInputId = circuit.net->addIn();
         circuit.net->setNot(oldInputId, newInputId);
-        circuit.bindings[i] = newInputId;
+        circuit.inputBindings.push_back(newInputId);
       }
     }
 
@@ -197,14 +189,14 @@ static void generateNpnInstances(const BoundGNet &bnet, RWDatabase &database) {
         const auto j = perm[p][i];
 
         if (i < j) {
-          const auto tempGate = circuit.bindings[i];
-          circuit.bindings[i] = circuit.bindings[j];
-          circuit.bindings[j] = tempGate;
+          const auto tempGate = circuit.inputBindings[i];
+          circuit.inputBindings[i] = circuit.inputBindings[j];
+          circuit.inputBindings[j] = tempGate;
         }
       }
 
-      const auto truthTable = TTBuilder::build(circuit);
-      std::cout << "Table: " << std::hex << truthTable << std::endl;
+      const auto truthTable = TruthTable::build(circuit);
+      std::cout << "Table: " << std::hex << truthTable.raw() << std::endl;
       std::cout << std::dec << *circuit.net << std::endl;
 
       database.set(truthTable, {circuit} /* One circuit per truth table */);

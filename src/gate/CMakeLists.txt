@@ -23,7 +23,7 @@ add_library(Gate OBJECT
   optimizer/strategy/zero_optimizer.cpp
   optimizer/substitute_visitor.cpp
   optimizer/tracker_visitor.cpp
-  optimizer/ttbuilder.cpp
+  optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
   parser/gate_verilog_parser.cpp

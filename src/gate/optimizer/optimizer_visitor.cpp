@@ -43,7 +43,7 @@ namespace eda::gate::optimizer {
       walker.walk(lastNode, cut, false);
 
       // Make binding.
-      RWDatabase::BoundGNet boundGNet;
+      BoundGNet boundGNet;
       boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
 
       if(coneVisitor.getResultCut().size() > 6) {
@@ -52,10 +52,10 @@ namespace eda::gate::optimizer {
 
       const auto & cutConeMap = coneVisitor.getResultCut();
       for(const auto &[gateSource, gateCone] : cutConeMap) {
-        boundGNet.bindings[boundGNet.bindings.size()] = gateCone;
+        boundGNet.inputBindings.push_back(gateCone);
       }
 
-      auto func = TTBuilder::build(boundGNet);
+      auto func = TruthTable::build(boundGNet);
 
       auto list = getSubnets(func);
       for(auto &option : list) {

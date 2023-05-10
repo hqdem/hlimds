@@ -6,20 +6,30 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ttbuilder.h"
+#include "truthtable.h"
 
 namespace eda::gate::optimizer {
 
-TTBuilder::TruthTable TTBuilder::applyGateFunc(const GateSymbol::Value func,
-                                               const TruthTableList
-                                               &inputList) {
+TruthTable TruthTable::buildNthVar(int n) {
+  uint64_t rawResult = 0;
+  int div = (1 << n);
+  for (uint64_t i = 0; i < 64; i++) {
+    if ((i / div) % 2 == 1) {
+      rawResult = rawResult | (1ull << i);
+    }
+  }
+  return TruthTable(rawResult);
+}
+
+TruthTable TruthTable::applyGateFunc(const GateSymbol::Value func,
+                                     const TruthTableList &inputList) {
   TruthTable result;
   switch (func) {
   case GateSymbol::ZERO:
-    result = 0;
+    result = TruthTable::zero();
     break;
   case GateSymbol::ONE:
-    result = -1;
+    result = TruthTable::one();
     break;
   case GateSymbol::NOP:
     assert(inputList.size() == 1);
@@ -35,7 +45,8 @@ TTBuilder::TruthTable TTBuilder::applyGateFunc(const GateSymbol::Value func,
     break;
   case GateSymbol::NOT:
     assert(inputList.size() == 1);
-    result = ~inputList[0];
+    result = inputList[0];
+    result = ~result;
     break;
   case GateSymbol::AND:
     result = inputList[0];
@@ -83,24 +94,24 @@ TTBuilder::TruthTable TTBuilder::applyGateFunc(const GateSymbol::Value func,
   return result;
 }
 
-TTBuilder::TruthTable TTBuilder::build(const BoundGNet &bgnet) {
-  TruthTable result = 0;
-  if (bgnet.net->isSorted() == false) {
-    bgnet.net->sortTopologically();
+TruthTable TruthTable::build(const BoundGNet &bGNet) {
+  TruthTable result;
+  if (!bGNet.net->isSorted()) {
+    bGNet.net->sortTopologically();
   }
-  ReversedGateBindings rBindings;
-  for (const auto &p : bgnet.bindings) {
-    rBindings[p.second] = p.first;
+  std::unordered_map<Gate::Id, uint32_t> rInputs;
+  for (size_t i = 0; i < bGNet.inputBindings.size(); i++) {
+    rInputs[bGNet.inputBindings[i]] = i;
   }
 
   std::unordered_map<Gate::Id, TruthTable> ttMap;
-  for (auto *gate : bgnet.net->gates()) {
+  for (auto *gate : bGNet.net->gates()) {
     Gate::Id gateId = gate->id();
 
     TruthTable curResult;
     if (gate->isSource()) {
-      assert(rBindings.find(gateId) != rBindings.end());
-      curResult = buildNthVar(rBindings[gateId]);
+      assert(rInputs.find(gateId) != rInputs.end());
+      curResult = buildNthVar(rInputs[gateId]);
     } else {
       TruthTableList inputList;
       for (auto signal : gate->inputs()) {
@@ -118,17 +129,6 @@ TTBuilder::TruthTable TTBuilder::build(const BoundGNet &bgnet) {
     ttMap[gateId] = curResult;
   }
 
-  return result;
-}
-
-uint64_t TTBuilder::buildNthVar(int n) {
-  uint64_t result = 0;
-  int div = (1 << n);
-  for (uint64_t i = 0; i < 64; i++) {
-    if ((i / div) % 2 == 1) {
-      result = result | (1ull << i);
-    }
-  }
   return result;
 }
 

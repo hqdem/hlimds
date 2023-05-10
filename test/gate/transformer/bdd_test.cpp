@@ -20,7 +20,8 @@ using GateList = GNetBDDConverter::GateList;
 using GateUintMap = GNetBDDConverter::GateUintMap;
 
 bool transformerAndTest() {
-  Gate::SignalList inputs; Gate::Id outputId;
+  Gate::SignalList inputs;
+  Gate::Id outputId;
   std::shared_ptr<GNet> net = makeAnd(2, inputs, outputId);
 
   Cudd manager(0, 0);
@@ -37,7 +38,8 @@ bool transformerAndTest() {
 }
 
 bool transformerOrTest() {
-  Gate::SignalList inputs; Gate::Id outputId;
+  Gate::SignalList inputs;
+  Gate::Id outputId;
   std::shared_ptr<GNet> net = makeOr(2, inputs, outputId);
 
   Cudd manager(0, 0);
@@ -54,7 +56,8 @@ bool transformerOrTest() {
 }
 
 bool transformerNorTest() {
-  Gate::SignalList inputs; Gate::Id outputId1;
+  Gate::SignalList inputs;
+  Gate::Id outputId1;
   std::shared_ptr<GNet> net = makeOr(2, inputs, outputId1);
 
   Cudd manager(0, 0);

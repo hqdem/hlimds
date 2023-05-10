@@ -218,7 +218,7 @@ public:
     };
 
     const OP opOr3 = [this](I out, IV in) {
-      memory[out] = memory[in[0]] || memory[in[1]] || memory[in[3]];
+      memory[out] = memory[in[0]] || memory[in[1]] || memory[in[2]];
     };
 
     const OP opOrN = [this](I out, IV in) {

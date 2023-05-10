@@ -267,8 +267,8 @@ bool Checker::areEqualCombSim(const GNet &lhs,
   auto lhsCompiled = simulator.compile(lhs, lhsInputs, lhsOutputs);
   auto rhsCompiled = simulator.compile(rhs, rhsInputs, rhsOutputs);
 
-  for (std::uint64_t in = 0; in < (1ull << lhs.nSourceLinks()); in++) {
-    std::uint64_t lhsOut, rhsOut;
+  for (uint64_t in = 0; in < (1ull << lhs.nSourceLinks()); in++) {
+    uint64_t lhsOut, rhsOut;
 
     lhsCompiled.simulate(lhsOut, in);
     rhsCompiled.simulate(rhsOut, in);

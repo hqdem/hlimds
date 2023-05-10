@@ -16,10 +16,6 @@ std::shared_ptr<GNet> makeSingleGateNet(GateSymbol gate, const unsigned N);
 std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate, const unsigned N);
 std::shared_ptr<GNet> premapAig(std::shared_ptr<GNet> net, GateIdMap &gmap);
 
-void initializeBinds(const GNet &net,
-                     GateIdMap &gmap,
-                     GateBinding &ibind,
-                     GateBinding &obind);
 bool checkEquivalence(const std::shared_ptr<GNet> net,
                       const std::shared_ptr<GNet> premapped,
                       GateIdMap &gmap);

@@ -65,23 +65,6 @@ std::shared_ptr<GNet> makeSingleGateNetn(GateSymbol gate,
   return net;
 }
 
-void initializeBinds(const GNet &net,
-                     GateIdMap &gmap,
-                     GateBinding &ibind,
-                     GateBinding &obind) {
-  // Input-to-input correspondence.
-  for (const auto oldSourceLink : net.sourceLinks()) {
-    auto newSourceId = gmap[oldSourceLink.target];
-    ibind.insert({oldSourceLink, Link(newSourceId)});
-  }
-
-  // Output-to-output correspondence.
-  for (const auto oldTargetLink : net.targetLinks()) {
-    auto newTargetId = gmap[oldTargetLink.source];
-    obind.insert({oldTargetLink, Link(newTargetId)});
-  }
-}
-
 std::shared_ptr<GNet> premap(std::shared_ptr<GNet> net, GateIdMap &gmap) {
   eda::gate::premapper::XagMapper premapper;
   std::shared_ptr<GNet> premapped = premapper.map(*net, gmap);
@@ -92,16 +75,8 @@ std::shared_ptr<GNet> premap(std::shared_ptr<GNet> net, GateIdMap &gmap) {
 bool checkEquivalence(const std::shared_ptr<GNet> net,
                       const std::shared_ptr<GNet> premapped,
                       GateIdMap &gmap) {
-  // Initialize binds
-  GateBinding ibind, obind;
-  initializeBinds(*net, gmap, ibind, obind);
-  eda::gate::debugger::Checker::Hints hints;
-  hints.sourceBinding  = std::make_shared<GateBinding>(std::move(ibind));
-  hints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
-  //check equivalence
   eda::gate::debugger::Checker checker;
-  bool equal = checker.areEqual(*net, *premapped, hints);
-  return equal;
+  return checker.areEqual(*net, *premapped, gmap);
 }
 
 /*

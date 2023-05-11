@@ -36,8 +36,8 @@ uint16_t GateSymbol::_next = GateSymbol::XXX;
 
 GateSymbol GateSymbol::create(const std::string &name) {
   assert(_next < N_GATE_SYMBOLS);
-  _desc[_next++] = { name, 0, 0, 0, 0, 0, XXX, XXX };
-  return static_cast<Value>(_next);
+  _desc[_next] = { name, 0, 0, 0, 0, 0, XXX, XXX };
+  return static_cast<Value>(_next++);
 }
 
 std::ostream& operator <<(std::ostream &out, GateSymbol gate) {

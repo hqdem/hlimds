@@ -18,7 +18,7 @@ using namespace eda::gate::model;
 
 // gate(x1, ..., xN).
 static std::shared_ptr<GNet> makeNet(GateSymbol gate,
-                                     const unsigned N,
+                                     unsigned N,
                                      Gate::SignalList &inputs,
                                      Gate::Id &outputId) {
   auto net = std::make_shared<GNet>();
@@ -37,7 +37,7 @@ static std::shared_ptr<GNet> makeNet(GateSymbol gate,
 
 // gate(~x1, ..., ~xN).
 static std::shared_ptr<GNet> makeNetn(GateSymbol gate,
-                                      const unsigned N,
+                                      unsigned N,
                                       Gate::SignalList &inputs,
                                       Gate::Id &outputId) {
   auto net = std::make_shared<GNet>();
@@ -59,14 +59,14 @@ static std::shared_ptr<GNet> makeNetn(GateSymbol gate,
 }
 
 // (x1 | ... | xN).
-std::shared_ptr<GNet> makeOr(const unsigned N,
+std::shared_ptr<GNet> makeOr(unsigned N,
                              Gate::SignalList &inputs,
                              Gate::Id &outputId) {
   return makeNet(GateSymbol::OR, N, inputs, outputId);
 }
 
 // (x1 & ... & xN).
-std::shared_ptr<GNet> makeAnd(const unsigned N,
+std::shared_ptr<GNet> makeAnd(unsigned N,
                               Gate::SignalList &inputs,
                               Gate::Id &outputId) {
   return makeNet(GateSymbol::AND, N, inputs, outputId);
@@ -74,14 +74,14 @@ std::shared_ptr<GNet> makeAnd(const unsigned N,
 
 
 // ~(x1 | ... | xN).
-std::shared_ptr<GNet> makeNor(const unsigned N,
+std::shared_ptr<GNet> makeNor(unsigned N,
                               Gate::SignalList &inputs,
                               Gate::Id &outputId) {
   return makeNet(GateSymbol::NOR, N, inputs, outputId);
 }
 
 // ~(x1 & ... & xN).
-std::shared_ptr<GNet> makeNand(const unsigned N,
+std::shared_ptr<GNet> makeNand(unsigned N,
                                Gate::SignalList &inputs,
                                Gate::Id &outputId) {
   return makeNet(GateSymbol::NAND, N, inputs, outputId);
@@ -89,29 +89,36 @@ std::shared_ptr<GNet> makeNand(const unsigned N,
 
 
 // (~x1 | ... | ~xN).
-std::shared_ptr<GNet> makeOrn(const unsigned N,
+std::shared_ptr<GNet> makeOrn(unsigned N,
                               Gate::SignalList &inputs,
                               Gate::Id &outputId) {
   return makeNetn(GateSymbol::OR, N, inputs, outputId);
 }
 
 // (~x1 & ... & ~xN).
-std::shared_ptr<GNet> makeAndn(const unsigned N,
+std::shared_ptr<GNet> makeAndn(unsigned N,
                                Gate::SignalList &inputs,
                                Gate::Id &outputId) {
   return makeNetn(GateSymbol::AND, N, inputs, outputId);
 }
 
 // Maj(x1, x2, ..., xN).
-std::shared_ptr<GNet> makeMaj(const unsigned N,
+std::shared_ptr<GNet> makeMaj(unsigned N,
                               Gate::SignalList &inputs,
                               Gate::Id &outputId) {
   return makeNet(GateSymbol::MAJ, N, inputs, outputId);
 }
 
+// UDP(x1, x2, ..., xN).
+std::shared_ptr<GNet> makeUdp(unsigned N,
+                              Gate::SignalList &inputs,
+                              Gate::Id &outputId) {
+  GateSymbol UDP = GateSymbol::create("udp");
+  return makeNet(UDP, N, inputs, outputId);
+}
+
 // Random hierarchical network.
-std::shared_ptr<GNet> makeRand(const std::size_t nGates,
-                               const std::size_t nSubnets) {
+std::shared_ptr<GNet> makeRand(size_t nGates, size_t nSubnets) {
   assert((nGates >= 2) && "Small number of gates");
   auto net = std::make_shared<GNet>();
 
@@ -268,6 +275,20 @@ TEST(GNetTest, GNetAndnTest) {
   Gate::SignalList inputs;
   Gate::Id outputId;
   auto net = makeAndn(1024, inputs, outputId);
+  EXPECT_TRUE(net != nullptr);
+}
+
+TEST(GNetTest, GNetMajTest) {
+  Gate::SignalList inputs;
+  Gate::Id outputId;
+  auto net = makeMaj(7, inputs, outputId);
+  EXPECT_TRUE(net != nullptr);
+}
+
+TEST(GNetTest, GNetUdpTest) {
+  Gate::SignalList inputs;
+  Gate::Id outputId;
+  auto net = makeUdp(6, inputs, outputId);
   EXPECT_TRUE(net != nullptr);
 }
 

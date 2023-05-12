@@ -90,19 +90,19 @@ void printerParserTest(const std::string designName) {
 }
 
 TEST(GateVerilogPrinter, OrCoutTest) {
-  printerTest(makeOr);
+  printerTest(eda::gate::model::makeOr);
 }
 
 TEST(GateVerilogPrinter, OrFileTest) {
-  printerTest("or_gate.v", makeOr);
+  printerTest("or_gate.v", eda::gate::model::makeOr);
 }
 
 TEST(GateVerilogPrinter, MajCoutTest) {
-  printerTest(makeMaj);
+  printerTest(eda::gate::model::makeMaj);
 }
 
 TEST(GateVerilogPrinter, MajFileTest) {
-  printerTest("maj_gate.v", makeMaj);
+  printerTest("maj_gate.v", eda::gate::model::makeMaj);
 }
 
 TEST(GateVerilogPrinter, adder) {

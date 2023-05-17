@@ -30,9 +30,11 @@ private:
       GateSymbol kind = GateSymbol::ZERO;
     };
 
+    // Gate nickname / <its inputs, real net id, function>.
     std::unordered_map<std::string, GateData> gates;
+    // Real net id / index in parser gates array.
     std::unordered_map<GateId,GateId> gIds;
-    // Wire name / <source, target>
+    // Wire name / <source module name, target module names>.
     std::unordered_map<std::string, std::vector<std::string>> links;
 
     std::string netName;

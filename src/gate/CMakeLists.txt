@@ -44,6 +44,7 @@ target_link_libraries(Gate
   PUBLIC
   minisat-lib-static
   Cudd::Cudd
+  lorina
   sqlite3
   CTemplate::nothreads
 

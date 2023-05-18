@@ -1,5 +1,5 @@
 add_library(lorina INTERFACE)
-target_include_directories(lorina INTERFACE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(lorina INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lorina INTERFACE fmt infint)
 if (ENABLE_COVERAGE)
   target_link_libraries(lorina INTERFACE gcov)

@@ -4,9 +4,6 @@
 [submodule "lib/kitty"]
 	path = lib/kitty
 	url = https://github.com/msoeken/kitty
-[submodule "lib/lorina"]
-	path = lib/lorina
-	url = https://github.com/hriener/lorina
 [submodule "lib/mockturtle"]
 	path = lib/mockturtle
 	url = https://github.com/lsils/mockturtle

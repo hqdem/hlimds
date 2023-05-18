@@ -3,11 +3,11 @@ if (NOT TARGET cli11)
   target_include_directories(cli11 SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/cli11)
 endif()
 
-find_package(fmt)
-
-set(fmt_INCLUDE_DIRS ${fmt_INCLUDE_DIR} )
-
-include_directories(${fmt_INCLUDE_DIR})
+if (NOT TARGET fmt)
+  add_library(fmt INTERFACE)
+  target_include_directories(fmt SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/fmt)
+  target_compile_definitions(fmt INTERFACE FMT_HEADER_ONLY)
+endif()
 
 if (NOT TARGET json)
   add_library(json INTERFACE) # v3.5.0

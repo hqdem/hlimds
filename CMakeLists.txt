@@ -19,12 +19,6 @@ else()
   message(FATAL_ERROR "UTOPIA_HOME env var is not set!")
 endif()
 
-find_package(MLIR REQUIRED CONFIG)
-set_property(TARGET LLVMSupport APPEND
-  PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LLVM_INCLUDE_DIRS}")
-set_property(TARGET MLIRSupport APPEND
-  PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MLIR_INCLUDE_DIRS}")
-
 include(UtopiaFindHelper)
 set_local_from_env(CTemplate_ROOT CT_DIR)
 set_local_from_env(XercesC_ROOT XERCES_DIR)

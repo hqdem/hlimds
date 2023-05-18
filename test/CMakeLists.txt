@@ -48,26 +48,11 @@ add_executable(${TEST_TARGET}
   gate/printer/verilog/gate_verilog_printer_test.cpp
   gate/simulator/simulator_test.cpp
   gate/transformer/bdd_test.cpp
-  hls/compiler/compiler_dfc_test.cpp
-  hls/compiler/compiler_hil_test.cpp
-  hls/debugger/eq_checker_test.cpp
-  #hls/library/library_test.cpp
-  hls/library/parser_test.cpp
-  hls/model/mlir/dump_test.cpp
-  hls/model/mlir/transform_test.cpp
-  hls/parser/dfc/dfc_dot_test.cpp
-  hls/parser/dfc/dfc_idct_test.cpp
-  hls/parser/dfc/dfc_model_types_test.cpp
-  hls/parser/hil/hil_test.cpp
-  hls/scheduler/param_optimizer_test.cpp
-  hls/scheduler/scheduler_test.cpp
-  hls/scheduler/simulated_annealing_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   rtl/library/arithmetic_test.cpp
   test_main.cpp
   util/fm_test.cpp
-  util/graph_traverse_test.cpp
 )
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET}
@@ -75,14 +60,6 @@ target_link_libraries(${TEST_TARGET}
     gtest_main
     ${MAIN_LIBRARY}
     easyloggingpp
-)
-
-add_executable(${MULGEN_TARGET}
-  hls/library/mulgen.cpp
-)
-target_link_libraries(${MULGEN_TARGET}
-  PRIVATE
-    stdc++fs
 )
 
 include(GoogleTest)

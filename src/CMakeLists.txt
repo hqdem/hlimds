@@ -35,7 +35,6 @@ set(CMAKE_CXX_CLANG_TIDY
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 add_subdirectory(util)
-add_subdirectory(hls)
 add_subdirectory(gate)
 add_subdirectory(rtl)
 
@@ -45,8 +44,6 @@ add_library(${MAIN_LIBRARY})
 # The libraries to link with.
 target_link_libraries(${MAIN_LIBRARY}
   Utopia::Util
-  Utopia::HLS
-  Utopia::HILParser
   Utopia::Gate
   Utopia::RTL
   Utopia::RILParser

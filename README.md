@@ -2,7 +2,7 @@
 
 # Utopia EDA
 
-Utopia is an open-source HLS-based EDA for digital hardware design.
+Utopia is an open-source EDA for digital hardware design.
 
 The EDA takes the following inputs:
 * an algorithmic description of the accelerator (IP core);
@@ -49,8 +49,8 @@ in 4 threads do the following:
 ```
 make -j4
 ```
-It is recommended to use such options upon building the project dependencies
-(like CIRCT/LLVM), due to significant reduction of the compilation time.
+It is recommended to use such options upon building the project dependencies,
+due to significant reduction of the compilation time.
 
 ### Working directory
 
@@ -92,61 +92,6 @@ sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
     make ninja-build python zlib1g zlib1g-dev
 ```
 
-### CIRCT Installation
-
-LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
-Please take this into account while moving through the guide.
-
-#### Check out LLVM and CIRCT repos
-
-```
-cd <workdir>
-git clone --recursive https://github.com/circt/circt.git
-cd circt
-git checkout 6de88ef7
-git submodule update
-```
-
-#### LLVM/MLIR Installation
-
-```
-cd <workdir>/circt
-mkdir llvm/build
-cd llvm/build
-cmake -G Ninja ../llvm \
-    -DLLVM_ENABLE_PROJECTS=mlir \
-    -DLLVM_BUILD_EXAMPLES=ON \
-    -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DLLVM_ENABLE_ASSERTIONS=ON \
-    -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_ENABLE_LLD=ON
-ninja
-```
-Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
-```
-export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
-```
-
-#### CIRCT Installation
-
-```
-cd <workdir>/circt
-mkdir build
-cd build
-cmake -G Ninja .. \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DLLVM_ENABLE_ASSERTIONS=ON \
-    -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
-    -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
-    -DVERILATOR_DISABLE=ON
-ninja
-```
-Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
-to your `PATH` environment variable:
-```
-export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
-```
-
 ### Z3 Installation
 
 ```
@@ -175,7 +120,6 @@ sudo make install
 If you would like to install CTemplate to a non-standard location, please
 specify `--prefix` option of `configure` script to installation directory
 you want and set `CT_DIR` environment variable to it too.
-
 
 ### CUDD Installation
 
@@ -225,7 +169,7 @@ for incremental build.
 
 ```
 rm -rf $UTOPIA_HOME/output
-./build/src/umain hls <file(s)>
+./build/src/umain rtl <file(s)>
 ```
 
 ### Running Tests

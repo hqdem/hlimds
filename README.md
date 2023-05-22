@@ -2,17 +2,7 @@
 
 # Utopia EDA
 
-Utopia is an open-source EDA for digital hardware design.
-
-The EDA takes the following inputs:
-* an algorithmic description of the accelerator (IP core);
-* a configuration of the target hardware (FPGA, ULA, or ASIC);
-* custom constraints.
-
-And produces the following outputs:
-* an RTL model of the accelerator;
-* recommendations for placing elements of the RTL model on a chip;
-* an implementation of the API for interacting with the accelerator (if necessary).
+Utopia is an open-source EDA for logic synthesis of digital hardware designs.
 
 ## Licensing and Distribution
 
@@ -24,40 +14,7 @@ See `CODE_STYLE.md` for more details.
 
 ## General Notes
 
-### Environment variables
-
-Several environment variables should be set during the Utopia building.
-To keep the value of the environment variable in your system permanenly, add the
-appropriate command to either `.profile` or `.bashrc` file. For example, to set
-the `/usr` value to the `SOME_DIR` variable, the command should be as follows:
-```
-export SOME_DIR=/usr
-```
-To make this variable-value pair active in your terminal session you need either
-to reboot your operating system or run the following command (it is supposed
-that the variable was established in `.profile`):
-```
-source ~/.profile
-```
-To check if value is set, use `echo $SOME_DIR` command.
-
-### Parallelization
-
-To speed up building, several tools like `make` or `ninja` provide options
-that aimed at running multiple jobs in parallel. For example, to run `make`
-in 4 threads do the following:
-```
-make -j4
-```
-It is recommended to use such options upon building the project dependencies,
-due to significant reduction of the compilation time.
-
-### Working directory
-
-In this guide `<workdir>` path appears several times. This string denotes
-a path to user's working directory (e.g. `~/work`, `~/projects`). It is not
-necessary for the project's building to have the same `<workdir>` all the
-times it is used in this guide.
+See `NOTES.md` if you're not familiar with program building/installation on Linux.
 
 ## System Requirements
 
@@ -91,20 +48,6 @@ sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
     iverilog liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld \
     make ninja-build python zlib1g zlib1g-dev
 ```
-
-### Z3 Installation
-
-```
-cd <workdir>
-git clone https://github.com/Z3Prover/z3.git
-cd z3
-python scripts/mk_make.py
-cd build
-make
-sudo make install
-```
-If you would like to install Z3 to a non-standard location,
-please set `Z3_DIR` environment variable to Z3 build/installation directory.
 
 ### C++ CTemplate Installation
 
@@ -152,6 +95,7 @@ Please keep `UTOPIA_HOME` variable and its value in your system permanently.
 ### Building Project
 
 ```
+cd utopia
 cmake -S . -B build -G Ninja
 cmake --build build
 ```
@@ -166,9 +110,12 @@ for incremental build.
 
 ```
 rm -rf $UTOPIA_HOME/output
-./build/src/umain rtl <file(s)>
+./build/src/umain rtl <file(s)> <options>
 ```
-
+To list the Utopia EDA options, do the following:
+```
+./build/src/umain --help-all
+```
 ### Running Tests
 
 #### Run All Tests
@@ -193,29 +140,3 @@ Test pattern accepts ```*``` and ```?``` wildcards.
 ```
 ./build/test/utest --gtest_list_tests
 ```
-
-## Working in Visual Studio Code
-
-### Installing VS Studio w/ C/C++ and CMake Extensions
-* Download the VS Studio package
-  * Go to https://code.visualstudio.com/docs/?dv=linux64_deb
-  * Wait until the package is downloaded
-* Install the VS Studio package
-  ```
-  sudo apt install -f ~/Downloads/code_1.60.2-1632313585_amd64.deb
-  ```
-* Install the C/C++ and CMake extensions
-  * Start VS Code
-  * Press the `Ctrl+Shift+x` key combination
-    * Find and install the `C/C++` extension
-    * Find and install the `CMake Tools` extension
-  * Click on the `No Kit Selected` text in the status bar
-    * Select the kit to use (for example, `GCC 9.3.0 x86_64-linux-gnu`)
-
-### Opening/Building Project
-
-* Clone project repository (see above)
-* Click on the `File` and `Open Folder...` menu items
-  * Select the `<UTOPIA_HOME>/src` directory (or `<UTOPIA_HOME>`)
-  * Press the `I trust the authors` button
-* Click on the `Build` text in the status bar

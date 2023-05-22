@@ -102,7 +102,7 @@ bool parse(RtlContext &context) {
   context.vnet = eda::rtl::parser::ril::parse(context.file);
 
   if (context.vnet == nullptr) {
-    LOG(ERROR) << "Could not parse the file";;
+    LOG(ERROR) << "Could not parse the file";
     return false;
   }
 

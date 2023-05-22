@@ -176,62 +176,10 @@ struct RtlOptions final : public AppOptions {
   std::string preLib;
 };
 
-struct HlsOptions final : public AppOptions {
-  static constexpr const char *ID = "hls";
-
-  static constexpr const char *OUTPUT_DIR  = "output-dir";
-  static constexpr const char *OUTPUT_DOT  = "output-dot";
-  static constexpr const char *OUTPUT_MLIR = "output-mlir";
-  static constexpr const char *OUTPUT_LIB  = "output-lib";
-  static constexpr const char *OUTPUT_TOP  = "output-top";
-  static constexpr const char *OUTPUT_TEST = "output-test";
-
-  HlsOptions(AppOptions &parent):
-      AppOptions(parent, ID, "High-level synthesis") {
-
-    // Named options.
-    options->add_option(cli(OUTPUT_DIR),  outDir,  "Output directory")
-           ->expected(1);
-    options->add_option(cli(OUTPUT_DOT),  outDot,  "Output DOT file")
-           ->expected(0, 1);
-    options->add_option(cli(OUTPUT_MLIR), outMlir, "Output MLIR file")
-           ->expected(1);
-    options->add_option(cli(OUTPUT_LIB),  outLib,  "Output Verilog library file")
-           ->expected(1);
-    options->add_option(cli(OUTPUT_TOP),  outTop,  "Output Verilog top file")
-          ->expected(1);
-    options->add_option(cli(OUTPUT_TEST), outTest, "Output test file")
-           ->expected(0, 1);
-
-    // Input file(s).
-    options->allow_extras();
-  }
-
-  std::vector<std::string> files() const {
-    return options->remaining();
-  }
-
-  void fromJson(Json json) override {
-    get(json, OUTPUT_DIR,  outDir);
-    get(json, OUTPUT_DOT,  outDot);
-    get(json, OUTPUT_MLIR, outMlir);
-    get(json, OUTPUT_LIB,  outLib);
-    get(json, OUTPUT_TOP,  outTop);
-    get(json, OUTPUT_TEST, outTest);
-  }
-
-  std::string outDir;
-  std::string outDot;
-  std::string outMlir;
-  std::string outLib;
-  std::string outTop;
-  std::string outTest;
-};
-
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), hls(*this) {
+      AppOptions(title, version), rtl(*this) {
 
     // Top-level options.
     options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
@@ -251,9 +199,7 @@ struct Options final : public AppOptions {
 
   void fromJson(Json json) override {
     rtl.fromJson(json[RtlOptions::ID]);
-    hls.fromJson(json[HlsOptions::ID]);
   }
 
   RtlOptions rtl;
-  HlsOptions hls;
 };

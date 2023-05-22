@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
   try {
     options.initialize("config.json", argc, argv);
 
-    if (options.rtl.files().empty() && options.hls.files().empty()) {
+    if (options.rtl.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   } catch(const CLI::ParseError &e) {

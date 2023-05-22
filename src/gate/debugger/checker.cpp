@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,9 +14,9 @@
 
 namespace eda::gate::debugger {
 
-bool Checker::areEqual(const GNet &lhs,
-                       const GNet &rhs,
-                       GateIdMap &gmap) const {
+bool Checker::areEqual(GNet &lhs,
+                       GNet &rhs,
+                       GateIdMap &gmap) {
   GateBinding ibind, obind, tbind;
 
   // Input-to-input correspondence.

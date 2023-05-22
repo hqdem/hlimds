@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "config.h"
-#include "gate/debugger/checker.h"
+#include "gate/debugger/base_checker.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
 #include "gate/optimizer/rwmanager.h"
@@ -46,7 +46,7 @@ struct RtlContext {
   using Link = Gate::Link;
 
   using AigMapper = eda::gate::premapper::AigMapper;
-  using Checker = eda::gate::debugger::Checker;
+  using Checker = eda::gate::debugger::BaseChecker;
   using Compiler = eda::rtl::compiler::Compiler;
   using Library = eda::rtl::library::ArithmeticLibrary;
   using MigMapper = eda::gate::premapper::MigMapper;
@@ -146,41 +146,15 @@ bool premap(RtlContext &context) {
 }
 
 bool check(RtlContext &context) {
-  using Link = RtlContext::Link;
-  using GateBinding = RtlContext::Checker::GateBinding;
 
   LOG(INFO) << "RTL check";
 
-  RtlContext::Checker checker;
-  GateBinding ibind, obind, tbind;
+  auto &checker = eda::gate::debugger::getChecker(context.options.lecType);
 
   assert(context.gnet0->nSourceLinks() == context.gnet1->nSourceLinks());
   assert(context.gnet0->nTargetLinks() == context.gnet1->nTargetLinks());
 
-  // Input-to-input correspondence.
-  for (auto oldSourceLink : context.gnet0->sourceLinks()) {
-    auto newSourceId = context.gmap[oldSourceLink.target];
-    ibind.insert({oldSourceLink, Link(newSourceId)});
-  }
-
-  // Output-to-output correspondence.
-  for (auto oldTargetLink : context.gnet0->targetLinks()) {
-    auto newTargetId = context.gmap[oldTargetLink.source];
-    obind.insert({oldTargetLink, Link(newTargetId)});
-  }
-
-  // Trigger-to-trigger correspondence.
-  for (auto oldTriggerId : context.gnet0->triggers()) {
-    auto newTriggerId = context.gmap[oldTriggerId];
-    tbind.insert({Link(oldTriggerId), Link(newTriggerId)});
-  }
-
-  RtlContext::Checker::Hints hints;
-  hints.sourceBinding  = std::make_shared<GateBinding>(std::move(ibind));
-  hints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
-  hints.triggerBinding = std::make_shared<GateBinding>(std::move(tbind));
-
-  context.equal = checker.areEqual(*context.gnet0, *context.gnet1, hints);
+  context.equal = checker.areEqual(*context.gnet0, *context.gnet1, context.gmap);
   std::cout << "equivalent=" << context.equal << std::endl;
 
   return true;

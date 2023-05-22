@@ -45,38 +45,71 @@ static bool checkEquivTest(unsigned N,
   return checker.areEqual(lhs, rhs, hints); 
 }
 
-#define CHECK_EQUIV_TEST(G1, G2, expectedVerdict) \
-  bool check##G1##G2##Test(unsigned N) { \
-    Gate::SignalList lhsInputs; \
-    Gate::Id lhsOutputId; \
-    auto lhs = make##G1(N, lhsInputs, lhsOutputId); \
-    \
-    Gate::SignalList rhsInputs; \
-    Gate::Id rhsOutputId; \
-    auto rhs = make##G2(N, rhsInputs, rhsOutputId); \
-    \
-    return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId, \
-                             *rhs, rhsInputs, rhsOutputId); \
-  }\
-  \
-  TEST(CheckGNetTest, Check##G1##G2##SmallTest) {\
-    EXPECT_EQ(check##G1##G2##Test(8), expectedVerdict);\
-  } \
-  \
-  TEST(CheckGNetTest, Check##G1##G2##Test) {\
-    EXPECT_EQ(check##G1##G2##Test(256), expectedVerdict);\
-  }
+bool checkNorNorTest(unsigned N) {
+  // ~(x1 | ... | xN).
+  Gate::SignalList lhsInputs;
+  Gate::Id lhsOutputId;
+  auto lhs = makeNor(N, lhsInputs, lhsOutputId);
 
-CHECK_EQUIV_TEST(Nor,  Or,   false)
-CHECK_EQUIV_TEST(Nor,  Nor,  true)
-CHECK_EQUIV_TEST(Nor,  Orn,  false)
-CHECK_EQUIV_TEST(Nor,  And,  false)
-CHECK_EQUIV_TEST(Nor,  Nand, false)
-CHECK_EQUIV_TEST(Nor,  Andn, true)
+  // ~(x1 | ... | xN).
+  Gate::SignalList rhsInputs;
+  Gate::Id rhsOutputId;
+  auto rhs = makeNor(N, rhsInputs, rhsOutputId);
 
-CHECK_EQUIV_TEST(Nand, Or,   false)
-CHECK_EQUIV_TEST(Nand, Nor,  false)
-CHECK_EQUIV_TEST(Nand, Orn,  true)
-CHECK_EQUIV_TEST(Nand, And,  false)
-CHECK_EQUIV_TEST(Nand, Nand, true)
-CHECK_EQUIV_TEST(Nand, Andn, false)
+  return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
+                           *rhs, rhsInputs, rhsOutputId);
+}
+
+bool checkNorAndnTest(unsigned N) {
+  // ~(x1 | ... | xN).
+  Gate::SignalList lhsInputs;
+  Gate::Id lhsOutputId;
+  auto lhs = makeNor(N, lhsInputs, lhsOutputId);
+
+  // (~x1 & ... & ~xN).
+  Gate::SignalList rhsInputs;
+  Gate::Id rhsOutputId;
+  auto rhs = makeAndn(N, rhsInputs, rhsOutputId);
+
+  return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
+                           *rhs, rhsInputs, rhsOutputId);
+}
+
+bool checkNorAndTest(unsigned N) {
+  // ~(x1 | ... | xN).
+  Gate::SignalList lhsInputs;
+  Gate::Id lhsOutputId;
+  auto lhs = makeNor(N, lhsInputs, lhsOutputId);
+
+  // (x1 & ... & xN).
+  Gate::SignalList rhsInputs;
+  Gate::Id rhsOutputId;
+  auto rhs = makeAnd(N, rhsInputs, rhsOutputId);
+
+  return checkEquivTest(N, *lhs, lhsInputs, lhsOutputId,
+                           *rhs, rhsInputs, rhsOutputId);
+}
+
+TEST(CheckGNetTest, CheckNorNorSmallTest) {
+  EXPECT_TRUE(checkNorNorTest(8));
+}
+
+TEST(CheckGNetTest, CheckNorAndnSmallTest) {
+  EXPECT_TRUE(checkNorAndnTest(8));
+}
+
+TEST(CheckGNetTest, CheckNorAndSmallTest) {
+  EXPECT_FALSE(checkNorAndTest(8));
+}
+
+TEST(CheckGNetTest, CheckNorNorTest) {
+  EXPECT_TRUE(checkNorNorTest(256));
+}
+
+TEST(CheckGNetTest, CheckNorAndnTest) {
+  EXPECT_TRUE(checkNorAndnTest(256));
+}
+
+TEST(CheckGNetTest, CheckNorAndTest) {
+  EXPECT_FALSE(checkNorAndTest(256));
+}

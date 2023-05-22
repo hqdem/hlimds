@@ -28,6 +28,8 @@ enable_testing()
 
 add_executable(${TEST_TARGET}
   gate/debugger/checker_test.cpp
+  gate/debugger/rnd_checker_complex_test.cpp
+  gate/debugger/rnd_checker_test.cpp
   gate/model/gnet_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp
   gate/optimizer/bgnet_test.cpp
@@ -50,6 +52,7 @@ add_executable(${TEST_TARGET}
   gate/transformer/bdd_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
+  rtl/library/adder_test.cpp
   rtl/library/arithmetic_test.cpp
   test_main.cpp
   util/fm_test.cpp

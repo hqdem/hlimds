@@ -9,6 +9,7 @@
 #pragma once
 
 #include "CLI/CLI.hpp"
+#include "gate/debugger/base_checker.h"
 #include "gate/premapper/premapper.h"
 #include "nlohmann/json.hpp"
 
@@ -19,11 +20,17 @@
 
 using Json = nlohmann::json;
 
+NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::debugger::options::LecType, {
+  {eda::gate::debugger::options::BDD, "bdd"},
+  {eda::gate::debugger::options::DEFAULT, "default"},
+  {eda::gate::debugger::options::RND, "rnd"},
+})
+
 NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::premapper::PreBasis, {
-    {eda::gate::premapper::AIG, "aig"},
-    {eda::gate::premapper::MIG, "mig"},
-    {eda::gate::premapper::XAG, "xag"},
-    {eda::gate::premapper::XMG, "xmg"},
+  {eda::gate::premapper::AIG, "aig"},
+  {eda::gate::premapper::MIG, "mig"},
+  {eda::gate::premapper::XAG, "xag"},
+  {eda::gate::premapper::XMG, "xmg"},
 })
 
 class AppOptions {
@@ -133,14 +140,23 @@ protected:
   CLI::App *options;
 };
 
-struct RtlOptions final : public AppOptions {
 
-  using PreBasis = eda::gate::premapper::PreBasis;
+struct RtlOptions final : public AppOptions {
 
   static constexpr const char *ID = "rtl";
 
-  static constexpr const char *PREMAP_BASIS  = "premap-basis";
-  static constexpr const char *PREMAP_LIB    = "premap-lib";
+  using LecType = eda::gate::debugger::options::LecType;
+  using PreBasis = eda::gate::premapper::PreBasis;
+
+  static constexpr const char *LEC_TYPE     = "lec";
+  static constexpr const char *PREMAP_BASIS = "premap-basis";
+  static constexpr const char *PREMAP_LIB   = "premap-lib";
+
+  const std::map<std::string, LecType> lecTypeMap {
+    {"bdd", LecType::BDD},
+    {"default", LecType::DEFAULT},
+    {"rnd", LecType::RND},
+  };
 
   const std::map<std::string, PreBasis> preBasisMap {
     {"aig", PreBasis::AIG},
@@ -153,6 +169,9 @@ struct RtlOptions final : public AppOptions {
       AppOptions(parent, ID, "Logical synthesis") {
 
     // Named options.
+    options->add_option(cli(LEC_TYPE), lecType, "Type of LEC")
+            ->expected(1)
+            ->transform(CLI::CheckedTransformer(lecTypeMap, CLI::ignore_case));
     options->add_option(cli(PREMAP_BASIS), preBasis, "Premapper basis")
            ->expected(1)
            ->transform(CLI::CheckedTransformer(preBasisMap, CLI::ignore_case));
@@ -168,10 +187,12 @@ struct RtlOptions final : public AppOptions {
   }
 
   void fromJson(Json json) override {
+    get(json, LEC_TYPE, lecType);
     get(json, PREMAP_BASIS, preBasis);
     get(json, PREMAP_LIB, preLib);
   }
 
+  LecType lecType = LecType::DEFAULT;
   PreBasis preBasis = PreBasis::AIG;
   std::string preLib;
 };

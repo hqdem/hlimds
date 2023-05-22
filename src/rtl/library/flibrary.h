@@ -131,6 +131,7 @@ private:
   static Out synthMux(size_t outSize, const In &in, GNet &net);
 
   static Out synthAdder(size_t size, const In &in, bool plusOne, GNet &net);
+  static Out synthSimpleAdder(size_t outSize, const In &in, GNet &net);
 
   /// Returns two-bit output: z and carryOut (if required).
   static Out synthAdder(Gate::Id x,

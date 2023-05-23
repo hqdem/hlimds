@@ -87,9 +87,9 @@ to the `CUDD` actual installation directory.
 
 ```
 cd <workdir>
-git clone --recursive https://forge.ispras.ru/git/utopia.git
-cd utopia
-export UTOPIA_HOME=<workdir>/utopia
+git clone --recursive https://gitlab.ispras.ru/mvg/utopia-eda.git
+cd utopia-eda
+export UTOPIA_HOME=<workdir>/utopia-eda
 ```
 Please keep `UTOPIA_HOME` variable and its value in your system permanently.
 ### Building Project

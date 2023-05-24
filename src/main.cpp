@@ -16,6 +16,7 @@
 #include "gate/premapper/premapper.h"
 #include "gate/premapper/xagmapper.h"
 #include "gate/premapper/xmgmapper.h"
+#include "gate/printer/graphml.h"
 #include "options.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/arithmetic.h"
@@ -160,12 +161,21 @@ bool check(RtlContext &context) {
   return true;
 }
 
+bool print(RtlContext &context) {
+  std::ofstream fout;
+  fout.open(context.options.graphMl);
+  eda::printer::graphMl::toGraphMl::printer(fout, *context.gnet1);
+  fout.close();
+  return true;
+}
+
 int rtlMain(RtlContext &context) {
   if (!initialize(context)) { return -1; }
   if (!parse(context))      { return -1; }
   if (!compile(context))    { return -1; }
   if (!premap(context))     { return -1; }
   if (!check(context))      { return -1; }
+  if (!print(context))      { return -1; }
 
   return 0;
 }

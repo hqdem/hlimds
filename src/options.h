@@ -151,6 +151,7 @@ struct RtlOptions final : public AppOptions {
   static constexpr const char *LEC_TYPE     = "lec";
   static constexpr const char *PREMAP_BASIS = "premap-basis";
   static constexpr const char *PREMAP_LIB   = "premap-lib";
+  static constexpr const char *GRAPHML      = "graphml";
 
   const std::map<std::string, LecType> lecTypeMap {
     {"bdd", LecType::BDD},
@@ -173,10 +174,13 @@ struct RtlOptions final : public AppOptions {
             ->expected(1)
             ->transform(CLI::CheckedTransformer(lecTypeMap, CLI::ignore_case));
     options->add_option(cli(PREMAP_BASIS), preBasis, "Premapper basis")
-           ->expected(1)
-           ->transform(CLI::CheckedTransformer(preBasisMap, CLI::ignore_case));
+            ->expected(1)
+            ->transform(CLI::CheckedTransformer(preBasisMap, CLI::ignore_case));
     options->add_option(cli(PREMAP_LIB), preLib, "Premapper library")
            ->expected(1);
+    options->add_option(cli(GRAPHML), graphMl,
+                "Path to GraphML file for the model to be stored")
+            ->expected(1);
 
     // Input file(s).
     options->allow_extras();
@@ -190,11 +194,13 @@ struct RtlOptions final : public AppOptions {
     get(json, LEC_TYPE, lecType);
     get(json, PREMAP_BASIS, preBasis);
     get(json, PREMAP_LIB, preLib);
+    get(json, GRAPHML, graphMl);
   }
 
   LecType lecType = LecType::DEFAULT;
   PreBasis preBasis = PreBasis::AIG;
   std::string preLib;
+  std::string graphMl;
 };
 
 struct Options final : public AppOptions {

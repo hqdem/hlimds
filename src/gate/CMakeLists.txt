@@ -38,6 +38,7 @@ add_library(Gate OBJECT
   premapper/xagmapper.cpp
   premapper/xmgmapper.cpp
   printer/dot.cpp
+  printer/graphml.cpp
   printer/verilog/gate_verilog_printer.cpp
   simulator/simulator.cpp
   transformer/bdd.cpp

@@ -2,7 +2,7 @@
 
 # Utopia EDA
 
-Utopia is an open-source EDA for logic synthesis of digital hardware designs.
+Utopia is an EDA for logic synthesis of digital hardware designs.
 
 ## Licensing and Distribution
 
@@ -10,7 +10,7 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ## Coding Style
 
-See `CODE_STYLE.md` for more details.
+See `CODE_STYLE.md` for more details about our coding convention.
 
 ## General Notes
 

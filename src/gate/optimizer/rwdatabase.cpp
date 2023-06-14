@@ -28,10 +28,10 @@ std::string SQLiteRWDatabase::serialize(const BoundGNetList &list) {
   std::stringstream ss;
   ss << list.size() << ' ';
   for (const auto &bGNet : list) {
-    auto &inputBindings = bGNet.inputBindings;
-    auto &outputBindings = bGNet.outputBindings;
-    auto &inputDelays = bGNet.inputDelays;
-    auto &net = bGNet.net;
+    const auto &inputBindings = bGNet.inputBindings;
+    const auto &outputBindings = bGNet.outputBindings;
+    const auto &inputDelays = bGNet.inputDelays;
+    const auto &net = bGNet.net;
 
     if (!net->isSorted()) {
       throw "Net isn't topologically sorted.";
@@ -39,13 +39,13 @@ std::string SQLiteRWDatabase::serialize(const BoundGNetList &list) {
 
     // Inputs
     ss << inputBindings.size() << ' ';
-    for (auto &inputId : inputBindings) {
+    for (const auto &inputId : inputBindings) {
       ss << inputId << ' ';
     }
 
     // Outputs
     ss << outputBindings.size() << ' ';
-    for (auto &outputId : outputBindings) {
+    for (const auto &outputId : outputBindings) {
       ss << outputId << ' ';
     }
 

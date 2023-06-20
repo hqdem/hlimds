@@ -9,9 +9,11 @@
 #pragma once
 
 #include "gate/model/gnet.h"
+#include "util/logging.h"
 
 #include <lorina/verilog.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -101,3 +103,5 @@ private:
 
   ParserData::GateSymbol symbol(const std::string &s) const;
 };
+
+eda::gate::model::GNet *getNet(const std::string &infile);

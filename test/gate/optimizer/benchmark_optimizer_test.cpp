@@ -16,28 +16,6 @@
 
 namespace eda::gate::optimizer {
 
-  using lorina::text_diagnostics;
-  using lorina::diagnostic_engine;
-  using lorina::return_code;
-
-  GNet *getNet(const std::string &infile) {
-    const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
-    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-    const std::filesystem::path prefixPath = homePath / subCatalog;
-
-    std::string filename = prefixPath / (infile + ".v");
-
-    text_diagnostics consumer;
-    diagnostic_engine diag(&consumer);
-
-    GateVerilogParser parser(infile);
-
-    return_code result = read_verilog(filename, parser, &diag);
-    EXPECT_EQ(result, return_code::success);
-
-    return parser.getGnet();
-  }
-
   std::string getPath(const std::string &nameDir) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path outputPath =

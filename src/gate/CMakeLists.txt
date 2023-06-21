@@ -44,6 +44,12 @@ add_library(Gate OBJECT
   printer/gate_verilog.cpp
   printer/graphml.cpp
   simulator/simulator.cpp
+  tech_mapper/library/cell.cpp
+  tech_mapper/strategy/replacement_cut.cpp
+  tech_mapper/strategy/simple_techmapper.cpp
+  tech_mapper/super_gate_generator/generateBestCircuits.cpp
+  tech_mapper/tech_mapper.cpp
+  tech_mapper/tech_map_visitor.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)
 add_library(Utopia::Gate ALIAS Gate)
@@ -59,6 +65,8 @@ target_link_libraries(Gate
   Kitty
   Mockturtle
   parallel_hashmap
+  Json
+  Kitty
 
   PRIVATE
   Utopia::Util

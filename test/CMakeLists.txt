@@ -53,6 +53,9 @@ add_executable(${TEST_TARGET}
   gate/printer/graphml_test.cpp
   gate/simulator/simulator_memory_test.cpp
   gate/simulator/simulator_test.cpp
+  gate/tech_mapper/generate_super_gates_test.cpp
+  gate/tech_mapper/parser_lib_test.cpp
+  gate/tech_mapper/techmap_test.cpp
   gate/transformer/bdd_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp

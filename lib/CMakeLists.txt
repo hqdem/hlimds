@@ -6,6 +6,9 @@ target_include_directories(CLI SYSTEM INTERFACE CLI11)
 add_library(Json INTERFACE)
 target_include_directories(Json SYSTEM INTERFACE json)
 
+add_library(Kitty INTERFACE)
+target_include_directories(Kitty INTERFACE kitty/include)
+
 add_subdirectory(easyloggingpp)
 add_subdirectory(minisat)
 add_subdirectory(lorina/lib)

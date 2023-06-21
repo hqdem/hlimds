@@ -49,6 +49,12 @@ std::shared_ptr<GNet> makeUdp(unsigned N,
                               Gate::SignalList &inputs,
                               Gate::Id &outputId);
 
+// (x1, x2, ..., xN).
+std::shared_ptr<GNet> makeCustom(unsigned N,
+                              Gate::SignalList &inputs,
+                              Gate::Id &outputId,
+                              std::string callName);
+                              
 // Random hierarchical network.
 std::shared_ptr<GNet> makeRand(size_t nGates, size_t nSubnets);
 

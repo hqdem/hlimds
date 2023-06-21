@@ -59,9 +59,9 @@ namespace eda::gate::optimizer {
       // Saving cut if the iteration produced good size cut.
       if (!collected.empty()) {
         cuts->emplace(collected);
-        if(cuts->size() > 100) {
-          return VisitorFlags::SUCCESS;
-        }
+        //if(cuts->size() > 100) {
+        //  return VisitorFlags::SUCCESS;
+        //}
       }
 
       // Incrementing iterators to move to the next combination of nodes for cut.

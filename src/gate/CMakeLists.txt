@@ -40,6 +40,12 @@ add_library(Gate OBJECT
   printer/dot.cpp
   printer/verilog/gate_verilog_printer.cpp
   simulator/simulator.cpp
+  tech_mapper/library/cell.cpp
+  tech_mapper/strategy/replacement_cut.cpp
+  tech_mapper/strategy/simple_techmapper.cpp
+  tech_mapper/super_gate_generator/generateBestCircuits.cpp
+  tech_mapper/tech_mapper.cpp
+  tech_mapper/tech_map_visitor.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)
 add_library(Utopia::Gate ALIAS Gate)
@@ -52,6 +58,8 @@ target_link_libraries(Gate
   lorina
   sqlite3
   CTemplate::nothreads
+  Json
+  Kitty
 
   PRIVATE
   Utopia::Util

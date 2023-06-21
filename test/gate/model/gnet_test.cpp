@@ -117,6 +117,14 @@ std::shared_ptr<GNet> makeUdp(unsigned N,
   return makeNet(UDP, N, inputs, outputId);
 }
 
+std::shared_ptr<GNet> makeCustom(unsigned N,
+                              Gate::SignalList &inputs,
+                              Gate::Id &outputId,
+                              std::string cellName) {
+  GateSymbol customName = GateSymbol::create(cellName);
+  return makeNet(customName, N, inputs, outputId);
+}
+
 // Random hierarchical network.
 std::shared_ptr<GNet> makeRand(size_t nGates, size_t nSubnets) {
   assert((nGates >= 2) && "Small number of gates");

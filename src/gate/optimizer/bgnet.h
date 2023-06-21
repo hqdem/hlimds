@@ -30,6 +30,8 @@ struct BoundGNet {
   std::shared_ptr<model::GNet> net;
   GateBindings inputBindings, outputBindings;
   std::vector<double> inputDelays;
+  std::string name;
+  double area;
 
   // Clone with new Gate ID's
   BoundGNet clone() {

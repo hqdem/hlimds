@@ -66,7 +66,6 @@ target_link_libraries(Gate
   Mockturtle
   parallel_hashmap
   Json
-  Kitty
 
   PRIVATE
   Utopia::Util

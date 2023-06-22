@@ -17,6 +17,8 @@
 #include <cstdlib>
 #include <filesystem>
 
+using namespace eda::gate::parser::verilog;
+
 namespace eda::gate::printer {
 
 using Gate = eda::gate::model::Gate;

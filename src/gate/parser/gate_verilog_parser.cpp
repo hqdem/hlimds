@@ -8,8 +8,13 @@
 
 #include "gate/parser/gate_verilog_parser.h"
 
+namespace eda::gate::parser::verilog {
+
 using GateId = eda::gate::model::GNet::GateId;
 using GateSymbol = eda::gate::model::GateSymbol;
+using ::lorina::text_diagnostics;
+using ::lorina::diagnostic_engine;
+using ::lorina::return_code;
 
 GateVerilogParser::GateVerilogParser(std::string name) {
   data->netName = std::move(name);
@@ -129,3 +134,23 @@ GateSymbol GateVerilogParser::symbol(const std::string &s) const {
   }
   return GateSymbol::ZERO;
 }
+
+eda::gate::model::GNet *getNet(const std::string &infile) {
+  const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path prefixPath = homePath / subCatalog;
+
+  std::string filename = prefixPath / (infile + ".v");
+
+  text_diagnostics consumer;
+  diagnostic_engine diag(&consumer);
+
+  GateVerilogParser parser(infile);
+
+  return_code result = read_verilog(filename, parser, &diag);
+
+  CHECK(result == return_code::success) << "File was not read successfully\n";
+
+  return parser.getGnet();
+}
+} // namespace eda::gate::parser::verilog

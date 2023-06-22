@@ -17,7 +17,7 @@
 #include <cstdlib>
 #include <filesystem>
 
-using namespace eda::gate::parser::verilog::lorina;
+using namespace eda::gate::parser::verilog;
 
 namespace eda::gate::printer {
 

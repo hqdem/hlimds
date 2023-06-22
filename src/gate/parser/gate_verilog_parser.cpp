@@ -8,7 +8,7 @@
 
 #include "gate/parser/gate_verilog_parser.h"
 
-namespace eda::gate::parser::verilog::lorina {
+namespace eda::gate::parser::verilog {
 
 using GateId = eda::gate::model::GNet::GateId;
 using GateSymbol = eda::gate::model::GateSymbol;
@@ -153,4 +153,4 @@ eda::gate::model::GNet *getNet(const std::string &infile) {
 
   return parser.getGnet();
 }
-} // namespace eda::gate::parser::verilog::lorina
+} // namespace eda::gate::parser::verilog

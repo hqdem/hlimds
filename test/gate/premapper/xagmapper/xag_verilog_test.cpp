@@ -21,7 +21,7 @@
 
 using namespace eda::gate::premapper;
 using namespace eda::gate::model;
-using namespace eda::gate::parser::verilog::lorina;
+using namespace eda::gate::parser::verilog;
 using namespace lorina;
 
 using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;

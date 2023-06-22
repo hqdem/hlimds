@@ -17,7 +17,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace eda::gate::parser::verilog::lorina {
+namespace eda::gate::parser::verilog {
 
 /**
  * \brief Verilog parser based on Lorina.
@@ -113,4 +113,4 @@ private:
  */
 eda::gate::model::GNet *getNet(const std::string &infile);
 
-} // namespace eda::gate::parser::verilog::lorina
+} // namespace eda::gate::parser::verilog

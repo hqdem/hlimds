@@ -14,7 +14,7 @@
 #include "gtest/gtest.h"
 #include "gate/optimizer/examples.h"
 
-using namespace eda::gate::parser::verilog::lorina;
+using namespace eda::gate::parser::verilog;
 
 namespace eda::gate::optimizer {
 

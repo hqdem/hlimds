@@ -15,7 +15,7 @@
 #include <filesystem>
 #include <string>
 
-using namespace eda::gate::parser::verilog::lorina;
+using namespace eda::gate::parser::verilog;
 
 namespace eda::gate::optimizer {
 

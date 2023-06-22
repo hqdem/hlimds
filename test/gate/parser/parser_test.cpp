@@ -16,8 +16,8 @@
 #include <filesystem>
 #include <string>
 
-using namespace lorina;
 using namespace eda::gate::parser::verilog;
+using namespace lorina;
 
 void parse(const std::string &infile) {
   if (!getenv("UTOPIA_HOME")) {

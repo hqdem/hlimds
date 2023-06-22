@@ -14,6 +14,8 @@
 #include "gtest/gtest.h"
 #include "gate/optimizer/examples.h"
 
+using namespace eda::gate::parser::verilog::lorina;
+
 namespace eda::gate::optimizer {
 
   std::string getPath(const std::string &nameDir) {

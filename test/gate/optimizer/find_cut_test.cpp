@@ -15,6 +15,8 @@
 #include <filesystem>
 #include <string>
 
+using namespace eda::gate::parser::verilog::lorina;
+
 namespace eda::gate::optimizer {
 
   TEST(FindCutTest, FindCut_c17) {

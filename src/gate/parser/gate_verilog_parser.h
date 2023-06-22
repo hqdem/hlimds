@@ -17,11 +17,13 @@
 #include <fstream>
 #include <iostream>
 
+namespace eda::gate::parser::verilog::lorina {
+
 /**
  * \brief Verilog parser based on Lorina.
  * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
  */
-class GateVerilogParser : public lorina::verilog_reader {
+class GateVerilogParser : public ::lorina::verilog_reader {
 private:
   struct ParserData {
     using GateId = eda::gate::model::GNet::GateId;
@@ -104,4 +106,11 @@ private:
   ParserData::GateSymbol symbol(const std::string &s) const;
 };
 
+/**
+ *  \brief Constructs a net from a given Verilog file.
+ *  @param infile Name of the Verilog file without extension.
+ *  @return The constructed net.
+ */
 eda::gate::model::GNet *getNet(const std::string &infile);
+
+} // namespace eda::gate::parser::verilog::lorina

@@ -8,11 +8,13 @@
 
 #include "gate/parser/gate_verilog_parser.h"
 
+namespace eda::gate::parser::verilog::lorina {
+
 using GateId = eda::gate::model::GNet::GateId;
 using GateSymbol = eda::gate::model::GateSymbol;
-using lorina::text_diagnostics;
-using lorina::diagnostic_engine;
-using lorina::return_code;
+using ::lorina::text_diagnostics;
+using ::lorina::diagnostic_engine;
+using ::lorina::return_code;
 
 GateVerilogParser::GateVerilogParser(std::string name) {
   data->netName = std::move(name);
@@ -151,3 +153,4 @@ eda::gate::model::GNet *getNet(const std::string &infile) {
 
   return parser.getGnet();
 }
+} // namespace eda::gate::parser::verilog::lorina

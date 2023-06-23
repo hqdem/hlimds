@@ -48,6 +48,10 @@ void parse(const std::string &infile) {
   delete parser.getGnet();
 }
 
+int parseOuts(const std::string &infile) {
+  return getNet(infile)->nOuts();
+}
+
 TEST(ParserVTest, adder) {
   parse("adder");
 }
@@ -146,4 +150,18 @@ TEST(ParserVTest, square) {
 
 TEST(ParserVTest, voter) {
   parse("voter");
+}
+
+// The test suite checks if the nets, built according to gate-level Verilog
+// descriptions, contain the correct number of outputs.
+TEST(ParserVOutTest, sqrt) {
+  EXPECT_EQ(parseOuts("sqrt"), 64);
+}
+
+TEST(ParserVOutTest, adder) {
+  EXPECT_EQ(parseOuts("adder"), 129);
+}
+
+TEST(ParserVOutTest, c17) {
+  EXPECT_EQ(parseOuts("c17"), 2);
 }

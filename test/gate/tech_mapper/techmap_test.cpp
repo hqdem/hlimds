@@ -51,7 +51,7 @@ namespace eda::gate::optimizer {
   std::string netPath(const std::string &nameDir) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path outputPath =
-            homePath / "test/data/gate/tech_map/output" / nameDir;
+            homePath / "test/data/gate/tech_mapper/output" / nameDir;
     system(std::string("mkdir -p ").append(outputPath).c_str());
     system(std::string("mkdir -p ").append(outputPath / "before").c_str());
     return outputPath;

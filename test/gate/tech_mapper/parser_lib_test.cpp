@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/tech_mapper/library/cell.h"
-#include "gate/tech_mapper/super_gate_generator/generateBestCircuits.h"
 #include "gate/tech_mapper/parser_lib_test.h"
 
 #include "gtest/gtest.h"

@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-# После парсинга имеем следующую структуру:
-# "Название ячейки": {
-#   input: "вход1, вход2",
-#   output: {
-#       "выход" : "логическая функция",
-#       ...
-#   }
-# }
 import json
 from sys import argv
 from liberty.parser import parse_liberty

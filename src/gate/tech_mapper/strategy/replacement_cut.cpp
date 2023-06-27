@@ -30,14 +30,8 @@ namespace eda::gate::optimizer {
   VisitorFlags ReplacementVisitor::onNodeBegin(const GateID &node) {
     lastNode = node;
     finishTechMap();
-    if (cutStorage->cuts.find(node) == cutStorage->cuts.end()) {
-      // If node is not in cutStorage - means, that it is a new node.
-      // So we recount cuts for that node.
-      CutsFindVisitor finder(cutSize, cutStorage);
-      finder.onNodeBegin(node);
-    }
-    lastNode = node;
-    lastCuts = &(cutStorage->cuts[node]);
+
+    cutStorage->cuts.erase(node);
     return SUCCESS;
   }
 
@@ -46,50 +40,19 @@ namespace eda::gate::optimizer {
   }
 
   VisitorFlags ReplacementVisitor::onNodeEnd(const GateID &) {
-
-    //finishTechMap();
-
-    // Removing invalid nodes.
-    for (const auto &it: toRemove) {
-      lastCuts->erase(*it);
-    }
-    toRemove.clear();
     return SUCCESS;
   }
 
-  bool ReplacementVisitor::checkValidCut(const Cut &cut) {
-    for (auto node: cut) {
-      if (!net->contains(node)) {
-        toRemove.emplace_back(&cut);
-        return false;
-        // Discard trivial cuts.
-      } else if (node == lastNode) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   void ReplacementVisitor::finishTechMap() {
-    //std::cout << "Node which we going to rewrite: " << lastNode << std::endl;
-
     if (bestReplacement->count(lastNode)) {
       if (net->hasNode(lastNode)) {
         Replacement &replacementInfo = bestReplacement->at(lastNode);
         substitute(lastNode, replacementInfo.bestOptionMap, replacementInfo.subsNet, replacementInfo.net);
-        std::cout << "substitute: " <<  lastNode << " node to: " << replacementInfo.name << std::endl;
-        
+                
         if (delay < replacementInfo.delay) {delay = replacementInfo.delay;}
-        std::cout << "delay: " <<delay << std::endl;
-
         area = area + replacementInfo.area;
-        std::cout << "area: " << area << std::endl;
-      } else {
-        //std::cout << "net hasnt this node" << std::endl;
-      }
-    } else {
-      //std::cout << "replace hasnt this node" << std::endl;
-    }
+      } 
+    } 
   }
 
 

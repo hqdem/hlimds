@@ -45,7 +45,6 @@ namespace eda::gate::optimizer {
 
   private:
     CutStorage *cutStorage;
-    //std::unordered_map<GateID, double> *gatesDelay;
 
     CutStorage::Cuts *lastCuts;
     std::vector<const CutStorage::Cut*> toRemove;

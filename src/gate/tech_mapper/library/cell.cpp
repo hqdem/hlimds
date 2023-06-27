@@ -49,34 +49,23 @@ namespace eda::gate::optimizer {
       while (getline(ss, token, ' ')) {
         inputPinNames.push_back(token);
       }
+      int i = 0;
+      do {
+        i++;
+        std::vector<Pin> pins;
+        for (const auto &name: inputPinNames) {
+          const auto &cell = it.value()["delay"][name];
+          pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
+            cell["fall_transition"], cell["rise_transition"]));
+        }
 
-      kitty::dynamic_truth_table *truthTable =
+        kitty::dynamic_truth_table *truthTable =
           new kitty::dynamic_truth_table(inputPinNames.size());
-      kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
+        kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
 
-      std::vector<Pin> pins;
-    
-      // Extract the input pins and their timing information
-      for (const auto &name: inputPinNames) {
-        const auto &cell = it.value()["delay"][name];
-        pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
-          cell["fall_transition"], cell["rise_transition"]));
-      }
-     /*
-      for (long unsigned int i = 0; i < inputPinNames.size(); ++i) {
-        const std::string name = inputPinNames[i];
-
-        double cell_fall= it.value()["delay"][name]["cell_fall"];
-        double cell_rise = it.value()["delay"][name]["cell_rise"];
-        double fall_transition = it.value()["delay"][name]["fall_transition"];
-        double rise_transition = it.value()["delay"][name]["rise_transition"];
-
-        pins.push_back(Pin(name, cell_fall, cell_rise,
-            fall_transition, rise_transition));
-      }
-      */
-      Cell *cell = new Cell(it.key(), pins, truthTable, it.value()["area"]);
-      cells.push_back(cell);
+        Cell *cell = new Cell(it.key() + std::to_string(i), pins, truthTable, it.value()["area"]);
+        cells.push_back(cell);
+      } while(next_permutation(inputPinNames.begin(), inputPinNames.end()));
     }
   }
 } // namespace eda::gate::optimizer

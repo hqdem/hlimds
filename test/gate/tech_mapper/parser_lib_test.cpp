@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -26,7 +26,7 @@ void initializeLibraryRwDatabase(std::vector<Cell*> &cells, SQLiteRWDatabase *ar
       continue;
     }
 
-    truthTable = 0b0000000000000000000000000000000000000000000000000000000000000000'0000000000000000000000000000000000000000000000000000000000000000;
+    truthTable = 0;
     uint64_t _1 = 1;
     for (uint64_t i = 0; i < 64; i++) {
       if (kitty::get_bit(*(cell->getTruthTable()), i % cell->getTruthTable()->num_bits())) {

@@ -59,6 +59,8 @@ namespace eda::gate::optimizer {
       // Saving cut if the iteration produced good size cut.
       if (!collected.empty()) {
         cuts->emplace(collected);
+
+        // For correct execution of the technology mapping it is necessary to find all cuts
         //if(cuts->size() > 100) {
         //  return VisitorFlags::SUCCESS;
         //}

@@ -47,7 +47,6 @@ add_library(Gate OBJECT
   tech_mapper/library/cell.cpp
   tech_mapper/strategy/replacement_cut.cpp
   tech_mapper/strategy/simple_techmapper.cpp
-  tech_mapper/super_gate_generator/generateBestCircuits.cpp
   tech_mapper/tech_mapper.cpp
   tech_mapper/tech_map_visitor.cpp
   transformer/bdd.cpp

@@ -10,9 +10,6 @@
 
 #include "kitty/kitty.hpp"
 
-//#include <fstream>
-//#include <iostream>
-//#include <map>
 #include <string>
 #include <vector>
 
@@ -38,11 +35,7 @@ public:
   double getMaxdelay() {
     double riseDelay = cell_rise + rise_transition;
     double fallDelay = cell_fall + fall_transition;
-    if (riseDelay >= fallDelay)
-      return riseDelay;
-    else
-      return fallDelay;
-    //return (riseDelay >= fallDelay ? riseDelay : fallDelay);
+    return (riseDelay >= fallDelay ? riseDelay : fallDelay);
   }
 };
 

@@ -8,7 +8,7 @@
 
 namespace eda::gate::optimizer {
 /**
- * \brief Struct for descriptions Supper Gate
+ * \brief Struct for descriptions Super Gate
  * \author <a href="mailto:dgaryaev@ispras.ru"></a>
  */
   struct Replacement {
@@ -23,6 +23,5 @@ namespace eda::gate::optimizer {
     double delay;
     std::string name;
     double area;
-    //std::unordered_map<uint32_t, double> delays; 
   };
 } // namespace eda::gate::optimizer

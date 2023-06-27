@@ -30,7 +30,7 @@ namespace eda::gate::optimizer {
     minNodeArrivalTime = std::numeric_limits<double>::max();
 
     if (cutStorage->cuts.find(node) == cutStorage->cuts.end()) {
-      // If node is not in cutStorage - means, that it is a new node.
+      // If the node is not in cutStorage, it is a new node.
       // So we recount cuts for that node.
       CutsFindVisitor finder(cutSize, cutStorage);
       finder.onNodeBegin(node);

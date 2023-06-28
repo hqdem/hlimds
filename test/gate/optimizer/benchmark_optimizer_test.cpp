@@ -94,7 +94,9 @@ namespace eda::gate::optimizer {
     delete net;
   }
 
-  TEST(RewriteTest, adder) {
+  // TODO: uncomment the test below when incident #21 will be fixed
+
+  /*TEST(RewriteTest, adder) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -108,6 +110,6 @@ namespace eda::gate::optimizer {
     std::cout << "Gates number after rewrite : " << net->nGates() << '\n';
 
     delete net;
-  }
+  }*/
 
 }

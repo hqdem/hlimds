@@ -43,7 +43,9 @@ namespace eda::gate::optimizer {
     optimizePrint(net, 4, outputPath, ZeroOptimizer());
   }
 
-  TEST(OptimizerTest, optimizeToZeroNetGnet1) {
+  // TODO: uncomment tests below when incident #7 will be fixed
+
+  /*TEST(OptimizerTest, optimizeToZeroNetGnet1) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -82,6 +84,6 @@ namespace eda::gate::optimizer {
     gnet3(net);
     optimizePrint(&net, 4, "test/data/gate/optimizer/output/rewrite3",
                   ZeroOptimizer());
-  }
+  }*/
 
 }

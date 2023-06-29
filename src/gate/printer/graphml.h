@@ -8,6 +8,8 @@
 
 #include "gate/model/gnet.h"
 
+#include <ctemplate/template.h>
+
 #include <map>
 #include <ostream>
 #include <string>
@@ -22,14 +24,20 @@ class toGraphMl {
   using GNet = eda::gate::model::GNet;
   using Gate = eda::gate::model::Gate;
   using Link = Gate::Link;
+  using GateSymbol = eda::gate::model::GateSymbol;
   public:
     static void printer(std::ostream &output, const GNet &model);
   private:
     static std::map<std::string, std::string> colours;
-    static void printNode(std::ostream &output, uint32_t nodeId,
-                          std::string colour);
-    static void printEdge(std::ostream &output, const Link &link);
+
+    static void setShape(const GateSymbol &gate, 
+        ctemplate::TemplateDictionary &dict);
+    static std::string printNode(const Gate *node, const std::string colour);
+    static std::string printEdge(const Link &link, 
+        const bool sourceHasNegation);
     static const std::string linkToString(const Link &link);
+    static const std::string setGateSymbol(const GateSymbol &gate, 
+        const std::string colour);
 };
 
 } //namespace eda::printer::graphMl

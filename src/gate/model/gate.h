@@ -78,6 +78,13 @@ public:
     return !isSource() && !isTarget() && !isTrigger();
   }
 
+  bool isNegation() const {
+    GateSymbol symbol = func();
+    return symbol == GateSymbol::NOT ||
+        (symbol >= GateSymbol::NAND &&
+        symbol <= GateSymbol::XNOR);
+  }
+
 private:
   /// Creates a gate w/ the given operation and the inputs.
   Gate(GateSymbol func, const SignalList &inputs): GateBase(func, inputs) {}

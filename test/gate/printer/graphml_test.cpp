@@ -25,7 +25,7 @@ using namespace lorina;
 
 const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
 
-void printGNet(eda::gate::model::GNet* gnet, 
+void printGNet(eda::gate::model::GNet* gnet,
     const std::string &infile,
     const std::string &outfile) {
   if (!getenv("UTOPIA_HOME")) {
@@ -40,14 +40,14 @@ void printGNet(eda::gate::model::GNet* gnet,
   std::string outFilename = prefixPathOut / (outfile + ".graphml");
   std::ofstream printedFile;
   eda::printer::graphMl::toGraphMl graphMlTest;
-  
+
   printedFile.open(outFilename);
   graphMlTest.printer(printedFile, *gnet);
   printedFile.close();
 }
 
-/* Parses input Verilog file, builds GNet representation, 
- * and prints it into GraphML format. 
+/* Parses input Verilog file, builds GNet representation,
+ * and prints it into GraphML format.
  */
 void fromVerilog(const std::string &infile, const std::string &outfile) {
   const std::filesystem::path inDataSubCatalog = "test/data/gate/parser/verilog";
@@ -57,7 +57,7 @@ void fromVerilog(const std::string &infile, const std::string &outfile) {
   text_diagnostics consumer;
   diagnostic_engine diag(&consumer);
 
-  GateVerilogParser parser(infile);
+  eda::gate::parser::verilog::GateVerilogParser parser(infile);
   return_code result = read_verilog(filename, parser, &diag);
   EXPECT_EQ(result, return_code::success);
 
@@ -67,7 +67,7 @@ void fromVerilog(const std::string &infile, const std::string &outfile) {
 }
 
 /* Parses input RIL file, builds GNet model,
- * and prints it into GraphML format. 
+ * and prints it into GraphML format.
  */
 void fromRIL(const std::string &infile, const std::string &outfile) {
   const std::filesystem::path inDataSubCatalog = "test/data/ril";

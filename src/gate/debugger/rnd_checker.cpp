@@ -36,8 +36,19 @@ CheckerResult rndChecker(GNet &miter,
   }
 
   Gate::SignalList inputs;
-  Gate::Id outputId = 0;
+  Gate::Id outputId = model::Gate::INVALID;
   GNet::LinkList in;
+  for (auto *gate : miter.gates()) {
+    if (gate->isTarget()) {
+      outputId = gate->id();
+      break;
+    }
+  }
+
+  if (outputId == model::Gate::INVALID) {
+    LOG_ERROR << "Can't find OUT gate at miter!";
+    return CheckerResult::ERROR;
+  }
 
   for (size_t n = 0; n < inputNum; n++) {
     in.push_back(GNet::Link(input[n]));
@@ -57,9 +68,8 @@ CheckerResult rndChecker(GNet &miter,
   if (!exhaustive) {
     for (std::uint64_t t = 0; t < tries; t++) {
       for (std::uint64_t i = 0; i < (inputNum - 1); i++) {
-        std::uint64_t temp = 2 * rand();
-        std::uint64_t in = temp % inputPower;
-        compiled.simulate(output, in);
+        std::uint64_t temp = rand() % inputPower;
+        compiled.simulate(output, temp);
         if (output == 1) {
           return  CheckerResult::NOTEQUAL;
         }
@@ -70,9 +80,7 @@ CheckerResult rndChecker(GNet &miter,
 
   if (exhaustive) {
     for (std::uint64_t t = 0; t < inputPower; t++) {
-      std::uint64_t temp = 2 * t;
-      std::uint64_t in = temp % inputPower;
-      compiled.simulate(output, in);
+      compiled.simulate(output, t);
       if (output == 1) {
         return CheckerResult::NOTEQUAL;
       }

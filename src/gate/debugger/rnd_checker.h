@@ -13,6 +13,7 @@
 #include "gate/simulator/simulator.h"
 #include "miter.h"
 #include "rtl/library/flibrary.h"
+#include "util/logging.h"
 
 #include <cassert>
 #include <cmath>

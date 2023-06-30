@@ -19,14 +19,23 @@ CheckerResult rndChecker(GNet &miter,
                          const bool exhaustive) {
 
   if (!(miter.isComb())) {
+    LOG_ERROR << "Checker works with combinational circuits only!";
     return CheckerResult::ERROR;
   }
 
-  // check the number of outputs
-  assert(miter.nTargetLinks() == 1);
+  std::uint64_t outNum = miter.nTargetLinks();
+
+  if (outNum != 1) {
+    LOG_ERROR << "Unsupported number of OUT gates: " << outNum;
+    return CheckerResult::ERROR;
+  }
 
   std::uint64_t inputNum = miter.nSourceLinks();
-  assert(inputNum >= 2 && inputNum <= 64);
+
+  if (inputNum < 2 || inputNum > 64) {
+    LOG_ERROR << "Unsupported number of inputs: " << inputNum;
+    return CheckerResult::ERROR;
+  }
 
   GNet::In gnetInput(1);
   auto &input = gnetInput[0];
@@ -63,15 +72,15 @@ CheckerResult rndChecker(GNet &miter,
   miter.sortTopologically();
   auto compiled = simulator.compile(miter, in, out);
   std::uint64_t output;
-  std::uint64_t inputPower = static_cast<std::uint64_t>(1ULL << inputNum);
-  
+  std::uint64_t inputPower = 1ULL << inputNum;
+
   if (!exhaustive) {
     for (std::uint64_t t = 0; t < tries; t++) {
-      for (std::uint64_t i = 0; i < (inputNum - 1); i++) {
+      for (std::uint64_t i = 1; i < inputNum; i++) {
         std::uint64_t temp = rand() % inputPower;
         compiled.simulate(output, temp);
         if (output == 1) {
-          return  CheckerResult::NOTEQUAL;
+          return CheckerResult::NOTEQUAL;
         }
       }
     }

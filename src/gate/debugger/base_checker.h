@@ -21,16 +21,46 @@ enum LecType {
 } // namespace eda::gate::debugger::options
 
 namespace eda::gate::debugger {
-using GNet = eda::gate::model::GNet;
 using Gate = eda::gate::model::Gate;
 using GateId = eda::gate::model::Gate::Id;
+using GateIdMap = std::unordered_map<GateId, GateId>;
+using GNet = eda::gate::model::GNet;
 using LecType = eda::gate::debugger::options::LecType;
+
+// Equivalence checkers return value
+// EQUAL returns if there exhaustive check and nets are equal
+// UNKNOWN returns if there NO exhaustive check and nets are equal
+// NOTEQUAL returns if nets are not equal
+// ERROR returns if invalid arguments were given
+enum CheckerResult {
+  ERROR = -2,
+  UNKNOWN = -1,
+  EQUAL = 0,
+  NOTEQUAL = 1,
+};
 
 class BaseChecker {
 public:
-  virtual bool areEqual(GNet &lhs,
-                        GNet &rhs,
-                        std::unordered_map<Gate::Id, Gate::Id> &gmap) = 0;
+  /**
+ *  \brief Checks if the given nets are equal.
+ *  @param lhs First net.
+ *  @param rhs Second net.
+ *  @param gmap Gate-to-gate mapping between nets.
+ *  @return true if the nets are equal, false otherwise.
+ */
+  bool areEqual(GNet &lhs,
+                GNet &rhs,
+                GateIdMap &gmap);
+  /**
+ *  \brief Checks the equivalence of the given nets.
+ *  @param lhs First net.
+ *  @param rhs Second net.
+ *  @param gmap Gate-to-gate mapping between nets.
+ *  @return The result of the check.
+ */
+  virtual CheckerResult equivalent(GNet &lhs,
+                                   GNet &rhs,
+                                   GateIdMap &gmap) = 0;
   virtual ~BaseChecker() = 0;
 };
 

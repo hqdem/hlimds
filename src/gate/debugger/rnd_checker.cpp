@@ -14,7 +14,13 @@ namespace eda::gate::debugger {
 
 static simulator::Simulator simulator;
 
-Result rndChecker(GNet &miter, const unsigned int tries, const bool exhaustive = true) {
+CheckerResult rndChecker(GNet &miter,
+                         const unsigned int tries,
+                         const bool exhaustive) {
+
+  if (!(miter.isComb())) {
+    return CheckerResult::ERROR;
+  }
 
   // check the number of outputs
   assert(miter.nTargetLinks() == 1);
@@ -46,7 +52,7 @@ Result rndChecker(GNet &miter, const unsigned int tries, const bool exhaustive =
   miter.sortTopologically();
   auto compiled = simulator.compile(miter, in, out);
   std::uint64_t output;
-  std::uint64_t inputPower = static_cast<std::uint64_t>(1 << (inputNum - 1));
+  std::uint64_t inputPower = static_cast<std::uint64_t>(1ULL << inputNum);
   
   if (!exhaustive) {
     for (std::uint64_t t = 0; t < tries; t++) {
@@ -55,11 +61,11 @@ Result rndChecker(GNet &miter, const unsigned int tries, const bool exhaustive =
         std::uint64_t in = temp % inputPower;
         compiled.simulate(output, in);
         if (output == 1) {
-          return  Result::NOTEQUAL;
+          return  CheckerResult::NOTEQUAL;
         }
       }
     }
-    return Result::UNKNOWN;
+    return CheckerResult::UNKNOWN;
   }
 
   if (exhaustive) {
@@ -68,13 +74,13 @@ Result rndChecker(GNet &miter, const unsigned int tries, const bool exhaustive =
       std::uint64_t in = temp % inputPower;
       compiled.simulate(output, in);
       if (output == 1) {
-        return Result::NOTEQUAL;
+        return CheckerResult::NOTEQUAL;
       }
     }
-    return Result::EQUAL;
+    return CheckerResult::EQUAL;
   }
 
-  return Result::ERROR;
+  return CheckerResult::ERROR;
 }
 
 void RndChecker::setTries(int tries) {
@@ -85,9 +91,9 @@ void RndChecker::setExhaustive(bool exhaustive) {
   this->exhaustive = exhaustive;
 }
 
-bool RndChecker::areEqual(GNet &lhs,
-                          GNet &rhs,
-                          Checker::GateIdMap &gmap) {
+CheckerResult RndChecker::equivalent(GNet &lhs,
+                                     GNet &rhs,
+                                     Checker::GateIdMap &gmap) {
 
     GateBinding ibind, obind, tbind;
 
@@ -115,8 +121,7 @@ bool RndChecker::areEqual(GNet &lhs,
     hints.triggerBinding = std::make_shared<GateBinding>(std::move(tbind));
 
     GNet *net = miter(lhs, rhs, hints);
-    Result res = rndChecker(*net, tries, exhaustive);
-    return (res == 0);
+    return rndChecker(*net, tries, exhaustive);
   }
 
 } // namespace eda::gate::debugger

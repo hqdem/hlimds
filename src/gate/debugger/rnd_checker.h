@@ -21,18 +21,6 @@ using GNet = eda::gate::model::GNet;
 
 namespace eda::gate::debugger {
 
-// rndChecker return value
-// EQUAL returns if there exhaustive check and nets are equal
-// UNKNOWN returns if there NO exhaustive check and nets are equal
-// NOTEQUAL returns if nets are not equal
-// ERROR returns if invalid arguments were given
-enum Result {
-  ERROR = -2,
-  UNKNOWN = -1,
-  EQUAL = 0,
-  NOTEQUAL = 1,
-};
-
 /**
  *  \brief Goes through values and checks miter output.
  *  @param miter Miter which will receive values.
@@ -40,20 +28,29 @@ enum Result {
  *  @param exhaustive Sets the mode of the check.
  *  @return The result of the check.
  */
-Result rndChecker(GNet &miter, const unsigned int tries, const bool exhaustive);
+CheckerResult rndChecker(GNet &miter,
+                         const unsigned int tries,
+                         const bool exhaustive);
 
 class RndChecker : public BaseChecker, public util::Singleton<RndChecker> {
 friend class util::Singleton<RndChecker>;
 
 public:
-  bool areEqual(GNet &lhs,
-                GNet &rhs,
-                Checker::GateIdMap &gmap) override;
+  /**
+ *  @copydoc base_checker.h:equivalent
+ */
+  CheckerResult equivalent(GNet &lhs,
+                           GNet &rhs,
+                           Checker::GateIdMap &gmap) override;
   void setTries(int tries);
   void setExhaustive(bool exhaustive);
+  RndChecker(bool exhaustive = true, int tries = 0){
+    this->exhaustive = exhaustive;
+    this->tries = tries;
+  }
 private:
-  int tries = 0;
-  bool exhaustive = true;
+  int tries;
+  bool exhaustive;
 };
 
 } // namespace eda::gate::debugger

@@ -42,7 +42,7 @@ static bool checkEquivTest(unsigned N,
   hints.sourceBinding = std::make_shared<GateBinding>(std::move(imap));
   hints.targetBinding = std::make_shared<GateBinding>(std::move(omap));
 
-  return checker.areEqual(lhs, rhs, hints); 
+  return checker.equivalent(lhs, rhs, hints) == CheckerResult::EQUAL;
 }
 
 bool checkNorNorTest(unsigned N) {

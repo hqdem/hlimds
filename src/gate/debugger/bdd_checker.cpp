@@ -10,7 +10,10 @@
 
 namespace eda::gate::debugger {
 
-bool bddChecker(GNet &net1, GNet &net2, Hints &hints) {
+CheckerResult bddChecker(GNet &net1, GNet &net2, Hints &hints) {
+  if (!(net1.isComb() && net2.isComb())) {
+    return CheckerResult::ERROR;
+  }
 
   GNet *miterNet = miter(net1, net2, hints);
   SignalList inputs;
@@ -36,12 +39,15 @@ bool bddChecker(GNet &net1, GNet &net2, Hints &hints) {
   }
 
   BDD netBDD = GNetBDDConverter::convert(*miterNet, outputId, varMap, manager);
-  return (netBDD == manager.bddZero());
+  if (netBDD == manager.bddZero()) {
+    return CheckerResult::EQUAL;
+  }
+  return CheckerResult::NOTEQUAL;
 } 
 
-bool BddChecker::areEqual(GNet &lhs,
-                          GNet &rhs,
-                          Checker::GateIdMap &gmap) {
+CheckerResult BddChecker::equivalent(GNet &lhs,
+                                     GNet &rhs,
+                                     Checker::GateIdMap &gmap) {
 
   GateBinding ibind, obind, tbind;
 
@@ -68,7 +74,7 @@ bool BddChecker::areEqual(GNet &lhs,
   hints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
   hints.triggerBinding = std::make_shared<GateBinding>(std::move(tbind));
 
-  return (bddChecker(lhs, rhs, hints));
+  return bddChecker(lhs, rhs, hints);
 }
 
 } // namespace eda::gate::debugger

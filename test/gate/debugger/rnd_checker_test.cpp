@@ -24,5 +24,5 @@ TEST(RndChecker, SimpleTest) {
   std::cout << "STARTING RND_CHECKER TEST\n";
   int a = rndChecker(*net, 0, true);
   std::cout << "CHECKER RESULT IS: \t" << a << std::endl;
-  EXPECT_TRUE(a == 0);
+  EXPECT_TRUE(a == CheckerResult::NOTEQUAL);
 }

@@ -82,59 +82,61 @@ public:
   };
 
   /// Checks logic equivalence of two nets.
-  bool areEqual(const GNet &lhs,
-                const GNet &rhs,
-                const Hints &hints) const;
-
-  bool areEqual(GNet &lhs,
-                GNet &rhs,
-                GateIdMap &gmap) override;
+  CheckerResult equivalent(const GNet &lhs,
+                           const GNet &rhs,
+                           const Hints &hints) const;
+  /**
+ *  @copydoc base_checker.h:equivalent
+ */
+  CheckerResult equivalent(GNet &lhs,
+                           GNet &rhs,
+                           GateIdMap &gmap) override;
 
 private:
   /// Checks logic equivalence of two hierarchical nets.
-  bool areEqualHier(const GNet &lhs,
-                    const GNet &rhs,
-                    const Hints &hints) const;
+  CheckerResult areEqualHier(const GNet &lhs,
+                             const GNet &rhs,
+                             const Hints &hints) const;
 
   /// Checks logic equivalence of two flat combinational nets.
-  bool areEqualComb(const GNet &lhs,
-                    const GNet &rhs,
-	            const GateBinding &ibind,
-	            const GateBinding &obind) const;
+  CheckerResult areEqualComb(const GNet &lhs,
+                             const GNet &rhs,
+                             const GateBinding &ibind,
+                             const GateBinding &obind) const;
 
   /// Checks logic equivalence of two flat sequential nets
   /// with one-to-one correspondence of triggers.
-  bool areEqualSeq(const GNet &lhs,
-                   const GNet &rhs,
-                   const GateBinding &ibind,
-                   const GateBinding &obind,
-                   const GateBinding &tbind) const;
+  CheckerResult areEqualSeq(const GNet &lhs,
+                            const GNet &rhs,
+                            const GateBinding &ibind,
+                            const GateBinding &obind,
+                            const GateBinding &tbind) const;
 
   /// Checks logic equivalence of two flat sequential nets
   /// with given correspondence of state encodings.
-  bool areEqualSeq(const GNet &lhs,
-                   const GNet &rhs,
-                   const GNet &enc,
-                   const GNet &dec,
-                   const GateBinding &ibind,
-                   const GateBinding &obind,
-                   const GateBinding &lhsTriEncIn,
-                   const GateBinding &lhsTriDecOut,
-                   const GateBinding &rhsTriEncOut,
-                   const GateBinding &rhsTriDecIn) const;
+  CheckerResult areEqualSeq(const GNet &lhs,
+                            const GNet &rhs,
+                            const GNet &enc,
+                            const GNet &dec,
+                            const GateBinding &ibind,
+                            const GateBinding &obind,
+                            const GateBinding &lhsTriEncIn,
+                            const GateBinding &lhsTriDecOut,
+                            const GateBinding &rhsTriEncOut,
+                            const GateBinding &rhsTriDecIn) const;
 
   /// Simulation-based LEC of two small combinational nets by
   /// applying all possible inputs and checking the outputs.
-  bool areEqualCombSim(const GNet &lhs,
-                       const GNet &rhs,
-                       const GateBinding &ibind,
-                       const GateBinding &obind) const;
+  CheckerResult areEqualCombSim(const GNet &lhs,
+                                const GNet &rhs,
+                                const GateBinding &ibind,
+                                const GateBinding &obind) const;
 
   /// SAT-based LEC of two flat combinational nets.
-  bool areEqualCombSat(const std::vector<const GNet*> &nets,
-                       const GateConnect *connectTo,
-	               const GateBinding &ibind,
-	               const GateBinding &obind) const;
+  CheckerResult areEqualCombSat(const std::vector<const GNet*> &nets,
+                                const GateConnect *connectTo,
+	                            const GateBinding &ibind,
+	                            const GateBinding &obind) const;
 
   /// Handles an error (prints the diagnostics, etc.).
   void error(Context &context,

@@ -25,4 +25,10 @@ BaseChecker &getChecker(LecType lec) {
 }
 BaseChecker::~BaseChecker() {};
 
+bool BaseChecker::areEqual(GNet &lhs,
+                           GNet &rhs,
+                           GateIdMap &gmap) {
+  return equivalent(lhs, rhs, gmap) == CheckerResult::EQUAL;
+}
+
 } // namespace eda::gate::debugger

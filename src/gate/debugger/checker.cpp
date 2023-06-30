@@ -14,9 +14,9 @@
 
 namespace eda::gate::debugger {
 
-bool Checker::areEqual(GNet &lhs,
-                       GNet &rhs,
-                       GateIdMap &gmap) {
+CheckerResult Checker::equivalent(GNet &lhs,
+                                  GNet &rhs,
+                                  GateIdMap &gmap) {
   GateBinding ibind, obind, tbind;
 
   // Input-to-input correspondence.
@@ -42,12 +42,12 @@ bool Checker::areEqual(GNet &lhs,
   hints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
   hints.triggerBinding = std::make_shared<GateBinding>(std::move(tbind));
 
-  return areEqual(lhs, rhs, hints);
+  return equivalent(lhs, rhs, hints);
 }
 
-bool Checker::areEqual(const GNet &lhs,
-                       const GNet &rhs,
-                       const Hints &hints) const {
+CheckerResult Checker::equivalent(const GNet &lhs,
+                                  const GNet &rhs,
+                                  const Hints &hints) const {
   const unsigned flatCheckBound = 64 * 1024;
 
   assert(hints.isKnownIoPortBinding());
@@ -88,10 +88,10 @@ bool Checker::areEqual(const GNet &lhs,
   }
 
   assert(false && "Unimplemented LEC");
-  return false;
+  return CheckerResult::ERROR;
 }
 
-bool Checker::areEqualHier(const GNet &lhs,
+CheckerResult Checker::areEqualHier(const GNet &lhs,
                            const GNet &rhs,
                            const Hints &hints) const {
   assert(!lhs.isFlat() && !rhs.isFlat());
@@ -127,15 +127,16 @@ bool Checker::areEqualHier(const GNet &lhs,
     hintsSubnets.targetBinding = std::make_shared<GateBinding>(std::move(omap));
     hintsSubnets.innerBinding  = hints.innerBinding;
 
-    if (!areEqual(*lhsSubnet, *rhsSubnet, hintsSubnets)) {
-      return false;
+    CheckerResult result = equivalent(*lhsSubnet, *rhsSubnet, hintsSubnets);
+    if (result == CheckerResult::NOTEQUAL) {
+      return CheckerResult::NOTEQUAL;
     }
   }
 
-  return true;
+  return CheckerResult::EQUAL;
 }
 
-bool Checker::areEqualComb(const GNet &lhs,
+CheckerResult Checker::areEqualComb(const GNet &lhs,
                            const GNet &rhs,
                            const GateBinding &ibind,
                            const GateBinding &obind) const {
@@ -148,7 +149,7 @@ bool Checker::areEqualComb(const GNet &lhs,
   return areEqualCombSat({ &lhs, &rhs }, nullptr, ibind, obind);
 }
 
-bool Checker::areEqualSeq(const GNet &lhs,
+CheckerResult Checker::areEqualSeq(const GNet &lhs,
                           const GNet &rhs,
                           const GateBinding &ibind,
                           const GateBinding &obind,
@@ -177,7 +178,7 @@ bool Checker::areEqualSeq(const GNet &lhs,
   return areEqualComb(lhs, rhs, imap, omap);
 }
 
-bool Checker::areEqualSeq(const GNet &lhs,
+CheckerResult Checker::areEqualSeq(const GNet &lhs,
                           const GNet &rhs,
                           const GNet &enc,
                           const GNet &dec,
@@ -233,7 +234,7 @@ bool Checker::areEqualSeq(const GNet &lhs,
   return areEqualCombSat({&lhs, &rhs, &enc, &dec}, &connectTo, imap, omap);
 }
 
-bool Checker::areEqualCombSim(const GNet &lhs,
+CheckerResult Checker::areEqualCombSim(const GNet &lhs,
                               const GNet &rhs,
                               const GateBinding &ibind,
                               const GateBinding &obind) const {
@@ -274,14 +275,14 @@ bool Checker::areEqualCombSim(const GNet &lhs,
     rhsCompiled.simulate(rhsOut, in);
 
     if (lhsOut != rhsOut) {
-      return false;
+      return CheckerResult::NOTEQUAL;
     }
   }
 
-  return true;
+  return CheckerResult::EQUAL;
 }
 
-bool Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
+CheckerResult Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
                               const GateConnect *connectTo,
                               const GateBinding &ibind,
                               const GateBinding &obind) const {
@@ -317,11 +318,12 @@ bool Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
 
   const auto verdict = !encoder.solve();
 
-  if (!verdict) {
-    error(encoder.context(), ibind, obind);
+  if (verdict) {
+    return CheckerResult::EQUAL;
   }
 
-  return verdict;
+  error(encoder.context(), ibind, obind);
+  return CheckerResult::NOTEQUAL;
 }
 
 void Checker::error(Context &context,

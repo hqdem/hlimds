@@ -5,7 +5,7 @@ xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:y="http://www.yworks.com/xml/graphml"
 xmlns:yed="http://www.yworks.com/xml/yed/3"
-xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns 
+xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns
 http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
   <key attr.name="description" attr.type="string" for="node" id="d0"/>
   <key for="node" id="d1" yfiles.type="nodegraphics"/>

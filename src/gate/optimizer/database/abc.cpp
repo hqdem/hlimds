@@ -123,7 +123,7 @@ static BoundGNet clone(const BoundGNet &circuit) {
     const auto newGateId = oldToNewGates[oldGateId];
     newCircuit.inputBindings.push_back(newGateId);
 
-    std::cout << "inputId " << inputId++ << "->" << newGateId << std::endl;
+    //std::cout << "inputId " << inputId++ << "->" << newGateId << std::endl;
   }
 
   return newCircuit;
@@ -196,8 +196,8 @@ static void generateNpnInstances(const BoundGNet &bnet, RWDatabase &database) {
       }
 
       const auto truthTable = TruthTable::build(circuit);
-      std::cout << "Table: " << std::hex << truthTable.raw() << std::endl;
-      std::cout << std::dec << *circuit.net << std::endl;
+      //std::cout << "Table: " << std::hex << truthTable.raw() << std::endl;
+      //std::cout << std::dec << *circuit.net << std::endl;
 
       database.set(truthTable, {circuit} /* One circuit per truth table */);
     }

@@ -24,7 +24,7 @@ wire   u:8 w;
 }
 
 @(*) if(n) {
-  w = g; 
+  w = g;
 }
 
 @(level1(rst)) {
@@ -38,4 +38,3 @@ wire   u:8 w;
 @(posedge(clk)) if (n) {
   r = g;
 }
-

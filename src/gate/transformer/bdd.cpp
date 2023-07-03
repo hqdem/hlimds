@@ -84,6 +84,15 @@ BDD GNetBDDConverter::applyGateFunc(const GateSymbol::Value func,
     }
     result = !result;
     break;
+  // Only supports 3 arguments
+  case GateSymbol::MAJ: {
+    assert(inputList.size() == 3 && "BDD converter only supports majority function of 3 arguments.");
+    const BDD &x1 = inputList[0];
+    const BDD &x2 = inputList[1];
+    const BDD &x3 = inputList[2];
+    result = (x1 & x2) | (x1 & x3) | (x2 & x3);
+    break;
+  }
   default:
     assert(false && "Unsupported gate");
     break;

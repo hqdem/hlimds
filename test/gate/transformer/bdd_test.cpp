@@ -81,6 +81,25 @@ bool transformerNorTest() {
   return result[0] == orBDD && result[1] == norBDD;
 }
 
+bool transformerMajTest() {
+  Gate::SignalList inputs;
+  Gate::Id outputId;
+  std::shared_ptr<GNet> net = makeMaj(3, inputs, outputId);
+
+  Cudd manager(0, 0);
+  BDDList x;
+  GateBDDMap varMap;
+  for (size_t i = 0; i < inputs.size(); i++) {
+    x.push_back(manager.bddVar());
+    varMap[inputs[i].node()] = x[i];
+  }
+
+  BDD netBDD = GNetBDDConverter::convert(*net, outputId, varMap, manager);
+  BDD majBDD = (x[0] | x[1]) & (x[0] | x[2]) & (x[1] | x[2]);
+
+  return netBDD == majBDD;
+}
+
 TEST(TransformerBDDGNetTest, TransformerAndTest) {
   EXPECT_TRUE(transformerAndTest());
 }
@@ -91,4 +110,8 @@ TEST(TransformerBDDGNetTest, TransformerOrTest) {
 
 TEST(TransformerBDDGNetTest, TransformerNorTest) {
   EXPECT_TRUE(transformerNorTest());
+}
+
+TEST(TransformerBDDGNetTest, TransformerMajTest) {
+  EXPECT_TRUE(transformerMajTest());
 }

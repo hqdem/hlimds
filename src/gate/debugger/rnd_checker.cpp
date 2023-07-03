@@ -19,21 +19,21 @@ CheckerResult rndChecker(GNet &miter,
                          const bool exhaustive) {
 
   if (!(miter.isComb())) {
-    LOG_ERROR << "Checker works with combinational circuits only!";
+    LOG_ERROR << "Checker works with combinational circuits only!" << std::endl;
     return CheckerResult::ERROR;
   }
 
   std::uint64_t outNum = miter.nTargetLinks();
 
   if (outNum != 1) {
-    LOG_ERROR << "Unsupported number of OUT gates: " << outNum;
+    LOG_ERROR << "Unsupported number of OUT gates: " << outNum << std::endl;
     return CheckerResult::ERROR;
   }
 
   std::uint64_t inputNum = miter.nSourceLinks();
 
   if (inputNum < 2 || inputNum > 64) {
-    LOG_ERROR << "Unsupported number of inputs: " << inputNum;
+    LOG_ERROR << "Unsupported number of inputs: " << inputNum << std::endl;
     return CheckerResult::ERROR;
   }
 
@@ -55,7 +55,7 @@ CheckerResult rndChecker(GNet &miter,
   }
 
   if (outputId == model::Gate::INVALID) {
-    LOG_ERROR << "Can't find OUT gate at miter!";
+    LOG_ERROR << "Can't find OUT gate at miter!" << std::endl;
     return CheckerResult::ERROR;
   }
 

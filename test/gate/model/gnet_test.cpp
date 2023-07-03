@@ -326,4 +326,34 @@ TEST(GNetTest, GNetAddressTest) {
   EXPECT_TRUE(net.get()->clone() != net.get());
 }
 
+TEST(GNetTest, setTest) {
+  auto net = GNet(0);
+  Gate::SignalList inputs;
+  const int inNum = 100;
+
+  for (int i = 0; i < inNum; i++) {
+    Gate::Id z = net.addIn();
+    inputs.push_back(Gate::Signal::always(z));
+  }
+  Gate::Id y = net.addOr(inputs);
+  net.addOut(y);
+
+  auto net1 = GNet(0);
+
+  for (int i = 0; i < inNum; i++) {
+    Gate::Id z = net1.addIn();
+    inputs.push_back(Gate::Signal::always(z));
+  }
+  y = net1.addOr(inputs);
+  net1.addOut(y);
+
+  auto net2 = GNet(0);
+
+  Gate::Id id = net2.addIn();
+  net2.addNet(net);
+  net2.addNet(net1);
+  net2.setGate(net2.gates().at(0)->id(), GateSymbol::NOP, id);
+  net2.setGate(net2.gates().at(1)->id(), GateSymbol::NOP, id);
+}
+
 } // namespace eda::gate::model

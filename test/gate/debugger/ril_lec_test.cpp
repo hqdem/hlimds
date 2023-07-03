@@ -52,6 +52,18 @@ TEST(RilEquivalenceTest, sub) {
             CheckerResult::EQUAL);
   EXPECT_EQ(rilEquivalenceTest(subFolder, "sub.ril", rnd, PreBasis::XAG),
             CheckerResult::UNKNOWN);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "sub.ril", bdd, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "sub.ril", def, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "sub.ril", rnd, PreBasis::MIG),
+            CheckerResult::UNKNOWN);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "sub.ril", bdd, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "sub.ril", def, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "sub.ril", rnd, PreBasis::XMG),
+            CheckerResult::UNKNOWN);
 }
 
 TEST(RilEquivalenceTest, add) {
@@ -71,6 +83,18 @@ TEST(RilEquivalenceTest, add) {
   EXPECT_EQ(rilEquivalenceTest(subFolder, "add.ril", def, PreBasis::XAG),
             CheckerResult::EQUAL);
   EXPECT_EQ(rilEquivalenceTest(subFolder, "add.ril", rnd, PreBasis::XAG),
+            CheckerResult::UNKNOWN);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add.ril", bdd, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add.ril", def, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add.ril", rnd, PreBasis::MIG),
+            CheckerResult::UNKNOWN);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add.ril", bdd, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add.ril", def, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add.ril", rnd, PreBasis::XMG),
             CheckerResult::UNKNOWN);
 }
 
@@ -92,6 +116,18 @@ TEST(RilEquivalenceTest, add_small) {
             CheckerResult::EQUAL);
   EXPECT_EQ(rilEquivalenceTest(subFolder, "add_small.ril", rnd, PreBasis::XAG),
             CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add_small.ril", bdd, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add_small.ril", def, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add_small.ril", rnd, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add_small.ril", bdd, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add_small.ril", def, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "add_small.ril", rnd, PreBasis::XMG),
+            CheckerResult::EQUAL);
 }
 
 TEST(RilEquivalenceTest, test) {
@@ -111,6 +147,18 @@ TEST(RilEquivalenceTest, test) {
             PreBasis::XAG), CheckerResult::EQUAL);
   EXPECT_EQ(rilEquivalenceTest("test/data/ril", "test.ril", rnd,
             PreBasis::XAG), CheckerResult::ERROR);
+  EXPECT_EQ(rilEquivalenceTest("test/data/ril", "test.ril", bdd,
+            PreBasis::MIG), CheckerResult::ERROR);
+  EXPECT_EQ(rilEquivalenceTest("test/data/ril", "test.ril", def,
+            PreBasis::MIG), CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest("test/data/ril", "test.ril", rnd,
+            PreBasis::MIG), CheckerResult::ERROR);
+  EXPECT_EQ(rilEquivalenceTest("test/data/ril", "test.ril", bdd,
+            PreBasis::XMG), CheckerResult::ERROR);
+  EXPECT_EQ(rilEquivalenceTest("test/data/ril", "test.ril", def,
+            PreBasis::XMG), CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest("test/data/ril", "test.ril", rnd,
+            PreBasis::XMG), CheckerResult::ERROR);
 }
 
 TEST(RilEquivalenceTest, mul_small) {
@@ -131,6 +179,18 @@ TEST(RilEquivalenceTest, mul_small) {
             CheckerResult::EQUAL);
   EXPECT_EQ(rilEquivalenceTest(subFolder, "mul_small.ril", rnd, PreBasis::XAG),
             CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul_small.ril", bdd, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul_small.ril", def, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul_small.ril", rnd, PreBasis::MIG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul_small.ril", bdd, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul_small.ril", def, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul_small.ril", rnd, PreBasis::XMG),
+            CheckerResult::EQUAL);
 }
 
 TEST(RilEquivalenceTest, mul) {
@@ -143,6 +203,14 @@ TEST(RilEquivalenceTest, mul) {
             CheckerResult::UNKNOWN);
   EXPECT_EQ(rilEquivalenceTest(subFolder, "mul.ril", rnd, PreBasis::XAG),
             CheckerResult::UNKNOWN);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul.ril", rnd, PreBasis::MIG),
+            CheckerResult::UNKNOWN);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul.ril", rnd, PreBasis::XMG),
+            CheckerResult::UNKNOWN);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul.ril", bdd, PreBasis::XMG),
+            CheckerResult::EQUAL);
+  EXPECT_EQ(rilEquivalenceTest(subFolder, "mul.ril", bdd, PreBasis::MIG),
+            CheckerResult::EQUAL);
 }
 // TODO The test takes too long.
 //TEST(RilEquivalenceTest, func) {

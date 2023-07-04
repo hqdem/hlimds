@@ -21,7 +21,7 @@ namespace eda::gate::optimizer {
   }
 
   std::vector<GateID> gnet1(GNet &gNet) {
-    std::vector<GateID> g(4);
+    std::vector<GateID> g(3);
     for (GateID &el: g) {
       el = gNet.newGate();
     }

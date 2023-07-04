@@ -21,13 +21,13 @@ namespace eda::gate::optimizer {
   }
 
   std::vector<GateID> gnet1(GNet &gNet) {
-    std::vector<GateID> g(4);
+    std::vector<GateID> g(3);
     for (GateID &el: g) {
       el = gNet.newGate();
     }
     g.push_back(createLink(gNet, g, {0, 1}));
-    g.push_back(createLink(gNet, g, {4, 2}));
-    g.push_back(createLink(gNet, g, {5, 3}));
+    g.push_back(createLink(gNet, g, {2}, model::GateSymbol::Value::NOT));
+    g.push_back(createLink(gNet, g, {3, 4}));
     return g;
   }
 

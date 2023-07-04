@@ -13,5 +13,3 @@
 #include "gate/optimizer/rwdatabase.h"
 
 using namespace eda::gate::optimizer;
-
-void initializeLibraryRwDatabase(std::vector<Cell*> &cells, SQLiteRWDatabase *arwdb);

@@ -5,7 +5,6 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
 #pragma once
 
 #include "gate/optimizer/cuts_finder_visitor.h"
@@ -17,19 +16,21 @@
 
 #include <queue>
 
-namespace eda::gate::optimizer {
+namespace eda::gate::techMap {
 /**
  * \brief Realization of interface Visitor.
  * \author <a href="mailto:dgaryaev@ispras.ru"></a>
  */
 
-  class TechMapVisitor : public Visitor {
+  class  SearchOptReplacement : public eda::gate::optimizer::Visitor {
   public:
+    using RWDatabase = eda::gate::optimizer::RWDatabase;
+    using BoundGNetList = eda::gate::optimizer::RWDatabase::BoundGNetList;
+    using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
+    using CutStorage = eda::gate::optimizer::CutStorage;
+    using VisitorFlags = eda::gate::optimizer::VisitorFlags;
 
-    using BoundGNetList = RWDatabase::BoundGNetList;
-    using BoundGNet = RWDatabase::BoundGNet;
-
-    TechMapVisitor();
+    SearchOptReplacement();
 
     void set(CutStorage *cutStorage, GNet *net,
         std::unordered_map<GateID, Replacement> *bestReplacement, 
@@ -45,11 +46,11 @@ namespace eda::gate::optimizer {
 
   private:
     CutStorage *cutStorage;
+    BoundGNet bestOption;
+    std::unordered_map<GateID, GateID> bestOptionMap;
 
     CutStorage::Cuts *lastCuts;
-    std::vector<const CutStorage::Cut*> toRemove;
-
-    bool checkValidCut(const Cut &cut);
+    std::vector<const CutStorage::Cut *> toRemove;
 
   protected:
     double minNodeArrivalTime;
@@ -59,16 +60,19 @@ namespace eda::gate::optimizer {
     int cutSize;
     RWDatabase rwdb;
 
-    virtual bool checkOptimize(const BoundGNet &superGate,
-                               const std::unordered_map<GateID, GateID> &map) = 0;
+    bool checkOptimize(const BoundGNet &superGate,
+                               const std::unordered_map<GateID, GateID> &map);
 
-    virtual VisitorFlags
+    VisitorFlags
     considerTechMap(BoundGNet &superGate,
-                         std::unordered_map<GateID, GateID> &map) = 0;
+                         std::unordered_map<GateID, GateID> &map);
 
-    virtual void finishTechMap() {}
+    void saveBestReplacement();
 
-    virtual BoundGNetList getSubnets(uint64_t func) = 0;
+    virtual BoundGNetList getSubnets(uint64_t func);
+    bool checkValidCut(const Cut &cut);
+    double maxArrivalTime(const BoundGNet &superGate,
+        const std::unordered_map<GateID, GateID> &map);
   };
 
 } // namespace eda::gate::optimizer

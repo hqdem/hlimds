@@ -8,7 +8,6 @@
 #include "gate/tech_mapper/tech_map_visitor.h"
 #include "gate/optimizer/optimizer_visitor.h"
 
-
 namespace eda::gate::techMap {
 
   using GNet = eda::gate::model::GNet;

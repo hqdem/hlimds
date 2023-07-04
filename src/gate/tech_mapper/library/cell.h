@@ -10,6 +10,7 @@
 
 #include "gate/optimizer/rwdatabase.h"
 #include "kitty/kitty.hpp"
+#include "gate/optimizer/rwdatabase.h"
 
 #include <string>
 #include <vector>

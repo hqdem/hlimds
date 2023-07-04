@@ -6,7 +6,7 @@
 
 #include <unordered_map>
 
-namespace eda::gate::optimizer {
+namespace eda::gate::techMap {
 /**
  * \brief Struct for descriptions Super Gate
  * \author <a href="mailto:dgaryaev@ispras.ru"></a>
@@ -14,7 +14,7 @@ namespace eda::gate::optimizer {
   struct Replacement {
     using GNet = model::GNet;
     using GateID = GNet::GateId;
-    using BoundGNet = RWDatabase::BoundGNet;
+    using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
 
     GateID rootNode;
     std::unordered_map<GateID, GateID> bestOptionMap;

@@ -6,15 +6,25 @@
 //
 //===----------------------------------------------------------------------===//
 #include "gate/tech_mapper/tech_map_visitor.h"
+#include "gate/optimizer/optimizer_visitor.h"
 
-namespace eda::gate::optimizer {
+namespace eda::gate::techMap {
 
   using GNet = eda::gate::model::GNet;
   using Gate = eda::gate::model::Gate;
+  using RWDatabase = eda::gate::optimizer::RWDatabase;
+  using BoundGNetList = eda::gate::optimizer::RWDatabase::BoundGNetList;
+  using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
+  using CutStorage = eda::gate::optimizer::CutStorage;
+  using VisitorFlags = eda::gate::optimizer::VisitorFlags;
+  using Walker = eda::gate::optimizer::Walker;
+  using CutsFindVisitor = eda::gate::optimizer::CutsFindVisitor;
+  using ConeVisitor = eda::gate::optimizer::ConeVisitor;
+  using TruthTable = eda::gate::optimizer::TruthTable;
 
-  TechMapVisitor::TechMapVisitor() {}
+  SearchOptReplacement::SearchOptReplacement() {}
 
-  void TechMapVisitor::set(CutStorage *cutStorage,
+  void SearchOptReplacement::set(CutStorage *cutStorage,
       GNet *net, 
       std::unordered_map<GateID, Replacement> *bestReplacement,
       int cutSize, RWDatabase &rwdb) {
@@ -25,7 +35,7 @@ namespace eda::gate::optimizer {
     this->rwdb = rwdb;
                             }
 
-  VisitorFlags TechMapVisitor::onNodeBegin(const GateID &node) {
+  VisitorFlags SearchOptReplacement::onNodeBegin(const GateID &node) {
     saveReplace = false;
     minNodeArrivalTime = std::numeric_limits<double>::max();
 
@@ -37,10 +47,10 @@ namespace eda::gate::optimizer {
     }
     lastNode = node;
     lastCuts = &(cutStorage->cuts[node]);
-    return SUCCESS;
+    return eda::gate::optimizer::VisitorFlags::SUCCESS;
   }
 
-  VisitorFlags TechMapVisitor::onCut(const Visitor::Cut &cut) {
+  VisitorFlags SearchOptReplacement::onCut(const Visitor::Cut &cut) {
 
     if (checkValidCut(cut)) {
       // Finding cone.
@@ -82,22 +92,80 @@ namespace eda::gate::optimizer {
         }
       }
     }
-    return SUCCESS;
+    return eda::gate::optimizer::VisitorFlags::SUCCESS;
   }
 
-  VisitorFlags TechMapVisitor::onNodeEnd(const GateID &) {
+  VisitorFlags SearchOptReplacement::onNodeEnd(const GateID &) {
+    saveBestReplacement();
 
-    finishTechMap();
-
-    // Removing invalid nodes.
     for (const auto &it: toRemove) {
       lastCuts->erase(*it);
     }
     toRemove.clear();
-    return SUCCESS;
+    return eda::gate::optimizer::VisitorFlags::SUCCESS;
   }
 
-  bool TechMapVisitor::checkValidCut(const Cut &cut) {
+  bool SearchOptReplacement::checkOptimize(const BoundGNet &superGate,
+      const std::unordered_map<GateID, GateID> &map) {
+    double maxGateArrivalTime = maxArrivalTime(superGate, map);
+    if ( minNodeArrivalTime > maxGateArrivalTime) {
+      minNodeArrivalTime = maxGateArrivalTime;
+      return true;
+    }
+    return false;
+  }
+
+  VisitorFlags
+  SearchOptReplacement::considerTechMap(BoundGNet &superGate,
+      std::unordered_map<GateID, GateID> &map) {
+    bestOption = superGate;
+    bestOptionMap = map;
+    return eda::gate::optimizer::VisitorFlags::SUCCESS;
+  }
+
+  BoundGNetList
+  SearchOptReplacement::getSubnets(uint64_t func) {
+    return rwdb.get(func);
+  }
+
+  void SearchOptReplacement::saveBestReplacement() {
+    if (saveReplace) {
+      Replacement bestReplacment{lastNode, bestOptionMap, bestOption.net.get(), 
+        net, minNodeArrivalTime, bestOption.name, bestOption.area};
+      bestReplacement->insert(std::pair<GateID, Replacement>
+                              (lastNode, bestReplacment));
+    } 
+  }
+
+  double SearchOptReplacement::maxArrivalTime(const BoundGNet &superGate,
+      const std::unordered_map<GateID, GateID> &map) {
+
+    double maxDelay = 0;
+
+    std::unordered_map<Gate::Id, uint32_t> revGareBindings;
+
+    int superInputId = 0;
+    for (const auto &superGateId : superGate.inputBindings) {
+        revGareBindings[superGateId] = superInputId;
+        superInputId++;
+      }
+
+    for (const auto &[inputId, gateId] : map) {
+      double delay = 0;
+
+      if (bestReplacement->count(gateId)) {
+        delay = bestReplacement->at(gateId).delay;
+      }
+      delay = delay + superGate.inputDelays.at(revGareBindings.at(inputId));
+      
+      if (delay > maxDelay) {
+        maxDelay = delay;
+      }  
+    }
+    return maxDelay;
+  }
+
+   bool SearchOptReplacement::checkValidCut(const Cut &cut) {
     for (auto node: cut) {
       if (!net->contains(node)) {
         toRemove.emplace_back(&cut);
@@ -109,6 +177,5 @@ namespace eda::gate::optimizer {
     }
     return true;
   }
-
 
 } // namespace eda::gate::optimizer

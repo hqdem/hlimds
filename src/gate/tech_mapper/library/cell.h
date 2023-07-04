@@ -9,34 +9,34 @@
 #pragma once
 
 #include "kitty/kitty.hpp"
+#include "gate/optimizer/rwdatabase.h"
 
 #include <string>
 #include <vector>
-
-namespace eda::gate::optimizer {
-
+namespace eda::gate::techMap {
+using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
 struct Pin {
-public:
-  Pin(const std::string name, double cell_fall, double cell_rise,
-      double fall_transition, double rise_transition) :
-    name(name), cell_fall(cell_fall), cell_rise(cell_rise),
-    fall_transition(fall_transition), rise_transition(rise_transition) {}
+  public:
+    Pin(const std::string name, double cell_fall, double cell_rise,
+        double fall_transition, double rise_transition) :
+      name(name), cell_fall(cell_fall), cell_rise(cell_rise),
+      fall_transition(fall_transition), rise_transition(rise_transition) {}
 
-  const std::string &getName() { return name; }
+    const std::string &getName() { return name; }
 
-private:
-  const std::string name;
-  double cell_fall;
-  double cell_rise;
-  double fall_transition;
-  double rise_transition;
+  private:
+    const std::string name;
+    double cell_fall;
+    double cell_rise;
+    double fall_transition;
+    double rise_transition;
 
-public:
-  double getMaxdelay() {
-    double riseDelay = cell_rise + rise_transition;
-    double fallDelay = cell_fall + fall_transition;
-    return (riseDelay >= fallDelay ? riseDelay : fallDelay);
-  }
+  public:
+    double getMaxdelay() {
+      double riseDelay = cell_rise + rise_transition;
+      double fallDelay = cell_fall + fall_transition;
+      return (riseDelay >= fallDelay ? riseDelay : fallDelay);
+    }
 };
 
 struct Cell {
@@ -84,4 +84,5 @@ struct LibraryCells {
   void readLibertyFile(std::string filename);
 };
 
+void initializeLibraryRwDatabase(std::vector<Cell*> &cells, SQLiteRWDatabase *arwdb);
 } // namespace eda::gate::optimizer

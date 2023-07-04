@@ -43,9 +43,7 @@ add_library(Gate OBJECT
   printer/verilog/gate_verilog_printer.cpp
   simulator/simulator.cpp
   tech_mapper/library/cell.cpp
-  tech_mapper/strategy/replacement_cut.cpp
-  tech_mapper/strategy/simple_techmapper.cpp
-  tech_mapper/tech_mapper.cpp
+  tech_mapper/tech_map.cpp
   tech_mapper/tech_map_visitor.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)

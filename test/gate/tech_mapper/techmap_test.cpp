@@ -6,7 +6,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
+/*
 #include "gate/parser/gate_verilog_parser.h"
 #include "gate/printer/dot.h"
 #include "gate/optimizer/examples.h"
@@ -300,4 +300,4 @@ namespace eda::gate::optimizer {
     remove(dbPath.c_str());
   }
 
-}
+}*/

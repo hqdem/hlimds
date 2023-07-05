@@ -79,10 +79,11 @@ struct LibraryCells {
   }
 
   std::vector<Cell*> cells;
+  void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb);
 
   private:
   void readLibertyFile(std::string filename);
 };
 
-void initializeLibraryRwDatabase(std::vector<Cell*> &cells, SQLiteRWDatabase *arwdb);
+//void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb);
 } // namespace eda::gate::optimizer

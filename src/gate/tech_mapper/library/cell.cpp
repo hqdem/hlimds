@@ -75,8 +75,7 @@ namespace eda::gate::techMap {
     }
   }
 
-  void initializeLibraryRwDatabase(std::vector<Cell*> &cells,
-      SQLiteRWDatabase *arwdb){
+  void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb) {
   for(auto& cell : cells) {
     uint64_t truthTable = 0;
 
@@ -98,18 +97,19 @@ namespace eda::gate::techMap {
 
     model::GateSymbol customName =
         model::GateSymbol::create(cell->getName());
-    auto net = std::make_shared<GNet>();
 
+    auto cellNet = std::make_shared<GNet>();
     for (unsigned i = 0; i < cell->getInputPinsNumber(); i++) {
-      const Gate::Id inputId = net->addIn();
+      const Gate::Id inputId = cellNet->addIn();
       inputs.push_back(Gate::Signal::always(inputId));
     }
 
-    auto gateId = net->addGate(customName, inputs);
-    outputId = net->addOut(gateId);
+    auto gateId = cellNet->addGate(customName, inputs);
+    //outputId = net->addOut(gateId);
 
-    net->sortTopologically();
-    std::shared_ptr<GNet> dummy = net;
+    cellNet->sortTopologically();
+    
+    std::shared_ptr<GNet> dummy = cellNet;
 
     BoundGNet::GateBindings bindings;
     std::vector<double> delay;

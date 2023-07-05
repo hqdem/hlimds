@@ -12,33 +12,36 @@
 #include "gate/optimizer/cut_storage.h"
 #include "gate/tech_mapper/replacement_struct.h"
 #include "gate/optimizer/rwdatabase.h"
+#include "gate/tech_mapper/strategy/strategy.h"
 
 namespace eda::gate::techMap {
   using GNet = eda::gate::model::GNet;
   using GateID = GNet::GateId;
   using CutStorage = eda::gate::optimizer::CutStorage;
 
-  class TechMap {
+  class TechMapper {
   public:
-    TechMap(std::string libertyPath);
+    TechMapper(std::string libertyPath);
 
-    GNet *techMap(GNet *net);
+    GNet *techMap(GNet *net, Strategy &strategy);
     float getArea(GNet *net);
     float getDelay(GNet *net);
 
   private:
     //GNet *gNet;
     CutStorage cutStorage;
-    eda::gate::optimizer::RWDatabase rwdb;
     std::unordered_map<GateID, double> gatesDelay;
     std::unordered_map<GateID, Replacement> bestReplacement;
 
-    float area;
-    float delay;
+    std::string dbPath = "rwtest.db";
+    eda::gate::optimizer::SQLiteRWDatabase rwdb;
+
+    double area;
+    double delay;
 
     void aigMap(GNet *net);
     void findCuts(GNet *net);
-    void replacementSearch(GNet *net);
+    void replacementSearch(GNet *net, Strategy &strategy);
     void replacement(GNet *net);
   };
 }

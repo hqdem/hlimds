@@ -41,6 +41,8 @@ add_library(Gate OBJECT
   printer/verilog/gate_verilog_printer.cpp
   simulator/simulator.cpp
   tech_mapper/library/cell.cpp
+  tech_mapper/strategy/min_delay.h
+  tech_mapper/strategy/strategy.h
   tech_mapper/tech_map.cpp
   tech_mapper/tech_map_visitor.cpp
   transformer/bdd.cpp

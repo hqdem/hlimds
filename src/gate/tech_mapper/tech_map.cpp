@@ -16,56 +16,56 @@ namespace eda::gate::techMap {
   using Gate = eda::gate::model::Gate;
   using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
   using PreBasis = eda::gate::premapper::PreBasis;
-  using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
   
-  TechMap::TechMap(std::string libertyPath) {
+  TechMapper::TechMapper(std::string libertyPath) {
     LibraryCells libraryCells(libertyPath);
 
-    SQLiteRWDatabase arwdb;
-    std::string dbPath = "rwtest.db";
+    rwdb.linkDB(dbPath);
+    rwdb.openDB();
 
-    arwdb.linkDB(dbPath);
-    arwdb.openDB();
+    libraryCells.initializeLibraryRwDatabase(&rwdb);
 
-    initializeLibraryRwDatabase(libraryCells.cells, &arwdb);
+    for (auto const [TT,BD] : rwdb._storage) {
+      std::cout << TT << std::endl;
+    }
   }
 
-  GNet *TechMap::techMap(GNet *net) {
-    aigMap(net);
+  GNet *TechMapper::techMap(GNet *net, Strategy &strategy) {
+    //aigMap(net);
     findCuts(net);
-    replacementSearch(net);
+    replacementSearch(net, strategy);
     replacement(net);
     std::cout << getArea(net) << std::endl;
     std::cout << getDelay(net) << std::endl;
+
+    rwdb.closeDB();
+    remove(dbPath.c_str());
     return net;
   }
   
-  void TechMap::aigMap(GNet *net) {
+  void TechMapper::aigMap(GNet *net) {
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
 
     GateIdMap gmap;
     std::shared_ptr<GNet> premapped = 
         eda::gate::premapper::getPreMapper(PreBasis::AIG).map(*sharedNet, gmap);
-    premapped->sortTopologically();
 
     net = premapped.get();
   }
 
-  void TechMap::findCuts(GNet *net) {
+  void TechMapper::findCuts(GNet *net) {
     cutStorage = eda::gate::optimizer::findCuts(6, net);
   }
 
-  void TechMap::replacementSearch(GNet *net) {
+  void TechMapper::replacementSearch(GNet *net, Strategy &strategy) {
     SearchOptReplacement searchOptReplacement;
-    searchOptReplacement.set(&cutStorage, net, &bestReplacement, 6, rwdb);
-    eda::gate::optimizer::TrackerVisitor trackerVisitor("test/data/gate/tech_map/before", 
-        net, &searchOptReplacement);
-    eda::gate::optimizer::Walker walker(net, &trackerVisitor, &cutStorage);
+    searchOptReplacement.set(&cutStorage, net, &bestReplacement, 6, rwdb, strategy);
+    eda::gate::optimizer::Walker walker(net, &searchOptReplacement, &cutStorage);
     walker.walk(true);
   }
 
-  void TechMap::replacement(GNet *net) {
+  void TechMapper::replacement(GNet *net) {
     auto nodes = eda::utils::graph::topologicalSort(*net);
     std::reverse(nodes.begin(), nodes.end());
     for (auto &node: nodes) {
@@ -80,10 +80,10 @@ namespace eda::gate::techMap {
     }
   }
 
-  float TechMap::getArea(GNet *net) {
+  float TechMapper::getArea(GNet *net) {
     return area;
   }
-  float TechMap::getDelay(GNet *net) {
+  float TechMapper::getDelay(GNet *net) {
     return delay;
   }
 }

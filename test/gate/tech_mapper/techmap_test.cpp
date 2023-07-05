@@ -6,7 +6,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-/*
+
 #include "gate/parser/gate_verilog_parser.h"
 #include "gate/printer/dot.h"
 #include "gate/optimizer/examples.h"
@@ -57,6 +57,42 @@ namespace eda::gate::techMap {
     return outputPath;
   }
 
+  TEST(TechMapTest, c17) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    const std::string path = getenv("UTOPIA_HOME");
+
+    GNet *net = getNetForTechMap("c432");
+
+    std::shared_ptr<GNet> sharedNet(net);
+
+    // Premapping
+    GateIdMap gmap;
+
+    sharedNet->sortTopologically();
+    std::shared_ptr<GNet> premapped = premap(sharedNet, gmap, PreBasis::AIG);
+    
+    GNet *gnet = premapped.get();
+
+    std::cout << "  Before tech map" << std::endl;
+    std::cout << "N=" << net->nGates() << std::endl;
+    std::cout << "I=" << net->nSourceLinks() << std::endl;
+
+
+    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    
+    MinDelay minDelay;
+    techMapper.techMap(gnet, minDelay);
+
+    
+    std::cout << "  After tech map" << std::endl;
+    std::cout << std::endl;
+    std::cout << "N=" << net->nGates() << std::endl;
+    std::cout << "I=" << net->nSourceLinks() << std::endl;
+  }
+/*
   TEST(TechMapTest, gnet1) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
@@ -392,4 +428,4 @@ namespace eda::gate::techMap {
   }
   */
 
-}*/
+}

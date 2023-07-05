@@ -8,6 +8,7 @@
 #include "gate/tech_mapper/tech_map_visitor.h"
 #include "gate/optimizer/optimizer_visitor.h"
 
+
 namespace eda::gate::techMap {
 
   using GNet = eda::gate::model::GNet;
@@ -27,13 +28,14 @@ namespace eda::gate::techMap {
   void SearchOptReplacement::set(CutStorage *cutStorage,
       GNet *net, 
       std::unordered_map<GateID, Replacement> *bestReplacement,
-      int cutSize, RWDatabase &rwdb) {
+      int cutSize, RWDatabase &rwdb, Strategy &strategy) {
     this->cutStorage = cutStorage;
     this->net = net;
     this->cutSize = cutSize;
     this->bestReplacement = bestReplacement;
     this->rwdb = rwdb;
-                            }
+    this->strategy = strategy;
+  }
 
   VisitorFlags SearchOptReplacement::onNodeBegin(const GateID &node) {
     saveReplace = false;
@@ -86,7 +88,8 @@ namespace eda::gate::techMap {
           }
           ++it;
         }
-        if (checkOptimize(superGate, map)) {
+        if (strategy.checkOpt(superGate, map, minNodeArrivalTime,
+            bestReplacement)) {
           saveReplace = true;
           return considerTechMap(superGate, map);
         }

@@ -13,6 +13,7 @@
 #include "gate/optimizer/util.h"
 #include "gate/optimizer/visitor.h"
 #include "gate/tech_mapper/replacement_struct.h"
+#include "gate/tech_mapper/strategy/strategy.h"
 
 #include <queue>
 
@@ -34,7 +35,7 @@ namespace eda::gate::techMap {
 
     void set(CutStorage *cutStorage, GNet *net,
         std::unordered_map<GateID, Replacement> *bestReplacement, 
-        int cutSize, RWDatabase &rwdb);
+        int cutSize, RWDatabase &rwdb, Strategy &strategy);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -51,6 +52,8 @@ namespace eda::gate::techMap {
 
     CutStorage::Cuts *lastCuts;
     std::vector<const CutStorage::Cut *> toRemove;
+
+    Strategy strategy;
 
   protected:
     double minNodeArrivalTime;

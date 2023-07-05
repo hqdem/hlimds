@@ -6,23 +6,23 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-/*
+
 #include "gate/parser/gate_verilog_parser.h"
 #include "gate/printer/dot.h"
 #include "gate/optimizer/examples.h"
 
 #include "gate/tech_mapper/parser_lib_test.h"
-#include "gate/tech_mapper/tech_mapper.h"
-#include "gate/tech_mapper/strategy/simple_techmapper.h"
-#include "gate/tech_mapper/strategy/replacement_cut.h"
-
+#include "gate/tech_mapper/tech_map.h"
 #include "gate/premapper/mapper/mapper_test.h"
 #include "gate/debugger/checker.h"
+#include "gate/tech_mapper/strategy/min_delay.h"
+#include "gate/tech_mapper/strategy/strategy.h"
 
 
 #include "gtest/gtest.h"
 
-namespace eda::gate::optimizer {
+namespace eda::gate::techMap {
+  using GNet = eda::gate::model::GNet;
   using lorina::text_diagnostics;
   using lorina::diagnostic_engine;
   using lorina::return_code;
@@ -57,6 +57,42 @@ namespace eda::gate::optimizer {
     return outputPath;
   }
 
+  TEST(TechMapTest, c17) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+
+    const std::string path = getenv("UTOPIA_HOME");
+
+    GNet *net = getNetForTechMap("c432");
+
+    std::shared_ptr<GNet> sharedNet(net);
+
+    // Premapping
+    GateIdMap gmap;
+
+    sharedNet->sortTopologically();
+    std::shared_ptr<GNet> premapped = premap(sharedNet, gmap, PreBasis::AIG);
+    
+    GNet *gnet = premapped.get();
+
+    std::cout << "  Before tech map" << std::endl;
+    std::cout << "N=" << net->nGates() << std::endl;
+    std::cout << "I=" << net->nSourceLinks() << std::endl;
+
+
+    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    
+    MinDelay minDelay;
+    techMapper.techMap(gnet, minDelay);
+
+    
+    std::cout << "  After tech map" << std::endl;
+    std::cout << std::endl;
+    std::cout << "N=" << net->nGates() << std::endl;
+    std::cout << "I=" << net->nSourceLinks() << std::endl;
+  }
+/*
   TEST(TechMapTest, gnet1) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
@@ -299,5 +335,6 @@ namespace eda::gate::optimizer {
     arwdb.closeDB();
     remove(dbPath.c_str());
   }
+  */
 
-}*/
+}

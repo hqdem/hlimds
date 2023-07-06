@@ -22,8 +22,9 @@ namespace eda::gate::techMap {
   class TechMapper {
   public:
     TechMapper(std::string libertyPath);
+    TechMapper(eda::gate::optimizer::SQLiteRWDatabase &rwdb);
 
-    GNet *techMap(GNet *net, Strategy &strategy);
+    GNet *techMap(GNet *net, Strategy *strategy);
     float getArea(GNet *net);
     float getDelay(GNet *net);
 
@@ -41,7 +42,7 @@ namespace eda::gate::techMap {
 
     void aigMap(GNet *net);
     void findCuts(GNet *net);
-    void replacementSearch(GNet *net, Strategy &strategy);
+    void replacementSearch(GNet *net, Strategy *strategy);
     void replacement(GNet *net);
   };
 }

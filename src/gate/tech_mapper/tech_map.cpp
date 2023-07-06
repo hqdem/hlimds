@@ -30,7 +30,11 @@ namespace eda::gate::techMap {
     }
   }
 
-  GNet *TechMapper::techMap(GNet *net, Strategy &strategy) {
+  TechMapper::TechMapper(eda::gate::optimizer::SQLiteRWDatabase &rwdb) {
+    this->rwdb = rwdb;
+  }
+
+  GNet *TechMapper::techMap(GNet *net, Strategy *strategy) {
     //aigMap(net);
     findCuts(net);
     replacementSearch(net, strategy);
@@ -44,6 +48,8 @@ namespace eda::gate::techMap {
   }
   
   void TechMapper::aigMap(GNet *net) {
+    unsigned int start_time =  clock();
+
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
 
@@ -52,20 +58,26 @@ namespace eda::gate::techMap {
         eda::gate::premapper::getPreMapper(PreBasis::AIG).map(*sharedNet, gmap);
 
     net = premapped.get();
+    std::cout << "aigMapper - " << clock() - start_time << " ms" << std::endl;
   }
 
   void TechMapper::findCuts(GNet *net) {
-    cutStorage = eda::gate::optimizer::findCuts(6, net);
+    unsigned int start_time =  clock();
+    cutStorage = eda::gate::optimizer::findCuts(5, net);
+    std::cout << "find cuts - " << clock() - start_time << " ms" << std::endl;
   }
 
-  void TechMapper::replacementSearch(GNet *net, Strategy &strategy) {
+  void TechMapper::replacementSearch(GNet *net, Strategy *strategy) {
+    unsigned int start_time =  clock();
     SearchOptReplacement searchOptReplacement;
     searchOptReplacement.set(&cutStorage, net, &bestReplacement, 6, rwdb, strategy);
     eda::gate::optimizer::Walker walker(net, &searchOptReplacement, &cutStorage);
     walker.walk(true);
+    std::cout << "Search replacement - " << clock() - start_time << " ms" << std::endl;
   }
 
   void TechMapper::replacement(GNet *net) {
+    unsigned int start_time =  clock();
     auto nodes = eda::utils::graph::topologicalSort(*net);
     std::reverse(nodes.begin(), nodes.end());
     for (auto &node: nodes) {
@@ -78,6 +90,7 @@ namespace eda::gate::techMap {
         area = area + replacementInfo.area;
       } 
     }
+    std::cout << "replace - " << clock() - start_time << " ms" << std::endl;
   }
 
   float TechMapper::getArea(GNet *net) {

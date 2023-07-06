@@ -15,8 +15,6 @@ namespace eda::gate::techMap {
   using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
   
 /**
- * \brief Realization of interface Visitor.
- * \ Handler of the node and its cut to execute rewriting.
  * \author <a href="mailto:dgaryaev@ispras.ru">Daniil Gariaev</a>
  */
 class MinDelay : public Strategy {

@@ -13,14 +13,15 @@
 
 /**
  * \brief Interface to handle node and its cuts.
- * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ * \author <a href="mailto:dGaryaev@ispras.ru">Daniil Gariaev</a>
  */
 namespace eda::gate::techMap {
   using GateID = eda::gate::model::Gate::Id;
   class Strategy {
   public:
+    Strategy() {};
     virtual bool checkOpt(const eda::gate::optimizer::BoundGNet &,
         const eda::gate::model::GNet::GateIdMap &, double &,
-        std::unordered_map<GateID, Replacement> *);
+        std::unordered_map<GateID, Replacement> *) = 0;
   };
 } // namespace eda::gate::techMap

@@ -28,7 +28,7 @@ namespace eda::gate::techMap {
   void SearchOptReplacement::set(CutStorage *cutStorage,
       GNet *net, 
       std::unordered_map<GateID, Replacement> *bestReplacement,
-      int cutSize, RWDatabase &rwdb, Strategy &strategy) {
+      int cutSize, RWDatabase &rwdb, Strategy *strategy) {
     this->cutStorage = cutStorage;
     this->net = net;
     this->cutSize = cutSize;
@@ -88,7 +88,7 @@ namespace eda::gate::techMap {
           }
           ++it;
         }
-        if (strategy.checkOpt(superGate, map, minNodeArrivalTime,
+        if (strategy->checkOpt(superGate, map, minNodeArrivalTime,
             bestReplacement)) {
           saveReplace = true;
           return considerTechMap(superGate, map);
@@ -100,7 +100,6 @@ namespace eda::gate::techMap {
 
   VisitorFlags SearchOptReplacement::onNodeEnd(const GateID &) {
     saveBestReplacement();
-
     for (const auto &it: toRemove) {
       lastCuts->erase(*it);
     }

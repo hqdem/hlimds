@@ -35,7 +35,7 @@ namespace eda::gate::techMap {
 
     void set(CutStorage *cutStorage, GNet *net,
         std::unordered_map<GateID, Replacement> *bestReplacement, 
-        int cutSize, RWDatabase &rwdb, Strategy &strategy);
+        int cutSize, RWDatabase &rwdb, Strategy *strategy);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -53,7 +53,7 @@ namespace eda::gate::techMap {
     CutStorage::Cuts *lastCuts;
     std::vector<const CutStorage::Cut *> toRemove;
 
-    Strategy strategy;
+    Strategy *strategy;
 
   protected:
     double minNodeArrivalTime;

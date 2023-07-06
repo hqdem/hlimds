@@ -57,40 +57,94 @@ namespace eda::gate::techMap {
     return outputPath;
   }
 
-  TEST(TechMapTest, c17) {
+  TEST(TechMapTest, gnet1) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
+    GNet net;
+    gnet1(net);
 
-    const std::string path = getenv("UTOPIA_HOME");
-
-    GNet *net = getNetForTechMap("c432");
-
-    std::shared_ptr<GNet> sharedNet(net);
-
-    // Premapping
-    GateIdMap gmap;
-
-    sharedNet->sortTopologically();
-    std::shared_ptr<GNet> premapped = premap(sharedNet, gmap, PreBasis::AIG);
+    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
-    GNet *gnet = premapped.get();
+    MinDelay *minDelay = new MinDelay();
+    techMapper.techMap(&net, minDelay);
+  }
 
-    std::cout << "  Before tech map" << std::endl;
-    std::cout << "N=" << net->nGates() << std::endl;
-    std::cout << "I=" << net->nSourceLinks() << std::endl;
+  TEST(TechMapTest, gnet2) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+    GNet net;
+    gnet2(net);
 
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
-    MinDelay minDelay;
-    techMapper.techMap(gnet, minDelay);
+    MinDelay *minDelay = new MinDelay();
+    techMapper.techMap(&net, minDelay);
+  }
+  TEST(TechMapTest, gnet3) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+    GNet net;
+    gnet3(net);
 
+    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
-    std::cout << "  After tech map" << std::endl;
-    std::cout << std::endl;
-    std::cout << "N=" << net->nGates() << std::endl;
-    std::cout << "I=" << net->nSourceLinks() << std::endl;
+    MinDelay *minDelay = new MinDelay();
+    techMapper.techMap(&net, minDelay);
+  }
+
+  TEST(TechMapTest, c432) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+    GNet *net = getNetForTechMap("c432");
+
+    std::shared_ptr<GNet> sharedNet(net);
+    sharedNet->sortTopologically();
+    GateIdMap gmap;
+    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
+
+    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    
+    MinDelay *minDelay = new MinDelay();
+    techMapper.techMap(gnet, minDelay);
+  }
+
+  TEST(TechMapTest, adder) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+    GNet *net = getNetForTechMap("adder");
+
+    std::shared_ptr<GNet> sharedNet(net);
+    sharedNet->sortTopologically();
+    GateIdMap gmap;
+    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
+
+    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    
+    MinDelay *minDelay = new MinDelay();
+    techMapper.techMap(gnet, minDelay);
+  }
+
+  TEST(TechMapTest, c17) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+    GNet *net = getNetForTechMap("c17");
+
+    std::shared_ptr<GNet> sharedNet(net);
+    sharedNet->sortTopologically();
+    GateIdMap gmap;
+    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
+
+    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    
+    MinDelay *minDelay = new MinDelay();
+    techMapper.techMap(gnet, minDelay);
   }
 /*
   TEST(TechMapTest, gnet1) {

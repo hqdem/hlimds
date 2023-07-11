@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "kitty/kitty.hpp"
 #include "gate/optimizer/rwdatabase.h"
+#include "kitty/kitty.hpp"
 
 #include <string>
 #include <vector>
@@ -86,4 +86,4 @@ struct LibraryCells {
 };
 
 //void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb);
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::techMap

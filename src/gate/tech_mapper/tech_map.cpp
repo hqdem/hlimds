@@ -8,9 +8,9 @@
 
 #include "gate/optimizer/optimizer.h"
 #include "gate/premapper/aigmapper.h"
+#include "gate/tech_mapper/library/cell.h"
 #include "gate/tech_mapper/tech_map.h"
 #include "gate/tech_mapper/tech_map_visitor.h"
-#include "gate/tech_mapper/library/cell.h"
 
 namespace eda::gate::techMap {
   using Gate = eda::gate::model::Gate;
@@ -24,10 +24,6 @@ namespace eda::gate::techMap {
     rwdb.openDB();
 
     libraryCells.initializeLibraryRwDatabase(&rwdb);
-
-    for (auto const [TT,BD] : rwdb._storage) {
-      std::cout << TT << std::endl;
-    }
   }
 
   TechMapper::TechMapper(eda::gate::optimizer::SQLiteRWDatabase &rwdb) {
@@ -99,4 +95,4 @@ namespace eda::gate::techMap {
   float TechMapper::getDelay(GNet *net) {
     return delay;
   }
-}
+} // namespace eda::gate::techMap

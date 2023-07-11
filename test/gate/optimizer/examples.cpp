@@ -90,12 +90,13 @@ namespace eda::gate::optimizer {
     return g;
   }
 
-  std::unordered_map<GateID, GateID> createPrimitiveMap(GNet *subNet,  const Cut &cut) {
+  std::unordered_map<GateID, GateID>
+  createPrimitiveMap(GNet *subNet, const Cut &cut) {
     std::unordered_map<GateID, GateID> map;
 
     auto it = cut.begin();
-    for(GateID gateId : subNet->getSources()) {
-      if(it == cut.end()) {
+    for (GateID gateId: subNet->getSources()) {
+      if (it == cut.end()) {
         break;
       }
       map[gateId] = *it;
@@ -103,6 +104,16 @@ namespace eda::gate::optimizer {
     }
 
     return map;
+  }
+
+  GNet *getNet(const std::string &infile) {
+    const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
+    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+    const std::filesystem::path prefixPath = homePath / subCatalog;
+
+    std::string filename = prefixPath / (infile + ".v");
+
+    return eda::gate::parser::verilog::getNet(filename, infile);
   }
 
 } // namespace eda::gate::optimizer

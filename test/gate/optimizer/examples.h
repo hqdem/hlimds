@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/optimizer.h"
+#include "gate/parser/gate_verilog_parser.h"
 
 #include <filesystem>
 #include <string>
@@ -30,5 +31,7 @@ namespace eda::gate::optimizer {
   std::vector<GateID> gnet4(GNet &gNet);
 
   std::unordered_map<GateID, GateID> createPrimitiveMap(GNet *subNet,  const Cut &cut);
+
+  GNet *getNet(const std::string &netName);
 } // namespace eda::gate::optimizer
 

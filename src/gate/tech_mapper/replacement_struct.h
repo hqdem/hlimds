@@ -24,4 +24,4 @@ namespace eda::gate::techMap {
     std::string name;
     double area;
   };
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::techMap

@@ -10,8 +10,8 @@
 
 #include "gate/model/gnet.h"
 #include "gate/optimizer/cut_storage.h"
-#include "gate/tech_mapper/replacement_struct.h"
 #include "gate/optimizer/rwdatabase.h"
+#include "gate/tech_mapper/replacement_struct.h"
 #include "gate/tech_mapper/strategy/strategy.h"
 
 namespace eda::gate::techMap {
@@ -45,4 +45,4 @@ namespace eda::gate::techMap {
     void replacementSearch(GNet *net, Strategy *strategy);
     void replacement(GNet *net);
   };
-}
+} // namespace eda::gate::techMap

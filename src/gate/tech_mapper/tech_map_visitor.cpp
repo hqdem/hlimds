@@ -180,4 +180,4 @@ namespace eda::gate::techMap {
     return true;
   }
 
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::techMap

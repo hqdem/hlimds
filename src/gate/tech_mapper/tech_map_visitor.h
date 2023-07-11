@@ -46,36 +46,37 @@ namespace eda::gate::techMap {
     std::unordered_map<GateID, Replacement> *bestReplacement;
 
   private:
+    GNet *net;
     CutStorage *cutStorage;
+    RWDatabase rwdb;
+
     BoundGNet bestOption;
     std::unordered_map<GateID, GateID> bestOptionMap;
+    bool saveReplace;
+    double minNodeArrivalTime;
 
+    GateID lastNode;
     CutStorage::Cuts *lastCuts;
+    int cutSize;
     std::vector<const CutStorage::Cut *> toRemove;
 
     Strategy *strategy;
 
-  protected:
-    double minNodeArrivalTime;
-    bool saveReplace;
-    GNet *net;
-    GateID lastNode;
-    int cutSize;
-    RWDatabase rwdb;
-
     bool checkOptimize(const BoundGNet &superGate,
-                               const std::unordered_map<GateID, GateID> &map);
+        const std::unordered_map<GateID, GateID> &map);
 
     VisitorFlags
     considerTechMap(BoundGNet &superGate,
-                         std::unordered_map<GateID, GateID> &map);
+        std::unordered_map<GateID, GateID> &map);
 
     void saveBestReplacement();
 
     virtual BoundGNetList getSubnets(uint64_t func);
+
     bool checkValidCut(const Cut &cut);
+
     double maxArrivalTime(const BoundGNet &superGate,
         const std::unordered_map<GateID, GateID> &map);
   };
 
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::techMap

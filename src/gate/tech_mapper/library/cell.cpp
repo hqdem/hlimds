@@ -93,7 +93,6 @@ namespace eda::gate::techMap {
     }
 
     Gate::SignalList inputs;
-    Gate::Id outputId;
 
     model::GateSymbol customName =
         model::GateSymbol::create(cell->getName());
@@ -104,8 +103,7 @@ namespace eda::gate::techMap {
       inputs.push_back(Gate::Signal::always(inputId));
     }
 
-    auto gateId = cellNet->addGate(customName, inputs);
-    //outputId = net->addOut(gateId);
+    cellNet->addGate(customName, inputs);
 
     cellNet->sortTopologically();
     
@@ -140,4 +138,4 @@ namespace eda::gate::techMap {
     }
   }
 }
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::techMap

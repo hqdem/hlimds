@@ -48,4 +48,4 @@
     }
     return maxDelay;
   }
- }
+ } // namespace eda::gate::techMap

@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/optimizer/examples.h"
 #include "gate/parser/gate_verilog_parser.h"
 #include "gate/printer/dot.h"
 #include "gtest/gtest.h"
@@ -48,8 +49,8 @@ void parse(const std::string &infile) {
   delete parser.getGnet();
 }
 
-int parseOuts(const std::string &infile) {
-  return getNet(infile)->nOuts();
+size_t parseOuts(const std::string &infile) {
+  return eda::gate::optimizer::getNet(infile)->nOuts();
 }
 
 TEST(ParserVTest, adder) {
@@ -58,6 +59,10 @@ TEST(ParserVTest, adder) {
 
 TEST(ParserVTest, c17) {
   parse("c17");
+}
+
+TEST(ParserVTest, c17_modified) {
+  parse("c17_modified");
 }
 
 TEST(ParserVTest, arbiter) {

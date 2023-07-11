@@ -1496,11 +1496,6 @@ public:
   {
     bool success = true;
     std::string const module_name{ token }; // name of module
-    static int count = 0;
-   // std::cout<<--count<<std::endl;
-    if(count == -29966) {
-      int a = 0;
-    }
 
     auto const it = modules.find( module_name );
     if ( it == std::end( modules ) )

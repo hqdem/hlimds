@@ -89,7 +89,7 @@ public:
 
   virtual ~RWDatabase() { }
 
-//protected:
+protected:
   std::unordered_map<rawTT, BoundGNetList> _storage;
 
 };

@@ -68,14 +68,14 @@ Compiled::Compiled(const GNet &net,
     program(net.nGates()),
     nInputs(in.size()),
     outputs(out.size()),
-    memory(net.nSourceLinks() + net.nGates()),
+    memory(net.nGates()),
     postponed(net.nTriggers()),
     nPostponed(0) {
 
   assert(net.isSorted() && "Net is not topologically sorted");
   assert(net.nSourceLinks() == in.size());
 
-  gindex.reserve(net.nSourceLinks() + net.nGates());
+  gindex.reserve(net.nGates());
 
   // Map the source links (including source gates) to memory.
   I i = 0;

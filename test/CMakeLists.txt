@@ -51,6 +51,7 @@ add_executable(${TEST_TARGET}
   gate/premapper/xmgmapper/xmgmapper_test.cpp
   gate/printer/graphml_test.cpp
   gate/printer/verilog/gate_verilog_printer_test.cpp
+  gate/simulator/simulator_memory_test.cpp
   gate/simulator/simulator_test.cpp
   gate/transformer/bdd_test.cpp
   lib/minisat/minisat_test.cpp

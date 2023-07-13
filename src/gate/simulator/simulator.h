@@ -53,6 +53,11 @@ public:
       getTargets(out);
     }
 
+    /// Returns the value a gate had during simulation
+    bool getValue(Gate::Id gid) {
+      return memory[gindex[Gate::Link(gid)]];
+    }
+
   private:
     /// Sets the input values.
     void setSources(const BV &values) {

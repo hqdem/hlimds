@@ -17,7 +17,6 @@ Some of them are listed below.
 8. Use lowerCamelCase for names of functions/methods/objects/variables.
 9. "{" symbol should be at the same line as the related operator has.
 10. Source files should have header comments (set the `<yearnum>` here):
-
 ```cpp
 //===----------------------------------------------------------------------===//
 //
@@ -27,18 +26,16 @@ Some of them are listed below.
 //
 //===----------------------------------------------------------------------===//
 ```
-
-12. All the header files should have Doxygen-formatted comments for classes:
-
+11. All the header files should have Doxygen-formatted comments for classes:
 ```cpp
 /**
  * \brief Implements a very useful thing.
  */
 ```
 
-13. All the includes should be listed in the following order:
-1. project includes;
-2. third-party library includes;
-3. system includes.
+12. All the includes should be listed in the following order:
+  - project includes;
+  - third-party library includes;
+  - system includes.
 
 Includes should be sorted in alphabetical order at every category.

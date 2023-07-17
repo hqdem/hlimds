@@ -187,21 +187,21 @@ TEST(Verilog2GraphMlTest, voter) {
 // }
 
 TEST(RIL2GraphMlTest, func) {
-  fromRIL("func.v", "ril_func");
+  fromRIL("func", "ril_func");
 }
 
 TEST(RIL2GraphMlTest, test) {
-  fromRIL("test.v", "ril_test");
+  fromRIL("test", "ril_test");
 }
 
 TEST(RIL2GraphMlTest, add) {
-  fromRIL("ril_arithmetic_tests/add.v", "ril_add");
+  fromRIL("ril_arithmetic_tests/add", "ril_add");
 }
 
 TEST(RIL2GraphMlTest, mul) {
-  fromRIL("ril_arithmetic_tests/mul.v", "ril_mul");
+  fromRIL("ril_arithmetic_tests/mul", "ril_mul");
 }
 
 TEST(RIL2GraphMlTest, sub) {
-  fromRIL("ril_arithmetic_tests/sub.v", "ril_sub");
+  fromRIL("ril_arithmetic_tests/sub", "ril_sub");
 }

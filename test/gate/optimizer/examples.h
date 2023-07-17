@@ -20,7 +20,7 @@ namespace eda::gate::optimizer {
 
   std::vector<GateID> gnet1(GNet &gNet) ;
 
-  std::vector<GateID> gnet1Exteded(GNet &gNet);
+  std::vector<GateID> gnet1Extended(GNet &gNet);
 
   std::vector<GateID> gnet2(GNet &gNet);
 

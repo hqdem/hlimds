@@ -59,7 +59,7 @@ namespace eda::gate::optimizer {
 
     GNet mainGnet;
     GNet subGnet;
-    auto g = gnet1Exteded(mainGnet);
+    auto g = gnet1Extended(mainGnet);
     gnet2(subGnet);
 
     substitutePrint("test/data/gate/optimizer/output/substitute2", &mainGnet,

@@ -17,7 +17,7 @@ namespace eda::gate::optimizer {
     auto g = gnet1(mainGnet);
     gnet1(subGnet);
 
-    auto map = createPrimitiveMap(&subGnet, mainGnet.getSources());
+    auto map = createMap(&subGnet, mainGnet.getSources());
     int optimization = fakeSubstitute(g.back(), map, &subGnet,
                                       &mainGnet);
     EXPECT_EQ(0, optimization);
@@ -30,7 +30,7 @@ namespace eda::gate::optimizer {
     auto g = gnet1Extended(mainGnet);
     gnet1Extended(subGnet);
 
-    auto map = createPrimitiveMap(&subGnet, mainGnet.getSources());
+    auto map = createMap(&subGnet, mainGnet.getSources());
     int optimization = fakeSubstitute(g.back(), map, &subGnet,
                                       &mainGnet);
     EXPECT_EQ(0, optimization);
@@ -43,7 +43,7 @@ namespace eda::gate::optimizer {
     auto g = gnet2(mainGnet);
     gnet2(subGnet);
 
-    auto map = createPrimitiveMap(&subGnet, mainGnet.getSources());
+    auto map = createMap(&subGnet, mainGnet.getSources());
     int optimization = fakeSubstitute(g.back(), map, &subGnet,
                                       &mainGnet);
     EXPECT_EQ(0, optimization);
@@ -56,7 +56,7 @@ namespace eda::gate::optimizer {
     auto g = gnet1(mainGnet);
     gnet2(subGnet);
 
-    auto map = createPrimitiveMap(&subGnet, mainGnet.getSources());
+    auto map = createMap(&subGnet, mainGnet.getSources());
     int optimization = fakeSubstitute(g.back(), map, &subGnet,
                                       &mainGnet);
     EXPECT_EQ(0, optimization);
@@ -69,7 +69,7 @@ namespace eda::gate::optimizer {
     auto g = gnet1Extended(mainGnet);
     gnet2(subGnet);
 
-    auto map = createPrimitiveMap(&subGnet, mainGnet.getSources());
+    auto map = createMap(&subGnet, mainGnet.getSources());
     int optimization = fakeSubstitute(g[6], map, &subGnet,
                                       &mainGnet);
     EXPECT_EQ(1, optimization);

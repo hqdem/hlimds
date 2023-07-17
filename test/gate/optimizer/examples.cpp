@@ -90,8 +90,7 @@ namespace eda::gate::optimizer {
     return g;
   }
 
-  std::unordered_map<GateID, GateID>
-  createPrimitiveMap(GNet *subNet, const Cut &cut) {
+  std::unordered_map<GateID, GateID> createMap(GNet *subNet, const Cut &cut) {
     std::unordered_map<GateID, GateID> map;
 
     auto it = cut.begin();

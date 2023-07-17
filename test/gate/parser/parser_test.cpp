@@ -17,8 +17,21 @@
 #include <filesystem>
 #include <string>
 
+using namespace eda::gate::model;
 using namespace eda::gate::parser::verilog;
 using namespace lorina;
+
+namespace eda::gate::parser::verilog {
+
+GNet *parseVerilog(const std::string &infile) {
+  const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path prefixPath = homePath / subCatalog;
+
+  std::string filename = prefixPath / (infile + ".v");
+
+  return eda::gate::parser::verilog::getNet(filename, infile);
+}
 
 void parse(const std::string &infile) {
   if (!getenv("UTOPIA_HOME")) {
@@ -50,8 +63,9 @@ void parse(const std::string &infile) {
 }
 
 size_t parseOuts(const std::string &infile) {
-  return eda::gate::optimizer::getNet(infile)->nOuts();
+  return parseVerilog(infile)->nOuts();
 }
+} // namespace eda::gate::parser::verilog
 
 TEST(ParserVTest, adder) {
   parse("adder");

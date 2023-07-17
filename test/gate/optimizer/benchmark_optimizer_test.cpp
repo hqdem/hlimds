@@ -6,13 +6,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/parser/gate_verilog_parser.h"
-#include "gate/printer/dot.h"
+#include "gate/optimizer/examples.h"
 #include "gate/optimizer/optimizer.h"
 #include "gate/optimizer/strategy/apply_search_optimizer.h"
 #include "gate/optimizer/strategy/exhaustive_search_optimizer.h"
+#include "gate/parser/gate_verilog_parser.h"
+#include "gate/parser/parser_test.h"
+#include "gate/printer/dot.h"
 #include "gtest/gtest.h"
-#include "gate/optimizer/examples.h"
 
 using namespace eda::gate::parser::verilog;
 
@@ -67,7 +68,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = getNet("c17");
+    auto net = parseVerilog("c17");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 
@@ -83,7 +84,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = getNet("c432");
+    auto net = parseVerilog("c432");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 
@@ -101,7 +102,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = getNet("adder");
+    auto net = parseVerilog("adder");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 

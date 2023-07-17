@@ -32,6 +32,5 @@ namespace eda::gate::optimizer {
 
   std::unordered_map<GateID, GateID> createPrimitiveMap(GNet *subNet,  const Cut &cut);
 
-  GNet *getNet(const std::string &netName);
 } // namespace eda::gate::optimizer
 

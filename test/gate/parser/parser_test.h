@@ -14,7 +14,7 @@ namespace eda::gate::parser::verilog {
 
   /**
     * \brief Parses Verilog file and constructs the net.
-    * @param netName Name of Verilog file without extension.
+    * @param netName Name of Verilog file.
     * @return The constructed net.
     */
   eda::gate::model::GNet *parseVerilog(const std::string &infile);

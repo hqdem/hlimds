@@ -28,7 +28,7 @@ GNet *parseVerilog(const std::string &infile) {
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path prefixPath = homePath / subCatalog;
 
-  std::string filename = prefixPath / (infile + ".v");
+  std::string filename = prefixPath / infile;
 
   return eda::gate::parser::verilog::getNet(filename, infile);
 }
@@ -45,7 +45,7 @@ void parse(const std::string &infile) {
 
   system(std::string("mkdir -p ").append(prefixPathOut).c_str());
 
-  std::string filename = prefixPathIn / (infile + ".v");
+  std::string filename = prefixPathIn / infile;
   std::string outFilename = prefixPathOut / (infile + ".dot");
 
   text_diagnostics consumer;
@@ -68,119 +68,119 @@ size_t parseOuts(const std::string &infile) {
 } // namespace eda::gate::parser::verilog
 
 TEST(ParserVTest, adder) {
-  parse("adder");
+  parse("adder.v");
 }
 
 TEST(ParserVTest, c17) {
-  parse("c17");
+  parse("c17.v");
 }
 
 TEST(ParserVTest, c17_modified) {
-  parse("c17_modified");
+  parse("c17_modified.v");
 }
 
 TEST(ParserVTest, arbiter) {
-  parse("arbiter");
+  parse("arbiter.v");
 }
 
 TEST(ParserVTest, bar) {
-  parse("bar");
+  parse("bar.v");
 }
 
 TEST(ParserVTest, c1355) {
-  parse("c1355");
+  parse("c1355.v");
 }
 
 TEST(ParserVTest, c1908) {
-  parse("c1908");
+  parse("c1908.v");
 }
 
 TEST(ParserVTest, c3540) {
-  parse("c3540");
+  parse("c3540.v");
 }
 
 TEST(ParserVTest, c432) {
-  parse("c432");
+  parse("c432.v");
 }
 
 TEST(ParserVTest, c499) {
-  parse("c499");
+  parse("c499.v");
 }
 
 TEST(ParserVTest, c6288) {
-  parse("c6288");
+  parse("c6288.v");
 }
 
 TEST(ParserVTest, c880) {
-  parse("c880");
+  parse("c880.v");
 }
 
 TEST(ParserVTest, cavlc) {
-  parse("cavlc");
+  parse("cavlc.v");
 }
 
 TEST(ParserVTest, ctrl) {
-  parse("ctrl");
+  parse("ctrl.v");
 }
 
 TEST(ParserVTest, dec) {
-  parse("dec");
+  parse("dec.v");
 }
 
 TEST(ParserVTest, div) {
-  parse("div");
+  parse("div.v");
 }
 
 TEST(ParserVTest, i2c) {
-  parse("i2c");
+  parse("i2c.v");
 }
 
 TEST(ParserVTest, int2float) {
-  parse("int2float");
+  parse("int2float.v");
 }
 
 TEST(ParserVTest, log2) {
-  parse("log2");
+  parse("log2.v");
 }
 
 TEST(ParserVTest, max) {
-  parse("max");
+  parse("max.v");
 }
 
 TEST(ParserVTest, multiplier) {
-  parse("multiplier");
+  parse("multiplier.v");
 }
 
 TEST(ParserVTest, router) {
-  parse("router");
+  parse("router.v");
 }
 
 TEST(ParserVTest, sin) {
-  parse("sin");
+  parse("sin.v");
 }
 
 TEST(ParserVTest, sqrt) {
-  parse("sqrt");
+  parse("sqrt.v");
 }
 
 TEST(ParserVTest, square) {
-  parse("square");
+  parse("square.v");
 }
 
 TEST(ParserVTest, voter) {
-  parse("voter");
+  parse("voter.v");
 }
 
 // The test suite checks if the nets, built according to gate-level Verilog
 // descriptions, contain the correct number of outputs.
 TEST(ParserVOutTest, sqrt) {
-  EXPECT_EQ(parseOuts("sqrt"), 64);
+  EXPECT_EQ(parseOuts("sqrt.v"), 64);
 }
 
 TEST(ParserVOutTest, adder) {
-  EXPECT_EQ(parseOuts("adder"), 129);
+  EXPECT_EQ(parseOuts("adder.v"), 129);
 }
 
 TEST(ParserVOutTest, c17) {
-  EXPECT_EQ(parseOuts("c17"), 2);
+  EXPECT_EQ(parseOuts("c17.v"), 2);
 }

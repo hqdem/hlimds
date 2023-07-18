@@ -8,27 +8,38 @@
 
 #pragma once
 
+#include "gate/optimizer/cut_visitor.h"
 #include "gate/optimizer/visitor.h"
 #include "gate/printer/dot.h"
 
 #include <filesystem>
 
 namespace eda::gate::optimizer {
-  class TrackerVisitor : public Visitor {
-  public:
 
+ /**
+  * \brief Visitor class that prints given net on each step.
+  */
+  class TrackerVisitor : public CutVisitor {
+
+  public:
+    /**
+     * @param subCatalog Path to the folder for outputting log information.
+     * @param net Net that will be traced.
+     * @param visitor Implementation of interface OptimizerVisitor.
+     * which corresponding methods will be called.
+     */
     TrackerVisitor(const std::filesystem::path &subCatalog, const GNet *net,
-                   Visitor *visitor);
+                   CutVisitor *visitor);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
     VisitorFlags onNodeEnd(const GateID &) override;
 
-    VisitorFlags onCut(const Cut &) override;
+    VisitorFlags onCut(const GateID &, const Cut &) override;
 
   private:
     std::filesystem::path subCatalog;
-    Visitor *visitor;
+    CutVisitor *visitor;
     Dot dot;
     int counter = 0;
   };

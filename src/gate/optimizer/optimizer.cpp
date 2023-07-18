@@ -1,3 +1,4 @@
+
 //===----------------------------------------------------------------------===//
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
@@ -6,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/optimizer/cut_walker.h"
 #include "gate/optimizer/optimizer.h"
 
 namespace eda::gate::optimizer {
@@ -16,9 +18,9 @@ namespace eda::gate::optimizer {
     std::cout << "cuts found" << std::endl;
 
     optimizer.set(&cutStorage, net, cutSize);
-    Walker walker(net, &optimizer, &cutStorage);
+    CutWalker walker(net, &optimizer, &cutStorage);
 
-    // TODO: change for normal condition.
+    // TODO: change condition.
     while (true) {
       walker.walk(true);
       break;
@@ -34,28 +36,7 @@ namespace eda::gate::optimizer {
 
     optimizer.set(&cutStorage, net, cutSize);
     TrackerVisitor trackerVisitor(subCatalog, net, &optimizer);
-    Walker walker(net, &trackerVisitor, &cutStorage);
-
-    // TODO: change for normal condition.
-    while (true) {
-      walker.walk(true);
-      break;
-    }
-  }
-
-  void optimizeTrackPrint(GNet *net, int cutSize,
-                          const std::filesystem::path &subCatalog,
-                          OptimizerVisitor &&optimizer) {
-    CutStorage cutStorage = findCuts(cutSize, net);
-
-    std::cout << "cuts found " << std::endl;
-
-    optimizer.set(&cutStorage, net, cutSize);
-    TrackStrategy trackStrategy(subCatalog, &optimizer);
-    trackStrategy.set(&cutStorage, net, cutSize);
-
-    TrackerVisitor trackerVisitor(subCatalog, net, &trackStrategy);
-    Walker walker(net, &trackerVisitor, &cutStorage);
+    CutWalker walker(net, &trackerVisitor, &cutStorage);
 
     // TODO: change for normal condition.
     while (true) {
@@ -68,7 +49,7 @@ namespace eda::gate::optimizer {
     CutStorage cutStorage;
 
     CutsFindVisitor visitor(cutSize, &cutStorage);
-    Walker firstFind(net, &visitor, &cutStorage);
+    Walker firstFind(net, &visitor);
     // Find cuts on the first iteration.
     firstFind.walk(true);
 

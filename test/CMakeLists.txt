@@ -37,14 +37,13 @@ add_executable(${TEST_TARGET}
   gate/optimizer/examples.cpp
   gate/optimizer/find_cone_test.cpp
   gate/optimizer/find_cut_test.cpp
-  gate/optimizer/optimizer_test.cpp
   gate/optimizer/optimization_count_test.cpp
   gate/optimizer/rwdatabase_test.cpp
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
   gate/parser/parser_test.cpp
-  gate/premapper/mapper/mapper_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
+  gate/premapper/mapper/mapper_test.cpp
   gate/premapper/migmapper/migmapper_test.cpp
   gate/premapper/xagmapper/xag_test.cpp
   gate/premapper/xagmapper/xag_verilog_test.cpp
@@ -55,9 +54,9 @@ add_executable(${TEST_TARGET}
   gate/simulator/simulator_test.cpp
   gate/transformer/bdd_test.cpp
   lib/minisat/minisat_test.cpp
-  rtl/parser/ril/ril_test.cpp
   rtl/library/adder_test.cpp
   rtl/library/arithmetic_test.cpp
+  rtl/parser/ril/ril_test.cpp
   test_main.cpp
   util/fm_test.cpp
 )

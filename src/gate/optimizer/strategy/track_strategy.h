@@ -14,29 +14,39 @@
 #include <filesystem>
 
 namespace eda::gate::optimizer {
+
+  /**
+  * \brief Logs each step of given implementation of interface OptimizerVisitor.
+  */
   class TrackStrategy : public OptimizerVisitor {
 
   public:
 
-    VisitorFlags onNodeBegin(const GateID &) override;
-
+    /**
+     * @param subCatalog Path to the folder for outputting log information.
+     * @param visitor Implementation of interface OptimizerVisitor.
+     * which corresponding methods will be called.
+     */
     TrackStrategy(const std::filesystem::path &subCatalog,
                   OptimizerVisitor *visitor);
 
-    bool checkOptimize(const BoundGNet &option,
-                       const std::unordered_map<GateID, GateID> &map) override;
+    VisitorFlags onNodeBegin(const GateID &) override;
 
-    void considerOptimization(BoundGNet &option,
-                              std::unordered_map<GateID, GateID> &map) override;
+    bool checkOptimize(const GateID &lastNode, const BoundGNet &option,
+                       MatchMap &map) override;
+
+    void considerOptimization(const GateID &lastNode, BoundGNet &option,
+                              MatchMap &map) override;
 
     BoundGNetList getSubnets(uint64_t func) override;
 
-    VisitorFlags finishOptimization() override;
+    VisitorFlags finishOptimization(const GateID &) override;
 
   private:
     std::filesystem::path subCatalog;
     OptimizerVisitor *visitor;
     int counter = 0;
   };
+
 } // namespace eda::gate::optimizer
 

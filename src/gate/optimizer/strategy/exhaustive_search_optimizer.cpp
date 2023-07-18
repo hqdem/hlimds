@@ -9,11 +9,14 @@
 #include "exhaustive_search_optimizer.h"
 
 namespace eda::gate::optimizer {
+
   using BoundGNetList = RWDatabase::BoundGNetList;
 
-  bool ExhausitiveSearchOptimizer::checkOptimize(const BoundGNet &option,
-                                                 const std::unordered_map<GateID, GateID> &map) {
-    int reduce = fakeSubstitute(lastNode, map, option.net.get(), net);
+  bool ExhausitiveSearchOptimizer::checkOptimize(const GateID &lastNode,
+                                                 const BoundGNet &option,
+                                                 MatchMap &map) {
+    netSubstitute = NetSubstitute(lastNode, &map, option.net.get(), net);
+    int reduce = netSubstitute.fakeSubstitute();
     if (reduce < bestReduce) {
       bestReduce = reduce;
       return true;
@@ -21,11 +24,11 @@ namespace eda::gate::optimizer {
     return false;
   }
 
-  void
-  ExhausitiveSearchOptimizer::considerOptimization(BoundGNet &option,
-                                                   std::unordered_map<GateID, GateID> &map) {
-    bestOption = std::move(option);
-    bestOptionMap = std::move(map);
+  void ExhausitiveSearchOptimizer::considerOptimization(const GateID &lastNode,
+                                                        BoundGNet &option,
+                                                        std::unordered_map
+                                                        <GateID, GateID> &map) {
+    bestOption = std::move(netSubstitute);
   }
 
   BoundGNetList
@@ -33,12 +36,13 @@ namespace eda::gate::optimizer {
     return rwdb.get(func);
   }
 
-  VisitorFlags ExhausitiveSearchOptimizer::finishOptimization() {
-    if(bestReduce <= 0) {
-      substitute(lastNode, bestOptionMap, bestOption.net.get(), net);
+  VisitorFlags ExhausitiveSearchOptimizer::finishOptimization(
+          const GateID &lastNode) {
+    if (bestReduce <= 0) {
+      bestOption.substitute();
     }
     bestReduce = 1;
-    return SUCCESS;
+    return CONTINUE;
   }
 
 } // namespace eda::gate::optimizer

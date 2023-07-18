@@ -7,13 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/optimizer_visitor.h"
+#include "gate/printer/dot.h"
 
 namespace eda::gate::optimizer {
 
   using GNet = eda::gate::model::GNet;
   using Gate = eda::gate::model::Gate;
 
-  OptimizerVisitor::OptimizerVisitor()  {}
+  OptimizerVisitor::OptimizerVisitor() {}
 
   void OptimizerVisitor::set(CutStorage *cutStorage,
                              GNet *net, int cutSize) {
@@ -23,75 +24,77 @@ namespace eda::gate::optimizer {
   }
 
   VisitorFlags OptimizerVisitor::onNodeBegin(const GateID &node) {
+
+    if (Gate::get(node)->isTarget()) {
+      return SKIP;
+    }
+
     if (cutStorage->cuts.find(node) == cutStorage->cuts.end()) {
       // If node is not in cutStorage - means, that it is a new node.
       // So we recount cuts for that node.
       CutsFindVisitor finder(cutSize, cutStorage);
       finder.onNodeBegin(node);
     }
-    lastNode = node;
     lastCuts = &(cutStorage->cuts[node]);
-    return SUCCESS;
+
+    return CONTINUE;
   }
 
-  VisitorFlags OptimizerVisitor::onCut(const Cut &cut) {
-    if (checkValidCut(cut)) {
+  VisitorFlags OptimizerVisitor::onCut(const GateID &lastNode, const Cut &cut) {
+    if (checkValidCut(lastNode, cut)) {
 
       // Finding cone.
-      ConeVisitor coneVisitor(cut);
-      Walker walker(net, &coneVisitor, nullptr);
-      walker.walk(lastNode, cut, false);
+      ConeVisitor coneVisitor(cut, lastNode);
+      Walker walker(net, &coneVisitor);
+      walker.walk(cut, lastNode, false);
 
       // Make binding.
       BoundGNet boundGNet;
       boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
 
-      if(coneVisitor.getResultCut().size() > 6) {
-        return SUCCESS;
-      }
-
-      const auto & cutConeMap = coneVisitor.getResultCut();
-      for(const auto &[gateSource, gateCone] : cutConeMap) {
-        boundGNet.inputBindings.push_back(gateCone);
+      const auto &cutConeMap = coneVisitor.getResultMatch();
+      const auto &resultCut = coneVisitor.getResultCutOldGates();
+      for (const auto &gate: resultCut) {
+        boundGNet.inputBindings.push_back(cutConeMap.find(gate)->second);
       }
 
       auto func = TruthTable::build(boundGNet);
 
       auto list = getSubnets(func);
-      for(auto &option : list) {
+      for (auto &option: list) {
 
-        // Creating correspondence map for subNet sources and cut.
-        std::unordered_map<GateID, GateID> map;
-        const auto& sources = option.net->getSources();
-        auto it = sources.begin();
-        for(const auto & [k, v] : cutConeMap) {
-          if(it != sources.end()) {
-            map[*it] = k;
+        // TODO: Process constant cuts
+        // Creating correspondence map for substNet sources and cut.
+        MatchMap map;
+        auto it = option.inputBindings.begin();
+        for (const auto &oldGate: resultCut) {
+          if (it != option.inputBindings.end()) {
+            map[*it] = oldGate;
           } else {
             break;
           }
           ++it;
         }
 
-        if (checkOptimize(option, map)) {
-          considerOptimization(option, map);
-          return FINISH_THIS;
+        if (checkOptimize(lastNode, option, map)) {
+          considerOptimization(lastNode, option, map);
+          return FINISH_FURTHER_NODES;
         }
       }
     }
-    return SUCCESS;
+    return CONTINUE;
   }
 
-  VisitorFlags OptimizerVisitor::onNodeEnd(const GateID &) {
+  VisitorFlags OptimizerVisitor::onNodeEnd(const GateID &node) {
     // Removing invalid nodes.
     for (const auto &it: toRemove) {
       lastCuts->erase(*it);
     }
     toRemove.clear();
-    return finishOptimization();;
+    return finishOptimization(node);
   }
 
-  bool OptimizerVisitor::checkValidCut(const Cut &cut) {
+  bool OptimizerVisitor::checkValidCut(const GateID &lastNode, const Cut &cut) {
     for (auto node: cut) {
       if (!net->contains(node)) {
         toRemove.emplace_back(&cut);

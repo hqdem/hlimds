@@ -12,6 +12,10 @@
 #include <filesystem>
 #include <string>
 
+/**
+ * \brief Synthetic nets examples.
+ * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+ */
 namespace eda::gate::optimizer {
 
   GateID createLink(GNet &gNet, const std::vector<GateID> &g,
@@ -24,13 +28,15 @@ namespace eda::gate::optimizer {
 
   std::vector<GateID> gnet2(GNet &gNet);
 
+  std::vector<GateID> gnet2Extended(GNet &gNet);
+
   std::vector<GateID> gnet3(GNet &gNet);
 
   std::vector<GateID> gnet3Cone(GNet &gNet);
 
   std::vector<GateID> gnet4(GNet &gNet);
 
-  std::unordered_map<GateID, GateID> createMap(GNet *subNet,  const Cut &cut);
+  Visitor::MatchMap createPrimitiveMap(GNet *subNet,  const Cut &cut);
 
 } // namespace eda::gate::optimizer
 

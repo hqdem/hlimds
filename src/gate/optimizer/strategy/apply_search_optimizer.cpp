@@ -9,21 +9,24 @@
 #include "apply_search_optimizer.h"
 
 namespace eda::gate::optimizer {
+
   using BoundGNetList = RWDatabase::BoundGNetList;
 
-  bool ApplySearchOptimizer::checkOptimize(const BoundGNet &option,
-                                                 const std::unordered_map<GateID, GateID> &map) {
-    return fakeSubstitute(lastNode, map, option.net.get(), net) <= 0;
+  bool ApplySearchOptimizer::checkOptimize(const GateID &lastNode, const BoundGNet &option,
+                                           MatchMap &map) {
+    netSubstitute = NetSubstitute(lastNode, &map, option.net.get(), net);
+    return netSubstitute.fakeSubstitute() <= 0;
   }
 
   void
-  ApplySearchOptimizer::considerOptimization(BoundGNet &option,
-                                             std::unordered_map<GateID, GateID> &map) {
-    substitute(lastNode, map, option.net.get(), net);
+  ApplySearchOptimizer::considerOptimization(const GateID &lastNode, BoundGNet &option,
+                                             MatchMap &map) {
+    netSubstitute.substitute();
   }
 
   BoundGNetList
   ApplySearchOptimizer::getSubnets(uint64_t func) {
     return rwdb.get(func);
   }
+
 } // namespace eda::gate::optimizer

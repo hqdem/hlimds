@@ -8,34 +8,37 @@
 
 #pragma once
 
-#include "gate/optimizer/links_clean.h"
+#include "gate/optimizer/targets_list.h"
 #include "gate/optimizer/visitor.h"
-#include "gate/optimizer/walker.h"
 
 namespace eda::gate::optimizer {
 
+ /**
+  * \brief Visitor class to modify given net.
+  */
   class SubstituteVisitor : public Visitor {
   public:
     using Gate = model::Gate;
 
-    SubstituteVisitor(GateID cutFor, const std::unordered_map<GateID, GateID> &map, GNet *subsNet, GNet *net);
+    /**
+     * @param targets List of out node and its predecessor.
+     * @param cutFor Node for which cone is substituted.
+     * @param map Maps cone inputs and substitute net sources.
+     * @param net Net where substitution is executed.
+     */
+    SubstituteVisitor(const TargetsList &targetsList, GateID cutFor,
+                      MatchMap &map, GNet *net);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
     VisitorFlags onNodeEnd(const GateID &) override;
 
-    VisitorFlags onCut(const Cut &) override;
-
   private:
+    const TargetsList &targetsList;
     GateID cutFor;
-    /// subNetGateId -> sourceNetGaeId
-    const std::unordered_map<GateID, GateID> &map;
-    GNet *subsNet;
+    //  GateId in substitute net -> GateId of original net sources
+    MatchMap &map;
     GNet *net;
-
-    std::unordered_map<GateID, GateID> nodes;
-
-    bool checkOutGate(const Gate *gate) const;
   };
 
 } // namespace eda::gate::optimizer

@@ -16,10 +16,10 @@ namespace eda::gate::optimizer {
     this->subCatalog = homePath / subCatalog;
   }
 
-  bool TrackStrategy::checkOptimize(const BoundGNet &option,
-                                    const std::unordered_map<GateID, GateID> &map) {
+  bool TrackStrategy::checkOptimize(const GateID &lastNode, const BoundGNet &option,
+                                    MatchMap &map) {
 
-    bool result = visitor->checkOptimize(option, map);
+    bool result = visitor->checkOptimize(lastNode, option, map);
 
     Dot dot(option.net.get());
     dot.print(subCatalog / ("checkOptimize" + std::to_string(counter) + "_" +
@@ -31,20 +31,18 @@ namespace eda::gate::optimizer {
   }
 
   void
-  TrackStrategy::considerOptimization(BoundGNet &option,
-                                      std::unordered_map<GateID, GateID> &map) {
-    visitor->considerOptimization(option, map);
+  TrackStrategy::considerOptimization(const GateID &lastNode, BoundGNet &option,
+                                      MatchMap &map) {
+    visitor->considerOptimization(lastNode, option, map);
   }
 
   OptimizerVisitor::BoundGNetList TrackStrategy::getSubnets(uint64_t func) {
     auto list = visitor->getSubnets(func);
-    std::cout << "for node " << lastNode << " obtained number of gates "
-              << list.size() << std::endl;
     return list;
   }
 
-  VisitorFlags TrackStrategy::finishOptimization() {
-    return visitor->finishOptimization();
+  VisitorFlags TrackStrategy::finishOptimization(const GateID &node) {
+    return visitor->finishOptimization(node);
   }
 
   VisitorFlags TrackStrategy::onNodeBegin(const GateID &id) {

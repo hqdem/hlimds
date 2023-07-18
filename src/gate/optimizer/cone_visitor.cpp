@@ -10,66 +10,57 @@
 
 namespace eda::gate::optimizer {
 
-  ConeVisitor::ConeVisitor(const Cut &cut) : cut(cut) {
+  ConeVisitor::ConeVisitor(const Cut &cut, GateID cutFor) : cut(cut),
+                                                            cutFor(cutFor) {
+    net = new GNet();
   }
 
   VisitorFlags ConeVisitor::onNodeBegin(const GateID &node) {
-    visited.push_back(node);
-    if (cut.find(node) != cut.end()) {
-      resultCut.emplace(node, Gate::INVALID);
-      return FINISH_THIS;
+
+    Gate *cur = Gate::get(node);
+    const auto &inputs = cur->inputs();
+    std::vector<base::model::Signal<GateID>> signals;
+
+    for (const auto &signal: inputs) {
+      auto found = newGates.find(signal.node());
+      if (found != newGates.end()) {
+        signals.emplace_back(base::model::Event::ALWAYS, found->second);
+      }
     }
-    return SUCCESS;
+
+    if (cut.find(node) != cut.end() && signals.empty()) {
+      auto newGate = net->addGate(GateSymbol::IN);
+      newGates[node] = newGate;
+      resultCutOldGates.emplace(node);
+    } else {
+      newGates[node] = net->addGate(cur->func(), signals);
+    }
+
+    if (node == cutFor) {
+      if (Gate::get(node)->func() != GateSymbol::OUT) {
+        net->addGate(GateSymbol::OUT, newGates[node]);
+      }
+      return FINISH_ALL_NODES;
+    }
+
+    return CONTINUE;
+
   }
 
   VisitorFlags ConeVisitor::onNodeEnd(const GateID &) {
-    return SUCCESS;
-  }
-
-  VisitorFlags ConeVisitor::onCut(const Cut &) {
-    return SUCCESS;
+    return CONTINUE;
   }
 
   ConeVisitor::GNet *ConeVisitor::getGNet() {
-    GNet *coneNet = new GNet();
-
-    GateID first = visited.front();
-
-    while (!visited.empty()) {
-
-      auto cur = visited.back();
-      std::vector<base::model::Signal<GateID>> signals;
-      const Gate *curGate = Gate::get(cur);
-      const auto &inputs = curGate->inputs();
-      visited.pop_back();
-
-      for (const auto &signal: inputs) {
-        auto found = newGates.find(signal.node());
-        if (found != newGates.end()) {
-          signals.emplace_back(base::model::Event::ALWAYS, found->second);
-        }
-      }
-
-      if (resultCut.find(cur) != resultCut.end()) {
-        if (signals.empty()) {
-          resultCut[cur] = newGates[cur] = coneNet->addGate(GateSymbol::IN);
-        } else {
-          resultCut[cur] = newGates[cur] = coneNet->addGate(curGate->func(),signals);
-        }
-      } else {
-        if (signals.empty()) {
-          resultCut[cur] = newGates[cur] = coneNet->addGate(GateSymbol::IN);
-        } else {
-          newGates[cur] = coneNet->addGate(curGate->func(), signals);
-        }
-      }
-    }
-
-    // Adding target gate.
-    if (Gate::get(first)->func() != GateSymbol::OUT) {
-      coneNet->addGate(GateSymbol::OUT, newGates[first]);
-    }
-
-    return coneNet;
+    return net;
   }
+
+  const ConeVisitor::MatchMap &ConeVisitor::getResultMatch() {
+    return newGates;
+  }
+
+  const Cut &ConeVisitor::getResultCutOldGates() {
+    return resultCutOldGates;
+  }
+
 } // namespace eda::gate::optimizer

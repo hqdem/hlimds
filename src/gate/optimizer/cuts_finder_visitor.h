@@ -12,11 +12,10 @@
 #include "gate/optimizer/visitor.h"
 
 namespace eda::gate::optimizer {
-/**
- * \brief Realization of interface Visitor.
- * \ Finds cuts in given net.
- * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
- */
+
+ /**
+  * \brief Finds cuts in given net.
+  */
   class CutsFindVisitor : public Visitor {
 
     int cutSize;
@@ -24,12 +23,15 @@ namespace eda::gate::optimizer {
 
   public:
 
+    /**
+     * @param cutSize Max number of nodes in a cut.
+     * @param cutStorage Struct where cuts are stored.
+     */
     CutsFindVisitor(int cutSize, CutStorage *cutStorage);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
     VisitorFlags onNodeEnd(const GateID &) override;
 
-    VisitorFlags onCut(const Cut &) override;
   };
 } // namespace eda::gate::optimizer

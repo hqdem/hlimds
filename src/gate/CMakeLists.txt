@@ -13,11 +13,12 @@ add_library(Gate OBJECT
   optimizer/check_cut.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp
+  optimizer/cut_walker.cpp
   optimizer/database/abc.cpp
   optimizer/database/abc/rwrUtil.c
   optimizer/links_add_counter.cpp
-  optimizer/links_clean.cpp
   optimizer/links_clean_counter.cpp
+  optimizer/net_substitute.cpp
   optimizer/optimizer.cpp
   optimizer/optimizer_visitor.cpp
   optimizer/rwdatabase.cpp
@@ -25,8 +26,8 @@ add_library(Gate OBJECT
   optimizer/strategy/apply_search_optimizer.cpp
   optimizer/strategy/exhaustive_search_optimizer.cpp
   optimizer/strategy/track_strategy.cpp
-  optimizer/strategy/zero_optimizer.cpp
   optimizer/substitute_visitor.cpp
+  optimizer/targets_list.cpp
   optimizer/tracker_visitor.cpp
   optimizer/truthtable.cpp
   optimizer/util.cpp

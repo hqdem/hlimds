@@ -6,22 +6,26 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/optimizer/visitor.h"
+
 #pragma once
-
-#include "gate/model/gnet.h"
-#include "gate/optimizer/cut_storage.h"
-
-#include <queue>
 
 namespace eda::gate::optimizer {
 
-  using GateID = eda::gate::model::GNet::GateId;
-  using Gate = eda::gate::model::Gate;
-  using Cut = CutStorage::Cut;
-
  /**
-  * \brief Checking that a given cut is indeed a cut for a given vertex.
+  * \brief For each node elaborates all cuts of the node.
   */
-  bool isCut(const GateID &gate, const Cut &cut, GateID &failed);
+  class CutVisitor : public Visitor {
+
+  public:
+
+    /**
+     * Cut handle method.
+     * @param gate Currently handling gate.
+     * @param cut Currently handling cut of the gate.
+     */
+    virtual VisitorFlags onCut(const GateID &gate, const Cut &cut) = 0;
+
+  };
 
 } // namespace eda::gate::optimizer

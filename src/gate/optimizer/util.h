@@ -10,16 +10,10 @@
 
 #include "gate/model/gnet.h"
 #include "gate/optimizer/cone_visitor.h"
-#include "gate/optimizer/links_add_counter.h"
-#include "gate/optimizer/links_clean.h"
-#include "gate/optimizer/links_clean_counter.h"
-#include "gate/optimizer/substitute_visitor.h"
-// #include "gate/optimizer/ttbuilder.h"
 #include "gate/optimizer/walker.h"
 
 /**
  * \brief Methods used for rewriting.
- * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
  */
 namespace eda::gate::optimizer {
 
@@ -28,9 +22,29 @@ namespace eda::gate::optimizer {
   using Gate = model::Gate;
   using Cut = CutStorage::Cut;
 
-  void substitute(GateID cutFor, const std::unordered_map<GateID, GateID> &map, GNet *subsNet, GNet *net);
+  /**
+   * @param node
+   * @param forward
+   * @return List of node predecessors or successors depending on forward flag.
+   */
+  std::vector<GNet::GateId> getNext(GateID node, bool forward);
 
-  int fakeSubstitute(GateID cutFor, const std::unordered_map<GateID, GateID> &map, GNet *subsNet, GNet *net);
+  /**
+   * Finds all nodes that are part of a maximum cone for the node.
+   * @param start Vertex of the cone.
+   * @param coneNodes Set of nodes, that make up the cone will be stored.
+   * @param forward Direction of building a cone.
+   */
+  void getConeSet(GateID start, std::unordered_set<GateID> &coneNodes, bool forward);
+
+  /**
+   * Finds all nodes that are part of a cone for the node.
+   * @param start Vertex of the cone.
+   * @param cut Nodes that restricting the base of a cone.
+   * @param coneNodes Set of nodes, that make up the cone will be stored.
+   * @param forward Direction of building a cone.
+   */
+  void getConeSet(GateID start, const Cut &cut, std::unordered_set<GateID> &coneNodes,  bool forward);
 
 } // namespace eda::gate::optimizer
 

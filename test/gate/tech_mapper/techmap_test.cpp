@@ -100,6 +100,7 @@ namespace eda::gate::techMap {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
+    //test push
     GNet *net = getNetForTechMap("c432");
 
     std::shared_ptr<GNet> sharedNet(net);

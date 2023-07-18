@@ -10,23 +10,63 @@
 
 namespace eda::gate::optimizer {
 
-  void substitute(GateID cutFor, const std::unordered_map<GateID, GateID> &map, GNet *subsNet, GNet *net) {
-    SubstituteVisitor visitor(cutFor, map, subsNet, net);
-    Walker walker(subsNet, &visitor, nullptr);
-    walker.walk(true);
+  std::vector<GNet::GateId> getNext(GateID node, bool forward) {
+    std::vector<GNet::GateId> next;
+    if (forward) {
+      const auto &outputs = Gate::get(node)->links();
+      next.reserve(outputs.size());
+      for (const auto &out: outputs) {
+        next.emplace_back(out.target);
+      }
+    } else {
+      const auto &inputs = Gate::get(node)->inputs();
+      next.reserve(inputs.size());
+      for (const auto &in: inputs) {
+        next.emplace_back(in.node());
+      }
+    }
+    return next;
   }
 
-  int fakeSubstitute(GateID cutFor, const std::unordered_map<GateID, GateID> &map, GNet *subsNet, GNet *net) {
+  void getConeSet(GateID start, std::unordered_set<GateID> &coneNodes,
+                  bool forward) {
+    std::queue<GateID> bfs;
+    bfs.push(start);
 
-    LinkAddCounter addCounter(net, map);
-    Walker walker(subsNet, &addCounter, nullptr);
-    walker.walk(true);
+    // First trace to define needed nodes.
+    while (!bfs.empty()) {
+      GateID cur = bfs.front();
+      bfs.pop();
+      coneNodes.emplace(cur);
+      auto next = getNext(cur, forward);
+      for (auto node: next) {
+        bfs.push(node);
+      }
+    }
+  }
 
-    LinksRemoveCounter removeCounter(cutFor, addCounter.getUsed());
-    walker = Walker(net, &removeCounter, nullptr);
-    // TODO Change to found earlier cone.
-    walker.walk(cutFor, false);
-    return addCounter.getNAdded() - removeCounter.getNRemoved();
+  void getConeSet(GateID start, const Cut &cut,
+                  std::unordered_set<GateID> &coneNodes, bool forward) {
+    std::queue<GateID> bfs;
+    bfs.push(start);
+
+    // First trace to define needed nodes.
+    while (!bfs.empty()) {
+      GateID cur = bfs.front();
+      bfs.pop();
+      coneNodes.emplace(cur);
+      if (cut.find(cur) != cut.end()) {
+        continue;
+      }
+      auto next = getNext(cur, forward);
+      for (auto node: next) {
+        bfs.push(node);
+      }
+    }
+  }
+
+  GNet *getCone(const GNet *sourceNet, GateID root, const Cut &cut) {
+    return nullptr;
   }
 
 } // namespace eda::gate::optimizer

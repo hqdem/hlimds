@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "tracker_visitor.h"
+#include "gate/optimizer/tracker_visitor.h"
 
 namespace eda::gate::optimizer {
 
   TrackerVisitor::TrackerVisitor(const std::filesystem::path &subCatalog,
                                  const GNet *net,
-                                 Visitor *visitor) : visitor(visitor),
+                                 CutVisitor *visitor) : visitor(visitor),
                                                      dot(net) {
 
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
@@ -30,8 +30,8 @@ namespace eda::gate::optimizer {
     return visitor->onNodeEnd(gateId);
   }
 
-  VisitorFlags TrackerVisitor::onCut(const Cut &cut) {
-    return visitor->onCut(cut);
+  VisitorFlags TrackerVisitor::onCut(const GateID & node, const Cut &cut) {
+    return visitor->onCut(node, cut);
   }
 
 } // namespace eda::gate::optimizer

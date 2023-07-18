@@ -18,10 +18,6 @@ namespace eda::gate::optimizer {
   CutsFindVisitor::CutsFindVisitor(int cutSize, CutStorage *cutStorage) :
           cutSize(cutSize), cutStorage(cutStorage) {}
 
-  VisitorFlags CutsFindVisitor::onCut(const Cut &cut) {
-    return VisitorFlags::FINISH_THIS;
-  }
-
   VisitorFlags CutsFindVisitor::onNodeBegin(const GateID &vertex) {
     Gate *gate = Gate::get(vertex);
     auto *cuts = &cutStorage->cuts[vertex];
@@ -59,8 +55,8 @@ namespace eda::gate::optimizer {
       // Saving cut if the iteration produced good size cut.
       if (!collected.empty()) {
         cuts->emplace(collected);
-        if(cuts->size() > 100) {
-          return VisitorFlags::SUCCESS;
+        if (cuts->size() > 100) {
+          return CONTINUE;
         }
       }
 
@@ -79,10 +75,10 @@ namespace eda::gate::optimizer {
         i = 0;
       }
     }
-    return VisitorFlags::SUCCESS;
+    return CONTINUE;
   }
 
   VisitorFlags CutsFindVisitor::onNodeEnd(const GateID &) {
-    return VisitorFlags::SUCCESS;
+    return CONTINUE;
   }
 } // namespace eda::gate::optimizer

@@ -12,12 +12,15 @@
 #include "gate/optimizer/strategy/exhaustive_search_optimizer.h"
 #include "gate/parser/gate_verilog_parser.h"
 #include "gate/parser/parser_test.h"
-#include "gate/printer/dot.h"
 #include "gtest/gtest.h"
 
 using namespace eda::gate::parser::verilog;
 
 namespace eda::gate::optimizer {
+
+  using lorina::text_diagnostics;
+  using lorina::diagnostic_engine;
+  using lorina::return_code;
 
   std::string getPath(const std::string &nameDir) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
@@ -96,7 +99,6 @@ namespace eda::gate::optimizer {
   }
 
   // TODO: uncomment the test below when incident #21 will be fixed
-
   /*TEST(RewriteTest, adder) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";

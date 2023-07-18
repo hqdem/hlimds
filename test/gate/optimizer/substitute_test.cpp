@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/examples.h"
+#include "gate/optimizer/net_substitute.h"
 #include "gtest/gtest.h"
 
 #include <filesystem>
@@ -15,7 +16,7 @@
 namespace eda::gate::optimizer {
 
   void substitutePrint(const std::filesystem::path &subCatalog,
-                       GNet *net, GNet *subNet, GateID cutFor,
+                       GNet *net, GNet *substNet, GateID cutFor,
                        const Cut &cut) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path outputPath = homePath / "build" / subCatalog;
@@ -27,12 +28,17 @@ namespace eda::gate::optimizer {
     std::string filename12 = outputPath / "gnet12.dot";
 
     Dot mainGnetDot(net);
-    Dot subGnetDot(subNet);
+    Dot subGnetDot(substNet);
 
     mainGnetDot.print(filename1);
     subGnetDot.print(filename2);
 
-    substitute(cutFor, createMap(subNet, cut), subNet, net);
+    auto map = createPrimitiveMap(substNet, cut);
+
+    NetSubstitute netSubstitute(cutFor, &map, substNet, net);
+
+    netSubstitute.fakeSubstitute();
+    netSubstitute.substitute();
 
     mainGnetDot.print(filename12);
   }
@@ -82,15 +88,17 @@ namespace eda::gate::optimizer {
     gnet3Cone(subGnet);
 
     auto cut = {g[0], g[1], g[5]};
-    auto map = createMap(&subGnet, cut);
-    int optimization = fakeSubstitute(g[6], map, &subGnet,&mainGnet);
+    auto map = createPrimitiveMap(&subGnet, cut);
+
+    NetSubstitute netSubstitute(g[6], &map, &subGnet,&mainGnet);
+    int optimization = netSubstitute.fakeSubstitute();
 
     EXPECT_EQ(0, optimization);
 
     substitutePrint("test/data/gate/optimizer/output/substituteCount", &mainGnet,
                     &subGnet, g[6], cut);
 
-    EXPECT_EQ(7, mainGnet.nGates());
+    EXPECT_EQ(8, mainGnet.nGates());
   }
 
   TEST(SubstitueCount, gnet3) {
@@ -105,8 +113,10 @@ namespace eda::gate::optimizer {
     gnet4(subGnet);
 
     auto cut = {g[0], g[3], g[7]};
-    auto map = createMap(&subGnet, cut);
-    int optimization = fakeSubstitute(g[12], map, &subGnet,&mainGnet);
+    auto map = createPrimitiveMap(&subGnet, cut);
+
+    NetSubstitute netSubstitute(g[12], &map, &subGnet,&mainGnet);
+    int optimization = netSubstitute.fakeSubstitute();
     EXPECT_EQ(0, optimization);
 
     substitutePrint("test/data/gate/optimizer/output/substituteCount2", &mainGnet,
@@ -127,13 +137,14 @@ namespace eda::gate::optimizer {
     auto g = gnet4(mainGnet);
     gnet2(subGnet);
 
-    auto map = createMap(&subGnet, mainGnet.getSources());
-    int optimization = fakeSubstitute(g.back(), map, &subGnet,
-                                      &mainGnet);
-     EXPECT_EQ(3, optimization);
+    auto map = createPrimitiveMap(&subGnet, mainGnet.getSources());
+
+    NetSubstitute netSubstitute(g[g.size() - 2], &map, &subGnet,&mainGnet);
+    int optimization = netSubstitute.fakeSubstitute();
+    EXPECT_EQ(3, optimization);
 
     substitutePrint("test/data/gate/optimizer/output/DisbalanceBigCut", &mainGnet,
-                    &subGnet, g.back(), mainGnet.getSources());
+                    &subGnet, g[g.size() - 2], mainGnet.getSources());
   }
 
   TEST(SubstitueCount, DisbalanceBigCut2) {
@@ -148,13 +159,15 @@ namespace eda::gate::optimizer {
     gnet4(subGnet);
 
     auto cut = {g[4], g[5]};
-    auto map = createMap(&subGnet, cut);
-    int optimization = fakeSubstitute(g.back(), map, &subGnet,
-                                      &mainGnet);
+    auto map = createPrimitiveMap(&subGnet, cut);
+
+    NetSubstitute netSubstitute(g[g.size() - 2], &map, &subGnet,&mainGnet);
+    int optimization = netSubstitute.fakeSubstitute();
+
     EXPECT_EQ(1, optimization);
 
     substitutePrint("test/data/gate/optimizer/output/DisbalanceBigCut2", &mainGnet,
-                    &subGnet, g.back(), cut);
+                    &subGnet, g[g.size() - 2], cut);
   }
 
   TEST(SubstitueCount, DisbalanceSmallCut) {
@@ -168,13 +181,14 @@ namespace eda::gate::optimizer {
     auto g = gnet3(mainGnet);
     gnet4(subGnet);
 
-    auto map = createMap(&subGnet, mainGnet.getSources());
-    int optimization = fakeSubstitute(g.back(), map, &subGnet,
-                                      &mainGnet);
+    auto map = createPrimitiveMap(&subGnet, mainGnet.getSources());
+    NetSubstitute netSubstitute(g[15], &map, &subGnet,&mainGnet);
+    int optimization = netSubstitute.fakeSubstitute();
+
     EXPECT_EQ(-4, optimization);
 
     substitutePrint("test/data/gate/optimizer/output/DisbalanceSmallCut", &mainGnet,
-                    &subGnet, g.back(), mainGnet.getSources());
+                    &subGnet, g[15], mainGnet.getSources());
   }
 
   TEST(SubstitueCount, DisbalanceSmallCut2) {
@@ -188,13 +202,14 @@ namespace eda::gate::optimizer {
     auto g = gnet2(mainGnet);
     gnet4(subGnet);
 
-    auto map = createMap(&subGnet, mainGnet.getSources());
-    int optimization = fakeSubstitute(g.back(), map, &subGnet,
-                                      &mainGnet);
+    auto map = createPrimitiveMap(&subGnet, mainGnet.getSources());
+    NetSubstitute netSubstitute(g[g.size() - 2], &map, &subGnet,&mainGnet);
+    int optimization = netSubstitute.fakeSubstitute();
+
     EXPECT_EQ(-3, optimization);
 
     substitutePrint("test/data/gate/optimizer/output/DisbalanceSmallCut2", &mainGnet,
-                    &subGnet, g.back(), mainGnet.getSources());
+                    &subGnet, g[6], mainGnet.getSources());
   }
 
 } // namespace eda::gate::optimizer

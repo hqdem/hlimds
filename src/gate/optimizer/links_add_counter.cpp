@@ -10,9 +10,13 @@
 
 namespace eda::gate::optimizer {
 
-  LinkAddCounter::LinkAddCounter(GNet *net,
-                                 const std::unordered_map<GateID, GateID> &map)
-          : net(net), map(map) {}
+  LinkAddCounter::LinkAddCounter(const TargetsList &targets,
+                                 Visitor::GNet *net,
+                                 MatchMap &map,
+                                 std::vector<GateID> &toCreate,
+                                 std::unordered_set<GateID> &used)
+          : targets(targets), net(net), map(map), usedSubNet(used),
+            toCreate(toCreate) {}
 
   VisitorFlags LinkAddCounter::onNodeBegin(const GateID &id) {
     Gate *gate = Gate::get(id);
@@ -21,61 +25,58 @@ namespace eda::gate::optimizer {
 
       auto found = map.find(id);
       if (found != map.end()) {
-        substitute[id] = found->second;
-        used.emplace(found->second);
+        usedSubNet.emplace(id);
+        usedNet.emplace(found->second);
       } else {
-        // TODO: implement strategy here.
-        substitute[id] = Gate::INVALID;
-        ++added;
+        // TODO: question N2. implement strategy here.
+        //  substitute[id] = Gate::INVALID;
+
+        toCreate.push_back(id);
+        return FINISH_FURTHER_NODES;
       }
 
       // Handling out gate.
-    } else if (checkOutGate(gate)) {
-      return FINISH_ALL;
+    } else if (targets.checkOutGate(gate)) {
+      if (toCreate.empty()) {
+        toCreate.push_back(gate->id());
+      }
+      return FINISH_ALL_NODES;
     } else if (!gate->links().empty()) {
       std::vector<Signal> signals;
       // Mapping signals.
       for (const auto &input: gate->inputs()) {
-        auto found = substitute.find(input.node());
-        if (found != substitute.end()) {
+        auto found = map.find(input.node());
+        if (found != map.end()) {
           signals.emplace_back(input.event(), found->second);
         } else {
-          ++added;
-          return SUCCESS;
+          toCreate.push_back(id);
+          return FINISH_FURTHER_NODES;
         }
       }
       const auto *subGate = net->gate(gate->func(), signals);
       if (subGate) {
-        used.emplace(subGate->id());
-        substitute[id] = subGate->id();
+        usedSubNet.emplace(id);
+        usedNet.emplace(subGate->id());
+        map[id] = subGate->id();
       } else {
-        ++added;
+        toCreate.push_back(id);
+        return FINISH_FURTHER_NODES;
       }
     }
-    return SUCCESS;
+    return CONTINUE;
   }
 
   VisitorFlags LinkAddCounter::onNodeEnd(const Visitor::GateID &) {
-    return SUCCESS;
+    return CONTINUE;
   }
 
-  VisitorFlags LinkAddCounter::onCut(const Cut &) {
-    return SUCCESS;
+  int LinkAddCounter::getUsedNumber() const {
+    return static_cast<int>(usedSubNet.size());
   }
 
-  bool LinkAddCounter::checkOutGate(const Gate *gate) const {
-    // Output gate has either more than 2 inputs
-    // or net consists only of inputs and targets.
-    assert(!gate->isTarget() && "Rewriting input net error.");
-
-    if (gate->links().empty()) {
-      return true;
-    }
-    if (gate->links().size() == 1) {
-      Gate *next = Gate::get(gate->links().front().target);
-      return next->isTarget();
-    }
-    return false;
+  const std::unordered_set<LinkAddCounter::GateID> &
+  LinkAddCounter::getUsedNet() {
+    return usedNet;
   }
 
 } // namespace eda::gate::optimizer

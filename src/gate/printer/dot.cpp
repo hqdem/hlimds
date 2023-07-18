@@ -52,7 +52,7 @@ void Dot::print(const std::string &filename) const {
 }
 
 void Dot::print(std::ofstream &stream) const {
-  stream << "digraph subNet {\n";
+  stream << "digraph substNet {\n";
   for (const auto &gate: gNet->gates()) {
     if (gate->links().empty()) {
       stream << "\t";

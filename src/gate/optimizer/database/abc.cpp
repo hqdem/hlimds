@@ -34,18 +34,19 @@ static BoundGNet getAbcNet(std::vector<std::pair<GateId, TruthTable>> &gates) {
   auto net = std::make_shared<GNet>();
 
   gates.push_back({net->addZero(), 0x0000}); // Constant 0
-  gates.push_back({net->addIn(),   0xAAAA}); // Variable x0
-  gates.push_back({net->addIn(),   0xCCCC}); // Variable x1
-  gates.push_back({net->addIn(),   0xF0F0}); // Variable x2
-  gates.push_back({net->addIn(),   0xFF00}); // Varaible x3
+  gates.push_back({net->addIn(), 0xAAAA}); // Variable x0
+  gates.push_back({net->addIn(), 0xCCCC}); // Variable x1
+  gates.push_back({net->addIn(), 0xF0F0}); // Variable x2
+  gates.push_back({net->addIn(), 0xFF00}); // Varaible x3
 
   GateBindings inputBindings;
-  inputBindings = {gates[1].first, gates[2].first, gates[3].first, gates[4].first};
+  inputBindings = {gates[1].first, gates[2].first, gates[3].first,
+                   gates[4].first};
 
   // Reconstruct the forest.
   for (size_t i = 0;; i++) {
-    unsigned entry0 = graph[2*i + 0];
-    unsigned entry1 = graph[2*i + 1];
+    unsigned entry0 = graph[2 * i + 0];
+    unsigned entry1 = graph[2 * i + 1];
 
     if (entry0 == 0 && entry1 == 0) {
       break;
@@ -82,7 +83,7 @@ static BoundGNet getCircuit(GateId gid, const BoundGNet &bnet) {
   for (size_t i = 0; i < gates.size(); i++) {
     const auto *gate = Gate::get(gates[i]);
 
-    for (auto input : gate->inputs()) {
+    for (auto input: gate->inputs()) {
       const auto inputId = input.node();
       gates.push_back(inputId);
     }
@@ -103,7 +104,7 @@ static BoundGNet getCircuit(GateId gid, const BoundGNet &bnet) {
   circuit->addOut(oldToNewGates[gid]);
 
   GateBindings inputBindings;
-  for (const auto &gid : bnet.inputBindings) {
+  for (const auto &gid: bnet.inputBindings) {
     if (oldToNewGates.find(gid) != oldToNewGates.end()) {
       inputBindings.push_back(oldToNewGates[gid]);
     }
@@ -119,7 +120,7 @@ static BoundGNet clone(const BoundGNet &circuit) {
   newCircuit.net = std::shared_ptr<GNet>(circuit.net->clone(oldToNewGates));
 
   int inputId = 0;
-  for (const auto &oldGateId : circuit.inputBindings) {
+  for (const auto &oldGateId: circuit.inputBindings) {
     const auto newGateId = oldToNewGates[oldGateId];
     newCircuit.inputBindings.push_back(newGateId);
 
@@ -131,30 +132,30 @@ static BoundGNet clone(const BoundGNet &circuit) {
 
 static void generateNpnInstances(const BoundGNet &bnet, RWDatabase &database) {
   static size_t perm[24][4] = {
-    {0, 1, 2, 3},
-    {1, 0, 2, 3},
-    {2, 0, 1, 3},
-    {0, 2, 1, 3},
-    {1, 2, 0, 3},
-    {2, 1, 0, 3},
-    {2, 1, 3, 0},
-    {1, 2, 3, 0},
-    {3, 2, 1, 0},
-    {2, 3, 1, 0},
-    {1, 3, 2, 0},
-    {3, 1, 2, 0},
-    {3, 0, 2, 1},
-    {0, 3, 2, 1},
-    {2, 3, 0, 1},
-    {3, 2, 0, 1},
-    {0, 2, 3, 1},
-    {2, 0, 3, 1},
-    {1, 0, 3, 2},
-    {0, 1, 3, 2},
-    {3, 1, 0, 2},
-    {1, 3, 0, 2},
-    {0, 3, 1, 2},
-    {3, 0, 1, 2}
+      {0, 1, 2, 3},
+      {1, 0, 2, 3},
+      {2, 0, 1, 3},
+      {0, 2, 1, 3},
+      {1, 2, 0, 3},
+      {2, 1, 0, 3},
+      {2, 1, 3, 0},
+      {1, 2, 3, 0},
+      {3, 2, 1, 0},
+      {2, 3, 1, 0},
+      {1, 3, 2, 0},
+      {3, 1, 2, 0},
+      {3, 0, 2, 1},
+      {0, 3, 2, 1},
+      {2, 3, 0, 1},
+      {3, 2, 0, 1},
+      {0, 2, 3, 1},
+      {2, 0, 3, 1},
+      {1, 0, 3, 2},
+      {0, 1, 3, 2},
+      {3, 1, 0, 2},
+      {1, 3, 0, 2},
+      {0, 3, 1, 2},
+      {3, 0, 1, 2}
   };
 
   const size_t k = bnet.inputBindings.size();
@@ -221,7 +222,7 @@ void initializeAbcRwDatabase(RWDatabase &database) {
   std::unordered_set<TruthTable> processedNpnClasses;
   processedNpnClasses.reserve(practicalNpnClasses.size());
 
-  for (const auto &[gid, truthTable] : gates) {
+  for (const auto &[gid, truthTable]: gates) {
     if (practicalNpnClasses.find(truthTable) != practicalNpnClasses.end() &&
         processedNpnClasses.find(truthTable) == processedNpnClasses.end()) {
       auto circuit = getCircuit(gid, net);

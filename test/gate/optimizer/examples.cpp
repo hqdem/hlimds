@@ -28,6 +28,7 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {0, 1}));
     g.push_back(createLink(gNet, g, {4, 2}));
     g.push_back(createLink(gNet, g, {5, 3}));
+    g.push_back(createLink(gNet, g, {6}, model::GateSymbol::OUT));
     return g;
   }
 
@@ -40,6 +41,9 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {4, 2}));
     g.push_back(createLink(gNet, g, {5, 3}));
     g.push_back(createLink(gNet, g, {5, 6}));
+
+    g.push_back(createLink(gNet, g, {static_cast<GateID>(g.size() - 1)},
+                           model::GateSymbol::OUT));
     return g;
   }
 
@@ -51,6 +55,24 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {0, 1}));
     g.push_back(createLink(gNet, g, {3, 2}));
     g.push_back(createLink(gNet, g, {5, 4}));
+
+    g.push_back(createLink(gNet, g, {static_cast<GateID>(g.size() - 1)},
+                           model::GateSymbol::OUT));
+    return g;
+  }
+
+  std::vector<GateID> gnet2Extended(GNet &gNet) {
+    std::vector<GateID> g(4);
+    for (GateID &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {0, 1}));
+    g.push_back(createLink(gNet, g, {3, 2}));
+    g.push_back(createLink(gNet, g, {4}, model::GateSymbol::OR));
+    g.push_back(createLink(gNet, g, {5, 4}));
+
+    g.push_back(createLink(gNet, g, {static_cast<GateID>(g.size() - 1)},
+                           model::GateSymbol::OUT));
     return g;
   }
 
@@ -68,6 +90,11 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {9, 10}));
     g.push_back(createLink(gNet, g, {9, 7, 6}));
     g.push_back(createLink(gNet, g, {11, 12, 14}));
+
+    g.push_back(createLink(gNet, g, {13},
+                           model::GateSymbol::OUT));
+    g.push_back(createLink(gNet, g, {15},
+                           model::GateSymbol::OUT));
     return g;
   }
 
@@ -78,6 +105,9 @@ namespace eda::gate::optimizer {
     }
     g.push_back(createLink(gNet, g, {0, 1}));
     g.push_back(createLink(gNet, g, {0, 2, 3}));
+
+    g.push_back(createLink(gNet, g, {static_cast<GateID>(g.size() - 1)},
+                           model::GateSymbol::OUT));
     return g;
   }
 
@@ -87,14 +117,17 @@ namespace eda::gate::optimizer {
       el = gNet.newGate();
     }
     g.push_back(createLink(gNet, g, {0, 1, 2}));
+
+    g.push_back(createLink(gNet, g, {static_cast<GateID>(g.size() - 1)},
+                           model::GateSymbol::OUT));
     return g;
   }
 
-  std::unordered_map<GateID, GateID> createMap(GNet *subNet, const Cut &cut) {
+  Visitor::MatchMap createPrimitiveMap(GNet *substNet, const Cut &cut) {
     std::unordered_map<GateID, GateID> map;
 
     auto it = cut.begin();
-    for (GateID gateId: subNet->getSources()) {
+    for (GateID gateId: substNet->getSources()) {
       if (it == cut.end()) {
         break;
       }

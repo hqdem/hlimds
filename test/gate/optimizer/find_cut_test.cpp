@@ -26,7 +26,7 @@ namespace eda::gate::optimizer {
 
     const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-    const std::filesystem::path prefixPath = homePath / subCatalog;
+    const std::filesystem::path prefixPath = homePath / "build" / subCatalog;
     const std::string infile = "c17";
 
     std::string filename = prefixPath / (infile + ".v");

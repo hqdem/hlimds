@@ -15,7 +15,6 @@
 namespace eda::gate::optimizer {
 /**
  * \brief Class for storing cuts.
- * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
  */
   struct CutStorage {
     using GNet = model::GNet;

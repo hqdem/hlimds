@@ -11,27 +11,39 @@
 #include "gate/optimizer/cut_storage.h"
 
 namespace eda::gate::optimizer {
+
+  // CONTINUE - flag of success, keeps iteration as it has to go.
+  // SKIP - makes to begin iteration for the next node.
+  // FINISH_ALL_NODES - stops iteration for all nodes and cuts.
+  // FINISH_FURTHER_NODES - stops iteration for all child nodes
+  // of the current node.
+
   enum VisitorFlags {
-    SUCCESS,
-    FINISH_ALL,
-    FINISH_THIS
+    CONTINUE,
+    SKIP,
+    FINISH_ALL_NODES,
+    FINISH_FURTHER_NODES
   };
 
-/**
- * \brief Interface to handle node and its cuts.
- * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
- */
+ /**
+  * \brief Interface to handle node and its cuts.
+  */
   class Visitor {
-  public:
 
-    using GNet = eda::gate::model::GNet;
+  public:
+    using GNet = model::GNet;
     using GateID = GNet::GateId;
     using Cut = CutStorage::Cut;
+    using MatchMap = std::unordered_map<GateID, GateID>;
 
+    /**
+     * Starts handling a tracing node.
+     */
     virtual VisitorFlags onNodeBegin(const GateID &) = 0;
 
+    /**
+     * Finishes handling a tracing node.
+     */
     virtual VisitorFlags onNodeEnd(const GateID &) = 0;
-
-    virtual VisitorFlags onCut(const Cut &) = 0;
   };
 } // namespace eda::gate::optimizer

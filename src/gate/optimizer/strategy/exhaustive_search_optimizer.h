@@ -8,12 +8,23 @@
 
 #pragma once
 
+#include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/optimizer_visitor.h"
 #include "gate/optimizer/rwmanager.h"
 
 namespace eda::gate::optimizer {
 
+  /**
+   * \brief Stores the last best found replacement and
+   * after the end of the iteration on
+   * the list of substitute nets from the database
+   * performs the transformation with the best of replacements.
+   * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
+   */
   class ExhausitiveSearchOptimizer : public OptimizerVisitor {
+
+  private:
+    NetSubstitute netSubstitute;
 
   public:
     ExhausitiveSearchOptimizer() {
@@ -22,22 +33,22 @@ namespace eda::gate::optimizer {
       rwdb = rewriteManager.getDatabase();
     }
 
-    bool checkOptimize(const BoundGNet &option,
-                       const std::unordered_map<GateID, GateID> &map) override;
+    bool checkOptimize(const GateID &lastNode, const BoundGNet &option,
+                       MatchMap &map) override;
 
-    void considerOptimization(BoundGNet &option,
-                              std::unordered_map<GateID, GateID> &map) override;
+    void considerOptimization(const GateID &lastNode, BoundGNet &option,
+                              MatchMap &map) override;
 
     BoundGNetList getSubnets(uint64_t func) override;
 
-    VisitorFlags finishOptimization() override;
+    VisitorFlags finishOptimization(const GateID &lastNode) override;
 
   private:
     RWDatabase rwdb;
-    BoundGNet bestOption;
-    std::unordered_map<GateID, GateID> bestOptionMap;
+    NetSubstitute bestOption;
     int bestReduce = 1;
 
   };
+
 } // namespace eda::gate::optimizer
 

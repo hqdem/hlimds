@@ -143,4 +143,6 @@ private:
 	     const GateBinding &ibind,
 	     const GateBinding &obind) const;
 };
+
+Checker::Hints makeHints(GNet &lhs, GNet &rhs, GateIdMap &gmap);
 } // namespace eda::gate::debugger

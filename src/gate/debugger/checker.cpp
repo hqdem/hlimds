@@ -17,31 +17,7 @@ namespace eda::gate::debugger {
 CheckerResult Checker::equivalent(GNet &lhs,
                                   GNet &rhs,
                                   GateIdMap &gmap) {
-  GateBinding ibind, obind, tbind;
-
-  // Input-to-input correspondence.
-  for (auto oldSourceLink : lhs.sourceLinks()) {
-    auto newSourceId = gmap[oldSourceLink.target];
-    ibind.insert({oldSourceLink, Gate::Link(newSourceId)});
-  }
-
-  // Output-to-output correspondence.
-  for (auto oldTargetLink : lhs.targetLinks()) {
-    auto newTargetId = gmap[oldTargetLink.source];
-    obind.insert({oldTargetLink, Gate::Link(newTargetId)});
-  }
-
-  // Trigger-to-trigger correspondence.
-  for (auto oldTriggerId : lhs.triggers()) {
-    auto newTriggerId = gmap[oldTriggerId];
-    tbind.insert({Gate::Link(oldTriggerId), Gate::Link(newTriggerId)});
-  }
-
-  Checker::Hints hints;
-  hints.sourceBinding  = std::make_shared<GateBinding>(std::move(ibind));
-  hints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
-  hints.triggerBinding = std::make_shared<GateBinding>(std::move(tbind));
-
+  Checker::Hints hints = makeHints(lhs, rhs, gmap);
   return equivalent(lhs, rhs, hints);
 }
 
@@ -353,6 +329,35 @@ void Checker::error(Context &context,
     std::cout << context.value(context.var(rhsGateLink.source, 0));
   }
   std::cout << std::endl;
+}
+
+Checker::Hints makeHints(GNet &lhs, GNet &rhs, GateIdMap &gmap) {
+  Checker::GateBinding ibind, obind, tbind;
+
+  // Input-to-input correspondence.
+  for (auto oldSourceLink : lhs.sourceLinks()) {
+    auto newSourceId = gmap[oldSourceLink.target];
+    ibind.insert({oldSourceLink, Gate::Link(newSourceId)});
+  }
+
+  // Output-to-output correspondence.
+  for (auto oldTargetLink : lhs.targetLinks()) {
+    auto newTargetId = gmap[oldTargetLink.source];
+    obind.insert({oldTargetLink, Gate::Link(newTargetId)});
+  }
+
+  // Trigger-to-trigger correspondence.
+  for (auto oldTriggerId : lhs.triggers()) {
+    auto newTriggerId = gmap[oldTriggerId];
+    tbind.insert({Gate::Link(oldTriggerId), Gate::Link(newTriggerId)});
+  }
+
+  Checker::Hints hints;
+  hints.sourceBinding  = std::make_shared<Checker::GateBinding>(std::move(ibind));
+  hints.targetBinding  = std::make_shared<Checker::GateBinding>(std::move(obind));
+  hints.triggerBinding = std::make_shared<Checker::GateBinding>(std::move(tbind));
+
+  return hints;
 }
 
 } // namespace eda::gate::debugger

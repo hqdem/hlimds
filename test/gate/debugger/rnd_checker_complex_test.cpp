@@ -41,31 +41,7 @@ TEST(RndChecker, MiterAndCheckerTest) {
   std::unordered_map<Gate::Id, Gate::Id> testMap = {};
   auto netCloned = net.clone(testMap);
 
-  GateBinding ibind, obind, tbind;
-
-  // Input-to-input correspondence.
-  for (auto oldSourceLink : net.sourceLinks()) {
-    auto newSourceId = testMap[oldSourceLink.target];
-    ibind.insert({oldSourceLink, Gate::Link(newSourceId)});
-  }
-
-  // Output-to-output correspondence.
-  for (auto oldTargetLink : net.targetLinks()) {
-    auto newTargetId = testMap[oldTargetLink.source];
-    obind.insert({oldTargetLink, Gate::Link(newTargetId)});
-  }
-
-  // Trigger-to-trigger correspondence.
-  for (auto oldTriggerId : net.triggers()) {
-    auto newTriggerId = testMap[oldTriggerId];
-    tbind.insert({Gate::Link(oldTriggerId), Gate::Link(newTriggerId)});
-  }
-
-  Checker::Hints hints;
-  hints.sourceBinding  = std::make_shared<GateBinding>(std::move(ibind));
-  hints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
-  hints.triggerBinding = std::make_shared<GateBinding>(std::move(tbind));
-
+  Checker::Hints hints = makeHints(net, *netCloned, testMap);
   GNet* mit = miter(net, *netCloned, hints);
   int res = rndChecker(*mit, 0, true);
   int res2 = rndChecker(*mit, 2, false);

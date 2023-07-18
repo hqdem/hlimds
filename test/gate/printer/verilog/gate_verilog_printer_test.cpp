@@ -49,7 +49,8 @@ void printerTest(const std::string &filename, const GNet &net) {
   namespace fs = std::filesystem;
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
   const fs::path outputPath = "output/test/gate_verilog_printer";
-  fs::path file = homePath / outputPath / filename;
+  std::string noExt = filename.substr(0, filename.length() - 2);
+  fs::path file = homePath / outputPath / noExt;
   fs::path dir = file.parent_path();
   if (!fs::exists(dir)) {
     fs::create_directories(dir);

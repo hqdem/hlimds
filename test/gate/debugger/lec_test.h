@@ -23,6 +23,7 @@
 #include <filesystem>
 
 namespace eda::gate::debugger {
+
 using Gate = eda::gate::model::Gate;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 using GNet = eda::gate::model::GNet;

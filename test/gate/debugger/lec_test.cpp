@@ -41,12 +41,12 @@ CheckerResult fileLecTest(const std::string &fileName,
 }
 
 Checker::Hints checkerTestHints(unsigned N,
-                               const GNet &lhs,
-                               const Gate::SignalList &lhsInputs,
-                               Gate::Id lhsOutputId,
-                               const GNet &rhs,
-                               const Gate::SignalList &rhsInputs,
-                               Gate::Id rhsOutputId) {
+                                const GNet &lhs,
+                                const Gate::SignalList &lhsInputs,
+                                Gate::Id lhsOutputId,
+                                const GNet &rhs,
+                                const Gate::SignalList &rhsInputs,
+                                Gate::Id rhsOutputId) {
   using Link = Gate::Link;
   using GateBinding = Checker::GateBinding;
 

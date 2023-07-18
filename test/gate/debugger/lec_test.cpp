@@ -10,44 +10,9 @@
 
 using namespace eda::gate::debugger;
 using namespace eda::gate::model;
-using namespace eda::gate::parser::verilog;
-using namespace eda::rtl::compiler;
-using namespace eda::rtl::parser::ril;
+using namespace eda::gate::parser;
 
 namespace eda::gate::debugger {
-
-GNet getNetRil(const std::string &fileName, const std::string &outSubPath) {
-  std::filesystem::path basePath = std::getenv("UTOPIA_HOME");
-  std::filesystem::path fullPath = basePath / outSubPath / fileName;
-
-  auto model = parse(fullPath);
-  Compiler compiler(FLibraryDefault::get());
-  return *compiler.compile(*model);
-}
-
-GNet getModel(const std::string &fileName,
-              const std::string &outSubPath,
-              Exts ext) {
-  switch (ext) {
-  case Exts::VERILOG:
-    return *parseVerilog(fileName);
-  case Exts::RIL:
-    return getNetRil(fileName, outSubPath);
-  default:
-    CHECK(false) << "Unsupported extension!\n";
-    return GNet(0);
-  }
-}
-
-Exts getExt(std::uint64_t pos, const std::string &fileName) {
-  std::string extension = fileName.substr(pos);
-  if (extension == ".v") {
-    return Exts::VERILOG;
-  } else if (extension == ".ril") {
-    return Exts::RIL;
-  }
-  return Exts::UNSUP;
-}
 
 CheckerResult fileLecTest(const std::string &fileName,
                           BaseChecker &checker,
@@ -60,7 +25,7 @@ CheckerResult fileLecTest(const std::string &fileName,
   }
 
   Exts ext = getExt(pos, fileName);
-  if (ext == Exts::UNSUP) {
+  if (ext == Exts::UNSUPPORTED) {
     CHECK(false) << "Unsupported HDL!\n";
     return CheckerResult::ERROR;
   }
@@ -75,7 +40,7 @@ CheckerResult fileLecTest(const std::string &fileName,
   return checker.equivalent(*initialNet, *premappedNet, gatesMap);
 }
 
-Checker::Hints checkEquivHints(unsigned N,
+Checker::Hints checkerTestHints(unsigned N,
                                const GNet &lhs,
                                const Gate::SignalList &lhsInputs,
                                Gate::Id lhsOutputId,
@@ -87,6 +52,7 @@ Checker::Hints checkEquivHints(unsigned N,
 
   GateBinding imap, omap;
 
+  // TODO: Debug print.
   std::cout << lhs << std::endl;
   std::cout << rhs << std::endl;
 
@@ -113,7 +79,7 @@ bool checkEquivTest(unsigned N,
                     const Gate::SignalList &rhsInputs,
                     Gate::Id rhsOutputId) {
   Checker checker;
-  Checker::Hints hints = checkEquivHints(N, lhs, lhsInputs, lhsOutputId,
+  Checker::Hints hints = checkerTestHints(N, lhs, lhsInputs, lhsOutputId,
                                             rhs, rhsInputs, rhsOutputId);
   return checker.equivalent(lhs, rhs, hints) == CheckerResult::EQUAL;
 }
@@ -126,7 +92,7 @@ bool checkEquivMiterTest(unsigned N,
                          const Gate::SignalList &rhsInputs,
                          Gate::Id rhsOutputId) {
   Checker checker;
-  Checker::Hints hints = checkEquivHints(N, lhs, lhsInputs, lhsOutputId,
+  Checker::Hints hints = checkerTestHints(N, lhs, lhsInputs, lhsOutputId,
                                             rhs, rhsInputs, rhsOutputId);
   GNet mit = *miter(lhs, rhs, hints);
   return checker.isEqualCombMiter(mit) == CheckerResult::EQUAL;

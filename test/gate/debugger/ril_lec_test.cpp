@@ -114,31 +114,32 @@ TEST(RilEquivalenceTest, test) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd(false, 1000);
+  std::filesystem::path subFolder = "test/data/ril";
 
   EXPECT_EQ(fileLecTest("test.ril", bdd,
-            PreBasis::AIG, "test/data/ril"), CheckerResult::ERROR);
+            PreBasis::AIG, subFolder), CheckerResult::ERROR);
   EXPECT_EQ(fileLecTest("test.ril", def,
-            PreBasis::AIG, "test/data/ril"), CheckerResult::EQUAL);
+            PreBasis::AIG, subFolder), CheckerResult::EQUAL);
   EXPECT_EQ(fileLecTest("test.ril", rnd,
-            PreBasis::AIG, "test/data/ril"), CheckerResult::ERROR);
+            PreBasis::AIG, subFolder), CheckerResult::ERROR);
   EXPECT_EQ(fileLecTest("test.ril", bdd,
-            PreBasis::XAG, "test/data/ril"), CheckerResult::ERROR);
+            PreBasis::XAG, subFolder), CheckerResult::ERROR);
   EXPECT_EQ(fileLecTest("test.ril", def,
-            PreBasis::XAG, "test/data/ril"), CheckerResult::EQUAL);
+            PreBasis::XAG, subFolder), CheckerResult::EQUAL);
   EXPECT_EQ(fileLecTest("test.ril", rnd,
-            PreBasis::XAG, "test/data/ril"), CheckerResult::ERROR);
+            PreBasis::XAG, subFolder), CheckerResult::ERROR);
   EXPECT_EQ(fileLecTest("test.ril", bdd,
-            PreBasis::MIG, "test/data/ril"), CheckerResult::ERROR);
+            PreBasis::MIG, subFolder), CheckerResult::ERROR);
   EXPECT_EQ(fileLecTest("test.ril", def,
-            PreBasis::MIG, "test/data/ril"), CheckerResult::EQUAL);
+            PreBasis::MIG, subFolder), CheckerResult::EQUAL);
   EXPECT_EQ(fileLecTest("test.ril", rnd,
-            PreBasis::MIG, "test/data/ril"), CheckerResult::ERROR);
+            PreBasis::MIG, subFolder), CheckerResult::ERROR);
   EXPECT_EQ(fileLecTest("test.ril", bdd,
-            PreBasis::XMG, "test/data/ril"), CheckerResult::ERROR);
+            PreBasis::XMG, subFolder), CheckerResult::ERROR);
   EXPECT_EQ(fileLecTest("test.ril", def,
-            PreBasis::XMG, "test/data/ril"), CheckerResult::EQUAL);
+            PreBasis::XMG, subFolder), CheckerResult::EQUAL);
   EXPECT_EQ(fileLecTest("test.ril", rnd,
-            PreBasis::XMG, "test/data/ril"), CheckerResult::ERROR);
+            PreBasis::XMG, subFolder), CheckerResult::ERROR);
 }
 
 TEST(RilEquivalenceTest, mul_small) {
@@ -197,19 +198,20 @@ TEST(RilEquivalenceTest, mul) {
 //  BddChecker bdd;
 //  Checker def;
 //  RndChecker rnd(false, 1000);
+//  std::filesystem::path subFolder = "test/data/ril";
 //
 //  EXPECT_EQ(fileLecTest("func.ril", bdd, PreBasis::AIG, Exts::RIL,
-//                        "test/data/ril"), CheckerResult::EQUAL);
+//                        subFolder), CheckerResult::EQUAL);
 //  EXPECT_EQ(fileLecTest("func.ril", def, PreBasis::AIG, Exts::RIL,
-//                        "test/data/ril"), CheckerResult::EQUAL);
+//                        subFolder), CheckerResult::EQUAL);
 //  EXPECT_EQ(fileLecTest("func.ril", rnd, PreBasis::AIG, Exts::RIL,
-//                        "test/data/ril"), CheckerResult::UNKNOWN);
+//                        subFolder), CheckerResult::UNKNOWN);
 //  EXPECT_EQ(fileLecTest("func.ril", bdd, PreBasis::XAG, Exts::RIL,
-//                        "test/data/ril"), CheckerResult::EQUAL);
+//                        subFolder), CheckerResult::EQUAL);
 //  EXPECT_EQ(fileLecTest("func.ril", def, PreBasis::XAG, Exts::RIL,
-//                        "test/data/ril"), CheckerResult::EQUAL);
+//                        subFolder), CheckerResult::EQUAL);
 //  EXPECT_EQ(fileLecTest("func.ril", rnd, PreBasis::XAG, Exts::RIL,
-//                        "test/data/ril"), CheckerResult::UNKNOWN);
+//                        subFolder), CheckerResult::UNKNOWN);
 //}
 
 } // namespace eda::gate::debugger

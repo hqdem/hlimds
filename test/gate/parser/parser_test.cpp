@@ -8,8 +8,11 @@
 
 #include "gate/optimizer/examples.h"
 #include "gate/parser/gate_verilog_parser.h"
+#include "gate/parser/parser_test.h"
 #include "gate/printer/dot.h"
 #include "gtest/gtest.h"
+#include "rtl/compiler/compiler.h"
+#include "rtl/parser/ril/parser.h"
 
 #include <lorina/diagnostics.hpp>
 #include <lorina/verilog.hpp>
@@ -18,10 +21,13 @@
 #include <string>
 
 using namespace eda::gate::model;
+using namespace eda::gate::parser;
 using namespace eda::gate::parser::verilog;
+using namespace eda::rtl::compiler;
 using namespace lorina;
 
-namespace eda::gate::parser::verilog {
+
+namespace eda::gate::parser {
 
 GNet *parseVerilog(const std::string &infile) {
   const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
@@ -31,6 +37,39 @@ GNet *parseVerilog(const std::string &infile) {
   std::string filename = prefixPath / infile;
 
   return eda::gate::parser::verilog::getNet(filename, infile);
+}
+
+GNet parseRil(const std::string &fileName, const std::string &outSubPath) {
+  std::filesystem::path basePath = std::getenv("UTOPIA_HOME");
+  std::filesystem::path fullPath = basePath / outSubPath / fileName;
+
+  auto model = eda::rtl::parser::ril::parse(fullPath);
+  Compiler compiler(FLibraryDefault::get());
+  return *compiler.compile(*model);
+}
+
+GNet getModel(const std::string &fileName,
+              const std::string &outSubPath,
+              Exts ext) {
+  switch (ext) {
+  case Exts::VERILOG:
+    return *parseVerilog(fileName);
+  case Exts::RIL:
+    return parseRil(fileName, outSubPath);
+  default:
+    CHECK(false) << "Unsupported extension!\n";
+    return GNet(0);
+  }
+}
+
+Exts getExt(std::uint64_t pos, const std::string &fileName) {
+  std::string extension = fileName.substr(pos);
+  if (extension == ".v") {
+    return Exts::VERILOG;
+  } else if (extension == ".ril") {
+    return Exts::RIL;
+  }
+  return Exts::UNSUPPORTED;
 }
 
 void parse(const std::string &infile) {
@@ -65,7 +104,7 @@ void parse(const std::string &infile) {
 size_t parseOuts(const std::string &infile) {
   return parseVerilog(infile)->nOuts();
 }
-} // namespace eda::gate::parser::verilog
+} // namespace eda::gate::parser
 
 TEST(ParserVTest, adder) {
   parse("adder.v");

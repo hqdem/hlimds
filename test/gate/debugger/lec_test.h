@@ -15,7 +15,6 @@
 #include "gate/model/gnet_test.h"
 #include "gate/parser/parser_test.h"
 #include "gate/premapper/mapper/mapper_test.h"
-#include "rtl/compiler/compiler.h"
 #include "rtl/parser/ril/parser.h"
 #include "util/logging.h"
 
@@ -28,31 +27,6 @@ using Gate = eda::gate::model::Gate;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 using GNet = eda::gate::model::GNet;
 using PreBasis = eda::gate::premapper::PreBasis;
-
-// Supported HDL.
-enum Exts {
-  RIL,
-  VERILOG,
-  UNSUP,
-};
-
-/**
- *  \brief Parses input description & builds net.
- *  @param fileName Name of the file.
- *  @param outSubPath Folder specification.
- *  @param ext Extension type.
- *  @return The parsed net.
- */
-GNet getModel(const std::string &fileName,
-              const std::string &outSubPath,
-              Exts ext);
-/**
- *  \brief Finds out the extention of the file.
- *  @param fileName Name of the file.
- *  @param pos The index of the extention dot in the name of the file.
- *  @return The extention, if it is supported, error otherwise.
- */
-Exts getExt(std::uint64_t pos, const std::string &fileName);
 
 /**
  *  \brief Checks equivalence of the parsed net and the premapped net.
@@ -67,9 +41,7 @@ CheckerResult fileLecTest(const std::string &fileName,
                           PreBasis basis,
                           const std::string &outSubPath = "");
 
-GNet getNetRil(const std::string &fileName, const std::string &outSubPath);
-
-Checker::Hints checkEquivHints(unsigned N,
+Checker::Hints checkerTestHints(unsigned N,
                                const GNet &lhs,
                                const Gate::SignalList &lhsInputs,
                                Gate::Id lhsOutputId,

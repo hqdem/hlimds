@@ -10,13 +10,47 @@
 
 #include <string>
 
-namespace eda::gate::parser::verilog {
+namespace eda::gate::parser {
+  using GNet = eda::gate::model::GNet;
 
+  // Supported HDL.
+  enum Exts {
+    RIL,
+    VERILOG,
+    UNSUPPORTED,
+  };
   /**
     * \brief Parses Verilog file and constructs the net.
     * @param netName Name of Verilog file.
     * @return The constructed net.
     */
-  eda::gate::model::GNet *parseVerilog(const std::string &infile);
+  GNet *parseVerilog(const std::string &infile);
 
-} // namespace eda::gate::parser::verilog
+  /**
+    * \brief Parses RIL file and constructs the net.
+    * @param fileName Name of RIL file.
+    * @param outSubPath Path to the file.
+    * @return The constructed net.
+    */
+  GNet parseRil(const std::string &fileName, const std::string &outSubPath);
+
+
+  /**
+   *  \brief Parses input description & builds net.
+   *  @param fileName Name of the file.
+   *  @param outSubPath Folder specification.
+   *  @param ext Extension type.
+   *  @return The parsed net.
+   */
+  GNet getModel(const std::string &fileName,
+              const std::string &outSubPath,
+              Exts ext);
+  /**
+   *  \brief Finds out the extention of the file.
+   *  @param fileName Name of the file.
+   *  @param pos The index of the extention dot in the name of the file.
+   *  @return The extention, if it is supported, error otherwise.
+   */
+  Exts getExt(std::uint64_t pos, const std::string &fileName);
+
+} // namespace eda::gate::parser

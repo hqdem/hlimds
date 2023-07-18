@@ -14,7 +14,7 @@
 #include "gate/parser/parser_test.h"
 #include "gtest/gtest.h"
 
-using namespace eda::gate::parser::verilog;
+using namespace eda::gate::parser;
 
 namespace eda::gate::optimizer {
 

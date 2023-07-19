@@ -35,23 +35,22 @@ namespace eda::gate::parser {
   std::unique_ptr<GNet> parseRil(const std::string &fileName,
                                  const std::string &outSubPath);
 
-
   /**
    *  \brief Parses input description & builds net.
    *  @param fileName Name of the file.
-   *  @param outSubPath Folder specification.
+   *  @param outSubPath Relative path to the file.
    *  @param ext Extension type.
    *  @return The parsed net.
    */
   GNet getModel(const std::string &fileName,
-              const std::string &outSubPath,
-              Exts ext);
+                const std::string &outSubPath,
+                Exts ext);
   /**
    *  \brief Finds out the extention of the file.
    *  @param fileName Name of the file.
    *  @param pos The index of the extention dot in the name of the file.
    *  @return The extention, if it is supported, error otherwise.
    */
-  Exts getExt(std::uint64_t pos, const std::string &fileName);
+  Exts getExt(const std::string &fileName);
 
 } // namespace eda::gate::parser

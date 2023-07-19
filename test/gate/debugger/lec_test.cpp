@@ -18,13 +18,7 @@ CheckerResult fileLecTest(const std::string &fileName,
                           BaseChecker &checker,
                           PreBasis basis,
                           const std::string &outSubPath) {
-  std::uint64_t pos = fileName.rfind(".");
-  if (pos == std::string::npos) {
-    CHECK(false) << "Filename does not containt extension!\n";
-    return CheckerResult::ERROR;
-  }
-
-  Exts ext = getExt(pos, fileName);
+  Exts ext = getExt(fileName);
   if (ext == Exts::UNSUPPORTED) {
     CHECK(false) << "Unsupported HDL!\n";
     return CheckerResult::ERROR;

@@ -63,11 +63,14 @@ GNet getModel(const std::string &fileName,
   }
 }
 
-Exts getExt(std::uint64_t pos, const std::string &fileName) {
-  std::string extension = fileName.substr(pos);
-  if (extension == ".v") {
+Exts getExt(const std::string &fileName) {
+  std::uint64_t pos = fileName.rfind(".");
+  assert(pos != std::string::npos);
+
+  std::string extension = fileName.substr(pos + 1);
+  if (extension == "v") {
     return Exts::VERILOG;
-  } else if (extension == ".ril") {
+  } else if (extension == "ril") {
     return Exts::RIL;
   }
   return Exts::UNSUPPORTED;

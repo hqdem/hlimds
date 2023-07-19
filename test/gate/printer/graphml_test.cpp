@@ -183,7 +183,7 @@ TEST(Verilog2GraphMlTest, voter) {
 
 // TODO: uncomment when RIL parser will be fixed
 // TEST(RIL2GraphMlTest, dff) {
-//   fromRIL("dff.v", "ril_dff");
+//   fromRIL("dff", "ril_dff");
 // }
 
 TEST(RIL2GraphMlTest, func) {

@@ -9,10 +9,12 @@
 #pragma once
 
 #include "gate/debugger/checker.h"
+#include "gate/simulator/simulator.h"
 #include "util/logging.h"
 
 namespace eda::gate::debugger {
 
+using Compiled = simulator::Simulator::Compiled;
 using Gate = model::Gate;
 using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
 using GateId = model::Gate::Id;
@@ -32,5 +34,8 @@ GNet *miter(GNet &net1, GNet &net2, Hints &hints);
 
 // Checks if it is possible to construct a miter with given parameters.
 bool areMiterable(GNet &net1, GNet &net2, Hints &hints);
+
+// Prepares the miter for simulation
+Compiled makeCompiled(const GNet &miter);
 
 } // namespace eda::gate::debugger

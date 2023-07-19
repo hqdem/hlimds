@@ -13,6 +13,7 @@
 #include "gate/debugger/encoder.h"
 #include "gate/model/gnet.h"
 #include "gate/premapper/premapper.h"
+#include "util/logging.h"
 #include "util/singleton.h"
 
 #include <memory>
@@ -92,6 +93,12 @@ public:
                            GNet &rhs,
                            GateIdMap &gmap) override;
 
+  /// Checks if the miter is satisfiable
+  CheckerResult isEqualCombMiter(const GNet &miter) const;
+
+  /// Checks if the miter is satisfiable using SAT
+  CheckerResult isEqualCombSatMiter(const GNet &miter) const;
+
 private:
   /// Checks logic equivalence of two hierarchical nets.
   CheckerResult areEqualHier(const GNet &lhs,
@@ -103,6 +110,7 @@ private:
                              const GNet &rhs,
                              const GateBinding &ibind,
                              const GateBinding &obind) const;
+
 
   /// Checks logic equivalence of two flat sequential nets
   /// with one-to-one correspondence of triggers.
@@ -132,6 +140,9 @@ private:
                                 const GateBinding &ibind,
                                 const GateBinding &obind) const;
 
+  /// Checks if the miter is satisfiable using simulation
+  CheckerResult isEqualCombSimMiter(const GNet &miter) const;
+
   /// SAT-based LEC of two flat combinational nets.
   CheckerResult areEqualCombSat(const std::vector<const GNet*> &nets,
                                 const GateConnect *connectTo,
@@ -142,6 +153,8 @@ private:
   void error(Context &context,
 	     const GateBinding &ibind,
 	     const GateBinding &obind) const;
+
+  const unsigned simCheckBound = 8;
 };
 
 Checker::Hints makeHints(GNet &lhs, GNet &rhs, GateIdMap &gmap);

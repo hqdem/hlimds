@@ -12,8 +12,6 @@ using GNet = eda::gate::model::GNet;
 
 namespace eda::gate::debugger {
 
-static simulator::Simulator simulator;
-
 CheckerResult rndChecker(GNet &miter,
                          const unsigned int tries,
                          const bool exhaustive) {
@@ -37,40 +35,7 @@ CheckerResult rndChecker(GNet &miter,
     return CheckerResult::ERROR;
   }
 
-  GNet::In gnetInput(1);
-  auto &input = gnetInput[0];
-
-  for (auto srcLink : miter.sourceLinks()) {
-    input.push_back(srcLink.target);
-  }
-
-  Gate::SignalList inputs;
-  Gate::Id outputId = model::Gate::INVALID;
-  GNet::LinkList in;
-  for (auto *gate : miter.gates()) {
-    if (gate->isTarget()) {
-      outputId = gate->id();
-      break;
-    }
-  }
-
-  if (outputId == model::Gate::INVALID) {
-    LOG_ERROR << "Can't find OUT gate at miter!" << std::endl;
-    return CheckerResult::ERROR;
-  }
-
-  for (size_t n = 0; n < inputNum; n++) {
-    in.push_back(GNet::Link(input[n]));
-  }
-
-  GNet::LinkList out{Gate::Link(outputId)};
-
-  for (auto input : inputs) {
-    in.push_back(GNet::Link(input.node()));
-  }
-
-  miter.sortTopologically();
-  auto compiled = simulator.compile(miter, in, out);
+  auto compiled = makeCompiled(miter);
   std::uint64_t output;
   std::uint64_t inputPower = 1ULL << inputNum;
 

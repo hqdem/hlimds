@@ -105,7 +105,7 @@ CheckerResult Checker::areEqualHier(const GNet &lhs,
     hintsSubnets.innerBinding  = hints.innerBinding;
 
     CheckerResult result = equivalent(*lhsSubnet, *rhsSubnet, hintsSubnets);
-    if (result == CheckerResult::NOTEQUAL) {
+    if (result.notEqual()) {
       return CheckerResult::NOTEQUAL;
     }
   }

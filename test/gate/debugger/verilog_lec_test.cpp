@@ -15,30 +15,18 @@ TEST(VlogLecTest, c17) {
   Checker def;
   RndChecker rnd;
 
-  EXPECT_EQ(fileLecTest("c17.v", bdd, PreBasis::AIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", def, PreBasis::AIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", rnd, PreBasis::AIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", bdd, PreBasis::XAG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", def, PreBasis::XAG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", rnd, PreBasis::XAG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", bdd, PreBasis::MIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", def, PreBasis::MIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", rnd, PreBasis::MIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", bdd, PreBasis::XMG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", def, PreBasis::XMG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c17.v", rnd, PreBasis::XMG),
-            CheckerResult::EQUAL);
+  EXPECT_TRUE(fileLecTest("c17.v", bdd, PreBasis::AIG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", def, PreBasis::AIG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", rnd, PreBasis::AIG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", bdd, PreBasis::XAG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", def, PreBasis::XAG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", rnd, PreBasis::XAG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", bdd, PreBasis::MIG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", def, PreBasis::MIG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", rnd, PreBasis::MIG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", bdd, PreBasis::XMG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", def, PreBasis::XMG).equal());
+  EXPECT_TRUE(fileLecTest("c17.v", rnd, PreBasis::XMG).equal());
 }
 
 TEST(VlogLecTest, c432) {
@@ -46,30 +34,18 @@ TEST(VlogLecTest, c432) {
   Checker def;
   RndChecker rnd(false, 1000);
 
-  EXPECT_EQ(fileLecTest("c432.v", bdd, PreBasis::AIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c432.v", def, PreBasis::AIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c432.v", rnd, PreBasis::AIG),
-            CheckerResult::UNKNOWN);
-  EXPECT_EQ(fileLecTest("c432.v", bdd, PreBasis::XAG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c432.v", def, PreBasis::XAG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c432.v", rnd, PreBasis::XAG),
-            CheckerResult::UNKNOWN);
-  EXPECT_EQ(fileLecTest("c432.v", bdd, PreBasis::MIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c432.v", def, PreBasis::MIG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c432.v", rnd, PreBasis::MIG),
-            CheckerResult::UNKNOWN);
-  EXPECT_EQ(fileLecTest("c432.v", bdd, PreBasis::XMG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c432.v", def, PreBasis::XMG),
-            CheckerResult::EQUAL);
-  EXPECT_EQ(fileLecTest("c432.v", rnd, PreBasis::XMG),
-            CheckerResult::UNKNOWN);
+  EXPECT_TRUE(fileLecTest("c432.v", bdd, PreBasis::AIG).equal());
+  EXPECT_TRUE(fileLecTest("c432.v", def, PreBasis::AIG).equal());
+  EXPECT_TRUE(fileLecTest("c432.v", rnd, PreBasis::AIG).isUnknown());
+  EXPECT_TRUE(fileLecTest("c432.v", bdd, PreBasis::XAG).equal());
+  EXPECT_TRUE(fileLecTest("c432.v", def, PreBasis::XAG).equal());
+  EXPECT_TRUE(fileLecTest("c432.v", rnd, PreBasis::XAG).isUnknown());
+  EXPECT_TRUE(fileLecTest("c432.v", bdd, PreBasis::MIG).equal());
+  EXPECT_TRUE(fileLecTest("c432.v", def, PreBasis::MIG).equal());
+  EXPECT_TRUE(fileLecTest("c432.v", rnd, PreBasis::MIG).isUnknown());
+  EXPECT_TRUE(fileLecTest("c432.v", bdd, PreBasis::XMG).equal());
+  EXPECT_TRUE(fileLecTest("c432.v", def, PreBasis::XMG).equal());
+  EXPECT_TRUE(fileLecTest("c432.v", rnd, PreBasis::XMG).isUnknown());
 }
 
 } // namespace eda::gate::debugger

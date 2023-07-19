@@ -21,8 +21,6 @@ TEST(RndChecker, SimpleTest) {
 
   auto net = makeNor(8, inputs, output);
 
-  std::cout << "STARTING RND_CHECKER TEST\n";
-  int a = rndChecker(*net, 0, true);
-  std::cout << "CHECKER RESULT IS: \t" << a << std::endl;
-  EXPECT_TRUE(a == CheckerResult::NOTEQUAL);
+  CheckerResult a = rndChecker(*net, 0, true);
+  EXPECT_TRUE(a.notEqual());
 }

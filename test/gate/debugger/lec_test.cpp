@@ -81,7 +81,7 @@ bool checkEquivTest(unsigned N,
   Checker checker;
   Checker::Hints hints = checkerTestHints(N, lhs, lhsInputs, lhsOutputId,
                                             rhs, rhsInputs, rhsOutputId);
-  return checker.equivalent(lhs, rhs, hints) == CheckerResult::EQUAL;
+  return checker.equivalent(lhs, rhs, hints).equal();
 }
 
 bool checkEquivMiterTest(unsigned N,

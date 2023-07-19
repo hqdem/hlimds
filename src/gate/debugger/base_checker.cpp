@@ -28,7 +28,7 @@ BaseChecker::~BaseChecker() {};
 bool BaseChecker::areEqual(GNet &lhs,
                            GNet &rhs,
                            GateIdMap &gmap) {
-  return equivalent(lhs, rhs, gmap) == CheckerResult::EQUAL;
+  return equivalent(lhs, rhs, gmap).equal();
 }
 
 } // namespace eda::gate::debugger

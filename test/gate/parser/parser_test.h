@@ -32,7 +32,8 @@ namespace eda::gate::parser {
     * @param outSubPath Path to the file.
     * @return The constructed net.
     */
-  GNet parseRil(const std::string &fileName, const std::string &outSubPath);
+  std::unique_ptr<GNet> parseRil(const std::string &fileName,
+                                 const std::string &outSubPath);
 
 
   /**

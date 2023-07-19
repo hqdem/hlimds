@@ -41,17 +41,23 @@ namespace eda::gate::parser::verilog {
       };
 
       // Gate nickname / <its inputs, real net id, function>.
-      // Nickname is how the gate is called in .v files.
+      // Nickname is how the gate is called in Verilog.
       std::unordered_map<std::string, GateData> gates;
+
       // Real net id / index in parser gates array.
       std::unordered_map<GateId, GateId> gIds;
+
       // Wire name / <source module name, target module names>.
       std::unordered_map<std::string, LinkData> links;
+
       // Output wires names.
       std::vector<std::string> outputs;
 
+      // Name of the top-level net to be parsed.
       std::string netName;
+
       bool startParse = false;
+
       eda::gate::model::GNet *gnet = new eda::gate::model::GNet();
     };
 
@@ -129,6 +135,8 @@ namespace eda::gate::parser::verilog {
     void insertLink(const std::string &name,
                     const std::string &instName,
                     bool out) const;
+
+    void reportNameError() const;
 
     ParserData::GateSymbol symbol(const std::string &s) const;
   };

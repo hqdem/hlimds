@@ -35,8 +35,7 @@ namespace eda::gate::parser::verilog {
   void GateVerilogParser::on_inputs(const std::vector<std::string> &inputs,
                                     std::string const &size) const {
     if (!data->startParse) {
-      std::cerr << "Names of parsing module and expected module " <<
-                "don't correspond." << std::endl;
+      reportNameError();
       return;
     }
     for (const std::string &input: inputs) {
@@ -52,8 +51,7 @@ namespace eda::gate::parser::verilog {
   void GateVerilogParser::on_outputs(const std::vector<std::string> &outputs,
                                      const std::string &size) const {
     if (!data->startParse) {
-      std::cerr << "Names of parsing module and expected module " <<
-                "don't correspond." << std::endl;
+      reportNameError();
       return;
     }
     data->outputs = std::vector<std::string>(outputs.begin(), outputs.end());
@@ -62,8 +60,7 @@ namespace eda::gate::parser::verilog {
   void GateVerilogParser::on_wires(const std::vector<std::string> &wires,
                                    std::string const &size) const {
     if (!data->startParse) {
-      std::cerr << "Names of parsing module and expected module " <<
-                "don't correspond." << std::endl;
+      reportNameError();
       return;
     }
     for (const auto &name: wires) {
@@ -79,8 +76,7 @@ namespace eda::gate::parser::verilog {
           std::string const &instName,
           std::vector<std::pair<std::string, std::string>> const &args) const {
     if (!data->startParse) {
-      std::cerr << "Names of parsing module and expected module " <<
-                "don't correspond." << std::endl;
+      reportNameError();
       return;
     }
     auto &gateData = data->gates[instName];
@@ -98,8 +94,7 @@ namespace eda::gate::parser::verilog {
   void GateVerilogParser::on_assign(const std::string &lhs,
                                     const std::pair<std::string, bool> &rhs) const {
     if (!data->startParse) {
-      std::cerr << "Names of parsing module and expected module " <<
-                "don't correspond." << std::endl;
+      reportNameError();
       return;
     }
 
@@ -141,8 +136,7 @@ namespace eda::gate::parser::verilog {
 
   void GateVerilogParser::on_endmodule() const {
     if (!data->startParse) {
-      std::cerr << "Names of parsing module and expected module " <<
-                "don't correspond." << std::endl;
+      reportNameError();
       return;
     }
     // Collect links to make inputs arrays.
@@ -218,6 +212,10 @@ namespace eda::gate::parser::verilog {
                                           << std::endl;
 
     return parser.getGnet();
+  }
+
+  void GateVerilogParser::reportNameError() const {
+    std::cerr << "Non-equal names of parsed & expected module!" << std::endl;
   }
 
 } // namespace eda::gate::parser::verilog

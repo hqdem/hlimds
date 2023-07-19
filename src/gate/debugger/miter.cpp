@@ -57,17 +57,9 @@ GNet *miter(GNet &net1, GNet &net2, Hints &hints) {
     obind.insert({Gate::Link(newTargetId1), Gate::Link(newTargetId2)});
   }
 
-  // Trigger-to-trigger correspondence.
-  for (auto bind : *hints.triggerBinding.get()) {
-    auto newTriggerId1 = map1[bind.first.source];
-    auto newTriggerId2 = map2[bind.second.source];
-    tbind.insert({Gate::Link(newTriggerId1), Gate::Link(newTriggerId2)});
-  }
-
   Checker::Hints newHints;
   newHints.sourceBinding  = std::make_shared<GateBinding>(std::move(ibind));
   newHints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
-  newHints.triggerBinding = std::make_shared<GateBinding>(std::move(tbind));
 
   SignalList inputs, xorSignalList;
   GNet *miter = new GNet();
@@ -102,4 +94,32 @@ GNet *miter(GNet &net1, GNet &net2, Hints &hints) {
   miter->sortTopologically();
   return miter;
 }
+
+Compiled makeCompiled(const GNet &miter) {
+  assert(miter.nOuts() == 1);
+  static simulator::Simulator simulator;
+  GNet::In gnetInput(1);
+  auto &input = gnetInput[0];
+
+  for (auto srcLink : miter.sourceLinks()) {
+    input.push_back(srcLink.target);
+  }
+
+  Gate::SignalList inputs;
+  GateId outputId = (*miter.targetLinks().begin()).source;
+  GNet::LinkList in;
+
+  for (size_t n = 0; n < miter.nSourceLinks(); n++) {
+    in.push_back(GNet::Link(input[n]));
+  }
+
+  GNet::LinkList out{Gate::Link(outputId)};
+
+  for (auto input : inputs) {
+    in.push_back(GNet::Link(input.node()));
+  }
+
+  return simulator.compile(miter, in, out);
+}
+
 } // namespace eda::gate::debugger

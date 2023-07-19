@@ -8,6 +8,7 @@
 
 #include "gate/debugger/checker.h"
 #include "gate/debugger/encoder.h"
+#include "gate/debugger/miter.h"
 #include "gate/simulator/simulator.h"
 
 #include <cassert>
@@ -140,13 +141,21 @@ CheckerResult Checker::areEqualComb(const GNet &lhs,
                            const GNet &rhs,
                            const GateBinding &ibind,
                            const GateBinding &obind) const {
-  const unsigned simCheckBound = 8;
-
   if (lhs.nSourceLinks() <= simCheckBound) {
     return areEqualCombSim(lhs, rhs, ibind, obind);
   }
 
   return areEqualCombSat({ &lhs, &rhs }, nullptr, ibind, obind);
+}
+
+CheckerResult Checker::isEqualCombMiter(const GNet &miter) const {
+  assert(miter.isComb());
+  assert(miter.nOuts() == 1);
+
+  if (miter.nSourceLinks() <= simCheckBound) {
+    return isEqualCombSimMiter(miter);
+  }
+  return isEqualCombSatMiter(miter);
 }
 
 CheckerResult Checker::areEqualSeq(const GNet &lhs,
@@ -239,7 +248,7 @@ CheckerResult Checker::areEqualCombSim(const GNet &lhs,
                               const GateBinding &ibind,
                               const GateBinding &obind) const {
   assert(lhs.nSourceLinks() == rhs.nSourceLinks());
-  assert(lhs.nSourceLinks() <= 16);
+  assert(lhs.nSourceLinks() <= simCheckBound);
 
   GNet::LinkList lhsInputs;
   GNet::LinkList rhsInputs;
@@ -282,12 +291,28 @@ CheckerResult Checker::areEqualCombSim(const GNet &lhs,
   return CheckerResult::EQUAL;
 }
 
+CheckerResult Checker::isEqualCombSimMiter(const GNet &miter) const {
+  std::uint64_t inputNum = miter.nSourceLinks();
+  assert(inputNum <= simCheckBound);
+
+  auto compiled = makeCompiled(miter);
+  std::uint64_t output;
+  std::uint64_t inputPower = 1ULL << inputNum;
+
+  for (std::uint64_t t = 0; t < inputPower; t++) {
+    compiled.simulate(output, t);
+    if (output == 1) {
+      return CheckerResult::NOTEQUAL;
+    }
+  }
+    return CheckerResult::EQUAL;
+}
+
 CheckerResult Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
                               const GateConnect *connectTo,
                               const GateBinding &ibind,
                               const GateBinding &obind) const {
   Encoder encoder;
-  encoder.setConnectTo(connectTo);
 
   // Equate the inputs.
   for (const auto &[lhsGateLink, rhsGateLink] : ibind) {
@@ -324,6 +349,29 @@ CheckerResult Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
 
   error(encoder.context(), ibind, obind);
   return CheckerResult::NOTEQUAL;
+}
+
+CheckerResult Checker::isEqualCombSatMiter(const GNet &miter) const {
+  Encoder encoder;
+  encoder.setConnectTo(nullptr);
+
+  if (miter.nOuts() != 1) {
+    LOG_ERROR << "Incorrect number of OUT gates at miter!" << std::endl;
+    return CheckerResult::ERROR;
+  }
+
+  // Encode the miter.
+  encoder.encode(miter, 0);
+
+  GateId outputId = (*miter.targetLinks().begin()).source;
+
+  // Compare the outputs.
+  const auto y = encoder.var(outputId, 0);
+  encoder.encodeFix(y, 1);
+
+  const auto verdict = encoder.solve();
+
+  return verdict ? CheckerResult::NOTEQUAL : CheckerResult::EQUAL;
 }
 
 void Checker::error(Context &context,

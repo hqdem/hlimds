@@ -21,6 +21,8 @@ add_library(Gate OBJECT
   optimizer/net_substitute.cpp
   optimizer/optimizer.cpp
   optimizer/optimizer_visitor.cpp
+  optimizer/resynthesis/akers.cpp
+  optimizer/resynthesis/unitized_table.cpp
   optimizer/rwdatabase.cpp
   optimizer/rwmanager.cpp
   optimizer/strategy/apply_search_optimizer.cpp
@@ -54,6 +56,9 @@ target_link_libraries(Gate
   lorina
   sqlite3
   CTemplate::nothreads
+  Kitty
+  Mockturtle
+  parallel_hashmap
 
   PRIVATE
   Utopia::Util

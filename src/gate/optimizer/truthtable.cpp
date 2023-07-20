@@ -87,6 +87,13 @@ TruthTable TruthTable::applyGateFunc(const GateSymbol::Value func,
     }
     result = ~result;
     break;
+  case GateSymbol::MAJ:
+    if (inputList.size() == 3) {
+      result = (inputList[0] & inputList[1]) |
+               (inputList[0] & inputList[2]) |
+               (inputList[1] & inputList[2]);
+    }
+    break;
   default:
     assert(false && "Unsupported gate");
     break;

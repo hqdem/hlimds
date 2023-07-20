@@ -29,7 +29,7 @@ using LecType = eda::gate::debugger::options::LecType;
 
 // Equivalence checkers return value
 // EQUAL returns if there exhaustive check and nets are equal
-// UNKNOWN returns if there NO exhaustive check and nets are not not equal
+// UNKNOWN returns if there NO exhaustive check and the result is undefined
 // NOTEQUAL returns if nets are not equal
 // ERROR returns if invalid arguments were given
 struct CheckerResult {

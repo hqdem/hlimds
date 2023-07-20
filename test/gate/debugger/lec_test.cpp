@@ -89,7 +89,7 @@ bool checkEquivMiterTest(unsigned N,
   Checker::Hints hints = checkerTestHints(N, lhs, lhsInputs, lhsOutputId,
                                             rhs, rhsInputs, rhsOutputId);
   GNet mit = *miter(lhs, rhs, hints);
-  return checker.isEqualCombMiter(mit) == CheckerResult::EQUAL;
+  return checker.isEqualCombMiter(mit).equal();
 }
 
 bool checkNorNorTest(unsigned N) {

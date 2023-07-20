@@ -43,10 +43,9 @@ TEST(RndChecker, MiterAndCheckerTest) {
 
   Checker::Hints hints = makeHints(net, *netCloned, testMap);
   GNet* mit = miter(net, *netCloned, hints);
-  int res = rndChecker(*mit, 0, true);
-  int res2 = rndChecker(*mit, 2, false);
-  std::cout << "Result of RndChecker is:\t" << res << std::endl;
-  EXPECT_TRUE(res == 0);
-  EXPECT_TRUE(res2 == -1);
+  CheckerResult res = rndChecker(*mit, 0, true);
+  CheckerResult res2 = rndChecker(*mit, 2, false);
+  EXPECT_TRUE(res.equal());
+  EXPECT_TRUE(res2.isUnknown());
   EXPECT_TRUE(mit->nSourceLinks() == netCloned->nSourceLinks());
 }

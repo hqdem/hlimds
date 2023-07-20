@@ -49,7 +49,9 @@ void printerTest(const std::string &filename, const GNet &net) {
   namespace fs = std::filesystem;
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
   const fs::path outputPath = "output/test/gate_verilog_printer";
-  fs::path file = homePath / outputPath / filename;
+  size_t extIndex = filename.find_last_of(".");
+  std::string noExtName = filename.substr(0, extIndex);
+  fs::path file = homePath / outputPath / noExtName;
   fs::path dir = file.parent_path();
   if (!fs::exists(dir)) {
     fs::create_directories(dir);
@@ -72,7 +74,7 @@ GNet *parse(const std::string &infile) {
   const std::filesystem::path prefixPath = homePath / subCatalog;
   const std::filesystem::path prefixPathIn = prefixPath / "verilog";
 
-  std::string filename = prefixPathIn / (infile + ".v");
+  std::string filename = prefixPathIn / infile;
 
   lorina::text_diagnostics consumer;
   lorina::diagnostic_engine diag(&consumer);
@@ -108,103 +110,103 @@ TEST(GateVerilogPrinter, MajFileTest) {
 }
 
 TEST(GateVerilogPrinter, adder) {
-  printerParserTest("adder");
+  printerParserTest("adder.v");
 }
 
 TEST(GateVerilogPrinter, c17) {
-  printerParserTest("c17");
+  printerParserTest("c17.v");
 }
 
 TEST(GateVerilogPrinter, arbiter) {
-  printerParserTest("arbiter");
+  printerParserTest("arbiter.v");
 }
 
 TEST(GateVerilogPrinter, bar) {
-  printerParserTest("bar");
+  printerParserTest("bar.v");
 }
 
 TEST(GateVerilogPrinter, c1355) {
-  printerParserTest("c1355");
+  printerParserTest("c1355.v");
 }
 
 TEST(GateVerilogPrinter, c1908) {
-  printerParserTest("c1908");
+  printerParserTest("c1908.v");
 }
 
 TEST(GateVerilogPrinter, c3540) {
-  printerParserTest("c3540");
+  printerParserTest("c3540.v");
 }
 
 TEST(GateVerilogPrinter, c432) {
-  printerParserTest("c432");
+  printerParserTest("c432.v");
 }
 
 TEST(GateVerilogPrinter, c499) {
-  printerParserTest("c499");
+  printerParserTest("c499.v");
 }
 
 TEST(GateVerilogPrinter, c6288) {
-  printerParserTest("c6288");
+  printerParserTest("c6288.v");
 }
 
 TEST(GateVerilogPrinter, c880) {
-  printerParserTest("c880");
+  printerParserTest("c880.v");
 }
 
 TEST(GateVerilogPrinter, cavlc) {
-  printerParserTest("cavlc");
+  printerParserTest("cavlc.v");
 }
 
 TEST(GateVerilogPrinter, ctrl) {
-  printerParserTest("ctrl");
+  printerParserTest("ctrl.v");
 }
 
 TEST(GateVerilogPrinter, dec) {
-  printerParserTest("dec");
+  printerParserTest("dec.v");
 }
 
 TEST(GateVerilogPrinter, div) {
-  printerParserTest("div");
+  printerParserTest("div.v");
 }
 
 TEST(GateVerilogPrinter, i2c) {
-  printerParserTest("i2c");
+  printerParserTest("i2c.v");
 }
 
 TEST(GateVerilogPrinter, int2float) {
-  printerParserTest("int2float");
+  printerParserTest("int2float.v");
 }
 
 TEST(GateVerilogPrinter, log2) {
-  printerParserTest("log2");
+  printerParserTest("log2.v");
 }
 
 TEST(GateVerilogPrinter, max) {
-  printerParserTest("max");
+  printerParserTest("max.v");
 }
 
 TEST(GateVerilogPrinter, multiplier) {
-  printerParserTest("multiplier");
+  printerParserTest("multiplier.v");
 }
 
 TEST(GateVerilogPrinter, router) {
-  printerParserTest("router");
+  printerParserTest("router.v");
 }
 
 TEST(GateVerilogPrinter, sin) {
-  printerParserTest("sin");
+  printerParserTest("sin.v");
 }
 
 TEST(GateVerilogPrinter, sqrt) {
-  printerParserTest("sqrt");
+  printerParserTest("sqrt.v");
 }
 
 TEST(GateVerilogPrinter, square) {
-  printerParserTest("square");
+  printerParserTest("square.v");
 }
 
 TEST(GateVerilogPrinter, voter) {
-  printerParserTest("voter");
+  printerParserTest("voter.v");
 }
 
 } // namespace eda::gate::printer

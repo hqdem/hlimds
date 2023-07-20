@@ -35,7 +35,7 @@ const std::filesystem::path prefixPathIn = prefixPath;
 
 bool parseFile(const std::string g) {
   std::string infile = g;
-  std::string filename = prefixPathIn / (infile + ".v");
+  std::string filename = prefixPathIn / infile;
   text_diagnostics consumer;
   diagnostic_engine diag(&consumer);
   GateVerilogParser parser(infile);
@@ -52,29 +52,29 @@ bool parseFile(const std::string g) {
 }
 
 TEST(XagPremapperVerilogTest, orGateTest) {
-  parseFile("orGate");
+  parseFile("orGate.v");
 }
 
 TEST(XagPremapperVerilogTest, xorGateTest) {
-  parseFile("xorGate");
+  parseFile("xorGate.v");
 }
 
 TEST(XagPremapperVerilogTest, xnorGateTest) {
-  parseFile("xnorGate");
+  parseFile("xnorGate.v");
 }
 
 TEST(XagPremapperVerilogTest, norGateTest) {
-  parseFile("norGate");
+  parseFile("norGate.v");
 }
 
 TEST(XagPremapperVerilogTest, nandGateTest) {
-  parseFile("nandGate");
+  parseFile("nandGate.v");
 }
 
 TEST(XagPremapperVerilogTest, MultiplexerTest) {
-  parseFile("multiplexer");
+  parseFile("multiplexer.v");
 }
 
 TEST(XagPremapperVerilogTest, halfSubtractorTest) {
-  parseFile("halfSubtractor");
+  parseFile("halfSubtractor.v");
 }

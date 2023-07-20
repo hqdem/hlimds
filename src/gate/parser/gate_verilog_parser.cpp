@@ -29,7 +29,7 @@ namespace eda::gate::parser::verilog {
   void GateVerilogParser::on_module_header(const std::string &moduleName,
                                            const std::vector<std::string> &inputs)
   const {
-    data->startParse = moduleName == data->netName;
+    data->startParse = (moduleName + ".v") == data->netName;
   }
 
   void GateVerilogParser::on_inputs(const std::vector<std::string> &inputs,

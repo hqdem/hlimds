@@ -29,14 +29,34 @@ using LecType = eda::gate::debugger::options::LecType;
 
 // Equivalence checkers return value
 // EQUAL returns if there exhaustive check and nets are equal
-// UNKNOWN returns if there NO exhaustive check and nets are equal
+// UNKNOWN returns if there NO exhaustive check and the result is undefined
 // NOTEQUAL returns if nets are not equal
 // ERROR returns if invalid arguments were given
-enum CheckerResult {
-  ERROR = -2,
-  UNKNOWN = -1,
-  EQUAL = 0,
-  NOTEQUAL = 1,
+struct CheckerResult {
+  enum Results {
+    ERROR = -2,
+    UNKNOWN = -1,
+    EQUAL = 0,
+    NOTEQUAL = 1,
+  };
+  Results result;
+  CheckerResult(Results result) : result(result) {}
+
+  bool isError() {
+    return result == Results::ERROR;
+  }
+
+  bool isUnknown() {
+    return result == Results::UNKNOWN;
+  }
+
+  bool equal() {
+    return result == Results::EQUAL;
+  }
+
+  bool notEqual() {
+    return result == Results::NOTEQUAL;
+  }
 };
 
 class BaseChecker {

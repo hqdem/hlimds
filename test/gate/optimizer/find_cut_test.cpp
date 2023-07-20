@@ -27,9 +27,9 @@ namespace eda::gate::optimizer {
     const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path prefixPath = homePath / "build" / subCatalog;
-    const std::string infile = "c17";
+    const std::string infile = "c17.v";
 
-    std::string filename = prefixPath / (infile + ".v");
+    std::string filename = prefixPath / infile;
     lorina::text_diagnostics consumer;
     lorina::diagnostic_engine diag(&consumer);
 

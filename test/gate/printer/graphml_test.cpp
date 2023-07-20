@@ -52,7 +52,7 @@ void printGNet(eda::gate::model::GNet* gnet,
 void fromVerilog(const std::string &infile, const std::string &outfile) {
   const std::filesystem::path inDataSubCatalog = "test/data/gate/parser/verilog";
   const std::filesystem::path prefixPathIn =  homePath / inDataSubCatalog;
-  std::string filename = prefixPathIn / (infile + ".v");
+  std::string filename = prefixPathIn / infile;
 
   text_diagnostics consumer;
   diagnostic_engine diag(&consumer);
@@ -82,126 +82,126 @@ void fromRIL(const std::string &infile, const std::string &outfile) {
 }
 
 TEST(Verilog2GraphMlTest, adder) {
-  fromVerilog("adder", "verilog_adder");
+  fromVerilog("adder.v", "verilog_adder");
 }
 
 TEST(Verilog2GraphMlTest, c17) {
-  fromVerilog("c17", "verilog_c17");
+  fromVerilog("c17.v", "verilog_c17");
 }
 
 TEST(Verilog2GraphMlTest, arbiter) {
-  fromVerilog("arbiter", "verilog_arbiter");
+  fromVerilog("arbiter.v", "verilog_arbiter");
 }
 
 TEST(Verilog2GraphMlTest, bar) {
-  fromVerilog("bar", "verilog_bar");
+  fromVerilog("bar.v", "verilog_bar");
 }
 
 TEST(Verilog2GraphMlTest, c1355) {
-  fromVerilog("c1355", "verilog_c1355");
+  fromVerilog("c1355.v", "verilog_c1355");
 }
 
 TEST(Verilog2GraphMlTest, c1908) {
-  fromVerilog("c1908", "verilog_c1908");
+  fromVerilog("c1908.v", "verilog_c1908");
 }
 
 TEST(Verilog2GraphMlTest, c3540) {
-  fromVerilog("c3540", "verilog_c3540");
+  fromVerilog("c3540.v", "verilog_c3540");
 }
 
 TEST(Verilog2GraphMlTest, c432) {
-  fromVerilog("c432", "verilog_c432");
+  fromVerilog("c432.v", "verilog_c432");
 }
 
 TEST(Verilog2GraphMlTest, c499) {
-  fromVerilog("c499", "verilog_c499");
+  fromVerilog("c499.v", "verilog_c499");
 }
 
 TEST(Verilog2GraphMlTest, c6288) {
-  fromVerilog("c6288", "verilog_c6288");
+  fromVerilog("c6288.v", "verilog_c6288");
 }
 
 TEST(Verilog2GraphMlTest, c880) {
-  fromVerilog("c880", "verilog_c880");
+  fromVerilog("c880.v", "verilog_c880");
 }
 
 TEST(Verilog2GraphMlTest, cavlc) {
-  fromVerilog("cavlc", "verilog_cavlc");
+  fromVerilog("cavlc.v", "verilog_cavlc");
 }
 
 TEST(Verilog2GraphMlTest, ctrl) {
-  fromVerilog("ctrl", "verilog_ctrl");
+  fromVerilog("ctrl.v", "verilog_ctrl");
 }
 
 TEST(Verilog2GraphMlTest, dec) {
-  fromVerilog("dec", "verilog_dec");
+  fromVerilog("dec.v", "verilog_dec");
 }
 
 TEST(Verilog2GraphMlTest, div) {
-  fromVerilog("div", "verilog_div");
+  fromVerilog("div.v", "verilog_div");
 }
 
 TEST(Verilog2GraphMlTest, i2c) {
-  fromVerilog("i2c", "verilog_i2c");
+  fromVerilog("i2c.v", "verilog_i2c");
 }
 
 TEST(Verilog2GraphMlTest, int2float) {
-  fromVerilog("int2float", "verilog_int2float");
+  fromVerilog("int2float.v", "verilog_int2float");
 }
 
 TEST(Verilog2GraphMlTest, log2) {
-  fromVerilog("log2", "verilog_log2");
+  fromVerilog("log2.v", "verilog_log2");
 }
 
 TEST(Verilog2GraphMlTest, max) {
-  fromVerilog("max", "verilog_max");
+  fromVerilog("max.v", "verilog_max");
 }
 
 TEST(Verilog2GraphMlTest, multiplier) {
-  fromVerilog("multiplier", "verilog_multiplier");
+  fromVerilog("multiplier.v", "verilog_multiplier");
 }
 
 TEST(Verilog2GraphMlTest, router) {
-  fromVerilog("router", "verilog_router");
+  fromVerilog("router.v", "verilog_router");
 }
 
 TEST(Verilog2GraphMlTest, sin) {
-  fromVerilog("sin", "verilog_sin");
+  fromVerilog("sin.v", "verilog_sin");
 }
 
 TEST(Verilog2GraphMlTest, sqrt) {
-  fromVerilog("sqrt", "verilog_sqrt");
+  fromVerilog("sqrt.v", "verilog_sqrt");
 }
 
 TEST(Verilog2GraphMlTest, square) {
-  fromVerilog("square", "verilog_square");
+  fromVerilog("square.v", "verilog_square");
 }
 
 TEST(Verilog2GraphMlTest, voter) {
-  fromVerilog("voter", "verilog_voter");
+  fromVerilog("voter.v", "verilog_voter");
 }
 
 // TODO: uncomment when RIL parser will be fixed
 // TEST(RIL2GraphMlTest, dff) {
-//   fromRIL("dff", "ril_dff");
+//   fromRIL("dff.v", "ril_dff");
 // }
 
 TEST(RIL2GraphMlTest, func) {
-  fromRIL("func", "ril_func");
+  fromRIL("func.v", "ril_func");
 }
 
 TEST(RIL2GraphMlTest, test) {
-  fromRIL("test", "ril_test");
+  fromRIL("test.v", "ril_test");
 }
 
 TEST(RIL2GraphMlTest, add) {
-  fromRIL("ril_arithmetic_tests/add", "ril_add");
+  fromRIL("ril_arithmetic_tests/add.v", "ril_add");
 }
 
 TEST(RIL2GraphMlTest, mul) {
-  fromRIL("ril_arithmetic_tests/mul", "ril_mul");
+  fromRIL("ril_arithmetic_tests/mul.v", "ril_mul");
 }
 
 TEST(RIL2GraphMlTest, sub) {
-  fromRIL("ril_arithmetic_tests/sub", "ril_sub");
+  fromRIL("ril_arithmetic_tests/sub.v", "ril_sub");
 }

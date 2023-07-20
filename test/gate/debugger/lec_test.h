@@ -1,0 +1,102 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+#pragma once
+
+#include "gate/debugger/bdd_checker.h"
+#include "gate/debugger/checker.h"
+#include "gate/debugger/miter.h"
+#include "gate/debugger/rnd_checker.h"
+#include "gate/model/gnet_test.h"
+#include "gate/parser/parser_test.h"
+#include "gate/premapper/mapper/mapper_test.h"
+#include "rtl/compiler/compiler.h"
+#include "rtl/parser/ril/parser.h"
+#include "util/logging.h"
+
+#include "gtest/gtest.h"
+
+#include <filesystem>
+
+namespace eda::gate::debugger {
+using Gate = eda::gate::model::Gate;
+using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
+using GNet = eda::gate::model::GNet;
+using PreBasis = eda::gate::premapper::PreBasis;
+
+// Supported HDL.
+enum Exts {
+  RIL,
+  VERILOG,
+  UNSUP,
+};
+
+/**
+ *  \brief Parses input description & builds net.
+ *  @param fileName Name of the file.
+ *  @param outSubPath Folder specification.
+ *  @param ext Extension type.
+ *  @return The parsed net.
+ */
+GNet getModel(const std::string &fileName,
+              const std::string &outSubPath,
+              Exts ext);
+/**
+ *  \brief Finds out the extention of the file.
+ *  @param fileName Name of the file.
+ *  @param pos The index of the extention dot in the name of the file.
+ *  @return The extention, if it is supported, error otherwise.
+ */
+Exts getExt(std::uint64_t pos, const std::string &fileName);
+
+/**
+ *  \brief Checks equivalence of the parsed net and the premapped net.
+ *  @param fileName Name of the file.
+ *  @param outSubPath Folder specification.
+ *  @param checker LEC type.
+ *  @param basis Premapper basis.
+ *  @return The result of the check.
+ */
+CheckerResult fileLecTest(const std::string &fileName,
+                          BaseChecker &checker,
+                          PreBasis basis,
+                          const std::string &outSubPath = "");
+
+GNet getNetRil(const std::string &fileName, const std::string &outSubPath);
+
+Checker::Hints checkEquivHints(unsigned N,
+                               const GNet &lhs,
+                               const Gate::SignalList &lhsInputs,
+                               Gate::Id lhsOutputId,
+                               const GNet &rhs,
+                               const Gate::SignalList &rhsInputs,
+                               Gate::Id rhsOutputId);
+
+bool checkEquivTest(unsigned N,
+                    const GNet &lhs,
+                    const Gate::SignalList &lhsInputs,
+                    Gate::Id lhsOutputId,
+                    const GNet &rhs,
+                    const Gate::SignalList &rhsInputs,
+                    Gate::Id rhsOutputId);
+
+bool checkEquivMiterTest(unsigned N,
+                         GNet &lhs,
+                         const Gate::SignalList &lhsInputs,
+                         Gate::Id lhsOutputId,
+                         GNet &rhs,
+                         const Gate::SignalList &rhsInputs,
+                         Gate::Id rhsOutputId);
+
+bool checkNorNorTest(unsigned N);
+
+bool checkNorAndnTest(unsigned N);
+
+bool checkNorAndTest(unsigned N);
+
+} // namespace eda::gate::debugger

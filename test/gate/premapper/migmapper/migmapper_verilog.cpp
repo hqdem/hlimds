@@ -30,7 +30,7 @@ void parse(const std::string &infile) {
   const std::filesystem::path prefixPathIn = prefixPath / "verilog";
   const std::filesystem::path prefixPathOut = prefixPath / "output";
 
-  std::string filename = prefixPathIn / (infile + ".v");
+  std::string filename = prefixPathIn / infile;
   std::string outFilename = prefixPathOut / (infile + ".dot");
 
   text_diagnostics consumer;

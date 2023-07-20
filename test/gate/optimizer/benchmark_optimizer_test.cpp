@@ -71,7 +71,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = parseVerilog("c17");
+    auto net = parseVerilog("c17.v");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 
@@ -87,7 +87,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = parseVerilog("c432");
+    auto net = parseVerilog("c432.v");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 
@@ -104,7 +104,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = parseVerilog("adder");
+    auto net = parseVerilog("adder.v");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 

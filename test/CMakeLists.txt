@@ -38,6 +38,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/find_cone_test.cpp
   gate/optimizer/find_cut_test.cpp
   gate/optimizer/optimization_count_test.cpp
+  gate/optimizer/resynthesis/akers_test.cpp
   gate/optimizer/rwdatabase_test.cpp
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp

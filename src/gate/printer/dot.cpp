@@ -70,8 +70,7 @@ void Dot::print(std::ofstream &stream) const {
   stream << "}" << std::endl;
 }
 
-void
-Dot::print(std::ofstream &stream, const eda::gate::model::Gate *gate) const {
+void Dot::print(std::ofstream &stream, const Gate *gate) const {
   if(funcNames.size() > gate->func()) {
     stream << funcNames[gate->func()];
   }

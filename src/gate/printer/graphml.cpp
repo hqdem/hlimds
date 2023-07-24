@@ -12,13 +12,13 @@ const std::string graphMlTplPath = "src/data/ctemplate/graphml/";
 
 namespace eda::printer::graphml {
 
-std::map<std::string, std::string> toGraphMl::colours = {
+std::map<std::string, std::string> GraphMlPrinter::colours = {
   {"blue", "#CCCCFF"},
   {"green", "#34EB71"},
   {"red", "#EB3446"}
 };
 
-void toGraphMl::setShape(const GateSymbol &gate,
+void GraphMlPrinter::setShape(const GateSymbol &gate,
         ctemplate::TemplateDictionary &dict) {
   switch (gate)
   {
@@ -64,7 +64,7 @@ void toGraphMl::setShape(const GateSymbol &gate,
   }
 }
 
-const std::string toGraphMl::setGateSymbol(const GateSymbol &gate,
+const std::string GraphMlPrinter::setGateSymbol(const GateSymbol &gate,
     const std::string colour) {
   std::string filename = graphMlTplPath + "shapenode.tpl";
   std::string output;
@@ -85,7 +85,7 @@ const std::string toGraphMl::setGateSymbol(const GateSymbol &gate,
   return output;
 }
 
-std::string toGraphMl::printNode(const Gate *node,
+std::string GraphMlPrinter::printNode(const Gate *node,
     const std::string colour) {
   std::string output;
   ctemplate::TemplateDictionary dict("nodetemplate");
@@ -100,7 +100,7 @@ std::string toGraphMl::printNode(const Gate *node,
   return output;
 }
 
-std::string toGraphMl::printEdge(const Link &link, const bool sourceHasNegation) {
+std::string GraphMlPrinter::printEdge(const Link &link, const bool negate) {
   std::string output;
   const std::string link_description = linkToString(link);
   ctemplate::TemplateDictionary dict("nodetemplate");
@@ -112,7 +112,7 @@ std::string toGraphMl::printEdge(const Link &link, const bool sourceHasNegation)
 
   // If source has negation it draws white circle as source arrow which
   // imitates negation symbol
-  dict.SetValue("SRC_ARROW", sourceHasNegation ? "white_circle" : "none");
+  dict.SetValue("SRC_ARROW", negate ? "white_circle" : "none");
   ctemplate::ExpandTemplate(graphMlTplPath + "edgetemplate.tpl",
       ctemplate::DO_NOT_STRIP,
       &dict,
@@ -121,12 +121,12 @@ std::string toGraphMl::printEdge(const Link &link, const bool sourceHasNegation)
   return output;
 }
 
-const std::string toGraphMl::linkToString (const Link &link) {
+const std::string GraphMlPrinter::linkToString (const Link &link) {
   return std::to_string(link.source) + "_" + std::to_string(link.target)
   + "_" + std::to_string(link.input);
 }
 
-void toGraphMl::printer (std::ostream &output, const GNet &model) {
+void GraphMlPrinter::print(std::ostream &output, const GNet &model) {
   std::string nodeOutput;
   std::string edgeOutput;
   std::string docOutput;

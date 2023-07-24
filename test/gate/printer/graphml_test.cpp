@@ -20,7 +20,7 @@
 namespace eda::printer::graphml {
 
 using GNet = eda::gate::model::GNet;
-using GraphMlPrinter = eda::printer::graphml::toGraphMl;
+using GraphMlPrinter = eda::printer::graphml::GraphMlPrinter;
 
 const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
 const std::filesystem::path outPath = "test/data/gate/printer/graphml";
@@ -39,10 +39,10 @@ void printGNet(GNet* gnet,
 
   std::string outFilename = prefixPathOut / (outfile + ".graphml");
   std::ofstream printedFile;
-  GraphMlPrinter graphMlTest;
+  GraphMlPrinter printer;
 
   printedFile.open(outFilename);
-  graphMlTest.printer(printedFile, *gnet);
+  printer.print(printedFile, *gnet);
   printedFile.close();
 }
 

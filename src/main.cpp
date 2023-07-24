@@ -164,7 +164,7 @@ bool check(RtlContext &context) {
 bool print(RtlContext &context) {
   std::ofstream fout;
   fout.open(context.options.graphMl);
-  eda::printer::graphml::toGraphMl::printer(fout, *context.gnet1);
+  eda::printer::graphml::GraphMlPrinter::print(fout, *context.gnet1);
   fout.close();
   return true;
 }

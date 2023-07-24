@@ -8,6 +8,7 @@
 
 #include "gate/model/gnet_test.h"
 #include "gate/parser/gate_verilog.h"
+#include "gate/parser/parser_test.h"
 #include "gate/printer/gate_verilog.h"
 
 #include <gtest/gtest.h>
@@ -68,27 +69,8 @@ void printerTest(const std::string &filename, std::function
   printerTest(filename, *getNet(generator));
 }
 
-GNet *parse(const std::string &infile) {
-  const std::filesystem::path subCatalog = "test/data/gate/parser";
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path prefixPath = homePath / subCatalog;
-  const std::filesystem::path prefixPathIn = prefixPath / "verilog";
-
-  std::string filename = prefixPathIn / infile;
-
-  lorina::text_diagnostics consumer;
-  lorina::diagnostic_engine diag(&consumer);
-
-  GateVerilogParser parser(infile);
-
-  lorina::return_code result = read_verilog(filename, parser, &diag);
-  EXPECT_EQ(result, lorina::return_code::success);
-
-  return parser.getGnet();
-}
-
 void printerParserTest(const std::string designName) {
-  const auto *net = parse(designName);
+  GNet *net = eda::gate::parser::parseVerilog(designName);
   printerTest(designName + "_gate.v", *net);
   delete net;
 }

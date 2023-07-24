@@ -62,12 +62,12 @@ TEST(RilEquivalenceTest, add) {
                           subFolder).isUnknown());
 }
 
-TEST(RilEquivalenceTest, add_small) {
+TEST(RilEquivalenceTest, addSmall) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd;
   std::filesystem::path subFolder = "test/data/ril/ril_arithmetic_tests";
-  
+
   EXPECT_TRUE(fileLecTest("add_small.ril", bdd, PreBasis::AIG,
                         subFolder).equal());
   EXPECT_TRUE(fileLecTest("add_small.ril", def, PreBasis::AIG,
@@ -126,7 +126,7 @@ TEST(RilEquivalenceTest, test) {
             PreBasis::XMG, subFolder).isError());
 }
 
-TEST(RilEquivalenceTest, mul_small) {
+TEST(RilEquivalenceTest, mulSmall) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd;

@@ -6,40 +6,40 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/gnet.h"
 #include "gate/parser/gate_verilog.h"
+#include "gate/parser/parser_test.h"
 #include "gate/printer/graphml.h"
-#include "rtl/compiler/compiler.h"
-#include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
-#include "rtl/parser/ril/builder.h"
-#include "rtl/parser/ril/parser.h"
 
 #include <gtest/gtest.h>
-#include <lorina/diagnostics.hpp>
-#include <lorina/verilog.hpp>
 
 #include <filesystem>
 #include <string>
 
-using namespace lorina;
+namespace eda::printer::graphml {
+
+using GNet = eda::gate::model::GNet;
+using GraphMlPrinter = eda::printer::graphml::toGraphMl;
 
 const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+const std::filesystem::path outPath = "test/data/gate/printer/graphml";
 
-void printGNet(eda::gate::model::GNet* gnet,
+void printGNet(GNet* gnet,
     const std::string &infile,
     const std::string &outfile) {
+
   if (!getenv("UTOPIA_HOME")) {
     FAIL() << "UTOPIA_HOME is not set.";
   }
 
-  const std::filesystem::path outDataSubCatalog = "test/data/gate/printer/graphml";
-  const std::filesystem::path prefixPathOut = homePath / "build" / outDataSubCatalog;
+  const std::filesystem::path prefixPathOut = homePath / "build" / outPath;
 
   system(std::string("mkdir -p ").append(prefixPathOut).c_str());
 
   std::string outFilename = prefixPathOut / (outfile + ".graphml");
   std::ofstream printedFile;
-  eda::printer::graphMl::toGraphMl graphMlTest;
+  GraphMlPrinter graphMlTest;
 
   printedFile.open(outFilename);
   graphMlTest.printer(printedFile, *gnet);
@@ -50,35 +50,26 @@ void printGNet(eda::gate::model::GNet* gnet,
  * and prints it into GraphML format.
  */
 void fromVerilog(const std::string &infile, const std::string &outfile) {
-  const std::filesystem::path inDataSubCatalog = "test/data/gate/parser/verilog";
-  const std::filesystem::path prefixPathIn =  homePath / inDataSubCatalog;
-  std::string filename = prefixPathIn / infile;
 
-  text_diagnostics consumer;
-  diagnostic_engine diag(&consumer);
+  GNet *net = eda::gate::parser::parseVerilog(infile);
 
-  eda::gate::parser::verilog::GateVerilogParser parser(infile);
-  return_code result = read_verilog(filename, parser, &diag);
-  EXPECT_EQ(result, return_code::success);
+  printGNet(net, infile, outfile);
 
-  printGNet(parser.getGnet(), infile, outfile);
-
-  delete parser.getGnet();
+  delete net;
 }
 
 /* Parses input RIL file, builds GNet model,
  * and prints it into GraphML format.
  */
 void fromRIL(const std::string &infile, const std::string &outfile) {
-  const std::filesystem::path inDataSubCatalog = "test/data/ril";
-  const std::filesystem::path prefixPathIn =  homePath / inDataSubCatalog;
-  std::string filename = prefixPathIn / (infile + ".ril");
 
-  auto model = eda::rtl::parser::ril::parse(filename);
-  eda::rtl::compiler::Compiler compiler(eda::rtl::library::FLibraryDefault::get());
-  auto gnet = compiler.compile(*model);
+  const std::filesystem::path dir = "test/data/ril";
 
-  printGNet(gnet.get(), infile, outfile);
+  GNet *net = eda::gate::parser::parseRil(infile, dir).release();
+
+  printGNet(net, infile, outfile);
+
+  delete net;
 }
 
 TEST(Verilog2GraphMlTest, adder) {
@@ -187,21 +178,22 @@ TEST(Verilog2GraphMlTest, voter) {
 // }
 
 TEST(RIL2GraphMlTest, func) {
-  fromRIL("func", "ril_func");
+  fromRIL("func.ril", "ril_func");
 }
 
 TEST(RIL2GraphMlTest, test) {
-  fromRIL("test", "ril_test");
+  fromRIL("test.ril", "ril_test");
 }
 
 TEST(RIL2GraphMlTest, add) {
-  fromRIL("ril_arithmetic_tests/add", "ril_add");
+  fromRIL("ril_arithmetic_tests/add.ril", "ril_add");
 }
 
 TEST(RIL2GraphMlTest, mul) {
-  fromRIL("ril_arithmetic_tests/mul", "ril_mul");
+  fromRIL("ril_arithmetic_tests/mul.ril", "ril_mul");
 }
 
 TEST(RIL2GraphMlTest, sub) {
-  fromRIL("ril_arithmetic_tests/sub", "ril_sub");
+  fromRIL("ril_arithmetic_tests/sub.ril", "ril_sub");
 }
+} // namespace eda::gate::printer::graphml

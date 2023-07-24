@@ -40,9 +40,9 @@ GNet *parseVerilog(const std::string &infile) {
 }
 
 std::unique_ptr<GNet> parseRil(const std::string &fileName,
-                               const std::string &outSubPath) {
+                               const std::string &subPath) {
   std::filesystem::path basePath = std::getenv("UTOPIA_HOME");
-  std::filesystem::path fullPath = basePath / outSubPath / fileName;
+  std::filesystem::path fullPath = basePath / subPath / fileName;
 
   auto model = eda::rtl::parser::ril::parse(fullPath);
   Compiler compiler(FLibraryDefault::get());
@@ -50,13 +50,13 @@ std::unique_ptr<GNet> parseRil(const std::string &fileName,
 }
 
 GNet getModel(const std::string &fileName,
-              const std::string &outSubPath,
+              const std::string &subPath,
               Exts ext) {
   switch (ext) {
   case Exts::VERILOG:
     return *parseVerilog(fileName);
   case Exts::RIL:
-    return *parseRil(fileName, outSubPath);
+    return *parseRil(fileName, subPath);
   default:
     CHECK(false) << "Unsupported extension!\n";
     return GNet(0);

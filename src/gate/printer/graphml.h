@@ -14,7 +14,7 @@
 #include <ostream>
 #include <string>
 
-namespace eda::printer::graphMl {
+namespace eda::printer::graphml {
 
 /**
 * \brief Converts GNet to GraphMl representation.
@@ -30,14 +30,14 @@ class toGraphMl {
   private:
     static std::map<std::string, std::string> colours;
 
-    static void setShape(const GateSymbol &gate, 
+    static void setShape(const GateSymbol &gate,
         ctemplate::TemplateDictionary &dict);
     static std::string printNode(const Gate *node, const std::string colour);
-    static std::string printEdge(const Link &link, 
+    static std::string printEdge(const Link &link,
         const bool sourceHasNegation);
     static const std::string linkToString(const Link &link);
-    static const std::string setGateSymbol(const GateSymbol &gate, 
+    static const std::string setGateSymbol(const GateSymbol &gate,
         const std::string colour);
 };
 
-} //namespace eda::printer::graphMl
+} //namespace eda::printer::graphml

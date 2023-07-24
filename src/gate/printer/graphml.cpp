@@ -8,9 +8,9 @@
 
 #include "graphml.h"
 
-const std::string templatesFolderPath = "src/data/ctemplate/graphml/";
+const std::string graphMlTplPath = "src/data/ctemplate/graphml/";
 
-namespace eda::printer::graphMl {
+namespace eda::printer::graphml {
 
 std::map<std::string, std::string> toGraphMl::colours = {
   {"blue", "#CCCCFF"},
@@ -18,7 +18,7 @@ std::map<std::string, std::string> toGraphMl::colours = {
   {"red", "#EB3446"}
 };
 
-void toGraphMl::setShape(const GateSymbol &gate, 
+void toGraphMl::setShape(const GateSymbol &gate,
         ctemplate::TemplateDictionary &dict) {
   switch (gate)
   {
@@ -66,20 +66,20 @@ void toGraphMl::setShape(const GateSymbol &gate,
 
 const std::string toGraphMl::setGateSymbol(const GateSymbol &gate,
     const std::string colour) {
-  std::string filename = templatesFolderPath + "shapenode.tpl";
+  std::string filename = graphMlTplPath + "shapenode.tpl";
   std::string output;
   ctemplate::TemplateDictionary dict("nodeGeometry");
 
   dict.SetValue("NODE_NAME", gate.name());
   dict.SetValue("NODE_COLOUR", colours[colour]);
   setShape(gate, dict);
-  
+
   if (gate >= GateSymbol::AND && gate <= GateSymbol::XNOR) {
-    filename = templatesFolderPath + "genericnode.tpl";
+    filename = graphMlTplPath + "genericnode.tpl";
   }
-  ctemplate::ExpandTemplate(filename, 
-      ctemplate::DO_NOT_STRIP, 
-      &dict, 
+  ctemplate::ExpandTemplate(filename,
+      ctemplate::DO_NOT_STRIP,
+      &dict,
       &output);
 
   return output;
@@ -92,9 +92,9 @@ std::string toGraphMl::printNode(const Gate *node,
   dict.SetIntValue("NODE_ID", node->id());
   dict.SetValue("NODE_GEOMETRY", setGateSymbol(node->func(), colour));
 
-  ctemplate::ExpandTemplate(templatesFolderPath + "nodetemplate.tpl", 
-      ctemplate::DO_NOT_STRIP, 
-      &dict, 
+  ctemplate::ExpandTemplate(graphMlTplPath + "nodetemplate.tpl",
+      ctemplate::DO_NOT_STRIP,
+      &dict,
       &output);
 
   return output;
@@ -113,16 +113,16 @@ std::string toGraphMl::printEdge(const Link &link, const bool sourceHasNegation)
   // If source has negation it draws white circle as source arrow which
   // imitates negation symbol
   dict.SetValue("SRC_ARROW", sourceHasNegation ? "white_circle" : "none");
-  ctemplate::ExpandTemplate(templatesFolderPath + "edgetemplate.tpl", 
-      ctemplate::DO_NOT_STRIP, 
-      &dict, 
+  ctemplate::ExpandTemplate(graphMlTplPath + "edgetemplate.tpl",
+      ctemplate::DO_NOT_STRIP,
+      &dict,
       &output);
 
   return output;
 }
 
 const std::string toGraphMl::linkToString (const Link &link) {
-  return std::to_string(link.source) + "_" + std::to_string(link.target) 
+  return std::to_string(link.source) + "_" + std::to_string(link.target)
   + "_" + std::to_string(link.input);
 }
 
@@ -146,14 +146,14 @@ void toGraphMl::printer (std::ostream &output, const GNet &model) {
       // Check whether this node is the beginning for the edge
       if (link.source == gate->id()) {
         edgeOutput += printEdge(link, negationFlag);
-        // If the target node isn't in the graph, 
+        // If the target node isn't in the graph,
         // then draw it and mark it red
         if (!model.hasNode(link.target)) {
           nodeOutput += printNode(model.gate(link.target), "red");
         }
       }
       else {
-        // If the source node isn't in the graph, 
+        // If the source node isn't in the graph,
         // then draw it and mark it in green
         if (!model.hasNode(link.source)) {
           nodeOutput += printNode(model.gate(link.source), "green");
@@ -165,12 +165,12 @@ void toGraphMl::printer (std::ostream &output, const GNet &model) {
   dict.SetValue("NODE_DATA", nodeOutput);
   dict.SetValue("EDGE_DATA", edgeOutput);
   // End of document
-  ctemplate::ExpandTemplate(templatesFolderPath + "doctemplate.tpl", 
-      ctemplate::DO_NOT_STRIP, 
-      &dict, 
+  ctemplate::ExpandTemplate(graphMlTplPath + "doctemplate.tpl",
+      ctemplate::DO_NOT_STRIP,
+      &dict,
       &docOutput);
-  
+
   output << docOutput;
 }
 
-}; //namespace eda::printer::graphMl
+}; //namespace eda::printer::graphml

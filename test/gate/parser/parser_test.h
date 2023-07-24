@@ -29,21 +29,21 @@ namespace eda::gate::parser {
   /**
     * \brief Parses RIL file and constructs the net.
     * @param fileName Name of RIL file.
-    * @param outSubPath Path to the file.
+    * @param subPath Sub-path to the file.
     * @return The constructed net.
     */
   std::unique_ptr<GNet> parseRil(const std::string &fileName,
-                                 const std::string &outSubPath);
+                                 const std::string &subPath);
 
   /**
    *  \brief Parses input description & builds net.
    *  @param fileName Name of the file.
-   *  @param outSubPath Relative path to the file.
+   *  @param subPath Relative path to the file.
    *  @param ext Extension type.
    *  @return The parsed net.
    */
   GNet getModel(const std::string &fileName,
-                const std::string &outSubPath,
+                const std::string &subPath,
                 Exts ext);
   /**
    *  \brief Finds out the extention of the file.

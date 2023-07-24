@@ -46,11 +46,11 @@ void printerTest(std::function
   GateVerilogPrinter::get().print(std::cout, *getNet(generator));
 }
 
-void printerTest(const std::string &filename, const GNet &net) {
+void printerTest(const std::string &fileName, const GNet &net) {
   namespace fs = std::filesystem;
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
   const fs::path outputPath = "output/test/gate_verilog_printer";
-  fs::path file = homePath / outputPath / filename;
+  fs::path file = homePath / outputPath / fileName;
   fs::path dir = file.parent_path();
   if (!fs::exists(dir)) {
     fs::create_directories(dir);

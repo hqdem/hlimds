@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/parser/gate_verilog_parser.h"
+#include "gate/parser/gate_verilog.h"
 #include "gate/printer/dot.h"
 #include "gtest/gtest.h"
 

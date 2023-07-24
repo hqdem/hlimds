@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/parser/gate_verilog_parser.h"
+#include "gate/parser/gate_verilog.h"
 
 namespace eda::gate::parser::verilog {
 

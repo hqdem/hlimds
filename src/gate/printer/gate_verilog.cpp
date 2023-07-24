@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate_verilog_printer.h"
+#include "gate_verilog.h"
 #include "util/assert.h"
 
 #include <chrono>
@@ -111,10 +111,10 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
       auto *gateDict = moduleDict->AddSectionDictionary(OUTS);
       gateDict->SetValue(OUTPUT, outputName);
       gateDict->SetValue(SEPARATOR, separator);
-      
-      uassert(output->arity() == 1, 
+
+      uassert(output->arity() == 1,
         "Arity of the output is expected to be 1!\n");
-      
+
       // Print output assignment
       const auto driverName = wire(output->input(0).node());
       auto *assignDict = moduleDict->AddSectionDictionary(ASSIGNS);
@@ -125,7 +125,7 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
     std::string buffer;
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     std::filesystem::path templatePath = homePath / TEMPLATE_PATH;
-    ctemplate::ExpandTemplate(templatePath.string(), 
+    ctemplate::ExpandTemplate(templatePath.string(),
       ctemplate::DO_NOT_STRIP, &dictionary, &buffer);
     out << buffer;
   } else {
@@ -133,7 +133,7 @@ void GateVerilogPrinter::print(std::ostream &out, const GNet &net) const {
   }
 }
 
-void GateVerilogPrinter::print(const std::string &filename, 
+void GateVerilogPrinter::print(const std::string &filename,
     const GNet &net) const {
   std::ofstream outFile(filename);
   uassert(outFile.is_open(), "Could not create a file!\n");

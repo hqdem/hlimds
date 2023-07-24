@@ -34,15 +34,15 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
-  parser/gate_verilog_parser.cpp
+  parser/gate_verilog.cpp
   premapper/aigmapper.cpp
   premapper/migmapper.cpp
   premapper/premapper.cpp
   premapper/xagmapper.cpp
   premapper/xmgmapper.cpp
   printer/dot.cpp
+  printer/gate_verilog.cpp
   printer/graphml.cpp
-  printer/verilog/gate_verilog_printer.cpp
   simulator/simulator.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)

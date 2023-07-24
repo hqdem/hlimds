@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/gnet_test.h"
-#include "gate/parser/gate_verilog_parser.h"
-#include "gate/printer/verilog/gate_verilog_printer.h"
+#include "gate/parser/gate_verilog.h"
+#include "gate/printer/gate_verilog.h"
 
 #include <gtest/gtest.h>
 #include <lorina/diagnostics.hpp>

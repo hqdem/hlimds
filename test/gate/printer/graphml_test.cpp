@@ -6,8 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/parser/gate_verilog_parser.h"
-#include "gtest/gtest.h"
+#include "gate/parser/gate_verilog.h"
 #include "gate/printer/graphml.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/flibrary.h"
@@ -15,6 +14,7 @@
 #include "rtl/parser/ril/builder.h"
 #include "rtl/parser/ril/parser.h"
 
+#include <gtest/gtest.h>
 #include <lorina/diagnostics.hpp>
 #include <lorina/verilog.hpp>
 

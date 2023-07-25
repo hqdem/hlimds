@@ -12,6 +12,8 @@ using namespace eda::gate::model;
 using namespace eda::rtl::compiler;
 using namespace eda::rtl::parser::ril;
 
+// LEC test suites are based on RIL descriptions.
+
 namespace eda::gate::debugger {
 
 TEST(RilEquivalenceTest, sub) {

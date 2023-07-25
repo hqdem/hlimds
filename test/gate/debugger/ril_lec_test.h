@@ -19,7 +19,10 @@
 
 #include <filesystem>
 
+// LEC test suites are based on gate-level Verilog descriptions.
+
 namespace eda::gate::debugger {
+
 using Gate = eda::gate::model::Gate;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 using GNet = eda::gate::model::GNet;

@@ -2,17 +2,55 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include <iostream>
 
+#include "gate/debugger/lec_test.h"
 #include "gate/debugger/rnd_checker.h"
 #include "gate/model/gnet_test.h"
+
+#include <iostream>
+
 #include "gtest/gtest.h"
 
 using namespace eda::gate::debugger;
 using namespace eda::gate::model;
+
+// LEC test suites are based on synthetic (manually constructed) nets.
+
+//===----------------------------------------------------------------------===//
+// SAT-based checker ('default')
+//===----------------------------------------------------------------------===//
+namespace eda::gate::debugger {
+
+TEST(CheckGNetTest, CheckNorNorSmallTest) {
+  EXPECT_TRUE(checkNorNorTest(8));
+}
+
+TEST(CheckGNetTest, CheckNorAndnSmallTest) {
+  EXPECT_TRUE(checkNorAndnTest(8));
+}
+
+TEST(CheckGNetTest, CheckNorAndSmallTest) {
+  EXPECT_FALSE(checkNorAndTest(8));
+}
+
+TEST(CheckGNetTest, CheckNorNorTest) {
+  EXPECT_TRUE(checkNorNorTest(256));
+}
+
+TEST(CheckGNetTest, CheckNorAndnTest) {
+  EXPECT_TRUE(checkNorAndnTest(256));
+}
+
+TEST(CheckGNetTest, CheckNorAndTest) {
+  EXPECT_FALSE(checkNorAndTest(256));
+}
+
+//===----------------------------------------------------------------------===//
+// Random simulation based checker ('rnd')
+//===----------------------------------------------------------------------===//
 
 TEST(RndChecker, SimpleTest) {
 
@@ -59,3 +97,4 @@ TEST(RndChecker, MiterAndCheckerTest) {
   EXPECT_TRUE(res2.isUnknown());
   EXPECT_TRUE(mit->nSourceLinks() == netCloned->nSourceLinks());
 }
+} // namespace eda::gate::debugger

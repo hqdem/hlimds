@@ -27,10 +27,9 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
-  gate/debugger/checker_test.cpp
   gate/debugger/lec_test.cpp
   gate/debugger/ril_lec_test.cpp
-  gate/debugger/rnd_checker_test.cpp
+  gate/debugger/synth_lec_test.cpp
   gate/debugger/verilog_lec_test.cpp
   gate/model/gnet_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp

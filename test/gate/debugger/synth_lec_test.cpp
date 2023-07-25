@@ -10,14 +10,7 @@
 #include "gate/debugger/rnd_checker.h"
 #include "gate/model/gnet_test.h"
 
-#include <iostream>
-
-#include "gtest/gtest.h"
-
-using namespace eda::gate::debugger;
-using namespace eda::gate::model;
-
-// LEC test suites are based on synthetic (manually constructed) nets.
+/// LEC test suites are based on synthetic (manually constructed) nets.
 
 //===----------------------------------------------------------------------===//
 // SAT-based checker ('default')

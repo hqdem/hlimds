@@ -8,7 +8,7 @@
 
 #include "lec_test.h"
 
-// LEC test suites are based on gate-level Verilog descriptions.
+/// LEC test suites are based on gate-level Verilog descriptions.
 
 namespace eda::gate::debugger {
 

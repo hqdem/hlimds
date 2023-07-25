@@ -31,8 +31,8 @@ using PreBasis = eda::gate::premapper::PreBasis;
 
 /**
  *  \brief Checks equivalence of the parsed net and the premapped net.
- *  @param fileName Name of the file.
- *  @param outSubPath Folder specification.
+ *  @param fileName Name of the source file.
+ *  @param subPath Relative path to the file.
  *  @param checker LEC type.
  *  @param basis Premapper basis.
  *  @return The result of the check.
@@ -40,7 +40,7 @@ using PreBasis = eda::gate::premapper::PreBasis;
 CheckerResult fileLecTest(const std::string &fileName,
                           BaseChecker &checker,
                           PreBasis basis,
-                          const std::string &outSubPath = "");
+                          const std::string &subPath = "");
 
 Checker::Hints checkerTestHints(unsigned N,
                                 const GNet &lhs,

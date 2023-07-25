@@ -17,14 +17,14 @@ namespace eda::gate::debugger {
 CheckerResult fileLecTest(const std::string &fileName,
                           BaseChecker &checker,
                           PreBasis basis,
-                          const std::string &outSubPath) {
+                          const std::string &subPath) {
   Exts ext = getExt(fileName);
   if (ext == Exts::UNSUPPORTED) {
     CHECK(false) << "Unsupported HDL!\n";
     return CheckerResult::ERROR;
   }
 
-  GNet compiledNet = getModel(fileName, outSubPath, ext);
+  GNet compiledNet = getModel(fileName, subPath, ext);
 
   compiledNet.sortTopologically();
   std::shared_ptr<GNet> initialNet = std::make_shared<GNet>(compiledNet);

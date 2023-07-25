@@ -39,8 +39,25 @@ struct CheckerResult {
     EQUAL = 0,
     NOTEQUAL = 1,
   };
+
   Results result;
+
   CheckerResult(Results result) : result(result) {}
+
+  CheckerResult(Results result, std::vector<bool> counterEx) {
+    assert(result == Results::NOTEQUAL);
+    this->result = result;
+    this->counterEx = counterEx;
+  }
+
+  CheckerResult(Results result, size_t counterExVal, size_t valSize) {
+    assert(result == Results::NOTEQUAL);
+    this->result = result;
+    this->counterEx.resize(valSize);
+    for (size_t i = 0; i < valSize; i++) {
+      this->counterEx[i] = (counterExVal >> i) & 1;
+    }
+  }
 
   bool isError() {
     return result == Results::ERROR;
@@ -57,6 +74,14 @@ struct CheckerResult {
   bool notEqual() {
     return result == Results::NOTEQUAL;
   }
+
+  std::vector<bool> getCounterExample() {
+    assert(result == Results::NOTEQUAL);
+    return this->counterEx;
+  }
+
+private:
+  std::vector<bool> counterEx = {};
 };
 
 class BaseChecker {

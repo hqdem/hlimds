@@ -90,4 +90,44 @@ TEST(RndChecker, MiterAndCheckerTest) {
   EXPECT_TRUE(res2.isUnknown());
   EXPECT_TRUE(mit->nSourceLinks() == netCloned->nSourceLinks());
 }
+
+//===----------------------------------------------------------------------===//
+// Cross-checking tests
+//===----------------------------------------------------------------------===//
+
+TEST(CounterExample, OrAndTest) {
+  auto net = GNet(0);
+  SignalList inps;
+  int countInp = 5;
+  for (int i = 0; i < countInp; i++) {
+    GateId z = net.addIn();
+    inps.push_back(Signal::always(z));
+  }
+  GateId y = net.addGate(GateSymbol::OR, inps);
+  net.addOut(y);
+
+  std::unordered_map<Gate::Id, Gate::Id> testMap = {};
+  auto netCloned = net.clone(testMap);
+  net.setGate(y, GateSymbol::AND, inps);
+  net.sortTopologically();
+  netCloned->sortTopologically();
+
+  RndChecker rnd;
+  Checker def;
+
+  CheckerResult resRnd = rnd.equivalent(net, *netCloned, testMap);
+  CheckerResult resDef = def.equivalent(net, *netCloned, testMap);
+  EXPECT_TRUE(resRnd.notEqual());
+  EXPECT_TRUE(resDef.notEqual());
+
+  Checker::Hints hints = makeHints(net, *netCloned, testMap);
+  GNet *mit = miter(net, *netCloned, hints);
+  Compiled compiled = makeCompiled(*mit);
+
+  std::vector<bool> outRnd(1);
+  std::vector<bool> outDef(1);
+  compiled.simulate(outRnd, resRnd.getCounterExample());
+  compiled.simulate(outDef, resDef.getCounterExample());
+  EXPECT_TRUE(outDef == outRnd && outRnd[0] == 1);
+}
 } // namespace eda::gate::debugger

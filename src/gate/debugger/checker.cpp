@@ -260,7 +260,7 @@ CheckerResult Checker::areEqualCombSim(const GNet &lhs,
     rhsCompiled.simulate(rhsOut, in);
 
     if (lhsOut != rhsOut) {
-      return CheckerResult::NOTEQUAL;
+      return CheckerResult(CheckerResult::NOTEQUAL, in, lhs.nSourceLinks());
     }
   }
 
@@ -278,7 +278,7 @@ CheckerResult Checker::isEqualCombSimMiter(const GNet &miter) const {
   for (std::uint64_t t = 0; t < inputPower; t++) {
     compiled.simulate(output, t);
     if (output == 1) {
-      return CheckerResult::NOTEQUAL;
+      return CheckerResult(CheckerResult::NOTEQUAL, t, inputNum);
     }
   }
     return CheckerResult::EQUAL;
@@ -322,9 +322,15 @@ CheckerResult Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
   if (verdict) {
     return CheckerResult::EQUAL;
   }
-
   error(encoder.context(), ibind, obind);
-  return CheckerResult::NOTEQUAL;
+
+  auto &cont = encoder.context();
+  std::vector<bool> counterEx;
+  for (const auto &[lhsLink, rhsLink] : ibind) {
+    counterEx.push_back(cont.value(cont.var(lhsLink.source, 0)));
+  }
+
+  return CheckerResult(CheckerResult::NOTEQUAL, counterEx);
 }
 
 CheckerResult Checker::isEqualCombSatMiter(const GNet &miter) const {
@@ -347,7 +353,16 @@ CheckerResult Checker::isEqualCombSatMiter(const GNet &miter) const {
 
   const auto verdict = encoder.solve();
 
-  return verdict ? CheckerResult::NOTEQUAL : CheckerResult::EQUAL;
+  std::vector<bool> counterEx;
+  if (verdict) {
+    auto &cont = encoder.context();
+    for (const auto link : miter.sourceLinks()) {
+      counterEx.push_back(cont.value(cont.var(link.source, 0)));
+    }
+  }
+
+  return verdict ? CheckerResult(CheckerResult::NOTEQUAL, counterEx) :
+                   CheckerResult::EQUAL;
 }
 
 void Checker::error(Context &context,

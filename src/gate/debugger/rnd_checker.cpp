@@ -45,7 +45,7 @@ CheckerResult rndChecker(GNet &miter,
         std::uint64_t temp = rand() % inputPower;
         compiled.simulate(output, temp);
         if (output == 1) {
-          return CheckerResult::NOTEQUAL;
+          return CheckerResult(CheckerResult::NOTEQUAL, temp, inputNum);
         }
       }
     }
@@ -56,7 +56,7 @@ CheckerResult rndChecker(GNet &miter,
     for (std::uint64_t t = 0; t < inputPower; t++) {
       compiled.simulate(output, t);
       if (output == 1) {
-        return CheckerResult::NOTEQUAL;
+        return CheckerResult(CheckerResult::NOTEQUAL, t, inputNum);
       }
     }
     return CheckerResult::EQUAL;

@@ -16,7 +16,12 @@ using namespace eda::rtl::parser::ril;
 
 namespace eda::gate::debugger {
 
-TEST(RilEquivalenceTest, sub) {
+using Gate = eda::gate::model::Gate;
+using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
+using GNet = eda::gate::model::GNet;
+using PreBasis = eda::gate::premapper::PreBasis;
+
+TEST(RilLecTest, sub) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd(false, 1000);
@@ -40,7 +45,7 @@ TEST(RilEquivalenceTest, sub) {
                           subFolder).isUnknown());
 }
 
-TEST(RilEquivalenceTest, add) {
+TEST(RilLecTest, add) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd(false, 1000);
@@ -64,7 +69,7 @@ TEST(RilEquivalenceTest, add) {
                           subFolder).isUnknown());
 }
 
-TEST(RilEquivalenceTest, addSmall) {
+TEST(RilLecTest, addSmall) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd;
@@ -96,7 +101,7 @@ TEST(RilEquivalenceTest, addSmall) {
                         subFolder).equal());
 }
 
-TEST(RilEquivalenceTest, test) {
+TEST(RilLecTest, test) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd(false, 1000);
@@ -128,7 +133,7 @@ TEST(RilEquivalenceTest, test) {
             PreBasis::XMG, subFolder).isError());
 }
 
-TEST(RilEquivalenceTest, mulSmall) {
+TEST(RilLecTest, mulSmall) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd;
@@ -160,7 +165,7 @@ TEST(RilEquivalenceTest, mulSmall) {
                         subFolder).equal());
 }
 
-TEST(RilEquivalenceTest, mul) {
+TEST(RilLecTest, mul) {
   BddChecker bdd;
   Checker def;
   RndChecker rnd(false, 100);
@@ -180,7 +185,7 @@ TEST(RilEquivalenceTest, mul) {
                           subFolder).equal());
 }
 // TODO The test takes too long.
-//TEST(RilEquivalenceTest, func) {
+//TEST(RilLecTest, func) {
 //  BddChecker bdd;
 //  Checker def;
 //  RndChecker rnd(false, 1000);

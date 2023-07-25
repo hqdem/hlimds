@@ -17,14 +17,18 @@ bool areMiterable(GNet &net1, GNet &net2, Hints &hints) {
   }
 
   for (auto sourceLink : net1.sourceLinks()) {
-    if (hints.sourceBinding.get()->find(sourceLink) == hints.sourceBinding.get()->end()) {
-      CHECK(false) << "Unable to find source with id " << sourceLink.target << '\n';
+    if (hints.sourceBinding.get()->find(sourceLink) ==
+        hints.sourceBinding.get()->end()) {
+      CHECK(false) << "Unable to find source with id " <<
+                      sourceLink.target << '\n';
       return false;
     }
   }
   for (auto targetLink : net1.targetLinks()) {
-    if (hints.targetBinding.get()->find(targetLink) == hints.sourceBinding.get()->end()) {
-      CHECK(false) << "Unable to find target with id " << targetLink.source << '\n';
+    if (hints.targetBinding.get()->find(targetLink) ==
+        hints.sourceBinding.get()->end()) {
+      CHECK(false) << "Unable to find target with id " <<
+                      targetLink.source << '\n';
       return false;
     }
   }
@@ -68,17 +72,13 @@ GNet *miter(GNet &net1, GNet &net2, Hints &hints) {
 
   for (auto bind : *newHints.sourceBinding.get()) {
     GateId newInputId = miter->addIn();
-    if (Gate::get(bind.first.target)->func() == GateSymbol::IN) {
-      miter->setGate(bind.first.target, GateSymbol::NOP, newInputId);
-      miter->setGate(bind.second.target, GateSymbol::NOP, newInputId);
-    } else {
-      miter->setGate(bind.first.target, Gate::get(bind.first.target)->func(), newInputId);
-      miter->setGate(bind.second.target, Gate::get(bind.second.target)->func(), newInputId);
-    }
+    miter->replace(bind.first.target, newInputId);
+    miter->replace(bind.second.target, newInputId);
   }
 
   for (auto bind : *newHints.targetBinding.get()) {
-    GateId newOutId = miter->addGate(GateSymbol::XOR, bind.first.source, bind.second.source);
+    GateId newOutId = miter->addGate(GateSymbol::XOR, bind.first.source,
+                                     bind.second.source);
     xorSignalList.push_back(Signal::always(newOutId));
   }
 
@@ -87,8 +87,10 @@ GNet *miter(GNet &net1, GNet &net2, Hints &hints) {
   miter->setGate(finalOutId, GateSymbol::OR, xorSignalList);
 
   for (auto bind : *newHints.targetBinding.get()) {
-    miter->setGate(bind.first.source, GateSymbol::NOP, Gate::get(bind.first.source)->inputs());
-    miter->setGate(bind.second.source, GateSymbol::NOP, Gate::get(bind.second.source)->inputs());
+    miter->setGate(bind.first.source, GateSymbol::NOP,
+                   Gate::get(bind.first.source)->inputs());
+    miter->setGate(bind.second.source, GateSymbol::NOP,
+                   Gate::get(bind.second.source)->inputs());
   }
 
   miter->sortTopologically();

@@ -314,6 +314,9 @@ public:
     removeGate(gid);
   }
 
+  /// Removes the gate from the net and replaces it with another one.
+  void replace(GateId replaced, GateId replacement);
+
   //===--------------------------------------------------------------------===//
   // Convenience Methods
   //===--------------------------------------------------------------------===//

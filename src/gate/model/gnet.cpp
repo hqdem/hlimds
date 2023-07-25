@@ -55,6 +55,29 @@ size_t GNet::nOuts() const {
   return result;
 }
 
+//===--------------------------------------------------------------------===//
+// Modification Methods
+//===--------------------------------------------------------------------===//
+
+void GNet::replace(GateId replaced, GateId replacement) {
+  std::vector<GateId> outputs;
+  for (auto output : Gate::get(replaced)->links()) {
+    outputs.push_back(output.target);
+  }
+  for (GateId output : outputs) {
+    SignalList newSignals;
+    for (auto input : Gate::get(output)->inputs()) {
+      if (input.node() != replaced) {
+        newSignals.push_back(input);
+      }
+    }
+    newSignals.push_back(Signal::always(replacement));
+    setGate(output, Gate::get(output)->func(), newSignals);
+  }
+  disconnectInputs(replaced);
+  removeGate(replaced);
+}
+
 //===----------------------------------------------------------------------===//
 // Gates
 //===----------------------------------------------------------------------===//

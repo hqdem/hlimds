@@ -8,10 +8,9 @@
 #pragma once
 
 #include "gate/optimizer/cuts_finder_visitor.h"
-#include "gate/optimizer/links_clean.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/util.h"
-#include "gate/optimizer/visitor.h"
+#include "gate/optimizer/cut_visitor.h"
 #include "gate/tech_mapper/replacement_struct.h"
 #include "gate/tech_mapper/strategy/strategy.h"
 
@@ -23,7 +22,7 @@ namespace eda::gate::techMap {
  * \author <a href="mailto:dgaryaev@ispras.ru"></a>
  */
 
-  class  SearchOptReplacement : public eda::gate::optimizer::Visitor {
+  class  SearchOptReplacement : public eda::gate::optimizer::CutVisitor {
   public:
     using RWDatabase = eda::gate::optimizer::RWDatabase;
     using BoundGNetList = eda::gate::optimizer::RWDatabase::BoundGNetList;
@@ -41,7 +40,7 @@ namespace eda::gate::techMap {
 
     VisitorFlags onNodeEnd(const GateID &) override;
 
-    VisitorFlags onCut(const Cut &) override;
+    VisitorFlags onCut(const GateID &, const Cut &) override;
 
     std::unordered_map<GateID, Replacement> *bestReplacement;
 

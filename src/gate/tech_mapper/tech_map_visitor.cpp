@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include "gate/tech_mapper/tech_map_visitor.h"
+#include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/optimizer_visitor.h"
 
 
@@ -22,6 +23,7 @@ namespace eda::gate::techMap {
   using CutsFindVisitor = eda::gate::optimizer::CutsFindVisitor;
   using ConeVisitor = eda::gate::optimizer::ConeVisitor;
   using TruthTable = eda::gate::optimizer::TruthTable;
+  using NetSubstitute = eda::gate::optimizer::NetSubstitute;
 
   SearchOptReplacement::SearchOptReplacement() {}
 
@@ -38,35 +40,37 @@ namespace eda::gate::techMap {
   }
 
   VisitorFlags SearchOptReplacement::onNodeBegin(const GateID &node) {
+
+    if (Gate::get(node)->isTarget()) {
+      return eda::gate::optimizer::VisitorFlags::SKIP;
+    }
     saveReplace = false;
     minNodeArrivalTime = std::numeric_limits<double>::max();
 
     if (cutStorage->cuts.find(node) == cutStorage->cuts.end()) {
-      // If the node is not in cutStorage, it is a new node.
-      // So we recount cuts for that node.
       CutsFindVisitor finder(cutSize, cutStorage);
       finder.onNodeBegin(node);
     }
     lastNode = node;
     lastCuts = &(cutStorage->cuts[node]);
-    return eda::gate::optimizer::VisitorFlags::SUCCESS;
+    return eda::gate::optimizer::VisitorFlags::CONTINUE;
   }
 
-  VisitorFlags SearchOptReplacement::onCut(const Visitor::Cut &cut) {
-
+  VisitorFlags SearchOptReplacement::onCut(const GateID &lastNode, const Cut &cut) {
     if (checkValidCut(cut)) {
       // Finding cone.
-      ConeVisitor coneVisitor(cut);
-      Walker walker(net, &coneVisitor, nullptr);
-      walker.walk(lastNode, cut, false);
+      ConeVisitor coneVisitor(cut, lastNode);
+      Walker walker(net, &coneVisitor);
+      walker.walk(cut, lastNode, false);
 
       // Make binding.
       RWDatabase::BoundGNet boundGNet;
       boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
 
-      const auto & cutConeMap = coneVisitor.getResultCut();
-      for(const auto &[gateSource, gateCone] : cutConeMap) {
-        boundGNet.inputBindings.push_back(gateCone);
+      const auto & cutConeMap = coneVisitor.getResultMatch();
+      const auto &resultCut = coneVisitor.getResultCutOldGates();
+      for (const auto &gate: resultCut) {
+        boundGNet.inputBindings.push_back(cutConeMap.find(gate)->second);
       }
 
       auto func = TruthTable::build(boundGNet);
@@ -77,17 +81,16 @@ namespace eda::gate::techMap {
         // Creating correspondence map for subNet sources and cut.
         std::unordered_map<GateID, GateID> map;
 
-        const auto& sources = superGate.net->getSources();
-        auto it = sources.begin();
-        
-        for(const auto & [k, v] : cutConeMap) {
-          if(it != sources.end()) {
-            map[*it] = k;
+        auto it = superGate.inputBindings.begin();
+        for (const auto &oldGate: resultCut) {
+          if (it != superGate.inputBindings.end()) {
+            map[*it] = oldGate;
           } else {
             break;
           }
           ++it;
         }
+        
         if (strategy->checkOpt(superGate, map, minNodeArrivalTime,
             bestReplacement)) {
           saveReplace = true;
@@ -95,7 +98,7 @@ namespace eda::gate::techMap {
         }
       }
     }
-    return eda::gate::optimizer::VisitorFlags::SUCCESS;
+    return eda::gate::optimizer::VisitorFlags::CONTINUE;
   }
 
   VisitorFlags SearchOptReplacement::onNodeEnd(const GateID &) {
@@ -104,7 +107,7 @@ namespace eda::gate::techMap {
       lastCuts->erase(*it);
     }
     toRemove.clear();
-    return eda::gate::optimizer::VisitorFlags::SUCCESS;
+    return eda::gate::optimizer::VisitorFlags::CONTINUE;
   }
 
   bool SearchOptReplacement::checkOptimize(const BoundGNet &superGate,
@@ -122,7 +125,7 @@ namespace eda::gate::techMap {
       std::unordered_map<GateID, GateID> &map) {
     bestOption = superGate;
     bestOptionMap = map;
-    return eda::gate::optimizer::VisitorFlags::SUCCESS;
+    return eda::gate::optimizer::VisitorFlags::CONTINUE;
   }
 
   BoundGNetList
@@ -132,8 +135,11 @@ namespace eda::gate::techMap {
 
   void SearchOptReplacement::saveBestReplacement() {
     if (saveReplace) {
-      Replacement bestReplacment{lastNode, bestOptionMap, bestOption.net.get(), 
-        net, minNodeArrivalTime, bestOption.name, bestOption.area};
+      NetSubstitute netSubstitute = NetSubstitute(
+            lastNode, &bestOptionMap, bestOption.net.get(), net);
+
+      Replacement bestReplacment{lastNode, netSubstitute, minNodeArrivalTime, 
+          bestOption.name, bestOption.area};
       bestReplacement->insert(std::pair<GateID, Replacement>
                               (lastNode, bestReplacment));
     } 

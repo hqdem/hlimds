@@ -1,0 +1,20 @@
+image: isprasmvg/utopia-eda:clear
+
+stages:
+  - build
+
+build_project:
+  stage: build
+  tags:
+    - docker
+
+  script:
+    - rm -rf $UTOPIA_HOME/build
+    - export UTOPIA_HOME=/builds/mvg/utopia-eda
+    - pwd
+    - cmake -S . -B build -G Ninja
+    - cmake --build build
+
+  artifacts:
+    paths:
+      - build/

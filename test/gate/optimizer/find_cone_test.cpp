@@ -15,125 +15,148 @@
 
 namespace eda::gate::optimizer {
 
-const std::string testOutPath = "test/data/gate/optimizer/output";
+  const std::string testOutPath = "test/data/gate/optimizer/output";
 
-GNet *findConePrint(const std::filesystem::path &subCatalog, GNet *net,
-                    const std::vector<GateID> &cuNodes, GNet::V start) {
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path outputPath =
-          homePath / "build" / testOutPath / subCatalog;
+  GNet *findConePrint(const std::filesystem::path &subCatalog, GNet *net,
+                      const std::vector<GateID> &cuNodes, GNet::V start) {
+    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+    const std::filesystem::path outputPath =
+            homePath / "build" / testOutPath / subCatalog;
 
-  system(std::string("mkdir -p ").append(outputPath).c_str());
+    system(std::string("mkdir -p ").append(outputPath).c_str());
 
-  std::string filename1 = outputPath / "cone0.dot";
-  std::string filename2 = outputPath / "cone.dot";
+    std::string filename1 = outputPath / "cone0.dot";
+    std::string filename2 = outputPath / "cone.dot";
 
-  Dot printer(net);
-  printer.print(filename1);
+    Dot printer(net);
+    printer.print(filename1);
 
-  Cut cut;
-  for (auto node: cuNodes) {
-    cut.emplace(node);
+    Cut cut;
+    for (auto node: cuNodes) {
+      cut.emplace(node);
+    }
+
+    ConeVisitor coneVisitor(cut, start);
+    Walker walker(net, &coneVisitor);
+    walker.walk(cut, start, false);
+
+    GNet *subnet = coneVisitor.getGNet();
+
+    printer = Dot(subnet);
+    printer.print(filename2);
+
+    return subnet;
   }
 
-  ConeVisitor coneVisitor(cut, start);
-  Walker walker(net, &coneVisitor);
-  walker.walk(cut, start, false);
+  TEST(FindConeTest, findCone) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
 
-  GNet *subnet = coneVisitor.getGNet();
+    GNet net;
+    auto g = gnet1(net);
 
-  printer = Dot(subnet);
-  printer.print(filename2);
-
-  return subnet;
-}
-
-TEST(FindConeTest, findCone) {
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
+    auto *cone = findConePrint("findCone1",
+                               &net, {g[2], g[4]}, g[5]);
+    EXPECT_EQ(4, cone->nGates());
+    delete cone;
   }
 
-  GNet net;
-  auto g = gnet1(net);
+  TEST(FindConeTest, findCone2) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
 
-  auto *cone = findConePrint("findCone1",
-                             &net, {g[2], g[4]}, g[5]);
-  EXPECT_EQ(4, cone->nGates());
-  delete cone;
-}
+    GNet net;
+    auto g = gnet3(net);
 
-TEST(FindConeTest, findCone2) {
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
+    auto cone = findConePrint("findCone2", &net,
+                              {g[2], g[3], g[4], g[6], g[7]}, g[14]);
+    EXPECT_EQ(8, cone->nGates());
+    delete cone;
   }
 
-  GNet net;
-  auto g = gnet3(net);
+  TEST(FindConeTest, findCone3_0) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
 
-  auto cone = findConePrint("findCone2", &net,
-                            {g[2], g[3], g[4], g[6], g[7]}, g[14]);
-  EXPECT_EQ(8, cone->nGates());
-  delete cone;
-}
+    GNet net;
+    auto g = gnet3(net);
 
-TEST(FindConeTest, findCone3_0) {
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
+    auto cone = findConePrint("findCone3_0",
+                              &net, {g[0], g[3], g[7]}, g[8]);
+    EXPECT_EQ(5, cone->nGates());
+    EXPECT_EQ(2, cone->nSourceLinks());
+    delete cone;
   }
 
-  GNet net;
-  auto g = gnet3(net);
+  TEST(FindConeTest, findCone3_1) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
 
-  auto cone = findConePrint("findCone3_0",
-                            &net,{g[0], g[3], g[7]}, g[8]);
-  EXPECT_EQ(5, cone->nGates());
-  EXPECT_EQ(2, cone->nSourceLinks());
-  delete cone;
-}
+    GNet net;
+    auto g = gnet3(net);
 
-TEST(FindConeTest, findCone3_1) {
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
+    auto cone = findConePrint("findCone3_1",
+                              &net, {g[0], g[3], g[7]}, g[12]);
+    EXPECT_EQ(6, cone->nGates());
+    EXPECT_EQ(2, cone->nSourceLinks());
+    delete cone;
   }
 
-  GNet net;
-  auto g = gnet3(net);
+  TEST(FindConeTest, findConeExessiveCut) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
 
-  auto cone = findConePrint("findCone3_1",
-                            &net,{g[0], g[3], g[7]}, g[12]);
-  EXPECT_EQ(6, cone->nGates());
-  EXPECT_EQ(2, cone->nSourceLinks());
-  delete cone;
-}
+    GNet net;
+    auto g = gnet1(net);
 
-TEST(FindConeTest, findConeExessiveCut) {
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
+    auto cone = findConePrint(
+            "findConeExessiveCut", &net,
+            {g[0], g[1], g[2], g[4]}, g[5]);
+    EXPECT_EQ(4, cone->nGates());
+    EXPECT_EQ(2, cone->nSourceLinks());
+    delete cone;
   }
 
-  GNet net;
-  auto g = gnet1(net);
+  TEST(FindConeTest, findConeTrivial) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
 
-  auto cone = findConePrint(
-          "findConeExessiveCut", &net,
-          {g[0], g[1], g[2], g[4]}, g[5]);
-  EXPECT_EQ(4, cone->nGates());
-  EXPECT_EQ(2, cone->nSourceLinks());
-  delete cone;
-}
+    GNet net;
+    auto g = gnet1(net);
 
-TEST(FindConeTest, findConeTrivial) {
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
+    auto cone = findConePrint("findConeTrivial",
+                              &net, {g[5]}, g[5]);
+    EXPECT_EQ(2, cone->nGates());
+    delete cone;
   }
 
-  GNet net;
-  auto g = gnet1(net);
+  TEST(FindConeTest, findConeFunction) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
 
-  auto cone = findConePrint("findConeTrivial",
-                            &net, {g[5]}, g[5]);
-  EXPECT_EQ(2, cone->nGates());
-  delete cone;
-}
+    GNet net;
+    auto g = gnet1ChangedFunc(net);
+
+    std::vector<GateID> cut = {g[2], g[4]};
+    BoundGNet binding = extractCone(&net, g[5], cut);
+
+    GNet *cone = binding.net.get();
+    const auto &matchMap = binding.inputBindings;
+
+    EXPECT_EQ(4, cone->nGates());
+
+    EXPECT_EQ(2, matchMap.size());
+    EXPECT_EQ(Gate::get(cut[0])->links().size(),
+              Gate::get(matchMap[0])->links().size());
+    EXPECT_EQ(Gate::get(cut[1])->links().size(),
+              Gate::get(matchMap[1])->links().size());
+  }
 
 } // namespace eda::gate::optimizer

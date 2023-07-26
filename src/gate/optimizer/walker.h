@@ -31,7 +31,7 @@ namespace eda::gate::optimizer {
     using Cut = CutStorage::Cut;
 
   protected:
-    GNet *gNet;
+    const GNet *gNet;
     Visitor *visitor;
 
     virtual VisitorFlags callVisitor(GateID node);
@@ -56,7 +56,7 @@ namespace eda::gate::optimizer {
      * @param gNet Net to be traced.
      * @param visitor Node handler.
      */
-    Walker(GNet *gNet, Visitor *visitor);
+    Walker(const GNet *gNet, Visitor *visitor);
 
     /**
      * Traces all nodes in topological order and calls the handler on each node.

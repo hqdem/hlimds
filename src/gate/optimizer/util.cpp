@@ -65,4 +65,36 @@ namespace eda::gate::optimizer {
     }
   }
 
+  BoundGNet extractCone(const GNet *sourceNet, GateID root, Cut& cut,
+                        const std::vector<GateID> &order) {
+    ConeVisitor coneVisitor(cut, root);
+    Walker walker(sourceNet, &coneVisitor);
+    walker.walk(cut, root, false);
+
+    BoundGNet boundGNet;
+    boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
+    const auto &cutConeMap = coneVisitor.getResultMatch();
+    for (const auto &gate: order) {
+      boundGNet.inputBindings.push_back(cutConeMap.find(gate)->second);
+    }
+    return boundGNet;
+  }
+
+  BoundGNet extractCone(const GNet *sourceNet, GateID root,
+                        const std::vector<GateID> &order) {
+    Cut cut(order.begin(), order.end());
+
+    ConeVisitor coneVisitor(cut, root);
+    Walker walker(sourceNet, &coneVisitor);
+    walker.walk(cut, root, false);
+
+    BoundGNet boundGNet;
+    boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
+    const auto &cutConeMap = coneVisitor.getResultMatch();
+    for (const auto &gate: order) {
+      boundGNet.inputBindings.push_back(cutConeMap.find(gate)->second);
+    }
+    return boundGNet;
+  }
+
 } // namespace eda::gate::optimizer

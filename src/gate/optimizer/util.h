@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/gnet.h"
+#include "gate/optimizer/bgnet.h"
 #include "gate/optimizer/cone_visitor.h"
 #include "gate/optimizer/walker.h"
 
@@ -46,5 +47,25 @@ namespace eda::gate::optimizer {
    */
   void getConeSet(GateID start, const Cut &cut, std::unordered_set<GateID> &coneNodes,  bool forward);
 
+  /**
+   * Cone extraction function.
+   * @param sourceNet Net where cone extraction is executed.
+   * @param root Vertex for which the cone is constructed.
+   * @param cut Cut that forms the cone.
+   * @param order The order will be kept when constructing correspondence map.
+   * @return Extracted cone with input correspondence map.
+   */
+  BoundGNet extractCone(const GNet *sourceNet, GateID root, Cut& cut,
+                        const std::vector<GateID> &order);
+
+  /**
+   * Cone extraction function.
+   * @param sourceNet Net where cone extraction is executed.
+   * @param root Vertex for which the cone is constructed.
+   * @param order The order will be kept when constructing correspondence map.
+   * @return Extracted cone with input correspondence map.
+   */
+  BoundGNet extractCone(const GNet *sourceNet, GateID root,
+                        const std::vector<GateID> &order);
 } // namespace eda::gate::optimizer
 

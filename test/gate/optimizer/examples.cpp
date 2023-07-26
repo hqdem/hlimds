@@ -47,6 +47,18 @@ namespace eda::gate::optimizer {
     return g;
   }
 
+  std::vector<GateID> gnet1ChangedFunc(GNet &gNet) {
+    std::vector<GateID> g(4);
+    for (GateID &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {0, 1}));
+    g.push_back(createLink(gNet, g, {4, 2}, model::GateSymbol::XOR));
+    g.push_back(createLink(gNet, g, {5, 3}, model::GateSymbol::OR));
+    g.push_back(createLink(gNet, g, {6}, model::GateSymbol::OUT));
+    return g;
+  }
+
   std::vector<GateID> gnet2(GNet &gNet) {
     std::vector<GateID> g(4);
     for (GateID &el: g) {

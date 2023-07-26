@@ -19,7 +19,7 @@ namespace eda::gate::optimizer {
 
   using GNet = eda::gate::model::GNet;
 
-  Walker::Walker(Walker::GNet *gNet, Visitor *visitor) :
+  Walker::Walker(const Walker::GNet *gNet, Visitor *visitor) :
           gNet(gNet), visitor(visitor) {}
 
   void Walker::walk(bool forward) {

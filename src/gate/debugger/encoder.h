@@ -98,8 +98,18 @@ public:
     return _context.solver().solve();
   }
 
+  bool solveLimited() {
+    _context.solver().setConfBudget(confBudget);
+    _context.solver().setPropBudget(propBudget);
+    return _context.solver().solve();
+  }
+
 private:
   Context _context;
+  /// Max amount of conflict events upon SAT solving.
+  uint64_t confBudget = 1000;
+  /// Max amount of propagation events upon SAT solving.
+  uint64_t propBudget = 10000;
 };
 
 } // namespace eda::gate::debugger

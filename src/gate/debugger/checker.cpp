@@ -351,7 +351,7 @@ CheckerResult Checker::isEqualCombSatMiter(const GNet &miter) const {
   const auto y = encoder.var(outputId, 0);
   encoder.encodeFix(y, 1);
 
-  const auto verdict = encoder.solve();
+  const auto verdict = encoder.solveLimited();
 
   std::vector<bool> counterEx;
   if (verdict) {

@@ -9,9 +9,9 @@ build_project:
     - docker
 
   script:
-    - rm -rf $UTOPIA_HOME/build
+    - rm -rf ${UTOPIA_HOME}/build
     - export UTOPIA_HOME=/builds/mvg/utopia-eda
-    - cd UTOPIA_HOME
+    - cd ${UTOPIA_HOME}
     - git submodule init
     - git submodule update
     - cmake -S . -B build -G Ninja

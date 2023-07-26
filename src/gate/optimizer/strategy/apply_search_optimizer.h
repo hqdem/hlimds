@@ -17,7 +17,6 @@ namespace eda::gate::optimizer {
   /**
    * \brief Replacement is performed right away in place
    * if it improves the criterion of the number of nodes in the net.
-   * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
    */
   class ApplySearchOptimizer : public OptimizerVisitor {
 

@@ -15,8 +15,10 @@ namespace eda::gate::optimizer {
   using Cut = CutStorage::Cut;
   using CutIt = Cuts::iterator;
 
-  CutsFindVisitor::CutsFindVisitor(int cutSize, CutStorage *cutStorage) :
-          cutSize(cutSize), cutStorage(cutStorage) {}
+  CutsFindVisitor::CutsFindVisitor(unsigned int cutSize, CutStorage *cutStorage,
+                                   unsigned int maxCutsNumber) :
+          cutSize(cutSize), maxCutNum(maxCutsNumber),
+          cutStorage(cutStorage) {}
 
   VisitorFlags CutsFindVisitor::onNodeBegin(const GateID &vertex) {
     Gate *gate = Gate::get(vertex);
@@ -46,7 +48,7 @@ namespace eda::gate::optimizer {
 
       for (auto &it: ptrs) {
         collected.insert((*it).begin(), (*it).end());
-        if (static_cast<int>(collected.size()) > cutSize) {
+        if (collected.size() > cutSize) {
           collected = Cut();
           break;
         }
@@ -55,7 +57,8 @@ namespace eda::gate::optimizer {
       // Saving cut if the iteration produced good size cut.
       if (!collected.empty()) {
         cuts->emplace(collected);
-        if (cuts->size() > 100) {
+
+        if (maxCutNum != ALL_CUTS && cuts->size() > maxCutNum) {
           return CONTINUE;
         }
       }

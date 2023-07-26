@@ -18,9 +18,9 @@ namespace eda::gate::optimizer {
     return netSubstitute.fakeSubstitute() <= 0;
   }
 
-  void
-  ApplySearchOptimizer::considerOptimization(const GateID &lastNode, BoundGNet &option,
-                                             MatchMap &map) {
+  void ApplySearchOptimizer::considerOptimization(const GateID &lastNode,
+                                                  BoundGNet &option,
+                                                  MatchMap &map) {
     netSubstitute.substitute();
   }
 

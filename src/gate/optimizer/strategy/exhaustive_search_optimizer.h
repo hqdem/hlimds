@@ -19,7 +19,6 @@ namespace eda::gate::optimizer {
    * after the end of the iteration on
    * the list of substitute nets from the database
    * performs the transformation with the best of replacements.
-   * \author <a href="mailto:dreamer_1977@ispras.ru">Liza Shcherbakova</a>
    */
   class ExhausitiveSearchOptimizer : public OptimizerVisitor {
 

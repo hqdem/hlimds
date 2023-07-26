@@ -137,4 +137,5 @@ namespace eda::gate::optimizer {
 
     return map;
   }
+
 } // namespace eda::gate::optimizer

@@ -17,10 +17,11 @@ namespace eda::gate::optimizer {
   OptimizerVisitor::OptimizerVisitor() {}
 
   void OptimizerVisitor::set(CutStorage *cutStorage,
-                             GNet *net, int cutSize) {
+                             GNet *net, unsigned int cutSize, unsigned int maxCutsNumber) {
     this->cutStorage = cutStorage;
     this->net = net;
     this->cutSize = cutSize;
+    this->maxCutsNumber = maxCutsNumber;
   }
 
   VisitorFlags OptimizerVisitor::onNodeBegin(const GateID &node) {
@@ -32,7 +33,7 @@ namespace eda::gate::optimizer {
     if (cutStorage->cuts.find(node) == cutStorage->cuts.end()) {
       // If node is not in cutStorage - means, that it is a new node.
       // So we recount cuts for that node.
-      CutsFindVisitor finder(cutSize, cutStorage);
+      CutsFindVisitor finder(cutSize, cutStorage, maxCutsNumber);
       finder.onNodeBegin(node);
     }
     lastCuts = &(cutStorage->cuts[node]);
@@ -66,6 +67,7 @@ namespace eda::gate::optimizer {
         // TODO: Process constant cuts
         // Creating correspondence map for substNet sources and cut.
         MatchMap map;
+
         auto it = option.inputBindings.begin();
         for (const auto &oldGate: resultCut) {
           if (it != option.inputBindings.end()) {

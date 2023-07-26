@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 namespace eda::gate::optimizer {
+
 /**
  * \brief Class for storing cuts.
  */

@@ -22,6 +22,8 @@ namespace eda::gate::optimizer {
   using lorina::diagnostic_engine;
   using lorina::return_code;
 
+  const int kCutsMax = 100;
+
   std::string getPath(const std::string &nameDir) {
     const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
     const std::filesystem::path outputPath =
@@ -39,7 +41,7 @@ namespace eda::gate::optimizer {
     gnet1(net);
 
     optimizePrint(&net, 4, getPath("gnet1_rewrite"),
-                  ExhausitiveSearchOptimizer());
+                  ExhausitiveSearchOptimizer(), kCutsMax);
   }
 
   TEST(RewriteTest, gnet2) {
@@ -51,7 +53,7 @@ namespace eda::gate::optimizer {
     gnet2(net);
 
     optimizePrint(&net, 4, getPath("gnet2_rewrite"),
-                  ExhausitiveSearchOptimizer());
+                  ExhausitiveSearchOptimizer(), kCutsMax);
   }
 
   TEST(RewriteTest, gnet3) {
@@ -63,7 +65,7 @@ namespace eda::gate::optimizer {
     gnet3(net);
 
     optimizePrint(&net, 4, getPath("gnet3_rewrite"),
-                  ExhausitiveSearchOptimizer());
+                  ExhausitiveSearchOptimizer(), kCutsMax);
   }
 
   TEST(RewriteTest, c17) {
@@ -75,7 +77,7 @@ namespace eda::gate::optimizer {
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 
-    optimize(net, 6, ExhausitiveSearchOptimizer());
+    optimize(net, 6, ExhausitiveSearchOptimizer(), kCutsMax);
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 
@@ -91,7 +93,7 @@ namespace eda::gate::optimizer {
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 
-    optimize(net, 4, ApplySearchOptimizer());
+    optimize(net, 4, ApplySearchOptimizer(), kCutsMax);
 
     std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
 

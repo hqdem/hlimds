@@ -13,21 +13,27 @@
 
 namespace eda::gate::optimizer {
 
- /**
-  * \brief Finds cuts in given net.
-  */
+  /**
+   * \brief Finds cuts in given net.
+   */
   class CutsFindVisitor : public Visitor {
 
-    int cutSize;
+    unsigned int cutSize;
+    unsigned int maxCutNum;
     CutStorage *cutStorage;
 
   public:
 
+    constexpr static unsigned int ALL_CUTS = 0;
+
     /**
      * @param cutSize Max number of nodes in a cut.
      * @param cutStorage Struct where cuts are stored.
+     * @param maxCutsNumber Maximum number of cuts for a single node.
+     * To avoid restriction CutsFindVisitor::ALL_CUTS can be used.
      */
-    CutsFindVisitor(int cutSize, CutStorage *cutStorage);
+    CutsFindVisitor(unsigned int cutSize, CutStorage *cutStorage,
+                    unsigned int maxCutsNumber = ALL_CUTS);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 

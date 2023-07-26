@@ -32,7 +32,8 @@ namespace eda::gate::optimizer {
     /**
      * Setter for the fields based on which optimization is performed.
      */
-    void set(CutStorage *cutStorage, GNet *net, int cutSize);
+    void set(CutStorage *cutStorage, GNet *net, unsigned int cutSize,
+             unsigned int maxCutsNumber);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -77,12 +78,13 @@ namespace eda::gate::optimizer {
     CutStorage *cutStorage;
     CutStorage::Cuts *lastCuts;
     std::vector<const CutStorage::Cut *> toRemove;
+    unsigned int maxCutsNumber;
 
     bool checkValidCut(const GateID &lastNode, const Cut &cut);
 
   protected:
     GNet *net;
-    int cutSize;
+    unsigned int cutSize;
 
   };
 

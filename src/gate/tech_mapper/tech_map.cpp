@@ -11,6 +11,7 @@
 #include "gate/tech_mapper/library/cell.h"
 #include "gate/tech_mapper/tech_map.h"
 #include "gate/tech_mapper/tech_map_visitor.h"
+#include "gate/optimizer/cut_walker.h"
 
 namespace eda::gate::techMap {
   using Gate = eda::gate::model::Gate;
@@ -32,9 +33,13 @@ namespace eda::gate::techMap {
 
   GNet *TechMapper::techMap(GNet *net, Strategy *strategy) {
     //aigMap(net);
+    std::cout << "1" << std::endl;
     findCuts(net);
+    std::cout << "2" << std::endl;
     replacementSearch(net, strategy);
+    std::cout << "3" << std::endl;
     replacement(net);
+    std::cout << "4" << std::endl;
     std::cout << getArea(net) << std::endl;
     std::cout << getDelay(net) << std::endl;
 
@@ -66,8 +71,10 @@ namespace eda::gate::techMap {
   void TechMapper::replacementSearch(GNet *net, Strategy *strategy) {
     unsigned int start_time =  clock();
     SearchOptReplacement searchOptReplacement;
-    searchOptReplacement.set(&cutStorage, net, &bestReplacement, 6, rwdb, strategy);
-    eda::gate::optimizer::Walker walker(net, &searchOptReplacement, &cutStorage);
+    searchOptReplacement.set(&cutStorage, net, &bestReplacement, 6,
+        rwdb, strategy);
+    eda::gate::optimizer::CutWalker walker(net, &searchOptReplacement,
+        &cutStorage);
     walker.walk(true);
     std::cout << "Search replacement - " << clock() - start_time << " ms" << std::endl;
   }
@@ -79,8 +86,7 @@ namespace eda::gate::techMap {
     for (auto &node: nodes) {
       if (bestReplacement.count(node) & net->hasNode(node)) {
         Replacement &replacementInfo = bestReplacement.at(node);
-        eda::gate::optimizer::substitute(node, replacementInfo.bestOptionMap,
-            replacementInfo.subsNet, replacementInfo.net);
+        replacementInfo.netSubstitute.substitute();
                 
         if (delay < replacementInfo.delay) {delay = replacementInfo.delay;}
         area = area + replacementInfo.area;

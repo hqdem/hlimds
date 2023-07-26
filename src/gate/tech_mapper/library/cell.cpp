@@ -93,6 +93,7 @@ namespace eda::gate::techMap {
     }
 
     Gate::SignalList inputs;
+    Gate::Id outputId;
 
     model::GateSymbol customName =
         model::GateSymbol::create(cell->getName());
@@ -103,7 +104,8 @@ namespace eda::gate::techMap {
       inputs.push_back(Gate::Signal::always(inputId));
     }
 
-    cellNet->addGate(customName, inputs);
+    auto gateId = cellNet->addGate(customName, inputs);
+    outputId = cellNet->addOut(gateId);
 
     cellNet->sortTopologically();
     
@@ -124,7 +126,7 @@ namespace eda::gate::techMap {
     dummy->sortTopologically();
 
     BoundGNet::BoundGNetList bgl;
-    BoundGNet bg {dummy, bindings, {}, delay, cell->getName(), cell->getArea()};
+    BoundGNet bg {dummy, bindings, {outputId}, delay, cell->getName(), cell->getArea()};
     bgl.push_back(bg);
 
     RWDatabase::TruthTable TT(truthTable);

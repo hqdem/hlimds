@@ -2,6 +2,7 @@
 #pragma once
 
 #include "gate/model/gnet.h"
+#include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/rwdatabase.h"
 
 #include <unordered_map>
@@ -15,11 +16,10 @@ namespace eda::gate::techMap {
     using GNet = model::GNet;
     using GateID = GNet::GateId;
     using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
+    using NetSubstitute = eda::gate::optimizer::NetSubstitute;
 
     GateID rootNode;
-    std::unordered_map<GateID, GateID> bestOptionMap;
-    GNet *subsNet;
-    GNet *net;
+    NetSubstitute netSubstitute;
     double delay;
     std::string name;
     double area;

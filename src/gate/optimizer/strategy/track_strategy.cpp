@@ -30,9 +30,9 @@ namespace eda::gate::optimizer {
     return result;
   }
 
-  void
-  TrackStrategy::considerOptimization(const GateID &lastNode, BoundGNet &option,
-                                      MatchMap &map) {
+  void TrackStrategy::considerOptimization(const GateID &lastNode,
+                                           BoundGNet &option,
+                                           MatchMap &map) {
     visitor->considerOptimization(lastNode, option, map);
   }
 

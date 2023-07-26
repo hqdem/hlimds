@@ -37,7 +37,7 @@ namespace eda::gate::optimizer {
     assert(lorina::return_code::success ==
            read_verilog(filename, parser, &diag));
 
-    CutStorage storage = findCuts(4, parser.getGnet());
+    CutStorage storage = findCuts(parser.getGnet(), 4, 100);
 
     for (auto &[v, cs]: storage.cuts) {
       for (const auto &c: cs) {

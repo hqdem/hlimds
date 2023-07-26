@@ -65,8 +65,4 @@ namespace eda::gate::optimizer {
     }
   }
 
-  GNet *getCone(const GNet *sourceNet, GateID root, const Cut &cut) {
-    return nullptr;
-  }
-
 } // namespace eda::gate::optimizer

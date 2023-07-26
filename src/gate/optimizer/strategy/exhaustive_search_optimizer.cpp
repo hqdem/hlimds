@@ -26,8 +26,7 @@ namespace eda::gate::optimizer {
 
   void ExhausitiveSearchOptimizer::considerOptimization(const GateID &lastNode,
                                                         BoundGNet &option,
-                                                        std::unordered_map
-                                                        <GateID, GateID> &map) {
+                                                        MatchMap &map) {
     bestOption = std::move(netSubstitute);
   }
 

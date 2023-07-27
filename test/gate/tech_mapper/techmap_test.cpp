@@ -7,12 +7,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/parser/gate_verilog_parser.h"
-#include "gate/parser/parser_test.h"
 #include "gate/printer/dot.h"
 #include "gate/optimizer/examples.h"
 
-#include "gate/tech_mapper/parser_lib_test.h"
+#include "gate/parser/gate_verilog.h"
+#include "gate/parser/parser_test.h"
 #include "gate/tech_mapper/tech_map.h"
 #include "gate/premapper/mapper/mapper_test.h"
 #include "gate/debugger/checker.h"
@@ -21,7 +20,8 @@
 
 #include "gtest/gtest.h"
 
-using namespace eda::gate::parser::verilog;
+using namespace eda::gate::parser;
+using namespace eda::gate::optimizer;
 
 namespace eda::gate::techMap {
   using GNet = eda::gate::model::GNet;
@@ -84,7 +84,7 @@ namespace eda::gate::techMap {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-    GNet *net = parseVerilog("c432");
+    GNet *net = parseVerilog("c432.v");
 
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
@@ -101,7 +101,7 @@ namespace eda::gate::techMap {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-    GNet *net = parseVerilog("adder");
+    GNet *net = parseVerilog("adder.v");
 
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
@@ -118,7 +118,7 @@ namespace eda::gate::techMap {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-    GNet *net = getNetForTechMap("c17");
+    GNet *net = parseVerilog("c17.v");
 
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
@@ -129,97 +129,5 @@ namespace eda::gate::techMap {
     
     MinDelay *minDelay = new MinDelay();
     techMapper.techMap(gnet, minDelay);
-  }
-/*
-  TEST(TechMapTest, gnet1) {
-    if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
-    GNet net;
-    gnet1(net);
-
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
-    MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(&net, minDelay);
-  }
-
-  TEST(TechMapTest, gnet2) {
-    if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
-    GNet net;
-    gnet2(net);
-
-
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
-    MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(&net, minDelay);
-  }
-  TEST(TechMapTest, gnet3) {
-    if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
-    GNet net;
-    gnet3(net);
-
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
-    MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(&net, minDelay);
-  }
-
-  TEST(TechMapTest, c432) {
-    if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
-    //test push
-    GNet *net = getNetForTechMap("c432");
-
-    std::shared_ptr<GNet> sharedNet(net);
-    sharedNet->sortTopologically();
-    GateIdMap gmap;
-    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
-
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
-    MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(gnet, minDelay);
-  }
-
-  TEST(TechMapTest, adder) {
-    if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
-    GNet *net = getNetForTechMap("adder");
-
-    std::shared_ptr<GNet> sharedNet(net);
-    sharedNet->sortTopologically();
-    GateIdMap gmap;
-    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
-
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
-    MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(gnet, minDelay);
-  }
-
-  TEST(TechMapTest, c17) {
-    if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
-    GNet *net = parseVerilog("c17");
-
-    std::shared_ptr<GNet> sharedNet(net);
-    sharedNet->sortTopologically();
-    GateIdMap gmap;
-    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
-
-    TechMapper techMapper(libertyDirrectTechMap.string() 
-        + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
-    MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(net, minDelay);
   }
 }

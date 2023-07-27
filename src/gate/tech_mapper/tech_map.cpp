@@ -7,11 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/optimizer.h"
+#include "gate/optimizer/cut_walker.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/tech_mapper/library/cell.h"
 #include "gate/tech_mapper/tech_map.h"
 #include "gate/tech_mapper/tech_map_visitor.h"
-#include "gate/optimizer/cut_walker.h"
 
 namespace eda::gate::techMap {
   using Gate = eda::gate::model::Gate;
@@ -33,13 +33,9 @@ namespace eda::gate::techMap {
 
   GNet *TechMapper::techMap(GNet *net, Strategy *strategy) {
     //aigMap(net);
-    std::cout << "1" << std::endl;
     findCuts(net);
-    std::cout << "2" << std::endl;
     replacementSearch(net, strategy);
-    std::cout << "3" << std::endl;
     replacement(net);
-    std::cout << "4" << std::endl;
     std::cout << getArea(net) << std::endl;
     std::cout << getDelay(net) << std::endl;
 
@@ -64,7 +60,7 @@ namespace eda::gate::techMap {
 
   void TechMapper::findCuts(GNet *net) {
     unsigned int start_time =  clock();
-    cutStorage = eda::gate::optimizer::findCuts(5, net);
+    cutStorage = eda::gate::optimizer::findCuts(net, 5);
     std::cout << "find cuts - " << clock() - start_time << " ms" << std::endl;
   }
 

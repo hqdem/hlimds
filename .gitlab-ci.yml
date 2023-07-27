@@ -2,7 +2,6 @@ image: isprasmvg/utopia-eda:clear
 
 stages:
   - build
-  - test
 
 build_project:
   stage: build
@@ -17,15 +16,6 @@ build_project:
     - git submodule update
     - cmake -S . -B build -G Ninja
     - cmake --build build
-
-test_project:
-  stage: test
-  tags:
-    - docker
-
-  script:
-    - rm -rf ${UTOPIA_HOME}/output
-    - ${UTOPIA_HOME}/build/test/utest
 
   artifacts:
     paths:

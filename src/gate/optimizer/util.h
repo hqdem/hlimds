@@ -11,6 +11,7 @@
 #include "gate/model/gnet.h"
 #include "gate/optimizer/bgnet.h"
 #include "gate/optimizer/cone_visitor.h"
+#include "gate/optimizer/links_clean_counter.h"
 #include "gate/optimizer/walker.h"
 
 /**
@@ -67,5 +68,14 @@ namespace eda::gate::optimizer {
    */
   BoundGNet extractCone(const GNet *sourceNet, GateID root,
                         const std::vector<GateID> &order);
+
+
+  /**
+   * Removes the startRm and other nodes that were used only in initial node.
+   * @param net Net to delete nodes from.
+   * @param start Node to start recursive deleting with.
+   */
+  void rmRecursive(GNet *net, GateID start);
+
 } // namespace eda::gate::optimizer
 

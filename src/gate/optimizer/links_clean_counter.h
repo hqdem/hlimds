@@ -34,6 +34,10 @@ namespace eda::gate::optimizer {
                        const std::unordered_set<GateID> &used,
                        std::vector<GateID> &removedOrder);
 
+    LinksRemoveCounter(const TargetsList &targetsList,
+                       const std::unordered_set<GateID> &used,
+                       std::vector<GateID> &removedOrder);
+
     VisitorFlags onNodeBegin(const GateID &) override;
 
     VisitorFlags onNodeEnd(const GateID &) override;

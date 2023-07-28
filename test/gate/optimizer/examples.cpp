@@ -28,7 +28,9 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {0, 1}));
     g.push_back(createLink(gNet, g, {4, 2}));
     g.push_back(createLink(gNet, g, {5, 3}));
-    g.push_back(createLink(gNet, g, {6}, model::GateSymbol::OUT));
+    
+    g.push_back(createLink(gNet, g, {static_cast<GateID>(g.size() - 1)},
+                           model::GateSymbol::OUT));
     return g;
   }
 

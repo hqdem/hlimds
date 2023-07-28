@@ -32,14 +32,17 @@ namespace eda::gate::techMap {
   }
 
   GNet *TechMapper::techMap(GNet *net, Strategy *strategy) {
-    //aigMap(net);
-    findCuts(net);
-    replacementSearch(net, strategy);
-    replacement(net);
-    std::cout << getArea(net) << std::endl;
-    std::cout << getDelay(net) << std::endl;
-
-    rwdb.closeDB();
+    try {
+      //aigMap(net);
+      findCuts(net);
+      replacementSearch(net, strategy);
+      replacement(net);
+      std::cout << getArea(net) << std::endl;
+      std::cout << getDelay(net) << std::endl;
+      rwdb.closeDB();
+    } catch (const char* msg) {
+    std::cout << msg << std::endl;
+    }
     remove(dbPath.c_str());
     return net;
   }

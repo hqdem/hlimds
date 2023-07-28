@@ -316,7 +316,15 @@ public:
 
   /// Removes the gate from the net and replaces it with another one.
   void replace(GateId replaced, GateId replacement);
-
+  /**
+   *  \brief Removes the gate and connects another gate to its outputs.
+   *  Cannot be used for the same gates.
+   *  Gates which became hanging from the removal are also removed.
+   *  @param removed Id of the gate which is going to be removed from the net.
+   *  @param connected Id of the gate which will become an input
+   *  of removed gates' outputs.
+   */
+  void mergeGates(GateId removed, GateId connected);
   //===--------------------------------------------------------------------===//
   // Convenience Methods
   //===--------------------------------------------------------------------===//

@@ -78,6 +78,42 @@ void GNet::replace(GateId replaced, GateId replacement) {
   removeGate(replaced);
 }
 
+void GNet::mergeGates(GateId removed, GateId connected) {
+  assert(contains(removed) && contains(connected));
+  assert(removed != connected);
+  std::vector<GateId> outputs;
+  for (auto link : Gate::get(removed)->links()) {
+    outputs.push_back(link.target);
+  }
+  // Removal of the merged gate.
+  disconnectInputs(removed);
+  removeGate(removed);
+  for (auto output : outputs) {
+    // Reconnection of the removed gates' outputs.
+    Gate *deletedOuts = Gate::get(output);
+    SignalList newSignals = deletedOuts->inputs();
+    newSignals.push_back(Signal::always(connected));
+    newSignals.erase(std::remove(newSignals.begin(),
+                     newSignals.end(), Signal::always(removed)));
+    setGate(output, deletedOuts->func(), newSignals);
+  }
+  // TODO: check rmRecursive here.
+  // Removal of the gates which became hanging.
+  while (true) {
+    int countDeleted = 0;
+    for (auto *gate : gates()) {
+      if (gate->fanout() == 0 && !gate->isTarget()) {
+        eraseGate(gate->id());
+        countDeleted += 1;
+      }
+    }
+    if (!countDeleted) {
+      break;
+    }
+  }
+  sortTopologically();
+}
+
 //===----------------------------------------------------------------------===//
 // Gates
 //===----------------------------------------------------------------------===//

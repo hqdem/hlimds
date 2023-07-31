@@ -1,7 +1,11 @@
 image: isprasmvg/utopia-eda:clear
 
+variables:
+  UTOPIA_HOME: "/builds/mvg/utopia-eda"
+
 stages:
   - build
+  - test
 
 build_project:
   stage: build
@@ -10,7 +14,6 @@ build_project:
 
   script:
     - rm -rf ${UTOPIA_HOME}/build
-    - export UTOPIA_HOME=/builds/mvg/utopia-eda
     - cd ${UTOPIA_HOME}
     - git submodule init
     - git submodule update
@@ -19,4 +22,17 @@ build_project:
 
   artifacts:
     paths:
-      - build/
+      - ${UTOPIA_HOME}/build/
+
+test_project:
+  stage: test
+  tags:
+    - docker
+
+  script:
+    - cd ${UTOPIA_HOME}
+    - rm -rf ${UTOPIA_HOME}/output
+    - ./build/test/utest --gtest_filter=RndChecker*:GNetTest*:BoundGNetTest*:\FindConeTest*:FindCutTest*:SubstituteOptimizationCount*:RWDatabaseTest*:\SubstituteTest*:SubstitueCount*:TruthTableTest*:ParserVTest*:\AigPremapperTest*:MigMapperTest*:XagPremapperTest*:\XagPremapperVerilogTest*:XmgMapperTest*:toGraphMlTest*:\GateVerilogPrinter*:SimulatorGNetTest*:TransformerBDDGNetTest*:\MiniSatTest*:FLibraryDefaultTest*:ArithmeticTest*:FMTest*
+
+  dependencies:
+    - build_project

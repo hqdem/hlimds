@@ -97,4 +97,3 @@ namespace eda::gate::optimizer {
    */
   BoundGNet extractCone(const GNet *net, GateId root, const Order &order);
 } // namespace eda::gate::optimizer
-

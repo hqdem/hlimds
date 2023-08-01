@@ -25,14 +25,14 @@ namespace eda::gate::optimizer {
   class NetSubstitute {
 
   private:
-    GateID cutFor;
+    GateId cutFor;
     GNet *substNet;
     GNet *net;
     Visitor::MatchMap *map;
 
-    std::vector<GateID> toCreate;
-    std::vector<GateID> removed;
-    std::unordered_set<GateID> used;
+    std::vector<GateId> toCreate;
+    std::vector<GateId> removed;
+    std::unordered_set<GateId> used;
 
     TargetsList targetGates;
 
@@ -43,7 +43,7 @@ namespace eda::gate::optimizer {
      * @param subsNet Net to substitute with.
      * @param net Net where substitution is executed.
      */
-    NetSubstitute(GateID cutFor, Visitor::MatchMap *map,
+    NetSubstitute(GateId cutFor, Visitor::MatchMap *map,
                   GNet *subsNet, GNet *net);
 
     NetSubstitute();

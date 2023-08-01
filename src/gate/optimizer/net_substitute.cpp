@@ -10,7 +10,7 @@
 
 namespace eda::gate::optimizer {
 
-  NetSubstitute::NetSubstitute(GateID cutFor,
+  NetSubstitute::NetSubstitute(GateId cutFor,
                                Visitor::MatchMap *map,
                                GNet *substNet,
                                GNet *net) : cutFor(cutFor),

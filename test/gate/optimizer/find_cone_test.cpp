@@ -18,7 +18,7 @@
 namespace eda::gate::optimizer {
 
   GNet *findConePrint(const std::filesystem::path &subCatalog, GNet *net,
-                      const std::vector<GateID> &cuNodes, GNet::V start) {
+                      const std::vector<GateId> &cuNodes, GNet::V start) {
     std::filesystem::path outputPath = createOutPath(subCatalog);
     std::string wholeNet = outputPath / "cone0.dot";
     std::string extractedCone = outputPath / "cone.dot";
@@ -139,7 +139,7 @@ namespace eda::gate::optimizer {
     GNet net;
     auto g = gnet1ChangedFunc(net);
 
-    std::vector<GateID> cut = {g[2], g[4]};
+    std::vector<GateId> cut = {g[2], g[4]};
     BoundGNet binding = extractCone(&net, g[5], cut);
 
     GNet *cone = binding.net.get();

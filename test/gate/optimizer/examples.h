@@ -18,25 +18,25 @@
  */
 namespace eda::gate::optimizer {
 
-  GateID createLink(GNet &gNet, const std::vector<GateID> &g,
-                    const std::vector<GateID> &input,
+  GateId createLink(GNet &gNet, const std::vector<GateId> &g,
+                    const std::vector<GateId> &input,
                     model::GateSymbol func = model::GateSymbol::Value::AND);
 
-  std::vector<GateID> gnet1(GNet &gNet) ;
+  std::vector<GateId> gnet1(GNet &gNet) ;
 
-  std::vector<GateID> gnet1Extended(GNet &gNet);
+  std::vector<GateId> gnet1Extended(GNet &gNet);
 
-  std::vector<GateID> gnet1ChangedFunc(GNet &gNet);
+  std::vector<GateId> gnet1ChangedFunc(GNet &gNet);
 
-  std::vector<GateID> gnet2(GNet &gNet);
+  std::vector<GateId> gnet2(GNet &gNet);
 
-  std::vector<GateID> gnet2Extended(GNet &gNet);
+  std::vector<GateId> gnet2Extended(GNet &gNet);
 
-  std::vector<GateID> gnet3(GNet &gNet);
+  std::vector<GateId> gnet3(GNet &gNet);
 
-  std::vector<GateID> gnet3Cone(GNet &gNet);
+  std::vector<GateId> gnet3Cone(GNet &gNet);
 
-  std::vector<GateID> gnet4(GNet &gNet);
+  std::vector<GateId> gnet4(GNet &gNet);
 
   Visitor::MatchMap createPrimitiveMap(GNet *subNet,  const Cut &cut);
 

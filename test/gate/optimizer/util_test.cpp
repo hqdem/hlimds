@@ -17,7 +17,7 @@ using namespace eda::gate::parser;
 namespace eda::gate::optimizer {
 
   void removeNodePrint(const std::filesystem::path &subCatalog, GNet *net,
-                       GateID start) {
+                       GateId start) {
     std::filesystem::path outputPath = createOutPath(subCatalog);
     std::string beforeRm = outputPath / "beforeDelete.dot";
     std::string afterRm = outputPath / "afterDelete.dot";

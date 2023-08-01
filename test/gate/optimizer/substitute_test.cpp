@@ -18,7 +18,7 @@
 namespace eda::gate::optimizer {
 
   void substitutePrint(const std::filesystem::path &subCatalog,
-                       GNet *net, GNet *substNet, GateID cutFor,
+                       GNet *net, GNet *substNet, GateId cutFor,
                        const Cut &cut) {
 
     std::filesystem::path outputPath = createOutPath(subCatalog);

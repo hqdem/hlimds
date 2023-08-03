@@ -1,7 +1,7 @@
 image: isprasmvg/utopia-eda:clear
 
 variables:
-  UTOPIA_HOME: "/builds/${GITLAB_USER_LOGIN}/utopia-eda"
+  UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
 
 stages:
   - build
@@ -13,8 +13,6 @@ build_project:
     - docker
 
   script:
-    - echo 'User login'
-    - echo ${GITLAB_USER_LOGIN}
     - rm -rf ${UTOPIA_HOME}/build
     - cd ${UTOPIA_HOME}
     - git submodule init
@@ -34,7 +32,7 @@ test_project:
   script:
     - cd ${UTOPIA_HOME}
     - rm -rf ${UTOPIA_HOME}/output
-    - ./build/test/utest --gtest_filter=RndChecker*:GNetTest*:BoundGNetTest*:\FindConeTest*:FindCutTest*:SubstituteOptimizationCount*:RWDatabaseTest*:\SubstituteTest*:SubstitueCount*:TruthTableTest*:ParserVTest*:\AigPremapperTest*:MigMapperTest*:XagPremapperTest*:\XagPremapperVerilogTest*:XmgMapperTest*:toGraphMlTest*:\GateVerilogPrinter*:SimulatorGNetTest*:TransformerBDDGNetTest*:\MiniSatTest*:FLibraryDefaultTest*:ArithmeticTest*:FMTest*
+    - ./build/test/utest
 
   dependencies:
     - build_project

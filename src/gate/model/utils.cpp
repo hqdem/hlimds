@@ -71,4 +71,13 @@ void dump(const GNet &net) {
   std::cout << "O=" << net.nTargetLinks() << '\n';
 }
 
+int getNetDepth(const GNet &net) {
+  optimizer::DepthFindVisitor::GateDMap gateDepth;
+  optimizer::DepthFindVisitor depthFindVisitor(gateDepth, &net);
+  optimizer::Walker depthFindWalker(&net, &depthFindVisitor);
+  depthFindWalker.walk(true);
+
+  return depthFindVisitor.getNetDepth();
+}
+
 } // namespace eda::gate::model

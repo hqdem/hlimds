@@ -15,6 +15,7 @@ add_library(Gate OBJECT
   optimizer/cut_walker.cpp
   optimizer/database/abc.cpp
   optimizer/database/abc/rwrUtil.c
+  optimizer/depth_find_visitor.cpp
   optimizer/links_add_counter.cpp
   optimizer/links_clean_counter.cpp
   optimizer/net_substitute.cpp
@@ -25,6 +26,8 @@ add_library(Gate OBJECT
   optimizer/rwdatabase.cpp
   optimizer/rwmanager.cpp
   optimizer/strategy/apply_search_optimizer.cpp
+  optimizer/strategy/associative_balancer.cpp
+  optimizer/strategy/associative_balance_visitor.cpp
   optimizer/strategy/exhaustive_search_optimizer.cpp
   optimizer/strategy/track_strategy.cpp
   optimizer/substitute_visitor.cpp

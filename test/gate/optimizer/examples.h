@@ -40,5 +40,21 @@ namespace eda::gate::optimizer {
 
   Visitor::MatchMap createPrimitiveMap(GNet *subNet,  const Cut &cut);
 
+  std::vector<GateID> balanceAND(GNet &gNet);
+
+  std::vector<GateID> balanceANDTwice(GNet &gNet);
+
+  std::vector<GateID> balanceANDThrice(GNet &gNet);
+
+  std::vector<GateID> oneInOneOut(GNet &gNet);
+
+  std::vector<GateID> unbalancableANDOR(GNet &gNet);
+
+  std::vector<GateID> balanceOR(GNet &gNet);
+
+  std::vector<GateID> balanceXORXNOR(GNet &gNet);
+
+  std::vector<GateID> balanceSeveralOut(GNet &gNet);
+
 } // namespace eda::gate::optimizer
 

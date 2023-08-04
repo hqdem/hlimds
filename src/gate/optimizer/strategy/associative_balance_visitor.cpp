@@ -14,7 +14,7 @@ namespace eda::gate::optimizer {
                                                        : net(net),
                                                          gateDepth(gateDepth) {}
 
-  void AssociativeBalanceVisitor::updateDepth(const GateID &gateId) {
+  void AssociativeBalanceVisitor::updateDepth(const GateId &gateId) {
     int depth = 0;
     for (const auto &input : Gate::get(gateId)->inputs()) {
       depth = std::max(depth, gateDepth[input.node()] + 1);
@@ -23,19 +23,19 @@ namespace eda::gate::optimizer {
   }
 
   bool AssociativeBalanceVisitor::associativeOperations(
-    const GateID &gateId1,
-    const GateID &gateId2
+    const GateId &gateId1,
+    const GateId &gateId2
     ) const {
-    
+
     Gate *gate1 = Gate::get(gateId1);
     Gate *gate2 = Gate::get(gateId2);
-    return 
+    return
       ((gate1->func() == gate2->func() && gate2->func().isAssociative()) ||
       (gate1->isXor() && gate2->isXnor()) ||
       (gate1->isXnor() && gate2->isXor()));
   }
 
-  bool AssociativeBalanceVisitor::balancableOnGate(const GateID &gateId) {
+  bool AssociativeBalanceVisitor::balancableOnGate(const GateId &gateId) {
     // Works only on nets with gates with arity 1 or 2
 
     const GNet::SignalList &gateInputs = Gate::get(gateId)->inputs();
@@ -45,10 +45,10 @@ namespace eda::gate::optimizer {
       return false;
     }
 
-    GateID firstInputGate = gateInputs[0].node();
-    GateID secondInputGate = gateInputs[1].node();
+    GateId firstInputGate = gateInputs[0].node();
+    GateId secondInputGate = gateInputs[1].node();
     // Getting gate to balance
-    GateID gateToBalance;
+    GateId gateToBalance;
     if (gateDepth[firstInputGate] - gateDepth[secondInputGate] >= 2) {
       gateToBalance = firstInputGate;
     }
@@ -58,7 +58,7 @@ namespace eda::gate::optimizer {
     else {
       return false;
     }
-    
+
     const GNet::SignalList &gateToBalanceInputs = Gate::get(gateToBalance)->inputs();
 
     // Check if balancing ingoing gate has several parents
@@ -76,9 +76,9 @@ namespace eda::gate::optimizer {
     return true;
   }
 
-  void AssociativeBalanceVisitor::balanceOnGates(const GateID &uGateId,
-                                                 const GateID &dGateId) {
-    // TO DO: 
+  void AssociativeBalanceVisitor::balanceOnGates(const GateId &uGateId,
+                                                 const GateId &dGateId) {
+    // TO DO:
     // ADAPT ALGORITM FOR NETS WITH GATES WITH 3 OR MORE INGOING GATES
 
     const GNet::SignalList &uGateInputs = Gate::get(uGateId)->inputs();
@@ -87,7 +87,7 @@ namespace eda::gate::optimizer {
     GNet::SignalList newDGateSignals;
 
     for (const auto &edge : net->getOutEdges(uGateId)) {
-      GateID parentGate = net->leadsTo(edge);
+      GateId parentGate = net->leadsTo(edge);
       const GNet::SignalList &parentGateInputs = Gate::get(parentGate)->inputs();
       GNet::SignalList newParentSignals;
       for (const auto &input : parentGateInputs) {
@@ -105,19 +105,19 @@ namespace eda::gate::optimizer {
 
     for (const auto &input : uGateInputs) {
       if (input.node() != dGateId) {
-        newUGateSignals.push_back(input); 
+        newUGateSignals.push_back(input);
       }
       else {
         newDGateSignals.push_back(GNet::Signal(input.event(), uGateId));
       }
     }
 
-    GateID firstInputGate = dGateInputs[0].node();
-    GateID secondInputGate = dGateInputs[1].node();
-    GateID smallerDepthInput =
+    GateId firstInputGate = dGateInputs[0].node();
+    GateId secondInputGate = dGateInputs[1].node();
+    GateId smallerDepthInput =
            gateDepth[firstInputGate] < gateDepth[secondInputGate] ?
            firstInputGate : secondInputGate;
-           
+
     for (const auto &input : dGateInputs) {
       if (gateDepth[input.node()] > gateDepth[smallerDepthInput]) {
         newDGateSignals.push_back(input);
@@ -125,23 +125,23 @@ namespace eda::gate::optimizer {
       else {
         newUGateSignals.push_back(input);
       }
-    } 
+    }
 
     net->setGate(uGateId, Gate::get(uGateId)->func(), newUGateSignals);
     net->setGate(dGateId, Gate::get(dGateId)->func(), newDGateSignals);
   }
 
-  VisitorFlags AssociativeBalanceVisitor::onNodeBegin(const GateID &gateId) {
+  VisitorFlags AssociativeBalanceVisitor::onNodeBegin(const GateId &gateId) {
     updateDepth(gateId);
 
     return VisitorFlags::CONTINUE;
   }
 
-  VisitorFlags AssociativeBalanceVisitor::onNodeEnd(const GateID &gateId) {
+  VisitorFlags AssociativeBalanceVisitor::onNodeEnd(const GateId &gateId) {
     const GNet::SignalList &gateInputs = Gate::get(gateId)->inputs();
 
     if (balancableOnGate(gateId)) {
-      GateID dGateId;
+      GateId dGateId;
       if (gateDepth[gateInputs[0].node()] -
           gateDepth[gateInputs[1].node()] >= 2) {
         dGateId = gateInputs[0].node();

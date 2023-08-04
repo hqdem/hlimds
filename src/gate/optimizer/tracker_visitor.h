@@ -31,11 +31,11 @@ namespace eda::gate::optimizer {
     TrackerVisitor(const std::filesystem::path &subCatalog, const GNet *net,
                    CutVisitor *visitor);
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeEnd(const GateId &) override;
 
-    VisitorFlags onCut(const GateID &, const Cut &) override;
+    VisitorFlags onCut(const GateId &, const Cut &) override;
 
   private:
     std::filesystem::path subCatalog;

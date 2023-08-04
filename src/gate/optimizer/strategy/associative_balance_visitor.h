@@ -23,21 +23,21 @@ namespace eda::gate::optimizer {
 
     AssociativeBalanceVisitor(GNet *, GateDMap &);
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeEnd(const GateId &) override;
 
   private:
     GNet *net;
     GateDMap &gateDepth;
 
-    void updateDepth(const GateID &);
+    void updateDepth(const GateId &);
 
-    bool associativeOperations(const GateID &, const GateID &) const;
+    bool associativeOperations(const GateId &, const GateId &) const;
 
-    bool balancableOnGate(const GateID &);
+    bool balancableOnGate(const GateId &);
 
-    void balanceOnGates(const GateID &, const GateID &);
+    void balanceOnGates(const GateId &, const GateId &);
   };
 
 } // namespace eda::gate::optimizer

@@ -11,12 +11,12 @@
 namespace eda::gate::optimizer {
 
   SubstituteVisitor::SubstituteVisitor(const TargetsList &targetsList,
-                                       GateID cutFor,
+                                       GateId cutFor,
                                        MatchMap &map,
                                        GNet *net) :
           targetsList(targetsList), cutFor(cutFor), map(map), net(net) {}
 
-  VisitorFlags SubstituteVisitor::onNodeBegin(const GateID &gateId) {
+  VisitorFlags SubstituteVisitor::onNodeBegin(const GateId &gateId) {
     Gate *subGate = Gate::get(gateId);
 
     // If substitute starts from source node,
@@ -46,7 +46,7 @@ namespace eda::gate::optimizer {
     return CONTINUE;
   }
 
-  VisitorFlags SubstituteVisitor::onNodeEnd(const Visitor::GateID &) {
+  VisitorFlags SubstituteVisitor::onNodeEnd(const Visitor::GateId &) {
     return CONTINUE;
   }
 

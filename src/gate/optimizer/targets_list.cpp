@@ -10,7 +10,7 @@
 
 namespace eda::gate::optimizer {
 
-  void TargetsList::defineTargetLinks(GateID gateId) {
+  void TargetsList::defineTargetLinks(GateId gateId) {
     targets.emplace_back(gateId);
 
     Gate *gate = Gate::get(gateId);
@@ -44,7 +44,7 @@ namespace eda::gate::optimizer {
     defineTargetLinks(substNet);
   }
 
-  TargetsList::TargetsList(GateID cutFor) {
+  TargetsList::TargetsList(GateId cutFor) {
     defineTargetLinks(cutFor);
   }
 
@@ -61,7 +61,7 @@ namespace eda::gate::optimizer {
     return targets.size();
   }
 
-  const std::vector<TargetsList::GateID> &TargetsList::getTargets() const {
+  const std::vector<TargetsList::GateId> &TargetsList::getTargets() const {
     return targets;
   }
 

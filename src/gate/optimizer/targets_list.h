@@ -20,27 +20,27 @@ namespace eda::gate::optimizer {
 
     using GNet = eda::gate::model::GNet;
     using Gate = eda::gate::model::Gate;
-    using GateID = GNet::GateId;
+    using GateId = GNet::GateId;
 
     TargetsList() = default;
 
     TargetsList(const GNet *subsNet);
 
-    TargetsList(GateID cutFor);
+    TargetsList(GateId cutFor);
 
     bool checkOutGate(const Gate *gate) const;
 
     size_t getTargetsSize() const;
 
-    const std::vector<GateID> &getTargets() const;
+    const std::vector<GateId> &getTargets() const;
 
   private:
     // OUT gate, function gate;
-    std::vector<GateID> targets;
+    std::vector<GateId> targets;
 
     void defineTargetLinks(const GNet *subsNet);
 
-    void defineTargetLinks(GateID cutFor);
+    void defineTargetLinks(GateId cutFor);
 
   };
 } // namespace eda::gate::optimizer

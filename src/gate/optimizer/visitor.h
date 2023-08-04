@@ -32,18 +32,18 @@ namespace eda::gate::optimizer {
 
   public:
     using GNet = model::GNet;
-    using GateID = GNet::GateId;
+    using GateId = GNet::GateId;
     using Cut = CutStorage::Cut;
-    using MatchMap = std::unordered_map<GateID, GateID>;
+    using MatchMap = std::unordered_map<GateId, GateId>;
 
     /**
      * Starts handling a tracing node.
      */
-    virtual VisitorFlags onNodeBegin(const GateID &) = 0;
+    virtual VisitorFlags onNodeBegin(const GateId &) = 0;
 
     /**
      * Finishes handling a tracing node.
      */
-    virtual VisitorFlags onNodeEnd(const GateID &) = 0;
+    virtual VisitorFlags onNodeEnd(const GateId &) = 0;
   };
 } // namespace eda::gate::optimizer

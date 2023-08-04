@@ -22,19 +22,19 @@ namespace eda::gate::optimizer {
     return depth;
   }
 
-  VisitorFlags DepthFindVisitor::onNodeBegin(const GateID &gateId) {
+  VisitorFlags DepthFindVisitor::onNodeBegin(const GateId &gateId) {
     if (gateDepth.find(gateId) == gateDepth.end()) {
       gateDepth[gateId] = 0;
     }
-      
+
     for (const auto& link : net->getOutEdges(gateId)) {
-      GateID outGate = net->leadsTo(link);
+      GateId outGate = net->leadsTo(link);
       gateDepth[outGate] = std::max(gateDepth[gateId] + 1, gateDepth[outGate]);
     }
     return VisitorFlags::CONTINUE;
   }
 
-  VisitorFlags DepthFindVisitor::onNodeEnd(const GateID &gateId) {
+  VisitorFlags DepthFindVisitor::onNodeEnd(const GateId &gateId) {
     return VisitorFlags::CONTINUE;
   }
 } // namespace eda::gate::optimizer

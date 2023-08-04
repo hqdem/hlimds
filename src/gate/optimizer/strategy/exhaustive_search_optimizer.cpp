@@ -12,7 +12,7 @@ namespace eda::gate::optimizer {
 
   using BoundGNetList = RWDatabase::BoundGNetList;
 
-  bool ExhausitiveSearchOptimizer::checkOptimize(const GateID &lastNode,
+  bool ExhausitiveSearchOptimizer::checkOptimize(const GateId &lastNode,
                                                  const BoundGNet &option,
                                                  MatchMap &map) {
     netSubstitute = NetSubstitute(lastNode, &map, option.net.get(), net);
@@ -24,7 +24,7 @@ namespace eda::gate::optimizer {
     return false;
   }
 
-  void ExhausitiveSearchOptimizer::considerOptimization(const GateID &lastNode,
+  void ExhausitiveSearchOptimizer::considerOptimization(const GateId &lastNode,
                                                         BoundGNet &option,
                                                         MatchMap &map) {
     bestOption = std::move(netSubstitute);
@@ -36,7 +36,7 @@ namespace eda::gate::optimizer {
   }
 
   VisitorFlags ExhausitiveSearchOptimizer::finishOptimization(
-          const GateID &lastNode) {
+          const GateId &lastNode) {
     if (bestReduce <= 0) {
       bestOption.substitute();
     }

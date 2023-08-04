@@ -24,7 +24,7 @@ namespace eda::gate::optimizer {
     this->maxCutsNumber = maxCutsNumber;
   }
 
-  VisitorFlags OptimizerVisitor::onNodeBegin(const GateID &node) {
+  VisitorFlags OptimizerVisitor::onNodeBegin(const GateId &node) {
 
     if (Gate::get(node)->isTarget()) {
       return SKIP;
@@ -41,7 +41,7 @@ namespace eda::gate::optimizer {
     return CONTINUE;
   }
 
-  VisitorFlags OptimizerVisitor::onCut(const GateID &lastNode, const Cut &cut) {
+  VisitorFlags OptimizerVisitor::onCut(const GateId &lastNode, const Cut &cut) {
     if (checkValidCut(lastNode, cut)) {
 
       // Finding cone.
@@ -87,7 +87,7 @@ namespace eda::gate::optimizer {
     return CONTINUE;
   }
 
-  VisitorFlags OptimizerVisitor::onNodeEnd(const GateID &node) {
+  VisitorFlags OptimizerVisitor::onNodeEnd(const GateId &node) {
     // Removing invalid nodes.
     for (const auto &it: toRemove) {
       lastCuts->erase(*it);
@@ -96,7 +96,7 @@ namespace eda::gate::optimizer {
     return finishOptimization(node);
   }
 
-  bool OptimizerVisitor::checkValidCut(const GateID &lastNode, const Cut &cut) {
+  bool OptimizerVisitor::checkValidCut(const GateId &lastNode, const Cut &cut) {
     for (auto node: cut) {
       if (!net->contains(node)) {
         toRemove.emplace_back(&cut);

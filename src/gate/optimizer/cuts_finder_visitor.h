@@ -35,9 +35,9 @@ namespace eda::gate::optimizer {
     CutsFindVisitor(unsigned int cutSize, CutStorage *cutStorage,
                     unsigned int maxCutsNumber = ALL_CUTS);
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeEnd(const GateId &) override;
 
   };
 } // namespace eda::gate::optimizer

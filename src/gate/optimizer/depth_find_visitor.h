@@ -11,13 +11,13 @@
 #include "gate/optimizer/visitor.h"
 
 namespace eda::gate::optimizer {
-  
+
  /**
   * \brief Visitor class to calculate every subnet depth.
   */
   class DepthFindVisitor : public Visitor {
   public:
-    using GateDMap = std::unordered_map<GateID, int>;
+    using GateDMap = std::unordered_map<GateId, int>;
     using Gate = model::Gate;
 
     /**
@@ -28,9 +28,9 @@ namespace eda::gate::optimizer {
 
     int getNetDepth() const;
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeEnd(const GateId &) override;
 
   private:
 

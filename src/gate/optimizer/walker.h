@@ -27,29 +27,26 @@ namespace eda::gate::optimizer {
   public:
     using GNet = eda::gate::model::GNet;
     using Gate = eda::gate::model::Gate;
-    using GateID = GNet::GateId;
+    using GateId = GNet::GateId;
+    using GateIdQueue = std::queue<GateId>;
+    using GateIdSet = std::unordered_set<GateId>;
     using Cut = CutStorage::Cut;
 
   protected:
     const GNet *gNet;
     Visitor *visitor;
 
-    virtual VisitorFlags callVisitor(GateID node);
+    virtual VisitorFlags callVisitor(GateId node);
 
   private:
-    void walk(std::queue<GateID> &start, std::unordered_set<GateID> &accessed,
-              bool forward);
+    void walk(GateIdQueue &start, GateIdSet &accessed, bool forward);
 
-    void
-    walkAll(std::queue<GateID> &start, const std::unordered_set<GateID> &used,
-            bool forward);
+    void walkAll(GateIdQueue &start, const GateIdSet &used, bool forward);
 
-    bool checkVisited(const std::unordered_set<GateID> &visited, GateID node,
-                      bool forward);
+    bool checkVisited(const GateIdSet &visited, GateId node, bool forward);
 
-    bool checkAllVisited(const std::unordered_set<GateID> &visited,
-                         const std::unordered_set<GateID> &used, GateID node,
-                         bool forward);
+    bool checkAllVisited(const GateIdSet &visited, const GateIdSet &used,
+                         GateId node, bool forward);
 
   public:
     /**
@@ -71,7 +68,7 @@ namespace eda::gate::optimizer {
      * @param cut Cone base.
      * @param forward Direction to perform a trace in.
      */
-    void walk(GateID start, const Cut &end, bool forward);
+    void walk(GateId start, const Cut &end, bool forward);
 
     /**
      * Traces nodes from a cone in topological order and calls the handler on each node.
@@ -80,7 +77,7 @@ namespace eda::gate::optimizer {
      * @param end Cone vertex.
      * @param forward Direction to perform a trace in.
      */
-    void walk(const Cut &start, GateID end, bool forward);
+    void walk(const Cut &start, GateId end, bool forward);
 
     /**
      * Traces nodes from a cone in topological order and calls the handler on each node.
@@ -89,7 +86,7 @@ namespace eda::gate::optimizer {
      * @param start Cone vertex.
      * @param forward Direction to perform a trace in.
      */
-    void walk(GateID start, bool forward);
+    void walk(GateId start, bool forward);
 
     /**
      * Starts walking from the nodes from listed collection.
@@ -98,10 +95,9 @@ namespace eda::gate::optimizer {
      * @param start Nodes with which a trace starts.
      * @param used Set of all nodes that needs be traced.
      */
-    template<typename L>
-    void walk(L start, const std::unordered_set<GateID> &used) {
+    template<typename L> void walk(L start, const GateIdSet &used) {
 
-      std::queue<GateID> bfs;
+      std::queue<GateId> bfs;
       for (const auto &node: start) {
         bfs.push(node);
       }

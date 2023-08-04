@@ -22,7 +22,7 @@ namespace eda::gate::optimizer {
     CutStorage *cutStorage;
     CutVisitor *cutVisitor;
 
-    VisitorFlags callVisitor(GateID node) override;
+    VisitorFlags callVisitor(GateId node) override;
 
   public:
     /**

@@ -32,17 +32,17 @@ namespace eda::gate::optimizer {
     LinkAddCounter(const TargetsList &targets,
                    Visitor::GNet *net,
                    MatchMap &map,
-                   std::vector<GateID> &toCreate,
-                   std::unordered_set<GateID> &used);
+                   std::vector<GateId> &toCreate,
+                   std::unordered_set<GateId> &used);
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeEnd(const GateId &) override;
 
     /**
      * @return Set of used gate IDs from the initial net.
      */
-    const std::unordered_set<GateID> &getUsedNet();
+    const std::unordered_set<GateId> &getUsedNet();
 
     /**
      * @return Number of gates that were used.
@@ -54,9 +54,9 @@ namespace eda::gate::optimizer {
     GNet *net;
     // Gates IDs of substitute net / gate IDs of old gate.
     MatchMap &map;
-    std::unordered_set<GateID> &usedSubNet;
-    std::unordered_set<GateID> usedNet;
-    std::vector<GateID> &toCreate;
+    std::unordered_set<GateId> &usedSubNet;
+    std::unordered_set<GateId> usedNet;
+    std::vector<GateId> &toCreate;
   };
 
 } // namespace eda::gate::optimizer

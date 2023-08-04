@@ -14,7 +14,7 @@ namespace eda::gate::optimizer {
           : Walker(gNet, nullptr), cutStorage(cutStorage), cutVisitor(visitor) {
   }
 
-  VisitorFlags CutWalker::callVisitor(Walker::GateID node) {
+  VisitorFlags CutWalker::callVisitor(Walker::GateId node) {
     auto flag = cutVisitor->onNodeBegin(node);
 
     if (flag != CONTINUE) {

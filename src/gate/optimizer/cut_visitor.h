@@ -24,7 +24,7 @@ namespace eda::gate::optimizer {
      * @param gate Currently handling gate.
      * @param cut Currently handling cut of the gate.
      */
-    virtual VisitorFlags onCut(const GateID &gate, const Cut &cut) = 0;
+    virtual VisitorFlags onCut(const GateId &gate, const Cut &cut) = 0;
 
   };
 

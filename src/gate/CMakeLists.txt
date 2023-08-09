@@ -45,6 +45,8 @@ add_library(Gate OBJECT
   printer/graphml.cpp
   simulator/simulator.cpp
   tech_mapper/library/cell.cpp
+  tech_mapper/super_gate_generator/super_gate_generator.cpp
+  tech_mapper/super_gate_generator/node.cpp
   tech_mapper/strategy/min_delay.cpp
   tech_mapper/tech_map.cpp
   tech_mapper/tech_map_visitor.cpp

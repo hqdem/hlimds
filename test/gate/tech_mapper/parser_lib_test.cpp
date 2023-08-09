@@ -5,9 +5,11 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#include "kitty/kitty.hpp"
 
 #include "gate/tech_mapper/library/cell.h"
 #include "gate/tech_mapper/parser_lib_test.h"
+#include "gate/tech_mapper/super_gate_generator/super_gate_generator.h"
 
 #include "gtest/gtest.h"
 #include <filesystem>
@@ -25,7 +27,17 @@ bool checkLibParser(std::string liberty) {
   LibraryCells libraryCells(pathToLiberty);
 
   for(const auto& cell : libraryCells.cells) {
-    std::cout << cell->getName() << std::endl;
+    //std::cout << cell->getName() << std::endl;
+  }
+
+
+  CircuitsGenerator circuitsGenerator;
+  circuitsGenerator.setLibElementsList(libraryCells.cells);
+  circuitsGenerator.initCircuit(3);
+  circuitsGenerator.generateCircuits();
+
+  for(const auto& cell : circuitsGenerator.getGeneratedNodes()) {
+    kitty::print_binary(*(cell->getFunc()),std::cout);
   }
   return true;
 }

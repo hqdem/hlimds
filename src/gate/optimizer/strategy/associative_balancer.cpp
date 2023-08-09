@@ -20,5 +20,10 @@ namespace eda::gate::optimizer {
     AssociativeBalanceVisitor balanceVisitor(net, gateDepth);
     Walker walker(net, &balanceVisitor);
     walker.walk(true);
+    balancesNumber = balanceVisitor.getBalancesNumber();
+  }
+
+  int AssociativeBalancer::getBalancesNumber() const {
+    return balancesNumber;
   }
 } // namespace eda::gate::optimizer

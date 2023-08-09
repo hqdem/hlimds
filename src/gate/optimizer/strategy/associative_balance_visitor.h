@@ -16,6 +16,7 @@ namespace eda::gate::optimizer {
   * \brief Visitor class to balance associative operations in the given net.
   */
   class AssociativeBalanceVisitor : public Visitor {
+    friend class AssociativeBalancer;
   public:
     using Gate = model::Gate;
     using GateSymbol = model::GateSymbol;
@@ -30,6 +31,7 @@ namespace eda::gate::optimizer {
   private:
     GNet *net;
     GateDMap &gateDepth;
+    int balancesNumber;
 
     void updateDepth(const GateId &);
 
@@ -38,6 +40,8 @@ namespace eda::gate::optimizer {
     bool balancableOnGate(const GateId &);
 
     void balanceOnGates(const GateId &, const GateId &);
+
+    int getBalancesNumber() const;
   };
 
 } // namespace eda::gate::optimizer

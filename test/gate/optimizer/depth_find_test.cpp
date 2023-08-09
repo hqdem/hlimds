@@ -8,18 +8,17 @@
 
 #include "gate/model/utils.h"
 #include "gate/optimizer/examples.h"
+#include "gate/optimizer/optimizer_util.h"
 #include "gate/printer/dot.h"
 
 #include "gtest/gtest.h"
 
 namespace eda::gate::optimizer {
 
-  std::string graphDotsPath = "test/data/gate/optimizer/output/depth_find/";
-
   void testDepthFinder(const std::function<void(GNet &)> &netCreator,
                        const std::string &graphFileName,
                        const int expectedDepth) {
-    
+
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -28,7 +27,7 @@ namespace eda::gate::optimizer {
     netCreator(net);
 
     Dot dot(&net);
-    dot.print(graphDotsPath + graphFileName);
+    dot.print(createOutPath("depth_find/").c_str() + graphFileName);
 
     EXPECT_EQ(expectedDepth, getNetDepth(net));
   }

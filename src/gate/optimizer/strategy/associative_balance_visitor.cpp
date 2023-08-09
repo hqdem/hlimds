@@ -9,10 +9,15 @@
 #include "associative_balance_visitor.h"
 
 namespace eda::gate::optimizer {
+  int AssociativeBalanceVisitor::getBalancesNumber() const {
+    return balancesNumber;
+  }
+
   AssociativeBalanceVisitor::AssociativeBalanceVisitor(GNet *net,
                                                        GateDMap &gateDepth)
                                                        : net(net),
-                                                         gateDepth(gateDepth) {}
+                                                         gateDepth(gateDepth),
+                                                         balancesNumber(0) {}
 
   void AssociativeBalanceVisitor::updateDepth(const GateId &gateId) {
     int depth = 0;
@@ -40,8 +45,8 @@ namespace eda::gate::optimizer {
 
     const GNet::SignalList &gateInputs = Gate::get(gateId)->inputs();
 
-    // Check if gate has minimum 2 ingoing gates
-    if (gateInputs.size() < 2) {
+    // Check if gate has 2 ingoing gates
+    if (gateInputs.size() != 2) {
       return false;
     }
 
@@ -141,6 +146,7 @@ namespace eda::gate::optimizer {
     const GNet::SignalList &gateInputs = Gate::get(gateId)->inputs();
 
     if (balancableOnGate(gateId)) {
+      balancesNumber++;
       GateId dGateId;
       if (gateDepth[gateInputs[0].node()] -
           gateDepth[gateInputs[1].node()] >= 2) {

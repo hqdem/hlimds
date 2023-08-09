@@ -26,8 +26,11 @@ namespace eda::gate::optimizer {
 
     void balance();
 
+    int getBalancesNumber() const;
+
   private:
     GNet *net;
+    int balancesNumber;
   };
 
 } // namespace eda::gate::optimizer

@@ -412,6 +412,7 @@ public:
   DEFINE_GATE0_METHODS(GateSymbol::ONE,  addOne,  setOne)
   DEFINE_GATE1_METHODS(GateSymbol::NOP,  addNop,  setNop)
   DEFINE_GATE1_METHODS(GateSymbol::NOT,  addNot,  setNot)
+  DEFINE_GATE1_METHODS(GateSymbol::MAJ,  addMaj,  setMaj)
   DEFINE_GATE2_METHODS(GateSymbol::AND,  addAnd,  setAnd)
   DEFINE_GATE2_METHODS(GateSymbol::OR,   addOr,   setOr)
   DEFINE_GATE2_METHODS(GateSymbol::XOR,  addXor,  setXor)

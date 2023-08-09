@@ -114,7 +114,7 @@ FLibrary::Out ArithmeticLibrary::synthSub(const size_t outSize,
 
   Out temp(y.size());
   for (size_t i = 0; i < temp.size(); i++) {
-    temp[i] = net.addGate(GateSymbol::NOT, y[i]);
+    temp[i] = net.addNot(y[i]);
   }
 
   return synthLadnerFisherAdder(outSize, {x, temp}, true, net);
@@ -123,7 +123,7 @@ FLibrary::Out ArithmeticLibrary::synthSub(const size_t outSize,
 FLibrary::Out ArithmeticLibrary::synthMul(const size_t outSize,
                                           const In &in,
                                           GNet &net) {
-  // TODO: Different multiplication methods should be used 
+  // TODO: Different multiplication methods should be used
   // for different combinations of input sizes.
   return synthKaratsubaMultiplier(outSize, in, 3, net);
 }
@@ -211,8 +211,8 @@ FLibrary::Out ArithmeticLibrary::synthLadnerFisherAdder(const size_t outSize,
 
   if ((!needsCarryOut) && (inSize == 1)) {
     Out out(1);
-    auto temp = net.addGate(GateSymbol::XOR, x[0], y[0]);
-    out[0] = net.addGate(GateSymbol::XOR, carryIn, temp);
+    auto temp = net.addXor(x[0], y[0]);
+    out[0] = net.addXor(carryIn, temp);
     return out;
   }
 
@@ -232,17 +232,15 @@ FLibrary::Out ArithmeticLibrary::synthLadnerFisherAdder(const size_t outSize,
   // The level #0 of the prefix tree
   // Cell indices start with lastDigit = 1 and firstDigit = 0.
   // Step between cells is 2 for lastDigit and 2 for firstDigit.
-  auto temp = net.addGate(GateSymbol::AND, preP[0], carryIn);
-  g[{1, 0}] = net.addGate(GateSymbol::OR, preG[0], temp);
+  auto temp = net.addAnd(preP[0], carryIn);
+  g[{1, 0}] = net.addOr(preG[0], temp);
   GateIdKey key(3, 2);
   size_t &lastDigit{key.first};
   size_t &firstDigit{key.second};
   while (lastDigit <= maxDigit) {
-    p[key] = net.addGate(
-        GateSymbol::AND, preP[lastDigit - 1], preP[firstDigit - 1]);
-    temp = net.addGate(
-        GateSymbol::AND, preP[lastDigit - 1], preG[firstDigit - 1]);
-    g[key] = net.addGate(GateSymbol::OR, preG[lastDigit - 1], temp);
+    p[key] = net.addAnd(preP[lastDigit - 1], preP[firstDigit - 1]);
+    temp = net.addAnd(preP[lastDigit - 1], preG[firstDigit - 1]);
+    g[key] = net.addOr(preG[lastDigit - 1], temp);
     lastDigit += 2;
     firstDigit += 2;
   }
@@ -273,10 +271,10 @@ FLibrary::Out ArithmeticLibrary::synthLadnerFisherAdder(const size_t outSize,
     size_t j{0};// j - the number of the cell
     while (lastDigit <= maxDigit) {
       if (firstDigit != 0) {
-        p[key] = net.addGate(GateSymbol::AND, p[lKey], p[rKey]);
+        p[key] = net.addAnd(p[lKey], p[rKey]);
       }
-      temp = net.addGate(GateSymbol::AND, p[lKey], g[rKey]);
-      g[key] = net.addGate(GateSymbol::OR, g[lKey], temp);
+      temp = net.addAnd(p[lKey], g[rKey]);
+      g[key] = net.addOr(g[lKey], temp);
       lastDigit += 2;
       if ((j + 1) % (1 << (i - 1)) == 0) {
         lastDigit += (1 << i);
@@ -295,20 +293,19 @@ FLibrary::Out ArithmeticLibrary::synthLadnerFisherAdder(const size_t outSize,
   lastDigit = 2;
   firstDigit = 0;
   while (lastDigit <= maxDigit) {
-    temp = net.addGate(
-        GateSymbol::AND, preP[lastDigit - 1], g[{lastDigit - 1, 0}]);
-    g[key] = net.addGate(GateSymbol::OR, preG[lastDigit - 1], temp);
+    temp = net.addAnd(preP[lastDigit - 1], g[{lastDigit - 1, 0}]);
+    g[key] = net.addOr(preG[lastDigit - 1], temp);
     lastDigit += 2;
   }
 
   // Generating the sum
   Out out(inSize);
-  out[0] = net.addGate(GateSymbol::XOR, preP[0], carryIn);
+  out[0] = net.addXor(preP[0], carryIn);
   for (size_t i = 1; i < inSize; i++) {
-    out[i] = net.addGate(GateSymbol::XOR, preP[i], g[{i, 0}]);
+    out[i] = net.addXor(preP[i], g[{i, 0}]);
   }
   if (needsCarryOut) {
-    out.push_back(net.addGate(GateSymbol::NOP, g[{inSize, 0}]));
+    out.push_back(net.addNop(g[{inSize, 0}]));
   }
 
   fillWithZeros(outSize, {out}, net);
@@ -340,7 +337,7 @@ FLibrary::Out ArithmeticLibrary::synthKaratsubaMultiplier(const size_t outSize,
     // x0 * y0
     size_t size = std::min((x0.size() + y0.size()), outSize);
     terms.push_back(synthKaratsubaMultiplier(size, {x0, y0}, 3, net));
- 
+
     // Second term:
     // [(x1 * x0) * (y1 + y0) - (x1 * y1) - (x0 * y0)] * (2 ^ firstPartSize)
     size_t significant = outSize - firstPartSize;
@@ -385,7 +382,7 @@ FLibrary::Out ArithmeticLibrary::synthKaratsubaMultiplier(const size_t outSize,
       size = std::min((terms[i].size() + 1), outSize);
       out = synthAdd(size, {out, terms[i]}, net);
     }
- 
+
     fillWithZeros(outSize, {out}, net);
 
     return out;
@@ -420,7 +417,7 @@ FLibrary::Out ArithmeticLibrary::synthMultiplierByOneDigit(const size_t outSize,
   Out out;
   size_t mulSize = std::min(outSize, x.size());
   for (size_t i = 0; i < mulSize; i++) {
-    out.push_back(net.addGate(GateSymbol::AND, x[i], y));
+    out.push_back(net.addAnd(x[i], y));
   }
   fillWithZeros(outSize, {out}, net);
   return out;

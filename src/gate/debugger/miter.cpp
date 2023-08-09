@@ -77,20 +77,17 @@ GNet *miter(GNet &net1, GNet &net2, Hints &hints) {
   }
 
   for (auto bind : *newHints.targetBinding.get()) {
-    GateId newOutId = miter->addGate(GateSymbol::XOR, bind.first.source,
-                                     bind.second.source);
+    GateId newOutId = miter->addXor(bind.first.source, bind.second.source);
     xorSignalList.push_back(Signal::always(newOutId));
   }
 
   GateId finalOutId = miter->addOr(xorSignalList);
   miter->addOut(finalOutId);
-  miter->setGate(finalOutId, GateSymbol::OR, xorSignalList);
+  miter->setOr(finalOutId, xorSignalList);
 
   for (auto bind : *newHints.targetBinding.get()) {
-    miter->setGate(bind.first.source, GateSymbol::NOP,
-                   Gate::get(bind.first.source)->inputs());
-    miter->setGate(bind.second.source, GateSymbol::NOP,
-                   Gate::get(bind.second.source)->inputs());
+    miter->setNop(bind.first.source, Gate::get(bind.first.source)->inputs());
+    miter->setNop(bind.second.source, Gate::get(bind.second.source)->inputs());
   }
 
   miter->sortTopologically();

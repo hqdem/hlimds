@@ -26,21 +26,21 @@ TEST(SimulatorMemoryTest, MemoryTest) {
     inps.push_back(Gate::Signal::always(z));
   }
 
-  Gate::Id gidOr = net.addGate(GateSymbol::OR, inps);
+  Gate::Id gidOr = net.addOr(inps);
   andInps.push_back(Gate::Signal::always(gidOr));
 
-  Gate::Id gidAnd = net.addGate(GateSymbol::AND, inps);
+  Gate::Id gidAnd = net.addAnd(inps);
   xorInps.push_back(Gate::Signal::always(gidAnd));
 
-  Gate::Id gidXor = net.addGate(GateSymbol::XOR, inps);
+  Gate::Id gidXor = net.addXor(inps);
   xorInps.push_back(Gate::Signal::always(gidXor));
 
-  Gate::Id gidXor2 = net.addGate(GateSymbol::XOR, xorInps);
+  Gate::Id gidXor2 = net.addXor(xorInps);
   andInps.push_back(Gate::Signal::always(gidXor2));
 
-  Gate::Id gidAnd2= net.addGate(GateSymbol::AND, andInps);
+  Gate::Id gidAnd2= net.addAnd(andInps);
 
-  Gate::Id gidNot = net.addGate(GateSymbol::NOT, Gate::Signal::always(gidAnd2));
+  Gate::Id gidNot = net.addNot(Gate::Signal::always(gidAnd2));
   Gate::Id out = net.addOut(gidNot);
   outs.push_back(Gate::Link(out));
 

@@ -67,8 +67,7 @@ bool transformerNorTest() {
     varMap[inputs[i].node()] = x[i];
   }
 
-  Gate::Id outputId2 = net->addGate(GateSymbol::NOT,
-                                    {Gate::Signal::always(outputId1)});
+  Gate::Id outputId2 = net->addNot(Gate::Signal::always(outputId1));
 
   BDDList result;
 

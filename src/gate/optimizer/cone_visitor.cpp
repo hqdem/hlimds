@@ -29,7 +29,7 @@ namespace eda::gate::optimizer {
     }
 
     if (cut.find(node) != cut.end() && signals.empty()) {
-      auto newGate = net->addGate(GateSymbol::IN);
+      auto newGate = net->addIn();
       newGates[node] = newGate;
       resultCutOldGates.emplace(node);
     } else {
@@ -38,7 +38,7 @@ namespace eda::gate::optimizer {
 
     if (node == cutFor) {
       if (Gate::get(node)->func() != GateSymbol::OUT) {
-        net->addGate(GateSymbol::OUT, newGates[node]);
+        net->addOut(newGates[node]);
       }
       return FINISH_ALL_NODES;
     }

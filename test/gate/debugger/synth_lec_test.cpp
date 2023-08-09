@@ -65,16 +65,16 @@ TEST(RndChecker, MiterAndCheckerTest) {
     GateId z = net.addIn();
     inps.push_back(Signal::always(z));
   }
-  GateId y = net.addGate(GateSymbol::OR, inps);
+  GateId y = net.addOr(inps);
   net.addOut(y);
   SignalList inps1;
   for (int i = 0; i < countInp; i++) {
     GateId z = net.addIn();
     inps1.push_back(Signal::always(z));
   }
-  GateId w = net.addGate(GateSymbol::OR, inps1);
+  GateId w = net.addOr(inps1);
   net.addOut(w);
-  w = net.addGate(GateSymbol::OR, inps);
+  w = net.addOr(inps);
   for (int i = 0; i < countOut; i++) {
     net.addOut(w);
   }
@@ -103,12 +103,12 @@ TEST(CounterExample, OrAndTest) {
     GateId z = net.addIn();
     inps.push_back(Signal::always(z));
   }
-  GateId y = net.addGate(GateSymbol::OR, inps);
+  GateId y = net.addOr(inps);
   net.addOut(y);
 
   std::unordered_map<Gate::Id, Gate::Id> testMap = {};
   auto netCloned = net.clone(testMap);
-  net.setGate(y, GateSymbol::AND, inps);
+  net.setAnd(y, inps);
   net.sortTopologically();
   netCloned->sortTopologically();
 

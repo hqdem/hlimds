@@ -172,22 +172,22 @@ FLibrary::Out FLibraryDefault::synthSimpleAdder(size_t outSize, const In &in, GN
   for (size_t i = 0; i < outSize; i++) {
     auto termWire1 = Signal::always(term1[i]);
     auto termWire2 = Signal::always(term2[i]);
-    auto sum = net.addGate(GateSymbol::XOR, {termWire1, termWire2});
+    auto sum = net.addXor({termWire1, termWire2});
 
     if (i == 0) {
       out[i] = sum;
-      carrybit = Signal::always(net.addGate(GateSymbol::AND, {termWire1, termWire2}));
+      carrybit = Signal::always(net.addAnd({termWire1, termWire2}));
     } else {
-      out[i] = net.addGate(GateSymbol::XOR, {Signal::always(sum), carrybit});
+      out[i] = net.addXor({Signal::always(sum), carrybit});
 
       // counting carrybit
       // carrybit = (term1 & term2) || (term1 & previous carrybit) || (term2 & previous carrybit)
 
-      clause1 = Signal::always(net.addGate(GateSymbol::AND, {termWire1, termWire2}));
-      clause2 = Signal::always(net.addGate(GateSymbol::AND, {termWire1, carrybit}));
-      clause3 = Signal::always(net.addGate(GateSymbol::AND, {termWire2, carrybit}));
-      clause = Signal::always(net.addGate(GateSymbol::OR, {clause1, clause2}));
-      carrybit = Signal::always(net.addGate(GateSymbol::OR, {clause, clause3}));
+      clause1 = Signal::always(net.addAnd({termWire1, termWire2}));
+      clause2 = Signal::always(net.addAnd({termWire1, carrybit}));
+      clause3 = Signal::always(net.addAnd({termWire2, carrybit}));
+      clause = Signal::always(net.addOr({clause1, clause2}));
+      carrybit = Signal::always(net.addOr({clause, clause3}));
     }
   }
   return out;
@@ -299,7 +299,7 @@ FLibrary::Out FLibraryDefault::synthMultiplier(const size_t outSize,
   Out out;
   size_t mulSize = std::min(outSize, x.size());
   for (size_t i = 0; i < mulSize; i++) {
-    out.push_back(net.addGate(GateSymbol::AND, x[i], y));
+    out.push_back(net.addAnd(x[i], y));
   }
   fillWithZeros(outSize, {out}, net);
   return out;
@@ -324,7 +324,7 @@ FLibrary::Out FLibraryDefault::synthMux(
       temp.push_back(Signal::always(id));
     }
 
-    out[i] = net.addGate(GateSymbol::OR, temp);
+    out[i] = net.addOr(temp);
   }
 
   return out;

@@ -156,7 +156,7 @@ Gate::Id MigMapper::mapAnd(const Gate::SignalList &newInputs,
 }
 
 Gate::Id MigMapper::mapAnd(const Gate::SignalList &newInputs,
-                           const size_t n0, const size_t n1, 
+                           const size_t n0, const size_t n1,
                            const bool sign, GNet &newNet) const {
   if (n0 > 0) {
     return mapVal(!sign, newNet);
@@ -229,7 +229,7 @@ Gate::Id MigMapper::mapXor(const Gate::SignalList &newInputs,
 
     const auto z1 = mapOr({inputs[left], inputs[right]}, true, newNet);
     const auto z2 = mapAnd({inputs[left], inputs[right]}, false, newNet);
-    
+
     const auto id = mapAnd({Gate::Signal::always(z1),
                             Gate::Signal::always(z2)},
                             sign, newNet);
@@ -273,7 +273,7 @@ Gate::Id majorityOfFive(const Gate::SignalList &newInputs, GNet &newNet) {
   const auto muzId = newNet.addMaj(newInputs[4],
                                    newInputs[2],
                                    Gate::Signal::always(xyuId));
-  return newNet.addMaj(Gate::Signal::always(xyzId), 
+  return newNet.addMaj(Gate::Signal::always(xyzId),
                        newInputs[3],
                        Gate::Signal::always(muzId));
 }
@@ -299,8 +299,8 @@ Gate::Id majorityOfSeven(const Gate::SignalList &newInputs, GNet &newNet) {
                                        Gate::Signal::always(ufrId),
                                        Gate::Signal::always(xzNotTId));
   // <xyztufr>
-  return newNet.addMaj(newInputs[1], 
-                       Gate::Signal::always(uxztufrId), 
+  return newNet.addMaj(newInputs[1],
+                       Gate::Signal::always(uxztufrId),
                        Gate::Signal::always(tufrxztId));
 }
 
@@ -317,7 +317,7 @@ Gate::Id MigMapper::mapMaj(const Gate::SignalList &newInputs,
 
   if ((inputSize <= 3) && (n0 == n1)) {
     if (inputSize == 3) {
-      return newNet.addGate(GateSymbol::MAJ, newInputs);
+      return newNet.addMaj(newInputs);
     }
     // inputSize == 1
     return mapNop(newInputs, true, newNet);
@@ -359,24 +359,24 @@ Gate::Id MigMapper::mapMaj(const Gate::SignalList &newInputs,
   }
   const size_t halfQuan = (quantity + 1) / 2;
 
-  /** 
+  /**
   * Majority of n to several majority of 3
   * Example of "rhombus" for majority function of 9:
   *              1.1
-  *              / \ 
+  *              / \
   *           2.1  2.2
-  *           / \  / \ 
+  *           / \  / \
   *         3.1  3.2  3.3
-  *         / \  / \  / \ 
+  *         / \  / \  / \
   *       4.1  4.2  4.3  4.4
-  *       / \  / \  / \  / \ 
+  *       / \  / \  / \  / \
   * |--5.1  5.2  5.3  5.4  5.5--|
   * |     \ /  \ /  \ /  \ /    |
   * |-----6.1  6.2  6.3  6.4----|
   * |        \ /  \ /  \ /      |
   * F--------7.1  7.2  7.3------T
   *             \      /
-  *          <-7x, 8x, 9x>     
+  *          <-7x, 8x, 9x>
   */
   Gate::SignalList toFitIn(halfQuan);
   Gate::SignalList toTakeFrom(halfQuan);
@@ -450,7 +450,7 @@ Gate::Id MigMapper::mapMaj(const Gate::SignalList &newInputs,
     const auto internalMaj = newNet.addMaj(inputs[0],
                                            toTakeFrom[0],
                                            toTakeFrom[2]);
-    return newNet.addMaj(inputs[1], 
+    return newNet.addMaj(inputs[1],
                          toTakeFrom[1],
                          Gate::Signal::always(internalMaj));
   }

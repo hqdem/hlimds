@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/tech_mapper/super_gate_generator/super_gate_generator.h"
+#include "gate/model/gnet.h"
 
 #include <kitty/kitty.hpp>
 #include <omp.h>
@@ -22,40 +23,8 @@
 #include <vector>
 
 namespace eda::gate::techMap {
-
-bool CircuitsGenerator::getPermutation(std::vector<unsigned> &indices,
-       int *currIndex, std::size_t maxElementNumber) {
-  do {
-    if (indices[*currIndex] == maxElementNumber - 1) {
-      --(*currIndex);
-      if (*currIndex < 0) {
-        return false; } }
-    else {
-      ++(indices[*currIndex]);
-      while ((std::size_t)*currIndex < indices.size() - 1) {
-        indices[*currIndex + 1] = 0;
-        ++(*currIndex);
-      }
-      return true;
-    }
-  } while (true);
-}
-
-// TODO we need a temporal storage of layersLE2 + lastNodes vectors of Node* type
-bool CircuitsGenerator::getNextCombination(
-    std::vector<Node*> &nextCombination,
-    std::vector<unsigned> *indices,
-    int *currIndex, std::size_t maxElementNumber) {
-  bool hasNext = getPermutation(*indices, currIndex, maxElementNumber);
-  nextCombination.clear();
-  std::cout << "indices (max= " << maxElementNumber << ", currIndex=" << *currIndex << "): ";
-  for(const auto index : *indices) {
-    nextCombination.push_back(tempNodesStorage[index]);
-    std::cout << index << " ";
-  }
-  std::cout << std::endl;
-  return hasNext;
-}
+using GNet = eda::gate::model::GNet;
+using GateId = eda::gate::model::GNet::GateId;
 
 void CircuitsGenerator::createNode(Node *startNode,
                                    const std::vector<Node*> &combination,
@@ -135,7 +104,7 @@ void CircuitsGenerator::createNode(Node *startNode,
 }
 
 void CircuitsGenerator::generateCombinations(
-    Node* prevLayerNode,
+    Node *prevLayerNode,
     Cell *libElement,
     std::vector<std::vector<Node*>::iterator> &inputsIt) {
   int next = 0;
@@ -143,8 +112,14 @@ void CircuitsGenerator::generateCombinations(
     next = 0;
     std::vector<Node*> combination;
     for (int i = 0; i < inputsIt.size(); i++) {
+      std::vector<Node*>::iterator it = inputsIt.at(i);
+      std::cout << "прошло" << std::endl;
+      Node* nodePtr = *it;
+      std::cout << inputsIt.size() << std::endl;
+      //std::cout << (*(inputsIt.at(i)))->getCell()->getName() << std::endl;
       std::cout << "до" << std::endl;
-      combination.push_back(*(inputsIt.at(i)));
+      combination.push_back(nodePtr);
+      //combination.push_back(*(inputsIt.at(i)));
       std::cout << "после" << std::endl;
     }
     createNode(prevLayerNode, combination, *libElement);
@@ -220,4 +195,17 @@ void CircuitsGenerator::initCircuit(int inputsNumber) {
   }
 }
 
+/*
+void CircuitsGenerator::translateNodeIntoGnet() {
+  for (const auto &node : nodesPrePrevLevel) {
+    GNet net;
+    std::unordered_map<Node*, GateId> transferMap;
+    GNet::SignalList inputs;
+    for (const auto &InvolvedNode : node->getInvolvedNodes()) {
+      net.addGate(GNet::GateSymbol::create("random"),inputs);
+      //TODO
+    }
+  }
+}
+*/
 } // namespace eda::gate::techMap

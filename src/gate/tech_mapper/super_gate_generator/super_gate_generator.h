@@ -35,11 +35,7 @@ private:
         Node * prevLayerNode,
         Cell *libElement,
         std::vector<std::vector<Node*>::iterator> &inputsIt);
-    bool getNextCombination(std::vector<Node*> &nextCombination,
-        std::vector<unsigned> *indices, int *currIndex, std::size_t maxElementNumber);
-    bool getPermutation(std::vector<unsigned> &indices, int *currIndex, std::size_t maxElementNumber);
-    std::vector<Node*> tempNodesStorage;
-
+    void CircuitsGenerator::translateNodeIntoGnet();
     // Input data
     std::vector<Cell*> libElements;
 

@@ -35,19 +35,19 @@ private:
         Node * prevLayerNode,
         Cell *libElement,
         std::vector<std::vector<Node*>::iterator> &inputsIt);
-    void CircuitsGenerator::translateNodeIntoGnet();
+    void translateNodeIntoGnet();
     // Input data
     std::vector<Cell*> libElements;
 
     // Cells params
-    unsigned maxNodesInCell;
-    unsigned maxCellsArea;
-    unsigned maxCellsDelay;
-    unsigned maxCellsLevel;
+    //unsigned maxNodesInCell;
+    //unsigned maxCellsArea;
+    //unsigned maxCellsDelay;
+    //unsigned maxCellsLevel;
 
     // Generators params
     unsigned maxGeneratedLevel = 3;
-    unsigned numTreads;
+    //unsigned numTreads;
 
     // Nodes-predecessors for the given node.
     // Current level for the given node.

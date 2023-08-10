@@ -57,7 +57,7 @@ namespace eda::gate::techMap {
     std::shared_ptr<GNet> premapped = 
         eda::gate::premapper::getPreMapper(PreBasis::AIG).map(*sharedNet, gmap);
 
-    net = premapped.get();
+    net = premapped.get(); // The value is modified by reference for use in other parts of the code.
     std::cout << "aigMapper - " << clock() - start_time << " ms" << std::endl;
   }
 

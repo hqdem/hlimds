@@ -25,6 +25,7 @@
 namespace eda::gate::techMap {
 using GNet = eda::gate::model::GNet;
 using GateId = eda::gate::model::GNet::GateId;
+using GateSymbol = eda::gate::model::GateSymbol;
 
 void CircuitsGenerator::createNode(Node *startNode,
                                    const std::vector<Node*> &combination,
@@ -107,11 +108,11 @@ void CircuitsGenerator::generateCombinations(
     Node *prevLayerNode,
     Cell *libElement,
     std::vector<std::vector<Node*>::iterator> &inputsIt) {
-  int next = 0;
+  long unsigned int next = 0;
   while (next != inputsIt.size()) {
     next = 0;
     std::vector<Node*> combination;
-    for (int i = 0; i < inputsIt.size(); i++) {
+    for (long unsigned int i = 0; i < inputsIt.size(); i++) {
       std::vector<Node*>::iterator it = inputsIt.at(i);
       std::cout << "прошло" << std::endl;
       Node* nodePtr = *it;
@@ -123,7 +124,7 @@ void CircuitsGenerator::generateCombinations(
       std::cout << "после" << std::endl;
     }
     createNode(prevLayerNode, combination, *libElement);
-    for (int i = 0; i <= inputsIt.size(); i++) {
+    for (long unsigned int i = 0; i <= inputsIt.size(); i++) {
       if (inputsIt[i] == nodesPrePrevLevel.end()) {
         next++;
         continue;
@@ -136,7 +137,7 @@ void CircuitsGenerator::generateCombinations(
 }
 
 void CircuitsGenerator::generateCircuits() {
-  int depth = 0;
+  long unsigned int depth = 0;
   while (depth != maxGeneratedLevel) {
     std::vector<Node*>::iterator prevLayerNode = nodesPrevLevel.begin();
     std::vector<Cell*>::iterator libElement = libElements.begin();
@@ -144,7 +145,8 @@ void CircuitsGenerator::generateCircuits() {
     do {
       std::vector<std::vector<Node*>::iterator> inputsIt;
 
-      for (int i = 0; i < (*libElement)->getInputPinsNumber() - 1; ++i) {
+      for (long unsigned int i = 0; i < 
+          (*libElement)->getInputPinsNumber() - 1; ++i) {
         inputsIt.push_back(nodesPrePrevLevel.begin());
       }
 
@@ -195,17 +197,18 @@ void CircuitsGenerator::initCircuit(int inputsNumber) {
   }
 }
 
-/*
+
 void CircuitsGenerator::translateNodeIntoGnet() {
   for (const auto &node : nodesPrePrevLevel) {
     GNet net;
     std::unordered_map<Node*, GateId> transferMap;
     GNet::SignalList inputs;
     for (const auto &InvolvedNode : node->getInvolvedNodes()) {
-      net.addGate(GNet::GateSymbol::create("random"),inputs);
+      GateId gateId = net.addGate(GateSymbol::create("random"),inputs);
+      transferMap.emplace(InvolvedNode, gateId);
       //TODO
     }
   }
 }
-*/
+
 } // namespace eda::gate::techMap

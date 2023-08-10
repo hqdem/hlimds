@@ -26,9 +26,9 @@ bool checkLibParser(std::string liberty) {
   const std::string pathToLiberty = libertyDirrect / liberty;
   LibraryCells libraryCells(pathToLiberty);
 
-  for(const auto& cell : libraryCells.cells) {
+  //for(const auto& cell : libraryCells.cells) {
     //std::cout << cell->getName() << std::endl;
-  }
+  //}
 
 
   CircuitsGenerator circuitsGenerator;

@@ -39,7 +39,7 @@ struct Node {
   void setMaxDelay(double delay) { maxDelay = delay; }
   double getMaxDelay() { return maxDelay; }
 
-  void setFunc(kitty::dynamic_truth_table *func) { func = func; }
+  void setFunc(kitty::dynamic_truth_table *func) { this->func = func; }
   kitty::dynamic_truth_table *getFunc() { return func; }
 
   void delaysCalculation();

@@ -18,9 +18,9 @@ using ArgumentsSet = AkersAlgorithm::ArgumentsSet;
 using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 
-//===------------------------------------------------------------------------===//
+//===----------------------------------------------------------------------===//
 // Constructors/Destructors
-//===------------------------------------------------------------------------===//
+//===----------------------------------------------------------------------===//
 
 AkersAlgorithm::AkersAlgorithm(const TruthTable &func, const TruthTable &care):
                                table(func, care), nVariables(func.num_vars()),

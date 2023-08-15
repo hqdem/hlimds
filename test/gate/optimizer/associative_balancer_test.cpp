@@ -103,6 +103,10 @@ namespace eda::gate::optimizer {
     testBalancer(balanceAND, "balanceAND.dot", 5, 4);
   }
 
+  TEST(AssociativeBalanceTest, balanceAND2) {
+    testBalancer(balanceAND2, "balanceAND2.dot", 4, 3);
+  }
+
   TEST(AssociativeBalanceTest, balanceANDTwice) {
     testBalancer(balanceANDTwice, "balanceANDTwice.dot", 6, 4);
   }
@@ -188,7 +192,7 @@ namespace eda::gate::optimizer {
   }
 
   TEST(AssociativeBalanceTest, c3540Verilog) {
-    testBalancerOnFile("c3540.v", "c3540Verilog.dot", true, 69, 64);
+    testBalancerOnFile("c3540.v", "c3540Verilog.dot", true, 69, 63);
   }
 
   TEST(AssociativeBalanceTest, c432Verilog) {

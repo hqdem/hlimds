@@ -42,6 +42,8 @@ namespace eda::gate::optimizer {
 
   std::vector<GateId> balanceAND(GNet &gNet);
 
+  std::vector<GateId> balanceAND2(GNet &gNet);
+
   std::vector<GateId> balanceANDTwice(GNet &gNet);
 
   std::vector<GateId> balanceANDThrice(GNet &gNet);

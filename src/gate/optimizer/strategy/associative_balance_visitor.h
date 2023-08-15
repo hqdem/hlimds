@@ -35,11 +35,26 @@ namespace eda::gate::optimizer {
 
     void updateDepth(const GateId &);
 
-    bool associativeOperations(const GateId &, const GateId &) const;
+    bool associative(const GateId &, const GateId &) const;
 
-    bool balancableOnGate(const GateId &);
+    bool commutative(const GateId &, const GateId &) const;
 
-    void balanceOnGates(const GateId &, const GateId &);
+    GateId getDeeperInput(const GateId &) const;
+
+    // 1. f1(f2(x, y), z) -> f1(x, f2(y, z))
+    // 2. f1(x, f2(y, z)) -> f1(f2(x, y), z)
+    bool canReorderOperations(const GateId &) const;
+
+    bool balanceOnGate(const GateId &);
+
+    bool balanceCommutAssoc(const GateId &, const GateId &);
+
+    void reorderOperationsOnGate(const GateId &);
+
+    bool applyReorderStrategy (const GateId &, const GateId &,
+                                const GateId &, const GateId &);
+
+    bool balanceAssoc(const GateId &);
 
     int getBalancesNumber() const;
   };

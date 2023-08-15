@@ -169,6 +169,26 @@ namespace eda::gate::optimizer {
     return g;
   }
 
+  /* in2                    */
+  /* ┌─┐                    */
+  /* └─┘─┐ and4  in3        */
+  /* ┌─┐ |_┌─┐   ┌─┐        */
+  /* └─┘───└─┘─┐ └─┘─┐      */
+  /* in1   ┌─┐ |_┌─┐ |_┌─┐  */
+  /*       └─┘───└─┘───└─┘  */
+  /*       in0   and5  and6 */
+  std::vector<GateId> balanceAND2(GNet &gNet) {
+    std::vector<GateId> g(4);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {1, 2}));
+    g.push_back(createLink(gNet, g, {0, 4}));
+    g.push_back(createLink(gNet, g, {5, 3}));
+    g.push_back(createLink(gNet, g, {6}, model::GateSymbol::OUT));
+    return g;
+  }
+
   /* in1   in2   in3   in4   in5              */
   /* ┌─┐   ┌─┐   ┌─┐   ┌─┐   ┌─┐              */
   /* └─┘─┐ └─┘─┐ └─┘─┐ └─┘─┐ └─┘─┐            */
@@ -206,7 +226,7 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {13, 8}));
     g.push_back(createLink(gNet, g, {14}, model::GateSymbol::NOT));
     g.push_back(createLink(gNet, g, {4, 15}));
-    g.push_back(createLink(gNet, g, {16, 11}));
+    g.push_back(createLink(gNet, g, {11, 16}));
     g.push_back(createLink(gNet, g, {17}, model::GateSymbol::OUT));
     return g;
   }

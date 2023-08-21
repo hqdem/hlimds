@@ -20,7 +20,8 @@ public:
   /// TODO: Dummy (to be implemented).
   template<typename... Args>
   static typename T::ID allocate(Args&&... args) {
-    objects.emplace_back(args...);
+    T object(args...);
+    objects.push_back(object);
     return static_cast<typename T::ID>(reinterpret_cast<uint64_t>(&objects.back()));
   }
 

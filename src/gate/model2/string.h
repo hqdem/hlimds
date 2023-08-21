@@ -9,21 +9,38 @@
 #pragma once
 
 #include "gate/model2/object.h"
+#include "gate/model2/storage.h"
 
 #include <string>
 
 namespace eda::gate::model {
 
+//===----------------------------------------------------------------------===//
+// String
+//===----------------------------------------------------------------------===//
+
 class String final {
+  friend class Storage<String>;
+
 public:
   using ID = StringID;
 
-  String(const std::string &value): value(value) {}
   operator std::string() const { return value; }
+
+private:
+  String(const std::string &value): value(value) {}
 
   std::string value;
 };
 
 static_assert(sizeof(String) == StringID::Size);
+
+//===----------------------------------------------------------------------===//
+// String Builder
+//===----------------------------------------------------------------------===//
+
+StringID makeString(const std::string &value) {
+  return allocate<String>(value);
+}
 
 } // namespace eda::gate::model

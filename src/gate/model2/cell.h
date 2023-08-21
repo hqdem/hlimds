@@ -11,14 +11,22 @@
 #include "gate/model2/celltype.h"
 #include "gate/model2/link.h"
 #include "gate/model2/object.h"
+#include "gate/model2/storage.h"
+
+#include <vector>
 
 namespace eda::gate::model {
 
+//===----------------------------------------------------------------------===//
+// Cell
+//===----------------------------------------------------------------------===//
+
 class Cell final {
+  friend class Storage<Cell>;
+
 public:
   using ID = CellID;
-
-  Cell(CellTypeID typeID): typeSID(typeID.getSID()) {}
+  using LinkList = std::vector<Link>;
 
   bool isIn()    const { return typeSID == CELL_TYPE_SID_IN;    }
   bool isOut()   const { return typeSID == CELL_TYPE_SID_OUT;   }
@@ -44,6 +52,11 @@ public:
   void setFanout(uint16_t value) { fanout = value; }
 
 private:
+  Cell(CellTypeID typeID):
+      typeSID(typeID.getSID()), fanin(0), fanout(0) {}
+
+  Cell(CellTypeID typeID, const LinkList &links);
+
   /// Cell type short identifier.
   const uint32_t typeSID;
 
@@ -54,5 +67,52 @@ private:
 };
 
 static_assert(sizeof(Cell) == CellID::Size);
+
+//===----------------------------------------------------------------------===//
+// Cell Builder
+//===----------------------------------------------------------------------===//
+
+inline CellID makeCell(CellTypeID typeID) {
+  return allocate<Cell>(typeID);
+}
+
+inline CellID makeCell(CellTypeID typeID, const Cell::LinkList &links) {
+  return allocate<Cell>(typeID, links);
+}
+
+template<CellSymbol symbol>
+CellID make() {
+  return makeCell(getCellTypeID(symbol));
+}
+
+template<CellSymbol symbol>
+CellID make(const Cell::LinkList &links) {
+  return makeCell(getCellTypeID(symbol), links);
+}
+
+template<CellSymbol symbol>
+CellID make(Link link) {
+  return makeCell(getCellTypeID(symbol), {link});
+}
+
+template<CellSymbol symbol>
+CellID make(Link link1, Link link2) {
+  return makeCell(getCellTypeID(symbol), {link1, link2});
+}
+
+template<CellSymbol symbol>
+CellID make(Link link1, Link link2, Link link3) {
+  return makeCell(getCellTypeID(symbol), {link1, link2, link3});
+}
+
+template<CellSymbol symbol>
+CellID make(Link link1, Link link2, Link link3, Link link4) {
+  return makeCell(getCellTypeID(symbol), {link1, link2, link3, link4});
+}
+
+template<CellSymbol symbol>
+CellID make(Link link1, Link link2, Link link3, Link link4, Link link5) {
+  return makeCell(getCellTypeID(symbol), {link1, link2, link3, link4, link5});
+}
 
 } // namespace eda::gate::model

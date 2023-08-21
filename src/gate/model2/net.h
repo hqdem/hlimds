@@ -8,36 +8,50 @@
 
 #pragma once
 
-#include "gate/model2/cell.h"
 #include "gate/model2/list.h"
+#include "gate/model2/storage.h"
 
 namespace eda::gate::model {
 
+//===----------------------------------------------------------------------===//
+// Net
+//===----------------------------------------------------------------------===//
+
 class Net final {
+  friend class Storage<Net>;
+
 public:
   using ID = NetID;
 
-  uint16_t getInNumber()   const { return nInputs;     }
-  uint16_t getOutNumber()  const { return nOutputs;    }
-  uint32_t getCombNumber() const { return nCombCells;  }
-  uint32_t getFlipNumber() const { return nFlipFlops;  }
+  /// Returns the number of inputs.
+  uint16_t getInNumber() const { return nInputs; }
+  /// Returns the number of outputs.
+  uint16_t getOutNumber() const { return nOutputs; }
+  /// Returns the number of combinational gates/cells.
+  uint32_t getCombNumber() const { return nCombCells; }
+  /// Returns the number of flip-flops and latches.
+  uint32_t getFlipNumber() const { return nFlipFlops; }
+  /// Returns the number of hard blocks.
   uint16_t getHardNumber() const { return nHardBlocks; }
+  /// Returns the number of soft blocks and subnets.
   uint16_t getSoftNumber() const { return nSoftBlocks; }
 
 private:
+  Net() {}
+
   /// Primary inputs.
   ListID inputs;
   /// Primary outputs.
   ListID outputs;
 
-  /// Combinational gates and library cells.
+  /// Combinational gates/cells.
   ListID combCells;
   /// Triggers (flip-flops and latches).
   ListID flipFlops;
 
-  /// Technology-dependent cells w/ unknown structure and functionality.
+  /// Technology-dependent blocks w/ unknown structure and functionality.
   ListID hardBlocks;
-  /// Soft macro-blocks (subnets).
+  /// Blocks w/ known structure (subnets).
   ListID softBlocks;
 
   uint16_t nInputs;
@@ -49,5 +63,11 @@ private:
 };
 
 static_assert(sizeof(Net) == NetID::Size);
+
+//===----------------------------------------------------------------------===//
+// Net Builder
+//===----------------------------------------------------------------------===//
+
+// TODO:
 
 } // namespace eda::gate::model

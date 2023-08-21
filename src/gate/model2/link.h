@@ -18,10 +18,13 @@ public:
   using ID = LinkID;
 
   Link():
-    cellSID(0), port(0), valid(0) {}
+      cellSID(0), port(0), valid(0) {}
 
   Link(CellID cellID, uint16_t port):
-    cellSID(cellID.getSID()), port(port), valid(1) {}
+      cellSID(cellID.getSID()), port(port), valid(1) {}
+
+  Link(const Link &) = default;
+  Link &operator =(const Link &) = default;
 
   CellID getSourceID() const { return CellID::makeFID(cellSID); }
 
@@ -31,12 +34,12 @@ public:
 
 private:
   /// Source cell short identifier.
-  const uint64_t cellSID : 40;
+  uint64_t cellSID : 40;
   /// Output port of the source cell.
-  const uint64_t port : 16;
+  uint64_t port : 16;
 
   /// Properties.
-  const uint64_t valid : 1;
+  uint64_t valid : 1;
 };
 #pragma pack(pop)
 

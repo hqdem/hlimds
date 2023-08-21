@@ -10,6 +10,7 @@ add_library(Gate OBJECT
   model/gnet.cpp
   model/gsymbol.cpp
   model/utils.cpp
+  model2/cell.cpp
   model2/celltype.cpp
   model2/net.cpp
   optimizer/cone_visitor.cpp

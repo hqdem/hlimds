@@ -13,6 +13,9 @@
 
 namespace eda::gate::model {
 
+/// Null object identifier.
+static constexpr uint64_t OBJ_NULL_ID = 0;
+
 /// Full object identifier: [ tag:8 | short identifier | alignment zeros ].
 template <uint64_t TAG, size_t SIZE, size_t LOG2>
 class ObjectID final {
@@ -34,6 +37,7 @@ public:
   }
 
   ObjectID(uint64_t value): value(value) {}
+  ObjectID(): ObjectID(OBJ_NULL_ID) {}
   operator uint64_t() const { return value; }
 
   /// Returns the short identifier.
@@ -42,9 +46,6 @@ public:
 private:
   uint64_t value;
 };
-
-/// Null object identifier.
-static constexpr uint64_t OBJ_NULL_ID = 0;
 
 /// Object tag.
 enum ObjectTag : uint8_t {
@@ -55,7 +56,7 @@ enum ObjectTag : uint8_t {
   TAG_LINK,
   TAG_NET,
   TAG_STRING,
-  TAG_LIST
+  TAG_LIST_BLOCK
 };
 
 using CellID         = ObjectID<TAG_CELL, 32, 5>;
@@ -64,6 +65,8 @@ using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 1024, 10>;
 using LinkID         = ObjectID<TAG_LINK, 8, 3>;
 using NetID          = ObjectID<TAG_NET, 64, 6>;
 using StringID       = ObjectID<TAG_STRING, 32, 5>;
-using ListID         = ObjectID<TAG_LIST, 32, 5>;
+using ListBlockID    = ObjectID<TAG_LIST_BLOCK, 32, 5>;
+
+using ListID = ListBlockID;
 
 } // namespace eda::gate::model

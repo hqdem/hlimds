@@ -107,23 +107,10 @@ static_assert(sizeof(CellProperties) == 2);
 //===----------------------------------------------------------------------===//
 
 class CellType final {
+  friend class Storage<CellType>;
+
 public:
   using ID = CellTypeID;
-
-  CellType(const std::string &name,
-           NetID netID,
-           CellTypeAttrID attrID,
-           CellSymbol symbol,
-           CellProperties props,
-           uint16_t nIn,
-           uint16_t nOut):
-    nameID(allocate<String>(name)),
-    netID(netID),
-    attrID(attrID),
-    symbol(symbol),
-    props(props),
-    nIn(nIn),
-    nOut(nOut) {}
 
   const String &getName() const { return *access<String>(nameID); }
 
@@ -139,6 +126,21 @@ public:
   uint16_t getOutNumber() const { return nOut; }
 
 private:
+  CellType(const std::string &name,
+           NetID netID,
+           CellTypeAttrID attrID,
+           CellSymbol symbol,
+           CellProperties props,
+           uint16_t nIn,
+           uint16_t nOut):
+    nameID(makeString(name)),
+    netID(netID),
+    attrID(attrID),
+    symbol(symbol),
+    props(props),
+    nIn(nIn),
+    nOut(nOut) {}
+
   const StringID nameID;
 
   const NetID netID;
@@ -152,6 +154,28 @@ private:
 };
 
 static_assert(sizeof(CellType) == CellTypeID::Size);
+
+//===----------------------------------------------------------------------===//
+// Cell Type Builder
+//===----------------------------------------------------------------------===//
+
+CellTypeID makeCellType(const std::string &name,
+                        NetID netID,
+                        CellTypeAttrID attrID,
+                        CellSymbol symbol,
+                        CellProperties props,
+                        uint16_t nIn,
+                        uint16_t nOut) {
+  return allocate<CellType>(name, netID, attrID, symbol, props, nIn, nOut);
+}
+
+CellTypeID makeCellType(const std::string &name,
+                        CellSymbol symbol,
+                        CellProperties props,
+                        uint16_t nIn,
+                        uint16_t nOut) {
+  return makeCellType(name, OBJ_NULL_ID, OBJ_NULL_ID, symbol, props, nIn, nOut);
+}
 
 //===----------------------------------------------------------------------===//
 // Standard Cell Types
@@ -175,6 +199,28 @@ extern const CellTypeID CELL_TYPE_ID_LATCH;
 extern const CellTypeID CELL_TYPE_ID_DFF;
 extern const CellTypeID CELL_TYPE_ID_DFFrs;
 
+constexpr uint64_t getCellTypeID(CellSymbol symbol) {
+  switch(symbol) {
+  case IN:    return CELL_TYPE_ID_IN;
+  case OUT:   return CELL_TYPE_ID_OUT;
+  case ZERO:  return CELL_TYPE_ID_ZERO;
+  case ONE:   return CELL_TYPE_ID_ONE;
+  case NOP:   return CELL_TYPE_ID_NOP;
+  case NOT:   return CELL_TYPE_ID_NOT;
+  case AND:   return CELL_TYPE_ID_AND;
+  case OR:    return CELL_TYPE_ID_OR;
+  case XOR:   return CELL_TYPE_ID_XOR;
+  case NAND:  return CELL_TYPE_ID_NAND;
+  case NOR:   return CELL_TYPE_ID_NOR;
+  case XNOR:  return CELL_TYPE_ID_XNOR;
+  case MAJ:   return CELL_TYPE_ID_MAJ;
+  case LATCH: return CELL_TYPE_ID_LATCH;
+  case DFF:   return CELL_TYPE_ID_DFF;
+  case DFFrs: return CELL_TYPE_ID_DFFrs;
+  default:    return OBJ_NULL_ID;
+  }
+}
+
 // Short cell type identifiers.
 extern const uint32_t CELL_TYPE_SID_IN;
 extern const uint32_t CELL_TYPE_SID_OUT;
@@ -192,5 +238,27 @@ extern const uint32_t CELL_TYPE_SID_MAJ;
 extern const uint32_t CELL_TYPE_SID_LATCH;
 extern const uint32_t CELL_TYPE_SID_DFF;
 extern const uint32_t CELL_TYPE_SID_DFFrs;
+
+constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
+  switch(symbol) {
+  case IN:    return CELL_TYPE_SID_IN;
+  case OUT:   return CELL_TYPE_SID_OUT;
+  case ZERO:  return CELL_TYPE_SID_ZERO;
+  case ONE:   return CELL_TYPE_SID_ONE;
+  case NOP:   return CELL_TYPE_SID_NOP;
+  case NOT:   return CELL_TYPE_SID_NOT;
+  case AND:   return CELL_TYPE_SID_AND;
+  case OR:    return CELL_TYPE_SID_OR;
+  case XOR:   return CELL_TYPE_SID_XOR;
+  case NAND:  return CELL_TYPE_SID_NAND;
+  case NOR:   return CELL_TYPE_SID_NOR;
+  case XNOR:  return CELL_TYPE_SID_XNOR;
+  case MAJ:   return CELL_TYPE_SID_MAJ;
+  case LATCH: return CELL_TYPE_SID_LATCH;
+  case DFF:   return CELL_TYPE_SID_DFF;
+  case DFFrs: return CELL_TYPE_SID_DFFrs;
+  default:    return -1u;
+  }
+}
 
 } // namespace eda::gate::model

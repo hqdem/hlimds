@@ -13,10 +13,8 @@
 #define CELL_TYPE_SID(symbol) CELL_TYPE_SID_##symbol
 
 #define CELL_TYPE(name, symbol, p0, p1, p2, p3, p4, nIn, nOut) \
-  const CellTypeID CELL_TYPE_ID(symbol) = allocate<CellType>( \
+  const CellTypeID CELL_TYPE_ID(symbol) = makeCellType( \
     name, \
-    OBJ_NULL_ID, \
-    OBJ_NULL_ID, \
     symbol, \
     CellProperties{p0, p1, p2, p3, p4}, \
     nIn, \

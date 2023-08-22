@@ -37,7 +37,24 @@ public:
   uint16_t getSoftNumber() const { return nSoftBlocks; }
 
 private:
-  Net() {}
+  Net(ListID inputs,
+      ListID outputs,
+      ListID combCells,
+      ListID flipFlops,
+      ListID hardBlocks,
+      ListID softBlocks):
+      inputs(inputs),
+      outputs(outputs),
+      combCells(combCells),
+      flipFlops(flipFlops),
+      hardBlocks(hardBlocks),
+      softBlocks(softBlocks),
+      nInputs(0),
+      nOutputs(0),
+      nCombCells(0),
+      nFlipFlops(0),
+      nHardBlocks(0),
+      nSoftBlocks(0) {}
 
   /// Primary inputs.
   ListID inputs;

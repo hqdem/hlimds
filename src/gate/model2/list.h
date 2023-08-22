@@ -23,6 +23,17 @@ namespace eda::gate::model {
 struct ListBlock final {
   using ID = ListBlockID;
 
+  ListBlock(bool begin,
+            bool end,
+            uint64_t capacity):
+      begin(begin),
+      end(end),
+      totalSize(0),
+      capacity(capacity),
+      size(0),
+      nextBlockSID(OBJ_NULL_ID),
+      prevBlockSID(OBJ_NULL_ID) {}
+
   /// Initial block of the list.
   uint64_t begin : 1;
   /// Final block of the list.
@@ -125,6 +136,12 @@ public:
     assert(block != nullptr);
   }
 
+  // TODO: Block size.
+  List(): List(allocate<ListBlock>(1, 1, 1)) {}
+
+  /// Returns the list identifier.
+  ListID getListID() const { return listID; }
+
   /// Returns the size of the list.
   uint64_t size() const { return block->totalSize; }
   /// Checks whether the list is empty.
@@ -142,8 +159,9 @@ public:
 
   /// Erases the specified element from the list.
   ListIterator<T> erase(ListIterator<T> pos) {
-    // TODO: To be implemented.
-    return pos;
+    assert(pos->block != nullptr);
+    pos->block[pos->index] = OBJ_NULL_ID;
+    return ++pos;
   }
 
   /// Inserts the specified element before the specified location in the list.

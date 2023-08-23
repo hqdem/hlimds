@@ -11,10 +11,20 @@
 
 #include "gtest/gtest.h"
 
+#include <iostream>
+
 namespace eda::gate::model {
 
 TEST(ListTest, SimpleTest) {
   List<Cell> list;
+
+  for (uint64_t i = 1; i <= 1024; i++) {
+    list.push_back(i);
+  }
+
+  for (auto i = list.begin(); i != list.end(); i++) {
+    std::cout << "Item: " << *i << std::endl;
+  }
 }
 
 } // namespace eda::gate::model

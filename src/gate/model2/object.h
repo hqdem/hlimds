@@ -16,7 +16,8 @@ namespace eda::gate::model {
 /// Null object identifier.
 static constexpr uint64_t OBJ_NULL_ID = 0;
 
-/// Full object identifier: [ tag:8 | short identifier | alignment zeros ].
+/// Full object identifier (FID):
+/// [ tag:8 | short object identifier (SID) | alignment zeros ].
 template <uint64_t TAG, size_t SIZE, size_t LOG2>
 class ObjectID final {
 public:
@@ -26,25 +27,37 @@ public:
   static constexpr size_t Log2 = LOG2;
   static_assert(Size == (1 << Log2));
 
-  /// Makes the full identifier (FID) from the short one (SID).
-  static ObjectID makeFID(uint64_t objectSID) {
-    return (Tag << (64 - 8)) | (objectSID << Log2);
+  /// Sets the tag to the untagged FID.
+  static constexpr ObjectID makeTaggedFID(uint64_t objectFID) {
+    return (Tag << (64 - 8)) | objectFID;
   }
 
-  /// Makes the short identifier (SID) from full one (FID).
-  static uint64_t makeSID(ObjectID objectFID) {
-    return (objectFID & ~(0xfull << (64 - 8))) >> Log2;
+  /// Resets the tag of the tagged FID.
+  static constexpr ObjectID makeUntaggedFID(uint64_t objectFID) {
+    return objectFID & ~(0xfull << (64 - 8));
+  }
+
+  /// Makes the FID from the SID.
+  static constexpr ObjectID makeFID(uint64_t objectSID) {
+    return makeTaggedFID(objectSID << Log2);
+  }
+
+  /// Makes the SID from the FID.
+  static constexpr uint64_t makeSID(ObjectID objectFID) {
+    return makeUntaggedFID(objectFID) >> Log2;
   }
 
   ObjectID(uint64_t value): value(value) {}
   ObjectID(): ObjectID(OBJ_NULL_ID) {}
   operator uint64_t() const { return value; }
 
-  /// Returns the short identifier.
+  /// Returns the SID.
   uint64_t getSID() const { return makeSID(value); }
+  /// Returns the untagged FID.
+  uint64_t getUntaggedFID() const { return makeUntaggedFID(value); }
 
 private:
-  uint64_t value;
+  const uint64_t value;
 };
 
 /// Object tag.
@@ -65,7 +78,7 @@ using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 1024, 10>;
 using LinkID         = ObjectID<TAG_LINK, 8, 3>;
 using NetID          = ObjectID<TAG_NET, 64, 6>;
 using StringID       = ObjectID<TAG_STRING, 32, 5>;
-using ListBlockID    = ObjectID<TAG_LIST_BLOCK, 32, 5>;
+using ListBlockID    = ObjectID<TAG_LIST_BLOCK, 64, 6>;
 
 using ListID = ListBlockID;
 

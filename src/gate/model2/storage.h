@@ -8,53 +8,85 @@
 
 #pragma once
 
+#include "gate/model2/memory.h"
 #include "gate/model2/object.h"
+#include "util/singleton.h"
 
-#include <vector>
+#include <cassert>
 
 namespace eda::gate::model {
 
 template<typename T>
-class Storage {
+class Storage : public util::Singleton<Storage<T>> {
 public:
   /// TODO: Dummy (to be implemented).
   template<typename... Args>
-  static typename T::ID allocate(Args&&... args) {
-    T object(args...);
-    objects.push_back(object);
-    return static_cast<typename T::ID>(reinterpret_cast<uint64_t>(&objects.back()));
+  typename T::ID allocateExt(size_t size, Args&&... args) {
+    assert(size >= T::ID::Size && size <= PAGE_SIZE);
+
+    if (systemPage == nullptr || (offset + size) < PAGE_SIZE) {
+      const auto translation = PageManager::get().allocate();
+
+      objectPage = translation.first;
+      systemPage = translation.second;
+
+      offset = 0;
+    }
+
+    new(PageManager::getObjectPtr(systemPage, offset)) T(args...);
+    offset += size;
+
+    return T::ID::makeTaggedFID(PageManager::getObjectID(objectPage, offset));
+  }
+
+  template<typename... Args>
+  typename T::ID allocate(Args&&... args) {
+    return allocateExt(T::ID::Size, args...);
   }
 
   /// TODO: Dummy (to be implemented).
-  static T *access(typename T::ID objectID) {
-    return reinterpret_cast<T*>(static_cast<uint64_t>(objectID));
+  T *access(typename T::ID objectFID) {
+    const typename T::ID untaggedFID = T::ID::makeUntaggedFID(objectFID);
+
+    const auto objectPage = PageManager::getPage(untaggedFID);
+    const auto offset = PageManager::getOffset(untaggedFID);
+
+    const SystemPage systemPage = PageManager::get().translate(objectPage);
+    return reinterpret_cast<T*>(PageManager::getObjectPtr(systemPage, offset));
   }
 
   /// TODO: Dummy (to be implemented).
-  static void release(typename T::ID objectID) {
+  void release(typename T::ID objectID) {
     // Do nothing.
   }
 
 private:
-  static std::vector<T> objects;
+  /// Current object page.
+  ObjectPage objectPage = -1;
+  /// Current system page.
+  SystemPage systemPage = nullptr;
+  /// Current offset.
+  size_t offset = 0;
 };
 
-template<typename T>
-std::vector<T> Storage<T>::objects;
+template<typename T, typename... Args>
+typename T::ID allocateExt(size_t size, Args&&... args) {
+  return Storage<T>::get().allocateExt(size, args...);
+}
 
 template<typename T, typename... Args>
 typename T::ID allocate(Args&&... args) {
-  return Storage<T>::allocate(args...);
+  return Storage<T>::get().allocate(args...);
 }
 
 template<typename T>
 T *access(typename T::ID objectID) {
-  return Storage<T>::access(objectID);
+  return Storage<T>::get().access(objectID);
 }
 
 template<typename T>
 void release(typename T::ID objectID) {
-  Storage<T>::release(objectID);
+  Storage<T>::get().release(objectID);
 }
 
 } // namespace eda::gate::model

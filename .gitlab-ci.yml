@@ -23,6 +23,7 @@ build_project:
     - cmake --build ${BUILD}
 
   artifacts:
+    expire_in: 1 day
     paths:
       - ${BUILD_PATH}
 

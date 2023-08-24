@@ -11,20 +11,41 @@
 
 #include "gtest/gtest.h"
 
-#include <iostream>
+#include <vector>
 
 namespace eda::gate::model {
 
 TEST(ListTest, SimpleTest) {
-  List<Cell> list;
+  static constexpr uint64_t A = 1;
+  static constexpr uint64_t B = 64*1024;
+  static constexpr uint64_t N = (B - A) + 1;
 
-  for (uint64_t i = 1; i <= 1024; i++) {
+#if 0
+  std::vector<uint64_t> list;
+  list.reserve(N);
+#else
+  List<Cell> list;
+#endif
+
+  for (uint64_t i = A; i <= B; i++) {
     list.push_back(i);
   }
 
-  for (auto i = list.begin(); i != list.end(); i++) {
-    std::cout << "Item: " << *i << std::endl;
+  EXPECT_EQ(list.size(), N);
+
+  uint64_t i = A;
+  for (auto iter = list.begin(); iter != list.end(); iter++) {
+    EXPECT_EQ(i, *iter);
+    i++;
   }
+
+  i = 0;
+  while (!list.empty()) {
+    list.erase(list.begin());
+    i++;
+  }
+
+  EXPECT_EQ(i, N);
 }
 
 } // namespace eda::gate::model

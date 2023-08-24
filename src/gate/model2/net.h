@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "gate/model2/cell.h"
 #include "gate/model2/list.h"
-#include "gate/model2/storage.h"
 
 namespace eda::gate::model {
 
@@ -42,19 +42,25 @@ private:
       ListID combCells,
       ListID flipFlops,
       ListID hardBlocks,
-      ListID softBlocks):
+      ListID softBlocks,
+      uint16_t nInputs,
+      uint16_t nOutputs,
+      uint32_t nCombCells,
+      uint32_t nFlipFlops,
+      uint16_t nHardBlocks,
+      uint16_t nSoftBlocks):
       inputs(inputs),
       outputs(outputs),
       combCells(combCells),
       flipFlops(flipFlops),
       hardBlocks(hardBlocks),
       softBlocks(softBlocks),
-      nInputs(0),
-      nOutputs(0),
-      nCombCells(0),
-      nFlipFlops(0),
-      nHardBlocks(0),
-      nSoftBlocks(0) {}
+      nInputs(nInputs),
+      nOutputs(nOutputs),
+      nCombCells(nCombCells),
+      nFlipFlops(nFlipFlops),
+      nHardBlocks(nHardBlocks),
+      nSoftBlocks(nSoftBlocks) {}
 
   /// Primary inputs.
   ListID inputs;
@@ -85,6 +91,19 @@ static_assert(sizeof(Net) == NetID::Size);
 // Net Builder
 //===----------------------------------------------------------------------===//
 
-// TODO:
+class NetBuilder final {
+public:
+  NetBuilder() {}
+  void addCell(CellID cellID);
+  NetID makeNet();
+ 
+private:
+  List<Cell> inputs;
+  List<Cell> outputs;
+  List<Cell> combCells;
+  List<Cell> flipFlops;
+  List<Cell> hardBlocks;
+  List<Cell> softBlocks;
+};
 
 } // namespace eda::gate::model

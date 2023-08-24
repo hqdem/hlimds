@@ -12,7 +12,6 @@
 
 namespace eda::gate::model {
 
-#pragma pack(push, 1)
 class Link final {
 public:
   using ID = LinkID;
@@ -22,6 +21,8 @@ public:
 
   Link(CellID cellID, uint16_t port):
       cellSID(cellID.getSID()), port(port), valid(1) {}
+
+  explicit Link(CellID cellID): Link(cellID, 0) {}
 
   Link(const Link &) = default;
   Link &operator =(const Link &) = default;
@@ -41,7 +42,6 @@ private:
   /// Properties.
   uint64_t valid : 1;
 };
-#pragma pack(pop)
 
 static_assert(sizeof(Link) == LinkID::Size);
 

@@ -24,6 +24,7 @@ public:
   typename T::ID allocateExt(size_t size, Args&&... args) {
     assert(size >= T::ID::Size && size <= PAGE_SIZE);
 
+    // If there is no place in the current page, a new one is allocated.
     if (systemPage == nullptr || (offset + size) < PAGE_SIZE) {
       const auto translation = PageManager::get().allocate();
 
@@ -34,9 +35,11 @@ public:
     }
 
     new(PageManager::getObjectPtr(systemPage, offset)) T(args...);
+    auto untaggedID = PageManager::getObjectID(objectPage, offset);
+
     offset += size;
 
-    return T::ID::makeTaggedFID(PageManager::getObjectID(objectPage, offset));
+    return T::ID::makeTaggedFID(untaggedID);
   }
 
   template<typename... Args>
@@ -46,6 +49,10 @@ public:
 
   /// TODO: Dummy (to be implemented).
   T *access(typename T::ID objectFID) {
+    if (objectFID == OBJ_NULL_ID) {
+      return nullptr;
+    }
+
     const typename T::ID untaggedFID = T::ID::makeUntaggedFID(objectFID);
 
     const auto objectPage = PageManager::getPage(untaggedFID);

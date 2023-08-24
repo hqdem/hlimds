@@ -17,14 +17,15 @@ namespace eda::gate::model {
 static constexpr uint64_t OBJ_NULL_ID = 0;
 
 /// Full object identifier (FID):
-/// [ tag:8 | short object identifier (SID) | alignment zeros ].
-template <uint64_t TAG, size_t SIZE, size_t LOG2>
+/// | tag:8 | short object identifier (SID) | zeros:Z |
+/// | 63 56 | 55                          Z | Z-1   0 |.
+template <uint64_t T, size_t S, size_t Z>
 class ObjectID final {
 public:
-  static constexpr uint64_t Tag = TAG;
+  static constexpr uint64_t Tag = T;
 
-  static constexpr size_t Size = SIZE;
-  static constexpr size_t Log2 = LOG2;
+  static constexpr size_t Size = S;
+  static constexpr size_t Log2 = Z;
   static_assert(Size == (1 << Log2));
 
   /// Sets the tag to the untagged FID.
@@ -47,9 +48,19 @@ public:
     return makeUntaggedFID(objectFID) >> Log2;
   }
 
+  /// Constructs a FID from the specified value.
   ObjectID(uint64_t value): value(value) {}
+  /// Constructs a null-valued FID.
   ObjectID(): ObjectID(OBJ_NULL_ID) {}
+
+  /// Converts the FID to the 64-bit unsigned integer.
   operator uint64_t() const { return value; }
+
+  /// Assigns the value to this FID.
+  ObjectID &operator =(ObjectID r) {
+    value = r.value;
+    return *this;
+  }
 
   /// Returns the SID.
   uint64_t getSID() const { return makeSID(value); }
@@ -57,7 +68,8 @@ public:
   uint64_t getUntaggedFID() const { return makeUntaggedFID(value); }
 
 private:
-  const uint64_t value;
+  /// FID value.
+  uint64_t value;
 };
 
 /// Object tag.

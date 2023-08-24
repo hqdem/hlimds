@@ -159,21 +159,21 @@ static_assert(sizeof(CellType) == CellTypeID::Size);
 // Cell Type Builder
 //===----------------------------------------------------------------------===//
 
-CellTypeID makeCellType(const std::string &name,
-                        NetID netID,
-                        CellTypeAttrID attrID,
-                        CellSymbol symbol,
-                        CellProperties props,
-                        uint16_t nIn,
-                        uint16_t nOut) {
+inline CellTypeID makeCellType(const std::string &name,
+                               NetID netID,
+                               CellTypeAttrID attrID,
+                               CellSymbol symbol,
+                               CellProperties props,
+                               uint16_t nIn,
+                               uint16_t nOut) {
   return allocate<CellType>(name, netID, attrID, symbol, props, nIn, nOut);
 }
 
-CellTypeID makeCellType(const std::string &name,
-                        CellSymbol symbol,
-                        CellProperties props,
-                        uint16_t nIn,
-                        uint16_t nOut) {
+inline CellTypeID makeCellType(const std::string &name,
+                               CellSymbol symbol,
+                               CellProperties props,
+                               uint16_t nIn,
+                               uint16_t nOut) {
   return makeCellType(name, OBJ_NULL_ID, OBJ_NULL_ID, symbol, props, nIn, nOut);
 }
 

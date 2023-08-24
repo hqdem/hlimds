@@ -58,9 +58,10 @@ public:
     const SystemPage systemPage = static_cast<SystemPage>(malloc(PAGE_SIZE));
     const std::pair<ObjectPage, SystemPage> translation{objectPage, systemPage};
 
-    pageTable.insert(translation);
-    objectPage += PAGE_SIZE;
+    const auto info = pageTable.insert(translation);
+    assert(info.second);
 
+    objectPage += PAGE_SIZE;
     return translation;
   }
 

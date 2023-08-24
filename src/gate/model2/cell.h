@@ -45,6 +45,8 @@ public:
   bool isDff()   const { return typeSID == CELL_TYPE_SID_DFF;   }
   bool isDffRs() const { return typeSID == CELL_TYPE_SID_DFFrs; }
 
+  CellTypeID getTypeID() const { return CellTypeID::makeFID(typeSID); }
+
   uint16_t getFanin()  const { return fanin;  }
   uint16_t getFanout() const { return fanout; }
 
@@ -80,39 +82,64 @@ inline CellID makeCell(CellTypeID typeID, const Cell::LinkList &links) {
   return allocate<Cell>(typeID, links);
 }
 
-template<CellSymbol symbol>
+template<CellSymbol S>
 CellID make() {
-  return makeCell(getCellTypeID(symbol));
+  return makeCell(getCellTypeID(S));
 }
 
-template<CellSymbol symbol>
+template<CellSymbol S>
 CellID make(const Cell::LinkList &links) {
-  return makeCell(getCellTypeID(symbol), links);
+  return makeCell(getCellTypeID(S), links);
 }
 
-template<CellSymbol symbol>
+template<CellSymbol S>
 CellID make(Link link) {
-  return makeCell(getCellTypeID(symbol), {link});
+  return make<S>({link});
 }
 
-template<CellSymbol symbol>
-CellID make(Link link1, Link link2) {
-  return makeCell(getCellTypeID(symbol), {link1, link2});
+template<CellSymbol S>
+CellID make(Link l1, Link l2) {
+  return make<S>({l1, l2});
 }
 
-template<CellSymbol symbol>
-CellID make(Link link1, Link link2, Link link3) {
-  return makeCell(getCellTypeID(symbol), {link1, link2, link3});
+template<CellSymbol S>
+CellID make(Link l1, Link l2, Link l3) {
+  return make<S>({l1, l2, l3});
 }
 
-template<CellSymbol symbol>
-CellID make(Link link1, Link link2, Link link3, Link link4) {
-  return makeCell(getCellTypeID(symbol), {link1, link2, link3, link4});
+template<CellSymbol S>
+CellID make(Link l1, Link l2, Link l3, Link l4) {
+  return make<S>({l1, l2, l3, l4});
 }
 
-template<CellSymbol symbol>
-CellID make(Link link1, Link link2, Link link3, Link link4, Link link5) {
-  return makeCell(getCellTypeID(symbol), {link1, link2, link3, link4, link5});
+template<CellSymbol S>
+CellID make(Link l1, Link l2, Link l3, Link l4, Link l5) {
+  return make<S>({l1, l2, l3, l4, l5});
+}
+
+template<CellSymbol S>
+CellID make(CellID cell) {
+  return make<S>(Link(cell));
+}
+
+template<CellSymbol S>
+CellID make(CellID c1, CellID c2) {
+  return make<S>(Link(c1), Link(c2));
+}
+
+template<CellSymbol S>
+CellID make(CellID c1, CellID c2, CellID c3) {
+  return make<S>(Link(c1), Link(c2), Link(c3));
+}
+
+template<CellSymbol S>
+CellID make(CellID c1, CellID c2, CellID c3, CellID c4) {
+  return make<S>(Link(c1), Link(c2), Link(c3), Link(c4));
+}
+
+template<CellSymbol S>
+CellID make(CellID c1, CellID c2, CellID c3, CellID c4, CellID c5) {
+  return make<S>(Link(c1), Link(c2), Link(c3), Link(c4), Link(c5));
 }
 
 } // namespace eda::gate::model

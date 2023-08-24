@@ -39,7 +39,7 @@ static_assert(sizeof(String) == StringID::Size);
 // String Builder
 //===----------------------------------------------------------------------===//
 
-StringID makeString(const std::string &value) {
+inline StringID makeString(const std::string &value) {
   return allocate<String>(value);
 }
 

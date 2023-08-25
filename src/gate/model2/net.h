@@ -17,11 +17,16 @@ namespace eda::gate::model {
 // Net
 //===----------------------------------------------------------------------===//
 
-class Net final {
+class Net final : public Object<Net, NetID> {
   friend class Storage<Net>;
 
 public:
-  using ID = NetID;
+  List<CellID> getInputs() const { return List<CellID>(inputs); }
+  List<CellID> getOutputs() const { return List<CellID>(outputs); }
+  List<CellID> getCombCells() const { return List<CellID>(combCells); }
+  List<CellID> getFlipFlops() const { return List<CellID>(flipFlops); }
+  List<CellID> getSoftBlocks() const { return List<CellID>(softBlocks); }
+  List<CellID> getHardBlocks() const { return List<CellID>(hardBlocks); }
 
   /// Returns the number of inputs.
   uint16_t getInNumber() const { return nInputs; }
@@ -95,15 +100,15 @@ class NetBuilder final {
 public:
   NetBuilder() {}
   void addCell(CellID cellID);
-  NetID makeNet();
+  NetID make();
  
 private:
-  List<Cell> inputs;
-  List<Cell> outputs;
-  List<Cell> combCells;
-  List<Cell> flipFlops;
-  List<Cell> hardBlocks;
-  List<Cell> softBlocks;
+  List<CellID> inputs;
+  List<CellID> outputs;
+  List<CellID> combCells;
+  List<CellID> flipFlops;
+  List<CellID> hardBlocks;
+  List<CellID> softBlocks;
 };
 
 } // namespace eda::gate::model

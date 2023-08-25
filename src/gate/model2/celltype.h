@@ -9,7 +9,6 @@
 #pragma once
 
 #include "gate/model2/object.h"
-#include "gate/model2/storage.h"
 #include "gate/model2/string.h"
 
 #include <cstdint>
@@ -106,13 +105,11 @@ static_assert(sizeof(CellProperties) == 2);
 // Cell Type
 //===----------------------------------------------------------------------===//
 
-class CellType final {
+class CellType final : public Object<CellType, CellTypeID> {
   friend class Storage<CellType>;
 
 public:
-  using ID = CellTypeID;
-
-  const String &getName() const { return *access<String>(nameID); }
+  std::string getName() const { return String::get(nameID); }
 
   CellSymbol getSymbol() const { return symbol; }
 

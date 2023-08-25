@@ -9,7 +9,6 @@
 #pragma once
 
 #include "gate/model2/object.h"
-#include "gate/model2/storage.h"
 
 #include <string>
 
@@ -19,12 +18,10 @@ namespace eda::gate::model {
 // String
 //===----------------------------------------------------------------------===//
 
-class String final {
+class String final : public Object<String, StringID> {
   friend class Storage<String>;
 
 public:
-  using ID = StringID;
-
   operator std::string() const { return value; }
 
 private:

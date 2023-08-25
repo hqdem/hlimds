@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model/storage.h"
+#include "gate/model/object.h"
 
 namespace eda::gate::model {
 
@@ -16,11 +16,8 @@ namespace eda::gate::model {
 // Cell Type Attributes
 //===----------------------------------------------------------------------===//
 
-class CellTypeAttr final {
+class CellTypeAttr final : public Object<CellTypeAttr, CellTypeAttrID> {
   friend class Storage<CellTypeAttr>;
-
-public:
-  using ID = CellTypeAttrID;
 
 private:
   CellTypeAttr() {}

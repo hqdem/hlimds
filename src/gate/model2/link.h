@@ -12,35 +12,53 @@
 
 namespace eda::gate::model {
 
-class Link final {
+//===----------------------------------------------------------------------===//
+// Link End
+//===----------------------------------------------------------------------===//
+
+class LinkEnd final : public Object<LinkEnd, LinkEndID> {
 public:
-  using ID = LinkID;
+  static LinkEnd unpack(uint64_t value) {
+    CellID cellID = CellID::makeFID(value >> 24);
+    uint16_t port = (value >> 8) & 0xffff;
+    bool valid = value & 1;
 
-  Link():
-      cellSID(0), port(0), valid(0) {}
+    return valid ? LinkEnd(cellID, port) : LinkEnd();
+  }
 
-  Link(CellID cellID, uint16_t port):
-      cellSID(cellID.getSID()), port(port), valid(1) {}
+  static uint64_t pack(LinkEnd link) {
+    return link.value;
+  }
 
-  explicit Link(CellID cellID): Link(cellID, 0) {}
+  LinkEnd(): value(0) {}
 
-  Link(const Link &) = default;
-  Link &operator =(const Link &) = default;
+  LinkEnd(CellID cellID, uint16_t port):
+      value((cellID.getSID() << 24) | (static_cast<uint64_t>(port) << 8) | 1) {}
 
-  CellID getSourceID() const { return CellID::makeFID(cellSID); }
+  explicit LinkEnd(CellID cellID): LinkEnd(cellID, 0) {}
 
-  uint16_t getSourcePort() const { return port; }
+  LinkEnd(const LinkEnd &) = default;
+  LinkEnd &operator =(const LinkEnd &) = default;
 
-  bool isValid() const { return valid; }
+  CellID getCellID() const { return CellID::makeFID(value >> 24); }
+  uint16_t getPort() const { return (value >> 8) & 0xffff; }
+
+  bool isValid() const { return value & 1; }
 
 private:
-  /// Source cell short identifier.
-  uint64_t cellSID : 40;
-  /// Output port of the source cell.
-  uint64_t port : 16;
+  /// Packed value: [ cell SID:40 | port:16 | valid:1]
+  uint64_t value;
+};
 
-  /// Properties.
-  uint64_t valid : 1;
+static_assert(sizeof(LinkEnd) == LinkEndID::Size);
+
+//===----------------------------------------------------------------------===//
+// Link
+//===----------------------------------------------------------------------===//
+
+struct Link final : public Object<Link, LinkID> {
+  LinkEnd source;
+  LinkEnd target;
 };
 
 static_assert(sizeof(Link) == LinkID::Size);

@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/net.h"
+#include "gate/model2/printer/printer.h"
 
 #include "gtest/gtest.h"
 
@@ -23,20 +24,28 @@ TEST(NetTest, SimpleTest) {
 
   std::array<CellID, Breadth> cells[2];
   for (size_t i = 0; i < Breadth; i++) {
-    cells[0][i] = makeCell(IN);
+    auto cellID = makeCell(IN);
+    cells[0][i] = cellID;
+    netBuilder.addCell(cellID);
   }
 
   size_t k = 0;
   for (size_t i = 0; i < Depth; i++) {
     for (size_t j = 0; j < Breadth; j++) {
-      cells[1 - k][j] = makeCell(AND, cells[k][j], cells[k][(Breadth - j) - 1]);
+      auto cellID = makeCell(AND, cells[k][j], cells[k][(Breadth - j) - 1]);
+      cells[1 - k][j] = cellID;
+      netBuilder.addCell(cellID);
     }
     k = 1 - k;
   }
 
   for (size_t i = 0; i < Breadth; i++) {
-    makeCell(OUT, cells[k][i]);
+    auto cellID = makeCell(OUT, cells[k][i]);
+    netBuilder.addCell(cellID);
   }
+
+  const Net &net = Net::get(netBuilder.make());
+  std::cout << net << std::endl;
 }
 
 } // namespace eda::gate::model

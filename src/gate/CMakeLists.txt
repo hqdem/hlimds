@@ -13,6 +13,7 @@ add_library(Gate OBJECT
   model2/cell.cpp
   model2/celltype.cpp
   model2/net.cpp
+  model2/printer/printer.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp
   optimizer/cut_walker.cpp

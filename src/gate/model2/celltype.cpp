@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/celltype.h"
-#include "gate/model2/storage.h"
 
 #define CELL_TYPE_ID(symbol)  CELL_TYPE_ID_##symbol
 #define CELL_TYPE_SID(symbol) CELL_TYPE_SID_##symbol

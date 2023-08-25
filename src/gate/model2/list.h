@@ -9,7 +9,6 @@
 #pragma once
 
 #include "gate/model2/object.h"
-#include "gate/model2/storage.h"
 
 #include <algorithm>
 #include <cassert>
@@ -20,36 +19,66 @@ namespace eda::gate::model {
 // List Block
 //===----------------------------------------------------------------------===//
 
-/// Block containing a number of 64-bit elements (FIDs != OBJ_NULL_ID).
-struct ListBlock final {
-  using ID = ListBlockID;
+/// Block containing a number of 64-bit elements of type T.
+template<typename T>
+class ListBlock final : public Object<ListBlock<T>, ListBlockID> {
+  friend class Storage<ListBlock<T>>;
 
-  using ElementType = uint64_t;
-  static_assert(sizeof(ElementType) == 8);
+  static_assert(sizeof(T) == 8);
+  static constexpr size_t MinCapacity = 4;
 
-  static constexpr size_t MIN_CAPACITY = 4;
-
+public:
   /// Returns the block size in bytes depending on the capacity.
   static constexpr size_t getSizeInBytes(uint32_t sizeInItems) {
-    return sizeInItems <= MIN_CAPACITY
-        ? ID::Size
-        : ID::Size + sizeof(ElementType)*(sizeInItems - MIN_CAPACITY);
+    return sizeInItems <= MinCapacity
+        ? ListBlockID::Size
+        : ListBlockID::Size + sizeof(T)*(sizeInItems - MinCapacity);
   }
 
   /// Returns the block capacity depending on the size in bytes.
   static constexpr uint32_t getSizeInItems(size_t sizeInBytes) {
-    return sizeInBytes < ID::Size
+    return sizeInBytes < ListBlockID::Size
         ? 0
-        : (sizeInBytes - ID::Size) / sizeof(ElementType) + MIN_CAPACITY;
+        : (sizeInBytes - ListBlockID::Size) / sizeof(T) + MinCapacity;
   }
 
   /// Allocates the block w/ the specified capacity.
-  static ID allocate(uint32_t capacity, bool begin, bool end) {
+  static ListBlockID allocate(uint32_t capacity, bool begin, bool end) {
     auto sizeInBytes = std::min(getSizeInBytes(capacity), PAGE_SIZE);
     auto sizeInItems = getSizeInItems(sizeInBytes);
-    return allocateExt<ListBlock>(sizeInBytes, sizeInItems, begin, end);
+    return allocateExt<ListBlock<T>>(sizeInBytes, sizeInItems, begin, end);
   }
 
+  /// Returns the pointer to the previous block.
+  ListBlock<T> *prevBlock() const {
+    return access<ListBlock<T>>(ListBlockID::makeFID(prevBlockSID));
+  }
+
+  /// Returns the pointer to the next block.
+  ListBlock<T> *nextBlock() const {
+    return access<ListBlock<T>>(ListBlockID::makeFID(nextBlockSID));
+  }
+
+  /// Number of items in the entire list (for the first block only).
+  uint64_t totalSize;
+  /// Capacity of the block. 
+  uint32_t capacity;
+  /// Number of items in the block.
+  uint32_t size;
+  /// Index of the last occupied item.
+  uint32_t last;
+  /// SID of the next block (the first block for the final one).
+  uint32_t nextBlockSID;
+  /// SID of the previous block (the final block for the first one).
+  uint32_t prevBlockSID;
+  /// First block of the list.
+  uint32_t begin : 1;
+  /// Final block of the list.
+  uint32_t end : 1;
+  /// Block items (64-bit elements != OBJ_NULL_ID).
+  T items[MinCapacity /* or more */];
+
+private:
   /// Constructs a block w/ the specified capacity and flags.
   ListBlock(uint32_t capacity, bool begin, bool end):
       totalSize(0),
@@ -62,38 +91,9 @@ struct ListBlock final {
       end(end) {
     assert(capacity != 0);
   }
-
-  /// Returns the pointer to the previous block.
-  ListBlock *prevBlock() const {
-    return access<ListBlock>(ListBlockID::makeFID(prevBlockSID));
-  }
-
-  /// Returns the pointer to the next block.
-  ListBlock *nextBlock() const {
-    return access<ListBlock>(ListBlockID::makeFID(nextBlockSID));
-  }
-
-  /// Number of items in the entire list (for the first block).
-  uint64_t totalSize;
-  /// Capacity of the block. 
-  uint32_t capacity;
-  /// Number of items in the block.
-  uint32_t size;
-  /// Index of the last occupied item of the block.
-  uint32_t last;
-  /// SID of the next block (the first block for the final one).
-  uint32_t nextBlockSID;
-  /// SID of the previous block (the final block for the first one).
-  uint32_t prevBlockSID;
-  /// First block of the list.
-  uint32_t begin : 1;
-  /// Final block of the list.
-  uint32_t end : 1;
-  /// Block items (64-bit elements != OBJ_NULL_ID).
-  ElementType items[MIN_CAPACITY /* or more */];
 };
 
-static_assert(sizeof(ListBlock) == ListBlockID::Size);
+static_assert(sizeof(ListBlock<uint64_t>) == ListBlockID::Size);
 
 //===----------------------------------------------------------------------===//
 // List Iterator
@@ -120,7 +120,7 @@ public:
 
   /// Prefix increment operator.
   ListIterator<T> &operator ++() {
-    assert(blockID != OBJ_NULL_ID);
+    assert(block != nullptr);
 
     if (block->size == 0 || index == block->last) {
       index = 0;
@@ -129,7 +129,7 @@ public:
       index++;
     }
 
-    if (blockID != OBJ_NULL_ID) {
+    if (block != nullptr) {
       skipNullItems();
     }
 
@@ -144,8 +144,9 @@ public:
   }
 
   /// Dereferencing operator.
-  typename T::ID &operator *() {
-    return reinterpret_cast<typename T::ID&>(block->items[index]);
+  T &operator *() {
+    assert(block != nullptr);
+    return reinterpret_cast<T&>(block->items[index]);
   }
 
 private:
@@ -153,7 +154,7 @@ private:
   ListIterator(ListBlockID blockID):
       blockID(blockID),
       index(0),
-      block(access<ListBlock>(blockID)) {
+      block(access<ListBlock<T>>(blockID)) {
     while (block != nullptr && block->size == 0) {
       moveNextBlock();
     }
@@ -170,7 +171,7 @@ private:
       block = nullptr;
     } else {
       blockID = ListBlockID::makeFID(block->nextBlockSID);
-      block = access<ListBlock>(blockID);
+      block = access<ListBlock<T>>(blockID);
     }
   }
 
@@ -186,7 +187,7 @@ private:
   /// Current index.
   uint32_t index;
   /// Current block.
-  ListBlock *block;
+  ListBlock<T> *block;
 };
 
 //===----------------------------------------------------------------------===//
@@ -195,25 +196,26 @@ private:
 
 template <typename T>
 class List final {
-  static constexpr uint32_t DEFAULT_BLOCK_CAPACITY = ListBlock::getSizeInItems(256);
+  static constexpr uint32_t DefaultBlockCapacity =
+      ListBlock<T>::getSizeInItems(256);
 
 public:
   /// Constructs a wrapper around the given list structure.
   List(ListID listID):
-      listID(listID), block(access<ListBlock>(listID)) {
-    assert(block != nullptr);
+      listID(listID), block(access<ListBlock<T>>(listID)) {
+    assert(block != nullptr && block->begin);
   }
 
   /// Constructs a new list w/ the specified capacity.
-  List(uint32_t capacity, bool begin, bool end):
-      List(ListBlock::allocate(capacity, begin, end)) {
+  List(uint32_t capacity):
+      List(ListBlock<T>::allocate(capacity, true, true)) {
     uint32_t blockSID = listID.getSID();
     block->prevBlockSID = blockSID;
     block->nextBlockSID = blockSID;
   }
 
   /// Constructs a new list w/ the default capacity.
-  List(): List(DEFAULT_BLOCK_CAPACITY, true, true) {}
+  List(): List(DefaultBlockCapacity) {}
 
   /// Returns the list identifier.
   ListID getID() const { return listID; }
@@ -229,7 +231,7 @@ public:
   ListIterator<T> end() const { return ListIterator<T>(OBJ_NULL_ID); }
 
   /// Adds the specified element to the end of the list.
-  void push_back(typename T::ID value) {
+  void push_back(T value) {
     assert(value != OBJ_NULL_ID);
 
     auto *lastBlock = block->prevBlock();
@@ -239,10 +241,10 @@ public:
       lastBlock->items[++lastBlock->last] = value;
       lastBlock->size++;
     } else {
-      auto nextBlockFID = ListBlock::allocate(lastBlock->capacity, 0, 1);
+      auto nextBlockFID = ListBlock<T>::allocate(lastBlock->capacity, 0, 1);
       auto nextBlockSID = nextBlockFID.getSID();
 
-      auto *nextBlock = access<ListBlock>(nextBlockFID);
+      auto *nextBlock = access<ListBlock<T>>(nextBlockFID);
 
       nextBlock->nextBlockSID = lastBlock->nextBlockSID;
       nextBlock->prevBlockSID = block->prevBlockSID;
@@ -277,7 +279,7 @@ public:
 
       prevBlock->end = pos.block->end;
 
-      release<ListBlock>(pos.blockID);
+      release<ListBlock<T>>(pos.blockID);
       return ListIterator<T>(ListBlockID::makeFID(pos.block->nextBlockSID));
     }
 
@@ -296,7 +298,7 @@ private:
   /// List identifier.
   const ListID listID;
   /// Pointer to the first block of the list.
-  ListBlock *block;
+  ListBlock<T> *block;
 };
 
 } // namespace eda::gate::model

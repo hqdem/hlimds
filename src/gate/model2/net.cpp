@@ -13,27 +13,27 @@
 namespace eda::gate::model {
 
 void NetBuilder::addCell(CellID cellID) {
-  auto *cell = access<Cell>(cellID);
-  auto *type = access<CellType>(cell->getTypeID());
+  const auto &cell = Cell::get(cellID);
+  const auto &type = cell.getType();
 
   // TODO: Implement structural hashing.
 
-  if (type->getSymbol() == IN) {
+  if (type.getSymbol() == IN) {
     inputs.push_back(cellID);
-  } else if (type->getSymbol() == OUT) {
+  } else if (type.getSymbol() == OUT) {
     outputs.push_back(cellID);
-  } else if (type->getSymbol() == NET || type->getSymbol() == SOFT) {
+  } else if (type.getSymbol() == NET || type.getSymbol() == SOFT) {
     softBlocks.push_back(cellID);
-  } else if (type->getSymbol() == HARD) {
+  } else if (type.getSymbol() == HARD) {
     hardBlocks.push_back(cellID);
-  } else if (type->isCombinational()) {
+  } else if (type.isCombinational()) {
     combCells.push_back(cellID);
   } else {
     flipFlops.push_back(cellID);
   }
 }
 
-NetID NetBuilder::makeNet() {
+NetID NetBuilder::make() {
   uint16_t nInputs = inputs.size();
   assert(nInputs == inputs.size());
 

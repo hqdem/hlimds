@@ -24,7 +24,7 @@ TEST(ListTest, SimpleTest) {
   std::vector<uint64_t> list;
   list.reserve(N);
 #else
-  List<Cell> list;
+  List<uint64_t> list;
 #endif
 
   for (uint64_t i = A; i <= B; i++) {

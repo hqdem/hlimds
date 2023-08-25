@@ -11,7 +11,6 @@
 #include "gate/model2/celltype.h"
 #include "gate/model2/link.h"
 #include "gate/model2/object.h"
-#include "gate/model2/storage.h"
 
 #include <vector>
 
@@ -21,12 +20,11 @@ namespace eda::gate::model {
 // Cell
 //===----------------------------------------------------------------------===//
 
-class Cell final {
+class Cell final : public Object<Cell, CellID> {
   friend class Storage<Cell>;
 
 public:
-  using ID = CellID;
-  using LinkList = std::vector<Link>;
+  using LinkList = std::vector<LinkEnd>;
 
   bool isIn()    const { return typeSID == CELL_TYPE_SID_IN;    }
   bool isOut()   const { return typeSID == CELL_TYPE_SID_OUT;   }
@@ -47,25 +45,31 @@ public:
 
   CellTypeID getTypeID() const { return CellTypeID::makeFID(typeSID); }
 
+  const CellType &getType() const { return CellType::get(getTypeID()); }
+
   uint16_t getFanin()  const { return fanin;  }
   uint16_t getFanout() const { return fanout; }
 
   void setFanin(uint16_t value)  { fanin  = value; }
   void setFanout(uint16_t value) { fanout = value; }
 
+  LinkList getLinks() const;
+
 private:
+  static constexpr size_t InPlaceLinks = 3;
+
   Cell(CellTypeID typeID):
       typeSID(typeID.getSID()), fanin(0), fanout(0) {}
 
   Cell(CellTypeID typeID, const LinkList &links);
 
-  /// Cell type short identifier.
+  /// Cell type SID.
   const uint32_t typeSID;
 
   uint16_t fanin;
   uint16_t fanout;
 
-  Link link[3];
+  LinkEnd link[InPlaceLinks];
 };
 
 static_assert(sizeof(Cell) == CellID::Size);
@@ -78,8 +82,7 @@ inline CellID makeCell(CellTypeID typeID) {
   return allocate<Cell>(typeID);
 }
 
-inline CellID makeCell(CellTypeID typeID,
-                       const Cell::LinkList &links) {
+inline CellID makeCell(CellTypeID typeID, const Cell::LinkList &links) {
   return allocate<Cell>(typeID, links);
 }
 
@@ -87,59 +90,53 @@ inline CellID makeCell(CellSymbol symbol) {
   return makeCell(getCellTypeID(symbol));
 }
 
-inline CellID makeCell(CellSymbol symbol,
-                       const Cell::LinkList &links) {
+inline CellID makeCell(CellSymbol symbol, const Cell::LinkList &links) {
   return makeCell(getCellTypeID(symbol), links);
 }
 
-inline CellID makeCell(CellSymbol symbol,
-                       Link link) {
+inline CellID makeCell(CellSymbol symbol, LinkEnd link) {
   return makeCell(symbol, Cell::LinkList{link});
 }
 
-inline CellID makeCell(CellSymbol symbol,
-                       Link l1, Link l2) {
+inline CellID makeCell(CellSymbol symbol, LinkEnd l1, LinkEnd l2) {
   return makeCell(symbol, Cell::LinkList{l1, l2});
 }
 
-inline CellID makeCell(CellSymbol symbol,
-                       Link l1, Link l2, Link l3) {
+inline CellID makeCell(CellSymbol symbol, LinkEnd l1, LinkEnd l2, LinkEnd l3) {
   return makeCell(symbol, Cell::LinkList{l1, l2, l3});
 }
 
 inline CellID makeCell(CellSymbol symbol,
-                       Link l1, Link l2, Link l3, Link l4) {
+    LinkEnd l1, LinkEnd l2, LinkEnd l3, LinkEnd l4) {
   return makeCell(symbol, Cell::LinkList{l1, l2, l3, l4});
 }
 
 inline CellID makeCell(CellSymbol symbol,
-                       Link l1, Link l2, Link l3, Link l4, Link l5) {
+    LinkEnd l1, LinkEnd l2, LinkEnd l3, LinkEnd l4, LinkEnd l5) {
   return makeCell(symbol, Cell::LinkList{l1, l2, l3, l4, l5});
 }
 
-inline CellID makeCell(CellSymbol symbol,
-                       CellID cell) {
-  return makeCell(symbol, Link(cell));
+inline CellID makeCell(CellSymbol symbol, CellID cell) {
+  return makeCell(symbol, LinkEnd(cell));
+}
+
+inline CellID makeCell(CellSymbol symbol, CellID c1, CellID c2) {
+  return makeCell(symbol, LinkEnd(c1), LinkEnd(c2));
+}
+
+inline CellID makeCell(CellSymbol symbol, CellID c1, CellID c2, CellID c3) {
+  return makeCell(symbol, LinkEnd(c1), LinkEnd(c2), LinkEnd(c3));
 }
 
 inline CellID makeCell(CellSymbol symbol,
-                       CellID c1, CellID c2) {
-  return makeCell(symbol, Link(c1), Link(c2));
+    CellID c1, CellID c2, CellID c3, CellID c4) {
+  return makeCell(symbol, LinkEnd(c1), LinkEnd(c2), LinkEnd(c3), LinkEnd(c4));
 }
 
 inline CellID makeCell(CellSymbol symbol,
-                       CellID c1, CellID c2, CellID c3) {
-  return makeCell(symbol, Link(c1), Link(c2), Link(c3));
-}
-
-inline CellID makeCell(CellSymbol symbol,
-                       CellID c1, CellID c2, CellID c3, CellID c4) {
-  return makeCell(symbol, Link(c1), Link(c2), Link(c3), Link(c4));
-}
-
-inline CellID makeCell(CellSymbol symbol,
-                       CellID c1, CellID c2, CellID c3, CellID c4, CellID c5) {
-  return makeCell(symbol, Link(c1), Link(c2), Link(c3), Link(c4), Link(c5));
+    CellID c1, CellID c2, CellID c3, CellID c4, CellID c5) {
+  return makeCell(symbol,
+    LinkEnd(c1), LinkEnd(c2), LinkEnd(c3), LinkEnd(c4), LinkEnd(c5));
 }
 
 } // namespace eda::gate::model

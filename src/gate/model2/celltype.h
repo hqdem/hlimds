@@ -32,7 +32,7 @@ enum CellSymbol : uint16_t {
   ONE,
 
   /// Identity: OUT = X.
-  NOP,
+  BUF,
   /// Negation: OUT = ~X.
   NOT,
 
@@ -186,7 +186,7 @@ extern const CellTypeID CELL_TYPE_ID_IN;
 extern const CellTypeID CELL_TYPE_ID_OUT;
 extern const CellTypeID CELL_TYPE_ID_ZERO;
 extern const CellTypeID CELL_TYPE_ID_ONE;
-extern const CellTypeID CELL_TYPE_ID_NOP;
+extern const CellTypeID CELL_TYPE_ID_BUF;
 extern const CellTypeID CELL_TYPE_ID_NOT;
 extern const CellTypeID CELL_TYPE_ID_AND;
 extern const CellTypeID CELL_TYPE_ID_OR;
@@ -205,7 +205,7 @@ constexpr uint64_t getCellTypeID(CellSymbol symbol) {
   case OUT:   return CELL_TYPE_ID_OUT;
   case ZERO:  return CELL_TYPE_ID_ZERO;
   case ONE:   return CELL_TYPE_ID_ONE;
-  case NOP:   return CELL_TYPE_ID_NOP;
+  case BUF:   return CELL_TYPE_ID_BUF;
   case NOT:   return CELL_TYPE_ID_NOT;
   case AND:   return CELL_TYPE_ID_AND;
   case OR:    return CELL_TYPE_ID_OR;
@@ -226,7 +226,7 @@ extern const uint32_t CELL_TYPE_SID_IN;
 extern const uint32_t CELL_TYPE_SID_OUT;
 extern const uint32_t CELL_TYPE_SID_ZERO;
 extern const uint32_t CELL_TYPE_SID_ONE;
-extern const uint32_t CELL_TYPE_SID_NOP;
+extern const uint32_t CELL_TYPE_SID_BUF;
 extern const uint32_t CELL_TYPE_SID_NOT;
 extern const uint32_t CELL_TYPE_SID_AND;
 extern const uint32_t CELL_TYPE_SID_OR;
@@ -245,7 +245,7 @@ constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
   case OUT:   return CELL_TYPE_SID_OUT;
   case ZERO:  return CELL_TYPE_SID_ZERO;
   case ONE:   return CELL_TYPE_SID_ONE;
-  case NOP:   return CELL_TYPE_SID_NOP;
+  case BUF:   return CELL_TYPE_SID_BUF;
   case NOT:   return CELL_TYPE_SID_NOT;
   case AND:   return CELL_TYPE_SID_AND;
   case OR:    return CELL_TYPE_SID_OR;

@@ -27,7 +27,7 @@ CELL_TYPE("in",    IN,    0,0,0,0,0,  0,      1);
 CELL_TYPE("out",   OUT,   0,0,0,0,0,  1,      0);
 CELL_TYPE("0",     ZERO,  1,1,0,0,0,  0,      1);
 CELL_TYPE("1",     ONE,   1,1,0,0,0,  0,      1);
-CELL_TYPE("buf",   NOP,   1,0,1,0,0,  1,      1);
+CELL_TYPE("buf",   BUF,   1,0,1,0,0,  1,      1);
 CELL_TYPE("not",   NOT,   1,0,0,0,0,  1,      1);
 CELL_TYPE("and",   AND,   1,0,0,1,1,  0xffff, 1);
 CELL_TYPE("or",    OR,    1,0,0,1,1,  0xffff, 1);

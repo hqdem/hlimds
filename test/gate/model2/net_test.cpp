@@ -23,19 +23,19 @@ TEST(NetTest, SimpleTest) {
 
   std::array<CellID, Breadth> cells[2];
   for (size_t i = 0; i < Breadth; i++) {
-    cells[0][i] = make<IN>();
+    cells[0][i] = makeCell(IN);
   }
 
   size_t k = 0;
   for (size_t i = 0; i < Depth; i++) {
     for (size_t j = 0; j < Breadth; j++) {
-      cells[1 - k][j] = make<AND>(cells[k][j], cells[k][(Breadth - j) - 1]);
+      cells[1 - k][j] = makeCell(AND, cells[k][j], cells[k][(Breadth - j) - 1]);
     }
     k = 1 - k;
   }
 
   for (size_t i = 0; i < Breadth; i++) {
-    make<OUT>(cells[k][i]);
+    makeCell(OUT, cells[k][i]);
   }
 }
 

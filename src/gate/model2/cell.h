@@ -32,7 +32,7 @@ public:
   bool isOut()   const { return typeSID == CELL_TYPE_SID_OUT;   }
   bool isZero()  const { return typeSID == CELL_TYPE_SID_ZERO;  }
   bool isOne()   const { return typeSID == CELL_TYPE_SID_ONE;   }
-  bool isNop()   const { return typeSID == CELL_TYPE_SID_NOP;   }
+  bool isBuf()   const { return typeSID == CELL_TYPE_SID_BUF;   }
   bool isNot()   const { return typeSID == CELL_TYPE_SID_NOT;   }
   bool isAnd()   const { return typeSID == CELL_TYPE_SID_AND;   }
   bool isOr()    const { return typeSID == CELL_TYPE_SID_OR;    }
@@ -78,68 +78,68 @@ inline CellID makeCell(CellTypeID typeID) {
   return allocate<Cell>(typeID);
 }
 
-inline CellID makeCell(CellTypeID typeID, const Cell::LinkList &links) {
+inline CellID makeCell(CellTypeID typeID,
+                       const Cell::LinkList &links) {
   return allocate<Cell>(typeID, links);
 }
 
-template<CellSymbol S>
-CellID make() {
-  return makeCell(getCellTypeID(S));
+inline CellID makeCell(CellSymbol symbol) {
+  return makeCell(getCellTypeID(symbol));
 }
 
-template<CellSymbol S>
-CellID make(const Cell::LinkList &links) {
-  return makeCell(getCellTypeID(S), links);
+inline CellID makeCell(CellSymbol symbol,
+                       const Cell::LinkList &links) {
+  return makeCell(getCellTypeID(symbol), links);
 }
 
-template<CellSymbol S>
-CellID make(Link link) {
-  return make<S>(Cell::LinkList{link});
+inline CellID makeCell(CellSymbol symbol,
+                       Link link) {
+  return makeCell(symbol, Cell::LinkList{link});
 }
 
-template<CellSymbol S>
-CellID make(Link l1, Link l2) {
-  return make<S>(Cell::LinkList{l1, l2});
+inline CellID makeCell(CellSymbol symbol,
+                       Link l1, Link l2) {
+  return makeCell(symbol, Cell::LinkList{l1, l2});
 }
 
-template<CellSymbol S>
-CellID make(Link l1, Link l2, Link l3) {
-  return make<S>(Cell::LinkList{l1, l2, l3});
+inline CellID makeCell(CellSymbol symbol,
+                       Link l1, Link l2, Link l3) {
+  return makeCell(symbol, Cell::LinkList{l1, l2, l3});
 }
 
-template<CellSymbol S>
-CellID make(Link l1, Link l2, Link l3, Link l4) {
-  return make<S>(Cell::LinkList{l1, l2, l3, l4});
+inline CellID makeCell(CellSymbol symbol,
+                       Link l1, Link l2, Link l3, Link l4) {
+  return makeCell(symbol, Cell::LinkList{l1, l2, l3, l4});
 }
 
-template<CellSymbol S>
-CellID make(Link l1, Link l2, Link l3, Link l4, Link l5) {
-  return make<S>(Cell::LinkList{l1, l2, l3, l4, l5});
+inline CellID makeCell(CellSymbol symbol,
+                       Link l1, Link l2, Link l3, Link l4, Link l5) {
+  return makeCell(symbol, Cell::LinkList{l1, l2, l3, l4, l5});
 }
 
-template<CellSymbol S>
-CellID make(CellID cell) {
-  return make<S>(Link(cell));
+inline CellID makeCell(CellSymbol symbol,
+                       CellID cell) {
+  return makeCell(symbol, Link(cell));
 }
 
-template<CellSymbol S>
-CellID make(CellID c1, CellID c2) {
-  return make<S>(Link(c1), Link(c2));
+inline CellID makeCell(CellSymbol symbol,
+                       CellID c1, CellID c2) {
+  return makeCell(symbol, Link(c1), Link(c2));
 }
 
-template<CellSymbol S>
-CellID make(CellID c1, CellID c2, CellID c3) {
-  return make<S>(Link(c1), Link(c2), Link(c3));
+inline CellID makeCell(CellSymbol symbol,
+                       CellID c1, CellID c2, CellID c3) {
+  return makeCell(symbol, Link(c1), Link(c2), Link(c3));
 }
 
-template<CellSymbol S>
-CellID make(CellID c1, CellID c2, CellID c3, CellID c4) {
-  return make<S>(Link(c1), Link(c2), Link(c3), Link(c4));
+inline CellID makeCell(CellSymbol symbol,
+                       CellID c1, CellID c2, CellID c3, CellID c4) {
+  return makeCell(symbol, Link(c1), Link(c2), Link(c3), Link(c4));
 }
 
-template<CellSymbol S>
-CellID make(CellID c1, CellID c2, CellID c3, CellID c4, CellID c5) {
-  return make<S>(Link(c1), Link(c2), Link(c3), Link(c4), Link(c5));
+inline CellID makeCell(CellSymbol symbol,
+                       CellID c1, CellID c2, CellID c3, CellID c4, CellID c5) {
+  return makeCell(symbol, Link(c1), Link(c2), Link(c3), Link(c4), Link(c5));
 }
 
 } // namespace eda::gate::model

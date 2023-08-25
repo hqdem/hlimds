@@ -5,10 +5,6 @@ variables:
   BUILD: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"
 
-default:
-  artifacts:
-    expire_in: 1 min
-
 stages:
   - build
   - test
@@ -29,6 +25,7 @@ build_project:
   artifacts:
     paths:
       - ${BUILD_PATH}
+    expire_in: 10 min
 
 test_project:
   stage: test

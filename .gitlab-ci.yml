@@ -5,6 +5,10 @@ variables:
   BUILD: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"
 
+default:
+  artifacts:
+    expire_in: 1 min
+
 stages:
   - build
   - test
@@ -23,7 +27,6 @@ build_project:
     - cmake --build ${BUILD}
 
   artifacts:
-    expire_in: 8 hrs
     paths:
       - ${BUILD_PATH}
 

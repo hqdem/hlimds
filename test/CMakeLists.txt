@@ -44,6 +44,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/optimization_count_test.cpp
   gate/optimizer/optimizer_util.cpp
   gate/optimizer/resynthesis/akers_test.cpp
+  gate/optimizer/resynthesis/cascade_test.cpp
   gate/optimizer/resynthesis/reed_muller_test.cpp
   gate/optimizer/rwdatabase_test.cpp
   gate/optimizer/substitute_test.cpp

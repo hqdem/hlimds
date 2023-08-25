@@ -94,27 +94,27 @@ CellID make(const Cell::LinkList &links) {
 
 template<CellSymbol S>
 CellID make(Link link) {
-  return make<S>({link});
+  return make<S>(Cell::LinkList{link});
 }
 
 template<CellSymbol S>
 CellID make(Link l1, Link l2) {
-  return make<S>({l1, l2});
+  return make<S>(Cell::LinkList{l1, l2});
 }
 
 template<CellSymbol S>
 CellID make(Link l1, Link l2, Link l3) {
-  return make<S>({l1, l2, l3});
+  return make<S>(Cell::LinkList{l1, l2, l3});
 }
 
 template<CellSymbol S>
 CellID make(Link l1, Link l2, Link l3, Link l4) {
-  return make<S>({l1, l2, l3, l4});
+  return make<S>(Cell::LinkList{l1, l2, l3, l4});
 }
 
 template<CellSymbol S>
 CellID make(Link l1, Link l2, Link l3, Link l4, Link l5) {
-  return make<S>({l1, l2, l3, l4, l5});
+  return make<S>(Cell::LinkList{l1, l2, l3, l4, l5});
 }
 
 template<CellSymbol S>

@@ -39,3 +39,8 @@ test_project:
 
   dependencies:
     - build_project
+
+  artifacts:
+    paths:
+      - ${BUILD_PATH}
+    expire_in: 10 min

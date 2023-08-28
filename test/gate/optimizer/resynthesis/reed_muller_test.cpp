@@ -7,6 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/resynthesis/reed_muller.h"
+#include "util/arith.h"
+
 #include "gtest/gtest.h"
 
 namespace eda::gate::optimizer::resynthesis {
@@ -46,7 +48,7 @@ TEST(ReedMuller, correctTestOnDiffSizes) {
     Polynomial f = r.getTT(t);
     
     for (uint64_t i = 0; i < bits; ++i) {
-      ASSERT_EQ(r.apply(f, r.toBinString(i, sizes[j])),
+      ASSERT_EQ(r.apply(f, eda::utils::toBinString(i, sizes[j])),
                   kitty::get_bit(t, i));
     }
   } 

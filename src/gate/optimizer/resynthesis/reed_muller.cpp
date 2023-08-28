@@ -7,6 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "reed_muller.h"
+#include "util/arith.h"
+
 #include <algorithm>
 
 namespace eda::gate::optimizer::resynthesis {
@@ -42,7 +44,7 @@ uint64_t ReedMuller::apply(const Polynomial &func, const std::string &s) {
   uint64_t size = positionsOfOnes.size();
   uint64_t base = 1 << size;
   for (uint64_t i = 0; i < base; ++i) {
-    std::string str = toBinString(i, size);
+    std::string str = eda::utils::toBinString(i, size);
     int pos = 0;
     for (uint64_t j = 0; j < size; ++j) {
       if (str[j] == '1') {
@@ -74,7 +76,7 @@ Polynomial ReedMuller::charFromFunction(Polynomial &func) {
   Polynomial resultFunction(numBits + 1);
 
   for (uint64_t i = 0; i < numBits; ++i) {
-    resultFunction[i] = apply(func, toBinString(i, numVar));
+    resultFunction[i] = apply(func, eda::utils::toBinString(i, numVar));
   }
 
   resultFunction[resultFunction.size() - 1] = numVar;
@@ -144,25 +146,4 @@ std::vector<int> ReedMuller::popcnt(int a) {
   return res;
 }
 
-std::string ReedMuller::toBinString(int a, uint64_t padding) {
-  std::string res;
-  uint64_t size = 0;
-
-  if (!a) {
-    while (size++ < padding) {
-      res.push_back('0');
-    }
-  } else {
-    while (a != 0) {
-      res.push_back((a % 2) + '0');
-      a /= 2;
-      ++size;
-    }
-    while (size++ < padding) {
-      res.push_back('0');
-    }
-    std::reverse(res.begin(), res.end());
-  }
-  return res;
-}
 } // namespace eda::gate::optimizer::resynthesis

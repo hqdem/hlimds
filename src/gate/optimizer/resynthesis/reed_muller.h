@@ -74,19 +74,6 @@ public:
    */
   uint64_t apply(const Polynomial &func, const std::string &s);
 
-  /** 
-   * Generates binary representation of a number with a padding.
-   *        
-   * Padding is the size of a result vector.
-   *
-   * Sample output: 
-   *
-   * to2(6, 4) = "1100", to2(4, 4) = "0100", to2(6,3) = "110"
-   *
-   * @return binary representation of a given number
-   */
-  std::string toBinString(int a, uint64_t padding);
-
 private:
   /** 
    * Generates the vector, each element is a position of "1" in argument.

@@ -57,6 +57,9 @@ static_assert(sizeof(LinkEnd) == LinkEndID::Size);
 //===----------------------------------------------------------------------===//
 
 struct Link final : public Object<Link, LinkID> {
+  Link(const LinkEnd &source, const LinkEnd &target):
+      source(source), target(target) {}
+
   LinkEnd source;
   LinkEnd target;
 };

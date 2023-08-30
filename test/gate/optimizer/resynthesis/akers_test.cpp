@@ -16,6 +16,7 @@
 #include <mockturtle/networks/mig.hpp>
 #include <mockturtle/algorithms/akers_synthesis.hpp>
 
+#include <random>
 #include <string>
 #include <time.h>
 
@@ -79,6 +80,8 @@ TEST(Akers62, Example1) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
+  std::cout << *bGNet.net;
+
   EXPECT_TRUE(equal);
 }
 
@@ -102,6 +105,8 @@ TEST(Akers62, Example2) {
   TruthTable gNetTT = TruthTable::build(bGNet);
 
   bool equal = areEqualTT(func, care, gNetTT);
+
+  std::cout << *bGNet.net;
 
   EXPECT_TRUE(equal);
 }
@@ -129,7 +134,7 @@ TEST(AkersTest, NOT1) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
-  EXPECT_TRUE(equal);
+  EXPECT_TRUE(equal && (alg.nMaj == 0));
 }
 
 TEST(AkersTest, One3) {
@@ -151,7 +156,7 @@ TEST(AkersTest, One3) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
-  EXPECT_TRUE(equal);
+  EXPECT_TRUE(equal && (alg.nMaj == 0));
 }
 
 TEST(AkersTest, Zero3) {
@@ -173,7 +178,7 @@ TEST(AkersTest, Zero3) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
-  EXPECT_TRUE(equal);
+  EXPECT_TRUE(equal && (alg.nMaj == 0));
 }
 
 TEST(AkersTest, OR2) {
@@ -195,7 +200,7 @@ TEST(AkersTest, OR2) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
-  EXPECT_TRUE(equal);
+  EXPECT_TRUE(equal && (alg.nMaj == 1));
 }
 
 TEST(AkersTest, AND2) {
@@ -217,7 +222,7 @@ TEST(AkersTest, AND2) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
-  EXPECT_TRUE(equal);
+  EXPECT_TRUE(equal && (alg.nMaj == 1));
 }
 
 TEST(AkersTest, XOR2) {
@@ -239,7 +244,52 @@ TEST(AkersTest, XOR2) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
-  EXPECT_TRUE(equal);
+  EXPECT_TRUE(equal && (alg.nMaj == 3));
+}
+
+TEST(AkersTest, XOR3) {
+  // Gate XOR(x, y, z).
+  KittyTT func(3);
+  KittyTT care(3);
+  initializeTT(func, care, "01101001", "11111111");
+
+  Gate::SignalList inputs;
+  Gate::Id outputId;
+  BGNet bGNet;
+
+  AkersAlgorithm alg(func, care);
+  bGNet.net = alg.run(inputs, outputId);
+  bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node()};
+  bGNet.outputBindings = {outputId};
+
+  TruthTable gNetTT = TruthTable::build(bGNet);
+
+  bool equal = areEqualTT(func, care, gNetTT);
+
+  EXPECT_TRUE(equal && (alg.nMaj == 3));
+}
+
+TEST(AkersTest, XOR4) {
+  // Gate XOR(x, y, z, v).
+  KittyTT func(4);
+  KittyTT care(4);
+  initializeTT(func, care, "0110100110010110", "1111111111111111");
+
+  Gate::SignalList inputs;
+  Gate::Id outputId;
+  BGNet bGNet;
+
+  AkersAlgorithm alg(func, care);
+  bGNet.net = alg.run(inputs, outputId);
+  bGNet.inputBindings = {inputs[0].node(), inputs[1].node(),
+                         inputs[2].node(), inputs[3].node()};
+  bGNet.outputBindings = {outputId};
+
+  TruthTable gNetTT = TruthTable::build(bGNet);
+
+  bool equal = areEqualTT(func, care, gNetTT);
+
+  EXPECT_TRUE(equal && (alg.nMaj <= 11));
 }
 
 //===----------------------------------------------------------------------===//
@@ -265,11 +315,11 @@ TEST(AkersTest, MAJ3) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
-  EXPECT_TRUE(equal);
+  EXPECT_TRUE(equal && (alg.nMaj == 1));
 }
 
 TEST(AkersTest, MAJ5) {
-  // Gate MAJ(x, y, z).
+  // Gate MAJ(x, y, z, u, v).
   KittyTT func(5);
   KittyTT care(5);
   initializeTT(func, care, "11111110111010001110100010000000",
@@ -289,7 +339,7 @@ TEST(AkersTest, MAJ5) {
 
   bool equal = areEqualTT(func, care, gNetTT);
 
-  EXPECT_TRUE(equal);
+  EXPECT_TRUE(equal && (alg.nMaj == 4));
 }
 
 //===----------------------------------------------------------------------===//
@@ -297,7 +347,7 @@ TEST(AkersTest, MAJ5) {
 //===----------------------------------------------------------------------===//
 
 TEST(AkersTest, RandomFunc5) {
-  // Random gate RAND(x, y, z, t, u).
+  // Random gate RAND(x, y, z, u, v).
   // Without random care.
   KittyTT func(5);
   KittyTT care(5);
@@ -391,7 +441,7 @@ TEST(AkersTest, CompetitionWithMockturtle) {
   clock_t start = clock();
   MIGnetwork mockAkers = mockturtle::akers_synthesis<MIGnetwork>(func, care);
   clock_t end = clock();
-  double mockturtleTime = (double)(end - start);
+  double mockturtleTime = (double)(end - start)/CLOCKS_PER_SEC * 1000;
 
   Gate::SignalList inputs;
   Gate::Id outputId;
@@ -399,10 +449,10 @@ TEST(AkersTest, CompetitionWithMockturtle) {
   AkersAlgorithm alg(func, care);
   auto net = alg.run(inputs, outputId);
   end = clock();
-  double ispTime = (double)(end - start);
+  double currentImplTime = (double)(end - start)/CLOCKS_PER_SEC * 1000;
 
-  std::cout << "Time of mockturtle algorithm: " << mockturtleTime << "\n";
-  std::cout << "Time of ISP RAS algorithm: " << ispTime << "\n";
+  std::cout << "Time of mockturtle algorithm: " << mockturtleTime << " ms\n";
+  std::cout << "Time of current implementation: " << currentImplTime << " ms\n";
 
-  EXPECT_TRUE(ispTime <= mockturtleTime);
+  EXPECT_TRUE(currentImplTime <= mockturtleTime);
 }

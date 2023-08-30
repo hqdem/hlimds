@@ -10,6 +10,7 @@
 
 #include <map>
 #include <memory>
+#include <utility>
 
 #include "gate/model/gnet.h"
 #include "gate/optimizer/resynthesis/unitized_table.h"
@@ -20,7 +21,7 @@ namespace eda::gate::optimizer::resynthesis {
  * \brief Implements an Akers method of resynthesis.
  * 
  * The algorithm based on the article "Synthesis of combinational logic using
- *  three-input majority gates" by Sheldon B. Akers, Jr. (1962).
+ * three-input majority gates" by Sheldon B. Akers, Jr. (1962).
 */
 class AkersAlgorithm {
 
@@ -29,13 +30,16 @@ public:
   //===--------------------------------------------------------------------===//
   // Types
   //===--------------------------------------------------------------------===//
-  
+
   using Arguments = std::set<unsigned>;
   using ArgumentsSet = std::set<Arguments>;
   using CanditateList = std::map<std::set<unsigned>, std::vector<unsigned>>;
   using ColumnsToRemove = std::vector<unsigned>;
+  using EssentialEdge = std::unordered_map<unsigned,
+      std::vector<std::pair<uint32_t, uint32_t>>>;
   using Gate = eda::gate::model::Gate;
   using GNet = eda::gate::model::GNet;
+  using RowNums = std::unordered_set<uint32_t>;
   using SignalList = Gate::SignalList;
   using TruthTable = kitty::dynamic_truth_table;
 
@@ -50,12 +54,16 @@ public:
   // Convenience Methods
   //===--------------------------------------------------------------------===//
 
-  /** Launch the Akers algorithm.
-   *  @param inputs For writing signals of gates In().
-   *  @param outputId For writing Id of gate Out().
-   *  @return Shared pointer of GNet.
+  /**
+   * Launch the Akers algorithm.
+   * @param inputs For writing signals of gates In().
+   * @param outputId For writing Id of gate Out().
+   * @return Shared pointer of GNet.
    */
   std::shared_ptr<GNet> run(SignalList &inputs, Gate::Id &outputId);
+
+  /// The number of MAJ(x, y, z) gates in the GNet.
+  uint64_t nMaj = 0;
 
 private:
 
@@ -66,9 +74,10 @@ private:
   /// Adds a majority gate.
   void addMajGate(const Arguments &gate);
 
-  /** Finds the best set of arguments for a majority gate.
-   *  @param columnsToRemove For writing numbers of columns that may be removed.
-   *  @return Set of arguments for MAJ that may remove columnsToRemove.
+  /**
+   * Finds the best set of arguments for a majority gate.
+   * @param columnsToRemove For writing numbers of columns that may be removed.
+   * @return Set of arguments for MAJ that may remove columnsToRemove.
    */
   Arguments findBestGate(ColumnsToRemove &columnsToRemove);
 
@@ -87,28 +96,44 @@ private:
                          const ColumnsToRemove &forRemoval,
                          ColumnsToRemove &columnsToRemove);
 
-  /** Finds sets of arguments for a majority gate
-   *  that lead to removal of the particular column.
-   *  @param essentialRows Numbers of essential rows in the column for removing.
-   *  @param index The number of the column for removing.
-   *  @return Set of sets of possible arguments.
+  /**
+   * Finds sets of arguments for a majority gate
+   * that lead to removal of the particular column.
+   * @param essentialRows Numbers of "essential" rows in the column for erasing.
+   * @param index The number of the column for removing.
+   * @return Set of sets of possible arguments.
    */
-  ArgumentsSet findGatesForColumnRemoval
-    (const std::set<uint32_t> &essentialRows, unsigned index);
+  ArgumentsSet findGatesForColumnRemoval(const RowNums &essentialRows, 
+                                         unsigned index);
 
-  /** Finds set of arguments for a majority gate
+  /**
+   * Finds set of arguments for a majority gate
    * that leads to the best decrease of the number of "essential" ones.
    */
   Arguments findEliminatingOnesGate();
 
-  /** Checks whether it is possible to remove rows after adding MAJ(args).
-   *  @param args Arguments for a MAJ gate.
-   *  @param colsToRemove Numbers of columns for removing after adding MAJ.
-   *  @return Whether this removal leads to a deletion of rows.
+  /**
+   * Checks whether it is possible to remove rows after adding MAJ(args).
+   * @param args Arguments for a MAJ gate.
+   * @param colsToRemove Numbers of columns for removing after adding MAJ.
+   * @return Whether this removal leads to a deletion of rows.
    */
   bool mayDeleteRows(const Arguments &args,
                      const ColumnsToRemove &colsToRemove);
 
+  /**
+   * Counts number of "essential" ones
+   * that will lose this property after adding MAJ(c1, c2, c3).
+   */
+  uint64_t countRemovedOnes(unsigned c1, unsigned c2, unsigned c3);
+
+  /// Increments the counter of essential ones that may be eliminated.
+  void incCounter(uint64_t &counter, RowNums &toRemove, uint32_t rowNum);
+
+  /// Decrements the counter of essential ones that may be eliminated.
+  void decCounter(uint64_t &counter, RowNums &cantRemove,
+                  RowNums &toRemove, uint32_t rowNum);
+  
   //===--------------------------------------------------------------------===//
   // Internal Fields
   //===--------------------------------------------------------------------===//
@@ -128,8 +153,11 @@ private:
   /// Counts how many times in a row findEliminatingOnesGate() was called.
   unsigned nCallElimFunc = 0;
 
-  /// The number of columns before the launching 
-  /// findEssentialOnesEliminatingGate().
+  /// A columns number before launching a function for reducing essential ones.
   unsigned nInnerColumns = 0;
+
+  /// Pairs of graph nodes or pairs of "essential" positions of ones.
+  EssentialEdge pairEssentialRows;
 };
+
 } // namespace eda::gate::optimizer::resynthesis

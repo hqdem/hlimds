@@ -5,7 +5,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
+/*
 #include "gate/tech_optimizer/tech_optimizer.h"
 #include "gate/tech_mapper/strategy/strategy.h"
 
@@ -66,3 +66,4 @@ void tech_optimize(GNet *net, uint approachSelector) { // TODO: approach selecto
   // Final checks
   // TODO: checking for functional equivalence
 }
+*/

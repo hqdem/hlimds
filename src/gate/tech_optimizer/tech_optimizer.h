@@ -5,7 +5,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
+/*
 #pragma once
 
 #include "gate/model/gnet.h"
@@ -18,3 +18,4 @@ namespace eda::gate::tech_optimizer {
   void read_db(std::string dbPath);
   void tech_optimize(GNet *net);
 } // namespace eda::gate::tech_optimizer
+*/

@@ -13,6 +13,7 @@
 #include <cassert>
 #include <set>
 #include <string>
+#include <strings.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -41,6 +42,8 @@ public:
   // Types
   //===--------------------------------------------------------------------===//
 
+  using Column = std::pair<unsigned, uint32_t>;
+  using Columns = std::vector<Column>;
   using TruthTable = kitty::dynamic_truth_table;
 
   //===--------------------------------------------------------------------===//
@@ -67,7 +70,7 @@ public:
   }
 
   /// Returns the row.
-  uint32_t getRow(uint32_t rowNum) const {
+  uint64_t getRow(uint32_t rowNum) const {
     return table[rowNum];
   }
 
@@ -83,11 +86,8 @@ public:
 
   /// Returns the column id.
   unsigned idColumn(unsigned index) const {
-    return columns[index];
+    return columns[index].first;
   }
-
-  /// Counts "essential" ones in the table.
-  uint64_t countEssentialOnes() const;
   
   //===--------------------------------------------------------------------===//
   // Modification Methods
@@ -124,11 +124,17 @@ private:
   /// Checks whether row has only one bit.
   bool isDegreeOfTwo(uint64_t row, unsigned &degree) const;
 
+  /// Updates the number of ones in columns after a deletion 'row'.
+  void deleteRow(uint32_t row);
+
   /// Reduces the number of rows if it possible.
   bool reduceRows();
 
   /// Reduces the number of columns if it possible.
-  bool reduceColumns(unsigned saveColumn = 64);
+  bool reduceColumns();
+
+  /// Shows whether we must check if ones are "essential".
+  bool mustCheck(bool wasReduced, uint32_t rowNum, unsigned removedColumn);
 
   //===--------------------------------------------------------------------===//
   // Internal Fields
@@ -138,7 +144,7 @@ private:
   std::vector<uint64_t> table;
 
   /// Identifiers of columns.
-  std::vector<unsigned> columns;
+  Columns columns;
 
   /// Number of majority functions that were added to the table.
   uint32_t nMajGates;

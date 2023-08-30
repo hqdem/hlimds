@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "gate/optimizer/resynthesis/akers.h"
 
 namespace eda::gate::optimizer::resynthesis {
@@ -69,6 +77,7 @@ std::shared_ptr<GNet> AkersAlgorithm::run(SignalList &inputs,
       signals.push_back(Gate::Signal::always(inputId));
     }
   }
+  nMaj =  table.nMajGates;
   outputId = net->addOut(signals.back());
   net->sortTopologically();
   return net;
@@ -129,27 +138,28 @@ Arguments AkersAlgorithm::findBestGate(ColumnsToRemove &columnsToRemove) {
   size_t nRows = table.nRows();
   unsigned degree;
 
-  // unsigned is a number of column with essential one
-  // std::set is a set of numbers of rows with essential one
-  std::unordered_map<unsigned, std::set<uint32_t>> essentialOnes;
-  // Filling map of columns and their essential rows.
+  // map of columns and their essential ones.
+  std::unordered_map<unsigned, RowNums> essentialOnes;
+  pairEssentialRows.clear();
+  // Filling maps.
   for (uint32_t i = 0; i < nRows; ++i) {
     for (uint32_t j = i + 1; j < nRows; ++j) {
       if (table.isDegreeOfTwo(table.getRow(i) & table.getRow(j), degree)) {
         essentialOnes[degree].insert(i);
         essentialOnes[degree].insert(j);
+        pairEssentialRows[degree].push_back(std::make_pair(i, j));
       }
     }
   }
   // Selection of candidates (possible gates for the table).
-  for (uint32_t i = 0; i < table.nColumns(); ++i) {
+  size_t nCols = nCallElimFunc ? nInnerColumns : table.nColumns();
+  for (uint32_t i = 0; i < nCols; ++i) {
     for (const auto &gate : findGatesForColumnRemoval(essentialOnes[i], i)) {
-      assert(gate.size() == 3 && "Invalid number of inputs for a MAJ gate!");
       gates[gate].push_back(i);
     }
   }
 
-  if ((gates.empty())) {
+  if (gates.empty()) {
     return findEliminatingOnesGate();
   }
   // Try to select more suitable set of arguments.
@@ -241,7 +251,7 @@ Arguments AkersAlgorithm::findEliminatingNColsGate(CanditateList &gates,
   if (otherGates.empty()) {
     return findEliminatingOnesGate();
   }
-  
+
   if (n == 3) {
     return findEliminatingNColsGate(otherGates, columnsToRemove, 2);
   }
@@ -261,7 +271,7 @@ Arguments AkersAlgorithm::setWhatFound(const Arguments &args,
 }
 
 ArgumentsSet AkersAlgorithm::findGatesForColumnRemoval
-  (const std::set<uint32_t> &essentialRows, unsigned index) {
+  (const RowNums &essentialRows, unsigned index) {
 
   ArgumentsSet argsSet;
 
@@ -273,8 +283,8 @@ ArgumentsSet AkersAlgorithm::findGatesForColumnRemoval
     }
     for (unsigned j = i + 1; j < columnsSize; j++) {
       if ((index == j) ||
-         (table.areInverse(index, j)) ||
-         (table.areInverse(j, i))) {
+          (table.areInverse(index, j)) ||
+          (table.areInverse(i, j))) {
         continue;
       }
       bool wasFound = true;
@@ -296,17 +306,74 @@ ArgumentsSet AkersAlgorithm::findGatesForColumnRemoval
   return argsSet;
 }
 
+uint64_t AkersAlgorithm::countRemovedOnes(unsigned c1,
+                                          unsigned c2,
+                                          unsigned c3) {
+
+  uint64_t counter = 0;
+  std::vector<unsigned> args = {c1, c2, c3};
+
+  for (unsigned i = 0; i < 3; ++i) {
+    unsigned essArg = args[i];
+    unsigned arg1 = args[(i + 1) % 3];
+    unsigned arg2 = args[(i + 2) % 3];
+    RowNums deletedOnes;
+    RowNums cannotDelete;
+    for (const auto &p : pairEssentialRows[essArg]) {
+      bool bit1 = table.getBit(p.first, arg1) || table.getBit(p.first, arg2);
+      bool bit2 = table.getBit(p.second, arg1) || table.getBit(p.second, arg2);
+      if (bit1 && bit2) {
+        if (cannotDelete.find(p.first) == cannotDelete.end()) {
+          incCounter(counter, deletedOnes, p.first);
+        }
+        if (cannotDelete.find(p.second) == cannotDelete.end()) {
+          incCounter(counter, deletedOnes, p.second);
+        }
+      } else {
+        if (cannotDelete.find(p.first) == cannotDelete.end()) {
+          decCounter(counter, cannotDelete, deletedOnes, p.first);
+        }
+        if (cannotDelete.find(p.second) == cannotDelete.end()) {
+          decCounter(counter, cannotDelete, deletedOnes, p.second);
+        }
+      }
+    }
+  }
+  return counter;
+}
+
+void AkersAlgorithm::incCounter(uint64_t &counter,
+                                RowNums &toRemove,
+                                uint32_t rowNum) {
+
+  auto pair = toRemove.insert(rowNum);
+  if (pair.second) {
+    counter++;
+  }
+}
+
+void AkersAlgorithm::decCounter(uint64_t &counter, RowNums &cantRemove,
+                                RowNums &toRemove, uint32_t rowNum) {
+
+  cantRemove.insert(rowNum);
+  size_t flag = toRemove.erase(rowNum);
+  if (flag) {
+    counter--;
+  }
+}
+
 Arguments AkersAlgorithm::findEliminatingOnesGate() {
   if (!nCallElimFunc) {
     nInnerColumns = table.nColumns();
   }
   nCallElimFunc++;
 
-  uint64_t counter = -1;
+  uint64_t counter = 0;
+  uint64_t interCounter = 0;
   Arguments args;
   uint64_t columnsSize = table.nColumns();
 
-  for (unsigned i = 0; i < columnsSize; i++) {
+  for (unsigned i = 0; i < nInnerColumns; i++) {
     for (unsigned j = i + 1; j < columnsSize; j++) {
       if (table.areInverse(i, j)) {
         continue;
@@ -315,25 +382,23 @@ Arguments AkersAlgorithm::findEliminatingOnesGate() {
         if ((table.areInverse(i, k)) || (table.areInverse(j, k))) {
           continue;
         }
-        Arguments tmpArgs = {i, j, k};
-        table.addMajColumn(tmpArgs);
-        uint64_t onesCount = table.countEssentialOnes();
-        if (onesCount < counter) {
-          args = tmpArgs;
-          counter = onesCount;
+        interCounter = countRemovedOnes(i, j, k);
+        if (interCounter > counter) {
+          counter = interCounter;
+          args = {i, j, k};
         }
-        table.eraseCol(columnsSize);
-        table.nMajGates--;
       }
     }
   }
 
+  if (args.empty()) {
+    args = {nCallElimFunc - 1, nCallElimFunc, nCallElimFunc + 1};
+  }
   return args;
 }
 
 bool AkersAlgorithm::mayDeleteRows(const Arguments &args,
                                    const ColumnsToRemove &colsToErase) {
-
   table.addMajColumn(args);
 
   uint64_t mask = -1;
@@ -356,7 +421,6 @@ bool AkersAlgorithm::mayDeleteRows(const Arguments &args,
       }
     }
   }
-
   table.eraseCol(columnsSize - 1);
   table.nMajGates--;
   return false;

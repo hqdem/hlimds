@@ -17,8 +17,9 @@ namespace eda::gate::optimizer {
     Walker depthFindWalker(net, &depthFindVisitor);
     depthFindWalker.walk(true);
 
-    AssociativeBalanceVisitor balanceVisitor(net, gateDepth);
+    AssocBalanceVisitor balanceVisitor(net, gateDepth);
     Walker walker(net, &balanceVisitor);
+
     walker.walk(true);
     balancesNumber = balanceVisitor.getBalancesNumber();
   }

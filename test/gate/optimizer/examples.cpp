@@ -209,7 +209,7 @@ namespace eda::gate::optimizer {
     return g;
   }
 
-  /* Three has AND and NOT opertations.                     */
+  /* Net has AND and NOT opertations.                     */
   /* Balacing net once in left subnet of upper AND gate,    */
   /* once in right subnet of upper AND gate, then balancing */
   /* once on upper gate.                                    */
@@ -231,7 +231,7 @@ namespace eda::gate::optimizer {
     return g;
   }
 
-  /* Three has AND, OR and NOT opertations.            */
+  /* Net has AND, OR and NOT opertations.            */
   /* Same GNet as previous one, but operations are not */
   /* associative between each other.                   */
   std::vector<GateId> unbalancableANDOR(GNet &gNet) {
@@ -318,6 +318,170 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {5, 3}));
     g.push_back(createLink(gNet, g, {6}, model::GateSymbol::OUT));
     g.push_back(createLink(gNet, g, {5}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /* Net has AND operations. And gates with arity 3. */
+  std::vector<GateId> balanceArity3(GNet &gNet) {
+    std::vector<GateId> g(6);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {1, 2}));
+    g.push_back(createLink(gNet, g, {6, 3, 4}));
+    g.push_back(createLink(gNet, g, {0, 7, 5}));
+    g.push_back(createLink(gNet, g, {8}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /* Net has AND and OR operations. And gates with arity 4. */
+  std::vector<GateId> balanceArity4(GNet &gNet) {
+    std::vector<GateId> g(8);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {2, 3}, model::GateSymbol::OR));
+    g.push_back(createLink(gNet, g, {8, 4, 5, 6}));
+    g.push_back(createLink(gNet, g, {0, 1, 9, 7}));
+    g.push_back(createLink(gNet, g, {10}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /* Net has AND and OR operations. And gates with arity 4. */
+  /* It is impossible to reduce depth if operations */
+  /* are not commutative. */
+  std::vector<GateId> balanceArity4_2(GNet &gNet) {
+    std::vector<GateId> g(10);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {2, 3}, model::GateSymbol::OR));
+    g.push_back(createLink(gNet, g, {10, 4, 5, 6}));
+    g.push_back(createLink(gNet, g, {8, 9}));
+    g.push_back(createLink(gNet, g, {7, 12}));
+    g.push_back(createLink(gNet, g, {0, 1, 11, 13}));
+    g.push_back(createLink(gNet, g, {14}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /* Net has AND operations. And gates with arity 3 and 4.     */
+  /* For not commutative operations test checks possibility to */
+  /* move operations left and right.                           */
+  std::vector<GateId> balanceArity4LR(GNet &gNet) {
+    std::vector<GateId> g(10);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {3, 4}));
+    g.push_back(createLink(gNet, g, {5, 6}));
+    g.push_back(createLink(gNet, g, {1, 2, 10}));
+    g.push_back(createLink(gNet, g, {11, 7, 8}));;
+    g.push_back(createLink(gNet, g, {0, 12, 13, 9}));
+    g.push_back(createLink(gNet, g, {14}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /*    ┌─┐                       */
+  /* in0└─┘─┐                     */
+  /*    ┌─┐ └┌─┐and5              */
+  /* in1└─┘──└─┘──┐               */
+  /*       _______├─┐maj6         */
+  /*      |  ┌─┐┌─└─┘┐            */
+  /*    ┌─┤  └─┘┘in3 | maj7       */
+  /* in2└─┘────────┐ |_┌─┐   out8 */
+  /*    ┌─┐        └───| |   ┌─┐  */
+  /* in4└─┘────────────└─┘───└─┘  */
+  /*                              */
+  std::vector<GateId> balanceMajLeft(GNet &gNet) {
+    std::vector<GateId> g(5);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {0, 1}));
+    g.push_back(createLink(gNet, g, {5, 2, 3}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {6, 2, 4}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {7}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /* Same GNet as "balanceMajLeft", but lower maj function  */
+  /* is third input of upper one. And deeper input of lower */
+  /* maj is also third.                                     */
+  std::vector<GateId> balanceMajRight(GNet &gNet) {
+    std::vector<GateId> g(5);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {3, 4}));
+    g.push_back(createLink(gNet, g, {1, 2, 5}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {0, 2, 6}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {7}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /*                ┌─┐in0          */
+  /*                └─┴──┐          */
+  /*             in1┌─┐  |          */
+  /*       in2┌─┐   └─┴┐ |maj8 out9 */
+  /*          └─┴────┐ └┬┴┐   ┌─┐   */
+  /*       in3┌─┬──┐ | ┌┴─┘───└─┘   */
+  /* in4┌─┐   └─┘  └┬┴┐|            */
+  /*    └─┘───┌─┬───└─┘┘maj7        */
+  /*    ┌─┐───└─┘and6               */
+  /* in5└─┘                         */
+  std::vector<GateId> balanceMajUnbalancable(GNet &gNet) {
+    std::vector<GateId> g(6);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {4, 5}));
+    g.push_back(createLink(gNet, g, {2, 3, 6}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {0, 1, 7}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {8}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /* First and third inputs of uppder maj gate are maj */
+  /* gates. Third input has greater depth. Test checks */
+  /* choise between two lower maj gates.               */
+  std::vector<GateId> balanceMaj2Variants(GNet &gNet) {
+    std::vector<GateId> g(6);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {0, 2, 1}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {5}, model::GateSymbol::NOT));
+    g.push_back(createLink(gNet, g, {4, 7}));
+    g.push_back(createLink(gNet, g, {3, 2, 8}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {6, 2, 9}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {10}, model::GateSymbol::OUT));
+    return g;
+  }
+
+  /*                     ┌─┐in0           */
+  /*                     └─┴──┐           */
+  /*         ┌──────────────┐ |           */
+  /* in3     |  in1┌─┐      | |maj9 out10 */
+  /*   ┌─────┘     └─┴────┐ └┬┴┐   ┌─┐    */
+  /* ┌─┼────────────────┐ | ┌┴─┘───└─┘    */
+  /* └─┤  in2┌─┐        └┬┴┐|             */
+  /*   |     └─┘───┌─┬───└─┘┘maj7         */
+  /*   └───────────┤─┘maj6                */
+  /*               |                      */
+  /* in4┌─┐──┬─┐───┘                      */
+  /*    └─┘  └─┤and6                      */
+  /*    ┌─┐────┘                          */
+  /* in5└─┘                               */
+  std::vector<GateId> balanceMajTwice(GNet &gNet) {
+    std::vector<GateId> g(6);
+    for (GateId &el: g) {
+      el = gNet.newGate();
+    }
+    g.push_back(createLink(gNet, g, {4, 5}, model::GateSymbol::AND));
+    g.push_back(createLink(gNet, g, {2, 3, 6}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {1, 3, 7}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {0, 3, 8}, model::GateSymbol::MAJ));
+    g.push_back(createLink(gNet, g, {9}, model::GateSymbol::OUT));
     return g;
   }
 

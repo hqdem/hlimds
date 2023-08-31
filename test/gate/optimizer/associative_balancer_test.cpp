@@ -6,6 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+//#define CHECKEQUAL
+
+#include "gate/debugger/bdd_checker.h"
 #include "gate/model/utils.h"
 #include "gate/optimizer/examples.h"
 #include "gate/optimizer/optimizer_util.h"
@@ -17,6 +20,7 @@
 #include "gtest/gtest.h"
 
 namespace eda::gate::optimizer {
+  using BddChecker = eda::gate::debugger::BddChecker;
 
   std::string graphsFolder = "associative_balance/";
   std::string unbalancedGraphsFolder = graphsFolder + "unbalanced/";
@@ -25,6 +29,11 @@ namespace eda::gate::optimizer {
   std::string testDataPath = "test/data/";
   std::string rilTestPath = testDataPath + "ril/ril_arithmetic_tests/";
   std::string verilogTestPath = testDataPath + "gate/optimizer/verilog/";
+
+  bool areEquivalent(GNet *unbalancedNet , GNet *balancedNet, GateIdMap oldToNew) {
+    BddChecker checker;
+    return checker.equivalent(*balancedNet, *unbalancedNet, oldToNew).equal();
+  }
 
   void printBalancingInfo(GNet *net,
                           const std::string &graphFileName,
@@ -37,6 +46,12 @@ namespace eda::gate::optimizer {
 
     Dot dot(net);
     dot.print(createOutPath(unbalancedGraphsFolder).c_str() + graphFileName);
+
+#ifdef CHECKEQUAL
+    GateIdMap oldToNew;
+    GNet *unbalancedNet = net->clone(oldToNew);
+#endif
+
     AssociativeBalancer balancer(net);
 
     std::clock_t startBalance = clock();
@@ -44,6 +59,10 @@ namespace eda::gate::optimizer {
     balancer.balance();
 
     clock_t endBalance = clock();
+
+#ifdef CHECKEQUAL
+    EXPECT_TRUE(areEquivalent(unbalancedNet, net, oldToNew));
+#endif
 
     std::cout << "Net depth after balancing: " << getNetDepth(*net) << std::endl;
     std::cout << "Balances number: " << balancer.getBalancesNumber() << std::endl;
@@ -131,12 +150,48 @@ namespace eda::gate::optimizer {
     testBalancer(balanceSeveralOut, "balanceSeveralOut.dot", 4, 4);
   }
 
+  TEST(AssociativeBalanceTest, balanceArity3) {
+    testBalancer(balanceArity3, "balanceArity3.dot", 4, 3);
+  }
+
+  TEST(AssociativeBalanceTest, balanceArity4) {
+    testBalancer(balanceArity4, "balanceArity4.dot", 4, 3);
+  }
+
+  TEST(AssociativeBalanceTest, balanceArity4_2) {
+    testBalancer(balanceArity4_2, "balanceArity4_2.dot", 4, 3);
+  }
+
+  TEST(AssociativeBalanceTest, balanceArity4LR) {
+    testBalancer(balanceArity4LR, "balanceArity4LR.dot", 4, 3);
+  }
+
   TEST(AssociativeBalanceTest, gnet1) {
     testBalancer(gnet1, "gnet1.dot", 4, 3);
   }
 
   TEST(AssociativeBalanceTest, oneInOneOut) {
     testBalancer(oneInOneOut, "oneInOneOut.dot", 1, 1);
+  }
+
+  TEST(AssociativeBalanceTest, balanceMajLeft) {
+    testBalancer(balanceMajLeft, "balanceMajLeft.dot", 4, 3);
+  }
+
+  TEST(AssociativeBalanceTest, balanceMajRight) {
+    testBalancer(balanceMajRight, "balanceMajRight.dot", 4, 3);
+  }
+
+  TEST(AssociativeBalanceTest, balanceMajUnbalancable) {
+    testBalancer(balanceMajUnbalancable, "balanceMajUnbalancable.dot", 4, 4);
+  }
+
+  TEST(AssociativeBalanceTest, balanceMaj2Variants) {
+    testBalancer(balanceMaj2Variants, "balanceMaj2Variants.dot", 5, 4);
+  }
+
+  TEST(AssociativeBalanceTest, balanceMajTwice) {
+    testBalancer(balanceMajTwice, "balanceMajTwice.dot", 5, 4);
   }
 
   TEST(AssociativeBalanceTest, addSmallRIL) {
@@ -252,7 +307,7 @@ namespace eda::gate::optimizer {
   }
 
   TEST(AssociativeBalanceTest, sinVerilog) {
-    testBalancerOnFile("sin.v", "sinVerilog.dot", true, 337, 315);
+    testBalancerOnFile("sin.v", "sinVerilog.dot", true, 337, 314);
   }
 
   TEST(AssociativeBalanceTest, sqrtVerilog) {

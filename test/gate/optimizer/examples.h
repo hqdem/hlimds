@@ -58,5 +58,22 @@ namespace eda::gate::optimizer {
 
   std::vector<GateId> balanceSeveralOut(GNet &gNet);
 
-} // namespace eda::gate::optimizer
+  std::vector<GateId> balanceArity3(GNet &gNet);
 
+  std::vector<GateId> balanceArity4(GNet &gNet);
+
+  std::vector<GateId> balanceArity4_2(GNet &gNet);
+
+  std::vector<GateId> balanceArity4LR(GNet &gNet);
+
+  std::vector<GateId> balanceMajLeft(GNet &gNet);
+
+  std::vector<GateId> balanceMajRight(GNet &gNet);
+
+  std::vector<GateId> balanceMajUnbalancable(GNet &gNet);
+
+  std::vector<GateId> balanceMaj2Variants(GNet &gNet);
+
+  std::vector<GateId> balanceMajTwice(GNet &gNet);
+
+} // namespace eda::gate::optimizer

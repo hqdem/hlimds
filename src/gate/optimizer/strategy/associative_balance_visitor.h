@@ -10,19 +10,20 @@
 
 #include "gate/optimizer/depth_find_visitor.h"
 
+#include <map>
+
 namespace eda::gate::optimizer {
 
  /**
   * \brief Visitor class to balance associative operations in the given net.
   */
-  class AssociativeBalanceVisitor : public Visitor {
+  class AssocBalanceVisitor : public Visitor {
     friend class AssociativeBalancer;
   public:
     using Gate = model::Gate;
-    using GateSymbol = model::GateSymbol;
     using GateDMap = DepthFindVisitor::GateDMap;
 
-    AssociativeBalanceVisitor(GNet *, GateDMap &);
+    AssocBalanceVisitor(GNet *, GateDMap &);
 
     VisitorFlags onNodeBegin(const GateId &) override;
 
@@ -35,27 +36,55 @@ namespace eda::gate::optimizer {
 
     void updateDepth(const GateId &);
 
-    bool associative(const GateId &, const GateId &) const;
+    /* Starts balancing operations on the gate. */
+    int balanceOnGate(const GateId &);
 
-    bool commutative(const GateId &, const GateId &) const;
+    /* Moves associative operation to the left/right, */
+    /* depending on what type of iterator is provided */
+    /* (reverse_iterator or iterator).                */
+    template<typename Iter>
+    void moveOp(const GateId &, const Iter, const Iter, const Iter, const Iter,
+                const Iter);
 
-    GateId getDeeperInput(const GateId &) const;
+    /* Moves associative operation to the left/right,   */
+    /* depending on what type of iterator is provided,  */
+    /* while the depth of upper gate is not increasing. */
+    template<typename Iter>
+    void moveOpToLim(const GateId &, Iter, const Iter, const Iter, const Iter,
+                     const Iter);
 
-    // 1. f1(f2(x, y), z) -> f1(x, f2(y, z))
-    // 2. f1(x, f2(y, z)) -> f1(f2(x, y), z)
-    bool canReorderOperations(const GateId &) const;
+    /* Checks if it is possible to balance operations */
+    /* using associativity property.                  */
+    bool canBalanceAssoc(const GateId &, const GateId &) const;
 
-    bool balanceOnGate(const GateId &);
+    /* Checks if it is possible to balance operations */
+    /* using complementary associativity property.    */
+    bool canBalanceCompl(const GateId &, const GateId &, const GateId &) const;
 
-    bool balanceCommutAssoc(const GateId &, const GateId &);
+    /* Checks if it is possible to balance operations      */
+    /* using associativity or complementary associativity. */
+    bool canBalance(const GateId &, const GateId &, const GateId &) const;
 
-    void reorderOperationsOnGate(const GateId &);
+    /* Moves all associative input operations left while */
+    /* the depth of the parent gate is not increasing.   */
+    void moveAllOpsLToLim(const GateId &);
 
-    bool applyReorderStrategy (const GateId &, const GateId &,
-                                const GateId &, const GateId &);
+    /* Moves all associative input operations right while */
+    /* the depth of the parent gate is not increasing.    */
+    void moveAllOpsRToLim(const GateId &);
 
-    bool balanceAssoc(const GateId &);
+    /* Implements associative balancing for operations. */
+    void balanceAssoc(const GateId &);
 
+    /* Implements associative balancing for operations, */
+    /* that are commutative too.                        */
+    void balanceCommutAssoc(const GateId &);
+
+    /* Implements complementary associative balancing. */
+    /* In current version it is only MAJ3 function.    */
+    void balanceComplAssoc(const GateId &);
+
+    /* Returns total number of depth decreases on each gate. */
     int getBalancesNumber() const;
   };
 

@@ -34,7 +34,8 @@ private:
     void generateCombinations(
         Node * prevLayerNode,
         Cell *libElement,
-        std::vector<std::vector<Node*>::iterator> &inputsIt);
+        std::vector<std::vector<Node*>::iterator> &inputsIt,
+        std::vector<Node*> &combinedNodes);
     void translateNodeIntoGnet();
     // Input data
     std::vector<Cell*> libElements;
@@ -46,7 +47,7 @@ private:
     //unsigned maxCellsLevel;
 
     // Generators params
-    unsigned maxGeneratedLevel = 3;
+    unsigned maxGeneratedLevel = 1;
     //unsigned numTreads;
 
     // Nodes-predecessors for the given node.

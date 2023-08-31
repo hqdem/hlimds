@@ -33,7 +33,7 @@ bool checkLibParser(std::string liberty) {
 
   CircuitsGenerator circuitsGenerator;
   circuitsGenerator.setLibElementsList(libraryCells.cells);
-  circuitsGenerator.initCircuit(3);
+  circuitsGenerator.initCircuit(2);
   circuitsGenerator.generateCircuits();
 
   for(const auto& cell : circuitsGenerator.getGeneratedNodes()) {

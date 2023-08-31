@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/list.h"
+#include "gate/model2/array.h"
 
 #include "gtest/gtest.h"
 
@@ -14,37 +14,29 @@
 
 namespace eda::gate::model {
 
-TEST(ListTest, SimpleTest) {
+TEST(ArrayTest, SimpleTest) {
   static constexpr uint64_t A = 1;
   static constexpr uint64_t B = 64*1024;
   static constexpr uint64_t N = (B - A) + 1;
 
 #if 0
-  std::vector<uint64_t> list;
-  list.reserve(N);
+  std::vector<uint64_t> array(N);
 #else
-  List<uint64_t> list;
+  Array<uint64_t> array(N);
 #endif
 
-  for (uint64_t i = A; i <= B; i++) {
-    list.push_back(i);
+  EXPECT_EQ(array.size(), N);
+
+  uint64_t v = A;
+  for (uint64_t i = 0; i <= N; i++) {
+    array[i] = v++;
   }
 
-  EXPECT_EQ(list.size(), N);
-
-  uint64_t i = A;
-  for (auto iter = list.begin(); iter != list.end(); ++iter) {
-    EXPECT_EQ(i, *iter);
-    i++;
+  uint64_t w = A;
+  for (auto iter = array.begin(); iter != array.end(); ++iter) {
+    EXPECT_EQ(w, *iter);
+    w++;
   }
-
-  i = 0;
-  while (!list.empty()) {
-    list.erase(list.begin());
-    i++;
-  }
-
-  EXPECT_EQ(i, N);
 }
 
 } // namespace eda::gate::model

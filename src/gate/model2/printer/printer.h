@@ -48,6 +48,7 @@ protected:
   };
 
   NetPrinter(const std::vector<Pass> passes): passes(passes) {}
+  virtual ~NetPrinter() {}
 
   virtual void onNetBegin(
       std::ostream &out, const Net &net, const std::string &name) = 0;

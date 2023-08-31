@@ -47,10 +47,10 @@ public:
 
   const CellType &getType() const { return CellType::get(getTypeID()); }
 
-  uint16_t getFanin()  const { return fanin;  }
+  uint16_t getFanin() const { return fanin; }
   uint16_t getFanout() const { return fanout; }
 
-  void setFanin(uint16_t value)  { fanin  = value; }
+  void setFanin(uint16_t value) { fanin = value; }
   void setFanout(uint16_t value) { fanout = value; }
 
   LinkList getLinks() const;
@@ -69,7 +69,14 @@ private:
   uint16_t fanin;
   uint16_t fanout;
 
-  LinkEnd link[InPlaceLinks];
+  union LinkData {
+    LinkData() {}
+
+    /// Links in the external list.
+    ListID listID;
+    /// In-place links.
+    LinkEnd link[InPlaceLinks];
+  } data;
 };
 
 static_assert(sizeof(Cell) == CellID::Size);

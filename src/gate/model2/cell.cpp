@@ -17,14 +17,14 @@ Cell::Cell(CellTypeID typeID, const LinkList &links):
     typeSID(typeID.getSID()), fanin(links.size()), fanout(0) {
   if (fanin <= InPlaceLinks) {
     for (auto i = 0u; i < fanin; ++i) {
-      link[i] = links[i];
+      data.link[i] = links[i];
     }
   } else {
     List<uint64_t> list(fanin);
     for (auto i = links.begin(); i != links.end(); ++i) {
       list.push_back(LinkEnd::pack(*i));
     }
-    link[0] = LinkEnd::unpack(list.getID());
+    data.listID = list.getID();
   }
 }
 
@@ -33,10 +33,10 @@ Cell::LinkList Cell::getLinks() const {
 
   if (fanin <= InPlaceLinks) {
     for (auto i = 0u; i < fanin; ++i) {
-      links.push_back(link[i]);
+      links.push_back(data.link[i]);
     }
   } else {
-    List<uint64_t> list(static_cast<ListID>(LinkEnd::pack(link[0])));
+    List<uint64_t> list(data.listID);
     for (auto i = list.begin(); i != list.end(); ++i) {
       links.push_back(LinkEnd::unpack(*i));
     }

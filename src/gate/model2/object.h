@@ -60,6 +60,8 @@ public:
   ObjectID(uint64_t value): value(value) {}
   /// Constructs a null-valued FID.
   ObjectID(): ObjectID(OBJ_NULL_ID) {}
+  /// Constructs a copy of the FID.
+  ObjectID(const ObjectID &r): value(r.value) {}
 
   /// Converts the FID to the 64-bit unsigned integer.
   operator uint64_t() const { return value; }
@@ -91,6 +93,7 @@ enum ObjectTag : uint8_t {
   TAG_LINK_END,
   TAG_LINK,
   TAG_NET,
+  TAG_SUBNET,
   TAG_STRING,
   TAG_LIST_BLOCK
 };
@@ -101,6 +104,7 @@ using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 1024, 10>;
 using LinkEndID      = ObjectID<TAG_LINK_END, 8, 3>;
 using LinkID         = ObjectID<TAG_LINK, 16, 4>;
 using NetID          = ObjectID<TAG_NET, 64, 6>;
+using SubnetID       = ObjectID<TAG_SUBNET, 16, 4>;
 using StringID       = ObjectID<TAG_STRING, 32, 5>;
 using ListBlockID    = ObjectID<TAG_LIST_BLOCK, 64, 6>;
 

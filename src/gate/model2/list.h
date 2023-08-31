@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 
 namespace eda::gate::model {
 
@@ -19,13 +20,13 @@ namespace eda::gate::model {
 // List Block
 //===----------------------------------------------------------------------===//
 
-/// Block containing a number of 64-bit elements of type T.
+/// Block containing a number of elements of type T.
 template<typename T>
 class ListBlock final : public Object<ListBlock<T>, ListBlockID> {
   friend class Storage<ListBlock<T>>;
 
-  static_assert(sizeof(T) == 8);
-  static constexpr size_t MinCapacity = 4;
+  static_assert(sizeof(T) == 8 || sizeof(T) == 16 || sizeof(T) == 32);
+  static constexpr size_t MinCapacity = 32 / sizeof(T);
 
 public:
   /// Returns the block size in bytes depending on the capacity.
@@ -42,11 +43,43 @@ public:
         : (sizeInBytes - ListBlockID::Size) / sizeof(T) + MinCapacity;
   }
 
-  /// Allocates the block w/ the specified capacity.
-  static ListBlockID allocate(uint32_t capacity, bool begin, bool end) {
-    auto sizeInBytes = std::min(getSizeInBytes(capacity), PAGE_SIZE);
-    auto sizeInItems = getSizeInItems(sizeInBytes);
+  /// Allocates a block w/ the specified capacity.
+  static inline ListBlockID allocate(uint32_t capacity, bool begin, bool end) {
+    const auto sizeInBytes = std::min(getSizeInBytes(capacity), PAGE_SIZE);
+    const auto sizeInItems = getSizeInItems(sizeInBytes);
     return allocateExt<ListBlock<T>>(sizeInBytes, sizeInItems, begin, end);
+  }
+
+  /// Allocates a block w/ and fills it w/ the given items.
+  static inline ListBlockID allocate(
+      const std::vector<T> &items, bool begin, bool end) {
+    const ListBlockID blockID = allocate(items.size(), begin, end);
+    ListBlock<T> *block = access<ListBlock<T>>(blockID);
+    assert(block->capacity == items.size());
+    for (size_t i = 0; i < items.size(); ++i) {
+      block->items[i] = items[i];
+    }
+    return blockID;
+  }
+
+  /// Checks if the item is null.
+  static inline bool isNull(const T &item) {
+    if constexpr (sizeof(T) == 8) {
+      return reinterpret_cast<const uint64_t&>(item) == 0;
+    } else {
+      const char *data = reinterpret_cast<const char*>(&item);
+      if (*data) return false;
+      return memcmp(data, data + 1, sizeof(T) - 1) == 0;
+    }
+  }
+
+  /// Nullifies the item.
+  static inline void setNull(T &item) {
+    if constexpr (sizeof(T) == 8) {
+      reinterpret_cast<uint64_t&>(item) = 0;
+    } else {
+      memset(&item, 0, sizeof(T));
+    }
   }
 
   /// Returns the pointer to the previous block.
@@ -75,7 +108,7 @@ public:
   uint32_t begin : 1;
   /// Final block of the list.
   uint32_t end : 1;
-  /// Block items (64-bit elements != OBJ_NULL_ID).
+  /// Block items (non-zero elements).
   T items[MinCapacity /* or more */];
 
 private:
@@ -177,9 +210,7 @@ private:
 
   /// Skips null items.
   void skipNullItems() {
-    while (block->items[index] == OBJ_NULL_ID) {
-      index++;
-    }
+    while (ListBlock<T>::isNull(block->items[index])) index++;
   }
 
   /// Current block SID.
@@ -209,7 +240,7 @@ public:
   /// Constructs a new list w/ the specified capacity.
   List(uint32_t capacity):
       List(ListBlock<T>::allocate(capacity, true, true)) {
-    uint32_t blockSID = listID.getSID();
+    const auto blockSID = listID.getSID();
     block->prevBlockSID = blockSID;
     block->nextBlockSID = blockSID;
   }
@@ -232,7 +263,7 @@ public:
 
   /// Adds the specified element to the end of the list.
   void push_back(T value) {
-    assert(value != OBJ_NULL_ID);
+    assert(!ListBlock<T>::isNull(value));
 
     auto *lastBlock = block->prevBlock();
     assert(lastBlock->end);
@@ -264,9 +295,9 @@ public:
     assert(pos.block != nullptr);
 
     auto &item = pos.block->items[pos.index];
-    assert(item != OBJ_NULL_ID);
+    assert(!ListBlock<T>::isNull(item));
 
-    item = OBJ_NULL_ID;
+    ListBlock<T>::setNull(item);
     pos.block->size--;
     block->totalSize--;
 
@@ -285,7 +316,7 @@ public:
 
     // Update the index of the last occupied item.
     for (uint32_t i = pos.index; i > 0; i--) {
-      if (pos.block->items[i - 1] != OBJ_NULL_ID) {
+      if (!ListBlock<T>::isNull(pos.block->items[i - 1])) {
         pos.block->last = i - 1;
         break;
       }

@@ -32,6 +32,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verilog_lec_test.cpp
   gate/model/gnet_test.cpp
+  gate/model2/array_test.cpp
   gate/model2/list_test.cpp
   gate/model2/net_test.cpp
   gate/optimizer/associative_balancer_test.cpp

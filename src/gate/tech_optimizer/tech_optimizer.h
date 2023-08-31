@@ -14,8 +14,8 @@
 
 namespace eda::gate::tech_optimizer {
   using GNet = eda::gate::model::GNet;
-  
+
   void read_db(std::string dbPath);
-  void tech_optimize(GNet *net);
+  void tech_optimize(GNet *net, uint approachSelector, Constraints &constraints);
 } // namespace eda::gate::tech_optimizer
 */

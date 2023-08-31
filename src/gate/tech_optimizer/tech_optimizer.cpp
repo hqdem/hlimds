@@ -23,7 +23,7 @@ void read_db(std::string &dbPath) {
   // TODO: account for latches and FFs, also
 }
 
-void tech_optimize(GNet *net, uint approachSelector) { // TODO: approach selector should be enum
+void tech_optimize(GNet *net, uint approachSelector, Constraints &constraints) { // TODO: approach selector should be enum
   // Run the stage of technology mapping to construct
   // a cell network by means of a cell library.
 
@@ -56,14 +56,15 @@ void tech_optimize(GNet *net, uint approachSelector) { // TODO: approach selecto
   // 2. ?
 
   // TODO: conceptional sequence of the next steps.
-  // STA sta(); // e.g., OpenSTA
-  // GateSizer gateSizer();
+  OpenSTA sta(); // e.g., OpenSTA
+  GateSizer gateSizer();
   //
-  // do {
-  //   gateSizer(net);
-  // } while (!sta.check(net, constraints));
+  do {
+    gateSizer(net);
+  } while (!sta.check(net, constraints));
 
   // Final checks
   // TODO: checking for functional equivalence
+  functionalEquivalence
 }
 */

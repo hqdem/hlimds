@@ -20,7 +20,7 @@ namespace eda::gate::optimizer {
           cutSize(cutSize), maxCutNum(maxCutsNumber),
           cutStorage(cutStorage) {}
 
-  VisitorFlags CutsFindVisitor::onNodeBegin(const GateID &vertex) {
+  VisitorFlags CutsFindVisitor::onNodeBegin(const GateId &vertex) {
     Gate *gate = Gate::get(vertex);
     auto *cuts = &cutStorage->cuts[vertex];
 
@@ -81,7 +81,7 @@ namespace eda::gate::optimizer {
     return CONTINUE;
   }
 
-  VisitorFlags CutsFindVisitor::onNodeEnd(const GateID &) {
+  VisitorFlags CutsFindVisitor::onNodeEnd(const GateId &) {
     return CONTINUE;
   }
 } // namespace eda::gate::optimizer

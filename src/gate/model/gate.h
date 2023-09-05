@@ -38,7 +38,7 @@ class Gate final : public GateBase {
 
 public:
   using List = std::vector<Gate*>;
- 
+
   /// Returns the gate w/ the given id.
   static Gate *get(Id id) {
     return static_cast<Gate*>(GateBase::get(id));
@@ -52,6 +52,18 @@ public:
   /// Saves the gate in the hash table.
   static void add(uint32_t netId, Gate *gate) {
     GateBase::add(netId, gate);
+  }
+
+  bool isXor() const {
+    return _func == GateSymbol::XOR;
+  }
+
+  bool isXnor() const {
+    return _func == GateSymbol::XNOR;
+  }
+
+  bool isMaj() const {
+    return _func == GateSymbol::MAJ;
   }
 
   bool isSource() const {
@@ -129,7 +141,7 @@ inline bool areContrary(const Gate::Signal &lhs, const Gate::Signal &rhs) {
   const auto *rhsGate = Gate::get(rhs.node());
 
   if (lhsGate->func() == GateSymbol::NOT) {
-    return areIdentical(lhsGate->input(0), rhs); 
+    return areIdentical(lhsGate->input(0), rhs);
   }
   if (rhsGate->func() == GateSymbol::NOT) {
     return areIdentical(lhs, rhsGate->input(0));

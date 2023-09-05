@@ -46,26 +46,26 @@ namespace eda::gate::optimizer {
     }
   }
 
-  void Walker::walk(GateID start, const Cut &cut, bool forwardCone) {
-    std::unordered_set<GateID> accessed;
+  void Walker::walk(GateId start, const Cut &cut, bool forwardCone) {
+    std::unordered_set<GateId> accessed;
 
     // First trace to define needed nodes.
     getConeSet(start, cut, accessed, forwardCone);
 
-    std::queue<GateID> bfs;
+    std::queue<GateId> bfs;
     bfs.push(start);
 
     // Second trace to visit needed nodes in topological order.
     walk(bfs, accessed, forwardCone);
   }
 
-  void Walker::walk(Walker::GateID start, bool forward) {
-    std::unordered_set<GateID> accessed;
+  void Walker::walk(Walker::GateId start, bool forward) {
+    std::unordered_set<GateId> accessed;
 
     // First trace to define needed nodes.
     getConeSet(start, accessed, forward);
 
-    std::queue<GateID> bfs;
+    std::queue<GateId> bfs;
     bfs.push(start);
 
     // Second trace to visit needed nodes in topological order.
@@ -73,13 +73,13 @@ namespace eda::gate::optimizer {
   }
 
   void Walker::walk(const Walker::Cut &start,
-                    Walker::GateID end, bool forward) {
-    std::unordered_set<GateID> accessed;
+                    Walker::GateId end, bool forward) {
+    std::unordered_set<GateId> accessed;
 
     // First trace to define needed nodes.
     getConeSet(end, start, accessed, forward);
 
-    std::queue<GateID> bfs;
+    std::queue<GateId> bfs;
     for (const auto &node: start) {
       bfs.push(node);
     }
@@ -88,8 +88,8 @@ namespace eda::gate::optimizer {
     walk(bfs, accessed, !forward);
   }
 
-  void Walker::walk(std::queue<GateID> &bfs,
-                    std::unordered_set<GateID> &accessed,
+  void Walker::walk(std::queue<GateId> &bfs,
+                    std::unordered_set<GateId> &accessed,
                     bool forward) {
 
     while (!bfs.empty()) {
@@ -138,10 +138,10 @@ namespace eda::gate::optimizer {
 
   }
 
-  void Walker::walkAll(std::queue<GateID> &bfs,
-                       const std::unordered_set<GateID> &used, bool forward) {
+  void Walker::walkAll(std::queue<GateId> &bfs,
+                       const std::unordered_set<GateId> &used, bool forward) {
 
-    std::unordered_set<GateID> visited;
+    std::unordered_set<GateId> visited;
 
     while (!bfs.empty()) {
       auto cur = bfs.front();
@@ -187,7 +187,7 @@ namespace eda::gate::optimizer {
     }
   }
 
-  VisitorFlags Walker::callVisitor(GateID node) {
+  VisitorFlags Walker::callVisitor(GateId node) {
     auto flag = visitor->onNodeBegin(node);
 
     if (flag != CONTINUE) {
@@ -197,9 +197,9 @@ namespace eda::gate::optimizer {
     return visitor->onNodeEnd(node);
   }
 
-  bool Walker::checkAllVisited(const std::unordered_set<GateID> &visited,
-                               const std::unordered_set<GateID> &used,
-                               GateID node, bool forward) {
+  bool Walker::checkAllVisited(const std::unordered_set<GateId> &visited,
+                               const std::unordered_set<GateId> &used,
+                               GateId node, bool forward) {
     if (forward) {
       const auto &inputs = Gate::get(node)->inputs();
       for (const auto &in: inputs) {
@@ -220,8 +220,8 @@ namespace eda::gate::optimizer {
     return true;
   }
 
-  bool Walker::checkVisited(const std::unordered_set<GateID> &accessed,
-                            GateID node, bool forward) {
+  bool Walker::checkVisited(const std::unordered_set<GateId> &accessed,
+                            GateId node, bool forward) {
     if (forward) {
       const auto &inputs = Gate::get(node)->inputs();
       for (const auto &in: inputs) {

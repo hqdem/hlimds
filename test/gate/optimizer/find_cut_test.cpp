@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer/check_cut.h"
 #include "gate/optimizer/optimizer.h"
+#include "gate/optimizer/util.h"
 #include "gate/parser/gate_verilog.h"
 #include "gtest/gtest.h"
 #include "gate/printer/dot.h"
@@ -41,7 +41,7 @@ namespace eda::gate::optimizer {
 
     for (auto &[v, cs]: storage.cuts) {
       for (const auto &c: cs) {
-        GateID failed;
+        GateId failed;
 
         if (!isCut(v, c, failed)) {
           FAIL() << "Wrong cut for v " << v << "; failed " << failed << "\n";

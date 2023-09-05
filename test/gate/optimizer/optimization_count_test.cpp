@@ -94,7 +94,7 @@ namespace eda::gate::optimizer {
     auto g = gnet2Extended(mainGnet);
     auto gSub = gnet1(subGnet);
 
-    std::unordered_map<GateID, GateID> map = {{gSub[0], g[0]},
+    std::unordered_map<GateId, GateId> map = {{gSub[0], g[0]},
                                               {gSub[1], g[2]},
                                               {gSub[2], g[1]},
                                               {gSub[3], g[3]}};

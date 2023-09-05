@@ -32,16 +32,25 @@ add_executable(${TEST_TARGET}
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verilog_lec_test.cpp
   gate/model/gnet_test.cpp
+  gate/model2/array_test.cpp
+  gate/model2/list_test.cpp
+  gate/model2/net_test.cpp
+  gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp
   gate/optimizer/bgnet_test.cpp
+  gate/optimizer/depth_find_test.cpp
   gate/optimizer/examples.cpp
   gate/optimizer/find_cone_test.cpp
   gate/optimizer/find_cut_test.cpp
   gate/optimizer/optimization_count_test.cpp
+  gate/optimizer/optimizer_util.cpp
   gate/optimizer/resynthesis/akers_test.cpp
+  gate/optimizer/resynthesis/cascade_test.cpp
+  gate/optimizer/resynthesis/reed_muller_test.cpp
   gate/optimizer/rwdatabase_test.cpp
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
+  gate/optimizer/util_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
   gate/premapper/mapper/mapper_test.cpp

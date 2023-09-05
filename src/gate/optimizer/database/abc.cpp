@@ -39,9 +39,8 @@ static BoundGNet getAbcNet(std::vector<std::pair<GateId, TruthTable>> &gates) {
   gates.push_back({net->addIn(), 0xF0F0}); // Variable x2
   gates.push_back({net->addIn(), 0xFF00}); // Varaible x3
 
-  GateBindings inputBindings;
-  inputBindings = {gates[1].first, gates[2].first, gates[3].first,
-                   gates[4].first};
+  GateBindings inputBinds;
+  inputBinds = {gates[1].first, gates[2].first, gates[3].first, gates[4].first};
 
   // Reconstruct the forest.
   for (size_t i = 0;; i++) {
@@ -73,7 +72,7 @@ static BoundGNet getAbcNet(std::vector<std::pair<GateId, TruthTable>> &gates) {
     gates.push_back({gid, table});
   }
 
-  return BoundGNet{net, inputBindings};
+  return BoundGNet{net, inputBinds};
 }
 
 static BoundGNet getCircuit(GateId gid, const BoundGNet &bnet) {

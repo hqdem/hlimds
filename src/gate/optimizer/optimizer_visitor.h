@@ -35,11 +35,11 @@ namespace eda::gate::optimizer {
     void set(CutStorage *cutStorage, GNet *net, unsigned int cutSize,
              unsigned int maxCutsNumber);
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeEnd(const GateId &) override;
 
-    VisitorFlags onCut(const GateID &, const Cut &) override;
+    VisitorFlags onCut(const GateId &, const Cut &) override;
 
     /**
      * \brief Checks if substitution is optimizing.
@@ -48,7 +48,7 @@ namespace eda::gate::optimizer {
      * @param map Maps cone inputs and substitute net sources.
      * @return true if substitution is optimizing.
      */
-    virtual bool checkOptimize(const GateID &lastNode, const BoundGNet &option,
+    virtual bool checkOptimize(const GateId &lastNode, const BoundGNet &option,
                                MatchMap &map) = 0;
 
     /**
@@ -57,14 +57,14 @@ namespace eda::gate::optimizer {
      * @param option Net with which substitution is executed.
      * @param map Maps cone inputs and substitute net sources.
      */
-    virtual void considerOptimization(const GateID &lastNode, BoundGNet &option,
+    virtual void considerOptimization(const GateId &lastNode, BoundGNet &option,
                                       MatchMap &map) = 0;
 
     /**
      * Finishes making real changes in the net.
      * @param lastNode Node, which cone was used for substitution.
      */
-    virtual VisitorFlags finishOptimization(const GateID &lastNode) {
+    virtual VisitorFlags finishOptimization(const GateId &lastNode) {
       return CONTINUE;
     }
 
@@ -80,7 +80,7 @@ namespace eda::gate::optimizer {
     std::vector<const CutStorage::Cut *> toRemove;
     unsigned int maxCutsNumber;
 
-    bool checkValidCut(const GateID &lastNode, const Cut &cut);
+    bool checkValidCut(const GateId &lastNode, const Cut &cut);
 
   protected:
     GNet *net;

@@ -32,15 +32,15 @@ namespace eda::gate::optimizer {
       rwdb = rewriteManager.getDatabase();
     }
 
-    bool checkOptimize(const GateID &lastNode, const BoundGNet &option,
+    bool checkOptimize(const GateId &lastNode, const BoundGNet &option,
                        MatchMap &map) override;
 
-    void considerOptimization(const GateID &lastNode, BoundGNet &option,
+    void considerOptimization(const GateId &lastNode, BoundGNet &option,
                               MatchMap &map) override;
 
     BoundGNetList getSubnets(uint64_t func) override;
 
-    VisitorFlags finishOptimization(const GateID &lastNode) override;
+    VisitorFlags finishOptimization(const GateId &lastNode) override;
 
   private:
     RWDatabase rwdb;

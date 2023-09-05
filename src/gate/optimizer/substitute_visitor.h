@@ -26,16 +26,16 @@ namespace eda::gate::optimizer {
      * @param map Maps cone inputs and substitute net sources.
      * @param net Net where substitution is executed.
      */
-    SubstituteVisitor(const TargetsList &targetsList, GateID cutFor,
+    SubstituteVisitor(const TargetsList &targetsList, GateId cutFor,
                       MatchMap &map, GNet *net);
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeEnd(const GateId &) override;
 
   private:
     const TargetsList &targetsList;
-    GateID cutFor;
+    GateId cutFor;
     //  GateId in substitute net -> GateId of original net sources
     MatchMap &map;
     GNet *net;

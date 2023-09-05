@@ -29,11 +29,11 @@ namespace eda::gate::optimizer {
      * @param cut Set of nodes on base of which cone needs to be found.
      * @param cutFor Node for which cone needs to be found.
      */
-    ConeVisitor(const Cut &cut, GateID cutFor);
+    ConeVisitor(const Cut &cut, GateId cutFor);
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeEnd(const GateId &) override;
 
     /**
      * @return Found cone net.
@@ -52,7 +52,7 @@ namespace eda::gate::optimizer {
 
   private:
     const Cut &cut;
-    GateID cutFor;
+    GateId cutFor;
     // old node - new node.
     MatchMap newGates;
     Cut resultCutOldGates;

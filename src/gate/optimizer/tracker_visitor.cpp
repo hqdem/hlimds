@@ -19,18 +19,18 @@ namespace eda::gate::optimizer {
     this->subCatalog = homePath / subCatalog;
   }
 
-  VisitorFlags TrackerVisitor::onNodeBegin(const GateID &gateId) {
+  VisitorFlags TrackerVisitor::onNodeBegin(const GateId &gateId) {
     return visitor->onNodeBegin(gateId);
   }
 
-  VisitorFlags TrackerVisitor::onNodeEnd(const GateID &gateId) {
+  VisitorFlags TrackerVisitor::onNodeEnd(const GateId &gateId) {
     dot.print(subCatalog / ("onNodeEnd" + std::to_string(counter) + "_" +
                             std::to_string(gateId) + ".dot"));
     ++counter;
     return visitor->onNodeEnd(gateId);
   }
 
-  VisitorFlags TrackerVisitor::onCut(const GateID & node, const Cut &cut) {
+  VisitorFlags TrackerVisitor::onCut(const GateId & node, const Cut &cut) {
     return visitor->onCut(node, cut);
   }
 

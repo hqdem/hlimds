@@ -31,12 +31,16 @@ namespace eda::gate::optimizer {
      * in order of their calling.
      */
     LinksRemoveCounter(TargetsList &&targetsList,
-                       const std::unordered_set<GateID> &used,
-                       std::vector<GateID> &removedOrder);
+                       const std::unordered_set<GateId> &used,
+                       std::vector<GateId> &removedOrder);
 
-    VisitorFlags onNodeBegin(const GateID &) override;
+    LinksRemoveCounter(const TargetsList &targetsList,
+                       const std::unordered_set<GateId> &used,
+                       std::vector<GateId> &removedOrder);
 
-    VisitorFlags onNodeEnd(const GateID &) override;
+    VisitorFlags onNodeBegin(const GateId &) override;
+
+    VisitorFlags onNodeEnd(const GateId &) override;
 
     /**
      * @return Number of nodes that were removed.
@@ -48,9 +52,9 @@ namespace eda::gate::optimizer {
 
   private:
     TargetsList targets;
-    const std::unordered_set<GateID> &used;
-    std::unordered_set<GateID> removed;
-    std::vector<GateID> &removedOrder;
+    const std::unordered_set<GateId> &used;
+    std::unordered_set<GateId> removed;
+    std::vector<GateId> &removedOrder;
   };
 
 } // namespace eda::gate::optimizer

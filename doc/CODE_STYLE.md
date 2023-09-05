@@ -13,7 +13,7 @@ Some of them are listed below.
 4. Maximum line length is 80, no trailing whitespaces.
 5. Do not use multiple subsequent blank lines.
 6. Use lowercase_underscore_separated style for names of source files.
-7. Use UpperCamelCase style for names of classes/enums/structures/unions.
+7. Use UpperCamelCase style for names of classes/enums/structures/types/unions.
 8. Use lowerCamelCase for names of functions/methods/objects/variables.
 9. "{" symbol should be at the same line as the related operator has.
 10. Source files should have header comments (set the `<yearnum>` here):

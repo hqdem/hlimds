@@ -18,27 +18,62 @@
  */
 namespace eda::gate::optimizer {
 
-  GateID createLink(GNet &gNet, const std::vector<GateID> &g,
-                    const std::vector<GateID> &input,
+  GateId createLink(GNet &gNet, const std::vector<GateId> &g,
+                    const std::vector<GateId> &input,
                     model::GateSymbol func = model::GateSymbol::Value::AND);
 
-  std::vector<GateID> gnet1(GNet &gNet) ;
+  std::vector<GateId> gnet1(GNet &gNet) ;
 
-  std::vector<GateID> gnet1Extended(GNet &gNet);
+  std::vector<GateId> gnet1Extended(GNet &gNet);
 
-  std::vector<GateID> gnet1ChangedFunc(GNet &gNet);
+  std::vector<GateId> gnet1ChangedFunc(GNet &gNet);
 
-  std::vector<GateID> gnet2(GNet &gNet);
+  std::vector<GateId> gnet2(GNet &gNet);
 
-  std::vector<GateID> gnet2Extended(GNet &gNet);
+  std::vector<GateId> gnet2Extended(GNet &gNet);
 
-  std::vector<GateID> gnet3(GNet &gNet);
+  std::vector<GateId> gnet3(GNet &gNet);
 
-  std::vector<GateID> gnet3Cone(GNet &gNet);
+  std::vector<GateId> gnet3Cone(GNet &gNet);
 
-  std::vector<GateID> gnet4(GNet &gNet);
+  std::vector<GateId> gnet4(GNet &gNet);
 
   Visitor::MatchMap createPrimitiveMap(GNet *subNet,  const Cut &cut);
 
-} // namespace eda::gate::optimizer
+  std::vector<GateId> balanceAND(GNet &gNet);
 
+  std::vector<GateId> balanceAND2(GNet &gNet);
+
+  std::vector<GateId> balanceANDTwice(GNet &gNet);
+
+  std::vector<GateId> balanceANDThrice(GNet &gNet);
+
+  std::vector<GateId> oneInOneOut(GNet &gNet);
+
+  std::vector<GateId> unbalancableANDOR(GNet &gNet);
+
+  std::vector<GateId> balanceOR(GNet &gNet);
+
+  std::vector<GateId> balanceXORXNOR(GNet &gNet);
+
+  std::vector<GateId> balanceSeveralOut(GNet &gNet);
+
+  std::vector<GateId> balanceArity3(GNet &gNet);
+
+  std::vector<GateId> balanceArity4(GNet &gNet);
+
+  std::vector<GateId> balanceArity4_2(GNet &gNet);
+
+  std::vector<GateId> balanceArity4LR(GNet &gNet);
+
+  std::vector<GateId> balanceMajLeft(GNet &gNet);
+
+  std::vector<GateId> balanceMajRight(GNet &gNet);
+
+  std::vector<GateId> balanceMajUnbalancable(GNet &gNet);
+
+  std::vector<GateId> balanceMaj2Variants(GNet &gNet);
+
+  std::vector<GateId> balanceMajTwice(GNet &gNet);
+
+} // namespace eda::gate::optimizer

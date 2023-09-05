@@ -133,6 +133,10 @@ or
 ```
 ./build/test/utest --gtest_filter=<test-pattern>
 ```
+or
+```
+./filter-tests.sh <test-pattern>
+```
 Test pattern accepts ```*``` and ```?``` wildcards.
 
 #### List Available Tests

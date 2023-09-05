@@ -22,9 +22,9 @@
 namespace eda::gate::optimizer {
 
   using GNet = eda::gate::model::GNet;
-  using GateID = eda::gate::model::GNet::GateId;
+  using GateId = eda::gate::model::GNet::GateId;
   using Gate = eda::gate::model::Gate;
-  using Cut = std::unordered_set<GateID>;
+  using Cut = std::unordered_set<GateId>;
 
   /**
    * Optimizes a net on based on rewriting.

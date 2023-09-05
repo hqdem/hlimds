@@ -12,13 +12,13 @@ namespace eda::gate::optimizer {
 
   using BoundGNetList = RWDatabase::BoundGNetList;
 
-  bool ApplySearchOptimizer::checkOptimize(const GateID &lastNode, const BoundGNet &option,
+  bool ApplySearchOptimizer::checkOptimize(const GateId &lastNode, const BoundGNet &option,
                                            MatchMap &map) {
     netSubstitute = NetSubstitute(lastNode, &map, option.net.get(), net);
     return netSubstitute.fakeSubstitute() <= 0;
   }
 
-  void ApplySearchOptimizer::considerOptimization(const GateID &lastNode,
+  void ApplySearchOptimizer::considerOptimization(const GateId &lastNode,
                                                   BoundGNet &option,
                                                   MatchMap &map) {
     netSubstitute.substitute();

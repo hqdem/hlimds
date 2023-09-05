@@ -1,3 +1,11 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
 #include "gate/optimizer/resynthesis/unitized_table.h"
 
 namespace eda::gate::optimizer::resynthesis {
@@ -16,28 +24,26 @@ UnitizedTable::UnitizedTable(const TruthTable &func, const TruthTable &care):
          "Too many variables for Akers algorithm!");
   assert(funcNumVars == careNumVars &&
          "Number of variables of function and care are not equal!");
-
-  std::vector<uint32_t> ones;
-  ones.assign(2 * funcNumVars + 2, 0);
+  columns.reserve(64);
   // create identifiers of columns
   // the identifiers for inputs from 0 to the number of variables
-  for (uint32_t i = 0; i < funcNumVars; i++) {
-    columns.push_back(i);
+  for (unsigned i = 0; i < funcNumVars; i++) {
+    columns.push_back(std::make_pair(i, 0));
   }
   // the identifiers for NOT(inputs) from 31 to (31 + the number of variables)
-  for (uint32_t i = 31; i < 31 + funcNumVars; i++) {
-    columns.push_back(i);
+  for (unsigned i = 31; i < 31 + funcNumVars; i++) {
+    columns.push_back(std::make_pair(i, 0));
   }
   // 62 will be for '0'
   // 63 will be for '1'
-  columns.push_back(62);
-  columns.push_back(63);
-  uint32_t dontCareCount = 0;
-
+  columns.push_back(std::make_pair(62, 0));
+  columns.push_back(std::make_pair(63, 0));
+  
+  uint32_t nCareSets = 0;
   // add rows
-  for (size_t pos = 0; pos < func.num_bits(); pos++) {
+  for (uint32_t pos = 0; pos < func.num_bits(); pos++) {
     if (!kitty::get_bit(care, pos)) {
-      dontCareCount++;
+      nCareSets++;
       continue;
     }
     table.push_back(0);
@@ -45,51 +51,30 @@ UnitizedTable::UnitizedTable(const TruthTable &func, const TruthTable &care):
     if (kitty::get_bit(func, pos)) {
       for (uint32_t j = 0; j < funcNumVars; j++) {
         if (half[j]) {
-          setBit(pos - dontCareCount, j);
-          ones[j]++;
+          setBit(pos - nCareSets, j);
+          columns[j].second++;
         } else {
-          setBit(pos - dontCareCount, j + funcNumVars);
-          ones[j + funcNumVars]++;
+          setBit(pos - nCareSets, j + funcNumVars);
+          columns[j + funcNumVars].second++;
         }
       }
-      setBit(pos - dontCareCount, 2 * funcNumVars + 1);
-      ones[2 * funcNumVars + 1]++;
+      setBit(pos - nCareSets, 2 * funcNumVars + 1);
+      columns[2 * funcNumVars + 1].second++;
     } else {
       for (uint32_t j = 0; j < funcNumVars; j++) {
         if (half[j]) {
-          setBit(pos - dontCareCount, j + funcNumVars);
-          ones[j + funcNumVars]++;
+          setBit(pos - nCareSets, j + funcNumVars);
+          columns[j + funcNumVars].second++;
         } else {
-          setBit(pos - dontCareCount, j);
-          ones[j]++;
+          setBit(pos - nCareSets, j);
+          columns[j].second++;
         }
       }
-      setBit(pos - dontCareCount, 2 * funcNumVars);
-      ones[2 * funcNumVars]++;
+      setBit(pos - nCareSets, 2 * funcNumVars);
+      columns[2 * funcNumVars].second++;
     }
   }
   assert(table.size() && "Empty input function!");
-
-  uint64_t maxOnes = table.size() / 2;
-  unsigned saveColumn = 64;
-  for (uint32_t i = 0; i < ones.size(); i++) {
-    if (ones[i] > maxOnes) {
-      saveColumn = i;
-      maxOnes = ones[i];
-    }
-  }
-  if (maxOnes == table.size()) {
-    std::vector<unsigned> forRemovalCols;
-    for (unsigned i = 0; i < columns.size(); i++) {
-      if (i == saveColumn) {
-        continue;
-      }
-      forRemovalCols.push_back(i);
-    }
-    eraseCol(forRemovalCols);
-  } else {
-    reduceColumns(saveColumn);
-  }
 
   reduce();
 }
@@ -99,13 +84,16 @@ UnitizedTable::UnitizedTable(const TruthTable &func, const TruthTable &care):
 //===----------------------------------------------------------------------===//
 
 bool UnitizedTable::areInverse(unsigned c1, unsigned c2) const {
-  unsigned id1 = columns[c1];
-  unsigned id2 = columns[c2];
+  unsigned id1 = columns[c1].first;
+  unsigned id2 = columns[c2].first;
 
-  if ((id1 > 30) && (id1 - 31 == id2)) {
+  if (((id1 == 62) && (id2 == 63)) || ((id1 == 63) && (id2 == 62))) {
     return true;
   }
-  if ((id2 > 30) && (id2 - 31 == id1)) {
+  if ((id1 > 30) && (id1 < 62) && (id1 - 31 == id2)) {
+    return true;
+  }
+  if ((id2 > 30) && (id2 < 62) && (id2 - 31 == id1)) {
     return true;
   }
   for (uint32_t i = 0; i < table.size(); i++) {
@@ -117,51 +105,16 @@ bool UnitizedTable::areInverse(unsigned c1, unsigned c2) const {
 }
 
 //===----------------------------------------------------------------------===//
-// Statistics
-//===----------------------------------------------------------------------===//
-
-uint64_t UnitizedTable::countEssentialOnes() const {
-  size_t tableSize = table.size();
-  unsigned degree;
-
-  // unsigned is a number of column with essential one
-  // std::set is a set of numbers of rows with essential one
-  std::unordered_map<unsigned, std::unordered_set<uint32_t>> essentialOnes;
-  uint64_t counter = 0;
-  for (uint32_t i = 0; i < tableSize; i++) {
-    for (uint32_t j = i + 1; j < tableSize; j++) {
-      if (isDegreeOfTwo(table[i] & table[j], degree)) {
-        if (essentialOnes.find(degree) == essentialOnes.end()) {
-          essentialOnes[degree].insert(i);
-          essentialOnes[degree].insert(j);
-          counter += 2;
-        } else {
-          auto p = essentialOnes[degree].insert(i);
-          if (p.second) {
-            counter++;
-          }
-          p = essentialOnes[degree].insert(j);
-          if (p.second) {
-            counter++;
-          }
-        }
-      }
-    }
-  }
-  return counter;
-}
-
-//===----------------------------------------------------------------------===//
 // Modification Methods
 //===----------------------------------------------------------------------===//
 
 void UnitizedTable::addMajColumn(std::set<unsigned> args) {
   assert(columns.size() < 64 && "An overflow of the columns!");
-
   auto it = args.begin();
   unsigned c1 = *it++;
   unsigned c2 = *it++;
   unsigned c3 = *it;
+  uint32_t nOnes = 0;
 
   for (uint32_t i = 0; i < table.size(); i++) {
     bool bit = (getBit(i, c1) && getBit(i, c2)) ||
@@ -169,10 +122,11 @@ void UnitizedTable::addMajColumn(std::set<unsigned> args) {
                (getBit(i, c2) && getBit(i, c3));
     if (bit) {
       setBit(i, columns.size());
+      nOnes++;
     }
   }
 
-  columns.push_back(nMajGates + 64);
+  columns.push_back(std::make_pair(nMajGates + 64, nOnes));
   nMajGates++;
 }
 
@@ -180,7 +134,7 @@ void UnitizedTable::eraseCol(unsigned index) {
   size_t columnsSize = columns.size();
   for (uint32_t i = 0; i < table.size(); i++) {
     if (index == columnsSize - 1) {
-      table[i] &= ~(1ull << index);
+      clearBit(i, index);
     }
     for (unsigned j = index + 1; j < columnsSize; j++) {
       if (getBit(i, j)) {
@@ -220,17 +174,18 @@ void UnitizedTable::eraseCol(const std::vector<unsigned> &index) {
   }
 
   size_t columnsSize = columns.size();
+  size_t indexSize = index.size();
   for (uint32_t i = 0; i < table.size(); i++) {
     size_t pointVector = 1;
     unsigned pointPush = index[0];
     unsigned pointPop = index[0] + 1;
-    if (pointPush == columnsSize - 2) {
+    if (pointPush == columnsSize - indexSize) {
       clearBit(i, pointPush);
     }
     for (; pointPop < columnsSize; pointPop++) {
       if (index[pointVector] == pointPop) {
         clearBit(i, pointPop);
-        if (pointVector + 1 != index.size()) {
+        if (pointVector + 1 != indexSize) {
           pointVector++;
         }
         continue;
@@ -245,7 +200,7 @@ void UnitizedTable::eraseCol(const std::vector<unsigned> &index) {
     }
   }
 
-  size_t i = index.size();
+  size_t i = indexSize;
   do {
     --i;
     columns.erase(columns.begin() + index[i]);
@@ -253,17 +208,22 @@ void UnitizedTable::eraseCol(const std::vector<unsigned> &index) {
 }
 
 bool UnitizedTable::isDegreeOfTwo(uint64_t row, unsigned &degree) const {
-  bool flag = false;
-  for (unsigned i = 0; i < columns.size(); i++) {
-    if ((row >> i) & 1) {
-      if (flag) {
-        return false;
-      }
-      degree = i;
-      flag = true;
+  if (!row) {
+    assert(false && "Invalid condition of the table!");
+  }
+  if (!(row & (row - 1))) {
+    degree = ffsll(row) - 1;
+    return true;
+  }
+  return false;
+}
+
+void UnitizedTable::deleteRow(uint32_t row) {
+  for (uint16_t i = 0; i < columns.size(); i++) {
+    if (getBit(row, i)) {
+      columns[i].second--;
     }
   }
-  return flag;
 }
 
 bool UnitizedTable::reduceRows() {
@@ -271,7 +231,6 @@ bool UnitizedTable::reduceRows() {
   if ((columnsSize == 1) || (columnsSize == 3)) {
     return false;
   }
-
   std::set<uint32_t> rowsForRemoval;
   size_t tableSize = table.size();
   for (uint32_t i = 0; i < tableSize; i++) {
@@ -298,23 +257,19 @@ bool UnitizedTable::reduceRows() {
   auto it = rowsForRemoval.end();
   do {
     --it;
-    table.erase(table.begin() + (*it));
+    uint32_t rowNum = *it;
+    deleteRow(rowNum);
+    table.erase(table.begin() + rowNum);
   } while (it != rowsForRemoval.begin());
 
   return true;
 }
 
-bool UnitizedTable::reduceColumns(unsigned saveColumn) {
+bool UnitizedTable::reduceColumns() {
   size_t columnsSize = columns.size();
   if ((columnsSize == 1) || (columnsSize == 3)) {
     return false;
   }
-
-  unsigned isSave = 0;
-  if (saveColumn < columnsSize) {
-    isSave = 1;
-  }
-
   size_t tableSize = table.size();
   size_t selectedCols;
   std::unordered_set<unsigned> essentialCols;
@@ -323,13 +278,29 @@ bool UnitizedTable::reduceColumns(unsigned saveColumn) {
   unsigned degree;
   unsigned startPos = 0;
   bool mayRemove = true;
+  bool wasRemoved = false;
+  unsigned position = 0;
+
+  std::vector<Column> cols;
+  for (unsigned i = 0; i < columnsSize; i++) {
+    cols.push_back(std::make_pair(i, columns[i].second));
+  }
+  std::sort(cols.begin(), cols.end(), [] (Column a, Column b) {
+                                            return a.second < b.second;
+                                          });
 
   for (unsigned i = 0; i < columnsSize - 1; i++) {
     for (uint32_t j = 0; j < tableSize; j++) {
+      if (!mustCheck(wasRemoved, j, position)) {
+        continue;
+      }
       for (uint32_t k = j + 1; k < tableSize; k++) {
+        if (!mustCheck(wasRemoved, k, position)) {
+          continue;
+        }
         if (isDegreeOfTwo(table[j] & table[k] & mask, degree)) {
           essentialCols.insert(degree);
-          selectedCols = colsForRemoval.size() + essentialCols.size() + isSave;
+          selectedCols = colsForRemoval.size() + essentialCols.size();
           if (selectedCols == columnsSize) {
             mayRemove = false;
             break;
@@ -344,24 +315,32 @@ bool UnitizedTable::reduceColumns(unsigned saveColumn) {
       break;
     }
     for (unsigned j = startPos; j < columnsSize; j++) {
-      if (j == saveColumn) {
-        continue;
-      }
-      if (essentialCols.find(j) == essentialCols.end()) {
-        colsForRemoval.push_back(j);
+      unsigned candidate = cols[j].first;
+      if (essentialCols.find(candidate) == essentialCols.end()) {
+        colsForRemoval.push_back(candidate);
         startPos = j + 1;
-        selectedCols = colsForRemoval.size() + essentialCols.size() + isSave;
+        wasRemoved = true;
+        position = candidate;
+        selectedCols = colsForRemoval.size() + essentialCols.size();
         if (selectedCols == columnsSize) {
+          std::sort(colsForRemoval.begin(), colsForRemoval.end());
           eraseCol(colsForRemoval);
           return true;
         }
-        mask &= ~(1ull << j);
+        mask &= ~(1ull << cols[j].first);
         break;
       }
     }
   }
+  std::sort(colsForRemoval.begin(), colsForRemoval.end());
   eraseCol(colsForRemoval);
   return !colsForRemoval.empty();
+}
+
+bool UnitizedTable::mustCheck(bool wasReduced, uint32_t rowNum,
+                                               unsigned removedColumn) {
+
+  return !wasReduced || getBit(rowNum, removedColumn);
 }
 
 std::ostream& operator <<(std::ostream &out, const UnitizedTable &t) {

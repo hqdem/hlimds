@@ -364,4 +364,42 @@ TEST(GNetTest, setTest) {
   net2.setGate(net2.gates().at(1)->id(), GateSymbol::NOP, id);
 }
 
+TEST(GNetTest, mergeTest) {
+  auto net = GNet(0);
+  Gate::SignalList inputs;
+  const int inNum = 4;
+
+  for (int i = 0; i < inNum; i++) {
+    Gate::Id z = net.addIn();
+    inputs.push_back(Gate::Signal::always(z));
+  }
+
+  Gate::Id gidOr = net.addOr(inputs);
+  Gate::Id gidAnd = net.addAnd(inputs);
+  Gate::Id gidNot1 = net.addNot(gidOr);
+  Gate::Id gidNot2 = net.addNot(gidAnd);
+  Gate::SignalList andInputs;
+  andInputs.push_back(Gate::Signal::always(gidNot1));
+  andInputs.push_back(Gate::Signal::always(gidNot2));
+  andInputs.push_back(Gate::Signal::always(gidOr));
+  Gate::Id y = net.addAnd(andInputs);
+  net.addOut(y);
+
+  size_t initialGates = net.gates().size();
+  // TODO: Debug print.
+  std::cout << net << '\n';
+  net.mergeGates(gidAnd, gidOr);
+  EXPECT_EQ(initialGates - 1, net.gates().size());
+
+  std::cout << net << '\n';
+  net.mergeGates(gidNot1, gidNot2);
+  EXPECT_EQ(initialGates - 2, net.gates().size());
+
+  std::cout << net << '\n';
+  net.mergeGates(y, gidOr);
+  EXPECT_EQ(initialGates - 4, net.gates().size());
+
+  std::cout << net << '\n';
+}
+
 } // namespace eda::gate::model

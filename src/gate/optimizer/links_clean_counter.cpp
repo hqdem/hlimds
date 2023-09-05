@@ -11,13 +11,20 @@
 namespace eda::gate::optimizer {
 
   LinksRemoveCounter::LinksRemoveCounter(TargetsList &&targets,
-                                         const std::unordered_set<GateID> &used,
-                                         std::vector<GateID> &removedOrder)
+                                         const std::unordered_set<GateId> &used,
+                                         std::vector<GateId> &removedOrder)
           : targets(targets), used(used), removedOrder(removedOrder) {
     removed.insert(targets.getTargets().begin(), targets.getTargets().end());
   }
 
-  VisitorFlags LinksRemoveCounter::onNodeBegin(const Visitor::GateID &node) {
+  LinksRemoveCounter::LinksRemoveCounter(const TargetsList &targets,
+                                         const std::unordered_set<GateId> &used,
+                                         std::vector<GateId> &removedOrder)
+          : targets(targets), used(used), removedOrder(removedOrder) {
+    removed.insert(targets.getTargets().begin(), targets.getTargets().end());
+  }
+
+  VisitorFlags LinksRemoveCounter::onNodeBegin(const Visitor::GateId &node) {
     //  Cutting off the case when meeting the node for which cut was found.
     if (targets.checkOutGate(Gate::get(node))) {
       return CONTINUE;
@@ -43,7 +50,7 @@ namespace eda::gate::optimizer {
     return CONTINUE;
   }
 
-  VisitorFlags LinksRemoveCounter::onNodeEnd(const Visitor::GateID &) {
+  VisitorFlags LinksRemoveCounter::onNodeEnd(const Visitor::GateId &) {
     return CONTINUE;
   }
 

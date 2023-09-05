@@ -1,4 +1,5 @@
 add_library(Util OBJECT
+  arith.cpp
   fm.cpp
   partition_hgraph.cpp
   string.cpp

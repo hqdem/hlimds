@@ -16,7 +16,7 @@ namespace eda::gate::optimizer {
     this->subCatalog = homePath / subCatalog;
   }
 
-  bool TrackStrategy::checkOptimize(const GateID &lastNode, const BoundGNet &option,
+  bool TrackStrategy::checkOptimize(const GateId &lastNode, const BoundGNet &option,
                                     MatchMap &map) {
 
     bool result = visitor->checkOptimize(lastNode, option, map);
@@ -30,7 +30,7 @@ namespace eda::gate::optimizer {
     return result;
   }
 
-  void TrackStrategy::considerOptimization(const GateID &lastNode,
+  void TrackStrategy::considerOptimization(const GateId &lastNode,
                                            BoundGNet &option,
                                            MatchMap &map) {
     visitor->considerOptimization(lastNode, option, map);
@@ -41,11 +41,11 @@ namespace eda::gate::optimizer {
     return list;
   }
 
-  VisitorFlags TrackStrategy::finishOptimization(const GateID &node) {
+  VisitorFlags TrackStrategy::finishOptimization(const GateId &node) {
     return visitor->finishOptimization(node);
   }
 
-  VisitorFlags TrackStrategy::onNodeBegin(const GateID &id) {
+  VisitorFlags TrackStrategy::onNodeBegin(const GateId &id) {
     visitor->onNodeBegin(id);
     return OptimizerVisitor::onNodeBegin(id);
   }

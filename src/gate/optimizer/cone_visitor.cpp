@@ -10,16 +10,16 @@
 
 namespace eda::gate::optimizer {
 
-  ConeVisitor::ConeVisitor(const Cut &cut, GateID cutFor) : cut(cut),
+  ConeVisitor::ConeVisitor(const Cut &cut, GateId cutFor) : cut(cut),
                                                             cutFor(cutFor) {
     net = new GNet();
   }
 
-  VisitorFlags ConeVisitor::onNodeBegin(const GateID &node) {
+  VisitorFlags ConeVisitor::onNodeBegin(const GateId &node) {
 
     Gate *cur = Gate::get(node);
     const auto &inputs = cur->inputs();
-    std::vector<base::model::Signal<GateID>> signals;
+    std::vector<base::model::Signal<GateId>> signals;
 
     for (const auto &signal: inputs) {
       auto found = newGates.find(signal.node());
@@ -29,7 +29,7 @@ namespace eda::gate::optimizer {
     }
 
     if (cut.find(node) != cut.end() && signals.empty()) {
-      auto newGate = net->addGate(GateSymbol::IN);
+      auto newGate = net->addIn();
       newGates[node] = newGate;
       resultCutOldGates.emplace(node);
     } else {
@@ -38,7 +38,7 @@ namespace eda::gate::optimizer {
 
     if (node == cutFor) {
       if (Gate::get(node)->func() != GateSymbol::OUT) {
-        net->addGate(GateSymbol::OUT, newGates[node]);
+        net->addOut(newGates[node]);
       }
       return FINISH_ALL_NODES;
     }
@@ -47,7 +47,7 @@ namespace eda::gate::optimizer {
 
   }
 
-  VisitorFlags ConeVisitor::onNodeEnd(const GateID &) {
+  VisitorFlags ConeVisitor::onNodeEnd(const GateId &) {
     return CONTINUE;
   }
 

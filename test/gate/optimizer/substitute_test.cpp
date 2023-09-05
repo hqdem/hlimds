@@ -8,6 +8,8 @@
 
 #include "gate/optimizer/examples.h"
 #include "gate/optimizer/net_substitute.h"
+#include "gate/optimizer/optimizer_util.h"
+
 #include "gtest/gtest.h"
 
 #include <filesystem>
@@ -16,22 +18,20 @@
 namespace eda::gate::optimizer {
 
   void substitutePrint(const std::filesystem::path &subCatalog,
-                       GNet *net, GNet *substNet, GateID cutFor,
+                       GNet *net, GNet *substNet, GateId cutFor,
                        const Cut &cut) {
-    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-    const std::filesystem::path outputPath = homePath / "build" / subCatalog;
 
-    system(std::string("mkdir -p ").append(outputPath).c_str());
+    std::filesystem::path outputPath = createOutPath(subCatalog);
 
-    std::string filename1 = outputPath / "gnet1.dot";
-    std::string filename2 = outputPath / "gnet2.dot";
-    std::string filename12 = outputPath / "gnet12.dot";
+    std::string toSubstitute = outputPath / "gnet1.dot";
+    std::string substituteWith = outputPath / "gnet2.dot";
+    std::string afterSubstitute = outputPath / "gnet12.dot";
 
     Dot mainGnetDot(net);
     Dot subGnetDot(substNet);
 
-    mainGnetDot.print(filename1);
-    subGnetDot.print(filename2);
+    mainGnetDot.print(toSubstitute);
+    subGnetDot.print(substituteWith);
 
     auto map = createPrimitiveMap(substNet, cut);
 
@@ -40,7 +40,7 @@ namespace eda::gate::optimizer {
     netSubstitute.fakeSubstitute();
     netSubstitute.substitute();
 
-    mainGnetDot.print(filename12);
+    mainGnetDot.print(afterSubstitute);
   }
 
   TEST(SubstituteTest, substitute) {

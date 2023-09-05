@@ -8,6 +8,8 @@
 
 #include "gate/optimizer/cone_visitor.h"
 #include "gate/optimizer/examples.h"
+#include "gate/optimizer/optimizer_util.h"
+
 #include "gtest/gtest.h"
 
 #include <filesystem>
@@ -15,21 +17,14 @@
 
 namespace eda::gate::optimizer {
 
-  const std::string testOutPath = "test/data/gate/optimizer/output";
-
   GNet *findConePrint(const std::filesystem::path &subCatalog, GNet *net,
-                      const std::vector<GateID> &cuNodes, GNet::V start) {
-    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-    const std::filesystem::path outputPath =
-            homePath / "build" / testOutPath / subCatalog;
-
-    system(std::string("mkdir -p ").append(outputPath).c_str());
-
-    std::string filename1 = outputPath / "cone0.dot";
-    std::string filename2 = outputPath / "cone.dot";
+                      const std::vector<GateId> &cuNodes, GNet::V start) {
+    std::filesystem::path outputPath = createOutPath(subCatalog);
+    std::string wholeNet = outputPath / "cone0.dot";
+    std::string extractedCone = outputPath / "cone.dot";
 
     Dot printer(net);
-    printer.print(filename1);
+    printer.print(wholeNet);
 
     Cut cut;
     for (auto node: cuNodes) {
@@ -43,7 +38,7 @@ namespace eda::gate::optimizer {
     GNet *subnet = coneVisitor.getGNet();
 
     printer = Dot(subnet);
-    printer.print(filename2);
+    printer.print(extractedCone);
 
     return subnet;
   }
@@ -144,7 +139,7 @@ namespace eda::gate::optimizer {
     GNet net;
     auto g = gnet1ChangedFunc(net);
 
-    std::vector<GateID> cut = {g[2], g[4]};
+    std::vector<GateId> cut = {g[2], g[4]};
     BoundGNet binding = extractCone(&net, g[5], cut);
 
     GNet *cone = binding.net.get();

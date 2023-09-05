@@ -10,22 +10,31 @@ add_library(Gate OBJECT
   model/gnet.cpp
   model/gsymbol.cpp
   model/utils.cpp
-  optimizer/check_cut.cpp
+  model2/cell.cpp
+  model2/celltype.cpp
+  model2/net.cpp
+  model2/printer/printer.cpp
+  model2/subnet.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp
   optimizer/cut_walker.cpp
   optimizer/database/abc.cpp
   optimizer/database/abc/rwrUtil.c
+  optimizer/depth_find_visitor.cpp
   optimizer/links_add_counter.cpp
   optimizer/links_clean_counter.cpp
   optimizer/net_substitute.cpp
   optimizer/optimizer.cpp
   optimizer/optimizer_visitor.cpp
   optimizer/resynthesis/akers.cpp
+  optimizer/resynthesis/cascade.cpp
+  optimizer/resynthesis/reed_muller.cpp
   optimizer/resynthesis/unitized_table.cpp
   optimizer/rwdatabase.cpp
   optimizer/rwmanager.cpp
   optimizer/strategy/apply_search_optimizer.cpp
+  optimizer/strategy/associative_balancer.cpp
+  optimizer/strategy/associative_balance_visitor.cpp
   optimizer/strategy/exhaustive_search_optimizer.cpp
   optimizer/strategy/track_strategy.cpp
   optimizer/substitute_visitor.cpp

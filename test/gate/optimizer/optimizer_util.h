@@ -6,22 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#pragma once
-
-#include "gate/model/gnet.h"
-#include "gate/optimizer/cut_storage.h"
-
-#include <queue>
+#include <string>
+#include <filesystem>
 
 namespace eda::gate::optimizer {
 
-  using GateID = eda::gate::model::GNet::GateId;
-  using Gate = eda::gate::model::Gate;
-  using Cut = CutStorage::Cut;
+  const std::string testOutPath = "test/data/gate/optimizer/output";
 
- /**
-  * \brief Checking that a given cut is indeed a cut for a given vertex.
-  */
-  bool isCut(const GateID &gate, const Cut &cut, GateID &failed);
+  std::filesystem::path createOutPath(const std::string &folderName);
 
 } // namespace eda::gate::optimizer

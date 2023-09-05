@@ -11,61 +11,89 @@
 #include "gate/model/gnet.h"
 #include "gate/optimizer/bgnet.h"
 #include "gate/optimizer/cone_visitor.h"
+#include "gate/optimizer/links_clean_counter.h"
 #include "gate/optimizer/walker.h"
 
 /**
- * \brief Methods used for rewriting.
+ * \brief Methods for circuit model optimization.
  */
 namespace eda::gate::optimizer {
 
-  using GNet = model::GNet;
-  using GateID = model::GNet::GateId;
   using Gate = model::Gate;
+  using GateId = model::GNet::GateId;
+  using GNet = model::GNet;
+  using ConeSet = std::unordered_set<GateId>;
   using Cut = CutStorage::Cut;
+  using Order = std::vector<GateId>;
+
+  //===--------------------------------------------------------------------===//
+  // Model modification methods
+  //===--------------------------------------------------------------------===//
 
   /**
-   * @param node
-   * @param forward
+   * \brief Returns neighbours of the node.
+   * @param node The target node.
+   * @param forward The direction of neighbours (parent or child).
    * @return List of node predecessors or successors depending on forward flag.
    */
-  std::vector<GNet::GateId> getNext(GateID node, bool forward);
+  std::vector<GNet::GateId> getNext(GateId node, bool forward);
 
   /**
-   * Finds all nodes that are part of a maximum cone for the node.
+   * \brief Removes the start node and others that were used only by the start.
+   * @param net Net to delete nodes from.
+   * @param start Node to start recursive deleting with.
+   */
+  void rmRecursive(GNet *net, GateId start);
+
+  //===--------------------------------------------------------------------===//
+  // Cut-related methods
+  //===--------------------------------------------------------------------===//
+
+  /**
+   * \brief Checks that a given cut is indeed a cut for a given vertex.
+   */
+  bool isCut(const GateId &gate, const Cut &cut, GateId &failed);
+
+  //===--------------------------------------------------------------------===//
+  // Cone-related methods
+  //===--------------------------------------------------------------------===//
+
+  /**
+   * \brief Finds all nodes that are part of a maximum cone for the node.
    * @param start Vertex of the cone.
-   * @param coneNodes Set of nodes, that make up the cone will be stored.
+   * @param cone Set of nodes, that make up the cone will be stored.
    * @param forward Direction of building a cone.
    */
-  void getConeSet(GateID start, std::unordered_set<GateID> &coneNodes, bool forward);
+  void getConeSet(GateId start, ConeSet &cone, bool forward);
 
   /**
-   * Finds all nodes that are part of a cone for the node.
+   * \brief Finds all nodes that are part of a cone for the node.
    * @param start Vertex of the cone.
    * @param cut Nodes that restricting the base of a cone.
    * @param coneNodes Set of nodes, that make up the cone will be stored.
    * @param forward Direction of building a cone.
    */
-  void getConeSet(GateID start, const Cut &cut, std::unordered_set<GateID> &coneNodes,  bool forward);
+  void getConeSet(GateId start, const Cut &cut, ConeSet &cone, bool forward);
 
   /**
-   * Cone extraction function.
-   * @param sourceNet Net where cone extraction is executed.
+   * \brief Cone extraction function.
+   * @param net Net where cone extraction is executed.
    * @param root Vertex for which the cone is constructed.
    * @param cut Cut that forms the cone.
    * @param order The order will be kept when constructing correspondence map.
    * @return Extracted cone with input correspondence map.
    */
-  BoundGNet extractCone(const GNet *sourceNet, GateID root, Cut& cut,
-                        const std::vector<GateID> &order);
+  BoundGNet extractCone(const GNet *net,
+                        GateId root,
+                        Cut &cut,
+                        const Order &order);
 
   /**
-   * Cone extraction function.
-   * @param sourceNet Net where cone extraction is executed.
+   * \brief Cone extraction function.
+   * @param net Net where cone extraction is executed.
    * @param root Vertex for which the cone is constructed.
    * @param order The order will be kept when constructing correspondence map.
    * @return Extracted cone with input correspondence map.
    */
-  BoundGNet extractCone(const GNet *sourceNet, GateID root,
-                        const std::vector<GateID> &order);
+  BoundGNet extractCone(const GNet *net, GateId root, const Order &order);
 } // namespace eda::gate::optimizer
-

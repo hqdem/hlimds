@@ -13,12 +13,12 @@ namespace eda::gate::optimizer {
   LinkAddCounter::LinkAddCounter(const TargetsList &targets,
                                  Visitor::GNet *net,
                                  MatchMap &map,
-                                 std::vector<GateID> &toCreate,
-                                 std::unordered_set<GateID> &used)
+                                 std::vector<GateId> &toCreate,
+                                 std::unordered_set<GateId> &used)
           : targets(targets), net(net), map(map), usedSubNet(used),
             toCreate(toCreate) {}
 
-  VisitorFlags LinkAddCounter::onNodeBegin(const GateID &id) {
+  VisitorFlags LinkAddCounter::onNodeBegin(const GateId &id) {
     Gate *gate = Gate::get(id);
     // Handling sources.
     if (gate->isSource()) {
@@ -66,7 +66,7 @@ namespace eda::gate::optimizer {
     return CONTINUE;
   }
 
-  VisitorFlags LinkAddCounter::onNodeEnd(const Visitor::GateID &) {
+  VisitorFlags LinkAddCounter::onNodeEnd(const Visitor::GateId &) {
     return CONTINUE;
   }
 
@@ -74,7 +74,7 @@ namespace eda::gate::optimizer {
     return static_cast<int>(usedSubNet.size());
   }
 
-  const std::unordered_set<LinkAddCounter::GateID> &
+  const std::unordered_set<LinkAddCounter::GateId> &
   LinkAddCounter::getUsedNet() {
     return usedNet;
   }

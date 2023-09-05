@@ -9,6 +9,8 @@
 #include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/optimizer_visitor.h"
 
+#include <float.h>
+
 
 namespace eda::gate::techMap {
 
@@ -45,7 +47,7 @@ namespace eda::gate::techMap {
       return eda::gate::optimizer::VisitorFlags::SKIP;
     }
     saveReplace = false;
-    minNodeArrivalTime = std::numeric_limits<double>::max();
+    minNodeArrivalTime = DBL_MAX;
 
     if (cutStorage->cuts.find(node) == cutStorage->cuts.end()) {
       CutsFindVisitor finder(cutSize, cutStorage);

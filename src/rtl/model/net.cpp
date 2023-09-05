@@ -95,7 +95,7 @@ void Net::muxWireDefines(VNode *phi, const VNode::List &defines) {
 }
 
 // @(signal): if (g[1]) { r <= w[1] }    w <= mux{ g[i] -> w[i] }
-// ...                     =>
+// ...                                =>
 // @(signal): if (g[n]) { r <= w[n] }    @(signal): r <= w
 void Net::muxRegDefines(VNode *phi, const VNode::List &defines) {
   std::vector<std::pair<Signal, VNode::List>> groups = groupRegDefines(defines);
@@ -189,6 +189,7 @@ VNode *Net::createMux(const Variable &output, const VNode::List &defines) {
 
     // Guards come first: mux(g[1], ..., g[n]; w[1], ..., w[n]).
     inputs[i] = vnode->pnode()->guard().back()->always();
+    // Use input(0), i.e. the rhs of the assignment: reg <= w[i].
     inputs[i + n] = vnode->input(0);
 
     scheduleRelease(vnode);

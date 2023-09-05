@@ -1,0 +1,19 @@
+input  u:1 clk;
+input  u:1 rst;
+input  u:1 add;
+input  u:1 sub;
+input  u:4 idata;
+output u:4 odata;
+reg    u:4 state;
+
+@(*) { odata = state; }
+
+@(level1(rst)) { state = 0b0000; }
+
+@(posedge(clk)) if (add) {
+  state = state + idata;
+}
+
+@(posedge(clk)) if (sub) {
+  state = state - idata;
+}

@@ -7,12 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "rtl/parser/ril/builder.h"
+#include "util/string.h"
 
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
 
 using namespace eda::rtl;
+using namespace eda::utils;
 
 namespace eda::rtl::parser::ril {
 
@@ -91,21 +93,24 @@ std::unique_ptr<Net> Builder::create() {
   std::unordered_map<std::string, VNode::Id> val_nodes;
 
   for (const auto &proc: _model.procs) {
+    // Event.
     VNode::Id triggerId = !proc.signal.empty() ?
         use_nodes[proc.signal] : VNode::INVALID;
     VNode::Signal event(proc.event, triggerId);
 
+    // Guard.
     VNode::List guard;
-    VNode::List action;
-
     if (!proc.guard.empty()) {
       VNode::Id vnodeId = use_nodes[proc.guard];
       guard.push_back(VNode::get(vnodeId));
     }
  
+    // Action.
+    VNode::List action;
     for (const auto &assign: proc.action) {
       VNode::SignalList inputs;
 
+      // Construct the list of inputs.
       for (const auto &in: assign.in) {
         if (in.at(0) == '0') {
 	  VNode::Id valueId = VNode::INVALID;
@@ -127,17 +132,32 @@ std::unique_ptr<Net> Builder::create() {
         inputs.push_back(VNode::Signal::always(i->second));
       }
 
+      // Get the node ID.
       VNode::Id vnodeId = VNode::INVALID;
       auto v = variables.find(assign.out);
 
       if (def_count[assign.out] == 1) {
+        // If there is one definition of the variable, use the created v-node.
         vnodeId = use_nodes[assign.out];
         net->update(vnodeId, inputs);
       } else if (v->second.kind() == Variable::WIRE) {
+        // Create a functional node.
         vnodeId = net->addFun(v->second, assign.func, inputs);
       } else {
-        assert(!inputs.empty());
-	vnodeId = net->addReg(v->second, inputs.front());
+        // Create a register node.
+        if (assign.func == FuncSymbol::NOP) {
+          // Assignment: reg = wire.
+          assert(inputs.size() == 1);
+	  vnodeId = net->addReg(v->second, inputs.front());
+        } else {
+          // Assignment: reg = f(wires).
+          Variable tempWire(unique_name(assign.out),
+                            Variable::WIRE,
+                            Variable::INNER,
+                            v->second.type() /* of the same type */);
+          auto vtempId = net->addFun(tempWire, assign.func, inputs);
+          vnodeId = net->addReg(v->second, {VNode::Signal::always(vtempId)});
+        }
       }
 
       action.push_back(VNode::get(vnodeId));

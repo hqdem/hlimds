@@ -9,7 +9,6 @@
 
 #include "gate/tech_mapper/library/cell.h"
 #include "gate/tech_mapper/parser_lib_test.h"
-#include "gate/tech_mapper/super_gate_generator/super_gate_generator.h"
 
 #include "gtest/gtest.h"
 #include <filesystem>
@@ -26,19 +25,10 @@ bool checkLibParser(std::string liberty) {
   const std::string pathToLiberty = libertyDirrect / liberty;
   LibraryCells libraryCells(pathToLiberty);
 
-  //for(const auto& cell : libraryCells.cells) {
-    //std::cout << cell->getName() << std::endl;
-  //}
-
-
-  CircuitsGenerator circuitsGenerator;
-  circuitsGenerator.setLibElementsList(libraryCells.cells);
-  circuitsGenerator.initCircuit(2);
-  circuitsGenerator.generateCircuits();
-
-  for(const auto& cell : circuitsGenerator.getGeneratedNodes()) {
-    kitty::print_binary(*(cell->getFunc()),std::cout);
+  for(const auto& cell : libraryCells.cells) {
+    std::cout << cell->getName() << std::endl;
   }
+
   return true;
 }
 

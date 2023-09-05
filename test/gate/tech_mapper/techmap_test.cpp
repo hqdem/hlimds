@@ -24,6 +24,24 @@ using namespace eda::gate::parser;
 using namespace eda::gate::optimizer;
 
 namespace eda::gate::techMap {
+  void dump(const GNet &net) {
+  std::cout << net << '\n';
+
+  for (auto source : net.sourceLinks()) {
+    const auto *gate = Gate::get(source.target);
+    std::cout << *gate << std::endl;
+  }
+  for (auto target : net.targetLinks()) {
+    const auto *gate = Gate::get(target.source);
+    std::cout << *gate << std::endl;
+  }
+
+  std::cout << std::endl;
+  std::cout << "N=" << net.nGates() << '\n';
+  std::cout << "I=" << net.nSourceLinks() << '\n';
+  std::cout << "O=" << net.nTargetLinks() << '\n';
+}
+
   using GNet = eda::gate::model::GNet;
   using lorina::text_diagnostics;
   using lorina::diagnostic_engine;
@@ -48,10 +66,13 @@ namespace eda::gate::techMap {
     GNet net;
     gnet1(net);
 
+    dump(net);
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
     MinDelay *minDelay = new MinDelay();
     techMapper.techMap(&net, minDelay);
+
+     dump(net);
   }
 
   TEST(TechMapTest, gnet2) {
@@ -85,11 +106,12 @@ namespace eda::gate::techMap {
       FAIL() << "UTOPIA_HOME is not set.";
     }
     GNet *net = parseVerilog("c432.v");
-
+    
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
     GateIdMap gmap;
-    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
+    std::shared_ptr<GNet> premapped = premap(sharedNet, gmap, PreBasis::AIG);
+    GNet *gnet = premapped.get();
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
@@ -106,7 +128,8 @@ namespace eda::gate::techMap {
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
     GateIdMap gmap;
-    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
+    std::shared_ptr<GNet> premapped = premap(sharedNet, gmap, PreBasis::AIG);
+    GNet *gnet = premapped.get();
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
@@ -123,7 +146,8 @@ namespace eda::gate::techMap {
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
     GateIdMap gmap;
-    GNet *gnet = premap(sharedNet, gmap, PreBasis::AIG).get();
+    std::shared_ptr<GNet> premapped = premap(sharedNet, gmap, PreBasis::AIG);
+    GNet *gnet = premapped.get();
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     

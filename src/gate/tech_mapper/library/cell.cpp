@@ -14,68 +14,125 @@
 
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 
 using json = nlohmann::json;
 
 namespace eda::gate::techMap {
-  using RWDatabase = eda::gate::optimizer::RWDatabase;
-  using Gate = eda::gate::model::Gate;
-  using GNet = eda::gate::model::GNet;
-  using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
-  void LibraryCells::readLibertyFile(std::string filename) {
 
-    const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-    const std::filesystem::path PythonScriptPath = homePath / "src" / "gate" / "tech_mapper" / "library" / "libertyToJson.py";
-    const std::filesystem::path outputPath = homePath / "test" / "data" / "gate" / "tech_mapper" / "liberty.json";
+using RWDatabase = eda::gate::optimizer::RWDatabase;
+using Gate = eda::gate::model::Gate;
+using GNet = eda::gate::model::GNet;
+using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
 
-    std::string CallPythonParser = "python3 " + PythonScriptPath.string() + ' ' + filename  + ' ' + outputPath.string();
-    
-    std::cout << CallPythonParser << std::endl;
+//===----------------------------------------------------------------------===//
+// Pin
+//===----------------------------------------------------------------------===//
 
-    system(CallPythonParser.c_str());
+Pin::Pin(const std::string &name, double cell_fall, double cell_rise,
+    double fall_transition, double rise_transition)
+  : name(name), cell_fall(cell_fall), cell_rise(cell_rise),
+    fall_transition(fall_transition), rise_transition(rise_transition) {}
 
-    // Open the JSON file and parse its contents
-    std::ifstream ifs(outputPath.string());
-    json j;
-    ifs >> j;
+const std::string& Pin::getName() const {
+  return name;
+}
+double Pin::getMaxDelay() const {
+  double riseDelay = cell_rise + rise_transition;
+  double fallDelay = cell_fall + fall_transition;
+  return (riseDelay >= fallDelay ? riseDelay : fallDelay);
+}
 
-    // Iterate over the objects in the JSON file
-    for (json::iterator it = j.begin(); it != j.end(); ++it) {
+//===----------------------------------------------------------------------===//
+// Cell
+//===----------------------------------------------------------------------===//
 
-      // Extract the truth table
-      const std::string truthTableName = it.value()["output"].begin().key();
-      const std::string plainTruthTable = it.value()["output"][truthTableName];
+Cell::Cell(const std::string &name, const std::vector<Pin> &inputPins,
+          kitty::dynamic_truth_table *truthTable, double area)
+  : name(name), inputPins(inputPins), truthTable(truthTable), area(area) {}
 
-      // Create a dynamic truth table with the appropriate number of inputs
-      std::vector<std::string> inputPinNames;
+Cell::Cell(kitty::dynamic_truth_table *truthTable) :
+  name(""), inputPins({}), truthTable(truthTable) {}
 
-      const std::string inputs = it.value()["input"];
-      std::string token;
-      std::stringstream ss(inputs);
-      while (getline(ss, token, ' ')) {
-        inputPinNames.push_back(token);
-      }
-      int i = 0;
-      do {
-        i++;
-        std::vector<Pin> pins;
-        for (const auto &name: inputPinNames) {
-          const auto &cell = it.value()["delay"][name];
-          pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
-            cell["fall_transition"], cell["rise_transition"]));
-        }
+const std::string &Cell::getName() const {
+  return name;
+}
+double Cell::getArea() const {
+    return area;
+}
+kitty::dynamic_truth_table *Cell::getTruthTable() const {
+    return truthTable;
+}
+unsigned Cell::getInputPinsNumber() const {
+    return inputPins.size();
+}
+const Pin &Cell::getInputPin(uint inputPinNumber) const {
+    assert(inputPinNumber < inputPins.size());
+    return inputPins[inputPinNumber];
+}
 
-        kitty::dynamic_truth_table *truthTable =
-          new kitty::dynamic_truth_table(inputPinNames.size());
-        kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
+//===----------------------------------------------------------------------===//
+// LibraryCells
+//===----------------------------------------------------------------------===//
 
-        Cell *cell = new Cell(it.key() + std::to_string(i), pins, truthTable, it.value()["area"]);
-        cells.push_back(cell);
-      } while(next_permutation(inputPinNames.begin(), inputPinNames.end()));
+LibraryCells::LibraryCells(const std::string& filename) {
+  readLibertyFile(filename);
+}
+
+void LibraryCells::readLibertyFile(const std::string &filename) {
+
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path PythonScriptPath = homePath / "src" / "gate" / "tech_mapper" / "library" / "libertyToJson.py";
+  const std::filesystem::path outputPath = homePath / "test" / "data" / "gate" / "tech_mapper" / "liberty.json";
+
+  std::string CallPythonParser = "python3 " + PythonScriptPath.string() + ' ' + filename  + ' ' + outputPath.string();
+  
+  std::cout << CallPythonParser << std::endl;
+
+  system(CallPythonParser.c_str());
+
+  // Open the JSON file and parse its contents
+  std::ifstream ifs(outputPath.string());
+  json j;
+  ifs >> j;
+
+  // Iterate over the objects in the JSON file
+  for (json::iterator it = j.begin(); it != j.end(); ++it) {
+
+    // Extract the truth table
+    const std::string truthTableName = it.value()["output"].begin().key();
+    const std::string plainTruthTable = it.value()["output"][truthTableName];
+
+    // Create a dynamic truth table with the appropriate number of inputs
+    std::vector<std::string> inputPinNames;
+
+    const std::string inputs = it.value()["input"];
+    std::string token;
+    std::stringstream ss(inputs);
+    while (getline(ss, token, ' ')) {
+      inputPinNames.push_back(token);
     }
-  }
+    int i = 0;
+    do {
+      i++;
+      std::vector<Pin> pins;
+      for (const auto &name: inputPinNames) {
+        const auto &cell = it.value()["delay"][name];
+        pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
+          cell["fall_transition"], cell["rise_transition"]));
+      }
 
-  void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb) {
+      kitty::dynamic_truth_table *truthTable =
+        new kitty::dynamic_truth_table(inputPinNames.size());
+      kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
+
+      Cell *cell = new Cell(it.key() + std::to_string(i), pins, truthTable, it.value()["area"]);
+      cells.push_back(cell);
+    } while(next_permutation(inputPinNames.begin(), inputPinNames.end()));
+  }
+}
+
+void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb) {
   for(auto& cell : cells) {
     uint64_t truthTable = 0;
 
@@ -119,7 +176,7 @@ namespace eda::gate::techMap {
 
       
         Pin pin = cell->getInputPin(i);
-        double pinDelay = pin.getMaxdelay();
+        double pinDelay = pin.getMaxDelay();
         delay.push_back(pinDelay);
       }
 

@@ -13,16 +13,17 @@
 
 #include <string>
 #include <vector>
-namespace eda::gate::techMap {
-using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
-struct Pin {
-  public:
-    Pin(const std::string name, double cell_fall, double cell_rise,
-        double fall_transition, double rise_transition) :
-      name(name), cell_fall(cell_fall), cell_rise(cell_rise),
-      fall_transition(fall_transition), rise_transition(rise_transition) {}
 
-    const std::string &getName() { return name; }
+namespace eda::gate::techMap {
+
+using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
+
+struct Pin {
+  Pin(const std::string &name, double cell_fall, double cell_rise,
+      double fall_transition, double rise_transition);
+
+  const std::string &getName() const;
+  double getMaxDelay() const;
 
   private:
     const std::string name;
@@ -30,38 +31,19 @@ struct Pin {
     double cell_rise;
     double fall_transition;
     double rise_transition;
-
-  public:
-    double getMaxdelay() {
-      double riseDelay = cell_rise + rise_transition;
-      double fallDelay = cell_fall + fall_transition;
-      return (riseDelay >= fallDelay ? riseDelay : fallDelay);
-    }
 };
 
 struct Cell {
-  Cell(const std::string name, const std::vector<Pin> inputPins,
-      kitty::dynamic_truth_table *truthTable) :
-    name(name), inputPins(inputPins), truthTable(truthTable) {}
+  Cell(const std::string &name, const std::vector<Pin> &inputPins,
+      kitty::dynamic_truth_table *truthTable, double area = 0.0);
 
-  Cell(const std::string name, const std::vector<Pin> inputPins,
-      kitty::dynamic_truth_table *truthTable, double area) :
-    name(name), inputPins(inputPins), truthTable(truthTable), area(area) {}
+  Cell(kitty::dynamic_truth_table *truthTable);
 
-  Cell(kitty::dynamic_truth_table *truthTable) :
-    name(""), inputPins({}), truthTable(truthTable) {} // TODO: should we extract inputs number from TT?
-
-  const std::string getName() { return name; }
-
-  double getArea() { return area; }
-
-  kitty::dynamic_truth_table* getTruthTable() { return truthTable; }
-
-  unsigned getInputPinsNumber() { return inputPins.size(); }
-
-  Pin &getInputPin (uint inputPinNumber) {
-    assert(inputPinNumber < inputPins.size());
-    return inputPins[inputPinNumber]; }
+  const std::string &getName() const;
+  double getArea() const; 
+  kitty::dynamic_truth_table *getTruthTable() const;
+  unsigned getInputPinsNumber() const;
+  const Pin &getInputPin (uint inputPinNumber) const;
 
 private:
   const std::string name;
@@ -70,20 +52,14 @@ private:
   double area;
 };
 
-
 struct LibraryCells {
-  LibraryCells(std::string filename) {
-
-    //system("python /home/");
-    readLibertyFile(filename);
-  }
+  LibraryCells(const std::string &filename);
 
   std::vector<Cell*> cells;
   void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb);
 
   private:
-  void readLibertyFile(std::string filename);
+  void readLibertyFile(const std::string &filename);
 };
 
-//void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb);
 } // namespace eda::gate::techMap

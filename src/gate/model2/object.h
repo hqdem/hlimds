@@ -26,15 +26,28 @@ static constexpr uint64_t OBJ_NULL_ID = 0;
 
 /// Full object identifier (FID):
 /// | tag:8 | short object identifier (SID) | zeros:Z |
-/// | 63 56 | 55                          Z | Z-1   0 |.
-template <uint64_t T, size_t S, size_t Z>
+/// | 63 56 | 55 (V+Z-1)                  Z | Z-1   0 |.
+template <uint64_t T, size_t S, size_t V, size_t Z>
 class ObjectID final {
 public:
+  /// Object tag.
   static constexpr uint64_t Tag = T;
+  static_assert(0x01 <= T && T <= 0xff);
 
+  /// Object size in bytes.
   static constexpr size_t Size = S;
+  static_assert(S <= PAGE_SIZE);
+
+  /// Number of alignment zeros: log2(size).
   static constexpr size_t Log2 = Z;
-  static_assert(Size == (1 << Log2));
+  static_assert(S == (1u << Z));
+
+  /// Number of valuable bits: SID width.
+  static constexpr size_t Bits = V;
+  static_assert((V + Z) <= (64 - 8));
+
+  /// Invalid SID (11...1).
+  static constexpr uint64_t InvalidSID = (1ull << V) - 1;
 
   /// Sets the tag to the untagged FID.
   static constexpr ObjectID makeTaggedFID(uint64_t objectFID) {
@@ -98,15 +111,15 @@ enum ObjectTag : uint8_t {
   TAG_LIST_BLOCK
 };
 
-using CellID         = ObjectID<TAG_CELL, 32, 5>;
-using CellTypeID     = ObjectID<TAG_CELL_TYPE, 32, 5>;
-using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 1024, 10>;
-using LinkEndID      = ObjectID<TAG_LINK_END, 8, 3>;
-using LinkID         = ObjectID<TAG_LINK, 16, 4>;
-using NetID          = ObjectID<TAG_NET, 64, 6>;
-using SubnetID       = ObjectID<TAG_SUBNET, 16, 4>;
-using StringID       = ObjectID<TAG_STRING, 32, 5>;
-using ListBlockID    = ObjectID<TAG_LIST_BLOCK, 64, 6>;
+using CellID         = ObjectID<TAG_CELL, 32, 40, 5>;
+using CellTypeID     = ObjectID<TAG_CELL_TYPE, 32, 32, 5>;
+using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 1024, 32, 10>;
+using LinkEndID      = ObjectID<TAG_LINK_END, 8, 50, 3>;
+using LinkID         = ObjectID<TAG_LINK, 16, 50, 4>;
+using NetID          = ObjectID<TAG_NET, 64, 32, 6>;
+using SubnetID       = ObjectID<TAG_SUBNET, 16, 32, 4>;
+using StringID       = ObjectID<TAG_STRING, 32, 32, 5>;
+using ListBlockID    = ObjectID<TAG_LIST_BLOCK, 64, 32, 6>;
 
 using ListID = ListBlockID;
 

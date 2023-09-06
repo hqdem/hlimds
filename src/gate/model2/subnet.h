@@ -43,19 +43,20 @@ public:
 
   /// Cell entry.
   struct Cell final {
-    /// Cell SID or CELL_NULL_SID (not connected w/ a design).
-    uint64_t cell : 40;
+    /// Cell SID or CellID::InvalidSID (not connected w/ a design).
+    uint64_t cell : CellID::Bits;
     /// Cell arity.
     uint64_t arity : 5;
     /// Number of entries for additional links.
     uint64_t more : 3;
-    /// Type SID or TYPE_NULL_SID (undefined cell).
+    /// Type SID or CellTypeID::InvalidSID (undefined cell).
     uint32_t type;
     /// Input links.
     Link link[5];
   };
+  static_assert(sizeof(Cell) == 32);
 
-  /// Generalized entry.
+  /// Generalized entry: a cell or an array of additional links.
   union Entry {
     Entry() {} 
     Cell cell;
@@ -80,7 +81,7 @@ private:
   const uint16_t nIn;
   /// Number of outputs.
   const uint16_t nOut;
-  /// Total number of cells.
+  /// Total number of cells (including inputs and outputs).
   const uint32_t nCell;
 
   /// Topologically sorted array of entries.

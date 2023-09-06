@@ -14,11 +14,12 @@
 #include "gate/tech_mapper/tech_map_visitor.h"
 
 namespace eda::gate::techMap {
+
   using Gate = eda::gate::model::Gate;
   using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
   using PreBasis = eda::gate::premapper::PreBasis;
   
-  TechMapper::TechMapper(std::string libertyPath) {
+  TechMapper::TechMapper(const std::string &libertyPath) {
     LibraryCells libraryCells(libertyPath);
 
     rwdb.linkDB(dbPath);
@@ -27,37 +28,37 @@ namespace eda::gate::techMap {
     libraryCells.initializeLibraryRwDatabase(&rwdb);
   }
 
-  TechMapper::TechMapper(eda::gate::optimizer::SQLiteRWDatabase &rwdb) {
-    this->rwdb = rwdb;
-  }
+  TechMapper::TechMapper(eda::gate::optimizer::SQLiteRWDatabase &rwdb) :
+  rwdb(rwdb) {}
 
-  GNet *TechMapper::techMap(GNet *net, Strategy *strategy) {
+  GNet *TechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
     try {
-      //aigMap(net);
+      if (aig) {aigMap(net);}
+      std::cout << "I=" << net->nSourceLinks() << '\n';
       findCuts(net);
       replacementSearch(net, strategy);
       replacement(net);
-      std::cout << getArea(net) << std::endl;
-      std::cout << getDelay(net) << std::endl;
+      std::cout << getArea() << std::endl;
+      std::cout << getDelay() << std::endl;
       rwdb.closeDB();
     } catch (const char* msg) {
-    std::cout << msg << std::endl;
+      std::cout << msg << std::endl;
     }
     remove(dbPath.c_str());
     return net;
   }
   
-  void TechMapper::aigMap(GNet *net) {
+  void TechMapper::aigMap(GNet *&net) {
     unsigned int start_time =  clock();
 
     std::shared_ptr<GNet> sharedNet(net);
     sharedNet->sortTopologically();
-
     GateIdMap gmap;
     std::shared_ptr<GNet> premapped = 
         eda::gate::premapper::getPreMapper(PreBasis::AIG).map(*sharedNet, gmap);
+    premapped->sortTopologically();
+    net = new GNet(*premapped);
 
-    net = premapped.get(); // The value is modified by reference for use in other parts of the code.
     std::cout << "aigMapper - " << clock() - start_time << " ms" << std::endl;
   }
 
@@ -94,10 +95,10 @@ namespace eda::gate::techMap {
     std::cout << "replace - " << clock() - start_time << " ms" << std::endl;
   }
 
-  float TechMapper::getArea(GNet *net) {
+  float TechMapper::getArea() const{
     return area;
   }
-  float TechMapper::getDelay(GNet *net) {
+  float TechMapper::getDelay() const{
     return delay;
   }
 } // namespace eda::gate::techMap

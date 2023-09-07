@@ -37,7 +37,7 @@ class VerilogPrinter final : public NetPrinter,
   static std::string getWire(const CellID &cellID, uint16_t port) {
     const CellType &type = Cell::get(cellID).getType();
 
-    if (type.getOutNumber() <= 1) {
+    if (type.getOutNum() <= 1) {
       return getName(cellID);
     }
 
@@ -99,7 +99,7 @@ class VerilogPrinter final : public NetPrinter,
     if (pass == 0) {
       // Declare the cell's output wires.
       if (!cell.isIn() && !cell.isOut()) {
-        for (uint16_t port = 0; port < type.getOutNumber(); ++port) {
+        for (uint16_t port = 0; port < type.getOutNum(); ++port) {
           out << "  wire " << getWire(cellID, port) << ";\n";
         }
       }
@@ -114,7 +114,7 @@ class VerilogPrinter final : public NetPrinter,
         out << "  " << getType(cellID) << "(";
 
         bool comma = false;
-        for (uint16_t port = 0; port < type.getOutNumber(); ++port) {
+        for (uint16_t port = 0; port < type.getOutNum(); ++port) {
           if (comma) out << ", ";
           out << getWire(cellID, port);
           comma = true;

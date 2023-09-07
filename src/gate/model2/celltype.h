@@ -119,8 +119,8 @@ public:
   bool isCommutative()   const { return props.commutative;   }
   bool isAssociative()   const { return props.associative;   }
 
-  uint16_t getInNumber()  const { return nIn;  }
-  uint16_t getOutNumber() const { return nOut; }
+  uint16_t getInNum()  const { return nIn;  }
+  uint16_t getOutNum() const { return nOut; }
 
 private:
   CellType(const std::string &name,

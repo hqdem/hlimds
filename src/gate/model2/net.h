@@ -29,17 +29,17 @@ public:
   List<CellID> getHardBlocks() const { return List<CellID>(hardBlocks); }
 
   /// Returns the number of inputs.
-  uint16_t getInNumber() const { return nInputs; }
+  uint16_t getInNum() const { return nInputs; }
   /// Returns the number of outputs.
-  uint16_t getOutNumber() const { return nOutputs; }
+  uint16_t getOutNum() const { return nOutputs; }
   /// Returns the number of combinational gates/cells.
-  uint32_t getCombNumber() const { return nCombCells; }
+  uint32_t getCombNum() const { return nCombCells; }
   /// Returns the number of flip-flops and latches.
-  uint32_t getFlipNumber() const { return nFlipFlops; }
+  uint32_t getFlipNum() const { return nFlipFlops; }
   /// Returns the number of hard blocks.
-  uint16_t getHardNumber() const { return nHardBlocks; }
+  uint16_t getHardNum() const { return nHardBlocks; }
   /// Returns the number of soft blocks and subnets.
-  uint16_t getSoftNumber() const { return nSoftBlocks; }
+  uint16_t getSoftNum() const { return nSoftBlocks; }
 
 private:
   Net(ListID inputs,

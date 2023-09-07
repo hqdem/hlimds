@@ -35,6 +35,7 @@ add_executable(${TEST_TARGET}
   gate/model2/array_test.cpp
   gate/model2/list_test.cpp
   gate/model2/net_test.cpp
+  gate/model2/subnet_test.cpp
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp
   gate/optimizer/bgnet_test.cpp

@@ -46,8 +46,10 @@ public:
   static constexpr size_t Bits = V;
   static_assert((V + Z) <= (64 - 8));
 
-  /// Invalid SID (11...1).
-  static constexpr uint64_t InvalidSID = (1ull << V) - 1;
+  /// Invalid (null) FID.
+  static constexpr uint64_t NullFID = OBJ_NULL_ID;
+  /// Invalid (null) SID.
+  static constexpr uint64_t NullSID = (1ull << V) - 1ull;
 
   /// Sets the tag to the untagged FID.
   static constexpr ObjectID makeTaggedFID(uint64_t objectFID) {
@@ -61,12 +63,14 @@ public:
 
   /// Makes the FID from the SID.
   static constexpr ObjectID makeFID(uint64_t objectSID) {
-    return makeTaggedFID(objectSID << Log2);
+    return objectSID == NullSID ? ObjectID(NullFID)
+                                : makeTaggedFID(objectSID << Log2);
   }
 
   /// Makes the SID from the FID.
   static constexpr uint64_t makeSID(ObjectID objectFID) {
-    return makeUntaggedFID(objectFID) >> Log2;
+    return objectFID == NullFID ? NullSID
+                                : makeUntaggedFID(objectFID) >> Log2;
   }
 
   /// Constructs a FID from the specified value.

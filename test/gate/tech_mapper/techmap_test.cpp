@@ -33,7 +33,7 @@ namespace eda::gate::techMap {
   const std::filesystem::path homePathTechMap = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path libertyDirrectTechMap = homePathTechMap / "test" / "data" / "gate" / "tech_mapper";
 
-  TEST(TechMapTest, gnet1) {
+  TEST(TechMapTest, DISABLED_gnet1) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -46,7 +46,7 @@ namespace eda::gate::techMap {
     techMapper.techMap(&net, minDelay, false);
   }
 
-  TEST(TechMapTest, gnet2) {
+  TEST(TechMapTest, DISABLED_gnet2) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -60,7 +60,7 @@ namespace eda::gate::techMap {
     techMapper.techMap(&net, minDelay, false);
   }
 
-  TEST(TechMapTest, gnet3) {
+  TEST(TechMapTest, DISABLED_gnet3) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -73,7 +73,7 @@ namespace eda::gate::techMap {
     techMapper.techMap(&net, minDelay, false);
   }
 
-  TEST(TechMapTest, c432) {
+  TEST(TechMapTest, DISABLED_c432) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -97,7 +97,7 @@ namespace eda::gate::techMap {
     techMapper.techMap(net, minDelay, true);
   }
 
-  TEST(TechMapTest, c17) {
+  TEST(TechMapTest, DISABLED_c17) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }

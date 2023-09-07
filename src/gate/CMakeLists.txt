@@ -57,7 +57,6 @@ add_library(Gate OBJECT
   tech_mapper/strategy/min_delay.cpp
   tech_mapper/tech_map.cpp
   tech_mapper/tech_map_visitor.cpp
-  tech_optimizer/tech_optimizer.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)
 add_library(Utopia::Gate ALIAS Gate)

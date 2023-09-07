@@ -32,7 +32,6 @@ namespace eda::gate::optimizer {
     return g;
   }
 
-
   std::vector<GateId> gnet1Extended(GNet &gNet) {
     std::vector<GateId> g(4);
     for (GateId &el: g) {

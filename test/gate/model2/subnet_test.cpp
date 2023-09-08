@@ -26,7 +26,7 @@ TEST(SubnetTest, SimpleTest) {
 
   size_t idx[InNum];
   for (size_t i = 0; i < InNum; ++i) {
-    idx[i] = subnetBuilder.addCell(IN);
+    idx[i] = subnetBuilder.addCell(IN, SubnetBuilder::INPUT);
   }
 
   for (size_t n = (InNum >> 1); n != 0; n >>= 1) {
@@ -38,10 +38,7 @@ TEST(SubnetTest, SimpleTest) {
     }
   }
 
-  subnetBuilder.addCell(OUT, Link(idx[0]));
-
-  subnetBuilder.setInNum(InNum);
-  subnetBuilder.setOutNum(OutNum);
+  subnetBuilder.addCell(OUT, Link(idx[0]), SubnetBuilder::OUTPUT);
 
   const auto &subnet = Subnet::get(subnetBuilder.make());
   EXPECT_EQ(subnet.getInNum(), InNum);

@@ -13,6 +13,7 @@
 #include "gate/model2/celltype.h"
 #include "gate/model2/object.h"
 
+#include <cstdint>
 #include <ostream>
 #include <vector>
 
@@ -38,7 +39,7 @@ public:
     uint32_t idx : 28;
     /// Output port.
     uint32_t out : 3;
-    /// Invertor flag.
+    /// Invertor flag (for invertor graphs, e.g. AIG).
     uint32_t inv : 1;
   };
   static_assert(sizeof(Link) == 4);
@@ -49,14 +50,18 @@ public:
   struct Cell final {
     static constexpr size_t InPlaceLinks = 5;
     static constexpr size_t InEntryLinks = 8;
+    static constexpr size_t MaxCellArity = (1 << 5) - 1;
 
     /// Constructs a view to the existing cell.
-    Cell(CellTypeID typeID, CellID cellID, const LinkList &links):
+    Cell(CellTypeID typeID, CellID cellID, const LinkList &links, bool in, bool out):
         cell(CellID::makeSID(cellID)),
+        in(in),
+        out(out),
         arity(links.size()),
         more((links.size() + (InEntryLinks - 1) - InPlaceLinks) / InEntryLinks),
         type(CellTypeID::makeSID(typeID)) {
-      assert(links.size() < (1u << 5));
+      assert(links.size() <= MaxCellArity);
+      assert(!in || arity == 0);
 
       const auto size = std::min(links.size(), InPlaceLinks);
       for (size_t i = 0; i < size; ++i) {
@@ -65,15 +70,21 @@ public:
     }
 
     /// Constructs a virtual cell not presented in a net.
-    Cell(CellTypeID typeID, const LinkList &links):
-      Cell(typeID, OBJ_NULL_ID, links) {}
+    Cell(CellTypeID typeID, const LinkList &links, bool in, bool out):
+      Cell(typeID, OBJ_NULL_ID, links, in, out) {}
+
+    bool isInput() const { return in; }
+    bool isOutput() const { return out; }
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
-
     const CellType &getType() const { return CellType::get(getTypeID()); }
     
     /// Cell SID or CellID::NullSID (not connected w/ a design).
     uint64_t cell : CellID::Bits;
+    /// Input flag.
+    uint64_t in : 1;
+    /// Output flag.
+    uint64_t out : 1;
     /// Cell arity.
     uint64_t arity : 5;
     /// Number of entries for additional links.
@@ -88,10 +99,10 @@ public:
   /// Generalized entry: a cell or an array of additional links.
   union Entry {
     Entry() {}
-    Entry(CellTypeID typeID, const LinkList &links):
-        cell(typeID, links) {}
-    Entry(CellTypeID typeID, CellID cellID, const LinkList &links):
-        cell(typeID, cellID, links) {}
+    Entry(CellTypeID typeID, const LinkList &links, bool in, bool out):
+        cell(typeID, links, in, out) {}
+    Entry(CellTypeID typeID, CellID cellID, const LinkList &links, bool in, bool out):
+        cell(typeID, cellID, links, in, out) {}
     Entry(const LinkList &links, size_t startWith) {
       const auto size = links.size() - startWith;
       for (size_t i = 0; i < size && i < Cell::InEntryLinks; ++i) {
@@ -139,16 +150,23 @@ public:
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
+  using Kind = std::pair<bool, bool>;
+
+  static constexpr auto INPUT  = std::make_pair(true,  false);
+  static constexpr auto OUTPUT = std::make_pair(false, true);
+  static constexpr auto INOUT  = std::make_pair(true,  true);
+  static constexpr auto INNER  = std::make_pair(false, false);
+
   SubnetBuilder(): nIn(0), nOut(0), entries() {}
 
-  size_t addCell(CellTypeID typeID) {
-    entries.emplace_back(typeID, LinkList{});
-    return entries.size() - 1;
-  }
+  size_t addCell(CellTypeID typeID, const LinkList &links, Kind kind = INNER) {
+    const auto in  = kind.first;
+    const auto out = kind.second;
+    const auto idx = entries.size();
 
-  size_t addCell(CellTypeID typeID, const LinkList &links) {
-    const auto index = entries.size();
-    entries.emplace_back(typeID, links);
+    entries.emplace_back(typeID, links, in, out);
+    if (in)  nIn++;
+    if (out) nOut++;
 
     const auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
     const auto InEntryLinks = Subnet::Cell::InEntryLinks;
@@ -156,42 +174,39 @@ public:
       entries.emplace_back(links, i);
     }
 
-    return index;
+    return idx;
   }
 
-  size_t addCell(CellSymbol symbol) {
-    return addCell(getCellTypeID(symbol));
+  size_t addCell(CellSymbol symbol, Kind kind = INNER) {
+    return addCell(getCellTypeID(symbol), LinkList{}, kind);
   }
 
-  size_t addCell(CellSymbol symbol, const LinkList &links) {
-    return addCell(getCellTypeID(symbol), links);
+  size_t addCell(CellSymbol symbol, const LinkList &links, Kind kind = INNER) {
+    return addCell(getCellTypeID(symbol), links, kind);
   }
 
-  size_t addCell(CellSymbol symbol, Link link) {
-    return addCell(symbol, LinkList{link});
+  size_t addCell(CellSymbol symbol, Link link, Kind kind = INNER) {
+    return addCell(symbol, LinkList{link}, kind);
   }
 
-  size_t addCell(CellSymbol symbol, Link l1, Link l2) {
-    return addCell(symbol, LinkList{l1, l2});
-  }
-
-  size_t addCell(CellSymbol symbol, Link l1, Link l2, Link l3) {
-    return addCell(symbol, LinkList{l1, l2, l3});
+  size_t addCell(CellSymbol symbol, Link l1, Link l2, Kind kind = INNER) {
+    return addCell(symbol, LinkList{l1, l2}, kind);
   }
 
   size_t addCell(CellSymbol symbol,
-      Link l1, Link l2, Link l3, Link l4) {
-    return addCell(symbol, LinkList{l1, l2, l3, l4});
+      Link l1, Link l2, Link l3, Kind kind = INNER) {
+    return addCell(symbol, LinkList{l1, l2, l3}, kind);
   }
 
   size_t addCell(CellSymbol symbol,
-      Link l1, Link l2, Link l3, Link l4, Link l5) {
-    return addCell(symbol, LinkList{l1, l2, l3, l4, l5});
+      Link l1, Link l2, Link l3, Link l4, Kind kind = INNER) {
+    return addCell(symbol, LinkList{l1, l2, l3, l4}, kind);
   }
 
-  void setInNum(size_t num) { nIn = num; }
-
-  void setOutNum(size_t num) { nOut = num; }
+  size_t addCell(CellSymbol symbol,
+      Link l1, Link l2, Link l3, Link l4, Link l5, Kind kind = INNER) {
+    return addCell(symbol, LinkList{l1, l2, l3, l4, l5}, kind);
+  }
 
   SubnetID make() {
     assert(nIn > 0 && nOut > 0);

@@ -73,8 +73,8 @@ public:
     Cell(CellTypeID typeID, const LinkList &links, bool in, bool out):
       Cell(typeID, OBJ_NULL_ID, links, in, out) {}
 
-    bool isInput() const { return in; }
-    bool isOutput() const { return out; }
+    bool isIn() const { return in; }
+    bool isOut() const { return out; }
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }

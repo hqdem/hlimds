@@ -52,7 +52,6 @@ protected:
 
   virtual void onNetBegin(
       std::ostream &out, const Net &net, const std::string &name) = 0;
-
   virtual void onNetEnd(
       std::ostream &out, const Net &net, const std::string &name) = 0;
 

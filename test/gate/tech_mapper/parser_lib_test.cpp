@@ -7,14 +7,15 @@
 //===----------------------------------------------------------------------===//
 #include "kitty/kitty.hpp"
 
-#include "gate/tech_mapper/library/cell.h"
-#include "gate/tech_mapper/parser_lib_test.h"
+#include "gate/tech_optimizer/library/cell.h"
+#include "gate/model/gnet_test.h"
+#include "gate/optimizer/rwdatabase.h"
 
 #include "gtest/gtest.h"
 #include <filesystem>
 
 using namespace eda::gate::optimizer;
-using namespace eda::gate::techMap;
+using namespace eda::gate::tech_optimizer;
 using namespace eda::gate::model;
 
 const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));

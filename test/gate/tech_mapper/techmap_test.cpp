@@ -12,18 +12,19 @@
 
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/parser_test.h"
-#include "gate/tech_mapper/tech_map.h"
+#include "gate/tech_optimizer/tech_optimizer.h"
+#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/min_delay.h"
+#include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/premapper/mapper/mapper_test.h"
 #include "gate/debugger/checker.h"
-#include "gate/tech_mapper/strategy/min_delay.h"
-#include "gate/tech_mapper/strategy/strategy.h"
 
 #include "gtest/gtest.h"
 
 using namespace eda::gate::parser;
 using namespace eda::gate::optimizer;
 
-namespace eda::gate::techMap {
+namespace eda::gate::tech_optimizer {
 
   using GNet = eda::gate::model::GNet;
   using lorina::text_diagnostics;
@@ -33,17 +34,16 @@ namespace eda::gate::techMap {
   const std::filesystem::path homePathTechMap = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path libertyDirrectTechMap = homePathTechMap / "test" / "data" / "gate" / "tech_mapper";
 
-  TEST(TechMapTest, DISABLED_gnet1) {
+  TEST(TechMapTest, gnet1) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
     GNet net;
     gnet1(net);
 
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
-    MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(&net, minDelay, false);
+    read_db(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+
+    tech_optimize(&net,0);
   }
 
   TEST(TechMapTest, DISABLED_gnet2) {
@@ -53,11 +53,10 @@ namespace eda::gate::techMap {
     GNet net;
     gnet2(net);
 
-
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    CutBasedTechMapper cutBasedTechMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
     MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(&net, minDelay, false);
+    cutBasedTechMapper.techMap(&net, minDelay, false);
   }
 
   TEST(TechMapTest, DISABLED_gnet3) {
@@ -67,10 +66,10 @@ namespace eda::gate::techMap {
     GNet net;
     gnet3(net);
 
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    CutBasedTechMapper cutBasedTechMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
     MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(&net, minDelay, false);
+    cutBasedTechMapper.techMap(&net, minDelay, false);
   }
 
   TEST(TechMapTest, DISABLED_c432) {
@@ -79,10 +78,10 @@ namespace eda::gate::techMap {
     }
     GNet *net = parseVerilog("c432.v");
 
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    CutBasedTechMapper cutBasedTechMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
     MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(net, minDelay, true);
+    cutBasedTechMapper.techMap(net, minDelay, true);
   }
 
   TEST(TechMapTest, adder) {
@@ -91,10 +90,10 @@ namespace eda::gate::techMap {
     }
     GNet *net = parseVerilog("adder.v");
 
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    CutBasedTechMapper cutBasedTechMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
     MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(net, minDelay, true);
+    cutBasedTechMapper.techMap(net, minDelay, true);
   }
 
   TEST(TechMapTest, DISABLED_c17) {
@@ -103,9 +102,9 @@ namespace eda::gate::techMap {
     }
     GNet *net = parseVerilog("c17.v");
 
-    TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    CutBasedTechMapper cutBasedTechMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
     MinDelay *minDelay = new MinDelay();
-    techMapper.techMap(net, minDelay, true);
+    cutBasedTechMapper.techMap(net, minDelay, true);
   }
 }

@@ -324,6 +324,73 @@ namespace eda::gate::optimizer::resynthesis {
     return net;
   }
 
+  const auto &runSubnet() {
+
+    using Link = Subnet::Link;
+    SubnetBuilder subnetBuilder;
+
+    int numVars = table.num_vars();
+    // id of the first value in the output line
+    int firstValId = numVars * 2 + 2; 
+    CNF output = Cascade::getFunction(table);
+    int size = output[0].size();
+    unsigned int InNum = size - 1; // number of cells in subnet
+
+    size_t idx[InNum];
+    for (size_t i = 0; i < InNum; ++i) {
+      idx[i] = subnetBuilder.addCell(IN, SubnetBuilder::INPUT);
+    }
+
+    if (!output[0][size - 1]) { // 0 case
+      idx[InNum - 2] = subnetBuilder.addCell(ZERO, SubnetBuilder::INPUT);
+      idx[InNum - 1] = subnetBuilder.addCell(OUT, Link(idx[InNum - 2]), 
+          SubnetBuilder::OUTPUT);
+
+      const auto &subnet = Subnet::get(subnetBuilder.make());
+      return subnet;
+
+    } else if (output[0][size - 1] == 1) { // 1 case
+      idx[InNum - 2] = subnetBuilder.addCell(ONE, SubnetBuilder::INPUT);
+      idx[InNum - 1] = subnetBuilder.addCell(OUT, Link(idx[InNum - 2]), 
+          SubnetBuilder::OUTPUT);
+
+      const auto &subnet = Subnet::get(subnetBuilder.make());
+      return subnet;
+    }
+
+    for (int i = numVars; i < numVars * 2; i++) { // negotiation
+      const Link link(idx[i - numVars]); // source
+      idx[i] = subnetBuilder.addCell(NOT, link);
+    }
+
+    for (int i = firstValId; i < size; i++) { // building subnet
+      if (!output[1][i] && !output[2][i]) { // one source case
+        int idx1 = output[0][i] - 2; // link to source
+        idx[i - 2] = idx[idx1]; 
+      } else { // two sources 
+        int idx1 = output[1][i] - 2;
+        int idx2 = output[2][i] - 2;
+
+        const Link lhs(idx[idx1]); // link to 1st source
+        const Link rhs(idx[idx2]); // link to 2nd source
+
+        // new cell
+        if(output[0][i] == 2) {
+          idx[i - 2] = subnetBuilder.addCell(AND, lhs, rhs);
+          k++;
+        } else if (output[0][i] == 3) {
+          idx[i - 2] = subnetBuilder.addCell(OR, lhs, rhs);
+          k++;
+        }
+      }
+    }
+    idx[InNum - 1] = subnetBuilder.addCell(OUT, Link(idx[InNum - 2]), 
+        SubnetBuilder::OUTPUT);
+    const auto &subnet = Subnet::get(subnetBuilder.make());
+
+    return subnet;
+  }
+
 //===----------------------------------------------------------------------===//
 // Constructors/Destructors
 //===----------------------------------------------------------------------===//

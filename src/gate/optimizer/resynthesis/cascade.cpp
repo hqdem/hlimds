@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 #include "gate/optimizer/resynthesis/cascade.h"
-#include "gate/model2/subnet.h"
 #include "kitty/kitty.hpp"
 #include <memory>
 #include <vector>
@@ -363,7 +362,7 @@ namespace eda::gate::optimizer::resynthesis {
 
     for (int i = numVars; i < numVars * 2; i++) { // negotiation
       const Link link(idx[i - numVars]); // source
-      idx[i] = subnetBuilder.addCell(NOT, link);
+      idx[i] = subnetBuilder.addCell(model::NOT, link);
     }
 
     for (int i = firstValId; i < size; i++) { // building subnet
@@ -380,10 +379,8 @@ namespace eda::gate::optimizer::resynthesis {
         // new cell
         if(output[0][i] == 2) {
           idx[i - 2] = subnetBuilder.addCell(model::AND, lhs, rhs);
-          k++;
         } else if (output[0][i] == 3) {
           idx[i - 2] = subnetBuilder.addCell(model::OR, lhs, rhs);
-          k++;
         }
       }
     }

@@ -9,6 +9,7 @@
 #define UNTITLED_METHODS_H
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
+#include "gate/model2/subnet.h"
 #include "kitty/kitty.hpp"
 #include <memory>
 #include <vector>
@@ -47,6 +48,9 @@ namespace eda::gate::optimizer::resynthesis {
 
     /// Makes net using cascade method
     std::shared_ptr<GNet> run(SignalList &inputs, Gate::Id &outputId);
+
+    /// Makes subnet using cascade method
+    const auto &runSubnet();
     
     /// Makes CNF for function using cascade method
     CNF getFunction(kitty::dynamic_truth_table &table);

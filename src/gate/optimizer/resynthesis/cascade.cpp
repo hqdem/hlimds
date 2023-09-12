@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include "gate/optimizer/resynthesis/cascade.h"
+#include "gate/model2/subnet.h"
 #include "kitty/kitty.hpp"
 #include <memory>
 #include <vector>
@@ -324,7 +325,7 @@ namespace eda::gate::optimizer::resynthesis {
     return net;
   }
 
-  const auto &runSubnet() {
+  const auto &runSubnet(kitty::dynamic_truth_table &table) {
 
     using Link = Subnet::Link;
     SubnetBuilder subnetBuilder;

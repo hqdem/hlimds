@@ -20,6 +20,8 @@ namespace eda::gate::optimizer::resynthesis {
   using CNF = Cascade::CNF;
   using GateSymbol = eda::gate::model::GateSymbol;
   using GNet = Cascade::GNet;
+  using Subnet = model::Subnet;
+  using SubnetBuilder = model::SubnetBuilder;
 
 //===----------------------------------------------------------------------===//
 // Internal Methods

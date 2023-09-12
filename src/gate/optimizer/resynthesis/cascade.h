@@ -50,7 +50,7 @@ namespace eda::gate::optimizer::resynthesis {
     std::shared_ptr<GNet> run(SignalList &inputs, Gate::Id &outputId);
 
     /// Makes subnet using cascade method
-    const auto &runSubnet();
+    const auto &runSubnet(kitty::dynamic_truth_table &table);
     
     /// Makes CNF for function using cascade method
     CNF getFunction(kitty::dynamic_truth_table &table);

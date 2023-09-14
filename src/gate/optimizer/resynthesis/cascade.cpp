@@ -19,8 +19,6 @@ namespace eda::gate::optimizer::resynthesis {
   using CNF = Cascade::CNF;
   using GateSymbol = eda::gate::model::GateSymbol;
   using GNet = Cascade::GNet;
-  using Subnet = model::Subnet;
-  using SubnetBuilder = model::SubnetBuilder;
 
 //===----------------------------------------------------------------------===//
 // Internal Methods
@@ -324,71 +322,6 @@ namespace eda::gate::optimizer::resynthesis {
     outputId = net->addOut(output[0][output[0].size() - 1]);
     net->sortTopologically();
     return net;
-  }
-
-  const auto &Cascade::runSubnet() {
-
-    using Link = Subnet::Link;
-    SubnetBuilder subnetBuilder;
-
-    int numVars = table.num_vars();
-    // id of the first value in the output line
-    int firstValId = numVars * 2 + 2; 
-    CNF output = Cascade::getFunction(table);
-    int size = output[0].size();
-    unsigned int InNum = size - 1; // number of cells in subnet
-
-    size_t idx[InNum];
-    for (size_t i = 0; i < InNum; ++i) {
-      idx[i] = subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT);
-    }
-
-    if (!output[0][size - 1]) { // 0 case
-      idx[InNum - 2] = subnetBuilder.addCell(model::ZERO, SubnetBuilder::INPUT);
-      idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
-          SubnetBuilder::OUTPUT);
-
-      const auto &subnet = Subnet::get(subnetBuilder.make());
-      return subnet;
-    } 
-    if (output[0][size - 1] == 1) { // 1 case
-      idx[InNum - 2] = subnetBuilder.addCell(model::ONE, SubnetBuilder::INPUT);
-      idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
-          SubnetBuilder::OUTPUT);
-
-      const auto &subnet = Subnet::get(subnetBuilder.make());
-      return subnet;
-    }
-
-    for (int i = numVars; i < numVars * 2; i++) { // negotiation
-      const Link link(idx[i - numVars]); // source
-      idx[i] = subnetBuilder.addCell(model::NOT, link);
-    }
-
-    for (int i = firstValId; i < size; i++) { // building subnet
-      if (!output[1][i] && !output[2][i]) { // one source case
-        int idx1 = output[0][i] - 2; // link to source
-        idx[i - 2] = idx[idx1]; 
-      } else { // two sources 
-        int idx1 = output[1][i] - 2;
-        int idx2 = output[2][i] - 2;
-
-        const Link lhs(idx[idx1]); // link to 1st source
-        const Link rhs(idx[idx2]); // link to 2nd source
-
-        // new cell
-        if(output[0][i] == 2) {
-          idx[i - 2] = subnetBuilder.addCell(model::AND, lhs, rhs);
-        } else if (output[0][i] == 3) {
-          idx[i - 2] = subnetBuilder.addCell(model::OR, lhs, rhs);
-        }
-      }
-    }
-    idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
-        SubnetBuilder::OUTPUT);
-    const auto &subnet = Subnet::get(subnetBuilder.make());
-
-    return subnet;
   }
 
 //===----------------------------------------------------------------------===//

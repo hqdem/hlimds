@@ -10,15 +10,13 @@
 #include <memory>
 #include <vector>
 
-namespace eda::gate::optimizer::resynthesis {
+namespace eda::gate::optimizer2::resynthesis {
 
 //===----------------------------------------------------------------------===//
 // Types
 //===----------------------------------------------------------------------===//
 
   using CNF = Cascade::CNF;
-  using GateSymbol = eda::gate::model::GateSymbol;
-  using GNet = Cascade::GNet;
 
 //===----------------------------------------------------------------------===//
 // Internal Methods
@@ -257,73 +255,6 @@ namespace eda::gate::optimizer::resynthesis {
     return output;
   }
 
-  std::shared_ptr<GNet> Cascade::run(SignalList &inputs, Gate::Id &outputId) {
-
-    int numVars = table.num_vars();
-    // id of the first value in the output line
-    int firstValId = numVars * 2 + 2; 
-    CNF output = Cascade::getFunction(table);
-
-    Gate::Id id = net->addZero();
-    output[0][0] = id;
-    Gate::Signal input = Gate::Signal::always(id);
-    inputs.push_back(input);
-    id = net->addOne();
-    output[0][1] = id;
-    input = Gate::Signal::always(id);
-    inputs.push_back(input);
-
-    for (int i = 0; i < numVars; i++) {
-      const Gate::Id id = net->addIn();
-      output[0][i + 2] = id;
-      const Gate::Signal input = Gate::Signal::always(id);
-      inputs.push_back(input);
-    }
-
-    for (long unsigned int i = firstValId; i < output[0].size(); i++) {
-      // output[j][i] - id of the column where the source is stored in 
-      // the 0th row, so source is stored in the output[0][output[j][i]] 
-      // cell in the negotiation case: (output[j][i] - numVars) is the id
-      // subtraction is needed to take the source in its direct value:
-      // (output[j][i]) is !x, so (output[j][i] - numVars) is x
-      
-      unsigned int source = output[0][output[0][i]];
-      unsigned int source1 = output[0][output[1][i]];
-      unsigned int source2 = output[0][output[2][i]];
-      unsigned int negSource = output[0][output[0][i] - numVars];
-      unsigned int negSource2 = output[0][output[2][i] - numVars];
-      
-      if (!output[1][i] && !output[2][i]) {
-        if (output[0][i] < numVars + 2) {
-          output[0][i] = source;
-        } else if (!source) {
-          const Gate::Id id = net->addNot(negSource);
-          output[0][output[0][i]] = id;
-          output[0][i] = id;
-
-        } else if (source) {
-          output[0][i] = source;
-        }
-      } else {
-        if (output[2][i] < firstValId &&
-            output[2][i] > numVars + 1 && !source2) {
-          const Gate::Id id = net->addNot(negSource2);
-          output[0][output[2][i]] = id;
-        }
-        Gate::Id id = 0;
-        if (output[0][i] == 2) {
-          id = net->addAnd(source1, source2);
-        } else if (output[0][i] == 3) {
-          id = net->addOr(source1, source2);
-        }
-        output[0][i] = id;
-      }
-    }
-    outputId = net->addOut(output[0][output[0].size() - 1]);
-    net->sortTopologically();
-    return net;
-  }
-
   const auto &runSubnet() {
 
     using Link = Subnet::Link;
@@ -397,4 +328,4 @@ namespace eda::gate::optimizer::resynthesis {
 
   Cascade::Cascade(kitty::dynamic_truth_table &_table) : table(_table), 
     net(std::make_shared<GNet>()), form(normalForm(table)) {}
-}; // namespace eda::gate::optimizer::resynthesis
+}; // namespace eda::gate::optimizer2::resynthesis

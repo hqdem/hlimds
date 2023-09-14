@@ -44,5 +44,6 @@ namespace eda::gate::tech_optimizer {
     void findCuts(GNet *net);
     void replacementSearch(GNet *net, Strategy *strategy);
     void replacement(GNet *net);
+    void MapedNet(GNet *net);
   };
 } // namespace eda::gate::tech_optimizer

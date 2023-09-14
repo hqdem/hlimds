@@ -8,8 +8,10 @@
 
 #include "gate/optimizer/optimizer.h"
 #include "gate/optimizer/cut_walker.h"
+#include "gate/optimizer/net_substitute.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/tech_optimizer/library/cell.h"
+#include "gate/model2/celltype.h"
 
 #include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/tech_map_visitor.h"
@@ -64,6 +66,16 @@ namespace eda::gate::tech_optimizer {
   }
 
   void CutBasedTechMapper::replacementSearch(GNet *net, Strategy *strategy) {
+    auto nodes = eda::utils::graph::topologicalSort(*net);
+    for (auto &id: net->getSources()) {
+      if (Gate::get(id)->isSource()) {
+        eda::gate::optimizer::NetSubstitute netSubstitute{};
+
+        Replacement bestReplacment{id, netSubstitute};
+        bestReplacement.insert(std::pair<GateID, Replacement>
+                                (id, bestReplacment));
+      }
+    }
     SearchOptReplacement searchOptReplacement;
     searchOptReplacement.set(&cutStorage, net, &bestReplacement, 6,
         rwdb, strategy);
@@ -84,6 +96,17 @@ namespace eda::gate::tech_optimizer {
         area = area + replacementInfo.area;
       } 
     }
+  }
+
+  void CutBasedTechMapper::MapedNet(GNet *net) {
+
+    //NetBuilder netBuilder;
+
+    //auto nodes = eda::utils::graph::topologicalSort(*net);
+    //for (auto &node: nodes) {
+    //  node.
+    //}
+
   }
 
   float CutBasedTechMapper::getArea() const{

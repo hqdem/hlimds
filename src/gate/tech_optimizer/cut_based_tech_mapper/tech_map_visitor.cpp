@@ -143,7 +143,8 @@ namespace eda::gate::tech_optimizer {
       Replacement bestReplacment{lastNode, netSubstitute, minNodeArrivalTime, 
           bestOption.name, bestOption.area};
       bestReplacement->insert(std::pair<GateID, Replacement>
-                              (lastNode, bestReplacment));
+          (lastNode, bestReplacment));
+      
     } 
   }
 

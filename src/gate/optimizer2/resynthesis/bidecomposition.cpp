@@ -15,26 +15,36 @@
 
 namespace eda::gate::optimizer2::resynthesis {
 
-using BoundGNet       = BiDecompositor::BoundGNet;
 using CoverageElement = BiDecompositor::CoverageElement;
-using GateId          = BiDecompositor::GateId;
+using Link            = BiDecompositor::Link;
+using SubnetID        = BiDecompositor::SubnetID;
+using TruthTable      = BiDecompositor::TruthTable;
 
-BoundGNet BiDecompositor::run(const KittyTT &func, const KittyTT &care) {
-  auto net = std::make_shared<GNet>();
-  GateIdList inputs;
+SubnetID BiDecompositor::synthesize(const TruthTable &func) {
+  SubnetBuilder subnetBuilder;
+
+  std::vector<size_t> inputs;
   for (size_t i = 0; i < func.num_vars(); ++i) {
-    inputs.push_back(net->addIn());
+    inputs.push_back(subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT));
   }
+  
+  TruthTable care(func.num_vars());
+  kitty::create_from_binary_string(care, std::string(func.num_bits(), '1'));
   TernaryBiClique initBiClique(func, care);
-  GateId output = net->addOut(getBiDecomposition(initBiClique, inputs, *net));
-  net->sortTopologically();
-  return BoundGNet{net, inputs, {output}};
+
+  Link output = getBiDecomposition(initBiClique, inputs, subnetBuilder);
+
+  subnetBuilder.addCell(model::OUT, output, SubnetBuilder::OUTPUT);
+  
+  return subnetBuilder.make();
 }
 
-GateId BiDecompositor::getBiDecomposition(TernaryBiClique &initBiClique,
-                                          const GateIdList &inputs, GNet &net) {
+Link BiDecompositor::getBiDecomposition(TernaryBiClique &initBiClique,
+                                          const std::vector<size_t> &inputs,
+                                          SubnetBuilder &subnetBuilder) {
   if (initBiClique.getOnSet().size() == 1) {
-    return makeNetForDNF(*initBiClique.getOnSet().begin(), inputs, net);
+    return makeNetForDNF(*initBiClique.getOnSet().begin(), inputs, 
+                         subnetBuilder);
   }
   
   auto starBiCliques = initBiClique.getStarCoverage();
@@ -53,10 +63,10 @@ GateId BiDecompositor::getBiDecomposition(TernaryBiClique &initBiClique,
   firstBiClique.eraseExtraVars(first.vars);
   secondBiClique.eraseExtraVars(second.vars);
 
-  auto id1 = getBiDecomposition(firstBiClique, inputs, net);
-  auto id2 = getBiDecomposition(secondBiClique, inputs, net);
+  Link lhs = getBiDecomposition(firstBiClique, inputs, subnetBuilder);
+  Link rhs = getBiDecomposition(secondBiClique, inputs, subnetBuilder);
 
-  return net.addNot(net.addAnd(id1, id2));
+  return Link(subnetBuilder.addCell(model::AND, lhs, rhs), false);
 }
 
 std::pair<CoverageElement, CoverageElement> 
@@ -134,19 +144,21 @@ bool BiDecompositor::checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
   return false;
 }
 
-GateId BiDecompositor::makeNetForDNF(const TernaryVector &vector,
-                                     const GateIdList &inputs, GNet &net) {
+Link BiDecompositor::makeNetForDNF(const TernaryVector &vector,
+                                     const std::vector<size_t> &inputs,
+                                     SubnetBuilder &subnetBuilder) {
   uint32_t bits = vector.getBits();
   uint32_t care = vector.getCare();
   size_t index = std::log2(care - (care & (care - 1)));
   care &= (care - 1);
-  GateId prev = ((bits >> index) & 1) ?
-      inputs[index] : net.addNot(inputs[index]);
+  bool inv = !((bits >> index) & 1);
+  Link prev(inputs[index], inv);
   while (care) {
     index = std::log2(care - (care & (care-1)));
     care &= (care - 1);
-    prev = net.addAnd(prev, 
-        ((bits >> index) & 1) ? inputs[index] : net.addNot(inputs[index]));
+    inv = !((bits >> index) & 1);
+    prev = 
+        Link(subnetBuilder.addCell(model::AND, prev, Link(inputs[index], inv)));
   }
   return prev;
 }

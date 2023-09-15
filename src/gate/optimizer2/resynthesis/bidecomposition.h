@@ -8,8 +8,11 @@
 
 #pragma once
 
-#include "gate/optimizer/bgnet.h"
+#include "gate/model2/subnet.h"
 #include "gate/optimizer2/resynthesis/ternary_bi_clique.h"
+#include "gate/optimizer2/synthesizer.h"
+
+#include <vector>
 
 namespace eda::gate::optimizer2::resynthesis {
 
@@ -20,31 +23,32 @@ namespace eda::gate::optimizer2::resynthesis {
  * The algorithm based on the article "Synthesis of combinational circuits by
  * means of bi-decomposition of Boolean functions" by Yuri V. Pottosin (2022).
 */
-class BiDecompositor final {
+class BiDecompositor : public Synthesizer {
 public:
 
-  using BoundGNet       = eda::gate::optimizer::BoundGNet;
   using CoverageElement = TernaryBiClique::CoverageElement;
-  using GNet            = eda::gate::model::GNet;
-  using GateId          = GNet::GateId;
-  using GateIdList      = GNet::GateIdList;
-  using KittyTT         = TernaryBiClique::KittyTT;
+  using Subnet          = eda::gate::model::Subnet;
+  using SubnetID        = eda::gate::model::SubnetID;
+  using Link            = Subnet::Link;
+  using LinkList        = Subnet::LinkList;
+  using SubnetBuilder   = eda::gate::model::SubnetBuilder;
+  using TruthTable      = Synthesizer::TruthTable;
 
   BiDecompositor() { };
 
   ~BiDecompositor() { };
 
-  /** Runs bi-decomposition.
+  /** Launchs synthesizing the Subnet.
    * @param func To define a Boolean function.
-   * @param care To define don't care rows in func.
-   * @return Pointer of GNet and lists of inputs and outputs - BoundGNet.
+   * @return SunetID.
   */
-  static BoundGNet run(const KittyTT &func, const KittyTT &care);
+  SubnetID synthesize(const TruthTable &func) override;
 
 private:
 
-  static GateId getBiDecomposition(TernaryBiClique &initBiClique,
-                                   const GateIdList &inputs, GNet &net);
+  static Link getBiDecomposition(TernaryBiClique &initBiClique,
+                                 const std::vector<size_t> &inputs,
+                                 SubnetBuilder &subnetBuilder);
 
   static std::pair<CoverageElement, CoverageElement> 
       findBaseCoverage(std::vector<CoverageElement> &stars);
@@ -56,8 +60,9 @@ private:
   static bool checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
                              CoverageElement &first, CoverageElement &second);
   
-  static GateId makeNetForDNF(const TernaryVector &vector,
-                              const GateIdList &inputs, GNet &net);
+  static Link makeNetForDNF(const TernaryVector &vector,
+                            const std::vector<size_t> &inputs,
+                            SubnetBuilder &subnetBuilder);
 };
 
 } // namespace eda::gate::optimizer2::resynthesis

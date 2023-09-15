@@ -282,7 +282,8 @@ namespace eda::gate::optimizer2::resynthesis {
       const auto &subnet = Subnet::get(subnetBuilder.make());
       return subnet;
 
-    } else if (output[0][size - 1] == 1) { // 1 case
+    } 
+    if (output[0][size - 1] == 1) { // 1 case
       idx[InNum - 2] = subnetBuilder.addCell(model::ONE, SubnetBuilder::INPUT);
       idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
           SubnetBuilder::OUTPUT);
@@ -310,10 +311,8 @@ namespace eda::gate::optimizer2::resynthesis {
         // new cell
         if(output[0][i] == 2) {
           idx[i - 2] = subnetBuilder.addCell(model::AND, lhs, rhs);
-          k++;
         } else if (output[0][i] == 3) {
           idx[i - 2] = subnetBuilder.addCell(model::OR, lhs, rhs);
-          k++;
         }
       }
     }
@@ -329,5 +328,5 @@ namespace eda::gate::optimizer2::resynthesis {
 //===----------------------------------------------------------------------===//
 
   Cascade::Cascade(kitty::dynamic_truth_table &_table) : table(_table), 
-    net(std::make_shared<GNet>()), form(normalForm(table)) {}
+      form(normalForm(table)) {}
 }; // namespace eda::gate::optimizer2::resynthesis

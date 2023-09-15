@@ -30,7 +30,6 @@ namespace eda::gate::optimizer2::resynthesis {
     //===------------------------------------------------------------------===//
 
     using CNF = std::vector<std::vector<int>>;
-    using SignalList = Gate::SignalList;
 
     //===------------------------------------------------------------------===//
     // Constructors/Destructors
@@ -51,8 +50,6 @@ namespace eda::gate::optimizer2::resynthesis {
   private:
 
     kitty::dynamic_truth_table table;
-    
-    std::shared_ptr<GNet> net;
 
     std::vector<int> values;
     

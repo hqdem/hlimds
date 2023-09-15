@@ -5,7 +5,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/optimizer/resynthesis/cascade.h"
+#include "gate/optimizer2/resynthesis/cascade.h"
 #include "kitty/kitty.hpp"
 #include <memory>
 #include <vector>

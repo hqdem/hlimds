@@ -17,6 +17,8 @@ namespace eda::gate::optimizer2::resynthesis {
 //===----------------------------------------------------------------------===//
 
   using CNF = Cascade::CNF;
+  using Subnet = model::Subnet;
+  using SubnetBuilder = model::SubnetBuilder;
 
 //===----------------------------------------------------------------------===//
 // Internal Methods
@@ -255,7 +257,7 @@ namespace eda::gate::optimizer2::resynthesis {
     return output;
   }
 
-  const auto &runSubnet() {
+  const auto &Cascade::runSubnet() {
 
     using Link = Subnet::Link;
     SubnetBuilder subnetBuilder;
@@ -269,20 +271,20 @@ namespace eda::gate::optimizer2::resynthesis {
 
     size_t idx[InNum];
     for (size_t i = 0; i < InNum; ++i) {
-      idx[i] = subnetBuilder.addCell(IN, SubnetBuilder::INPUT);
+      idx[i] = subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT);
     }
 
     if (!output[0][size - 1]) { // 0 case
-      idx[InNum - 2] = subnetBuilder.addCell(ZERO, SubnetBuilder::INPUT);
-      idx[InNum - 1] = subnetBuilder.addCell(OUT, Link(idx[InNum - 2]), 
+      idx[InNum - 2] = subnetBuilder.addCell(model::ZERO, SubnetBuilder::INPUT);
+      idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
           SubnetBuilder::OUTPUT);
 
       const auto &subnet = Subnet::get(subnetBuilder.make());
       return subnet;
 
     } else if (output[0][size - 1] == 1) { // 1 case
-      idx[InNum - 2] = subnetBuilder.addCell(ONE, SubnetBuilder::INPUT);
-      idx[InNum - 1] = subnetBuilder.addCell(OUT, Link(idx[InNum - 2]), 
+      idx[InNum - 2] = subnetBuilder.addCell(model::ONE, SubnetBuilder::INPUT);
+      idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
           SubnetBuilder::OUTPUT);
 
       const auto &subnet = Subnet::get(subnetBuilder.make());
@@ -291,7 +293,7 @@ namespace eda::gate::optimizer2::resynthesis {
 
     for (int i = numVars; i < numVars * 2; i++) { // negotiation
       const Link link(idx[i - numVars]); // source
-      idx[i] = subnetBuilder.addCell(NOT, link);
+      idx[i] = subnetBuilder.addCell(model::NOT, link);
     }
 
     for (int i = firstValId; i < size; i++) { // building subnet
@@ -307,15 +309,15 @@ namespace eda::gate::optimizer2::resynthesis {
 
         // new cell
         if(output[0][i] == 2) {
-          idx[i - 2] = subnetBuilder.addCell(AND, lhs, rhs);
+          idx[i - 2] = subnetBuilder.addCell(model::AND, lhs, rhs);
           k++;
         } else if (output[0][i] == 3) {
-          idx[i - 2] = subnetBuilder.addCell(OR, lhs, rhs);
+          idx[i - 2] = subnetBuilder.addCell(model::OR, lhs, rhs);
           k++;
         }
       }
     }
-    idx[InNum - 1] = subnetBuilder.addCell(OUT, Link(idx[InNum - 2]), 
+    idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
         SubnetBuilder::OUTPUT);
     const auto &subnet = Subnet::get(subnetBuilder.make());
 

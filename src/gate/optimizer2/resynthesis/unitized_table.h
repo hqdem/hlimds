@@ -19,8 +19,8 @@
 #include <utility>
 #include <vector>
 
-#include <kitty/bit_operations.hpp>
-#include <kitty/dynamic_truth_table.hpp>
+#include "kitty/bit_operations.hpp"
+#include "kitty/dynamic_truth_table.hpp"
 
 namespace eda::gate::optimizer2::resynthesis {
   class AkersAlgorithm;

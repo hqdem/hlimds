@@ -10,8 +10,7 @@
 
 #include "gtest/gtest.h"
 
-#include <kitty/constructors.hpp>
-#include <mockturtle/networks/mig.hpp>
+#include "mockturtle/networks/mig.hpp"
 
 #include <string>
 
@@ -84,7 +83,7 @@ TEST(AkersTest2, NOT1) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 0) && (subnet.size() == 2));
+  EXPECT_TRUE((alg.getNMaj() == 0) && (subnet.size() == 2));
 }
 
 TEST(AkersTest2, One3) {
@@ -97,7 +96,7 @@ TEST(AkersTest2, One3) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 0) && (subnet.size() == 5));
+  EXPECT_TRUE((alg.getNMaj() == 0) && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, Zero3) {
@@ -110,7 +109,7 @@ TEST(AkersTest2, Zero3) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 0) && (subnet.size() == 5));
+  EXPECT_TRUE((alg.getNMaj() == 0) && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, OR2) {
@@ -123,7 +122,7 @@ TEST(AkersTest2, OR2) {
   const auto &subnetId = alg.run();
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 1) && (subnet.size() == 5));
+  EXPECT_TRUE((alg.getNMaj() == 1) && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, AND2) {
@@ -136,7 +135,7 @@ TEST(AkersTest2, AND2) {
   const auto &subnetId = alg.run();
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 1) && (subnet.size() == 5));
+  EXPECT_TRUE((alg.getNMaj() == 1) && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, XOR2) {
@@ -149,7 +148,7 @@ TEST(AkersTest2, XOR2) {
   const auto &subnetId = alg.run();
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 3) && (subnet.size() <= 8));
+  EXPECT_TRUE((alg.getNMaj() == 3) && (subnet.size() <= 8));
 }
 
 TEST(AkersTest2, XOR3) {
@@ -162,7 +161,7 @@ TEST(AkersTest2, XOR3) {
   const auto &subnetId = alg.run();
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 3) && (subnet.size() == 7));
+  EXPECT_TRUE((alg.getNMaj() == 3) && (subnet.size() == 7));
 }
 
 TEST(AkersTest2, XOR4) {
@@ -175,7 +174,7 @@ TEST(AkersTest2, XOR4) {
   const auto &subnetId = alg.run();
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj <= 11) && (subnet.size() <= 18));
+  EXPECT_TRUE((alg.getNMaj() <= 11) && (subnet.size() <= 18));
 }
 
 //===----------------------------------------------------------------------===//
@@ -192,7 +191,7 @@ TEST(AkersTest2, MAJ3) {
   const auto &subnetId = alg.run();
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 1) && (subnet.size() == 5));
+  EXPECT_TRUE((alg.getNMaj() == 1) && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, MAJ5) {
@@ -206,5 +205,5 @@ TEST(AkersTest2, MAJ5) {
   const auto &subnetId = alg.run();
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.nMaj == 4) && (subnet.size() == 10));
+  EXPECT_TRUE((alg.getNMaj() == 4) && (subnet.size() == 10));
 }

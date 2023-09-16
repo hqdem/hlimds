@@ -73,10 +73,10 @@ SubnetID AkersAlgorithm::run() {
     switch (id) {
       case 62:
         cellId = subnetBuilder.addCell(model::ZERO);
-        break;
+      break;
       case 63:
         cellId = subnetBuilder.addCell(model::ONE);
-        break;
+      break;
       default:
         if ((id < 62) && (id > 30)) {
           cellId = idx[id - 31];
@@ -112,25 +112,25 @@ void AkersAlgorithm::addMajGate(const Arguments &gate) {
         }
         cellId = zeroId;
         links.push_back(Link(cellId));
-        break;
+      break;
       case 63:
         if (!oneId) {
           oneId = subnetBuilder.addCell(model::ONE);
         }
         cellId = oneId;
         links.push_back(Link(cellId));
-        break;
+      break;
       default:
         switch (id < 31 ? 1 : (id < 62 ? 2 : 3)) {
           case 1:
             links.push_back(Link(idx[id]));
-            break;
+          break;
           case 2:
             links.push_back(Link(idx[id - 31], true));
-            break;
+          break;
           case 3:
             links.push_back(Link(idx[id - 64 + nVariables]));
-            break;
+          break;
         }
     }
   }
@@ -441,4 +441,4 @@ bool AkersAlgorithm::mayDeleteRows(const Arguments &args,
   return false;
 }
 
-}; // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::resynthesis

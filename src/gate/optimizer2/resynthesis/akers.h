@@ -10,11 +10,9 @@
 
 #include <map>
 #include <memory>
-#include <utility>
 
 #include "kitty/constructors.hpp"
 
-#include "gate/model2/subnet.h"
 #include "gate/optimizer2/resynthesis/unitized_table.h"
 #include "gate/optimizer2/synthesizer.h"
 
@@ -66,8 +64,10 @@ public:
   /// Launch the Akers algorithm.
   SubnetID run();
 
-  /// The number of MAJ(x, y, z) gates in the GNet.
-  uint64_t nMaj = 0;
+  /// Returns number of MAJ gates that were added by the algorithm.
+  uint64_t getNMaj() {
+    return nMaj;
+  }
 
 private:
 
@@ -168,6 +168,9 @@ private:
 
   /// Pairs of graph nodes or pairs of "essential" positions of ones.
   EssentialEdge pairEssentialRows;
+
+  /// The number of MAJ(x, y, z) gates in the GNet.
+  uint64_t nMaj = 0;
 };
 
 } // namespace eda::gate::optimizer2::resynthesis

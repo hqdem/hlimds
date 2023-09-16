@@ -371,4 +371,4 @@ std::ostream& operator <<(std::ostream &out, const UnitizedTable &t) {
   return out;
 }
 
-}; // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::resynthesis

@@ -17,6 +17,7 @@
 namespace eda::gate::optimizer2::resynthesis {
   
   using CNF = std::vector<std::vector<int>>;
+  using Subnet = model::Subnet;
   
 //===----------------------------------------------------------------------===//
 // Convenience Methods

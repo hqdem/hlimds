@@ -42,7 +42,7 @@ namespace eda::gate::optimizer2::resynthesis {
     //===------------------------------------------------------------------===//
 
     /// Makes subnet using cascade method
-    const auto &runSubnet();
+    SubnetID runSubnet();
     
     /// Makes CNF for function using cascade method
     CNF getFunction(kitty::dynamic_truth_table &table);

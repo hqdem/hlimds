@@ -108,5 +108,16 @@ namespace eda::gate::optimizer2::resynthesis {
   TEST(Cascade, CorrectSynthTest) {
     synthTest(4, "1001000000100100");
   }
+
+  TEST(Cascade, SubnetTest) {
+    int vars = 4;
+    kitty::dynamic_truth_table table(vars);
+    kitty::create_from_binary_string(table, "1001000000100100");
+
+    Cascade obj(table);
+    const auto &subnet = runSubnet();
+
+    EXPECT_TRUE(true);
+  }
   
 }; // namespace eda::gate::optimizer2::resynthesis

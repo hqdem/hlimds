@@ -280,17 +280,14 @@ namespace eda::gate::optimizer2::resynthesis {
       idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
           SubnetBuilder::OUTPUT);
 
-      const auto &subnet = Subnet::get(subnetBuilder.make());
-      return subnet;
-
+      return subnetBuilder.make();
     } 
     if (output[0][size - 1] == 1) { // 1 case
       idx[InNum - 2] = subnetBuilder.addCell(model::ONE, SubnetBuilder::INPUT);
       idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
           SubnetBuilder::OUTPUT);
 
-      const auto &subnet = Subnet::get(subnetBuilder.make());
-      return subnet;
+      return subnetBuilder.make();
     }
 
     for (int i = numVars; i < numVars * 2; i++) { // negotiation

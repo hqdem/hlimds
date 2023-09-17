@@ -30,6 +30,7 @@ namespace eda::gate::optimizer2::resynthesis {
     //===------------------------------------------------------------------===//
 
     using CNF = std::vector<std::vector<int>>;
+    using SubnetID = model::SubnetID;
 
     //===------------------------------------------------------------------===//
     // Constructors/Destructors

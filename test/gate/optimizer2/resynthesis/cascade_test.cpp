@@ -111,15 +111,15 @@ namespace eda::gate::optimizer2::resynthesis {
   }
 
   TEST(Cascade, SubnetTest) {
-    int vars = 4;
+    int vars = 2;
     kitty::dynamic_truth_table table(vars);
-    kitty::create_from_binary_string(table, "1001000000100100");
+    kitty::create_from_binary_string(table, "1000");
 
     Cascade obj(table);
     const auto subnetId = obj.runSubnet();
     const auto &subnet = Subnet::get(subnetId);
 
-    EXPECT_TRUE(true);
+    EXPECT_TRUE(subnet.size() == 6);
   }
   
 }; // namespace eda::gate::optimizer2::resynthesis

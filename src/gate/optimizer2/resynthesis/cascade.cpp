@@ -19,6 +19,7 @@ namespace eda::gate::optimizer2::resynthesis {
   using CNF = Cascade::CNF;
   using Subnet = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
+  using SubnetID = model::SubnetID
 
 //===----------------------------------------------------------------------===//
 // Internal Methods

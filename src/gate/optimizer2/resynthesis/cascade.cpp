@@ -271,7 +271,7 @@ namespace eda::gate::optimizer2::resynthesis {
     unsigned int InNum = size - 1; // number of cells in subnet
 
     size_t idx[InNum];
-    for (size_t i = 0; i < InNum; ++i) {
+    for (size_t i = 0; i < numVars; ++i) {
       idx[i] = subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT);
     }
 

@@ -20,6 +20,7 @@ namespace eda::gate::optimizer2::resynthesis {
   using Subnet = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetID = model::SubnetID;
+  using TruthTable = kitty::dynamic_truth_table;
 
 //===----------------------------------------------------------------------===//
 // Internal Methods
@@ -258,7 +259,7 @@ namespace eda::gate::optimizer2::resynthesis {
     return output;
   }
 
-  SubnetID Cascade::synthesize(kitty::dynamic_truth_table &table) {
+  SubnetID Cascade::synthesize(TruthTable &func) {
 
     using Link = Subnet::Link;
     SubnetBuilder subnetBuilder;

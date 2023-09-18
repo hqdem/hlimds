@@ -116,7 +116,7 @@ namespace eda::gate::optimizer2::resynthesis {
     kitty::create_from_binary_string(table, "1000");
 
     Cascade obj(table);
-    const auto subnetId = obj.runSubnet();
+    const auto subnetId = obj.synthesize(table);
     const auto &subnet = Subnet::get(subnetId);
 
     EXPECT_TRUE(subnet.size() == 6);

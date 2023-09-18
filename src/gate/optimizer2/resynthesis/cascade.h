@@ -7,8 +7,11 @@
 //===----------------------------------------------------------------------===//
 #ifndef UNTITLED_METHODS_H
 #define UNTITLED_METHODS_H
-#include "gate/model2/subnet.h"
 #include "kitty/kitty.hpp"
+
+#include "gate/model2/subnet.h"
+#include "gate/optimizer2/synthesizer.h"
+
 #include <memory>
 #include <vector>
 
@@ -21,7 +24,7 @@ namespace eda::gate::optimizer2::resynthesis {
   * computational and control contact circuits" by G. N. Povarov,
   * Avtomat i Telemekh., 1957, volume 18, issue 2, 145–162
   */
-  class Cascade {
+  class Cascade : public Synthesizer {
 
   public:
 
@@ -43,7 +46,7 @@ namespace eda::gate::optimizer2::resynthesis {
     //===------------------------------------------------------------------===//
 
     /// Makes subnet using cascade method
-    SubnetID runSubnet();
+    SubnetID synthesize(kitty::dynamic_truth_table &table) override;
     
     /// Makes CNF for function using cascade method
     CNF getFunction(kitty::dynamic_truth_table &table);
@@ -77,3 +80,4 @@ namespace eda::gate::optimizer2::resynthesis {
   };
 } // namespace eda::gate::optimizer2::resynthesis
 #endif
+

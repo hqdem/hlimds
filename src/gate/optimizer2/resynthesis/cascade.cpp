@@ -259,7 +259,7 @@ namespace eda::gate::optimizer2::resynthesis {
     return output;
   }
 
-  SubnetID Cascade::synthesize(TruthTable &func) {
+  SubnetID Cascade::synthesize(const TruthTable &func) {
 
     using Link = Subnet::Link;
     SubnetBuilder subnetBuilder;

@@ -47,7 +47,7 @@ namespace eda::gate::optimizer2::resynthesis {
     //===------------------------------------------------------------------===//
 
     /// Makes subnet using cascade method
-    SubnetID synthesize(TruthTable &func) override;
+    SubnetID synthesize(const TruthTable &func) override;
     
     /// Makes CNF for function using cascade method
     CNF getFunction(kitty::dynamic_truth_table &table);

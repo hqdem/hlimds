@@ -34,6 +34,7 @@ namespace eda::gate::optimizer2::resynthesis {
 
     using CNF = std::vector<std::vector<int>>;
     using SubnetID = model::SubnetID;
+    using TruthTable = kitty::dynamic_truth_table;
 
     //===------------------------------------------------------------------===//
     // Constructors/Destructors
@@ -46,7 +47,7 @@ namespace eda::gate::optimizer2::resynthesis {
     //===------------------------------------------------------------------===//
 
     /// Makes subnet using cascade method
-    SubnetID synthesize(kitty::dynamic_truth_table &table) override;
+    SubnetID synthesize(TruthTable &func) override;
     
     /// Makes CNF for function using cascade method
     CNF getFunction(kitty::dynamic_truth_table &table);

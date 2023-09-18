@@ -258,7 +258,7 @@ namespace eda::gate::optimizer2::resynthesis {
     return output;
   }
 
-  SubnetID Cascade::runSubnet() {
+  SubnetID Cascade::synthesize(kitty::dynamic_truth_table &table) {
 
     using Link = Subnet::Link;
     SubnetBuilder subnetBuilder;
@@ -327,3 +327,4 @@ namespace eda::gate::optimizer2::resynthesis {
   Cascade::Cascade(kitty::dynamic_truth_table &_table) : table(_table), 
       form(normalForm(table)) {}
 }; // namespace eda::gate::optimizer2::resynthesis
+

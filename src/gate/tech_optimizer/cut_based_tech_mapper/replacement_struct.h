@@ -18,13 +18,39 @@ namespace eda::gate::tech_optimizer {
     using GateID = GNet::GateId;
     using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
     using NetSubstitute = eda::gate::optimizer::NetSubstitute;
-    using CellType = eda::gate::model::CellType;
+    using CellType = eda::gate::model::CellTypeID;
+
+    Replacement(GateID rootNode,
+                NetSubstitute netSubstitute,
+                double delay,
+                std::string name,
+                double area,
+                model::CellTypeID cellType) : rootNode(rootNode),
+                            netSubstitute(netSubstitute),
+                            delay(delay), name(name),
+                            area(area), cellType(cellType) {
+    }
+
+    Replacement(GateID rootNode,
+                NetSubstitute netSubstitute,
+                double delay,
+                std::string name,
+                double area, 
+                optimizer::ConeVisitor::MatchMap *map) : rootNode(rootNode),
+                            netSubstitute(netSubstitute),
+                            delay(delay), name(name),
+                            area(area), map(map) {
+    }
 
     GateID rootNode;
     NetSubstitute netSubstitute;
     double delay;
     std::string name;
     double area;
-    CellType cellType;
+    model::CellTypeID cellType;
+    bool used = false;
+
+    optimizer::ConeVisitor::MatchMap *map;
+
   };
 } // namespace eda::gate::tech_optimizer

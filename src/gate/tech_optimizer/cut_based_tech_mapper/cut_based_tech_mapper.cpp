@@ -24,12 +24,10 @@ namespace eda::gate::tech_optimizer {
   
   CutBasedTechMapper::CutBasedTechMapper(const std::string &libertyPath) {
     LibraryCells libraryCells(libertyPath);
-    std::cout << "1" << std::endl;
     rwdb.linkDB(dbPath);
     rwdb.openDB();
 
     libraryCells.initializeLibraryRwDatabase(&rwdb);
-    std::cout << "2" << std::endl;
   }
 
   CutBasedTechMapper::CutBasedTechMapper(eda::gate::optimizer::SQLiteRWDatabase &rwdb) :
@@ -71,7 +69,8 @@ namespace eda::gate::tech_optimizer {
       if (Gate::get(id)->isSource()) {
         eda::gate::optimizer::NetSubstitute netSubstitute{};
 
-        Replacement bestReplacment{id, netSubstitute};
+        Replacement bestReplacment{id, netSubstitute, 0, "", 0,
+            eda::gate::model::CELL_TYPE_ID_IN};
         bestReplacement.insert(std::pair<GateID, Replacement>
                                 (id, bestReplacment));
       }
@@ -98,7 +97,8 @@ namespace eda::gate::tech_optimizer {
     }
   }
 
-  void CutBasedTechMapper::MapedNet(GNet *net) {
+  void CutBasedTechMapper::mapedNet(GNet *net) {
+    
 
     //NetBuilder netBuilder;
 
@@ -107,6 +107,48 @@ namespace eda::gate::tech_optimizer {
     //  node.
     //}
 
+  }
+
+  void CutBasedTechMapper::traversalNode(GNet *net) {
+    std::stack<Replacement*> stack;
+    std::unordered_set<Replacement*> visited;
+    bool canPop = false;
+
+    for (auto &id: getOutputs(net)) {
+      stack.push(&bestReplacement.at(id));
+      visited.push(&bestReplacement.at(id));
+    }
+
+    while (!stack.empty()) {
+      Replacement* current = stack.top();
+      //stack.pop();
+
+      //обработка 
+      if (current->map == nullptr) {
+        canPop = true;
+        //mappedNet.createInput(); //TODO create method
+      }
+
+      if (canPop) {
+        current->used = true;
+        stack.pop();
+      }
+      //
+
+      for (const auto& [input, secondParam] : *current->map) {
+            if (visited.find(&bestReplacement.at(input)) == visited.end()) {
+                stack.push(&bestReplacement.at(input));
+                visited.insert(&bestReplacement.at(input));
+            }
+        }
+
+    }
+  }
+
+
+  std::vector<Gate::Id> getOutputs(GNet *net) {
+    std::vector<Gate::Id> outputs;
+    return outputs;
   }
 
   float CutBasedTechMapper::getArea() const{

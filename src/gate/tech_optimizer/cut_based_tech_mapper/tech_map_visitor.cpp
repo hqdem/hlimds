@@ -141,7 +141,7 @@ namespace eda::gate::tech_optimizer {
             lastNode, &bestOptionMap, bestOption.net.get(), net);
 
       Replacement bestReplacment{lastNode, netSubstitute, minNodeArrivalTime, 
-          bestOption.name, bestOption.area};
+          bestOption.name, bestOption.area, &bestOptionMap};
       bestReplacement->insert(std::pair<GateID, Replacement>
           (lastNode, bestReplacment));
       

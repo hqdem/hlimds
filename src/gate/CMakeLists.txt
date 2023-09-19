@@ -43,7 +43,8 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
-  optimizer2/resynthesis/cascade.cpp
+  optimizer2/resynthesis/akers.cpp
+  optimizer2/resynthesis/unitized_table.cpp
   parser/gate_verilog.cpp
   premapper/aigmapper.cpp
   premapper/migmapper.cpp

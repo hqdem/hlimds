@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <gate/model2/subnet.h>
+#include "gate/model2/subnet.h"
 
-#include <kitty/dynamic_truth_table.hpp>
+#include "kitty/dynamic_truth_table.hpp"
 
 namespace eda::gate::optimizer2 {
 

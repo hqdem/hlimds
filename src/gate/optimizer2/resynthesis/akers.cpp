@@ -6,38 +6,46 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer/resynthesis/akers.h"
+#include "gate/optimizer2/resynthesis/akers.h"
 
-namespace eda::gate::optimizer::resynthesis {
+namespace eda::gate::optimizer2::resynthesis {
 //===----------------------------------------------------------------------===//
 // Types
 //===----------------------------------------------------------------------===//
 
 using Arguments = AkersAlgorithm::Arguments;
 using ArgumentsSet = AkersAlgorithm::ArgumentsSet;
-using Gate = eda::gate::model::Gate;
-using GNet = eda::gate::model::GNet;
+using Link = eda::gate::model::Subnet::Link;
+using Subnet = eda::gate::model::Subnet;
+using SubnetID = eda::gate::model::SubnetID;
 
 //===----------------------------------------------------------------------===//
 // Constructors/Destructors
 //===----------------------------------------------------------------------===//
 
 AkersAlgorithm::AkersAlgorithm(const TruthTable &func, const TruthTable &care):
-                               table(func, care), nVariables(func.num_vars()),
-                               net(std::make_shared<GNet>()) {}
+                               table(func, care), nVariables(func.num_vars()) {}
 
-//===------------------------------------------------------------------------===//
+//===----------------------------------------------------------------------===//
 // Convenience Methods
-//===------------------------------------------------------------------------===//
+//===----------------------------------------------------------------------===//
 
-std::shared_ptr<GNet> AkersAlgorithm::run(SignalList &inputs,
-                                          Gate::Id &outputId) {
+SubnetID AkersAlgorithm::synthesize(const TruthTable &func) {
+  TruthTable care(func.num_vars());
+  std::string bitsCare;
+  bitsCare.assign(func.num_bits(), '1');
+  kitty::create_from_binary_string(care, bitsCare);
+  
+  table.initialize(func, care);
+  nVariables = func.num_vars();
 
+  return run();
+}
+
+SubnetID AkersAlgorithm::run() {
   for (uint32_t i = 0; i < nVariables; i++) {
-    const Gate::Id inputId = net->addIn();
-    const Gate::Signal input = Gate::Signal::always(inputId);
-    signals.push_back(input);
-    inputs.push_back(input);
+    size_t cellId = subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT);
+    idx.push_back(cellId);
   }
 
   while ((table.nColumns() != 3) && (table.nColumns() != 1)) {
@@ -55,34 +63,36 @@ std::shared_ptr<GNet> AkersAlgorithm::run(SignalList &inputs,
       table.reduce();
     }
   }
+  bool inv = false;
   if (table.nColumns() == 3) {
     Arguments gate = {0, 1, 2};
     addMajGate(gate);
   } else {
     unsigned id = table.idColumn(0);
-    Gate::Id inputId = 0;
+    size_t cellId = 0;
     switch (id) {
       case 62:
-        inputId = net->addZero();
-        break;
+        cellId = subnetBuilder.addCell(model::ZERO);
+      break;
       case 63:
-        inputId = net->addOne();
-        break;
+        cellId = subnetBuilder.addCell(model::ONE);
+      break;
       default:
         if ((id < 62) && (id > 30)) {
-          inputId = net->addNot(signals[id - 31]);
+          cellId = idx[id - 31];
+          inv = true;
         }
     }
-    if (inputId) {
-      signals.push_back(Gate::Signal::always(inputId));
+    if (cellId) {
+      idx.push_back(cellId);
     }
   }
   nMaj =  table.nMajGates;
-  outputId = net->addOut(signals.back());
-  net->sortTopologically();
-  return net;
+  const Link link(idx.back(), inv);
+  subnetBuilder.addCell(model::OUT, link, SubnetBuilder::OUTPUT);
+  return subnetBuilder.make();
 }
- 
+
 //===----------------------------------------------------------------------===//
 // Internal Methods
 //===----------------------------------------------------------------------===//
@@ -90,40 +100,45 @@ std::shared_ptr<GNet> AkersAlgorithm::run(SignalList &inputs,
 void AkersAlgorithm::addMajGate(const Arguments &gate) {
   assert(gate.size() == 3 && "Invalid number of inputs for a MAJ gate!");
 
-  Gate::SignalList majInputs;
-  
+  std::vector<Link> links;
+
   for (const auto &i : gate) {
     unsigned id = table.idColumn(i);
-    Gate::Id inputId;
+    size_t cellId = 0;
     switch (id) {
       case 62:
-        inputId = net->addZero();
-        majInputs.push_back(Gate::Signal::always(inputId));
-        break;
+        if (!zeroId) {
+          zeroId = subnetBuilder.addCell(model::ZERO);
+        }
+        cellId = zeroId;
+        links.push_back(Link(cellId));
+      break;
       case 63:
-        inputId = net->addOne();
-        majInputs.push_back(Gate::Signal::always(inputId));
-        break;
+        if (!oneId) {
+          oneId = subnetBuilder.addCell(model::ONE);
+        }
+        cellId = oneId;
+        links.push_back(Link(cellId));
+      break;
       default:
         switch (id < 31 ? 1 : (id < 62 ? 2 : 3)) {
           case 1:
-            majInputs.push_back(signals[id]);
-            break;
+            links.push_back(Link(idx[id]));
+          break;
           case 2:
-            inputId = net->addNot(signals[id - 31]);
-            majInputs.push_back(Gate::Signal::always(inputId));
-            break;
+            links.push_back(Link(idx[id - 31], true));
+          break;
           case 3:
-            majInputs.push_back(signals[id - 64 + nVariables]);
-            break;
+            links.push_back(Link(idx[id - 64 + nVariables]));
+          break;
         }
     }
   }
 
-  const Gate::Id inputId = net->addMaj(majInputs[0],
-                                       majInputs[1],
-                                       majInputs[2]);
-  signals.push_back(Gate::Signal::always(inputId));
+  const size_t majId = subnetBuilder.addCell(model::MAJ, links[0],
+                                                         links[1],
+                                                         links[2]);
+  idx.push_back(majId);
 
   table.addMajColumn(gate);
 }
@@ -426,4 +441,4 @@ bool AkersAlgorithm::mayDeleteRows(const Arguments &args,
   return false;
 }
 
-}; // namespace eda::gate::optimizer::resynthesis
+} // namespace eda::gate::optimizer2::resynthesis

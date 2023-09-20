@@ -328,4 +328,4 @@ SubnetID Cascade::synthesize(const TruthTable &func) {
         
   return subnetBuilder.make();
 }
-}; // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::resynthesis

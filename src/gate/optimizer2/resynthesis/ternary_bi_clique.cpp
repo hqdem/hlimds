@@ -17,62 +17,12 @@ using CoverageElement = TernaryBiClique::CoverageElement;
 using KittyTT         = TernaryBiClique::KittyTT;
 using NormalForm      = TernaryBiClique::NormalForm;
 
-TernaryVector::TernaryVector() : bits(0), care(0) { };
-
-TernaryVector::TernaryVector(uint32_t bits, size_t vars)
-    : bits(bits), care((1 << vars) - 1) { }
-
-TernaryVector::TernaryVector(uint32_t bits, uint32_t care)
-    : bits(bits), care(care) { }
-
 uint32_t TernaryVector::orthogonality(const TernaryVector &rhs) const {
   return (bits & care & rhs.care) ^ (rhs.bits & care & rhs.care);
 }
 
-uint32_t TernaryVector::getBits() const {
-  return bits;
-}
-
-uint32_t& TernaryVector::getBits() {
-  return bits;
-}
-
-uint32_t TernaryVector::getCare() const {
-  return care;
-}
-
-uint32_t& TernaryVector::getCare() {
-  return care;
-}
-
 bool operator==(const TernaryVector &lhs, const TernaryVector &rhs) {
   return (lhs.getBits() == rhs.getBits()) && (lhs.getCare() == rhs.getCare());
-}
-
-TernaryMatrix::TernaryMatrix(const std::initializer_list<TernaryVector> &init) 
-  : rows(init) { }
-
-TernaryMatrix::TernaryMatrix(const std::vector<TernaryVector> &rows) 
-  : rows(rows), merged(true) { }
-
-bool TernaryMatrix::empty() const {
-  return rows.empty();
-}
-
-size_t TernaryMatrix::size() const {
-  return rows.size();
-}
-
-std::vector<TernaryVector>::const_iterator TernaryMatrix::begin() const {
-  return rows.begin();
-}
-
-std::vector<TernaryVector>::const_iterator TernaryMatrix::end() const {
-  return rows.end();
-}
-
-void TernaryMatrix::pushBack(const TernaryVector &vector) {
-  rows.push_back(vector);
 }
 
 void TernaryMatrix::eraseExtraVars(uint32_t vars) { 
@@ -99,11 +49,10 @@ void TernaryMatrix::openVectors(uint32_t vars) {
                  [care = vars](uint32_t bits){
                   return TernaryVector(bits, care);
                  });
-  merged = false;
 }
 
 void TernaryMatrix::mergeVectors(uint32_t vars) {
-  if (rows.size() <= 1 || merged) {
+  if (rows.size() <= 1) {
     return;
   }
 
@@ -172,7 +121,6 @@ void TernaryMatrix::mergeVectors(uint32_t vars) {
       }
     }
   }
-  merged = true;
 }
 
 void TernaryMatrix::getAbsorbedVectors(uint32_t pos, uint32_t bits,
@@ -208,8 +156,7 @@ TernaryBiClique::TernaryBiClique(const KittyTT &func, const KittyTT &care) {
 
   for (uint32_t i = 0; i < func.num_bits(); ++i) {
     if (get_bit(care, i)) {
-      get_bit(func, i) ? onSet.pushBack({i, fSize})
-          : offSet.pushBack({i, fSize});
+      get_bit(func, i) ? onSet.pushBack({i, vars}) : offSet.pushBack({i, vars});
     }
   }
 
@@ -240,18 +187,6 @@ std::vector<CoverageElement> TernaryBiClique::getStarCoverage() const {
     coverage.push_back({{vector}, findVars(vector)});
   }
   return coverage;
-}
-
-TernaryMatrix& TernaryBiClique::getOffSet() {
-  return offSet;
-}
-
-TernaryMatrix& TernaryBiClique::getOnSet() {
-  return onSet;
-}
-
-uint32_t TernaryBiClique::getVars() const {
-  return vars;
 }
 
 uint32_t TernaryBiClique::findVars(const TernaryVector &vector) const {

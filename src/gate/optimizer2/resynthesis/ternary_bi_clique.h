@@ -33,23 +33,29 @@ uint8_t popCount(T number) {
 class TernaryVector final {
 public:
 
-  TernaryVector();
+  TernaryVector() = default;
 
-  TernaryVector(uint32_t bits, size_t vars);
-
-  TernaryVector(uint32_t bits, uint32_t care);
+  TernaryVector(uint32_t bits, uint32_t care) : bits(bits), care(care) { }
 
   /// Returns orthogonal bits (two vectors are orthogonal to each other by bit,
   /// if in one vector the bit has the value 0, and in the other the value 1.
   uint32_t orthogonality(const TernaryVector &rhs) const;
 
-  uint32_t getBits() const;
+  uint32_t getBits() const {
+    return bits;
+  }
 
-  uint32_t& getBits();
+  uint32_t& getBits() {
+    return bits;
+  }
 
-  uint32_t getCare() const;
+  uint32_t getCare() const {
+    return care;
+  }
 
-  uint32_t& getCare();
+  uint32_t& getCare() {
+    return care;
+  }
 
 private:
 
@@ -67,19 +73,30 @@ public:
 
   TernaryMatrix() = default;
 
-  TernaryMatrix(const std::vector<TernaryVector> &rows);
+  TernaryMatrix(const std::initializer_list<TernaryVector> &init)
+      : rows(init) { }
 
-  TernaryMatrix(const std::initializer_list<TernaryVector> &init);
+  TernaryMatrix(const std::vector<TernaryVector> &rows) : rows(rows) { }
 
-  std::vector<TernaryVector>::const_iterator begin() const;
+  bool empty() const {
+    return rows.empty();
+  }
 
-  std::vector<TernaryVector>::const_iterator end() const;
+  size_t size() const {
+    return rows.size();
+  }
 
-  bool empty() const;
+  std::vector<TernaryVector>::const_iterator begin() const {
+    return rows.begin();
+  }
 
-  size_t size() const;
+  std::vector<TernaryVector>::const_iterator end() const {
+    return rows.end();
+  }
 
-  void pushBack(const TernaryVector &vector);
+  void pushBack(const TernaryVector &vector) {
+    rows.push_back(vector);
+  }
 
   void mergeVectors(uint32_t vars);
 
@@ -98,12 +115,13 @@ private:
                          const std::set<uint32_t> &allAbsorbedVectors);
 
   std::vector<TernaryVector> rows;
-  bool merged = false;
 };
 
 /**
  * \brief Represents a complete bipartite graph (bi-clique), whose nodes
  * are ternary vectors. Each part of graph constitutes ternary matrix.
+ * TODO: Implement Minato-Morreale algorithm to use ISOP instead of
+ * ternary matrices.
  */
 class TernaryBiClique final {
 public:
@@ -124,11 +142,17 @@ public:
 
   void eraseExtraVars(uint32_t vars);
 
-  TernaryMatrix& getOffSet();
+  TernaryMatrix& getOffSet() {
+    return offSet;
+  }
 
-  TernaryMatrix& getOnSet();
+  TernaryMatrix& getOnSet() {
+    return onSet;
+  }
 
-  uint32_t getVars() const;
+  uint32_t getVars() const {
+    return vars;
+  }
 
 private:
 

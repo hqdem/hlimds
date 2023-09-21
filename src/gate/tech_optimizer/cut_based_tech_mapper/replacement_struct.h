@@ -21,36 +21,33 @@ namespace eda::gate::tech_optimizer {
     using CellType = eda::gate::model::CellTypeID;
 
     Replacement(GateID rootNode,
-                NetSubstitute netSubstitute,
-                double delay,
+                model::CellTypeID cellType,
                 std::string name,
-                double area,
-                model::CellTypeID cellType) : rootNode(rootNode),
-                            netSubstitute(netSubstitute),
-                            delay(delay), name(name),
-                            area(area), cellType(cellType) {
-    }
+                double delay,
+                double area) : rootNode(rootNode),
+                            cellType(cellType),
+                            name(name), delay(delay),
+                            area(area) {}
 
     Replacement(GateID rootNode,
-                NetSubstitute netSubstitute,
-                double delay,
+                model::CellTypeID cellType,
+                optimizer::ConeVisitor::MatchMap *map,
                 std::string name,
-                double area, 
-                optimizer::ConeVisitor::MatchMap *map) : rootNode(rootNode),
-                            netSubstitute(netSubstitute),
-                            delay(delay), name(name),
-                            area(area), map(map) {
-    }
+                double delay,
+                double area) : rootNode(rootNode),
+                            cellType(cellType), map(map),
+                            name(name), delay(delay),
+                            area(area) {}
 
     GateID rootNode;
-    NetSubstitute netSubstitute;
-    double delay;
-    std::string name;
-    double area;
     model::CellTypeID cellType;
-    bool used = false;
-
     optimizer::ConeVisitor::MatchMap *map;
+    bool used = false;
+    eda::gate::model::CellID cellID;
 
+    //NetSubstitute netSubstitute;
+    std::string name;
+    double delay;
+    double area;
   };
 } // namespace eda::gate::tech_optimizer

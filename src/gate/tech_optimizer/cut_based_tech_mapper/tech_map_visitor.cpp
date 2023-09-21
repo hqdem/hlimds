@@ -137,11 +137,11 @@ namespace eda::gate::tech_optimizer {
 
   void SearchOptReplacement::saveBestReplacement() {
     if (saveReplace) {
-      NetSubstitute netSubstitute = NetSubstitute(
-            lastNode, &bestOptionMap, bestOption.net.get(), net);
 
-      Replacement bestReplacment{lastNode, netSubstitute, minNodeArrivalTime, 
-          bestOption.name, bestOption.area, &bestOptionMap};
+      Replacement bestReplacment{lastNode, eda::gate::model::CELL_TYPE_ID_AND,
+          &bestOptionMap, bestOption.name,
+          minNodeArrivalTime, bestOption.area};
+
       bestReplacement->insert(std::pair<GateID, Replacement>
           (lastNode, bestReplacment));
       

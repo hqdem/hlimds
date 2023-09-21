@@ -38,7 +38,8 @@ namespace eda::gate::tech_optimizer {
       if (aig) {aigMap(net);}
       findCuts(net);
       replacementSearch(net, strategy);
-      replacement(net);
+      traversalNode(net);
+      //replacement(net);
       std::cout << getArea() << std::endl;
       std::cout << getDelay() << std::endl;
       rwdb.closeDB();
@@ -67,10 +68,8 @@ namespace eda::gate::tech_optimizer {
     auto nodes = eda::utils::graph::topologicalSort(*net);
     for (auto &id: net->getSources()) {
       if (Gate::get(id)->isSource()) {
-        eda::gate::optimizer::NetSubstitute netSubstitute{};
-
-        Replacement bestReplacment{id, netSubstitute, 0, "", 0,
-            eda::gate::model::CELL_TYPE_ID_IN};
+        Replacement bestReplacment{id, eda::gate::model::CELL_TYPE_ID_IN, 
+            " ", 0, 0};
         bestReplacement.insert(std::pair<GateID, Replacement>
                                 (id, bestReplacment));
       }
@@ -84,7 +83,7 @@ namespace eda::gate::tech_optimizer {
   }
 
   void CutBasedTechMapper::replacement(GNet *net) {
-    auto nodes = eda::utils::graph::topologicalSort(*net);
+    /*auto nodes = eda::utils::graph::topologicalSort(*net);
     std::reverse(nodes.begin(), nodes.end());
     for (auto &node: nodes) {
       if (bestReplacement.count(node) & net->hasNode(node)) {
@@ -95,6 +94,7 @@ namespace eda::gate::tech_optimizer {
         area = area + replacementInfo.area;
       } 
     }
+    */
   }
 
   void CutBasedTechMapper::mapedNet(GNet *net) {
@@ -114,39 +114,54 @@ namespace eda::gate::tech_optimizer {
     std::unordered_set<Replacement*> visited;
     bool canPop = false;
 
-    for (auto &id: getOutputs(net)) {
+    optimizer::CutWalker::GateIdSet targets;
+    targets.reserve((net->targetLinks()).size());
+
+    for (auto link : net->targetLinks()) {
+      targets.insert(link.target);
+    }
+  
+
+    for (const GateID &id: targets) {
       stack.push(&bestReplacement.at(id));
-      visited.push(&bestReplacement.at(id));
+      visited.insert(&bestReplacement.at(id));
     }
 
     while (!stack.empty()) {
       Replacement* current = stack.top();
-      //stack.pop();
 
-      //обработка 
       if (current->map == nullptr) {
         canPop = true;
-        //mappedNet.createInput(); //TODO create method
+        auto cellID = model::makeCell(eda::gate::model::CellSymbol::IN);
+        netBuilder.addCell(cellID);
+        current->cellID = cellID;
       }
 
-      if (canPop) {
+      if (canPop & current->map != nullptr) {
         current->used = true;
         stack.pop();
+        model::Cell::LinkList linkList;
+        for (auto& [input, secondParam] : *current->map) {
+          linkList.push_back(model::LinkEnd(bestReplacement.at(input).cellID));
+        }
+        auto cellID = makeCell(current->cellType, linkList);
+        current->cellID = cellID;
+        //mappedNet.createCell();
       }
-      //
 
       for (const auto& [input, secondParam] : *current->map) {
-            if (visited.find(&bestReplacement.at(input)) == visited.end()) {
-                stack.push(&bestReplacement.at(input));
-                visited.insert(&bestReplacement.at(input));
-            }
+        if (visited.find(&bestReplacement.at(input)) == visited.end()) {
+          stack.push(&bestReplacement.at(input));
+          visited.insert(&bestReplacement.at(input));
         }
-
+      }
     }
+
   }
 
 
-  std::vector<Gate::Id> getOutputs(GNet *net) {
+  std::vector<Gate::Id> CutBasedTechMapper::getOutputs(GNet *net) {
+    //TODO create
     std::vector<Gate::Id> outputs;
     return outputs;
   }

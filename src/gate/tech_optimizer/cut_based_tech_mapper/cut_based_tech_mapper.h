@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/gnet.h"
+#include "gate/model2/net.h"
 #include "gate/optimizer/cut_storage.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/replacement_struct.h"
@@ -34,6 +35,8 @@ namespace eda::gate::tech_optimizer {
     std::unordered_map<GateID, double> gatesDelay;
     std::unordered_map<GateID, Replacement> bestReplacement;
 
+    eda::gate::model::NetBuilder netBuilder;
+
     std::string dbPath = "rwtest.db";
     eda::gate::optimizer::SQLiteRWDatabase rwdb;
 
@@ -46,5 +49,7 @@ namespace eda::gate::tech_optimizer {
     void replacement(GNet *net);
     void mapedNet(GNet *net);
     void traversalNode(GNet *net);
+
+    std::vector<GateID> getOutputs(GNet *net);
   };
 } // namespace eda::gate::tech_optimizer

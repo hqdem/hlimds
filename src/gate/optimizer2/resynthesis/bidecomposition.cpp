@@ -32,7 +32,8 @@ SubnetID BiDecompositor::synthesize(const TruthTable &func) {
   kitty::create_from_binary_string(care, std::string(func.num_bits(), '1'));
   TernaryBiClique initBiClique(func, care);
 
-  Link output = getBiDecomposition(initBiClique, inputs, subnetBuilder);
+  Link output = getBiDecomposition(initBiClique,
+      {inputs.rbegin(), inputs.rend()}, subnetBuilder);
 
   subnetBuilder.addCell(model::OUT, output, SubnetBuilder::OUTPUT);
   
@@ -66,7 +67,7 @@ Link BiDecompositor::getBiDecomposition(TernaryBiClique &initBiClique,
   Link lhs = getBiDecomposition(firstBiClique, inputs, subnetBuilder);
   Link rhs = getBiDecomposition(secondBiClique, inputs, subnetBuilder);
 
-  return Link(subnetBuilder.addCell(model::AND, lhs, rhs), false);
+  return Link(subnetBuilder.addCell(model::AND, lhs, rhs), true);
 }
 
 std::pair<CoverageElement, CoverageElement> 

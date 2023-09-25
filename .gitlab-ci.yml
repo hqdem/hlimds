@@ -1,6 +1,7 @@
-image: isprasmvg/utopia-eda:clear
+image: isprasmvg/utopia-eda:coverage
 
 variables:
+  GIT_SUBMODULE_STRATEGY: recursive
   UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
   BUILD: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"
@@ -8,6 +9,7 @@ variables:
 stages:
   - build
   - test
+  - coverage
 
 build_project:
   stage: build
@@ -17,15 +19,13 @@ build_project:
   script:
     - rm -rf ${BUILD_PATH}
     - cd ${UTOPIA_HOME}
-    - git submodule init
-    - git submodule update
-    - cmake -S . -B ${BUILD} -G Ninja
+    - cmake -S ${UTOPIA_HOME} -B ${BUILD} -G Ninja
     - cmake --build ${BUILD}
 
   artifacts:
+    expire_in: 10 min
     paths:
       - ${BUILD_PATH}
-    expire_in: 10 min
 
 test_project:
   stage: test
@@ -41,6 +41,24 @@ test_project:
     - build_project
 
   artifacts:
+    expire_in: 10 min
     paths:
       - ${BUILD_PATH}
-    expire_in: 10 min
+
+get_coverage_info:
+  stage: coverage
+  tags:
+    - docker
+
+  script:
+    - lcov --capture --directory ${UTOPIA_HOME} -o lcoverage.info
+    - lcov --remove lcoverage.info "${BUILD_PATH}/*" "${UTOPIA_HOME}/lib/*" "/usr/*" -o clean_cov.info
+    - genhtml clean_cov.info -o clean_coverage
+
+  dependencies:
+    - test_project
+
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - ${UTOPIA_HOME}/clean_coverage

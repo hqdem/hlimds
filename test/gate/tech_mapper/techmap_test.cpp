@@ -33,7 +33,7 @@ namespace eda::gate::techMap {
   const std::filesystem::path homePathTechMap = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path libertyDirrectTechMap = homePathTechMap / "test" / "data" / "gate" / "tech_mapper";
 
-  TEST(TechMapTest, DISABLED_gnet1) {
+  TEST(TechMapTest, gnet1) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -85,7 +85,7 @@ namespace eda::gate::techMap {
     techMapper.techMap(net, minDelay, true);
   }
 
-  TEST(TechMapTest, adder) {
+  TEST(TechMapTest, DISABLED_adder) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }

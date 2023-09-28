@@ -41,7 +41,7 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
       comma = true;
     }
 
-    out << ");\n";
+    out << ");" << std::endl;
     i += cell.more;
   }
 

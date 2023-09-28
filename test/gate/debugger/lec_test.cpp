@@ -20,7 +20,7 @@ CheckerResult fileLecTest(const std::string &fileName,
                           const std::string &subPath) {
   Exts ext = getExt(fileName);
   if (ext == Exts::UNSUPPORTED) {
-    CHECK(false) << "Unsupported HDL!\n";
+    CHECK(false) << "Unsupported HDL!" << std::endl;
     return CheckerResult::ERROR;
   }
 

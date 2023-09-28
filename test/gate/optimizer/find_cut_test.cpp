@@ -44,7 +44,7 @@ namespace eda::gate::optimizer {
         GateId failed;
 
         if (!isCut(v, c, failed)) {
-          FAIL() << "Wrong cut for v " << v << "; failed " << failed << "\n";
+          FAIL() << "Wrong cut for v " << v << "; failed " << failed << std::endl;
         }
       }
     }

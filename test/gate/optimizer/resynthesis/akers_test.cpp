@@ -449,10 +449,10 @@ TEST(AkersTest, CompetitionWithMockturtle) {
   AkersAlgorithm alg(func, care);
   auto net = alg.run(inputs, outputId);
   end = clock();
-  double currentImplTime = (double)(end - start)/CLOCKS_PER_SEC * 1000;
+  double implTime = (double)(end - start)/CLOCKS_PER_SEC * 1000;
 
-  std::cout << "Time of mockturtle algorithm: " << mockturtleTime << " ms\n";
-  std::cout << "Time of current implementation: " << currentImplTime << " ms\n";
+  std::cout << "mockturtle time: " << mockturtleTime << " ms" << std::endl;
+  std::cout << "impl time: " << implTime << " ms" << std:: endl;
 
-  EXPECT_TRUE(currentImplTime <= mockturtleTime);
+  EXPECT_TRUE(implTime <= mockturtleTime);
 }

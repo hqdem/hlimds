@@ -387,19 +387,19 @@ TEST(GNetTest, mergeTest) {
 
   size_t initialGates = net.gates().size();
   // TODO: Debug print.
-  std::cout << net << '\n';
+  std::cout << net << std::endl;
   net.mergeGates(gidAnd, gidOr);
   EXPECT_EQ(initialGates - 1, net.gates().size());
 
-  std::cout << net << '\n';
+  std::cout << net << std::endl;
   net.mergeGates(gidNot1, gidNot2);
   EXPECT_EQ(initialGates - 2, net.gates().size());
 
-  std::cout << net << '\n';
+  std::cout << net << std::endl;
   net.mergeGates(y, gidOr);
   EXPECT_EQ(initialGates - 4, net.gates().size());
 
-  std::cout << net << '\n';
+  std::cout << net << std::endl;
 }
 
 } // namespace eda::gate::model

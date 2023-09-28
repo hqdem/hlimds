@@ -58,7 +58,7 @@ GNet getModel(const std::string &fileName,
   case Exts::RIL:
     return *parseRil(fileName, subPath);
   default:
-    CHECK(false) << "Unsupported extension!\n";
+    CHECK(false) << "Unsupported extension!" << std::endl;
     return GNet(0);
   }
 }

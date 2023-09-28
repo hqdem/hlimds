@@ -350,7 +350,7 @@ std::ostream& operator <<(std::ostream &out, const UnitizedTable &t) {
     --j;
     out << t.idColumn(j) << " ";
   } while (j);
-  out << "\n";
+  out << std::endl;
   // rows (sets of bits)
   for (uint32_t i = 0; i < t.nRows(); i++) {
     size_t j = t.nColumns();
@@ -364,7 +364,7 @@ std::ostream& operator <<(std::ostream &out, const UnitizedTable &t) {
         id /=10;
       }
     } while (j);
-    out << "\n";
+    out << std::endl;
   }
   return out;
 }

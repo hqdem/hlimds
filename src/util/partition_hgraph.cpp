@@ -94,7 +94,7 @@ void HyperGraph::print(const BoolVector &sides) const {
         std::cout << " " << i;
       }
     }
-    std::cout << " }\n";
+    std::cout << " }" << std::endl;
   }
   std::cout << std::endl;
 }
@@ -107,9 +107,8 @@ void HyperGraph::printArea(const BoolVector &sides) const {
     area[sides[i]] += weights[i];
     ++number[sides[i]];
   }
-  std::cout << "Area[0] = " << area[0] << " number[0] = " << number[0] << '\n';
-  std::cout << "Area[1] = " << area[1] << " number[1] = " << number[1]
-            << std::endl;
+  std::cout << "Area[0]=" << area[0] << " number[0]=" << number[0] << std::endl;
+  std::cout << "Area[1]=" << area[1] << " number[1]=" << number[1] << std::endl;
 }
 
 bool HyperGraph::graphOutput(const std::string &filename) const {
@@ -123,21 +122,21 @@ bool HyperGraph::graphOutput(const std::string &filename) const {
 }
 
 void HyperGraph::dotOutput(std::ofstream &fout) const {
-  fout << "graph not_partitioned {\n";
+  fout << "graph not_partitioned {" << std::endl;
   for (size_t i = 0; i < weights.size(); ++i) {
     fout << "\tnode" << i;
-    fout << ";\n";
+    fout << ";" << std::endl;
   }
   for (size_t i = 0; i < eptr.size() - 1; ++i) {
-    fout << "\tedges" << i << "[shape=point];\n";
+    fout << "\tedges" << i << "[shape=point];" << std::endl;
     for (size_t j = eptr[i]; j < eptr[i + 1]; ++j) {
       int nodet = eind[j];
       if (nodet & 1) {
-        fout << "\tedges" << i << " -- node" << nodet << ";\n";
+        fout << "\tedges" << i << " -- node" << nodet << ";" << std::endl;
       } else {
-        fout << "\tnode" << nodet << " -- edges" << i << ";\n";
+        fout << "\tnode" << nodet << " -- edges" << i << ";" << std::endl;
       }
     }
   }
-  fout<<"}\n";
+  fout << "}" << std::endl;
 }

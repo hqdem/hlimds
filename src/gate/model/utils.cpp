@@ -54,7 +54,7 @@ Gate::SignalList getNewInputs(const Gate &oldGate,
 }
 
 void dump(const GNet &net) {
-  std::cout << net << '\n';
+  std::cout << net << std::endl;
 
   for (auto source : net.sourceLinks()) {
     const auto *gate = Gate::get(source.target);
@@ -66,9 +66,9 @@ void dump(const GNet &net) {
   }
 
   std::cout << std::endl;
-  std::cout << "N=" << net.nGates() << '\n';
-  std::cout << "I=" << net.nSourceLinks() << '\n';
-  std::cout << "O=" << net.nTargetLinks() << '\n';
+  std::cout << "N=" << net.nGates() << std::endl;
+  std::cout << "I=" << net.nSourceLinks() << std::endl;
+  std::cout << "O=" << net.nTargetLinks() << std::endl;
 }
 
 int getNetDepth(const GNet &net) {

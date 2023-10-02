@@ -51,7 +51,7 @@ void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*
   case 0: // cut-based matching
     CutBasedTechMapper mapper(functDB);
     MinDelay *minDelay = new MinDelay();
-    mapper.techMap(net, minDelay, true); // TODO not need to return the pointer
+    mapper.techMap(net, minDelay, false); // TODO not need to return the pointer
   break;
   //case 1: // DAGON matching
     //DagonTechMapper mapper(structDB);

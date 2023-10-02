@@ -35,9 +35,10 @@ namespace eda::gate::tech_optimizer {
 
   GNet *CutBasedTechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
     try {
-      if (aig) {aigMap(net);}
+      //if (aig) {aigMap(net);}
       findCuts(net);
       replacementSearch(net, strategy);
+      std::cout << "переход к созданию новой схемы" << std::endl;
       traversalNode(net);
       //replacement(net);
       std::cout << getArea() << std::endl;
@@ -120,7 +121,7 @@ namespace eda::gate::tech_optimizer {
     for (auto link : net->targetLinks()) {
       targets.insert(link.target);
     }
-  
+    std::cout << "вытаемся сохранить выходы" << std::endl;
 
     for (const GateID &id: targets) {
       stack.push(&bestReplacement.at(id));
@@ -128,6 +129,7 @@ namespace eda::gate::tech_optimizer {
     }
 
     while (!stack.empty()) {
+      std::cout << "создаем схему" << std::endl;
       Replacement* current = stack.top();
 
       if (current->map == nullptr) {
@@ -142,7 +144,7 @@ namespace eda::gate::tech_optimizer {
         stack.pop();
         model::Cell::LinkList linkList;
         for (auto& [input, secondParam] : *current->map) {
-          linkList.push_back(model::LinkEnd(bestReplacement.at(input).cellID));
+          linkList.push_back(model::LinkEnd(bestReplacement.at(secondParam).cellID));
         }
         auto cellID = makeCell(current->cellType, linkList);
         current->cellID = cellID;
@@ -150,9 +152,9 @@ namespace eda::gate::tech_optimizer {
       }
 
       for (const auto& [input, secondParam] : *current->map) {
-        if (visited.find(&bestReplacement.at(input)) == visited.end()) {
-          stack.push(&bestReplacement.at(input));
-          visited.insert(&bestReplacement.at(input));
+        if (visited.find(&bestReplacement.at(secondParam)) == visited.end()) {
+          stack.push(&bestReplacement.at(secondParam));
+          visited.insert(&bestReplacement.at(secondParam  ));
         }
       }
     }

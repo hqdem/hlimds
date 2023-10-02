@@ -57,6 +57,7 @@ add_library(Gate OBJECT
   tech_optimizer/cut_based_tech_mapper/strategy/min_delay.cpp
   tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.cpp
   tech_optimizer/cut_based_tech_mapper/tech_map_visitor.cpp
+  tech_optimizer/super_gate_generator/super_gate_generator.cpp
   tech_optimizer/tech_optimizer.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)

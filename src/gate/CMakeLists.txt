@@ -29,7 +29,6 @@ add_library(Gate OBJECT
   optimizer/resynthesis/akers.cpp
   optimizer/resynthesis/cascade.cpp
   optimizer/resynthesis/reed_muller.cpp
-  optimizer/resynthesis/unitized_table.cpp
   optimizer/rwdatabase.cpp
   optimizer/rwmanager.cpp
   optimizer/strategy/apply_search_optimizer.cpp

@@ -13,7 +13,7 @@
 #include <utility>
 
 #include "gate/model/gnet.h"
-#include "gate/optimizer/resynthesis/unitized_table.h"
+#include "gate/optimizer2/resynthesis/unitized_table.h"
 
 namespace eda::gate::optimizer::resynthesis {
 
@@ -42,6 +42,7 @@ public:
   using RowNums = std::unordered_set<uint32_t>;
   using SignalList = Gate::SignalList;
   using TruthTable = kitty::dynamic_truth_table;
+  using UnitizedTable = eda::gate::optimizer2::resynthesis::UnitizedTable;
 
   //===--------------------------------------------------------------------===//
   // Constructors/Destructors

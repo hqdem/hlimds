@@ -26,6 +26,10 @@ namespace eda::gate::optimizer2::resynthesis {
   class AkersAlgorithm;
 } // namespace eda::gate::optimizer2::resynthesis
 
+namespace eda::gate::optimizer::resynthesis {
+  class AkersAlgorithm;
+} // namespace eda::gate::optimizer::resynthesis
+
 namespace eda::gate::optimizer2::resynthesis {
 
 constexpr unsigned varLimit = 31;
@@ -35,6 +39,7 @@ constexpr unsigned varLimit = 31;
 */
 class UnitizedTable {
   friend class AkersAlgorithm;
+  friend class eda::gate::optimizer::resynthesis::AkersAlgorithm;
 
 public:
 

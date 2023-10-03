@@ -115,17 +115,30 @@ namespace eda::gate::tech_optimizer {
     std::unordered_set<Replacement*> visited;
     bool canPop = false;
 
+    //std::vector<>
+    //Gate::List gates = net.gates();
+    //for (auto &gate : gates) {
+    //  if (gate.isTarget()) {
+
+    //  }
+    //}
+
+    for (const auto &[gateID, repl] : bestReplacement) {
+      std::cout << gateID << std::endl;
+    }
+
     optimizer::CutWalker::GateIdSet targets;
     targets.reserve((net->targetLinks()).size());
 
     for (auto link : net->targetLinks()) {
       targets.insert(link.target);
     }
-    std::cout << "вытаемся сохранить выходы" << std::endl;
 
-    for (const GateID &id: targets) {
-      stack.push(&bestReplacement.at(id));
-      visited.insert(&bestReplacement.at(id));
+    for (const auto &outGateID: targets) {
+      for (const auto &preOutGateID: Gate::get(outGateID)->inputs()) {
+        stack.push(&bestReplacement.at(preOutGateID.node()));
+        visited.insert(&bestReplacement.at(preOutGateID.node()));
+      }
     }
 
     while (!stack.empty()) {
@@ -144,7 +157,7 @@ namespace eda::gate::tech_optimizer {
         stack.pop();
         model::Cell::LinkList linkList;
         for (auto& [input, secondParam] : *current->map) {
-          linkList.push_back(model::LinkEnd(bestReplacement.at(secondParam).cellID));
+          linkList.push_back(model::LinkEnd(bestReplacement.at(input).cellID));
         }
         auto cellID = makeCell(current->cellType, linkList);
         current->cellID = cellID;
@@ -152,9 +165,10 @@ namespace eda::gate::tech_optimizer {
       }
 
       for (const auto& [input, secondParam] : *current->map) {
-        if (visited.find(&bestReplacement.at(secondParam)) == visited.end()) {
-          stack.push(&bestReplacement.at(secondParam));
-          visited.insert(&bestReplacement.at(secondParam  ));
+        std::cout << input << std::endl;
+        if (visited.find(&bestReplacement.at(input)) == visited.end()) {
+          stack.push(&bestReplacement.at(input));
+          visited.insert(&bestReplacement.at(input));
         }
       }
     }

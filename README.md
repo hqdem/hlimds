@@ -49,6 +49,10 @@ sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
     iverilog liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld \
     make ninja-build python python3-pip zlib1g zlib1g-dev
 ```
+Several Python packages should be installed too. Do the following:
+```
+pip install liberty-parser
+```
 
 ### C++ CTemplate Installation
 
@@ -82,11 +86,6 @@ If you want to install `CUDD` not in default directory by using
 will require environment variable `CUDD_DIR` that contains the path
 to the `CUDD` actual installation directory.
 
-### Liberty Parser Installation
-
-```
-pip install liberty-parser
-```
 
 ## Working in Command Line
 

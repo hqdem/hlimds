@@ -1,4 +1,4 @@
-image: isprasmvg/utopia-eda:coverage
+image: isprasmvg/utopia-eda:pip-liberty
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive

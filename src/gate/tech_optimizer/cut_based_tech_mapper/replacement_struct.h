@@ -27,11 +27,11 @@ namespace eda::gate::tech_optimizer {
                 double area) : rootNode(rootNode),
                             cellType(cellType),
                             name(name), delay(delay),
-                            area(area) {}
+                            area(area), isInput(true) {}
 
     Replacement(GateID rootNode,
                 model::CellTypeID cellType,
-                optimizer::ConeVisitor::MatchMap *map,
+                optimizer::ConeVisitor::MatchMap map,
                 std::string name,
                 double delay,
                 double area) : rootNode(rootNode),
@@ -41,7 +41,8 @@ namespace eda::gate::tech_optimizer {
 
     GateID rootNode;
     model::CellTypeID cellType;
-    optimizer::ConeVisitor::MatchMap *map;
+    optimizer::ConeVisitor::MatchMap map;
+    bool isInput = false;
     bool used = false;
     eda::gate::model::CellID cellID;
 

@@ -59,7 +59,7 @@ namespace eda::gate::tech_optimizer {
     cutBasedTechMapper.techMap(&net, minDelay, false);
   }
 
-  TEST(TechMapTest, DISABLED_gnet3) {
+  TEST(TechMapTest, gnet3) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }

@@ -12,6 +12,8 @@
 #include "gate/premapper/aigmapper.h"
 #include "gate/tech_optimizer/library/cell.h"
 #include "gate/model2/celltype.h"
+#include "gate/model2/net.h"
+#include "gate/model2/printer/printer.h"
 
 #include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/tech_map_visitor.h"
@@ -19,6 +21,7 @@
 namespace eda::gate::tech_optimizer {
 
   using Gate = eda::gate::model::Gate;
+  using Net = eda::gate::model::Net;
   using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
   using PreBasis = eda::gate::premapper::PreBasis;
   
@@ -142,37 +145,47 @@ namespace eda::gate::tech_optimizer {
     }
 
     while (!stack.empty()) {
-      std::cout << "создаем схему" << std::endl;
+      //std::cout << "создаем схему" << std::endl;
       Replacement* current = stack.top();
+      uint inputCounter = 1;
 
-      if (current->map == nullptr) {
-        canPop = true;
+      if (current->isInput) {
+        //std::cout << "add input  " << current->isInput << std::endl;
+        inputCounter ++;
         auto cellID = model::makeCell(eda::gate::model::CellSymbol::IN);
         netBuilder.addCell(cellID);
         current->cellID = cellID;
+        stack.pop();
+        if (inputCounter == net->nSourceLinks()) {
+          canPop = true;
+        }
       }
 
-      if (canPop & current->map != nullptr) {
+      if (canPop && !current->isInput) {
+        std::cout << "создаем ячейку" << std::endl;
         current->used = true;
         stack.pop();
         model::Cell::LinkList linkList;
-        for (auto& [input, secondParam] : *current->map) {
-          linkList.push_back(model::LinkEnd(bestReplacement.at(input).cellID));
+        for (auto& [input, secondParam] : current->map) {
+          linkList.push_back(model::LinkEnd(
+              bestReplacement.at(secondParam).cellID));
         }
         auto cellID = makeCell(current->cellType, linkList);
+        netBuilder.addCell(cellID);
         current->cellID = cellID;
         //mappedNet.createCell();
       }
 
-      for (const auto& [input, secondParam] : *current->map) {
-        std::cout << input << std::endl;
-        if (visited.find(&bestReplacement.at(input)) == visited.end()) {
-          stack.push(&bestReplacement.at(input));
-          visited.insert(&bestReplacement.at(input));
+      for (const auto& [input, secondParam] : current->map) {
+        std::cout << secondParam << std::endl;
+        if (visited.find(&bestReplacement.at(secondParam)) == visited.end()) {
+          stack.push(&bestReplacement.at(secondParam));
+          visited.insert(&bestReplacement.at(secondParam));
         }
       }
     }
-
+    const Net &model2 = Net::get(netBuilder.make());
+    std::cout << model2 << std::endl;
   }
 
 

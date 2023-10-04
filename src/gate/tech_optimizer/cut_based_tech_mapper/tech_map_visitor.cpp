@@ -139,7 +139,7 @@ namespace eda::gate::tech_optimizer {
     if (saveReplace) {
 
       Replacement bestReplacment{lastNode, eda::gate::model::CELL_TYPE_ID_AND,
-          &bestOptionMap, bestOption.name,
+          bestOptionMap, bestOption.name,
           minNodeArrivalTime, bestOption.area};
 
       bestReplacement->insert(std::pair<GateID, Replacement>

@@ -39,6 +39,7 @@ below are specific to this operating system:
 * `make`
 * `ninja-build`
 * `python`
+* `python3-pip`
 * `zlib1g`
 * `zlib1g-dev`
 
@@ -46,7 +47,7 @@ To install them, do the following:
 ```
 sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
     iverilog liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld \
-    make ninja-build python zlib1g zlib1g-dev
+    make ninja-build python python3-pip zlib1g zlib1g-dev
 ```
 
 ### C++ CTemplate Installation
@@ -84,7 +85,6 @@ to the `CUDD` actual installation directory.
 ### Liberty Parser Installation
 
 ```
-sudo apt install python3-pip
 pip install liberty-parser
 ```
 

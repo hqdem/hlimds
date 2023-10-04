@@ -81,6 +81,13 @@ If you want to install `CUDD` not in default directory by using
 will require environment variable `CUDD_DIR` that contains the path
 to the `CUDD` actual installation directory.
 
+### Liberty Parser Installation
+
+```
+sudo apt install python3-pip
+pip install liberty-parser
+```
+
 ## Working in Command Line
 
 ### Clone Project Repository and Set Environment Variable

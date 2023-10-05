@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer/examples.h"
+#include "gate/model/examples.h"
 #include "gate/optimizer/net_substitute.h"
 #include "gtest/gtest.h"
 

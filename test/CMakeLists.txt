@@ -31,6 +31,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/ril_lec_test.cpp
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verilog_lec_test.cpp
+  gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp
   gate/model2/list_test.cpp
@@ -40,9 +41,9 @@ add_executable(${TEST_TARGET}
   gate/optimizer/benchmark_optimizer_test.cpp
   gate/optimizer/bgnet_test.cpp
   gate/optimizer/depth_find_test.cpp
-  gate/optimizer/examples.cpp
   gate/optimizer/find_cone_test.cpp
   gate/optimizer/find_cut_test.cpp
+  gate/optimizer/npndb_test.cpp
   gate/optimizer/optimization_count_test.cpp
   gate/optimizer/optimizer_util.cpp
   gate/optimizer/resynthesis/akers_test.cpp

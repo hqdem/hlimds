@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/examples.h"
 #include "gate/model/utils.h"
-#include "gate/optimizer/examples.h"
 #include "gate/optimizer/optimizer_util.h"
 #include "gate/printer/dot.h"
 

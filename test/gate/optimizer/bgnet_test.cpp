@@ -6,32 +6,29 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/gnet_test.h"
+#include "gate/model/examples.h"
 #include "gate/optimizer/bgnet.h"
 #include "gate/optimizer/truthtable.h"
 
 #include "gtest/gtest.h"
 
-using namespace eda::gate::model;
-using namespace eda::gate::optimizer;
+namespace eda::gate::optimizer {
 
-bool areEquivalentTT(BoundGNet bgnet1, BoundGNet bgnet2) {
+static bool areEquivalentTT(BoundGNet bgnet1, BoundGNet bgnet2) {
   return (TruthTable::build(bgnet1) == TruthTable::build(bgnet2));
 }
 
-bool cloneTest() {
-  Gate::SignalList inputs;
-  Gate::Id outputId;
-  BoundGNet bnet;
-
-  bnet.net = makeAnd(3, inputs, outputId);
-  bnet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node()};
-  bnet.inputDelays = {1, 2, 3};
+bool cloneTest(BoundGNet bnet) {
+  bnet.inputDelays = {1, 2, 3, 4, 5};
 
   BoundGNet newBnet = bnet.clone();
   return areEquivalentTT(bnet, newBnet) && (bnet.inputDelays == newBnet.inputDelays);
 }
 
 TEST(BoundGNetTest, CloneTest) {
-  EXPECT_TRUE(cloneTest());
+  EXPECT_TRUE(cloneTest(makeTestBgnet1()));
+  EXPECT_TRUE(cloneTest(makeTestBgnet2()));
+  EXPECT_TRUE(cloneTest(makeTestBgnet3()));
 }
+
+} // namespace eda::gate::optimizer

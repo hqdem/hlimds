@@ -24,6 +24,7 @@ add_library(Gate OBJECT
   optimizer/links_add_counter.cpp
   optimizer/links_clean_counter.cpp
   optimizer/net_substitute.cpp
+  optimizer/npndb.cpp
   optimizer/optimizer.cpp
   optimizer/optimizer_visitor.cpp
   optimizer/resynthesis/akers.cpp

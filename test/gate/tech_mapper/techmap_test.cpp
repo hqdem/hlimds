@@ -7,8 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/examples.h"
 #include "gate/printer/dot.h"
-#include "gate/optimizer/examples.h"
 
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/parser_test.h"
@@ -41,7 +41,7 @@ namespace eda::gate::techMap {
     gnet1(net);
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
+
     MinDelay *minDelay = new MinDelay();
     techMapper.techMap(&net, minDelay, false);
   }
@@ -55,7 +55,7 @@ namespace eda::gate::techMap {
 
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
+
     MinDelay *minDelay = new MinDelay();
     techMapper.techMap(&net, minDelay, false);
   }
@@ -68,7 +68,7 @@ namespace eda::gate::techMap {
     gnet3(net);
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
+
     MinDelay *minDelay = new MinDelay();
     techMapper.techMap(&net, minDelay, false);
   }
@@ -80,7 +80,7 @@ namespace eda::gate::techMap {
     GNet *net = parseVerilog("c432.v");
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
+
     MinDelay *minDelay = new MinDelay();
     techMapper.techMap(net, minDelay, true);
   }
@@ -92,7 +92,7 @@ namespace eda::gate::techMap {
     GNet *net = parseVerilog("adder.v");
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
+
     MinDelay *minDelay = new MinDelay();
     techMapper.techMap(net, minDelay, true);
   }
@@ -104,7 +104,7 @@ namespace eda::gate::techMap {
     GNet *net = parseVerilog("c17.v");
 
     TechMapper techMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
-    
+
     MinDelay *minDelay = new MinDelay();
     techMapper.techMap(net, minDelay, true);
   }

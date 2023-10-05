@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer/examples.h"
+#include "gate/model/examples.h"
 
 namespace eda::gate::optimizer {
 
@@ -483,6 +483,92 @@ namespace eda::gate::optimizer {
     g.push_back(createLink(gNet, g, {0, 3, 8}, model::GateSymbol::MAJ));
     g.push_back(createLink(gNet, g, {9}, model::GateSymbol::OUT));
     return g;
+  }
+
+  /* in1 ┌─┐                        */
+  /*     └─┘─┐ and                  */
+  /* in2 ┌─┐ |_┌─┐                  */
+  /*     └─┘───└─┘─┐ and            */
+  /*       in3 ┌─┐ |_┌─┐            */
+  /*           └─┘───└─┘─┐          */
+  /*       in4 ┌─┐       |          */
+  /*           └─┘─┐ xor |  or  out */
+  /*       in5 ┌─┐ |_┌─┐ |_┌─┐__┌─┐ */
+  /*           └─┘───└─┘───└─┘  └─┘ */
+  BoundGNet makeTestBgnet1() {
+    BoundGNet bnet;
+    std::shared_ptr<GNet> net = std::make_shared<GNet>();
+    for (int i = 0; i < 5; i++) {
+      bnet.inputBindings.push_back(net->addIn());
+    }
+    const Gate::Id andTempGate = net->addAnd(bnet.inputBindings[0],
+                                            bnet.inputBindings[1]);
+    const Gate::Id andGate = net->addAnd(andTempGate,
+                                        bnet.inputBindings[2]);
+    const Gate::Id xorGate = net->addXor(bnet.inputBindings[3],
+                                        bnet.inputBindings[4]);
+    const Gate::Id orGate = net->addOr(andGate, xorGate);
+    const Gate::Id outGate = net->addOut(orGate);
+    bnet.outputBindings.push_back(outGate);
+    bnet.net = net;
+    return bnet;
+  }
+
+  /*             in1 ┌─┐                  */
+  /*                 └─┘─┐  or            */
+  /*             in2 ┌─┐ |_┌─┐            */
+  /*                 └─┘───└─┘─┐          */
+  /* in3 ┌─┐                   |          */
+  /*     └─┘─┐ xor             |          */
+  /* in4 ┌─┐ |_┌─┐             |          */
+  /*     └─┘───└─┘─┐           |          */
+  /* in5 ┌─┐       |           |          */
+  /*     └─┘─┐ and |  or   not | and  out */
+  /* in6 ┌─┐ |_┌─┐ |_┌─┐___┌─┐ |_┌─┐__┌─┐ */
+  /*     └─┘───└─┘───└─┘   └─┘───└─┘  └─┘ */
+  BoundGNet makeTestBgnet2() {
+    BoundGNet bnet;
+    std::shared_ptr<GNet> net = std::make_shared<GNet>();
+    for (int i = 0; i < 6; i++) {
+      bnet.inputBindings.push_back(net->addIn());
+    }
+    const Gate::Id or1Gate = net->addOr(bnet.inputBindings[0],
+                                        bnet.inputBindings[1]);
+    const Gate::Id xor1Gate = net->addXor(bnet.inputBindings[2],
+                                          bnet.inputBindings[3]);
+    const Gate::Id and1Gate = net->addAnd(bnet.inputBindings[4],
+                                          bnet.inputBindings[5]);
+    const Gate::Id or2Gate = net->addOr(xor1Gate, and1Gate);
+    const Gate::Id not1Gate = net->addNot(or2Gate);
+    const Gate::Id and2Gate = net->addAnd(not1Gate, or1Gate);
+    const Gate::Id outGate = net->addOut(and2Gate);
+    bnet.outputBindings.push_back(outGate);
+    bnet.net = net;
+    return bnet;
+  }
+
+  /* in1 ┌─┐                  */
+  /*     └─┘───┐ xor          */
+  /* in2 ┌─┐___├─┐            */
+  /*     └─┘─┐ └─┘─┐  or  out */
+  /* in3 ┌─┐ |_┌─┐ |_┌─┐__┌─┐ */
+  /*     └─┘───└─┘───└─┘  └─┘ */
+  /*           xor            */
+  BoundGNet makeTestBgnet3() {
+    BoundGNet bnet;
+    std::shared_ptr<GNet> net = std::make_shared<GNet>();
+    for (int i = 0; i < 3; i++) {
+      bnet.inputBindings.push_back(net->addIn());
+    }
+    const Gate::Id xor1Gate = net->addXor(bnet.inputBindings[0],
+                                          bnet.inputBindings[1]);
+    const Gate::Id xor2Gate = net->addXor(bnet.inputBindings[1],
+                                          bnet.inputBindings[2]);
+    const Gate::Id or1Gate = net->addOr(xor1Gate, xor2Gate);
+    const Gate::Id outGate = net->addOut(or1Gate);
+    bnet.outputBindings.push_back(outGate);
+    bnet.net = net;
+    return bnet;
   }
 
 } // namespace eda::gate::optimizer

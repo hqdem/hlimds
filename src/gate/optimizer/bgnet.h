@@ -18,9 +18,9 @@
 namespace eda::gate::optimizer {
 
 /**
-* \brief GNet with input and output bindings and inputs delay.
-* \author <a href="mailto:mrpepelulka@gmail.com">Rustamkhan Ramaldanov</a>
-*/
+ * \brief GNet with input and output bindings and inputs delay.
+ * \author <a href="mailto:mrpepelulka@gmail.com">Rustamkhan Ramaldanov</a>
+ */
 struct BoundGNet {
   using BoundGNetList = std::vector<BoundGNet>;
   using GateBindings = std::vector<model::Gate::Id>;
@@ -34,7 +34,7 @@ struct BoundGNet {
   double area;
 
   // Clone with new Gate ID's
-  BoundGNet clone() {
+  BoundGNet clone() const {
     BoundGNet result;
 
     GateIdMap oldToNewGates;

@@ -76,4 +76,10 @@ namespace eda::gate::optimizer {
 
   std::vector<GateId> balanceMajTwice(GNet &gNet);
 
+  BoundGNet makeTestBgnet1();
+
+  BoundGNet makeTestBgnet2();
+
+  BoundGNet makeTestBgnet3();
+
 } // namespace eda::gate::optimizer

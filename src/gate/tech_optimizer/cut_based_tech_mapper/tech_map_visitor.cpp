@@ -11,7 +11,6 @@
 
 #include <float.h>
 
-
 namespace eda::gate::tech_optimizer {
 
   using GNet = eda::gate::model::GNet;
@@ -32,13 +31,15 @@ namespace eda::gate::tech_optimizer {
   void SearchOptReplacement::set(CutStorage *cutStorage,
       GNet *net, 
       std::unordered_map<GateID, Replacement> *bestReplacement,
-      int cutSize, RWDatabase &rwdb, Strategy *strategy) {
+      int cutSize, RWDatabase &rwdb, Strategy *strategy,
+      std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
     this->cutStorage = cutStorage;
     this->net = net;
     this->cutSize = cutSize;
     this->bestReplacement = bestReplacement;
     this->rwdb = rwdb;
     this->strategy = strategy;
+    this->cellTypeMap = cellTypeMap;
   }
 
   VisitorFlags SearchOptReplacement::onNodeBegin(const GateID &node) {
@@ -138,7 +139,7 @@ namespace eda::gate::tech_optimizer {
   void SearchOptReplacement::saveBestReplacement() {
     if (saveReplace) {
 
-      Replacement bestReplacment{lastNode, eda::gate::model::CELL_TYPE_ID_AND,
+      Replacement bestReplacment{lastNode, cellTypeMap.at(bestOption.name),
           bestOptionMap, bestOption.name,
           minNodeArrivalTime, bestOption.area};
 

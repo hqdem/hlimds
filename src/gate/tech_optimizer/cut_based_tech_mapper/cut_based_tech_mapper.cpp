@@ -14,7 +14,7 @@
 #include "gate/model2/celltype.h"
 #include "gate/model2/net.h"
 #include "gate/model2/printer/printer.h"
-
+#include "gate/optimizer/cut_storage.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/tech_map_visitor.h"
 
@@ -24,28 +24,33 @@ namespace eda::gate::tech_optimizer {
   using Net = eda::gate::model::Net;
   using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
   using PreBasis = eda::gate::premapper::PreBasis;
+  using CutStorage = eda::gate::optimizer::CutStorage;
   
   CutBasedTechMapper::CutBasedTechMapper(const std::string &libertyPath) {
     LibraryCells libraryCells(libertyPath);
     rwdb.linkDB(dbPath);
     rwdb.openDB();
 
-    libraryCells.initializeLibraryRwDatabase(&rwdb);
+    libraryCells.initializeLibraryRwDatabase(&rwdb, cellTypeMap);
   }
 
-  CutBasedTechMapper::CutBasedTechMapper(eda::gate::optimizer::SQLiteRWDatabase &rwdb) :
-  rwdb(rwdb) {}
+  CutBasedTechMapper::CutBasedTechMapper(
+      eda::gate::optimizer::SQLiteRWDatabase &rwdb) :
+    rwdb(rwdb) {}
 
   GNet *CutBasedTechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
     try {
       //if (aig) {aigMap(net);}
-      findCuts(net);
-      replacementSearch(net, strategy);
-      std::cout << "переход к созданию новой схемы" << std::endl;
-      traversalNode(net);
-      //replacement(net);
-      std::cout << getArea() << std::endl;
-      std::cout << getDelay() << std::endl;
+
+      CutStorage cutStorage;
+      findCuts(net, cutStorage);
+
+      std::unordered_map<GateID, Replacement> bestReplacement;
+      replacementSearch(net, strategy, bestReplacement, cutStorage,
+          cellTypeMap);
+
+      createModel2(net, bestReplacement);
+
       rwdb.closeDB();
     } catch (const char* msg) {
       std::cout << msg << std::endl;
@@ -64,11 +69,15 @@ namespace eda::gate::tech_optimizer {
     net = new GNet(*premapped);
   }
 
-  void CutBasedTechMapper::findCuts(GNet *net) {
+  void CutBasedTechMapper::findCuts(GNet *net, CutStorage &cutStorage) {
     cutStorage = eda::gate::optimizer::findCuts(net, 6);
   }
 
-  void CutBasedTechMapper::replacementSearch(GNet *net, Strategy *strategy) {
+  void CutBasedTechMapper::replacementSearch(GNet *net, Strategy *strategy,  
+      std::unordered_map<GateID, Replacement> &bestReplacement, 
+      CutStorage &cutStorage,
+      std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
+
     auto nodes = eda::utils::graph::topologicalSort(*net);
     for (auto &id: net->getSources()) {
       if (Gate::get(id)->isSource()) {
@@ -78,59 +87,23 @@ namespace eda::gate::tech_optimizer {
                                 (id, bestReplacment));
       }
     }
+
     SearchOptReplacement searchOptReplacement;
     searchOptReplacement.set(&cutStorage, net, &bestReplacement, 6,
-        rwdb, strategy);
+        rwdb, strategy, cellTypeMap);
     eda::gate::optimizer::CutWalker walker(net, &searchOptReplacement,
         &cutStorage);
     walker.walk(true);
   }
 
-  void CutBasedTechMapper::replacement(GNet *net) {
-    /*auto nodes = eda::utils::graph::topologicalSort(*net);
-    std::reverse(nodes.begin(), nodes.end());
-    for (auto &node: nodes) {
-      if (bestReplacement.count(node) & net->hasNode(node)) {
-        Replacement &replacementInfo = bestReplacement.at(node);
-        replacementInfo.netSubstitute.substitute();
-                
-        if (delay < replacementInfo.delay) {delay = replacementInfo.delay;}
-        area = area + replacementInfo.area;
-      } 
-    }
-    */
-  }
+  void CutBasedTechMapper::createModel2(GNet *net, 
+      std::unordered_map<GateID, Replacement> &bestReplacement) {
 
-  void CutBasedTechMapper::mapedNet(GNet *net) {
-    
-
-    //NetBuilder netBuilder;
-
-    //auto nodes = eda::utils::graph::topologicalSort(*net);
-    //for (auto &node: nodes) {
-    //  node.
-    //}
-
-  }
-
-  void CutBasedTechMapper::traversalNode(GNet *net) {
+    eda::gate::model::NetBuilder netBuilder;
     std::stack<Replacement*> stack;
     std::unordered_set<Replacement*> visited;
-    bool canPop = false;
-
-    //std::vector<>
-    //Gate::List gates = net.gates();
-    //for (auto &gate : gates) {
-    //  if (gate.isTarget()) {
-
-    //  }
-    //}
-
-    for (const auto &[gateID, repl] : bestReplacement) {
-      std::cout << gateID << std::endl;
-    }
-
     optimizer::CutWalker::GateIdSet targets;
+
     targets.reserve((net->targetLinks()).size());
 
     for (auto link : net->targetLinks()) {
@@ -139,54 +112,69 @@ namespace eda::gate::tech_optimizer {
 
     for (const auto &outGateID: targets) {
       for (const auto &preOutGateID: Gate::get(outGateID)->inputs()) {
+        std::cout << "добавляем корень" << preOutGateID.node() << std::endl;
         stack.push(&bestReplacement.at(preOutGateID.node()));
         visited.insert(&bestReplacement.at(preOutGateID.node()));
       }
     }
 
     while (!stack.empty()) {
-      //std::cout << "создаем схему" << std::endl;
       Replacement* current = stack.top();
-      uint inputCounter = 1;
+      std::cout << current->name << std::endl;
 
       if (current->isInput) {
-        //std::cout << "add input  " << current->isInput << std::endl;
-        inputCounter ++;
+
+        std::cout << "добавляем вход: " << current->rootNode << std::endl;
         auto cellID = model::makeCell(eda::gate::model::CellSymbol::IN);
         netBuilder.addCell(cellID);
         current->cellID = cellID;
-        stack.pop();
-        if (inputCounter == net->nSourceLinks()) {
-          canPop = true;
-        }
-      }
-
-      if (canPop && !current->isInput) {
-        std::cout << "создаем ячейку" << std::endl;
         current->used = true;
         stack.pop();
-        model::Cell::LinkList linkList;
+
+      } else {
+
+        bool readyForCreate = true;
+
         for (auto& [input, secondParam] : current->map) {
-          linkList.push_back(model::LinkEnd(
-              bestReplacement.at(secondParam).cellID));
+          std::cout << secondParam << std::endl;
+          if (!bestReplacement.at(secondParam).used) {
+            std::cout << "этот не создался: " << secondParam << std::endl;
+            readyForCreate = false;
+          }
         }
-        auto cellID = makeCell(current->cellType, linkList);
-        netBuilder.addCell(cellID);
-        current->cellID = cellID;
-        //mappedNet.createCell();
+
+        if (readyForCreate) {
+          std::cout << "создаем ячейку" << std::endl;
+          current->used = true;
+          model::Cell::LinkList linkList;
+          for (auto& [input, secondParam] : current->map) {
+            linkList.push_back(model::LinkEnd(
+                bestReplacement.at(secondParam).cellID));
+          }
+          auto cellID = makeCell(current->cellType, linkList);
+          netBuilder.addCell(cellID);
+          current->cellID = cellID;
+          stack.pop();
+        } else {
+          std::cout << "мы не создали входов для этого элемента" << std::endl;
+        }
       }
 
+
       for (const auto& [input, secondParam] : current->map) {
-        std::cout << secondParam << std::endl;
+        std::cout << "пытаемся добавляем потомка: " << secondParam << std::endl;
         if (visited.find(&bestReplacement.at(secondParam)) == visited.end()) {
+          std::cout << "добавляем потомка: " << secondParam << std::endl;
           stack.push(&bestReplacement.at(secondParam));
           visited.insert(&bestReplacement.at(secondParam));
         }
       }
     }
+
     const Net &model2 = Net::get(netBuilder.make());
     std::cout << model2 << std::endl;
   }
+  
 
 
   std::vector<Gate::Id> CutBasedTechMapper::getOutputs(GNet *net) {

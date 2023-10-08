@@ -13,6 +13,7 @@
 #include "gate/optimizer/util.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/replacement_struct.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/model2/celltype.h"
 
 #include <queue>
 
@@ -29,12 +30,14 @@ namespace eda::gate::tech_optimizer {
     using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
     using CutStorage = eda::gate::optimizer::CutStorage;
     using VisitorFlags = eda::gate::optimizer::VisitorFlags;
+    using CellTypeID = eda::gate::model::CellTypeID;
 
     SearchOptReplacement();
 
     void set(CutStorage *cutStorage, GNet *net,
         std::unordered_map<GateID, Replacement> *bestReplacement, 
-        int cutSize, RWDatabase &rwdb, Strategy *strategy);
+        int cutSize, RWDatabase &rwdb, Strategy *strategy,
+        std::unordered_map<std::string, CellTypeID> &cellTypeMap);
 
     VisitorFlags onNodeBegin(const GateID &) override;
 
@@ -51,6 +54,7 @@ namespace eda::gate::tech_optimizer {
 
     BoundGNet bestOption;
     std::unordered_map<GateID, GateID> bestOptionMap;
+    std::unordered_map<std::string, CellTypeID> cellTypeMap;
     bool saveReplace;
     double minNodeArrivalTime;
 

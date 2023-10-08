@@ -9,6 +9,8 @@
 #pragma once
 
 #include "gate/optimizer/rwdatabase.h"
+#include "gate/model2/celltype.h"
+
 #include "kitty/kitty.hpp"
 
 #include <string>
@@ -17,6 +19,7 @@
 namespace eda::gate::tech_optimizer {
 
 using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
+using CellTypeID = eda::gate::model::CellTypeID;
 
 struct Pin {
   Pin(const std::string &name, double cell_fall, double cell_rise,
@@ -56,10 +59,12 @@ struct LibraryCells {
   LibraryCells(const std::string &filename);
 
   std::vector<Cell*> cells;
-  void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb);
+  void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb, 
+      std::unordered_map<std::string, CellTypeID> &cellTypeMap);
 
   private:
   void readLibertyFile(const std::string &filename);
+  
 };
 
 } // namespace eda::gate::tech_optimizer

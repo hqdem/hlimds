@@ -11,11 +11,14 @@
 #include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/strategy/min_delay.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/model2/celltype.h"
 
 namespace eda::gate::tech_optimizer {
 
 // TODO: do we indeed need it in such a format?
 // what if we use a structural matching?
+
+std::unordered_map<std::string, eda::gate::model::CellTypeID> cellTypeMap;
 eda::gate::optimizer::SQLiteRWDatabase functDB;
 eda::gate::optimizer::SQLiteRWDatabase structDB; // TODO: replace the format
 
@@ -30,7 +33,7 @@ void read_db(const std::string &dbPath) {
     functDB.linkDB("rwtest.db");
     functDB.openDB();
 
-    libraryCells.initializeLibraryRwDatabase(&functDB);
+    libraryCells.initializeLibraryRwDatabase(&functDB, cellTypeMap);
 }
 
 void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*/) { // TODO: approach selector should be enum

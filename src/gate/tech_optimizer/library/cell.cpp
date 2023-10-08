@@ -75,7 +75,7 @@ const Pin &Cell::getInputPin(uint inputPinNumber) const {
 // LibraryCells
 //===----------------------------------------------------------------------===//
 
-LibraryCells::LibraryCells(const std::string& filename) {
+LibraryCells::LibraryCells(const std::string &filename) {
   readLibertyFile(filename);
 }
 
@@ -132,7 +132,8 @@ void LibraryCells::readLibertyFile(const std::string &filename) {
   }
 }
 
-void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb) {
+void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
+    std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
   for(auto& cell : cells) {
     uint64_t truthTable = 0;
 
@@ -195,6 +196,15 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb) {
       list.push_back(bg);
       arwdb->set(TT, list);
     }
+
+    eda::gate::model::CellProperties props{0, 0, 0, 0, 0};
+    CellTypeID cellID = eda::gate::model::makeCellType(
+        cell->getName(), eda::gate::model::CellSymbol::CELL,
+        props, static_cast<uint16_t>(cell->getInputPinsNumber()), 
+        static_cast<uint16_t>(1));
+    cellTypeMap.insert(std::pair<std::string, CellTypeID>
+          (cell->getName(), cellID));
   }
+
 }
 } // namespace eda::gate::tech_optimizer

@@ -12,7 +12,6 @@
 #include "gate/premapper/aigmapper.h"
 #include "gate/tech_optimizer/library/cell.h"
 #include "gate/model2/celltype.h"
-#include "gate/model2/net.h"
 #include "gate/model2/printer/printer.h"
 #include "gate/optimizer/cut_storage.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
@@ -21,7 +20,6 @@
 namespace eda::gate::tech_optimizer {
 
   using Gate = eda::gate::model::Gate;
-  using Net = eda::gate::model::Net;
   using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
   using PreBasis = eda::gate::premapper::PreBasis;
   using CutStorage = eda::gate::optimizer::CutStorage;
@@ -35,7 +33,9 @@ namespace eda::gate::tech_optimizer {
   }
 
   CutBasedTechMapper::CutBasedTechMapper(
-      eda::gate::optimizer::SQLiteRWDatabase &rwdb) :
+      eda::gate::optimizer::SQLiteRWDatabase &rwdb,  
+      std::unordered_map<std::string, CellTypeID> &cellTypeMap) :
+    cellTypeMap(cellTypeMap),
     rwdb(rwdb) {}
 
   GNet *CutBasedTechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
@@ -49,7 +49,8 @@ namespace eda::gate::tech_optimizer {
       replacementSearch(net, strategy, bestReplacement, cutStorage,
           cellTypeMap);
 
-      createModel2(net, bestReplacement);
+      const Net &model2 = createModel2(net, bestReplacement);
+      printNet(model2);
 
       rwdb.closeDB();
     } catch (const char* msg) {
@@ -96,7 +97,7 @@ namespace eda::gate::tech_optimizer {
     walker.walk(true);
   }
 
-  void CutBasedTechMapper::createModel2(GNet *net, 
+  const Net &CutBasedTechMapper::createModel2(GNet *net, 
       std::unordered_map<GateID, Replacement> &bestReplacement) {
 
     eda::gate::model::NetBuilder netBuilder;
@@ -173,6 +174,21 @@ namespace eda::gate::tech_optimizer {
 
     const Net &model2 = Net::get(netBuilder.make());
     std::cout << model2 << std::endl;
+    return model2;
+  }
+
+  void CutBasedTechMapper::printNet(const Net &model2) {
+    // Create an instance of the NetPrinter class for the VERILOG format
+    eda::gate::model::NetPrinter& verilogPrinter = eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+
+    // Open a stream for writing Verilog code to a file or console
+    std::ofstream outFile("output.v");  // Or use std::cout to print to the console
+
+    // Call the NetPrinter::print method to generate Verilog code
+    verilogPrinter.print(outFile, model2, "my_net");
+
+    // Close the stream
+    outFile.close();
   }
   
 

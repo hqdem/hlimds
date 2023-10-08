@@ -39,7 +39,7 @@ namespace eda::gate::tech_optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
     GNet net;
-    gnet1(net);
+    gnet3(net);
 
     read_db(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
 
@@ -84,7 +84,7 @@ namespace eda::gate::tech_optimizer {
     cutBasedTechMapper.techMap(net, minDelay, true);
   }
 
-  TEST(TechMapTest, adder) {
+  TEST(TechMapTest, DISABLED_adder) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -96,7 +96,7 @@ namespace eda::gate::tech_optimizer {
     cutBasedTechMapper.techMap(net, minDelay, true);
   }
 
-  TEST(TechMapTest, DISABLED_c17) {
+  TEST(TechMapTest, c17) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }

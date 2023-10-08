@@ -52,7 +52,7 @@ void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*
   
   switch(approachSelector) {
   case 0: // cut-based matching
-    CutBasedTechMapper mapper(functDB);
+    CutBasedTechMapper mapper(functDB, cellTypeMap);
     MinDelay *minDelay = new MinDelay();
     mapper.techMap(net, minDelay, false); // TODO not need to return the pointer
   break;

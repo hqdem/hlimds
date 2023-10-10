@@ -121,6 +121,21 @@ void TernaryMatrix::mergeVectors(uint32_t vars) {
       }
     }
   }
+
+  std::set<uint32_t> absorbedVectors;
+  std::vector<TernaryVector> newRows;
+  for (auto it = rows.begin(); it != rows.end() - 1; ++it) {
+    std::set<uint32_t> newAbsorbedVectors;
+    getAbsorbedVectors(it->getCare() ^ vars, it->getBits(),
+        newAbsorbedVectors);
+    if (!std::includes(absorbedVectors.begin(), absorbedVectors.end(),
+                       newAbsorbedVectors.begin(), newAbsorbedVectors.end())) {
+      newRows.push_back(std::move(*it));
+      absorbedVectors.insert(newAbsorbedVectors.begin(),
+                             newAbsorbedVectors.end());
+    }
+  }
+  rows = newRows;
 }
 
 void TernaryMatrix::getAbsorbedVectors(uint32_t pos, uint32_t bits,

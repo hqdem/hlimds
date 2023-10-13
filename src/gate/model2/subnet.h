@@ -73,8 +73,20 @@ public:
     Cell(CellTypeID typeID, const LinkList &links, bool in, bool out):
       Cell(typeID, OBJ_NULL_ID, links, in, out) {}
 
-    bool isIn() const { return in; }
-    bool isOut() const { return out; }
+    bool isIn()   const { return in;                          }
+    bool isOut()  const { return out;                         }
+    bool isZero() const { return type == CELL_TYPE_SID_ZERO;  }
+    bool isOne()  const { return type == CELL_TYPE_SID_ONE;   }
+    bool isBuf()  const { return type == CELL_TYPE_SID_BUF;   }
+    bool isNot()  const { return type == CELL_TYPE_SID_NOT;   }
+    bool isAnd()  const { return type == CELL_TYPE_SID_AND;   }
+    bool isOr()   const { return type == CELL_TYPE_SID_OR;    }
+    bool isXor()  const { return type == CELL_TYPE_SID_XOR;   }
+    bool isNand() const { return type == CELL_TYPE_SID_NAND;  }
+    bool isNor()  const { return type == CELL_TYPE_SID_NOR;   }
+    bool isXnor() const { return type == CELL_TYPE_SID_XNOR;  }
+    bool isMaj()  const { return type == CELL_TYPE_SID_MAJ;   }
+    bool isNull() const { return type == CellTypeID::NullSID; } 
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
@@ -118,6 +130,7 @@ public:
   uint16_t getInNum() const { return nIn; }
   uint16_t getOutNum() const { return nOut; }
 
+  /// Returns the overall number of cells including inputs and outputs.
   uint32_t size() const { return nCell; }
 
   Array<Entry> getEntries() const { return Array<Entry>(entries); }

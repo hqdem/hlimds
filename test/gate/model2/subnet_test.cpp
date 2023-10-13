@@ -7,8 +7,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
+#include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
+#include "kitty/print.hpp"
 
 #include <iostream>
 #include <vector>
@@ -46,6 +48,7 @@ TEST(SubnetTest, SimpleTest) {
   EXPECT_EQ(subnet.size(), 1u << (Depth + 1));
 
   std::cout << subnet << std::endl;
+  std::cout << kitty::to_hex(evaluate(subnet)) << std::endl;
 }
 
 } // namespace eda::gate::model

@@ -139,7 +139,7 @@ inline kitty::dynamic_truth_table evaluateMaj(
   return table;
 }
 
-kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
+inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
   assert(subnet.getInNum() > 0);
   assert(subnet.getOutNum() == 1);
 

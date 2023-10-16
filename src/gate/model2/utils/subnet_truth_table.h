@@ -152,7 +152,7 @@ inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
     const auto &cell = entries[i].cell;
 
     assert(!cell.isNull());
-    assert(cell.arity <= Subnet::Cell::InEntryLinks);
+    assert(cell.arity <= Subnet::Cell::InPlaceLinks);
 
     kitty::dynamic_truth_table table;
 

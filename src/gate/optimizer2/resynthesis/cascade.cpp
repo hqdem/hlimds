@@ -27,7 +27,7 @@ using TruthTable = kitty::dynamic_truth_table;
 // Constructors/Destructors
 //===----------------------------------------------------------------------===//
 
-Cascade::Cascade(TruthTable &_table) : table(_table), form(normalForm(table)) {}
+Cascade::Cascade() {}
 
 //===----------------------------------------------------------------------===//
 // Internal Methods
@@ -171,7 +171,7 @@ void Cascade::checkSimplify(int numVars, CNF &out, CNF &out1, CNF &out2) {
   }
 }
 
-CNF Cascade::normalForm(TruthTable &table) {
+CNF Cascade::normalForm(const TruthTable &table) {
 
   int numVars = table.num_vars();
   int bits = 1 << numVars;
@@ -218,7 +218,7 @@ CNF Cascade::normalForm(TruthTable &table) {
     // Main Methods
 //===--------------------------------------------------------------------===//
 
-CNF Cascade::getFunction(TruthTable &table) {
+CNF Cascade::getFunction(const TruthTable &table, CNF &form) {
 
   unsigned int numVars = table.num_vars();
   CNF output(3);
@@ -256,10 +256,10 @@ CNF Cascade::getFunction(TruthTable &table) {
   // double copying is used in x_i&f(1, ...) + !x_i&f(0, ...) to represent
   // f(1, ...) and f(0, ...) - stored in two different vectors
   values.push_back(1);
-  CNF output1 = getFunction(table);
+  CNF output1 = getFunction(table, form);
   values.pop_back();
   values.push_back(0);
-  CNF output2 = getFunction(table);
+  CNF output2 = getFunction(table, form);
   values.pop_back();
   checkSimplify(numVars, output, output1, output2);
 
@@ -271,10 +271,12 @@ SubnetID Cascade::synthesize(const TruthTable &func) {
   using Link = Subnet::Link;
   SubnetBuilder subnetBuilder;
 
-  int numVars = table.num_vars();
+  CNF form = Cascade::normalForm(func);
+
+  int numVars = func.num_vars();
   // id of the first value in the output line
   int firstValId = numVars * 2 + 2; 
-  CNF output = Cascade::getFunction(table);
+  CNF output = Cascade::getFunction(func, form);
   int size = output[0].size();
   unsigned int InNum = size - 1; // number of cells in subnet
 

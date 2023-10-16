@@ -99,8 +99,9 @@ void synthTest(int vars, std::string str) {
   TruthTable table(vars);
   kitty::create_from_binary_string(table, str);
 
-  Cascade obj(table);
-  CNF output = obj.getFunction(table);
+  Cascade resynth;
+  CNF form = resynth.normalForm(table);
+  CNF output = resynth.getFunction(table, form);
   TruthTable tt(vars);
   tt = checkSynth(vars, table.num_bits(), output);
     
@@ -116,8 +117,8 @@ TEST(Cascade, SubnetTest) {
   TruthTable table(vars);
   kitty::create_from_binary_string(table, "1000");
 
-  Cascade obj(table);
-  const auto subnetId = obj.synthesize(table);
+  Cascade resynth;
+  const auto subnetId = resynth.synthesize(table);
   const auto &subnet = Subnet::get(subnetId);
 
   EXPECT_TRUE(subnet.size() == 6);

@@ -41,7 +41,7 @@ public:
   // Constructors/Destructors
   //===------------------------------------------------------------------===//
 
-  Cascade(TruthTable &table);
+  Cascade();
 
   //===------------------------------------------------------------------===//
   // Main Methods
@@ -51,15 +51,14 @@ public:
   SubnetID synthesize(const TruthTable &func) override;
     
   /// Makes CNF for function using cascade method
-  CNF getFunction(TruthTable &table);
+  CNF getFunction(const TruthTable &table, CNF &form);
+
+  /// Calculates normal form
+  CNF normalForm(const TruthTable &table);
 
 private:
 
-  TruthTable table;
-
   std::vector<int> values;
-    
-  CNF form;
     
   //===----------------------------------------------------------------===//
   // Internal Methods
@@ -75,9 +74,6 @@ private:
   /// Checks if out1 and out2 can be simplified and if so, does it;
   /// result is stored in out
   void checkSimplify(int, CNF &out, CNF &out1, CNF &out2);
-                
-  /// Calculates normal form
-  CNF normalForm(TruthTable &table);
 
 };
 } // namespace eda::gate::optimizer2::resynthesis

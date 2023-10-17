@@ -75,6 +75,8 @@ public:
 
     bool isIn()   const { return in;                          }
     bool isOut()  const { return out;                         }
+    bool isPI()   const { return type == CELL_TYPE_SID_IN;    }
+    bool isPO()   const { return type == CELL_TYPE_SID_OUT;   }
     bool isZero() const { return type == CELL_TYPE_SID_ZERO;  }
     bool isOne()  const { return type == CELL_TYPE_SID_ONE;   }
     bool isBuf()  const { return type == CELL_TYPE_SID_BUF;   }
@@ -130,10 +132,29 @@ public:
   uint16_t getInNum() const { return nIn; }
   uint16_t getOutNum() const { return nOut; }
 
+  /// Returns the minimum and maximum path lengths.
+  std::pair<uint32_t, uint32_t> getPathLength() const;
+
   /// Returns the overall number of cells including inputs and outputs.
   uint32_t size() const { return nCell; }
 
+  /// Returns the array of entries.
   Array<Entry> getEntries() const { return Array<Entry>(entries); }
+
+  /// Returns the j-th link of the i-th cell.
+  Link getLink(size_t i, size_t j) const {
+    const auto cells = getEntries();
+    const auto &cell = cells[i].cell;
+
+    if (j < Cell::InPlaceLinks) {
+      return cell.link[j];
+    }
+
+    const auto k = j - Cell::InPlaceLinks;
+    const auto n = Cell::InEntryLinks;
+
+    return cells[i + i + (k / n)].link[k % n];
+  }
 
 private:
   /// Constructs a subnet.

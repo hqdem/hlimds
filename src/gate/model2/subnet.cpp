@@ -10,12 +10,40 @@
 
 namespace eda::gate::model {
 
+std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
+  uint32_t minLength = nCell, maxLength = 0;
+  std::vector<uint32_t> min(nCell), max(nCell);
+
+  const auto cells = getEntries();
+  for (size_t i = 0; i < nCell; ++i) {
+    const auto &cell = cells[i].cell;
+
+    if (cell.isIn()) {
+      min[i] = max[i] = 0;
+    } else {
+      min[i] = nCell; max[i] = 0;
+
+      for (size_t j = 0; j < cell.arity; ++j) {
+        auto link = getLink(i, j);
+        min[i] = std::min(min[i], min[link.idx]);
+        max[i] = std::max(max[i], max[link.idx]);
+      }
+
+      if (!cell.isPO()) {
+        min[i]++; max[i]++;
+      }
+    }
+
+    if (cell.isOut()) {
+      minLength = std::min(minLength, min[i]);
+      maxLength = std::max(maxLength, max[i]);
+    }
+  }
+
+  return {minLength, maxLength};
+}
+
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
-  using Link = Subnet::Link;
-
-  const auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
-  const auto InEntryLinks = Subnet::Cell::InEntryLinks;
-
   const auto cells = subnet.getEntries();
   for (size_t i = 0; i < subnet.size(); ++i) {
     const auto &cell = cells[i].cell;
@@ -24,16 +52,10 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
     out << i << " <= " << type.getName() << "(";
 
     bool comma = false;
-    for (size_t j = 0; j < cell.arity; j++) {
+    for (size_t j = 0; j < cell.arity; ++j) {
       if (comma) out << ", ";
 
-      Link link;
-      if (j < InPlaceLinks) {
-        link = cell.link[j];
-      } else {
-        const auto k = (j - InPlaceLinks);
-        link = cells[i + i + (k / InEntryLinks)].link[k % InEntryLinks];
-      }
+      auto link = subnet.getLink(i, j);
 
       if (link.inv) out << "~";
       out << link.idx << "." << link.out;

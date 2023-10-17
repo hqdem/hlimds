@@ -36,7 +36,7 @@ TEST(SubnetTest, SimpleTest) {
       const Link lhs(idx[(i << 1)]);
       const Link rhs(idx[(i << 1) | 1]);
 
-      idx[i] = subnetBuilder.addCell(AND, lhs, rhs);
+      idx[i] = subnetBuilder.addCell(((i & 1) ? AND : OR), lhs, rhs);
     }
   }
 
@@ -49,6 +49,10 @@ TEST(SubnetTest, SimpleTest) {
 
   std::cout << subnet << std::endl;
   std::cout << kitty::to_hex(evaluate(subnet)) << std::endl;
+
+  const auto length = subnet.getPathLength();
+  std::cout << "Path lenth: min=" << length.first
+            << ", max="  << length.second << std::endl;
 }
 
 } // namespace eda::gate::model

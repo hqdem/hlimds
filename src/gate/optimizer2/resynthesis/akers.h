@@ -24,7 +24,7 @@ namespace eda::gate::optimizer2::resynthesis {
  * The algorithm based on the article "Synthesis of combinational logic using
  * three-input majority gates" by Sheldon B. Akers, Jr. (1962).
 */
-class AkersAlgorithm : public Synthesizer {
+class AkersAlgorithm : public Synthesizer<kitty::dynamic_truth_table> {
 
 public:
 

@@ -25,7 +25,7 @@ namespace eda::gate::optimizer2::resynthesis {
 * computational and control contact circuits" by G. N. Povarov,
 * Avtomat i Telemekh., 1957, volume 18, issue 2, 145–162
 */
-class Cascade : public Synthesizer {
+class Cascade : public Synthesizer<kitty::dynamic_truth_table> {
 
 public:
 

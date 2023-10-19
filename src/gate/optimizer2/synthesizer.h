@@ -17,12 +17,12 @@ namespace eda::gate::optimizer2 {
 /**
  * \brief Common interface for synthesizers.
  */
+template<typename IR>
 class Synthesizer {
-protected:
+public:
   using SubnetID = eda::gate::model::SubnetID;
-  using TruthTable = kitty::dynamic_truth_table;
 
-  virtual SubnetID synthesize(const TruthTable &func) = 0;
+  virtual SubnetID synthesize(const IR &ir) = 0;
 };
 
 } // namespace eda::gate::optimizer2

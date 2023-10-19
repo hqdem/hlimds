@@ -23,7 +23,7 @@ namespace eda::gate::optimizer2::resynthesis {
  * The algorithm based on the article "Synthesis of combinational circuits by
  * means of bi-decomposition of Boolean functions" by Yuri V. Pottosin (2022).
 */
-class BiDecompositor : public Synthesizer {
+class BiDecompositor : public Synthesizer<kitty::dynamic_truth_table> {
 public:
 
   using CoverageElement = TernaryBiClique::CoverageElement;
@@ -32,7 +32,7 @@ public:
   using Link            = Subnet::Link;
   using LinkList        = Subnet::LinkList;
   using SubnetBuilder   = eda::gate::model::SubnetBuilder;
-  using TruthTable      = Synthesizer::TruthTable;
+  using TruthTable      = kitty::dynamic_truth_table;
 
   BiDecompositor() { };
 

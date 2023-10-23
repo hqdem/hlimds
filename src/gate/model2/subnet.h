@@ -57,6 +57,7 @@ public:
         cell(CellID::makeSID(cellID)),
         in(in),
         out(out),
+        dummy(false),
         arity(links.size()),
         more((links.size() + (InEntryLinks - 1) - InPlaceLinks) / InEntryLinks),
         type(CellTypeID::makeSID(typeID)) {
@@ -73,22 +74,23 @@ public:
     Cell(CellTypeID typeID, const LinkList &links, bool in, bool out):
       Cell(typeID, OBJ_NULL_ID, links, in, out) {}
 
-    bool isIn()   const { return in;                          }
-    bool isOut()  const { return out;                         }
-    bool isPI()   const { return type == CELL_TYPE_SID_IN;    }
-    bool isPO()   const { return type == CELL_TYPE_SID_OUT;   }
-    bool isZero() const { return type == CELL_TYPE_SID_ZERO;  }
-    bool isOne()  const { return type == CELL_TYPE_SID_ONE;   }
-    bool isBuf()  const { return type == CELL_TYPE_SID_BUF;   }
-    bool isNot()  const { return type == CELL_TYPE_SID_NOT;   }
-    bool isAnd()  const { return type == CELL_TYPE_SID_AND;   }
-    bool isOr()   const { return type == CELL_TYPE_SID_OR;    }
-    bool isXor()  const { return type == CELL_TYPE_SID_XOR;   }
-    bool isNand() const { return type == CELL_TYPE_SID_NAND;  }
-    bool isNor()  const { return type == CELL_TYPE_SID_NOR;   }
-    bool isXnor() const { return type == CELL_TYPE_SID_XNOR;  }
-    bool isMaj()  const { return type == CELL_TYPE_SID_MAJ;   }
-    bool isNull() const { return type == CellTypeID::NullSID; } 
+    bool isIn()    const { return in;                          }
+    bool isOut()   const { return out;                         }
+    bool isDummy() const { return dummy;                       }
+    bool isPI()    const { return type == CELL_TYPE_SID_IN;    }
+    bool isPO()    const { return type == CELL_TYPE_SID_OUT;   }
+    bool isZero()  const { return type == CELL_TYPE_SID_ZERO;  }
+    bool isOne()   const { return type == CELL_TYPE_SID_ONE;   }
+    bool isBuf()   const { return type == CELL_TYPE_SID_BUF;   }
+    bool isNot()   const { return type == CELL_TYPE_SID_NOT;   }
+    bool isAnd()   const { return type == CELL_TYPE_SID_AND;   }
+    bool isOr()    const { return type == CELL_TYPE_SID_OR;    }
+    bool isXor()   const { return type == CELL_TYPE_SID_XOR;   }
+    bool isNand()  const { return type == CELL_TYPE_SID_NAND;  }
+    bool isNor()   const { return type == CELL_TYPE_SID_NOR;   }
+    bool isXnor()  const { return type == CELL_TYPE_SID_XNOR;  }
+    bool isMaj()   const { return type == CELL_TYPE_SID_MAJ;   }
+    bool isNull()  const { return type == CellTypeID::NullSID; } 
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
@@ -99,6 +101,8 @@ public:
     uint64_t in : 1;
     /// Output flag.
     uint64_t out : 1;
+    /// Dummy input flag.
+    uint64_t dummy : 1;
     /// Cell arity.
     uint64_t arity : 5;
     /// Number of entries for additional links.
@@ -208,6 +212,14 @@ public:
       entries.emplace_back(links, i);
     }
 
+    return idx;
+  }
+
+  /// Creates a dummy input (a nonessential variable).
+  /// Such inputs are introduced to keep the subnet interface unchanged.
+  size_t addDummy() {
+    const auto idx = addCell(IN, INPUT);
+    entries[idx].cell.dummy = 1;
     return idx;
   }
 

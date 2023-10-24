@@ -49,6 +49,7 @@ add_library(Gate OBJECT
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/bidecomposition.cpp
   optimizer2/resynthesis/cascade.cpp
+  optimizer2/resynthesis/reed_muller.cpp
   optimizer2/resynthesis/ternary_bi_clique.cpp
   optimizer2/resynthesis/unitized_table.cpp
   parser/gate_verilog.cpp

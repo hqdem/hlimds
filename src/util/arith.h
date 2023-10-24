@@ -28,4 +28,16 @@ namespace eda::utils {
  */
 std::string toBinString(int num, uint64_t size);
 
+/** 
+* Generates the vector, each element is a position of "1" in argument.
+*
+* Sample output: 
+*
+* popcnt(6) = {1,2} as 6 in binary is "110"
+*
+* @return vector of positions of ones in the binary representation of the number
+*/
+std::vector<int> popcnt(int num);
+
 } // namespace eda::utils
+

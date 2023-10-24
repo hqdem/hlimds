@@ -22,6 +22,9 @@ class Synthesizer {
 public:
   using SubnetID = eda::gate::model::SubnetID;
 
+  Synthesizer() {}
+  virtual ~Synthesizer() {}
+
   virtual SubnetID synthesize(const IR &ir) = 0;
 };
 

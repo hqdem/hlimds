@@ -34,6 +34,7 @@ add_executable(${TEST_TARGET}
   gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp
+  gate/model2/generator_test.cpp
   gate/model2/list_test.cpp
   gate/model2/net_test.cpp
   gate/model2/subnet_test.cpp

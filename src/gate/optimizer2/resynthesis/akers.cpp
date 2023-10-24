@@ -13,21 +13,14 @@ namespace eda::gate::optimizer2::resynthesis {
 // Types
 //===----------------------------------------------------------------------===//
 
-using Arguments = AkersAlgorithm::Arguments;
+using Arguments    = AkersAlgorithm::Arguments;
 using ArgumentsSet = AkersAlgorithm::ArgumentsSet;
-using Link = eda::gate::model::Subnet::Link;
-using Subnet = eda::gate::model::Subnet;
-using SubnetID = eda::gate::model::SubnetID;
+using Link         = eda::gate::model::Subnet::Link;
+using Subnet       = eda::gate::model::Subnet;
+using SubnetID     = eda::gate::model::SubnetID;
 
 //===----------------------------------------------------------------------===//
-// Constructors/Destructors
-//===----------------------------------------------------------------------===//
-
-AkersAlgorithm::AkersAlgorithm(const TruthTable &func, const TruthTable &care):
-                               table(func, care), nVariables(func.num_vars()) {}
-
-//===----------------------------------------------------------------------===//
-// Convenience Methods
+// Synthesize Methods
 //===----------------------------------------------------------------------===//
 
 SubnetID AkersAlgorithm::synthesize(const TruthTable &func) {
@@ -35,69 +28,83 @@ SubnetID AkersAlgorithm::synthesize(const TruthTable &func) {
   std::string bitsCare;
   bitsCare.assign(func.num_bits(), '1');
   kitty::create_from_binary_string(care, bitsCare);
-  
-  table.initialize(func, care);
-  nVariables = func.num_vars();
 
-  return run();
-}
-
-SubnetID AkersAlgorithm::run() {
-  for (uint32_t i = 0; i < nVariables; i++) {
-    size_t cellId = subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT);
-    idx.push_back(cellId);
-  }
-
-  while ((table.nColumns() != 3) && (table.nColumns() != 1)) {
-    ColumnsToRemove columnsToRemove;
-
-    Arguments gate = findBestGate(columnsToRemove);
-    addMajGate(gate);
-
-    if (!columnsToRemove.empty()) {
-      table.eraseCol(columnsToRemove);
-      columnsToRemove.clear();
-    }
-
-    if (!nCallElimFunc) {
-      table.reduce();
-    }
-  }
-  bool inv = false;
-  if (table.nColumns() == 3) {
-    Arguments gate = {0, 1, 2};
-    addMajGate(gate);
-  } else {
-    unsigned id = table.idColumn(0);
-    size_t cellId = 0;
-    switch (id) {
-      case 62:
-        cellId = subnetBuilder.addCell(model::ZERO);
-      break;
-      case 63:
-        cellId = subnetBuilder.addCell(model::ONE);
-      break;
-      default:
-        if ((id < 62) && (id > 30)) {
-          cellId = idx[id - 31];
-          inv = true;
-        }
-    }
-    if (cellId) {
-      idx.push_back(cellId);
-    }
-  }
-  nMaj =  table.nMajGates;
-  const Link link(idx.back(), inv);
-  subnetBuilder.addCell(model::OUT, link, SubnetBuilder::OUTPUT);
-  return subnetBuilder.make();
+  return run(func, care);
 }
 
 //===----------------------------------------------------------------------===//
 // Internal Methods
 //===----------------------------------------------------------------------===//
 
-void AkersAlgorithm::addMajGate(const Arguments &gate) {
+SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
+  // Initialize the unitized table.
+  UnitizedTable table;
+  table.initialize(func, care);
+  uint32_t nVariables = func.num_vars();
+  // Create variables for building the Subnet.
+  SubBuild subBuild;
+  for (uint32_t i = 0; i < nVariables; i++) {
+    size_t cellId = subBuild.builder.addCell(model::IN, SubnetBuilder::INPUT);
+    subBuild.idx.push_back(cellId);
+  }
+
+  ElimOnesInfo onesInfo;
+  onesInfo.nCall = 0;
+  onesInfo.nInner = table.nColumns();
+  ConstantId cid;
+
+  while ((table.nColumns() != 3) && (table.nColumns() != 1)) {
+    Candidate candidate = findBestGate(table, onesInfo);
+    addMajGate(table, subBuild, candidate.args, nVariables, cid);
+
+    if (!candidate.toRemove.empty()) {
+      table.eraseCol(candidate.toRemove);
+    }
+
+    if (!onesInfo.nCall) {
+      table.reduce();
+    }
+  }
+  bool inv = false;
+  if (table.nColumns() == 3) {
+    Arguments gate = {0, 1, 2};
+    addMajGate(table, subBuild, gate, nVariables, cid);
+  } else {
+    unsigned id = table.idColumn(0);
+    size_t cellId = 0;
+    bool flag = false;
+    switch (id) {
+      case 62:
+        cellId = subBuild.builder.addCell(model::ZERO);
+        flag = true;
+      break;
+      case 63:
+        cellId = subBuild.builder.addCell(model::ONE);
+        flag = true;
+      break;
+      default:
+        if ((id < 62) && (id > 30)) {
+          cellId = subBuild.idx[id - 31];
+          flag = true;
+          inv = true;
+        }
+    }
+    if (flag) {
+      subBuild.idx.push_back(cellId);
+    } else {
+      cellId = subBuild.idx[id];
+      subBuild.idx.push_back(cellId);
+    }
+  }
+  const Link link(subBuild.idx.back(), inv);
+  subBuild.builder.addCell(model::OUT, link, SubnetBuilder::OUTPUT);
+  return subBuild.builder.make();
+}
+
+void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
+                                const Arguments &gate, uint32_t nVariables,
+                                ConstantId &cid) {
+
   assert(gate.size() == 3 && "Invalid number of inputs for a MAJ gate!");
 
   std::vector<Link> links;
@@ -107,131 +114,137 @@ void AkersAlgorithm::addMajGate(const Arguments &gate) {
     size_t cellId = 0;
     switch (id) {
       case 62:
-        if (!zeroId) {
-          zeroId = subnetBuilder.addCell(model::ZERO);
+        if (!cid.hasZero) {
+          cid.zeroId = subBuild.builder.addCell(model::ZERO);
+          cid.hasZero = true;
         }
-        cellId = zeroId;
+        cellId = cid.zeroId;
         links.push_back(Link(cellId));
       break;
       case 63:
-        if (!oneId) {
-          oneId = subnetBuilder.addCell(model::ONE);
+        if (!cid.hasOne) {
+          cid.oneId = subBuild.builder.addCell(model::ONE);
+          cid.hasOne = true;
         }
-        cellId = oneId;
+        cellId = cid.oneId;
         links.push_back(Link(cellId));
       break;
       default:
         switch (id < 31 ? 1 : (id < 62 ? 2 : 3)) {
           case 1:
-            links.push_back(Link(idx[id]));
+            links.push_back(Link(subBuild.idx[id]));
           break;
           case 2:
-            links.push_back(Link(idx[id - 31], true));
+            links.push_back(Link(subBuild.idx[id - 31], true));
           break;
           case 3:
-            links.push_back(Link(idx[id - 64 + nVariables]));
+            links.push_back(Link(subBuild.idx[id - 64 + nVariables]));
           break;
         }
     }
   }
 
-  const size_t majId = subnetBuilder.addCell(model::MAJ, links[0],
-                                                         links[1],
-                                                         links[2]);
-  idx.push_back(majId);
+  const size_t majId = subBuild.builder.addCell(model::MAJ, links[0],
+                                                            links[1],
+                                                            links[2]);
+  subBuild.idx.push_back(majId);
 
   table.addMajColumn(gate);
 }
 
-Arguments AkersAlgorithm::findBestGate(ColumnsToRemove &columnsToRemove) {
-  columnsToRemove.clear();
+Candidate AkersAlgorithm::findBestGate(UnitizedTable &table,
+                                       ElimOnesInfo &onesInfo) {
 
   CanditateList gates;
-  Arguments args;
-  ColumnsToRemove forRemoval;
+  Candidate candidate;
 
   size_t nRows = table.nRows();
   unsigned degree;
 
   // map of columns and their essential ones.
-  std::unordered_map<unsigned, RowNums> essentialOnes;
-  pairEssentialRows.clear();
+  std::unordered_map<unsigned, RowNums> essenOnes;
+  EssentialEdge edges;
   // Filling maps.
   for (uint32_t i = 0; i < nRows; ++i) {
     for (uint32_t j = i + 1; j < nRows; ++j) {
       if (table.isDegreeOfTwo(table.getRow(i) & table.getRow(j), degree)) {
-        essentialOnes[degree].insert(i);
-        essentialOnes[degree].insert(j);
-        pairEssentialRows[degree].push_back(std::make_pair(i, j));
+        essenOnes[degree].insert(i);
+        essenOnes[degree].insert(j);
+        edges[degree].push_back(std::make_pair(i, j));
       }
     }
   }
   // Selection of candidates (possible gates for the table).
-  size_t nCols = nCallElimFunc ? nInnerColumns : table.nColumns();
+  size_t nCols = onesInfo.nCall ? onesInfo.nInner : table.nColumns();
   for (uint32_t i = 0; i < nCols; ++i) {
-    for (const auto &gate : findGatesForColumnRemoval(essentialOnes[i], i)) {
+    for (const auto &gate : findGatesForColumnRemoval(table, essenOnes[i], i)) {
       gates[gate].push_back(i);
     }
   }
 
   if (gates.empty()) {
-    return findEliminatingOnesGate();
+    return findEliminatingOnesGate(table, edges, onesInfo);
   }
   // Try to select more suitable set of arguments.
   auto it = gates.begin();
-  args = it->first;
-  forRemoval = it->second;
+  candidate.args = it->first;
+  candidate.toRemove = it->second;
 
   ++it;
   for (; it != gates.end(); ++it) {
-    if (it->second.size() > forRemoval.size()) {
-      args = it->first;
-      forRemoval = it->second;
+    if (it->second.size() > candidate.toRemove.size()) {
+      candidate.args = it->first;
+      candidate.toRemove = it->second;
     }
   }
 
-  if (nCallElimFunc) {
-    switch (forRemoval.size()) {
+  if (onesInfo.nCall) {
+    switch (candidate.toRemove.size()) {
     case 1:
-      return chooseGate(args, forRemoval, gates, columnsToRemove);
+      return chooseGate(table, edges, candidate, gates, onesInfo);
     
     case 2:
-      return findEliminatingNColsGate(gates, columnsToRemove, 2);
+      return findEliminatingNColsGate(table, edges, gates, onesInfo, 2);
     
     case 3:
-      return findEliminatingNColsGate(gates, columnsToRemove, 3);
+      return findEliminatingNColsGate(table, edges, gates, onesInfo, 3);
     }
   }
 
-  return chooseGate(args, forRemoval, gates, columnsToRemove);
+  return chooseGate(table, edges, candidate, gates, onesInfo);
 }
 
-Arguments AkersAlgorithm::chooseGate(Arguments &candidate,
-                                     ColumnsToRemove &forRemoval,
+Candidate AkersAlgorithm::chooseGate(UnitizedTable &table,
+                                     EssentialEdge &edges,
+                                     Candidate &candidate,
                                      const CanditateList &gates,
-                                     ColumnsToRemove &columnsToRemove) {
+                                     ElimOnesInfo &onesInfo) {
 
-  if ((forRemoval.size() != 1) || (mayDeleteRows(candidate, forRemoval))) {
-    return setWhatFound(candidate, forRemoval, columnsToRemove);
+  if ((candidate.toRemove.size() != 1) || (mayDeleteRows(table, candidate))) {
+    return setWhatFound(candidate, onesInfo);
   }
   auto it = gates.begin();
   ++it;
   for (; it != gates.end(); it++) {
-    if (mayDeleteRows(it->first, it->second)) {
-      return setWhatFound(it->first, it->second, columnsToRemove);
+    candidate.args = it->first;
+    candidate.toRemove = it->second;
+    if (mayDeleteRows(table, candidate)) {
+      return setWhatFound(candidate, onesInfo);
     }
   }
-  return findEliminatingOnesGate();
+  return findEliminatingOnesGate(table, edges, onesInfo);
 }
 
-Arguments AkersAlgorithm::findEliminatingNColsGate(CanditateList &gates,
-  ColumnsToRemove &columnsToRemove, const unsigned n) {
+Candidate AkersAlgorithm::findEliminatingNColsGate(UnitizedTable &table,
+                                                   EssentialEdge &edges,
+                                                   CanditateList &gates,
+                                                   ElimOnesInfo &onesInfo,
+                                                   const unsigned n) {
 
   assert(((n == 2) || (n == 3)) && "Error of input variable n!");
 
-  Arguments args;
-  ColumnsToRemove forRemoval;
-  
+  Candidate candidate;
+
   unsigned i = n;
   do {
     --i;
@@ -239,20 +252,20 @@ Arguments AkersAlgorithm::findEliminatingNColsGate(CanditateList &gates,
       if (gate.second.size() < n) {
         continue;
       }
-      if (gate.second[i] < nInnerColumns) {
-        args = gate.first;
-        forRemoval = gate.second;
-        if (mayDeleteRows(args, forRemoval)) {
-          return setWhatFound(args, forRemoval, columnsToRemove);
+      if (gate.second[i] < onesInfo.nInner) {
+        candidate.args = gate.first;
+        candidate.toRemove = gate.second;
+        if (mayDeleteRows(table, candidate)) {
+          return setWhatFound(candidate, onesInfo);
         }
       }
     }
     bool firstTime = false;
     if (n == 3) {
-      firstTime = (nCallElimFunc == 1);
+      firstTime = (onesInfo.nCall == 1);
     }
-    if (!args.empty() && ((i == 2) || firstTime)) {
-      return setWhatFound(args, forRemoval, columnsToRemove);
+    if (!candidate.args.empty() && ((i == 2) || firstTime)) {
+      return setWhatFound(candidate, onesInfo);
     }
   } while (i);
 
@@ -264,29 +277,27 @@ Arguments AkersAlgorithm::findEliminatingNColsGate(CanditateList &gates,
   }
 
   if (otherGates.empty()) {
-    return findEliminatingOnesGate();
+    return findEliminatingOnesGate(table, edges, onesInfo);
   }
 
   if (n == 3) {
-    return findEliminatingNColsGate(otherGates, columnsToRemove, 2);
+    return findEliminatingNColsGate(table, edges, otherGates, onesInfo, 2);
   }
 
-  args = otherGates.begin()->first;
-  forRemoval = otherGates.begin()->second;
-  return chooseGate(args, forRemoval, otherGates, columnsToRemove);
+  candidate.args = otherGates.begin()->first;
+  candidate.toRemove = otherGates.begin()->second;
+  return chooseGate(table, edges, candidate, otherGates, onesInfo);
 }
 
-Arguments AkersAlgorithm::setWhatFound(const Arguments &args,
-                                       const ColumnsToRemove &forRemoval,
-                                       ColumnsToRemove &columnsToRemove) {
+Candidate AkersAlgorithm::setWhatFound(const Candidate &candidate,
+                                       ElimOnesInfo &onesInfo) {
 
-  nCallElimFunc = 0;
-  columnsToRemove = forRemoval;
-  return args;
+  onesInfo.nCall = 0;
+  return candidate;
 }
 
 ArgumentsSet AkersAlgorithm::findGatesForColumnRemoval
-  (const RowNums &essentialRows, unsigned index) {
+  (const UnitizedTable &table, const RowNums &essentialRows, unsigned index) {
 
   ArgumentsSet argsSet;
 
@@ -321,9 +332,9 @@ ArgumentsSet AkersAlgorithm::findGatesForColumnRemoval
   return argsSet;
 }
 
-uint64_t AkersAlgorithm::countRemovedOnes(unsigned c1,
-                                          unsigned c2,
-                                          unsigned c3) {
+uint64_t AkersAlgorithm::countRemoved(const UnitizedTable &table,
+                                      EssentialEdge &edges,
+                                      unsigned c1, unsigned c2, unsigned c3) {
 
   uint64_t counter = 0;
   std::vector<unsigned> args = {c1, c2, c3};
@@ -334,7 +345,7 @@ uint64_t AkersAlgorithm::countRemovedOnes(unsigned c1,
     unsigned arg2 = args[(i + 2) % 3];
     RowNums deletedOnes;
     RowNums cannotDelete;
-    for (const auto &p : pairEssentialRows[essArg]) {
+    for (const auto &p : edges[essArg]) {
       bool bit1 = table.getBit(p.first, arg1) || table.getBit(p.first, arg2);
       bool bit2 = table.getBit(p.second, arg1) || table.getBit(p.second, arg2);
       if (bit1 && bit2) {
@@ -377,18 +388,21 @@ void AkersAlgorithm::decCounter(uint64_t &counter, RowNums &cantRemove,
   }
 }
 
-Arguments AkersAlgorithm::findEliminatingOnesGate() {
-  if (!nCallElimFunc) {
-    nInnerColumns = table.nColumns();
+Candidate AkersAlgorithm::findEliminatingOnesGate(const UnitizedTable &table,
+                                                  EssentialEdge &edges,
+                                                  ElimOnesInfo &onesInfo) {
+
+  if (!onesInfo.nCall) {
+    onesInfo.nInner = table.nColumns();
   }
-  nCallElimFunc++;
+  onesInfo.nCall++;
 
   uint64_t counter = 0;
   uint64_t interCounter = 0;
-  Arguments args;
+  Candidate candidate;
   uint64_t columnsSize = table.nColumns();
 
-  for (unsigned i = 0; i < nInnerColumns; i++) {
+  for (unsigned i = 0; i < onesInfo.nInner; i++) {
     for (unsigned j = i + 1; j < columnsSize; j++) {
       if (table.areInverse(i, j)) {
         continue;
@@ -397,27 +411,28 @@ Arguments AkersAlgorithm::findEliminatingOnesGate() {
         if ((table.areInverse(i, k)) || (table.areInverse(j, k))) {
           continue;
         }
-        interCounter = countRemovedOnes(i, j, k);
+        interCounter = countRemoved(table, edges, i, j, k);
         if (interCounter > counter) {
           counter = interCounter;
-          args = {i, j, k};
+          candidate.args = {i, j, k};
         }
       }
     }
   }
 
-  if (args.empty()) {
-    args = {nCallElimFunc - 1, nCallElimFunc, nCallElimFunc + 1};
+  if (candidate.args.empty()) {
+    candidate.args = {onesInfo.nCall - 1, onesInfo.nCall, onesInfo.nCall + 1};
   }
-  return args;
+  return candidate;
 }
 
-bool AkersAlgorithm::mayDeleteRows(const Arguments &args,
-                                   const ColumnsToRemove &colsToErase) {
-  table.addMajColumn(args);
+bool AkersAlgorithm::mayDeleteRows(UnitizedTable &table,
+                                   const Candidate &candidate) {
+
+  table.addMajColumn(candidate.args);
 
   uint64_t mask = -1;
-  for (const auto &col: colsToErase) {
+  for (const auto &col: candidate.toRemove) {
     mask &= ~(1ull << col);
   }
 

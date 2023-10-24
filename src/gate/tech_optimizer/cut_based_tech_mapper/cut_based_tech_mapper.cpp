@@ -5,17 +5,16 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
-#include "gate/optimizer/optimizer.h"
-#include "gate/optimizer/cut_walker.h"
-#include "gate/optimizer/net_substitute.h"
-#include "gate/premapper/aigmapper.h"
-#include "gate/tech_optimizer/library/cell.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/printer/printer.h"
 #include "gate/optimizer/cut_storage.h"
+#include "gate/optimizer/cut_walker.h"
+#include "gate/optimizer/net_substitute.h"
+#include "gate/optimizer/optimizer.h"
+#include "gate/premapper/aigmapper.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/tech_map_visitor.h"
+#include "gate/tech_optimizer/library/cell.h"
 
 namespace eda::gate::tech_optimizer {
 
@@ -35,8 +34,8 @@ namespace eda::gate::tech_optimizer {
   CutBasedTechMapper::CutBasedTechMapper(
       eda::gate::optimizer::SQLiteRWDatabase &rwdb,  
       std::unordered_map<std::string, CellTypeID> &cellTypeMap) :
-    cellTypeMap(cellTypeMap),
-    rwdb(rwdb) {}
+    rwdb(rwdb),
+    cellTypeMap(cellTypeMap) {}
 
   GNet *CutBasedTechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
     try {
@@ -80,7 +79,7 @@ namespace eda::gate::tech_optimizer {
       std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
 
     auto nodes = eda::utils::graph::topologicalSort(*net);
-    for (auto &id: net->getSources()) {
+    for (const auto &id: net->getSources()) {
       if (Gate::get(id)->isSource()) {
         Replacement bestReplacment{id, eda::gate::model::CELL_TYPE_ID_IN, 
             " ", 0, 0};

@@ -2,9 +2,9 @@
 #pragma once
 
 #include "gate/model/gnet.h"
+#include "gate/model2/celltype.h"
 #include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/rwdatabase.h"
-#include "gate/model2/celltype.h"
 
 #include <unordered_map>
 
@@ -42,13 +42,11 @@ namespace eda::gate::tech_optimizer {
     GateID rootNode;
     model::CellTypeID cellType;
     optimizer::ConeVisitor::MatchMap map;
-    bool isInput = false;
-    bool used = false;
-    eda::gate::model::CellID cellID;
-
-    //NetSubstitute netSubstitute;
     std::string name;
     double delay;
     double area;
+    bool isInput = false;
+    bool used = false;
+    eda::gate::model::CellID cellID;
   };
 } // namespace eda::gate::tech_optimizer

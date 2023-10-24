@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "gate/optimizer/rwdatabase.h"
 #include "gate/model2/celltype.h"
+#include "gate/optimizer/rwdatabase.h"
 
 #include "kitty/kitty.hpp"
 
@@ -38,8 +38,11 @@ struct Pin {
 
 struct Cell {
   Cell(const std::string &name, const std::vector<Pin> &inputPins,
-      kitty::dynamic_truth_table *truthTable, double area = 0.0, 
-      std::string &realName);
+      kitty::dynamic_truth_table *truthTable, const std::string &realName);
+
+  Cell(const std::string &name, const std::vector<Pin> &inputPins,
+      kitty::dynamic_truth_table *truthTable, const std::string &realName, 
+      double area);
 
   Cell(kitty::dynamic_truth_table *truthTable);
 
@@ -53,8 +56,8 @@ private:
   const std::string name;
   std::vector<Pin> inputPins;
   kitty::dynamic_truth_table *truthTable;
-  double area;
   std::string realName;
+  double area;
 };
 
 struct LibraryCells {

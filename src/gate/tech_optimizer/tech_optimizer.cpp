@@ -6,12 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/tech_optimizer/tech_optimizer.h"
-#include "gate/tech_optimizer/library/cell.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/min_delay.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/model2/celltype.h"
+#include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/min_delay.h"
+#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/tech_optimizer/library/cell.h"
+#include "gate/tech_optimizer/tech_optimizer.h"
 
 namespace eda::gate::tech_optimizer {
 
@@ -83,6 +83,6 @@ void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*
   // TODO: checking for functional equivalence
   //functionalEquivalence
 }
-}
+} // namespace eda::gate::tech_optimizer
 
 

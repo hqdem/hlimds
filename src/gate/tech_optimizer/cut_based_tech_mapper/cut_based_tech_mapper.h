@@ -9,10 +9,10 @@
 #pragma once
 
 #include "gate/model/gnet.h"
-#include "gate/model2/net.h"
-#include "gate/optimizer/cut_storage.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/net.h"
+#include "gate/optimizer/cut_storage.h"
+#include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/replacement_struct.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"

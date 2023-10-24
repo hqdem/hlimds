@@ -7,13 +7,13 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
+#include "gate/model2/celltype.h"
 #include "gate/optimizer/cut_visitor.h"
 #include "gate/optimizer/cuts_finder_visitor.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/util.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/replacement_struct.h"
 #include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
-#include "gate/model2/celltype.h"
 
 #include <queue>
 

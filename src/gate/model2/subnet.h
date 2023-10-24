@@ -223,6 +223,11 @@ public:
     return idx;
   }
 
+  void setDummy(size_t idx) {
+    assert(entries[idx].cell.in);
+    entries[idx].cell.dummy = 1;
+  }
+
   size_t addCell(CellSymbol symbol, Kind kind = INNER) {
     return addCell(getCellTypeID(symbol), LinkList{}, kind);
   }

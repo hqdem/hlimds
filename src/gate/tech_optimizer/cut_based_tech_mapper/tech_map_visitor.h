@@ -35,7 +35,7 @@ namespace eda::gate::tech_optimizer {
     SearchOptReplacement();
 
     void set(CutStorage *cutStorage, GNet *net,
-        std::unordered_map<GateID, Replacement> *bestReplacement, 
+        std::unordered_map<GateID, Replacement> *bestSubstitutions, 
         int cutSize, RWDatabase &rwdb, Strategy *strategy,
         std::unordered_map<std::string, CellTypeID> &cellTypeMap);
 
@@ -45,7 +45,7 @@ namespace eda::gate::tech_optimizer {
 
     VisitorFlags onCut(const GateID &, const Cut &) override;
 
-    std::unordered_map<GateID, Replacement> *bestReplacement;
+    std::unordered_map<GateID, Replacement> *bestSubstitutions;
 
   private:
     GNet *net;

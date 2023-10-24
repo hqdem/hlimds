@@ -30,13 +30,13 @@ namespace eda::gate::tech_optimizer {
 
   void SearchOptReplacement::set(CutStorage *cutStorage,
       GNet *net, 
-      std::unordered_map<GateID, Replacement> *bestReplacement,
+      std::unordered_map<GateID, Replacement> *bestSubstitutions,
       int cutSize, RWDatabase &rwdb, Strategy *strategy,
       std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
     this->cutStorage = cutStorage;
     this->net = net;
     this->cutSize = cutSize;
-    this->bestReplacement = bestReplacement;
+    this->bestSubstitutions = bestSubstitutions;
     this->rwdb = rwdb;
     this->strategy = strategy;
     this->cellTypeMap = cellTypeMap;
@@ -95,7 +95,7 @@ namespace eda::gate::tech_optimizer {
         }
         
         if (strategy->checkOpt(superGate, map, minNodeArrivalTime,
-            bestReplacement)) {
+            bestSubstitutions)) {
           saveReplace = true;
           return considerTechMap(superGate, map);
         }
@@ -143,7 +143,7 @@ namespace eda::gate::tech_optimizer {
           bestOptionMap, bestOption.name,
           minNodeArrivalTime, bestOption.area};
 
-      bestReplacement->insert(std::pair<GateID, Replacement>
+      bestSubstitutions->insert(std::pair<GateID, Replacement>
           (lastNode, bestReplacment));
       
     } 
@@ -165,8 +165,8 @@ namespace eda::gate::tech_optimizer {
     for (const auto &[inputId, gateId] : map) {
       double delay = 0;
 
-      if (bestReplacement->count(gateId)) {
-        delay = bestReplacement->at(gateId).delay;
+      if (bestSubstitutions->count(gateId)) {
+        delay = bestSubstitutions->at(gateId).delay;
       }
       delay = delay + superGate.inputDelays.at(revGareBindings.at(inputId));
       

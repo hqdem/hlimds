@@ -25,6 +25,6 @@ namespace eda::gate::tech_optimizer {
   private:
     double maxArrivalTime(const BoundGNet &superGate,
         const std::unordered_map<GateID, GateID> &map,
-        std::unordered_map<GateID, Replacement> *bestReplacement);
+        std::unordered_map<GateID, Replacement> *bestSubstitutions);
   };
 } // namespace eda::gate::tech_optimizer

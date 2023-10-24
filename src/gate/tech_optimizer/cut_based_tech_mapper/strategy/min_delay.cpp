@@ -11,8 +11,8 @@
  
  bool MinDelay::checkOpt(const eda::gate::optimizer::BoundGNet &superGate,
       const eda::gate::model::GNet::GateIdMap &map, double &minNodeArrivalTime,  
-      std::unordered_map<GateID, Replacement> *bestReplacement) {
-      double maxGateArrivalTime = maxArrivalTime(superGate, map, bestReplacement);
+      std::unordered_map<GateID, Replacement> *bestSubstitutions) {
+      double maxGateArrivalTime = maxArrivalTime(superGate, map, bestSubstitutions);
       if ( minNodeArrivalTime > maxGateArrivalTime) {
         minNodeArrivalTime = maxGateArrivalTime;
         return true;
@@ -22,7 +22,7 @@
   
  double MinDelay::maxArrivalTime(const BoundGNet &superGate,
       const std::unordered_map<GateID, GateID> &map,
-      std::unordered_map<GateID, Replacement> *bestReplacement) {
+      std::unordered_map<GateID, Replacement> *bestSubstitutions) {
 
     double maxDelay = 0;
 
@@ -37,8 +37,8 @@
     for (const auto &[inputId, gateId] : map) {
       double delay = 0;
 
-      if (bestReplacement->count(gateId)) {
-        delay = bestReplacement->at(gateId).delay;
+      if (bestSubstitutions->count(gateId)) {
+        delay = bestSubstitutions->at(gateId).delay;
       }
       delay = delay + superGate.inputDelays.at(revGareBindings.at(inputId));
       

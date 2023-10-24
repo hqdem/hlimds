@@ -45,11 +45,11 @@ namespace eda::gate::tech_optimizer {
       CutStorage cutStorage;
       findCuts(net, cutStorage);
 
-      std::unordered_map<GateID, Replacement> bestReplacement;
-      replacementSearch(net, strategy, bestReplacement, cutStorage,
+      std::unordered_map<GateID, Replacement> bestSubstitutions;
+      replacementSearch(net, strategy, bestSubstitutions, cutStorage,
           cellTypeMap);
 
-      const Net &model2 = createModel2(net, bestReplacement);
+      const Net &model2 = createModel2(net, bestSubstitutions);
       printNet(model2);
 
       rwdb.closeDB();
@@ -75,7 +75,7 @@ namespace eda::gate::tech_optimizer {
   }
 
   void CutBasedTechMapper::replacementSearch(GNet *net, Strategy *strategy,  
-      std::unordered_map<GateID, Replacement> &bestReplacement, 
+      std::unordered_map<GateID, Replacement> &bestSubstitutions, 
       CutStorage &cutStorage,
       std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
 
@@ -84,13 +84,13 @@ namespace eda::gate::tech_optimizer {
       if (Gate::get(id)->isSource()) {
         Replacement bestReplacment{id, eda::gate::model::CELL_TYPE_ID_IN, 
             " ", 0, 0};
-        bestReplacement.insert(std::pair<GateID, Replacement>
+        bestSubstitutions.insert(std::pair<GateID, Replacement>
                                 (id, bestReplacment));
       }
     }
 
     SearchOptReplacement searchOptReplacement;
-    searchOptReplacement.set(&cutStorage, net, &bestReplacement, 6,
+    searchOptReplacement.set(&cutStorage, net, &bestSubstitutions, 6,
         rwdb, strategy, cellTypeMap);
     eda::gate::optimizer::CutWalker walker(net, &searchOptReplacement,
         &cutStorage);
@@ -98,7 +98,7 @@ namespace eda::gate::tech_optimizer {
   }
 
   const Net &CutBasedTechMapper::createModel2(GNet *net, 
-      std::unordered_map<GateID, Replacement> &bestReplacement) {
+      std::unordered_map<GateID, Replacement> &bestSubstitutions) {
 
     eda::gate::model::NetBuilder netBuilder;
     std::stack<Replacement*> stack;
@@ -114,18 +114,16 @@ namespace eda::gate::tech_optimizer {
     for (const auto &outGateID: targets) {
       for (const auto &preOutGateID: Gate::get(outGateID)->inputs()) {
         std::cout << "добавляем корень" << preOutGateID.node() << std::endl;
-        stack.push(&bestReplacement.at(preOutGateID.node()));
-        visited.insert(&bestReplacement.at(preOutGateID.node()));
+        stack.push(&bestSubstitutions.at(preOutGateID.node()));
+        visited.insert(&bestSubstitutions.at(preOutGateID.node()));
       }
     }
 
     while (!stack.empty()) {
       Replacement* current = stack.top();
-      std::cout << current->name << std::endl;
 
       if (current->isInput) {
 
-        std::cout << "добавляем вход: " << current->rootNode << std::endl;
         auto cellID = model::makeCell(eda::gate::model::CellSymbol::IN);
         netBuilder.addCell(cellID);
         current->cellID = cellID;
@@ -138,7 +136,7 @@ namespace eda::gate::tech_optimizer {
 
         for (auto& [input, secondParam] : current->map) {
           std::cout << secondParam << std::endl;
-          if (!bestReplacement.at(secondParam).used) {
+          if (!bestSubstitutions.at(secondParam).used) {
             std::cout << "этот не создался: " << secondParam << std::endl;
             readyForCreate = false;
           }
@@ -150,7 +148,7 @@ namespace eda::gate::tech_optimizer {
           model::Cell::LinkList linkList;
           for (auto& [input, secondParam] : current->map) {
             linkList.push_back(model::LinkEnd(
-                bestReplacement.at(secondParam).cellID));
+                bestSubstitutions.at(secondParam).cellID));
           }
           auto cellID = makeCell(current->cellType, linkList);
           netBuilder.addCell(cellID);
@@ -164,10 +162,10 @@ namespace eda::gate::tech_optimizer {
 
       for (const auto& [input, secondParam] : current->map) {
         std::cout << "пытаемся добавляем потомка: " << secondParam << std::endl;
-        if (visited.find(&bestReplacement.at(secondParam)) == visited.end()) {
+        if (visited.find(&bestSubstitutions.at(secondParam)) == visited.end()) {
           std::cout << "добавляем потомка: " << secondParam << std::endl;
-          stack.push(&bestReplacement.at(secondParam));
-          visited.insert(&bestReplacement.at(secondParam));
+          stack.push(&bestSubstitutions.at(secondParam));
+          visited.insert(&bestSubstitutions.at(secondParam));
         }
       }
     }

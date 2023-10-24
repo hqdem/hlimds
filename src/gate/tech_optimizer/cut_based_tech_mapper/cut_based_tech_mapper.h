@@ -46,11 +46,11 @@ namespace eda::gate::tech_optimizer {
     void aigMap(GNet *&net);
     void findCuts(GNet *net, CutStorage &cutStorage);
     void replacementSearch(GNet *net, Strategy *strategy, 
-        std::unordered_map<GateID, Replacement> &bestReplacement,
+        std::unordered_map<GateID, Replacement> &bestSubstitutions,
         CutStorage &cutStorage, 
         std::unordered_map<std::string, CellTypeID> &cellTypeMap);
     const Net &createModel2(GNet *net, 
-        std::unordered_map<GateID, Replacement> &bestReplacement);
+        std::unordered_map<GateID, Replacement> &bestSubstitutions);
     void printNet(const Net &model2);
 
     std::vector<GateID> getOutputs(GNet *net);

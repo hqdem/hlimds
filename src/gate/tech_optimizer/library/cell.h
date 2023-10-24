@@ -38,7 +38,8 @@ struct Pin {
 
 struct Cell {
   Cell(const std::string &name, const std::vector<Pin> &inputPins,
-      kitty::dynamic_truth_table *truthTable, double area = 0.0);
+      kitty::dynamic_truth_table *truthTable, double area = 0.0, 
+      std::string &realName);
 
   Cell(kitty::dynamic_truth_table *truthTable);
 
@@ -53,6 +54,7 @@ private:
   std::vector<Pin> inputPins;
   kitty::dynamic_truth_table *truthTable;
   double area;
+  std::string realName;
 };
 
 struct LibraryCells {

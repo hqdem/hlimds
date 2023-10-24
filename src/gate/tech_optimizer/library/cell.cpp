@@ -48,24 +48,18 @@ double Pin::getMaxDelay() const {
 //===----------------------------------------------------------------------===//
 
 Cell::Cell(const std::string &name, const std::vector<Pin> &inputPins,
-          kitty::dynamic_truth_table *truthTable, double area)
-  : name(name), inputPins(inputPins), truthTable(truthTable), area(area) {}
+          kitty::dynamic_truth_table *truthTable, double area, 
+          std::string &realName)
+  : name(name), inputPins(inputPins), truthTable(truthTable), area(area),
+      realName(realName) {}
 
 Cell::Cell(kitty::dynamic_truth_table *truthTable) :
   name(""), inputPins({}), truthTable(truthTable) {}
 
-const std::string &Cell::getName() const {
-  return name;
-}
-double Cell::getArea() const {
-    return area;
-}
-kitty::dynamic_truth_table *Cell::getTruthTable() const {
-    return truthTable;
-}
-unsigned Cell::getInputPinsNumber() const {
-    return inputPins.size();
-}
+const std::string &Cell::getName() const {return name;}
+double Cell::getArea() const {return area;}
+kitty::dynamic_truth_table *Cell::getTruthTable() const {return truthTable;}
+unsigned Cell::getInputPinsNumber() const {return inputPins.size();}
 const Pin &Cell::getInputPin(uint inputPinNumber) const {
     assert(inputPinNumber < inputPins.size());
     return inputPins[inputPinNumber];
@@ -126,7 +120,8 @@ void LibraryCells::readLibertyFile(const std::string &filename) {
         new kitty::dynamic_truth_table(inputPinNames.size());
       kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
 
-      Cell *cell = new Cell(it.key() + std::to_string(i), pins, truthTable, it.value()["area"]);
+      Cell *cell = new Cell(it.key() + std::to_string(i), 
+          pins, truthTable, it.value()["area"], it.key());
       cells.push_back(cell);
     } while(next_permutation(inputPinNames.begin(), inputPinNames.end()));
   }

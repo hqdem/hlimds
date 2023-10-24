@@ -7,17 +7,18 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer2/resynthesis/akers.h"
+#include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
-
 #include "mockturtle/networks/mig.hpp"
 
+#include <ctime>
 #include <string>
 
 using AkersAlgorithm = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
-using KittyTT = kitty::dynamic_truth_table;
-using MIGnetwork = mockturtle::mig_network;
-using Subnet = eda::gate::model::Subnet;
+using KittyTT        = kitty::dynamic_truth_table;
+using MIGnetwork     = mockturtle::mig_network;
+using Subnet         = eda::gate::model::Subnet;
 
 //===----------------------------------------------------------------------===//
 // Convenience Methods
@@ -46,8 +47,8 @@ TEST(Akers62_2, Example1) {
   KittyTT care(3);
   initializeTT2(func, care, "11011110", "01101111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnet = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnet = alg.synthesize(func, care);
 
   std::cout << Subnet::get(subnet) << std::endl;
 
@@ -61,8 +62,8 @@ TEST(Akers62_2, Example2) {
   initializeTT2(func, care, "0010001100101010",
                             "1111111111111111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnet = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnet = alg.synthesize(func, care);
 
   std::cout << Subnet::get(subnet) << std::endl;
 
@@ -83,7 +84,9 @@ TEST(AkersTest2, NOT1) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 0) && (subnet.size() == 2));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() == 2));
 }
 
 TEST(AkersTest2, One3) {
@@ -96,7 +99,9 @@ TEST(AkersTest2, One3) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 0) && (subnet.size() == 5));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, Zero3) {
@@ -109,7 +114,9 @@ TEST(AkersTest2, Zero3) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 0) && (subnet.size() == 5));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, OR2) {
@@ -118,11 +125,13 @@ TEST(AkersTest2, OR2) {
   KittyTT care(2);
   initializeTT2(func, care, "1110", "1111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnetId = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 1) && (subnet.size() == 5));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, AND2) {
@@ -131,11 +140,13 @@ TEST(AkersTest2, AND2) {
   KittyTT care(2);
   initializeTT2(func, care, "1000", "1111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnetId = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 1) && (subnet.size() == 5));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, XOR2) {
@@ -144,11 +155,13 @@ TEST(AkersTest2, XOR2) {
   KittyTT care(2);
   initializeTT2(func, care, "0110", "1111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnetId = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 3) && (subnet.size() <= 8));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() <= 8));
 }
 
 TEST(AkersTest2, XOR3) {
@@ -157,11 +170,13 @@ TEST(AkersTest2, XOR3) {
   KittyTT care(3);
   initializeTT2(func, care, "01101001", "11111111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnetId = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 3) && (subnet.size() == 7));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() == 7));
 }
 
 TEST(AkersTest2, XOR4) {
@@ -170,11 +185,13 @@ TEST(AkersTest2, XOR4) {
   KittyTT care(4);
   initializeTT2(func, care, "0110100110010110", "1111111111111111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnetId = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() <= 11) && (subnet.size() <= 18));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() <= 18));
 }
 
 //===----------------------------------------------------------------------===//
@@ -187,11 +204,13 @@ TEST(AkersTest2, MAJ3) {
   KittyTT care(3);
   initializeTT2(func, care, "11101000", "11111111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnetId = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 1) && (subnet.size() == 5));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
 
 TEST(AkersTest2, MAJ5) {
@@ -201,9 +220,71 @@ TEST(AkersTest2, MAJ5) {
   initializeTT2(func, care, "11111110111010001110100010000000",
                             "11111111111111111111111111111111");
 
-  AkersAlgorithm alg(func, care);
-  const auto &subnetId = alg.run();
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE((alg.getNMaj() == 4) && (subnet.size() == 10));
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual && (subnet.size() == 10));
+}
+
+//===----------------------------------------------------------------------===//
+// Random Tests
+//===----------------------------------------------------------------------===//
+
+TEST(AkersTest2, RandomFunc5) {
+  // Random gate RAND(x, y, z, u, v).
+  KittyTT func(5);
+  kitty::create_random(func);
+
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func);
+  const auto &subnet = Subnet::get(subnetId);
+
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual);
+}
+
+TEST(AkersTest2, RandomFunc6) {
+  // Random gate RAND(x, y, z, u, v, w).
+  KittyTT func(6);
+  kitty::create_random(func);
+
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func);
+  const auto &subnet = Subnet::get(subnetId);
+
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual);
+}
+
+TEST(AkersTest2, RandomFunc7) {
+  // Random gate RAND(x, y, z, u, v, w, p).
+  KittyTT func(7);
+  kitty::create_random(func);
+
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func);
+  const auto &subnet = Subnet::get(subnetId);
+
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual);
+}
+
+TEST(AkersTest2, RandomFunc8) {
+  // Random gate RAND(x, y, z, u, v, w, p, h).
+  KittyTT func(8);
+  kitty::create_random(func);
+
+  AkersAlgorithm alg;
+  const auto &subnetId = alg.synthesize(func);
+  const auto &subnet = Subnet::get(subnetId);
+
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+
+  EXPECT_TRUE(areEqual);
 }

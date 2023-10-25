@@ -31,8 +31,10 @@ add_executable(${TEST_TARGET}
   gate/debugger/ril_lec_test.cpp
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verilog_lec_test.cpp
+  gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp
+  gate/model2/generator_test.cpp
   gate/model2/list_test.cpp
   gate/model2/net_test.cpp
   gate/model2/subnet_test.cpp
@@ -40,9 +42,9 @@ add_executable(${TEST_TARGET}
   gate/optimizer/benchmark_optimizer_test.cpp
   gate/optimizer/bgnet_test.cpp
   gate/optimizer/depth_find_test.cpp
-  gate/optimizer/examples.cpp
   gate/optimizer/find_cone_test.cpp
   gate/optimizer/find_cut_test.cpp
+  gate/optimizer/npndb_test.cpp
   gate/optimizer/optimization_count_test.cpp
   gate/optimizer/optimizer_util.cpp
   gate/optimizer/resynthesis/akers_test.cpp
@@ -52,6 +54,12 @@ add_executable(${TEST_TARGET}
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
   gate/optimizer/util_test.cpp
+  gate/optimizer2/resynthesis/akers_test.cpp
+  gate/optimizer2/resynthesis/bidecomposition_test.cpp
+  gate/optimizer2/resynthesis/cascade_test.cpp
+  gate/optimizer2/resynthesis/reed_muller_test.cpp
+  gate/optimizer2/resynthesis/resynthesis_contest.cpp
+  gate/optimizer2/resynthesizer_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
   gate/premapper/mapper/mapper_test.cpp

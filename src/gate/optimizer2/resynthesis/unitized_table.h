@@ -19,14 +19,18 @@
 #include <utility>
 #include <vector>
 
-#include <kitty/bit_operations.hpp>
-#include <kitty/dynamic_truth_table.hpp>
+#include "kitty/bit_operations.hpp"
+#include "kitty/dynamic_truth_table.hpp"
+
+namespace eda::gate::optimizer2::resynthesis {
+  class AkersAlgorithm;
+} // namespace eda::gate::optimizer2::resynthesis
 
 namespace eda::gate::optimizer::resynthesis {
   class AkersAlgorithm;
 } // namespace eda::gate::optimizer::resynthesis
 
-namespace eda::gate::optimizer::resynthesis {
+namespace eda::gate::optimizer2::resynthesis {
 
 constexpr unsigned varLimit = 31;
 
@@ -35,6 +39,7 @@ constexpr unsigned varLimit = 31;
 */
 class UnitizedTable {
   friend class AkersAlgorithm;
+  friend class eda::gate::optimizer::resynthesis::AkersAlgorithm;
 
 public:
 
@@ -49,6 +54,9 @@ public:
   //===--------------------------------------------------------------------===//
   // Constructors/Destructors
   //===--------------------------------------------------------------------===//
+
+  /// Empty constructor.
+  UnitizedTable() {};
 
   /// Constructs unitized table of "func" without the sets where "care" has 0.
   UnitizedTable(const TruthTable &func, const TruthTable &care);
@@ -92,6 +100,9 @@ public:
   //===--------------------------------------------------------------------===//
   // Modification Methods
   //===--------------------------------------------------------------------===//
+
+  /// Initializer function.
+  void initialize(const TruthTable &func, const TruthTable &care);
   
   /// Sets the bit in the table.
   void setBit(uint32_t rowNum, unsigned index) {
@@ -147,10 +158,10 @@ private:
   Columns columns;
 
   /// Number of majority functions that were added to the table.
-  uint32_t nMajGates;
+  uint32_t nMajGates = 0;
 };
 
 /// Outputs the table
 std::ostream& operator <<(std::ostream &out, const UnitizedTable &t);
 
-} // namespace eda::gate::optimizer::resynthesis
+} // namespace eda::gate::optimizer2::resynthesis

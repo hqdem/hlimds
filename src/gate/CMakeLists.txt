@@ -12,6 +12,9 @@ add_library(Gate OBJECT
   model/utils.cpp
   model2/cell.cpp
   model2/celltype.cpp
+  model2/generator/generator.cpp
+  model2/generator/layer_generator.cpp
+  model2/generator/matrix_generator.cpp
   model2/net.cpp
   model2/printer/printer.cpp
   model2/subnet.cpp
@@ -24,12 +27,12 @@ add_library(Gate OBJECT
   optimizer/links_add_counter.cpp
   optimizer/links_clean_counter.cpp
   optimizer/net_substitute.cpp
+  optimizer/npndb.cpp
   optimizer/optimizer.cpp
   optimizer/optimizer_visitor.cpp
   optimizer/resynthesis/akers.cpp
   optimizer/resynthesis/cascade.cpp
   optimizer/resynthesis/reed_muller.cpp
-  optimizer/resynthesis/unitized_table.cpp
   optimizer/rwdatabase.cpp
   optimizer/rwmanager.cpp
   optimizer/strategy/apply_search_optimizer.cpp
@@ -43,6 +46,12 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
+  optimizer2/resynthesis/akers.cpp
+  optimizer2/resynthesis/bidecomposition.cpp
+  optimizer2/resynthesis/cascade.cpp
+  optimizer2/resynthesis/reed_muller.cpp
+  optimizer2/resynthesis/ternary_bi_clique.cpp
+  optimizer2/resynthesis/unitized_table.cpp
   parser/gate_verilog.cpp
   premapper/aigmapper.cpp
   premapper/migmapper.cpp

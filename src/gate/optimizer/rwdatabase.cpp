@@ -188,7 +188,7 @@ void SQLiteRWDatabase::linkDB(const std::string &path) {
                       _dbValueType + ")";
     _rc = sqlite3_exec(_db, sql.c_str(), nullptr, 0, &_zErrMsg);
     if (_rc != SQLITE_OK) {
-      std::cout << sqlite3_errmsg(_db) << '\n';
+      std::cout << sqlite3_errmsg(_db) << std::endl;
       throw "Can't create table.";
     }
   }
@@ -229,7 +229,7 @@ bool SQLiteRWDatabase::contains(const TruthTable key) {
                             SQLITE_BIND_INT64(key.raw()),
                             SQLITE_BIND_END);
     if (_rc != SQLITE_OK) {
-      std::cout << sqlite3_errmsg(_db) << '\n';
+      std::cout << sqlite3_errmsg(_db) << std::endl;
       throw "Can't select.";
     }
     return !_selectResult.empty();
@@ -250,7 +250,7 @@ BoundGNetList SQLiteRWDatabase::get(const TruthTable key) {
                             SQLITE_BIND_INT64(key.raw()),
                             SQLITE_BIND_END);
     if (_rc != SQLITE_OK) {
-      std::cout << sqlite3_errmsg(_db) << '\n';
+      std::cout << sqlite3_errmsg(_db) << std::endl;
       throw "Can't select.";
     }
     if (!_selectResult.empty()) {
@@ -275,7 +275,7 @@ void SQLiteRWDatabase::insertIntoDB(const TruthTable key,
                           SQLITE_BIND_TEXT(ser.c_str()),
                           SQLITE_BIND_END);
   if (_rc != SQLITE_OK) {
-    std::cout << sqlite3_errmsg(_db) << '\n';
+    std::cout << sqlite3_errmsg(_db) << std::endl;
     throw "Can't insert.";
   }
 }
@@ -291,7 +291,7 @@ void SQLiteRWDatabase::updateInDB(const TruthTable key,
                           SQLITE_BIND_INT64(key.raw()),
                           SQLITE_BIND_END);
   if (_rc != SQLITE_OK) {
-    std::cout << sqlite3_errmsg(_db) << '\n';
+    std::cout << sqlite3_errmsg(_db) << std::endl;
     throw "Can't update.";
   }
 }
@@ -303,7 +303,7 @@ void SQLiteRWDatabase::deleteFromDB(const TruthTable key) {
                           SQLITE_BIND_INT64(key.raw()),
                           SQLITE_BIND_END);
   if (_rc != SQLITE_OK) {
-    std::cout << sqlite3_errmsg(_db) << '\n';
+    std::cout << sqlite3_errmsg(_db) << std::endl;
     throw "Can't delete.";
   }
 }
@@ -317,7 +317,7 @@ BoundGNetList SQLiteRWDatabase::getFromDB(const TruthTable key) {
                           SQLITE_BIND_INT64(key.raw()),
                           SQLITE_BIND_END);
   if (_rc != SQLITE_OK) {
-    std::cout << sqlite3_errmsg(_db) << '\n';
+    std::cout << sqlite3_errmsg(_db) << std::endl;
     throw "Can't select.";
   }
   if (!_selectResult.empty()) {

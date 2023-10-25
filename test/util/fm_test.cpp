@@ -28,7 +28,6 @@ struct FMAlgoConfig {
   size_t step;
 };
 
-
 //  Tests FM hypergraph partitioning algorithm.
 int testFM(int passes, double r, HyperGraph &hgraph,
             const std::string &outPath) {
@@ -37,7 +36,7 @@ int testFM(int passes, double r, HyperGraph &hgraph,
               passes);
 
   algo.fm();  
-  if(hgraph.getWeights().size() <= 100) {
+  if (hgraph.getWeights().size() <= 100) {
     hgraph.print(algo.getSides());
   }
   hgraph.printArea(algo.getSides());
@@ -61,11 +60,11 @@ void testRandom(const FMAlgoConfig &config, const std::string &configPath,
   int cutsetFm = testFM(config.passes, config.r, graph, outPath);
   //int cutsetK = testKahypar(config.r, graph, configPath, outPath);
 
-  std::cout << "FM cutset : " << cutsetFm << '\n';
+  std::cout << "FM cutset : " << cutsetFm << std::endl;
   //std::cout << "Kahypar cutset : " << cutsetK << std::endl;
 }
 
-//  Tests fm algorithm with the hypergraph with pattern-created edges.
+//  Tests FM algorithm with the hypergraph with pattern-created edges.
 void testLinked(const FMAlgoConfig &config, const std::string &configPath,
                 const std::string &outSubPath) {
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
@@ -81,11 +80,11 @@ void testLinked(const FMAlgoConfig &config, const std::string &configPath,
   int cutsetFm = testFM(config.passes, config.r, graph, outPath);
   //int cutsetK = testKahypar(config.r, graph, configPath, outPath);
   
-  std::cout << "FM cutset : " << cutsetFm << '\n';
+  std::cout << "FM cutset : " << cutsetFm << std::endl;
   //std::cout << "Kahypar cutset : " << cutsetK << std::endl;
 }
 
-//  Tests fm algorithm with the hypergraph from input file.
+//  Tests FM algorithm with the hypergraph from input file.
 int testInput(int passes, double r, const std::string &configPath,
                const std::string &inSubPath, const std::string &outSubPath) {
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
@@ -106,11 +105,11 @@ int testInput(int passes, double r, const std::string &configPath,
     int cutsetFm = testFM(passes, r, hgraph, outPath);
     //int cutsetK = testKahypar(r, hgraph, configPath, outPath);
 
-    std::cout << "FM cutset : " << cutsetFm << '\n';
+    std::cout << "FM cutset : " << cutsetFm << std::endl;
     //std::cout << "Kahypar cutset : " << cutsetK << std::endl;
     cutset = cutsetFm;
   } else {
-    std::cerr << "Failed to open file " << inPath << '\n';
+    std::cerr << "Failed to open file " << inPath << std::endl;
   }
   return cutset;
 }
@@ -129,7 +128,7 @@ void testGate(const eda::gate::model::GNet &net, int passes, double r,
   int cutsetFm = testFM(passes, r, hgraph, outPath);
   //int cutsetK = testKahypar(r, hgraph, configPath, outPath);
   
-  std::cout << "FM cutset : " << cutsetFm << '\n';
+  std::cout << "FM cutset : " << cutsetFm << std::endl;
   //std::cout << "Kahypar cutset : " << cutsetK << std::endl;
 }
 
@@ -144,7 +143,7 @@ TEST(FMTest, BookPartitionTest) {
 
 TEST(FMTest, GatePartitionTest) {
   auto net = eda::gate::model::makeRand(1024, 256);
-  std::cout<<"NET GENERATED\n";
+  std::cout << "NET GENERATED" << std::endl;
   const std::string pathOut = "test/data/fm/test_gate_out.txt";
 
   testGate(*net.get(), 1000, 0.375, "", pathOut);
@@ -189,4 +188,3 @@ TEST(FMTest, BigPartitionTest) {
 
   testLinked(config, "config_path", out);
 }
-

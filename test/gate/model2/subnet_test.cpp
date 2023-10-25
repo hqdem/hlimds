@@ -7,8 +7,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
+#include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
+#include "kitty/print.hpp"
 
 #include <iostream>
 #include <vector>
@@ -26,7 +28,7 @@ TEST(SubnetTest, SimpleTest) {
 
   size_t idx[InNum];
   for (size_t i = 0; i < InNum; ++i) {
-    idx[i] = subnetBuilder.addCell(IN);
+    idx[i] = subnetBuilder.addCell(IN, SubnetBuilder::INPUT);
   }
 
   for (size_t n = (InNum >> 1); n != 0; n >>= 1) {
@@ -34,14 +36,11 @@ TEST(SubnetTest, SimpleTest) {
       const Link lhs(idx[(i << 1)]);
       const Link rhs(idx[(i << 1) | 1]);
 
-      idx[i] = subnetBuilder.addCell(AND, lhs, rhs);
+      idx[i] = subnetBuilder.addCell(((i & 1) ? AND : OR), lhs, rhs);
     }
   }
 
-  subnetBuilder.addCell(OUT, Link(idx[0]));
-
-  subnetBuilder.setInNum(InNum);
-  subnetBuilder.setOutNum(OutNum);
+  subnetBuilder.addCell(OUT, Link(idx[0]), SubnetBuilder::OUTPUT);
 
   const auto &subnet = Subnet::get(subnetBuilder.make());
   EXPECT_EQ(subnet.getInNum(), InNum);
@@ -49,6 +48,11 @@ TEST(SubnetTest, SimpleTest) {
   EXPECT_EQ(subnet.size(), 1u << (Depth + 1));
 
   std::cout << subnet << std::endl;
+  std::cout << kitty::to_hex(evaluate(subnet)) << std::endl;
+
+  const auto length = subnet.getPathLength();
+  std::cout << "Path lenth: min=" << length.first
+            << ", max="  << length.second << std::endl;
 }
 
 } // namespace eda::gate::model

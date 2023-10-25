@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer/examples.h"
+#include "gate/model/examples.h"
 #include "gate/optimizer/optimizer.h"
 #include "gate/optimizer/optimizer_util.h"
 #include "gate/optimizer/strategy/apply_search_optimizer.h"
@@ -69,11 +69,11 @@ namespace eda::gate::optimizer {
 
     auto net = parseVerilog("c17.v");
 
-    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+    std::cout << "Gates number before rewrite : " << net->nGates() << std::endl;
 
     optimize(net, 6, ExhausitiveSearchOptimizer(), kCutsMax);
 
-    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+    std::cout << "Gates number before rewrite : " << net->nGates() << std::endl;
 
     delete net;
   }
@@ -85,11 +85,11 @@ namespace eda::gate::optimizer {
 
     auto net = parseVerilog("c432.v");
 
-    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+    std::cout << "Gates number before rewrite : " << net->nGates() << std::endl;
 
     optimize(net, 4, ApplySearchOptimizer(), kCutsMax);
 
-    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+    std::cout << "Gates number before rewrite : " << net->nGates() << std::endl;
 
     delete net;
   }
@@ -102,11 +102,11 @@ namespace eda::gate::optimizer {
 
     auto net = parseVerilog("adder.v");
 
-    std::cout << "Gates number before rewrite : " << net->nGates() << '\n';
+    std::cout << "Gates number before rewrite : " << net->nGates() << std::endl;
 
     optimize(net, 4, ApplySearchOptimizer());
 
-    std::cout << "Gates number after rewrite : " << net->nGates() << '\n';
+    std::cout << "Gates number after rewrite : " << net->nGates() << std::endl;
 
     delete net;
   }*/

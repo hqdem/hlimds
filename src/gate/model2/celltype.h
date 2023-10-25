@@ -104,11 +104,14 @@ static_assert(sizeof(CellProperties) == 2);
 //===----------------------------------------------------------------------===//
 // Cell Type
 //===----------------------------------------------------------------------===//
+class Net;
 
 class CellType final : public Object<CellType, CellTypeID> {
   friend class Storage<CellType>;
 
 public:
+  static constexpr uint16_t AnyArity = 0xffff;
+
   std::string getName() const { return String::get(nameID); }
 
   CellSymbol getSymbol() const { return symbol; }
@@ -121,6 +124,11 @@ public:
 
   uint16_t getInNum()  const { return nIn;  }
   uint16_t getOutNum() const { return nOut; }
+
+  bool isAnyArity() const { return nIn == AnyArity; }
+
+  bool isNet() const { return netID != OBJ_NULL_ID; }
+  const Net &getNet() const;
 
 private:
   CellType(const std::string &name,

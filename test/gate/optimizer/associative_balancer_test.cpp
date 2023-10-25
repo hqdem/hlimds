@@ -9,8 +9,8 @@
 //#define CHECKEQUAL
 
 #include "gate/debugger/bdd_checker.h"
+#include "gate/model/examples.h"
 #include "gate/model/utils.h"
-#include "gate/optimizer/examples.h"
 #include "gate/optimizer/optimizer_util.h"
 #include "gate/optimizer/strategy/associative_balancer.h"
 #include "gate/parser/parser_test.h"

@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/celltype.h"
+#include "gate/model2/net.h"
 
 #define CELL_TYPE_ID(symbol)  CELL_TYPE_ID_##symbol
 #define CELL_TYPE_SID(symbol) CELL_TYPE_SID_##symbol
@@ -38,5 +39,9 @@ CELL_TYPE("maj",   MAJ,   1,0,0,1,0,  0xffff, 1);
 CELL_TYPE("latch", LATCH, 0,0,0,0,0,  3,      1);
 CELL_TYPE("dff",   DFF,   0,0,0,0,0,  3,      1);
 CELL_TYPE("dffrs", DFFrs, 0,0,0,0,0,  5,      1);
+
+const Net &CellType::getNet() const {
+  return Net::get(netID);
+}
 
 } // namespace eda::gate::model

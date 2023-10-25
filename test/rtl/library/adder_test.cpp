@@ -67,11 +67,11 @@ bool adderTest(FuncSymbol func, const size_t size) {
   for (int n = size - 1; n >= 0; n--) {
     std::cout << input[n];
   }
-  std::cout << "\n + \n";
+  std::cout << std::endl << " + " << std::endl;
   for (size_t n = size + size - 1; n >= term1.size(); n--) {
     std::cout << input[n];
   }
-  std::cout << "\n = " << std::endl;
+  std::cout << std::endl << " = " << std::endl;
   for(int n = outputs.size() - 1; n >= 0; n--) {
     std::cout << output[n];
   }

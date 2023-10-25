@@ -6,17 +6,48 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer/resynthesis/unitized_table.h"
+#include "gate/optimizer2/resynthesis/unitized_table.h"
 
-namespace eda::gate::optimizer::resynthesis {
+namespace eda::gate::optimizer2::resynthesis {
 
 //===----------------------------------------------------------------------===//
 // Constructors/Destructors
 //===----------------------------------------------------------------------===//
 
-UnitizedTable::UnitizedTable(const TruthTable &func, const TruthTable &care):
-                             nMajGates(0) {
+UnitizedTable::UnitizedTable(const TruthTable &func, const TruthTable &care) {
+  initialize(func, care);
+}
 
+//===----------------------------------------------------------------------===//
+// Properties
+//===----------------------------------------------------------------------===//
+
+bool UnitizedTable::areInverse(unsigned c1, unsigned c2) const {
+  unsigned id1 = columns[c1].first;
+  unsigned id2 = columns[c2].first;
+
+  if (((id1 == 62) && (id2 == 63)) || ((id1 == 63) && (id2 == 62))) {
+    return true;
+  }
+  if ((id1 > 30) && (id1 < 62) && (id1 - 31 == id2)) {
+    return true;
+  }
+  if ((id2 > 30) && (id2 < 62) && (id2 - 31 == id1)) {
+    return true;
+  }
+  for (uint32_t i = 0; i < table.size(); i++) {
+    if (getBit(i, c1) == getBit(i, c2)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+//===----------------------------------------------------------------------===//
+// Modification Methods
+//===----------------------------------------------------------------------===//
+
+void UnitizedTable::initialize(const TruthTable &func, const TruthTable &care) {
   uint32_t funcNumVars = func.num_vars();
   uint32_t careNumVars = care.num_vars();
 
@@ -78,35 +109,6 @@ UnitizedTable::UnitizedTable(const TruthTable &func, const TruthTable &care):
 
   reduce();
 }
-
-//===----------------------------------------------------------------------===//
-// Properties
-//===----------------------------------------------------------------------===//
-
-bool UnitizedTable::areInverse(unsigned c1, unsigned c2) const {
-  unsigned id1 = columns[c1].first;
-  unsigned id2 = columns[c2].first;
-
-  if (((id1 == 62) && (id2 == 63)) || ((id1 == 63) && (id2 == 62))) {
-    return true;
-  }
-  if ((id1 > 30) && (id1 < 62) && (id1 - 31 == id2)) {
-    return true;
-  }
-  if ((id2 > 30) && (id2 < 62) && (id2 - 31 == id1)) {
-    return true;
-  }
-  for (uint32_t i = 0; i < table.size(); i++) {
-    if (getBit(i, c1) == getBit(i, c2)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-//===----------------------------------------------------------------------===//
-// Modification Methods
-//===----------------------------------------------------------------------===//
 
 void UnitizedTable::addMajColumn(std::set<unsigned> args) {
   assert(columns.size() < 64 && "An overflow of the columns!");
@@ -350,7 +352,7 @@ std::ostream& operator <<(std::ostream &out, const UnitizedTable &t) {
     --j;
     out << t.idColumn(j) << " ";
   } while (j);
-  out << "\n";
+  out << std::endl;
   // rows (sets of bits)
   for (uint32_t i = 0; i < t.nRows(); i++) {
     size_t j = t.nColumns();
@@ -364,9 +366,9 @@ std::ostream& operator <<(std::ostream &out, const UnitizedTable &t) {
         id /=10;
       }
     } while (j);
-    out << "\n";
+    out << std::endl;
   }
   return out;
 }
 
-}; // namespace eda::gate::optimizer::resynthesis
+} // namespace eda::gate::optimizer2::resynthesis

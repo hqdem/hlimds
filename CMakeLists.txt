@@ -8,6 +8,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 
 set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
 set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt

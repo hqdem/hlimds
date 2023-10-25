@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/optimizer/rwdatabase.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 
 namespace eda::gate::tech_optimizer {
   using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;

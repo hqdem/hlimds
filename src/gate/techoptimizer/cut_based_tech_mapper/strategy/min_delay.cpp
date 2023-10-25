@@ -5,7 +5,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/min_delay.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/min_delay.h"
 
  namespace eda::gate::tech_optimizer {
  

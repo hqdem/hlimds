@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/tech_optimizer/library/cell.h"
+#include "gate/techoptimizer/library/cell.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/visitor.h"
 

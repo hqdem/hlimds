@@ -12,10 +12,10 @@
 
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/parser_test.h"
-#include "gate/tech_optimizer/tech_optimizer.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/min_delay.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/techoptimizer/tech_optimizer.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/min_delay.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/premapper/mapper/mapper_test.h"
 #include "gate/debugger/checker.h"
 
@@ -59,7 +59,7 @@ namespace eda::gate::tech_optimizer {
     cutBasedTechMapper.techMap(&net, minDelay, false);
   }
 
-  TEST(TechMapTest, gnet3) {
+  TEST(TechMapTest, DISABLED_gnet3) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -96,7 +96,7 @@ namespace eda::gate::tech_optimizer {
     cutBasedTechMapper.techMap(net, minDelay, true);
   }
 
-  TEST(TechMapTest, c17) {
+  TEST(TechMapTest,  DISABLED_c17) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }

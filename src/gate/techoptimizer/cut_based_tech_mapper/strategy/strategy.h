@@ -9,7 +9,7 @@
 
 #include "gate/model/gnet.h"
 #include "gate/optimizer/rwdatabase.h"
- #include "gate/tech_optimizer/cut_based_tech_mapper/replacement_struct.h"
+ #include "gate/techoptimizer/cut_based_tech_mapper/replacement_struct.h"
 
 /**
  * \brief Interface to handle node and its cuts.

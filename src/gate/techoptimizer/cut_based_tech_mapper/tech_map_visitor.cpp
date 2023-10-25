@@ -5,7 +5,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/tech_optimizer/cut_based_tech_mapper/tech_map_visitor.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/tech_map_visitor.h"
 #include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/optimizer_visitor.h"
 

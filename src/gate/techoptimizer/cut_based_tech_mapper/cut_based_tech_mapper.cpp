@@ -12,9 +12,9 @@
 #include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/optimizer.h"
 #include "gate/premapper/aigmapper.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/tech_map_visitor.h"
-#include "gate/tech_optimizer/library/cell.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/tech_map_visitor.h"
+#include "gate/techoptimizer/library/cell.h"
 
 namespace eda::gate::tech_optimizer {
 
@@ -39,7 +39,7 @@ namespace eda::gate::tech_optimizer {
 
   GNet *CutBasedTechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
     try {
-      //if (aig) {aigMap(net);}
+      if (aig) {aigMap(net);}
 
       CutStorage cutStorage;
       findCuts(net, cutStorage);
@@ -112,7 +112,6 @@ namespace eda::gate::tech_optimizer {
 
     for (const auto &outGateID: targets) {
       for (const auto &preOutGateID: Gate::get(outGateID)->inputs()) {
-        std::cout << "добавляем корень" << preOutGateID.node() << std::endl;
         stack.push(&bestSubstitutions.at(preOutGateID.node()));
         visited.insert(&bestSubstitutions.at(preOutGateID.node()));
       }
@@ -134,15 +133,12 @@ namespace eda::gate::tech_optimizer {
         bool readyForCreate = true;
 
         for (auto& [input, secondParam] : current->map) {
-          std::cout << secondParam << std::endl;
           if (!bestSubstitutions.at(secondParam).used) {
-            std::cout << "этот не создался: " << secondParam << std::endl;
             readyForCreate = false;
           }
         }
 
         if (readyForCreate) {
-          std::cout << "создаем ячейку" << std::endl;
           current->used = true;
           model::Cell::LinkList linkList;
           for (auto& [input, secondParam] : current->map) {
@@ -153,16 +149,12 @@ namespace eda::gate::tech_optimizer {
           netBuilder.addCell(cellID);
           current->cellID = cellID;
           stack.pop();
-        } else {
-          std::cout << "мы не создали входов для этого элемента" << std::endl;
         }
       }
 
 
       for (const auto& [input, secondParam] : current->map) {
-        std::cout << "пытаемся добавляем потомка: " << secondParam << std::endl;
         if (visited.find(&bestSubstitutions.at(secondParam)) == visited.end()) {
-          std::cout << "добавляем потомка: " << secondParam << std::endl;
           stack.push(&bestSubstitutions.at(secondParam));
           visited.insert(&bestSubstitutions.at(secondParam));
         }
@@ -186,14 +178,6 @@ namespace eda::gate::tech_optimizer {
 
     // Close the stream
     outFile.close();
-  }
-  
-
-
-  std::vector<Gate::Id> CutBasedTechMapper::getOutputs(GNet *net) {
-    //TODO create
-    std::vector<Gate::Id> outputs;
-    return outputs;
   }
 
   float CutBasedTechMapper::getArea() const{

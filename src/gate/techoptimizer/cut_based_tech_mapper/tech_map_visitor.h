@@ -12,8 +12,8 @@
 #include "gate/optimizer/cuts_finder_visitor.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/util.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/replacement_struct.h"
-#include "gate/tech_optimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/replacement_struct.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 
 #include <queue>
 

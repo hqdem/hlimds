@@ -10,8 +10,6 @@
 
 #include "gate/model/gnet.h"
 
-//#include "gate/tech_mapper/tech_mapper.h"
-
 namespace eda::gate::tech_optimizer {
   using GNet = eda::gate::model::GNet;
 

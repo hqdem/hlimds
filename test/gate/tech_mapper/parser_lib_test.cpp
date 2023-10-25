@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 #include "kitty/kitty.hpp"
 
-#include "gate/tech_optimizer/library/cell.h"
+#include "gate/techoptimizer/library/cell.h"
 #include "gate/model/gnet_test.h"
 #include "gate/optimizer/rwdatabase.h"
 

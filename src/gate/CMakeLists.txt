@@ -62,6 +62,7 @@ add_library(Gate OBJECT
   printer/gate_verilog.cpp
   printer/graphml.cpp
   simulator/simulator.cpp
+  simulator2/simulator.cpp
   tech_mapper/library/cell.cpp
   tech_mapper/strategy/min_delay.cpp
   tech_mapper/tech_map.cpp

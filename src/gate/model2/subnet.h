@@ -94,6 +94,7 @@ public:
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
+    CellSymbol getSymbol() const { return getType().getSymbol(); }
     
     /// Cell SID or CellID::NullSID (not connected w/ a design).
     uint64_t cell : CellID::Bits;
@@ -157,7 +158,29 @@ public:
     const auto k = j - Cell::InPlaceLinks;
     const auto n = Cell::InEntryLinks;
 
-    return cells[i + i + (k / n)].link[k % n];
+    return cells[i + 1 + (k / n)].link[k % n];
+  }
+
+  /// Returns the links of the i-th cell.
+  LinkList getLinks(size_t i) const {
+    const auto cells = getEntries();
+    const auto &cell = cells[i].cell;
+
+    LinkList links(cell.arity);
+
+    size_t j = 0;
+    for (; j < cell.arity && j < Cell::InPlaceLinks; ++j) {
+      links[j] = cell.link[j];
+    }
+
+    for (; j < cell.arity; ++j) {
+      const auto k = j - Cell::InPlaceLinks;
+      const auto n = Cell::InEntryLinks;
+
+      links[j] = cells[i + 1 + (k / n)].link[k % n];
+    }
+
+    return links;
   }
 
 private:

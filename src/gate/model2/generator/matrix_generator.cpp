@@ -10,14 +10,14 @@
 
 namespace eda::gate::model {
 
-MatrixGenerator::MatrixGenerator(const int nCells, const int nIn,
-                                 const int nOut,
+MatrixGenerator::MatrixGenerator(const std::size_t nCells,
+                                 const std::size_t nIn, const std::size_t nOut,
                                  const std::vector<CellSymbol> &netBase,
                                  const unsigned seed):
   Generator(nIn, nOut, netBase, seed), matrixNCells(nCells + nIn) {};
 
-MatrixGenerator::MatrixGenerator(const int nCells, const int nIn,
-                                 const int nOut,
+MatrixGenerator::MatrixGenerator(const std::size_t nCells,
+                                 const std::size_t nIn, const std::size_t nOut,
                                  const std::vector<CellTypeID> &netBase,
                                  const unsigned seed):
   Generator(nIn, nOut, netBase, seed), matrixNCells(nCells + nIn) {};
@@ -26,20 +26,21 @@ std::string MatrixGenerator::getName() const {
   return "MatrixGenerator";
 }
 
-void MatrixGenerator::setPrimIns(std::unordered_set<int> &inputs) {
-  while ((int)inputs.size() != nIn) {
+void MatrixGenerator::setPrimIns(std::unordered_set<std::size_t> &inputs) {
+  while (inputs.size() != nIn) {
     inputs.insert(matrixNCells - inputs.size() - 1);
   }
 }
 
-bool MatrixGenerator::canMakeDrain(Matrix &m, const int columnN,
+bool MatrixGenerator::canMakeDrain(Matrix &m, const std::size_t columnN,
                                    CellToNIn &cellNIn) {
 
-  for (int i = 0; i < matrixNCells; ++i) {
+  for (std::size_t i = 0; i < matrixNCells; ++i) {
     const bool curRowHasIn = (*m)[i][columnN];
     const bool noLessInNOps = nInCellTIDs.find(cellNIn[i] - 1) ==
                               nInCellTIDs.end();
-    const bool noAnyNInOps = nInCellTIDs.find(CellType::AnyArity) == nInCellTIDs.end();
+    const bool noAnyNInOps = nInCellTIDs.find(CellType::AnyArity) ==
+                             nInCellTIDs.end();
     if (curRowHasIn && (noLessInNOps && (cellNIn[i] < 3 || noAnyNInOps))) {
       return false;
     }
@@ -47,29 +48,30 @@ bool MatrixGenerator::canMakeDrain(Matrix &m, const int columnN,
   return true;
 }
 
-void MatrixGenerator::setPrimOuts(Matrix &m, std::vector<int> &outputs,
+void MatrixGenerator::setPrimOuts(Matrix &m, std::vector<std::size_t> &outputs,
                                   CellToNIn &cellNIn,
-                                  std::map<int, CellTypeID> &cellIndCellTID) {
+                                  CellIdxToCellType &cellIdxCellTID) {
 
   outputs.push_back(0);
-  for (int k = 0; k < nOut - 1; ++k) {
+  for (std::size_t k = 0; k < nOut - 1; ++k) {
     if (!(std::rand() % 2)) {
       continue;
     }
     assert(matrixNCells != 0);
-    int j = std::rand() % matrixNCells;
+    std::size_t j = std::rand() % matrixNCells;
 
     if (!canMakeDrain(m, j, cellNIn)) {
       continue;
     }
-    for (int i = 0; i < matrixNCells; ++i) {
+    for (std::size_t i = 0; i < matrixNCells; ++i) {
       if ((*m)[i][j]) {
         if (nInCellTIDs.find(cellNIn[i] - 1) != nInCellTIDs.end()) {
-          int opN = std::rand() % nInCellTIDs[cellNIn[i] - 1].size();
-          cellIndCellTID[i] = nInCellTIDs[cellNIn[i] - 1][opN];
+          std::size_t opN = std::rand() % nInCellTIDs[cellNIn[i] - 1].size();
+          cellIdxCellTID[i] = nInCellTIDs[cellNIn[i] - 1][opN];
         } else {
-          int opN = std::rand() % nInCellTIDs[CellType::AnyArity].size();
-          cellIndCellTID[i] = nInCellTIDs[CellType::AnyArity][opN];
+          std::size_t opN = std::rand() %
+            nInCellTIDs[CellType::AnyArity].size();
+          cellIdxCellTID[i] = nInCellTIDs[CellType::AnyArity][opN];
         }
         cellNIn[i]--;
       }
@@ -78,18 +80,18 @@ void MatrixGenerator::setPrimOuts(Matrix &m, std::vector<int> &outputs,
     outputs.push_back(j);
   }
 
-  while (nOut > (int)outputs.size()) {
+  while (nOut > outputs.size()) {
     assert(matrixNCells != 0);
     outputs.push_back(std::rand() % matrixNCells);
   }
 }
 
 bool MatrixGenerator::setCellsOuts(Matrix &m, CellToNIn &cellNIn) {
-  for (int j = 1; j < matrixNCells; ++j) {
-    int availRowsN = std::min(j, matrixNCells - nIn);
-    std::unordered_set<int> unavailRows;
+  for (std::size_t j = 1; j < matrixNCells; ++j) {
+    std::size_t availRowsN = std::min(j, matrixNCells - nIn);
+    std::unordered_set<std::size_t> unavailRows;
     assert(availRowsN != 0);
-    int i;
+    std::size_t i;
     do {
       i = std::rand() % availRowsN;
       if (!canAddIn(cellNIn[i], matrixNCells - i - 1)) {
@@ -97,8 +99,8 @@ bool MatrixGenerator::setCellsOuts(Matrix &m, CellToNIn &cellNIn) {
       } else {
         break;
       }
-    } while ((int)unavailRows.size() != availRowsN);
-    if ((int)unavailRows.size() == availRowsN) {
+    } while (unavailRows.size() != availRowsN);
+    if (unavailRows.size() == availRowsN) {
       return false;
     }
 
@@ -109,12 +111,12 @@ bool MatrixGenerator::setCellsOuts(Matrix &m, CellToNIn &cellNIn) {
   return true;
 }
 
-void MatrixGenerator::addInsForCell(const int rowN, Matrix &m,
+void MatrixGenerator::addInsForCell(const std::size_t rowN, Matrix &m,
                                     CellToNIn &cellNIn,
-                                    std::map<int, CellTypeID> &cellIndCellTID) {
+                                    CellIdxToCellType &cellIdxCellTID) {
 
-  int neededCurNIn;
-  const CellType *cellT = &CellType::get(cellIndCellTID[rowN]);
+  uint16_t neededCurNIn;
+  const CellType *cellT = &CellType::get(cellIdxCellTID[rowN]);
   if (cellT->isAnyArity()) {
     const uint16_t lowerBound = std::max((uint16_t)2,
                                          std::max(cellNIn[rowN], faninLow));
@@ -130,7 +132,7 @@ void MatrixGenerator::addInsForCell(const int rowN, Matrix &m,
   while (cellNIn[rowN] < neededCurNIn) {
 
     assert((matrixNCells - rowN - 1) != 0);
-    int j = std::rand() % (matrixNCells - rowN - 1) + rowN + 1;
+    std::size_t j = std::rand() % (matrixNCells - rowN - 1) + rowN + 1;
     if (!(*m)[rowN][j]) {
       (*m)[rowN][j] = true;
       cellNIn[rowN] += (*m)[rowN][j] ? 1 : 0;
@@ -138,57 +140,58 @@ void MatrixGenerator::addInsForCell(const int rowN, Matrix &m,
   }
 }
 
-bool MatrixGenerator::setOp(const int i, CellToNIn &cellNIn,
-                            std::map<int, CellTypeID> &cellIndCellTID) {
+bool MatrixGenerator::setOp(const std::size_t i, CellToNIn &cellNIn,
+                            CellIdxToCellType &cellIdxCellTID) {
 
   CellTypeID cellTID = chooseCellType(cellNIn[i], matrixNCells - i - 1);
   if (cellTID == OBJ_NULL_ID) {
     return false;
   }
-  cellIndCellTID[i] = cellTID;
+  cellIdxCellTID[i] = cellTID;
 
   return true;
 }
 
 bool MatrixGenerator::setOps(Matrix &m, CellToNIn &cellNIn,
-                             std::map<int, CellTypeID> &cellIndCellTID) {
+                             CellIdxToCellType &cellIdxCellTID) {
 
   if (!setCellsOuts(m, cellNIn)) {
     return false;
   }
-  for (int i = 0; i < matrixNCells - nIn; ++i) {
-    if (!setOp(i, cellNIn, cellIndCellTID)) {
+  for (std::size_t i = 0; i < matrixNCells - nIn; ++i) {
+    if (!setOp(i, cellNIn, cellIdxCellTID)) {
       return false;
     }
-    addInsForCell(i, m, cellNIn, cellIndCellTID);
+    addInsForCell(i, m, cellNIn, cellIdxCellTID);
   }
 
   return true;
 }
 
-auto MatrixGenerator::genM(std::unordered_set<int> &inputs,
-                           std::vector<int> &outputs, CellToNIn &cellNIn,
-                           std::map<int, CellTypeID> &cellIndCellTID) ->
+auto MatrixGenerator::genM(std::unordered_set<std::size_t> &inputs,
+                           std::vector<std::size_t> &outputs,
+                           CellToNIn &cellNIn,
+                           CellIdxToCellType &cellIdxCellTID) ->
   MatrixGenerator::Matrix {
 
   auto m(std::make_unique<std::vector<std::vector<char>>>(matrixNCells,
          std::vector<char>(matrixNCells, false)));
 
   setPrimIns(inputs);
-  if (!setOps(m, cellNIn, cellIndCellTID)) {
+  if (!setOps(m, cellNIn, cellIdxCellTID)) {
     return nullptr;
   }
-  setPrimOuts(m, outputs, cellNIn, cellIndCellTID);
+  setPrimOuts(m, outputs, cellNIn, cellIdxCellTID);
 
   return m;
 }
 
 NetID MatrixGenerator::generateValid() {
-  std::map<int, CellTypeID> cellIndCellTID;
-  std::unordered_set<int> inputs;
-  std::vector<int> outputs;
+  CellIdxToCellType cellIdxCellTID;
+  std::unordered_set<std::size_t> inputs;
+  std::vector<std::size_t> outputs;
   CellToNIn cellNIn;
-  Matrix m = genM(inputs, outputs, cellNIn, cellIndCellTID);
+  Matrix m = genM(inputs, outputs, cellNIn, cellIdxCellTID);
 
   if (m == nullptr) {
     return genEmptyNet();
@@ -196,7 +199,7 @@ NetID MatrixGenerator::generateValid() {
 
   NetBuilder netBuilder;
 
-  std::unordered_map<int, CellID> mp;
+  std::unordered_map<std::size_t, CellID> mp;
 
   for (const auto &input : inputs) {
     auto cellID = makeCell(IN);
@@ -204,10 +207,10 @@ NetID MatrixGenerator::generateValid() {
     netBuilder.addCell(cellID);
   }
 
-  for (auto it = cellIndCellTID.rbegin(); it != cellIndCellTID.rend(); ++it) {
-    int curCellN = it->first;
+  for (auto it = cellIdxCellTID.rbegin(); it != cellIdxCellTID.rend(); ++it) {
+    std::size_t curCellN = it->first;
     Cell::LinkList inputs;
-    for (int j = (*m).size() - 1; j >= 0; --j) {
+    for (long long j = (long long)(*m).size() - 1; j >= 0; --j) {
       if ((*m)[curCellN][j]) {
         inputs.push_back(LinkEnd((mp[j])));
       }

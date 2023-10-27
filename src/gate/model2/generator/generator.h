@@ -17,7 +17,7 @@
 
 namespace eda::gate::model {
 
-using CellToNIn = std::unordered_map<int, uint16_t>;
+using CellToNIn = std::unordered_map<std::size_t, uint16_t>;
 
 /**
  * @brief Base nets generator class.
@@ -40,6 +40,11 @@ public:
   void setSeed(const unsigned seed);
   void setHierarchical(const bool hierarchical);
 
+  /**
+   * @brief Sets upper bound of nesting depth.
+   */
+  void setNestingMax(const std::size_t nestMax);
+
   unsigned getSeed() const;
   virtual std::string getName() const = 0;
 
@@ -57,10 +62,10 @@ protected:
   Generator &operator=(Generator &&other) = default;
   virtual ~Generator() = default;
 
-  Generator(const int nIn, const int nOut,
+  Generator(const std::size_t nIn, const std::size_t nOut,
             const std::vector<CellSymbol> &netBase, const unsigned seed);
 
-  Generator(const int nIn, const int nOut,
+  Generator(const std::size_t nIn, const std::size_t nOut,
             const std::vector<CellTypeID> &netBase, const unsigned seed);
 
   /**
@@ -77,34 +82,37 @@ protected:
    * @param nSourceCells The number of cells that can be
    * linked to considering one.
    */
-  bool canAddIn(const uint16_t cellNIn, const int nSourceCells) const;
+  bool canAddIn(const uint16_t cellNIn, const std::size_t nSourceCells) const;
 
   /**
    * @brief Chooses operation from the generator basis relying to cell inputs
    * number and available to connect cells number.
    */
-  CellTypeID chooseCellType(const uint16_t cellNIn, const int nSourceCells);
+  CellTypeID chooseCellType(const uint16_t cellNIn,
+                            const std::size_t nSourceCells);
   NetID genEmptyNet() const;
 
 private:
-  Generator(const int nIn, const int nOut, const unsigned seed);
+  Generator(const std::size_t nIn, const std::size_t nOut, const unsigned seed);
 
   bool isOperation(const CellTypeID cellTID) const;
 
   bool primInsOutsNotEmpty() const;
 
   ///  Checks if passed val is inside [low, high]
-  bool isBounded(const uint16_t val, const int low, const int high) const;
+  bool isBounded(const uint16_t val, const uint16_t low,
+                 const uint16_t high) const;
 
   bool canCreateNetCell() const;
 
   CellTypeID createNetCell();
 
 protected:
-  int nIn, nOut;
+  std::size_t nIn, nOut;
   unsigned seed;
   uint16_t faninLow, faninHigh;
   bool hierarchical;
+  std::size_t nestingDepth;
   std::vector<CellTypeID> netBase;
 
   std::map<uint16_t, std::vector<CellTypeID>> nInCellTIDs;

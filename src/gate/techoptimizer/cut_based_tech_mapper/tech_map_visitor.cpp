@@ -5,14 +5,13 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/tech_mapper/tech_map_visitor.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/tech_map_visitor.h"
 #include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/optimizer_visitor.h"
 
 #include <float.h>
 
-
-namespace eda::gate::techMap {
+namespace eda::gate::tech_optimizer {
 
   using GNet = eda::gate::model::GNet;
   using Gate = eda::gate::model::Gate;
@@ -31,14 +30,16 @@ namespace eda::gate::techMap {
 
   void SearchOptReplacement::set(CutStorage *cutStorage,
       GNet *net, 
-      std::unordered_map<GateID, Replacement> *bestReplacement,
-      int cutSize, RWDatabase &rwdb, Strategy *strategy) {
+      std::unordered_map<GateID, Replacement> *bestSubstitutions,
+      int cutSize, RWDatabase &rwdb, Strategy *strategy,
+      std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
     this->cutStorage = cutStorage;
     this->net = net;
     this->cutSize = cutSize;
-    this->bestReplacement = bestReplacement;
+    this->bestSubstitutions = bestSubstitutions;
     this->rwdb = rwdb;
     this->strategy = strategy;
+    this->cellTypeMap = cellTypeMap;
   }
 
   VisitorFlags SearchOptReplacement::onNodeBegin(const GateID &node) {
@@ -94,7 +95,7 @@ namespace eda::gate::techMap {
         }
         
         if (strategy->checkOpt(superGate, map, minNodeArrivalTime,
-            bestReplacement)) {
+            bestSubstitutions)) {
           saveReplace = true;
           return considerTechMap(superGate, map);
         }
@@ -137,13 +138,14 @@ namespace eda::gate::techMap {
 
   void SearchOptReplacement::saveBestReplacement() {
     if (saveReplace) {
-      NetSubstitute netSubstitute = NetSubstitute(
-            lastNode, &bestOptionMap, bestOption.net.get(), net);
 
-      Replacement bestReplacment{lastNode, netSubstitute, minNodeArrivalTime, 
-          bestOption.name, bestOption.area};
-      bestReplacement->insert(std::pair<GateID, Replacement>
-                              (lastNode, bestReplacment));
+      Replacement bestReplacment{lastNode, cellTypeMap.at(bestOption.name),
+          bestOptionMap, bestOption.name,
+          minNodeArrivalTime, bestOption.area};
+
+      bestSubstitutions->insert(std::pair<GateID, Replacement>
+          (lastNode, bestReplacment));
+      
     } 
   }
 
@@ -163,8 +165,8 @@ namespace eda::gate::techMap {
     for (const auto &[inputId, gateId] : map) {
       double delay = 0;
 
-      if (bestReplacement->count(gateId)) {
-        delay = bestReplacement->at(gateId).delay;
+      if (bestSubstitutions->count(gateId)) {
+        delay = bestSubstitutions->at(gateId).delay;
       }
       delay = delay + superGate.inputDelays.at(revGareBindings.at(inputId));
       
@@ -188,4 +190,4 @@ namespace eda::gate::techMap {
     return true;
   }
 
-} // namespace eda::gate::techMap
+} // namespace eda::gate::tech_optimizer

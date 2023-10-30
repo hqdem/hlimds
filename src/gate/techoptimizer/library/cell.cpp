@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/tech_mapper/library/cell.h"
+#include "gate/techoptimizer/library/cell.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/visitor.h"
 
@@ -18,7 +18,7 @@
 
 using json = nlohmann::json;
 
-namespace eda::gate::techMap {
+namespace eda::gate::tech_optimizer {
 
 using RWDatabase = eda::gate::optimizer::RWDatabase;
 using Gate = eda::gate::model::Gate;
@@ -48,24 +48,23 @@ double Pin::getMaxDelay() const {
 //===----------------------------------------------------------------------===//
 
 Cell::Cell(const std::string &name, const std::vector<Pin> &inputPins,
-          kitty::dynamic_truth_table *truthTable, double area)
-  : name(name), inputPins(inputPins), truthTable(truthTable), area(area) {}
+          kitty::dynamic_truth_table *truthTable, const std::string &realName, 
+          double area)
+  : name(name), inputPins(inputPins), truthTable(truthTable),
+      realName(realName), area(area) {}
+
+Cell::Cell(const std::string &name, const std::vector<Pin> &inputPins,
+          kitty::dynamic_truth_table *truthTable, const std::string &realName)
+  : name(name), inputPins(inputPins), truthTable(truthTable),
+      realName(realName), area(0.0) {}
 
 Cell::Cell(kitty::dynamic_truth_table *truthTable) :
   name(""), inputPins({}), truthTable(truthTable) {}
 
-const std::string &Cell::getName() const {
-  return name;
-}
-double Cell::getArea() const {
-    return area;
-}
-kitty::dynamic_truth_table *Cell::getTruthTable() const {
-    return truthTable;
-}
-unsigned Cell::getInputPinsNumber() const {
-    return inputPins.size();
-}
+const std::string &Cell::getName() const {return name;}
+double Cell::getArea() const {return area;}
+kitty::dynamic_truth_table *Cell::getTruthTable() const {return truthTable;}
+unsigned Cell::getInputPinsNumber() const {return inputPins.size();}
 const Pin &Cell::getInputPin(uint inputPinNumber) const {
     assert(inputPinNumber < inputPins.size());
     return inputPins[inputPinNumber];
@@ -75,14 +74,14 @@ const Pin &Cell::getInputPin(uint inputPinNumber) const {
 // LibraryCells
 //===----------------------------------------------------------------------===//
 
-LibraryCells::LibraryCells(const std::string& filename) {
+LibraryCells::LibraryCells(const std::string &filename) {
   readLibertyFile(filename);
 }
 
 void LibraryCells::readLibertyFile(const std::string &filename) {
 
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path PythonScriptPath = homePath / "src" / "gate" / "tech_mapper" / "library" / "libertyToJson.py";
+  const std::filesystem::path PythonScriptPath = homePath / "src" / "gate" / "techoptimizer" / "library" / "libertyToJson.py";
   const std::filesystem::path outputPath = homePath / "test" / "data" / "gate" / "tech_mapper" / "liberty.json";
 
   std::string CallPythonParser = "python3 " + PythonScriptPath.string() + ' ' + filename  + ' ' + outputPath.string();
@@ -126,13 +125,15 @@ void LibraryCells::readLibertyFile(const std::string &filename) {
         new kitty::dynamic_truth_table(inputPinNames.size());
       kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
 
-      Cell *cell = new Cell(it.key() + std::to_string(i), pins, truthTable, it.value()["area"]);
+      Cell *cell = new Cell(it.key() + std::to_string(i), 
+          pins, truthTable, it.key() + std::string(""), it.value()["area"]);
       cells.push_back(cell);
     } while(next_permutation(inputPinNames.begin(), inputPinNames.end()));
   }
 }
 
-void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb) {
+void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
+    std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
   for(auto& cell : cells) {
     uint64_t truthTable = 0;
 
@@ -195,6 +196,15 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb) {
       list.push_back(bg);
       arwdb->set(TT, list);
     }
+
+    eda::gate::model::CellProperties props{0, 0, 0, 0, 0};
+    CellTypeID cellID = eda::gate::model::makeCellType(
+        cell->getName(), eda::gate::model::CellSymbol::CELL,
+        props, static_cast<uint16_t>(cell->getInputPinsNumber()), 
+        static_cast<uint16_t>(1));
+    cellTypeMap.insert(std::pair<std::string, CellTypeID>
+          (cell->getName(), cellID));
   }
+
 }
-} // namespace eda::gate::techMap
+} // namespace eda::gate::tech_optimizer

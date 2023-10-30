@@ -62,11 +62,12 @@ add_library(Gate OBJECT
   printer/gate_verilog.cpp
   printer/graphml.cpp
   simulator/simulator.cpp
+  techoptimizer/library/cell.cpp
+  techoptimizer/cut_based_tech_mapper/strategy/min_delay.cpp
+  techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.cpp
+  techoptimizer/cut_based_tech_mapper/tech_map_visitor.cpp
+  techoptimizer/tech_optimizer.cpp
   simulator2/simulator.cpp
-  tech_mapper/library/cell.cpp
-  tech_mapper/strategy/min_delay.cpp
-  tech_mapper/tech_map.cpp
-  tech_mapper/tech_map_visitor.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)
 add_library(Utopia::Gate ALIAS Gate)

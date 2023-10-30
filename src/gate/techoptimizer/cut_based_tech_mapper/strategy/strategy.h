@@ -9,13 +9,13 @@
 
 #include "gate/model/gnet.h"
 #include "gate/optimizer/rwdatabase.h"
- #include "gate/tech_mapper/replacement_struct.h"
+ #include "gate/techoptimizer/cut_based_tech_mapper/replacement_struct.h"
 
 /**
  * \brief Interface to handle node and its cuts.
  * \author <a href="mailto:dGaryaev@ispras.ru">Daniil Gariaev</a>
  */
-namespace eda::gate::techMap {
+namespace eda::gate::tech_optimizer {
   using GateID = eda::gate::model::Gate::Id;
   class Strategy {
   public:
@@ -24,4 +24,4 @@ namespace eda::gate::techMap {
         const eda::gate::model::GNet::GateIdMap &, double &,
         std::unordered_map<GateID, Replacement> *) = 0;
   };
-} // namespace eda::gate::techMap
+} // namespace eda::gate::tech_optimizer

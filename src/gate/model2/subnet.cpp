@@ -49,7 +49,11 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
     const auto &cell = cells[i].cell;
     const auto &type = cell.getType();
 
-    out << i << " <= " << type.getName() << "(";
+    out << i << " <= " << type.getName();
+    if (cell.in) {
+      out << (cell.dummy ? "[dummy]" : "[input]");
+    }
+    out << "(";
 
     bool comma = false;
     for (size_t j = 0; j < cell.arity; ++j) {

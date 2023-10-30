@@ -109,7 +109,8 @@ private:
 
   /// Adds a majority gate.
   void addMajGate(UnitizedTable &table, SubBuild &subBuild,
-                  const Arguments &gate, uint32_t nVariables, ConstantId &cid);
+                  const Arguments &gate, uint32_t nVariables,
+                  ConstantId &cid, std::set<unsigned> &dummy);
 
   /// Finds the best set of arguments for a majority gate.
   Candidate findBestGate(UnitizedTable &table, ElimOnesInfo &onesInfo);

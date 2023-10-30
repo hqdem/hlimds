@@ -43,7 +43,9 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
   uint32_t nVariables = func.num_vars();
   // Create variables for building the Subnet.
   SubBuild subBuild;
+  std::set<unsigned> dummy;
   for (uint32_t i = 0; i < nVariables; i++) {
+    dummy.insert(i);
     size_t cellId = subBuild.builder.addCell(model::IN, SubnetBuilder::INPUT);
     subBuild.idx.push_back(cellId);
   }
@@ -55,7 +57,7 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
 
   while ((table.nColumns() != 3) && (table.nColumns() != 1)) {
     Candidate candidate = findBestGate(table, onesInfo);
-    addMajGate(table, subBuild, candidate.args, nVariables, cid);
+    addMajGate(table, subBuild, candidate.args, nVariables, cid, dummy);
 
     if (!candidate.toRemove.empty()) {
       table.eraseCol(candidate.toRemove);
@@ -68,7 +70,7 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
   bool inv = false;
   if (table.nColumns() == 3) {
     Arguments gate = {0, 1, 2};
-    addMajGate(table, subBuild, gate, nVariables, cid);
+    addMajGate(table, subBuild, gate, nVariables, cid, dummy);
   } else {
     unsigned id = table.idColumn(0);
     size_t cellId = 0;
@@ -84,6 +86,7 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
       break;
       default:
         if ((id < 62) && (id > 30)) {
+          dummy.erase(id - 31);
           cellId = subBuild.idx[id - 31];
           flag = true;
           inv = true;
@@ -92,18 +95,25 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
     if (flag) {
       subBuild.idx.push_back(cellId);
     } else {
-      cellId = subBuild.idx[id];
-      subBuild.idx.push_back(cellId);
+      if (id < 31) {
+        dummy.erase(id);
+        cellId = subBuild.idx[id];
+        subBuild.idx.push_back(cellId);
+      }
     }
   }
   const Link link(subBuild.idx.back(), inv);
   subBuild.builder.addCell(model::OUT, link, SubnetBuilder::OUTPUT);
+  auto it = dummy.begin();
+  for (; it != dummy.end(); it++) {
+    subBuild.builder.setDummy(subBuild.idx[*it]);
+  }
   return subBuild.builder.make();
 }
 
 void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
                                 const Arguments &gate, uint32_t nVariables,
-                                ConstantId &cid) {
+                                ConstantId &cid, std::set<unsigned> &dummy) {
 
   assert(gate.size() == 3 && "Invalid number of inputs for a MAJ gate!");
 
@@ -133,9 +143,11 @@ void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
         switch (id < 31 ? 1 : (id < 62 ? 2 : 3)) {
           case 1:
             links.push_back(Link(subBuild.idx[id]));
+            dummy.erase(id);
           break;
           case 2:
             links.push_back(Link(subBuild.idx[id - 31], true));
+            dummy.erase(id - 31);
           break;
           case 3:
             links.push_back(Link(subBuild.idx[id - 64 + nVariables]));

@@ -81,7 +81,7 @@ LibraryCells::LibraryCells(const std::string &filename) {
 void LibraryCells::readLibertyFile(const std::string &filename) {
 
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path PythonScriptPath = homePath / "src" / "gate" / "tech_optimizer" / "library" / "libertyToJson.py";
+  const std::filesystem::path PythonScriptPath = homePath / "src" / "gate" / "techoptimizer" / "library" / "libertyToJson.py";
   const std::filesystem::path outputPath = homePath / "test" / "data" / "gate" / "tech_mapper" / "liberty.json";
 
   std::string CallPythonParser = "python3 " + PythonScriptPath.string() + ' ' + filename  + ' ' + outputPath.string();

@@ -35,7 +35,8 @@ public:
 
   /**
    * @brief Layered net generator constructor.
-   *
+   * Generator is able to generate net only if it is possible to connect
+   * every layer with next layer or primary output layer.
    * @param nIn Number of primary inputs.
    * @param nOut Number of primary outputs.
    * @param netBase Basis of allowed operations.
@@ -45,13 +46,15 @@ public:
    * primary outputs layer. The first layer contains only primary inputs.
    * @param seed Seed for reproducibility of the result.
    */
-  LayerGenerator(const int nIn, const int nOut,
+  LayerGenerator(const std::size_t nIn, const std::size_t nOut,
                  const std::vector<CellSymbol> &netBase,
-                 const std::vector<int> &layerNCells, const unsigned seed = 0u);
+                 const std::vector<std::size_t> &layerNCells,
+                 const unsigned seed = 0u);
 
   /**
    * @brief Layered net generator constructor.
-   *
+   * Generator is able to generate net only if it is possible to connect
+   * every layer with next layer or primary output layer.
    * @param nIn Number of primary inputs.
    * @param nOut Number of primary outputs.
    * @param netBase Basis of allowed operations.
@@ -61,17 +64,14 @@ public:
    * primary outputs layer. The first layer contains only primary inputs.
    * @param seed Seed for reproducibility of the result.
    */
-  LayerGenerator(const int nIn, const int nOut,
+  LayerGenerator(const std::size_t nIn, const std::size_t nOut,
                  const std::vector<CellTypeID> &netBase,
-                 const std::vector<int> &layerNCells, const unsigned seed = 0u);
+                 const std::vector<std::size_t> &layerNCells,
+                 const unsigned seed = 0u);
 
   std::string getName() const override;
 
 private:
-  /**
-   * @brief Generates net if it is possible to connect every layer with next
-   * layer or primary output layer.
-   */
   NetID generateValid() override;
 
   /// Sets primary inputs in netBuilder.
@@ -90,7 +90,7 @@ private:
                      std::vector<CellID> &addedCells);
 
   /// Links the previous layer with the current one in netBuilder.
-  bool linkPrevLayer(const int cellOnLayer,
+  bool linkPrevLayer(const std::size_t cellOnLayer,
                      std::vector<Cell::LinkList> &curLayerIns,
                      std::vector<CellID> &prevLayerCells,
                      std::vector<CellID> &addedCells,
@@ -105,7 +105,7 @@ private:
              std::vector<CellID> &addedCells, NetBuilder &netBuilder);
 
 private:
-  std::vector<int> layerNCells;
+  std::vector<std::size_t> layerNCells;
 };
 
 } // namespace eda::gate::model

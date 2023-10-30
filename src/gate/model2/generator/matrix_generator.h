@@ -17,6 +17,7 @@ namespace eda::gate::model {
  */
 class MatrixGenerator final : public Generator {
   using Matrix = std::unique_ptr<std::vector<std::vector<char>>>;
+  using CellIdxToCellType = std::map<std::size_t, CellTypeID>;
 
 public:
   MatrixGenerator() = delete;
@@ -28,7 +29,8 @@ public:
 
   /**
    * @brief Matrix-based net generator constructor.
-   *
+   * Generator is able to generate net only if it is possible to create
+   * net with one primary output.
    * @param nCells Number of inner cells.
    * @param nIn Number of primary inputs.
    * @param nOut Number of primary outputs.
@@ -37,13 +39,15 @@ public:
    * Inputs, outputs and constants are not allowed.
    * @param seed Seed for reproducibility of the result.
    */
-  MatrixGenerator(const int nCells, const int nIn, const int nOut,
+  MatrixGenerator(const std::size_t nCells, const std::size_t nIn,
+                  const std::size_t nOut,
                   const std::vector<CellSymbol> &netBase,
                   const unsigned seed = 0u);
 
   /**
    * @brief Matrix-based net generator constructor.
-   *
+   * Generator is able to generate net only if it is possible to create
+   * net with one primary output.
    * @param nCells Number of inner cells.
    * @param nIn Number of primary inputs.
    * @param nOut Number of primary outputs.
@@ -52,46 +56,43 @@ public:
    * Inputs, outputs and constants are not allowed.
    * @param seed Seed for reproducibility of the result.
    */
-  MatrixGenerator(const int nCells, const int nIn, const int nOut,
+  MatrixGenerator(const std::size_t nCells, const std::size_t nIn,
+                  const std::size_t nOut,
                   const std::vector<CellTypeID> &netBase,
                   const unsigned seed = 0u);
 
   std::string getName() const override;
 
 private:
-  /**
-   * @brief Generates net if it is possible to generateValid connected
-   *        net with one primary output.
-   */
   NetID generateValid() override;
 
   /// Sets primary inputs in matrix.
-  void setPrimIns(std::unordered_set<int> &inputs);
+  void setPrimIns(std::unordered_set<std::size_t> &inputs);
 
   /// Checks if it is possible to make drain on column columnN.
-  bool canMakeDrain(Matrix &m, const int columnN, CellToNIn &cellNIn);
+  bool canMakeDrain(Matrix &m, const std::size_t columnN, CellToNIn &cellNIn);
 
   /// Sets primary outputs in matrix.
-  void setPrimOuts(Matrix &m, std::vector<int> &outputs, CellToNIn &cellNIn,
-                   std::map<int, CellTypeID> &cellIndCellTID);
+  void setPrimOuts(Matrix &m, std::vector<std::size_t> &outputs,
+                   CellToNIn &cellNIn, CellIdxToCellType &cellIndCellTID);
 
   /// Sets "1" in each column in matrix (except the first one).
   bool setCellsOuts(Matrix &m, CellToNIn &cellNIn);
-  void addInsForCell(const int rowN, Matrix &m, CellToNIn &cellNIn,
-                     std::map<int, CellTypeID> &cellIndCellTID);
-  bool setOp(const int i, CellToNIn &cellNIn,
-             std::map<int, CellTypeID> &cellIndCellTID);
+  void addInsForCell(const std::size_t rowN, Matrix &m, CellToNIn &cellNIn,
+                     CellIdxToCellType &cellIndCellTID);
+  bool setOp(const std::size_t i, CellToNIn &cellNIn,
+             CellIdxToCellType &cellIndCellTID);
 
   /// Sets operations in matrix.
-  bool setOps(Matrix &m, CellToNIn &cellNIn,
-              std::map<int, CellTypeID> &cellIndCellTID);
+  bool setOps(Matrix &m, CellToNIn &cellNIn, CellIdxToCellType &cellIndCellTID);
 
   /// Generates adjacency matrix.
-  Matrix genM(std::unordered_set<int> &inputs, std::vector<int> &outputs,
-              CellToNIn &cellNIn, std::map<int, CellTypeID> &cellIndCellTID);
+  Matrix genM(std::unordered_set<std::size_t> &inputs,
+              std::vector<std::size_t> &outputs, CellToNIn &cellNIn,
+              CellIdxToCellType &cellIndCellTID);
 
 private:
-  int matrixNCells;
+  std::size_t matrixNCells;
 };
 
 } // namespace eda::gate::model

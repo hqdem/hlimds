@@ -10,11 +10,12 @@
 
 namespace eda::gate::model {
 
-Generator::Generator(const int nIn, const int nOut, const unsigned seed):
+Generator::Generator(const std::size_t nIn, const std::size_t nOut,
+                     const unsigned seed):
   nIn(nIn), nOut(nOut), seed(seed), faninLow(1), faninHigh(CellType::AnyArity),
-  hierarchical(false), netCellsN(0u) {};
+  hierarchical(false), nestingDepth(1), netCellsN(0u) {};
 
-Generator::Generator(const int nIn, const int nOut,
+Generator::Generator(const std::size_t nIn, const std::size_t nOut,
                      const std::vector<CellSymbol> &netBase,
                      const unsigned seed):
   Generator(nIn, nOut, seed) {
@@ -30,7 +31,7 @@ Generator::Generator(const int nIn, const int nOut,
   }
 }
 
-Generator::Generator(const int nIn, const int nOut,
+Generator::Generator(const std::size_t nIn, const std::size_t nOut,
                      const std::vector<CellTypeID> &netBase,
                      const unsigned seed):
   Generator(nIn, nOut, seed) {
@@ -83,31 +84,37 @@ bool Generator::primInsOutsNotEmpty() const {
   return nIn && nOut;
 }
 
-bool Generator::isBounded(const uint16_t val, const int low,
-                          const int high) const {
+bool Generator::isBounded(const uint16_t val, const uint16_t low,
+                          const uint16_t high) const {
 
-  return ((int)val >= low && (int)val <= high) ||
-         ((int)val == CellType::AnyArity && high >= 2);
+  return (val >= low && val <= high) ||
+         (val == CellType::AnyArity && high >= 2);
 }
 
 bool Generator::canCreateNetCell() const {
-  return faninLow <= nIn && faninHigh >= nIn && hierarchical;
+  return faninLow <= nIn && faninHigh >= nIn && hierarchical && nestingDepth;
 }
 
 CellTypeID Generator::createNetCell() {
   if (!hierarchical) {
     return OBJ_NULL_ID;
   }
-  setHierarchical(false);
+  nestingDepth--;
+  setSeed(seed + 1);
   CellTypeID cellTID = makeCellType("net" + std::to_string(netCellsN),
                                     generate(), OBJ_NULL_ID, NET,
                                     CellProperties(1, 0, 0, 0, 0), nIn, nOut);
+  nestingDepth++;
   netCellsN++;
-  setHierarchical(true);
   return cellTID;
 }
 
-bool Generator::canAddIn(const uint16_t cellNIn, const int nSourceCells) const {
+bool Generator::canAddIn(const uint16_t cellNIn,
+                         const std::size_t nSourceCells) const {
+
+  if (cellNIn == CellType::AnyArity) {
+    return false;
+  }
   const auto nextInsCnt = nInCellTIDs.lower_bound(cellNIn + 1);
 
   if (nInCellTIDs.find(CellType::AnyArity) != nInCellTIDs.end() &&
@@ -121,7 +128,7 @@ bool Generator::canAddIn(const uint16_t cellNIn, const int nSourceCells) const {
 }
 
 CellTypeID Generator::chooseCellType(const uint16_t cellNIn,
-                                     const int nSourceCells) {
+                                     const std::size_t nSourceCells) {
 
   uint16_t nInLowerBound = std::max(cellNIn, faninLow);
   uint16_t bottomNCellsToConnect = nSourceCells > 0xffff ? 0xffff :
@@ -131,7 +138,7 @@ CellTypeID Generator::chooseCellType(const uint16_t cellNIn,
     return OBJ_NULL_ID;
   }
   CellTypeID cellTID = OBJ_NULL_ID;
-  int availNInNumber = 0;
+  std::size_t availNInNumber = 0;
   for (const auto &nInTIDs : nInCellTIDs) {
     if (isBounded(nInTIDs.first, nInLowerBound, nInUpperBound)) {
       availNInNumber++;
@@ -140,7 +147,8 @@ CellTypeID Generator::chooseCellType(const uint16_t cellNIn,
   if (!availNInNumber) {
     return OBJ_NULL_ID;
   }
-  int nInNumber = std::rand() % (availNInNumber + (canCreateNetCell() ? 1 : 0));
+  std::size_t nInNumber = std::rand() %
+                          (availNInNumber + (canCreateNetCell() ? 1 : 0));
   if (nInNumber == availNInNumber) {
     return createNetCell();
   }
@@ -150,7 +158,7 @@ CellTypeID Generator::chooseCellType(const uint16_t cellNIn,
         nInNumber--;
         continue;
       }
-      int cellTNumber = std::rand() % nInTIDs.second.size();
+      std::size_t cellTNumber = std::rand() % nInTIDs.second.size();
       cellTID = nInTIDs.second[cellTNumber];
       break;
     }
@@ -170,6 +178,10 @@ void Generator::setSeed(const unsigned seed) {
 
 void Generator::setHierarchical(const bool hierarchical) {
   this->hierarchical = hierarchical;
+}
+
+void Generator::setNestingMax(const std::size_t nestMax) {
+  nestingDepth = nestMax;
 }
 
 unsigned Generator::getSeed() const {

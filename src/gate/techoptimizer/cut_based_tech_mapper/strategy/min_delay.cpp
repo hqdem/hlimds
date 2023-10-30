@@ -5,14 +5,14 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
- #include "gate/tech_mapper/strategy/min_delay.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/min_delay.h"
 
- namespace eda::gate::techMap {
+ namespace eda::gate::tech_optimizer {
  
  bool MinDelay::checkOpt(const eda::gate::optimizer::BoundGNet &superGate,
       const eda::gate::model::GNet::GateIdMap &map, double &minNodeArrivalTime,  
-      std::unordered_map<GateID, Replacement> *bestReplacement) {
-      double maxGateArrivalTime = maxArrivalTime(superGate, map, bestReplacement);
+      std::unordered_map<GateID, Replacement> *bestSubstitutions) {
+      double maxGateArrivalTime = maxArrivalTime(superGate, map, bestSubstitutions);
       if ( minNodeArrivalTime > maxGateArrivalTime) {
         minNodeArrivalTime = maxGateArrivalTime;
         return true;
@@ -22,7 +22,7 @@
   
  double MinDelay::maxArrivalTime(const BoundGNet &superGate,
       const std::unordered_map<GateID, GateID> &map,
-      std::unordered_map<GateID, Replacement> *bestReplacement) {
+      std::unordered_map<GateID, Replacement> *bestSubstitutions) {
 
     double maxDelay = 0;
 
@@ -37,8 +37,8 @@
     for (const auto &[inputId, gateId] : map) {
       double delay = 0;
 
-      if (bestReplacement->count(gateId)) {
-        delay = bestReplacement->at(gateId).delay;
+      if (bestSubstitutions->count(gateId)) {
+        delay = bestSubstitutions->at(gateId).delay;
       }
       delay = delay + superGate.inputDelays.at(revGareBindings.at(inputId));
       
@@ -48,4 +48,4 @@
     }
     return maxDelay;
   }
- } // namespace eda::gate::techMap
+ } // namespace eda::gate::tech_optimizer

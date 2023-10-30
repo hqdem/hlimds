@@ -8,8 +8,11 @@
 
 #pragma once
 
-#include "gate/tech_mapper/library/cell.h"
-#include "gate/model/gnet_test.h"
-#include "gate/optimizer/rwdatabase.h"
+#include "gate/model/gnet.h"
 
-using namespace eda::gate::optimizer;
+namespace eda::gate::tech_optimizer {
+  using GNet = eda::gate::model::GNet;
+
+  void read_db(const std::string &dbPath);
+  void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*/);
+} // namespace eda::gate::tech_optimizer

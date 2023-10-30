@@ -8,15 +8,18 @@
 
 #pragma once
 
+#include "gate/model2/celltype.h"
 #include "gate/optimizer/rwdatabase.h"
+
 #include "kitty/kitty.hpp"
 
 #include <string>
 #include <vector>
 
-namespace eda::gate::techMap {
+namespace eda::gate::tech_optimizer {
 
 using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
+using CellTypeID = eda::gate::model::CellTypeID;
 
 struct Pin {
   Pin(const std::string &name, double cell_fall, double cell_rise,
@@ -35,7 +38,11 @@ struct Pin {
 
 struct Cell {
   Cell(const std::string &name, const std::vector<Pin> &inputPins,
-      kitty::dynamic_truth_table *truthTable, double area = 0.0);
+      kitty::dynamic_truth_table *truthTable, const std::string &realName);
+
+  Cell(const std::string &name, const std::vector<Pin> &inputPins,
+      kitty::dynamic_truth_table *truthTable, const std::string &realName, 
+      double area);
 
   Cell(kitty::dynamic_truth_table *truthTable);
 
@@ -49,6 +56,7 @@ private:
   const std::string name;
   std::vector<Pin> inputPins;
   kitty::dynamic_truth_table *truthTable;
+  std::string realName;
   double area;
 };
 
@@ -56,10 +64,12 @@ struct LibraryCells {
   LibraryCells(const std::string &filename);
 
   std::vector<Cell*> cells;
-  void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb);
+  void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb, 
+      std::unordered_map<std::string, CellTypeID> &cellTypeMap);
 
   private:
   void readLibertyFile(const std::string &filename);
+  
 };
 
-} // namespace eda::gate::techMap
+} // namespace eda::gate::tech_optimizer

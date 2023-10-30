@@ -9,9 +9,9 @@
 #pragma once
 
 #include "gate/optimizer/rwdatabase.h"
-#include "gate/tech_mapper/strategy/strategy.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 
-namespace eda::gate::techMap {
+namespace eda::gate::tech_optimizer {
   using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
   
 /**
@@ -25,6 +25,6 @@ namespace eda::gate::techMap {
   private:
     double maxArrivalTime(const BoundGNet &superGate,
         const std::unordered_map<GateID, GateID> &map,
-        std::unordered_map<GateID, Replacement> *bestReplacement);
+        std::unordered_map<GateID, Replacement> *bestSubstitutions);
   };
-} // namespace eda::gate::techMap
+} // namespace eda::gate::tech_optimizer

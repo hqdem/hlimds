@@ -1,6 +1,5 @@
 build
 output
-src/build
 *.cnf
 *.dot
 *.log

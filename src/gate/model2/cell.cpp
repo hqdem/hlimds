@@ -11,8 +11,6 @@
 
 namespace eda::gate::model {
 
-static_assert(sizeof(LinkEnd) == sizeof(ListID));
-
 Cell::Cell(CellTypeID typeID, const LinkList &links):
     typeSID(typeID.getSID()), fanin(links.size()), fanout(0) {
   if (fanin <= InPlaceLinks) {

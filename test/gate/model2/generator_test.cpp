@@ -130,7 +130,7 @@ CellTypeID createNetCell() {
   netBuilder.addCell(cellANDID);
   netBuilder.addCell(cellOUTID);
 
-  return makeCellType("net", netBuilder.make(), OBJ_NULL_ID, NET,
+  return makeCellType("net", netBuilder.make(), OBJ_NULL_ID, SOFT,
                       CellProperties(1, 0, 0, 0, 0), 2, 1);
 }
 
@@ -329,7 +329,7 @@ TEST(MatrixGeneratorTest, FaninLimit3_5) {
 TEST(MatrixGeneratorTest, InvalidBasisException) {
   auto faninLim = std::pair<uint16_t, uint16_t>{ 3, 5 };
   try {
-    startMatrixGenerator(13, 5, 1, { AND, DFFrs, NET },
+    startMatrixGenerator(13, 5, 1, { AND, DFFrs, SOFT },
                          "invalid_basis_exception.dot", true, &faninLim, false);
   } catch (std::invalid_argument &e) {
     EXPECT_STREQ("Generator's base has invalid cell types.", e.what());

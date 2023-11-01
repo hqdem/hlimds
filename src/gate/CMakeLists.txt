@@ -15,6 +15,7 @@ add_library(Gate OBJECT
   model2/generator/generator.cpp
   model2/generator/layer_generator.cpp
   model2/generator/matrix_generator.cpp
+  model2/link.cpp
   model2/net.cpp
   model2/printer/printer.cpp
   model2/subnet.cpp

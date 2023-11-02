@@ -128,7 +128,7 @@ void LayerGenerator::setInputs(Cell::LinkList &curInputs,
   }
 
   uint16_t inputsN;
-  if (cellT->isAnyArity()) {
+  if (!cellT->isInNumFixed()) {
     const uint16_t lowerBound = std::max((uint16_t)2,
                                          std::max((uint16_t)curInputs.size(),
                                          faninLow));

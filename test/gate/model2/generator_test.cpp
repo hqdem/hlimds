@@ -36,7 +36,7 @@ bool checkCellsValid(const List<CellID> &cells, const std::size_t nCells,
     const uint16_t cellFanout = cell.getFanout();
     const CellSymbol &cellSymbol = cell.getType().getSymbol();
 #endif
-    if ((cellType.isAnyArity() && cellFanin < 2) &&
+    if ((!cellType.isInNumFixed() && cellFanin < 2) &&
         (cellType.getInNum() != cellFanin)) {
 
       return false;

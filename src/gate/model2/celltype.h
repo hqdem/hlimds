@@ -124,7 +124,10 @@ public:
   uint16_t getInNum()  const { return nIn;  }
   uint16_t getOutNum() const { return nOut; }
 
-  bool isAnyArity() const { return nIn == AnyArity; }
+  /// Checks whether the cell type does not specify the number of inputs.
+  bool isInNumFixed() const { return nIn != AnyArity; }
+  /// Checks whether the cell type does not specify the number of outputs.
+  bool isOutNumFixed() const { return nOut != AnyArity; }
 
   /// Checks whether the cell type is described by net.
   bool isNet() const { return netID != OBJ_NULL_ID; }

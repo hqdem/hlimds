@@ -11,7 +11,7 @@
 
 namespace eda::gate::optimizer {
 
-  const std::string testOutPath = "test/data/gate/optimizer/output";
+  const std::string testOutPath = "output/data/gate/optimizer/output";
 
   std::filesystem::path createOutPath(const std::string &folderName);
 

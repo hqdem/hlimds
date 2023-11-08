@@ -22,13 +22,11 @@ endif()
 
 include(UtopiaFindHelper)
 set_local_from_env(CTemplate_ROOT CT_DIR)
-set_local_from_env(XercesC_ROOT XERCES_DIR)
 set_local_from_env(Z3_ROOT Z3_DIR)
 set_local_from_env(Cudd_ROOT CUDD_DIR)
 
 find_package(LpSolve REQUIRED)
 find_package(Z3 REQUIRED)
-find_package(XercesC REQUIRED)
 find_package(CTemplate REQUIRED COMPONENTS nothreads)
 find_package(Cudd REQUIRED)
 

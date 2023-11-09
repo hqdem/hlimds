@@ -99,7 +99,7 @@ Please keep `UTOPIA_HOME` variable and its value in your system permanently.
 ### Building Project
 
 ```
-cd utopia
+cd utopia-eda
 cmake -S . -B build -G Ninja
 cmake --build build
 ```

@@ -31,6 +31,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/ril_lec_test.cpp
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verilog_lec_test.cpp
+  gate/debugger2/miter2_test.cpp
   gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp

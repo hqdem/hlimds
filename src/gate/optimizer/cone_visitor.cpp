@@ -29,7 +29,11 @@ namespace eda::gate::optimizer {
     }
 
     if (cut.find(node) != cut.end() && signals.empty()) {
-      auto newGate = net->addIn();
+      auto func = GateSymbol::IN;
+      if (cur->isValue()) {
+        func = cur->func();
+      }
+      auto newGate = net->addGate(func);
       newGates[node] = newGate;
       resultCutOldGates.emplace(node);
     } else {

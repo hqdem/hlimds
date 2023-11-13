@@ -101,7 +101,7 @@ namespace eda::gate::optimizer {
     delete cone;
   }
 
-  TEST(FindConeTest, findConeExessiveCut) {
+  TEST(FindConeTest, findConeExcessiveCut) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
@@ -110,8 +110,8 @@ namespace eda::gate::optimizer {
     auto g = gnet1(net);
 
     auto cone = findConePrint(
-            "findConeExessiveCut", &net,
-            {g[0], g[1], g[2], g[4]}, g[5]);
+        "findConeExcessiveCut", &net,
+        {g[0], g[1], g[2], g[4]}, g[5]);
     EXPECT_EQ(4, cone->nGates());
     EXPECT_EQ(2, cone->nSourceLinks());
     delete cone;
@@ -128,6 +128,31 @@ namespace eda::gate::optimizer {
     auto cone = findConePrint("findConeTrivial",
                               &net, {g[5]}, g[5]);
     EXPECT_EQ(2, cone->nGates());
+    delete cone;
+  }
+
+  TEST(FindConeTest, findConeConstInputs) {
+    GNet net;
+    auto g = constInputs(net);
+    auto cone = findConePrint("findConeConstInputs",
+                              &net, {g[0], g[1], g[4]}, g[5]);
+
+    bool hasZero = false;
+    bool hasOne = false;
+    bool hasIn = false;
+
+    const auto &sources = cone->getSources();
+    for (auto it = sources.begin(); it != sources.end(); ++it) {
+      Gate *gate = Gate::get(*it);
+      hasIn |= gate->isSource();
+      hasZero |= gate->func() == model::GateSymbol::ZERO;
+      hasOne |= gate->func() == model::GateSymbol::ONE;
+    }
+
+    ASSERT_TRUE(hasZero);
+    ASSERT_TRUE(hasOne);
+    ASSERT_TRUE(hasIn);
+
     delete cone;
   }
 

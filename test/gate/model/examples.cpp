@@ -502,11 +502,11 @@ namespace eda::gate::optimizer {
       bnet.inputBindings.push_back(net->addIn());
     }
     const Gate::Id andTempGate = net->addAnd(bnet.inputBindings[0],
-                                            bnet.inputBindings[1]);
+                                             bnet.inputBindings[1]);
     const Gate::Id andGate = net->addAnd(andTempGate,
-                                        bnet.inputBindings[2]);
+                                         bnet.inputBindings[2]);
     const Gate::Id xorGate = net->addXor(bnet.inputBindings[3],
-                                        bnet.inputBindings[4]);
+                                         bnet.inputBindings[4]);
     const Gate::Id orGate = net->addOr(andGate, xorGate);
     const Gate::Id outGate = net->addOut(orGate);
     bnet.outputBindings.push_back(outGate);
@@ -571,4 +571,18 @@ namespace eda::gate::optimizer {
     return bnet;
   }
 
+  std::vector<GateId> constInputs(GNet &gNet) {
+    std::vector<GateId> g;
+
+    g.push_back(createLink(gNet, g, {}, model::GateSymbol::ZERO));
+    g.push_back(createLink(gNet, g, {}, model::GateSymbol::ONE));
+    g.push_back(createLink(gNet, g, {}, model::GateSymbol::IN));
+    g.push_back(createLink(gNet, g, {}, model::GateSymbol::IN));
+
+    g.push_back(createLink(gNet, g, {3, 2}));
+    g.push_back(createLink(gNet, g, {0, 1, 4}));
+    g.push_back(createLink(gNet, g, {5}, model::GateSymbol::OUT));
+
+    return g;
+  }
 } // namespace eda::gate::optimizer

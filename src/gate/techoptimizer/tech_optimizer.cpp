@@ -12,15 +12,14 @@
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 #include "gate/techoptimizer/library/cell.h"
 #include "gate/techoptimizer/tech_optimizer.h"
+#include "gate/techoptimizer/library/subnetattr.h"
 
 namespace eda::gate::tech_optimizer {
 
-// TODO: do we indeed need it in such a format?
-// what if we use a structural matching?
-
 std::unordered_map<std::string, eda::gate::model::CellTypeID> cellTypeMap;
 eda::gate::optimizer::SQLiteRWDatabase functDB;
-eda::gate::optimizer::SQLiteRWDatabase structDB; // TODO: replace the format
+eda::gate::optimizer::SQLiteRWDatabase structDB;
+std::unordered_map<eda::gate::model::SubnetID, Subnetattr> cellDB;
 
 void read_db(const std::string &dbPath) {
   // Read and populate the databases. Input format: Liberty.

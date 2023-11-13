@@ -6,21 +6,31 @@
 //
 //===----------------------------------------------------------------------===//
 #include "gate/model2/celltype.h"
+#include "gate/model2/subnet.h"
 #include "gate/techoptimizer/library/subnetattr.h"
 
+#include "kitty/print.hpp"
+
+#include <unordered_map>
+#include <map>
+#include <list>
+
 using CellTypeID = eda::gate::model::CellTypeID;
+using SubnetID = eda::gate::model::SubnetID;
 
 namespace eda::gate::tech_optimizer {
+
   class CellDB final{
   public:
-    CellDB(const std::list<CellTypeID> &cellType);
+    CellDB(const std::list<CellTypeID> &cellTypeIDs);
 
-    std::unordered_map<eda::gate::model::SubnetID, Subnetattr> 
-        &getSubnetMap() const;
+    std::map<SubnetID, Subnetattr> &getSubnetMap();
 
   private:
-    std::unordered_map<eda::gate::model::SubnetID, Subnetattr>;
-    std::unordered_map<uint64_t, eda::gate::model::SubnetID>;
+    std::vector<SubnetID> subnets;
+    std::map<SubnetID, Subnetattr> subnetMap;
+    std::map< kitty::dynamic_truth_table, 
+        eda::gate::model::SubnetID> ttSubnetMap;
 
-  }
+  };
 } // namespace eda::gate::tech_optimizer

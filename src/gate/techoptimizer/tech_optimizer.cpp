@@ -19,7 +19,6 @@ namespace eda::gate::tech_optimizer {
 std::unordered_map<std::string, eda::gate::model::CellTypeID> cellTypeMap;
 eda::gate::optimizer::SQLiteRWDatabase functDB;
 eda::gate::optimizer::SQLiteRWDatabase structDB;
-std::unordered_map<eda::gate::model::SubnetID, Subnetattr> cellDB;
 
 void read_db(const std::string &dbPath) {
   // Read and populate the databases. Input format: Liberty.

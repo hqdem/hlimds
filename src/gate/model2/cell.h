@@ -16,15 +16,24 @@
 
 namespace eda::gate::model {
 
+class NetBuilder;
+
 //===----------------------------------------------------------------------===//
 // Cell
 //===----------------------------------------------------------------------===//
 
+/**
+ * \brief Cell in a logic network.
+ */
 class Cell final : public Object<Cell, CellID> {
   friend class Storage<Cell>;
+  friend class NetBuilder;
 
 public:
   using LinkList = std::vector<LinkEnd>;
+
+  static constexpr uint16_t MaxFanin  = 0xffff;
+  static constexpr uint16_t MaxFanout = 0xffff;
 
   bool isIn()    const { return typeSID == CELL_TYPE_SID_IN;    }
   bool isOut()   const { return typeSID == CELL_TYPE_SID_OUT;   }
@@ -43,19 +52,21 @@ public:
   bool isDff()   const { return typeSID == CELL_TYPE_SID_DFF;   }
   bool isDffRs() const { return typeSID == CELL_TYPE_SID_DFFrs; }
 
+  /// Returns the full cell type identifier.
   CellTypeID getTypeID() const { return CellTypeID::makeFID(typeSID); }
-
+  /// Returns the reference to the cell type.
   const CellType &getType() const { return CellType::get(getTypeID()); }
 
+  /// Returns the cell fan-in (the number of inputs).
   uint16_t getFanin() const { return fanin; }
+  /// Returns the cell fan-out (reference count for all outputs).
   uint16_t getFanout() const { return fanout; }
 
-  void setFanin(uint16_t value) { fanin = value; }
-  void setFanout(uint16_t value) { fanout = value; }
-
+  /// Returns the input links of the cell.
   LinkList getLinks() const;
 
 private:
+  /// Number of links stored in place (the rest are located in a separate list).
   static constexpr size_t InPlaceLinks = 3;
 
   Cell(CellTypeID typeID):
@@ -77,6 +88,8 @@ private:
     /// In-place links.
     LinkEnd link[InPlaceLinks];
   } data;
+
+  static_assert(sizeof(LinkEnd) == sizeof(ListID));
 };
 
 static_assert(sizeof(Cell) == CellID::Size);

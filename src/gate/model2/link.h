@@ -12,6 +12,8 @@
 
 namespace eda::gate::model {
 
+class Cell;
+
 //===----------------------------------------------------------------------===//
 // Link End
 //===----------------------------------------------------------------------===//
@@ -40,9 +42,13 @@ public:
   LinkEnd(const LinkEnd &) = default;
   LinkEnd &operator =(const LinkEnd &) = default;
 
+  /// Returns the identifier of the source cell.
   CellID getCellID() const { return CellID::makeFID(value >> 24); }
+  /// Returns the reference to the source cell.
+  const Cell &getCell() const;
+  /// Returns the output port of the source cell.
   uint16_t getPort() const { return (value >> 8) & 0xffff; }
-
+  /// Checks whether the link is valid.
   bool isValid() const { return value & 1; }
 
 private:

@@ -68,10 +68,10 @@ void Generator::setFaninLim(const uint16_t faninLow, const uint16_t faninHigh) {
   for (std::size_t i = 0; i < netBase.size(); ++i) {
     const CellType *cellT = &CellType::get(netBase[i]);
     const uint16_t curOpInNum = cellT->getInNum();
-    if (cellT->isAnyArity() && faninHigh < 2) {
+    if (!cellT->isInNumFixed() && faninHigh < 2) {
       throw std::invalid_argument(baseIrrelevantOps);
     }
-    if (!cellT->isAnyArity() &&
+    if (cellT->isInNumFixed() &&
         (curOpInNum < faninLow || curOpInNum > faninHigh)) {
       throw std::invalid_argument(baseIrrelevantOps);
     }
@@ -102,7 +102,7 @@ CellTypeID Generator::createNetCell() {
   nestingDepth--;
   setSeed(seed + 1);
   CellTypeID cellTID = makeCellType("net" + std::to_string(netCellsN),
-                                    generate(), OBJ_NULL_ID, NET,
+                                    generate(), OBJ_NULL_ID, SOFT,
                                     CellProperties(1, 0, 0, 0, 0), nIn, nOut);
   nestingDepth++;
   netCellsN++;

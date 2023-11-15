@@ -62,9 +62,7 @@ enum CellSymbol : uint16_t {
 
   /// Standard cell.
   CELL,
-  /// Macrocell.
-  NET,
-  /// Soft IP core.
+  /// Soft IP core (or a subnet).
   SOFT,
   /// Hard IP core.
   HARD
@@ -112,8 +110,9 @@ class CellType final : public Object<CellType, CellTypeID> {
 public:
   static constexpr uint16_t AnyArity = 0xffff;
 
+  /// Returns the cell type name.
   std::string getName() const { return String::get(nameID); }
-
+  /// Returns the cell type function/kind.
   CellSymbol getSymbol() const { return symbol; }
 
   bool isCombinational() const { return props.combinational; }
@@ -125,9 +124,14 @@ public:
   uint16_t getInNum()  const { return nIn;  }
   uint16_t getOutNum() const { return nOut; }
 
-  bool isAnyArity() const { return nIn == AnyArity; }
+  /// Checks whether the cell type does not specify the number of inputs.
+  bool isInNumFixed() const { return nIn != AnyArity; }
+  /// Checks whether the cell type does not specify the number of outputs.
+  bool isOutNumFixed() const { return nOut != AnyArity; }
 
+  /// Checks whether the cell type is described by net.
   bool isNet() const { return netID != OBJ_NULL_ID; }
+  /// Returns the net of the cell type.
   const Net &getNet() const;
 
 private:

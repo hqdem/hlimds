@@ -21,7 +21,7 @@ namespace eda::gate::model {
 // Object Identifier
 //===----------------------------------------------------------------------===//
 
-/// Null object identifier.
+/// Untyped null object identifier.
 static constexpr uint64_t OBJ_NULL_ID = 0;
 
 /// Full object identifier (FID):
@@ -71,6 +71,16 @@ public:
   static constexpr uint64_t makeSID(ObjectID objectFID) {
     return objectFID == NullFID ? NullSID
                                 : makeUntaggedFID(objectFID) >> Log2;
+  }
+
+  /// Returns the tag of the FID.
+  static constexpr uint64_t getTag(uint64_t objectFID) {
+    return (objectFID >> (64 - 8)) & 0xff;
+  }
+
+  /// Checks that the FID is of the required type.
+  static constexpr bool checkTag(uint64_t objectFID) {
+    return getTag(objectFID) == Tag;
   }
 
   /// Constructs a FID from the specified value.

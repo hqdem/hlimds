@@ -117,7 +117,7 @@ void MatrixGenerator::addInsForCell(const std::size_t rowN, Matrix &m,
 
   uint16_t neededCurNIn;
   const CellType *cellT = &CellType::get(cellIdxCellTID[rowN]);
-  if (cellT->isAnyArity()) {
+  if (!cellT->isInNumFixed()) {
     const uint16_t lowerBound = std::max((uint16_t)2,
                                          std::max(cellNIn[rowN], faninLow));
     const uint16_t nSourceCells = matrixNCells - rowN - 1 > CellType::AnyArity ?

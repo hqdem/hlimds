@@ -33,8 +33,6 @@ below are specific to this operating system:
 * `libfmt-dev`
 * `liblpsolve55-dev`
 * `libtool`
-* `libxerces-c3.2`
-* `libxerces-c-dev`
 * `lld`
 * `make`
 * `ninja-build`
@@ -46,8 +44,8 @@ below are specific to this operating system:
 To install them, do the following:
 ```
 sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
-    iverilog liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld \
-    make ninja-build python python3-pip zlib1g zlib1g-dev
+    iverilog liblpsolve55-dev libtool lld make ninja-build python \
+    python3-pip zlib1g zlib1g-dev
 ```
 Several Python packages should be installed too. Do the following:
 ```
@@ -101,7 +99,7 @@ Please keep `UTOPIA_HOME` variable and its value in your system permanently.
 ### Building Project
 
 ```
-cd utopia
+cd utopia-eda
 cmake -S . -B build -G Ninja
 cmake --build build
 ```

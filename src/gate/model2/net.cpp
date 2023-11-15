@@ -22,7 +22,7 @@ void NetBuilder::addCell(CellID cellID) {
     inputs.push_back(cellID);
   } else if (type.getSymbol() == OUT) {
     outputs.push_back(cellID);
-  } else if (type.getSymbol() == NET || type.getSymbol() == SOFT) {
+  } else if (type.getSymbol() == SOFT) {
     softBlocks.push_back(cellID);
   } else if (type.getSymbol() == HARD) {
     hardBlocks.push_back(cellID);
@@ -30,6 +30,14 @@ void NetBuilder::addCell(CellID cellID) {
     combCells.push_back(cellID);
   } else {
     flipFlops.push_back(cellID);
+  }
+
+  // Update the reference counts of the cell's sources.
+  const auto links = cell.getLinks();
+  for (auto link : links) {
+    auto &source = const_cast<Cell&>(link.getCell());
+    assert(source.fanout != Cell::MaxFanout);
+    source.fanout++;
   }
 }
 

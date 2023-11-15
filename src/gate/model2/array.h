@@ -114,7 +114,7 @@ public:
   const T &operator [](size_t i) const { return block->items[i]; }
 
 private:
-  /// List identifier.
+  /// Array identifier.
   const ArrayID arrayID;
   /// Pointer to the first block of the list.
   ArrayBlock<T> *block;

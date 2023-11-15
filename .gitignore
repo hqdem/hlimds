@@ -1,5 +1,5 @@
 build
-src/build
+output
 *.cnf
 *.dot
 *.log
@@ -10,4 +10,3 @@ CMakeLists.txt.user
 a.out
 annealing.txt
 estimation.txt
-output/test/dfc/*

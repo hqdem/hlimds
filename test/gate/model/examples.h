@@ -22,7 +22,7 @@ namespace eda::gate::optimizer {
                     const std::vector<GateId> &input,
                     model::GateSymbol func = model::GateSymbol::Value::AND);
 
-  std::vector<GateId> gnet1(GNet &gNet) ;
+  std::vector<GateId> gnet1(GNet &gNet);
 
   std::vector<GateId> gnet1Extended(GNet &gNet);
 
@@ -75,6 +75,8 @@ namespace eda::gate::optimizer {
   std::vector<GateId> balanceMaj2Variants(GNet &gNet);
 
   std::vector<GateId> balanceMajTwice(GNet &gNet);
+
+  std::vector<GateId> constInputs(GNet &gNet);
 
   BoundGNet makeTestBgnet1();
 

@@ -6,6 +6,7 @@ add_library(Gate OBJECT
   debugger/miter.cpp
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
+  debugger2/miter2.cpp
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
@@ -15,6 +16,7 @@ add_library(Gate OBJECT
   model2/generator/generator.cpp
   model2/generator/layer_generator.cpp
   model2/generator/matrix_generator.cpp
+  model2/link.cpp
   model2/net.cpp
   model2/printer/printer.cpp
   model2/subnet.cpp

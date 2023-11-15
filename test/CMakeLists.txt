@@ -31,6 +31,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/ril_lec_test.cpp
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verilog_lec_test.cpp
+  gate/debugger2/miter2_test.cpp
   gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp
@@ -67,6 +68,7 @@ add_executable(${TEST_TARGET}
   gate/premapper/xagmapper/xag_test.cpp
   gate/premapper/xagmapper/xag_verilog_test.cpp
   gate/premapper/xmgmapper/xmgmapper_test.cpp
+  gate/printer/dot_test.cpp
   gate/printer/gate_verilog_printer_test.cpp
   gate/printer/graphml_test.cpp
   gate/simulator/simulator_memory_test.cpp

@@ -40,9 +40,7 @@ namespace eda::gate::tech_optimizer {
       Subnetattr subnetattr;
       subnetMap.insert(std::pair<SubnetID, Subnetattr>
           (subnetID, subnetattr));
-      
-      kitty::dynamic_truth_table truthTable = 
-          model::evaluate(eda::gate::model::Subnet::get(subnetID));
+
     }
   }
 

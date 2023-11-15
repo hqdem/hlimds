@@ -8,6 +8,6 @@
 
 namespace eda::gate::tech_optimizer {
 struct Subnetattr {
-
+  std::string name;
   };
 } // namespace eda::gate::tech_optimizer

@@ -9,6 +9,7 @@
 #include "gate/techoptimizer/library/cell.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/visitor.h"
+#include "gate/optimizer2/resynthesis/akers.h"
 
 #include "nlohmann/json.hpp"
 
@@ -24,6 +25,10 @@ using RWDatabase = eda::gate::optimizer::RWDatabase;
 using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
+
+using AkersAlgorithm = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using NetID = eda::gate::model::NetID;
 
 //===----------------------------------------------------------------------===//
 // Pin
@@ -205,6 +210,35 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
     cellTypeMap.insert(std::pair<std::string, CellTypeID>
           (cell->getName(), cellID));
   }
+  }
 
-}
+  std::list<CellTypeID> LibraryCells::initializeLiberty() {
+    std::list<CellTypeID> cellTypeIDs;
+
+    for(auto& cell : cells) {
+
+      if (cell->getInputPinsNumber() == 0 ) {
+        continue;
+      }
+
+      eda::gate::model::CellProperties props{0, 0, 0, 0, 0};
+      eda::gate::model::CellTypeAttrID attrID;
+
+      AkersAlgorithm alg;
+      const auto subnetID = alg.synthesize(*cell->getTruthTable());
+
+      NetID netID = static_cast<NetID>(subnetID);
+
+      CellTypeID cellID = eda::gate::model::makeCellType(
+          cell->getName(), netID, attrID,
+          eda::gate::model::CellSymbol::CELL,
+          props, static_cast<uint16_t>(cell->getInputPinsNumber()), 
+          static_cast<uint16_t>(1));
+
+      cellTypeIDs.push_back(cellID);
+    }
+    return cellTypeIDs;
+  }
+
+
 } // namespace eda::gate::tech_optimizer

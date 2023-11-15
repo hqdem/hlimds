@@ -9,12 +9,15 @@
 #pragma once
 
 #include "gate/model2/celltype.h"
+#include "gate/model2/subnet.h"
+
 #include "gate/optimizer/rwdatabase.h"
 
 #include "kitty/kitty.hpp"
 
 #include <string>
 #include <vector>
+#include <list>
 
 namespace eda::gate::tech_optimizer {
 
@@ -66,6 +69,8 @@ struct LibraryCells {
   std::vector<Cell*> cells;
   void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb, 
       std::unordered_map<std::string, CellTypeID> &cellTypeMap);
+
+  std::list<CellTypeID> initializeLiberty();
 
   private:
   void readLibertyFile(const std::string &filename);

@@ -12,13 +12,15 @@
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 #include "gate/techoptimizer/library/cell.h"
 #include "gate/techoptimizer/tech_optimizer.h"
-#include "gate/techoptimizer/library/subnetattr.h"
+#include "gate/techoptimizer/library/cellDB.h"
 
 namespace eda::gate::tech_optimizer {
 
 std::unordered_map<std::string, eda::gate::model::CellTypeID> cellTypeMap;
 eda::gate::optimizer::SQLiteRWDatabase functDB;
 eda::gate::optimizer::SQLiteRWDatabase structDB;
+
+std::map<SubnetID, Subnetattr> subnetMap;
 
 void read_db(const std::string &dbPath) {
   // Read and populate the databases. Input format: Liberty.
@@ -30,6 +32,9 @@ void read_db(const std::string &dbPath) {
 
     functDB.linkDB("rwtest.db");
     functDB.openDB();
+    
+    CellDB cellDB(libraryCells.initializeLiberty());
+    subnetMap = cellDB.getSubnetMap();
 
     libraryCells.initializeLibraryRwDatabase(&functDB, cellTypeMap);
 }

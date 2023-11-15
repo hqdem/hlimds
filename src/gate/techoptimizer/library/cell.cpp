@@ -221,7 +221,7 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
         continue;
       }
 
-      eda::gate::model::CellProperties props{0, 0, 0, 0, 0};
+      eda::gate::model::CellProperties props(true, false, false, false, false);
       eda::gate::model::CellTypeAttrID attrID;
 
       AkersAlgorithm alg;

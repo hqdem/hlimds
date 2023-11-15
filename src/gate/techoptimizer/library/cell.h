@@ -15,9 +15,9 @@
 
 #include "kitty/kitty.hpp"
 
+#include <list>
 #include <string>
 #include <vector>
-#include <list>
 
 namespace eda::gate::tech_optimizer {
 

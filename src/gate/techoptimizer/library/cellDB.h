@@ -11,9 +11,9 @@
 
 #include "kitty/print.hpp"
 
-#include <unordered_map>
-#include <map>
 #include <list>
+#include <map>
+#include <unordered_map>
 
 using CellTypeID = eda::gate::model::CellTypeID;
 using SubnetID = eda::gate::model::SubnetID;

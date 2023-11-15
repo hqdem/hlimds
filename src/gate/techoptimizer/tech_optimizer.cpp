@@ -11,8 +11,8 @@
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/min_delay.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 #include "gate/techoptimizer/library/cell.h"
-#include "gate/techoptimizer/tech_optimizer.h"
 #include "gate/techoptimizer/library/cellDB.h"
+#include "gate/techoptimizer/tech_optimizer.h"
 
 namespace eda::gate::tech_optimizer {
 

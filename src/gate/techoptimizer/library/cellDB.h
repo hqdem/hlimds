@@ -24,10 +24,15 @@ namespace eda::gate::tech_optimizer {
   public:
     CellDB(const std::list<CellTypeID> &cellTypeIDs);
 
+    void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs);
+
     std::map<SubnetID, Subnetattr> &getSubnetMap();
 
   private:
     std::vector<SubnetID> subnets;
+
+    std::vector<SubnetID> triggers;
+
     std::map<SubnetID, Subnetattr> subnetMap;
     std::map< kitty::dynamic_truth_table, 
         eda::gate::model::SubnetID> ttSubnetMap;

@@ -9,7 +9,7 @@
 #include "gate/techoptimizer/library/cell.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/visitor.h"
-#include "gate/optimizer2/resynthesis/akers.h"
+#include "gate/optimizer2/resynthesis/isop.h"
 
 #include "nlohmann/json.hpp"
 
@@ -26,7 +26,7 @@ using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
 
-using AkersAlgorithm = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
+using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using NetID = eda::gate::model::NetID;
 
@@ -224,8 +224,8 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
       eda::gate::model::CellProperties props(true, false, false, false, false);
       eda::gate::model::CellTypeAttrID attrID;
 
-      AkersAlgorithm alg;
-      const auto subnetID = alg.synthesize(*cell->getTruthTable());
+      MinatoMorrealeAlg minatoMorrealeAlg;
+      const auto subnetID = minatoMorrealeAlg.synthesize(*cell->getTruthTable());
 
       NetID netID = static_cast<NetID>(subnetID);
 

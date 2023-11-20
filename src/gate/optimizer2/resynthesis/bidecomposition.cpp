@@ -7,45 +7,31 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
-#include "util/assert.h"
 
 #include <algorithm>
-#include <cmath>
-#include <memory>
 
 namespace eda::gate::optimizer2::resynthesis {
 
-using CoverageElement = BiDecompositor::CoverageElement;
-using Link            = BiDecompositor::Link;
-using SubnetID        = BiDecompositor::SubnetID;
-using TruthTable      = BiDecompositor::TruthTable;
-
-SubnetID BiDecompositor::synthesize(const TruthTable &func) {
-  SubnetBuilder subnetBuilder;
-
-  std::vector<size_t> inputs;
-  for (size_t i = 0; i < func.num_vars(); ++i) {
-    inputs.push_back(subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT));
-  }
+BiDecomposition::Link BiDecomposition::run(const KittyTT &func,
+                                           const Inputs &inputs,
+                                           uint32_t &dummy,
+                                           SubnetBuilder &subnetBuilder) const {
   
-  TruthTable care(func.num_vars());
+  KittyTT care(func.num_vars());
   kitty::create_from_binary_string(care, std::string(func.num_bits(), '1'));
   TernaryBiClique initBiClique(func, care);
 
-  Link output = getBiDecomposition(initBiClique,
-      {inputs.rbegin(), inputs.rend()}, subnetBuilder);
-
-  subnetBuilder.addCell(model::OUT, output, SubnetBuilder::OUTPUT);
-  
-  return subnetBuilder.make();
+  return decompose(initBiClique, dummy, subnetBuilder);
 }
 
-Link BiDecompositor::getBiDecomposition(TernaryBiClique &initBiClique,
-                                          const std::vector<size_t> &inputs,
-                                          SubnetBuilder &subnetBuilder) {
+BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
+                                                 uint32_t &dummy,
+                                                 SubnetBuilder &subnetBuilder) {
+
   if (initBiClique.getOnSet().size() == 1) {
-    return makeNetForDNF(*initBiClique.getOnSet().begin(), inputs, 
-                         subnetBuilder);
+    MinatoMorrealeAlg minatoMorrealeAlg;
+    return minatoMorrealeAlg.synthFromISOP(initBiClique.getOnSet(),
+        initBiClique.getInputs(), dummy, subnetBuilder);
   }
   
   auto starBiCliques = initBiClique.getStarCoverage();
@@ -55,34 +41,35 @@ Link BiDecompositor::getBiDecomposition(TernaryBiClique &initBiClique,
 
   TernaryBiClique firstBiClique(initBiClique.getOffSet(),
                                 std::move(first.offSet),
-                                initBiClique.getVars());
+                                first.vars,
+                                initBiClique.getInputs(),
+                                initBiClique.getIndices());
 
   TernaryBiClique secondBiClique(std::move(initBiClique.getOffSet()),
                                  std::move(second.offSet),
-                                 initBiClique.getVars());
-  
-  firstBiClique.eraseExtraVars(first.vars);
-  secondBiClique.eraseExtraVars(second.vars);
+                                 second.vars, 
+                                 std::move(initBiClique.getInputs()),
+                                 initBiClique.getIndices());
 
-  Link lhs = getBiDecomposition(firstBiClique, inputs, subnetBuilder);
-  Link rhs = getBiDecomposition(secondBiClique, inputs, subnetBuilder);
+  Link lhs = decompose(firstBiClique, dummy, subnetBuilder);
+  Link rhs = decompose(secondBiClique, dummy, subnetBuilder);
 
   return Link(subnetBuilder.addCell(model::AND, lhs, rhs), true);
 }
 
-std::pair<CoverageElement, CoverageElement> 
-    BiDecompositor::findBaseCoverage(std::vector<CoverageElement> &stars) {
+BiDecomposition::CoveragePair BiDecomposition::findBaseCoverage(
+    CoverageList &stars) {
 
   auto first = stars.end() - 2;
   auto second = stars.end() - 1;
 
-  auto intersection = popCount(first->vars & second->vars);
-  auto merge = popCount(first->vars | second->vars);
+  auto intersection = __builtin_popcount(first->vars & second->vars);
+  auto merge = __builtin_popcount(first->vars | second->vars);
  
   for (auto i = stars.begin(); i != (stars.end() - 2); ++i) {
     for (auto j = (i + 1); j != stars.end(); ++j) {
-      auto newIntersection = popCount(i->vars & j->vars);
-      auto newMerge = popCount(i->vars | j->vars);
+      auto newIntersection = __builtin_popcount(i->vars & j->vars);
+      auto newMerge = __builtin_popcount(i->vars | j->vars);
       if (newIntersection < intersection ||
          (newIntersection == intersection && newMerge > merge)) {
         first = i;
@@ -101,9 +88,8 @@ std::pair<CoverageElement, CoverageElement>
   return result;
 }
 
-void BiDecompositor::expandBaseCoverage(std::vector<CoverageElement> &stars,
-                                        CoverageElement &first,
-                                        CoverageElement &second) {
+void BiDecomposition::expandBaseCoverage(CoverageList &stars, Coverage &first,
+                                         Coverage &second) {
   while (!stars.empty()) {
     bool shouldWiden = true;
     auto absorbed = stars.end();
@@ -121,21 +107,20 @@ void BiDecompositor::expandBaseCoverage(std::vector<CoverageElement> &stars,
     }
     if (shouldWiden) {
       first.vars = first.vars | absorbed->vars;
-      first.offSet.pushBack(*absorbed->offSet.begin());
+      first.offSet.push_back(*absorbed->offSet.begin());
     } else {
       second.vars = second.vars | absorbed->vars;
-      second.offSet.pushBack(*absorbed->offSet.begin());
+      second.offSet.push_back(*absorbed->offSet.begin());
     }
     stars.erase(absorbed); 
   }
 }
 
-bool BiDecompositor::checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
-                                    CoverageElement &first,
-                                    CoverageElement &second) {
-  uint8_t newMerge = popCount(first.vars | second.vars);
-  uint8_t newDifBase = newMerge - popCount(first.vars);
-  uint8_t newDifAbsorbed = newMerge - popCount(second.vars);
+bool BiDecomposition::checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
+                                     Coverage &first, Coverage &second) {
+  uint8_t newMerge = __builtin_popcount(first.vars | second.vars);
+  uint8_t newDifBase = newMerge - __builtin_popcount(first.vars);
+  uint8_t newDifAbsorbed = newMerge - __builtin_popcount(second.vars);
   if (newDifBase < difBase ||
      (newDifBase == difBase && newDifAbsorbed < difAbsorbed)) {
     difBase = newDifBase;
@@ -143,25 +128,6 @@ bool BiDecompositor::checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
     return true;
   }
   return false;
-}
-
-Link BiDecompositor::makeNetForDNF(const TernaryVector &vector,
-                                     const std::vector<size_t> &inputs,
-                                     SubnetBuilder &subnetBuilder) {
-  uint32_t bits = vector.getBits();
-  uint32_t care = vector.getCare();
-  size_t index = std::log2(care - (care & (care - 1)));
-  care &= (care - 1);
-  bool inv = !((bits >> index) & 1);
-  Link prev(inputs[index], inv);
-  while (care) {
-    index = std::log2(care - (care & (care-1)));
-    care &= (care - 1);
-    inv = !((bits >> index) & 1);
-    prev = 
-        Link(subnetBuilder.addCell(model::AND, prev, Link(inputs[index], inv)));
-  }
-  return prev;
 }
 
 } // namespace eda::gate::optimizer2::resynthesis

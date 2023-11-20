@@ -9,6 +9,7 @@
 #include "gate/optimizer2/resynthesis/akers.h"
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
 #include "gate/optimizer2/resynthesis/cascade.h"
+#include "gate/optimizer2/resynthesis/isop.h"
 #include "gate/optimizer2/resynthesis/reed_muller.h"
 #include "gate/optimizer2/synthesizer.h"
 
@@ -22,14 +23,15 @@
 #include <ios>
 #include <vector>
 
-using AkersAlgorithm = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
-using BiDecompositor = eda::gate::optimizer2::resynthesis::BiDecompositor;
-using CascadeMethod  = eda::gate::optimizer2::resynthesis::Cascade;
-using DynTruthTable  = kitty::dynamic_truth_table;
-using ReedMullerAlg  = eda::gate::optimizer2::resynthesis::ReedMuller;
-using Subnet         = eda::gate::model::Subnet;
-using SubnetID       = eda::gate::model::SubnetID;
-using SynthTable     = eda::gate::optimizer2::Synthesizer<DynTruthTable>;
+using AkersAlgorithm    = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
+using BiDecomposition   = eda::gate::optimizer2::resynthesis::BiDecomposition;
+using CascadeMethod     = eda::gate::optimizer2::resynthesis::Cascade;
+using DynTruthTable     = kitty::dynamic_truth_table;
+using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
+using ReedMullerAlg     = eda::gate::optimizer2::resynthesis::ReedMuller;
+using Subnet            = eda::gate::model::Subnet;
+using SubnetID          = eda::gate::model::SubnetID;
+using SynthTable        = eda::gate::optimizer2::Synthesizer<DynTruthTable>;
 
 constexpr unsigned RAND3_TT_NUM  = 10;
 constexpr unsigned RAND4_TT_NUM  = 10;
@@ -41,17 +43,17 @@ constexpr unsigned RAND9_TT_NUM  = 5;
 constexpr unsigned RAND10_TT_NUM = 5;
 
 /// Defines the names of the resynthesis algorithms.
-enum Algorithm {
+enum class Algorithm {
   /// Akers algorithm.
   Akers,
-  /// The cascade method.
-  Cascade,
-  /// Reed-Muller algorithm.
-  ReedMuller,
   /// The bi-decomposition method.
   BiDecomposition,
+  /// The cascade method.
+  Cascade,
   /// Minato-Morreale algorithm.
-  MinatoMorreale
+  MinatoMorreale,
+  /// Reed-Muller algorithm.
+  ReedMuller
 };
 
 void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
@@ -119,7 +121,9 @@ void runTest(const DynTruthTable &table) {
   // Algorithms registry.
   std::vector<SynthTable*> registry;
   registry.push_back(new AkersAlgorithm());
+  registry.push_back(new BiDecomposition());
   registry.push_back(new CascadeMethod());
+  registry.push_back(new MinatoMorrealeAlg());
   registry.push_back(new ReedMullerAlg());
   // Launching.
   for (size_t i = 0; i < registry.size(); i++) {

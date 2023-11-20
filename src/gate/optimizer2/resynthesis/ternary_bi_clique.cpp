@@ -9,206 +9,74 @@
 #include "gate/optimizer2/resynthesis/ternary_bi_clique.h"
 #include "util/assert.h"
 
-#include <algorithm>
+// Removes a bit from the number by shifting the left bits to the right
+#define REMOVE_BIT(bits, idx)\
+  bits = ((bits >> 1) & (0xffffffff << idx)) +\
+         (bits & (0x00000000 | ((1u << idx) - 1)));\
 
 namespace eda::gate::optimizer2::resynthesis {
 
-using CoverageElement = TernaryBiClique::CoverageElement;
-using KittyTT         = TernaryBiClique::KittyTT;
-using NormalForm      = TernaryBiClique::NormalForm;
+using Coverage = TernaryBiClique::Coverage;
 
-uint32_t TernaryVector::orthogonality(const TernaryVector &rhs) const {
-  return (bits & care & rhs.care) ^ (rhs.bits & care & rhs.care);
-}
+TernaryBiClique::TernaryBiClique(const KittyTT &func, const KittyTT &care)
+    : indices((1u << func.num_vars()) - 1u),
+      onSet(kitty::isop(func & care)),
+      offSet(kitty::isop(~func & care)) {
 
-bool operator==(const TernaryVector &lhs, const TernaryVector &rhs) {
-  return (lhs.getBits() == rhs.getBits()) && (lhs.getCare() == rhs.getCare());
-}
-
-void TernaryMatrix::eraseExtraVars(uint32_t vars) { 
-  for (TernaryVector &vector : rows) {
-    vector.getBits() &= vars;
-    vector.getCare() &= vars; 
-  }
-  openVectors(vars);
-  mergeVectors(vars);
-}
-
-void TernaryMatrix::openVectors(uint32_t vars) {
-  std::set<uint32_t> allAbsorbedVectors;
-
-  for (const TernaryVector &vector : rows) {
-    getAbsorbedVectors(vector.getCare() ^ vars, vector.getBits(),
-                       allAbsorbedVectors);
-  }
-
-  rows.resize(allAbsorbedVectors.size());
-
-  std::transform(allAbsorbedVectors.begin(), allAbsorbedVectors.end(),
-                 rows.begin(),
-                 [care = vars](uint32_t bits){
-                  return TernaryVector(bits, care);
-                 });
-}
-
-void TernaryMatrix::mergeVectors(uint32_t vars) {
-  if (rows.size() <= 1) {
-    return;
-  }
-
-  std::vector<uint32_t> allSourceVectors(rows.size());
-  std::set<uint32_t> allAbsorbedVectors;
-
-  std::transform(rows.begin(), rows.end(), allSourceVectors.begin(), 
-                 [](const TernaryVector &vector) {
-                    return vector.getBits(); 
-                 });
-
-  auto base = rows.begin();
-  auto absorbed = base + 1;
-  auto end = rows.end();
-
-  while (base != end - 1) {
-    uint32_t orthBits = base->orthogonality(*absorbed);
-    if (popCount(orthBits) == 1) {
-      TernaryVector newBase = *base;
-      newBase.getCare() ^= orthBits;
-      allAbsorbedVectors.clear();
-      getAbsorbedVectors(newBase.getCare() ^ vars, base->getBits(),
-                         allAbsorbedVectors);
-      if (checkMerge(allSourceVectors, allAbsorbedVectors)) {
-        TernaryVector newAbsorbed = *absorbed;
-        *base = newBase;
-        for (const auto &vector : allAbsorbedVectors) {
-          auto it = std::find_if(absorbed, rows.end(), 
-                                 [vector](const auto &row) {
-                                   return row.getBits() == vector;
-                                 });
-          if (it != rows.end()) {
-            if (*it == newAbsorbed && it != rows.end() - 1) {
-              newAbsorbed = *(it + 1);
-            }
-            rows.erase(it);
-          }
-        }
-        end = rows.end();
-        base = std::find(rows.begin(), rows.end(), newBase);
-        absorbed = std::find(rows.begin(), rows.end(), newAbsorbed);
-      } else {
-        ++absorbed;
-      }
-    } else {
-      ++absorbed;
-    }
-    if (absorbed == end && base != end - 1) {
-      ++base;
-      absorbed = base + 1;
-    }
-  }
-
-  for (base = rows.begin(); base != rows.end() - 1; ++base) {
-    for (absorbed = base + 1; absorbed != rows.end(); ++absorbed) {
-      allAbsorbedVectors.clear();
-      uint32_t orthBits = base->orthogonality(*absorbed);
-      if (orthBits) {
-        TernaryVector newAbsorbed = *absorbed;
-        newAbsorbed.getCare() ^= orthBits;
-        getAbsorbedVectors(newAbsorbed.getCare() ^ vars, newAbsorbed.getBits(), 
-                           allAbsorbedVectors);
-        if (checkMerge(allSourceVectors, allAbsorbedVectors)) {
-          *absorbed = newAbsorbed;
-        }
-      }
-    }
-  }
-
-  std::set<uint32_t> absorbedVectors;
-  std::vector<TernaryVector> newRows;
-  for (auto it = rows.begin(); it != rows.end() - 1; ++it) {
-    std::set<uint32_t> newAbsorbedVectors;
-    getAbsorbedVectors(it->getCare() ^ vars, it->getBits(),
-        newAbsorbedVectors);
-    if (!std::includes(absorbedVectors.begin(), absorbedVectors.end(),
-                       newAbsorbedVectors.begin(), newAbsorbedVectors.end())) {
-      newRows.push_back(std::move(*it));
-      absorbedVectors.insert(newAbsorbedVectors.begin(),
-                             newAbsorbedVectors.end());
-    }
-  }
-  rows = newRows;
-}
-
-void TernaryMatrix::getAbsorbedVectors(uint32_t pos, uint32_t bits,
-    std::set<uint32_t> &allAbsorbedVectors) {
-  if (!popCount(pos)) {
-    allAbsorbedVectors.insert(bits);
-  } else {
-    uint32_t newPos = pos & (pos - 1);
-    getAbsorbedVectors(newPos, bits | (pos - newPos), allAbsorbedVectors);
-    getAbsorbedVectors(newPos, bits & ~(pos - newPos), allAbsorbedVectors);
-  }
-}
-
-bool TernaryMatrix::checkMerge(const std::vector<uint32_t> &allSourceVectors,
-                                 const std::set<uint32_t> &allAbsorbedVectors) {
-  return std::includes(allSourceVectors.begin(), allSourceVectors.end(),
-                       allAbsorbedVectors.begin(), allAbsorbedVectors.end());
-}
-
-
-bool operator==(const TernaryMatrix &lhs, const TernaryMatrix &rhs) {
-  return lhs.rows == rhs.rows;
-}
-
-TernaryBiClique::TernaryBiClique(const KittyTT &func, const KittyTT &care) {
-
-  const size_t fSize = func.num_vars();
-  const size_t cSize = care.num_vars();
-
+  auto fSize = func.num_vars();
+  auto cSize = func.num_vars();
+      
   uassert(fSize == cSize, "func and care have different sizes");
+  uassert(fSize <= 32, "Too many inputs");
 
-  vars = ((1u << func.num_vars()) - 1u);
-
-  for (uint32_t i = 0; i < func.num_bits(); ++i) {
-    if (get_bit(care, i)) {
-      get_bit(func, i) ? onSet.pushBack({i, vars}) : offSet.pushBack({i, vars});
-    }
+  for (size_t i{0}; i < fSize; ++i) {
+    inputs.push_back(i);
   }
-
-  onSet.mergeVectors(vars);
-  offSet.mergeVectors(vars);
 }
 
-TernaryBiClique::TernaryBiClique(TernaryMatrix onSet, TernaryMatrix offSet,
-                                 uint32_t vars) 
-  : vars(vars), onSet(std::move(onSet)), offSet(std::move(offSet)) { }
+TernaryBiClique::TernaryBiClique(ISOP onSet, ISOP offSet, uint32_t indices,
+                                 Inputs inputs, uint32_t oldIndices)
+  : indices(indices),
+    inputs(std::move(inputs)),
+    onSet(std::move(onSet)),
+    offSet(std::move(offSet)) { 
 
-void TernaryBiClique::eraseExtraVars(uint32_t vars) {
-  if (vars == this->vars) {
+  if (oldIndices == this->indices) {
     return;
   }
-  this->onSet.eraseExtraVars(vars);
-  this->offSet.eraseExtraVars(vars);
+
+  eraseExtraInputs(this->onSet, oldIndices);
+  eraseExtraInputs(this->offSet, oldIndices);
+
+  uint32_t idxs = oldIndices ^ this->indices;
+  size_t i{0};
+  for(; idxs; idxs &= (idxs - 1)) {
+    size_t idx = std::log2(idxs - (idxs & (idxs - 1))) - i;
+    REMOVE_BIT(this->indices, idx)
+    ++i;
+    this->inputs.erase(this->inputs.begin() + idx);
+  }
 }
 
-std::vector<CoverageElement> TernaryBiClique::getStarCoverage() const {
+std::vector<Coverage> TernaryBiClique::getStarCoverage() const {
 
   uassert(!onSet.empty() && !offSet.empty(),
       "There are not edges in the bi-clique");
 
-  std::vector<CoverageElement> coverage;
+  std::vector<Coverage> coverage;
   coverage.reserve(onSet.size());
-  for (const auto &vector : onSet) {
-    coverage.push_back({{vector}, findVars(vector)});
+  for (const Cube &vector : onSet) {
+    coverage.push_back({{vector}, findIndices(vector)});
   }
+
   return coverage;
 }
 
-uint32_t TernaryBiClique::findVars(const TernaryVector &vector) const {
+uint32_t TernaryBiClique::findIndices(const Cube &vector) const {
 
   NormalForm cnf;
-  for (const auto &v : offSet) {
-    uint32_t q = vector.orthogonality(v);
+  for (const Cube &v : offSet) {
+    uint32_t q = findCubeOrthogonality(vector, v);
     cnf.insert(q);
   }
 
@@ -262,17 +130,17 @@ uint32_t TernaryBiClique::findVars(const TernaryVector &vector) const {
     multiplyDisjuncts(dnf, *it);
   }
 
-  // Finds weight of the bi-clique.
-  auto vars = *std::min_element(dnf.begin(), dnf.end(), [](auto lhs, auto rhs) {
-    return popCount(lhs) < popCount(rhs);
-  });
+  auto foundIndices = *std::min_element(dnf.begin(), dnf.end(),
+      [](auto lhs, auto rhs) {
+        return __builtin_popcount(lhs) < __builtin_popcount(rhs);
+      });
 
-  return vars;
+  return foundIndices;
 }
 
 void TernaryBiClique::multiplyDisjuncts(NormalForm &dnf, uint32_t disjunct) {
   NormalForm newDNF;
-  if (popCount(disjunct) == 1) {
+  if (__builtin_popcount(disjunct) == 1) {
     for (auto conjunct : dnf) {
       conjunct |= disjunct;
       newDNF.insert(conjunct);
@@ -288,8 +156,20 @@ void TernaryBiClique::multiplyDisjuncts(NormalForm &dnf, uint32_t disjunct) {
   dnf = newDNF;
 }
 
-bool operator==(const CoverageElement &lhs, const CoverageElement &rhs) {
-  return (lhs.offSet == rhs.offSet) && (lhs.vars == rhs.vars); 
+void TernaryBiClique::eraseExtraInputs(ISOP &isop, uint32_t oldIndices) {
+  uint32_t idxs = oldIndices ^ this->indices;
+  size_t i{0};
+  for(; idxs; idxs &= (idxs - 1)) {
+    size_t idx = std::log2(idxs - (idxs & (idxs - 1))) - i;
+    for (Cube &cube : isop) {
+      REMOVE_BIT(cube._mask, idx)
+      REMOVE_BIT(cube._bits, idx)
+    }
+    ++i;
+  }
+  KittyTT tt(__builtin_popcount(indices));
+  kitty::create_from_cubes(tt, isop);
+  isop = kitty::isop(tt);
 }
 
 } // namespace eda::gate::optimizer2::resynthesis

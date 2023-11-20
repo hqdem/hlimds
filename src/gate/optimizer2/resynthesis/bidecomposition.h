@@ -9,9 +9,11 @@
 #pragma once
 
 #include "gate/model2/subnet.h"
+#include "gate/optimizer2/resynthesis/isop.h"
 #include "gate/optimizer2/resynthesis/ternary_bi_clique.h"
 #include "gate/optimizer2/synthesizer.h"
 
+#include <utility>
 #include <vector>
 
 namespace eda::gate::optimizer2::resynthesis {
@@ -23,46 +25,42 @@ namespace eda::gate::optimizer2::resynthesis {
  * The algorithm based on the article "Synthesis of combinational circuits by
  * means of bi-decomposition of Boolean functions" by Yuri V. Pottosin (2022).
 */
-class BiDecompositor : public Synthesizer<kitty::dynamic_truth_table> {
+class BiDecomposition final : public Synthesizer<kitty::dynamic_truth_table> {
 public:
 
-  using CoverageElement = TernaryBiClique::CoverageElement;
-  using Subnet          = eda::gate::model::Subnet;
-  using SubnetID        = eda::gate::model::SubnetID;
-  using Link            = Subnet::Link;
-  using LinkList        = Subnet::LinkList;
-  using SubnetBuilder   = eda::gate::model::SubnetBuilder;
-  using TruthTable      = kitty::dynamic_truth_table;
+  using Coverage      = TernaryBiClique::Coverage;
+  using CoverageList  = std::vector<Coverage>;
+  using CoveragePair  = std::pair<Coverage, Coverage>;
+  using Inputs        = std::vector<size_t>;
+  using KittyTT       = kitty::dynamic_truth_table;
+  using Link          = model::Subnet::Link;
+  using LinkList      = model::Subnet::LinkList;
+  using Subnet        = model::Subnet;
+  using SubnetBuilder = model::SubnetBuilder;
+  using SubnetID      = model::SubnetID;
 
-  BiDecompositor() { };
+  /// Synthesizes the Subnet.
+  SubnetID synthesize(const KittyTT &func) override {
+    return launchAlgorithm<BiDecomposition>(func, *this);
+  }
 
-  ~BiDecompositor() { };
-
-  /** Launchs synthesizing the Subnet.
-   * @param func To define a Boolean function.
-   * @return SunetID.
-  */
-  SubnetID synthesize(const TruthTable &func) override;
+  /// Synthesizes the Subnet for a non-constant function.
+  Link run(const KittyTT &func, const Inputs &inputs, uint32_t &dummy,
+           SubnetBuilder &subnetBuilder) const;
 
 private:
 
-  static Link getBiDecomposition(TernaryBiClique &initBiClique,
-                                 const std::vector<size_t> &inputs,
-                                 SubnetBuilder &subnetBuilder);
+  static Link decompose(TernaryBiClique &initBiClique, uint32_t &dummy,
+                        SubnetBuilder &subnetBuilder);
 
-  static std::pair<CoverageElement, CoverageElement> 
-      findBaseCoverage(std::vector<CoverageElement> &stars);
+  static CoveragePair findBaseCoverage(CoverageList &stars);
 
-  static void expandBaseCoverage(std::vector<CoverageElement> &stars,
-                                 CoverageElement &first,
-                                 CoverageElement &second);
+  static void expandBaseCoverage(CoverageList &stars, Coverage &first,
+                                 Coverage &second);
 
   static bool checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
-                             CoverageElement &first, CoverageElement &second);
+                             Coverage &first, Coverage &second);
   
-  static Link makeNetForDNF(const TernaryVector &vector,
-                            const std::vector<size_t> &inputs,
-                            SubnetBuilder &subnetBuilder);
 };
 
 } // namespace eda::gate::optimizer2::resynthesis

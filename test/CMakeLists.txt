@@ -58,6 +58,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/resynthesis/akers_test.cpp
   gate/optimizer2/resynthesis/bidecomposition_test.cpp
   gate/optimizer2/resynthesis/cascade_test.cpp
+  gate/optimizer2/resynthesis/isop_test.cpp
   gate/optimizer2/resynthesis/reed_muller_test.cpp
   gate/optimizer2/resynthesis/resynthesis_contest.cpp
   gate/optimizer2/resynthesizer_test.cpp

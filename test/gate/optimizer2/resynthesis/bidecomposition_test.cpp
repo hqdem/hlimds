@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
+#include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
 #include "kitty/kitty.hpp"
@@ -14,68 +15,68 @@
 #include <random>
 #include <string>
 
-using BiDecompositor = eda::gate::optimizer2::resynthesis::BiDecompositor;
-using Subnet         = eda::gate::model::Subnet;
-using TruthTable     = BiDecompositor::TruthTable;
+using BiDecomposition = eda::gate::optimizer2::resynthesis::BiDecomposition;
+using KittyTT         = BiDecomposition::KittyTT;
+using Subnet          = eda::gate::model::Subnet;
+using TernaryBiClique = eda::gate::optimizer2::resynthesis::TernaryBiClique;
 
-bool BiDecompositorTest(const std::string &funcString, size_t numVars) {
-  TruthTable func(numVars);
-  kitty::create_from_binary_string(func, funcString);
+bool BiDecompositionTest(size_t numVars) {
 
-  // Making sure that func has no less then one bit for 1 and no less then
-  // one bit for 0.
-  if (!kitty::count_ones(func)) {
-    kitty::set_bit(func, std::rand() % func.num_bits());
-  } else if (!kitty::count_zeros(func)) {
-    kitty::clear_bit(func, std::rand() % func.num_bits());
+  BiDecomposition biDecomposition;
+
+  bool flag{true};
+  const size_t funcCount = 10;
+  for (size_t i{0}; i < funcCount; ++i) {
+    std::string funcString;
+    for (int i = 0; i < (1 << numVars); ++i) {
+      funcString += std::to_string(std::rand() & 1);
+    }
+    BiDecomposition::KittyTT tt(numVars);
+    kitty::create_from_binary_string(tt, funcString);
+    const auto &subnet = Subnet::get(biDecomposition.synthesize(tt));
+    auto ttCopy = eda::gate::model::evaluate(subnet);
+    flag &= (ttCopy == tt);
   }
 
-  // Getting a heuristic bi-decomposition for boolean function.
-  BiDecompositor biDecompositor;
-  const auto &subnet = Subnet::get(biDecompositor.synthesize(func));
-  std::cout << subnet << std::endl;
-
-  return true;
+  return flag;
 }
 
-bool BiDecompositorTest(size_t numVars) {
-  std::string funcString;
-  for (int j = 0; j < (1 << numVars); ++j) {
-    funcString += std::to_string(std::rand() & 1);
-  }
-  return BiDecompositorTest(funcString, numVars);
+TEST(BiDecompositionTest, RandomFunc1Vars) {
+  EXPECT_TRUE(BiDecompositionTest(1));
 }
 
-TEST(BiDecompositorTest, Example5Vars) {
-  EXPECT_TRUE(BiDecompositorTest("10110010000000101110001111000000", 5));
+TEST(BiDecompositionTest, RandomFunc2Vars) {
+  EXPECT_TRUE(BiDecompositionTest(2));
 }
 
-TEST(BiDecompositorTest, Example3Vars) {
-  EXPECT_TRUE(BiDecompositorTest("10010110", 3));
+TEST(BiDecompositionTest, RandomFunc3Vars) {
+  EXPECT_TRUE(BiDecompositionTest(3));
 }
 
-TEST(BiDecompositorTest, RandomFunc6Vars) {
-  EXPECT_TRUE(BiDecompositorTest(6));
+TEST(BiDecompositionTest, RandomFunc4Vars) {
+  EXPECT_TRUE(BiDecompositionTest(4));
 }
 
-TEST(BiDecompositorTest, RandomFunc5Vars) {
-  EXPECT_TRUE(BiDecompositorTest(5));
+TEST(BiDecompositionTest, RandomFunc5Vars) {
+  EXPECT_TRUE(BiDecompositionTest(5));
 }
 
-TEST(BiDecompositorTest, RandomFunc4Vars) {
-  EXPECT_TRUE(BiDecompositorTest(4));
+TEST(BiDecompositionTest, RandomFunc6Vars) {
+  EXPECT_TRUE(BiDecompositionTest(6));
 }
 
-// TODO: uncomment when #61 will be fixed
-
-/*TEST(BiDecompositorTest, RandomFunc3Vars) {
-  EXPECT_TRUE(BiDecompositorTest(3));
+TEST(BiDecompositionTest, RandomFunc7Vars) {
+  EXPECT_TRUE(BiDecompositionTest(7));
 }
 
-TEST(BiDecompositorTest, RandomFunc2Vars) {
-  EXPECT_TRUE(BiDecompositorTest(2));
-}*/
+TEST(BiDecompositionTest, RandomFunc8Vars) {
+  EXPECT_TRUE(BiDecompositionTest(8));
+}
 
-TEST(BiDecompositorTest, RandomFunc1Vars) {
-  EXPECT_TRUE(BiDecompositorTest(1));
+TEST(BiDecompositionTest, RandomFunc9Vars) {
+  EXPECT_TRUE(BiDecompositionTest(9));
+}
+
+TEST(BiDecompositionTest, RandomFunc10Vars) {
+  EXPECT_TRUE(BiDecompositionTest(10));
 }

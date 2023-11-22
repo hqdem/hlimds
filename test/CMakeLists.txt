@@ -55,6 +55,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
   gate/optimizer/util_test.cpp
+  gate/optimizer2/cut_extractor_test.cpp
   gate/optimizer2/resynthesis/akers_test.cpp
   gate/optimizer2/resynthesis/bidecomposition_test.cpp
   gate/optimizer2/resynthesis/cascade_test.cpp

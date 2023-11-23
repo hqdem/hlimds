@@ -10,6 +10,7 @@
 #include "gate/techoptimizer/library/cell.h"
 #include "gate/model/gnet_test.h"
 #include "gate/optimizer/rwdatabase.h"
+#include "util/logging.h"
 
 #include "gtest/gtest.h"
 #include <filesystem>
@@ -26,9 +27,11 @@ bool checkLibParser(std::string liberty) {
   const std::string pathToLiberty = libertyDirrect / liberty;
   LibraryCells libraryCells(pathToLiberty);
 
+#ifdef UTOPIA_DEBUG
   for(const auto& cell : libraryCells.cells) {
     std::cout << cell->getName() << std::endl;
   }
+#endif
 
   return true;
 }

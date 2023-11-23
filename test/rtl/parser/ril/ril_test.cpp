@@ -12,6 +12,7 @@
 #include "rtl/model/net.h"
 #include "rtl/parser/ril/builder.h"
 #include "rtl/parser/ril/parser.h"
+#include "util/logging.h"
 
 #include "gtest/gtest.h"
 
@@ -34,14 +35,14 @@ int rilTest(const std::string &outSubPath,
 
   auto model = parse(fullPath);
 
-  std::cout << "------ p/v-nets ------" << std::endl;
-  std::cout << *model << std::endl;
+  LOG_DEBUG("------ p/v-nets ------");
+  LOG_DEBUG(*model);
 
   Compiler compiler(FLibraryDefault::get());
   auto gnet = compiler.compile(*model);
 
-  std::cout << "------ g-net ------" << std::endl;
-  std::cout << *gnet;
+  LOG_DEBUG("------ g-net ------");
+  LOG_DEBUG(*gnet);
 
   return 0;
 }

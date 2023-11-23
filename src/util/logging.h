@@ -15,6 +15,12 @@
 #define LOG_WARN  LOG_INFO
 #define LOG_FATAL LOG_INFO
 
+#ifdef UTOPIA_DEBUG
+#define LOG_DEBUG(x) std::cerr << x << std::endl;
+#else
+#define LOG_DEBUG(x)
+#endif
+
 #define LOG(severity) LOG_##severity
 
 #define CHECK(x) \

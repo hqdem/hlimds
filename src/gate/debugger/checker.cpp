@@ -322,7 +322,10 @@ CheckerResult Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
   if (verdict) {
     return CheckerResult::EQUAL;
   }
+
+ #ifdef UTOPIA_DEBUG
   error(encoder.context(), ibind, obind);
+ #endif
 
   auto &cont = encoder.context();
   std::vector<bool> counterEx;

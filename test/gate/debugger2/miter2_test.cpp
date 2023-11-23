@@ -6,9 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/miter2.h"
+#include "gate/debugger2/rnd_checker2.h"
 #include "gate/model2/utils/subnet_random.h"
-#include "gate/simulator2/simulator.h"
 
 #include "gtest/gtest.h"
 
@@ -26,21 +25,11 @@ TEST(MiterTest, Random) {
 
   for (size_t i = 0; i < nSubnet; ++i) {
     Subnet s = Subnet::get(randomSubnet(nIn, nOut, nCell, minArity, maxArity));
-    MiterHints hints;
-    for (size_t i = 0; i < nIn; ++i) {
-      hints.sourceBinding[i] = i;
+    CellToCell map;
+    for (size_t i = 0; i < s.getEntries().size(); ++i) {
+      map[i] = i;
     }
-    for (size_t i = s.size() - 1; ; i--) {
-      size_t prevMore = s.getEntries()[i - 1].cell.more;
-      if (prevMore) {
-        continue;
-      } else {
-        hints.targetBinding[i] = i;
-      }
-      if (hints.targetBinding.size() == nOut) {
-        break;
-      }
-    }
+    MiterHints hints = makeHints(s, map);
     Subnet miter = miter2(s, s, hints);
     EXPECT_TRUE(miter.getOutNum() == 1);
     EXPECT_TRUE(miter.getInNum() == s.getInNum());
@@ -51,6 +40,10 @@ TEST(MiterTest, Random) {
     }
     simulator.simulate(values);
     EXPECT_FALSE(simulator.getValue(miter.getEntries().size() - 1)) << std::endl;
+    RndChecker2 rnd(false, 100);
+    EXPECT_TRUE(rnd.equivalent(s, s, map).isUnknown());
+    rnd.setExhaustive(true);
+    EXPECT_TRUE(rnd.equivalent(s, s, map).equal());
   }
 }
 } // namespace eda::gate::debugger2

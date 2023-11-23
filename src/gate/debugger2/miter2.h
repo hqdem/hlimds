@@ -43,5 +43,12 @@ bool areMiterable(const Subnet &net1, const Subnet &net2, MiterHints &hints);
 void buildCells(const Subnet &net,
                 SubnetBuilder &builder,
                 CellToCell &correspondence);
+/**
+ *  \brief Fills hints structure for two nets based on a map.
+ *  @param net The net, which the maps' keys were based on.
+ *  @param map Cell-to-Cell mapping between nets.
+ *  @return Filled hints structure.
+ */
+MiterHints makeHints(const Subnet &net, CellToCell &map);
 
 } // namespace eda::gate::debugger2

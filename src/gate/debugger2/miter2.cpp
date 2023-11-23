@@ -79,4 +79,24 @@ Subnet miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
   return Subnet::get(subnetBuilder.make());
 }
 
+MiterHints makeHints(const Subnet &net, CellToCell &map) {
+    MiterHints hints;
+    size_t nOut = net.getOutNum();
+    size_t nIn = net.getInNum();
+    for (size_t i = 0; i < nIn; ++i) {
+      hints.sourceBinding[i] = map[i];
+    }
+    for (size_t i = net.size() - 1; ; i--) {
+      size_t prevMore = net.getEntries()[i - 1].cell.more;
+      if (prevMore) {
+        continue;
+      }
+      hints.targetBinding[i] = map[i];
+      if (hints.targetBinding.size() == nOut) {
+        break;
+      }
+    }
+    return hints;
+}
+
 } // namespace eda::gate::debugger2

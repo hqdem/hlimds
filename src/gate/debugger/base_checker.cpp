@@ -16,7 +16,7 @@ namespace eda::gate::debugger {
 using LecType = eda::gate::debugger::options::LecType;
 
 BaseChecker &getChecker(LecType lec) {
-  switch(lec) {
+  switch (lec) {
     case LecType::BDD: return BddChecker::get();
     case LecType::DEFAULT: return Checker::get();
     case LecType::RND: return RndChecker::get();

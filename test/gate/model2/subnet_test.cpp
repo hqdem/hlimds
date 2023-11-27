@@ -17,6 +17,30 @@
 
 namespace eda::gate::model {
 
+SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, bool tree = false) {
+  using Link = Subnet::Link;
+  using LinkList = Subnet::LinkList;
+
+  SubnetBuilder builder;
+  LinkList links;
+
+  for (size_t i = 0; i < arity; i++) {
+    const auto idx = builder.addCell(IN, SubnetBuilder::INPUT);
+    links.emplace_back(Link(idx));
+  }
+
+  size_t idx = 0;
+  if (tree) {
+    idx = builder.addCellTree(symbol, links);
+  } else {
+    idx = builder.addCell(symbol, links);
+  }
+
+  builder.addCell(OUT, Link(idx), SubnetBuilder::OUTPUT);
+
+  return builder.make();
+}
+
 TEST(SubnetTest, SimpleTest) {
   using Link = Subnet::Link;
 
@@ -53,6 +77,40 @@ TEST(SubnetTest, SimpleTest) {
   const auto length = subnet.getPathLength();
   std::cout << "Path lenth: min=" << length.first
             << ", max="  << length.second << std::endl;
+}
+
+TEST(SubnetTest, CellTreeTest) {
+  // OR.
+  for (size_t i = 2; i < 6; ++i) {
+    const auto &subnet = Subnet::get(makeSimpleSubnet(OR, i));
+    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(OR, i, true));
+
+    EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
+  }
+
+  // AND.
+  for (size_t i = 2; i < 6; ++i) {
+    const auto &subnet = Subnet::get(makeSimpleSubnet(AND, i));
+    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(AND, i, true));
+
+    EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
+  }
+
+  // XOR.
+  for (size_t i = 2; i < 6; ++i) {
+    const auto &subnet = Subnet::get(makeSimpleSubnet(XOR, i));
+    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(XOR, i, true));
+
+    EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
+  }
+
+  // XNOR.
+  for (size_t i = 2; i < 6; ++i) {
+    const auto &subnet = Subnet::get(makeSimpleSubnet(XNOR, i));
+    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(XNOR, i, true));
+
+    EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
+  }
 }
 
 } // namespace eda::gate::model

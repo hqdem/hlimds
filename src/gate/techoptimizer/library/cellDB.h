@@ -24,7 +24,8 @@ namespace eda::gate::tech_optimizer {
   public:
     CellDB(const std::list<CellTypeID> &cellTypeIDs);
 
-    void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs);
+    CellDB();
+    //void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs);
 
     std::map<SubnetID, Subnetattr> &getSubnetMap();
 

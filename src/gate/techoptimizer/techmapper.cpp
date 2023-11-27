@@ -11,7 +11,13 @@
 #include "gate/techoptimizer/library/cellDB.h"
 #include "gate/techoptimizer/techmapper.h"
 
+#include <list>
+#include <map>
+#include <unordered_map>
+
 namespace eda::gate::tech_optimizer {
+
+using CellID = eda::gate::model::CellID;
 
 CellDB cellDB;
 
@@ -31,32 +37,52 @@ void tech_optimize(NetID net, uint approachSelector/*, Constraints &constraints*
   
   switch(approachSelector) {
   case 0: // cut-based matching
-    CutBasedTechMapper mapper(functDB, cellTypeMap);
-    MinDelay *minDelay = new MinDelay();
-    mapper.techMap(net, minDelay, false); // TODO not need to return the pointer
-  break;
+    //CutBasedTechMapper mapper(functDB, cellTypeMap);
+
+    //MinDelay *minDelay = new MinDelay();
+
+    //CutBasedTechMapper mapper(cellDB, minDelay);
+
+    //NetID mappedNet = sequence_net(net, mapper)
+    //mapper.techMap(net, minDelay, false);
+    break;
   //case 1: // DAGON matching
-    //DagonTechMapper mapper(structDB);
-    //mapper.techMap(net, &strategy);
   }
 }
 
-void sequence_net(NetID netID) {
+NetID sequence_net(NetID netID, CutBasedTechMapper mapper) {
   Net net = model::Net::get(netID);
-  List<CellID> FFIDs = net.getFlipFlops();
+  model::List<CellID> FFIDs = net.getFlipFlops();
+
+  std::map<CellID, CellID> cellMap;
+  model::NetBuilder netBuilder;
+
+  // addInputToNetBuilder(netBuilder, net.getFanIn(), cellMap);
 
   for (CellID FFID : FFIDs) {
-    for (eda::gate::model::LinkEnd inputCell : Cell::get(FFID).getLinks()) {
+
+    std::list<CellID> FFinputs;
+    for (eda::gate::model::LinkEnd inputCell : model::Cell::get(FFID).getLinks()) {
 
       CellID subnetOutput = inputCell.getCellID();
-      std::list<CellID> subnetInputs = getSequenceInputs(netID, subnetOutput);
-      SubnetID subnetID = net.getSubnet(subnetInputs, subnetOutput);
+      // std::list<CellID> subnetInputs = getSequenceInputs(netID, subnetOutput);
 
-      
+      // SubnetID partOfNet = net.getSubnet(subnetInputs, subnetOutput);
 
-      std::cout << elem << " ";
+      // SubnetID mappedSubnet = mapper.techMap(partOfNet);
+
+      // std::list<CellID> inputs = getNetCellID(subnetInputs, cellMap);
+      // CellID output = netBuilder.addSubnet(mappedSubnet, inputs);
+      // cellMap.insert(std::pair<CellID, CellID>(subnetOutput, output));
+
+      FFinputs.push_back(subnetOutput);
     }
+    // std::list<CellID> inputs = getNetCellID(FFinputs, cellMap);
+    // CellID mappedFFID = addFFToNet(netBuilder, FFID, inputs);
+    // cellMap.insert(std::pair<CellID, CellID>(FFID, mappedFFID));
   }
+
+  return netBuilder.make();
 }
 } // namespace eda::gate::tech_optimizer
 

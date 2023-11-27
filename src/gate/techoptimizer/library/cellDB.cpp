@@ -13,6 +13,8 @@ using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using CellType = eda::gate::model::CellType;
 
 namespace eda::gate::tech_optimizer {
+  
+  CellDB::CellDB() {}
 
   CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
 
@@ -43,7 +45,7 @@ namespace eda::gate::tech_optimizer {
 
     }
   }
-
+/*
     void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs) {
       for (const CellTypeID& cellTypeID : cellTypeIDs) {
       CellType cellType = CellType::get(cellTypeID);
@@ -75,6 +77,7 @@ namespace eda::gate::tech_optimizer {
 
     }
     }
+    */
 
    std::map<SubnetID, Subnetattr> &CellDB::getSubnetMap() {
     return subnetMap;

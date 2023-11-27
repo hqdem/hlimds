@@ -43,6 +43,35 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   return {minLength, maxLength};
 }
 
+size_t SubnetBuilder::addCellTree(CellSymbol symbol, const LinkList &links) {
+  if (links.size() < 3) {
+    return addCell(symbol, links);
+  }
+
+  bool isAssociative = CellType::get(getCellTypeID(symbol)).isAssociative();
+  assert(isAssociative && "Only associative cells are allowed!");
+
+  CellSymbol finalSym = symbol;
+  if (symbol == XNOR) {
+    symbol = XOR;
+  }
+
+  LinkList linksNew = links;
+  linksNew.reserve(2 * links.size() - 2);
+
+  size_t l = 0;
+  size_t r = 1;
+  while (r != linksNew.size() - 1) {
+    const auto idx = addCell(symbol, linksNew[l], linksNew[r]);
+    linksNew.emplace_back(Link(idx));
+
+    l += 2;
+    r += 2;
+  }
+
+  return addCell(finalSym, linksNew[l], linksNew[r]);
+}
+
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
   const auto cells = subnet.getEntries();
   for (size_t i = 0; i < subnet.size(); ++i) {

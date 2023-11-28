@@ -7,12 +7,8 @@
 //===----------------------------------------------------------------------===//
 #include "gate/model2/celltype.h"
 #include "gate/model2/printer/printer.h"
-#include "gate/optimizer/cut_storage.h"
-#include "gate/optimizer/cut_walker.h"
-#include "gate/optimizer/net_substitute.h"
-#include "gate/optimizer/optimizer.h"
 #include "gate/premapper/aigmapper.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/techoptimizer/cut_based_tech_mapper2/cut_based_tech_mapper.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/tech_map_visitor.h"
 #include "gate/techoptimizer/library/cell.h"
 
@@ -23,22 +19,13 @@ namespace eda::gate::tech_optimizer {
   using PreBasis = eda::gate::premapper::PreBasis;
   using CutStorage = eda::gate::optimizer::CutStorage;
   
-  CutBasedTechMapper::CutBasedTechMapper(const std::string &libertyPath) {
-    LibraryCells libraryCells(libertyPath);
-    rwdb.linkDB(dbPath);
-    rwdb.openDB();
 
-    libraryCells.initializeLibraryRwDatabase(&rwdb, cellTypeMap);
+  void CutBasedTechMapper2::set(CellDB cellDB, Strategy2 *strategy) {
+    this->cellDB = cellDB;
+    this->strategy = strategy;
   }
 
-  CutBasedTechMapper::CutBasedTechMapper(
-      eda::gate::optimizer::SQLiteRWDatabase &rwdb,  
-      std::unordered_map<std::string, CellTypeID> &cellTypeMap) :
-    rwdb(rwdb),
-    cellTypeMap(cellTypeMap) {}
-
-  GNet *CutBasedTechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
-    try {
+  SubnetID CutBasedTechMapper2::techMap(SubnetID subnetID) {
       if (aig) {aigMap(net);}
 
       CutStorage cutStorage;

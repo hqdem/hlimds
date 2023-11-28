@@ -69,6 +69,7 @@ add_library(Gate OBJECT
   techoptimizer/cut_based_tech_mapper/strategy/min_delay.cpp
   techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.cpp
   techoptimizer/cut_based_tech_mapper/tech_map_visitor.cpp
+  techoptimizer/sequential_mapper/sequential_mapper.cpp
   techoptimizer/tech_optimizer.cpp
   techoptimizer/techmapper.cpp
   techoptimizer/library/cellDB.cpp

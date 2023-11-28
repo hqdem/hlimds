@@ -9,6 +9,7 @@
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 
 namespace eda::gate::tech_optimizer {
+  /*
   void mapDFF( LinkList linkList) {
     CellTypeID cellID = eda::gate::model::makeCellType(
         "DFF", eda::gate::model::CellSymbol::CELL,
@@ -23,5 +24,11 @@ namespace eda::gate::tech_optimizer {
       functDB.openDB();
 
       libraryCells.initializeLibraryRwDatabase(&functDB, cellTypeMap);
+  }
+  */
+
+  std::list<CellID> getSequenceInputs(NetID netID, CellID subnetOutput) {
+    std::list<CellID> cellID;
+    return cellID;
   }
 } // namespace eda::gate::tech_optimizer

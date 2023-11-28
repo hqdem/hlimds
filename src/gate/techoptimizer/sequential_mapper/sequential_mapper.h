@@ -8,14 +8,18 @@
 
 #pragma once
 
-#include "gate/model/gnet.h"
+#include "gate/model2/cell.h"
+#include "gate/model2/net.h"
+
+#include <list>
 
 namespace eda::gate::tech_optimizer {
-  using GNet = eda::gate::model::GNet;
   using LinkList = model::Cell::LinkList;
+  using CellID = eda::gate::model::CellID;
+  using NetID = eda::gate::model::NetID;
 
-  void mapDFF( LinkList linkList);
-  void mapLatch( LinkList linkList);
-  void mapDFFrs( LinkList linkList);
-  void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*/);
+  //void mapDFF( LinkList linkList);
+  //void mapLatch( LinkList linkList);
+  //void mapDFFrs( LinkList linkList);
+  std::list<CellID> getSequenceInputs(NetID netID, CellID subnetOutput);
 } // namespace eda::gate::tech_optimizer

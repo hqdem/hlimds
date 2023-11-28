@@ -22,23 +22,26 @@ namespace eda::gate::tech_optimizer {
   public:
     CutBasedTechMapper2();
 
-    void set(SubnetID subnetID, CellDB cellDB, Strategy2 *strategy);
+    void set(CellDB cellDB, Strategy2 *strategy);
 
-    SubnetID techMap();
+    SubnetID techMap(SubnetID subnetID);
 
     float getArea() const;
     float getDelay() const;
 
   private:
     SubnetID subnetID;
+
     CellDB cellDB;
     Strategy2 *strategy;
 
     double area;
     double delay;
 
-    void aigMap();
-    void findCuts(CutStorage &cutStorage);
+    // Dosnt exist yet for model2
+    //void aigMap();
+
+    void findCuts(SubnetID subnetID);
     void replacementSearch();
     void buildNet( 
         std::unordered_map<GateID, Replacement> &bestSubstitutions);

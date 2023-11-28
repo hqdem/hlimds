@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "lec_test.h"
+#include "util/logging.h"
 
 using namespace eda::gate::debugger;
 using namespace eda::gate::model;
@@ -46,9 +47,8 @@ Checker::Hints checkerTestHints(unsigned N,
 
   GateBinding imap, omap;
 
-  // TODO: Debug print.
-  std::cout << lhs << std::endl;
-  std::cout << rhs << std::endl;
+  LOG_DEBUG(lhs);
+  LOG_DEBUG(rhs);
 
   // Input bindings.
   for (unsigned i = 0; i < N; i++) {

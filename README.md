@@ -96,7 +96,7 @@ cd utopia-eda
 export UTOPIA_HOME=<workdir>/utopia-eda
 ```
 Please keep `UTOPIA_HOME` variable and its value in your system permanently.
-### Building Project
+### Project Building 
 
 ```
 cd utopia-eda
@@ -110,7 +110,7 @@ or simply run the following script:
 If you've modified some of the project files, you can use `rebuild.sh` script
 for incremental build.
 
-### Running Utopia EDA
+### Utopia EDA Running
 
 ```
 rm -rf $UTOPIA_HOME/output
@@ -120,9 +120,9 @@ To list the Utopia EDA options, do the following:
 ```
 ./build/src/umain --help-all
 ```
-### Running Tests
+### Tests Running
 
-#### Run All Tests
+#### All Tests Running
 
 ```
 rm -rf $UTOPIA_HOME/output
@@ -132,7 +132,7 @@ or
 ```
 ./run-tests.sh
 ```
-#### Run Specific Tests
+#### Specific Tests Running
 
 ```
 ./build/test/utest --gtest_filter=<test-pattern>

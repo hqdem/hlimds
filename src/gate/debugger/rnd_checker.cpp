@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/rnd_checker.h"
+#include "util/logging.h"
 
 using GNet = eda::gate::model::GNet;
 
@@ -17,21 +18,21 @@ CheckerResult rndChecker(GNet &miter,
                          const bool exhaustive) {
 
   if (!(miter.isComb())) {
-    LOG_ERROR << "Checker works with combinational circuits only!" << std::endl;
+    LOG_DEBUG(LOG_ERROR << "Checker works with combinational circuits only!");
     return CheckerResult::ERROR;
   }
 
   std::uint64_t outNum = miter.nTargetLinks();
 
   if (outNum != 1) {
-    LOG_ERROR << "Unsupported number of OUT gates: " << outNum << std::endl;
+    LOG_DEBUG(LOG_ERROR << "Unsupported number of OUT gates: " << outNum);
     return CheckerResult::ERROR;
   }
 
   std::uint64_t inputNum = miter.nSourceLinks();
 
   if (inputNum < 2 || inputNum > 64) {
-    LOG_ERROR << "Unsupported number of inputs: " << inputNum << std::endl;
+    LOG_DEBUG(LOG_ERROR << "Unsupported number of inputs: " << inputNum);
     return CheckerResult::ERROR;
   }
 

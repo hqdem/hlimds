@@ -38,6 +38,7 @@ add_executable(${TEST_TARGET}
   gate/model2/generator_test.cpp
   gate/model2/list_test.cpp
   gate/model2/net_test.cpp
+  gate/model2/seq_net.cpp
   gate/model2/subnet_test.cpp
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp
@@ -55,6 +56,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
   gate/optimizer/util_test.cpp
+  gate/optimizer2/cut_extractor_test.cpp
   gate/optimizer2/resynthesis/akers_test.cpp
   gate/optimizer2/resynthesis/bidecomposition_test.cpp
   gate/optimizer2/resynthesis/cascade_test.cpp

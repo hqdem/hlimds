@@ -1,4 +1,4 @@
-image: isprasmvg/utopia-eda:pip-liberty
+image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:pip-liberty
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive

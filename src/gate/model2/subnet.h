@@ -282,6 +282,9 @@ public:
     return addCell(symbol, LinkList{l1, l2, l3, l4, l5}, kind);
   }
 
+  /// Adds cell tree that implements the function with linked args.
+  size_t addCellTree(CellSymbol symbol, const LinkList &links);
+
   SubnetID make() {
     assert(nIn > 0 && nOut > 0);
     assert(nIn + nOut <= entries.size());

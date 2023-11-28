@@ -10,6 +10,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 
+OPTION(UTOPIA_DEBUG "Extended debug printing" OFF) # Disabled by default
+
+if(UTOPIA_DEBUG)
+  add_definitions(-DUTOPIA_DEBUG)
+endif()
+
 set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
 set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt
 

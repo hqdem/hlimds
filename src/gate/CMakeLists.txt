@@ -6,7 +6,9 @@ add_library(Gate OBJECT
   debugger/miter.cpp
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
+  debugger2/base_checker2.cpp
   debugger2/miter2.cpp
+  debugger2/rnd_checker2.cpp
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
@@ -48,6 +50,7 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
+  optimizer2/cut_extractor.cpp
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/bidecomposition.cpp
   optimizer2/resynthesis/cascade.cpp

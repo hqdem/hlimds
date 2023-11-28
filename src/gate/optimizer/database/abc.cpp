@@ -9,6 +9,7 @@
 #include "gate/model/gnet.h"
 #include "gate/model/utils.h"
 #include "gate/optimizer/rwdatabase.h"
+#include "util/logging.h"
 #include "util/math.h"
 
 #include <algorithm>
@@ -118,12 +119,14 @@ static BoundGNet clone(const BoundGNet &circuit) {
   GateIdMap oldToNewGates;
   newCircuit.net = std::shared_ptr<GNet>(circuit.net->clone(oldToNewGates));
 
+#ifdef UTOPIA_DEBUG
   int inputId = 0;
+ #endif
   for (const auto &oldGateId: circuit.inputBindings) {
     const auto newGateId = oldToNewGates[oldGateId];
     newCircuit.inputBindings.push_back(newGateId);
 
-    std::cout << "inputId " << inputId++ << "->" << newGateId << std::endl;
+    LOG_DEBUG("inputId " << inputId++ << "->" << newGateId);
   }
 
   return newCircuit;
@@ -196,8 +199,8 @@ static void generateNpnInstances(const BoundGNet &bnet, RWDatabase &database) {
       }
 
       const auto truthTable = TruthTable::build(circuit);
-      std::cout << "Table: " << std::hex << truthTable.raw() << std::endl;
-      std::cout << std::dec << *circuit.net << std::endl;
+      LOG_DEBUG("Table: " << std::hex << truthTable.raw());
+      LOG_DEBUG(std::dec << *circuit.net);
 
       database.set(truthTable, {circuit} /* One circuit per truth table */);
     }

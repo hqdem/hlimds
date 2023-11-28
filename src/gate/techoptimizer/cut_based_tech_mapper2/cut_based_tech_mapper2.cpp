@@ -46,41 +46,39 @@ namespace eda::gate::tech_optimizer {
     return net;
   }
   
-  void CutBasedTechMapper::aigMap(GNet *&net) {
-    std::shared_ptr<GNet> sharedNet(net);
-    sharedNet->sortTopologically();
-    GateIdMap gmap;
-    std::shared_ptr<GNet> premapped = 
-        eda::gate::premapper::getPreMapper(PreBasis::AIG).map(*sharedNet, gmap);
-    premapped->sortTopologically();
-    net = new GNet(*premapped);
+  void CutBasedTechMapper2::aigMap(SubnetID subnetID) {
   }
 
-  void CutBasedTechMapper::findCuts(GNet *net, CutStorage &cutStorage) {
-    cutStorage = eda::gate::optimizer::findCuts(net, 6);
+  CutExtractor CutBasedTechMapper2::findCuts(SubnetID subnetID) {
+    CutExtractor cutExtractor(Subnet::get(subnetID), 6);
+    return cutExtractor;
   }
 
-  void CutBasedTechMapper::replacementSearch(GNet *net, Strategy *strategy,  
-      std::unordered_map<GateID, Replacement> &bestSubstitutions, 
-      CutStorage &cutStorage,
-      std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
+  std::map<CellID, BestReplacement> CutBasedTechMapper2::replacementSearch(
+    SubnetID subnetID, CutExtractor cutExtractor) {
+    std::map<CellID, BestReplacement> bestReplacementMap;
+    Subnet subnet = Subnet::get(subnetID);
 
-    auto nodes = eda::utils::graph::topologicalSort(*net);
-    for (const auto &id: net->getSources()) {
-      if (Gate::get(id)->isSource()) {
-        Replacement bestReplacment{id, eda::gate::model::CELL_TYPE_ID_IN, 
-            " ", 0, 0};
-        bestSubstitutions.insert(std::pair<GateID, Replacement>
-                                (id, bestReplacment));
-      }
+    Array<Entry> entries = subnet.getEntries();
+
+    for (const auto &entri : subnet.getEntries()) {
+      auto cell = entri.cell;
+
+      if (cell.isIn()) {
+
+      } else if (cell.isOut()) {
+
+      } else if (cell.isZero()) {
+        
+      } else if (cell.isOne()) {
+        
+      } 
+
+      auto cellID = cell.cell;
+      Cut bestCut = strategy.findBest(subnetID, cellID, 
+          cutExtractor.getCuts(cellID), bestReplacementMap);
     }
-
-    SearchOptReplacement searchOptReplacement;
-    searchOptReplacement.set(&cutStorage, net, &bestSubstitutions, 6,
-        rwdb, strategy, cellTypeMap);
-    eda::gate::optimizer::CutWalker walker(net, &searchOptReplacement,
-        &cutStorage);
-    walker.walk(true);
+    return bestReplacementMap;
   }
 
   const Net &CutBasedTechMapper::createModel2(GNet *net, 

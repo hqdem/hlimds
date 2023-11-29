@@ -41,14 +41,14 @@ namespace eda::gate::optimizer2::resynthesis {
     DinTruthTable t(numVars);
     std::string s = generateRandom(numVars);
     kitty::create_from_binary_string(t, s);
-    return r.synthesize(t);
+    return r.synthesize(t, -1);
   }
 
   SubnetID generateSubnetID(std::string s, const uint64_t numVars) {
     ReedMuller r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, s);
-    return r.synthesize(t);
+    return r.synthesize(t, -1);
   }
 
   void testSubnetToSubnet(const Subnet &net, const Subnet &subnet) {
@@ -63,7 +63,7 @@ namespace eda::gate::optimizer2::resynthesis {
     ReedMuller r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, generateRandom(numVars));
-    SubnetID subnet = r.synthesize(t);
+    SubnetID subnet = r.synthesize(t, -1);
 
     DinTruthTable result_table = evaluate(Subnet::get(subnet));
     for (size_t i = 0; i < t.num_bits(); ++i) {

@@ -25,7 +25,7 @@ public:
   Synthesizer() {}
   virtual ~Synthesizer() {}
 
-  virtual SubnetID synthesize(const IR &ir) = 0;
+  virtual SubnetID synthesize(const IR &ir, uint16_t maxArity) = 0;
 };
 
 } // namespace eda::gate::optimizer2

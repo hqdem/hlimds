@@ -48,7 +48,7 @@ public:
   //===------------------------------------------------------------------===//
 
   /// Makes subnet using cascade method
-  SubnetID synthesize(const TruthTable &func) override;
+  SubnetID synthesize(const TruthTable &func, uint16_t maxArity) override;
     
   /// Makes CNF for function using cascade method
   CNF getFunction(const TruthTable &table, CNF &form);

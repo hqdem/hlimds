@@ -30,7 +30,7 @@ bool ISOPManagerTest(size_t numVars) {
     }
     MinatoMorrealeAlg::KittyTT tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
-    const auto &subnet = Subnet::get(minatoMorrealeAlg.synthesize(tt));
+    const auto &subnet = Subnet::get(minatoMorrealeAlg.synthesize(tt, -1));
     auto ttCopy = eda::gate::model::evaluate(subnet);
     flag &= (ttCopy == tt);
   }

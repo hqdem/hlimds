@@ -133,7 +133,7 @@ void runTest(const DynTruthTable &table) {
       continue;
     }
     clock_t start = clock();
-    const auto id = registry[i]->synthesize(table);
+    const auto id = registry[i]->synthesize(table, -1);
     clock_t end = clock();
     writeLogs(fout, table, static_cast<Algorithm>(i), id, start, end);
   }

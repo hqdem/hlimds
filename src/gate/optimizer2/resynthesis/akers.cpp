@@ -23,7 +23,8 @@ using SubnetID     = eda::gate::model::SubnetID;
 // Synthesize Methods
 //===----------------------------------------------------------------------===//
 
-SubnetID AkersAlgorithm::synthesize(const TruthTable &func) {
+SubnetID AkersAlgorithm::synthesize(const TruthTable &func, uint16_t maxArity) {
+  assert(maxArity > 2 && "Arity of MAJ gate can't be less than three!");
   TruthTable care(func.num_vars());
   std::string bitsCare;
   bitsCare.assign(func.num_bits(), '1');

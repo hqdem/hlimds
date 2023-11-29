@@ -118,7 +118,7 @@ TEST(Cascade, SubnetTest) {
   kitty::create_from_binary_string(table, "1000");
 
   Cascade resynth;
-  const auto subnetId = resynth.synthesize(table);
+  const auto subnetId = resynth.synthesize(table, -1);
   const auto &subnet = Subnet::get(subnetId);
 
   EXPECT_TRUE(subnet.size() == 6);

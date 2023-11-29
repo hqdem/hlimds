@@ -81,7 +81,7 @@ TEST(AkersTest2, NOT1) {
   initializeTT2(func, care, "01", "11");
 
   AkersAlgorithm alg;
-  const auto subnetId = alg.synthesize(func);
+  const auto subnetId = alg.synthesize(func, -1);
   const auto &subnet = Subnet::get(subnetId);
 
   bool areEqual = (func == eda::gate::model::evaluate(subnet));
@@ -96,7 +96,7 @@ TEST(AkersTest2, One3) {
   initializeTT2(func, care, "11111111", "11111111");
 
   AkersAlgorithm alg;
-  const auto subnetId = alg.synthesize(func);
+  const auto subnetId = alg.synthesize(func, -1);
   const auto &subnet = Subnet::get(subnetId);
 
   bool areEqual = (func == eda::gate::model::evaluate(subnet));
@@ -111,7 +111,7 @@ TEST(AkersTest2, Zero3) {
   initializeTT2(func, care, "00000000", "11111111");
 
   AkersAlgorithm alg;
-  const auto subnetId = alg.synthesize(func);
+  const auto subnetId = alg.synthesize(func, -1);
   const auto &subnet = Subnet::get(subnetId);
 
   bool areEqual = (func == eda::gate::model::evaluate(subnet));
@@ -239,7 +239,7 @@ TEST(AkersTest2, RandomFunc5) {
   kitty::create_random(func);
 
   AkersAlgorithm alg;
-  const auto &subnetId = alg.synthesize(func);
+  const auto &subnetId = alg.synthesize(func, -1);
   const auto &subnet = Subnet::get(subnetId);
 
   bool areEqual = (func == eda::gate::model::evaluate(subnet));
@@ -253,7 +253,7 @@ TEST(AkersTest2, RandomFunc6) {
   kitty::create_random(func);
 
   AkersAlgorithm alg;
-  const auto &subnetId = alg.synthesize(func);
+  const auto &subnetId = alg.synthesize(func, -1);
   const auto &subnet = Subnet::get(subnetId);
 
   bool areEqual = (func == eda::gate::model::evaluate(subnet));
@@ -267,7 +267,7 @@ TEST(AkersTest2, RandomFunc7) {
   kitty::create_random(func);
 
   AkersAlgorithm alg;
-  const auto &subnetId = alg.synthesize(func);
+  const auto &subnetId = alg.synthesize(func, -1);
   const auto &subnet = Subnet::get(subnetId);
 
   bool areEqual = (func == eda::gate::model::evaluate(subnet));
@@ -281,7 +281,7 @@ TEST(AkersTest2, RandomFunc8) {
   kitty::create_random(func);
 
   AkersAlgorithm alg;
-  const auto &subnetId = alg.synthesize(func);
+  const auto &subnetId = alg.synthesize(func, -1);
   const auto &subnet = Subnet::get(subnetId);
 
   bool areEqual = (func == eda::gate::model::evaluate(subnet));

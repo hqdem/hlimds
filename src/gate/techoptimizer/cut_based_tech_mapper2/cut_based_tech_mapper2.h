@@ -16,9 +16,12 @@
 
 namespace eda::gate::tech_optimizer {
 
-  using SubnetID = eda::gate::model::SubnetID;
-  using CellTypeID = eda::gate::model::CellTypeID;
+  using SubnetID = model::SubnetID;
+  using CellID = uint64_t;
+  using CellTypeID = model::CellTypeID;
   using CutExtractor = optimizer2::CutExtractor;
+
+  using Net = model::Net;
 
   class CutBasedTechMapper2 {
   public:
@@ -40,16 +43,17 @@ namespace eda::gate::tech_optimizer {
     double area;
     double delay;
 
-    // Dosnt exist yet for model2
-    //void aigMap(SubnetID subnetID);
+    // Dosnt work yet for model2
+    void aigMap(SubnetID subnetID);
 
     CutExtractor findCuts(SubnetID subnetID);
 
     std::map<CellID, BestReplacement> replacementSearch(
       SubnetID subnetID, CutExtractor cutExtractor);
 
-    void buildNet( 
-        std::unordered_map<GateID, Replacement> &bestSubstitutions);
+    SubnetID buildSubnet(std::map<CellID, BestReplacement> &bestReplacementMap);
+
+    const Net &buildModel2(std::map<CellID, BestReplacement> &bestReplacementMap);
     void printNet(const Net &model2);
   };
 } // namespace eda::gate::tech_optimizer

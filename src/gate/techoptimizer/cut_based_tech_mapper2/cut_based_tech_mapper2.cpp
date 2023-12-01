@@ -26,23 +26,18 @@ namespace eda::gate::tech_optimizer {
   }
 
   SubnetID CutBasedTechMapper2::techMap(SubnetID subnetID) {
-      if (aig) {aigMap(net);}
+      
+      // TODO
+      if (false) {
+        aigMap(net);
+      }
 
-      CutStorage cutStorage;
-      findCuts(net, cutStorage);
+      auto cutExtractor = findCuts(subnetID);
 
-      std::unordered_map<GateID, Replacement> bestSubstitutions;
-      replacementSearch(net, strategy, bestSubstitutions, cutStorage,
-          cellTypeMap);
+      auto bestReplacementMap = replacementSearch(subnetID, cutExtractor);
 
-      const Net &model2 = createModel2(net, bestSubstitutions);
-      printNet(model2);
+      const SubnetID mappedSubnet = createTechMappedSubnet(bestReplacementMap);
 
-      rwdb.closeDB();
-    } catch (const char* msg) {
-      std::cout << msg << std::endl;
-    }
-    remove(dbPath.c_str());
     return net;
   }
   
@@ -50,6 +45,7 @@ namespace eda::gate::tech_optimizer {
   }
 
   CutExtractor CutBasedTechMapper2::findCuts(SubnetID subnetID) {
+    // 6 - max of technology cells input
     CutExtractor cutExtractor(Subnet::get(subnetID), 6);
     return cutExtractor;
   }
@@ -61,8 +57,8 @@ namespace eda::gate::tech_optimizer {
 
     Array<Entry> entries = subnet.getEntries();
 
-    for (const auto &entri : subnet.getEntries()) {
-      auto cell = entri.cell;
+    for (const auto &entry : subnet.getEntries()) {
+      auto cell = entry.cell;
 
       if (cell.isIn()) {
 
@@ -83,30 +79,40 @@ namespace eda::gate::tech_optimizer {
     return bestReplacementMap;
   }
 
-  const Net &CutBasedTechMapper::createModel2(std::map<CellID, BestReplacement> bestReplacementMap) {
-
+  SubnetID CutBasedTechMapper::buildSubnet(std::map<CellID, BestReplacement> &bestReplacementMap) {
     eda::gate::model::SubnetBuilder subnetBuilder;
 
     std::stack<CellID> stack;
     std::unordered_set<CellID> visited;
-    
-    optimizer::CutWalker::GateIdSet targets;
 
-    targets.reserve((net->targetLinks()).size());
+    for (const auto& pair : bestReplacementMap) {
+      CellID cellID = pair.first;
 
-    for (auto link : net->targetLinks()) {
-      targets.insert(link.target);
+      if (Cell::get(cellID).isOut()) {
+        stack.push(cellID);
+        visited.insert(cellID);
+      } 
     }
+  }
 
-    for (const auto &outGateID: targets) {
-      for (const auto &preOutGateID: Gate::get(outGateID)->inputs()) {
-        stack.push(&bestSubstitutions.at(preOutGateID.node()));
-        visited.insert(&bestSubstitutions.at(preOutGateID.node()));
-      }
+  const Net &CutBasedTechMapper::buildModel2(std::map<CellID, BestReplacement> &bestReplacementMap) {
+
+    eda::gate::model::NetBuilder netBuilder;
+
+    std::stack<CellID> stack;
+    std::unordered_set<CellID> visited;
+
+    for (const auto& pair : bestReplacementMap) {
+      CellID cellID = pair.first;
+
+      if (Cell::get(cellID).isOut()) {
+        stack.push(cellID);
+        visited.insert(cellID);
+      } 
     }
 
     while (!stack.empty()) {
-      Replacement* current = stack.top();
+      cellID current = stack.top();
 
       if (current->isInput) {
 

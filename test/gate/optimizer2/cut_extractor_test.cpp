@@ -34,14 +34,14 @@ std::array<std::size_t, N> makeInputs(SubnetBuilder &builder) {
 }
 
 bool cutsEqual(const Cut &cut1, const Cut &cut2) {
-  const auto &cut1CellIdxs = cut1.cellIdxs;
-  const auto &cut2CellIdxs = cut2.cellIdxs;
+  const auto &cut1EntryIdxs = cut1.entryIdxs;
+  const auto &cut2EntryIdxs = cut2.entryIdxs;
   if (cut1.signature != cut2.signature ||
-      cut1CellIdxs.size() != cut2CellIdxs.size()) {
+      cut1EntryIdxs.size() != cut2EntryIdxs.size()) {
     return false;
   }
-  for (const auto cellIdx: cut1CellIdxs) {
-    if (cut2CellIdxs.find(cellIdx) == cut2CellIdxs.end()) {
+  for (const auto entryIdx: cut1EntryIdxs) {
+    if (cut2EntryIdxs.find(entryIdx) == cut2EntryIdxs.end()) {
       return false;
     }
   }
@@ -254,6 +254,32 @@ TEST(CutExtractorTest, SameElementsInCuts) {
     { Cut(4, { 2 }), Cut(1, { 0 }) },
     { Cut(8, { 3 }), Cut(1, { 0 }) },
     { Cut(16, { 4 }), Cut(8, { 3 }), Cut(1, { 0 }) }
+  };
+  EXPECT_TRUE(resultValid(cutExtractor, validRes));
+}
+
+TEST(CutExtractorTest, LinkEntriesInSubnet) {
+  SubnetBuilder builder;
+  std::array<std::size_t, 6> inputs = makeInputs<6>(builder);
+
+  std::size_t andIdx0 = builder.addCell(model::AND,
+                                        { Link(inputs[0]), Link(inputs[1]),
+                                          Link(inputs[2]), Link(inputs[3]),
+                                          Link(inputs[4]), Link(inputs[5]) });
+  builder.addCell(model::OUT, Link(andIdx0), SubnetBuilder::OUTPUT);
+  Subnet subnet = Subnet::get(builder.make());
+
+  CutExtractor cutExtractor(subnet, 6);
+  const std::vector<CutsList> validRes {
+    { Cut(1, { 0 }) },
+    { Cut(2, { 1 }) },
+    { Cut(4, { 2 }) },
+    { Cut(8, { 3 }) },
+    { Cut(16, { 4 }) },
+    { Cut(32, { 5 }) },
+    { Cut(64, { 6 }), Cut(63, { 0, 1, 2, 3, 4, 5 }) },
+    {  },
+    { Cut(256, { 8 }), Cut(64, { 6 }), Cut(63, { 0, 1, 2, 3, 4, 5 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }

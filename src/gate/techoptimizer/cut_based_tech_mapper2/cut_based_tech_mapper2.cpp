@@ -55,7 +55,7 @@ namespace eda::gate::tech_optimizer {
   }
 
   std::map<CellID, BestReplacement> CutBasedTechMapper2::replacementSearch(
-    SubnetID subnetID, CutExtractor cutExtractor) {
+    SubnetID subnetID, CutExtractor &cutExtractor) {
     std::map<CellID, BestReplacement> bestReplacementMap;
     Subnet subnet = Subnet::get(subnetID);
 
@@ -75,18 +75,21 @@ namespace eda::gate::tech_optimizer {
       } 
 
       auto cellID = cell.cell;
-      Cut bestCut = strategy.findBest(subnetID, cellID, 
-          cutExtractor.getCuts(cellID), bestReplacementMap);
+
+      // Save best tech cells subnet to bestReplMap 
+      strategy.findBest(cellID, cutExtractor.getCuts(cellID), 
+          bestReplacementMap, cellDB.ttSubnetMap);
     }
     return bestReplacementMap;
   }
 
-  const Net &CutBasedTechMapper::createModel2(GNet *net, 
-      std::unordered_map<GateID, Replacement> &bestSubstitutions) {
+  const Net &CutBasedTechMapper::createModel2(std::map<CellID, BestReplacement> bestReplacementMap) {
 
-    eda::gate::model::NetBuilder netBuilder;
-    std::stack<Replacement*> stack;
-    std::unordered_set<Replacement*> visited;
+    eda::gate::model::SubnetBuilder subnetBuilder;
+
+    std::stack<CellID> stack;
+    std::unordered_set<CellID> visited;
+    
     optimizer::CutWalker::GateIdSet targets;
 
     targets.reserve((net->targetLinks()).size());

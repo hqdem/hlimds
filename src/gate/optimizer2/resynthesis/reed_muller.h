@@ -41,12 +41,13 @@ namespace eda::gate::optimizer2::resynthesis {
      * using a Reed-Muller method.
      * 
      * maxArity is a parameter, that defines the maximum for Arity of every node in subnet.
-     * By default it's set to Subnet::Cell::InPlaceLinks - 1, 
-     * to use other value pass it as the second argument
+     * By default it's set to Subnet::Cell::InPlaceLinks, 
+     * to use other value pass it as the second argument.
      * 
-     * maxArity has to be more than 2, if it's not => assert, however, if it's equal to 0
-     * method doesn't create an assert, it uses the default value of maxArity
+     * If the second argument passed to "synthesize" is more than Subnet::Cell::InPlaceLinks,
+     * it's forced to be equal to Subnet::Cell::InPlaceLinks.
      * 
+     * maxArity has to be more than 2, if it's not => assert.
      */
     SubnetID synthesize(const DinTruthTable &func, uint16_t maxArity = -1) override;
 

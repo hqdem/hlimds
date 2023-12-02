@@ -78,7 +78,7 @@ namespace eda::gate::optimizer2::resynthesis {
     SubnetID baseSubnet = r.synthesize(t, -1);
     DinTruthTable baseTable = evaluate(Subnet::get(baseSubnet));
 
-    for(uint16_t arity = 3; arity < 10; ++arity){
+    for(uint16_t arity = 3; arity < Subnet::Cell::InPlaceLinks + 1; ++arity){
       SubnetID subnet = r.synthesize(t, arity);
       DinTruthTable resultTable = evaluate(Subnet::get(subnet));
       for (size_t i = 0; i < t.num_bits(); ++i) {

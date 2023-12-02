@@ -17,9 +17,9 @@ namespace eda::gate::optimizer2::resynthesis {
   SubnetID ReedMuller::synthesize(const DinTruthTable &func,
                                   uint16_t maxArity) {
 
-    /// TODO: Take into account the restriction on arity.
+    assert((maxArity > 2 || maxArity == UINT16_MAX) && "Invalid value for maxArity, it's less than 3");    
     Polynomial resultFunction = getTT(func);
-    const size_t maxSize = Subnet::Cell::InPlaceLinks - 1;
+    const size_t maxSize = (maxArity >= Subnet::Cell::InPlaceLinks) ? (Subnet::Cell::InPlaceLinks) : (maxArity);
     SubnetBuilder subnetBuilder;
     uint64_t argNum  = resultFunction[resultFunction.size() - 1];
     size_t idx[argNum];

@@ -74,7 +74,8 @@ public:
   using SubnetID      = model::SubnetID;
 
   /// Synthesizes the Subnet.
-  SubnetID synthesize(const KittyTT &func) override {
+  SubnetID synthesize(const KittyTT &func, uint16_t maxArity = -1) override {
+    /// TODO: Take into account the restriction on arity.
     return launchAlgorithm<MinatoMorrealeAlg>(func, *this);
   }
 

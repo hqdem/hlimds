@@ -266,8 +266,8 @@ CNF Cascade::getFunction(const TruthTable &table, CNF &form) {
   return output;
 }
 
-SubnetID Cascade::synthesize(const TruthTable &func) {
-
+SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
+  /// TODO: Take into account the restriction on arity.
   using Link = Subnet::Link;
   SubnetBuilder subnetBuilder;
 

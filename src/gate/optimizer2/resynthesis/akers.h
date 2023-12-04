@@ -91,7 +91,7 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Synthesize function without "don't care" bits.
-  SubnetID synthesize(const TruthTable &func) override;
+  SubnetID synthesize(const TruthTable &func, uint16_t maxArity = -1) override;
 
   /// Synthesize function with "don't care" bits.
   SubnetID synthesize(const TruthTable &func, const TruthTable &care) {

@@ -5,15 +5,18 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#pragma once
+
 #include "gate/model2/celltype.h"
 #include "gate/model2/subnet.h"
 #include "gate/techoptimizer/library/subnetattr.h"
 
 #include "kitty/print.hpp"
 
+#include <vector>
 #include <list>
-#include <map>
 #include <unordered_map>
+#include <utility> 
 
 using CellTypeID = eda::gate::model::CellTypeID;
 using SubnetID = eda::gate::model::SubnetID;
@@ -22,21 +25,24 @@ namespace eda::gate::tech_optimizer {
 
   class CellDB final{
   public:
+      CellDB(){};
     CellDB(const std::list<CellTypeID> &cellTypeIDs);
 
-    CellDB();
+    //CellDB();
     //void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs);
 
-    std::map<SubnetID, Subnetattr> &getSubnetMap();
+    std::vector<std::pair<SubnetID, Subnetattr>> &getSubnetsAttr();
+    std::vector<std::pair<kitty::dynamic_truth_table, 
+        SubnetID>> &getTTSubnet();
 
   private:
     std::vector<SubnetID> subnets;
 
     std::vector<SubnetID> triggers;
 
-    std::map<SubnetID, Subnetattr> subnetMap;
-    std::map< kitty::dynamic_truth_table, 
-        eda::gate::model::SubnetID> ttSubnetMap;
+    std::vector<std::pair<SubnetID, Subnetattr>> subnetToAttr;
+
+    std::vector<std::pair<kitty::dynamic_truth_table, SubnetID>> ttSubnet;
 
   };
 } // namespace eda::gate::tech_optimizer

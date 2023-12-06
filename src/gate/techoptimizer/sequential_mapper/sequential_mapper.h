@@ -13,10 +13,11 @@
 
 #include <list>
 
-namespace eda::gate::tech_optimizer {
-  using LinkList = model::Cell::LinkList;
+  using LinkList = eda::gate::model::Cell::LinkList;
   using CellID = eda::gate::model::CellID;
   using NetID = eda::gate::model::NetID;
+
+namespace eda::gate::tech_optimizer {
 
   //void mapDFF( LinkList linkList);
   //void mapLatch( LinkList linkList);

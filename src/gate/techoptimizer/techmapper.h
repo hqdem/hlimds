@@ -15,5 +15,5 @@ namespace eda::gate::tech_optimizer {
 
   void read_db(const std::string &dbPath);
   void tech_optimize(NetID net, uint approachSelector/*, Constraints &constraints*/);
-  void sequence_net(NetID net);
+  NetID sequence_net(NetID net, CutBasedTechMapper mapper);
 } // namespace eda::gate::tech_optimizer

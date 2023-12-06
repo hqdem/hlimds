@@ -12,16 +12,18 @@ namespace eda::gate::tech_optimizer {
  * \author <a href="mailto:dgaryaev@ispras.ru"></a>
  */
 
-  using CellID = uint64_t;
-  using SubnetID = model::SubnetID;
+  using EntryIndex = uint64_t;
+  using SubnetID = eda::gate::model::SubnetID;
 
   struct BestReplacement {
 
-    CellID cellID;
+    EntryIndex cellID;
+
+    // Sunbnet with custom cell from CellDB
     SubnetID subnetID;
 
-    // matching technology cells CellID to circuts CellID
-    std::unordered_map<CellID, CellID>;
+    // matching technology cells inputs CellID with circuts CellID
+    std::unordered_map<EntryIndex, EntryIndex> matchMap;
 
   };
 } // namespace eda::gate::tech_optimizer

@@ -6,7 +6,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
+/*
 #include "gate/model/examples.h"
 #include "gate/printer/dot.h"
 
@@ -108,3 +108,4 @@ namespace eda::gate::tech_optimizer {
     cutBasedTechMapper.techMap(net, minDelay, true);
   }
 }
+*/

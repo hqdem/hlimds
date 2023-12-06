@@ -5,14 +5,17 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
 #pragma once
 
-#include "gate/model/gnet.h"
+#include "gate/model2/subnet.h"
+#include "gate/techoptimizer/library/cellDB.h"
+
+using SubnetID = eda::gate::model::SubnetID;
 
 namespace eda::gate::tech_optimizer {
-  using GNet = eda::gate::model::GNet;
 
-  void read_db(const std::string &dbPath);
-  void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*/);
-} // namespace eda::gate::tech_optimizer
+  CellDB getSimpleCells();
+  SubnetID subnet1();
+  SubnetID subnet2();
+
+} // namespace eda::gate::optimizer

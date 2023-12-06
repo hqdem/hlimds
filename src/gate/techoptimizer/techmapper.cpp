@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/cut_based_tech_mapper2/cut_based_tech_mapper.h"
-#include "gate/techoptimizer/library/cell.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/techoptimizer/library/cellDB.h"
 #include "gate/techoptimizer/techmapper.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
+#include "gate/techoptimizer/library/cell.h"
 
 #include <list>
 #include <map>
@@ -26,14 +26,9 @@ void addInputToNetBuilder(model::NetBuilder &netBuilder,
 CellDB cellDB;
 
 void read_db(const std::string &dbPath) {
-  // Read and populate the databases. Input format: Liberty.
-  // 1. Populate functDB
-  // 2. Populate structDB
-  // TODO: account for latches and FFs, also
-
   LibraryCells libraryCells(dbPath);
 
-  CellDB* cellDB_ptr = &cellDB;
+  CellDB *cellDB_ptr = &cellDB;
   *cellDB_ptr = libraryCells.initializeLiberty();
 }
 
@@ -54,7 +49,7 @@ void tech_optimize(NetID net, uint approachSelector/*, Constraints &constraints*
   }
 }
 
-NetID sequence_net(NetID netID, CutBasedTechMapper mapper) {
+NetID sequence_net(NetID netID, CutBasedTechMapper *mapper) {
 
   Net net = model::Net::get(netID);
 

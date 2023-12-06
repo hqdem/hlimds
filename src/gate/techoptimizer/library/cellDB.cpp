@@ -6,15 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/library/cellDB.h"
 #include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/techoptimizer/library/cellDB.h"
 
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using CellType = eda::gate::model::CellType;
 
 namespace eda::gate::tech_optimizer {
-  
-  CellDB::CellDB() {}
 
   CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
 
@@ -40,9 +38,10 @@ namespace eda::gate::tech_optimizer {
       subnets.push_back(subnetID);
 
       Subnetattr subnetattr;
-      subnetMap.insert(std::pair<SubnetID, Subnetattr>
-          (subnetID, subnetattr));
+      subnetToAttr.push_back(std::make_pair(subnetID, subnetattr));
 
+      ttSubnet.push_back(std::make_pair(eda::gate::model::evaluate(
+          model::Subnet::get(subnetID)), subnetID));
     }
   }
 /*
@@ -79,8 +78,13 @@ namespace eda::gate::tech_optimizer {
     }
     */
 
-   std::map<SubnetID, Subnetattr> &CellDB::getSubnetMap() {
-    return subnetMap;
+   std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getSubnetsAttr() {
+    return subnetToAttr;
+   }
+
+   std::vector<std::pair<kitty::dynamic_truth_table, 
+        SubnetID>> &CellDB::getTTSubnet(){
+    return ttSubnet;
    }
 
 } // namespace eda::gate::tech_optimizer

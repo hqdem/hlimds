@@ -77,8 +77,10 @@ add_executable(${TEST_TARGET}
   gate/simulator/simulator_memory_test.cpp
   gate/simulator/simulator_test.cpp
   gate/simulator2/simulator_test.cpp
-  gate/tech_mapper/parser_lib_test.cpp
-  gate/tech_mapper/techmap_test.cpp
+  gate/techmapper/parser_lib_test.cpp
+  gate/techmapper/techmap_test.cpp
+  gate/techmapper/strategy/strategy_example.cpp
+  gate/techmapper/strategy/example_test.cpp
   gate/transformer/bdd_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp

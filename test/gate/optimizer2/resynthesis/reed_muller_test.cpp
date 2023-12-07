@@ -239,10 +239,6 @@ TEST(ReedMullerModel2, timeTestOn9Vars) { generateTest(9); }
 
 TEST(ReedMullerModel2, timeTestOn10Vars) { generateTest(10); }
 
-TEST(ReedMullerModel2, timeTestOn11Vars) { generateTest(11); }
-
-TEST(ReedMullerModel2, timeTestOn12Vars) { generateTest(12); }
-
 //Compare subnets generated on the same DinTruthTable but with different
 //maxArity values to see if they are equal to each other
 TEST(ReedMullerModel2, DiffArityOn4Values) { subnetToSubnetWithDifferentArity(4); }

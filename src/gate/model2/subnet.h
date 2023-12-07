@@ -48,9 +48,14 @@ public:
 
   /// Cell entry.
   struct Cell final {
+    static constexpr auto ArityBits = 6;
+    static constexpr auto RefCountBits = 10;
+
+    static constexpr size_t MaxCellArity = (1 << ArityBits) - 1;
+    static constexpr size_t MaxRefCount = (1 << RefCountBits) - 1;
+
     static constexpr size_t InPlaceLinks = 5;
     static constexpr size_t InEntryLinks = 8;
-    static constexpr size_t MaxCellArity = (1 << 5) - 1;
 
     /// Constructs a view to the existing cell.
     Cell(CellTypeID typeID, CellID cellID, const LinkList &links, bool in, bool out):
@@ -60,6 +65,7 @@ public:
         dummy(false),
         arity(links.size()),
         more((links.size() + (InEntryLinks - 1) - InPlaceLinks) / InEntryLinks),
+        refcount(0),
         type(CellTypeID::makeSID(typeID)) {
       assert(links.size() <= MaxCellArity);
       assert(!in || arity == 0);
@@ -105,9 +111,11 @@ public:
     /// Dummy input flag.
     uint64_t dummy : 1;
     /// Cell arity.
-    uint64_t arity : 5;
+    uint64_t arity : ArityBits;
     /// Number of entries for additional links.
-    uint64_t more : 3;
+    uint64_t more : 4;
+    /// Reference count (fanout).
+    uint64_t refcount : RefCountBits;
     /// Type SID or CellTypeID::NullSID (undefined cell).
     uint32_t type;
     /// Input links.
@@ -134,7 +142,9 @@ public:
   };
   static_assert(sizeof(Entry) == 32);
 
+  /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
+  /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
 
   /// Returns the minimum and maximum path lengths.
@@ -224,6 +234,13 @@ public:
     const auto in  = kind.first;
     const auto out = kind.second;
     const auto idx = entries.size();
+
+    // Update reference counts.
+    for (const auto link : links) {
+      auto &cell = entries[link.idx].cell;
+      assert(cell.refcount < Subnet::Cell::MaxRefCount);
+      cell.refcount++;
+    }
 
     entries.emplace_back(typeID, links, in, out);
     if (in)  nIn++;

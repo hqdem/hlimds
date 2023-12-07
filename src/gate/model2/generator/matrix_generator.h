@@ -39,9 +39,16 @@ public:
    * Inputs, outputs and constants are not allowed.
    * @param seed Seed for reproducibility of the result.
    */
-  MatrixGenerator(const std::size_t nCells, const std::size_t nIn,
+  MatrixGenerator(const std::size_t nCells,
+                  const std::size_t nIn,
                   const std::size_t nOut,
                   const std::vector<CellSymbol> &netBase,
+                  const unsigned seed = 0u);
+
+  MatrixGenerator(const std::size_t nCells,
+                  const std::size_t nIn,
+                  const std::size_t nOut,
+                  const CellSymbolList &netBase,
                   const unsigned seed = 0u);
 
   /**
@@ -56,9 +63,16 @@ public:
    * Inputs, outputs and constants are not allowed.
    * @param seed Seed for reproducibility of the result.
    */
-  MatrixGenerator(const std::size_t nCells, const std::size_t nIn,
+  MatrixGenerator(const std::size_t nCells,
+                  const std::size_t nIn,
                   const std::size_t nOut,
                   const std::vector<CellTypeID> &netBase,
+                  const unsigned seed = 0u);
+
+  MatrixGenerator(const std::size_t nCells,
+                  const std::size_t nIn,
+                  const std::size_t nOut,
+                  const CellTypeIDList &netBase,
                   const unsigned seed = 0u);
 
   std::string getName() const override;
@@ -73,14 +87,21 @@ private:
   bool canMakeDrain(Matrix &m, const std::size_t columnN, CellToNIn &cellNIn);
 
   /// Sets primary outputs in matrix.
-  void setPrimOuts(Matrix &m, std::vector<std::size_t> &outputs,
-                   CellToNIn &cellNIn, CellIdxToCellType &cellIndCellTID);
+  void setPrimOuts(Matrix &m,
+                   std::vector<std::size_t> &outputs,
+                   CellToNIn &cellNIn,
+                   CellIdxToCellType &cellIndCellTID);
 
   /// Sets "1" in each column in matrix (except the first one).
   bool setCellsOuts(Matrix &m, CellToNIn &cellNIn);
-  void addInsForCell(const std::size_t rowN, Matrix &m, CellToNIn &cellNIn,
+
+  void addInsForCell(const std::size_t rowN,
+                     Matrix &m,
+                     CellToNIn &cellNIn,
                      CellIdxToCellType &cellIndCellTID);
-  bool setOp(const std::size_t i, CellToNIn &cellNIn,
+
+  bool setOp(const std::size_t i,
+             CellToNIn &cellNIn,
              CellIdxToCellType &cellIndCellTID);
 
   /// Sets operations in matrix.
@@ -88,7 +109,8 @@ private:
 
   /// Generates adjacency matrix.
   Matrix genM(std::unordered_set<std::size_t> &inputs,
-              std::vector<std::size_t> &outputs, CellToNIn &cellNIn,
+              std::vector<std::size_t> &outputs,
+              CellToNIn &cellNIn,
               CellIdxToCellType &cellIndCellTID);
 
 private:

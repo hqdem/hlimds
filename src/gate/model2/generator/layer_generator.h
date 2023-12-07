@@ -18,7 +18,6 @@ namespace eda::gate::model {
  * @brief Generates layered net.
  */
 class LayerGenerator final : public Generator {
-
   struct CellIDHash {
     std::uint64_t operator()(const CellID &cellID) const {
       return std::hash<std::uint64_t>{}(cellID.getFID());
@@ -36,7 +35,7 @@ public:
   /**
    * @brief Layered net generator constructor.
    * Generator is able to generate net only if it is possible to connect
-   * every layer with next layer or primary output layer.
+   * every element on a layer with the next layer or primary output layer.
    * @param nIn Number of primary inputs.
    * @param nOut Number of primary outputs.
    * @param netBase Basis of allowed operations.
@@ -46,15 +45,55 @@ public:
    * primary outputs layer. The first layer contains only primary inputs.
    * @param seed Seed for reproducibility of the result.
    */
-  LayerGenerator(const std::size_t nIn, const std::size_t nOut,
+  LayerGenerator(const std::size_t nIn,
+                 const std::size_t nOut,
                  const std::vector<CellSymbol> &netBase,
+                 const std::vector<std::size_t> &layerNCells,
+                 const unsigned seed = 0u);
+
+  LayerGenerator(const std::size_t nIn,
+                 const std::size_t nOut,
+                 const CellSymbolList &netBase,
                  const std::vector<std::size_t> &layerNCells,
                  const unsigned seed = 0u);
 
   /**
    * @brief Layered net generator constructor.
    * Generator is able to generate net only if it is possible to connect
-   * every layer with next layer or primary output layer.
+   * every element on a layer with the next layer.
+   * @param nIn Number of primary inputs.
+   * @param nOut Number of primary outputs.
+   * @param netBase Basis of allowed operations.
+   * Basis can contain predefined operation symbols only.
+   * Inputs, outputs and constants are not allowed.
+   * @param nLayers Number of layers. It should be possible with the passed
+   * net basis to reduce number of cells on layer from nIn to nOut with nLayers.
+   * @param layerNCellsMin Minimum number of cells on each layer. Should be less
+   * or equal to nOut.
+   * @param layerNCellsMax Maximum number of cells on each layer. Second layer
+   * should be connectable with first layer (with primary inputs).
+   * @param seed Seed for reproducibility of the result.
+   */
+  LayerGenerator(const std::size_t nIn,
+                 const std::size_t nOut,
+                 const std::vector<CellSymbol> &netBase,
+                 const std::size_t nLayers,
+                 const uint16_t layerNCellsMin,
+                 const uint16_t layerNCellsMax,
+                 const unsigned seed = 0u);
+
+  LayerGenerator(const std::size_t nIn,
+                 const std::size_t nOut,
+                 const CellSymbolList &netBase,
+                 const std::size_t nLayers,
+                 const uint16_t layerNCellsMin,
+                 const uint16_t layerNCellsMax,
+                 const unsigned seed = 0u);
+
+  /**
+   * @brief Layered net generator constructor.
+   * Generator is able to generate net only if it is possible to connect
+   * every element on a layer with the next layer or primary output layer.
    * @param nIn Number of primary inputs.
    * @param nOut Number of primary outputs.
    * @param netBase Basis of allowed operations.
@@ -64,9 +103,49 @@ public:
    * primary outputs layer. The first layer contains only primary inputs.
    * @param seed Seed for reproducibility of the result.
    */
-  LayerGenerator(const std::size_t nIn, const std::size_t nOut,
+  LayerGenerator(const std::size_t nIn,
+                 const std::size_t nOut,
                  const std::vector<CellTypeID> &netBase,
                  const std::vector<std::size_t> &layerNCells,
+                 const unsigned seed = 0u);
+
+  LayerGenerator(const std::size_t nIn,
+                 const std::size_t nOut,
+                 const CellTypeIDList &netBase,
+                 const std::vector<std::size_t> &layerNCells,
+                 const unsigned seed = 0u);
+
+  /**
+   * @brief Layered net generator constructor.
+   * Generator is able to generate net only if it is possible to connect
+   * every element on a layer with the next layer.
+   * @param nIn Number of primary inputs.
+   * @param nOut Number of primary outputs.
+   * @param netBase Basis of allowed operations.
+   * Basis can contain predefined and custom operation identifiers only.
+   * Inputs, outputs and constants are not allowed.
+   * @param nLayers Number of layers. It should be possible with the passed
+   * net basis to reduce number of cells on layer from nIn to nOut with nLayers.
+   * @param layerNCellsMin Minimum number of cells on each layer. Should be less
+   * or equal to nOut.
+   * @param layerNCellsMax Maximum number of cells on each layer. Second layer
+   * should be connectable with first layer (with primary inputs).
+   * @param seed Seed for reproducibility of the result.
+   */
+  LayerGenerator(const std::size_t nIn,
+                 const std::size_t nOut,
+                 const std::vector<CellTypeID> &netBase,
+                 const std::size_t nLayers,
+                 const uint16_t layerNCellsMin,
+                 const uint16_t layerNCellsMax,
+                 const unsigned seed = 0u);
+
+  LayerGenerator(const std::size_t nIn,
+                 const std::size_t nOut,
+                 const CellTypeIDList &netBase,
+                 const std::size_t nLayers,
+                 const uint16_t layerNCellsMin,
+                 const uint16_t layerNCellsMax,
                  const unsigned seed = 0u);
 
   std::string getName() const override;
@@ -75,11 +154,13 @@ private:
   NetID generateValid() override;
 
   /// Sets primary inputs in netBuilder.
-  void setPrimIns(NetBuilder &netBuilder, std::vector<CellID> &prevLayerCells,
+  void setPrimIns(NetBuilder &netBuilder,
+                  std::vector<CellID> &prevLayerCells,
                   std::vector<CellID> &addedCells);
 
   /// Sets primary outputs in netBuilder.
-  bool setPrimOuts(NetBuilder &netBuilder, std::vector<CellID> &prevLayerCells,
+  bool setPrimOuts(NetBuilder &netBuilder,
+                   std::vector<CellID> &prevLayerCells,
                    std::vector<CellID> &addedCells,
                    std::vector<CellID> &outputs);
 
@@ -97,15 +178,26 @@ private:
                      std::vector<CellID> &outputs);
 
   /// Sets inputs for cell.
-  void setInputs(Cell::LinkList &curInputs, const CellTypeID cellTID,
+  void setInputs(Cell::LinkList &curInputs,
+                 const CellTypeID cellTID,
                  std::vector<CellID> &addedCells);
 
   /// Sets operation for cell in netBuilder.
-  bool setOp(std::vector<CellID> &curLayerCells, Cell::LinkList &curCellIns,
-             std::vector<CellID> &addedCells, NetBuilder &netBuilder);
+  bool setOp(std::vector<CellID> &curLayerCells,
+             Cell::LinkList &curCellIns,
+             std::vector<CellID> &addedCells,
+             NetBuilder &netBuilder);
+
+  bool generateLayerNCells(const std::size_t nLayers,
+                           uint16_t layerNCellsMin,
+                           uint16_t layerNCellsMax);
 
 private:
   std::vector<std::size_t> layerNCells;
+
+  std::size_t nLayers {0};
+  std::size_t layerNCellsMin {0};
+  std::size_t layerNCellsMax {0};
 };
 
 } // namespace eda::gate::model

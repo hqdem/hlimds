@@ -33,14 +33,14 @@ using Subnet            = eda::gate::model::Subnet;
 using SubnetID          = eda::gate::model::SubnetID;
 using SynthTable        = eda::gate::optimizer2::Synthesizer<DynTruthTable>;
 
-constexpr unsigned RAND3_TT_NUM  = 10;
-constexpr unsigned RAND4_TT_NUM  = 10;
-constexpr unsigned RAND5_TT_NUM  = 10;
-constexpr unsigned RAND6_TT_NUM  = 10;
-constexpr unsigned RAND7_TT_NUM  = 10;
-constexpr unsigned RAND8_TT_NUM  = 10;
-constexpr unsigned RAND9_TT_NUM  = 5;
-constexpr unsigned RAND10_TT_NUM = 5;
+constexpr unsigned RAND3_TT_NUM  = 8;
+constexpr unsigned RAND4_TT_NUM  = 16;
+constexpr unsigned RAND5_TT_NUM  = 32;
+constexpr unsigned RAND6_TT_NUM  = 64;
+constexpr unsigned RAND7_TT_NUM  = 128;
+constexpr unsigned RAND8_TT_NUM  = 256;
+constexpr unsigned RAND9_TT_NUM  = 512;
+constexpr unsigned RAND10_TT_NUM = 1024;
 
 /// Defines the names of the resynthesis algorithms.
 enum class Algorithm {
@@ -128,8 +128,12 @@ void runTest(const DynTruthTable &table) {
   // Launching.
   for (size_t i = 0; i < registry.size(); i++) {
     // TODO: decide, what may be used instead of "assert" to indicate an error.
-    if ((i == 0) && (table.num_vars() > 8)) {
+    if ((i == 0) && (table.num_vars() > 7)) {
       writeLogs(fout, table, Algorithm::Akers, 0, 0, 0, true);
+      continue;
+    }
+    if ((i == 1) && (table.num_vars() > 8)) {
+      writeLogs(fout, table, Algorithm::BiDecomposition, 0, 0, 0, true);
       continue;
     }
     clock_t start = clock();

@@ -20,14 +20,29 @@
 namespace eda::gate::model {
 
 const std::string genTestFolder = "/output/test/generator/";
+const std::string matrixGenSubfolder = "/matrix/";
+const std::string layerGenSubfolder = "/layer/";
 
-bool netValid(const Net &net, const std::size_t nCells,
-              const std::size_t nIn, const std::size_t nOut,
-              const bool generatable, const std::size_t nestingDepth);
+void checkEnvVarSet() {
+  if (!getenv("UTOPIA_HOME")) {
+    FAIL() << "UTOPIA_HOME is not set.";
+  }
+}
 
-bool checkCellsValid(const List<CellID> &cells, const std::size_t nCells,
-                     const std::size_t nIn, const std::size_t nOut,
-                     const bool generatable, const std::size_t nestingDepth) {
+bool netValid(const Net &net,
+              const std::size_t nCells,
+              const std::size_t nIn,
+              const std::size_t nOut,
+              const bool generatable,
+              const std::size_t nestingDepth);
+
+bool checkCellsValid(const List<CellID> &cells,
+                     const std::size_t nCells,
+                     const std::size_t nIn,
+                     const std::size_t nOut,
+                     const bool generatable,
+                     const std::size_t nestingDepth) {
+
   for (const auto &cellId : cells) {
     const Cell &cell = Cell::get(cellId);
     const CellType &cellType = cell.getType();
@@ -59,15 +74,15 @@ bool checkCellsValid(const List<CellID> &cells, const std::size_t nCells,
   return true;
 }
 
-bool netValid(const Net &net, const std::size_t nCells,
-              const std::size_t nIn, const std::size_t nOut,
-              const bool generatable, const std::size_t nestingDepth) {
+bool netValid(const Net &net,
+              const std::size_t nCells,
+              const std::size_t nIn,
+              const std::size_t nOut,
+              const bool generatable,
+              const std::size_t nestingDepth = 1) {
 
   const uint16_t netInN = net.getInNum(), netOutN = net.getOutNum();
   const uint32_t netCombN = net.getCombNum();
-  if (!generatable) {
-    return !netInN && !netOutN && !netCombN;
-  }
   if (!(netInN == nIn && netOutN == nOut &&
         (netCombN + net.getFlipNum()) +
         net.getSoftNum() + net.getHardNum() == nCells) ||
@@ -90,8 +105,49 @@ bool netValid(const Net &net, const std::size_t nCells,
                          nestingDepth);
 }
 
-void printGeneratedNet(const Net &net, const std::string &subFolder,
+bool netValid(const NetID &netID,
+              const std::size_t nCells,
+              const std::size_t nIn,
+              const std::size_t nOut,
+              const bool generatable,
+              const std::size_t nestingDepth = 1) {
+
+  if (netID == OBJ_NULL_ID) {
+    return !generatable;
+  }
+  if (!generatable) {
+    return false;
+  }
+  const Net net = Net::get(netID);
+  return netValid(net, nCells, nIn, nOut, generatable, nestingDepth);
+}
+
+std::size_t getNCells(const std::vector<std::size_t> &layerNCells) {
+  std::size_t nCells = 0;
+  for (std::size_t i = 0; i < layerNCells.size(); ++i) {
+    nCells += layerNCells[i];
+  }
+  return nCells;
+}
+
+std::size_t getNCells(const NetID &netID) {
+  if (netID == OBJ_NULL_ID) {
+    return 0;
+  }
+  const Net &net = Net::get(netID);
+  std::size_t nCells = net.getCombNum() + net.getFlipNum() + net.getHardNum() +
+                       net.getSoftNum();
+  return nCells;
+}
+
+void printGeneratedNet(const NetID &netID,
+                       const std::string &subFolder,
                        const std::string &fileName) {
+
+  if (netID == OBJ_NULL_ID) {
+    return;
+  }
+  const Net &net = Net::get(netID);
   NetPrinter *dotPrinter = &NetPrinter::getDefaultPrinter();
   std::ofstream out;
   std::string homePath = getenv("UTOPIA_HOME");
@@ -101,21 +157,6 @@ void printGeneratedNet(const Net &net, const std::string &subFolder,
   out.open(filePath.c_str() + fileName);
   dotPrinter->print(out, net);
   out.close();
-}
-
-void setFaninLim(Generator *generator,
-                 const std::pair<uint16_t, uint16_t> *faninLim) {
-
-  if (generator == nullptr) {
-    return;
-  }
-  if (faninLim != nullptr) {
-    if (!faninLim->first) {
-      generator->setFaninHigh(faninLim->second);
-    } else {
-      generator->setFaninLim(faninLim->first, faninLim->second);
-    }
-  }
 }
 
 CellTypeID createNetCell() {
@@ -134,203 +175,243 @@ CellTypeID createNetCell() {
                       CellProperties(1, 0, 0, 0, 0), 2, 1);
 }
 
-template<typename BaseT>
-void startMatrixGenerator(const std::size_t nCells, const std::size_t nIn,
-                          const std::size_t nOut,
-                          const std::initializer_list<BaseT> &netBase,
-                          const std::string &fileName, const bool generatable,
-                          const std::pair<uint16_t, uint16_t> *faninLim,
-                          const bool hierarchical,
-                          const unsigned seed = 0u,
-                          const std::size_t nestingDepth = 1) {
-
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
-  }
-
-  auto generator = seed ? MatrixGenerator(nCells, nIn, nOut, netBase, seed) :
-                          MatrixGenerator(nCells, nIn, nOut, netBase);
-  setFaninLim(&generator, faninLim);
-  generator.setHierarchical(hierarchical);
-  if (nestingDepth != 1) {
-    generator.setNestingMax(nestingDepth);
-  }
-  Net &net = Net::get(generator.generate());
-  EXPECT_TRUE(netValid(net, nCells, nIn, nOut, generatable, nestingDepth));
-  printGeneratedNet(net, "matrix/", fileName);
-}
-
-template<typename BaseT>
-void startLayerGenerator(const std::size_t nIn, const std::size_t nOut,
-                         const std::initializer_list<BaseT> &netBase,
-                         const std::vector<std::size_t> &layerNCells,
-                         const std::string &fileName, const bool generatable,
-                         const std::pair<uint16_t, uint16_t> *faninLim,
-                         const bool hierarchical,
-                         const unsigned seed = 0u,
-                         const std::size_t nestingDepth = 1) {
-
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
-  }
-
-  auto generator = seed ?
-                   LayerGenerator(nIn, nOut, netBase, layerNCells, seed) :
-                   LayerGenerator(nIn, nOut, netBase, layerNCells);
-  setFaninLim(&generator, faninLim);
-  generator.setHierarchical(hierarchical);
-  if (nestingDepth != 1) {
-    generator.setNestingMax(nestingDepth);
-  }
-  Net &net = Net::get(generator.generate());
-
-  std::size_t nCells = 0;
-  for (const std::size_t nCellsOnLayer: layerNCells) {
-    nCells += nCellsOnLayer;
-  }
-  EXPECT_TRUE(netValid(net, nCells, nIn, nOut, generatable, nestingDepth));
-  printGeneratedNet(net, "layers/", fileName);
-}
-
 // Matrix generator tests.
 
-TEST(MatrixMatrixGeneratorTest, MinCells) {
-  startMatrixGenerator(0, 1, 1, { AND, NOT }, "min_cells.dot", true, nullptr,
-                       false);
+TEST(MatrixGeneratorTest, MinCells) {
+  checkEnvVarSet();
+
+  MatrixGenerator generator(0, 1, 1, { AND, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 0, 1, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "min_cells.dot");
 }
 
 TEST(MatrixGeneratorTest, OnlyNot) {
-  startMatrixGenerator(1, 1, 1, { NOT }, "only_not.dot", true, nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 1, 1, { NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 1, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "only_not.dot");
 }
 
 TEST(MatrixGeneratorTest, SeveralIn) {
-  startMatrixGenerator(40, 30, 1, { AND, NOT }, "several_in.dot", true,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(40, 30, 1, { AND, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 40, 30, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "several_in.dot");
 }
 
 TEST(MatrixGeneratorTest, SeveralOut) {
-  startMatrixGenerator(40, 1, 30, { AND, NOT }, "several_out.dot", true,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(40, 1, 30, { AND, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 40, 1, 30, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "several_out.dot");
 }
 
 TEST(MatrixGeneratorTest, SeveralInOut) {
-  startMatrixGenerator(40, 10, 50, { AND, NOT }, "several_in_out.dot", true,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(40, 10, 50, { AND, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 40, 10, 50, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "several_in_out.dot");
 }
 
 TEST(MatrixGeneratorTest, Ungeneratable) {
-  startMatrixGenerator(3, 9, 1, { LATCH, NOT }, "ungeneratable.dot", false,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(3, 9, 1, { LATCH, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 3, 9, 1, false));
+  printGeneratedNet(netID, matrixGenSubfolder, "ungeneratable.dot");
 }
 
 TEST(MatrixGeneratorTest, Ungeneratable2) {
-  startMatrixGenerator(0, 0, 1, { AND, NOT }, "ungeneratable2.dot", false,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(0, 0, 1, { AND, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 0, 0, 1, false));
+  printGeneratedNet(netID, matrixGenSubfolder, "ungeneratable2.dot");
 }
 
 TEST(MatrixGeneratorTest, ExtraOuts) {
-  startMatrixGenerator(2, 4, 7, { AND, NOT }, "extra_outs.dot", true, nullptr,
-                       false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(2, 4, 7, { AND, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 2, 4, 7, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "extra_outs.dot");
 }
 
 TEST(MatrixGeneratorTest, IrrelevantOps) {
-  startMatrixGenerator(1, 2, 1, { NOT, DFF, LATCH }, "irrelevant_ops.dot",
-                       false, nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 2, 1, { NOT, DFF, LATCH });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 2, 1, false));
+  printGeneratedNet(netID, matrixGenSubfolder, "irrelevant_ops.dot");
 }
 
 TEST(MatrixGeneratorTest, BottomLayerDrain) {
-  startMatrixGenerator(1, 4, 2, { NOT, DFF, LATCH }, "bottom_layer_drain.dot",
-                       false, nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 4, 2, { NOT, DFF, LATCH });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 4, 2, false));
+  printGeneratedNet(netID, matrixGenSubfolder, "bottom_layer_drain.dot");
 }
 
 TEST(MatrixGeneratorTest, NoOuts) {
-  startMatrixGenerator(1, 2, 0, { AND, NOT }, "no_outs.dot", false, nullptr,
-                       false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 2, 0, { NOT, AND });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 2, 0, false));
+  printGeneratedNet(netID, matrixGenSubfolder, "no_outs.dot");
 }
 
 TEST(MatrixGeneratorTest, AnyNInHandle) {
-  startMatrixGenerator(1, 2, 1, { AND, DFF }, "any_n_in_handle.dot", true,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 2, 1, { AND, DFF });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 2, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "any_n_in_handle.dot");
 }
 
 TEST(MatrixGeneratorTest, LinkAllCells) {
-  startMatrixGenerator(2, 2, 1, { LATCH, NOT }, "link_all_cells.dot", true,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(2, 2, 1, { LATCH, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 2, 2, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "link_all_cells.dot");
 }
 
-TEST(MatrixGeneratorTest, MaxOuts) {
-  startMatrixGenerator(2, 4, 6, { AND, NOT }, "max_outs.dot", true, nullptr,
-                       false);
+TEST(MatrixGeneratorTest, TwoOutsForCell) {
+  checkEnvVarSet();
+
+  MatrixGenerator generator(2, 4, 7, { AND, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 2, 4, 7, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "two_outs_for_cell.dot");
 }
 
 TEST(MatrixGeneratorTest, MAJCells) {
-  startMatrixGenerator(30, 1, 1, { MAJ, NOT }, "maj_cells.dot", true, nullptr,
-                       false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(30, 1, 1, { MAJ, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 30, 1, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "maj_cells.dot");
 }
 
 TEST(MatrixGeneratorTest, LATCHCells) {
-  startMatrixGenerator(13, 27, 1, { LATCH, NOT }, "latch_cells.dot", true,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(13, 27, 1, { LATCH, NOT });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 13, 27, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "latch_cells.dot");
 }
 
 TEST(MatrixGeneratorTest, Less4OpCells) {
-  startMatrixGenerator(50, 5, 5, { NOT, AND, OR, XOR, NAND,
-                                   NOR, XNOR, MAJ, DFF, LATCH },
-                       "less4_op_cells.dot", true, nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(50, 5, 5, { NOT, AND, OR, XOR, NAND, NOR, XNOR,
+                                         MAJ, DFF, LATCH });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 50, 5, 5, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "less4_op_cells.dot");
 }
 
 TEST(MatrixGeneratorTest, SeedUse) {
-  startMatrixGenerator(5, 9, 3, { NOT, DFF, LATCH }, "seed_use.dot", true,
-                       nullptr, false, 123431);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(5, 9, 3, { NOT, DFF, LATCH }, 123431);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 5, 9, 3, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "seed_use.dot");
 }
 
 TEST(MatrixGeneratorTest, DFFrsTest) {
-  startMatrixGenerator(1, 5, 2, { NOT, DFF, DFFrs }, "dffrs_test.dot", true,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 5, 2, { NOT, DFF, DFFrs });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 5, 2, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "dffrs_test.dot");
 }
 
 TEST(MatrixGeneratorTest, DFFrsUngeneratable) {
-  startMatrixGenerator(1, 4, 2, { NOT, DFF, DFFrs }, "dffrs_ungeneratable.dot",
-                       false, nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 4, 2, { NOT, DFF, DFFrs });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 4, 2, false));
+  printGeneratedNet(netID, matrixGenSubfolder, "dffrs_ungeneratable.dot");
 }
 
 TEST(MatrixGeneratorTest, DFFrsUngeneratable2) {
-  startMatrixGenerator(1, 6, 2, { NOT, DFF, DFFrs }, "dffrs_ungeneratable2.dot",
-                       false, nullptr, false);
-}
+  checkEnvVarSet();
 
-TEST(MatrixGeneratorTest, DFFTest) {
-  startMatrixGenerator(1, 3, 1, { DFF }, "dff_test.dot", true, nullptr, false);
+  MatrixGenerator generator(1, 6, 2, { NOT, DFF, DFFrs });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 6, 2, false));
+  printGeneratedNet(netID, matrixGenSubfolder, "dffrs_ungeneratable2.dot");
 }
 
 TEST(MatrixGeneratorTest, CustomCell) {
-  startMatrixGenerator(1, 2, 1, { createNetCell() }, "custom_cell.dot",
-                       true, nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 2, 1, { createNetCell() });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 2, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "custom_cell.dot");
 }
 
 TEST(MatrixGeneratorTest, FaninLimit1_5) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 0, 5 };
-  startMatrixGenerator(10, 5, 1, { AND, DFFrs }, "fanin_limit_1_5.dot", true,
-                       &faninLim, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(10, 5, 1, { AND, DFFrs });
+  generator.setFaninHigh(5);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 10, 5, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "fanin_limit_1_5.dot");
 }
 
 TEST(MatrixGeneratorTest, FaninLimit1_2) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 1, 2 };
-  startMatrixGenerator(10, 5, 1, { AND }, "fanin_limit_1_2.dot", true,
-                       &faninLim, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(10, 5, 1, { AND });
+  generator.setFaninLim(1, 2);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 10, 5, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "fanin_limit_1_2.dot");
 }
 
 TEST(MatrixGeneratorTest, FaninLimit3_5) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 3, 5 };
-  startMatrixGenerator(13, 5, 1, { AND, DFFrs }, "fanin_limit_3_5.dot", true,
-                       &faninLim, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(13, 5, 1, { AND, DFFrs });
+  generator.setFaninLim(3, 5);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 13, 5, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "fanin_limit_3_5.dot");
 }
 
 TEST(MatrixGeneratorTest, InvalidBasisException) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 3, 5 };
+  checkEnvVarSet();
+
   try {
-    startMatrixGenerator(13, 5, 1, { AND, DFFrs, SOFT },
-                         "invalid_basis_exception.dot", true, &faninLim, false);
+    MatrixGenerator generator(13, 5, 1, { AND, DFFrs, SOFT });
+    generator.setFaninLim(3, 5);
   } catch (std::invalid_argument &e) {
     EXPECT_STREQ("Generator's base has invalid cell types.", e.what());
     return;
@@ -339,101 +420,171 @@ TEST(MatrixGeneratorTest, InvalidBasisException) {
 }
 
 TEST(MatrixGeneratorTest, NetCell) {
-  startMatrixGenerator(13, 27, 1, { LATCH, NOT }, "net_cell.dot", true,
-                       nullptr, true, 100u);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(13, 27, 1, { LATCH, NOT }, 100u);
+  generator.setHierarchical(true);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 13, 27, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "net_cell.dot");
 }
 
 TEST(MatrixGeneratorTest, NestingDepthLim) {
-  startMatrixGenerator(1, 1, 1, { NOT }, "nesting_depth_lim.dot", true,
-                       nullptr, true, 100u, 10);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(1, 1, 1, { NOT }, 100u);
+  generator.setHierarchical(true);
+  generator.setNestingMax(10);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 1, 1, 1, true, 10));
+  printGeneratedNet(netID, matrixGenSubfolder, "nesting_depth_lim.dot");
 }
 
 TEST(MatrixGeneratorTest, LimitedNetCell) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 1, 26 };
-  startMatrixGenerator(13, 27, 1, { LATCH, NOT }, "limited_net_cell.dot", true,
-                       &faninLim, true, 100u);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(13, 27, 1, { LATCH, NOT }, 100u);
+  generator.setHierarchical(true);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 13, 27, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "limited_net_cell.dot");
 }
 
 TEST(MatrixGeneratorTest, ManyCells) {
-  startMatrixGenerator(10000, 1, 1, { NOT, DFF, LATCH }, "many_cells.dot", true,
-                       nullptr, false);
+  checkEnvVarSet();
+
+  MatrixGenerator generator(10000, 1, 1, { LATCH, NOT, DFF });
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, 10000, 1, 1, true));
+  printGeneratedNet(netID, matrixGenSubfolder, "many_cells.dot");
 }
 
-// Layer generator tests.
+// Layered generator with layerNcells constructor tests.
 
 TEST(LayerGeneratorTest, 3Layers) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 3, 1, 2 };
-  startLayerGenerator(9, 2, { NOT, DFF, LATCH }, layerNCells, "3layers.dot",
-                      true, nullptr, false);
+  LayerGenerator generator(9, 2, { NOT, DFF, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 9, 2, true));
+  printGeneratedNet(netID, layerGenSubfolder, "3layers.dot");
 }
 
 TEST(LayerGeneratorTest, BottomLayerDrain) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(4, 2, { NOT, LATCH }, layerNCells,
-                      "bottom_layer_drain.dot", true, nullptr, false);
+  LayerGenerator generator(4, 2, { NOT, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 4, 2, true));
+  printGeneratedNet(netID, layerGenSubfolder, "bottom_layer_drain.dot");
 }
 
 TEST(LayerGeneratorTest, 3BottomLayerDrains) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(6, 4, { NOT, LATCH, DFF }, layerNCells,
-                      "3bottom_layer_drains.dot", true, nullptr, false);
+  LayerGenerator generator(6, 4, { NOT, LATCH, DFF }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 6, 4, true));
+  printGeneratedNet(netID, layerGenSubfolder, "3bottom_layer_drains.dot");
 }
 
 TEST(LayerGeneratorTest, Ungeneratable) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 3 };
-  startLayerGenerator(9, 1, { AND, NOT }, layerNCells, "ungeneratable.dot",
-                      false, nullptr, false);
+  LayerGenerator generator(9, 1, { NOT, AND }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 9, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "ungeneratable.dot");
 }
 
 TEST(LayerGeneratorTest, Ungeneratable2) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{};
-  startLayerGenerator(0, 1, { NOT, LATCH }, layerNCells, "ungeneratable2.dot",
-                      false, nullptr, false);
+  LayerGenerator generator(0, 1, { NOT, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 0, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "ungeneratable2.dot");
 }
 
 TEST(LayerGeneratorTest, ExtraOuts) {
-  std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(2, 4, { AND }, layerNCells, "extra_outs.dot", true,
-                      nullptr, false);
+  checkEnvVarSet();
+
+  std::vector<std::size_t> layerNCells{ 3 };
+  LayerGenerator generator(2, 4, { AND }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 2, 4, true));
+  printGeneratedNet(netID, layerGenSubfolder, "extra_outs.dot");
 }
 
 TEST(LayerGeneratorTest, IrrelevantOps) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(2, 1, { NOT, DFF, LATCH }, layerNCells,
-                      "irrelevant_ops.dot", false, nullptr, false);
+  LayerGenerator generator(2, 1, { NOT, DFF, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 2, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "irrelevant_ops.dot");
 }
 
 TEST(LayerGeneratorTest, NoOuts) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(3, 0, { NOT, DFF, LATCH }, layerNCells, "no_outs.dot",
-                      false, nullptr, false);
+  LayerGenerator generator(3, 0, { NOT, DFF, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 3, 0, false));
+  printGeneratedNet(netID, layerGenSubfolder, "no_outs.dot");
 }
 
 TEST(LayerGeneratorTest, MinCells) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells;
-  startLayerGenerator(1, 1, { NOT, DFF, LATCH }, layerNCells, "min_cells.dot",
-                      true, nullptr, false);
+  LayerGenerator generator(1, 1, { NOT, DFF, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 1, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "min_cells.dot");
 }
 
 TEST(LayerGeneratorTest, OnlyNot) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(1, 1, { NOT, DFF, LATCH }, layerNCells, "only_not.dot",
-                      true, nullptr, false);
+  LayerGenerator generator(1, 1, { NOT, DFF, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 1, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "only_not.dot");
 }
 
 TEST(LayerGeneratorTest, ANDOp) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1, 3, 2, 1 };
-  startLayerGenerator(2, 3, { NOT, DFF, AND }, layerNCells, "and_op.dot", true,
-                      nullptr, false);
+  LayerGenerator generator(1, 1, { NOT, DFF, AND }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 1, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "and_op.dot");
 }
 
 TEST(LayerGeneratorTest, SeedUse) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells(30, 1);
-  startLayerGenerator(3, 3, { NOT, DFF, LATCH, AND }, layerNCells,
-                      "seed_use.dot", true, nullptr, false, 12314321);
+  LayerGenerator generator(3, 3, { NOT, DFF, LATCH, AND }, layerNCells,
+                           12314321);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 3, 3, true));
+  printGeneratedNet(netID, layerGenSubfolder, "seed_use.dot");
 }
 
 TEST(LayerGeneratorTest, Less4OpCells) {
+  checkEnvVarSet();
+
   std::srand(0u);
   std::vector<std::size_t> layerNCells(10);
   std::size_t nCells = 6;
@@ -449,74 +600,115 @@ TEST(LayerGeneratorTest, Less4OpCells) {
   }
   std::size_t nOut = std::rand() % (nCells - (layerNCells[9] - 1)) +
                      layerNCells[9];
-  startLayerGenerator(6, nOut, { NOT, AND, OR, XOR, NAND,
-                                 NOR, XNOR, MAJ, DFF, LATCH }, layerNCells,
-                      "less4_op_cells.dot", true, nullptr, false);
+
+  LayerGenerator generator(6, nOut, { NOT, AND, OR, XOR, NAND, NOR, XNOR, MAJ,
+                           DFF, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 6, nOut, true));
+  printGeneratedNet(netID, layerGenSubfolder, "less4_op_cells.dot");
 }
 
 TEST(LayerGeneratorTest, AnyNInHandle) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(2, 1, { AND, DFF }, layerNCells, "any_n_in_handle.dot",
-                      true, nullptr, false);
+  LayerGenerator generator(2, 1, { DFF, AND }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 2, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "any_n_in_handle.dot");
 }
 
 TEST(LayerGeneratorTest, DFFrsTest) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(5, 2, { NOT, DFF, DFFrs }, layerNCells, "dffrs_test.dot",
-                      true, nullptr, false);
+  LayerGenerator generator(5, 2, { DFF, AND, DFFrs }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 5, 2, true));
+  printGeneratedNet(netID, layerGenSubfolder, "dffrs_test.dot");
 }
 
 TEST(LayerGeneratorTest, DFFrsUngeneratable) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(4, 1, { NOT, DFF, DFFrs }, layerNCells,
-                      "dffrs_ungeneratable.dot", false, nullptr, false);
+  LayerGenerator generator(4, 1, { DFF, NOT, DFFrs }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 4, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "dffrs_ungeneratable.dot");
 }
 
 TEST(LayerGeneratorTest, DFFrsUngeneratable2) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(6, 1, { NOT, DFF, DFFrs }, layerNCells,
-                      "dffrs_ungeneratable2.dot", false, nullptr, false);
+  LayerGenerator generator(6, 1, { DFF, NOT, DFFrs }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 6, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "dffrs_ungeneratable2.dot");
 }
 
 TEST(LayerGeneratorTest, DFFTest) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(3, 1, { DFF }, layerNCells, "dff_test.dot", true,
-                      nullptr, false);
+  LayerGenerator generator(3, 1, { DFF }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 3, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "dff_test.dot");
 }
 
 TEST(LayerGeneratorTest, CustomCell) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(2, 1, { createNetCell() }, layerNCells, "custom_cell.dot",
-                      true, nullptr, false);
+  LayerGenerator generator(2, 1, { createNetCell() }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 2, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "custom_cell.dot");
 }
 
 TEST(LayerGeneratorTest, FaninLimit1_2) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 1, 2 };
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 3, 4, 3 };
-  startLayerGenerator(5, 3, { AND }, layerNCells, "fanin_limit_1_2.dot", true,
-                      &faninLim, false);
+
+  LayerGenerator generator(5, 3, { AND }, layerNCells);
+  generator.setFaninLim(1, 2);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 5, 3, true));
+  printGeneratedNet(netID, layerGenSubfolder, "fanin_limit_1_2.dot");
 }
 
 TEST(LayerGeneratorTest, FaninLimit3_5) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 3, 5 };
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 3, 4, 3, 2, 1 };
-  startLayerGenerator(5, 1, { AND, DFFrs }, layerNCells, "fanin_limit_3_5.dot",
-                      true, &faninLim, false);
+  LayerGenerator generator(5, 1, { AND, DFFrs }, layerNCells);
+  generator.setFaninLim(3, 5);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 5, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "fanin_limit_3_5.dot");
 }
 
 TEST(LayerGeneratorTest, FaninLimit1_5) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 0, 5 };
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 3, 4, 3, 2, 1 };
-  startLayerGenerator(5, 1, { AND, DFFrs }, layerNCells, "fanin_limit_1_5.dot",
-                      true, &faninLim, false);
+  LayerGenerator generator(5, 1, { AND, DFFrs }, layerNCells);
+  generator.setFaninHigh(5);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 5, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "fanin_limit_1_5.dot");
 }
 
 TEST(LayerGeneratorTest, FaninLimitException) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 6, 10 };
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 3, 4, 3, 2, 1 };
+  LayerGenerator generator(5, 1, { AND, DFFrs }, layerNCells);
   try {
-    startLayerGenerator(5, 1, { AND, DFFrs }, layerNCells,
-                        "fanin_lim_exception.dot", true, &faninLim, false);
+    generator.setFaninLim(6, 10);
   } catch (std::invalid_argument &e) {
     EXPECT_STREQ("Generator basis has irrelevant operations.",
                  e.what());
@@ -526,11 +718,12 @@ TEST(LayerGeneratorTest, FaninLimitException) {
 }
 
 TEST(LayerGeneratorTest, FaninLimitException2) {
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 10, 6 };
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 3, 4, 3, 2, 1 };
+  LayerGenerator generator(5, 1, { AND, DFFrs }, layerNCells);
   try {
-    startLayerGenerator(5, 1, { AND, DFFrs }, layerNCells,
-                        "fanin_lim_exception2.dot", true, &faninLim, false);
+    generator.setFaninLim(10, 6);
   } catch (std::invalid_argument &e) {
     EXPECT_STREQ("Fanin lower bound is greater than fanin upper bound.",
                  e.what());
@@ -540,11 +733,12 @@ TEST(LayerGeneratorTest, FaninLimitException2) {
 }
 
 TEST(LayerGeneratorTest, InvalidBasisException) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 3, 4, 3, 2, 1 };
   try {
-    startLayerGenerator(5, 1, { AND, DFFrs, IN }, layerNCells,
-                        "invalid_basis_exception.dot", true, nullptr, false);
-  } catch (std::exception &e) {
+    LayerGenerator generator(5, 1, { AND, DFFrs, IN }, layerNCells);
+  } catch (std::invalid_argument &e) {
     EXPECT_STREQ("Generator's base has invalid cell types.",
                  e.what());
     return;
@@ -553,33 +747,182 @@ TEST(LayerGeneratorTest, InvalidBasisException) {
 }
 
 TEST(LayerGeneratorTest, NetCell) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1, 3, 2, 1 };
-  startLayerGenerator(2, 3, { NOT, DFF, AND }, layerNCells, "net_cell.dot",
-                      true, nullptr, true, 100u);
+  LayerGenerator generator(2, 3, { NOT, DFF, AND }, layerNCells);
+  generator.setHierarchical(true);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 2, 3, true));
+  printGeneratedNet(netID, layerGenSubfolder, "net_cell.dot");
 }
 
 TEST(LayerGeneratorTest, NestingDepthLim) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 1 };
-  startLayerGenerator(1, 1, { NOT }, layerNCells, "nesting_depth_lim.dot",
-                      true, nullptr, true, 658u, 2);
+  LayerGenerator generator(1, 1, { NOT }, layerNCells, 658u);
+  generator.setHierarchical(true);
+  generator.setNestingMax(2);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 1, 1, true, 2));
+  printGeneratedNet(netID, layerGenSubfolder, "nesting_depth_lim.dot");
+}
+
+TEST(LayerGeneratorTest, NestingDepthLim2) {
+  checkEnvVarSet();
+
+  std::vector<std::size_t> layerNCells{ 2, 1 };
+  LayerGenerator generator(1, 1, { NOT, AND }, layerNCells, 1u);
+  generator.setHierarchical(true);
+  generator.setNestingMax(0);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 1, 1, true, 1));
+  printGeneratedNet(netID, layerGenSubfolder, "nesting_depth_lim2.dot");
 }
 
 TEST(LayerGeneratorTest, LimitedNetCell) {
+  checkEnvVarSet();
+
   std::vector<std::size_t> layerNCells{ 2, 3, 2, 1 };
-  auto faninLim = std::pair<uint16_t, uint16_t>{ 1, 9 };
-  startLayerGenerator(10, 3, { NOT, DFF, AND }, layerNCells,
-                      "limited_net_cell.dot", true, &faninLim, true, 100u);
+  LayerGenerator generator(10, 3, { NOT, AND, DFF }, layerNCells, 100u);
+  generator.setHierarchical(true);
+  generator.setFaninHigh(9);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 10, 3, true, 9));
+  printGeneratedNet(netID, layerGenSubfolder, "limited_net_cell.dot");
+}
+
+TEST(LayerGeneratorTest, UngeneratableNetCell) {
+  checkEnvVarSet();
+
+  std::vector<std::size_t> layerNCells{ 1 };
+  LayerGenerator generator(4, 1, { DFF }, layerNCells);
+  generator.setHierarchical(true);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 4, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "ungeneratable_net_cell.dot");
 }
 
 TEST(LayerGeneratorTest, ManyCells) {
-  std::vector<std::size_t> layerNCells(100000, 1);
-  startLayerGenerator(1, 1, { NOT, DFF, LATCH }, layerNCells, "many_cells.dot",
-                      true, nullptr, false);
+  checkEnvVarSet();
+
+  std::vector<std::size_t> layerNCells(10000, 1);
+  LayerGenerator generator(1, 1, { NOT, DFF, LATCH }, layerNCells);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(layerNCells), 1, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "many_cells.dot");
+}
+
+// Layered generator with nLayers constructor tests.
+
+TEST(LayerGeneratorTest, FixedNCellsOnLayer) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(9, 1, { LATCH }, 2, 1, 3);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 9, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "fixed_layer_n_cells.dot");
+}
+
+TEST(LayerGeneratorTest, RandomNCellsOnLayer) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(9, 1, { LATCH, AND }, 10, 1, 7);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 9, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "random_layer_n_cells.dot");
+}
+
+TEST(LayerGeneratorTest, UngeneratableNLayers) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(4, 1, { LATCH }, 1, 1, 1);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 4, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "ungeneratable_n_layers.dot");
+}
+
+TEST(LayerGeneratorTest, UngeneratableNLayers2) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(4, 1, { DFF }, 1, 1, 2);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 4, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "ungeneratable_n_layers2.dot");
+}
+
+TEST(LayerGeneratorTest, UngeneratableNLayers3) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(7, 1, { DFF }, 2, 1, 1);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 7, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "ungeneratable_n_layers3.dot");
+}
+
+TEST(LayerGeneratorTest, ZeroLayers) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(1, 1, { DFF }, 0, 1, 100);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 1, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "zero_layers.dot");
+}
+
+TEST(LayerGeneratorTest, LayerNCellsMinTest) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(10, 3, { DFF, LATCH, DFFrs, NOT }, 5, 3, 5);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 10, 3, true));
+  printGeneratedNet(netID, layerGenSubfolder, "layer_n_cells_min_test.dot");
+}
+
+TEST(LayerGeneratorTest, HierarchicalNLayers) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(6, 4, { NOT, DFF }, 2, 1, 4);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 6, 4, true));
+  printGeneratedNet(netID, layerGenSubfolder, "hierarchical_n_layers.dot");
+}
+
+TEST(LayerGeneratorTest, FaninLimNLayers) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(8, 4, { NOT, DFF }, 1, 1, 4);
+  generator.setHierarchical(true);
+  generator.setNestingMax(2);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 8, 4, true, 2));
+  printGeneratedNet(netID, layerGenSubfolder, "fanin_lim_n_layers.dot");
+}
+
+TEST(LayerGeneratorTest, UngeneratableNetCell2) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(2, 1, { DFF }, 1, 1, 1);
+  generator.setHierarchical(true);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 2, 1, false));
+  printGeneratedNet(netID, layerGenSubfolder, "ungeneratable_net_cell2.dot");
+}
+
+TEST(LayerGeneratorTest, ManyCellsNLayers) {
+  checkEnvVarSet();
+
+  LayerGenerator generator(1, 1, { NOT, DFF, LATCH }, 10000, 1, 1);
+  const NetID &netID = generator.generate();
+  EXPECT_TRUE(netValid(netID, getNCells(netID), 1, 1, true));
+  printGeneratedNet(netID, layerGenSubfolder, "many_cells_n_layers.dot");
 }
 
 // General tests
 
 TEST(GeneratorsTest, GeneratorName) {
+  checkEnvVarSet();
+
   const auto netBase = { NOT, DFF, LATCH };
   std::vector<std::size_t> layerNCells(100000, 1);
 

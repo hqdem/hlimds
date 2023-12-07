@@ -49,7 +49,8 @@ namespace eda::gate::optimizer2::resynthesis {
      * 
      * maxArity has to be more than 2, if it's not => assert.
      */
-    SubnetID synthesize(const DinTruthTable &func, uint16_t maxArity = -1) override;
+    SubnetID synthesize(const DinTruthTable &func,
+                        uint16_t maxArity = -1) override;
 
     /**
      * Creates a function, represented by a given truth table. 

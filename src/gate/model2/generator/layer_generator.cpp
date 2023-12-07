@@ -10,17 +10,96 @@
 
 namespace eda::gate::model {
 
-LayerGenerator::LayerGenerator(const std::size_t nIn, const std::size_t nOut,
+/**
+ * @brief Get a raised to the power n.
+ * Get { a ^ n, 0 } if result < 0xffff. Otherwise get { a', k }, where
+ * a' -- a raised to max power with result < 0xffff, k -- the number of residual
+ * exponentiations.
+ */
+std::pair<std::size_t, uint32_t> binpow(uint16_t a, std::size_t n) {
+  std::size_t res = 1;
+  std::size_t residualExp = 1;
+  while (n) {
+    if (n & 1) {
+      if (res * a >= 0xffff) {
+        return { res, n * residualExp };
+      }
+      res *= a;
+    }
+    a *= a;
+    residualExp *= 2;
+    n >>= 1;
+  }
+  return { res, 0 };
+}
+
+LayerGenerator::LayerGenerator(const std::size_t nIn,
+                               const std::size_t nOut,
                                const std::vector<CellSymbol> &netBase,
                                const std::vector<std::size_t> &layerNCells,
                                const unsigned seed):
   Generator(nIn, nOut, netBase, seed), layerNCells(layerNCells) {};
 
-LayerGenerator::LayerGenerator(const std::size_t nIn, const std::size_t nOut,
+LayerGenerator::LayerGenerator(const std::size_t nIn,
+                               const std::size_t nOut,
+                               const CellSymbolList &netBase,
+                               const std::vector<std::size_t> &layerNCells,
+                               const unsigned seed):
+  Generator(nIn, nOut, netBase, seed), layerNCells(layerNCells) {};
+
+LayerGenerator::LayerGenerator(const std::size_t nIn,
+                               const std::size_t nOut,
+                               const std::vector<CellSymbol> &netBase,
+                               const std::size_t nLayers,
+                               const uint16_t layerNCellsMin,
+                               const uint16_t layerNCellsMax,
+                               const unsigned seed):
+  Generator(nIn, nOut, netBase, seed), layerNCells({}), nLayers(nLayers),
+  layerNCellsMin(layerNCellsMin), layerNCellsMax(layerNCellsMax) {};
+
+LayerGenerator::LayerGenerator(const std::size_t nIn,
+                               const std::size_t nOut,
+                               const CellSymbolList &netBase,
+                               const std::size_t nLayers,
+                               const uint16_t layerNCellsMin,
+                               const uint16_t layerNCellsMax,
+                               const unsigned seed):
+  Generator(nIn, nOut, netBase, seed), layerNCells({}), nLayers(nLayers),
+  layerNCellsMin(layerNCellsMin), layerNCellsMax(layerNCellsMax) {};
+
+LayerGenerator::LayerGenerator(const std::size_t nIn,
+                               const std::size_t nOut,
                                const std::vector<CellTypeID> &netBase,
                                const std::vector<std::size_t> &layerNCells,
                                const unsigned seed):
   Generator(nIn, nOut, netBase, seed), layerNCells(layerNCells) {};
+
+LayerGenerator::LayerGenerator(const std::size_t nIn,
+                               const std::size_t nOut,
+                               const CellTypeIDList &netBase,
+                               const std::vector<std::size_t> &layerNCells,
+                               const unsigned seed):
+  Generator(nIn, nOut, netBase, seed), layerNCells(layerNCells) {};
+
+LayerGenerator::LayerGenerator(const std::size_t nIn,
+                               const std::size_t nOut,
+                               const std::vector<CellTypeID> &netBase,
+                               const std::size_t nLayers,
+                               const uint16_t layerNCellsMin,
+                               const uint16_t layerNCellsMax,
+                               const unsigned seed):
+  Generator(nIn, nOut, netBase, seed), layerNCells({}), nLayers(nLayers),
+  layerNCellsMin(layerNCellsMin), layerNCellsMax(layerNCellsMax) {};
+
+LayerGenerator::LayerGenerator(const std::size_t nIn,
+                               const std::size_t nOut,
+                               const CellTypeIDList &netBase,
+                               const std::size_t nLayers,
+                               const uint16_t layerNCellsMin,
+                               const uint16_t layerNCellsMax,
+                               const unsigned seed):
+  Generator(nIn, nOut, netBase, seed), layerNCells({}), nLayers(nLayers),
+  layerNCellsMin(layerNCellsMin), layerNCellsMax(layerNCellsMax) {};
 
 std::string LayerGenerator::getName() const {
   return "LayerGenerator";
@@ -169,7 +248,51 @@ bool LayerGenerator::setOp(std::vector<CellID> &curLayerCells,
   return true;
 }
 
+bool LayerGenerator::generateLayerNCells(const std::size_t nLayers,
+                                         uint16_t layerNCellsMin,
+                                         uint16_t layerNCellsMax) {
+
+  std::srand(seed);
+  layerNCells.resize(nLayers, 0);
+  std::size_t prevLayerNCells = nIn;
+  uint16_t netBaseNInMax = nInCellTIDs.rbegin()->first;
+  uint16_t maxNIn = std::min(hierarchical ?
+                             std::max(netBaseNInMax, (uint16_t)nIn) :
+                             netBaseNInMax, faninHigh);
+  // Maximum number of cells on the current layer if it is one primary output
+  // in the net.
+  std::pair<std::size_t, uint32_t> oneOutlayerNCellsMax = binpow(maxNIn,
+                                                                 nLayers - 1);
+  for (std::size_t i = 0; i < nLayers; ++i) {
+    std::size_t curLayerNCellsMin = std::max((std::size_t)layerNCellsMin,
+                                             prevLayerNCells / maxNIn +
+                                             (prevLayerNCells % maxNIn ?
+                                              1 : 0));
+    layerNCellsMax = std::min((std::size_t)layerNCellsMax,
+                              (oneOutlayerNCellsMax.second ? 0xffff :
+                               oneOutlayerNCellsMax.first) * nOut);
+    if (!oneOutlayerNCellsMax.second) {
+      oneOutlayerNCellsMax.first /= maxNIn;
+    } else {
+      oneOutlayerNCellsMax.second--;
+    }
+    if (curLayerNCellsMin > layerNCellsMax) {
+      return false;
+    }
+    layerNCells[i] = std::rand() % (layerNCellsMax - curLayerNCellsMin + 1) +
+                     curLayerNCellsMin;
+    prevLayerNCells = layerNCells[i];
+  }
+  return true;
+}
+
 NetID LayerGenerator::generateValid() {
+  if (layerNCells.empty()) {
+    if (!generateLayerNCells(nLayers, layerNCellsMin, layerNCellsMax)) {
+      return genInvalidNet();
+    }
+  }
+
   std::vector<CellID> outputs;
   std::vector<CellID> prevLayerCells;
   std::vector<CellID> addedCells;
@@ -183,12 +306,12 @@ NetID LayerGenerator::generateValid() {
                        addedCells, outputs) ||
         !setLayerCells(netBuilder, curLayerIns, prevLayerCells, addedCells)) {
 
-      return genEmptyNet();
+      return genInvalidNet();
     }
   }
 
   if (!setPrimOuts(netBuilder, prevLayerCells, addedCells, outputs)) {
-    return genEmptyNet();
+    return genInvalidNet();
   }
   return netBuilder.make();
 }

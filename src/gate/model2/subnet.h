@@ -51,7 +51,7 @@ public:
     static constexpr auto ArityBits = 6;
     static constexpr auto RefCountBits = 10;
 
-    static constexpr size_t MaxCellArity = (1 << ArityBits) - 1;
+    static constexpr size_t MaxArity = (1 << ArityBits) - 1;
     static constexpr size_t MaxRefCount = (1 << RefCountBits) - 1;
 
     static constexpr size_t InPlaceLinks = 5;
@@ -67,7 +67,7 @@ public:
         more((links.size() + (InEntryLinks - 1) - InPlaceLinks) / InEntryLinks),
         refcount(0),
         type(CellTypeID::makeSID(typeID)) {
-      assert(links.size() <= MaxCellArity);
+      assert(links.size() <= MaxArity);
       assert(!in || arity == 0);
 
       const auto size = std::min(links.size(), InPlaceLinks);
@@ -299,8 +299,8 @@ public:
     return addCell(symbol, LinkList{l1, l2, l3, l4, l5}, kind);
   }
 
-  /// Adds cell tree that implements the function with linked args.
-  size_t addCellTree(CellSymbol symbol, const LinkList &links);
+  /// Adds a k-ary tree that implements the given function.
+  size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
 
   SubnetID make() {
     assert(nIn > 0 && nOut > 0);

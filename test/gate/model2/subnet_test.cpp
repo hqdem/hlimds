@@ -17,7 +17,7 @@
 
 namespace eda::gate::model {
 
-SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, bool tree = false) {
+SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
@@ -26,16 +26,10 @@ SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, bool tree = false) {
 
   for (size_t i = 0; i < arity; i++) {
     const auto idx = builder.addCell(IN, SubnetBuilder::INPUT);
-    links.emplace_back(Link(idx));
+    links.emplace_back(idx);
   }
 
-  size_t idx = 0;
-  if (tree) {
-    idx = builder.addCellTree(symbol, links);
-  } else {
-    idx = builder.addCell(symbol, links);
-  }
-
+  const auto idx = builder.addCellTree(symbol, links, k);
   builder.addCell(OUT, Link(idx), SubnetBuilder::OUTPUT);
 
   return builder.make();

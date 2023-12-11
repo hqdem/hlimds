@@ -4,6 +4,8 @@
 #include "gate/model2/cell.h"
 #include "gate/model2/subnet.h"
 
+#include <limits.h>
+
 #include <unordered_map>
 
 namespace eda::gate::tech_optimizer {
@@ -18,6 +20,11 @@ namespace eda::gate::tech_optimizer {
   struct BestReplacement {
 
     EntryIndex cellID;
+
+    bool isIN = false;
+    bool isOUT = false;
+
+    size_t cellIDInMappedSubnet = ULLONG_MAX;
 
     // Sunbnet with custom cell from CellDB
     SubnetID subnetID;

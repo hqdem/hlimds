@@ -129,7 +129,7 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opZero = [this](size_t out, const LinkList &in) {
-    state[out] = 0u;
+    state[out] = 0ull;
   };
 
   Function getZero(uint32_t arity) const { return opZero; }
@@ -139,7 +139,7 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opOne = [this](size_t out, const LinkList &in) {
-    state[out] = -1u;
+    state[out] = -1ull;
   };
 
   Function getOne(uint32_t arity) const { return opOne; }

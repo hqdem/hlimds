@@ -41,18 +41,17 @@ public:
 
   /// Synthesizes the Subnet.
   SubnetID synthesize(const KittyTT &func, uint16_t maxArity = -1) override {
-    /// TODO: Take into account the restriction on arity.
-    return launchAlgorithm<BiDecomposition>(func, *this);
+    return launchAlgorithm<BiDecomposition>(func, *this, maxArity);
   }
 
   /// Synthesizes the Subnet for a non-constant function.
   Link run(const KittyTT &func, const Inputs &inputs, uint32_t &dummy,
-           SubnetBuilder &subnetBuilder) const;
+           SubnetBuilder &subnetBuilder, uint16_t maxArity = -1) const;
 
 private:
 
   static Link decompose(TernaryBiClique &initBiClique, uint32_t &dummy,
-                        SubnetBuilder &subnetBuilder);
+                        SubnetBuilder &subnetBuilder, uint16_t maxArity = -1);
 
   static CoveragePair findBaseCoverage(CoverageList &stars);
 

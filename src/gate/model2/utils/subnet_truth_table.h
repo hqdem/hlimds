@@ -146,6 +146,10 @@ inline kitty::dynamic_truth_table evaluateMaj(
   return table;
 }
 
+inline kitty::dynamic_truth_table evaluateDummy() {
+  return kitty::create<kitty::dynamic_truth_table>(0);
+}
+
 inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
   assert(subnet.getInNum() > 0);
   assert(subnet.getOutNum() == 1);
@@ -177,11 +181,11 @@ inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
     else                    { assert(false && "Unsupported operation");      }
 
     tables.push_back(table);
-    
-    if (cell.more) {
-      i += cell.more;
+    i += cell.more;
+
+    if (i < entries.size()) {
       for (size_t j = 0; j < cell.more; ++j) {
-        tables.push_back(kitty::create<kitty::dynamic_truth_table>(0));
+        tables.push_back(evaluateDummy());
       }
     }
   }

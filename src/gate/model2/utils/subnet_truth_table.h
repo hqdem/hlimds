@@ -177,7 +177,13 @@ inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
     else                    { assert(false && "Unsupported operation");      }
 
     tables.push_back(table);
-    i += cell.more;
+    
+    if (cell.more) {
+      i += cell.more;
+      for (size_t j = 0; j < cell.more; ++j) {
+        tables.push_back(kitty::create<kitty::dynamic_truth_table>(0));
+      }
+    }
   }
 
   return tables.back();

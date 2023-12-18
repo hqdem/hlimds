@@ -22,6 +22,10 @@ using CellID = eda::gate::model::CellID;
 
 void addInputToNetBuilder(model::NetBuilder &netBuilder,
     model::List<CellID> inputs, std::map<CellID, CellID> &cellMap);
+std::list<CellID> getNetCellID(std::list<CellID> &subnetInputs, std::map<CellID,
+    CellID>  &cellMap);
+NetID mapSequenceNet(NetID net, CutBasedTechMapper *mapper);
+NetID mapCombNet(NetID netID, CutBasedTechMapper *mapper);
 
 CellDB cellDB;
 
@@ -36,20 +40,23 @@ void tech_optimize(NetID net, uint approachSelector/*, Constraints &constraints*
   
   switch(approachSelector) {
   case 0: // cut-based matching
-    //CutBasedTechMapper mapper(functDB, cellTypeMap);
+    CutBasedTechMapper *mapper = new CutBasedTechMapper();
 
     //MinDelay *minDelay = new MinDelay();
-
-    //CutBasedTechMapper mapper(cellDB, minDelay);
-
-    //NetID mappedNet = sequence_net(net, mapper)
+    //mapper->set(cellDB, strategy);
+    
+    if (model::Net::get(net).getFlipNum() != 0) {
+      NetID mappedNet = mapSequenceNet(net, mapper);
+    } else {
+      NetID mappedNet = mapCombNet(net, mapper);
+    }
     //mapper.techMap(net, minDelay, false);
     break;
   //case 1: // DAGON matching
   }
 }
 
-NetID sequence_net(NetID netID, CutBasedTechMapper *mapper) {
+NetID mapSequenceNet(NetID netID, CutBasedTechMapper *mapper) {
 
   Net net = model::Net::get(netID);
 
@@ -68,20 +75,39 @@ NetID sequence_net(NetID netID, CutBasedTechMapper *mapper) {
       CellID subnetOutput = inputCell.getCellID();
       std::list<CellID> subnetInputs = getSequenceInputs(netID, subnetOutput);
 
-      // SubnetID partOfNet = net.getSubnet(subnetInputs, subnetOutput);
+      SubnetID partOfNet;// = net.getSubnet(subnetInputs, subnetOutput);
 
-      // SubnetID mappedSubnet = mapper.techMap(partOfNet);
+      SubnetID mappedSubnet = mapper->techMap(partOfNet);
 
-      // std::list<CellID> inputs = getNetCellID(subnetInputs, cellMap);
-      // CellID output = netBuilder.addSubnet(mappedSubnet, inputs);
-      // cellMap.insert(std::pair<CellID, CellID>(subnetOutput, output));
+      // Список гейтов куда подключать отмапленую схему в netBuilder
+      std::list<CellID> inputs = getNetCellID(subnetInputs, cellMap);
+      CellID output; //= netBuilder.addSubnet(mappedSubnet, inputs);
+      cellMap.insert(std::pair<CellID, CellID>(subnetOutput, output));
 
       FFinputs.push_back(subnetOutput);
     }
-    // std::list<CellID> inputs = getNetCellID(FFinputs, cellMap);
-    // CellID mappedFFID = addFFToNet(netBuilder, FFID, inputs);
-    // cellMap.insert(std::pair<CellID, CellID>(FFID, mappedFFID));
+    
+    std::list<CellID> inputs = getNetCellID(FFinputs, cellMap);
+    CellID mappedFFID; //= addFFToNet(netBuilder, FFID, inputs);
+    cellMap.insert(std::pair<CellID, CellID>(FFID, mappedFFID));
   }
+
+  return netBuilder.make();
+}
+
+NetID mapCombNet(NetID netID, CutBasedTechMapper *mapper) {
+
+  Net net = model::Net::get(netID);
+
+  std::map<CellID, CellID> cellMap;
+
+  model::NetBuilder netBuilder;
+
+  addInputToNetBuilder(netBuilder, net.getInputs(), cellMap);
+
+  //SubnetID mappedSubnet = mapper->techMap(net.convertNetToSubnet(net));
+  //std::list<CellID> inputs = getNetCellID(net.getInputs(), cellMap);
+  // netBuilder.addSubnet(mappedSubnet, inputs);
 
   return netBuilder.make();
 }
@@ -95,6 +121,15 @@ void addInputToNetBuilder(model::NetBuilder &netBuilder,
     netBuilder.addCell(cellID);
   }
 }
+
+std::list<CellID> getNetCellID(std::list<CellID> &subnetInputs, 
+std::map<CellID, CellID>  &cellMap) {
+      std::list<CellID> inputs;
+      for (const auto &input : subnetInputs) {
+        inputs.push_back(cellMap.at(input));
+      }
+      return inputs;
+    }
 
 } // namespace eda::gate::tech_optimizer
 

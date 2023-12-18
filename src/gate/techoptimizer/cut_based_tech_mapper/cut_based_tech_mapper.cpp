@@ -26,9 +26,9 @@ namespace eda::gate::tech_optimizer {
   SubnetID CutBasedTechMapper::techMap(SubnetID subnetID) {
       
       // TODO
-      if (false) {
+      //if () {
         //aigMap(net);
-      }
+      //}
 
       auto cutExtractor = findCuts(subnetID);
 
@@ -54,29 +54,25 @@ namespace eda::gate::tech_optimizer {
     std::map<EntryIndex, BestReplacement> bestReplacementMap;
     Subnet subnet = Subnet::get(subnetID);
 
-    eda::gate::model::Array<Subnet::Entry> enstries = subnet.getEntries();
-    for (uint64_t enstryID = 0; i < std::size(enstries); enstryID++) {
-      auto cell = enstries[enstryID].cell;
+    eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
+    for (uint64_t entryIndex = 0; entryIndex < std::size(entries); 
+        entryIndex++) {
+      auto cell = entries[entryIndex].cell;
 
-      // TODO: Копипаста, переделать. 
       if (cell.isIn()) {
         BestReplacement bestReplacement;
         bestReplacement.isIN = true;
-        bestReplacementMap[enstryID] = bestReplacement;
+        bestReplacementMap[entryIndex] = bestReplacement;
 
       } else if (cell.isOut()) {
-        outID.push_back(enstryID);
-
-        //BestReplacement bestReplacement;
-        //bestReplacement.isOUT = true;
-        //bestReplacementMap[enstryID] = bestReplacement;
+        outID.push_back(entryIndex);
       } 
 
       // Save best tech cells subnet to bestReplMap 
       strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
           bestReplacementMap, cellDB);
 
-      enstryID += cell.more;
+      entryIndex += cell.more;
     }
     return bestReplacementMap;
   }
@@ -89,6 +85,7 @@ namespace eda::gate::tech_optimizer {
 
     std::stack<EntryIndex> stack;
     std::unordered_set<EntryIndex> visited;
+
 
     for (const auto& out : outID) {
       stack.push(out);
@@ -106,126 +103,50 @@ namespace eda::gate::tech_optimizer {
 
       } else {
         bool readyForCreate = true;
-
-        for (EntryIndex entryIDX = currentEntryIDX + 1; 
-            entryIDX <= currentEntryIDX + currentCell.more; entryIDX++) {
-          if (bestReplacementMap[entryIDX] = ULLONG_MAX) {
+        for (const auto &link : currentCell.link) {
+          if (bestReplacementMap[link.idx].cellIDInMappedSubnet == ULLONG_MAX) {
             readyForCreate = false;
           }
         }
 
-        //Продолжить
-
         if (readyForCreate) {
-          current->used = true;
-          model::Cell::LinkList linkList;
-          for (auto& [input, secondParam] : current->map) {
-            linkList.push_back(model::LinkEnd(
-                bestSubstitutions.at(secondParam).cellID));
+          Subnet::LinkList linkList;
+
+          for (const auto &currentLink : currentCell.link) {
+            Subnet::Link link(currentLink);
+            linkList.push_back(link);
           }
-          auto cellID = makeCell(current->cellType, linkList);
-          netBuilder.addCell(cellID);
-          current->cellID = cellID;
+
+          size_t cellID;
+          Subnet techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].subnetID);
+          eda::gate::model::Array<Subnet::Entry> techCellEntries = techSubnet.getEntries();
+          for (const auto &techCellEntry : techCellEntries) {
+            auto techCell = techCellEntry.cell;
+            if (!techCell.isIn() & !techCell.isOut()) {
+              cellID = subnetBuilder.addCell(techCell.getSymbol());
+            }
+          }
+          bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
+
+          // when addSubnet() ready uncoment this and delete upper
+          //auto cellID = subnetBuilder.addSubnet(
+          //    bestReplacementMap[currentEntryIDX].subnetID, linkList);
+          //bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
+
           stack.pop();
         }
       }
 
-
-      for (const auto& [input, secondParam] : current->map) {
-        if (visited.find(&bestSubstitutions.at(secondParam)) == visited.end()) {
-          stack.push(&bestSubstitutions.at(secondParam));
-          visited.insert(&bestSubstitutions.at(secondParam));
+      for (const auto &link : currentCell.link) {
+        if (visited.find(link.idx) == visited.end()) {
+          stack.push(link.idx);
+          visited.insert(link.idx);
         }
       }
     }
-
-    const Net &model2 = Net::get(netBuilder.make());
-    std::cout << model2 << std::endl;
-    return model2;
 
     return subnetBuilder.make();
   }
-
-  //const Net &CutBasedTechMapper::buildModel2(std::map<CellID, BestReplacement> &bestReplacementMap) {
-    /*
-    eda::gate::model::NetBuilder netBuilder;
-
-    std::stack<EntryIndex> stack;
-    std::unordered_set<EntryIndex> visited;
-
-    for (const auto& pair : bestReplacementMap) {
-      EntryIndex entryIndex = pair.first;
-
-      if (entryIndex.isOut()) {
-        stack.push(cellID);
-        visited.insert(cellID);
-      } 
-    }
-
-    while (!stack.empty()) {
-      cellID current = stack.top();
-
-      if (current->isInput) {
-
-        auto cellID = model::makeCell(eda::gate::model::CellSymbol::IN);
-        netBuilder.addCell(cellID);
-        current->cellID = cellID;
-        current->used = true;
-        stack.pop();
-
-      } else {
-
-        bool readyForCreate = true;
-
-        for (auto& [input, secondParam] : current->map) {
-          if (!bestSubstitutions.at(secondParam).used) {
-            readyForCreate = false;
-          }
-        }
-
-        if (readyForCreate) {
-          current->used = true;
-          model::Cell::LinkList linkList;
-          for (auto& [input, secondParam] : current->map) {
-            linkList.push_back(model::LinkEnd(
-                bestSubstitutions.at(secondParam).cellID));
-          }
-          auto cellID = makeCell(current->cellType, linkList);
-          netBuilder.addCell(cellID);
-          current->cellID = cellID;
-          stack.pop();
-        }
-      }
-
-
-      for (const auto& [input, secondParam] : current->map) {
-        if (visited.find(&bestSubstitutions.at(secondParam)) == visited.end()) {
-          stack.push(&bestSubstitutions.at(secondParam));
-          visited.insert(&bestSubstitutions.at(secondParam));
-        }
-      }
-    }
-
-    const Net &model2 = Net::get(netBuilder.make());
-    std::cout << model2 << std::endl;
-    return model2;
-    
-  //}
-
-  void CutBasedTechMapper::printNet(const Net &model2) {
-    // Create an instance of the NetPrinter class for the VERILOG format
-    eda::gate::model::NetPrinter& verilogPrinter = eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
-
-    // Open a stream for writing Verilog code to a file or console
-    std::ofstream outFile("output.v");  // Or use std::cout to print to the console
-
-    // Call the NetPrinter::print method to generate Verilog code
-    verilogPrinter.print(outFile, model2, "my_net");
-
-    // Close the stream
-    outFile.close();
-  }
-  */
 
   float CutBasedTechMapper::getArea() const{
     return area;

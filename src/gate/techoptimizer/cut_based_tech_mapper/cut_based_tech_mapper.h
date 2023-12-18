@@ -54,8 +54,5 @@ namespace eda::gate::tech_optimizer {
     CutExtractor findCuts(SubnetID subnetID);
 
     SubnetID buildSubnet(SubnetID subnetID, std::map<EntryIndex, BestReplacement> &bestReplacementMap);
-
-    //const Net &buildModel2(std::map<EntryIndex, BestReplacement> &bestReplacementMap);
-    //void printNet(const Net &model2);
   };
 } // namespace eda::gate::tech_optimizer

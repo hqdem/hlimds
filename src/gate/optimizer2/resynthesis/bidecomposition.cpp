@@ -15,23 +15,25 @@ namespace eda::gate::optimizer2::resynthesis {
 BiDecomposition::Link BiDecomposition::run(const KittyTT &func,
                                            const Inputs &inputs,
                                            uint32_t &dummy,
-                                           SubnetBuilder &subnetBuilder) const {
+                                           SubnetBuilder &subnetBuilder,
+                                           uint16_t maxArity) const {
   
   KittyTT care(func.num_vars());
   kitty::create_from_binary_string(care, std::string(func.num_bits(), '1'));
   TernaryBiClique initBiClique(func, care);
 
-  return decompose(initBiClique, dummy, subnetBuilder);
+  return decompose(initBiClique, dummy, subnetBuilder, maxArity);
 }
 
 BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
                                                  uint32_t &dummy,
-                                                 SubnetBuilder &subnetBuilder) {
+                                                 SubnetBuilder &subnetBuilder,
+                                                 uint16_t maxArity) {
 
   if (initBiClique.getOnSet().size() == 1) {
     MinatoMorrealeAlg minatoMorrealeAlg;
     return minatoMorrealeAlg.synthFromISOP(initBiClique.getOnSet(),
-        initBiClique.getInputs(), dummy, subnetBuilder);
+        initBiClique.getInputs(), dummy, subnetBuilder, maxArity);
   }
   
   auto starBiCliques = initBiClique.getStarCoverage();

@@ -27,6 +27,7 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
+  gate/analyzer/simulation_estimator_test.cpp
   gate/debugger/lec_test.cpp
   gate/debugger/ril_lec_test.cpp
   gate/debugger/synth_lec_test.cpp

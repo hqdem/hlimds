@@ -4,6 +4,7 @@ add_library(Gate OBJECT
   debugger/bdd_checker.cpp
   debugger/checker.cpp
   debugger/encoder.cpp
+  debugger/k_checker.cpp
   debugger/miter.cpp
   debugger/rnd_checker.cpp
   debugger/symexec.cpp

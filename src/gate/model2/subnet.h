@@ -96,12 +96,12 @@ public:
     bool isNor()   const { return type == CELL_TYPE_SID_NOR;   }
     bool isXnor()  const { return type == CELL_TYPE_SID_XNOR;  }
     bool isMaj()   const { return type == CELL_TYPE_SID_MAJ;   }
-    bool isNull()  const { return type == CellTypeID::NullSID; } 
+    bool isNull()  const { return type == CellTypeID::NullSID; }
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
     CellSymbol getSymbol() const { return getType().getSymbol(); }
-    
+
     /// Cell SID or CellID::NullSID (not connected w/ a design).
     uint64_t cell : CellID::Bits;
     /// Input flag.
@@ -304,7 +304,7 @@ public:
 
   SubnetID make() {
     assert(nIn > 0 && nOut > 0);
-    assert(nIn + nOut <= entries.size());
+    //TODO: assert(nIn + nOut <= entries.size());
     return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 

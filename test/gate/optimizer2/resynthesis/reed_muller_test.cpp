@@ -127,7 +127,7 @@ TEST(ReedMullerModel2, subnetToSubnetOn3Vars) {
     idx[i] = builder.addCell(model::IN, SubnetBuilder::INPUT);
   }
   LinkList output;
-  output.push_back(Link(builder.addCell(model::BUF, Link(idx[1]))));
+  output.push_back(Link(idx[1]));
   output.push_back(Link(builder.addCell(model::AND, {Link(idx[1]), Link(idx[2])})));
   output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[2])})));
   size_t out = builder.addCell(model::XOR, output);
@@ -148,9 +148,9 @@ TEST(ReedMullerModel2, subnetToSubnetOn3VarsWith1) {
     idx[i] = builder.addCell(model::IN, SubnetBuilder::INPUT);
   }
   LinkList output;
-  output.push_back(Link(builder.addCell(model::NOT, Link(idx[0]))));
+  output.push_back(Link(idx[0], true));
   output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[1])})));
-  output.push_back(Link(builder.addCell(model::BUF, Link(idx[2]))));
+  output.push_back(Link(idx[2]));
   output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[1]), Link(idx[2])})));
   size_t out = builder.addCell(model::XOR, output);
   builder.addCell(model::OUT, Link(out), SubnetBuilder::OUTPUT);
@@ -171,10 +171,10 @@ TEST(ReedMullerModel2, subnetToSubnetOn4Vars) {
     idx[i] = builder.addCell(model::IN, SubnetBuilder::INPUT);
   }
   LinkList output;
-  output.push_back(Link(builder.addCell(model::BUF, Link(idx[0]))));
-  output.push_back(Link(builder.addCell(model::BUF, Link(idx[1]))));
-  output.push_back(Link(builder.addCell(model::BUF, Link(idx[2]))));
-  output.push_back(Link(builder.addCell(model::BUF, Link(idx[3]))));
+  output.push_back(Link(idx[0]));
+  output.push_back(Link(idx[1]));
+  output.push_back(Link(idx[2]));
+  output.push_back(Link(idx[3]));
   Link split = Link(builder.addCell(model::XOR, output));
   output.clear();
 

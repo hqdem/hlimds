@@ -80,20 +80,26 @@ struct CellProperties {
                  bool constant,
                  bool identity,
                  bool commutative,
-                 bool associative):
+                 bool associative,
+                 bool regroupable,
+                 bool negative):
     combinational(combinational),
     constant(constant),
     identity(identity),
     commutative(commutative),
-    associative(associative) {}
+    associative(associative),
+    regroupable(regroupable),
+    negative(negative) {}
 
   unsigned combinational : 1;
   unsigned constant      : 1;
   unsigned identity      : 1;
   unsigned commutative   : 1;
   unsigned associative   : 1;
+  unsigned regroupable   : 1;
+  unsigned negative      : 1;
 
-  unsigned reserved      : 11;
+  unsigned reserved      : 9;
 };
 #pragma pack(pop)
 
@@ -120,6 +126,8 @@ public:
   bool isIdentity()      const { return props.identity;      }
   bool isCommutative()   const { return props.commutative;   }
   bool isAssociative()   const { return props.associative;   }
+  bool isRegroupable()   const { return props.regroupable;   }
+  bool isNegative()      const { return props.negative;      }
 
   uint16_t getInNum()  const { return nIn;  }
   uint16_t getOutNum() const { return nOut; }

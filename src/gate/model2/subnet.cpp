@@ -42,6 +42,8 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
       minLength = std::min(minLength, min[i]);
       maxLength = std::max(maxLength, max[i]);
     }
+
+    i += cell.more;
   }
 
   return {minLength, maxLength};

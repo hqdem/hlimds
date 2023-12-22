@@ -40,6 +40,10 @@ auto ConeBuilder::getCone(const uint64_t rootEntryIdx,
 
   while (!subnetEntriesStack.empty()) {
     uint64_t curEntryIdx = subnetEntriesStack.top();
+    if (origEntryToCone.find(curEntryIdx) != origEntryToCone.end()) {
+      subnetEntriesStack.pop();
+      continue;
+    }
     auto curCell = entries[curEntryIdx].cell;
     if (isInEntry(curEntryIdx)) {
       subnetEntriesStack.pop();
@@ -63,9 +67,10 @@ auto ConeBuilder::getCone(const uint64_t rootEntryIdx,
       if (origEntryToCone.find(newEntryIdx) == origEntryToCone.end()) {
         subnetEntriesStack.push(newEntryIdx);
         allInputsVisited = false;
-        origEntryToCone[newEntryIdx] = 0;
       }
-      links.push_back(origEntryToCone[newEntryIdx]);
+      if (allInputsVisited) {
+        links.push_back(origEntryToCone[newEntryIdx]);
+      }
     }
 
     if (!allInputsVisited) {

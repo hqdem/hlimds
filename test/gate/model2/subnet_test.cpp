@@ -74,34 +74,29 @@ SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
 }
 
 TEST(SubnetTest, CellTreeTest) {
+  static constexpr size_t Arity = 10u;
+  static constexpr size_t K     = 2u;
+
   // OR.
-  for (size_t i = 2; i < 6; ++i) {
-    const auto &subnet = Subnet::get(makeSimpleSubnet(OR, i));
-    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(OR, i, true));
+  for (size_t i = 2; i < Arity; ++i) {
+    const auto &subnet = Subnet::get(makeSimpleSubnet(OR, i, i));
+    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(OR, i, K));
 
     EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
   }
 
   // AND.
-  for (size_t i = 2; i < 6; ++i) {
-    const auto &subnet = Subnet::get(makeSimpleSubnet(AND, i));
-    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(AND, i, true));
+  for (size_t i = 2; i < Arity; ++i) {
+    const auto &subnet = Subnet::get(makeSimpleSubnet(AND, i, i));
+    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(AND, i, K));
 
     EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
   }
 
   // XOR.
-  for (size_t i = 2; i < 6; ++i) {
-    const auto &subnet = Subnet::get(makeSimpleSubnet(XOR, i));
-    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(XOR, i, true));
-
-    EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
-  }
-
-  // XNOR.
-  for (size_t i = 2; i < 6; ++i) {
-    const auto &subnet = Subnet::get(makeSimpleSubnet(XNOR, i));
-    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(XNOR, i, true));
+  for (size_t i = 2; i < Arity; ++i) {
+    const auto &subnet = Subnet::get(makeSimpleSubnet(XOR, i, i));
+    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(XOR, i, K));
 
     EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
   }

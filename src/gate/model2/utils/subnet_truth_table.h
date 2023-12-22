@@ -53,13 +53,6 @@ inline kitty::dynamic_truth_table evaluateBuf(
   return getLinkTable(cell.link[0], tables); 
 }
 
-inline kitty::dynamic_truth_table evaluateNot(
-    const Subnet &subnet,
-    const Subnet::Cell &cell,
-    const std::vector<kitty::dynamic_truth_table> &tables) {
-  return ~getLinkTable(cell.link[0], tables); 
-}
-
 inline kitty::dynamic_truth_table evaluateAnd(
     const Subnet &subnet,
     const Subnet::Cell &cell,
@@ -94,30 +87,6 @@ inline kitty::dynamic_truth_table evaluateXor(
     table ^= getLinkTable(subnet.getLink(i, j), tables);
   }
   return table;
-}
-
-inline kitty::dynamic_truth_table evaluateNand(
-    const Subnet &subnet,
-    const Subnet::Cell &cell,
-    const size_t i,
-    const std::vector<kitty::dynamic_truth_table> &tables) {
-  return ~evaluateAnd(subnet, cell, i, tables);
-}
-
-inline kitty::dynamic_truth_table evaluateNor(
-    const Subnet &subnet,
-    const Subnet::Cell &cell,
-    const size_t i,
-    const std::vector<kitty::dynamic_truth_table> &tables) {
-  return ~evaluateOr(subnet, cell, i, tables);
-}
-
-inline kitty::dynamic_truth_table evaluateXnor(
-    const Subnet &subnet,
-    const Subnet::Cell &cell,
-    const size_t i,
-    const std::vector<kitty::dynamic_truth_table> &tables) {
-  return ~evaluateXor(subnet, cell, i, tables);
 }
 
 inline kitty::dynamic_truth_table evaluateMaj(
@@ -170,13 +139,9 @@ inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
     else if (cell.isZero()) { table = evaluateZero(subnet                 ); }
     else if (cell.isOne())  { table = evaluateOne (subnet                 ); }
     else if (cell.isBuf())  { table = evaluateBuf (subnet, cell,    tables); }
-    else if (cell.isNot())  { table = evaluateNot (subnet, cell,    tables); }
     else if (cell.isAnd())  { table = evaluateAnd (subnet, cell, i, tables); }
     else if (cell.isOr())   { table = evaluateOr  (subnet, cell, i, tables); }
     else if (cell.isXor())  { table = evaluateXor (subnet, cell, i, tables); }
-    else if (cell.isNand()) { table = evaluateNand(subnet, cell, i, tables); }
-    else if (cell.isNor())  { table = evaluateNor (subnet, cell, i, tables); }
-    else if (cell.isXnor()) { table = evaluateXnor(subnet, cell, i, tables); }
     else if (cell.isMaj())  { table = evaluateMaj (subnet, cell, i, tables); }
     else                    { assert(false && "Unsupported operation");      }
 

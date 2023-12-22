@@ -130,8 +130,8 @@ TEST(CutExtractorTest, Domination) {
   auto inputs = makeInputs<2>(builder);
   std::size_t andIdx0 = builder.addCell(model::AND,
                                         { Link(inputs[0]), Link(inputs[1]) });
-  std::size_t notIdx0 = builder.addCell(model::NOT,
-                                        Link(andIdx0));
+  std::size_t notIdx0 = builder.addCell(model::BUF,
+                                        Link(andIdx0, true));
   std::size_t andIdx1 = builder.addCell(model::AND,
                                         { Link(andIdx0), Link(notIdx0) });
   builder.addCell(model::OUT, Link(andIdx1), SubnetBuilder::OUTPUT);
@@ -153,13 +153,13 @@ TEST(CutExtractorTest, Domination) {
 TEST(CutExtractorTest, LimitedK) {
   SubnetBuilder builder;
 
-  auto inputs = makeInputs<1>(builder);
-  std::size_t notIdx0 = builder.addCell(model::NOT, Link(inputs[0]));
-  std::size_t notIdx1 = builder.addCell(model::NOT, Link(inputs[0]));
-  std::size_t notIdx2 = builder.addCell(model::NOT, Link(notIdx0));
-  std::size_t notIdx3 = builder.addCell(model::NOT, Link(notIdx0));
-  std::size_t notIdx4 = builder.addCell(model::NOT, Link(notIdx1));
-  std::size_t notIdx5 = builder.addCell(model::NOT, Link(notIdx1));
+  std::array<std::size_t, 1> inputs = makeInputs<1>(builder);
+  std::size_t notIdx0 = builder.addCell(model::BUF, Link(inputs[0], true));
+  std::size_t notIdx1 = builder.addCell(model::BUF, Link(inputs[0], true));
+  std::size_t notIdx2 = builder.addCell(model::BUF, Link(notIdx0,   true));
+  std::size_t notIdx3 = builder.addCell(model::BUF, Link(notIdx0,   true));
+  std::size_t notIdx4 = builder.addCell(model::BUF, Link(notIdx1,   true));
+  std::size_t notIdx5 = builder.addCell(model::BUF, Link(notIdx1,   true));
   std::size_t andIdx0 = builder.addCell(model::AND,
                                         { Link(notIdx2), Link(notIdx3) });
   std::size_t andIdx1 = builder.addCell(model::AND,
@@ -244,8 +244,8 @@ TEST(CutExtractorTest, SameElementsInCuts) {
   SubnetBuilder builder;
   auto inputs = makeInputs<1>(builder);
 
-  std::size_t notIdx0 = builder.addCell(model::NOT, Link(inputs[0]));
-  std::size_t notIdx1 = builder.addCell(model::NOT, Link(inputs[0]));
+  std::size_t notIdx0 = builder.addCell(model::BUF, Link(inputs[0], true));
+  std::size_t notIdx1 = builder.addCell(model::BUF, Link(inputs[0], true));
   std::size_t andIdx0 = builder.addCell(model::AND,
                                         { Link(notIdx0), Link(notIdx1) });
   builder.addCell(model::OUT, Link(andIdx0), SubnetBuilder::OUTPUT);

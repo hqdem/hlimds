@@ -300,10 +300,10 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
 
     return subnetBuilder.make();
   }
-
+  /// TODO: Exclude using a BUF cell.
   for (int i = numVars; i < numVars * 2; i++) { // negotiation
-    const Link link(idx[i - numVars]); // source
-    idx[i] = subnetBuilder.addCell(model::NOT, link);
+    const Link link(idx[i - numVars], true); // source
+    idx[i] = subnetBuilder.addCell(model::BUF, link);
   }
 
   for (int i = firstValId; i < size; i++) { // building subnet

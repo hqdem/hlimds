@@ -93,8 +93,8 @@ size_t SubnetBuilder::addCellTree(
     return addCell(symbol, links);
   }
 
-  bool isAssociative = CellType::get(getCellTypeID(symbol)).isAssociative();
-  assert(isAssociative && "Only associative cells are allowed");
+  bool isRegroupable = CellType::get(getCellTypeID(symbol)).isRegroupable();
+  assert(isRegroupable && "Only regroupable cells are allowed");
 
   LinkList linkList = links;
   linkList.reserve(2 * links.size() - 1);

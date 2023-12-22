@@ -36,7 +36,7 @@ inline SubnetID randomSubnet(
   std::uniform_int_distribution<size_t> arity(minArity, maxArity);
 
   // Gate distribution.
-  static CellSymbol symbols[] = { AND, OR, XOR, NAND, NOR, XNOR, MAJ };
+  static CellSymbol symbols[] = { AND, OR, XOR, MAJ };
   const auto nSymbols = sizeof(symbols) / sizeof(CellSymbol);
   const auto isMajAllowed = (nArities > 1) || (minArity & 1);
 

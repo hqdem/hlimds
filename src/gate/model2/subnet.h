@@ -302,8 +302,7 @@ public:
   size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
 
   SubnetID make() {
-    assert(nIn > 0 && nOut > 0);
-    //TODO: assert(nIn + nOut <= entries.size());
+    assert(nIn > 0 && nOut > 0 && !entries.empty());
     return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 

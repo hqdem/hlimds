@@ -15,6 +15,8 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <vector>
+#include <algorithm>
 
 namespace eda::gate::tech_optimizer {
 
@@ -26,6 +28,7 @@ std::list<CellID> getNetCellID(std::list<CellID> &subnetInputs, std::map<CellID,
     CellID>  &cellMap);
 NetID mapSequenceNet(NetID net, CutBasedTechMapper *mapper);
 NetID mapCombNet(NetID netID, CutBasedTechMapper *mapper);
+SubnetID getSubnet(NetID netID, std::list<CellID> subnetInputs, CellID subnetOutput);
 
 CellDB cellDB;
 
@@ -96,18 +99,16 @@ NetID mapSequenceNet(NetID netID, CutBasedTechMapper *mapper) {
 }
 
 NetID mapCombNet(NetID netID, CutBasedTechMapper *mapper) {
-
   Net net = model::Net::get(netID);
 
-  std::map<CellID, CellID> cellMap;
-
   model::NetBuilder netBuilder;
+  std::map<CellID, CellID> cellMap;
 
   addInputToNetBuilder(netBuilder, net.getInputs(), cellMap);
 
   //SubnetID mappedSubnet = mapper->techMap(net.convertNetToSubnet(net));
   //std::list<CellID> inputs = getNetCellID(net.getInputs(), cellMap);
-  // netBuilder.addSubnet(mappedSubnet, inputs);
+  //netBuilder.addSubnet(mappedSubnet, inputs);
 
   return netBuilder.make();
 }
@@ -131,6 +132,77 @@ std::map<CellID, CellID>  &cellMap) {
       return inputs;
     }
 
+struct SubnetCellinput {
+  CellID netCellID;
+  size_t subnetEntryIDX;
+  };    
+/*
+SubnetID getSubnet(NetID netID, std::list<CellID> subnetInputs, CellID subnetOutput){
+  using Subnet = eda::gate::model::Subnet;
+
+  Net net = model::Net::get(netID);
+  eda::gate::model::SubnetBuilder subnetBuilder;
+
+  std::stack<CellID> stack;
+  std::unordered_set<CellID> visited;
+
+  std::vector<SubnetCellinput> subnetCellinputs;
+
+  std::vector<CellID> netCellID;
+  std::vector<size_t> subnetEntryIDX;
+
+  stack.push(subnetOutput);
+  visited.insert(subnetOutput);
+
+    while (!stack.empty()) {
+      CellID currentCellID = stack.top();
+      auto currentCell = eda::gate::model::Cell::get(currentCellID);
+
+      if (std::find(subnetInputs.begin(), subnetInputs.end(), currentCellID)) {
+        auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::IN);
+        netCellID.push_back(currentCellID);
+        subnetEntryIDX.push_back(cellID);
+        stack.pop();
+
+      } else {
+        bool readyForCreate = true;
+        for (const auto &inputLink : currentCell.getLinks()) {
+          if (netCellID.find(netCellID.begin, netCellID.end(), 
+              inputLink.getCellID()) == netCellID.end()) {
+            readyForCreate = false;
+          }
+        }
+
+        if (readyForCreate) {
+          Subnet::LinkList linkList;
+
+          for (const auto &inputLink : currentCell.getLinks()) {
+            auto it = netCellID.find(netCellID.begin, netCellID.end(), 
+                inputLink.getCellID());
+            int distance = std::distance(netCellID.begin(), it)
+            Subnet::Link link(subnetEntryIDX[distance]);
+            linkList.push_back(link);
+          }
+
+          auto cellID = subnetBuilder.addCell(currentCell.getTypeID(), linkList);
+
+          netCellID.push_back(currentCellID);
+          subnetEntryIDX.push_back(cellID);
+          stack.pop();
+        }
+      }
+
+      for (const auto &inputLink : currentCell.getLinks()) {
+        auto inputCellID = inputLink.getCellID();
+        if (visited.find(inputCellID) == visited.end()) {
+          stack.push(inputCellID);
+          visited.insert(inputCellID);
+        }
+      }
+    }
+    return subnetBuilder.make();
+}
+*/
 } // namespace eda::gate::tech_optimizer
 
 

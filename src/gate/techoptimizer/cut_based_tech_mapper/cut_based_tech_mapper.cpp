@@ -66,11 +66,11 @@ namespace eda::gate::tech_optimizer {
 
       } else if (cell.isOut()) {
         outID.push_back(entryIndex);
-      } 
-
-      // Save best tech cells subnet to bestReplMap 
-      strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
-          bestReplacementMap, cellDB);
+      } else {
+        // Save best tech cells subnet to bestReplMap 
+        strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
+            bestReplacementMap, cellDB, entries);
+      }
 
       entryIndex += cell.more;
     }

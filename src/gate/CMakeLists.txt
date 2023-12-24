@@ -74,6 +74,7 @@ add_library(Gate OBJECT
   techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.cpp
   techoptimizer/cut_based_tech_mapper/tech_map_visitor.cpp
   techoptimizer/tech_optimizer.cpp
+  techoptimizer/power_map/power_map.cpp
   simulator2/simulator.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)

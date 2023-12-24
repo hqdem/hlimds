@@ -30,7 +30,7 @@ TEST(TechmapStrategyTest, MinDelay) {
 
   Subnet subnet = Subnet::get(subnet1());
 
-  CutExtractor cutExtractor(subnet, 6);
+  CutExtractor cutExtractor(&subnet, 6);
 
   std::map<EntryIndex, BestReplacement> bestReplacementMap;
 

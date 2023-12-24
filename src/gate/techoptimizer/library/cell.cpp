@@ -221,7 +221,7 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
         continue;
       }
 
-      eda::gate::model::CellProperties props(true, false, false, false, false);
+      eda::gate::model::CellProperties props(true, false, false, false, false, false, false);
       eda::gate::model::CellTypeAttrID attrID;
 
       MinatoMorrealeAlg minatoMorrealeAlg;

@@ -44,7 +44,7 @@ namespace eda::gate::tech_optimizer {
 
   CutExtractor CutBasedTechMapper::findCuts(SubnetID subnetID) {
     // 6 - max of technology cells input
-    CutExtractor cutExtractor(model::Subnet::get(subnetID), 6);
+    CutExtractor cutExtractor(&model::Subnet::get(subnetID), 6);
     return cutExtractor;
   }
 

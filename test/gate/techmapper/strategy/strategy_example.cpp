@@ -17,7 +17,7 @@ namespace eda::gate::tech_optimizer {
     
     std::list<CellTypeID> cellTypeIDs;
 
-    eda::gate::model::CellProperties props(true, false, false, false, false);
+    eda::gate::model::CellProperties props(true, false, false, false, false, false, false);
     eda::gate::model::CellTypeAttrID attrID;
     MinatoMorrealeAlg minatoMorrealeAlg;
 
@@ -61,7 +61,6 @@ namespace eda::gate::tech_optimizer {
     using LinkList = Subnet::LinkList;
 
     size_t arity = 5;
-    bool tree = false;
  
     SubnetBuilder builder;
     LinkList links;
@@ -73,11 +72,7 @@ namespace eda::gate::tech_optimizer {
     }
 
     size_t idx = 0;
-    if (tree) {
-      idx = builder.addCellTree(eda::gate::model::CellSymbol::AND, links);
-    } else {
-      idx = builder.addCell(eda::gate::model::CellSymbol::AND, links);
-    }
+    idx = builder.addCell(eda::gate::model::CellSymbol::AND, links);
 
     builder.addCell(eda::gate::model::CellSymbol::OUT, 
         Link(idx), SubnetBuilder::OUTPUT);

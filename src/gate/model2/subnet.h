@@ -88,20 +88,16 @@ public:
     bool isZero()  const { return type == CELL_TYPE_SID_ZERO;  }
     bool isOne()   const { return type == CELL_TYPE_SID_ONE;   }
     bool isBuf()   const { return type == CELL_TYPE_SID_BUF;   }
-    bool isNot()   const { return type == CELL_TYPE_SID_NOT;   }
     bool isAnd()   const { return type == CELL_TYPE_SID_AND;   }
     bool isOr()    const { return type == CELL_TYPE_SID_OR;    }
     bool isXor()   const { return type == CELL_TYPE_SID_XOR;   }
-    bool isNand()  const { return type == CELL_TYPE_SID_NAND;  }
-    bool isNor()   const { return type == CELL_TYPE_SID_NOR;   }
-    bool isXnor()  const { return type == CELL_TYPE_SID_XNOR;  }
     bool isMaj()   const { return type == CELL_TYPE_SID_MAJ;   }
-    bool isNull()  const { return type == CellTypeID::NullSID; } 
+    bool isNull()  const { return type == CellTypeID::NullSID; }
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
     CellSymbol getSymbol() const { return getType().getSymbol(); }
-    
+
     /// Cell SID or CellID::NullSID (not connected w/ a design).
     uint64_t cell : CellID::Bits;
     /// Input flag.
@@ -231,6 +227,9 @@ public:
   SubnetBuilder(): nIn(0), nOut(0), entries() {}
 
   size_t addCell(CellTypeID typeID, const LinkList &links, Kind kind = INNER) {
+    bool isPositive = !CellType::get(typeID).isNegative();
+    assert(isPositive && "Only positive cells are allowed in a subnet");
+
     const auto in  = kind.first;
     const auto out = kind.second;
     const auto idx = entries.size();
@@ -303,8 +302,7 @@ public:
   size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
 
   SubnetID make() {
-    assert(nIn > 0 && nOut > 0);
-    assert(nIn + nOut <= entries.size());
+    assert(nIn > 0 && nOut > 0 && !entries.empty());
     return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 

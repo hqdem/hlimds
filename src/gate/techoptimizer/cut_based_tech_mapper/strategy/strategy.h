@@ -7,21 +7,29 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/model/gnet.h"
-#include "gate/optimizer/rwdatabase.h"
- #include "gate/techoptimizer/cut_based_tech_mapper/replacement_struct.h"
+ #include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
+ #include "gate/optimizer2/cut_extractor.h"
+ #include "gate/model2/subnet.h"
+ #include "gate/techoptimizer/library/cellDB.h"
+
+ #include <map>
 
 /**
  * \brief Interface to handle node and its cuts.
  * \author <a href="mailto:dGaryaev@ispras.ru">Daniil Gariaev</a>
  */
 namespace eda::gate::tech_optimizer {
-  using GateID = eda::gate::model::Gate::Id;
+
+  using EntryIndex = uint64_t;
+  using CutsList = eda::gate::optimizer2::CutExtractor::CutsList;
+
   class Strategy {
   public:
     Strategy() {};
-    virtual bool checkOpt(const eda::gate::optimizer::BoundGNet &,
-        const eda::gate::model::GNet::GateIdMap &, double &,
-        std::unordered_map<GateID, Replacement> *) = 0;
+    virtual void findBest(EntryIndex entryIndex, const CutsList &CutsList, 
+        std::map<EntryIndex, BestReplacement> &bestReplacementMap, 
+        CellDB &cellDB, 
+        eda::gate::model::Array<model::Subnet::Entry> &entries) = 0;
+    //virtual bool checkOpt() = 0;
   };
 } // namespace eda::gate::tech_optimizer

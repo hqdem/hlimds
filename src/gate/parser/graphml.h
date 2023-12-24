@@ -57,7 +57,8 @@ namespace eda::gate::parser::graphml {
     * The method can only parse GraphML files with the following constraints:
     *       - Node IDs must be unique and consistent throughout the file.
     *       - Edges must reference valid existing node IDs.
-    *       - Nodes must have attributes: d0(node_id), d1(node_type), d2(num_inverted_predecessors).
+    *       - Nodes must have attributes: d0(node_id), d1(node_type),
+    *         d2(num_inverted_predecessors).
     *       - Edges must have attributes: d3(edge_type).
     * \param filename Absolute path to the GraphML file.
     * \return A pointer to a GNet object representing the net.

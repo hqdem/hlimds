@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "gate/model/gnet.h"
+#include "gate/model2/net.h"
 
 namespace eda::gate::tech_optimizer {
-  using GNet = eda::gate::model::GNet;
+  using NetID = eda::gate::model::NetID;
 
   void read_db(const std::string &dbPath);
-  void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*/);
+  void tech_optimize(NetID net, uint approachSelector/*, Constraints &constraints*/);
 } // namespace eda::gate::tech_optimizer

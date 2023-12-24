@@ -55,6 +55,16 @@ size_t GNet::nOuts() const {
   return result;
 }
 
+size_t GNet::nNegations() const {
+  size_t amount = 0;
+  for (size_t i = 0; i < this->nGates(); ++i) {
+    if (this->gate(i)->isNegation()) {
+      amount++;
+    }
+  }
+  return amount;
+}
+
 //===--------------------------------------------------------------------===//
 // Modification Methods
 //===--------------------------------------------------------------------===//

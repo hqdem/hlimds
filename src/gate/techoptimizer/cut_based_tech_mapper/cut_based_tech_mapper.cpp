@@ -7,177 +7,145 @@
 //===----------------------------------------------------------------------===//
 #include "gate/model2/celltype.h"
 #include "gate/model2/printer/printer.h"
-#include "gate/optimizer/cut_storage.h"
-#include "gate/optimizer/cut_walker.h"
-#include "gate/optimizer/net_substitute.h"
-#include "gate/optimizer/optimizer.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/tech_map_visitor.h"
-#include "gate/techoptimizer/library/cell.h"
+
+#include <limits.h>
 
 namespace eda::gate::tech_optimizer {
 
-  using Gate = eda::gate::model::Gate;
-  using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
-  using PreBasis = eda::gate::premapper::PreBasis;
-  using CutStorage = eda::gate::optimizer::CutStorage;
-  
-  CutBasedTechMapper::CutBasedTechMapper(const std::string &libertyPath) {
-    LibraryCells libraryCells(libertyPath);
-    rwdb.linkDB(dbPath);
-    rwdb.openDB();
+  using Subnet = model::Subnet;
 
-    libraryCells.initializeLibraryRwDatabase(&rwdb, cellTypeMap);
+  std::vector<EntryIndex> outID;
+
+  void CutBasedTechMapper::set(CellDB &cellDB, Strategy *strategy) {
+    this->cellDB = cellDB;
+    this->strategy = strategy;
   }
 
-  CutBasedTechMapper::CutBasedTechMapper(
-      eda::gate::optimizer::SQLiteRWDatabase &rwdb,  
-      std::unordered_map<std::string, CellTypeID> &cellTypeMap) :
-    rwdb(rwdb),
-    cellTypeMap(cellTypeMap) {}
+  SubnetID CutBasedTechMapper::techMap(SubnetID subnetID) {
+      
+      // TODO
+      //if () {
+        //aigMap(net);
+      //}
 
-  GNet *CutBasedTechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
-    try {
-      if (aig) {aigMap(net);}
+      auto cutExtractor = findCuts(subnetID);
 
-      CutStorage cutStorage;
-      findCuts(net, cutStorage);
+      auto bestReplacementMap = replacementSearch(subnetID, cutExtractor);
 
-      std::unordered_map<GateID, Replacement> bestSubstitutions;
-      replacementSearch(net, strategy, bestSubstitutions, cutStorage,
-          cellTypeMap);
+      const SubnetID mappedSubnet = buildSubnet(subnetID, bestReplacementMap);
 
-      const Net &model2 = createModel2(net, bestSubstitutions);
-      printNet(model2);
-
-      rwdb.closeDB();
-    } catch (const char* msg) {
-      std::cout << msg << std::endl;
-    }
-    remove(dbPath.c_str());
-    return net;
+    return mappedSubnet;
   }
   
-  void CutBasedTechMapper::aigMap(GNet *&net) {
-    std::shared_ptr<GNet> sharedNet(net);
-    sharedNet->sortTopologically();
-    GateIdMap gmap;
-    std::shared_ptr<GNet> premapped = 
-        eda::gate::premapper::getPreMapper(PreBasis::AIG).map(*sharedNet, gmap);
-    premapped->sortTopologically();
-    net = new GNet(*premapped);
+  void CutBasedTechMapper::aigMap(SubnetID subnetID) {
   }
 
-  void CutBasedTechMapper::findCuts(GNet *net, CutStorage &cutStorage) {
-    cutStorage = eda::gate::optimizer::findCuts(net, 6);
+  CutExtractor CutBasedTechMapper::findCuts(SubnetID subnetID) {
+    // 6 - max of technology cells input
+    CutExtractor cutExtractor(model::Subnet::get(subnetID), 6);
+    return cutExtractor;
   }
 
-  void CutBasedTechMapper::replacementSearch(GNet *net, Strategy *strategy,  
-      std::unordered_map<GateID, Replacement> &bestSubstitutions, 
-      CutStorage &cutStorage,
-      std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
+  std::map<EntryIndex, BestReplacement> CutBasedTechMapper::replacementSearch(
+      SubnetID subnetID, CutExtractor &cutExtractor) {
 
-    auto nodes = eda::utils::graph::topologicalSort(*net);
-    for (const auto &id: net->getSources()) {
-      if (Gate::get(id)->isSource()) {
-        Replacement bestReplacment{id, eda::gate::model::CELL_TYPE_ID_IN, 
-            " ", 0, 0};
-        bestSubstitutions.insert(std::pair<GateID, Replacement>
-                                (id, bestReplacment));
+    std::map<EntryIndex, BestReplacement> bestReplacementMap;
+    Subnet subnet = Subnet::get(subnetID);
+
+    eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
+    for (uint64_t entryIndex = 0; entryIndex < std::size(entries); 
+        entryIndex++) {
+      auto cell = entries[entryIndex].cell;
+
+      if (cell.isIn()) {
+        BestReplacement bestReplacement;
+        bestReplacement.isIN = true;
+        bestReplacementMap[entryIndex] = bestReplacement;
+
+      } else if (cell.isOut()) {
+        outID.push_back(entryIndex);
+      } else {
+        // Save best tech cells subnet to bestReplMap 
+        strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
+            bestReplacementMap, cellDB, entries);
       }
-    }
 
-    SearchOptReplacement searchOptReplacement;
-    searchOptReplacement.set(&cutStorage, net, &bestSubstitutions, 6,
-        rwdb, strategy, cellTypeMap);
-    eda::gate::optimizer::CutWalker walker(net, &searchOptReplacement,
-        &cutStorage);
-    walker.walk(true);
+      entryIndex += cell.more;
+    }
+    return bestReplacementMap;
   }
 
-  const Net &CutBasedTechMapper::createModel2(GNet *net, 
-      std::unordered_map<GateID, Replacement> &bestSubstitutions) {
+  SubnetID CutBasedTechMapper::buildSubnet(SubnetID subnetID, std::map<EntryIndex, BestReplacement> &bestReplacementMap) {
+    Subnet subnet = Subnet::get(subnetID);
+    eda::gate::model::Array<Subnet::Entry> enstries = subnet.getEntries();
+    
+    eda::gate::model::SubnetBuilder subnetBuilder;
 
-    eda::gate::model::NetBuilder netBuilder;
-    std::stack<Replacement*> stack;
-    std::unordered_set<Replacement*> visited;
-    optimizer::CutWalker::GateIdSet targets;
+    std::stack<EntryIndex> stack;
+    std::unordered_set<EntryIndex> visited;
 
-    targets.reserve((net->targetLinks()).size());
 
-    for (auto link : net->targetLinks()) {
-      targets.insert(link.target);
-    }
-
-    for (const auto &outGateID: targets) {
-      for (const auto &preOutGateID: Gate::get(outGateID)->inputs()) {
-        stack.push(&bestSubstitutions.at(preOutGateID.node()));
-        visited.insert(&bestSubstitutions.at(preOutGateID.node()));
-      }
+    for (const auto& out : outID) {
+      stack.push(out);
+      visited.insert(out);
     }
 
     while (!stack.empty()) {
-      Replacement* current = stack.top();
+      EntryIndex currentEntryIDX = stack.top();
+      auto currentCell = enstries[currentEntryIDX].cell;
 
-      if (current->isInput) {
-
-        auto cellID = model::makeCell(eda::gate::model::CellSymbol::IN);
-        netBuilder.addCell(cellID);
-        current->cellID = cellID;
-        current->used = true;
+      if (currentCell.isIn()) {
+        auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::IN);
+        bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
         stack.pop();
 
       } else {
-
         bool readyForCreate = true;
-
-        for (auto& [input, secondParam] : current->map) {
-          if (!bestSubstitutions.at(secondParam).used) {
+        for (const auto &link : currentCell.link) {
+          if (bestReplacementMap[link.idx].cellIDInMappedSubnet == ULLONG_MAX) {
             readyForCreate = false;
           }
         }
 
         if (readyForCreate) {
-          current->used = true;
-          model::Cell::LinkList linkList;
-          for (auto& [input, secondParam] : current->map) {
-            linkList.push_back(model::LinkEnd(
-                bestSubstitutions.at(secondParam).cellID));
+          Subnet::LinkList linkList;
+
+          for (const auto &currentLink : currentCell.link) {
+            Subnet::Link link(currentLink);
+            linkList.push_back(link);
           }
-          auto cellID = makeCell(current->cellType, linkList);
-          netBuilder.addCell(cellID);
-          current->cellID = cellID;
+
+          size_t cellID;
+          Subnet techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].subnetID);
+          eda::gate::model::Array<Subnet::Entry> techCellEntries = techSubnet.getEntries();
+          for (const auto &techCellEntry : techCellEntries) {
+            auto techCell = techCellEntry.cell;
+            if (!techCell.isIn() & !techCell.isOut()) {
+              cellID = subnetBuilder.addCell(techCell.getSymbol());
+            }
+          }
+          bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
+
+          // when addSubnet() ready uncoment this and delete upper
+          //auto cellID = subnetBuilder.addSubnet(
+          //    bestReplacementMap[currentEntryIDX].subnetID, linkList);
+          //bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
+
           stack.pop();
         }
       }
 
-
-      for (const auto& [input, secondParam] : current->map) {
-        if (visited.find(&bestSubstitutions.at(secondParam)) == visited.end()) {
-          stack.push(&bestSubstitutions.at(secondParam));
-          visited.insert(&bestSubstitutions.at(secondParam));
+      for (const auto &link : currentCell.link) {
+        if (visited.find(link.idx) == visited.end()) {
+          stack.push(link.idx);
+          visited.insert(link.idx);
         }
       }
     }
 
-    const Net &model2 = Net::get(netBuilder.make());
-    std::cout << model2 << std::endl;
-    return model2;
-  }
-
-  void CutBasedTechMapper::printNet(const Net &model2) {
-    // Create an instance of the NetPrinter class for the VERILOG format
-    eda::gate::model::NetPrinter& verilogPrinter = eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
-
-    // Open a stream for writing Verilog code to a file or console
-    std::ofstream outFile("output.v");  // Or use std::cout to print to the console
-
-    // Call the NetPrinter::print method to generate Verilog code
-    verilogPrinter.print(outFile, model2, "my_net");
-
-    // Close the stream
-    outFile.close();
+    return subnetBuilder.make();
   }
 
   float CutBasedTechMapper::getArea() const{

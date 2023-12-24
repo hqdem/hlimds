@@ -1,8 +1,10 @@
 add_library(Gate OBJECT
+  analyzer/simulation_estimator.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
   debugger/checker.cpp
   debugger/encoder.cpp
+  debugger/k_checker.cpp
   debugger/miter.cpp
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
@@ -50,6 +52,7 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
+  optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/bidecomposition.cpp
@@ -70,10 +73,10 @@ add_library(Gate OBJECT
   printer/graphml.cpp
   simulator/simulator.cpp
   techoptimizer/library/cell.cpp
-  techoptimizer/cut_based_tech_mapper/strategy/min_delay.cpp
   techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.cpp
-  techoptimizer/cut_based_tech_mapper/tech_map_visitor.cpp
-  techoptimizer/tech_optimizer.cpp
+  techoptimizer/sequential_mapper/sequential_mapper.cpp
+  techoptimizer/techmapper.cpp
+  techoptimizer/library/cellDB.cpp
   techoptimizer/power_map/power_map.cpp
   simulator2/simulator.cpp
   transformer/bdd.cpp

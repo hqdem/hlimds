@@ -172,7 +172,7 @@ CellTypeID createNetCell() {
   netBuilder.addCell(cellOUTID);
 
   return makeCellType("net", netBuilder.make(), OBJ_NULL_ID, SOFT,
-                      CellProperties(1, 0, 0, 0, 0), 2, 1);
+                      CellProperties(1, 0, 0, 0, 0, 0, 0), 2, 1);
 }
 
 // Matrix generator tests.

@@ -95,6 +95,7 @@ add_executable(${TEST_TARGET}
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/techmap_test.cpp
+  gate/techmapper/power_map_test.cpp
   gate/techmapper/strategy/strategy_example.cpp
   gate/techmapper/strategy/example_test.cpp
   gate/transformer/aigmapper_test.cpp

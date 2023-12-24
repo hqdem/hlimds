@@ -54,6 +54,10 @@ public:
     GateBase::add(netId, gate);
   }
 
+  bool isNot() const {
+    return _func == GateSymbol::NOT;
+  }
+
   bool isXor() const {
     return _func == GateSymbol::XOR;
   }

@@ -1,8 +1,10 @@
 add_library(Gate OBJECT
+  analyzer/simulation_estimator.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
   debugger/checker.cpp
   debugger/encoder.cpp
+  debugger/k_checker.cpp
   debugger/miter.cpp
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
@@ -50,6 +52,7 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
+  optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/bidecomposition.cpp
@@ -59,6 +62,7 @@ add_library(Gate OBJECT
   optimizer2/resynthesis/ternary_bi_clique.cpp
   optimizer2/resynthesis/unitized_table.cpp
   parser/gate_verilog.cpp
+  parser/graphml.cpp
   premapper/aigmapper.cpp
   premapper/migmapper.cpp
   premapper/premapper.cpp
@@ -78,7 +82,7 @@ add_library(Gate OBJECT
   transformer/hmetis.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 
-target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/lib)
 target_link_libraries(Gate
   PUBLIC
   minisat-lib-static
@@ -93,4 +97,5 @@ target_link_libraries(Gate
 
   PRIVATE
   Utopia::Util
+  tinyxml2
 )

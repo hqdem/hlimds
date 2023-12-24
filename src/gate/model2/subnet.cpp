@@ -10,6 +10,10 @@
 
 namespace eda::gate::model {
 
+//===----------------------------------------------------------------------===//
+// Subnet
+//===----------------------------------------------------------------------===//
+
 std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   uint32_t minLength = nCell, maxLength = 0;
   std::vector<uint32_t> min(nCell), max(nCell);
@@ -38,38 +42,11 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
       minLength = std::min(minLength, min[i]);
       maxLength = std::max(maxLength, max[i]);
     }
+
+    i += cell.more;
   }
 
   return {minLength, maxLength};
-}
-
-size_t SubnetBuilder::addCellTree(CellSymbol symbol, const LinkList &links) {
-  if (links.size() < 3) {
-    return addCell(symbol, links);
-  }
-
-  bool isAssociative = CellType::get(getCellTypeID(symbol)).isAssociative();
-  assert(isAssociative && "Only associative cells are allowed!");
-
-  CellSymbol finalSym = symbol;
-  if (symbol == XNOR) {
-    symbol = XOR;
-  }
-
-  LinkList linksNew = links;
-  linksNew.reserve(2 * links.size() - 2);
-
-  size_t l = 0;
-  size_t r = 1;
-  while (r != linksNew.size() - 1) {
-    const auto idx = addCell(symbol, linksNew[l], linksNew[r]);
-    linksNew.emplace_back(Link(idx));
-
-    l += 2;
-    r += 2;
-  }
-
-  return addCell(finalSym, linksNew[l], linksNew[r]);
 }
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
@@ -101,6 +78,40 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
   }
 
   return out;
+}
+
+//===----------------------------------------------------------------------===//
+// Subnet Builder
+//===----------------------------------------------------------------------===//
+
+size_t SubnetBuilder::addCellTree(
+    CellSymbol symbol, const LinkList &links, uint16_t k) {
+  const uint16_t maxCellArity = Subnet::Cell::MaxArity;
+  const uint16_t maxTreeArity = (k > maxCellArity) ? maxCellArity : k;
+
+  if (links.size() <= maxTreeArity) {
+    return addCell(symbol, links);
+  }
+
+  bool isRegroupable = CellType::get(getCellTypeID(symbol)).isRegroupable();
+  assert(isRegroupable && "Only regroupable cells are allowed");
+
+  LinkList linkList = links;
+  linkList.reserve(2 * links.size() - 1);
+
+  for (size_t i = 0; i < linkList.size() - 1;) {
+    const size_t nRest = linkList.size() - i;
+    const size_t nArgs = (nRest > maxTreeArity) ? maxTreeArity : nRest;
+
+    LinkList args(nArgs);
+    for (size_t j = 0; j < nArgs; ++j) {
+      args[j] = linkList[i++];
+    }
+
+    linkList.emplace_back(addCell(symbol, args));
+  }
+
+  return linkList.back().idx;
 }
 
 } // namespace eda::gate::model

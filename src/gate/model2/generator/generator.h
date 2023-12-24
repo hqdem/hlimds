@@ -18,6 +18,8 @@
 namespace eda::gate::model {
 
 using CellToNIn = std::unordered_map<std::size_t, uint16_t>;
+using CellSymbolList = std::initializer_list<CellSymbol>;
+using CellTypeIDList = std::initializer_list<CellTypeID>;
 
 /**
  * @brief Base nets generator class.
@@ -49,8 +51,8 @@ public:
   virtual std::string getName() const = 0;
 
   /**
-   * @brief Generates valid net or empty one if it's impossible to generate
-   * net using the parameters passed to the constructor.
+   * @brief Returns valid net id or invalid object id if it's impossible
+   * to generate net using the parameters passed to the constructor.
    */
   NetID generate();
 
@@ -62,21 +64,25 @@ protected:
   Generator &operator=(Generator &&other) = default;
   virtual ~Generator() = default;
 
-  Generator(const std::size_t nIn, const std::size_t nOut,
-            const std::vector<CellSymbol> &netBase, const unsigned seed);
+  Generator(const std::size_t nIn,
+            const std::size_t nOut,
+            const std::vector<CellSymbol> &netBase,
+            const unsigned seed);
 
-  Generator(const std::size_t nIn, const std::size_t nOut,
-            const std::vector<CellTypeID> &netBase, const unsigned seed);
+  Generator(const std::size_t nIn,
+            const std::size_t nOut,
+            const std::vector<CellTypeID> &netBase,
+            const unsigned seed);
 
   /**
-   * @brief Generates valid or empty net if it is found during generation,
-   * that net can't be generated.
+   * @brief Returns valid net id or invalid object id if it is found during
+   * generation, that net can't be generated.
    */
   virtual NetID generateValid() = 0;
 
   /**
    * @brief Checks if it is possible to add input for
-   * considering cell.
+   * considering cell according to the net basis.
    *
    * @param cellNIn The inputs number of considering cell.
    * @param nSourceCells The number of cells that can be
@@ -90,7 +96,7 @@ protected:
    */
   CellTypeID chooseCellType(const uint16_t cellNIn,
                             const std::size_t nSourceCells);
-  NetID genEmptyNet() const;
+  NetID genInvalidNet() const;
 
 private:
   Generator(const std::size_t nIn, const std::size_t nOut, const unsigned seed);
@@ -100,10 +106,11 @@ private:
   bool primInsOutsNotEmpty() const;
 
   ///  Checks if passed val is inside [low, high]
-  bool isBounded(const uint16_t val, const uint16_t low,
+  bool isBounded(const uint16_t val,
+                 const uint16_t low,
                  const uint16_t high) const;
 
-  bool canCreateNetCell() const;
+  bool canCreateNetCell(const uint16_t cellNIn) const;
 
   CellTypeID createNetCell();
 

@@ -48,9 +48,14 @@ public:
 
   /// Cell entry.
   struct Cell final {
+    static constexpr auto ArityBits = 6;
+    static constexpr auto RefCountBits = 10;
+
+    static constexpr size_t MaxArity = (1 << ArityBits) - 1;
+    static constexpr size_t MaxRefCount = (1 << RefCountBits) - 1;
+
     static constexpr size_t InPlaceLinks = 5;
     static constexpr size_t InEntryLinks = 8;
-    static constexpr size_t MaxCellArity = (1 << 5) - 1;
 
     /// Constructs a view to the existing cell.
     Cell(CellTypeID typeID, CellID cellID, const LinkList &links, bool in, bool out):
@@ -60,8 +65,9 @@ public:
         dummy(false),
         arity(links.size()),
         more((links.size() + (InEntryLinks - 1) - InPlaceLinks) / InEntryLinks),
+        refcount(0),
         type(CellTypeID::makeSID(typeID)) {
-      assert(links.size() <= MaxCellArity);
+      assert(links.size() <= MaxArity);
       assert(!in || arity == 0);
 
       const auto size = std::min(links.size(), InPlaceLinks);
@@ -82,20 +88,16 @@ public:
     bool isZero()  const { return type == CELL_TYPE_SID_ZERO;  }
     bool isOne()   const { return type == CELL_TYPE_SID_ONE;   }
     bool isBuf()   const { return type == CELL_TYPE_SID_BUF;   }
-    bool isNot()   const { return type == CELL_TYPE_SID_NOT;   }
     bool isAnd()   const { return type == CELL_TYPE_SID_AND;   }
     bool isOr()    const { return type == CELL_TYPE_SID_OR;    }
     bool isXor()   const { return type == CELL_TYPE_SID_XOR;   }
-    bool isNand()  const { return type == CELL_TYPE_SID_NAND;  }
-    bool isNor()   const { return type == CELL_TYPE_SID_NOR;   }
-    bool isXnor()  const { return type == CELL_TYPE_SID_XNOR;  }
     bool isMaj()   const { return type == CELL_TYPE_SID_MAJ;   }
-    bool isNull()  const { return type == CellTypeID::NullSID; } 
+    bool isNull()  const { return type == CellTypeID::NullSID; }
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
     CellSymbol getSymbol() const { return getType().getSymbol(); }
-    
+
     /// Cell SID or CellID::NullSID (not connected w/ a design).
     uint64_t cell : CellID::Bits;
     /// Input flag.
@@ -105,9 +107,11 @@ public:
     /// Dummy input flag.
     uint64_t dummy : 1;
     /// Cell arity.
-    uint64_t arity : 5;
+    uint64_t arity : ArityBits;
     /// Number of entries for additional links.
-    uint64_t more : 3;
+    uint64_t more : 4;
+    /// Reference count (fanout).
+    uint64_t refcount : RefCountBits;
     /// Type SID or CellTypeID::NullSID (undefined cell).
     uint32_t type;
     /// Input links.
@@ -134,7 +138,9 @@ public:
   };
   static_assert(sizeof(Entry) == 32);
 
+  /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
+  /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
 
   /// Returns the minimum and maximum path lengths.
@@ -221,9 +227,19 @@ public:
   SubnetBuilder(): nIn(0), nOut(0), entries() {}
 
   size_t addCell(CellTypeID typeID, const LinkList &links, Kind kind = INNER) {
+    bool isPositive = !CellType::get(typeID).isNegative();
+    assert(isPositive && "Only positive cells are allowed in a subnet");
+
     const auto in  = kind.first;
     const auto out = kind.second;
     const auto idx = entries.size();
+
+    // Update reference counts.
+    for (const auto link : links) {
+      auto &cell = entries[link.idx].cell;
+      assert(cell.refcount < Subnet::Cell::MaxRefCount);
+      cell.refcount++;
+    }
 
     entries.emplace_back(typeID, links, in, out);
     if (in)  nIn++;
@@ -282,12 +298,11 @@ public:
     return addCell(symbol, LinkList{l1, l2, l3, l4, l5}, kind);
   }
 
-  /// Adds cell tree that implements the function with linked args.
-  size_t addCellTree(CellSymbol symbol, const LinkList &links);
+  /// Adds a k-ary tree that implements the given function.
+  size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
 
   SubnetID make() {
-    assert(nIn > 0 && nOut > 0);
-    assert(nIn + nOut <= entries.size());
+    assert(nIn > 0 && nOut > 0 && !entries.empty());
     return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 

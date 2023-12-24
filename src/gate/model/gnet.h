@@ -217,6 +217,9 @@ public:
   /// Returns the number of out gates.
   size_t nOuts() const;
 
+  /// Returns the number of negations.
+  size_t nNegations() const;
+
   //===--------------------------------------------------------------------===//
   // Gates
   //===--------------------------------------------------------------------===//

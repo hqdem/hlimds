@@ -266,8 +266,8 @@ CNF Cascade::getFunction(const TruthTable &table, CNF &form) {
   return output;
 }
 
-SubnetID Cascade::synthesize(const TruthTable &func) {
-
+SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
+  /// TODO: Take into account the restriction on arity.
   using Link = Subnet::Link;
   SubnetBuilder subnetBuilder;
 
@@ -300,10 +300,10 @@ SubnetID Cascade::synthesize(const TruthTable &func) {
 
     return subnetBuilder.make();
   }
-
+  /// TODO: Exclude using a BUF cell.
   for (int i = numVars; i < numVars * 2; i++) { // negotiation
-    const Link link(idx[i - numVars]); // source
-    idx[i] = subnetBuilder.addCell(model::NOT, link);
+    const Link link(idx[i - numVars], true); // source
+    idx[i] = subnetBuilder.addCell(model::BUF, link);
   }
 
   for (int i = firstValId; i < size; i++) { // building subnet

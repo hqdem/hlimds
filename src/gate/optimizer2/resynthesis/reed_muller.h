@@ -40,7 +40,8 @@ namespace eda::gate::optimizer2::resynthesis {
      * Transforms truth table for the function to subnet model 
      * using a Reed-Muller method.
      */
-    SubnetID synthesize(const DinTruthTable &func) override;
+    SubnetID synthesize(const DinTruthTable &func,
+                        uint16_t maxArity = -1) override;
 
     /**
      * Creates a function, represented by a given truth table. 

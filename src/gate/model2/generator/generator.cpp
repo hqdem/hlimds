@@ -10,12 +10,14 @@
 
 namespace eda::gate::model {
 
-Generator::Generator(const std::size_t nIn, const std::size_t nOut,
+Generator::Generator(const std::size_t nIn,
+                     const std::size_t nOut,
                      const unsigned seed):
   nIn(nIn), nOut(nOut), seed(seed), faninLow(1), faninHigh(CellType::AnyArity),
   hierarchical(false), nestingDepth(1), netCellsN(0u) {};
 
-Generator::Generator(const std::size_t nIn, const std::size_t nOut,
+Generator::Generator(const std::size_t nIn,
+                     const std::size_t nOut,
                      const std::vector<CellSymbol> &netBase,
                      const unsigned seed):
   Generator(nIn, nOut, seed) {
@@ -31,7 +33,8 @@ Generator::Generator(const std::size_t nIn, const std::size_t nOut,
   }
 }
 
-Generator::Generator(const std::size_t nIn, const std::size_t nOut,
+Generator::Generator(const std::size_t nIn,
+                     const std::size_t nOut,
                      const std::vector<CellTypeID> &netBase,
                      const unsigned seed):
   Generator(nIn, nOut, seed) {
@@ -84,15 +87,17 @@ bool Generator::primInsOutsNotEmpty() const {
   return nIn && nOut;
 }
 
-bool Generator::isBounded(const uint16_t val, const uint16_t low,
+bool Generator::isBounded(const uint16_t val,
+                          const uint16_t low,
                           const uint16_t high) const {
 
   return (val >= low && val <= high) ||
          (val == CellType::AnyArity && high >= 2);
 }
 
-bool Generator::canCreateNetCell() const {
-  return faninLow <= nIn && faninHigh >= nIn && hierarchical && nestingDepth;
+bool Generator::canCreateNetCell(const uint16_t cellNIn) const {
+  return faninLow <= nIn && faninHigh >= nIn && cellNIn <= nIn && hierarchical
+         && nestingDepth;
 }
 
 CellTypeID Generator::createNetCell() {
@@ -103,7 +108,8 @@ CellTypeID Generator::createNetCell() {
   setSeed(seed + 1);
   CellTypeID cellTID = makeCellType("net" + std::to_string(netCellsN),
                                     generate(), OBJ_NULL_ID, SOFT,
-                                    CellProperties(1, 0, 0, 0, 0), nIn, nOut);
+                                    CellProperties(1, 0, 0, 0, 0, 0, 0),
+                                    nIn, nOut);
   nestingDepth++;
   netCellsN++;
   return cellTID;
@@ -148,7 +154,8 @@ CellTypeID Generator::chooseCellType(const uint16_t cellNIn,
     return OBJ_NULL_ID;
   }
   std::size_t nInNumber = std::rand() %
-                          (availNInNumber + (canCreateNetCell() ? 1 : 0));
+                          (availNInNumber +
+                           (canCreateNetCell(cellNIn) ? 1 : 0));
   if (nInNumber == availNInNumber) {
     return createNetCell();
   }
@@ -167,9 +174,8 @@ CellTypeID Generator::chooseCellType(const uint16_t cellNIn,
   return cellTID;
 }
 
-NetID Generator::genEmptyNet() const {
-  NetBuilder netBuilder;
-  return netBuilder.make();
+NetID Generator::genInvalidNet() const {
+  return OBJ_NULL_ID;
 }
 
 void Generator::setSeed(const unsigned seed) {
@@ -191,7 +197,7 @@ unsigned Generator::getSeed() const {
 NetID Generator::generate() {
   std::srand(seed);
   if (!primInsOutsNotEmpty()) {
-    return genEmptyNet();
+    return genInvalidNet();
   }
 
   return generateValid();

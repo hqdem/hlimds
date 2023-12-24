@@ -14,7 +14,10 @@ namespace eda::gate::optimizer2::resynthesis {
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetID = model::SubnetID;
 
-  SubnetID ReedMuller::synthesize(const DinTruthTable &func) {
+  SubnetID ReedMuller::synthesize(const DinTruthTable &func,
+                                  uint16_t maxArity) {
+
+    /// TODO: Take into account the restriction on arity.
     Polynomial resultFunction = getTT(func);
     const size_t maxSize = Subnet::Cell::InPlaceLinks - 1;
     SubnetBuilder subnetBuilder;

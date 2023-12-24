@@ -27,6 +27,8 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
+  gate/analyzer/simulation_estimator_test.cpp
+  gate/debugger/k_lec_test.cpp
   gate/debugger/lec_test.cpp
   gate/debugger/ril_lec_test.cpp
   gate/debugger/synth_lec_test.cpp
@@ -56,6 +58,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
   gate/optimizer/util_test.cpp
+  gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
   gate/optimizer2/resynthesis/akers_test.cpp
   gate/optimizer2/resynthesis/bidecomposition_test.cpp
@@ -64,6 +67,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/resynthesis/reed_muller_test.cpp
   gate/optimizer2/resynthesis/resynthesis_contest.cpp
   gate/optimizer2/resynthesizer_test.cpp
+  gate/parser/graphml_parser_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
   gate/premapper/mapper/mapper_test.cpp

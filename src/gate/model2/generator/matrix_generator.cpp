@@ -11,14 +11,30 @@
 namespace eda::gate::model {
 
 MatrixGenerator::MatrixGenerator(const std::size_t nCells,
-                                 const std::size_t nIn, const std::size_t nOut,
+                                 const std::size_t nIn,
+                                 const std::size_t nOut,
                                  const std::vector<CellSymbol> &netBase,
                                  const unsigned seed):
   Generator(nIn, nOut, netBase, seed), matrixNCells(nCells + nIn) {};
 
 MatrixGenerator::MatrixGenerator(const std::size_t nCells,
-                                 const std::size_t nIn, const std::size_t nOut,
+                                 const std::size_t nIn,
+                                 const std::size_t nOut,
+                                 const CellSymbolList &netBase,
+                                 const unsigned seed):
+  Generator(nIn, nOut, netBase, seed), matrixNCells(nCells + nIn) {};
+
+MatrixGenerator::MatrixGenerator(const std::size_t nCells,
+                                 const std::size_t nIn,
+                                 const std::size_t nOut,
                                  const std::vector<CellTypeID> &netBase,
+                                 const unsigned seed):
+  Generator(nIn, nOut, netBase, seed), matrixNCells(nCells + nIn) {};
+
+MatrixGenerator::MatrixGenerator(const std::size_t nCells,
+                                 const std::size_t nIn,
+                                 const std::size_t nOut,
+                                 const CellTypeIDList &netBase,
                                  const unsigned seed):
   Generator(nIn, nOut, netBase, seed), matrixNCells(nCells + nIn) {};
 
@@ -32,7 +48,8 @@ void MatrixGenerator::setPrimIns(std::unordered_set<std::size_t> &inputs) {
   }
 }
 
-bool MatrixGenerator::canMakeDrain(Matrix &m, const std::size_t columnN,
+bool MatrixGenerator::canMakeDrain(Matrix &m,
+                                   const std::size_t columnN,
                                    CellToNIn &cellNIn) {
 
   for (std::size_t i = 0; i < matrixNCells; ++i) {
@@ -48,7 +65,8 @@ bool MatrixGenerator::canMakeDrain(Matrix &m, const std::size_t columnN,
   return true;
 }
 
-void MatrixGenerator::setPrimOuts(Matrix &m, std::vector<std::size_t> &outputs,
+void MatrixGenerator::setPrimOuts(Matrix &m,
+                                  std::vector<std::size_t> &outputs,
                                   CellToNIn &cellNIn,
                                   CellIdxToCellType &cellIdxCellTID) {
 
@@ -111,7 +129,8 @@ bool MatrixGenerator::setCellsOuts(Matrix &m, CellToNIn &cellNIn) {
   return true;
 }
 
-void MatrixGenerator::addInsForCell(const std::size_t rowN, Matrix &m,
+void MatrixGenerator::addInsForCell(const std::size_t rowN,
+                                    Matrix &m,
                                     CellToNIn &cellNIn,
                                     CellIdxToCellType &cellIdxCellTID) {
 
@@ -140,7 +159,8 @@ void MatrixGenerator::addInsForCell(const std::size_t rowN, Matrix &m,
   }
 }
 
-bool MatrixGenerator::setOp(const std::size_t i, CellToNIn &cellNIn,
+bool MatrixGenerator::setOp(const std::size_t i,
+                            CellToNIn &cellNIn,
                             CellIdxToCellType &cellIdxCellTID) {
 
   CellTypeID cellTID = chooseCellType(cellNIn[i], matrixNCells - i - 1);
@@ -152,7 +172,8 @@ bool MatrixGenerator::setOp(const std::size_t i, CellToNIn &cellNIn,
   return true;
 }
 
-bool MatrixGenerator::setOps(Matrix &m, CellToNIn &cellNIn,
+bool MatrixGenerator::setOps(Matrix &m,
+                             CellToNIn &cellNIn,
                              CellIdxToCellType &cellIdxCellTID) {
 
   if (!setCellsOuts(m, cellNIn)) {
@@ -194,7 +215,7 @@ NetID MatrixGenerator::generateValid() {
   Matrix m = genM(inputs, outputs, cellNIn, cellIdxCellTID);
 
   if (m == nullptr) {
-    return genEmptyNet();
+    return genInvalidNet();
   }
 
   NetBuilder netBuilder;

@@ -10,6 +10,7 @@
 
 #include "gate/model2/subnet.h"
 
+#include <queue>
 #include <unordered_set>
 
 namespace eda::gate::optimizer2 {
@@ -23,64 +24,66 @@ public:
   struct Cut;
 
   using Subnet = model::Subnet;
-  using CutsCells = std::vector<std::unordered_set<std::size_t>>;
+  using CutsEntries = std::vector<std::unordered_set<uint64_t>>;
   using CutsList = std::vector<Cut>;
   using RawCutsList = std::vector<std::pair<Cut, char>>;
 
-  /**
-   * @brief Cut class with its signature and indexes.
-   */
+  /// Cut class with its signature and indexes.
   struct Cut {
     Cut() = default;
-    Cut(const unsigned long long sign,
-        const std::unordered_set<uint64_t> &cellIdxs):
-      signature(sign), cellIdxs(cellIdxs) {};
+    Cut(const uint64_t rootEntryIdx,
+        const uint64_t sign,
+        const std::unordered_set<uint64_t> &entryIdxs):
+      rootEntryIdx(rootEntryIdx), signature(sign), entryIdxs(entryIdxs) {};
 
-    unsigned long long signature {0};
-    std::unordered_set<uint64_t> cellIdxs;
+    /// Unite other cut to current.
+    void uniteCut(const Cut &other) {
+      for (const auto &entryIdx : other.entryIdxs) {
+        entryIdxs.insert(entryIdx);
+      }
+      signature |= other.signature;
+    }
+
+    uint64_t rootEntryIdx {0};
+    uint64_t signature {0};
+    std::unordered_set<uint64_t> entryIdxs;
   };
 
   CutExtractor() = delete;
   CutExtractor(const CutExtractor &other) = default;
-  CutExtractor(CutExtractor &&other) = default;
   CutExtractor &operator=(const CutExtractor &other) = default;
-  CutExtractor &operator=(CutExtractor &&other) = default;
   ~CutExtractor() = default;
 
   /**
    * @brief Cut extractor constructor.
-   * Finds cuts for each cell of passed subnet.
    * @param subnet Subnet to find cuts.
    * @param k Maximum cut size.
    */
-  CutExtractor(const Subnet &subnet, const unsigned int k);
+  CutExtractor(const Subnet *subnet,
+               const unsigned int k);
 
-  /// Get cuts (with indexes and signatures) for cell with cellIdx index.
-  const CutsList &getCuts(uint64_t cellIdx) const;
+  /// Get cuts (entries indexes and signatures) for cell with entryIdx index.
+  const CutsList getCuts(uint64_t entryIdx) const;
 
-  /**
-   * @brief Get cuts cells (cells indexes in cuts) for cell with cellIdx index.
-   */
-  CutsCells getCutsCells(uint64_t cellIdx) const;
+  /// Get cuts (entries indexes) for cell with entryIdx index.
+  CutsEntries getCutsEntries(uint64_t entryIdx) const;
 
 private:
-  /**
-   * @brief Find all cuts for cell with cellIdx index.
-   */
-  CutsList findCuts(const Subnet &subnet, const std::size_t cellIdx,
-                    const uint64_t cellArity, const unsigned int k) const;
+  /// Find all cuts for cell with entryIdx index.
+  CutsList findCuts(const uint64_t entryIdx,
+                    const uint64_t cellArity,
+                    const unsigned int k) const;
 
   /// Add new cut into addedCuts if it is not dominated and its size < k.
-  void addCut(const Subnet &subnet, const unsigned int k,
-              const std::size_t cellIdx, const uint64_t cellArity,
-              unsigned long long cutsCombinationIdx, RawCutsList &addedCuts,
+  void addCut(const unsigned int k,
+              const uint64_t entryIdx,
+              const uint64_t cellArity,
+              unsigned long long cutsCombinationIdx,
+              RawCutsList &addedCuts,
               const std::vector<std::size_t> &suffCutsCombinationsN) const;
 
-  /// Unite cut2 to cut1.
-  void uniteCut(Cut &cut1, const Cut &cut2) const;
-
   /// Create and get cut with passed cell.
-  Cut getOneElemCut(const Subnet &subnet, const std::size_t cellIdx) const;
+  Cut getOneElemCut(const uint64_t entryIdx) const;
 
   /**
    * @brief Check if cut can be added to cuts.
@@ -98,7 +101,8 @@ private:
   bool cutDominates(const Cut &cut1, const Cut &cut2) const;
 
 private:
-  std::vector<CutsList> cellsCuts;
+  const Subnet *subnet;
+  std::vector<CutsList> entriesCuts;
 };
 
 } // namespace eda::gate::optimizer2

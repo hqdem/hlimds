@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/analyzer/simulation_estimator.h"
 #include "gate/optimizer2/resynthesis/akers.h"
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
 #include "gate/optimizer2/resynthesis/cascade.h"
@@ -29,18 +30,19 @@ using CascadeMethod     = eda::gate::optimizer2::resynthesis::Cascade;
 using DynTruthTable     = kitty::dynamic_truth_table;
 using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
 using ReedMullerAlg     = eda::gate::optimizer2::resynthesis::ReedMuller;
+using SimEstimator      = eda::gate::analyzer::SimulationEstimator;
 using Subnet            = eda::gate::model::Subnet;
 using SubnetID          = eda::gate::model::SubnetID;
 using SynthTable        = eda::gate::optimizer2::Synthesizer<DynTruthTable>;
 
-constexpr unsigned RAND3_TT_NUM  = 10;
-constexpr unsigned RAND4_TT_NUM  = 10;
-constexpr unsigned RAND5_TT_NUM  = 10;
-constexpr unsigned RAND6_TT_NUM  = 10;
-constexpr unsigned RAND7_TT_NUM  = 10;
-constexpr unsigned RAND8_TT_NUM  = 10;
-constexpr unsigned RAND9_TT_NUM  = 5;
-constexpr unsigned RAND10_TT_NUM = 5;
+constexpr unsigned RAND3_TT_NUM  = 8;
+constexpr unsigned RAND4_TT_NUM  = 16;
+constexpr unsigned RAND5_TT_NUM  = 32;
+constexpr unsigned RAND6_TT_NUM  = 64;
+constexpr unsigned RAND7_TT_NUM  = 128;
+constexpr unsigned RAND8_TT_NUM  = 256;
+constexpr unsigned RAND9_TT_NUM  = 512;
+constexpr unsigned RAND10_TT_NUM = 1024;
 
 /// Defines the names of the resynthesis algorithms.
 enum class Algorithm {
@@ -83,7 +85,7 @@ void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
   file << table.num_vars() << ',';
   // Error.
   if (err) {
-    file << "ERROR,ERROR,ERROR" << std::endl;
+    file << "ERROR,ERROR,ERROR,ERROR" << std::endl;
     return;
   }
   // Inner gates.
@@ -93,7 +95,10 @@ void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
   const auto length = subnet.getPathLength();
   file << length.second << ',';
   // Time (ms).
-  file << (double)(end - st)/CLOCKS_PER_SEC * 1000 << std::endl;
+  file << (double)(end - st)/CLOCKS_PER_SEC * 1000 << ',';
+  // Toggle rate
+  SimEstimator simEstimator;
+  file << simEstimator.estimate(subnet).getActivitySum() << std::endl;
 }
 
 void runTest(const DynTruthTable &table) {
@@ -111,8 +116,8 @@ void runTest(const DynTruthTable &table) {
   std::ifstream fin(file);
   if (fout.is_open() && "Cannot open the file for tests logs!");
   if (fin.peek() == EOF) {
-    fout << "Algorithm,Truth table,Inputs,Inner gates,Depth,Time (ms)"
-         << std::endl;
+    fout << "Algorithm,Truth table,Inputs,Inner gates,Depth,Time (ms),"
+        << "Switching activity" << std::endl;
   } else {
     fout.seekp(0, std::ios_base::end);
   }
@@ -128,8 +133,12 @@ void runTest(const DynTruthTable &table) {
   // Launching.
   for (size_t i = 0; i < registry.size(); i++) {
     // TODO: decide, what may be used instead of "assert" to indicate an error.
-    if ((i == 0) && (table.num_vars() > 8)) {
+    if ((i == 0) && (table.num_vars() > 7)) {
       writeLogs(fout, table, Algorithm::Akers, 0, 0, 0, true);
+      continue;
+    }
+    if ((i == 1) && (table.num_vars() > 8)) {
+      writeLogs(fout, table, Algorithm::BiDecomposition, 0, 0, 0, true);
       continue;
     }
     clock_t start = clock();

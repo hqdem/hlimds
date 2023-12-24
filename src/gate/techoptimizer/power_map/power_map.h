@@ -25,12 +25,12 @@ namespace eda::gate::tech_optimizer {
   class PowerMap : public Strategy{
     public:
 
-      bool checkOpt(
-        const eda::gate::optimizer::BoundGNet &,
-        const eda::gate::model::GNet::GateIdMap &, double &,
-        std::unordered_map<GateID, Replacement> *){
-        return true;
-      }
+      void findBest(
+        EntryIndex entryIndex,
+        const CutsList &CutsList, 
+        std::map<EntryIndex, BestReplacement> &bestReplacementMap, 
+        CellDB &cellDB, 
+        ArrayEntry &entries) = 0;
     // private:
 
       static double switchFlow(

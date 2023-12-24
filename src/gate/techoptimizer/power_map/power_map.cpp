@@ -6,7 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "power_map.h"
+// #include "power_map.h"
+#include "gate/techoptimizer/power_map/power_map.h"
 
 namespace eda::gate::tech_optimizer{
 

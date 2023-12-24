@@ -20,7 +20,7 @@
 #include "gate/debugger/checker.h"
 
 #include "gtest/gtest.h"
-
+#include "gate/techoptimizer/power_map/power_map.h"
 using namespace eda::gate::parser;
 using namespace eda::gate::optimizer;
 
@@ -107,4 +107,13 @@ namespace eda::gate::tech_optimizer {
     MinDelay *minDelay = new MinDelay();
     cutBasedTechMapper.techMap(net, minDelay, true);
   }
+
+  TEST(TechMapTest,  PowerMap) {
+    if (!getenv("UTOPIA_HOME")) {
+      FAIL() << "UTOPIA_HOME is not set.";
+    }
+    eda::gate::tech_optimizer::switchFlowTest1();
+  }
+
 }
+

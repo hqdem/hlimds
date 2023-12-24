@@ -91,6 +91,7 @@ add_library(Gate OBJECT
   techoptimizer/mapper/baseMapper.cpp
   techoptimizer/library/cell.cpp
   techoptimizer/library/cellDB.cpp
+  techoptimizer/power_map/power_map.cpp
   techoptimizer/sequential_mapper/sequential_mapper.cpp
   techoptimizer/techoptimizer.cpp
   simulator2/simulator.cpp

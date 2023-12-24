@@ -83,6 +83,7 @@ add_executable(${TEST_TARGET}
   gate/simulator2/simulator_test.cpp
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/techmap_test.cpp
+  gate/techmapper/power_map_test.cpp
   gate/techmapper/strategy/strategy_example.cpp
   gate/techmapper/strategy/example_test.cpp
   gate/transformer/bdd_test.cpp

@@ -10,10 +10,10 @@
 
 #include "gate/model2/celltype.h"
 #include "gate/model2/net.h"
-#include "gate/techoptimizer/library/cellDB.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
 #include "gate/optimizer2/cut_extractor.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techoptimizer/library/cellDB.h"
 
 using SubnetID = eda::gate::model::SubnetID;
 using EntryIndex = uint64_t;
@@ -26,9 +26,9 @@ namespace eda::gate::tech_optimizer {
 
   class CutBasedTechMapper {
   public:
-    CutBasedTechMapper();
+    CutBasedTechMapper(CellDB &cellDB);
 
-    void set(CellDB &cellDB, Strategy *strategy);
+    void setStrategy(Strategy *strategy);
 
     SubnetID techMap(SubnetID subnetID);
 
@@ -40,8 +40,6 @@ namespace eda::gate::tech_optimizer {
       SubnetID subnetID, CutExtractor &cutExtractor);
 
   private:
-    SubnetID subnetID;
-
     CellDB cellDB;
     Strategy *strategy;
 

@@ -13,9 +13,9 @@
 
 #include <list>
 
-  using LinkList = eda::gate::model::Cell::LinkList;
-  using CellID = eda::gate::model::CellID;
-  using NetID = eda::gate::model::NetID;
+using LinkList = eda::gate::model::Cell::LinkList;
+using CellID = eda::gate::model::CellID;
+using NetID = eda::gate::model::NetID;
 
 namespace eda::gate::tech_optimizer {
 

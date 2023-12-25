@@ -18,23 +18,25 @@ namespace eda::gate::tech_optimizer {
 
   std::vector<EntryIndex> outID;
 
-  void CutBasedTechMapper::set(CellDB &cellDB, Strategy *strategy) {
+  CutBasedTechMapper::CutBasedTechMapper(CellDB &cellDB) {
     this->cellDB = cellDB;
+  }
+
+  void CutBasedTechMapper::setStrategy(Strategy *strategy) {
     this->strategy = strategy;
   }
 
   SubnetID CutBasedTechMapper::techMap(SubnetID subnetID) {
-      
-      // TODO
-      //if () {
-        //aigMap(net);
-      //}
+    // TODO
+    //if () {
+      //aigMap(net);
+    //}
 
-      auto cutExtractor = findCuts(subnetID);
+    auto cutExtractor = findCuts(subnetID);
 
-      auto bestReplacementMap = replacementSearch(subnetID, cutExtractor);
+    auto bestReplacementMap = replacementSearch(subnetID, cutExtractor);
 
-      const SubnetID mappedSubnet = buildSubnet(subnetID, bestReplacementMap);
+    const SubnetID mappedSubnet = buildSubnet(subnetID, bestReplacementMap);
 
     return mappedSubnet;
   }
@@ -44,8 +46,7 @@ namespace eda::gate::tech_optimizer {
 
   CutExtractor CutBasedTechMapper::findCuts(SubnetID subnetID) {
     // 6 - max of technology cells input
-    CutExtractor cutExtractor(&model::Subnet::get(subnetID), 6);
-    return cutExtractor;
+    return CutExtractor(&model::Subnet::get(subnetID), 6);
   }
 
   std::map<EntryIndex, BestReplacement> CutBasedTechMapper::replacementSearch(
@@ -60,8 +61,7 @@ namespace eda::gate::tech_optimizer {
       auto cell = entries[entryIndex].cell;
 
       if (cell.isIn()) {
-        BestReplacement bestReplacement;
-        bestReplacement.isIN = true;
+        BestReplacement bestReplacement{true};
         bestReplacementMap[entryIndex] = bestReplacement;
 
       } else if (cell.isOut()) {
@@ -106,6 +106,7 @@ namespace eda::gate::tech_optimizer {
         for (const auto &link : currentCell.link) {
           if (bestReplacementMap[link.idx].cellIDInMappedSubnet == ULLONG_MAX) {
             readyForCreate = false;
+            break;
           }
         }
 

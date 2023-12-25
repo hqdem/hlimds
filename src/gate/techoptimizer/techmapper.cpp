@@ -7,16 +7,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
-#include "gate/techoptimizer/library/cellDB.h"
-#include "gate/techoptimizer/techmapper.h"
-#include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/library/cell.h"
+#include "gate/techoptimizer/library/cellDB.h"
+#include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
+#include "gate/techoptimizer/techmapper.h"
 
 #include <list>
 #include <map>
-#include <unordered_map>
-#include <vector>
-#include <algorithm>
 
 namespace eda::gate::tech_optimizer {
 
@@ -40,18 +37,18 @@ void read_db(const std::string &dbPath) {
 }
 
 void tech_optimize(NetID net, uint approachSelector/*, Constraints &constraints*/) {
-  
+
   switch(approachSelector) {
   case 0: // cut-based matching
-    CutBasedTechMapper *mapper = new CutBasedTechMapper();
+    //CutBasedTechMapper *mapper = new CutBasedTechMapper(cellDB);
 
     //MinDelay *minDelay = new MinDelay();
     //mapper->set(cellDB, strategy);
-    
+
     if (model::Net::get(net).getFlipNum() != 0) {
-      NetID mappedNet = mapSequenceNet(net, mapper);
+      //NetID mappedNet = mapSequenceNet(net, mapper);
     } else {
-      NetID mappedNet = mapCombNet(net, mapper);
+      //NetID mappedNet = mapCombNet(net, mapper);
     }
     //mapper.techMap(net, minDelay, false);
     break;
@@ -80,7 +77,7 @@ NetID mapSequenceNet(NetID netID, CutBasedTechMapper *mapper) {
 
       SubnetID partOfNet;// = net.getSubnet(subnetInputs, subnetOutput);
 
-      SubnetID mappedSubnet = mapper->techMap(partOfNet);
+      //SubnetID mappedSubnet = mapper->techMap(partOfNet);
 
       // Список гейтов куда подключать отмапленую схему в netBuilder
       std::list<CellID> inputs = getNetCellID(subnetInputs, cellMap);
@@ -89,7 +86,7 @@ NetID mapSequenceNet(NetID netID, CutBasedTechMapper *mapper) {
 
       FFinputs.push_back(subnetOutput);
     }
-    
+
     std::list<CellID> inputs = getNetCellID(FFinputs, cellMap);
     CellID mappedFFID; //= addFFToNet(netBuilder, FFID, inputs);
     cellMap.insert(std::pair<CellID, CellID>(FFID, mappedFFID));
@@ -115,7 +112,7 @@ NetID mapCombNet(NetID netID, CutBasedTechMapper *mapper) {
 
 void addInputToNetBuilder(model::NetBuilder &netBuilder,
     model::List<CellID> &inputs, std::map<CellID, CellID> &cellMap) {
-     
+
   for (auto it = inputs.begin(); it != inputs.end(); ++it) {
     auto cellID = makeCell(model::IN);
     cellMap.insert(std::pair<CellID, CellID>(*it, cellID));
@@ -123,7 +120,7 @@ void addInputToNetBuilder(model::NetBuilder &netBuilder,
   }
 }
 
-std::list<CellID> getNetCellID(std::list<CellID> &subnetInputs, 
+std::list<CellID> getNetCellID(std::list<CellID> &subnetInputs,
 std::map<CellID, CellID>  &cellMap) {
       std::list<CellID> inputs;
       for (const auto &input : subnetInputs) {
@@ -135,7 +132,7 @@ std::map<CellID, CellID>  &cellMap) {
 struct SubnetCellinput {
   CellID netCellID;
   size_t subnetEntryIDX;
-  };    
+  };
 /*
 SubnetID getSubnet(NetID netID, std::list<CellID> subnetInputs, CellID subnetOutput){
   using Subnet = eda::gate::model::Subnet;
@@ -167,7 +164,7 @@ SubnetID getSubnet(NetID netID, std::list<CellID> subnetInputs, CellID subnetOut
       } else {
         bool readyForCreate = true;
         for (const auto &inputLink : currentCell.getLinks()) {
-          if (netCellID.find(netCellID.begin, netCellID.end(), 
+          if (netCellID.find(netCellID.begin, netCellID.end(),
               inputLink.getCellID()) == netCellID.end()) {
             readyForCreate = false;
           }
@@ -177,7 +174,7 @@ SubnetID getSubnet(NetID netID, std::list<CellID> subnetInputs, CellID subnetOut
           Subnet::LinkList linkList;
 
           for (const auto &inputLink : currentCell.getLinks()) {
-            auto it = netCellID.find(netCellID.begin, netCellID.end(), 
+            auto it = netCellID.find(netCellID.begin, netCellID.end(),
                 inputLink.getCellID());
             int distance = std::distance(netCellID.begin(), it)
             Subnet::Link link(subnetEntryIDX[distance]);

@@ -7,15 +7,15 @@
 //===----------------------------------------------------------------------===//
 #include "kitty/kitty.hpp"
 
-#include "gate/techoptimizer/library/cellDB.h"
 #include "gate/model2/subnet.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 #include "gate/optimizer2/cut_extractor.h"
 #include "gate/techmapper/strategy/strategy_example.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techoptimizer/library/cellDB.h"
 #include "util/logging.h"
 
-#include "map"
 #include "gtest/gtest.h"
+#include "map"
 
 using CutExtractor = eda::gate::optimizer2::CutExtractor;
 using Subnet = eda::gate::model::Subnet;
@@ -35,7 +35,7 @@ TEST(TechmapStrategyTest, MinDelay) {
   std::map<EntryIndex, BestReplacement> bestReplacementMap;
 
   eda::gate::model::Array<Subnet::Entry> enstries = subnet.getEntries();
-  for (int i = 0; i < std::size(enstries); i++) {
+  for (EntryIndex i = 0; i < std::size(enstries); i++) {
     
     //init strategy
     //strategy->findBest(i, cutExtractor.getCuts(i), 

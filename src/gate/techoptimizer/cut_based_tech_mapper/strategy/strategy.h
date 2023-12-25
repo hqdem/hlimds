@@ -7,9 +7,9 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
- #include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
- #include "gate/optimizer2/cut_extractor.h"
  #include "gate/model2/subnet.h"
+ #include "gate/optimizer2/cut_extractor.h"
+ #include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
  #include "gate/techoptimizer/library/cellDB.h"
 
  #include <map>

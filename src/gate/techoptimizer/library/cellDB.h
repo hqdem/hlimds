@@ -13,10 +13,10 @@
 
 #include "kitty/print.hpp"
 
-#include <vector>
 #include <list>
 #include <unordered_map>
-#include <utility> 
+#include <utility>
+#include <vector>
 
 using CellTypeID = eda::gate::model::CellTypeID;
 using SubnetID = eda::gate::model::SubnetID;

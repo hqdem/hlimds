@@ -18,11 +18,10 @@ namespace eda::gate::tech_optimizer {
   using SubnetID = eda::gate::model::SubnetID;
 
   struct BestReplacement {
-
-    EntryIndex cellID;
-
     bool isIN = false;
     bool isOUT = false;
+
+    EntryIndex cellID;
 
     size_t cellIDInMappedSubnet = ULLONG_MAX;
 

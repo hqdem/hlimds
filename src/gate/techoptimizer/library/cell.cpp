@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/library/cell.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/visitor.h"
 #include "gate/optimizer2/resynthesis/isop.h"
+#include "gate/techoptimizer/library/cell.h"
 
 #include "nlohmann/json.hpp"
 

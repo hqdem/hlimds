@@ -7,6 +7,8 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 #include "gate/model2/array.h"
+#include "gate/model2/celltype.h"
+#include "gate/model2/object.h"
 #include "gate/model2/subnet.h"
 #include "gate/model2/utils/subnet_random.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
@@ -21,7 +23,7 @@ namespace eda::gate::tech_optimizer {
   using Subnet = eda::gate::model::Subnet;
   using Entry = Subnet::Entry;
   using ArrayEntry = eda::gate::model::Array<Entry>;
-  
+  using SubnetBuilder = eda::gate::model::SubnetBuilder;
   class PowerMap : public Strategy{
     public:
 

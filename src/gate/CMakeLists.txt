@@ -72,11 +72,12 @@ add_library(Gate OBJECT
   printer/gate_verilog.cpp
   printer/graphml.cpp
   simulator/simulator.cpp
-  techoptimizer/library/cell.cpp
+  techoptimizer/baseMapper.h
   techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.cpp
+  techoptimizer/library/cell.cpp
+  techoptimizer/library/cellDB.cpp
   techoptimizer/sequential_mapper/sequential_mapper.cpp
   techoptimizer/techmapper.cpp
-  techoptimizer/library/cellDB.cpp
   simulator2/simulator.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp)

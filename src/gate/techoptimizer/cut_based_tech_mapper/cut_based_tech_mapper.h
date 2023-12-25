@@ -11,6 +11,7 @@
 #include "gate/model2/celltype.h"
 #include "gate/model2/net.h"
 #include "gate/optimizer2/cut_extractor.h"
+#include "gate/techoptimizer/baseMapper.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 #include "gate/techoptimizer/library/cellDB.h"
@@ -24,13 +25,13 @@ using Net = eda::gate::model::Net;
 
 namespace eda::gate::tech_optimizer {
 
-  class CutBasedTechMapper {
+  class CutBasedTechMapper : public BaseMapper {
   public:
     CutBasedTechMapper(CellDB &cellDB);
 
-    void setStrategy(Strategy *strategy);
+    void setStrategy(Strategy *strategy) override;
 
-    SubnetID techMap(SubnetID subnetID);
+    SubnetID techMap(SubnetID subnetID) override;
 
     float getArea() const;
     float getDelay() const;

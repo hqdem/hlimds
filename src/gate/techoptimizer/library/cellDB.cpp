@@ -87,4 +87,16 @@ namespace eda::gate::tech_optimizer {
     return ttSubnet;
    }
 
+const std::vector<SubnetID> &CellDB::getDFF() const {
+  return DFF;
+}
+
+const std::vector<SubnetID> &CellDB::getDFFrs() const {
+  return DFFrs;
+}
+
+const std::vector<SubnetID> &CellDB::getLatch() const {
+  return Latch;
+}
+
 } // namespace eda::gate::tech_optimizer

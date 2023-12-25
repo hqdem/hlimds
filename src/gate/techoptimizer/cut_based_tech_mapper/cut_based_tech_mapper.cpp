@@ -145,7 +145,6 @@ namespace eda::gate::tech_optimizer {
         }
       }
     }
-
     return subnetBuilder.make();
   }
 

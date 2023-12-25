@@ -41,9 +41,9 @@ namespace eda::gate::tech_optimizer {
     GNet net;
     gnet3(net);
 
-    read_db(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    setLiberty(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
 
-    tech_optimize(&net,0);
+    setTechmap(&net,0);
   }
 
   TEST(TechMapTest, DISABLED_gnet2) {

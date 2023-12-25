@@ -11,6 +11,7 @@
 #include "gate/model2/object.h"
 #include "gate/model2/subnet.h"
 #include "gate/model2/utils/subnet_random.h"
+#include "gate/optimizer2/cut_extractor.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 
 
@@ -24,6 +25,8 @@ namespace eda::gate::tech_optimizer {
   using Entry = Subnet::Entry;
   using ArrayEntry = eda::gate::model::Array<Entry>;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
+  using Cut = eda::gate::optimizer2::CutExtractor::Cut;
+
   class PowerMap : public Strategy{
     public:
 
@@ -37,9 +40,10 @@ namespace eda::gate::tech_optimizer {
 
       static double switchFlow(
         const size_t entryIndex,
+        const Cut &cut,
         const std::vector<double> &cellActivities,
-        std::vector<double> &computedSwitchFlow,
-        const Subnet &subnet,
+        // std::vector<double> &computedSwitchFlow,
+        // const Subnet &subnet,
         const ArrayEntry &cells);
 
       double areaFlow(
@@ -54,6 +58,14 @@ namespace eda::gate::tech_optimizer {
         const Subnet &subnet,
         const ArrayEntry &cells);
 
+      static double switchFlowRecursive(
+        const size_t entryIndex,
+        const Cut &cut,
+        const std::vector<double> &cellActivities,
+        std::vector<double> &computedSwitchFlow,
+        // const Subnet &subnet,
+        const ArrayEntry &cells);
+      
   };
 
   void switchFlowTest1();

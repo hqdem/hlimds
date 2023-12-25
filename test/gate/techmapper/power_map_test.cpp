@@ -42,12 +42,14 @@ TEST(TechMapTest, switchFlow) {
   std::vector<double> cellActivities({0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 0.25});
   std::vector<double> computedSwitchFlow({0,0,0,0,0,0,0});
 
+  eda::gate::optimizer2::CutExtractor::Cut cut;
+
   const auto cells = subnet.getEntries();
   double r=0;
-  for(int i=0; i < 7;i++){
-    r = eda::gate::tech_optimizer::PowerMap::switchFlow(i,cellActivities,computedSwitchFlow,subnet,cells);
-  }
-
+  // for(int i=0; i < 7;i++){
+  //   r = eda::gate::tech_optimizer::PowerMap::switchFlow(i,cellActivities,computedSwitchFlow,subnet,cells);
+  // }
+  r = eda::gate::tech_optimizer::PowerMap::switchFlow(6,cut,cellActivities,cells);
   std::cout <<r << std::endl;
 
   EXPECT_DOUBLE_EQ(r,1.45);

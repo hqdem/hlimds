@@ -50,7 +50,7 @@ public:
     return allocateExt<ListBlock<T>>(sizeInBytes, sizeInItems, begin, end);
   }
 
-  /// Allocates a block w/ and fills it w/ the given items.
+  /// Allocates a block and fills it w/ the given items.
   static inline ListBlockID allocate(
       const std::vector<T> &items, bool begin, bool end) {
     const ListBlockID blockID = allocate(items.size(), begin, end);

@@ -79,7 +79,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
       simulator.simulate(values);
       output = simulator.getValue(miter.getEntries().size() - 1);
       if (output) {
-        return CheckerResult(CheckerResult::NOTEQUAL, output, inputNum);
+        return CheckerResult(CheckerResult::NOTEQUAL, values);
       }
     }
     return CheckerResult::UNKNOWN;
@@ -91,7 +91,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
       simulator.simulate(getAllValues(inputNum, i));
       output = simulator.getValue(miter.getEntries().size() - 1);
       if (output) {
-        return CheckerResult(CheckerResult::NOTEQUAL, output, inputNum);
+        return CheckerResult(CheckerResult::NOTEQUAL, values);
       }
     }
     return CheckerResult::EQUAL;

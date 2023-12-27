@@ -35,6 +35,7 @@ find_package(LpSolve REQUIRED)
 find_package(Z3 REQUIRED)
 find_package(CTemplate REQUIRED COMPONENTS nothreads)
 find_package(Cudd REQUIRED)
+find_package(Yosys REQUIRED)
 
 add_subdirectory(lib)
 add_subdirectory(src)

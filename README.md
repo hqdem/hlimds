@@ -120,6 +120,14 @@ To list the Utopia EDA options, do the following:
 ```
 ./build/src/umain --help-all
 ```
+
+#### Run translator Verilog to FIRRTL
+
+```
+./build/src/umain to_firrtl <file> --top <option>
+```
+When selecting this option, you must specify the name of the top module in the file Verilog and the path to the file Verilog itself. The output files will be the work of this application: `.fir` and a file with debugging information. These files will appear in the same directory as the specified Verilog file.
+
 ### Tests Running
 
 #### All Tests Running

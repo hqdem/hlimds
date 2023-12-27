@@ -79,7 +79,9 @@ add_library(Gate OBJECT
   techoptimizer/tech_optimizer.cpp
   simulator2/simulator.cpp
   transformer/bdd.cpp
-  transformer/hmetis.cpp)
+  transformer/hmetis.cpp
+  translator/yosys_converter_firrtl.cpp
+  translator/firrtl.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 
 target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/lib)
@@ -97,5 +99,7 @@ target_link_libraries(Gate
 
   PRIVATE
   Utopia::Util
+  CLI
+  Yosys::Yosys
   tinyxml2
 )

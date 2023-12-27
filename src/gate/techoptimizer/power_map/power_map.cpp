@@ -11,19 +11,24 @@
 
 namespace eda::gate::tech_optimizer{
 
-  double PowerMap::switchFlow(const Subnet& subnet, const std::vector<double> &cellActivities){
+  double PowerMap::switchFlow(
+    const Subnet& subnet,
+     const std::vector<double> &cellActivities,
+     EntryMap &coneEntryToOrig){
       ArrayEntry cells = subnet.getEntries();
       std::vector<double> computedSwitchFlow(cells.size(),0);
-      return switchFlowRecursive(cells.size()-1,cellActivities,computedSwitchFlow,cells);
-    }
+      return switchFlowRecursive(cells.size()-1,cellActivities,coneEntryToOrig,computedSwitchFlow,cells);
+      }
 
   double PowerMap::switchFlowRecursive(
     const size_t entryIndex,
     const std::vector<double> &cellActivities,
+    EntryMap &coneEntryToOrig,
     std::vector<double> &computedSwitchFlow,
     const ArrayEntry &cells){
+
       if(computedSwitchFlow[entryIndex] != 0.0)return computedSwitchFlow[entryIndex];
-      computedSwitchFlow[entryIndex] += cellActivities[entryIndex];
+      computedSwitchFlow[entryIndex] += cellActivities[coneEntryToOrig[entryIndex]];
       auto currentCell = cells[entryIndex].cell;
 
       if(currentCell.isIn()) return computedSwitchFlow[entryIndex];
@@ -33,7 +38,7 @@ namespace eda::gate::tech_optimizer{
         auto link = currentCell.link[i];
         auto leaf = cells[link.idx].cell;
         computedSwitchFlow[entryIndex] +=
-         switchFlowRecursive(link.idx,cellActivities,computedSwitchFlow,cells)/double(leaf.refcount); 
+         switchFlowRecursive(link.idx,cellActivities,coneEntryToOrig,computedSwitchFlow,cells)/double(leaf.refcount); 
 
       }
       return computedSwitchFlow[entryIndex];
@@ -76,6 +81,7 @@ namespace eda::gate::tech_optimizer{
       SubnetID subnetId,
       std::map<EntryIndex, BestReplacement> &bestReplacementMap,
       CellDB &cellDB){
+
         using CutExtractor = eda::gate::optimizer2::CutExtractor;
         const auto& subnet = Subnet::get(subnetId);
         const ArrayEntry entries = subnet.getEntries();
@@ -83,8 +89,9 @@ namespace eda::gate::tech_optimizer{
         std::unordered_map<EntryIndex,Cut> reprCutMap;
         CutExtractor cutExtractor(&subnet, k); 
         ConeBuilder coneBuilder(&subnet);
+        // stage 1: for each node find reprCut
         for(EntryIndex idx = 0; idx < entries.size(); idx++){
-
+          //stage 1.1: find cuts that have minimal AreaFlow value
           CutsList cutsList = cutExtractor.getCuts(idx);
           CutsList cuts= {};
           double minAF = 100000.0;
@@ -100,7 +107,7 @@ namespace eda::gate::tech_optimizer{
               minAF = curAF;
             }
           }
-
+          //stage 1.2: among cuts find the reprCuts that have min SwitchFlow value
           CutsList reprCuts = {};
           double minSF = 100000.0;
           
@@ -111,7 +118,7 @@ namespace eda::gate::tech_optimizer{
           for(size_t i = 0; i < cuts.size(); i++){
             Cone curCone = coneBuilder.getCone(cuts[i]);
             Subnet &curSubnet = Subnet::get(curCone.subnetID);
-            double curSF = PowerMap::switchFlow(curSubnet,cellActivities);
+            double curSF = PowerMap::switchFlow(curSubnet,cellActivities,curCone.coneEntryToOrig);
             if(fabs(curSF - minSF) < delta){reprCuts.push_back(cuts[i]);} 
             else if(curSF < minSF){
               cuts.clear();
@@ -122,8 +129,9 @@ namespace eda::gate::tech_optimizer{
           reprCutMap[idx] = reprCuts[0];
         }
 
-        // Mapping
+        // stage 2: choose nodes that will be used for mapping  
         using EntryIndex = uint64_t;
+        // M is the set of nodes that is supposed to be used for final mapping
         std::unordered_set<EntryIndex> M = {};
         std::stack<EntryIndex> F;
         for(EntryIndex idx=0; idx<entries.size();idx++){
@@ -143,25 +151,8 @@ namespace eda::gate::tech_optimizer{
           }
 
         }
-        // M is the set of nodes used for final mapping
+        
       }
-
-  // void switchFlowTest1(){
-  //   std::cout << "my test\n";
-
-  //   auto subnetId = eda::gate::model::randomSubnet(3,1,7,2,3);
-  //   const auto &subnet = Subnet::get(subnetId);
-  //   std::cout << subnet << std::endl;
-  //   const auto cells = subnet.getEntries();
-  //   std::vector<double> cellActivities({0.1, 0.2, 0.3, 0.1, 0.2, 0.3, 0.25});
-  //   std::vector<double> computedSwitchFlow({0,0,0,0,0,0,0});
-  //   double r=0;
-  //   for(int i=0; i < 7;i++){
-  //     r = PowerMap::switchFlow(i,cellActivities,computedSwitchFlow,subnet,cells);
-  //   }
-  //   std::cout <<r << std::endl;
-  // }
-
 } //namespace eda::gate::tech_optimizer
 
 

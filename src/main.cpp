@@ -17,6 +17,7 @@
 #include "gate/premapper/xagmapper.h"
 #include "gate/premapper/xmgmapper.h"
 #include "gate/printer/graphml.h"
+#include "gate/translator/firrtl.h"
 #include "options.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/arithmetic.h"
@@ -196,7 +197,7 @@ int main(int argc, char **argv) {
   try {
     options.initialize("config.json", argc, argv);
 
-    if (options.rtl.files().empty()) {
+    if (options.rtl.files().empty() && options.firrtl.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   } catch(const CLI::ParseError &e) {
@@ -209,5 +210,10 @@ int main(int argc, char **argv) {
     RtlContext context(file, options.rtl);
     result |= rtlMain(context);
   }
+
+  for (auto file : options.firrtl.files()) {
+    result |= translateToFirrtl(file, options.firrtl);
+  }
+
   return result;
 }

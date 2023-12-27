@@ -181,7 +181,6 @@ struct RtlOptions final : public AppOptions {
     options->add_option(cli(GRAPHML), graphMl,
                 "Path to GraphML file for the model to be stored")
             ->expected(1);
-
     // Input file(s).
     options->allow_extras();
   }
@@ -203,10 +202,39 @@ struct RtlOptions final : public AppOptions {
   std::string graphMl;
 };
 
+struct FirRtlOptions final : public AppOptions {
+
+  /// The command to run the Verilog-to-FIRRTL translator.
+  static constexpr const char *ID = "to_firrtl";
+  /// The option to manually specify the top-level module. The top-level module is detected automatically if not specified.
+  static constexpr const char *FIRRTL = "top";
+
+  FirRtlOptions(AppOptions &parent):
+      AppOptions(parent, ID, "Translator from Verilog to FIRRTL") {
+
+    options->add_option(cli(FIRRTL), top,
+                "Name of top module in Verilog")
+            ->expected(1);
+
+    // Input Verilog file(s).
+    options->allow_extras();
+  }
+
+  std::vector<std::string> files() const {
+    return options->remaining();
+  }
+
+  void fromJson(Json json) override {
+    get(json, FIRRTL, top);
+  }
+
+  std::string top;
+};
+
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this) {
+      AppOptions(title, version), rtl(*this), firrtl(*this) {
 
     // Top-level options.
     options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
@@ -226,7 +254,9 @@ struct Options final : public AppOptions {
 
   void fromJson(Json json) override {
     rtl.fromJson(json[RtlOptions::ID]);
+    firrtl.fromJson(json[FirRtlOptions::ID]);
   }
 
   RtlOptions rtl;
+  FirRtlOptions firrtl;
 };

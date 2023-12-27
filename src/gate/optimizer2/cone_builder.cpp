@@ -12,31 +12,87 @@ namespace eda::gate::optimizer2 {
 
 ConeBuilder::ConeBuilder(const Subnet *subnet): subnet(subnet) {};
 
+void ConeBuilder::addInput(const uint64_t origEntryIdx,
+                           const uint64_t rootEntryIdx,
+                           SubnetBuilder &builder,
+                           EntryMap &origEntryToCone,
+                           EntryMap &coneEntryToOrig) const {
+
+  const auto &origCell = subnet->getEntries()[origEntryIdx].cell;
+  const auto inputKind = (origEntryIdx == rootEntryIdx) ? SubnetBuilder::INOUT :
+                                                          SubnetBuilder::INPUT;
+  uint64_t coneEntryIdx = builder.addCell(origCell.getSymbol(), inputKind);
+  origEntryToCone[origEntryIdx] = coneEntryIdx;
+  coneEntryToOrig[coneEntryIdx] = origEntryIdx;
+}
+
+void ConeBuilder::addInsFromCut(const Cut &cut,
+                                SubnetBuilder &builder,
+                                EntryMap &origEntryToCone,
+                                EntryMap &coneEntryToOrig) const {
+
+  for (const auto &inEntryIdx : cut.entryIdxs) {
+    addInput(inEntryIdx, cut.rootEntryIdx, builder, origEntryToCone,
+             coneEntryToOrig);
+  }
+}
+
+void ConeBuilder::addInsForMaxCone(const uint64_t rootEntryIdx,
+                                   SubnetBuilder &builder,
+                                   EntryMap &origEntryToCone,
+                                   EntryMap &coneEntryToOrig) const {
+
+  const auto entries = subnet->getEntries();
+  std::unordered_map<uint64_t, char> used;
+  std::vector<uint64_t> subnetEntriesStack;
+  subnetEntriesStack.push_back(rootEntryIdx);
+  std::size_t stackIdx = 0;
+  while (stackIdx < subnetEntriesStack.size()) {
+    uint64_t origEntryIdx = subnetEntriesStack[stackIdx];
+    used[origEntryIdx] = true;
+    stackIdx++;
+    const auto &origCell = entries[origEntryIdx].cell;
+    if (origCell.isIn() || origCell.isZero() || origCell.isOne()) {
+      addInput(origEntryIdx, rootEntryIdx, builder, origEntryToCone,
+               coneEntryToOrig);
+      continue;
+    }
+    for (const auto &newEntry : subnet->getLinks(origEntryIdx)) {
+      uint64_t newEntryIdx = newEntry.idx;
+      if (used.find(newEntryIdx) != used.end()) {
+        continue;
+      }
+      subnetEntriesStack.push_back(newEntryIdx);
+    }
+  }
+}
+
 ConeBuilder::Cone ConeBuilder::getCone(const Cut &cut) const {
-  const auto isEntryFromCut = [&] (uint64_t curEntryIdx) {
-    return cut.entryIdxs.find(curEntryIdx) != cut.entryIdxs.end();
-  };
-  return getCone(cut.rootEntryIdx, isEntryFromCut);
-}
-
-ConeBuilder::Cone ConeBuilder::getMaxCone(const uint64_t rootEntryIdx) const {
-  const auto isEntryInput = [&] (uint64_t curEntryIdx) {
-    const auto curCell = subnet->getEntries()[curEntryIdx].cell;
-    return curCell.isIn() || curCell.isOne() || curCell.isZero();
-  };
-  return getCone(rootEntryIdx, isEntryInput);
-}
-
-auto ConeBuilder::getCone(const uint64_t rootEntryIdx,
-                          const EntryCheckFunc &isInEntry) const ->
-  ConeBuilder::Cone {
-
   SubnetBuilder builder;
   EntryMap origEntryToCone;
   EntryMap coneEntryToOrig;
+
+  addInsFromCut(cut, builder, origEntryToCone, coneEntryToOrig);
+  return getCone(cut.rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
+}
+
+ConeBuilder::Cone ConeBuilder::getMaxCone(const uint64_t rootEntryIdx) const {
+  SubnetBuilder builder;
+  EntryMap origEntryToCone;
+  EntryMap coneEntryToOrig;
+
+  addInsForMaxCone(rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
+  return getCone(rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
+}
+
+ConeBuilder::Cone ConeBuilder::getCone(const uint64_t rootEntryIdx,
+                                       SubnetBuilder &builder,
+                                       EntryMap &origEntryToCone,
+                                       EntryMap &coneEntryToOrig) const {
+
+  const auto &entries = subnet->getEntries();
   std::stack<uint64_t> subnetEntriesStack;
   subnetEntriesStack.push(rootEntryIdx);
-  const auto &entries = subnet->getEntries();
 
   while (!subnetEntriesStack.empty()) {
     uint64_t curEntryIdx = subnetEntriesStack.top();
@@ -45,20 +101,6 @@ auto ConeBuilder::getCone(const uint64_t rootEntryIdx,
       continue;
     }
     auto curCell = entries[curEntryIdx].cell;
-    if (isInEntry(curEntryIdx)) {
-      subnetEntriesStack.pop();
-      uint64_t coneEntryIdx;
-      if (curEntryIdx == rootEntryIdx) {
-        coneEntryIdx = builder.addCell(curCell.getSymbol(),
-                                       SubnetBuilder::INOUT);
-      } else {
-        coneEntryIdx = builder.addCell(curCell.getSymbol(),
-                                       SubnetBuilder::INPUT);
-      }
-      origEntryToCone[curEntryIdx] = coneEntryIdx;
-      coneEntryToOrig[coneEntryIdx] = curEntryIdx;
-      continue;
-    }
 
     LinkList links;
     bool allInputsVisited = true;

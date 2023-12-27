@@ -32,6 +32,7 @@ namespace eda::gate::tech_optimizer {
   using Cut = eda::gate::optimizer2::CutExtractor::Cut;
   using ConeBuilder = eda::gate::optimizer2::ConeBuilder;
   using Cone = ConeBuilder::Cone;
+  using EntryMap = std::unordered_map<uint64_t, uint64_t>;
 
   class PowerMap : public Strategy{
     public:
@@ -49,12 +50,16 @@ namespace eda::gate::tech_optimizer {
         CellDB &cellDB);
     // private:
 
-      static double switchFlow(const Subnet &subnet, const std::vector<double> &cellActivities );
+      static double switchFlow(
+        const Subnet &subnet,
+        const std::vector<double> &cellActivities,
+        EntryMap &coneEntryToOrig);
 
         
       static double switchFlowRecursive(
         const size_t entryIndex,
         const std::vector<double> &cellActivities,
+        EntryMap &coneEntryToOrig,
         std::vector<double> &computedSwitchFlow,
         const ArrayEntry &cells);
 
@@ -70,8 +75,19 @@ namespace eda::gate::tech_optimizer {
         std::vector<double> &computedEdgeFlow,
         const ArrayEntry &cells);
 
+      double getMappedCellActivity(EntryIndex inConeEntryIdx, EntryMap coneEntryToOrig){
+        return cellActivities[coneEntryToOrig[inConeEntryIdx]];
+      }
 
-      
+      PowerMap(SubnetID id){
+        this->subnetId = id;
+        eda::gate::analyzer::SimulationEstimator simulationEstimator(64);
+        this->cellActivities = simulationEstimator.estimate(Subnet::get(id)).getCellActivities();
+      };
+
+    private:
+      SubnetID subnetId;
+      std::vector<double> cellActivities;    
   };
 
   void switchFlowTest1();

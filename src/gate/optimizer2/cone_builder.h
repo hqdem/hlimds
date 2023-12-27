@@ -53,11 +53,37 @@ public:
 
 private:
   /**
-   * @brief Finds and returns cone.
-   * @param rootEntryIdx Root of cone.
-   * @param isInEntry Function to check if passed entry is input for cone.
+   * @brief Adds inner cells and primary output cells to cone and returns cone.
    */
-  Cone getCone(uint64_t rootEntryIdx, const EntryCheckFunc &isInEntry) const;
+  Cone getCone(const uint64_t rootEntryIdx,
+               SubnetBuilder &builder,
+               EntryMap &origEntryToCone,
+               EntryMap &coneEntryToOrig) const;
+
+  /**
+   * @brief Adds primary inputs to cone limited by cut.
+   */
+  void addInsFromCut(const Cut &cut,
+                     SubnetBuilder &builder,
+                     EntryMap &origEntryToCone,
+                     EntryMap &coneEntryToOrig) const;
+
+  /**
+   * @brief Adds primary inputs to maximum cone.
+   */
+  void addInsForMaxCone(const uint64_t rootEntryIdx,
+                        SubnetBuilder &builder,
+                        EntryMap &origEntryToCone,
+                        EntryMap &coneEntryToOrig) const;
+
+  /**
+   * @brief Adds primary input to cone.
+   */
+  void addInput(const uint64_t origEntryIdx,
+                const uint64_t rootEntryIdx,
+                SubnetBuilder &builder,
+                EntryMap &origEntryToCone,
+                EntryMap &coneEntryToOrig) const;
 
 private:
   const Subnet *subnet;

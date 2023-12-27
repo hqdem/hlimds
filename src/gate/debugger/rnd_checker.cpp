@@ -31,7 +31,7 @@ CheckerResult rndChecker(GNet &miter,
 
   std::uint64_t inputNum = miter.nSourceLinks();
 
-  if (inputNum < 2 || inputNum > 64) {
+  if (inputNum < 2 || inputNum >= 64) {
     LOG_DEBUG(LOG_ERROR << "Unsupported number of inputs: " << inputNum);
     return CheckerResult::ERROR;
   }

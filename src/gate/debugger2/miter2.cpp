@@ -35,11 +35,13 @@ bool areMiterable(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
     CHECK(false) << "Nets do not have the same number of outputs" << std::endl;
     return false;
   }
-  if (net1.getInNum() != hints.sourceBinding.size()) {
+  CellToCell &sources = hints.sourceBinding;
+  CellToCell &targets = hints.targetBinding;
+  if (net1.getInNum() != sources.size() || sources.empty()) {
     CHECK(false) << "Hints have incorrect number of inputs" << std::endl;
     return false;
   }
-  if (net2.getOutNum() != hints.targetBinding.size()) {
+  if (net2.getOutNum() != targets.size() || targets.empty()) {
     CHECK(false) << "Hints have incorrect number of outputs" << std::endl;
     return false;
   }

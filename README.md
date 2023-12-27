@@ -84,6 +84,19 @@ If you want to install `CUDD` not in default directory by using
 will require environment variable `CUDD_DIR` that contains the path
 to the `CUDD` actual installation directory.
 
+### Configuring with `Yosys`
+
+1. Get `Yosys` source code from the [^yosys] into `<yosys-dir>`
+2. Make sure your system meets the requirements listed in `<yosys-dir>/README.md`
+3. Edit `<yosys-dir>/Makefile`
+    - set `ENABLE_LIBYOSYS` to 1
+4. Build and install `Yosys` as described in the `<yosys-dir>/README.md`
+5. Configure `Utopia` to find `Yosys`
+    - add `-DYosys_ROOT=<yosys-dir>` to the `cmake` invocation
+    - e.g. `cmake -S <utopia-source-dir> -B <utopia-build-dir> -DYosys_ROOT=<yosys-dir> -G Ninja`
+
+[^yosys]: https://github.com/YosysHQ/yosys
+
 
 ## Working in Command Line
 
@@ -100,7 +113,7 @@ Please keep `UTOPIA_HOME` variable and its value in your system permanently.
 
 ```
 cd utopia-eda
-cmake -S . -B build -G Ninja
+cmake -S . -B build -DYosys_ROOT=<yosys-dir> -G Ninja
 cmake --build build
 ```
 or simply run the following script:
@@ -127,6 +140,7 @@ To list the Utopia EDA options, do the following:
 ./build/src/umain to_firrtl <file> --top <option>
 ```
 When selecting this option, you must specify the name of the top module in the file Verilog and the path to the file Verilog itself. The output files will be the work of this application: `.fir` and a file with debugging information. These files will appear in the same directory as the specified Verilog file.
+
 
 ### Tests Running
 

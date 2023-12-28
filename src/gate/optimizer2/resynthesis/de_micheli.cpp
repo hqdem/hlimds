@@ -21,7 +21,7 @@ using SubnetID = eda::gate::model::SubnetID;
 //===----------------------------------------------------------------------===//
 
 SubnetID DeMicheli::synthesize(const TruthTable &func, uint16_t maxArity) {
-  assert(maxArity > 2 && "Arity of MAJ gate should be >= 3");
+  assert(maxArity > 2 && "Arity of MAJ gate should be > 2");
   std::vector<TruthTable> divisors;
   std::vector<uint64_t> nOnes;
   std::vector<MajNode> tree;
@@ -100,7 +100,7 @@ bool DeMicheli::createDivisors(const TruthTable &func,
   // Count ones.
   nOnes.push_back(kitty::count_ones(divisors[0]));
   nOnes.push_back(maxOnes - nOnes[0]);
-  if ((nOnes[0] == 0) || (nOnes[0] == maxOnes)) {
+  if (!nOnes[0] || (nOnes[0] == maxOnes)) {
     return true;
   }
   // Input arguments.
@@ -112,7 +112,7 @@ bool DeMicheli::createDivisors(const TruthTable &func,
     nOnes.push_back(count);
     divisors.emplace_back(divisors[1] ^ divisor);
     nOnes.push_back(maxOnes - count);
-    if ((count == 0) || (count == maxOnes)) {
+    if (!count || (count == maxOnes)) {
       return true;
     }
   }
@@ -149,7 +149,7 @@ bool DeMicheli::isSuccessBuild(std::vector<MajNode> &tree,
                                const std::vector<TruthTable> &divisors) const {
 
   const uint32_t nVars = tree[0].func.num_vars();
-  while (toExpand.size() != 0 && tree.size() < BOUND) {
+  while (!toExpand.empty() && tree.size() < BOUND) {
     uint64_t minUncovered = (1ull << nVars) + 1;
     uint64_t pos = 0;
     TruthTable oldFunc;
@@ -187,7 +187,7 @@ bool DeMicheli::isSuccessBuild(std::vector<MajNode> &tree,
       }
     }
 
-    if (toExpand.size() == 0) {
+    if (toExpand.empty()) {
       break;
     }
 
@@ -304,7 +304,7 @@ void DeMicheli::updateTree(std::vector<MajNode> &tree,
 
   // update a grandparent
   uint64_t grandparentPos = tree[parent].position.parent;
-  if (grandparentPos != 4611686018427387903) {
+  if (grandparentPos != OUTID) {
     Position pos = {grandparentPos, tree[parent].position.arg};
     updateTree(tree, divisors, toExpand, pos, parentFunc);
   }
@@ -461,7 +461,7 @@ bool DeMicheli::selectLastArg(std::vector<MajNode> &topNodes,
       topNodes.emplace_back(node);
       return true;
     }
-    node.position.parent = 4611686018427387903;
+    node.position.parent = OUTID;
     node.func = top;
     node.care = care;
     topNodes.emplace_back(node);

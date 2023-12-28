@@ -36,7 +36,13 @@ struct MajNode {
   kitty::dynamic_truth_table care;
 };
 
-/// @brief Implements a De Micheli approach of resynthesis based on MAJ gates.
+/**
+ * @brief Implements a De Micheli approach of resynthesis based on MAJ gates.
+ * 
+ * The algorithm is based on the article "Logic Resynthesis of
+ * Majority-Based Logic using Top-Down Decomposition" by Siang-Yun Lee,
+ * Heinz Riener and Giovanni De Micheli.
+ */
 class DeMicheli : public Synthesizer<kitty::dynamic_truth_table> {
 
 public:
@@ -49,6 +55,7 @@ public:
   using TruthTable = kitty::dynamic_truth_table;
 
   static constexpr size_t BOUND = 2000;
+  static constexpr size_t OUTID = 4611686018427387903;
 
   /// Empty constructor.
   DeMicheli() {}

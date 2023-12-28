@@ -43,5 +43,8 @@ CELL_TYPE("dffrs", DFFrs, 0,0,0,0,0,0,0,  5,      1);
 const Net &CellType::getNet() const {
   return Net::get(netID);
 }
+const NetID CellType::getNetID() const {
+  return netID;
+}
 
 } // namespace eda::gate::model

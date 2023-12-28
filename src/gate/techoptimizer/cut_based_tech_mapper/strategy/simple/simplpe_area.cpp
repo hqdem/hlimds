@@ -1,5 +1,5 @@
 
-#include "gate/optimizer2/cone_builder.cpp"
+#include "gate/optimizer2/cone_builder.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/bestSimpleReplacement.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/simplpe_area.h"
 #include "gate/model2/utils/subnet_truth_table.h"
@@ -13,25 +13,36 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
                                   SubnetID subnetID) {
   eda::gate::optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   BestSimpleReplacement bestSimpleReplacement{};
+  float bestArea = 10000.0;
 
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
-    auto truthTable = eda::gate::model::evaluate(
-        model::Subnet::get(coneBuilder.getCone(cut).subnetID));
+    if (cut.entryIdxs.size() != 1) {
 
-    for (const auto &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable)) {
-      auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
-      if (!currentAttr.has_value()) continue; // Skip if no attribute found
+      std::cout << "entryIndex: " << entryIndex << std::endl;
 
-      float currentArea = currentAttr->area;
-      if (currentArea < bestSimpleReplacement.area) {
-        bestSimpleReplacement.area = currentArea;
-        bestSimpleReplacement.subnetID = currentSubnetID;
-        bestSimpleReplacement.entryIDxs = cut.entryIdxs;
+      SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
+      std::cout << Subnet::get(coneSubnetID) << std::endl;
+
+      auto truthTable = eda::gate::model::evaluate(
+          model::Subnet::get(coneSubnetID));
+
+      std::cout << "Truth table: " << kitty::to_binary(truthTable) << std::endl;
+
+      for (const SubnetID &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable)) {
+        std::cout << "Перевбор nf,kbw bcnbyyjcnb" << std::endl;
+        auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
+
+        float area = currentAttr->area;
+        if (area < bestArea) {
+          bestArea = area;
+          bestSimpleReplacement.area = area;
+          bestSimpleReplacement.subnetID = currentSubnetID;
+          bestSimpleReplacement.entryIDxs = cut.entryIdxs;
+        }
       }
     }
   }
-
   bestReplacementMap[entryIndex] = bestSimpleReplacement;
 }
 } // eda::gate::tech_optimizer

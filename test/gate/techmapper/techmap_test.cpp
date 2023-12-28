@@ -17,6 +17,7 @@
 #include "gate/premapper/mapper/mapper_test.h"
 
 #include "gtest/gtest.h"
+#include "gate/model2/object.h"
 
 
 namespace eda::gate::tech_optimizer {
@@ -28,8 +29,25 @@ namespace eda::gate::tech_optimizer {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
+  using Link = model::Subnet::Link;
+  using LinkList = model::Subnet::LinkList;
 
-  SubnetID subnetID = model::randomSubnet(10, 3, 20, 1, 2);
+  model::SubnetBuilder builder;
+  LinkList links;
+
+  for (size_t i = 0; i < 2; i++) {
+    const auto idx = builder.addCell(model::IN, model::SubnetBuilder::INPUT);
+    links.emplace_back(idx);
+  }
+
+  const auto idx = builder.addCell(model::AND, links);
+  builder.addCell(model::OUT, Link(idx), model::SubnetBuilder::OUTPUT);
+
+  SubnetID subnetID = builder.make();
+
+    //SubnetID subnetID = model::randomSubnet(5, 1, 7, 1, 2);
+    const auto &subnet = model::Subnet::get(subnetID);
+    std::cout << subnet << std::endl;
     Techmaper techmaper;
 
     techmaper.setLiberty(libertyDirrectTechMap.string() +
@@ -37,7 +55,7 @@ namespace eda::gate::tech_optimizer {
     techmaper.setMapper(Techmaper::TechmaperType::FUNC);
     techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 
-    techmaper.techmap(subnetID);
+  std::cout << model::Subnet::get(techmaper.techmap(subnetID)) << std::endl;
   }
 /*
   TEST(TechMapTest, DISABLED_gnet2) {

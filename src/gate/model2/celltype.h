@@ -141,6 +141,7 @@ public:
   bool isNet() const { return netID != OBJ_NULL_ID; }
   /// Returns the net of the cell type.
   const Net &getNet() const;
+  const NetID getNetID() const;
 
 private:
   CellType(const std::string &name,

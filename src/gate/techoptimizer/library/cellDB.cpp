@@ -19,7 +19,7 @@ namespace eda::gate::tech_optimizer {
 CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
 
   for (const CellTypeID& cellTypeID : cellTypeIDs) {
-    CellType cellType = CellType::get(cellTypeID);
+    CellType &cellType = CellType::get(cellTypeID);
     SubnetBuilder subnetBuilder;
 
     size_t inNum = cellType.getInNum();
@@ -49,7 +49,7 @@ CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
     subnetToAttr.push_back(std::make_pair(subnetID, subnetattr));
 
     ttSubnet.push_back(std::make_pair(eda::gate::model::evaluate(
-        model::Subnet::get(subnetID)), subnetID));
+        model::Subnet::get(static_cast<SubnetID>(cellType.getNetID()))), subnetID));
   }
 }
 

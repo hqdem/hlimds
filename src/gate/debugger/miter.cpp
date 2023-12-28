@@ -11,21 +11,33 @@
 namespace eda::gate::debugger {
 
 bool areMiterable(GNet &net1, GNet &net2, Hints &hints) {
+  GateBinding *sources = hints.sourceBinding.get();
+  GateBinding *targets = hints.targetBinding.get();
+  if (sources->empty()) {
+    CHECK(false) << "Hints contain 0 sources" << std::endl;
+    return false;
+  }
+
+  if (targets->empty()) {
+    CHECK(false) << "Hints contain 0 targets" << std::endl;
+    return false;
+  }
+
   if (net1.nSourceLinks() != net2.nSourceLinks()) {
     CHECK(false) << "Nets do not have the same number of inputs" << std::endl;
     return false;
   }
 
   for (auto source : net1.sourceLinks()) {
-    if (hints.sourceBinding.get()->find(source) ==
-        hints.sourceBinding.get()->end()) {
+    if (sources->find(source) ==
+        sources->end()) {
       CHECK(false) << "Can't find source, id=" << source.target << std::endl;
       return false;
     }
   }
   for (auto target : net1.targetLinks()) {
-    if (hints.targetBinding.get()->find(target) ==
-        hints.sourceBinding.get()->end()) {
+    if (targets->find(target) ==
+        targets->end()) {
       CHECK(false) << "Can't find target, id=" << target.source << std::endl;
       return false;
     }

@@ -40,6 +40,7 @@ add_subdirectory(rtl)
 
 # The project library.
 add_library(${MAIN_LIBRARY})
+add_library(Utopia::Lib ALIAS ${MAIN_LIBRARY})
 
 # The libraries to link with.
 target_link_libraries(${MAIN_LIBRARY}
@@ -47,6 +48,7 @@ target_link_libraries(${MAIN_LIBRARY}
   Utopia::Gate
   Utopia::RTL
   Utopia::RILParser
+  Yosys::Yosys
 )
 
 # The project executable.

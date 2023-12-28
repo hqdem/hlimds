@@ -21,15 +21,16 @@ namespace eda::gate::tech_optimizer {
     bool isIN = false;
     bool isOUT = false;
 
-    EntryIndex cellID;
-
     size_t cellIDInMappedSubnet = ULLONG_MAX;
 
     // Sunbnet with custom cell from CellDB
     SubnetID subnetID;
 
-    // matching technology cells inputs CellID with circuts CellID
-    std::unordered_map<EntryIndex, EntryIndex> matchMap;
+    // matching technology cells inputs CellID with circuits CellID
+    //std::unordered_map<EntryIndex, EntryIndex> matchMap;
+
+    // Entry indices in the mapped circuit
+    std::unordered_set<uint64_t> entryIDxs;
 
   };
 } // namespace eda::gate::tech_optimizer

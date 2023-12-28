@@ -5,16 +5,20 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
 #pragma once
 
-#include "gate/model2/cell.h"
-#include "gate/techoptimizer/library/cellDB.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
 
-#include <list>
+/**
+ * \brief Interface to handle node and its cuts.
+ * \author <a href="mailto:dGaryaev@ispras.ru">Daniil Gariaev</a>
+ */
 
 namespace eda::gate::tech_optimizer {
 
-  void setSequenceDB(CellDB &cellDB);
-  model::SubnetID mapSequenceCell(model::CellID sequenceCell);
-} // namespace eda::gate::tech_optimizer
+struct BestSimpleReplacement : public BestReplacement{
+  float area;
+};
+
+} // eda::gate::tech_optimizer
+

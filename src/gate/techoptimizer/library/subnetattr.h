@@ -9,5 +9,6 @@
 namespace eda::gate::tech_optimizer {
 struct Subnetattr {
   std::string name;
+  float area;
   };
 } // namespace eda::gate::tech_optimizer

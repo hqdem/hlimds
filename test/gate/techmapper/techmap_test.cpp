@@ -6,46 +6,40 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-/*
+
 #include "gate/model/examples.h"
 #include "gate/printer/dot.h"
 
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/parser_test.h"
-#include "gate/techoptimizer/tech_optimizer.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/min_delay.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/techoptimizer/techmapper.h"
+#include "gate/model2/utils/subnet_random.h"
 #include "gate/premapper/mapper/mapper_test.h"
-#include "gate/debugger/checker.h"
 
 #include "gtest/gtest.h"
 
-using namespace eda::gate::parser;
-using namespace eda::gate::optimizer;
 
 namespace eda::gate::tech_optimizer {
-
-  using GNet = eda::gate::model::GNet;
-  using lorina::text_diagnostics;
-  using lorina::diagnostic_engine;
-  using lorina::return_code;
 
   const std::filesystem::path homePathTechMap = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path libertyDirrectTechMap = homePathTechMap / "test" / "data" / "gate" / "tech_mapper";
 
-  TEST(TechMapTest, gnet1) {
+  TEST(TechMapTest, RandomSubnet) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-    GNet net;
-    gnet3(net);
 
-    setLiberty(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+  SubnetID subnetID = model::randomSubnet(10, 3, 20, 1, 2);
+    Techmaper techmaper;
 
-    setTechmap(&net,0);
+    techmaper.setLiberty(libertyDirrectTechMap.string() +
+        "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+    techmaper.setMapper(Techmaper::TechmaperType::FUNC);
+    techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
+
+    techmaper.techmap(subnetID);
   }
-
+/*
   TEST(TechMapTest, DISABLED_gnet2) {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
@@ -107,5 +101,5 @@ namespace eda::gate::tech_optimizer {
     MinDelay *minDelay = new MinDelay();
     cutBasedTechMapper.techMap(net, minDelay, true);
   }
+  */
 }
-*/

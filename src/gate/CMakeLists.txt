@@ -74,6 +74,7 @@ add_library(Gate OBJECT
   simulator/simulator.cpp
   techoptimizer/baseMapper.h
   techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.cpp
+  techoptimizer/cut_based_tech_mapper/strategy/simple/simplpe_area.cpp
   techoptimizer/library/cell.cpp
   techoptimizer/library/cellDB.cpp
   techoptimizer/sequential_mapper/sequential_mapper.cpp

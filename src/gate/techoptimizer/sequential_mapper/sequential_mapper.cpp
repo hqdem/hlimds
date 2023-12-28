@@ -23,21 +23,17 @@ void setSequenceDB(CellDB &cellDB) {
   cells = cellDB;
 }
 
-model::SubnetID mapSequenceCell(model::Subnet::Cell sequenceCell) {
-  assert(sequenceCell.getSymbol() == (CellSymbol::DFF | CellSymbol::DFFrs | CellSymbol::LATCH));
-  switch (sequenceCell.getSymbol()) {
-    case CellSymbol::DFF:
-      return mapDFF();
-      break;
-    case CellSymbol::DFFrs:
-      return mapDFFrs();
-      break;
-    case CellSymbol::LATCH:
-      return mapLATCH();
-      break;
-    default:
-      exit(1);
-      break;
+model::SubnetID mapSequenceCell(model::CellID sequenceCellID) {
+  auto &sequenceCell = model::Cell::get(sequenceCellID);
+
+  assert(sequenceCell.isDff() || sequenceCell.isDffRs() || sequenceCell.isLatch());
+
+  if (sequenceCell.isDff()) {
+    return mapDFF();
+  } else if (sequenceCell.isDffRs()) {
+    return mapDFFrs();
+  } else if (sequenceCell.isLatch()) {
+    return mapLATCH();
   }
 }
 

@@ -27,9 +27,10 @@ namespace eda::gate::tech_optimizer {
  public:
    Strategy() {};
    virtual void findBest(EntryIndex entryIndex, const CutsList &CutsList,
-       std::map<EntryIndex, BestReplacement> &bestReplacementMap,
-       CellDB &cellDB,
-       eda::gate::model::Array<model::Subnet::Entry> &entries) = 0;
+                         std::map<EntryIndex,BestReplacement>
+                             &bestReplacementMap,
+                         CellDB &cellDB,
+                         SubnetID subnetId) = 0;
    //virtual bool checkOpt() = 0;
  };
 } // namespace eda::gate::tech_optimizer

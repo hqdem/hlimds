@@ -9,25 +9,29 @@
 
 #include "gate/model2/net.h"
 
-namespace eda::gate::tech_optimizer {
-
 using NetID = eda::gate::model::NetID;
 using SubnetID = eda::gate::model::SubnetID;
 
-enum class TechmapType {
-  FUNC,
-  STRUCT
-};
+namespace eda::gate::tech_optimizer {
 
-enum class StrategyType {
-  AREA_FLOW,
-  DELAY,
-  POWER
-};
+class Techmaper {
+public:
+  enum class TechmaperType {
+    FUNC,
+    STRUCT
+  };
 
-void setLiberty(const std::string &dbPath);
-void setMapper(TechmapType techmapSelector);
-void setStrategy(StrategyType strategySelector);
-SubnetID techmap(SubnetID subnetID);
-SubnetID techmap(model::Subnet::Cell sequenceCell);
+  enum class TechmaperStrategyType {
+    AREA_FLOW,
+    DELAY,
+    POWER,
+    SIMPLE
+  };
+
+  void setLiberty(const std::string &dbPath);
+  void setMapper(TechmaperType techmapSelector);
+  void setStrategy(TechmaperStrategyType strategySelector);
+  SubnetID techmap(SubnetID subnetID);
+  SubnetID techmap(model::CellID sequenceCell);
+};
 } // namespace eda::gate::tech_optimizer

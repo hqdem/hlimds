@@ -10,11 +10,11 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ## Coding Style
 
-See `CODE_STYLE.md` for more details about our coding convention.
+See `doc\CODE_STYLE.md` for more details about our coding convention.
 
 ## General Notes
 
-See `NOTES.md` if you're not familiar with program building/installation on Linux.
+See `doc\NOTES.md` if you're not familiar with program building/installation on Linux.
 
 ## System Requirements
 

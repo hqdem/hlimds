@@ -10,7 +10,6 @@
 #include "gate/optimizer2/resynthesis/akers.h"
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
 #include "gate/optimizer2/resynthesis/cascade.h"
-#include "gate/optimizer2/resynthesis/de_micheli.h"
 #include "gate/optimizer2/resynthesis/isop.h"
 #include "gate/optimizer2/resynthesis/reed_muller.h"
 #include "gate/optimizer2/synthesizer.h"
@@ -28,7 +27,6 @@
 using AkersAlgorithm    = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
 using BiDecomposition   = eda::gate::optimizer2::resynthesis::BiDecomposition;
 using CascadeMethod     = eda::gate::optimizer2::resynthesis::Cascade;
-using DeMicheli         = eda::gate::optimizer2::resynthesis::DeMicheli;
 using DynTruthTable     = kitty::dynamic_truth_table;
 using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
 using ReedMullerAlg     = eda::gate::optimizer2::resynthesis::ReedMuller;
@@ -54,8 +52,6 @@ enum class Algorithm {
   BiDecomposition,
   /// The cascade method.
   Cascade,
-  /// De Micheli heuristic approach.
-  DeMicheli,
   /// Minato-Morreale algorithm.
   MinatoMorreale,
   /// Reed-Muller algorithm.
@@ -75,9 +71,6 @@ void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
     break;
     case Algorithm::Cascade:
       file << "Cascade,";
-    break;
-    case Algorithm::DeMicheli:
-      file << "De Micheli";
     break;
     case Algorithm::MinatoMorreale:
       file << "Minato-Morreale,";
@@ -135,12 +128,11 @@ void runTest(const DynTruthTable &table) {
   registry.push_back(new AkersAlgorithm());
   registry.push_back(new BiDecomposition());
   registry.push_back(new CascadeMethod());
-  registry.push_back(new DeMicheli());
   registry.push_back(new MinatoMorrealeAlg());
   registry.push_back(new ReedMullerAlg());
   // Launching.
   for (size_t i = 0; i < registry.size(); i++) {
-    /// TODO: decide, what may be used instead of "assert" to indicate an error.
+    // TODO: decide, what may be used instead of "assert" to indicate an error.
     if ((i == 0) && (table.num_vars() > 7)) {
       writeLogs(fout, table, Algorithm::Akers, 0, 0, 0, true);
       continue;
@@ -152,10 +144,6 @@ void runTest(const DynTruthTable &table) {
     clock_t start = clock();
     const auto id = registry[i]->synthesize(table);
     clock_t end = clock();
-    if ((i == 3) && (id == eda::gate::model::OBJ_NULL_ID)) {
-      writeLogs(fout, table, Algorithm::DeMicheli, 0, 0, 0, true);
-      continue;
-    }
     writeLogs(fout, table, static_cast<Algorithm>(i), id, start, end);
   }
   // Delete objects of the registry.

@@ -1,10 +1,11 @@
-image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:pip-liberty
+image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:yosys
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
   BUILD: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"
+  YOSYS_DIR: "/workdir/yosys"
 
 stages:
   - build
@@ -19,7 +20,7 @@ build_project:
   script:
     - rm -rf ${BUILD_PATH}
     - cd ${UTOPIA_HOME}
-    - cmake -S ${UTOPIA_HOME} -B ${BUILD} -G Ninja
+    - cmake -S ${UTOPIA_HOME} -B ${BUILD} -DYosys_ROOT=${YOSYS_DIR} -G Ninja
     - cmake --build ${BUILD}
 
   artifacts:
@@ -62,3 +63,4 @@ get_coverage_info:
     expire_in: 1 day
     paths:
       - ${UTOPIA_HOME}/clean_coverage
+

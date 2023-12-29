@@ -22,5 +22,14 @@ RUN make -j$(nproc)
 RUN make install
 
 WORKDIR /workdir
+RUN git clone https://github.com/YosysHQ/yosys.git
+ENV old_line="ENABLE_LIBYOSYS := 0"
+ENV new_line="ENABLE_LIBYOSYS := 1"
+ENV file_path="/workdir/yosys/Makefile"
+RUN sed -i "s|$old_line|$new_line|" "$file_path"
+WORKDIR /workdir/yosys
+RUN make -j$(nproc)
+RUN make install
 
+WORKDIR /workdir
 CMD ["/bin/bash"]

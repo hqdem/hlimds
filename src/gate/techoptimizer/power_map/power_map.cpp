@@ -29,8 +29,7 @@ namespace eda::gate::tech_optimizer{
 
       if(computedSwitchFlow[entryIndex] != 0.0)return computedSwitchFlow[entryIndex];
       computedSwitchFlow[entryIndex] += cellActivities[coneEntryToOrig[entryIndex]];
-      auto currentCell = cells[entryIndex].cell;
-
+      auto currentCell = cells[entryIndex].cell;  
       if(currentCell.isIn()) return computedSwitchFlow[entryIndex];
 
       for(int i=0;i<currentCell.arity; i++){

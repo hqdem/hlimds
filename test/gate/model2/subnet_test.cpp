@@ -41,7 +41,7 @@ SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, bool tree = false) {
   return builder.make();
 }
 
-/*TEST(SubnetTest, SimpleTest) {
+TEST(SubnetTest, SimpleTest) {
   using Link = Subnet::Link;
 
   static constexpr size_t Depth  = 3u;
@@ -111,6 +111,6 @@ TEST(SubnetTest, CellTreeTest) {
 
     EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
   }
-}*/
+}
 
 } // namespace eda::gate::model

@@ -36,13 +36,19 @@ namespace eda::gate::tech_optimizer {
 
   class PowerMap : public Strategy{
     public:
+      void findBest(
+        EntryIndex entryIndex,
+        const CutsList &CutsList,
+        std::map<EntryIndex,BestReplacement> &bestReplacementMap,
+        CellDB &cellDB,
+        SubnetID subnetId);
 
       void findBest(
         EntryIndex entryIndex,
         const CutsList &CutsList, 
         std::map<EntryIndex, BestReplacement> &bestReplacementMap, 
         CellDB &cellDB, 
-        ArrayEntry &entries) = 0;
+        ArrayEntry &entries);
       
       void findBest(
         SubnetID subnetId,

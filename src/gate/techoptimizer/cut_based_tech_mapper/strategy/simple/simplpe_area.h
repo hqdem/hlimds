@@ -30,5 +30,5 @@ class SimplifiedStrategy : public Strategy{
 
 };
 
-} // eda::gate::tech_optimizer
+} // namespace eda::gate::tech_optimizer
 

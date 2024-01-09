@@ -20,5 +20,5 @@ struct BestSimpleReplacement : public BestReplacement{
   float area;
 };
 
-} // eda::gate::tech_optimizer
+} // namespace eda::gate::tech_optimizer
 

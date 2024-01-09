@@ -34,6 +34,8 @@ model::SubnetID mapSequenceCell(model::CellID sequenceCellID) {
     return mapDFFrs();
   } else if (sequenceCell.isLatch()) {
     return mapLATCH();
+  } else {
+    return 1;
   }
 }
 

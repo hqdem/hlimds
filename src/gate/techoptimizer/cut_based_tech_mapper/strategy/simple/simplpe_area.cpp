@@ -1,8 +1,8 @@
 
+#include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/bestSimpleReplacement.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/simplpe_area.h"
-#include "gate/model2/utils/subnet_truth_table.h"
 
 using Subnet = eda::gate::model::Subnet;
 namespace eda::gate::tech_optimizer {
@@ -45,4 +45,4 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
   }
   bestReplacementMap[entryIndex] = bestSimpleReplacement;
 }
-} // eda::gate::tech_optimizer
+} // namespace eda::gate::tech_optimizer

@@ -7,11 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/simplpe_area.h"
 #include "gate/techoptimizer/library/cell.h"
 #include "gate/techoptimizer/library/cellDB.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techmapper.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/simplpe_area.h"
 
 #include <list>
 #include <map>

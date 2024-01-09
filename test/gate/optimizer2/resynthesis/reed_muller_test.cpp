@@ -228,4 +228,4 @@ TEST(ReedMullerModel2, timeTestOn11Vars) { generateTest(11); }
 
 TEST(ReedMullerModel2, timeTestOn12Vars) { generateTest(12); }
 
-}//namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::resynthesis

@@ -217,12 +217,20 @@ public:
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
-  using Kind = std::pair<bool, bool>;
+  struct Kind {
+    bool operator ==(const Kind &r) const {
+      return in == r.in && out == r.out && ff == r.out;
+    }
 
-  static constexpr auto INPUT  = std::make_pair(true,  false);
-  static constexpr auto OUTPUT = std::make_pair(false, true);
-  static constexpr auto INOUT  = std::make_pair(true,  true);
-  static constexpr auto INNER  = std::make_pair(false, false);
+    uint8_t in  : 1;
+    uint8_t out : 1;
+    uint8_t ff  : 1;
+  };
+
+  static constexpr auto INPUT  = Kind{1, 0, 0};
+  static constexpr auto OUTPUT = Kind{0, 1, 0};
+  static constexpr auto INOUT  = Kind{1, 1, 0};
+  static constexpr auto INNER  = Kind{0, 0, 0};
 
   SubnetBuilder(): nIn(0), nOut(0), entries() {}
 
@@ -230,8 +238,8 @@ public:
     bool isPositive = !CellType::get(typeID).isNegative();
     assert(isPositive && "Only positive cells are allowed in a subnet");
 
-    const auto in  = kind.first;
-    const auto out = kind.second;
+    const bool in  = kind.in;
+    const bool out = kind.out;
     const auto idx = entries.size();
 
     // Update reference counts.

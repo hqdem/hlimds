@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model2/celltype.h"
 #include "gate/model2/subnet.h"
 
 #include "kitty/kitty.hpp"
@@ -130,20 +131,21 @@ inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
 
   for (size_t i = 0; i < entries.size(); ++i) {
     const auto &cell = entries[i].cell;
+    const auto symbol = cell.getSymbol();
     assert(!cell.isNull());
 
     kitty::dynamic_truth_table table;
 
-    if (cell.isIn())        { table = evaluateIn  (subnet,       i        ); }
-    else if (cell.isOut())  { table = evaluateOut (subnet, cell,    tables); }
-    else if (cell.isZero()) { table = evaluateZero(subnet                 ); }
-    else if (cell.isOne())  { table = evaluateOne (subnet                 ); }
-    else if (cell.isBuf())  { table = evaluateBuf (subnet, cell,    tables); }
-    else if (cell.isAnd())  { table = evaluateAnd (subnet, cell, i, tables); }
-    else if (cell.isOr())   { table = evaluateOr  (subnet, cell, i, tables); }
-    else if (cell.isXor())  { table = evaluateXor (subnet, cell, i, tables); }
-    else if (cell.isMaj())  { table = evaluateMaj (subnet, cell, i, tables); }
-    else                    { assert(false && "Unsupported operation");      }
+    if (symbol == IN)        { table = evaluateIn  (subnet,       i        ); }
+    else if (symbol == OUT)  { table = evaluateOut (subnet, cell,    tables); }
+    else if (symbol == ZERO) { table = evaluateZero(subnet                 ); }
+    else if (symbol == ONE)  { table = evaluateOne (subnet                 ); }
+    else if (symbol == BUF)  { table = evaluateBuf (subnet, cell,    tables); }
+    else if (symbol == AND)  { table = evaluateAnd (subnet, cell, i, tables); }
+    else if (symbol == OR)   { table = evaluateOr  (subnet, cell, i, tables); }
+    else if (symbol == XOR)  { table = evaluateXor (subnet, cell, i, tables); }
+    else if (symbol == MAJ)  { table = evaluateMaj (subnet, cell, i, tables); }
+    else                     { assert(false && "Unsupported operation");      }
 
     tables.push_back(table);
     i += cell.more;

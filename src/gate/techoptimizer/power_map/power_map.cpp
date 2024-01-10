@@ -8,67 +8,85 @@
 
 // #include "power_map.h"
 #include "gate/techoptimizer/power_map/power_map.h"
-
+#include <algorithm>
 namespace eda::gate::tech_optimizer{
 
   double PowerMap::switchFlow(
-    const Subnet& subnet,
-     const std::vector<double> &cellActivities,
-     EntryMap &coneEntryToOrig){
-      ArrayEntry cells = subnet.getEntries();
-      std::vector<double> computedSwitchFlow(cells.size(),0);
-      return switchFlowRecursive(cells.size()-1,cellActivities,coneEntryToOrig,computedSwitchFlow,cells);
+    const ArrayEntry &cells,
+    const EntryIndex entryIndex,
+    const Cut &cut
+  ){
+    double sf = cellActivities[entryIndex];
+    auto currentCell  = cells[entryIndex].cell;
+    if (!currentCell.isIn()){
+      for (const auto &leafIdx : cut.entryIdxs){
+        const auto leaf = cells[leafIdx].cell;
+        if(leaf.isIn()){
+          computedSwitchFlow[leafIdx] = cellActivities[leafIdx];
+        }
+        sf += computedSwitchFlow[leafIdx]/(cells[leafIdx].cell.refcount);
       }
-
-  double PowerMap::switchFlowRecursive(
-    const size_t entryIndex,
-    const std::vector<double> &cellActivities,
-    EntryMap &coneEntryToOrig,
-    std::vector<double> &computedSwitchFlow,
-    const ArrayEntry &cells){
-
-      if(computedSwitchFlow[entryIndex] != 0.0)return computedSwitchFlow[entryIndex];
-      computedSwitchFlow[entryIndex] += cellActivities[coneEntryToOrig[entryIndex]];
-      auto currentCell = cells[entryIndex].cell;  
-      if(currentCell.isIn()) return computedSwitchFlow[entryIndex];
-
-      for(int i=0;i<currentCell.arity; i++){
-
-        auto link = currentCell.link[i];
-        auto leaf = cells[link.idx].cell;
-        computedSwitchFlow[entryIndex] +=
-         switchFlowRecursive(link.idx,cellActivities,coneEntryToOrig,computedSwitchFlow,cells)/double(leaf.refcount); 
-
-      }
-      return computedSwitchFlow[entryIndex];
+    }
+    computedSwitchFlow[entryIndex] = sf;
+    return sf;
+  }
+  
+  double PowerMap::areaFlow(
+    const ArrayEntry &cells,
+    const EntryIndex entryIndex,
+    const Cut &cut
+  ){
+    double area = 1;
+    auto currentCell  = cells[entryIndex].cell;
+    if (currentCell.isIn()){
+      computedAreaFlow[entryIndex] = 0;
+      return 0;
+    }
+    double af = area;
+    for (const auto &leafIdx : cut.entryIdxs){
+      const auto leaf = cells[leafIdx].cell;
+      if(leaf.isIn())continue;
+      af += computedAreaFlow[leafIdx]/(leaf.refcount);
+    }
+    computedAreaFlow[entryIndex] = af;
+    return af;
   }
 
-  double PowerMap::areaFlow(Subnet &subnet){
-      ArrayEntry cells = subnet.getEntries();
-      std::vector<double> computedAreaFlow(cells.size(),0);
-      return areaFlowRecursive(cells.size() - 1,computedAreaFlow, cells);
+  void PowerMap::findBest(
+    EntryIndex entryIndex,
+    const CutsList &cutsList,
+    std::map<EntryIndex,BestReplacement> &bestReplacementMap,
+    CellDB &cellDB,
+    SubnetID subnetId){
+      if(this->initialized == false)this->init(subnetId);
+      std::vector<BestReplacementPower> sortedCuts(cutsList.size());
+      ArrayEntry entries = Subnet::get(subnetId).getEntries();
+      for(size_t cutIdx=0; cutIdx < cutsList.size(); cutIdx++){
+        BestReplacementPower repl;
+        repl.cutIdx = cutIdx;
+        repl.areaFlow = areaFlow(entries,entryIndex,cutsList[cutIdx]);
+        repl.switchFlow = switchFlow(entries,entryIndex,cutsList[cutIdx]);
+        sortedCuts[cutIdx] = repl;
+      }
+      std::sort(sortedCuts.begin(),sortedCuts.end());
+      std::reverse(sortedCuts.begin(),sortedCuts.end());
+
+      ConeBuilder coneBuilder(&Subnet::get(subnetId));
+
+      for(size_t replIdx=0; replIdx < sortedCuts.size(); replIdx++){
+        const Cut &curCut = cutsList[sortedCuts[replIdx].cutIdx];
+        SubnetID coneSubnetID = coneBuilder.getCone(curCut).subnetID;
+        auto truthTable = eda::gate::model::evaluate(Subnet::get(coneSubnetID));
+        const auto& cellList = cellDB.getSubnetIDsByTT(truthTable);
+        if(cellList.size() == 0) continue;
+        const SubnetID currentSubnetID = cellList[0];
+        sortedCuts[replIdx].subnetID = currentSubnetID;
+        bestReplacementMap[entryIndex] = sortedCuts[replIdx];
+        
+        break;
+      }
     }
 
-  double PowerMap::areaFlowRecursive(
-    const size_t entryIndex,
-    std::vector<double> &computedAreaFlow,
-    const ArrayEntry &cells){
-      if(computedAreaFlow[entryIndex] != 0){ return computedAreaFlow[entryIndex]; }
-      auto currentCell = cells[entryIndex].cell;
-      if(currentCell.isIn()){
-        computedAreaFlow[entryIndex] = 0;
-        return 0;
-      }
-      else {computedAreaFlow[entryIndex] = 1; }
-
-        for(int i=0;i<currentCell.arity; i++){
-          auto link = currentCell.link[i];
-          auto leaf = cells[link.idx].cell;
-          computedAreaFlow[entryIndex] += 
-            areaFlowRecursive(link.idx,computedAreaFlow,cells)/double(leaf.refcount); 
-      }
-      return computedAreaFlow[entryIndex];
-    }
 
   double PowerMap::edgeFlow(
     const size_t entryIndex,
@@ -76,82 +94,7 @@ namespace eda::gate::tech_optimizer{
     const ArrayEntry &cells){ return 0; }
 
 
-    void findBest(
-      SubnetID subnetId,
-      std::map<EntryIndex, BestReplacement> &bestReplacementMap,
-      CellDB &cellDB){
-
-        using CutExtractor = eda::gate::optimizer2::CutExtractor;
-        const auto& subnet = Subnet::get(subnetId);
-        const ArrayEntry entries = subnet.getEntries();
-        const unsigned int k = 3;
-        std::unordered_map<EntryIndex,Cut> reprCutMap;
-        CutExtractor cutExtractor(&subnet, k); 
-        ConeBuilder coneBuilder(&subnet);
-        // stage 1: for each node find reprCut
-        for(EntryIndex idx = 0; idx < entries.size(); idx++){
-          //stage 1.1: find cuts that have minimal AreaFlow value
-          CutsList cutsList = cutExtractor.getCuts(idx);
-          CutsList cuts= {};
-          double minAF = 100000.0;
-          double delta = 0.001;
-          for(size_t i = 0; i < cutsList.size(); i++){
-            Cone curCone = coneBuilder.getCone(cutsList[i]);
-            Subnet &curSubnet = Subnet::get(curCone.subnetID);
-            double curAF = PowerMap::areaFlow(curSubnet);
-            if(fabs(curAF - minAF) < delta){cuts.push_back(cutsList[i]);} 
-            else if(curAF < minAF){
-              cuts.clear();
-              cuts.push_back(cutsList[i]);
-              minAF = curAF;
-            }
-          }
-          //stage 1.2: among cuts find the reprCuts that have min SwitchFlow value
-          CutsList reprCuts = {};
-          double minSF = 100000.0;
-          
-          eda::gate::analyzer::SimulationEstimator simulationEstimator(64); 
-          const auto switchingActivity = simulationEstimator.estimate(subnet);
-          const std::vector<double> cellActivities = switchingActivity.getCellActivities();
-
-          for(size_t i = 0; i < cuts.size(); i++){
-            Cone curCone = coneBuilder.getCone(cuts[i]);
-            Subnet &curSubnet = Subnet::get(curCone.subnetID);
-            double curSF = PowerMap::switchFlow(curSubnet,cellActivities,curCone.coneEntryToOrig);
-            if(fabs(curSF - minSF) < delta){reprCuts.push_back(cuts[i]);} 
-            else if(curSF < minSF){
-              cuts.clear();
-              cuts.push_back(cuts[i]);
-              minSF = curSF;
-            }
-          }
-          reprCutMap[idx] = reprCuts[0];
-        }
-
-        // stage 2: choose nodes that will be used for mapping  
-        using EntryIndex = uint64_t;
-        // M is the set of nodes that is supposed to be used for final mapping
-        std::unordered_set<EntryIndex> M = {};
-        std::stack<EntryIndex> F;
-        for(EntryIndex idx=0; idx<entries.size();idx++){
-          if(entries[idx].cell.isPO()){
-            M.insert(idx);
-            F.push(idx);
-          }
-        }
-        while(!F.empty()){
-          EntryIndex curIdx = F.top();
-          F.pop();
-          Cut cut = reprCutMap[curIdx];
-          for(const auto& nodeIdx : cut.entryIdxs){
-            if(M.count(nodeIdx) == 1 || entries[nodeIdx].cell.isPI()){ continue; }
-            M.insert(nodeIdx);
-            F.push(nodeIdx);
-          }
-
-        }
-        
-      }
+    
 } //namespace eda::gate::tech_optimizer
 
 

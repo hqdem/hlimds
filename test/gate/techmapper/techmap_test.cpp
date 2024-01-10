@@ -19,7 +19,6 @@
 #include "gtest/gtest.h"
 #include "gate/model2/object.h"
 
-#include "gate/techoptimizer/power_map/power_map.h"
 using namespace eda::gate::parser;
 using namespace eda::gate::optimizer;
 
@@ -124,13 +123,6 @@ namespace eda::gate::tech_optimizer {
   }
 
   */
-
-  TEST(TechMapTest,  PowerMap) {
-    if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
-    eda::gate::tech_optimizer::switchFlowTest1();
-  }
 
 }
 

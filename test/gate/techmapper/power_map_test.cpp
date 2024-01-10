@@ -5,9 +5,9 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/techoptimizer/power_map/power_map.h"
-#include "gtest/gtest.h"
-
+// #include "gate/techoptimizer/power_map/power_map.h"
+// #include "gtest/gtest.h"
+// 
 // using namespace eda::gate::model;
 // TEST(TechMapTest, switchFlow) {
 //   if (!getenv("UTOPIA_HOME")) {

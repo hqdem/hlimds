@@ -136,7 +136,7 @@ inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
 
     kitty::dynamic_truth_table table;
 
-    if (symbol == IN)        { table = evaluateIn  (subnet,       i        ); }
+    if      (cell.isIn())    { table = evaluateIn  (subnet,       i        ); }
     else if (symbol == OUT)  { table = evaluateOut (subnet, cell,    tables); }
     else if (symbol == ZERO) { table = evaluateZero(subnet                 ); }
     else if (symbol == ONE)  { table = evaluateOne (subnet                 ); }

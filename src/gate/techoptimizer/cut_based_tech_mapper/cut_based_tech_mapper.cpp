@@ -9,6 +9,7 @@
 #include "gate/model2/printer/printer.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/transformer/aigmapper.h"
 
 #include <limits.h>
 
@@ -27,16 +28,14 @@ namespace eda::gate::tech_optimizer {
   }
 
   SubnetID CutBasedTechMapper::techMap(SubnetID subnetID) {
-    // TODO
-    //if () {
-      //aigMap(net);
-    //}
+    transformer::AigMapper mapper;
+    const auto transformedSub  = mapper.transform(subnetID);
 
-    auto cutExtractor = findCuts(subnetID);
+    auto cutExtractor = findCuts(transformedSub);
 
-    auto bestReplacementMap = replacementSearch(subnetID, cutExtractor);
+    auto bestReplacementMap = replacementSearch(transformedSub, cutExtractor);
 
-    const SubnetID mappedSubnet = buildSubnet(subnetID, bestReplacementMap);
+    const SubnetID mappedSubnet = buildSubnet(transformedSub, bestReplacementMap);
 
     return mappedSubnet;
   }

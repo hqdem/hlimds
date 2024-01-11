@@ -42,10 +42,16 @@ namespace eda::gate::tech_optimizer {
       double areaFlow;
       size_t cutIdx;
   };
-  bool operator<(const BestReplacementPower& left, const BestReplacementPower& right){
+
+  inline bool costAreaSwitch(const BestReplacementPower& left, const BestReplacementPower& right){
     if(left.areaFlow == right.areaFlow)return left.switchFlow < right.switchFlow;
     return left.areaFlow < right.areaFlow;
-  } 
+  }
+
+  // bool operator<(const BestReplacementPower& left, const BestReplacementPower& right){
+  //   if(left.areaFlow == right.areaFlow)return left.switchFlow < right.switchFlow;
+  //   return left.areaFlow < right.areaFlow;
+  // } 
   class PowerMap : public Strategy{
     public:
 
@@ -56,7 +62,7 @@ namespace eda::gate::tech_optimizer {
       void findBest(
         EntryIndex entryIndex,
         const CutsList &CutsList,
-           std::map<EntryIndex,BestReplacement> &bestReplacementMap,
+        std::map<EntryIndex,BestReplacement> &bestReplacementMap,
         CellDB &cellDB,
         SubnetID subnetId);
 
@@ -81,7 +87,7 @@ namespace eda::gate::tech_optimizer {
 
       // init is called during first call of findBest()
       void init(SubnetID subnetId){
-        initialized = true;
+        this->initialized = true;
         this->subnetId = subnetId;
         auto& subnet = Subnet::get(subnetId);
         const auto& entries = subnet.getEntries();
@@ -94,6 +100,10 @@ namespace eda::gate::tech_optimizer {
         this->cellActivities = simulationEstimator.estimate(subnet).getCellActivities();
       }
 
+      void reset(){
+        this->initialized =false;
+      }
+
       SubnetID subnetId;
       std::vector<double> cellActivities;
       std::vector<double> computedAreaFlow;
@@ -101,5 +111,4 @@ namespace eda::gate::tech_optimizer {
       bool initialized;
   };
 
-  void switchFlowTest1();
 } // namespace eda::gate::tech_optimizer

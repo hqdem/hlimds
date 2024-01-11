@@ -39,17 +39,11 @@ CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
 
     subnets.push_back(subnetID);
 
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> dist(1.0, 100.0);
-
-    // Генерация случайного числа
-    float random_number = dist(mt);
-    Subnetattr subnetattr{"super", random_number};
+    Subnetattr subnetattr{"super", cellType.getAttr().area};
     subnetToAttr.push_back(std::make_pair(subnetID, subnetattr));
 
     ttSubnet.push_back(std::make_pair(eda::gate::model::evaluate(
-        model::Subnet::get(static_cast<SubnetID>(cellType.getNetID()))), subnetID));
+        cellType.getSubnet()), subnetID));
   }
 }
 

@@ -60,23 +60,19 @@ namespace eda::gate::tech_optimizer {
       auto cell = entries[entryIndex].cell;
 
       if (cell.isIn()) {
-        std::cout << "нашли вход"<< std::endl;
         BestReplacement bestReplacement{true};
         bestReplacementMap[entryIndex] = bestReplacement;
 
       } else if (cell.isOut()) {
-        std::cout << "нашли выход"<< std::endl;
         outID.push_back(entryIndex);
 
         BestReplacement bestReplacement{false, true};
         bestReplacement.entryIDxs.insert(cell.link[0].idx);
         bestReplacementMap[entryIndex] = bestReplacement;
       } else {
-        std::cout << "собираемся добавить ячейку"<< std::endl;
         // Save best tech cells subnet to bestReplMap 
         strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
             bestReplacementMap, cellDB, subnetID);
-        std::cout << "дабавили ячейку"<< std::endl;
       }
 
       entryIndex += cell.more;
@@ -138,8 +134,8 @@ namespace eda::gate::tech_optimizer {
             for (const auto &techCellEntry : techCellEntries) {
               auto techCell = techCellEntry.cell;
               if (!techCell.isIn() && !techCell.isOut()) {
-                std::cout << model::CellType::get(techCell.getTypeID()).getSymbol() << std::endl;
                 auto cellID = subnetBuilder.addCell(techCell.getTypeID(), linkList);
+                std::cout << "add cell" << std::endl;
                 bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
               }
             }

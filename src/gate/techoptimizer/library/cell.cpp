@@ -223,7 +223,8 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
       }
 
       eda::gate::model::CellProperties props(true, false, false, false, false, false, false);
-      eda::gate::model::CellTypeAttrID attrID;
+      model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+      model::CellTypeAttr::get(cellTypeAttrID).area = cell->getArea();
 
       MinatoMorrealeAlg minatoMorrealeAlg;
       const auto subnetID = minatoMorrealeAlg.synthesize(*cell->getTruthTable());
@@ -231,7 +232,7 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
       NetID netID = static_cast<NetID>(subnetID);
 
       CellTypeID cellID = eda::gate::model::makeCellType(
-          cell->getRealName(), netID, attrID,
+          cell->getRealName(), netID, cellTypeAttrID,
           eda::gate::model::CellSymbol::CELL,
           props, static_cast<uint16_t>(cell->getInputPinsNumber()),
           static_cast<uint16_t>(1));

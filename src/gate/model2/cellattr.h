@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model/object.h"
+#include "gate/model2/object.h"
 
 namespace eda::gate::model {
 
@@ -19,8 +19,15 @@ namespace eda::gate::model {
 class CellTypeAttr final : public Object<CellTypeAttr, CellTypeAttrID> {
   friend class Storage<CellTypeAttr>;
 
+public:
+  /// Physical area of the cell.
+  float area;
+
 private:
   CellTypeAttr() {}
+
+  /// TODO: To be updated.
+  uint32_t reserved[255];
 };
 
 static_assert(sizeof(CellTypeAttr) == CellTypeAttrID::Size);
@@ -29,7 +36,7 @@ static_assert(sizeof(CellTypeAttr) == CellTypeAttrID::Size);
 // Cell Type Attributes Builder
 //===----------------------------------------------------------------------===//
 
-CellTypeAttrID makeCellTypeAttr() {
+inline CellTypeAttrID makeCellTypeAttr() {
   return allocate<CellTypeAttr>();
 }
 

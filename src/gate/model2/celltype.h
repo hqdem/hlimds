@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model2/cellattr.h"
 #include "gate/model2/object.h"
 #include "gate/model2/string.h"
 
@@ -109,6 +110,7 @@ static_assert(sizeof(CellProperties) == 2);
 // Cell Type
 //===----------------------------------------------------------------------===//
 class Net;
+class Subnet;
 
 class CellType final : public Object<CellType, CellTypeID> {
   friend class Storage<CellType>;
@@ -137,22 +139,34 @@ public:
   /// Checks whether the cell type does not specify the number of outputs.
   bool isOutNumFixed() const { return nOut != AnyArity; }
 
-  /// Checks whether the cell type is described by net.
-  bool isNet() const { return netID != OBJ_NULL_ID; }
+  /// Checks whether the cell type has implementation.
+  bool hasImpl() const { return implID != OBJ_NULL_ID; }
+
+  /// Checks whether the cell type is implemented by Net.
+  bool isNet() const { return NetID::checkTag(implID); }
   /// Returns the net of the cell type.
   const Net &getNet() const;
-  const NetID getNetID() const;
+
+  /// Checks whether the cell type is implemented by Subnet.
+  bool isSubnet() const { return SubnetID::checkTag(implID); }
+  /// Return the subnet of the cell type.
+  const Subnet &getSubnet() const;
+
+  /// Checks whether the cell type has attributes.
+  bool hasAttr() const { return attrID != OBJ_NULL_ID; }
+  /// Returns the cell type attributes.
+  const CellTypeAttr &getAttr() const { return CellTypeAttr::get(attrID); }
 
 private:
   CellType(const std::string &name,
-           NetID netID,
+           uint64_t implID,
            CellTypeAttrID attrID,
            CellSymbol symbol,
            CellProperties props,
            uint16_t nIn,
            uint16_t nOut):
     nameID(makeString(name)),
-    netID(netID),
+    implID(implID),
     attrID(attrID),
     symbol(symbol),
     props(props),
@@ -161,7 +175,9 @@ private:
 
   const StringID nameID;
 
-  const NetID netID;
+  /// NetID or SubnetID.
+  const uint64_t implID;
+
   const CellTypeAttrID attrID;
 
   const CellSymbol symbol;

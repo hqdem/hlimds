@@ -41,16 +41,15 @@ struct Pin {
 
 struct Cell {
   Cell(const std::string &name, const std::vector<Pin> &inputPins,
-      kitty::dynamic_truth_table *truthTable, const std::string &realName);
+      kitty::dynamic_truth_table *truthTable);
 
   Cell(const std::string &name, const std::vector<Pin> &inputPins,
-      kitty::dynamic_truth_table *truthTable, const std::string &realName, 
+      kitty::dynamic_truth_table *truthTable,
       double area);
 
   Cell(kitty::dynamic_truth_table *truthTable);
 
   const std::string &getName() const;
-  const std::string &getRealName() const;
   double getArea() const; 
   kitty::dynamic_truth_table *getTruthTable() const;
   unsigned getInputPinsNumber() const;
@@ -60,7 +59,6 @@ private:
   const std::string name;
   std::vector<Pin> inputPins;
   kitty::dynamic_truth_table *truthTable;
-  std::string realName;
   double area;
 };
 

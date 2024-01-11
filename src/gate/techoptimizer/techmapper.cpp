@@ -26,10 +26,12 @@ BaseMapper *mapper = nullptr;
 void Techmaper::setLiberty(const std::string &dbPath) {
   LibraryCells libraryCells(dbPath);
 
-  CellDB *cellDB_ptr = &cellDB;
-  *cellDB_ptr = libraryCells.initializeLiberty();
+  CellDB cellDBF(libraryCells.initializeLiberty());
+  cellDB = cellDBF;
+  //CellDB *cellDB_ptr = &cellDB;
+  //*cellDB_ptr = libraryCells.initializeLiberty();
 
-  setSequenceDB(cellDB);
+  //setSequenceDB(cellDB);
 }
 
 void Techmaper::setMapper(TechmaperType techmapSelector) {

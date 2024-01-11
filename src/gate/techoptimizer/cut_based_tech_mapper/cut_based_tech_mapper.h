@@ -47,7 +47,6 @@ namespace eda::gate::tech_optimizer {
     double area;
     double delay;
 
-    // Dosnt work yet for model2
     void aigMap(SubnetID subnetID);
 
     CutExtractor findCuts(SubnetID subnetID);

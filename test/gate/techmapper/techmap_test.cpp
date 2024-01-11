@@ -105,7 +105,7 @@ TEST(TechMapTest, SimpleORSubnet) {
   Techmaper techmaper;
 
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-                       "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+                       "/simple_liberty.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 

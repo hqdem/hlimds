@@ -8,6 +8,9 @@
 
 #include "gate/model2/celltype.h"
 #include "gate/model2/net.h"
+#include "gate/model2/subnet.h"
+
+#include <cassert>
 
 #define CELL_TYPE_ID(symbol)  CELL_TYPE_ID_##symbol
 #define CELL_TYPE_SID(symbol) CELL_TYPE_SID_##symbol
@@ -41,7 +44,13 @@ CELL_TYPE("dff",   DFF,   0,0,0,0,0,0,0,  3,      1);
 CELL_TYPE("dffrs", DFFrs, 0,0,0,0,0,0,0,  5,      1);
 
 const Net &CellType::getNet() const {
-  return Net::get(netID);
+  assert(isNet());
+  return Net::get(implID);
+}
+
+const Subnet &CellType::getSubnet() const {
+  assert(isSubnet());
+  return Subnet::get(implID);
 }
 
 } // namespace eda::gate::model

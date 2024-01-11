@@ -228,17 +228,17 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
 
       MinatoMorrealeAlg minatoMorrealeAlg;
       const auto subnetID = minatoMorrealeAlg.synthesize(*cell->getTruthTable());
-
-      NetID netID = static_cast<NetID>(subnetID);
+      std::cout << cell->getRealName() << std::endl;
 
       CellTypeID cellID = eda::gate::model::makeCellType(
-          cell->getRealName(), netID, cellTypeAttrID,
+          cell->getRealName(), subnetID, cellTypeAttrID,
           eda::gate::model::CellSymbol::CELL,
           props, static_cast<uint16_t>(cell->getInputPinsNumber()),
           static_cast<uint16_t>(1));
 
       cellTypeIDs.push_back(cellID);
     }
+    std::cout << cells.size();
     return cellTypeIDs;
   }
 

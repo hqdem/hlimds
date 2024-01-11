@@ -52,12 +52,9 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.size() != 1) {
       SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-      std::cout << Subnet::get(coneSubnetID) << std::endl;
 
       auto truthTable = eda::gate::model::evaluate(
           model::Subnet::get(coneSubnetID));
-
-      std::cout << kitty::to_binary(truthTable)<< std::endl;
 
       for (const SubnetID &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable)) {
         auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
@@ -73,6 +70,8 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
       }
     }
   }
+  std::cout << entryIndex << "вот такая площадь" << bestArea;
+  std::cout << model::Subnet::get(bestSimpleReplacement.subnetID) << bestArea;
   bestReplacementMap[entryIndex] = bestSimpleReplacement;
 }
 } // namespace eda::gate::tech_optimizer

@@ -135,7 +135,6 @@ namespace eda::gate::tech_optimizer {
               auto techCell = techCellEntry.cell;
               if (!techCell.isIn() && !techCell.isOut()) {
                 auto cellID = subnetBuilder.addCell(techCell.getTypeID(), linkList);
-                std::cout << "add cell" << std::endl;
                 bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
               }
             }

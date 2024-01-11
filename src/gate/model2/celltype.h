@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model2/cellattr.h"
 #include "gate/model2/object.h"
 #include "gate/model2/string.h"
 
@@ -141,6 +142,11 @@ public:
   bool isNet() const { return netID != OBJ_NULL_ID; }
   /// Returns the net of the cell type.
   const Net &getNet() const;
+
+  /// Checks whether the cell type has attributes.
+  bool hasAttr() const { return attrID != OBJ_NULL_ID; }
+  /// Returns the cell type attributes.
+  const CellTypeAttr &getAttr() const { return CellTypeAttr::get(attrID); }
 
 private:
   CellType(const std::string &name,

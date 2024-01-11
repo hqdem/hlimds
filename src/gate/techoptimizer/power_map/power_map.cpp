@@ -68,7 +68,7 @@ namespace eda::gate::tech_optimizer{
         repl.switchFlow = switchFlow(entries,entryIndex,cutsList[cutIdx]);
         sortedCuts[cutIdx] = repl;
       }
-      std::sort(sortedCuts.begin(),sortedCuts.end());
+      std::sort(sortedCuts.begin(),sortedCuts.end(),costAreaSwitch);
       std::reverse(sortedCuts.begin(),sortedCuts.end());
 
       ConeBuilder coneBuilder(&Subnet::get(subnetId));

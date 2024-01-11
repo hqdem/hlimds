@@ -27,8 +27,6 @@ class SimplifiedStrategy : public Strategy{
                 std::map<EntryIndex, BestReplacement> &bestReplacementMap,
                 CellDB &cellDB,
                 SubnetID subnetID) override;
-
 };
-
 } // namespace eda::gate::tech_optimizer
 

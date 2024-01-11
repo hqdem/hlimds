@@ -67,6 +67,7 @@ Cell::Cell(kitty::dynamic_truth_table *truthTable) :
   name(""), inputPins({}), truthTable(truthTable) {}
 
 const std::string &Cell::getName() const {return name;}
+const std::string &Cell::getRealName() const {return realName;}
 double Cell::getArea() const {return area;}
 kitty::dynamic_truth_table *Cell::getTruthTable() const {return truthTable;}
 unsigned Cell::getInputPinsNumber() const {return inputPins.size();}
@@ -230,9 +231,9 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
       NetID netID = static_cast<NetID>(subnetID);
 
       CellTypeID cellID = eda::gate::model::makeCellType(
-          cell->getName(), netID, attrID,
+          cell->getRealName(), netID, attrID,
           eda::gate::model::CellSymbol::CELL,
-          props, static_cast<uint16_t>(cell->getInputPinsNumber()), 
+          props, static_cast<uint16_t>(cell->getInputPinsNumber()),
           static_cast<uint16_t>(1));
 
       cellTypeIDs.push_back(cellID);

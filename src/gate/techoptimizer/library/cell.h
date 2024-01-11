@@ -50,6 +50,7 @@ struct Cell {
   Cell(kitty::dynamic_truth_table *truthTable);
 
   const std::string &getName() const;
+  const std::string &getRealName() const;
   double getArea() const; 
   kitty::dynamic_truth_table *getTruthTable() const;
   unsigned getInputPinsNumber() const;

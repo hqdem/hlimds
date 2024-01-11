@@ -86,6 +86,7 @@ add_executable(${TEST_TARGET}
   gate/techmapper/power_map_test.cpp
   gate/techmapper/strategy/strategy_example.cpp
   gate/techmapper/strategy/example_test.cpp
+  gate/transformer/aigmapper_test.cpp
   gate/transformer/bdd_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp

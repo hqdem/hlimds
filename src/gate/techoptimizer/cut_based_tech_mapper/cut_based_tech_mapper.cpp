@@ -32,13 +32,10 @@ namespace eda::gate::tech_optimizer {
       //aigMap(net);
     //}
 
-    std::cout << "find Cuts" << std::endl;
     auto cutExtractor = findCuts(subnetID);
 
-    std::cout << "find replacement" << std::endl;
     auto bestReplacementMap = replacementSearch(subnetID, cutExtractor);
 
-    std::cout << "build subnet" << std::endl;
     const SubnetID mappedSubnet = buildSubnet(subnetID, bestReplacementMap);
 
     return mappedSubnet;
@@ -104,7 +101,6 @@ namespace eda::gate::tech_optimizer {
       auto currentCell = entries[currentEntryIDX].cell;
 
       if (currentCell.isIn()) {
-        std::cout << "create IN" << std::endl;
         auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::IN);
         bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
         stack.pop();
@@ -120,7 +116,6 @@ namespace eda::gate::tech_optimizer {
 
         if (readyForCreate) {
           if (currentCell.isOut()) {
-            std::cout << "create OUT" << std::endl;
             auto cellID = subnetBuilder.addCell(
                 eda::gate::model::CellSymbol::OUT,
                 Subnet::Link(currentCell.link[0].idx));
@@ -139,7 +134,6 @@ namespace eda::gate::tech_optimizer {
             for (const auto &techCellEntry : techCellEntries) {
               auto techCell = techCellEntry.cell;
               if (!techCell.isIn() && !techCell.isOut()) {
-                std::cout << "create cell" << std::endl;
                 auto cellID = subnetBuilder.addCell(techCell.getTypeID(), linkList);
                 bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
               }

@@ -81,6 +81,7 @@ add_library(Gate OBJECT
   techoptimizer/sequential_mapper/sequential_mapper.cpp
   techoptimizer/techmapper.cpp
   simulator2/simulator.cpp
+  transformer/aigmapper.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
   translator/yosys_converter_firrtl.cpp

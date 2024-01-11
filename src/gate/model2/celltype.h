@@ -194,13 +194,13 @@ static_assert(sizeof(CellType) == CellTypeID::Size);
 //===----------------------------------------------------------------------===//
 
 inline CellTypeID makeCellType(const std::string &name,
-                               NetID netID,
+                               uint64_t implID,
                                CellTypeAttrID attrID,
                                CellSymbol symbol,
                                CellProperties props,
                                uint16_t nIn,
                                uint16_t nOut) {
-  return allocate<CellType>(name, netID, attrID, symbol, props, nIn, nOut);
+  return allocate<CellType>(name, implID, attrID, symbol, props, nIn, nOut);
 }
 
 inline CellTypeID makeCellType(const std::string &name,

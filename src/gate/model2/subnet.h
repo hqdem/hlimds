@@ -176,8 +176,8 @@ public:
 
   /// Returns the j-th link of the i-th cell.
   Link getLink(size_t i, size_t j) const {
-    const auto cells = getEntries();
-    const auto &cell = cells[i].cell;
+    const auto &entries = getEntries();
+    const auto &cell = entries[i].cell;
 
     if (j < Cell::InPlaceLinks) {
       return cell.link[j];
@@ -186,13 +186,13 @@ public:
     const auto k = j - Cell::InPlaceLinks;
     const auto n = Cell::InEntryLinks;
 
-    return cells[i + 1 + (k / n)].link[k % n];
+    return entries[i + 1 + (k / n)].link[k % n];
   }
 
   /// Returns the links of the i-th cell.
   LinkList getLinks(size_t i) const {
-    const auto cells = getEntries();
-    const auto &cell = cells[i].cell;
+    const auto &entries = getEntries();
+    const auto &cell = entries[i].cell;
 
     LinkList links(cell.arity);
 
@@ -205,7 +205,7 @@ public:
       const auto k = j - Cell::InPlaceLinks;
       const auto n = Cell::InEntryLinks;
 
-      links[j] = cells[i + 1 + (k / n)].link[k % n];
+      links[j] = entries[i + 1 + (k / n)].link[k % n];
     }
 
     return links;
@@ -339,6 +339,11 @@ public:
 
   /// Adds a k-ary tree that implements the given function.
   size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
+
+  /// Adds a single-output subnet (marks the root as an output if required).
+  /// It is assumed that the inputs (to link to) have been already added.
+  size_t addSubnet(const SubnetID subnetID,
+      const LinkList &links, Kind kind = INNER);
 
   SubnetID make() {
     assert(nIn > 0 && nOut > 0 && !entries.empty());

@@ -10,6 +10,7 @@
 
 #include "gate/debugger/bdd_checker.h"
 #include "gate/debugger/checker.h"
+#include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/miter.h"
 #include "gate/debugger/rnd_checker.h"
 #include "gate/model/gnet_test.h"
@@ -41,6 +42,12 @@ CheckerResult fileLecTest(const std::string &fileName,
                           BaseChecker &checker,
                           PreBasis basis,
                           const std::string &subPath = "");
+
+CheckerResult twoFilesLecTest(const std::string &fileName1,
+                              const std::string &fileName2,
+                              BaseChecker &checker,
+                              const std::string &subPath1 = "",
+                              const std::string &subPath2 = "");
 
 Checker::Hints checkerTestHints(unsigned N,
                                 const GNet &lhs,

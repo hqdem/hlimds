@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -24,15 +24,18 @@ using PreBasis::XMG;
 TEST(RilLecTest, sub) {
   BddChecker bdd;
   Checker def;
+  FraigChecker fraig;
   RndChecker rnd(false, 1000);
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
   EXPECT_TRUE(fileLecTest("sub.ril", bdd, AIG, subPath).equal());
   EXPECT_TRUE(fileLecTest("sub.ril", def, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("sub.ril", fraig, AIG, subPath).equal());
   EXPECT_TRUE(fileLecTest("sub.ril", rnd, AIG, subPath).isUnknown());
 
   EXPECT_TRUE(fileLecTest("sub.ril", bdd, XAG, subPath).equal());
   EXPECT_TRUE(fileLecTest("sub.ril", def, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("sub.ril", fraig, XAG, subPath).equal());
   EXPECT_TRUE(fileLecTest("sub.ril", rnd, XAG, subPath).isUnknown());
 
   EXPECT_TRUE(fileLecTest("sub.ril", bdd, MIG, subPath).equal());
@@ -47,15 +50,18 @@ TEST(RilLecTest, sub) {
 TEST(RilLecTest, add) {
   BddChecker bdd;
   Checker def;
+  FraigChecker fraig;
   RndChecker rnd(false, 1000);
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
   EXPECT_TRUE(fileLecTest("add.ril", bdd, AIG, subPath).equal());
   EXPECT_TRUE(fileLecTest("add.ril", def, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add.ril", fraig, AIG, subPath).equal());
   EXPECT_TRUE(fileLecTest("add.ril", rnd, AIG, subPath).isUnknown());
 
   EXPECT_TRUE(fileLecTest("add.ril", bdd, XAG, subPath).equal());
   EXPECT_TRUE(fileLecTest("add.ril", def, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add.ril", fraig, XAG, subPath).equal());
   EXPECT_TRUE(fileLecTest("add.ril", rnd, XAG, subPath).isUnknown());
 
   EXPECT_TRUE(fileLecTest("add.ril", bdd, MIG, subPath).equal());
@@ -70,15 +76,18 @@ TEST(RilLecTest, add) {
 TEST(RilLecTest, addSmall) {
   BddChecker bdd;
   Checker def;
+  FraigChecker fraig;
   RndChecker rnd;
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
   EXPECT_TRUE(fileLecTest("add_small.ril", bdd, AIG, subPath).equal());
   EXPECT_TRUE(fileLecTest("add_small.ril", def, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", fraig, AIG, subPath).equal());
   EXPECT_TRUE(fileLecTest("add_small.ril", rnd, AIG, subPath).equal());
 
   EXPECT_TRUE(fileLecTest("add_small.ril", bdd, XAG, subPath).equal());
   EXPECT_TRUE(fileLecTest("add_small.ril", def, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", fraig, XAG, subPath).equal());
   EXPECT_TRUE(fileLecTest("add_small.ril", rnd, XAG, subPath).equal());
 
   EXPECT_TRUE(fileLecTest("add_small.ril", bdd, MIG, subPath).equal());
@@ -151,6 +160,18 @@ TEST(RilLecTest, mul) {
 
   EXPECT_TRUE(fileLecTest("mul.ril", bdd, XMG, subPath).equal());
   EXPECT_TRUE(fileLecTest("mul.ril", rnd, XMG, subPath).isUnknown());
+}
+
+TEST(RilLecTest, unequal) {
+  FraigChecker fraig;
+  std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
+
+  EXPECT_TRUE(twoFilesLecTest("mul_small.ril", "add6.ril",
+                              fraig, subPath, subPath).notEqual());
+  EXPECT_TRUE(twoFilesLecTest("mul_small.ril", "sub6.ril",
+                              fraig, subPath, subPath).notEqual());
+  EXPECT_TRUE(twoFilesLecTest("sub6.ril", "add6.ril",
+                              fraig, subPath, subPath).notEqual());
 }
 
 // TODO The test takes too long.

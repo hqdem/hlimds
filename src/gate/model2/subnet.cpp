@@ -18,9 +18,9 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   uint32_t minLength = nCell, maxLength = 0;
   std::vector<uint32_t> min(nCell), max(nCell);
 
-  const auto cells = getEntries();
+  const auto &entries = getEntries();
   for (size_t i = 0; i < nCell; ++i) {
-    const auto &cell = cells[i].cell;
+    const auto &cell = entries[i].cell;
 
     if (cell.isIn()) {
       min[i] = max[i] = 0;
@@ -50,9 +50,9 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
 }
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
-  const auto cells = subnet.getEntries();
+  const auto &entries = subnet.getEntries();
   for (size_t i = 0; i < subnet.size(); ++i) {
-    const auto &cell = cells[i].cell;
+    const auto &cell = entries[i].cell;
     const auto &type = cell.getType();
 
     out << i << " <= " << type.getName();
@@ -112,6 +112,41 @@ size_t SubnetBuilder::addCellTree(
   }
 
   return linkList.back().idx;
+}
+
+size_t SubnetBuilder::addSubnet(
+    const SubnetID subnetID, const LinkList &links, Kind kind) {
+  const auto offset = entries.size();
+
+  const auto &subnet = Subnet::get(subnetID);
+  assert(subnet.getOutNum() == 1);
+
+  const auto &entries = subnet.getEntries();
+  for (size_t i = subnet.getInNum(); i < entries.size(); ++i) {
+    auto newLinks = subnet.getLinks(i);
+
+    for (size_t j = 0; j < newLinks.size(); ++j) {
+      auto &newLink = newLinks[j];
+      if (newLink.idx < nIn) {
+        newLink = links[newLink.idx];
+      } else {
+        newLink.idx += offset;
+      }
+    }
+
+    const auto &cell = entries[i].cell;
+    i += cell.more;
+
+    const auto isOutput = (cell.isOut() || entries[i].cell.isPO());
+    const auto newKind  = isOutput ? kind : INNER;
+    const auto newIndex = addCell(cell.getTypeID(), newLinks, newKind);
+
+    if (isOutput) {
+      return newIndex;
+    }
+  }
+
+  return -1; 
 }
 
 } // namespace eda::gate::model

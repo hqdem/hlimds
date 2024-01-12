@@ -67,6 +67,7 @@ Cell::Cell(kitty::dynamic_truth_table *truthTable) :
   name(""), inputPins({}), truthTable(truthTable) {}
 
 const std::string &Cell::getName() const {return name;}
+const std::string &Cell::getRealName() const {return realName;}
 double Cell::getArea() const {return area;}
 kitty::dynamic_truth_table *Cell::getTruthTable() const {return truthTable;}
 unsigned Cell::getInputPinsNumber() const {return inputPins.size();}
@@ -222,21 +223,22 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
       }
 
       eda::gate::model::CellProperties props(true, false, false, false, false, false, false);
-      eda::gate::model::CellTypeAttrID attrID;
+      model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+      model::CellTypeAttr::get(cellTypeAttrID).area = cell->getArea();
 
       MinatoMorrealeAlg minatoMorrealeAlg;
       const auto subnetID = minatoMorrealeAlg.synthesize(*cell->getTruthTable());
-
-      NetID netID = static_cast<NetID>(subnetID);
+      std::cout << cell->getRealName() << std::endl;
 
       CellTypeID cellID = eda::gate::model::makeCellType(
-          cell->getName(), netID, attrID,
+          cell->getRealName(), subnetID, cellTypeAttrID,
           eda::gate::model::CellSymbol::CELL,
-          props, static_cast<uint16_t>(cell->getInputPinsNumber()), 
+          props, static_cast<uint16_t>(cell->getInputPinsNumber()),
           static_cast<uint16_t>(1));
 
       cellTypeIDs.push_back(cellID);
     }
+    std::cout << cells.size();
     return cellTypeIDs;
   }
 

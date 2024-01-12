@@ -20,7 +20,7 @@ namespace eda::gate::model {
 typedef uint64_t ObjectPage;
 typedef char *SystemPage;
 
-static constexpr uint64_t PAGE_SIZE = 1024*1024;
+static constexpr uint64_t PAGE_SIZE = 64*1024*1024;
 static constexpr uint64_t PAGE_MASK = PAGE_SIZE - 1;
 
 class PageManager : public util::Singleton<PageManager> {

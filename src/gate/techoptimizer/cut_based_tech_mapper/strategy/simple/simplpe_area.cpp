@@ -7,6 +7,39 @@
 using Subnet = eda::gate::model::Subnet;
 namespace eda::gate::tech_optimizer {
 
+float calculateArea(std::unordered_set<uint64_t> entryIdxs, SubnetID subID,
+                     std::map<EntryIndex, BestReplacement> &bestReplacementMap) {
+  float area = 0;
+  Subnet &subnet = Subnet::get(subID);
+  eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
+
+  std::stack<uint64_t> stack;
+  std::unordered_set<uint64_t> visited;
+
+  for (const auto& out : entryIdxs) {
+    stack.push(out);
+    visited.insert(out);
+  }
+
+  while (!stack.empty()) {
+    EntryIndex currentEntryIDX = stack.top();
+    auto currentCell = entries[currentEntryIDX].cell;
+    if (!currentCell.isIn() && !currentCell.isOut()) {
+      BestSimpleReplacement *simpleReplacement = static_cast<BestSimpleReplacement*>
+          (&bestReplacementMap.at(currentEntryIDX));
+      area += simpleReplacement->area;
+    }
+    stack.pop();
+    for (const auto &link : currentCell.link) {
+      if (visited.find(link.idx) == visited.end()) {
+        stack.push(link.idx);
+        visited.insert(link.idx);
+      }
+    }
+  }
+  return area;
+}
+
 void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsList,
                                   std::map<EntryIndex, BestReplacement> &bestReplacementMap,
                                   CellDB &cellDB,
@@ -19,7 +52,6 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.size() != 1) {
       SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-      std::cout << Subnet::get(coneSubnetID) << std::endl;
 
       auto truthTable = eda::gate::model::evaluate(
           model::Subnet::get(coneSubnetID));
@@ -27,7 +59,8 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
       for (const SubnetID &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable)) {
         auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
 
-        float area = currentAttr->area;
+        float area = calculateArea(cut.entryIdxs, subnetID, bestReplacementMap)
+            + currentAttr->area;
         if (area < bestArea) {
           bestArea = area;
           bestSimpleReplacement.area = area;
@@ -37,6 +70,8 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
       }
     }
   }
+  std::cout << entryIndex << "вот такая площадь" << bestArea;
+  std::cout << model::Subnet::get(bestSimpleReplacement.subnetID) << bestArea;
   bestReplacementMap[entryIndex] = bestSimpleReplacement;
 }
 } // namespace eda::gate::tech_optimizer

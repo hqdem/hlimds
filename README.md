@@ -26,9 +26,11 @@ below are specific to this operating system:
 * `clang`
 * `clang-tidy`
 * `cmake`
+* `doxygen`
 * `flex`
 * `g++`
 * `gcc`
+* `graphviz`
 * `iverilog`
 * `libfmt-dev`
 * `liblpsolve55-dev`
@@ -43,8 +45,8 @@ below are specific to this operating system:
 
 To install them, do the following:
 ```
-sudo apt install autoconf bison clang clang-tidy cmake flex g++ gcc \
-    iverilog liblpsolve55-dev libtool lld make ninja-build python \
+sudo apt install autoconf bison clang clang-tidy cmake doxygen flex g++ gcc \
+    graphviz iverilog liblpsolve55-dev libtool lld make ninja-build python \
     python3-pip zlib1g zlib1g-dev
 ```
 Several Python packages should be installed too. Do the following:
@@ -123,7 +125,9 @@ or simply run the following script:
 If you've modified some of the project files, you can use `rebuild.sh` script
 for incremental build.
 
-### Utopia EDA Running
+During the project building, Doxygen (if installed) generates the documentation in HTML and LaTeX formats. The generated documentation is stored at the build/doc directory.
+
+### Running Utopia EDA
 
 ```
 rm -rf $UTOPIA_HOME/output

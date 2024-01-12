@@ -9,6 +9,7 @@
 #include "gate/model2/printer/printer.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/transformer/aigmapper.h"
 
 #include <limits.h>
 
@@ -27,16 +28,14 @@ namespace eda::gate::tech_optimizer {
   }
 
   SubnetID CutBasedTechMapper::techMap(SubnetID subnetID) {
-    // TODO
-    //if () {
-      //aigMap(net);
-    //}
+    transformer::AigMapper mapper;
+    const auto transformedSub  = mapper.transform(subnetID);
 
-    auto cutExtractor = findCuts(subnetID);
+    auto cutExtractor = findCuts(transformedSub);
 
-    auto bestReplacementMap = replacementSearch(subnetID, cutExtractor);
+    auto bestReplacementMap = replacementSearch(transformedSub, cutExtractor);
 
-    const SubnetID mappedSubnet = buildSubnet(subnetID, bestReplacementMap);
+    const SubnetID mappedSubnet = buildSubnet(transformedSub, bestReplacementMap);
 
     return mappedSubnet;
   }
@@ -101,7 +100,8 @@ namespace eda::gate::tech_optimizer {
       auto currentCell = entries[currentEntryIDX].cell;
 
       if (currentCell.isIn()) {
-        auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::IN);
+        auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::IN,
+                                            model::SubnetBuilder::INPUT);
         bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
         stack.pop();
 
@@ -115,17 +115,17 @@ namespace eda::gate::tech_optimizer {
         }
 
         if (readyForCreate) {
-          if (currentCell.isOut()) {
+          if (currentCell.isOut() || currentCell.type == eda::gate::model::CellSymbol::OUT) {
             auto cellID = subnetBuilder.addCell(
                 eda::gate::model::CellSymbol::OUT,
-                Subnet::Link(currentCell.link[0].idx));
+                Subnet::Link(currentCell.link[0].idx), model::SubnetBuilder::OUTPUT);
             bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
             stack.pop();
           } else {
             Subnet::LinkList linkList;
 
             for (const auto &idx : bestReplacementMap.at(currentEntryIDX).entryIDxs) {
-              Subnet::Link link(idx);
+              Subnet::Link link(bestReplacementMap.at(idx).cellIDInMappedSubnet);
               linkList.push_back(link);
             }
 
@@ -149,10 +149,10 @@ namespace eda::gate::tech_optimizer {
         }
       }
 
-      for (const auto &link : currentCell.link) {
-        if (visited.find(link.idx) == visited.end()) {
-          stack.push(link.idx);
-          visited.insert(link.idx);
+      for (const auto &link : bestReplacementMap[currentEntryIDX].entryIDxs) {
+        if (visited.find(link) == visited.end()) {
+          stack.push(link);
+          visited.insert(link);
         }
       }
     }

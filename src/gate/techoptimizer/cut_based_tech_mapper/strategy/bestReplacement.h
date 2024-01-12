@@ -31,6 +31,5 @@ namespace eda::gate::tech_optimizer {
 
     // Entry indices in the mapped circuit
     std::unordered_set<uint64_t> entryIDxs;
-
   };
 } // namespace eda::gate::tech_optimizer

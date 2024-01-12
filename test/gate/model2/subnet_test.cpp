@@ -25,12 +25,12 @@ SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   LinkList links;
 
   for (size_t i = 0; i < arity; i++) {
-    const auto idx = builder.addCell(IN, SubnetBuilder::INPUT);
+    const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
 
   const auto idx = builder.addCellTree(symbol, links, k);
-  builder.addCell(OUT, Link(idx), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(idx));
 
   return builder.make();
 }
@@ -46,7 +46,7 @@ TEST(SubnetTest, SimpleTest) {
 
   size_t idx[InNum];
   for (size_t i = 0; i < InNum; ++i) {
-    idx[i] = subnetBuilder.addCell(IN, SubnetBuilder::INPUT);
+    idx[i] = subnetBuilder.addInput();
   }
 
   for (size_t n = (InNum >> 1); n != 0; n >>= 1) {
@@ -58,7 +58,7 @@ TEST(SubnetTest, SimpleTest) {
     }
   }
 
-  subnetBuilder.addCell(OUT, Link(idx[0]), SubnetBuilder::OUTPUT);
+  subnetBuilder.addOutput(Link(idx[0]));
 
   const auto &subnet = Subnet::get(subnetBuilder.make());
   EXPECT_EQ(subnet.getInNum(), InNum);

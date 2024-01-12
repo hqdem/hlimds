@@ -124,14 +124,14 @@ TEST(ReedMullerModel2, subnetToSubnetOn3Vars) {
   SubnetBuilder builder;
   size_t idx[3];
   for (int i = 0; i < 3; ++i) {
-    idx[i] = builder.addCell(model::IN, SubnetBuilder::INPUT);
+    idx[i] = builder.addInput();
   }
   LinkList output;
   output.push_back(Link(idx[1]));
   output.push_back(Link(builder.addCell(model::AND, {Link(idx[1]), Link(idx[2])})));
   output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[2])})));
   size_t out = builder.addCell(model::XOR, output);
-  builder.addCell(model::OUT, Link(out), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(out));
 
   const auto &subnet = Subnet::get(builder.make());
   const auto &net = Subnet::get(net1);
@@ -145,7 +145,7 @@ TEST(ReedMullerModel2, subnetToSubnetOn3VarsWith1) {
   SubnetBuilder builder;
   size_t idx[3];
   for (int i = 0; i < 3; ++i) {
-    idx[i] = builder.addCell(model::IN, SubnetBuilder::INPUT);
+    idx[i] = builder.addInput();
   }
   LinkList output;
   output.push_back(Link(idx[0], true));
@@ -153,7 +153,7 @@ TEST(ReedMullerModel2, subnetToSubnetOn3VarsWith1) {
   output.push_back(Link(idx[2]));
   output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[1]), Link(idx[2])})));
   size_t out = builder.addCell(model::XOR, output);
-  builder.addCell(model::OUT, Link(out), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(out));
   
   const auto &subnet = Subnet::get(builder.make());
   const auto &net = Subnet::get(net1);
@@ -168,7 +168,7 @@ TEST(ReedMullerModel2, subnetToSubnetOn4Vars) {
   SubnetBuilder builder;
   size_t idx[4];
   for (int i = 0; i < 4; ++i) {
-    idx[i] = builder.addCell(model::IN, SubnetBuilder::INPUT);
+    idx[i] = builder.addInput();
   }
   LinkList output;
   output.push_back(Link(idx[0]));
@@ -184,7 +184,7 @@ TEST(ReedMullerModel2, subnetToSubnetOn4Vars) {
   output.push_back(split);
   
   size_t out = builder.addCell(model::XOR, output);
-  builder.addCell(model::OUT, Link(out), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(out));
 
   const auto &subnet = Subnet::get(builder.make());
   const auto &net = Subnet::get(net1);

@@ -33,7 +33,7 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
         max[i] = std::max(max[i], max[link.idx]);
       }
 
-      if (!cell.isPO()) {
+      if (!cell.isOut()) {
         min[i]++; max[i]++;
       }
     }
@@ -56,9 +56,6 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
     const auto &type = cell.getType();
 
     out << i << " <= " << type.getName();
-    if (cell.in) {
-      out << (cell.dummy ? "[dummy]" : "[input]");
-    }
     out << "(";
 
     bool comma = false;
@@ -83,6 +80,36 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
 //===----------------------------------------------------------------------===//
 // Subnet Builder
 //===----------------------------------------------------------------------===//
+
+size_t SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
+  bool isPositive = !CellType::get(typeID).isNegative();
+  assert(isPositive && "Only positive cells are allowed in a subnet");
+
+  const bool in  = (typeID == CELL_TYPE_ID_IN);
+  const bool out = (typeID == CELL_TYPE_ID_OUT);
+  const auto idx = entries.size();
+
+  for (const auto link : links) {
+    auto &cell = entries[link.idx].cell;
+    assert(!cell.isOut());
+
+    // Update reference counts.
+    assert(cell.refcount < Subnet::Cell::MaxRefCount);
+    cell.refcount++;
+  }
+
+  entries.emplace_back(typeID, links);
+  if (in)  nIn++;
+  if (out) nOut++;
+
+  const auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
+  const auto InEntryLinks = Subnet::Cell::InEntryLinks;
+  for (size_t i = InPlaceLinks; i < links.size(); i += InEntryLinks) {
+    entries.emplace_back(links, i);
+  }
+
+  return idx;
+}
 
 size_t SubnetBuilder::addCellTree(
     CellSymbol symbol, const LinkList &links, uint16_t k) {
@@ -115,7 +142,7 @@ size_t SubnetBuilder::addCellTree(
 }
 
 size_t SubnetBuilder::addSubnet(
-    const SubnetID subnetID, const LinkList &links, Kind kind) {
+    const SubnetID subnetID, const LinkList &links) {
   const auto offset = entries.size();
 
   const auto &subnet = Subnet::get(subnetID);
@@ -137,11 +164,9 @@ size_t SubnetBuilder::addSubnet(
     const auto &cell = entries[i].cell;
     i += cell.more;
 
-    const auto isOutput = (cell.isOut() || entries[i].cell.isPO());
-    const auto newKind  = isOutput ? kind : INNER;
-    const auto newIndex = addCell(cell.getTypeID(), newLinks, newKind);
+    const auto newIndex = addCell(cell.getTypeID(), newLinks);
 
-    if (isOutput) {
+    if (cell.isOut()) {
       return newIndex;
     }
   }

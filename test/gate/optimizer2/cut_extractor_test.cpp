@@ -27,7 +27,7 @@ template<std::size_t N>
 std::array<std::size_t, N> makeInputs(SubnetBuilder &builder) {
   std::array<std::size_t, N> inputs;
   for (std::size_t i = 0; i < N; ++i) {
-    inputs[i] = builder.addCell(model::IN, SubnetBuilder::INPUT);
+    inputs[i] = builder.addInput();
   }
   return inputs;
 }
@@ -87,7 +87,7 @@ TEST(CutExtractorTest, OneAND) {
   auto inputs = makeInputs<2>(builder);
   std::size_t andIdx0 = builder.addCell(model::AND,
                                         { Link(inputs[0]), Link(inputs[1]) });
-  builder.addCell(model::OUT, Link(andIdx0), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx0));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 10);
@@ -108,7 +108,7 @@ TEST(CutExtractorTest, TwoAND) {
                                         { Link(inputs[0]), Link(inputs[1]) });
   std::size_t andIdx1 = builder.addCell(model::AND,
                                         { Link(andIdx0), Link(inputs[2]) });
-  builder.addCell(model::OUT, Link(andIdx1), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx1));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 10);
@@ -134,7 +134,7 @@ TEST(CutExtractorTest, Domination) {
                                         Link(andIdx0, true));
   std::size_t andIdx1 = builder.addCell(model::AND,
                                         { Link(andIdx0), Link(notIdx0) });
-  builder.addCell(model::OUT, Link(andIdx1), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx1));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 10);
@@ -166,7 +166,7 @@ TEST(CutExtractorTest, LimitedK) {
                                         { Link(notIdx4), Link(notIdx5) });
   std::size_t andIdx2 = builder.addCell(model::AND,
                                         { Link(andIdx0), Link(andIdx1) });
-  builder.addCell(model::OUT, Link(andIdx2), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx2));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 2);
@@ -201,7 +201,7 @@ TEST(CutExtractorTest, CutsIntersection) {
                                         { Link(inputs[1]), Link(inputs[2]) });
   std::size_t andIdx2 = builder.addCell(model::AND,
                                         { Link(andIdx0), Link(andIdx1) });
-  builder.addCell(model::OUT, Link(andIdx2), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx2));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 3);
@@ -226,7 +226,7 @@ TEST(CutExtractorTest, NoCuts) {
   std::size_t andIdx0 = builder.addCell(model::AND,
                                         { Link(inputs[0]), Link(inputs[1]),
                                           Link(inputs[2]) });
-  builder.addCell(model::OUT, Link(andIdx0), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx0));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 2);
@@ -248,7 +248,7 @@ TEST(CutExtractorTest, SameElementsInCuts) {
   std::size_t notIdx1 = builder.addCell(model::BUF, Link(inputs[0], true));
   std::size_t andIdx0 = builder.addCell(model::AND,
                                         { Link(notIdx0), Link(notIdx1) });
-  builder.addCell(model::OUT, Link(andIdx0), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx0));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 1);
@@ -270,7 +270,7 @@ TEST(CutExtractorTest, LinkEntriesInSubnet) {
                                         { Link(inputs[0]), Link(inputs[1]),
                                           Link(inputs[2]), Link(inputs[3]),
                                           Link(inputs[4]), Link(inputs[5]) });
-  builder.addCell(model::OUT, Link(andIdx0), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx0));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 6);
@@ -294,7 +294,7 @@ TEST(CutExtractorTest, GetEntriesIdxs) {
   auto inputs = makeInputs<2>(builder);
   std::size_t andIdx0 = builder.addCell(model::AND,
                                         { Link(inputs[0]), Link(inputs[1]) });
-  builder.addCell(model::OUT, Link(andIdx0), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx0));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 2);

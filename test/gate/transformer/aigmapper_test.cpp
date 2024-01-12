@@ -31,12 +31,12 @@ SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
   LinkList links;
 
   for (size_t i = 0; i < nIn; i++) {
-    const auto idx = builder.addCell(CellSymbol::IN, Builder::INPUT);
+    const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
 
   const auto idx = builder.addCellTree(symbol, links, arity);
-  builder.addCell(CellSymbol::OUT, Link(idx), Builder::OUTPUT);
+  builder.addOutput(Link(idx));
 
   return builder.make();
 }
@@ -48,7 +48,7 @@ TEST(AigTransformer, MAJ) {
 
   std::vector<size_t> idx;
   for (size_t i = 0; i < nIn; ++i) {
-    idx.push_back(builder.addCell(CellSymbol::IN, Builder::INPUT));
+    idx.push_back(builder.addInput());
   }
 
   for (size_t i = 0; i < nIn; ++i) {
@@ -56,7 +56,7 @@ TEST(AigTransformer, MAJ) {
   }
 
   idx.push_back(builder.addCell(CellSymbol::MAJ, links));
-  builder.addCell(CellSymbol::OUT, idx.back(), Builder::OUTPUT);
+  builder.addOutput(idx.back());
   const auto id = builder.make();
 
   const auto &oldSubnet = Subnet::get(id);

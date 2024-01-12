@@ -19,9 +19,10 @@ void ConeBuilder::addInput(const uint64_t origEntryIdx,
                            EntryMap &coneEntryToOrig) const {
 
   const auto &origCell = subnet->getEntries()[origEntryIdx].cell;
-  const auto inputKind = (origEntryIdx == rootEntryIdx) ? SubnetBuilder::INOUT :
-                                                          SubnetBuilder::INPUT;
-  uint64_t coneEntryIdx = builder.addCell(origCell.getSymbol(), inputKind);
+  // TODO: Needs to be checked.
+  //const auto inputKind = (origEntryIdx == rootEntryIdx) ? SubnetBuilder::INOUT :
+  //                                                        SubnetBuilder::INPUT;
+  uint64_t coneEntryIdx = builder.addCell(origCell.getSymbol()); // TODO: Needs to be checked: inputKind);
   origEntryToCone[origEntryIdx] = coneEntryIdx;
   coneEntryToOrig[coneEntryIdx] = origEntryIdx;
 }
@@ -121,8 +122,8 @@ ConeBuilder::Cone ConeBuilder::getCone(const uint64_t rootEntryIdx,
     subnetEntriesStack.pop();
     uint64_t coneEntryIdx;
     if (curEntryIdx == rootEntryIdx) {
-      coneEntryIdx = builder.addCell(curCell.getSymbol(), links,
-                                     SubnetBuilder::OUTPUT);
+      // TODO: Needs to be checked.
+      coneEntryIdx = builder.addCell(curCell.getSymbol(), links); // SubnetBuilder::OUTPUT);
     } else {
       coneEntryIdx = builder.addCell(curCell.getSymbol(), links);
     }

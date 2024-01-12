@@ -34,10 +34,6 @@ SubnetID AigMapper::transform(SubnetID id) {
     if (inv) {
       toInvert.insert(cellId);
     }
-    if (cell.isOut() && (symbol != CellSymbol::OUT)) {
-      Link linkOut(cellId, inv);
-      builder.addCell(CellSymbol::OUT, linkOut, Builder::OUTPUT);
-    }
 
     i += cell.more;
   }
@@ -95,12 +91,12 @@ LinkList AigMapper::getNewLinks(const CellIdMap &oldToNew, size_t idx,
 }
 
 size_t AigMapper::mapIn(Builder &builder) const {
-  return builder.addCell(CellSymbol::IN, Builder::INPUT);
+  return builder.addInput();
 }
 
 size_t AigMapper::mapOut(const LinkList &links, Builder &builder) const {
   assert(links.size() == 1 && "Only single input is allowed in OUT cell");
-  return builder.addCell(CellSymbol::OUT, links, Builder::OUTPUT);
+  return builder.addOutput(links.front());
 }
 
 size_t AigMapper::mapVal(bool val, Builder &builder) const {

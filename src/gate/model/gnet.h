@@ -327,7 +327,7 @@ public:
    *  @param connected Id of the gate which will become an input
    *  of removed gates' outputs.
    */
-  void mergeGates(GateId removed, GateId connected);
+  std::vector<GateId> mergeGates(GateId removed, GateId connected);
   //===--------------------------------------------------------------------===//
   // Convenience Methods
   //===--------------------------------------------------------------------===//

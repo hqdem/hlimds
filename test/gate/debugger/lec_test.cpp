@@ -35,6 +35,52 @@ CheckerResult fileLecTest(const std::string &fileName,
   return checker.equivalent(*initialNet, *premappedNet, gatesMap);
 }
 
+CheckerResult twoFilesLecTest(const std::string &fileName1,
+                              const std::string &fileName2,
+                              BaseChecker &checker,
+                              const std::string &subPath1,
+                              const std::string &subPath2) {
+  Exts ext1 = getExt(fileName1);
+  Exts ext2 = getExt(fileName2);
+  if (ext1 == Exts::UNSUPPORTED || ext2 == Exts::UNSUPPORTED) {
+    CHECK(false) << "Unsupported HDL!\n";
+    return CheckerResult::ERROR;
+  }
+
+  GNet compiledNet1 = getModel(fileName1, subPath1, ext1);
+  GNet compiledNet2 = getModel(fileName2, subPath2, ext2);
+
+  compiledNet1.sortTopologically();
+  compiledNet2.sortTopologically();
+
+  std::vector<GateId> inputs1;
+  std::vector<GateId> inputs2;
+  std::vector<GateId> outputs1;
+  std::vector<GateId> outputs2;
+  std::unordered_map<GateId, GateId> inOutMap;
+
+  for (auto link : compiledNet1.sourceLinks()) {
+    inputs1.push_back(link.target);
+  }
+  for (auto link : compiledNet2.sourceLinks()) {
+    inputs2.push_back(link.target);
+  }
+  for (auto link : compiledNet1.targetLinks()) {
+    outputs1.push_back(link.source);
+  }
+  for (auto link : compiledNet2.targetLinks()) {
+    outputs2.push_back(link.source);
+  }
+  for (size_t i = 0; i < inputs1.size(); i++) {
+    inOutMap[inputs1[i]] = inputs2[i];
+  }
+  for (size_t i = 0; i < outputs1.size(); i++) {
+    inOutMap[outputs1[i]] = outputs2[i];
+  }
+
+  return checker.equivalent(compiledNet1, compiledNet2, inOutMap);
+}
+
 Checker::Hints checkerTestHints(unsigned N,
                                 const GNet &lhs,
                                 const Gate::SignalList &lhsInputs,

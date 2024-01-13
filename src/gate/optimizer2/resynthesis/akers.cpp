@@ -48,7 +48,7 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
   std::set<unsigned> dummy;
   for (uint32_t i = 0; i < nVariables; i++) {
     dummy.insert(i);
-    size_t cellId = subBuild.builder.addCell(model::IN, SubnetBuilder::INPUT);
+    size_t cellId = subBuild.builder.addInput();
     subBuild.idx.push_back(cellId);
   }
 
@@ -105,11 +105,13 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
     }
   }
   const Link link(subBuild.idx.back(), inv);
-  subBuild.builder.addCell(model::OUT, link, SubnetBuilder::OUTPUT);
-  auto it = dummy.begin();
-  for (; it != dummy.end(); it++) {
-    subBuild.builder.setDummy(subBuild.idx[*it]);
-  }
+  subBuild.builder.addOutput(link);
+
+  // TODO: Needs to be checked.
+  //auto it = dummy.begin();
+  //for (; it != dummy.end(); it++) {
+  //  subBuild.builder.setDummy(subBuild.idx[*it]);
+  //}
   return subBuild.builder.make();
 }
 

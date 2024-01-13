@@ -35,11 +35,13 @@ bool areMiterable(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
     CHECK(false) << "Nets do not have the same number of outputs" << std::endl;
     return false;
   }
-  if (net1.getInNum() != hints.sourceBinding.size()) {
+  CellToCell &sources = hints.sourceBinding;
+  CellToCell &targets = hints.targetBinding;
+  if (net1.getInNum() != sources.size() || sources.empty()) {
     CHECK(false) << "Hints have incorrect number of inputs" << std::endl;
     return false;
   }
-  if (net2.getOutNum() != hints.targetBinding.size()) {
+  if (net2.getOutNum() != targets.size() || targets.empty()) {
     CHECK(false) << "Hints have incorrect number of outputs" << std::endl;
     return false;
   }
@@ -56,7 +58,7 @@ Subnet miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
 
   auto itIn = hints.sourceBinding.begin();
   for (size_t i = 0; i < net1.getInNum(); ++i) {
-    size_t cellNum = subnetBuilder.addCell(IN, SubnetBuilder::INPUT);
+    size_t cellNum = subnetBuilder.addInput();
     map1[itIn->first] = cellNum;
     map2[itIn->second] = cellNum;
     itIn++;
@@ -75,7 +77,7 @@ Subnet miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
     itOut++;
   }
   Link orLink = subnetBuilder.addCell(OR, xors);
-  subnetBuilder.addCell(OUT, orLink, SubnetBuilder::OUTPUT);
+  subnetBuilder.addOutput(orLink);
   return Subnet::get(subnetBuilder.make());
 }
 

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "gate/debugger/base_checker.h"
 #include "gate/model2/subnet.h"
 
 using namespace eda::gate::model;
@@ -23,7 +22,54 @@ enum LecType {
 namespace eda::gate::debugger2 {
 using CellToCell = std::unordered_map<size_t, size_t>;
 using LecType = eda::gate::debugger2::options::LecType;
-using CheckerResult = eda::gate::debugger::CheckerResult;
+
+// Equivalence checkers return value
+// EQUAL returns if there is exhaustive check and nets are equal
+// UNKNOWN returns if there is NO exhaustive check and the result is undefined
+// NOTEQUAL returns if nets are not equal
+// ERROR returns if an error occured 
+struct CheckerResult {
+  enum Result {
+    ERROR = -2,
+    UNKNOWN = -1,
+    EQUAL = 0,
+    NOTEQUAL = 1,
+  };
+
+  Result result;
+
+  CheckerResult(Result result) : result(result) {}
+
+  CheckerResult(Result result, std::vector<uint64_t> counterEx) {
+    assert(result == Result::NOTEQUAL);
+    this->result = result;
+    this->counterEx = counterEx;
+  }
+
+  bool isError() {
+    return result == Result::ERROR;
+  }
+
+  bool isUnknown() {
+    return result == Result::UNKNOWN;
+  }
+
+  bool equal() {
+    return result == Result::EQUAL;
+  }
+
+  bool notEqual() {
+    return result == Result::NOTEQUAL;
+  }
+
+  std::vector<uint64_t> getCounterExample() {
+    assert(result == Result::NOTEQUAL);
+    return this->counterEx;
+  }
+
+private:
+  std::vector<uint64_t> counterEx = {};
+};
 
 class BaseChecker2 {
 public:

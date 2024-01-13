@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 
 namespace eda::gate::model {
 
@@ -241,3 +242,11 @@ struct Object {
 };
 
 } // namespace eda::gate::model
+
+template <uint64_t T, size_t S, size_t V, size_t Z>
+struct std::hash<eda::gate::model::ObjectID<T, S, V, Z>> {
+  size_t operator() (const eda::gate::model::ObjectID<T, S, V, Z> &o) const {
+    return static_cast<uint64_t>(o);
+  }
+};
+

@@ -217,6 +217,9 @@ public:
   /// Returns the number of out gates.
   size_t nOuts() const;
 
+  /// Returns the number of negations.
+  size_t nNegations() const;
+
   //===--------------------------------------------------------------------===//
   // Gates
   //===--------------------------------------------------------------------===//
@@ -324,7 +327,7 @@ public:
    *  @param connected Id of the gate which will become an input
    *  of removed gates' outputs.
    */
-  void mergeGates(GateId removed, GateId connected);
+  std::vector<GateId> mergeGates(GateId removed, GateId connected);
   //===--------------------------------------------------------------------===//
   // Convenience Methods
   //===--------------------------------------------------------------------===//

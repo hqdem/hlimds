@@ -35,7 +35,17 @@ find_package(LpSolve REQUIRED)
 find_package(Z3 REQUIRED)
 find_package(CTemplate REQUIRED COMPONENTS nothreads)
 find_package(Cudd REQUIRED)
+find_package(Yosys REQUIRED)
 
 add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)
+
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+  message("Doxygen is installed. Generating documentation...")
+  execute_process(COMMAND doxygen doc/Doxyfile)
+
+else ()
+  message("Can't find doxygen; to generate docs from sources please install it.")
+endif()

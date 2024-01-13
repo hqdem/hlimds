@@ -283,27 +283,25 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
   size_t idx[InNum];
   memset(idx, 0, sizeof(idx));
   for (size_t i = 0; i < (size_t)numVars; ++i) {
-    idx[i] = subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT);
+    idx[i] = subnetBuilder.addInput();
   }
 
   if (!output[0][size - 1]) { // 0 case
-    idx[InNum - 2] = subnetBuilder.addCell(model::ZERO, SubnetBuilder::INPUT);
-    idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
-        SubnetBuilder::OUTPUT);
+    idx[InNum - 2] = subnetBuilder.addCell(model::ZERO);
+    idx[InNum - 1] = subnetBuilder.addOutput(Link(idx[InNum - 2]));
 
     return subnetBuilder.make();
   } 
   if (output[0][size - 1] == 1) { // 1 case
-    idx[InNum - 2] = subnetBuilder.addCell(model::ONE, SubnetBuilder::INPUT);
-    idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
-        SubnetBuilder::OUTPUT);
+    idx[InNum - 2] = subnetBuilder.addCell(model::ONE);
+    idx[InNum - 1] = subnetBuilder.addOutput(Link(idx[InNum - 2]));
 
     return subnetBuilder.make();
   }
-
+  /// TODO: Exclude using a BUF cell.
   for (int i = numVars; i < numVars * 2; i++) { // negotiation
-    const Link link(idx[i - numVars]); // source
-    idx[i] = subnetBuilder.addCell(model::NOT, link);
+    const Link link(idx[i - numVars], true); // source
+    idx[i] = subnetBuilder.addCell(model::BUF, link);
   }
 
   for (int i = firstValId; i < size; i++) { // building subnet
@@ -325,8 +323,7 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
       }
     }
   }
-  idx[InNum - 1] = subnetBuilder.addCell(model::OUT, Link(idx[InNum - 2]), 
-      SubnetBuilder::OUTPUT);
+  idx[InNum - 1] = subnetBuilder.addOutput(Link(idx[InNum - 2]));
         
   return subnetBuilder.make();
 }

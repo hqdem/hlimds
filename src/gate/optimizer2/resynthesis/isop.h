@@ -22,14 +22,14 @@ namespace eda::gate::optimizer2::resynthesis {
 /// Synthesizes the Subnet by using a concrete algorithm.
 template<typename Algorithm>
 model::SubnetID launchAlgorithm(const kitty::dynamic_truth_table &func,
-                                const Algorithm &algorithm) {
+                                const Algorithm &algorithm,
+                                uint16_t maxArity = -1) {
 
   model::SubnetBuilder subnetBuilder;
 
   std::vector<size_t> inputs;
   for (size_t i = 0; i < func.num_vars(); ++i) {
-    inputs.push_back(
-        subnetBuilder.addCell(model::IN, model::SubnetBuilder::INPUT));
+    inputs.push_back(subnetBuilder.addInput());
   }
 
   uint32_t dummy{0xffffffff};
@@ -42,7 +42,7 @@ model::SubnetID launchAlgorithm(const kitty::dynamic_truth_table &func,
   if (one || zero) {
     output = subnetBuilder.addCell(one ? model::ONE : model::ZERO);
   } else {
-    output = algorithm.run(func, inputs, dummy, subnetBuilder);
+    output = algorithm.run(func, inputs, dummy, subnetBuilder, maxArity);
   }
 
   for (; dummy; dummy &= (dummy - 1)) {
@@ -50,10 +50,11 @@ model::SubnetID launchAlgorithm(const kitty::dynamic_truth_table &func,
     if (idx >= inputs.size()) {
       break;
     }
-    subnetBuilder.setDummy(idx);
+    // TODO: Needs to be checked.
+    // subnetBuilder.setDummy(idx);
   }
 
-  subnetBuilder.addCell(model::OUT, output, model::SubnetBuilder::OUTPUT);
+  subnetBuilder.addOutput(output);
 
   return subnetBuilder.make();
 }
@@ -70,27 +71,36 @@ public:
   using ISOP          = std::vector<Cube>;
   using KittyTT       = kitty::dynamic_truth_table;
   using Link          = model::Subnet::Link;
+  using LinkList      = model::Subnet::LinkList;
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetID      = model::SubnetID;
 
   /// Synthesizes the Subnet.
   SubnetID synthesize(const KittyTT &func, uint16_t maxArity = -1) override {
-    /// TODO: Take into account the restriction on arity.
-    return launchAlgorithm<MinatoMorrealeAlg>(func, *this);
+    return launchAlgorithm<MinatoMorrealeAlg>(func, *this, maxArity);
   }
 
   /// Synthesizes the Subnet for a non-constant function.
-  Link run(const KittyTT &func, const Inputs &inputs, uint32_t &dummy,
-           SubnetBuilder &subnetBuilder) const;
+  Link run(const KittyTT &func,
+           const Inputs &inputs,
+           uint32_t &dummy,
+           SubnetBuilder &subnetBuilder,
+           uint16_t maxArity = -1) const;
 
   /// Synthesizes the Subnet without output for passed ISOP.
-  Link synthFromISOP(const ISOP &cubes, const Inputs &inputs, uint32_t &dummy,
-                     SubnetBuilder &subnetBuilder) const;
+  Link synthFromISOP(const ISOP &cubes,
+                     const Inputs &inputs,
+                     uint32_t &dummy,
+                     SubnetBuilder &subnetBuilder,
+                     uint16_t maxArity = -1) const;
 
 private:
 
-  Link synthFromCube(Cube cube, const Inputs &inputs, uint32_t &dummy,
-                     SubnetBuilder &subnetBuilder) const;
+  Link synthFromCube(Cube cube,
+                     const Inputs &inputs,
+                     uint32_t &dummy,
+                     SubnetBuilder &subnetBuilder,
+                     uint16_t maxArity = -1) const;
 
 };
 

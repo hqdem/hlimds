@@ -87,7 +87,7 @@ public:
   /// Constructs a wrapper around the given list structure.
   Array(ArrayID arrayID):
       arrayID(arrayID), block(access<ArrayBlock<T>>(arrayID)) {
-    // Only single-block array are supported.
+    // Only single-block arrays are supported.
     assert(block != nullptr && block->begin && block->end);
   }
 

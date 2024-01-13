@@ -1,8 +1,11 @@
 add_library(Gate OBJECT
+  analyzer/simulation_estimator.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
   debugger/checker.cpp
   debugger/encoder.cpp
+  debugger/fraig_checker.cpp
+  debugger/k_checker.cpp
   debugger/miter.cpp
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
@@ -50,6 +53,7 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
+  optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/bidecomposition.cpp
@@ -75,8 +79,11 @@ add_library(Gate OBJECT
   techoptimizer/cut_based_tech_mapper/tech_map_visitor.cpp
   techoptimizer/tech_optimizer.cpp
   simulator2/simulator.cpp
+  transformer/aigmapper.cpp
   transformer/bdd.cpp
-  transformer/hmetis.cpp)
+  transformer/hmetis.cpp
+  translator/yosys_converter_firrtl.cpp
+  translator/firrtl.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 
 target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/lib)
@@ -94,5 +101,7 @@ target_link_libraries(Gate
 
   PRIVATE
   Utopia::Util
+  CLI
+  Yosys::Yosys
   tinyxml2
 )

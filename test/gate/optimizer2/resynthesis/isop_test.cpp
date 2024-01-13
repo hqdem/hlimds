@@ -17,7 +17,7 @@
 using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
 using Subnet      = eda::gate::model::Subnet;
 
-bool ISOPManagerTest(size_t numVars) {
+bool ISOPTest(size_t numVars) {
 
   MinatoMorrealeAlg minatoMorrealeAlg;
 
@@ -30,7 +30,7 @@ bool ISOPManagerTest(size_t numVars) {
     }
     MinatoMorrealeAlg::KittyTT tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
-    const auto &subnet = Subnet::get(minatoMorrealeAlg.synthesize(tt, -1));
+    const auto &subnet = Subnet::get(minatoMorrealeAlg.synthesize(tt, 3));
     auto ttCopy = eda::gate::model::evaluate(subnet);
     flag &= (ttCopy == tt);
   }
@@ -38,42 +38,42 @@ bool ISOPManagerTest(size_t numVars) {
   return flag;
 }
 
-TEST(ISOPManagerTest, RandomFunc1Vars) {
-  EXPECT_TRUE(ISOPManagerTest(1));
+TEST(ISOPTest, RandomFunc1Vars) {
+  EXPECT_TRUE(ISOPTest(1));
 }
 
-TEST(ISOPManagerTest, RandomFunc2Vars) {
-  EXPECT_TRUE(ISOPManagerTest(2));
+TEST(ISOPTest, RandomFunc2Vars) {
+  EXPECT_TRUE(ISOPTest(2));
 }
 
-TEST(ISOPManagerTest, RandomFunc3Vars) {
-  EXPECT_TRUE(ISOPManagerTest(3));
+TEST(ISOPTest, RandomFunc3Vars) {
+  EXPECT_TRUE(ISOPTest(3));
 }
 
-TEST(ISOPManagerTest, RandomFunc4Vars) {
-  EXPECT_TRUE(ISOPManagerTest(4));
+TEST(ISOPTest, RandomFunc4Vars) {
+  EXPECT_TRUE(ISOPTest(4));
 }
 
-TEST(ISOPManagerTest, RandomFunc5Vars) {
-  EXPECT_TRUE(ISOPManagerTest(5));
+TEST(ISOPTest, RandomFunc5Vars) {
+  EXPECT_TRUE(ISOPTest(5));
 }
 
-TEST(ISOPManagerTest, RandomFunc6Vars) {
-  EXPECT_TRUE(ISOPManagerTest(6));
+TEST(ISOPTest, RandomFunc6Vars) {
+  EXPECT_TRUE(ISOPTest(6));
 }
 
-TEST(ISOPManagerTest, RandomFunc7Vars) {
-  EXPECT_TRUE(ISOPManagerTest(7));
+TEST(ISOPTest, RandomFunc7Vars) {
+  EXPECT_TRUE(ISOPTest(7));
 }
 
-TEST(ISOPManagerTest, RandomFunc8Vars) {
-  EXPECT_TRUE(ISOPManagerTest(8));
+TEST(ISOPTest, RandomFunc8Vars) {
+  EXPECT_TRUE(ISOPTest(8));
 }
 
-TEST(ISOPManagerTest, RandomFunc9Vars) {
-  EXPECT_TRUE(ISOPManagerTest(9));
+TEST(ISOPTest, RandomFunc9Vars) {
+  EXPECT_TRUE(ISOPTest(9));
 }
 
-TEST(ISOPManagerTest, RandomFunc10Vars) {
-  EXPECT_TRUE(ISOPManagerTest(10));
+TEST(ISOPTest, RandomFunc10Vars) {
+  EXPECT_TRUE(ISOPTest(10));
 }

@@ -28,30 +28,30 @@ using GNet = eda::gate::model::GNet;
 using LecType = eda::gate::debugger::options::LecType;
 
 // Equivalence checkers return value
-// EQUAL returns if there exhaustive check and nets are equal
-// UNKNOWN returns if there NO exhaustive check and the result is undefined
+// EQUAL returns if there is exhaustive check and nets are equal
+// UNKNOWN returns if there is NO exhaustive check and the result is undefined
 // NOTEQUAL returns if nets are not equal
-// ERROR returns if invalid arguments were given
+// ERROR returns if an error occured 
 struct CheckerResult {
-  enum Results {
+  enum Result {
     ERROR = -2,
     UNKNOWN = -1,
     EQUAL = 0,
     NOTEQUAL = 1,
   };
 
-  Results result;
+  Result result;
 
-  CheckerResult(Results result) : result(result) {}
+  CheckerResult(Result result) : result(result) {}
 
-  CheckerResult(Results result, std::vector<bool> counterEx) {
-    assert(result == Results::NOTEQUAL);
+  CheckerResult(Result result, std::vector<bool> counterEx) {
+    assert(result == Result::NOTEQUAL);
     this->result = result;
     this->counterEx = counterEx;
   }
 
-  CheckerResult(Results result, size_t counterExVal, size_t valSize) {
-    assert(result == Results::NOTEQUAL);
+  CheckerResult(Result result, size_t counterExVal, size_t valSize) {
+    assert(result == Result::NOTEQUAL);
     this->result = result;
     this->counterEx.resize(valSize);
     for (size_t i = 0; i < valSize; i++) {
@@ -60,23 +60,23 @@ struct CheckerResult {
   }
 
   bool isError() {
-    return result == Results::ERROR;
+    return result == Result::ERROR;
   }
 
   bool isUnknown() {
-    return result == Results::UNKNOWN;
+    return result == Result::UNKNOWN;
   }
 
   bool equal() {
-    return result == Results::EQUAL;
+    return result == Result::EQUAL;
   }
 
   bool notEqual() {
-    return result == Results::NOTEQUAL;
+    return result == Result::NOTEQUAL;
   }
 
   std::vector<bool> getCounterExample() {
-    assert(result == Results::NOTEQUAL);
+    assert(result == Result::NOTEQUAL);
     return this->counterEx;
   }
 

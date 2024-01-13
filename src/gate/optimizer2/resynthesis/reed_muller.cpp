@@ -26,7 +26,7 @@ namespace eda::gate::optimizer2::resynthesis {
     std::vector<size_t> resultOutput;
 
     for (size_t i = 0; i < argNum; ++i) {
-      idx[i] = subnetBuilder.addCell(model::IN, SubnetBuilder::INPUT);
+      idx[i] = subnetBuilder.addCell(model::IN);
     }
 
     if (resultFunction[0]) {
@@ -84,7 +84,7 @@ namespace eda::gate::optimizer2::resynthesis {
     }
 
     size_t out = subnetBuilder.addCell(model::XOR, outNode);
-    subnetBuilder.addCell(model::OUT, Link(out), SubnetBuilder::OUTPUT);
+    subnetBuilder.addCell(model::OUT, Link(out));
     return subnetBuilder.make();
   }
 

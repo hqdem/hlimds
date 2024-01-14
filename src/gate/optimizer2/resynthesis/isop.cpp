@@ -14,28 +14,25 @@ using Link = MinatoMorrealeAlg::Link;
 
 Link MinatoMorrealeAlg::run(const KittyTT &func,
                             const Inputs &inputs,
-                            uint32_t &dummy,
                             SubnetBuilder &subnetBuilder,
                             uint16_t maxArity) const {
   return synthFromISOP(kitty::isop(func),
                        inputs,
-                       dummy,
                        subnetBuilder,
                        maxArity);
 }
 
 Link MinatoMorrealeAlg::synthFromISOP(const ISOP &cubes,
                                       const Inputs &inputs,
-                                      uint32_t &dummy,
                                       SubnetBuilder &subnetBuilder,
                                       uint16_t maxArity) const {
   if (cubes.size() == 1) {
-    return synthFromCube(cubes[0], inputs, dummy, subnetBuilder, maxArity);
+    return synthFromCube(cubes[0], inputs, subnetBuilder, maxArity);
   }
 
   LinkList links;
   for (auto it = cubes.begin(); it < cubes.end(); ++it) {
-    Link link = synthFromCube(*it, inputs, dummy, subnetBuilder, maxArity);
+    Link link = synthFromCube(*it, inputs, subnetBuilder, maxArity);
     link.inv = ~link.inv;
     links.push_back(std::move(link));
   }
@@ -45,7 +42,6 @@ Link MinatoMorrealeAlg::synthFromISOP(const ISOP &cubes,
 
 Link MinatoMorrealeAlg::synthFromCube(Cube cube,
                                       const Inputs &inputs,
-                                      uint32_t &dummy,
                                       SubnetBuilder &subnetBuilder,
                                       uint16_t maxArity) const {
   uint32_t mask {cube._mask};
@@ -54,7 +50,6 @@ Link MinatoMorrealeAlg::synthFromCube(Cube cube,
     size_t idx = std::log2(mask - (mask & (mask - 1)));
     bool inv = !(cube.get_bit(idx));
     links.push_back(Link(inputs[idx], inv));
-    dummy &= ~(1u << inputs[idx]);
   }
   if (links.size() == 1) {
     return links[0];

@@ -100,15 +100,15 @@ size_t AigMapper::mapOut(const LinkList &links, Builder &builder) const {
 }
 
 size_t AigMapper::mapVal(bool val, Builder &builder) const {
-    if (val) {
-      return builder.addCell(CellSymbol::ONE);
-    }
-    return builder.addCell(CellSymbol::ZERO);
+  if (val) {
+    return builder.addCell(CellSymbol::ONE);
+  }
+  return builder.addCell(CellSymbol::ZERO);
 }
 
 size_t AigMapper::mapBuf(const LinkList &links, Builder &builder) const {
-    assert(links.size() == 1 && "Only single input is allowed in BUF cell");
-    return builder.addCell(CellSymbol::BUF, links);
+  assert(links.size() == 1 && "Only single input is allowed in BUF cell");
+  return builder.addCell(CellSymbol::BUF, links);
 }
 
 size_t AigMapper::mapAnd(const LinkList &links, size_t n0, size_t n1,

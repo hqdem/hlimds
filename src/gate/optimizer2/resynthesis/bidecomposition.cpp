@@ -51,8 +51,8 @@ BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
                                  std::move(initBiClique.getInputs()),
                                  initBiClique.getIndices());
 
-  Link lhs = decompose(firstBiClique, subnetBuilder);
-  Link rhs = decompose(secondBiClique, subnetBuilder);
+  Link lhs = decompose(firstBiClique, subnetBuilder, maxArity);
+  Link rhs = decompose(secondBiClique, subnetBuilder, maxArity);
 
   return Link(subnetBuilder.addCell(model::AND, lhs, rhs), true);
 }

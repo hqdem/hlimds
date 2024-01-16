@@ -100,16 +100,13 @@ void printVerilog(const SubnetID subnetID) {
 
 bool checkAllCellsMapped(SubnetID subnetID) {
   bool isTotalMapped = true;
-  const auto &subnet = model::Subnet::get(subnetID);
-
-  eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
-  for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
-       entryIndex++) {
-    auto cell = entries[entryIndex].cell;
+  auto entr = model::Subnet::get(subnetID).getEntries();
+  for (uint64_t entryIndex = 0; entryIndex < std::size(entr); entryIndex++) {
+    auto cell = entr[entryIndex].cell;
     if (cell.isIn() || cell.isOut() || cell.isZero() || cell.isOne()) {
       continue;
     }
-    if (model::CellType::get(cell.type).getSymbol() != model::CellSymbol::CELL ) {
+    if (cell.getSymbol() != model::CellSymbol::CELL) {
       isTotalMapped = false;
     }
     entryIndex += cell.more;
@@ -164,6 +161,13 @@ TEST(TechMapTest, SimpleORSubnet) {
 
   SubnetID mappedSub = techmaper.techmap(primitiveORSub);
 
+  auto entries = model::Subnet::get(mappedSub).getEntries();
+  for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
+       entryIndex++) {
+    auto cell = entries[entryIndex].cell;
+    std::cout << cell.getSymbol() << std::endl;
+    entryIndex += cell.more;
+  }
   std::cout << model::Subnet::get(mappedSub) << std::endl;
   printVerilog(mappedSub);
 

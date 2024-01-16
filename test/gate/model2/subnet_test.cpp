@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
+#include "gate/model2/utils/subnet_cnf_encoder.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
@@ -71,6 +72,10 @@ TEST(SubnetTest, SimpleTest) {
   const auto length = subnet.getPathLength();
   std::cout << "Path lenth: min=" << length.first
             << ", max="  << length.second << std::endl;
+
+  eda::gate::solver::Solver solver;
+  SubnetEncoder::get().encode(subnet, solver);
+  EXPECT_TRUE(solver.solve());
 }
 
 TEST(SubnetTest, CellTreeTest) {

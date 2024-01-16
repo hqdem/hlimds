@@ -9,48 +9,49 @@
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/techoptimizer/library/cellDB.h"
 
+#include <algorithm>
 #include <random>
 
-using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using CellSymbol = eda::gate::model::CellSymbol;
 using CellType = eda::gate::model::CellType;
+using Link = eda::gate::model::Subnet::Link;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
 namespace eda::gate::tech_optimizer {
 
 CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
+  for (const CellTypeID &cellTypeID : cellTypeIDs) {
+    CellType &cellType = CellType::get(cellTypeID);
 
-  for (const CellTypeID cellTypeID : cellTypeIDs) {
-    CellType cellType = CellType::get(cellTypeID);
-    SubnetBuilder subnetBuilder;
+    for (int rotate = 0; rotate < cellType.getInNum(); rotate++) {
+      SubnetBuilder subnetBuilder;
+      std::vector<Link> linkList;
+      for (size_t i = 0; i < cellType.getInNum(); ++i) {
+        auto inputIdx = subnetBuilder.addCell(CellSymbol::IN, SubnetBuilder::INPUT);
+        linkList.emplace_back(inputIdx);
+      }
 
-    size_t inNum = cellType.getInNum();
-    size_t idx[inNum];
-    std::vector<eda::gate::model::Subnet::Link> linkList;
-    for (size_t i = 0; i < inNum; ++i) {
-      idx[i] = subnetBuilder.addCell(model::CellSymbol::IN, SubnetBuilder::INPUT);
-      linkList.push_back(idx[i]);
+      std::rotate(linkList.begin(), linkList.end() - rotate, linkList.end());
+
+      auto cellIdx = subnetBuilder.addCell(cellTypeID, linkList);
+
+      subnetBuilder.addCell(CellSymbol::OUT,
+                            Link(cellIdx), SubnetBuilder::OUTPUT);
+
+      SubnetID subnetID = subnetBuilder.make();
+
+      subnets.push_back(subnetID);
+
+      Subnetattr subnetattr{"LibraryCell", cellType.getAttr().area};
+      subnetToAttr.emplace_back(subnetID, subnetattr);
+
+      ttSubnet.emplace_back(model::evaluate(
+          cellType.getSubnet()), subnetID);
     }
-
-    idx[inNum] = subnetBuilder.addCell(cellTypeID, linkList);
-
-    subnetBuilder.addCell(model::CellSymbol::OUT,
-        eda::gate::model::Subnet::Link(idx[inNum]), SubnetBuilder::OUTPUT);
-
-    SubnetID subnetID = subnetBuilder.make();
-
-    subnets.push_back(subnetID);
-
-    Subnetattr subnetattr{"super", cellType.getAttr().area};
-    subnetToAttr.push_back(std::make_pair(subnetID, subnetattr));
-
-    ttSubnet.push_back(std::make_pair(eda::gate::model::evaluate(
-        cellType.getSubnet()), subnetID));
-    std::cout <<  model::Subnet::get(subnetID) << std::endl;
-    std::cout <<  kitty::to_binary(eda::gate::model::evaluate(
-        cellType.getSubnet())) << std::endl;
   }
 }
 
-std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table& tt) {
+std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table& tt) const {
   std::vector<SubnetID> ids;
   for (const auto& pair : ttSubnet) {
     if (pair.first == tt) {
@@ -60,7 +61,7 @@ std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table&
   return ids;
 }
 
-std::optional<Subnetattr> CellDB::getSubnetAttrBySubnetID(SubnetID id) {
+std::optional<Subnetattr> CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
   for (const auto& pair : subnetToAttr) {
     if (pair.first == id) {
       return pair.second;

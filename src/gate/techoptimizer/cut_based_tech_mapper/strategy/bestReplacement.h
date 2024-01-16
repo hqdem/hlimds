@@ -24,7 +24,11 @@ namespace eda::gate::tech_optimizer {
     size_t cellIDInMappedSubnet = ULLONG_MAX;
 
     // Sunbnet with custom cell from CellDB
-    SubnetID subnetID;
+    SubnetID subnetID = 0;
+    SubnetID getLibertySubnetID() const {
+      assert(subnetID != 0);
+      return subnetID;
+    }
 
     // matching technology cells inputs CellID with circuits CellID
     //std::unordered_map<EntryIndex, EntryIndex> matchMap;

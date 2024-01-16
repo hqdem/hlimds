@@ -13,6 +13,8 @@
 
 #include <limits.h>
 
+const int MAX_CUT_SIZE = 6;
+
 namespace eda::gate::tech_optimizer {
 
   using Subnet = model::Subnet;
@@ -31,8 +33,7 @@ namespace eda::gate::tech_optimizer {
     transformer::AigMapper mapper;
     const auto transformedSub  = mapper.transform(subnetID);
 
-    auto cutExtractor = findCuts(transformedSub);
-
+    CutExtractor cutExtractor(&model::Subnet::get(transformedSub), MAX_CUT_SIZE);
     auto bestReplacementMap = replacementSearch(transformedSub, cutExtractor);
 
     const SubnetID mappedSubnet = buildSubnet(transformedSub, bestReplacementMap);
@@ -54,6 +55,8 @@ namespace eda::gate::tech_optimizer {
     std::map<EntryIndex, BestReplacement> bestReplacementMap;
     Subnet &subnet = Subnet::get(subnetID);
 
+    std::cout <<  subnet << std::endl;
+
     eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
     for (uint64_t entryIndex = 0; entryIndex < std::size(entries); 
         entryIndex++) {
@@ -70,7 +73,8 @@ namespace eda::gate::tech_optimizer {
         bestReplacement.entryIDxs.insert(cell.link[0].idx);
         bestReplacementMap[entryIndex] = bestReplacement;
       } else {
-        // Save best tech cells subnet to bestReplMap 
+        // Save best tech cells subnet to bestReplMap
+        std::cout <<  entryIndex  << std::endl;
         strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
             bestReplacementMap, cellDB, subnetID);
       }
@@ -134,6 +138,7 @@ namespace eda::gate::tech_optimizer {
             for (const auto &techCellEntry : techCellEntries) {
               auto techCell = techCellEntry.cell;
               if (!techCell.isIn() && !techCell.isOut()) {
+                std::cout << model::CellType::get(techCell.getTypeID()).getName()  << std::endl;
                 auto cellID = subnetBuilder.addCell(techCell.getTypeID(), linkList);
                 bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
               }

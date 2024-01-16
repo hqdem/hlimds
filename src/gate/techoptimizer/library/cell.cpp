@@ -53,21 +53,20 @@ double Pin::getMaxDelay() const {
 //===----------------------------------------------------------------------===//
 
 Cell::Cell(const std::string &name, const std::vector<Pin> &inputPins,
-          kitty::dynamic_truth_table *truthTable, const std::string &realName, 
+          kitty::dynamic_truth_table *truthTable,
           double area)
   : name(name), inputPins(inputPins), truthTable(truthTable),
-      realName(realName), area(area) {}
+  area(area) {}
 
 Cell::Cell(const std::string &name, const std::vector<Pin> &inputPins,
-          kitty::dynamic_truth_table *truthTable, const std::string &realName)
+          kitty::dynamic_truth_table *truthTable)
   : name(name), inputPins(inputPins), truthTable(truthTable),
-      realName(realName), area(0.0) {}
+  area(0.0) {}
 
 Cell::Cell(kitty::dynamic_truth_table *truthTable) :
   name(""), inputPins({}), truthTable(truthTable) {}
 
 const std::string &Cell::getName() const {return name;}
-const std::string &Cell::getRealName() const {return realName;}
 double Cell::getArea() const {return area;}
 kitty::dynamic_truth_table *Cell::getTruthTable() const {return truthTable;}
 unsigned Cell::getInputPinsNumber() const {return inputPins.size();}
@@ -117,24 +116,21 @@ void LibraryCells::readLibertyFile(const std::string &filename) {
     while (getline(ss, token, ' ')) {
       inputPinNames.push_back(token);
     }
-    int i = 0;
-    do {
-      i++;
-      std::vector<Pin> pins;
-      for (const auto &name: inputPinNames) {
-        const auto &cell = it.value()["delay"][name];
-        pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
-          cell["fall_transition"], cell["rise_transition"]));
-      }
 
-      kitty::dynamic_truth_table *truthTable =
-        new kitty::dynamic_truth_table(inputPinNames.size());
-      kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
+    std::vector<Pin> pins;
+    for (const auto &name: inputPinNames) {
+      const auto &cell = it.value()["delay"][name];
+      pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
+        cell["fall_transition"], cell["rise_transition"]));
+    }
 
-      Cell *cell = new Cell(it.key() + std::to_string(i), 
-          pins, truthTable, it.key() + std::string(""), it.value()["area"]);
-      cells.push_back(cell);
-    } while(next_permutation(inputPinNames.begin(), inputPinNames.end()));
+    kitty::dynamic_truth_table *truthTable =
+      new kitty::dynamic_truth_table(inputPinNames.size());
+    kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
+
+    Cell *cell = new Cell(it.key(),
+        pins, truthTable, it.value()["area"]);
+    cells.push_back(cell);
   }
 }
 
@@ -228,17 +224,15 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
 
       MinatoMorrealeAlg minatoMorrealeAlg;
       const auto subnetID = minatoMorrealeAlg.synthesize(*cell->getTruthTable());
-      std::cout << cell->getRealName() << std::endl;
 
       CellTypeID cellID = eda::gate::model::makeCellType(
-          cell->getRealName(), subnetID, cellTypeAttrID,
+          cell->getName(), subnetID, cellTypeAttrID,
           eda::gate::model::CellSymbol::CELL,
           props, static_cast<uint16_t>(cell->getInputPinsNumber()),
           static_cast<uint16_t>(1));
 
       cellTypeIDs.push_back(cellID);
     }
-    std::cout << cells.size();
     return cellTypeIDs;
   }
 

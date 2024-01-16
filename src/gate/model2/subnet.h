@@ -290,9 +290,14 @@ public:
   /// The operation should be regroupable (associative).
   size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
 
-  /// Adds the single-output subnet (marks the root as an output if required).
-  /// The cells to link the subnet inputs to should have been already added.
-  size_t addSubnet(const SubnetID subnetID, const LinkList &links);
+  /// Adds the subnet and connects it via the specified links.
+  /// Does not add the output cells (it should be done explicitly).
+  /// Returns the output links.
+  LinkList addSubnet(const SubnetID subnetID, const LinkList &links);
+
+  /// Adds the single-output subnet and connects it via the specified links.
+  /// Returns the output link.
+  Link addSingleOutputSubnet(const SubnetID subnetID, const LinkList &links);
 
   SubnetID make() {
     assert(nIn > 0 && nOut > 0 && !entries.empty());

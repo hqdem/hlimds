@@ -80,9 +80,6 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
       }
     }
   }
-  if (bestArea == MAXFLOAT) {
-    std::cout <<  "ненашли замену" << std::endl;
-  }
   std::cout <<  model::Subnet::get(bestSimpleReplacement.subnetID) << std::endl;
   bestReplacementMap[entryIndex] = bestSimpleReplacement;
 }

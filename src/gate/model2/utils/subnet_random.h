@@ -28,7 +28,7 @@ inline SubnetID randomSubnet(
   std::vector<size_t> cells(nCell);
 
   for (size_t i = 0; i < nIn; ++i) {
-    cells[i] = builder.addCell(IN, SubnetBuilder::INPUT);
+    cells[i] = builder.addInput();
   }
 
   // Arity distribution.
@@ -50,9 +50,7 @@ inline SubnetID randomSubnet(
   std::random_device device;
   std::mt19937 generator(device());
 
-  for (size_t i = nIn; i < nCell; ++i) {
-    auto kind = (i >= (nCell - nOut)) ? SubnetBuilder::OUTPUT
-                                      : SubnetBuilder::INNER;
+  for (size_t i = nIn; i < (nCell - nOut); ++i) {
     auto f = symbols[symbolIdx(generator)];
     auto k = arity(generator);
 
@@ -70,7 +68,14 @@ inline SubnetID randomSubnet(
       links[j] = Subnet::Link(cells[idx], inv);
     }
 
-    cells[i] = builder.addCell(f, links, kind);
+    cells[i] = builder.addCell(f, links);
+  }
+
+  // Link distribution.
+  std::uniform_int_distribution<size_t> cellIdx(0, nCell - nOut - 1);
+ 
+  for (size_t i = 0; i < nOut; ++i) {
+   builder.addOutput(cellIdx(generator));
   }
 
   return builder.make();

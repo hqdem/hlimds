@@ -20,7 +20,7 @@ Simulator::Simulator(const Subnet &subnet):
   for (size_t i = 0; i < entries.size(); ++i) {
     const auto cell = entries[i].cell;
 
-    if (!cell.in) {
+    if (!cell.isIn()) {
       program.emplace_back(getFunction(cell), i, subnet.getLinks(i));
       i += cell.more;
     }

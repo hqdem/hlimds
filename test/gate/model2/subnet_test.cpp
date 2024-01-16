@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
+#include "gate/model2/utils/subnet_cnf_encoder.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
@@ -25,12 +26,12 @@ SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   LinkList links;
 
   for (size_t i = 0; i < arity; i++) {
-    const auto idx = builder.addCell(IN, SubnetBuilder::INPUT);
+    const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
 
   const auto idx = builder.addCellTree(symbol, links, k);
-  builder.addCell(OUT, Link(idx), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(idx));
 
   return builder.make();
 }
@@ -46,7 +47,7 @@ TEST(SubnetTest, SimpleTest) {
 
   size_t idx[InNum];
   for (size_t i = 0; i < InNum; ++i) {
-    idx[i] = subnetBuilder.addCell(IN, SubnetBuilder::INPUT);
+    idx[i] = subnetBuilder.addInput();
   }
 
   for (size_t n = (InNum >> 1); n != 0; n >>= 1) {
@@ -58,7 +59,7 @@ TEST(SubnetTest, SimpleTest) {
     }
   }
 
-  subnetBuilder.addCell(OUT, Link(idx[0]), SubnetBuilder::OUTPUT);
+  subnetBuilder.addOutput(Link(idx[0]));
 
   const auto &subnet = Subnet::get(subnetBuilder.make());
   EXPECT_EQ(subnet.getInNum(), InNum);
@@ -71,6 +72,10 @@ TEST(SubnetTest, SimpleTest) {
   const auto length = subnet.getPathLength();
   std::cout << "Path lenth: min=" << length.first
             << ", max="  << length.second << std::endl;
+
+  eda::gate::solver::Solver solver;
+  SubnetEncoder::get().encode(subnet, solver);
+  EXPECT_TRUE(solver.solve());
 }
 
 TEST(SubnetTest, CellTreeTest) {

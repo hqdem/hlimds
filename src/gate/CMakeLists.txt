@@ -4,6 +4,7 @@ add_library(Gate OBJECT
   debugger/bdd_checker.cpp
   debugger/checker.cpp
   debugger/encoder.cpp
+  debugger/fraig_checker.cpp
   debugger/k_checker.cpp
   debugger/miter.cpp
   debugger/rnd_checker.cpp
@@ -57,6 +58,7 @@ add_library(Gate OBJECT
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/bidecomposition.cpp
   optimizer2/resynthesis/cascade.cpp
+  optimizer2/resynthesis/de_micheli.cpp
   optimizer2/resynthesis/isop.cpp
   optimizer2/resynthesis/reed_muller.cpp
   optimizer2/resynthesis/ternary_bi_clique.cpp

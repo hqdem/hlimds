@@ -45,6 +45,12 @@ bool coneValid(const Subnet &subnet,
                const uint64_t coneEntryIdx,
                const bool isMaxCone) {
 
+  const Subnet &coneSubnet = Subnet::get(cone.subnetID);
+  const auto &coneCell = coneSubnet.getEntries()[coneEntryIdx].cell;
+  if (coneCell.isOut()) {
+    const Link coneCellIn = coneSubnet.getLinks(coneEntryIdx)[0];
+    return coneValid(subnet, cone, coneCellIn.idx, isMaxCone);
+  }
   if (cone.coneEntryToOrig.find(coneEntryIdx) == cone.coneEntryToOrig.end()) {
     return false;
   }
@@ -52,14 +58,11 @@ bool coneValid(const Subnet &subnet,
     return false;
   }
   const uint64_t subnetEntryIdx = cone.coneEntryToOrig[coneEntryIdx];
-  const Subnet &coneSubnet = Subnet::get(cone.subnetID);
   const auto &subnetCell = subnet.getEntries()[subnetEntryIdx].cell;
-  const auto &coneCell = coneSubnet.getEntries()[coneEntryIdx].cell;
-  if (subnetCell.getSymbol() != coneCell.getSymbol()) {
-    return false;
-  }
-  if (!coneCell.isIn() && subnet.getLinks(subnetEntryIdx).size() !=
-      coneSubnet.getLinks(coneEntryIdx).size()) {
+  if (!coneCell.isIn() && (subnetCell.getSymbol() != coneCell.getSymbol() ||
+                           subnet.getLinks(subnetEntryIdx).size() !=
+                           coneSubnet.getLinks(coneEntryIdx).size())) {
+
     return false;
   }
   if (isMaxCone && subnetCell.isIn() != coneCell.isIn()) {
@@ -90,6 +93,11 @@ void cutConesValid(const Subnet &subnet,
   }
   const auto &subnetEntries = subnet.getEntries();
   for (uint64_t entryIdx = 0; entryIdx < subnetEntries.size(); ++entryIdx) {
+    const auto subnetCell = subnetEntries[entryIdx].cell;
+    if (subnetCell.isOut()) {
+      entryIdx += subnetCell.more;
+      continue;
+    }
     const auto &cuts = cutExtractor.getCuts(entryIdx);
     for (const auto &cut : cuts) {
       const Cone cone = coneBuilder.getCone(cut);
@@ -98,7 +106,7 @@ void cutConesValid(const Subnet &subnet,
       const auto &coneSubnetEntries = coneSubnet.getEntries();
       EXPECT_TRUE(coneValid(subnet, cone, coneSubnetEntries.size() - 1, false));
     }
-    entryIdx += subnetEntries[entryIdx].cell.more;
+    entryIdx += subnetCell.more;
   }
 }
 
@@ -110,20 +118,25 @@ void maxConesValid(const Subnet &subnet,
   }
   const auto &subnetEntries = subnet.getEntries();
   for (uint64_t entryIdx = 0; entryIdx < subnetEntries.size(); ++entryIdx) {
+    const auto subnetCell = subnetEntries[entryIdx].cell;
+    if (subnetCell.isOut()) {
+      entryIdx += subnetCell.more;
+      continue;
+    }
     const Cone cone = coneBuilder.getMaxCone(entryIdx);
     const auto &coneSubnetEntries = Subnet::get(cone.subnetID).getEntries();
     EXPECT_TRUE(coneValid(subnet, cone, coneSubnetEntries.size() - 1, true));
-    entryIdx += subnetEntries[entryIdx].cell.more;
+    entryIdx += subnetCell.more;
   }
 }
 
 TEST(ConeBuilderTest, SimpleTest) {
   SubnetBuilder builder;
 
-  std::size_t inputIdx0 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx1 = builder.addCell(model::IN, SubnetBuilder::INPUT);
+  std::size_t inputIdx0 = builder.addInput();
+  std::size_t inputIdx1 = builder.addInput();
   std::size_t andIdx0 = builder.addCell(model::AND, inputIdx0, inputIdx1);
-  builder.addCell(model::OUT, Link(andIdx0), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx0));
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 5);
@@ -135,7 +148,7 @@ TEST(ConeBuilderTest, SimpleTest) {
 TEST(ConeBuilderTest, OneElementCut) {
   SubnetBuilder builder;
 
-  builder.addCell(model::OUT, SubnetBuilder::INOUT);
+  builder.addOutput(builder.addInput());
   Subnet subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 2);
@@ -147,12 +160,12 @@ TEST(ConeBuilderTest, OneElementCut) {
 TEST(ConeBuilderTest, CutLimit) {
   SubnetBuilder builder;
 
-  std::size_t inputIdx0 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx1 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx2 = builder.addCell(model::IN, SubnetBuilder::INPUT);
+  std::size_t inputIdx0 = builder.addInput();
+  std::size_t inputIdx1 = builder.addInput();
+  std::size_t inputIdx2 = builder.addInput();
   std::size_t andIdx0 = builder.addCell(model::AND, inputIdx0, inputIdx1);
   std::size_t andIdx1 = builder.addCell(model::AND, andIdx0, inputIdx2);
-  builder.addCell(model::OUT, Link(andIdx1), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx1));
   Subnet subnet = Subnet::get(builder.make());
   CutExtractor cutExtractor(&subnet, 2);
   ConeBuilder coneBuilder(&subnet);
@@ -163,14 +176,14 @@ TEST(ConeBuilderTest, CutLimit) {
 TEST(ConeBuilderTest, OverlapLinks3UsagesCut) {
   SubnetBuilder builder;
 
-  std::size_t inputIdx0 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx1 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx2 = builder.addCell(model::IN, SubnetBuilder::INPUT);
+  std::size_t inputIdx0 = builder.addInput();
+  std::size_t inputIdx1 = builder.addInput();
+  std::size_t inputIdx2 = builder.addInput();
   std::size_t bufIdx0 = builder.addCell(model::BUF, inputIdx2);
   std::size_t andIdx0 = builder.addCell(model::AND, bufIdx0, inputIdx1);
   std::size_t andIdx1 = builder.addCell(model::AND, bufIdx0, inputIdx0);
-  builder.addCell(model::AND, bufIdx0, andIdx0, andIdx1,
-                  SubnetBuilder::OUTPUT);
+  std::size_t andIdx2 = builder.addCell(model::AND, bufIdx0, andIdx0, andIdx1);
+  builder.addOutput(Link(andIdx2));
   Subnet subnet = Subnet::get(builder.make());
   CutExtractor cutExtractor(&subnet, 3);
   ConeBuilder coneBuilder(&subnet);
@@ -180,12 +193,12 @@ TEST(ConeBuilderTest, OverlapLinks3UsagesCut) {
 TEST(ConeBuilderTest, MaxCone) {
   SubnetBuilder builder;
 
-  std::size_t inputIdx0 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx1 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx2 = builder.addCell(model::IN, SubnetBuilder::INPUT);
+  std::size_t inputIdx0 = builder.addInput();
+  std::size_t inputIdx1 = builder.addInput();
+  std::size_t inputIdx2 = builder.addInput();
   std::size_t andIdx0 = builder.addCell(model::AND, inputIdx0, inputIdx1);
   std::size_t andIdx1 = builder.addCell(model::AND, andIdx0, inputIdx2);
-  builder.addCell(model::OUT, Link(andIdx1), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx1));
   Subnet subnet = Subnet::get(builder.make());
   ConeBuilder coneBuilder(&subnet);
 
@@ -195,13 +208,13 @@ TEST(ConeBuilderTest, MaxCone) {
 TEST(ConeBuilderTest, OverlapLinks) {
   SubnetBuilder builder;
 
-  std::size_t inputIdx0 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx1 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx2 = builder.addCell(model::IN, SubnetBuilder::INPUT);
+  std::size_t inputIdx0 = builder.addInput();
+  std::size_t inputIdx1 = builder.addInput();
+  std::size_t inputIdx2 = builder.addInput();
   std::size_t andIdx0 = builder.addCell(model::AND, inputIdx0, inputIdx1);
   std::size_t andIdx1 = builder.addCell(model::AND, inputIdx1, inputIdx2);
   std::size_t andIdx2 = builder.addCell(model::AND, andIdx0, andIdx1);
-  builder.addCell(model::OUT, Link(andIdx2), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(andIdx2));
   Subnet subnet = Subnet::get(builder.make());
   ConeBuilder coneBuilder(&subnet);
   maxConesValid(subnet, coneBuilder);
@@ -210,10 +223,11 @@ TEST(ConeBuilderTest, OverlapLinks) {
 TEST(ConeBuilderTest, OverlapLinksReverse) {
   SubnetBuilder builder;
 
-  std::size_t inputIdx0 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx1 = builder.addCell(model::IN, SubnetBuilder::INPUT);
+  std::size_t inputIdx0 = builder.addInput();
+  std::size_t inputIdx1 = builder.addInput();
   std::size_t andIdx0 = builder.addCell(model::AND, inputIdx1, inputIdx0);
-  builder.addCell(model::AND, inputIdx1, andIdx0, SubnetBuilder::OUTPUT);
+  std::size_t andIdx1 = builder.addCell(model::AND, inputIdx1, andIdx0);
+  builder.addOutput(Link(andIdx1));
   Subnet subnet = Subnet::get(builder.make());
   ConeBuilder coneBuilder(&subnet);
   maxConesValid(subnet, coneBuilder);
@@ -222,14 +236,14 @@ TEST(ConeBuilderTest, OverlapLinksReverse) {
 TEST(ConeBuilderTest, OverlapLinks3UsagesMax) {
   SubnetBuilder builder;
 
-  std::size_t inputIdx0 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx1 = builder.addCell(model::IN, SubnetBuilder::INPUT);
-  std::size_t inputIdx2 = builder.addCell(model::IN, SubnetBuilder::INPUT);
+  std::size_t inputIdx0 = builder.addInput();
+  std::size_t inputIdx1 = builder.addInput();
+  std::size_t inputIdx2 = builder.addInput();
   std::size_t bufIdx0 = builder.addCell(model::BUF, inputIdx2);
   std::size_t andIdx0 = builder.addCell(model::AND, bufIdx0, inputIdx1);
   std::size_t andIdx1 = builder.addCell(model::AND, bufIdx0, inputIdx0);
-  builder.addCell(model::AND, bufIdx0, andIdx0, andIdx1,
-                  SubnetBuilder::OUTPUT);
+  std::size_t andIdx2 = builder.addCell(model::AND, bufIdx0, andIdx0, andIdx1);
+  builder.addOutput(Link(andIdx2));
   Subnet subnet = Subnet::get(builder.make());
   ConeBuilder coneBuilder(&subnet);
   maxConesValid(subnet, coneBuilder);
@@ -238,7 +252,7 @@ TEST(ConeBuilderTest, OverlapLinks3UsagesMax) {
 TEST(ConeBuilderTest, OneElementMaxCone) {
   SubnetBuilder builder;
 
-  builder.addCell(model::OUT, SubnetBuilder::INOUT);
+  builder.addOutput(builder.addInput());
   Subnet subnet = Subnet::get(builder.make());
 
   ConeBuilder coneBuilder(&subnet);

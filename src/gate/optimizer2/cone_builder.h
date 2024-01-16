@@ -20,6 +20,7 @@ class ConeBuilder {
 public:
   using Subnet = model::Subnet;
   using SubnetID = model::SubnetID;
+  using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
   using SubnetBuilder = model::SubnetBuilder;
   using Cut = optimizer2::CutExtractor::Cut;

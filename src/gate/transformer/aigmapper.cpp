@@ -34,10 +34,6 @@ SubnetID AigMapper::transform(SubnetID id) {
     if (inv) {
       toInvert.insert(cellId);
     }
-    if (cell.isOut() && (symbol != CellSymbol::OUT)) {
-      Link linkOut(cellId, inv);
-      builder.addCell(CellSymbol::OUT, linkOut, Builder::OUTPUT);
-    }
 
     i += cell.more;
   }
@@ -95,24 +91,24 @@ LinkList AigMapper::getNewLinks(const CellIdMap &oldToNew, size_t idx,
 }
 
 size_t AigMapper::mapIn(Builder &builder) const {
-  return builder.addCell(CellSymbol::IN, Builder::INPUT);
+  return builder.addInput();
 }
 
 size_t AigMapper::mapOut(const LinkList &links, Builder &builder) const {
   assert(links.size() == 1 && "Only single input is allowed in OUT cell");
-  return builder.addCell(CellSymbol::OUT, links, Builder::OUTPUT);
+  return builder.addOutput(links.front());
 }
 
 size_t AigMapper::mapVal(bool val, Builder &builder) const {
-    if (val) {
-      return builder.addCell(CellSymbol::ONE);
-    }
-    return builder.addCell(CellSymbol::ZERO);
+  if (val) {
+    return builder.addCell(CellSymbol::ONE);
+  }
+  return builder.addCell(CellSymbol::ZERO);
 }
 
 size_t AigMapper::mapBuf(const LinkList &links, Builder &builder) const {
-    assert(links.size() == 1 && "Only single input is allowed in BUF cell");
-    return builder.addCell(CellSymbol::BUF, links);
+  assert(links.size() == 1 && "Only single input is allowed in BUF cell");
+  return builder.addCell(CellSymbol::BUF, links);
 }
 
 size_t AigMapper::mapAnd(const LinkList &links, size_t n0, size_t n1,

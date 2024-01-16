@@ -66,16 +66,14 @@ namespace eda::gate::tech_optimizer {
     LinkList links;
 
     for (size_t i = 0; i < arity; i++) {
-      const auto idx = builder.addCell(eda::gate::model::CellSymbol::IN,
-          SubnetBuilder::INPUT);
+      const auto idx = builder.addInput();
       links.emplace_back(Link(idx));
     }
 
     size_t idx = 0;
     idx = builder.addCell(eda::gate::model::CellSymbol::AND, links);
 
-    builder.addCell(eda::gate::model::CellSymbol::OUT, 
-        Link(idx), SubnetBuilder::OUTPUT);
+    builder.addOutput(idx);
 
     return builder.make();
   }

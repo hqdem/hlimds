@@ -35,12 +35,12 @@ SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
   LinkList links;
 
   for (size_t i = 0; i < nIn; i++) {
-    const auto idx = builder.addCell(CellSymbol::IN, Builder::INPUT);
+    const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
 
   const auto idx = builder.addCellTree(symbol, links, arity);
-  builder.addCell(CellSymbol::OUT, Link(idx), Builder::OUTPUT);
+  builder.addOutput(Link(idx));
 
   return builder.make();
 }
@@ -186,7 +186,7 @@ TEST(TechMapTest, SimpleSub) {
   LinkList links2;
 
   for (size_t i = 0; i < 2; i++) {
-    const auto idx = builder.addCell(model::IN, model::SubnetBuilder::INPUT);
+    const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
 
@@ -195,14 +195,14 @@ TEST(TechMapTest, SimpleSub) {
 
   links.clear();
   for (size_t i = 0; i < 2; i++) {
-    const auto idx = builder.addCell(model::IN, model::SubnetBuilder::INPUT);
+    const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
   const auto idx2 = builder.addCell(model::AND, links);
   links2.emplace_back(idx2);
 
   const auto idx3 = builder.addCell(model::AND, links2);
-  builder.addCell(model::OUT, Link(idx3), model::SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(idx3));
 
   SubnetID subnetID = builder.make();
 
@@ -212,7 +212,7 @@ TEST(TechMapTest, SimpleSub) {
   Techmaper techmaper;
 
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-                       "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+                       "/simple_liberty.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 
@@ -233,9 +233,9 @@ TEST(TechMapTest, ANDNOTNOTAND) {
   LinkList links;
   LinkList links2;
 
-  const auto idx0 = builder.addCell(model::IN, model::SubnetBuilder::INPUT);
+  const auto idx0 = builder.addInput();
   links.emplace_back(idx0);
-  const auto idx1 = builder.addCell(model::IN, model::SubnetBuilder::INPUT);
+  const auto idx1 = builder.addInput();
   links.emplace_back(idx1);
 
   const auto idx2 = builder.addCell(model::AND, Link(idx0, true), Link(idx1));
@@ -244,7 +244,7 @@ TEST(TechMapTest, ANDNOTNOTAND) {
 
   const auto idx4 = builder.addCell(model::AND, Link(idx2), Link(idx3));
 
-  builder.addCell(model::OUT, Link(idx4), model::SubnetBuilder::OUTPUT);
+  builder.addOutput(idx4);
 
   SubnetID subnetID = builder.make();
 

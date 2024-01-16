@@ -146,8 +146,7 @@ namespace eda::gate::tech_optimizer {
       std::cout << currentEntryIDX << std:: endl;
 
       if (currentCell.isIn()) {
-        auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::IN,
-                                            model::SubnetBuilder::INPUT);
+        auto cellID = subnetBuilder.addInput();
         bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
         stack.pop();
       } else if (currentCell.isZero()) {
@@ -174,12 +173,10 @@ namespace eda::gate::tech_optimizer {
 
         if (readyForCreate) {
           if (currentCell.isOut() || currentCell.type == eda::gate::model::CellSymbol::OUT) {
-            auto cellID = subnetBuilder.addCell(
-                eda::gate::model::CellSymbol::OUT,linkList,
-                model::SubnetBuilder::OUTPUT);
+            auto cellID = subnetBuilder.addOutput(linkList[0]);
             bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
           } else {
-            Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].getLibertySubnetID());
+            /*Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].getLibertySubnetID());
             eda::gate::model::Array<Subnet::Entry> techCellEntries = techSubnet.getEntries();
             for (const auto &techCellEntry : techCellEntries) {
               auto techCell = techCellEntry.cell;
@@ -187,12 +184,12 @@ namespace eda::gate::tech_optimizer {
                 auto cellID = subnetBuilder.addCell(techCell.getTypeID(), linkList);
                 bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
               }
-            }
-           /*
-            auto cellID = subnetBuilder.addSubnet(bestReplacementMap[currentEntryIDX].subnetID,
+            }*/
+            std::cout << bestReplacementMap[currentEntryIDX].subnetID << std::endl;
+            auto cellID = subnetBuilder.addSingleOutputSubnet(bestReplacementMap[currentEntryIDX].subnetID,
                                                   linkList);
-            bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
-            */
+            bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
+
           }
           stack.pop();
         }

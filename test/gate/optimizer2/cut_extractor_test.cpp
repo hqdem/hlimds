@@ -328,7 +328,7 @@ std::size_t andIdx1 = builder.addCell(model::AND,
                                       { Link(inputs[2]), Link(inputs[3]) });
 std::size_t andIdx2 = builder.addCell(model::AND,
                                       { Link(andIdx0), Link(andIdx1) });
-builder.addCell(model::OUT, Link(andIdx2), SubnetBuilder::OUTPUT);
+builder.addOutput(andIdx2);
 SubnetID subID = builder.make();
 Subnet subnet = Subnet::get(subID);
 

@@ -27,7 +27,7 @@ CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
       SubnetBuilder subnetBuilder;
       std::vector<Link> linkList;
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
-        auto inputIdx = subnetBuilder.addCell(CellSymbol::IN, SubnetBuilder::INPUT);
+        auto inputIdx = subnetBuilder.addInput();
         linkList.emplace_back(inputIdx);
       }
 
@@ -35,8 +35,7 @@ CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
 
       auto cellIdx = subnetBuilder.addCell(cellTypeID, linkList);
 
-      subnetBuilder.addCell(CellSymbol::OUT,
-                            Link(cellIdx), SubnetBuilder::OUTPUT);
+      subnetBuilder.addOutput(cellIdx);
 
       SubnetID subnetID = subnetBuilder.make();
 

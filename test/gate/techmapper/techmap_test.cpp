@@ -16,6 +16,7 @@
 
 #include "gtest/gtest.h"
 #include "gate/model2/object.h"
+#include "gate/model2/printer/printer.h"
 
 using Builder    = eda::gate::model::SubnetBuilder;
 using CellSymbol = eda::gate::model::CellSymbol;
@@ -44,6 +45,59 @@ SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
   return builder.make();
 }
 
+void printVerilog(const SubnetID subnetID) {
+  model::NetBuilder netBuilder;
+  const auto &subnet = model::Subnet::get(subnetID);
+
+  auto entries = subnet.getEntries();
+  model::CellID cellIDArray[std::size(entries)];
+
+  for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
+       entryIndex++) {
+    auto cell = entries[entryIndex].cell;
+    model::CellID cellID;
+    if (cell.isIn()) {
+      cellID = makeCell(model::IN);
+    } else if (cell.isOut()) {
+      cellID = makeCell(model::OUT, cellIDArray[cell.link[0].idx]);
+    } else {
+      model::Cell::LinkList linkList;
+
+      for (const auto &link : cell.link) {
+        linkList.emplace_back(cellIDArray[link.idx]);
+      }
+      if (cell.more > 0) {
+        for (int i = 1; i <= cell.more; i++) {
+          for (const auto &link :entries[entryIndex + i].link) {
+            linkList.emplace_back(cellIDArray[link.idx]);
+          }
+        }
+      }
+      cellID = makeCell(cell.getTypeID(), linkList);
+    }
+    cellIDArray[entryIndex] = cellID;
+    netBuilder.addCell(cellID);
+
+    entryIndex += cell.more;
+  }
+
+  // Create an instance of the NetPrinter class for the VERILOG format
+  eda::gate::model::NetPrinter& verilogPrinter =
+      eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+
+  // Open a stream for writing Verilog code to a file or console
+  std::ofstream outFile("test/data/gate/tech_mapper/print/techmappedNet.v");  // Or use std::cout to print to the console
+
+  // Call the NetPrinter::print method to generate Verilog code
+  verilogPrinter.print(outFile,
+                       model::Net::get(netBuilder.make()),
+                       "techmappedNet");
+
+  // Close the stream
+  outFile.close();
+
+}
+
 bool checkAllCellsMapped(SubnetID subnetID) {
   bool isTotalMapped = true;
   const auto &subnet = model::Subnet::get(subnetID);
@@ -57,21 +111,19 @@ bool checkAllCellsMapped(SubnetID subnetID) {
     }
     if (model::CellType::get(cell.type).getSymbol() != model::CellSymbol::CELL ) {
       isTotalMapped = false;
-
-      std::cout << model::CellType::get(cell.type).getSymbol() << "  " << entryIndex << std::endl;
     }
     entryIndex += cell.more;
   }
-  std::cout << model::CellSymbol::CELL << std::endl;
   return isTotalMapped;
 }
 
 TEST(TechMapTest, RandomSubnet) {
   SubnetID randomSubnet = model::randomSubnet(50, 13, 1000, 1, 2);
+  std::cout << model::Subnet::get(randomSubnet) << std::endl;
 
   Techmaper techmaper;
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-      "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+      "/simple_liberty.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 
@@ -88,13 +140,14 @@ TEST(TechMapTest, SimpleANDSubnet) {
 
   Techmaper techmaper;
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-                       "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+                       "/simple_liberty.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 
   SubnetID mappedSub = techmaper.techmap(primitiveANDSub);
 
   std::cout << model::Subnet::get(mappedSub) << std::endl;
+  printVerilog(mappedSub);
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
 }
@@ -112,6 +165,7 @@ TEST(TechMapTest, SimpleORSubnet) {
   SubnetID mappedSub = techmaper.techmap(primitiveORSub);
 
   std::cout << model::Subnet::get(mappedSub) << std::endl;
+  printVerilog(mappedSub);
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
 }

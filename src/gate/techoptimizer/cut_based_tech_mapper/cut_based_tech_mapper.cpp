@@ -55,8 +55,6 @@ namespace eda::gate::tech_optimizer {
     std::map<EntryIndex, BestReplacement> bestReplacementMap;
     Subnet &subnet = Subnet::get(subnetID);
 
-    std::cout <<  subnet << std::endl;
-
     eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
     for (uint64_t entryIndex = 0; entryIndex < std::size(entries); 
         entryIndex++) {
@@ -74,7 +72,6 @@ namespace eda::gate::tech_optimizer {
         bestReplacementMap[entryIndex] = bestReplacement;
       } else {
         // Save best tech cells subnet to bestReplMap
-        std::cout <<  entryIndex  << std::endl;
         strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
             bestReplacementMap, cellDB, subnetID);
       }
@@ -111,7 +108,11 @@ namespace eda::gate::tech_optimizer {
 
       } else {
         bool readyForCreate = true;
+        Subnet::LinkList linkList;
+
         for (const auto &idx : bestReplacementMap.at(currentEntryIDX).entryIDxs) {
+          Subnet::Link link(bestReplacementMap.at(idx).cellIDInMappedSubnet);
+          linkList.push_back(link);
           if (bestReplacementMap[idx].cellIDInMappedSubnet == ULLONG_MAX) {
             readyForCreate = false;
             break;
@@ -121,36 +122,26 @@ namespace eda::gate::tech_optimizer {
         if (readyForCreate) {
           if (currentCell.isOut() || currentCell.type == eda::gate::model::CellSymbol::OUT) {
             auto cellID = subnetBuilder.addCell(
-                eda::gate::model::CellSymbol::OUT,
-                Subnet::Link(currentCell.link[0].idx), model::SubnetBuilder::OUTPUT);
+                eda::gate::model::CellSymbol::OUT,linkList,
+                model::SubnetBuilder::OUTPUT);
             bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
-            stack.pop();
           } else {
-            Subnet::LinkList linkList;
-
-            for (const auto &idx : bestReplacementMap.at(currentEntryIDX).entryIDxs) {
-              Subnet::Link link(bestReplacementMap.at(idx).cellIDInMappedSubnet);
-              linkList.push_back(link);
-            }
-
-            Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].subnetID);
+            Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].getLibertySubnetID());
             eda::gate::model::Array<Subnet::Entry> techCellEntries = techSubnet.getEntries();
             for (const auto &techCellEntry : techCellEntries) {
               auto techCell = techCellEntry.cell;
               if (!techCell.isIn() && !techCell.isOut()) {
-                std::cout << model::CellType::get(techCell.getTypeID()).getName()  << std::endl;
                 auto cellID = subnetBuilder.addCell(techCell.getTypeID(), linkList);
                 bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
               }
             }
-
-            // when addSubnet() ready uncomment this and delete upper
-            //auto cellID = subnetBuilder.addSubnet(
-            //    bestReplacementMap[currentEntryIDX].subnetID, linkList);
-            //bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
-
-            stack.pop();
+           /*
+            auto cellID = subnetBuilder.addSubnet(bestReplacementMap[currentEntryIDX].subnetID,
+                                                  linkList);
+            bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
+            */
           }
+          stack.pop();
         }
       }
 

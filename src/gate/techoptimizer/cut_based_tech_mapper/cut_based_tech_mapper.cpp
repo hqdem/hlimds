@@ -30,16 +30,47 @@ namespace eda::gate::tech_optimizer {
   }
 
   SubnetID CutBasedTechMapper::techMap(SubnetID subnetID) {
+
+    auto startAIG = std::chrono::high_resolution_clock::now();
     transformer::AigMapper mapper;
     const auto transformedSub  = mapper.transform(subnetID);
+    auto endAIG = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> AIGTime = endAIG - startAIG;
 
+    auto startCut = std::chrono::high_resolution_clock::now();
     CutExtractor cutExtractor(&model::Subnet::get(transformedSub), MAX_CUT_SIZE);
-    auto bestReplacementMap = replacementSearch(transformedSub, cutExtractor);
+    auto endCut = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> CutFindTime = endCut - startCut;
 
+    auto startFindBestRepl = std::chrono::high_resolution_clock::now();
+    auto bestReplacementMap = replacementSearch(transformedSub, cutExtractor);
+    auto endFindBestRepl = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> CutFindBestReplTime = endFindBestRepl - startFindBestRepl;
+
+    auto startMapped = std::chrono::high_resolution_clock::now();
     const SubnetID mappedSubnet = buildSubnet(transformedSub, bestReplacementMap);
+    auto endMapped = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> CutMappedTime = endMapped - startMapped;
+
+    std::cout << "Функция AIG выполнялась " << AIGTime.count() << " секунд.\n";
+    std::cout << "Функция CutExtractor выполнялась " << CutFindTime.count() << " секунд.\n";
+    std::cout << "Функция FindBestRepl выполнялась " << CutFindBestReplTime.count() << " секунд.\n";
+    std::cout << "Функция Mapped выполнялась " << CutMappedTime.count() << " секунд.\n";
 
     return mappedSubnet;
   }
+
+/*SubnetID CutBasedTechMapper::techMap(SubnetID subnetID) {
+  transformer::AigMapper mapper;
+  const auto transformedSub  = mapper.transform(subnetID);
+
+  CutExtractor cutExtractor(&model::Subnet::get(transformedSub), MAX_CUT_SIZE);
+  auto bestReplacementMap = replacementSearch(transformedSub, cutExtractor);
+
+  const SubnetID mappedSubnet = buildSubnet(transformedSub, bestReplacementMap);
+
+  return mappedSubnet;
+}*/
   
   void CutBasedTechMapper::aigMap(SubnetID subnetID) {
   }

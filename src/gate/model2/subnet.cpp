@@ -168,7 +168,9 @@ SubnetBuilder::LinkList SubnetBuilder::addSubnet(
     i += cell.more;
 
     if (cell.isOut()) {
-      outs.push_back(cell.link[0]);
+      outs.push_back(newLinks[0]);
+    } else {
+      addCell(cell.getTypeID(), newLinks);
     }
   }
 

@@ -115,7 +115,7 @@ bool checkAllCellsMapped(SubnetID subnetID) {
 }
 
 TEST(TechMapTest, RandomSubnet) {
-  SubnetID randomSubnet = model::randomSubnet(50, 13, 1000, 1, 2);
+  SubnetID randomSubnet = model::randomSubnet(6, 3, 50, 1, 6);
   std::cout << model::Subnet::get(randomSubnet) << std::endl;
 
   Techmaper techmaper;
@@ -213,6 +213,47 @@ TEST(TechMapTest, SimpleSub) {
 
   techmaper.setLiberty(libertyDirrectTechMap.string() +
                        "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+  techmaper.setMapper(Techmaper::TechmaperType::FUNC);
+  techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
+
+  SubnetID mappedSub = techmaper.techmap(subnetID);
+
+  std::cout << model::Subnet::get(mappedSub) << std::endl;
+
+  EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
+TEST(TechMapTest, ANDNOTNOTAND) {
+  if (!getenv("UTOPIA_HOME")) {
+    FAIL() << "UTOPIA_HOME is not set.";
+  }
+  using Link = model::Subnet::Link;
+  using LinkList = model::Subnet::LinkList;
+
+  model::SubnetBuilder builder;
+  LinkList links;
+  LinkList links2;
+
+  const auto idx0 = builder.addCell(model::IN, model::SubnetBuilder::INPUT);
+  links.emplace_back(idx0);
+  const auto idx1 = builder.addCell(model::IN, model::SubnetBuilder::INPUT);
+  links.emplace_back(idx1);
+
+  const auto idx2 = builder.addCell(model::AND, Link(idx0, true), Link(idx1));
+
+  const auto idx3 = builder.addCell(model::AND, Link(idx0), Link(idx1, true));
+
+  const auto idx4 = builder.addCell(model::AND, Link(idx2), Link(idx3));
+
+  builder.addCell(model::OUT, Link(idx4), model::SubnetBuilder::OUTPUT);
+
+  SubnetID subnetID = builder.make();
+
+  const auto &subnet = model::Subnet::get(subnetID);
+  std::cout << subnet << std::endl;
+  Techmaper techmaper;
+
+  techmaper.setLiberty(libertyDirrectTechMap.string() +
+                       "/simple_liberty.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 

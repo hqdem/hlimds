@@ -48,14 +48,17 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
   eda::gate::optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   BestReplacement bestSimpleReplacement{};
   float bestArea = MAXFLOAT;
-
+  std::cout << entryIndex << std::endl;
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.size() != 1) {
+
       SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
+      std::cout << Subnet::get(coneSubnetID) << std::endl;
 
       auto truthTable = eda::gate::model::evaluate(
           model::Subnet::get(coneSubnetID));
+      std::cout << kitty::to_binary(truthTable) << std::endl;
 
       for (const SubnetID &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable)) {
         auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);

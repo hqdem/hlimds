@@ -20,6 +20,8 @@ namespace eda::gate::tech_optimizer {
   struct BestReplacement {
     bool isIN = false;
     bool isOUT = false;
+    bool isOne = false;
+    bool isZero = false;
 
     size_t cellIDInMappedSubnet = ULLONG_MAX;
 

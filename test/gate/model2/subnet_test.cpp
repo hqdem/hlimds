@@ -107,4 +107,46 @@ TEST(SubnetTest, CellTreeTest) {
   }
 }
 
+TEST(SubnetTest, BugTest) {
+  using Link = Subnet::Link;
+  using LinkList = Subnet::LinkList;
+
+  SubnetBuilder ANDSubnetBuilder;
+  size_t idx[2];
+  for (size_t i = 0; i < 2; ++i) {
+    idx[i] = ANDSubnetBuilder.addInput();
+  }
+  auto idxAND = ANDSubnetBuilder.addCell(AND, idx[0], idx[1]);
+  ANDSubnetBuilder.addOutput(Link(idxAND));
+  SubnetID ANDSubnet = ANDSubnetBuilder.make();
+  std::cout << "Subnet that will be used in SubnetBuilder" << std::endl;
+  std::cout << Subnet::get(ANDSubnet) << std::endl;
+
+  SubnetBuilder mainSubnetBuilder;
+  LinkList linkList;
+  for (size_t i = 0; i < 2; ++i) {
+    linkList.emplace_back(mainSubnetBuilder.addInput());
+  }
+  auto idxANDSubnetOut0 = mainSubnetBuilder.addSingleOutputSubnet(ANDSubnet, linkList);
+  std::cout << "idx of idxANDSubnetOut0: " << idxANDSubnetOut0.idx << std::endl;
+
+  linkList.clear();
+  for (size_t i = 0; i < 2; ++i) {
+    linkList.emplace_back(mainSubnetBuilder.addInput());
+  }
+  auto idxANDSubnetOut1 = mainSubnetBuilder.addSingleOutputSubnet(ANDSubnet, linkList);
+  std::cout << "idx of idxANDSubnetOut1: " << idxANDSubnetOut1.idx << std::endl;
+
+  linkList.clear();
+  linkList.emplace_back(idxANDSubnetOut0);
+  linkList.emplace_back(idxANDSubnetOut1);
+  auto idxANDSubnetOut2 = mainSubnetBuilder.addSingleOutputSubnet(ANDSubnet, linkList);
+  std::cout << "idx of idxANDSubnetOut2: " << idxANDSubnetOut2.idx << std::endl;
+
+  mainSubnetBuilder.addOutput(Link(idxANDSubnetOut2));
+  SubnetID mainSubnetId = mainSubnetBuilder.make();
+
+  std::cout << Subnet::get(mainSubnetId) << std::endl;
+}
+
 } // namespace eda::gate::model

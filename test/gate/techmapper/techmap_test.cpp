@@ -115,7 +115,7 @@ bool checkAllCellsMapped(SubnetID subnetID) {
 }
 
 TEST(TechMapTest, RandomSubnet) {
-  SubnetID randomSubnet = model::randomSubnet(6, 3, 50, 1, 6);
+  SubnetID randomSubnet = model::randomSubnet(6, 3, 50, 2, 6);
   std::cout << model::Subnet::get(randomSubnet) << std::endl;
 
   Techmaper techmaper;

@@ -18,7 +18,7 @@
 
 namespace eda::gate::model {
 
-SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
+static SubnetID makeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
@@ -36,18 +36,40 @@ SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   return builder.make();
 }
 
-TEST(SubnetTest, SimpleTest) {
+inline void checkMakeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
+  const auto &cellSubnet = Subnet::get(makeTreeSubnet(symbol, arity, arity));
+  const auto &treeSubnet = Subnet::get(makeTreeSubnet(symbol, arity, k));
+
+  EXPECT_EQ(evaluate(cellSubnet), evaluate(treeSubnet));
+}
+
+inline void testMakeTreeSubnet(CellSymbol symbol, size_t maxArity, uint16_t k) {
+  for (size_t i = 2; i <= maxArity; ++i) {
+    checkMakeTreeSubnet(symbol, i, k);
+  }
+}
+
+TEST(SubnetTest, CellTreeTest) {
+  constexpr size_t MaxArity = 10u;
+  constexpr size_t K = 2u;
+
+  checkMakeTreeSubnet(OR,  MaxArity, K);
+  checkMakeTreeSubnet(AND, MaxArity, K);
+  checkMakeTreeSubnet(XOR, MaxArity, K);
+}
+
+TEST(SubnetTest, AddCellTest) {
   using Link = Subnet::Link;
 
-  static constexpr size_t Depth  = 3u;
-  static constexpr size_t InNum  = (1u << Depth);
-  static constexpr size_t OutNum = 1u;
+  constexpr size_t Depth  = 3u;
+  constexpr size_t InNum  = (1u << Depth);
+  constexpr size_t OutNum = 1u;
 
-  SubnetBuilder subnetBuilder;
+  SubnetBuilder builder;
 
   size_t idx[InNum];
   for (size_t i = 0; i < InNum; ++i) {
-    idx[i] = subnetBuilder.addInput();
+    idx[i] = builder.addInput();
   }
 
   for (size_t n = (InNum >> 1); n != 0; n >>= 1) {
@@ -55,13 +77,13 @@ TEST(SubnetTest, SimpleTest) {
       const Link lhs(idx[(i << 1)]);
       const Link rhs(idx[(i << 1) | 1]);
 
-      idx[i] = subnetBuilder.addCell(((i & 1) ? AND : OR), lhs, rhs);
+      idx[i] = builder.addCell(((i & 1) ? AND : OR), lhs, rhs);
     }
   }
 
-  subnetBuilder.addOutput(Link(idx[0]));
+  builder.addOutput(Link(idx[0]));
 
-  const auto &subnet = Subnet::get(subnetBuilder.make());
+  const auto &subnet = Subnet::get(builder.make());
   EXPECT_EQ(subnet.getInNum(), InNum);
   EXPECT_EQ(subnet.getOutNum(), OutNum);
   EXPECT_EQ(subnet.size(), 1u << (Depth + 1));
@@ -78,33 +100,42 @@ TEST(SubnetTest, SimpleTest) {
   EXPECT_TRUE(solver.solve());
 }
 
-TEST(SubnetTest, CellTreeTest) {
-  static constexpr size_t Arity = 10u;
-  static constexpr size_t K     = 2u;
+TEST(SubnetTest, AddSingleOutputSubnetTest) {
+  using Link = Subnet::Link;
+  using LinkList = Subnet::LinkList;
 
-  // OR.
-  for (size_t i = 2; i < Arity; ++i) {
-    const auto &subnet = Subnet::get(makeSimpleSubnet(OR, i, i));
-    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(OR, i, K));
+  constexpr size_t InNum = 4;
+  constexpr size_t SubnetNum = 4;
+  constexpr size_t TotalInNum = InNum * SubnetNum;
 
-    EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
+  const auto subnetID = makeTreeSubnet(AND, InNum, 2);
+  const auto &subnet = Subnet::get(subnetID);
+
+  SubnetBuilder builder;
+
+  LinkList inputs(TotalInNum);
+  LinkList outputs(SubnetNum);
+
+  for (size_t i = 0; i < TotalInNum; ++i) {
+    inputs[i] = Link(builder.addInput());
   }
 
-  // AND.
-  for (size_t i = 2; i < Arity; ++i) {
-    const auto &subnet = Subnet::get(makeSimpleSubnet(AND, i, i));
-    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(AND, i, K));
+  for (size_t i = 0; i < SubnetNum; ++i) {
+    LinkList links(InNum);
+    for (size_t j = 0; j < InNum; ++j) {
+      links[j] = inputs[i*InNum + j];
+    }
 
-    EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
+    outputs[i] = builder.addSingleOutputSubnet(subnetID, links);
   }
 
-  // XOR.
-  for (size_t i = 2; i < Arity; ++i) {
-    const auto &subnet = Subnet::get(makeSimpleSubnet(XOR, i, i));
-    const auto &treeSubnet = Subnet::get(makeSimpleSubnet(XOR, i, K));
-
-    EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
+  for (const auto output : outputs) {
+    builder.addOutput(output);
   }
+
+  const auto &result = Subnet::get(builder.make());
+
+  EXPECT_EQ(result.size(), SubnetNum * subnet.size());
 }
 
 } // namespace eda::gate::model

@@ -28,7 +28,7 @@ float calculateArea(const std::unordered_set<uint64_t> &entryIdxs, const SubnetI
     if ((!currentCell.isIn() || currentCell.getSymbol() != model::CellSymbol::IN)
         && (!currentCell.isOut() || currentCell.getSymbol() != model::CellSymbol::OUT)) {
       area += cellDb.getSubnetAttrBySubnetID(bestReplacementMap.at(
-          currentEntryIDX).subnetID)->area;
+          currentEntryIDX).subnetID).area;
     }
     stack.pop();
     for (const auto &link : currentCell.link) {
@@ -64,7 +64,7 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
         auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
 
         float area = calculateArea(cut.entryIdxs, subnetID, bestReplacementMap, cellDB)
-            + currentAttr->area;
+            + currentAttr.area;
 
         if (area < bestArea) {
           bestArea = area;

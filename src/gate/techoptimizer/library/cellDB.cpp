@@ -60,13 +60,12 @@ std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table&
   return ids;
 }
 
-std::optional<Subnetattr> CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
+const Subnetattr &CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
   for (const auto& pair : subnetToAttr) {
     if (pair.first == id) {
       return pair.second;
     }
   }
-  return std::nullopt;
 }
 /*
     void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs) {

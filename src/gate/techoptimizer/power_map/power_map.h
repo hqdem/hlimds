@@ -37,7 +37,11 @@ namespace eda::gate::tech_optimizer {
 
   class BestReplacementPower : public BestReplacement{
     public:
-      BestReplacementPower() = default;
+      BestReplacementPower(){
+        areaFlow = 1000000.0;
+        switchFlow = 1000000.0;
+        cutIdx = 0;
+      };
       double switchFlow;
       double areaFlow;
       size_t cutIdx;

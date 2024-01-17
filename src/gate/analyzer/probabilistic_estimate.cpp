@@ -84,7 +84,8 @@ std::vector<double> ProbabilisticEstimate::probEstimator(const Subnet &subnet,
 
       for (size_t j = 0; j < cell.arity; ++j) {
         auto link = subnet.getLink(i, j);
-        p = link.inv ? (p * (1 - cellEstimate[link.idx])) : (p * cellEstimate[link.idx]);
+        auto cellEst = cellEstimate[link.idx];
+        p = p * (link.inv ? (1 - cellEst) : cellEst);
       }
 
     }
@@ -94,7 +95,8 @@ std::vector<double> ProbabilisticEstimate::probEstimator(const Subnet &subnet,
 
       for (size_t j = 0; j < cell.arity; ++j) {
         auto link = subnet.getLink(i, j);
-        p =  link.inv ? (p * cellEstimate[link.idx]) : (p * (1 - cellEstimate[link.idx]));
+        auto cellEst = cellEstimate[link.idx];
+        p = p * (link.inv ? cellEst : (1 - cellEst));
       }
 
       p = 1 - p;
@@ -121,14 +123,15 @@ std::vector<double> ProbabilisticEstimate::probEstimator(const Subnet &subnet,
       
       for (size_t j = 0; j < cell.arity; ++j) {
         auto link = subnet.getLink(i, j);
-        auto сellEst = cellEstimate[link.idx];
-        auto cellPr = link.inv ? (1 - сellEst) : сellEst;
+        auto cellEst = cellEstimate[link.idx];
+        auto cellPr = link.inv ? (1 - cellEst) : cellEst;
         arrProbability.push_back(cellPr);
       }
 
       size_t nArrProb = arrProbability.size();
 
-      p = cell.isMaj() ? majEstimate(arrProbability, nArrProb) : xorEstimate(arrProbability, nArrProb);
+      p = cell.isMaj() ? majEstimate(arrProbability, nArrProb)
+          : xorEstimate(arrProbability, nArrProb);
     }
 
     if (cell.isOut()) {

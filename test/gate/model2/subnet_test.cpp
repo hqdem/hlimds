@@ -19,11 +19,8 @@
 namespace eda::gate::model {
 
 static SubnetID makeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
-  using Link = Subnet::Link;
-  using LinkList = Subnet::LinkList;
-
   SubnetBuilder builder;
-  LinkList links;
+  Subnet::LinkList links;
 
   for (size_t i = 0; i < arity; i++) {
     const auto idx = builder.addInput();
@@ -31,7 +28,7 @@ static SubnetID makeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   }
 
   const auto idx = builder.addCellTree(symbol, links, k);
-  builder.addOutput(Link(idx));
+  builder.addOutput(Subnet::Link(idx));
 
   return builder.make();
 }
@@ -59,8 +56,6 @@ TEST(SubnetTest, CellTreeTest) {
 }
 
 TEST(SubnetTest, AddCellTest) {
-  using Link = Subnet::Link;
-
   constexpr size_t Depth  = 3u;
   constexpr size_t InNum  = (1u << Depth);
   constexpr size_t OutNum = 1u;
@@ -74,14 +69,14 @@ TEST(SubnetTest, AddCellTest) {
 
   for (size_t n = (InNum >> 1); n != 0; n >>= 1) {
     for (size_t i = 0; i < n; ++i) {
-      const Link lhs(idx[(i << 1)]);
-      const Link rhs(idx[(i << 1) | 1]);
+      const Subnet::Link lhs(idx[(i << 1)]);
+      const Subnet::Link rhs(idx[(i << 1) | 1]);
 
       idx[i] = builder.addCell(((i & 1) ? AND : OR), lhs, rhs);
     }
   }
 
-  builder.addOutput(Link(idx[0]));
+  builder.addOutput(Subnet::Link(idx[0]));
 
   const auto &subnet = Subnet::get(builder.make());
   EXPECT_EQ(subnet.getInNum(), InNum);
@@ -101,9 +96,6 @@ TEST(SubnetTest, AddCellTest) {
 }
 
 TEST(SubnetTest, AddSingleOutputSubnetTest) {
-  using Link = Subnet::Link;
-  using LinkList = Subnet::LinkList;
-
   constexpr size_t InNum = 4;
   constexpr size_t SubnetNum = 4;
   constexpr size_t TotalInNum = InNum * SubnetNum;
@@ -113,15 +105,11 @@ TEST(SubnetTest, AddSingleOutputSubnetTest) {
 
   SubnetBuilder builder;
 
-  LinkList inputs(TotalInNum);
-  LinkList outputs(SubnetNum);
-
-  for (size_t i = 0; i < TotalInNum; ++i) {
-    inputs[i] = Link(builder.addInput());
-  }
+  Subnet::LinkList inputs = builder.addInputs(TotalInNum);
+  Subnet::LinkList outputs(SubnetNum);
 
   for (size_t i = 0; i < SubnetNum; ++i) {
-    LinkList links(InNum);
+    Subnet::LinkList links(InNum);
     for (size_t j = 0; j < InNum; ++j) {
       links[j] = inputs[i*InNum + j];
     }
@@ -129,12 +117,9 @@ TEST(SubnetTest, AddSingleOutputSubnetTest) {
     outputs[i] = builder.addSingleOutputSubnet(subnetID, links);
   }
 
-  for (const auto output : outputs) {
-    builder.addOutput(output);
-  }
+  builder.addOutputs(outputs);
 
   const auto &result = Subnet::get(builder.make());
-
   EXPECT_EQ(result.size(), SubnetNum * subnet.size());
 }
 

@@ -132,7 +132,7 @@ TEST(TechMapTest, RandomSubnet) {
 }
 
 TEST(TechMapTest, SimpleANDSubnet) {
-  const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 1000, 2);
+  const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 13, 2);
   std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
 
   Techmaper techmaper;

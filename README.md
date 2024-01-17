@@ -125,7 +125,9 @@ or simply run the following script:
 If you've modified some of the project files, you can use `rebuild.sh` script
 for incremental build.
 
-During the project building, Doxygen (if installed) generates the documentation in HTML and LaTeX formats. The generated documentation is stored at the build/doc directory.
+During the project building, Doxygen (if installed) generates the documentation
+in HTML and LaTeX formats. The generated documentation is stored
+at the `build/doc` directory.
 
 ### Running Utopia EDA
 

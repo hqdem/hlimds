@@ -1,4 +1,5 @@
 add_library(Gate OBJECT
+  analyzer/probabilistic_estimate.cpp
   analyzer/simulation_estimator.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp

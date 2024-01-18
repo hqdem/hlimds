@@ -76,24 +76,35 @@ Exts getExt(const std::string &fileName) {
   return Exts::UNSUPPORTED;
 }
 
+std::filesystem::path inputFile(const std::string &infile) {
+  const std::filesystem::path subCatalog = "test/data/gate/parser";
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path prefixPathIn =  homePath / subCatalog / "verilog";
+  std::string filename = prefixPathIn / infile;
+  return filename;
+}
+
+std::filesystem::path outFile(const std::string &infile) {
+  const std::filesystem::path subCatalog = "test/data/gate/parser";
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path prefixPathOut = homePath / "build" / subCatalog / "output";
+
+  system(std::string("mkdir -p ").append(prefixPathOut).c_str());
+
+  std::string outFilename = prefixPathOut / (infile + ".dot");
+  return outFilename;
+}
+
 void parse(const std::string &infile) {
   if (!getenv("UTOPIA_HOME")) {
     FAIL() << "UTOPIA_HOME is not set.";
   }
 
-  const std::filesystem::path subCatalog = "test/data/gate/parser";
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path prefixPathIn =  homePath / subCatalog / "verilog";
-  const std::filesystem::path prefixPathOut = homePath / "build" / subCatalog / "output";
-
-  system(std::string("mkdir -p ").append(prefixPathOut).c_str());
-
-  std::string filename = prefixPathIn / infile;
-  std::string outFilename = prefixPathOut / (infile + ".dot");
+  std::string filename = inputFile(infile);
+  std::string outFilename = outFile(infile);
 
   text_diagnostics consumer;
   diagnostic_engine diag(&consumer);
-
   GateVerilogParser parser(infile);
 
   return_code result = read_verilog(filename, parser, &diag);
@@ -103,6 +114,17 @@ void parse(const std::string &infile) {
   dot.print(outFilename);
 
   delete parser.getGnet();
+}
+
+void noParse(const std::string &infile) {
+  std::string filename = inputFile(infile);
+
+  text_diagnostics consumer;
+  diagnostic_engine diag(&consumer);
+  GateVerilogParser parser(infile);
+
+  return_code result = read_verilog(filename, parser, &diag);
+  EXPECT_FALSE(result == return_code::success);
 }
 
 size_t parseOuts(const std::string &infile) {
@@ -152,6 +174,10 @@ TEST(ParserVTest, c499) {
 
 TEST(ParserVTest, c6288) {
   parse("c6288.v");
+}
+
+TEST(ParserVTest, c7552) {
+  noParse("c7552.v");
 }
 
 TEST(ParserVTest, c880) {

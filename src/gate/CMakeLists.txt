@@ -86,6 +86,8 @@ add_library(Gate OBJECT
   transformer/aigmapper.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
+  transformer/mutator/mutator.cpp
+  transformer/mutator/mutator_visitor.cpp
   translator/yosys_converter_firrtl.cpp
   translator/firrtl.cpp)
 add_library(Utopia::Gate ALIAS Gate)

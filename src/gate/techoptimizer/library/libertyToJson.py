@@ -12,6 +12,7 @@ def read_information_from_library(path_to_library):
   cell_library = {}
   last_output_pins = {}
   delay = {}
+  power = {}
 
   for cell_group in library.get_groups('cell'):
     cell_name = (str(cell_group.args[0]))[1: -1]
@@ -33,6 +34,27 @@ def read_information_from_library(path_to_library):
         pin_function_attribute = str(pin_group["function"])[1: -1]
         output_pins[pin_name_attribute] = pin_function_attribute
 
+        for power_group in pin_group.get_groups('internal_power'):
+          fall_power_max_value = 0
+          rise_power_max_value = 0
+          related_pin = str(power_group["related_pin"])[1: -1]
+
+          for fall_power_group in power_group.get_groups('fall_power'):
+            fall = fall_power_group.get_array('values')
+            max_value = max(max(row) for row in fall)
+            if max_value > fall_power_max_value:
+              fall_power_max_value = max_value
+
+          for rise_power_group in power_group.get_groups('rise_power'):
+            rise = rise_power_group.get_array('values')
+            max_value = max(max(row) for row in rise)
+            if max_value > rise_power_max_value:
+              rise_power_max_value = max_value
+
+
+          power[related_pin] = {'fall_power': fall_power_max_value,
+                                'rise_power': rise_power_max_value
+                                }
         for timing_group in pin_group.get_groups('timing'):
           cell_fall_max_value = 0
           cell_rise_max_value = 0
@@ -66,7 +88,9 @@ def read_information_from_library(path_to_library):
           delay[related_pin] = {'cell_fall': cell_fall_max_value,
                                 'cell_rise': cell_rise_max_value,
                                 'fall_transition': fall_transition_max_value,
-                                'rise_transition': rise_transition_max_value
+                                'rise_transition': rise_transition_max_value,
+                                'fall_power': fall_power_max_value,
+                                'rise_power': rise_power_max_value
                                 }
 
       else:
@@ -79,13 +103,14 @@ def read_information_from_library(path_to_library):
                                  'output': output_pins,
                                  'area' : cell_area,
                                  'leakage' : worstLeakege,
-                                #'power': power
+                                 'power': power
                                  }
       last_output_pins = output_pins
 
     input_pins = ""
     output_pins = {}
     delay = {}
+    power = {}
     
   return cell_library
 

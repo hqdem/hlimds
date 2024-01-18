@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 #include "gate/model2/object.h"
 #include "gate/model2/printer/printer.h"
+#include "gate/debugger2/sat_checker2.h"
 
 using Builder    = eda::gate::model::SubnetBuilder;
 using CellSymbol = eda::gate::model::CellSymbol;
@@ -40,26 +41,30 @@ SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
   }
 
   const auto idx = builder.addCellTree(symbol, links, arity);
-  builder.addOutput(Link(idx));
+  builder.addOutput(Subnet::Link(idx));
 
   return builder.make();
 }
 
 void printVerilog(const SubnetID subnetID) {
-  model::NetBuilder netBuilder;
   const auto &subnet = model::Subnet::get(subnetID);
-
   auto entries = subnet.getEntries();
+
+  model::NetBuilder netBuilder;
+
   model::CellID cellIDArray[std::size(entries)];
 
-  for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
+  for (size_t entryIndex = 0; entryIndex < std::size(entries);
        entryIndex++) {
     auto cell = entries[entryIndex].cell;
-    model::CellID cellID;
+
+    //model::CellID cellID;
+
     if (cell.isIn()) {
-      cellID = makeCell(model::IN);
+      auto cellID = makeCell(model::CellSymbol::IN);
+      netBuilder.addCell(cellID);
     } else if (cell.isOut()) {
-      cellID = makeCell(model::OUT, cellIDArray[cell.link[0].idx]);
+      //cellID = makeCell(model::CellSymbol::OUT, cellIDArray[cell.link[0].idx]);
     } else {
       model::Cell::LinkList linkList;
 
@@ -73,10 +78,11 @@ void printVerilog(const SubnetID subnetID) {
           }
         }
       }
-      cellID = makeCell(cell.getTypeID(), linkList);
+      //cellID = makeCell(cell.getTypeID(), linkList);
+      linkList.clear();
     }
-    cellIDArray[entryIndex] = cellID;
-    netBuilder.addCell(cellID);
+    //cellIDArray[entryIndex] = cellID;
+//    netBuilder.addCell(cellID);
 
     entryIndex += cell.more;
   }
@@ -150,12 +156,12 @@ TEST(TechMapTest, SimpleANDSubnet) {
 }
 
 TEST(TechMapTest, SimpleORSubnet) {
-  const auto primitiveORSub  = createPrimitiveSubnet(CellSymbol::OR, 13, 13);
+  const auto primitiveORSub  = createPrimitiveSubnet(CellSymbol::OR, 3, 13);
 
   Techmaper techmaper;
 
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-                       "/simple_liberty.lib");
+                       "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 
@@ -202,17 +208,17 @@ TEST(TechMapTest, SimpleSub) {
   links2.emplace_back(idx2);
 
   const auto idx3 = builder.addCell(model::AND, links2);
-  builder.addOutput(Link(idx3));
+  const auto idxOUT = builder.addOutput(Link(idx3));
 
   SubnetID subnetID = builder.make();
 
   //SubnetID subnetID = model::randomSubnet(5, 1, 7, 1, 2);
-  const auto &subnet = model::Subnet::get(subnetID);
+  auto &subnet = model::Subnet::get(subnetID);
   std::cout << subnet << std::endl;
   Techmaper techmaper;
 
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-                       "/simple_liberty.lib");
+                       "/asd.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 
@@ -221,6 +227,20 @@ TEST(TechMapTest, SimpleSub) {
   std::cout << model::Subnet::get(mappedSub) << std::endl;
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+
+  Subnet &mappedSubnet = model::Subnet::get(mappedSub);
+  std::unordered_map<size_t, size_t> map;
+
+  map[0] = 0;
+  map[1] = 1;
+  map[3] = 2;
+  map[4] = 3;
+  map[idxOUT] = 5;
+
+
+  debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
+  //EXPECT_TRUE(checker.equivalent(subnet, mappedSubnet, map).equal());
+  printVerilog(mappedSub);
 }
 TEST(TechMapTest, ANDNOTNOTAND) {
   if (!getenv("UTOPIA_HOME")) {
@@ -253,7 +273,7 @@ TEST(TechMapTest, ANDNOTNOTAND) {
   Techmaper techmaper;
 
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-                       "/simple_liberty.lib");
+                       "/sky130_fd_sc_hd__ff_100C_1v65.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 

@@ -177,7 +177,8 @@ namespace eda::gate::tech_optimizer {
             auto cellID = subnetBuilder.addOutput(linkList[0]);
             bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
           } else {
-            Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].getLibertySubnetID());
+
+            /*Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].getLibertySubnetID());
             eda::gate::model::Array<Subnet::Entry> techCellEntries = techSubnet.getEntries();
             for (const auto &techCellEntry : techCellEntries) {
               auto techCell = techCellEntry.cell;
@@ -186,14 +187,12 @@ namespace eda::gate::tech_optimizer {
                 bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
                 countOfCell++;
               }
-            }
+            }*/
             //std::cout << Subnet::get(bestReplacementMap[currentEntryIDX].subnetID) << std::endl;
-            /*
             auto cellID = subnetBuilder.addSingleOutputSubnet(bestReplacementMap[currentEntryIDX].subnetID,
                                                   linkList);
             bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
             std::cout << "add subnet out index: " << cellID.idx << std::endl;
-*/
           }
           stack.pop();
         }

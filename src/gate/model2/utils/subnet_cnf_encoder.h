@@ -14,6 +14,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <vector>
 
 namespace eda::gate::model {
@@ -115,7 +116,6 @@ private:
     const auto &entries = subnet.getEntries();
     for (size_t i = 0; i < entries.size(); ++i) {
       const auto &cell = entries[i].cell;
-      const auto &type = cell.getType();
       assert(!cell.isNull());
 
            if (cell.isIn())   { encodeIn  (subnet, cell, i, context, solver); }
@@ -128,6 +128,7 @@ private:
       else if (cell.isXor())  { encodeXor (subnet, cell, i, context, solver); }
       else if (cell.isMaj())  { encodeMaj (subnet, cell, i, context, solver); }
       else {
+        const auto &type = cell.getType();
         assert(type.isSubnet() && "Unsupported cell type");
 
         const auto &innerSubnet = type.getSubnet();
@@ -201,7 +202,7 @@ private:
     clause.push(context.lit(idx, 0, 1));
 
     for (size_t j = 0; j < cell.arity; ++j) {
-      auto link = subnet.getLink(idx, j);
+      const auto link = subnet.getLink(idx, j);
       clause.push(context.lit(link, 0));
       solver.addClause(context.lit(idx, 0, 0), context.lit(link, 1));
     }
@@ -218,7 +219,7 @@ private:
     clause.push(context.lit(idx, 0, 0));
 
     for (size_t j = 0; j < cell.arity; ++j) {
-      auto link = subnet.getLink(idx, j);
+      const auto link = subnet.getLink(idx, j);
       clause.push(context.lit(link, 1));
       solver.addClause(context.lit(idx, 0, 1), context.lit(link, 0));
     }
@@ -231,15 +232,15 @@ private:
     assert(cell.arity > 1);
     context.setVar(idx);
 
-    size_t k = cell.arity;
+    const size_t k = cell.arity;
     auto rhs = context.lit(idx, 0, 1);
 
     for (size_t j = 0; j < k - 1; ++j) {
-      auto link1 = subnet.getLink(idx, j);
-      auto link2 = subnet.getLink(idx, j + 1);
+      const auto link1 = subnet.getLink(idx, j);
+      const auto link2 = subnet.getLink(idx, j + 1);
 
-      auto lhs1 = context.lit(link1, 1);
-      auto lhs2 = (j == k - 2) ? context.lit(link2, 1) : context.newLit();
+      const auto lhs1 = context.lit(link1, 1);
+      const auto lhs2 = (j == k - 2) ? context.lit(link2, 1) : context.newLit();
 
       solver.encodeXor(rhs, lhs1, lhs2);
       rhs = lhs2;
@@ -251,9 +252,9 @@ private:
     assert(cell.arity == 3);
     context.setVar(idx);
 
-    auto lhs1 = context.lit(cell.link[0], 1);
-    auto lhs2 = context.lit(cell.link[1], 1);
-    auto lhs3 = context.lit(cell.link[2], 1);
+    const auto lhs1 = context.lit(cell.link[0], 1);
+    const auto lhs2 = context.lit(cell.link[1], 1);
+    const auto lhs3 = context.lit(cell.link[2], 1);
 
     solver.encodeMaj(context.lit(idx, 0, 1), lhs1, lhs2, lhs3);
   }

@@ -122,19 +122,19 @@ TEST(ReedMullerModel2, subnetToSubnetOn3Vars) {
   SubnetID net1 = generateSubnetID("10101100", 3);
 
   SubnetBuilder builder;
-  size_t idx[3];
-  for (int i = 0; i < 3; ++i) {
-    idx[i] = builder.addInput();
-  }
+
+  const auto input = builder.addInputs(3);
+
   LinkList output;
-  output.push_back(Link(idx[1]));
-  output.push_back(Link(builder.addCell(model::AND, {Link(idx[1]), Link(idx[2])})));
-  output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[2])})));
-  size_t out = builder.addCell(model::XOR, output);
-  builder.addOutput(Link(out));
+  output.push_back(input[1]);
+  output.push_back(builder.addCell(model::AND, input[1], input[2]));
+  output.push_back(builder.addCell(model::AND, input[0], input[2]));
+
+  builder.addOutput(builder.addCell(model::XOR, output));
 
   const auto &subnet = Subnet::get(builder.make());
   const auto &net = Subnet::get(net1);
+
   testSubnetToSubnet(net, subnet);
 }
 
@@ -143,17 +143,16 @@ TEST(ReedMullerModel2, subnetToSubnetOn3VarsWith1) {
   SubnetID net1 = generateSubnetID("10101101", 3);
 
   SubnetBuilder builder;
-  size_t idx[3];
-  for (int i = 0; i < 3; ++i) {
-    idx[i] = builder.addInput();
-  }
+
+  const auto input = builder.addInputs(3);
+
   LinkList output;
-  output.push_back(Link(idx[0], true));
-  output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[1])})));
-  output.push_back(Link(idx[2]));
-  output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[1]), Link(idx[2])})));
-  size_t out = builder.addCell(model::XOR, output);
-  builder.addOutput(Link(out));
+  output.push_back(input[0]);
+  output.push_back(builder.addCell(model::AND, input[0], input[1]));
+  output.push_back(input[2]);
+  output.push_back(builder.addCell(model::AND, input[0], input[1], input[2]));
+
+  builder.addOutput(builder.addCell(model::XOR, output));
   
   const auto &subnet = Subnet::get(builder.make());
   const auto &net = Subnet::get(net1);
@@ -166,25 +165,17 @@ TEST(ReedMullerModel2, subnetToSubnetOn4Vars) {
   SubnetID net1 = generateSubnetID("1010110110010110", 4);
 
   SubnetBuilder builder;
-  size_t idx[4];
-  for (int i = 0; i < 4; ++i) {
-    idx[i] = builder.addInput();
-  }
-  LinkList output;
-  output.push_back(Link(idx[0]));
-  output.push_back(Link(idx[1]));
-  output.push_back(Link(idx[2]));
-  output.push_back(Link(idx[3]));
-  Link split = Link(builder.addCell(model::XOR, output));
-  output.clear();
 
-  output.push_back(Link(builder.addCell(model::AND, {Link(idx[1]), Link(idx[3])})));
-  output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[1]), Link(idx[3])})));
-  output.push_back(Link(builder.addCell(model::AND, {Link(idx[0]), Link(idx[1]), Link(idx[2]), Link(idx[3])})));
+  const auto input = builder.addInputs(4);
+  const auto split = builder.addCell(model::XOR, input);
+
+  LinkList output;
+  output.push_back(builder.addCell(model::AND, input[1], input[3]));
+  output.push_back(builder.addCell(model::AND, input[0], input[1], input[3]));
+  output.push_back(builder.addCell(model::AND, input[0], input[1], input[2], input[3]));
   output.push_back(split);
   
-  size_t out = builder.addCell(model::XOR, output);
-  builder.addOutput(Link(out));
+  builder.addOutput(builder.addCell(model::XOR, output));
 
   const auto &subnet = Subnet::get(builder.make());
   const auto &net = Subnet::get(net1);

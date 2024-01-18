@@ -81,7 +81,7 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
 // Subnet Builder
 //===----------------------------------------------------------------------===//
 
-size_t SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
+Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
   const bool isPositive = !CellType::get(typeID).isNegative();
   assert(isPositive && "Only positive cells are allowed in a subnet");
 
@@ -111,10 +111,10 @@ size_t SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
     entries.emplace_back(links, i);
   }
 
-  return idx;
+  return Link(idx);
 }
 
-size_t SubnetBuilder::addCellTree(
+Subnet::Link SubnetBuilder::addCellTree(
     CellSymbol symbol, const LinkList &links, uint16_t k) {
   const uint16_t maxCellArity = Subnet::Cell::MaxArity;
   const uint16_t maxTreeArity = (k > maxCellArity) ? maxCellArity : k;
@@ -141,10 +141,10 @@ size_t SubnetBuilder::addCellTree(
     linkList.emplace_back(addCell(symbol, args));
   }
 
-  return linkList.back().idx;
+  return linkList.back();
 }
 
-SubnetBuilder::LinkList SubnetBuilder::addSubnet(
+Subnet::LinkList SubnetBuilder::addSubnet(
     const SubnetID subnetID, const LinkList &links) {
   
   const auto &subnet = Subnet::get(subnetID);
@@ -180,7 +180,7 @@ SubnetBuilder::LinkList SubnetBuilder::addSubnet(
   return outs; 
 }
 
-SubnetBuilder::Link SubnetBuilder::addSingleOutputSubnet(
+Subnet::Link SubnetBuilder::addSingleOutputSubnet(
     const SubnetID subnetID, const LinkList &links) {
   const auto &subnet = Subnet::get(subnetID);
   assert(subnet.getOutNum() == 1);

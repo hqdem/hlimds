@@ -23,10 +23,10 @@ namespace eda::gate::optimizer2::resynthesis {
     SubnetBuilder subnetBuilder;
     uint64_t argNum  = resultFunction[resultFunction.size() - 1];
     size_t idx[argNum];
-    std::vector<size_t> resultOutput;
+    LinkList resultOutput;
 
     for (size_t i = 0; i < argNum; ++i) {
-      idx[i] = subnetBuilder.addInput();
+      idx[i] = subnetBuilder.addInput().idx;
     }
 
     if (resultFunction[0]) {
@@ -45,22 +45,22 @@ namespace eda::gate::optimizer2::resynthesis {
         currentNode.push_back(Link(idx[n]));
         ++currentSize;
         if (currentSize == maxSize) {
-          size_t partOfCurrentNode = subnetBuilder.addCell(model::AND, currentNode);
+          Link partOfCurrentNode = subnetBuilder.addCell(model::AND, currentNode);
           currentNode.clear();
-          currentNode.push_back(Link(partOfCurrentNode));
+          currentNode.push_back(partOfCurrentNode);
           currentSize = 1;
         }
       }
       resultOutput.push_back(subnetBuilder.addCell(model::AND, currentNode));
     }
 
-    std::vector<size_t> outputNodes;
+    LinkList outputNodes;
     int currentNodeSize = 0;
     LinkList outNode;
     
     while (resultOutput.size() >= maxSize) {
       for (auto node : resultOutput) {
-        outNode.push_back(Link(node));
+        outNode.push_back(node);
         ++currentNodeSize;
         if (currentNodeSize == maxSize) { 
           outputNodes.push_back(subnetBuilder.addCell(model::XOR, outNode));
@@ -80,11 +80,11 @@ namespace eda::gate::optimizer2::resynthesis {
     }
 
     for (auto node : resultOutput) {
-      outNode.push_back(Link(node));
+      outNode.push_back(node);
     }
 
-    size_t out = subnetBuilder.addCell(model::XOR, outNode);
-    subnetBuilder.addOutput(Link(out));
+    Link out = subnetBuilder.addCell(model::XOR, outNode);
+    subnetBuilder.addOutput(out);
     return subnetBuilder.make();
   }
 

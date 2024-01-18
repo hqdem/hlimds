@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "gate/model2/subnet.h"
+
 #include <kitty/kitty.hpp>
 
 #include <cstdint>
@@ -24,21 +26,22 @@ class TernaryBiClique final {
 public:
 
   using Cube       = kitty::cube;
-  using Inputs     = std::vector<size_t>;
   using ISOP       = std::vector<Cube>;
   using KittyTT    = kitty::dynamic_truth_table;
+  using Link       = model::Subnet::Link;
+  using LinkList   = model::Subnet::LinkList;
   using NormalForm = std::set<uint32_t>;
 
   TernaryBiClique(const KittyTT &func, const KittyTT &care);
 
-  TernaryBiClique(ISOP onSet, ISOP offSet, uint32_t indices, Inputs inputs, 
-                  uint32_t oldIndices);
+  TernaryBiClique(ISOP onSet, ISOP offSet, uint32_t indices,
+                  LinkList inputs, uint32_t oldIndices);
 
   uint32_t getIndices() const {
     return indices;
   }
 
-  Inputs& getInputs() {
+  LinkList& getInputs() {
     return inputs;
   }
 
@@ -73,7 +76,7 @@ private:
   void eraseExtraInputs(ISOP &isop, uint32_t oldIndices);
 
   uint32_t indices;
-  Inputs inputs;
+  LinkList inputs;
 
   ISOP onSet;
   ISOP offSet;

@@ -36,6 +36,10 @@ public:
     return makeLit(newVar(), sign);
   }
 
+  void addClause(const Clause &clause) {
+    formula.addClause(clause);
+  }
+
   void addClause(Literal l) {
     formula.addClause(l);
   }
@@ -65,10 +69,6 @@ public:
     clause.push(l4);
     clause.push(l5);
     addClause(clause);
-  }
-
-  void addClause(const Clause &clause) {
-    formula.addClause(clause);
   }
 
   void encodeBuf(Literal rhs, Literal lhs) {

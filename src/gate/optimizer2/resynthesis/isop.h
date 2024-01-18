@@ -26,11 +26,7 @@ model::SubnetID launchAlgorithm(const kitty::dynamic_truth_table &func,
                                 uint16_t maxArity = -1) {
 
   model::SubnetBuilder subnetBuilder;
-
-  std::vector<size_t> inputs;
-  for (size_t i = 0; i < func.num_vars(); ++i) {
-    inputs.push_back(subnetBuilder.addInput());
-  }
+  model::Subnet::LinkList inputs = subnetBuilder.addInputs(func.num_vars());
 
   bool one{kitty::is_const0(~func)};
   bool zero{ kitty::is_const0(func)};
@@ -56,7 +52,6 @@ class MinatoMorrealeAlg final : public Synthesizer<kitty::dynamic_truth_table> {
 public:
 
   using Cube          = kitty::cube;
-  using Inputs        = std::vector<size_t>;
   using ISOP          = std::vector<Cube>;
   using KittyTT       = kitty::dynamic_truth_table;
   using Link          = model::Subnet::Link;
@@ -71,20 +66,20 @@ public:
 
   /// Synthesizes the Subnet for a non-constant function.
   Link run(const KittyTT &func,
-           const Inputs &inputs,
+           const LinkList &inputs,
            SubnetBuilder &subnetBuilder,
            uint16_t maxArity = -1) const;
 
   /// Synthesizes the Subnet without output for passed ISOP.
   Link synthFromISOP(const ISOP &cubes,
-                     const Inputs &inputs,
+                     const LinkList &inputs,
                      SubnetBuilder &subnetBuilder,
                      uint16_t maxArity = -1) const;
 
 private:
 
   Link synthFromCube(Cube cube,
-                     const Inputs &inputs,
+                     const LinkList &inputs,
                      SubnetBuilder &subnetBuilder,
                      uint16_t maxArity = -1) const;
 

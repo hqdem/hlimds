@@ -35,6 +35,8 @@ public:
     Link(uint32_t idx): Link(idx, false) {}
     Link(): Link(0) {}
 
+    Link operator~() const { return Link(idx, out, !inv); }
+
     /// Entry index.
     uint32_t idx : 28;
     /// Output port.
@@ -224,75 +226,75 @@ public:
 
   SubnetBuilder(): nIn(0), nOut(0), entries() {}
 
-  size_t addInput() {
+  Link addInput() {
     return addCell(IN);
   }
 
-  size_t addOutput(Link link) {
+  Link addOutput(Link link) {
     return addCell(OUT, link);
   }
 
-  size_t addInput(uint32_t flipFlopID) {
-    const auto idx = addInput();
-    auto &cell = entries[idx].cell;
+  Link addInput(uint32_t flipFlopID) {
+    const auto result = addInput();
+    auto &cell = entries[result.idx].cell;
     cell.flipFlop = 1;
     cell.flipFlopID = flipFlopID;
-    return idx;
+    return result;
   }
 
-  size_t addOutput(Link link, uint32_t flipFlopID) {
-    const auto idx = addOutput(link);
-    auto &cell = entries[idx].cell;
+  Link addOutput(Link link, uint32_t flipFlopID) {
+    const auto result = addOutput(link);
+    auto &cell = entries[result.idx].cell;
     cell.flipFlop = 1;
     cell.flipFlopID = flipFlopID;
-    return idx;
+    return result;
   }
 
-  size_t addCell(CellTypeID typeID, const LinkList &links);
+  Link addCell(CellTypeID typeID, const LinkList &links);
 
   /// Adds a cell w/o inputs.
-  size_t addCell(CellSymbol symbol) {
+  Link addCell(CellSymbol symbol) {
     return addCell(getCellTypeID(symbol), LinkList{});
   }
 
   /// Adds a cell w/ the linked inputs.
-  size_t addCell(CellSymbol symbol, const LinkList &links) {
+  Link addCell(CellSymbol symbol, const LinkList &links) {
     return addCell(getCellTypeID(symbol), links);
   }
 
   /// Adds a single-input cell.
-  size_t addCell(CellSymbol symbol, Link link) {
+  Link addCell(CellSymbol symbol, Link link) {
     return addCell(symbol, LinkList{link});
   }
 
   /// Adds a two-inputs cell.
-  size_t addCell(CellSymbol symbol, Link l1, Link l2) {
+  Link addCell(CellSymbol symbol, Link l1, Link l2) {
     return addCell(symbol, LinkList{l1, l2});
   }
 
   /// Adds a three-inputs cell.
-  size_t addCell(CellSymbol symbol, Link l1, Link l2, Link l3) {
+  Link addCell(CellSymbol symbol, Link l1, Link l2, Link l3) {
     return addCell(symbol, LinkList{l1, l2, l3});
   }
 
   /// Adds a four-inputs cell.
-  size_t addCell(CellSymbol symbol, Link l1, Link l2, Link l3, Link l4) {
+  Link addCell(CellSymbol symbol, Link l1, Link l2, Link l3, Link l4) {
     return addCell(symbol, LinkList{l1, l2, l3, l4});
   }
 
   /// Adds a five-inputs cell.
-  size_t addCell(CellSymbol symbol,
+  Link addCell(CellSymbol symbol,
       Link l1, Link l2, Link l3, Link l4, Link l5) {
     return addCell(symbol, LinkList{l1, l2, l3, l4, l5});
   }
 
   /// Adds the given number of inputs.
   LinkList addInputs(size_t nIn) {
-    LinkList inputs(nIn);
+    LinkList result(nIn);
     for (size_t i = 0; i < nIn; ++i) {
-      inputs[i] = Link(addInput());
+      result[i] = Link(addInput());
     }
-    return inputs;
+    return result;
   }
 
   /// Returns the outputs connected to the given links.
@@ -304,7 +306,7 @@ public:
 
   /// Adds a k-ary tree that implements the given function.
   /// The operation should be regroupable (associative).
-  size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
+  Link addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
 
   /// Adds the subnet and connects it via the specified links.
   /// Does not add the output cells (it should be done explicitly).

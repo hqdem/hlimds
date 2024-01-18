@@ -21,7 +21,7 @@ void buildCells(const Subnet &net,
       Link curLink = net.getLink(i, j);
       newLinks.push_back(Subnet::Link(map[curLink.idx], curLink.inv));
     }
-    map[i] = builder.addCell(curSymbol == OUT ? BUF : curSymbol, newLinks);
+    map[i] = builder.addCell(curSymbol == OUT ? BUF : curSymbol, newLinks).idx;
     i += curCell.more;
   }
 }
@@ -58,7 +58,7 @@ Subnet miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
 
   auto itIn = hints.sourceBinding.begin();
   for (size_t i = 0; i < net1.getInNum(); ++i) {
-    size_t cellNum = subnetBuilder.addInput();
+    size_t cellNum = subnetBuilder.addInput().idx;
     map1[itIn->first] = cellNum;
     map2[itIn->second] = cellNum;
     itIn++;

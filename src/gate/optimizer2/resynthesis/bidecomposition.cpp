@@ -13,7 +13,7 @@
 namespace eda::gate::optimizer2::resynthesis {
 
 BiDecomposition::Link BiDecomposition::run(const KittyTT &func,
-                                           const Inputs &inputs,
+                                           const LinkList &inputs,
                                            SubnetBuilder &subnetBuilder,
                                            uint16_t maxArity) const {
   
@@ -54,7 +54,7 @@ BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
   Link lhs = decompose(firstBiClique, subnetBuilder, maxArity);
   Link rhs = decompose(secondBiClique, subnetBuilder, maxArity);
 
-  return Link(subnetBuilder.addCell(model::AND, lhs, rhs), true);
+  return subnetBuilder.addCell(model::AND, lhs, rhs);
 }
 
 BiDecomposition::CoveragePair BiDecomposition::findBaseCoverage(

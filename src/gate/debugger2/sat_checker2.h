@@ -30,7 +30,7 @@ public:
     SubnetEncoderContext context(miter, solver);
 
     encoder.encode(miter, context, solver);
-    encoder.encodeEqual(miter, context, solver, miter.getOut(0), 0);
+    encoder.encodeEqual(miter, context, solver, miter.getOut(0), 1);
 
     return solver.solve() ? CheckerResult::NOTEQUAL : CheckerResult::EQUAL;
   }

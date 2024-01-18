@@ -17,7 +17,7 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 
 // Implements y = ~(x & ~x).
-static SubnetID makeSatAndSubnet() {
+static SubnetID makeOneAndSubnet() {
   SubnetBuilder builder;
   const auto x = builder.addInput();
   const auto y = builder.addCell(AND, x, ~x);
@@ -26,7 +26,7 @@ static SubnetID makeSatAndSubnet() {
 }
 
 // Implements y = (x | ~x).
-static SubnetID makeSatOrSubnet() {
+static SubnetID makeOneOrSubnet() {
   SubnetBuilder builder;
   const auto x = builder.addInput();
   const auto y = builder.addCell(OR, x, ~x);
@@ -35,7 +35,7 @@ static SubnetID makeSatOrSubnet() {
 }
 
 // Implements y = (x ^ ~x).
-static SubnetID makeSatXorSubnet() {
+static SubnetID makeOneXorSubnet() {
   SubnetBuilder builder;
   const auto x = builder.addInput();
   const auto y = builder.addCell(XOR, x, ~x);
@@ -44,7 +44,7 @@ static SubnetID makeSatXorSubnet() {
 }
 
 // Implements y = maj(x, ~x, 1).
-static SubnetID makeSatMajSubnet() {
+static SubnetID makeOneMajSubnet() {
   SubnetBuilder builder;
   const auto x = builder.addInput();
   const auto o = builder.addCell(ONE);
@@ -58,7 +58,7 @@ static SubnetID makeSatMajSubnet() {
 //===----------------------------------------------------------------------===//
 
 // Implements y = (x & ~x).
-static SubnetID makeUnsatAndSubnet() {
+static SubnetID makeZeroAndSubnet() {
   SubnetBuilder builder;
   const auto x = builder.addInput();
   const auto y = builder.addCell(AND, x, ~x);
@@ -67,7 +67,7 @@ static SubnetID makeUnsatAndSubnet() {
 }
 
 // Implements y = ~(x | ~x).
-static SubnetID makeUnsatOrSubnet() {
+static SubnetID makeZeroOrSubnet() {
   SubnetBuilder builder;
   const auto x = builder.addInput();
   const auto y = builder.addCell(OR, x, ~x);
@@ -76,7 +76,7 @@ static SubnetID makeUnsatOrSubnet() {
 }
 
 // Implements y = (x ^ x).
-static SubnetID makeUnsatXorSubnet() {
+static SubnetID makeZeroXorSubnet() {
   SubnetBuilder builder;
   const auto x = builder.addInput();
   const auto y = builder.addCell(XOR, x, x);
@@ -85,7 +85,7 @@ static SubnetID makeUnsatXorSubnet() {
 }
 
 // Implements y = maj(x, ~x, 0).
-static SubnetID makeUnsatMajSubnet() {
+static SubnetID makeZeroMajSubnet() {
   SubnetBuilder builder;
   const auto x = builder.addInput();
   const auto z = builder.addCell(ZERO);
@@ -98,45 +98,50 @@ static SubnetID makeUnsatMajSubnet() {
 // Tests
 //===----------------------------------------------------------------------===//
 
-inline bool isSat(SubnetID subnetID) {
-  eda::gate::solver::Solver solver;
+inline bool checkAlways(SubnetID subnetID, bool value) {
   const auto &subnet = Subnet::get(subnetID);
+  const auto &encoder = SubnetEncoder::get();
 
-  SubnetEncoder::get().encode(subnet, solver);
-  solver.dump("cnf.dimacs");
-  return solver.solve();
+  eda::gate::solver::Solver solver;
+  SubnetEncoderContext context(subnet, solver);
+
+  encoder.encode(subnet, context, solver);
+  encoder.encodeEqual(subnet, context, solver, subnet.getOut(0), !value);
+
+  // The opposite is impossible.
+  return !solver.solve();
 }
 
-TEST(SubnetCnfEncoderTest, SatAndTest) {
-  EXPECT_TRUE(isSat(makeSatAndSubnet()));
+TEST(SubnetCnfEncoderTest, OneAndTest) {
+  EXPECT_TRUE(checkAlways(makeOneAndSubnet(), 1));
 }
 
-TEST(SubnetCnfEncoderTest, SatOrTest) {
-  EXPECT_TRUE(isSat(makeSatOrSubnet()));
+TEST(SubnetCnfEncoderTest, OneOrTest) {
+  EXPECT_TRUE(checkAlways(makeOneOrSubnet(), 1));
 }
 
-TEST(SubnetCnfEncoderTest, SatXorTest) {
-  EXPECT_TRUE(isSat(makeSatXorSubnet()));
+TEST(SubnetCnfEncoderTest, OneXorTest) {
+  EXPECT_TRUE(checkAlways(makeOneXorSubnet(), 1));
 }
 
-TEST(SubnetCnfEncoderTest, SatMajTest) {
-  EXPECT_TRUE(isSat(makeSatMajSubnet()));
+TEST(SubnetCnfEncoderTest, OneMajTest) {
+  EXPECT_TRUE(checkAlways(makeOneMajSubnet(), 1));
 }
 
-TEST(SubnetCnfEncoderTest, UnsatAndTest) {
-  EXPECT_FALSE(isSat(makeUnsatAndSubnet()));
+TEST(SubnetCnfEncoderTest, ZeroAndTest) {
+  EXPECT_TRUE(checkAlways(makeZeroAndSubnet(), 0));
 }
 
-TEST(SubnetCnfEncoderTest, UnsatOrTest) {
-  EXPECT_FALSE(isSat(makeUnsatOrSubnet()));
+TEST(SubnetCnfEncoderTest, ZeroOrTest) {
+  EXPECT_TRUE(checkAlways(makeZeroOrSubnet(), 0));
 }
 
-TEST(SubnetCnfEncoderTest, UnsatXorTest) {
-  EXPECT_FALSE(isSat(makeUnsatXorSubnet()));
+TEST(SubnetCnfEncoderTest, ZeroXorTest) {
+  EXPECT_TRUE(checkAlways(makeZeroXorSubnet(), 0));
 }
 
-TEST(SubnetCnfEncoderTest, UnsatMajTest) {
-  EXPECT_FALSE(isSat(makeUnsatMajSubnet()));
+TEST(SubnetCnfEncoderTest, ZeroMajTest) {
+  EXPECT_TRUE(checkAlways(makeZeroMajSubnet(), 0));
 }
 
 } // namespace eda::gate::model

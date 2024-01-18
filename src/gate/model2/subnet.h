@@ -150,6 +150,19 @@ public:
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
 
+  /// Returns the i-th input link.
+  Link getIn(size_t i) const {
+    assert(i < nIn);
+    return Link(i, 0, 0);
+  }
+
+  /// Returns the i-th output link.
+  Link getOut(size_t i) const {
+    assert(i < nOut);
+    const auto &entries = getEntries();
+    return entries[entries.size() - nOut + i].cell.link[0];
+  }
+
   /// Returns the minimum and maximum path lengths.
   std::pair<uint32_t, uint32_t> getPathLength() const;
 

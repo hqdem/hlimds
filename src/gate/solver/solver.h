@@ -101,13 +101,12 @@ public:
     auto tmp3 = newLit();
 
     // t1 = (x1 & x2), t2 = (x1 & x3), t3 = (x2 & x3).
-    addClause(tmp1, lhs1, lhs2);
-    addClause(tmp2, lhs1, lhs3);
-    addClause(tmp3, lhs2, lhs3);
+    encodeAnd(tmp1, lhs1, lhs2);
+    encodeAnd(tmp2, lhs1, lhs3);
+    encodeAnd(tmp3, lhs2, lhs3);
 
     // y = maj(x1, x2, x3) = (t1 | t2 | t3).
     addClause(~rhs, tmp1, tmp2, tmp3);
-
     addClause(rhs, ~tmp1);
     addClause(rhs, ~tmp2);
     addClause(rhs, ~tmp3);

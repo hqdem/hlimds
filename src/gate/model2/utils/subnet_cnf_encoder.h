@@ -107,9 +107,6 @@ public:
     encode(subnet, context, solver);
   }
 
-private:
-  SubnetEncoder() {}
-
   void encode(const Subnet &subnet,
       SubnetEncoderContext &context, Solver &solver) const {
 
@@ -160,6 +157,19 @@ private:
       i += cell.more;
     }
   }
+
+  void encodeEqual(const Subnet &subnet, SubnetEncoderContext &context,
+      Solver &solver, Subnet::Link lhs, bool rhs) const {
+    solver.addClause(context.lit(lhs, rhs));
+  }
+
+  void encodeEqual(const Subnet &subnet, SubnetEncoderContext &context,
+      Solver &solver, Subnet::Link lhs, Subnet::Link rhs) const {
+    solver.encodeBuf(context.lit(lhs, 1), context.lit(rhs, 1));
+  }
+
+private:
+  SubnetEncoder() {}
 
   void encodeIn(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
       SubnetEncoderContext &context, Solver &solver) const {

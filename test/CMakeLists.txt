@@ -27,6 +27,7 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
+  gate/analyzer/prob_estimator_test.cpp
   gate/analyzer/simulation_estimator_test.cpp
   gate/debugger/k_lec_test.cpp
   gate/debugger/lec_test.cpp

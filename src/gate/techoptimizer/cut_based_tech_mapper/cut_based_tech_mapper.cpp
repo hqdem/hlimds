@@ -36,21 +36,26 @@ namespace eda::gate::tech_optimizer {
     const auto transformedSub  = mapper.transform(subnetID);
     auto endAIG = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> AIGTime = endAIG - startAIG;
+    std::cout << "Функция AIG выполнялась " << AIGTime.count() << " секунд.\n";
+    std::cout << Subnet::get(transformedSub)<< "\n";
 
     auto startCut = std::chrono::high_resolution_clock::now();
     CutExtractor cutExtractor(&model::Subnet::get(transformedSub), MAX_CUT_SIZE);
     auto endCut = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> CutFindTime = endCut - startCut;
+    std::cout << "Функция CutExtractor выполнялась " << CutFindTime.count() << " секунд.\n";
 
     auto startFindBestRepl = std::chrono::high_resolution_clock::now();
     auto bestReplacementMap = replacementSearch(transformedSub, cutExtractor);
     auto endFindBestRepl = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> CutFindBestReplTime = endFindBestRepl - startFindBestRepl;
+    std::cout << "Функция FindBestRepl выполнялась " << CutFindBestReplTime.count() << " секунд.\n";
 
     auto startMapped = std::chrono::high_resolution_clock::now();
     const SubnetID mappedSubnet = buildSubnet(transformedSub, bestReplacementMap);
     auto endMapped = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> CutMappedTime = endMapped - startMapped;
+    std::cout << "Функция Mapped выполнялась " << CutMappedTime.count() << " секунд.\n";
 
     std::cout << "Функция AIG выполнялась " << AIGTime.count() << " секунд.\n";
     std::cout << "Функция CutExtractor выполнялась " << CutFindTime.count() << " секунд.\n";
@@ -95,12 +100,20 @@ namespace eda::gate::tech_optimizer {
         BestReplacement bestReplacement{true};
         bestReplacementMap[entryIndex] = bestReplacement;
 
-      } else if (cell.isOut()) {
-        outID.push_back(entryIndex);
-
-        BestReplacement bestReplacement{false, true};
-        bestReplacement.entryIDxs.insert(cell.link[0].idx);
+      } else if (cell.isOne()) {
+        BestReplacement bestReplacement{};
+        bestReplacement.isOne = true;
         bestReplacementMap[entryIndex] = bestReplacement;
+      } else if (cell.isZero()) {
+        BestReplacement bestReplacement{true};
+        bestReplacement.isZero = true;
+        bestReplacementMap[entryIndex] = bestReplacement;
+      } else if (cell.isOut()) {
+          outID.push_back(entryIndex);
+
+          BestReplacement bestReplacement{false, true};
+          bestReplacement.entryIDxs.insert(cell.link[0].idx);
+          bestReplacementMap[entryIndex] = bestReplacement;
       } else {
         // Save best tech cells subnet to bestReplMap
         strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
@@ -113,6 +126,8 @@ namespace eda::gate::tech_optimizer {
   }
 
   SubnetID CutBasedTechMapper::buildSubnet(SubnetID subnetID, std::map<EntryIndex, BestReplacement> &bestReplacementMap) {
+    int countOfCell = 0;
+
     Subnet &subnet = Subnet::get(subnetID);
     eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
     
@@ -132,29 +147,34 @@ namespace eda::gate::tech_optimizer {
       auto currentCell = entries[currentEntryIDX].cell;
 
       if (currentCell.isIn()) {
-        auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::IN,
-                                            model::SubnetBuilder::INPUT);
+        auto cellID = subnetBuilder.addInput();
         bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
         stack.pop();
-
+      } else if (currentCell.isZero()) {
+          auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::ZERO);
+          bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
+          stack.pop();
+      } else if (currentCell.isOne()) {
+          auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::ONE);
+          bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
+          stack.pop();
       } else {
         bool readyForCreate = true;
         Subnet::LinkList linkList;
 
         for (const auto &idx : bestReplacementMap.at(currentEntryIDX).entryIDxs) {
-          Subnet::Link link(bestReplacementMap.at(idx).cellIDInMappedSubnet);
-          linkList.push_back(link);
           if (bestReplacementMap[idx].cellIDInMappedSubnet == ULLONG_MAX) {
             readyForCreate = false;
             break;
           }
+
+          Subnet::Link link(bestReplacementMap.at(idx).cellIDInMappedSubnet);
+          linkList.push_back(link);
         }
 
         if (readyForCreate) {
           if (currentCell.isOut() || currentCell.type == eda::gate::model::CellSymbol::OUT) {
-            auto cellID = subnetBuilder.addCell(
-                eda::gate::model::CellSymbol::OUT,linkList,
-                model::SubnetBuilder::OUTPUT);
+            auto cellID = subnetBuilder.addOutput(linkList[0]);
             bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
           } else {
             Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].getLibertySubnetID());
@@ -164,13 +184,16 @@ namespace eda::gate::tech_optimizer {
               if (!techCell.isIn() && !techCell.isOut()) {
                 auto cellID = subnetBuilder.addCell(techCell.getTypeID(), linkList);
                 bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
+                countOfCell++;
               }
             }
-           /*
-            auto cellID = subnetBuilder.addSubnet(bestReplacementMap[currentEntryIDX].subnetID,
+            //std::cout << Subnet::get(bestReplacementMap[currentEntryIDX].subnetID) << std::endl;
+            /*
+            auto cellID = subnetBuilder.addSingleOutputSubnet(bestReplacementMap[currentEntryIDX].subnetID,
                                                   linkList);
-            bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
-            */
+            bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
+            std::cout << "add subnet out index: " << cellID.idx << std::endl;
+*/
           }
           stack.pop();
         }
@@ -183,6 +206,7 @@ namespace eda::gate::tech_optimizer {
         }
       }
     }
+    std::cout << "Count of New Cell = " << countOfCell << std::endl;
     return subnetBuilder.make();
   }
 

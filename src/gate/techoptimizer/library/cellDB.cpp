@@ -20,23 +20,33 @@ using SubnetBuilder = eda::gate::model::SubnetBuilder;
 namespace eda::gate::tech_optimizer {
 
 CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
+  std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
+  int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
-    for (int rotate = 0; rotate < cellType.getInNum(); rotate++) {
+    std::vector<int> permutationVec;
+    for (int i = 0; i < cellType.getInNum(); i++) {
+      permutationVec.push_back(i);
+    }
+    std::sort(permutationVec.begin(), permutationVec.end());
+    do {
+      count ++;
       SubnetBuilder subnetBuilder;
       std::vector<Link> linkList;
+      size_t linkArray[cellType.getInNum()];
+      linkList.reserve(cellType.getInNum());
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
-        auto inputIdx = subnetBuilder.addCell(CellSymbol::IN, SubnetBuilder::INPUT);
-        linkList.emplace_back(inputIdx);
+        auto inputIdx = subnetBuilder.addInput();
+        linkArray[permutationVec.at(i)] = inputIdx;
       }
-
-      std::rotate(linkList.begin(), linkList.end() - rotate, linkList.end());
+      for (size_t i = 0; i < cellType.getInNum(); ++i) {
+        linkList.emplace_back(linkArray[i]);
+      }
 
       auto cellIdx = subnetBuilder.addCell(cellTypeID, linkList);
 
-      subnetBuilder.addCell(CellSymbol::OUT,
-                            Link(cellIdx), SubnetBuilder::OUTPUT);
+      subnetBuilder.addOutput(cellIdx);
 
       SubnetID subnetID = subnetBuilder.make();
 
@@ -47,8 +57,9 @@ CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
 
       ttSubnet.emplace_back(model::evaluate(
           cellType.getSubnet()), subnetID);
-    }
+    } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
+  std::cout << "Count of liberty Subnet = " << count << std::endl;
 }
 
 std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table& tt) const {
@@ -61,13 +72,12 @@ std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table&
   return ids;
 }
 
-std::optional<Subnetattr> CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
+const Subnetattr &CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
   for (const auto& pair : subnetToAttr) {
     if (pair.first == id) {
       return pair.second;
     }
   }
-  return std::nullopt;
 }
 /*
     void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs) {

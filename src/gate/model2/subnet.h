@@ -50,7 +50,7 @@ public:
   struct Cell final {
     static constexpr auto FlipFlopBits = 32;
     static constexpr auto ArityBits = 6;
-    static constexpr auto RefCountBits = 16;
+    static constexpr auto RefCountBits = 20;
 
     static constexpr size_t MaxArity = (1 << ArityBits) - 1;
     static constexpr size_t MaxRefCount = (1 << RefCountBits) - 1;
@@ -61,21 +61,16 @@ public:
     /// Constructs a cell.
     Cell(CellTypeID typeID,
          const LinkList &links,
-         bool in,
-         bool out,
-         bool flip,
+         bool flipFlop,
          uint32_t flipFlopID):
-        in(in),
-        out(out),
-        dummy(false),
-        flip(flip),
+        flipFlop(flipFlop),
         flipFlopID(flipFlopID),
         arity(links.size()),
         more((links.size() + (InEntryLinks - 1) - InPlaceLinks) / InEntryLinks),
         refcount(0),
         type(CellTypeID::makeSID(typeID)) {
       assert(links.size() <= MaxArity);
-      assert(!in || arity == 0);
+      assert((typeID != CELL_TYPE_ID_IN) || arity == 0);
 
       const auto size = std::min(links.size(), InPlaceLinks);
       for (size_t i = 0; i < size; ++i) {
@@ -84,22 +79,15 @@ public:
     }
 
     /// Constructs a non-flip-flop cell.
-    Cell(CellTypeID typeID, const LinkList &links, bool in, bool out):
-        Cell(typeID, links, in, out, false, 0) {}
+    Cell(CellTypeID typeID, const LinkList &links):
+        Cell(typeID, links, false, 0) {}
 
     /// Constructs a flip-flop cell.
-    Cell(CellTypeID typeID, const LinkList &links, bool in, bool out,
-         uint32_t flipFlopID):
-        Cell(typeID, links, in, out, true, flipFlopID) {
-      assert(in || out);
-    }
+    Cell(CellTypeID typeID, const LinkList &links, uint32_t flipFlopID):
+        Cell(typeID, links, true, flipFlopID) {}
 
-    bool isIn()    const { return in;                          }
-    bool isOut()   const { return out;                         }
-    bool isDummy() const { return dummy;                       }
-    bool isFF()    const { return flip;                        }
-    bool isPI()    const { return type == CELL_TYPE_SID_IN;    }
-    bool isPO()    const { return type == CELL_TYPE_SID_OUT;   }
+    bool isIn()    const { return type == CELL_TYPE_SID_IN;    }
+    bool isOut()   const { return type == CELL_TYPE_SID_OUT;   }
     bool isZero()  const { return type == CELL_TYPE_SID_ZERO;  }
     bool isOne()   const { return type == CELL_TYPE_SID_ONE;   }
     bool isBuf()   const { return type == CELL_TYPE_SID_BUF;   }
@@ -109,19 +97,14 @@ public:
     bool isMaj()   const { return type == CELL_TYPE_SID_MAJ;   }
     bool isNull()  const { return type == CellTypeID::NullSID; }
 
+    bool isFlipFlop() const { return flipFlop; }
+
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
     CellSymbol getSymbol() const { return getType().getSymbol(); }
 
-    /// Input flag.
-    uint64_t in : 1;
-    /// Output flag.
-    uint64_t out : 1;
-    /// Dummy input flag.
-    uint64_t dummy : 1;
-
     /// Flip-flop input/output flag.
-    uint64_t flip : 1;
+    uint64_t flipFlop : 1;
     /// Unique flip-flop identifier (for flip-flip inputs/outputs).
     uint64_t flipFlopID : FlipFlopBits;
 
@@ -144,10 +127,10 @@ public:
   /// Generalized entry: a cell or an array of additional links.
   union Entry {
     Entry() {}
-    Entry(CellTypeID typeID, const LinkList &links, bool in, bool out):
-        cell(typeID, links, in, out) {}
-    Entry(CellTypeID typeID, const LinkList &links, bool in, bool out, uint32_t flipFlopID):
-        cell(typeID, links, in, out, flipFlopID) {}
+    Entry(CellTypeID typeID, const LinkList &links):
+        cell(typeID, links) {}
+    Entry(CellTypeID typeID, const LinkList &links, uint32_t flipFlopID):
+        cell(typeID, links, flipFlopID) {}
     Entry(const LinkList &links, size_t startWith) {
       const auto size = links.size() - startWith;
       for (size_t i = 0; i < size && i < Cell::InEntryLinks; ++i) {
@@ -239,111 +222,82 @@ public:
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
-  struct Kind {
-    bool operator ==(const Kind &r) const {
-      return in == r.in && out == r.out && ff == r.ff && id == r.id;
-    }
-
-    bool in;
-    bool out;
-    bool ff;
-    uint32_t id;
-  };
-
-  static constexpr auto INPUT  = Kind{1, 0, 0, 0};
-  static constexpr auto OUTPUT = Kind{0, 1, 0, 0};
-  static constexpr auto INOUT  = Kind{1, 1, 0, 0};
-  static constexpr auto INNER  = Kind{0, 0, 0, 0};
-
-  static constexpr auto IN_FF(uint32_t id) {
-    return Kind{1, 0, 1, id};
-  }
-
-  static constexpr auto OUT_FF(uint32_t id) {
-    return Kind{0, 1, 1, id};
-  }
-
   SubnetBuilder(): nIn(0), nOut(0), entries() {}
 
-  size_t addCell(CellTypeID typeID, const LinkList &links, Kind kind = INNER) {
-    bool isPositive = !CellType::get(typeID).isNegative();
-    assert(isPositive && "Only positive cells are allowed in a subnet");
+  size_t addInput() {
+    return addCell(IN);
+  }
 
-    const bool in  = kind.in;
-    const bool out = kind.out;
-    const auto idx = entries.size();
+  size_t addOutput(Link link) {
+    return addCell(OUT, link);
+  }
 
-    // Update reference counts.
-    for (const auto link : links) {
-      auto &cell = entries[link.idx].cell;
-      assert(cell.refcount < Subnet::Cell::MaxRefCount);
-      cell.refcount++;
-    }
-
-    entries.emplace_back(typeID, links, in, out);
-    if (in)  nIn++;
-    if (out) nOut++;
-
-    const auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
-    const auto InEntryLinks = Subnet::Cell::InEntryLinks;
-    for (size_t i = InPlaceLinks; i < links.size(); i += InEntryLinks) {
-      entries.emplace_back(links, i);
-    }
-
+  size_t addInput(uint32_t flipFlopID) {
+    const auto idx = addInput();
+    auto &cell = entries[idx].cell;
+    cell.flipFlop = 1;
+    cell.flipFlopID = flipFlopID;
     return idx;
   }
 
-  /// Creates a dummy input (a nonessential variable).
-  /// Such inputs are introduced to keep the subnet interface unchanged.
-  size_t addDummy() {
-    const auto idx = addCell(IN, INPUT);
-    entries[idx].cell.dummy = 1;
+  size_t addOutput(Link link, uint32_t flipFlopID) {
+    const auto idx = addOutput(link);
+    auto &cell = entries[idx].cell;
+    cell.flipFlop = 1;
+    cell.flipFlopID = flipFlopID;
     return idx;
   }
 
-  void setDummy(size_t idx) {
-    assert(entries[idx].cell.in);
-    entries[idx].cell.dummy = 1;
+  size_t addCell(CellTypeID typeID, const LinkList &links);
+
+  /// Adds a cell w/o inputs.
+  size_t addCell(CellSymbol symbol) {
+    return addCell(getCellTypeID(symbol), LinkList{});
   }
 
-  size_t addCell(CellSymbol symbol, Kind kind = INNER) {
-    return addCell(getCellTypeID(symbol), LinkList{}, kind);
+  /// Adds a cell w/ the linked inputs.
+  size_t addCell(CellSymbol symbol, const LinkList &links) {
+    return addCell(getCellTypeID(symbol), links);
   }
 
-  size_t addCell(CellSymbol symbol, const LinkList &links, Kind kind = INNER) {
-    return addCell(getCellTypeID(symbol), links, kind);
+  /// Adds a single-input cell.
+  size_t addCell(CellSymbol symbol, Link link) {
+    return addCell(symbol, LinkList{link});
   }
 
-  size_t addCell(CellSymbol symbol, Link link, Kind kind = INNER) {
-    return addCell(symbol, LinkList{link}, kind);
+  /// Adds a two-inputs cell.
+  size_t addCell(CellSymbol symbol, Link l1, Link l2) {
+    return addCell(symbol, LinkList{l1, l2});
   }
 
-  size_t addCell(CellSymbol symbol, Link l1, Link l2, Kind kind = INNER) {
-    return addCell(symbol, LinkList{l1, l2}, kind);
+  /// Adds a three-inputs cell.
+  size_t addCell(CellSymbol symbol, Link l1, Link l2, Link l3) {
+    return addCell(symbol, LinkList{l1, l2, l3});
   }
 
+  /// Adds a four-inputs cell.
+  size_t addCell(CellSymbol symbol, Link l1, Link l2, Link l3, Link l4) {
+    return addCell(symbol, LinkList{l1, l2, l3, l4});
+  }
+
+  /// Adds a five-inputs cell.
   size_t addCell(CellSymbol symbol,
-      Link l1, Link l2, Link l3, Kind kind = INNER) {
-    return addCell(symbol, LinkList{l1, l2, l3}, kind);
-  }
-
-  size_t addCell(CellSymbol symbol,
-      Link l1, Link l2, Link l3, Link l4, Kind kind = INNER) {
-    return addCell(symbol, LinkList{l1, l2, l3, l4}, kind);
-  }
-
-  size_t addCell(CellSymbol symbol,
-      Link l1, Link l2, Link l3, Link l4, Link l5, Kind kind = INNER) {
-    return addCell(symbol, LinkList{l1, l2, l3, l4, l5}, kind);
+      Link l1, Link l2, Link l3, Link l4, Link l5) {
+    return addCell(symbol, LinkList{l1, l2, l3, l4, l5});
   }
 
   /// Adds a k-ary tree that implements the given function.
+  /// The operation should be regroupable (associative).
   size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
 
-  /// Adds a single-output subnet (marks the root as an output if required).
-  /// It is assumed that the inputs (to link to) have been already added.
-  size_t addSubnet(const SubnetID subnetID,
-      const LinkList &links, Kind kind = INNER);
+  /// Adds the subnet and connects it via the specified links.
+  /// Does not add the output cells (it should be done explicitly).
+  /// Returns the output links.
+  LinkList addSubnet(const SubnetID subnetID, const LinkList &links);
+
+  /// Adds the single-output subnet and connects it via the specified links.
+  /// Returns the output link.
+  Link addSingleOutputSubnet(const SubnetID subnetID, const LinkList &links);
 
   SubnetID make() {
     assert(nIn > 0 && nOut > 0 && !entries.empty());

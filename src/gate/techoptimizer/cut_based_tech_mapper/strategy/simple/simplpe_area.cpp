@@ -28,7 +28,7 @@ float calculateArea(const std::unordered_set<uint64_t> &entryIdxs, const SubnetI
     if ((!currentCell.isIn() || currentCell.getSymbol() != model::CellSymbol::IN)
         && (!currentCell.isOut() || currentCell.getSymbol() != model::CellSymbol::OUT)) {
       area += cellDb.getSubnetAttrBySubnetID(bestReplacementMap.at(
-          currentEntryIDX).subnetID)->area;
+          currentEntryIDX).subnetID).area;
     }
     stack.pop();
     for (const auto &link : currentCell.link) {
@@ -48,10 +48,10 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
   eda::gate::optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   BestReplacement bestSimpleReplacement{};
   float bestArea = MAXFLOAT;
-
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.size() != 1) {
+
       SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
 
       auto truthTable = eda::gate::model::evaluate(
@@ -61,7 +61,7 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
         auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
 
         float area = calculateArea(cut.entryIdxs, subnetID, bestReplacementMap, cellDB)
-            + currentAttr->area;
+            + currentAttr.area;
 
         if (area < bestArea) {
           bestArea = area;

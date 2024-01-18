@@ -18,10 +18,10 @@ void ConeBuilder::addInput(const uint64_t origEntryIdx,
                            EntryMap &origEntryToCone,
                            EntryMap &coneEntryToOrig) const {
 
-  const auto &origCell = subnet->getEntries()[origEntryIdx].cell;
-  const auto inputKind = (origEntryIdx == rootEntryIdx) ? SubnetBuilder::INOUT :
-                                                          SubnetBuilder::INPUT;
-  uint64_t coneEntryIdx = builder.addCell(origCell.getSymbol(), inputKind);
+  uint64_t coneEntryIdx = builder.addInput();
+  if (origEntryIdx == rootEntryIdx) {
+    builder.addOutput(Link(coneEntryIdx));
+  }
   origEntryToCone[origEntryIdx] = coneEntryIdx;
   coneEntryToOrig[coneEntryIdx] = origEntryIdx;
 }
@@ -57,12 +57,12 @@ void ConeBuilder::addInsForMaxCone(const uint64_t rootEntryIdx,
                coneEntryToOrig);
       continue;
     }
-    for (const auto &newEntry : subnet->getLinks(origEntryIdx)) {
-      uint64_t newEntryIdx = newEntry.idx;
-      if (used.find(newEntryIdx) != used.end()) {
+    for (const auto &newLink : subnet->getLinks(origEntryIdx)) {
+      uint64_t newLinkIdx = newLink.idx;
+      if (used.find(newLinkIdx) != used.end()) {
         continue;
       }
-      subnetEntriesStack.push_back(newEntryIdx);
+      subnetEntriesStack.push_back(newLinkIdx);
     }
   }
 }
@@ -104,14 +104,15 @@ ConeBuilder::Cone ConeBuilder::getCone(const uint64_t rootEntryIdx,
 
     LinkList links;
     bool allInputsVisited = true;
-    for (const auto &newEntry : subnet->getLinks(curEntryIdx)) {
-      const auto newEntryIdx = newEntry.idx;
-      if (origEntryToCone.find(newEntryIdx) == origEntryToCone.end()) {
-        subnetEntriesStack.push(newEntryIdx);
+    for (const auto &newLink : subnet->getLinks(curEntryIdx)) {
+      const auto newLinkIdx = newLink.idx;
+      if (origEntryToCone.find(newLinkIdx) == origEntryToCone.end()) {
+        subnetEntriesStack.push(newLinkIdx);
         allInputsVisited = false;
       }
       if (allInputsVisited) {
-        links.push_back(origEntryToCone[newEntryIdx]);
+        links.push_back(Link(origEntryToCone[newLinkIdx], newLink.out,
+                             newLink.inv));
       }
     }
 
@@ -120,14 +121,12 @@ ConeBuilder::Cone ConeBuilder::getCone(const uint64_t rootEntryIdx,
     }
     subnetEntriesStack.pop();
     uint64_t coneEntryIdx;
-    if (curEntryIdx == rootEntryIdx) {
-      coneEntryIdx = builder.addCell(curCell.getSymbol(), links,
-                                     SubnetBuilder::OUTPUT);
-    } else {
-      coneEntryIdx = builder.addCell(curCell.getSymbol(), links);
-    }
+    coneEntryIdx = builder.addCell(curCell.getSymbol(), links);
     origEntryToCone[curEntryIdx] = coneEntryIdx;
     coneEntryToOrig[coneEntryIdx] = curEntryIdx;
+    if (curEntryIdx == rootEntryIdx) {
+      builder.addOutput(Link(coneEntryIdx));
+    }
   }
   return Cone(builder.make(), coneEntryToOrig);
 }

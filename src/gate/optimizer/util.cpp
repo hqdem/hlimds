@@ -111,7 +111,12 @@ void getConeSet(GateId start, const Cut &cut,
     boundGNet.net = std::shared_ptr<GNet>(coneVisitor.getGNet());
     const auto &cutConeMap = coneVisitor.getResultMatch();
     for (const auto &gate: order) {
-      boundGNet.inputBindings.push_back(cutConeMap.find(gate)->second);
+      auto found = cutConeMap.find(gate);
+      if (found == cutConeMap.end()) {
+        boundGNet.inputBindings.push_back(Gate::INVALID);
+      } else {
+        boundGNet.inputBindings.push_back(found->second);
+      }
     }
     return boundGNet;
   }

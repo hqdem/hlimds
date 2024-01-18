@@ -29,8 +29,7 @@ model::SubnetID launchAlgorithm(const kitty::dynamic_truth_table &func,
 
   std::vector<size_t> inputs;
   for (size_t i = 0; i < func.num_vars(); ++i) {
-    inputs.push_back(
-        subnetBuilder.addCell(model::IN, model::SubnetBuilder::INPUT));
+    inputs.push_back(subnetBuilder.addInput());
   }
 
   uint32_t dummy{0xffffffff};
@@ -51,10 +50,11 @@ model::SubnetID launchAlgorithm(const kitty::dynamic_truth_table &func,
     if (idx >= inputs.size()) {
       break;
     }
-    subnetBuilder.setDummy(idx);
+    // TODO: Needs to be checked.
+    // subnetBuilder.setDummy(idx);
   }
 
-  subnetBuilder.addCell(model::OUT, output, model::SubnetBuilder::OUTPUT);
+  subnetBuilder.addOutput(output);
 
   return subnetBuilder.make();
 }

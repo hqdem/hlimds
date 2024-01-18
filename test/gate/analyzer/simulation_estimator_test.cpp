@@ -24,13 +24,13 @@ TEST(SwitchActivityTest, ToggleRateTest) {
   SubnetBuilder subnetBuilder;
   size_t in[4];
   for (size_t i{0}; i < 4; ++i) {
-    in[i] = subnetBuilder.addCell(CellSymbol::IN, SubnetBuilder::INPUT);
+    in[i] = subnetBuilder.addInput();
   }
   size_t id{0};
   id = subnetBuilder.addCell(CellSymbol::OR, Link(in[0]), Link(in[1]));
   id = subnetBuilder.addCell(CellSymbol::AND, Link(id), Link(in[2]));
   id = subnetBuilder.addCell(CellSymbol::XOR, Link(id), Link(in[3]));
-  subnetBuilder.addCell(CellSymbol::OUT, Link(id), SubnetBuilder::OUTPUT);
+  subnetBuilder.addOutput(Link(id));
 
   const Subnet &subnet = Subnet::get(subnetBuilder.make());
 

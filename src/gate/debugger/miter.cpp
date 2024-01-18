@@ -13,7 +13,9 @@ namespace eda::gate::debugger {
 bool areMiterable(GNet &net1, GNet &net2, Hints &hints) {
   GateBinding *sources = hints.sourceBinding.get();
   GateBinding *targets = hints.targetBinding.get();
-  if (sources->empty()) {
+
+  if (sources->empty() &&
+     (net1.constants().empty() || net2.constants().empty())) {
     CHECK(false) << "Hints contain 0 sources" << std::endl;
     return false;
   }

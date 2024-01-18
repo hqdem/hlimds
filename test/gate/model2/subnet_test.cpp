@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
+#include "gate/model2/utils/subnet_cnf_encoder.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
@@ -25,12 +26,12 @@ SubnetID makeSimpleSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   LinkList links;
 
   for (size_t i = 0; i < arity; i++) {
-    const auto idx = builder.addCell(IN, SubnetBuilder::INPUT);
+    const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
 
   const auto idx = builder.addCellTree(symbol, links, k);
-  builder.addCell(OUT, Link(idx), SubnetBuilder::OUTPUT);
+  builder.addOutput(Link(idx));
 
   return builder.make();
 }
@@ -46,7 +47,7 @@ TEST(SubnetTest, SimpleTest) {
 
   size_t idx[InNum];
   for (size_t i = 0; i < InNum; ++i) {
-    idx[i] = subnetBuilder.addCell(IN, SubnetBuilder::INPUT);
+    idx[i] = subnetBuilder.addInput();
   }
 
   for (size_t n = (InNum >> 1); n != 0; n >>= 1) {
@@ -58,7 +59,7 @@ TEST(SubnetTest, SimpleTest) {
     }
   }
 
-  subnetBuilder.addCell(OUT, Link(idx[0]), SubnetBuilder::OUTPUT);
+  subnetBuilder.addOutput(Link(idx[0]));
 
   const auto &subnet = Subnet::get(subnetBuilder.make());
   EXPECT_EQ(subnet.getInNum(), InNum);
@@ -71,6 +72,10 @@ TEST(SubnetTest, SimpleTest) {
   const auto length = subnet.getPathLength();
   std::cout << "Path lenth: min=" << length.first
             << ", max="  << length.second << std::endl;
+
+  eda::gate::solver::Solver solver;
+  SubnetEncoder::get().encode(subnet, solver);
+  EXPECT_TRUE(solver.solve());
 }
 
 TEST(SubnetTest, CellTreeTest) {
@@ -100,6 +105,48 @@ TEST(SubnetTest, CellTreeTest) {
 
     EXPECT_EQ(evaluate(subnet), evaluate(treeSubnet));
   }
+}
+
+TEST(SubnetTest, BugTest) {
+  using Link = Subnet::Link;
+  using LinkList = Subnet::LinkList;
+
+  SubnetBuilder ANDSubnetBuilder;
+  size_t idx[2];
+  for (size_t i = 0; i < 2; ++i) {
+    idx[i] = ANDSubnetBuilder.addInput();
+  }
+  auto idxAND = ANDSubnetBuilder.addCell(AND, idx[0], idx[1]);
+  ANDSubnetBuilder.addOutput(Link(idxAND));
+  SubnetID ANDSubnet = ANDSubnetBuilder.make();
+  std::cout << "Subnet that will be used in SubnetBuilder" << std::endl;
+  std::cout << Subnet::get(ANDSubnet) << std::endl;
+
+  SubnetBuilder mainSubnetBuilder;
+  LinkList linkList;
+  for (size_t i = 0; i < 2; ++i) {
+    linkList.emplace_back(mainSubnetBuilder.addInput());
+  }
+  auto idxANDSubnetOut0 = mainSubnetBuilder.addSingleOutputSubnet(ANDSubnet, linkList);
+  std::cout << "idx of idxANDSubnetOut0: " << idxANDSubnetOut0.idx << std::endl;
+
+  linkList.clear();
+  for (size_t i = 0; i < 2; ++i) {
+    linkList.emplace_back(mainSubnetBuilder.addInput());
+  }
+  auto idxANDSubnetOut1 = mainSubnetBuilder.addSingleOutputSubnet(ANDSubnet, linkList);
+  std::cout << "idx of idxANDSubnetOut1: " << idxANDSubnetOut1.idx << std::endl;
+
+  linkList.clear();
+  linkList.emplace_back(idxANDSubnetOut0);
+  linkList.emplace_back(idxANDSubnetOut1);
+  auto idxANDSubnetOut2 = mainSubnetBuilder.addSingleOutputSubnet(ANDSubnet, linkList);
+  std::cout << "idx of idxANDSubnetOut2: " << idxANDSubnetOut2.idx << std::endl;
+
+  mainSubnetBuilder.addOutput(Link(idxANDSubnetOut2));
+  SubnetID mainSubnetId = mainSubnetBuilder.make();
+
+  std::cout << Subnet::get(mainSubnetId) << std::endl;
 }
 
 } // namespace eda::gate::model

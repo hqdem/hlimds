@@ -56,23 +56,24 @@ void printVerilog(const SubnetID subnetID) {
 
   for (size_t entryIndex = 0; entryIndex < std::size(entries);
        entryIndex++) {
-    auto cell = entries[entryIndex].cell;
+    auto subnetCell = entries[entryIndex].cell;
 
     //model::CellID cellID;
 
-    if (cell.isIn()) {
+    if (subnetCell.isIn()) {
       auto cellID = makeCell(model::CellSymbol::IN);
       netBuilder.addCell(cellID);
-    } else if (cell.isOut()) {
+      cellIDArray[entryIndex] = cellID;
+    } else if (subnetCell.isOut()) {
       //cellID = makeCell(model::CellSymbol::OUT, cellIDArray[cell.link[0].idx]);
     } else {
       model::Cell::LinkList linkList;
 
-      for (const auto &link : cell.link) {
+      for (const auto &link : subnetCell.link) {
         linkList.emplace_back(cellIDArray[link.idx]);
       }
-      if (cell.more > 0) {
-        for (int i = 1; i <= cell.more; i++) {
+      if (subnetCell.more > 0) {
+        for (int i = 1; i <= subnetCell.more; i++) {
           for (const auto &link :entries[entryIndex + i].link) {
             linkList.emplace_back(cellIDArray[link.idx]);
           }
@@ -84,7 +85,7 @@ void printVerilog(const SubnetID subnetID) {
     //cellIDArray[entryIndex] = cellID;
 //    netBuilder.addCell(cellID);
 
-    entryIndex += cell.more;
+    entryIndex += subnetCell.more;
   }
 
   // Create an instance of the NetPrinter class for the VERILOG format
@@ -143,7 +144,7 @@ TEST(TechMapTest, SimpleANDSubnet) {
 
   Techmaper techmaper;
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-                       "/simple_liberty.lib");
+                       "/sky130_fd_sc_hd__ff_100C_1v65.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 
@@ -218,7 +219,7 @@ TEST(TechMapTest, SimpleSub) {
   Techmaper techmaper;
 
   techmaper.setLiberty(libertyDirrectTechMap.string() +
-                       "/asd.lib");
+                       "/sky130_fd_sc_hd__ff_100C_1v65.lib");
   techmaper.setMapper(Techmaper::TechmaperType::FUNC);
   techmaper.setStrategy(Techmaper::TechmaperStrategyType::SIMPLE);
 

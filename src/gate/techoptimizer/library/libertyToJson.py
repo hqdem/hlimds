@@ -16,8 +16,15 @@ def read_information_from_library(path_to_library):
   for cell_group in library.get_groups('cell'):
     cell_name = (str(cell_group.args[0]))[1: -1]
 
+    worstLeakege = 0
+    for leakege_grop in cell_group.get_groups('leakage_power'):
+      curLeakege = leakege_grop['value']
+      if curLeakege > worstLeakege:
+        worstLeakege = curLeakege
+
     for pin_group in cell_group.get_groups('pin'):
       pin_name_attribute = str(pin_group.args[0])[1: -1]
+
       cell_area = cell_group['area']
 
       pin_direction_attribute = pin_group['direction']
@@ -70,7 +77,9 @@ def read_information_from_library(path_to_library):
       cell_library[cell_name] = {'delay': delay,
                                  'input': input_pins,
                                  'output': output_pins,
-                                 'area' : cell_area
+                                 'area' : cell_area,
+                                 'leakage' : worstLeakege,
+                                #'power': power
                                  }
       last_output_pins = output_pins
 

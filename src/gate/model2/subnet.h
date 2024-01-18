@@ -286,6 +286,22 @@ public:
     return addCell(symbol, LinkList{l1, l2, l3, l4, l5});
   }
 
+  /// Adds the given number of inputs.
+  LinkList addInputs(size_t nIn) {
+    LinkList inputs(nIn);
+    for (size_t i = 0; i < nIn; ++i) {
+      inputs[i] = Link(addInput());
+    }
+    return inputs;
+  }
+
+  /// Returns the outputs connected to the given links.
+  void addOutputs(const LinkList &links) {
+    for (const auto link : links) {
+      addOutput(link);
+    }
+  }
+
   /// Adds a k-ary tree that implements the given function.
   /// The operation should be regroupable (associative).
   size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);

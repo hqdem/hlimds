@@ -218,7 +218,13 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
         continue;
       }
 
-      eda::gate::model::CellProperties props(true, false, false, false, false, false, false);
+      eda::gate::model::CellProperties props(true,
+                                             false,
+                                             false,
+                                             false,
+                                             false,
+                                             false,
+                                             false);
       model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
       model::CellTypeAttr::get(cellTypeAttrID).area = cell->getArea();
 
@@ -233,6 +239,10 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
 
       cellTypeIDs.push_back(cellID);
     }
+    for (Cell* ptr : cells) {
+      delete ptr;
+    }
+    cells.clear();
     return cellTypeIDs;
   }
 

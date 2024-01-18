@@ -82,12 +82,15 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
 //===----------------------------------------------------------------------===//
 
 size_t SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
-  bool isPositive = !CellType::get(typeID).isNegative();
+  const bool isPositive = !CellType::get(typeID).isNegative();
   assert(isPositive && "Only positive cells are allowed in a subnet");
 
   const bool in  = (typeID == CELL_TYPE_ID_IN);
   const bool out = (typeID == CELL_TYPE_ID_OUT);
   const auto idx = entries.size();
+
+  // It is prohibited to add normal cells after outputs.
+  assert(out || nOut == 0);
 
   for (const auto link : links) {
     auto &cell = entries[link.idx].cell;
@@ -144,27 +147,27 @@ size_t SubnetBuilder::addCellTree(
 SubnetBuilder::LinkList SubnetBuilder::addSubnet(
     const SubnetID subnetID, const LinkList &links) {
   
-  const auto offset = entries.size();
-
   const auto &subnet = Subnet::get(subnetID);
-  const auto &entries = subnet.getEntries();
+  const auto &subnetEntries = subnet.getEntries();
+
+  const auto offset = (entries.size() - subnet.getInNum());
 
   LinkList outs;
   outs.reserve(subnet.getOutNum());
 
-  for (size_t i = subnet.getInNum(); i < entries.size(); ++i) {
+  for (size_t i = subnet.getInNum(); i < subnetEntries.size(); ++i) {
     auto newLinks = subnet.getLinks(i);
 
     for (size_t j = 0; j < newLinks.size(); ++j) {
       auto &newLink = newLinks[j];
-      if (newLink.idx < nIn) {
+      if (newLink.idx < subnet.getInNum()) {
         newLink = links[newLink.idx];
       } else {
         newLink.idx += offset;
       }
     }
 
-    const auto &cell = entries[i].cell;
+    const auto &cell = subnetEntries[i].cell;
     i += cell.more;
 
     if (cell.isOut()) {

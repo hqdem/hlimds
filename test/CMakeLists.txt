@@ -27,6 +27,7 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
+  gate/analyzer/prob_estimator_test.cpp
   gate/analyzer/simulation_estimator_test.cpp
   gate/debugger/k_lec_test.cpp
   gate/debugger/lec_test.cpp
@@ -89,6 +90,7 @@ add_executable(${TEST_TARGET}
   gate/techmapper/strategy/example_test.cpp
   gate/transformer/aigmapper_test.cpp
   gate/transformer/bdd_test.cpp
+  gate/transformer/mutator_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp
   rtl/library/arithmetic_test.cpp

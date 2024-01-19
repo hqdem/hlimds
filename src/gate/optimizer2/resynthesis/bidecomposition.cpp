@@ -54,7 +54,7 @@ BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
   Link lhs = decompose(firstBiClique, subnetBuilder, maxArity);
   Link rhs = decompose(secondBiClique, subnetBuilder, maxArity);
 
-  return subnetBuilder.addCell(model::AND, lhs, rhs);
+  return ~subnetBuilder.addCell(model::AND, lhs, rhs);
 }
 
 BiDecomposition::CoveragePair BiDecomposition::findBaseCoverage(

@@ -37,7 +37,7 @@ Link MinatoMorrealeAlg::synthFromISOP(const ISOP &cubes,
     links.push_back(~link);
   }
   
-  return subnetBuilder.addCellTree(model::AND, links, maxArity);
+  return ~subnetBuilder.addCellTree(model::AND, links, maxArity);
 }
 
 Link MinatoMorrealeAlg::synthFromCube(Cube cube,

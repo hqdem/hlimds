@@ -12,18 +12,41 @@
 
 namespace eda::gate::simulator2 {
 
+static size_t getLinkNum(const Simulator::Subnet &subnet) {
+  const auto &entries = subnet.getEntries();
+
+  size_t n = 0;
+  for (size_t i = 0; i < entries.size(); ++i) {
+    const auto &cell = entries[i].cell;
+    const auto items = cell.isOut() ? 1u : cell.getOutNum();
+
+    n += items;
+    i += cell.more;
+  }
+
+  return n;
+}
+
 Simulator::Simulator(const Subnet &subnet):
-    state(subnet.size()), nIn(subnet.getInNum()) {
-  const auto entries = subnet.getEntries();
+    state(getLinkNum(subnet)),
+    pos(subnet.getEntries().size()),
+    nIn(subnet.getInNum()),
+    nOut(subnet.getOutNum()) {
+  const auto &entries = subnet.getEntries();
   program.reserve(subnet.size());
 
+  size_t p = 0;
   for (size_t i = 0; i < entries.size(); ++i) {
-    const auto cell = entries[i].cell;
+    const auto &cell = entries[i].cell;
 
     if (!cell.isIn()) {
       program.emplace_back(getFunction(cell), i, subnet.getLinks(i));
-      i += cell.more;
     }
+
+    pos[i] = p;
+
+    i += cell.more;
+    p += cell.getOutNum();
   }
 }
 

@@ -13,6 +13,7 @@
 #include <cassert>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <vector>
 
 namespace eda::gate::simulator2 {
@@ -42,46 +43,46 @@ public:
     simulate();
   }
 
-  /// Returns the cell value.
-  template <typename T = DataChunk>
-  T getValue(size_t i) const {
-    return static_cast<T>(state[i]);
-  }
-
-  /// Returns the output value.
-  template <typename T = DataChunk>
-  T getValue() const {
-    return getValue<T>(state.size() - 1);
-  }
-
-  /// Returns the full state of the simulation. 
-  const DataVector &getState() const {
-    return state;
-  }
-
-private:
-  /// Sets the input values.
+  /// Sets the input values (value = uint64_t).
   void setInputs(const DataVector &values) {
     assert(values.size() == nIn);
     for (size_t i = 0; i < nIn; ++i) {
-      state[i] = values[i];
+      setValue(i, values[i]);
     }
   }
 
-  /// Sets the input values.
+  /// Sets the input values (value = bit).
   void setInputs(uint64_t values) {
-    assert(nIn <= DataChunkBits);
+    assert(nIn <= (sizeof(values) << 3));
     for (size_t i = 0; i < nIn; ++i) {
-      state[i] = (values >> i) & 1;
+      setValue(i, (values >> i) & 1);
     }
   }
 
-  /// Sets the input values.
+  /// Sets the input values (value = bool).
   void setInputs(const std::vector<bool> &values) {
     assert(values.size() == nIn);
     for (size_t i = 0; i < nIn; ++i) {
-      state[i] = static_cast<DataChunk>(values[i]);
+      setValue(i, values[i]);
     }
+  }
+
+  /// Gets the output link value.
+  template <typename T = DataChunk>
+  T getValue(Link link) const {
+    return static_cast<T>(value(link));
+  }
+
+  /// Gets the cell value.
+  template <typename T = DataChunk>
+  T getValue(size_t idx) const {
+    return getValue(Link(idx));
+  }
+
+  /// Sets the cell value.
+  template <typename T = DataChunk>
+  void setValue(size_t idx, T value) {
+    access(idx) = static_cast<DataChunk>(value);
   }
 
   /// Executes the compiled program.
@@ -91,8 +92,37 @@ private:
     }
   }
 
+private:
+  DataChunk &access(Link link) {
+    return state[index(link)];
+  }
+
+  DataChunk &access(size_t idx) {
+    return state[index(idx)];
+  }
+
+  const DataChunk &access(Link link) const {
+    return state[index(link)];
+  }
+
+  const DataChunk &access(size_t idx) const {
+    return state[index(idx)];
+  }
+
+  DataChunk value(Link link) const {
+    return link.inv ? ~access(link) : access(link);
+  }
+
+  size_t index(Link link) const {
+    return pos[link.idx] + link.out;
+  }
+
+  size_t index(size_t idx) const {
+    return pos[idx];
+  }
+
   /// Cell function.
-  using Function = std::function<void(size_t, LinkList)>;
+  using Function = std::function<void(size_t, const LinkList&)>;
 
   /// Single command.
   struct Command final {
@@ -110,87 +140,96 @@ private:
   /// Compiled program for the given subnet.
   std::vector<Command> program;
 
-  /// Holds the simulation state (accessed via cell indices).
+  /// Holds the simulation state (accessed via links).
   DataVector state;
+  /// Holds the indices in the simulation state vector.
+  std::vector<size_t> pos;
 
   /// Number of inputs.
-  size_t nIn;
-
-  //------------------------------------------------------------------------//
-  // Utils
-  //------------------------------------------------------------------------//
-
-  DataChunk value(const Link &link) const {
-    assert(link.out == 0);
-    return link.inv ? ~state[link.idx] : state[link.idx];
-  }
+  const size_t nIn;
+  /// Number of outputs.
+  const size_t nOut;
 
   //------------------------------------------------------------------------//
   // ZERO
   //------------------------------------------------------------------------//
 
   const Function opZero = [this](size_t out, const LinkList &in) {
-    state[out] = 0ull;
+    access(out) = 0ull;
   };
 
-  Function getZero(uint16_t arity) const { return opZero; }
+  Function getZero(uint16_t arity) const {
+    assert(arity == 0);
+    return opZero;
+  }
 
   //------------------------------------------------------------------------//
   // ONE
   //------------------------------------------------------------------------//
 
   const Function opOne = [this](size_t out, const LinkList &in) {
-    state[out] = -1ull;
+    access(out) = -1ull;
   };
 
-  Function getOne(uint16_t arity) const { return opOne; }
+  Function getOne(uint16_t arity) const {
+    assert(arity == 0);
+    return opOne;
+  }
 
   //------------------------------------------------------------------------//
   // BUF
   //------------------------------------------------------------------------//
 
   const Function opBuf = [this](size_t out, const LinkList &in) {
-    state[out] = value(in[0]);
+    access(out) = value(in[0]);
   };
 
-  Function getBuf(uint16_t arity) const { return opBuf; }
+  Function getBuf(uint16_t arity) const {
+    assert(arity == 1);
+    return opBuf;
+  }
 
   //------------------------------------------------------------------------//
   // NOT
   //------------------------------------------------------------------------//
 
   const Function opNot = [this](size_t out, const LinkList &in) {
-    state[out] = ~value(in[0]);
+    access(out) = ~value(in[0]);
   };
 
-  Function getNot(uint16_t arity) const { return opNot; }
+  Function getNot(uint16_t arity) const {
+    assert(arity == 1);
+    return opNot;
+  }
 
   //------------------------------------------------------------------------//
   // AND
   //------------------------------------------------------------------------//
 
   const Function opAnd2 = [this](size_t out, const LinkList &in) {
-    state[out] = (value(in[0]) & value(in[1]));
+    access(out) = (value(in[0]) & value(in[1]));
   };
 
   const Function opAnd3 = [this](size_t out, const LinkList &in) {
-    state[out] = (value(in[0]) & value(in[1]) & value(in[2]));
+    access(out) = (value(in[0]) & value(in[1]) & value(in[2]));
   };
 
   const Function opAndN = [this](size_t out, const LinkList &in) {
     DataChunk result = -1ull;
 
-    for (size_t i = 0; i < in.size(); i += 2) {
+    for (size_t i = 0; i + 1 < in.size(); i += 2) {
       result &= (value(in[i]) & value(in[i + 1]));
     }
     if (in.size() & 1) {
       result &= value(in.back());
     }
 
-    state[out] = result;
+    access(out) = result;
   };
 
   Function getAnd(uint16_t arity) const {
+    assert(arity >= 1);
+
     switch (arity) {
     case  1: return opBuf;
     case  2: return opAnd2;
@@ -204,27 +243,29 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opOr2 = [this](size_t out, const LinkList &in) {
-    state[out] = (value(in[0]) | value(in[1]));
+    access(out) = (value(in[0]) | value(in[1]));
   };
 
   const Function opOr3 = [this](size_t out, const LinkList &in) {
-    state[out] = (value(in[0]) | value(in[1]) | value(in[2]));
+    access(out) = (value(in[0]) | value(in[1]) | value(in[2]));
   };
 
   const Function opOrN = [this](size_t out, const LinkList &in) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i < in.size(); i += 2) {
+    for (size_t i = 0; i + 1 < in.size(); i += 2) {
       result |= (value(in[i]) | value(in[i + 1]));
     }
     if (in.size() & 1) {
       result |= value(in.back());
     }
 
-    state[out] = result;
+    access(out) = result;
   };
 
   Function getOr(uint16_t arity) const {
+    assert(arity >= 1);
+
     switch (arity) {
     case  1: return opBuf;
     case  2: return opOr2;
@@ -238,27 +279,29 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opXor2 = [this](size_t out, const LinkList &in) {
-    state[out] = (value(in[0]) ^ value(in[1]));
+    access(out) = (value(in[0]) ^ value(in[1]));
   };
 
   const Function opXor3 = [this](size_t out, const LinkList &in) {
-    state[out] = (value(in[0]) ^ value(in[1]) ^ value(in[2]));
+    access(out) = (value(in[0]) ^ value(in[1]) ^ value(in[2]));
   };
 
   const Function opXorN = [this](size_t out, const LinkList &in) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i < in.size(); i += 2) {
+    for (size_t i = 0; i + 1 < in.size(); i += 2) {
       result ^= (value(in[i]) ^ value(in[i + 1]));
     }
     if (in.size() & 1) {
       result ^= value(in.back());
     }
 
-    state[out] = result;
+    access(out) = result;
   };
 
   Function getXor(uint16_t arity) const {
+    assert(arity >= 1);
+
     switch (arity) {
     case  1: return opBuf;
     case  2: return opXor2;
@@ -272,27 +315,29 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opNand2 = [this](size_t out, const LinkList &in) {
-    state[out] = ~(value(in[0]) & value(in[1]));
+    access(out) = ~(value(in[0]) & value(in[1]));
   };
 
   const Function opNand3 = [this](size_t out, const LinkList &in) {
-    state[out] = ~(value(in[0]) & value(in[1]) & value(in[2]));
+    access(out) = ~(value(in[0]) & value(in[1]) & value(in[2]));
   };
 
   const Function opNandN = [this](size_t out, const LinkList &in) {
     DataChunk result = -1ull;
 
-    for (size_t i = 0; i < in.size(); i += 2) {
+    for (size_t i = 0; i + 1 < in.size(); i += 2) {
       result &= (value(in[i]) & value(in[i + 1]));
     }
     if (in.size() & 1) {
       result &= value(in.back());
     }
 
-    state[out] = ~result;
+    access(out) = ~result;
   };
 
   Function getNand(uint16_t arity) const {
+    assert(arity >= 1);
+
     switch (arity) {
     case  1: return opNot;
     case  2: return opNand2;
@@ -306,27 +351,29 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opNor2 = [this](size_t out, const LinkList &in) {
-    state[out] = ~(value(in[0]) | value(in[1]));
+    access(out) = ~(value(in[0]) | value(in[1]));
   };
 
   const Function opNor3 = [this](size_t out, const LinkList &in) {
-    state[out] = ~(value(in[0]) | value(in[1]) | value(in[2]));
+    access(out) = ~(value(in[0]) | value(in[1]) | value(in[2]));
   };
 
   const Function opNorN = [this](size_t out, const LinkList &in) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i < in.size(); i += 2) {
+    for (size_t i = 0; i + 1 < in.size(); i += 2) {
       result |= (value(in[i]) | value(in[i + 1]));
     }
     if (in.size() & 1) {
       result |= value(in.back());
     }
 
-    state[out] = ~result;
+    access(out) = ~result;
   };
 
   Function getNor(uint16_t arity) const {
+    assert(arity >= 1);
+
     switch (arity) {
     case  1: return opNot;
     case  2: return opNor2;
@@ -340,27 +387,29 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opXnor2 = [this](size_t out, const LinkList &in) {
-    state[out] = ~(value(in[0]) ^ value(in[1]));
+    access(out) = ~(value(in[0]) ^ value(in[1]));
   };
 
   const Function opXnor3 = [this](size_t out, const LinkList &in) {
-    state[out] = ~(value(in[0]) ^ value(in[1]) ^ value(in[2]));
+    access(out) = ~(value(in[0]) ^ value(in[1]) ^ value(in[2]));
   };
 
   const Function opXnorN = [this](size_t out, const LinkList &in) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i < in.size(); i += 2) {
+    for (size_t i = 0; i + 1 < in.size(); i += 2) {
       result ^= (value(in[i]) ^ value(in[i + 1]));
     }
     if (in.size() & 1) {
       result ^= value(in.back());
     }
 
-    state[out] = ~result;
+    access(out) = ~result;
   };
 
   Function getXnor(uint16_t arity) const {
+    assert(arity >= 1);
+
     switch (arity) {
     case  1: return opNot;
     case  2: return opXnor2;
@@ -377,7 +426,8 @@ private:
     const auto x = value(in[0]);
     const auto y = value(in[1]);
     const auto z = value(in[2]);
-    state[out] = (x & y) | (x & z) | (y & z);
+
+    access(out) = ((x & y) | (x & z) | (y & z));
   };
 
   const Function opMajN = [this](size_t out, const LinkList &in) {
@@ -404,10 +454,12 @@ private:
       result |= (weight > k) << bit;
     }
 
-    state[out] = result;
+    access(out) = result;
   };
 
   Function getMaj(uint16_t arity) const {
+    assert(arity >= 1 && (arity & 1));
+
     switch (arity) {
     case  1: return opBuf;
     case  3: return opMaj3;

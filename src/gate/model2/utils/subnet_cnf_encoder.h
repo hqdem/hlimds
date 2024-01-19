@@ -143,14 +143,15 @@ public:
         for (size_t j = 0; j < type.getInNum(); ++j) {
           auto link = subnet.getLink(i, j);
           // The j-th subnet input <= the j-th cell input.
-          solver.encodeBuf(innerContext.lit(j, 1), context.lit(link, 1));
+          solver.encodeBuf(innerContext.lit(j, 0, 1), context.lit(link, 1));
         }
 
         // Encode the output bindings.
         const size_t out = subnet.getEntries().size() - subnet.getOutNum();
         for (size_t j = 0; j < type.getOutNum(); ++j) {
           // The j-th cell output <= the j-th subnet output.
-          solver.encodeBuf(context.lit(i, j, 1), innerContext.lit(out + j, 1));
+          const auto k = out + j;
+          solver.encodeBuf(context.lit(i, j, 1), innerContext.lit(k, 0, 1));
         }
       }
 

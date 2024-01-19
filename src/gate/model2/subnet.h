@@ -32,7 +32,7 @@ public:
   struct Link final {
     Link(uint32_t idx, uint8_t out, bool inv): idx(idx), out(out), inv(inv) {}
     Link(uint32_t idx, bool inv): Link(idx, 0, inv) {}
-    Link(uint32_t idx): Link(idx, false) {}
+    explicit Link(uint32_t idx): Link(idx, false) {}
     Link(): Link(0) {}
 
     Link operator~() const { return Link(idx, out, !inv); }
@@ -105,6 +105,9 @@ public:
     const CellType &getType() const { return CellType::get(getTypeID()); }
     CellSymbol getSymbol() const { return getType().getSymbol(); }
 
+    uint16_t getInNum() const { return arity; }
+    uint16_t getOutNum() const { return getType().getOutNum(); }
+
     /// Flip-flop input/output flag.
     uint64_t flipFlop : 1;
     /// Unique flip-flop identifier (for flip-flip inputs/outputs).
@@ -144,6 +147,9 @@ public:
     Link link[Cell::InEntryLinks];
   };
   static_assert(sizeof(Entry) == 32);
+
+  Subnet &operator =(const Subnet &r) = delete;
+  Subnet(const Subnet &r) = delete;
 
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }

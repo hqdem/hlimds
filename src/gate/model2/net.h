@@ -21,6 +21,9 @@ class Net final : public Object<Net, NetID> {
   friend class Storage<Net>;
 
 public:
+  Net &operator =(const Net &r) = delete;
+  Net(const Net &r) = delete;
+
   List<CellID> getInputs() const { return List<CellID>(inputs); }
   List<CellID> getOutputs() const { return List<CellID>(outputs); }
   List<CellID> getCombCells() const { return List<CellID>(combCells); }

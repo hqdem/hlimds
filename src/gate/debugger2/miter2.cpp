@@ -48,7 +48,7 @@ bool areMiterable(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
   return true;
 }
 
-Subnet miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
+const Subnet &miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
   if (not areMiterable(net1, net2, hints)) {
     return net1;
   }
@@ -71,8 +71,8 @@ Subnet miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints) {
   LinkList xors;
   for (size_t i = 0; i < net1.getOutNum(); i++) {
     LinkList xorLinks;
-    xorLinks.push_back(map1[itOut->first]);
-    xorLinks.push_back(map2[itOut->second]);
+    xorLinks.push_back(Link(map1[itOut->first]));
+    xorLinks.push_back(Link(map2[itOut->second]));
     xors.push_back(subnetBuilder.addCell(XOR, xorLinks));
     itOut++;
   }

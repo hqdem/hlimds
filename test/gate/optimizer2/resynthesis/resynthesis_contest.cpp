@@ -96,7 +96,7 @@ void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
     return;
   }
   // Inner gates.
-  const Subnet subnet = Subnet::get(id);
+  const Subnet &subnet = Subnet::get(id);
   file << subnet.size() - subnet.getInNum() - subnet.getOutNum() << ',';
   // Depth.
   const auto length = subnet.getPathLength();

@@ -35,7 +35,7 @@ TEST(MiterTest, Random) {
     }
 
     auto hints = makeHints(subnet, map);
-    auto miter = miter2(subnet, subnet, hints);
+    const auto &miter = miter2(subnet, subnet, hints);
     EXPECT_TRUE(miter.getOutNum() == 1);
     EXPECT_TRUE(miter.getInNum() == subnet.getInNum());
 
@@ -46,7 +46,7 @@ TEST(MiterTest, Random) {
       values[k] = std::rand();
     }
     simulator.simulate(values);
-    EXPECT_FALSE(simulator.getValue(miter.getEntries().size() - 1)) << std::endl;
+    EXPECT_FALSE(simulator.getValue(miter.getOut(0))) << std::endl;
 
     RndChecker2 rnd(false, 100);
     EXPECT_TRUE(rnd.equivalent(subnet, subnet, map).isUnknown());

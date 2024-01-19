@@ -118,6 +118,9 @@ class CellType final : public Object<CellType, CellTypeID> {
 public:
   static constexpr uint16_t AnyArity = 0xffff;
 
+  CellType &operator =(const CellType &r) = delete;
+  CellType(const CellType &r) = delete;
+
   /// Returns the cell type name.
   std::string getName() const { return String::get(nameID); }
   /// Returns the cell type function/kind.

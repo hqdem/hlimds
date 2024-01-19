@@ -51,7 +51,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
   }
 
   MiterHints hints = makeHints(lhs, gmap);
-  Subnet miter = miter2(lhs, rhs, hints);
+  const Subnet &miter = miter2(lhs, rhs, hints);
 
   std::uint64_t outNum = miter.getOutNum();
 
@@ -77,7 +77,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
         values[i] = std::rand() % inputPower;
       }
       simulator.simulate(values);
-      output = simulator.getValue(miter.getEntries().size() - 1);
+      output = simulator.getValue(miter.getOut(0));
       if (output) {
         return CheckerResult(CheckerResult::NOTEQUAL, values);
       }
@@ -89,7 +89,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
     size_t iterations = (inputPower <= 64) ? 1ULL : (inputPower >> 6);
     for (size_t i = 0; i < iterations; i++) {
       simulator.simulate(getAllValues(inputNum, i));
-      output = simulator.getValue(miter.getEntries().size() - 1);
+      output = simulator.getValue(miter.getOut(0));
       if (output) {
         return CheckerResult(CheckerResult::NOTEQUAL, values);
       }

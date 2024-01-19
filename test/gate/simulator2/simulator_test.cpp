@@ -26,12 +26,10 @@ TEST(SimulatorTest, SimpleTest) {
 
   for (size_t i = 0; i < nSubnet; ++i) {
     const auto subnetID = randomSubnet(nIn, nOut, nCell, minArity, maxArity);
-
     const auto &subnet = Subnet::get(subnetID);
-    std::cout << subnet << std::endl;
 
     Simulator simulator(subnet);
-    Simulator::DV values(nIn);
+    Simulator::DataVector values(nIn);
 
     for (size_t j = 0; j < nTest; ++j) {
       for (size_t k = 0; k < nIn; ++k) {

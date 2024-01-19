@@ -12,7 +12,7 @@
 
 namespace eda::gate::debugger2 {
 
-Simulator::DV getAllValues(size_t nIn, size_t count) {
+Simulator::DataVector getAllValues(size_t nIn, size_t count) {
   size_t startValue = count * 64;
   std::vector<std::bitset<64>> vec(nIn);
   for (size_t i = startValue; i < startValue + 64; i++) {
@@ -23,7 +23,7 @@ Simulator::DV getAllValues(size_t nIn, size_t count) {
       }
     }
   }
-  Simulator::DV res;
+  Simulator::DataVector res;
   for (size_t k = 0; k < vec.size(); k++) {
     res.push_back(vec[k].to_ullong());
   }
@@ -69,7 +69,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
   std::uint64_t output;
   std::uint64_t inputPower = 1ULL << inputNum;
   Simulator simulator(miter);
-  Simulator::DV values(inputNum);
+  Simulator::DataVector values(inputNum);
 
   if (!exhaustive) {
     for (std::uint64_t t = 0; t < tries; t++) {

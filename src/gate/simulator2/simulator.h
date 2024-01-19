@@ -15,8 +15,6 @@
 #include <functional>
 #include <vector>
 
-#include <iostream>
-
 namespace eda::gate::simulator2 {
 
 /**
@@ -29,38 +27,41 @@ public:
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
-  using D = uint64_t;
-  using DV = std::vector<D>;
+  using DataChunk = uint64_t;
+  using DataVector = std::vector<DataChunk>;
+
+  /// Data chunk size in bits.
+  static constexpr size_t DataChunkBits = (sizeof(DataChunk) << 3);
 
   Simulator(const Subnet &subnet);
 
   /// Evaluates the output and inner values from the input ones.
-  template <typename T = DV>
+  template <typename T = DataVector>
   void simulate(const T &values) { 
     setInputs(values);
     simulate();
   }
 
   /// Returns the cell value.
-  template <typename T = D>
+  template <typename T = DataChunk>
   T getValue(size_t i) const {
     return static_cast<T>(state[i]);
   }
 
   /// Returns the output value.
-  template <typename T = D>
+  template <typename T = DataChunk>
   T getValue() const {
     return getValue<T>(state.size() - 1);
   }
 
   /// Returns the full state of the simulation. 
-  const DV &getState() const {
+  const DataVector &getState() const {
     return state;
   }
 
 private:
   /// Sets the input values.
-  void setInputs(const DV &values) {
+  void setInputs(const DataVector &values) {
     assert(values.size() == nIn);
     for (size_t i = 0; i < nIn; ++i) {
       state[i] = values[i];
@@ -69,7 +70,7 @@ private:
 
   /// Sets the input values.
   void setInputs(uint64_t values) {
-    assert(nIn <= (sizeof(D) << 3));
+    assert(nIn <= DataChunkBits);
     for (size_t i = 0; i < nIn; ++i) {
       state[i] = (values >> i) & 1;
     }
@@ -79,7 +80,7 @@ private:
   void setInputs(const std::vector<bool> &values) {
     assert(values.size() == nIn);
     for (size_t i = 0; i < nIn; ++i) {
-      state[i] = static_cast<D>(values[i]);
+      state[i] = static_cast<DataChunk>(values[i]);
     }
   }
 
@@ -110,7 +111,7 @@ private:
   std::vector<Command> program;
 
   /// Holds the simulation state (accessed via cell indices).
-  DV state;
+  DataVector state;
 
   /// Number of inputs.
   size_t nIn;
@@ -119,7 +120,7 @@ private:
   // Utils
   //------------------------------------------------------------------------//
 
-  D value(const Link &link) const {
+  DataChunk value(const Link &link) const {
     assert(link.out == 0);
     return link.inv ? ~state[link.idx] : state[link.idx];
   }
@@ -132,7 +133,7 @@ private:
     state[out] = 0ull;
   };
 
-  Function getZero(uint32_t arity) const { return opZero; }
+  Function getZero(uint16_t arity) const { return opZero; }
 
   //------------------------------------------------------------------------//
   // ONE
@@ -142,7 +143,7 @@ private:
     state[out] = -1ull;
   };
 
-  Function getOne(uint32_t arity) const { return opOne; }
+  Function getOne(uint16_t arity) const { return opOne; }
 
   //------------------------------------------------------------------------//
   // BUF
@@ -152,7 +153,7 @@ private:
     state[out] = value(in[0]);
   };
 
-  Function getBuf(uint32_t arity) const { return opBuf; }
+  Function getBuf(uint16_t arity) const { return opBuf; }
 
   //------------------------------------------------------------------------//
   // NOT
@@ -162,7 +163,7 @@ private:
     state[out] = ~value(in[0]);
   };
 
-  Function getNot(uint32_t arity) const { return opNot; }
+  Function getNot(uint16_t arity) const { return opNot; }
 
   //------------------------------------------------------------------------//
   // AND
@@ -177,14 +178,14 @@ private:
   };
 
   const Function opAndN = [this](size_t out, const LinkList &in) {
-    D result = -1u;
+    DataChunk result = -1u;
     for (auto i : in) {
       result &= value(i);
     }
     state[out] = result;
   };
 
-  Function getAnd(uint32_t arity) const {
+  Function getAnd(uint16_t arity) const {
     switch (arity) {
     case  1: return opBuf;
     case  2: return opAnd2;
@@ -206,14 +207,14 @@ private:
   };
 
   const Function opOrN = [this](size_t out, const LinkList &in) {
-    D result = 0u;
+    DataChunk result = 0u;
     for (auto i : in) {
       result |= value(i);
     }
     state[out] = result;
   };
 
-  Function getOr(uint32_t arity) const {
+  Function getOr(uint16_t arity) const {
     switch (arity) {
     case  1: return opBuf;
     case  2: return opOr2;
@@ -242,7 +243,7 @@ private:
     state[out] = result;
   };
 
-  Function getXor(uint32_t arity) const {
+  Function getXor(uint16_t arity) const {
     switch (arity) {
     case  1: return opBuf;
     case  2: return opXor2;
@@ -264,14 +265,14 @@ private:
   };
 
   const Function opNandN = [this](size_t out, const LinkList &in) {
-    D result = -1u;
+    DataChunk result = -1u;
     for (auto i : in) {
       result &= value(i);
     }
     state[out] = ~result;
   };
 
-  Function getNand(uint32_t arity) const {
+  Function getNand(uint16_t arity) const {
     switch (arity) {
     case  1: return opNot;
     case  2: return opNand2;
@@ -293,14 +294,14 @@ private:
   };
 
   const Function opNorN = [this](size_t out, const LinkList &in) {
-    D result = 0u;
+    DataChunk result = 0u;
     for (auto i : in) {
       result |= value(i);
     }
     state[out] = ~result;
   };
 
-  Function getNor(uint32_t arity) const {
+  Function getNor(uint16_t arity) const {
     switch (arity) {
     case  1: return opNot;
     case  2: return opNor2;
@@ -322,14 +323,14 @@ private:
   };
 
   const Function opXnorN = [this](size_t out, const LinkList &in) {
-    D result = 0u;
+    DataChunk result = 0u;
     for (auto i : in) {
       result ^= value(i);
     }
     state[out] = ~result;
   };
 
-  Function getXnor(uint32_t arity) const {
+  Function getXnor(uint16_t arity) const {
     switch (arity) {
     case  1: return opNot;
     case  2: return opXnor2;
@@ -353,8 +354,8 @@ private:
     const size_t n = in.size();
     const size_t k = (n >> 1);
 
-    D result = 0u;
-    for (size_t bit = 0; bit <= (sizeof(D) << 3); ++bit) {
+    DataChunk result = 0u;
+    for (size_t bit = 0; bit <= DataChunkBits; ++bit) {
       auto upperBits = value(in[n - 1]) >> bit;
       auto zerosLeft = (upperBits == 0);
 
@@ -376,7 +377,7 @@ private:
     state[out] = result;
   };
 
-  Function getMaj(unsigned arity) const {
+  Function getMaj(uint16_t arity) const {
     switch (arity) {
     case  1: return opBuf;
     case  3: return opMaj3;

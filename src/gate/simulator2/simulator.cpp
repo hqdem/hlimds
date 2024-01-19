@@ -31,21 +31,21 @@ Simulator::Function Simulator::getFunction(const Cell &cell) const {
   using CellSymbol = eda::gate::model::CellSymbol;
 
   const auto f = cell.getSymbol();
-  const auto n = cell.arity;
+  const auto k = cell.arity;
 
   switch (f) {
-  case CellSymbol::OUT  : return getBuf(n);
-  case CellSymbol::ZERO : return getZero(n);
-  case CellSymbol::ONE  : return getOne(n);
-  case CellSymbol::BUF  : return getBuf(n);
-  case CellSymbol::NOT  : return getNot(n);
-  case CellSymbol::AND  : return getAnd(n);
-  case CellSymbol::OR   : return getOr(n);
-  case CellSymbol::XOR  : return getXor(n);
-  case CellSymbol::NAND : return getNand(n);
-  case CellSymbol::NOR  : return getNor(n);
-  case CellSymbol::XNOR : return getXnor(n);
-  case CellSymbol::MAJ  : return getMaj(n);
+  case CellSymbol::OUT  : return getBuf(k);
+  case CellSymbol::ZERO : return getZero(k);
+  case CellSymbol::ONE  : return getOne(k);
+  case CellSymbol::BUF  : return getBuf(k);
+  case CellSymbol::NOT  : return getNot(k);
+  case CellSymbol::AND  : return getAnd(k);
+  case CellSymbol::OR   : return getOr(k);
+  case CellSymbol::XOR  : return getXor(k);
+  case CellSymbol::NAND : return getNand(k);
+  case CellSymbol::NOR  : return getNor(k);
+  case CellSymbol::XNOR : return getXnor(k);
+  case CellSymbol::MAJ  : return getMaj(k);
   default: uassert(false, "Unsupported cell: " << f << std::endl);
   }
 

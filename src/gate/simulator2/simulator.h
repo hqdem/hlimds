@@ -86,7 +86,7 @@ private:
 
   /// Executes the compiled program.
   void simulate() {
-    for (auto &command : program) {
+    for (const auto &command : program) {
       command.op(command.out, command.in);
     }
   }
@@ -99,9 +99,9 @@ private:
     Command(Function op, size_t out, const LinkList &in):
         op(op), out(out), in(in) {}
 
-    Function op;
-    size_t out;
-    LinkList in;
+    const Function op;
+    const size_t out;
+    const LinkList in;
   };
 
   /// Returns the cell function.
@@ -170,18 +170,23 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opAnd2 = [this](size_t out, const LinkList &in) {
-    state[out] = value(in[0]) & value(in[1]);
+    state[out] = (value(in[0]) & value(in[1]));
   };
 
   const Function opAnd3 = [this](size_t out, const LinkList &in) {
-    state[out] = value(in[0]) & value(in[1]) & value(in[2]);
+    state[out] = (value(in[0]) & value(in[1]) & value(in[2]));
   };
 
   const Function opAndN = [this](size_t out, const LinkList &in) {
-    DataChunk result = -1u;
-    for (auto i : in) {
-      result &= value(i);
+    DataChunk result = -1ull;
+
+    for (size_t i = 0; i < in.size(); i += 2) {
+      result &= (value(in[i]) & value(in[i + 1]));
     }
+    if (in.size() & 1) {
+      result &= value(in.back());
+    }
+
     state[out] = result;
   };
 
@@ -199,18 +204,23 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opOr2 = [this](size_t out, const LinkList &in) {
-    state[out] = value(in[0]) | value(in[1]);
+    state[out] = (value(in[0]) | value(in[1]));
   };
 
   const Function opOr3 = [this](size_t out, const LinkList &in) {
-    state[out] = value(in[0]) | value(in[1]) | value(in[2]);
+    state[out] = (value(in[0]) | value(in[1]) | value(in[2]));
   };
 
   const Function opOrN = [this](size_t out, const LinkList &in) {
-    DataChunk result = 0u;
-    for (auto i : in) {
-      result |= value(i);
+    DataChunk result = 0ull;
+
+    for (size_t i = 0; i < in.size(); i += 2) {
+      result |= (value(in[i]) | value(in[i + 1]));
     }
+    if (in.size() & 1) {
+      result |= value(in.back());
+    }
+
     state[out] = result;
   };
 
@@ -228,18 +238,23 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opXor2 = [this](size_t out, const LinkList &in) {
-    state[out] = value(in[0]) ^ value(in[1]);
+    state[out] = (value(in[0]) ^ value(in[1]));
   };
 
   const Function opXor3 = [this](size_t out, const LinkList &in) {
-    state[out] = value(in[0]) ^ value(in[1]) ^ value(in[2]);
+    state[out] = (value(in[0]) ^ value(in[1]) ^ value(in[2]));
   };
 
   const Function opXorN = [this](size_t out, const LinkList &in) {
-    bool result = 0;
-    for (auto i : in) {
-      result ^= value(i);
+    DataChunk result = 0ull;
+
+    for (size_t i = 0; i < in.size(); i += 2) {
+      result ^= (value(in[i]) ^ value(in[i + 1]));
     }
+    if (in.size() & 1) {
+      result ^= value(in.back());
+    }
+
     state[out] = result;
   };
 
@@ -265,10 +280,15 @@ private:
   };
 
   const Function opNandN = [this](size_t out, const LinkList &in) {
-    DataChunk result = -1u;
-    for (auto i : in) {
-      result &= value(i);
+    DataChunk result = -1ull;
+
+    for (size_t i = 0; i < in.size(); i += 2) {
+      result &= (value(in[i]) & value(in[i + 1]));
     }
+    if (in.size() & 1) {
+      result &= value(in.back());
+    }
+
     state[out] = ~result;
   };
 
@@ -286,18 +306,23 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opNor2 = [this](size_t out, const LinkList &in) {
-    state[out] = !(value(in[0]) || value(in[1]));
+    state[out] = ~(value(in[0]) | value(in[1]));
   };
 
   const Function opNor3 = [this](size_t out, const LinkList &in) {
-    state[out] = !(value(in[0]) || value(in[1]) || value(in[2]));
+    state[out] = ~(value(in[0]) | value(in[1]) | value(in[2]));
   };
 
   const Function opNorN = [this](size_t out, const LinkList &in) {
-    DataChunk result = 0u;
-    for (auto i : in) {
-      result |= value(i);
+    DataChunk result = 0ull;
+
+    for (size_t i = 0; i < in.size(); i += 2) {
+      result |= (value(in[i]) | value(in[i + 1]));
     }
+    if (in.size() & 1) {
+      result |= value(in.back());
+    }
+
     state[out] = ~result;
   };
 
@@ -323,10 +348,15 @@ private:
   };
 
   const Function opXnorN = [this](size_t out, const LinkList &in) {
-    DataChunk result = 0u;
-    for (auto i : in) {
-      result ^= value(i);
+    DataChunk result = 0ull;
+
+    for (size_t i = 0; i < in.size(); i += 2) {
+      result ^= (value(in[i]) ^ value(in[i + 1]));
     }
+    if (in.size() & 1) {
+      result ^= value(in.back());
+    }
+
     state[out] = ~result;
   };
 

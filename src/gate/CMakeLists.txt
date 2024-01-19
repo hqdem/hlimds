@@ -66,6 +66,7 @@ add_library(Gate OBJECT
   optimizer2/resynthesis/unitized_table.cpp
   parser/gate_verilog.cpp
   parser/graphml.cpp
+  parser/graphml_to_subnet.cpp
   premapper/aigmapper.cpp
   premapper/migmapper.cpp
   premapper/premapper.cpp

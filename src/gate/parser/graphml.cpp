@@ -12,6 +12,19 @@ using namespace tinyxml2;
 
 namespace eda::gate::parser::graphml {
 
+  XMLElement *findGraph(XMLElement *root) {
+    XMLElement *child = root->FirstChildElement();
+    while (child) {
+      const char *tagName = child->Value();
+      if (tagName && !std::strcmp(tagName, "graph")) {
+        return child;
+      }
+      child = child->NextSiblingElement();
+    }
+    LOG_ERROR << "Graph Node is not found" << std::endl;
+    return nullptr;
+  }
+
   model::GNet *GraphMLParser::parse(const std::string &filename) {
     ParserData data;
     return parse(filename, data);
@@ -39,19 +52,6 @@ namespace eda::gate::parser::graphml {
     linkNet(data);
 
     return data.gnet;
-  }
-
-  XMLElement *GraphMLParser::findGraph(XMLElement *root) {
-    XMLElement *child = root->FirstChildElement();
-    while (child) {
-      const char *tagName = child->Value();
-      if (tagName && !std::strcmp(tagName, "graph")) {
-        return child;
-      }
-      child = child->NextSiblingElement();
-    }
-    LOG_ERROR << "Graph Node is not found" << std::endl;
-    return nullptr;
   }
 
   void GraphMLParser::iterateFromGraphNode(XMLElement *graphNode,

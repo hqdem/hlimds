@@ -18,7 +18,7 @@ static size_t getLinkNum(const Simulator::Subnet &subnet) {
   size_t n = 0;
   for (size_t i = 0; i < entries.size(); ++i) {
     const auto &cell = entries[i].cell;
-    const auto items = cell.isOut() ? 1u : cell.getOutNum();
+    const auto items = (cell.isOut() ? 1u : cell.getOutNum());
 
     n += items;
     i += cell.more;

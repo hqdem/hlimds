@@ -71,6 +71,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/resynthesis/resynthesis_contest.cpp
   gate/optimizer2/resynthesizer_test.cpp
   gate/parser/graphml_parser_test.cpp
+  gate/parser/graphml_to_subnet_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
   gate/premapper/mapper/mapper_test.cpp

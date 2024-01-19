@@ -83,14 +83,16 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
 
 Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
   const bool isPositive = !CellType::get(typeID).isNegative();
-  assert(isPositive && "Only positive cells are allowed in a subnet");
+  assert(isPositive && "Negative cells are not allowed");
 
   const bool in  = (typeID == CELL_TYPE_ID_IN);
   const bool out = (typeID == CELL_TYPE_ID_OUT);
   const auto idx = entries.size();
 
-  // It is prohibited to add normal cells after outputs.
-  assert(out || nOut == 0);
+  assert((!in || entries.size() == nIn)
+      && "Input cells after non-input cells are not allowed");
+  assert((out || nOut == 0)
+      && "Non-output cells after output cells are not allowed");
 
   for (const auto link : links) {
     auto &cell = entries[link.idx].cell;

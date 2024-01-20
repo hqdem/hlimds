@@ -13,13 +13,13 @@ using CellSymbol = eda::gate::model::CellSymbol;
 
 namespace eda::gate::tech_optimizer {
 
-CellDB cells;
+CellDB *cells;
 
 model::SubnetID mapDFF();
 model::SubnetID mapDFFrs();
 model::SubnetID mapLATCH();
 
-void setSequenceDB(CellDB &cellDB) {
+void setSequenceDB(CellDB *cellDB) {
   cells = cellDB;
 }
 
@@ -40,14 +40,14 @@ model::SubnetID mapSequenceCell(model::CellID sequenceCellID) {
 }
 
 model::SubnetID mapLATCH() {
-  return cells.getLatch()[0];
+  return cells->getLatch()[0];
 }
 
 model::SubnetID mapDFFrs() {
-  return cells.getDFFrs()[0];
+  return cells->getDFFrs()[0];
 }
 
 model::SubnetID mapDFF() {
-  return cells.getDFF()[0];
+  return cells->getDFF()[0];
 }
 } // namespace eda::gate::tech_optimizer

@@ -15,6 +15,6 @@
 
 namespace eda::gate::tech_optimizer {
 
-  void setSequenceDB(CellDB &cellDB);
+  void setSequenceDB(CellDB *cellDB);
   model::SubnetID mapSequenceCell(model::CellID sequenceCell);
 } // namespace eda::gate::tech_optimizer

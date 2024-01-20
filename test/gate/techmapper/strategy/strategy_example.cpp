@@ -3,7 +3,7 @@
 #include "gate/model2/net.h"
 #include "gate/optimizer2/resynthesis/isop.h"
 
-#include <list>
+#include <vector>
 
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using Subnet = eda::gate::model::Subnet;
@@ -15,7 +15,7 @@ namespace eda::gate::tech_optimizer {
     using NetID = eda::gate::model::NetID;
     using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
     
-    std::list<CellTypeID> cellTypeIDs;
+    std::vector<CellTypeID> cellTypeIDs;
 
     eda::gate::model::CellProperties props(true, false, false, false, false, false, false);
     eda::gate::model::CellTypeAttrID attrID;

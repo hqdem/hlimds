@@ -15,7 +15,7 @@
 
 #include "kitty/kitty.hpp"
 
-#include <list>
+//#include <list>
 #include <string>
 #include <vector>
 
@@ -31,12 +31,12 @@ struct Pin {
   const std::string &getName() const;
   double getMaxDelay() const;
 
-  private:
-    const std::string name;
-    double cell_fall;
-    double cell_rise;
-    double fall_transition;
-    double rise_transition;
+private:
+  const std::string name;
+  double cell_fall;
+  double cell_rise;
+  double fall_transition;
+  double rise_transition;
 };
 
 struct Cell {
@@ -63,17 +63,15 @@ private:
 };
 
 struct LibraryCells {
-  LibraryCells(const std::string &filename);
+  LibraryCells() = default;
+  //LibraryCells(const std::string &filename);
 
-  std::vector<Cell*> cells;
-  void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb, 
+  void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
+      std::vector<Cell*> &cells,
       std::unordered_map<std::string, CellTypeID> &cellTypeMap);
 
-  std::list<CellTypeID> initializeLiberty();
-
-  private:
-  void readLibertyFile(const std::string &filename);
-  
+  static void makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTypeID> &cellIDs);
+  static void readLibertyFile(const std::string &filename, std::vector<Cell*> &cells);
 };
 
 } // namespace eda::gate::tech_optimizer

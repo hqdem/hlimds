@@ -27,7 +27,7 @@ namespace eda::gate::tech_optimizer {
 
   class CutBasedTechMapper : public BaseMapper {
   public:
-    CutBasedTechMapper(CellDB &cellDB);
+    CutBasedTechMapper(CellDB *cellDB);
 
     void setStrategy(Strategy *strategy) override;
 
@@ -41,7 +41,7 @@ namespace eda::gate::tech_optimizer {
       SubnetID subnetID, CutExtractor &cutExtractor);
 
   private:
-    CellDB cellDB;
+    CellDB *cellDB;
     Strategy *strategy;
 
     double area;

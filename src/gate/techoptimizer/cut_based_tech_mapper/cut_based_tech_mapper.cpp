@@ -21,7 +21,7 @@ namespace eda::gate::tech_optimizer {
 
   std::vector<EntryIndex> outID;
 
-  CutBasedTechMapper::CutBasedTechMapper(CellDB &cellDB) {
+  CutBasedTechMapper::CutBasedTechMapper(CellDB *cellDB) {
     this->cellDB = cellDB;
   }
 
@@ -117,7 +117,7 @@ namespace eda::gate::tech_optimizer {
       } else {
         // Save best tech cells subnet to bestReplMap
         strategy->findBest(entryIndex, cutExtractor.getCuts(entryIndex), 
-            bestReplacementMap, cellDB, subnetID);
+            bestReplacementMap, *cellDB, subnetID);
       }
 
       entryIndex += cell.more;

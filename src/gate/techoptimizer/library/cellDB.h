@@ -13,7 +13,7 @@
 
 #include "kitty/print.hpp"
 
-#include <list>
+//#include <list>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -25,11 +25,10 @@ namespace eda::gate::tech_optimizer {
 
   class CellDB final{
   public:
-      CellDB(){};
-    CellDB(const std::list<CellTypeID> &cellTypeIDs);
+    CellDB(const std::vector<CellTypeID> &cellTypeIDs);
 
     //CellDB();
-    //void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs);
+    //void setFFTypeIDs(std::vectorCellTypeID> &triggTypeIDs);
 
     std::vector<std::pair<SubnetID, Subnetattr>> &getSubnetsAttr();
     std::vector<std::pair<kitty::dynamic_truth_table, 

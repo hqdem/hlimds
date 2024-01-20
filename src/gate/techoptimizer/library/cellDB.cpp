@@ -19,7 +19,7 @@ using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
 namespace eda::gate::tech_optimizer {
 
-CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
+CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
   std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {

@@ -30,8 +30,7 @@ static size_t getLinkNum(const Simulator::Subnet &subnet) {
 Simulator::Simulator(const Subnet &subnet):
     state(getLinkNum(subnet)),
     pos(subnet.getEntries().size()),
-    nIn(subnet.getInNum()),
-    nOut(subnet.getOutNum()) {
+    subnet(subnet) {
   const auto &entries = subnet.getEntries();
   program.reserve(subnet.size());
 
@@ -40,7 +39,8 @@ Simulator::Simulator(const Subnet &subnet):
     const auto &cell = entries[i].cell;
 
     if (!cell.isIn()) {
-      program.emplace_back(getFunction(cell), i, subnet.getLinks(i));
+      const auto op = getFunction(cell, i);
+      program.emplace_back(op, i, subnet.getLinks(i));
     }
 
     pos[i] = p;
@@ -50,26 +50,27 @@ Simulator::Simulator(const Subnet &subnet):
   }
 }
 
-Simulator::Function Simulator::getFunction(const Cell &cell) const {
+Simulator::Function Simulator::getFunction(const Cell &cell, size_t idx) const {
   using CellSymbol = eda::gate::model::CellSymbol;
 
-  const auto f = cell.getSymbol();
-  const auto k = cell.arity;
+  const auto func = cell.getSymbol();
+  const auto nIn  = cell.getInNum();
+  const auto nOut = cell.getOutNum();
 
-  switch (f) {
-  case CellSymbol::OUT  : return getBuf(k);
-  case CellSymbol::ZERO : return getZero(k);
-  case CellSymbol::ONE  : return getOne(k);
-  case CellSymbol::BUF  : return getBuf(k);
-  case CellSymbol::NOT  : return getNot(k);
-  case CellSymbol::AND  : return getAnd(k);
-  case CellSymbol::OR   : return getOr(k);
-  case CellSymbol::XOR  : return getXor(k);
-  case CellSymbol::NAND : return getNand(k);
-  case CellSymbol::NOR  : return getNor(k);
-  case CellSymbol::XNOR : return getXnor(k);
-  case CellSymbol::MAJ  : return getMaj(k);
-  default: uassert(false, "Unsupported cell: " << f << std::endl);
+  switch (func) {
+  case CellSymbol::OUT  : return getBuf(nIn);
+  case CellSymbol::ZERO : return getZero(nIn);
+  case CellSymbol::ONE  : return getOne(nIn);
+  case CellSymbol::BUF  : return getBuf(nIn);
+  case CellSymbol::NOT  : return getNot(nIn);
+  case CellSymbol::AND  : return getAnd(nIn);
+  case CellSymbol::OR   : return getOr(nIn);
+  case CellSymbol::XOR  : return getXor(nIn);
+  case CellSymbol::NAND : return getNand(nIn);
+  case CellSymbol::NOR  : return getNor(nIn);
+  case CellSymbol::XNOR : return getXnor(nIn);
+  case CellSymbol::MAJ  : return getMaj(nIn);
+  default               : return getCell(idx, nIn, nOut);
   }
 
   return getZero(0);

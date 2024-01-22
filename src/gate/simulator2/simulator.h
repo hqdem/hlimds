@@ -45,7 +45,9 @@ public:
 
   /// Sets the input values (value = uint64_t).
   void setInputs(const DataVector &values) {
+    const size_t nIn = subnet.getInNum();
     assert(values.size() == nIn);
+
     for (size_t i = 0; i < nIn; ++i) {
       setValue(i, values[i]);
     }
@@ -53,7 +55,9 @@ public:
 
   /// Sets the input values (value = bit).
   void setInputs(uint64_t values) {
+    const size_t nIn = subnet.getInNum();
     assert(nIn <= (sizeof(values) << 3));
+
     for (size_t i = 0; i < nIn; ++i) {
       setValue(i, (values >> i) & 1);
     }
@@ -61,7 +65,9 @@ public:
 
   /// Sets the input values (value = bool).
   void setInputs(const std::vector<bool> &values) {
+    const size_t nIn = subnet.getInNum();
     assert(values.size() == nIn);
+
     for (size_t i = 0; i < nIn; ++i) {
       setValue(i, values[i]);
     }
@@ -88,7 +94,7 @@ public:
   /// Executes the compiled program.
   void simulate() {
     for (const auto &command : program) {
-      command.op(command.out, command.in);
+      command.op(command.idx, command.links);
     }
   }
 
@@ -97,12 +103,12 @@ private:
     return state[index(link)];
   }
 
-  DataChunk &access(size_t idx) {
-    return state[index(idx)];
-  }
-
   const DataChunk &access(Link link) const {
     return state[index(link)];
+  }
+
+  DataChunk &access(size_t idx) {
+    return state[index(idx)];
   }
 
   const DataChunk &access(size_t idx) const {
@@ -126,16 +132,16 @@ private:
 
   /// Single command.
   struct Command final {
-    Command(Function op, size_t out, const LinkList &in):
-        op(op), out(out), in(in) {}
+    Command(Function op, size_t idx, const LinkList &links):
+        op(op), idx(idx), links(links) {}
 
     const Function op;
-    const size_t out;
-    const LinkList in;
+    const size_t idx;
+    const LinkList links;
   };
 
   /// Returns the cell function.
-  Function getFunction(const Cell &cell) const;
+  Function getFunction(const Cell &cell, size_t idx) const;
 
   /// Compiled program for the given subnet.
   std::vector<Command> program;
@@ -145,17 +151,15 @@ private:
   /// Holds the indices in the simulation state vector.
   std::vector<size_t> pos;
 
-  /// Number of inputs.
-  const size_t nIn;
-  /// Number of outputs.
-  const size_t nOut;
+  /// Subnet being simulated.
+  const Subnet &subnet;
 
   //------------------------------------------------------------------------//
   // ZERO
   //------------------------------------------------------------------------//
 
-  const Function opZero = [this](size_t out, const LinkList &in) {
-    access(out) = 0ull;
+  const Function opZero = [this](size_t idx, const LinkList &links) {
+    access(idx) = 0ull;
   };
 
   Function getZero(uint16_t arity) const {
@@ -167,8 +171,8 @@ private:
   // ONE
   //------------------------------------------------------------------------//
 
-  const Function opOne = [this](size_t out, const LinkList &in) {
-    access(out) = -1ull;
+  const Function opOne = [this](size_t idx, const LinkList &links) {
+    access(idx) = -1ull;
   };
 
   Function getOne(uint16_t arity) const {
@@ -180,8 +184,8 @@ private:
   // BUF
   //------------------------------------------------------------------------//
 
-  const Function opBuf = [this](size_t out, const LinkList &in) {
-    access(out) = value(in[0]);
+  const Function opBuf = [this](size_t idx, const LinkList &links) {
+    access(idx) = value(links[0]);
   };
 
   Function getBuf(uint16_t arity) const {
@@ -193,8 +197,8 @@ private:
   // NOT
   //------------------------------------------------------------------------//
 
-  const Function opNot = [this](size_t out, const LinkList &in) {
-    access(out) = ~value(in[0]);
+  const Function opNot = [this](size_t idx, const LinkList &links) {
+    access(idx) = ~value(links[0]);
   };
 
   Function getNot(uint16_t arity) const {
@@ -206,25 +210,25 @@ private:
   // AND
   //------------------------------------------------------------------------//
 
-  const Function opAnd2 = [this](size_t out, const LinkList &in) {
-    access(out) = (value(in[0]) & value(in[1]));
+  const Function opAnd2 = [this](size_t idx, const LinkList &links) {
+    access(idx) = (value(links[0]) & value(links[1]));
   };
 
-  const Function opAnd3 = [this](size_t out, const LinkList &in) {
-    access(out) = (value(in[0]) & value(in[1]) & value(in[2]));
+  const Function opAnd3 = [this](size_t idx, const LinkList &links) {
+    access(idx) = (value(links[0]) & value(links[1]) & value(links[2]));
   };
 
-  const Function opAndN = [this](size_t out, const LinkList &in) {
+  const Function opAndN = [this](size_t idx, const LinkList &links) {
     DataChunk result = -1ull;
 
-    for (size_t i = 0; i + 1 < in.size(); i += 2) {
-      result &= (value(in[i]) & value(in[i + 1]));
+    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+      result &= (value(links[i]) & value(links[i + 1]));
     }
-    if (in.size() & 1) {
-      result &= value(in.back());
+    if (links.size() & 1) {
+      result &= value(links.back());
     }
 
-    access(out) = result;
+    access(idx) = result;
   };
 
   Function getAnd(uint16_t arity) const {
@@ -242,25 +246,25 @@ private:
   // OR
   //------------------------------------------------------------------------//
 
-  const Function opOr2 = [this](size_t out, const LinkList &in) {
-    access(out) = (value(in[0]) | value(in[1]));
+  const Function opOr2 = [this](size_t idx, const LinkList &links) {
+    access(idx) = (value(links[0]) | value(links[1]));
   };
 
-  const Function opOr3 = [this](size_t out, const LinkList &in) {
-    access(out) = (value(in[0]) | value(in[1]) | value(in[2]));
+  const Function opOr3 = [this](size_t idx, const LinkList &links) {
+    access(idx) = (value(links[0]) | value(links[1]) | value(links[2]));
   };
 
-  const Function opOrN = [this](size_t out, const LinkList &in) {
+  const Function opOrN = [this](size_t idx, const LinkList &links) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i + 1 < in.size(); i += 2) {
-      result |= (value(in[i]) | value(in[i + 1]));
+    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+      result |= (value(links[i]) | value(links[i + 1]));
     }
-    if (in.size() & 1) {
-      result |= value(in.back());
+    if (links.size() & 1) {
+      result |= value(links.back());
     }
 
-    access(out) = result;
+    access(idx) = result;
   };
 
   Function getOr(uint16_t arity) const {
@@ -278,25 +282,25 @@ private:
   // XOR
   //------------------------------------------------------------------------//
 
-  const Function opXor2 = [this](size_t out, const LinkList &in) {
-    access(out) = (value(in[0]) ^ value(in[1]));
+  const Function opXor2 = [this](size_t idx, const LinkList &links) {
+    access(idx) = (value(links[0]) ^ value(links[1]));
   };
 
-  const Function opXor3 = [this](size_t out, const LinkList &in) {
-    access(out) = (value(in[0]) ^ value(in[1]) ^ value(in[2]));
+  const Function opXor3 = [this](size_t idx, const LinkList &links) {
+    access(idx) = (value(links[0]) ^ value(links[1]) ^ value(links[2]));
   };
 
-  const Function opXorN = [this](size_t out, const LinkList &in) {
+  const Function opXorN = [this](size_t idx, const LinkList &links) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i + 1 < in.size(); i += 2) {
-      result ^= (value(in[i]) ^ value(in[i + 1]));
+    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+      result ^= (value(links[i]) ^ value(links[i + 1]));
     }
-    if (in.size() & 1) {
-      result ^= value(in.back());
+    if (links.size() & 1) {
+      result ^= value(links.back());
     }
 
-    access(out) = result;
+    access(idx) = result;
   };
 
   Function getXor(uint16_t arity) const {
@@ -314,25 +318,25 @@ private:
   // NAND
   //------------------------------------------------------------------------//
 
-  const Function opNand2 = [this](size_t out, const LinkList &in) {
-    access(out) = ~(value(in[0]) & value(in[1]));
+  const Function opNand2 = [this](size_t idx, const LinkList &links) {
+    access(idx) = ~(value(links[0]) & value(links[1]));
   };
 
-  const Function opNand3 = [this](size_t out, const LinkList &in) {
-    access(out) = ~(value(in[0]) & value(in[1]) & value(in[2]));
+  const Function opNand3 = [this](size_t idx, const LinkList &links) {
+    access(idx) = ~(value(links[0]) & value(links[1]) & value(links[2]));
   };
 
-  const Function opNandN = [this](size_t out, const LinkList &in) {
+  const Function opNandN = [this](size_t idx, const LinkList &links) {
     DataChunk result = -1ull;
 
-    for (size_t i = 0; i + 1 < in.size(); i += 2) {
-      result &= (value(in[i]) & value(in[i + 1]));
+    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+      result &= (value(links[i]) & value(links[i + 1]));
     }
-    if (in.size() & 1) {
-      result &= value(in.back());
+    if (links.size() & 1) {
+      result &= value(links.back());
     }
 
-    access(out) = ~result;
+    access(idx) = ~result;
   };
 
   Function getNand(uint16_t arity) const {
@@ -350,25 +354,25 @@ private:
   // NOR
   //------------------------------------------------------------------------//
 
-  const Function opNor2 = [this](size_t out, const LinkList &in) {
-    access(out) = ~(value(in[0]) | value(in[1]));
+  const Function opNor2 = [this](size_t idx, const LinkList &links) {
+    access(idx) = ~(value(links[0]) | value(links[1]));
   };
 
-  const Function opNor3 = [this](size_t out, const LinkList &in) {
-    access(out) = ~(value(in[0]) | value(in[1]) | value(in[2]));
+  const Function opNor3 = [this](size_t idx, const LinkList &links) {
+    access(idx) = ~(value(links[0]) | value(links[1]) | value(links[2]));
   };
 
-  const Function opNorN = [this](size_t out, const LinkList &in) {
+  const Function opNorN = [this](size_t idx, const LinkList &links) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i + 1 < in.size(); i += 2) {
-      result |= (value(in[i]) | value(in[i + 1]));
+    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+      result |= (value(links[i]) | value(links[i + 1]));
     }
-    if (in.size() & 1) {
-      result |= value(in.back());
+    if (links.size() & 1) {
+      result |= value(links.back());
     }
 
-    access(out) = ~result;
+    access(idx) = ~result;
   };
 
   Function getNor(uint16_t arity) const {
@@ -386,25 +390,25 @@ private:
   // XNOR
   //------------------------------------------------------------------------//
 
-  const Function opXnor2 = [this](size_t out, const LinkList &in) {
-    access(out) = ~(value(in[0]) ^ value(in[1]));
+  const Function opXnor2 = [this](size_t idx, const LinkList &links) {
+    access(idx) = ~(value(links[0]) ^ value(links[1]));
   };
 
-  const Function opXnor3 = [this](size_t out, const LinkList &in) {
-    access(out) = ~(value(in[0]) ^ value(in[1]) ^ value(in[2]));
+  const Function opXnor3 = [this](size_t idx, const LinkList &links) {
+    access(idx) = ~(value(links[0]) ^ value(links[1]) ^ value(links[2]));
   };
 
-  const Function opXnorN = [this](size_t out, const LinkList &in) {
+  const Function opXnorN = [this](size_t idx, const LinkList &links) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i + 1 < in.size(); i += 2) {
-      result ^= (value(in[i]) ^ value(in[i + 1]));
+    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+      result ^= (value(links[i]) ^ value(links[i + 1]));
     }
-    if (in.size() & 1) {
-      result ^= value(in.back());
+    if (links.size() & 1) {
+      result ^= value(links.back());
     }
 
-    access(out) = ~result;
+    access(idx) = ~result;
   };
 
   Function getXnor(uint16_t arity) const {
@@ -422,27 +426,27 @@ private:
   // MAJ
   //------------------------------------------------------------------------//
 
-  const Function opMaj3 = [this](size_t out, const LinkList &in) {
-    const auto x = value(in[0]);
-    const auto y = value(in[1]);
-    const auto z = value(in[2]);
+  const Function opMaj3 = [this](size_t idx, const LinkList &links) {
+    const auto x = value(links[0]);
+    const auto y = value(links[1]);
+    const auto z = value(links[2]);
 
-    access(out) = ((x & y) | (x & z) | (y & z));
+    access(idx) = ((x & y) | (x & z) | (y & z));
   };
 
-  const Function opMajN = [this](size_t out, const LinkList &in) {
-    const size_t n = in.size();
+  const Function opMajN = [this](size_t idx, const LinkList &links) {
+    const size_t n = links.size();
     const size_t k = (n >> 1);
 
     DataChunk result = 0u;
     for (size_t bit = 0; bit <= DataChunkBits; ++bit) {
-      auto upperBits = value(in[n - 1]) >> bit;
+      auto upperBits = value(links[n - 1]) >> bit;
       auto zerosLeft = (upperBits == 0);
 
       auto weight = (upperBits & 1);
       for (size_t i = 0; i < k; i++) {
-        const auto upperBits0 = value(in[(i << 1)|0]) >> bit;
-        const auto upperBits1 = value(in[(i << 1)|1]) >> bit;
+        const auto upperBits0 = value(links[(i << 1)|0]) >> bit;
+        const auto upperBits1 = value(links[(i << 1)|1]) >> bit;
 
         zerosLeft &= (upperBits0 == 0) && (upperBits1 == 0);
        
@@ -454,7 +458,7 @@ private:
       result |= (weight > k) << bit;
     }
 
-    access(out) = result;
+    access(idx) = result;
   };
 
   Function getMaj(uint16_t arity) const {
@@ -465,6 +469,44 @@ private:
     case  3: return opMaj3;
     default: return opMajN;
     }
+  }
+
+  //------------------------------------------------------------------------//
+  // CELL
+  //------------------------------------------------------------------------//
+
+  const Function opCell = [this](size_t idx, const LinkList &links) {
+    const auto &entries = subnet.getEntries();
+    const auto &cell = entries[idx].cell;
+    const auto &type = cell.getType();
+    const auto &subnet = type.getSubnet();
+
+    Simulator simulator(subnet);
+
+    for (size_t i = 0; i < subnet.getInNum(); ++i) {
+      simulator.setValue(i, value(links[i]));
+    }
+
+    simulator.simulate();
+
+    for (size_t i = 0; i < subnet.getOutNum(); ++i) {
+      access(Link(idx, i)) = simulator.value(subnet.getOut(i));
+    }
+  };
+
+  Function getCell(size_t idx, uint16_t nIn, uint16_t nOut) const {
+    const auto &entries = subnet.getEntries();
+    assert(idx < entries.size());
+
+    const auto &cell = entries[idx].cell;
+    const auto &type = cell.getType();
+    assert(type.isSubnet());
+
+    const auto &subnet = type.getSubnet();
+    assert(subnet.getInNum() == nIn);
+    assert(subnet.getOutNum() == nOut);
+
+    return opCell;
   }
 };
 

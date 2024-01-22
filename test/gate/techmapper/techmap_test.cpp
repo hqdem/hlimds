@@ -57,14 +57,12 @@ void printVerilog(const SubnetID subnetID) {
        entryIndex++) {
     auto subnetCell = entries[entryIndex].cell;
 
-    //model::CellID cellID;
+    model::CellID cellID;
 
     if (subnetCell.isIn()) {
       auto cellID = makeCell(model::IN);
-      cellIDArray[entryIndex] = cellID;
-      netBuilder.addCell(cellID);
     } else if (subnetCell.isOut()) {
-      //cellID = makeCell(model::CellSymbol::OUT, cellIDArray[cell.link[0].idx]);
+      cellID = makeCell(model::CellSymbol::OUT, cellIDArray[subnetCell.link[0].idx]);
     } else {
       model::Cell::LinkList linkList;
 
@@ -78,11 +76,11 @@ void printVerilog(const SubnetID subnetID) {
           }
         }
       }
-      //cellID = makeCell(cell.getTypeID(), linkList);
+      cellID = makeCell(subnetCell.getTypeID(), linkList);
       linkList.clear();
     }
-    //cellIDArray[entryIndex] = cellID;
-//    netBuilder.addCell(cellID);
+    cellIDArray[entryIndex] = cellID;
+    netBuilder.addCell(cellID);
 
     entryIndex += subnetCell.more;
   }

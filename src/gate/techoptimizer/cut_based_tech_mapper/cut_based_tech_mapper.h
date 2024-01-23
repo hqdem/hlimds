@@ -12,8 +12,6 @@
 #include "gate/model2/net.h"
 #include "gate/optimizer2/cut_extractor.h"
 #include "gate/techoptimizer/baseMapper.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 #include "gate/techoptimizer/library/cellDB.h"
 
 using SubnetID = eda::gate::model::SubnetID;
@@ -29,28 +27,40 @@ namespace eda::gate::tech_optimizer {
   public:
     CutBasedTechMapper(CellDB *cellDB);
 
-    void setStrategy(Strategy *strategy) override;
+    void setStrategy(Strategy *strategy,
+        std::map<uint64_t, BestReplacement> *bestReplacementMap) override;
 
     SubnetID techMap(SubnetID subnetID) override;
 
     float getArea() const;
     float getDelay() const;
 
-    //TODO: temporarily in the public
-    std::map<EntryIndex, BestReplacement> replacementSearch(
-      SubnetID subnetID, CutExtractor &cutExtractor);
+    ~CutBasedTechMapper() override {
+      delete strategy;
+      delete bestReplacementMap;
+    }
 
   private:
     CellDB *cellDB;
     Strategy *strategy;
+    std::map<EntryIndex, BestReplacement> *bestReplacementMap;
 
     double area;
     double delay;
 
-    void aigMap(SubnetID subnetID);
+    SubnetID aigMap(SubnetID subnetID);
 
-    CutExtractor findCuts(SubnetID subnetID);
+    void replacementSearch(SubnetID subnetID);
 
-    SubnetID buildSubnet(SubnetID subnetID, std::map<EntryIndex, BestReplacement> &bestReplacementMap);
+    SubnetID buildSubnet(SubnetID subnetID);
+
+    void singlePassSearch(SubnetID subnetId,
+                          CutExtractor &cutExtractor);
+
+    void addInputToTheMap(EntryIndex entryIndex);
+    void addZeroToTheMap(EntryIndex entryIndex);
+    void addOneToTheMap(EntryIndex entryIndex);
+    void addOutToTheMap(EntryIndex entryIndex,
+                        model::Subnet::Cell &cell);
   };
 } // namespace eda::gate::tech_optimizer

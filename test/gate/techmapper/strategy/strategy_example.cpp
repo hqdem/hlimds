@@ -1,3 +1,4 @@
+/*
 #include "gate/techmapper/strategy/strategy_example.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/net.h"
@@ -81,3 +82,4 @@ namespace eda::gate::tech_optimizer {
   //SubnetID subnet2();
 
 } // namespace eda::gate::optimizer
+*/

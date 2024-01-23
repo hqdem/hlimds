@@ -12,7 +12,7 @@
  #include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
  #include "gate/techoptimizer/library/cellDB.h"
 
- #include <map>
+#include <map>
 
 /**
  * \brief Interface to handle node and its cuts.
@@ -21,16 +21,23 @@
 namespace eda::gate::tech_optimizer {
 
  using EntryIndex = uint64_t;
- using CutsList = eda::gate::optimizer2::CutExtractor::CutsList;
+ using CutExtractor = eda::gate::optimizer2::CutExtractor;
+ using CutsList = CutExtractor::CutsList;
 
  class Strategy {
  public:
-   Strategy() {};
+   bool multiPass = false;
    virtual void findBest(EntryIndex entryIndex, const CutsList &CutsList,
-                         std::map<EntryIndex,BestReplacement>
+                         std::map<EntryIndex, BestReplacement>
                              &bestReplacementMap,
                          CellDB &cellDB,
                          SubnetID subnetId) = 0;
+   virtual void findBest(SubnetID subnetID,
+                         CutExtractor &cutExtractor,
+                         CellDB &cellDB,
+                         std::map<EntryIndex, BestReplacement>
+                         &bestReplacementMap) = 0;
+   virtual ~Strategy() = default;
    //virtual bool checkOpt() = 0;
  };
 } // namespace eda::gate::tech_optimizer

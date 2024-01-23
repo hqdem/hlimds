@@ -54,7 +54,9 @@ void Techmapper::setStrategy(TechmapperStrategyType strategySelector) {
       break;
     case TechmapperStrategyType::SIMPLE: // simple area
       SimplifiedStrategy *strategy = new SimplifiedStrategy();
-      mapper->setStrategy(strategy);
+      std::map<EntryIndex, BestReplacement> *bestReplacementMap
+          = new std::map<EntryIndex, BestReplacement>;
+      mapper->setStrategy(strategy, bestReplacementMap);
       break;
   }
 }

@@ -40,5 +40,13 @@ public:
   std::vector<Cell*> cells;
   CellDB *cellDB;
   BaseMapper *mapper = nullptr;
+
+  ~Techmapper() {
+    delete mapper;
+    delete cellDB;
+    for(auto *cell : cells) {
+      delete cell;
+    }
+  }
 };
 } // namespace eda::gate::tech_optimizer

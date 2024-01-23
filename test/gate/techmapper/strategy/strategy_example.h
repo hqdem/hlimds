@@ -1,3 +1,4 @@
+/*
 //===----------------------------------------------------------------------===//
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
@@ -19,3 +20,4 @@ namespace eda::gate::tech_optimizer {
   SubnetID subnet2();
 
 } // namespace eda::gate::optimizer
+*/

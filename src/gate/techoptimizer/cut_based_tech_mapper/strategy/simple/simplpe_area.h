@@ -27,6 +27,11 @@ class SimplifiedStrategy : public Strategy{
                 std::map<EntryIndex, BestReplacement> &bestReplacementMap,
                 CellDB &cellDB,
                 SubnetID subnetID) override;
+  void findBest(SubnetID subnetID,
+                        optimizer2::CutExtractor &cutExtractor,
+                        CellDB &cellDB,
+                        std::map<EntryIndex, BestReplacement>
+                        &bestReplacementMap) override;
 };
 } // namespace eda::gate::tech_optimizer
 

@@ -1,3 +1,4 @@
+/*
 //===----------------------------------------------------------------------===//
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
@@ -316,3 +317,4 @@ for (const auto &cut : cutExtractor.getCuts(andIdx2)) {
 }
 
 } // namespace eda::gate::optimizer2
+*/

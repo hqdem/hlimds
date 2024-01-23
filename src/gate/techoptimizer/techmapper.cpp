@@ -6,71 +6,67 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model2/celltype.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/simplpe_area.h"
-#include "gate/techoptimizer/library/cell.h"
-#include "gate/techoptimizer/library/cellDB.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techmapper.h"
 
-#include <list>
+//#include <list>
 #include <map>
 
 using CellID = eda::gate::model::CellID;
 
 namespace eda::gate::tech_optimizer {
 
-CellDB cellDB;
-BaseMapper *mapper = nullptr;
-
-void Techmaper::setLiberty(const std::string &dbPath) {
-  LibraryCells libraryCells(dbPath);
-
-  CellDB cellDBF(libraryCells.initializeLiberty());
-  cellDB = cellDBF;
-  //CellDB *cellDB_ptr = &cellDB;
-  //*cellDB_ptr = libraryCells.initializeLiberty();
+void Techmapper::setLiberty(const std::string &dbPath) {
+  std::vector<CellTypeID> cellTypeIDs;
+  LibraryCells::readLibertyFile(dbPath, cells);
+  LibraryCells::makeCellTypeIDs(cells, cellTypeIDs);
+  this->cellDB = new CellDB(cellTypeIDs);
 
   //setSequenceDB(cellDB);
 }
 
-void Techmaper::setMapper(TechmaperType techmapSelector) {
+void Techmapper::setMapper(TechmapperType techmapSelector) {
   switch(techmapSelector) {
-    case TechmaperType::FUNC: // // cut-based matching
+    case TechmapperType::FUNC: // // cut-based matching
       mapper = new CutBasedTechMapper(cellDB);
       break;
 
-    case TechmaperType::STRUCT: // DAGON matching
-      //mapper = new DagonTechMapper(cellDB);
+    case TechmapperType::STRUCT: // DAGON matching
+      //mapper = new DagonTechMapper(*cellDB);
       break;
   }
 }
 
-void Techmaper::setStrategy(TechmaperStrategyType strategySelector) {
+void Techmapper::setStrategy(TechmapperStrategyType strategySelector) {
   switch(strategySelector) {
-    case TechmaperStrategyType::AREA_FLOW: // areaFlow
+    case TechmapperStrategyType::AREA_FLOW: // areaFlow
       //AreaFlow *strategy = new AreaFlow();
       //mapper->setStrategy(strategy);
       break;
 
-    case TechmaperStrategyType::DELAY: // delay
+    case TechmapperStrategyType::DELAY: // delay
       break;
 
-    case TechmaperStrategyType::POWER: // power
+    case TechmapperStrategyType::POWER: // power
       break;
-    case TechmaperStrategyType::SIMPLE: // simple area
+    case TechmapperStrategyType::SIMPLE: // simple area
       SimplifiedStrategy *strategy = new SimplifiedStrategy();
-      mapper->setStrategy(strategy);
+      std::map<EntryIndex, BestReplacement> *bestReplacementMap
+          = new std::map<EntryIndex, BestReplacement>;
+      mapper->setStrategy(strategy, bestReplacementMap);
       break;
   }
 }
 
-SubnetID Techmaper::techmap(SubnetID subnetID) {
+SubnetID Techmapper::techmap(SubnetID subnetID) {
  assert(mapper != nullptr);
  return mapper->techMap(subnetID);
 }
 
-SubnetID Techmaper::techmap(model::CellID sequenceCell) {
+SubnetID Techmapper::techmap(model::CellID sequenceCell) {
   return mapSequenceCell(sequenceCell);;
 }
 } // namespace eda::gate::tech_optimizer

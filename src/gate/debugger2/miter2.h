@@ -33,7 +33,7 @@ struct MiterHints {
  *  @param hints Gate-to-gate mapping between nets.
  *  @return The miter, if it is constructable, the first net otherwise.
  */
-Subnet miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints);
+const Subnet &miter2(const Subnet &net1, const Subnet &net2, MiterHints &hints);
 
 // Checks if it is possible to construct a miter with given parameters.
 bool areMiterable(const Subnet &net1, const Subnet &net2, MiterHints &hints);

@@ -12,7 +12,7 @@
 
 namespace eda::gate::debugger2 {
 
-Simulator::DV getAllValues(size_t nIn, size_t count) {
+Simulator::DataVector getAllValues(size_t nIn, size_t count) {
   size_t startValue = count * 64;
   std::vector<std::bitset<64>> vec(nIn);
   for (size_t i = startValue; i < startValue + 64; i++) {
@@ -23,7 +23,7 @@ Simulator::DV getAllValues(size_t nIn, size_t count) {
       }
     }
   }
-  Simulator::DV res;
+  Simulator::DataVector res;
   for (size_t k = 0; k < vec.size(); k++) {
     res.push_back(vec[k].to_ullong());
   }
@@ -51,7 +51,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
   }
 
   MiterHints hints = makeHints(lhs, gmap);
-  Subnet miter = miter2(lhs, rhs, hints);
+  const Subnet &miter = miter2(lhs, rhs, hints);
 
   std::uint64_t outNum = miter.getOutNum();
 
@@ -69,7 +69,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
   std::uint64_t output;
   std::uint64_t inputPower = 1ULL << inputNum;
   Simulator simulator(miter);
-  Simulator::DV values(inputNum);
+  Simulator::DataVector values(inputNum);
 
   if (!exhaustive) {
     for (std::uint64_t t = 0; t < tries; t++) {
@@ -77,7 +77,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
         values[i] = std::rand() % inputPower;
       }
       simulator.simulate(values);
-      output = simulator.getValue(miter.getEntries().size() - 1);
+      output = simulator.getValue(miter.getOut(0));
       if (output) {
         return CheckerResult(CheckerResult::NOTEQUAL, values);
       }
@@ -89,7 +89,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
     size_t iterations = (inputPower <= 64) ? 1ULL : (inputPower >> 6);
     for (size_t i = 0; i < iterations; i++) {
       simulator.simulate(getAllValues(inputNum, i));
-      output = simulator.getValue(miter.getEntries().size() - 1);
+      output = simulator.getValue(miter.getOut(0));
       if (output) {
         return CheckerResult(CheckerResult::NOTEQUAL, values);
       }

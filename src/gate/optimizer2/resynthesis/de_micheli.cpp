@@ -505,8 +505,8 @@ SubnetID DeMicheli::buildSubnet(const std::vector<MajNode> &tree,
   std::pair<size_t, bool> zero = {0, 0};
 
   for (size_t i = 0; i < nVars; ++i) {
-    const size_t id = builder.addInput();
-    idx.push_back(id);
+    const auto link = builder.addInput();
+    idx.push_back(link.idx);
   }
 
   auto it = tree.end();
@@ -522,8 +522,8 @@ SubnetID DeMicheli::buildSubnet(const std::vector<MajNode> &tree,
       links[i] = createLink(arg, nVars, treeSize, builder, idx, zero);
     }
 
-    const size_t id = builder.addCell(CellSymbol::MAJ, links);
-    idx.push_back(id);
+    const auto link = builder.addCell(CellSymbol::MAJ, links);
+    idx.push_back(link.idx);
   } while (it != tree.begin());
 
   if (simplest) {
@@ -561,7 +561,7 @@ Link DeMicheli::createLink(int64_t arg,
   if ((arg == -1) or (arg == -2)) {
     arg += 2;
     if (!zero.second) {
-      zero.first = builder.addCell(CellSymbol::ZERO);
+      zero.first = builder.addCell(CellSymbol::ZERO).idx;
       zero.second = true;
     }
   }

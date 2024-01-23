@@ -12,41 +12,65 @@
 
 namespace eda::gate::simulator2 {
 
+static size_t getLinkNum(const Simulator::Subnet &subnet) {
+  const auto &entries = subnet.getEntries();
+
+  size_t n = 0;
+  for (size_t i = 0; i < entries.size(); ++i) {
+    const auto &cell = entries[i].cell;
+    const auto items = (cell.isOut() ? 1u : cell.getOutNum());
+
+    n += items;
+    i += cell.more;
+  }
+
+  return n;
+}
+
 Simulator::Simulator(const Subnet &subnet):
-    state(subnet.size()), nIn(subnet.getInNum()) {
-  const auto entries = subnet.getEntries();
+    state(getLinkNum(subnet)),
+    pos(subnet.getEntries().size()),
+    subnet(subnet) {
+  const auto &entries = subnet.getEntries();
   program.reserve(subnet.size());
 
+  size_t p = 0;
   for (size_t i = 0; i < entries.size(); ++i) {
-    const auto cell = entries[i].cell;
+    const auto &cell = entries[i].cell;
 
     if (!cell.isIn()) {
-      program.emplace_back(getFunction(cell), i, subnet.getLinks(i));
-      i += cell.more;
+      const auto op = getFunction(cell, i);
+      program.emplace_back(op, i, subnet.getLinks(i));
     }
+
+    pos[i] = p;
+
+    i += cell.more;
+    p += cell.getOutNum();
   }
 }
 
-Simulator::Function Simulator::getFunction(const Cell &cell) const {
+Simulator::Function Simulator::getFunction(const Cell &cell, size_t idx) const {
   using CellSymbol = eda::gate::model::CellSymbol;
 
-  const auto f = cell.getSymbol();
-  const auto n = cell.arity;
+  const auto func = cell.getSymbol();
+  const auto nIn  = cell.getInNum();
+  const auto nOut = cell.getOutNum();
 
-  switch (f) {
-  case CellSymbol::OUT  : return getBuf(n);
-  case CellSymbol::ZERO : return getZero(n);
-  case CellSymbol::ONE  : return getOne(n);
-  case CellSymbol::BUF  : return getBuf(n);
-  case CellSymbol::NOT  : return getNot(n);
-  case CellSymbol::AND  : return getAnd(n);
-  case CellSymbol::OR   : return getOr(n);
-  case CellSymbol::XOR  : return getXor(n);
-  case CellSymbol::NAND : return getNand(n);
-  case CellSymbol::NOR  : return getNor(n);
-  case CellSymbol::XNOR : return getXnor(n);
-  case CellSymbol::MAJ  : return getMaj(n);
-  default: uassert(false, "Unsupported cell: " << f << std::endl);
+  switch (func) {
+  case CellSymbol::OUT  : return getBuf(nIn);
+  case CellSymbol::ZERO : return getZero(nIn);
+  case CellSymbol::ONE  : return getOne(nIn);
+  case CellSymbol::BUF  : return getBuf(nIn);
+  case CellSymbol::NOT  : return getNot(nIn);
+  case CellSymbol::AND  : return getAnd(nIn);
+  case CellSymbol::OR   : return getOr(nIn);
+  case CellSymbol::XOR  : return getXor(nIn);
+  case CellSymbol::NAND : return getNand(nIn);
+  case CellSymbol::NOR  : return getNor(nIn);
+  case CellSymbol::XNOR : return getXnor(nIn);
+  case CellSymbol::MAJ  : return getMaj(nIn);
+  default               : return getCell(idx, nIn, nOut);
   }
 
   return getZero(0);

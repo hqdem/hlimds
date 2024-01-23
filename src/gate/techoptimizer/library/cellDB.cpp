@@ -19,7 +19,7 @@ using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
 namespace eda::gate::tech_optimizer {
 
-CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
+CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
   std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
@@ -30,12 +30,11 @@ CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
       permutationVec.push_back(i);
     }
     std::sort(permutationVec.begin(), permutationVec.end());
-    do {
+    /*do {
       count ++;
       SubnetBuilder subnetBuilder;
       std::vector<Link> linkList;
       size_t linkArray[cellType.getInNum()];
-      linkList.reserve(cellType.getInNum());
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
         auto inputIdx = subnetBuilder.addInput();
         linkArray[permutationVec.at(i)] = inputIdx;
@@ -57,7 +56,28 @@ CellDB::CellDB(const std::list<CellTypeID> &cellTypeIDs) {
 
       ttSubnet.emplace_back(model::evaluate(
           cellType.getSubnet()), subnetID);
-    } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
+    } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));*/
+
+    SubnetBuilder subnetBuilder;
+    std::vector<Link> linkList;
+
+    for (size_t i = 0; i < cellType.getInNum(); ++i) {
+      linkList.emplace_back(subnetBuilder.addInput());
+    }
+
+    auto cellIdx = subnetBuilder.addCell(cellTypeID, linkList);
+
+    subnetBuilder.addOutput(cellIdx);
+
+    SubnetID subnetID = subnetBuilder.make();
+
+    subnets.push_back(subnetID);
+
+    Subnetattr subnetattr{"LibraryCell", cellType.getAttr().area};
+    subnetToAttr.emplace_back(subnetID, subnetattr);
+
+    ttSubnet.emplace_back(model::evaluate(
+        cellType.getSubnet()), subnetID);
   }
   std::cout << "Count of liberty Subnet = " << count << std::endl;
 }

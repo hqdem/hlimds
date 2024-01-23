@@ -23,7 +23,9 @@ typedef char *SystemPage;
 static constexpr uint64_t PAGE_SIZE = 64*1024*1024;
 static constexpr uint64_t PAGE_MASK = PAGE_SIZE - 1;
 
-class PageManager : public util::Singleton<PageManager> {
+class PageManager final : public util::Singleton<PageManager> {
+  friend class util::Singleton<PageManager>;
+
 public:
   /// Returns the object page.
   static constexpr uint64_t getPage(uint64_t objectID) {
@@ -66,6 +68,8 @@ public:
   }
 
 private:
+  PageManager() {}
+
   /// Current object page.
   ObjectPage objectPage = 0;
 

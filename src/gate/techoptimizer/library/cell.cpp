@@ -17,6 +17,8 @@
 #include <fstream>
 #include <sstream>
 
+//#include <list>
+
 using json = nlohmann::json;
 
 namespace eda::gate::tech_optimizer {
@@ -79,11 +81,11 @@ const Pin &Cell::getInputPin(uint inputPinNumber) const {
 // LibraryCells
 //===----------------------------------------------------------------------===//
 
-LibraryCells::LibraryCells(const std::string &filename) {
-  readLibertyFile(filename);
-}
+//LibraryCells::LibraryCells(const std::string &filename) {
+//  readLibertyFile(filename);
+//}
 
-void LibraryCells::readLibertyFile(const std::string &filename) {
+void LibraryCells::readLibertyFile(const std::string &filename, std::vector<Cell*> &cells) {
 
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path PythonScriptPath = homePath / "src" / "gate" / "techoptimizer" / "library" / "libertyToJson.py";
@@ -128,13 +130,12 @@ void LibraryCells::readLibertyFile(const std::string &filename) {
       new kitty::dynamic_truth_table(inputPinNames.size());
     kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
 
-    Cell *cell = new Cell(it.key(),
-        pins, truthTable, it.value()["area"]);
+    Cell *cell = new Cell(it.key(), pins, truthTable, it.value()["area"]);
     cells.push_back(cell);
   }
 }
 
-void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
+void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb, std::vector<Cell*> &cells,
     std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
   for(auto& cell : cells) {
     uint64_t truthTable = 0;
@@ -207,44 +208,37 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
     cellTypeMap.insert(std::pair<std::string, CellTypeID>
           (cell->getName(), cellID));
   }
+}
+
+void LibraryCells::makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTypeID> &cellTypeIDs) {
+  for(auto& cell : cells) {
+    if (cell->getInputPinsNumber() == 0 ) {
+      continue;
+    }
+
+    eda::gate::model::CellProperties
+      props(true, false, false, false, false, false, false);
+
+    model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+    model::CellTypeAttr::get(cellTypeAttrID).area = cell->getArea();
+
+    MinatoMorrealeAlg minatoMorrealeAlg;
+    const auto subnetID = minatoMorrealeAlg.synthesize(*cell->getTruthTable());
+
+    CellTypeID cellID = eda::gate::model::makeCellType(
+      cell->getName(), subnetID, cellTypeAttrID,
+      eda::gate::model::CellSymbol::CELL,
+      props, static_cast<uint16_t>(cell->getInputPinsNumber()),
+      static_cast<uint16_t>(1));
+
+    cellTypeIDs.push_back(cellID);
   }
 
-  std::list<CellTypeID> LibraryCells::initializeLiberty() {
-    std::list<CellTypeID> cellTypeIDs;
-
-    for(auto& cell : cells) {
-
-      if (cell->getInputPinsNumber() == 0 ) {
-        continue;
-      }
-
-      eda::gate::model::CellProperties props(true,
-                                             false,
-                                             false,
-                                             false,
-                                             false,
-                                             false,
-                                             false);
-      model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
-      model::CellTypeAttr::get(cellTypeAttrID).area = cell->getArea();
-
-      MinatoMorrealeAlg minatoMorrealeAlg;
-      const auto subnetID = minatoMorrealeAlg.synthesize(*cell->getTruthTable());
-
-      CellTypeID cellID = eda::gate::model::makeCellType(
-          cell->getName(), subnetID, cellTypeAttrID,
-          eda::gate::model::CellSymbol::CELL,
-          props, static_cast<uint16_t>(cell->getInputPinsNumber()),
-          static_cast<uint16_t>(1));
-
-      cellTypeIDs.push_back(cellID);
-    }
-    for (Cell* ptr : cells) {
-      delete ptr;
-    }
-    cells.clear();
-    return cellTypeIDs;
+  for (Cell* ptr : cells) {
+    delete ptr;
   }
+  cells.clear();
+}
 
 
 } // namespace eda::gate::tech_optimizer

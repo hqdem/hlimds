@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
+#include "gate/model2/printer/printer.h"
 
 namespace eda::gate::model {
 
@@ -50,30 +51,7 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
 }
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
-  const auto &entries = subnet.getEntries();
-  for (size_t i = 0; i < subnet.size(); ++i) {
-    const auto &cell = entries[i].cell;
-    const auto &type = cell.getType();
-
-    out << i << " <= " << type.getName();
-    out << "(";
-
-    bool comma = false;
-    for (size_t j = 0; j < cell.arity; ++j) {
-      if (comma) out << ", ";
-
-      auto link = subnet.getLink(i, j);
-
-      if (link.inv) out << "~";
-      out << link.idx << "." << link.out;
-
-      comma = true;
-    }
-
-    out << ");" << std::endl;
-    i += cell.more;
-  }
-
+  ModelPrinter::getDefaultPrinter().print(out, subnet);
   return out;
 }
 
@@ -81,16 +59,18 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
 // Subnet Builder
 //===----------------------------------------------------------------------===//
 
-size_t SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
+Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
   const bool isPositive = !CellType::get(typeID).isNegative();
-  assert(isPositive && "Only positive cells are allowed in a subnet");
+  assert(isPositive && "Negative cells are not allowed");
 
   const bool in  = (typeID == CELL_TYPE_ID_IN);
   const bool out = (typeID == CELL_TYPE_ID_OUT);
   const auto idx = entries.size();
 
-  // It is prohibited to add normal cells after outputs.
-  assert(out || nOut == 0);
+  assert((!in || entries.size() == nIn)
+      && "Input cells after non-input cells are not allowed");
+  assert((out || nOut == 0)
+      && "Non-output cells after output cells are not allowed");
 
   for (const auto link : links) {
     auto &cell = entries[link.idx].cell;
@@ -111,10 +91,10 @@ size_t SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
     entries.emplace_back(links, i);
   }
 
-  return idx;
+  return Link(idx);
 }
 
-size_t SubnetBuilder::addCellTree(
+Subnet::Link SubnetBuilder::addCellTree(
     CellSymbol symbol, const LinkList &links, uint16_t k) {
   const uint16_t maxCellArity = Subnet::Cell::MaxArity;
   const uint16_t maxTreeArity = (k > maxCellArity) ? maxCellArity : k;
@@ -141,10 +121,10 @@ size_t SubnetBuilder::addCellTree(
     linkList.emplace_back(addCell(symbol, args));
   }
 
-  return linkList.back().idx;
+  return linkList.back();
 }
 
-SubnetBuilder::LinkList SubnetBuilder::addSubnet(
+Subnet::LinkList SubnetBuilder::addSubnet(
     const SubnetID subnetID, const LinkList &links) {
   
   const auto &subnet = Subnet::get(subnetID);
@@ -180,7 +160,7 @@ SubnetBuilder::LinkList SubnetBuilder::addSubnet(
   return outs; 
 }
 
-SubnetBuilder::Link SubnetBuilder::addSingleOutputSubnet(
+Subnet::Link SubnetBuilder::addSingleOutputSubnet(
     const SubnetID subnetID, const LinkList &links) {
   const auto &subnet = Subnet::get(subnetID);
   assert(subnet.getOutNum() == 1);

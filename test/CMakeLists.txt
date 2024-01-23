@@ -42,6 +42,7 @@ add_executable(${TEST_TARGET}
   gate/model2/list_test.cpp
   gate/model2/net_test.cpp
   gate/model2/seq_net.cpp
+  gate/model2/subnet_cnf_encoder_test.cpp
   gate/model2/subnet_test.cpp
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp
@@ -70,6 +71,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/resynthesis/resynthesis_contest.cpp
   gate/optimizer2/resynthesizer_test.cpp
   gate/parser/graphml_parser_test.cpp
+  gate/parser/graphml_to_subnet_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
   gate/premapper/mapper/mapper_test.cpp

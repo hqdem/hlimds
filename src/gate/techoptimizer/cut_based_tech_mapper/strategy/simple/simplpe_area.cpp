@@ -73,4 +73,10 @@ void SimplifiedStrategy::findBest(EntryIndex entryIndex, const CutsList &cutsLis
   }
   bestReplacementMap[entryIndex] = bestSimpleReplacement;
 }
+
+void SimplifiedStrategy::findBest(SubnetID subnetID, CutExtractor &cutExtractor,
+                                  CellDB &cellDB,
+                                  std::map<EntryIndex, BestReplacement> &bestReplacementMap) {
+
+}
 } // namespace eda::gate::tech_optimizer

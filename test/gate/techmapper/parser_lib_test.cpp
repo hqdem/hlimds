@@ -14,18 +14,20 @@
 
 #include "gtest/gtest.h"
 #include <filesystem>
+#include <vector>
 
 using namespace eda::gate::optimizer;
 using namespace eda::gate::tech_optimizer;
 using namespace eda::gate::model;
 
-const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-const std::filesystem::path libertyDirrect = homePath / "test" / "data" / "gate" / "tech_mapper";
+//const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+//const std::filesystem::path libertyDirrect = homePath / "test" / "data" / "gate" / "tech_mapper";
+std::string techMapPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/tech_mapper";
 
-
-bool checkLibParser(std::string liberty) {
-  const std::string pathToLiberty = libertyDirrect / liberty;
-  LibraryCells libraryCells(pathToLiberty);
+bool checkLibParser(std::string libertyPath) {
+  //const std::string pathToLiberty = libertyPath + "/liberty";
+  std::vector<eda::gate::tech_optimizer::Cell*> cells;
+  LibraryCells::readLibertyFile(libertyPath, cells);
 
 #ifdef UTOPIA_DEBUG
   for(const auto& cell : libraryCells.cells) {
@@ -40,12 +42,12 @@ TEST(ReadLibertyTest, sky130_fd_sc_hd__ff_n40C_1v95) {
   if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-  checkLibParser(libertyDirrect.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+  checkLibParser(techMapPath + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
 }
 
 TEST(ReadLibertyTest, sky130_fd_sc_hd__ff_100C_1v65) {
   if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-  checkLibParser(libertyDirrect.string() + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
+  checkLibParser(techMapPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
 }

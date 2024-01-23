@@ -25,24 +25,21 @@ inline SubnetID randomSubnet(
   assert(minArity <= maxArity);
 
   SubnetBuilder builder;
-  std::vector<size_t> cells(nCell);
-
-  for (size_t i = 0; i < nIn; ++i) {
-    cells[i] = builder.addInput();
-  }
+  Subnet::LinkList subnetLinks = builder.addInputs(nIn);
+  subnetLinks.reserve(nCell);
 
   // Arity distribution.
   const auto nArities = (maxArity - minArity) + 1;
-  std::uniform_int_distribution<size_t> arity(minArity, maxArity);
+  std::uniform_int_distribution<size_t> arityDist(minArity, maxArity);
 
   // Gate distribution.
   static CellSymbol symbols[] = { AND, OR, XOR, MAJ };
   const auto nSymbols = sizeof(symbols) / sizeof(CellSymbol);
   const auto isMajAllowed = (nArities > 1) || (minArity & 1);
 
-  const auto minSymbolIdx = 0u;
-  const auto maxSymbolIdx = isMajAllowed ? nSymbols - 1 : nSymbols - 2;
-  std::uniform_int_distribution<size_t> symbolIdx(minSymbolIdx, maxSymbolIdx);
+  const auto minSymbol = 0u;
+  const auto maxSymbol = isMajAllowed ? nSymbols - 1 : nSymbols - 2;
+  std::uniform_int_distribution<size_t> symbolDist(minSymbol, maxSymbol);
 
   // Inverter distribution.
   std::bernoulli_distribution inverter(0.5);
@@ -51,31 +48,33 @@ inline SubnetID randomSubnet(
   std::mt19937 generator(device());
 
   for (size_t i = nIn; i < (nCell - nOut); ++i) {
-    auto f = symbols[symbolIdx(generator)];
-    auto k = arity(generator);
+    const auto symbol = symbols[symbolDist(generator)];
+    auto k = arityDist(generator);
 
-    if (f == MAJ && (k & 1) == 0) {
+    if (symbol == MAJ && (k & 1) == 0) {
       k = k < maxArity ? k + 1 : k - 1;
     }
 
     // Link distribution.
-    std::uniform_int_distribution<size_t> cellIdx(0, i - 1);
+    std::uniform_int_distribution<size_t> linkDist(0, i - 1);
 
     Subnet::LinkList links(k);
     for (size_t j = 0; j < k; ++j) {
-      auto idx = cellIdx(generator);
-      auto inv = inverter(generator);
-      links[j] = Subnet::Link(cells[idx], inv);
+      const auto idx = linkDist(generator);
+      const auto inv = inverter(generator);
+      links[j] = inv ? ~subnetLinks[idx] : subnetLinks[idx];
     }
 
-    cells[i] = builder.addCell(f, links);
+    subnetLinks.push_back(builder.addCell(symbol, links));
   }
 
   // Link distribution.
-  std::uniform_int_distribution<size_t> cellIdx(0, nCell - nOut - 1);
+  std::uniform_int_distribution<size_t> linkDist(0, subnetLinks.size() - 1);
  
   for (size_t i = 0; i < nOut; ++i) {
-   builder.addOutput(cellIdx(generator));
+    const auto idx = linkDist(generator);
+    const auto inv = inverter(generator);
+    builder.addOutput(inv ? ~subnetLinks[idx] : subnetLinks[idx]);
   }
 
   return builder.make();

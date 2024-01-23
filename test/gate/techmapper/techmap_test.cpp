@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 #include "gate/model2/object.h"
 #include "gate/model2/printer/printer.h"
+#include "gate/debugger2/sat_checker2.h"
 
 using Builder    = eda::gate::model::SubnetBuilder;
 using CellSymbol = eda::gate::model::CellSymbol;
@@ -163,7 +164,7 @@ TEST(TechMapTest, SimpleSub) {
   links2.emplace_back(idx2);
 
   const auto idx3 = builder.addCell(model::AND, links2);
-  builder.addOutput(Link(idx3));
+  const auto idxOUT = builder.addOutput(Link(idx3));
 
   SubnetID subnetID = builder.make();
 
@@ -187,14 +188,14 @@ TEST(TechMapTest, SimpleSub) {
   Subnet &mappedSubnet = model::Subnet::get(mappedSub);
   std::unordered_map<size_t, size_t> map;
 
-/*  map[0] = 0;
+  map[0] = 0;
   map[1] = 1;
   map[3] = 2;
   map[4] = 3;
-  map[idxOUT] = 5*/
+  map[idxOUT.idx] = 5;
 
-  //debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
-  //EXPECT_TRUE(checker.equivalent(subnet, mappedSubnet, map).equal());
+  debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
+  EXPECT_TRUE(checker.equivalent(subnet, mappedSubnet, map).equal());
 }
 
 TEST(TechMapTest, ANDNOTNOTAND) {

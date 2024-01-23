@@ -23,7 +23,7 @@ class SatChecker2 final : public BaseChecker2,
 public:
   CheckerResult equivalent(Subnet &lhs, Subnet &rhs, CellToCell &map) override {
     MiterHints hints = makeHints(lhs, map);
-    Subnet miter = miter2(lhs, rhs, hints);
+    const Subnet &miter = miter2(lhs, rhs, hints);
 
     const auto &encoder = SubnetEncoder::get();
     eda::gate::solver::Solver solver;

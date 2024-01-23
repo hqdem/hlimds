@@ -126,6 +126,23 @@ public:
   /// Returns the cell type function/kind.
   CellSymbol getSymbol() const { return symbol; }
 
+  bool isIn()    const { return symbol == IN;    }
+  bool isOut()   const { return symbol == OUT;   }
+  bool isZero()  const { return symbol == ZERO;  }
+  bool isOne()   const { return symbol == ONE;   }
+  bool isBuf()   const { return symbol == BUF;   }
+  bool isNot()   const { return symbol == NOT;   }
+  bool isAnd()   const { return symbol == AND;   }
+  bool isOr()    const { return symbol == OR;    }
+  bool isXor()   const { return symbol == XOR;   }
+  bool isNand()  const { return symbol == NAND;  }
+  bool isNor()   const { return symbol == NOR;   }
+  bool isXnor()  const { return symbol == XNOR;  }
+  bool isMaj()   const { return symbol == MAJ;   }
+  bool isLatch() const { return symbol == LATCH; }
+  bool isDff()   const { return symbol == DFF;   }
+  bool isDffRs() const { return symbol == DFFrs; }
+
   bool isCombinational() const { return props.combinational; }
   bool isConstant()      const { return props.constant;      }
   bool isIdentity()      const { return props.identity;      }

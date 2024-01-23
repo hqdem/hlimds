@@ -11,55 +11,20 @@
 #include "gate/model2/printer/printer.h"
 #include "util/singleton.h"
 
-#include <sstream>
-
 namespace eda::gate::model {
 
 /// Prints nets in Verilog.
-class VerilogPrinter final : public NetPrinter,
+class VerilogPrinter final : public ModelPrinter,
                              public util::Singleton<VerilogPrinter> {
   friend class util::Singleton<VerilogPrinter>;
 
-  static std::string getType(const CellID &cellID) {
-    return Cell::get(cellID).getType().getName();
-  }
+  VerilogPrinter(): ModelPrinter({{Pass::CELL, 0}, {Pass::CELL, 1}}) {}
 
-  static std::string getName(const CellID &cellID) {
-    std::stringstream ss;
-
-    ss << getType(cellID);
-    ss << "_";
-    ss << Cell::makeSID(cellID);
-
-    return ss.str();
-  }
-
-  static std::string getWire(const CellID &cellID, uint16_t port) {
-    const CellType &type = Cell::get(cellID).getType();
-
-    if (type.getOutNum() <= 1) {
-      return getName(cellID);
-    }
-
-    std::stringstream ss;
-    ss << getName(cellID) << "_" << port;
-
-    return ss.str();
-  }
-
-  static std::string getWire(const LinkEnd &source) {
-    return getWire(source.getCellID(), source.getPort());
-  }
-
-  VerilogPrinter(): NetPrinter({{Pass::CELL, 0}, {Pass::CELL, 1}}) {}
-
-  void onNetBegin(
-      std::ostream &out, const Net &net, const std::string &name) override {
+  void onModelBegin(std::ostream &out, const std::string &name) override {
     out << "module " << name;
   }
 
-  void onNetEnd(
-      std::ostream &out, const Net &net, const std::string &name) override {
+  void onModelEnd(std::ostream &out, const std::string &name) override {
     out << "endmodule" << " // module " << name << "\n";
   }
 
@@ -72,67 +37,58 @@ class VerilogPrinter final : public NetPrinter,
     out << "\n);\n";
   }
 
-  void onPort(std::ostream &out, const CellID &cellID) override {
+  void onPort(std::ostream &out, const CellInfo &cellInfo) override {
     if (!isFirstPort) {
       out << ",\n";
     }
 
-    out << "  " << (Cell::get(cellID).isIn() ? "input" : "output") << " ";
-    out << getWire(cellID, 0);
+    out << "  " << (cellInfo.type.get().isIn() ? "input" : "output") << " ";
+    out << PortInfo(cellInfo, 0).getName();
 
     isFirstPort = false;
   }
 
-  void onDefinitionBegin(std::ostream &out) override {
-    // Do nothing.
-  }
-
-  void onDefinitionEnd(std::ostream &out) override {
-    // Do nothing.
-  }
-
-  void onCell(std::ostream &out, const CellID &cellID, unsigned pass) override {
-    const Cell &cell = Cell::get(cellID);
-    const Cell::LinkList &links = cell.getLinks();
-    const CellType &type = cell.getType();
+  void onCell(std::ostream &out,
+              const CellInfo &cellInfo,
+              const LinksInfo &linksInfo,
+              unsigned pass) override {
+    const CellType &type = cellInfo.type.get();
 
     if (pass == 0) {
       // Declare the cell's output wires.
-      if (!cell.isIn() && !cell.isOut()) {
+      if (!type.isIn() && !type.isOut()) {
         for (uint16_t port = 0; port < type.getOutNum(); ++port) {
-          out << "  wire " << getWire(cellID, port) << ";\n";
+          out << "  wire " << PortInfo(cellInfo, port).getName() << ";\n";
         }
       }
     } else {
       // Instantiate the cell.
-      if (cell.isIn()) {
+      if (type.isIn()) {
         // Do nothing.
-      } else if (cell.isOut()) {
-        out << "  assign " << getWire(cellID, 0) << " = "
-            << getWire(links.front()) << ";\n"; 
+      } else if (type.isOut()) {
+        out << "  assign " << PortInfo(cellInfo, 0).getName() << " = "
+            << (linksInfo.front().inv ? "~" : "")
+            << linksInfo.front().getSourceName() << ";\n";
       } else {
-        out << "  " << getType(cellID) << "(";
+        out << "  " << cellInfo.getType() << "(";
 
         bool comma = false;
         for (uint16_t port = 0; port < type.getOutNum(); ++port) {
           if (comma) out << ", ";
-          out << getWire(cellID, port);
+          out << PortInfo(cellInfo, port).getName();
           comma = true;
         }
 
-        for (auto link : links) {
+        for (auto linkInfo : linksInfo) {
           if (comma) out << ", ";
-          out << getWire(link);
+          out << (linkInfo.inv ? "~" : "")
+              << linkInfo.getSourceName();
           comma = true;
         }
 
         out << ");\n";
       }
     }
-  }
-
-  void onLink(std::ostream &out, const Link &link, unsigned pass) override {
-    // Do nothing.
   }
 
   bool isFirstPort = false;

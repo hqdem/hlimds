@@ -148,7 +148,7 @@ void printGeneratedNet(const NetID &netID,
     return;
   }
   const Net &net = Net::get(netID);
-  NetPrinter *dotPrinter = &NetPrinter::getDefaultPrinter();
+  ModelPrinter *dotPrinter = &ModelPrinter::getDefaultPrinter();
   std::ofstream out;
   std::string homePath = getenv("UTOPIA_HOME");
   std::filesystem::path filePath = optimizer::createOutPath(homePath +

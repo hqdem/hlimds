@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
+#include "gate/model2/printer/printer.h"
 
 namespace eda::gate::model {
 
@@ -50,30 +51,7 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
 }
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
-  const auto &entries = subnet.getEntries();
-  for (size_t i = 0; i < subnet.size(); ++i) {
-    const auto &cell = entries[i].cell;
-    const auto &type = cell.getType();
-
-    out << i << " <= " << type.getName();
-    out << "(";
-
-    bool comma = false;
-    for (size_t j = 0; j < cell.arity; ++j) {
-      if (comma) out << ", ";
-
-      auto link = subnet.getLink(i, j);
-
-      if (link.inv) out << "~";
-      out << link.idx << "." << link.out;
-
-      comma = true;
-    }
-
-    out << ");" << std::endl;
-    i += cell.more;
-  }
-
+  ModelPrinter::getDefaultPrinter().print(out, subnet);
   return out;
 }
 

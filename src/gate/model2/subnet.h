@@ -88,16 +88,16 @@ public:
     Cell(CellTypeID typeID, const LinkList &links, uint32_t flipFlopID):
         Cell(typeID, links, true, flipFlopID) {}
 
-    bool isIn()    const { return type == CELL_TYPE_SID_IN;    }
-    bool isOut()   const { return type == CELL_TYPE_SID_OUT;   }
-    bool isZero()  const { return type == CELL_TYPE_SID_ZERO;  }
-    bool isOne()   const { return type == CELL_TYPE_SID_ONE;   }
-    bool isBuf()   const { return type == CELL_TYPE_SID_BUF;   }
-    bool isAnd()   const { return type == CELL_TYPE_SID_AND;   }
-    bool isOr()    const { return type == CELL_TYPE_SID_OR;    }
-    bool isXor()   const { return type == CELL_TYPE_SID_XOR;   }
-    bool isMaj()   const { return type == CELL_TYPE_SID_MAJ;   }
-    bool isNull()  const { return type == CellTypeID::NullSID; }
+    bool isIn()   const { return type == CELL_TYPE_SID_IN;    }
+    bool isOut()  const { return type == CELL_TYPE_SID_OUT;   }
+    bool isZero() const { return type == CELL_TYPE_SID_ZERO;  }
+    bool isOne()  const { return type == CELL_TYPE_SID_ONE;   }
+    bool isBuf()  const { return type == CELL_TYPE_SID_BUF;   }
+    bool isAnd()  const { return type == CELL_TYPE_SID_AND;   }
+    bool isOr()   const { return type == CELL_TYPE_SID_OR;    }
+    bool isXor()  const { return type == CELL_TYPE_SID_XOR;   }
+    bool isMaj()  const { return type == CELL_TYPE_SID_MAJ;   }
+    bool isNull() const { return type == CellTypeID::NullSID; }
 
     bool isFlipFlop() const { return flipFlop; }
 

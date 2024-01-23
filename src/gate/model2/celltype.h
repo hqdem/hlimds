@@ -142,6 +142,9 @@ public:
   bool isLatch() const { return symbol == LATCH; }
   bool isDff()   const { return symbol == DFF;   }
   bool isDffRs() const { return symbol == DFFrs; }
+  bool isCell()  const { return symbol == CELL;  }
+  bool isSoft()  const { return symbol == SOFT;  }
+  bool isHard()  const { return symbol == HARD;  }
 
   bool isCombinational() const { return props.combinational; }
   bool isConstant()      const { return props.constant;      }

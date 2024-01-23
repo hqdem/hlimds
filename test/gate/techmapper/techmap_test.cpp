@@ -85,8 +85,8 @@ void printVerilog(Subnet &subnet) {
   }
 
   // Create an instance of the NetPrinter class for the VERILOG format
-  eda::gate::model::NetPrinter& verilogPrinter =
-      eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+  eda::gate::model::ModelPrinter& verilogPrinter =
+      eda::gate::model::ModelPrinter::getPrinter( eda::gate::model::ModelPrinter::VERILOG);
 
   // Open a stream for writing Verilog code to a file or console
   std::ofstream outFile("test/data/gate/tech_mapper/print/techmappedNet.v");  // Or use std::cout to print to the console
@@ -131,7 +131,7 @@ TEST(TechMapTest, RandomSubnet) {
   std::cout << model::Subnet::get(mappedSub) << std::endl;
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
-Subnet mappedSubnet = Subnet::get(mappedSub);
+Subnet &mappedSubnet = Subnet::get(mappedSub);
 model::NetBuilder netBuilder;
 
 auto entries = mappedSubnet.getEntries();
@@ -169,8 +169,8 @@ entryIndex += subnetCell.more;
 }
 
 NetID net = netBuilder.make();
-eda::gate::model::NetPrinter& verilogPrinter =
-    eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+eda::gate::model::ModelPrinter& verilogPrinter =
+    eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
 std::ofstream outFile("test/data/gate/tech_mapper/print/techmappedNet.v");
 verilogPrinter.print(outFile,
     model::Net::get(net),
@@ -194,7 +194,7 @@ TEST(TechMapTest, SimpleANDSubnet) {
   //printVerilog(mappedSub);
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
-  Subnet mappedSubnet = Subnet::get(mappedSub);
+  Subnet &mappedSubnet = Subnet::get(mappedSub);
 model::NetBuilder netBuilder;
 
 auto entries = mappedSubnet.getEntries();
@@ -232,8 +232,8 @@ entryIndex += subnetCell.more;
 }
 
 NetID net = netBuilder.make();
-eda::gate::model::NetPrinter& verilogPrinter =
-    eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+  eda::gate::model::ModelPrinter& verilogPrinter =
+      eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
 std::ofstream outFile("test/data/gate/tech_mapper/print/techmappedNet.v");
 verilogPrinter.print(outFile,
     model::Net::get(net),
@@ -263,7 +263,7 @@ TEST(TechMapTest, SimpleORSubnet) {
   //printVerilog(mappedSub);
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
-Subnet mappedSubnet = Subnet::get(mappedSub);
+Subnet &mappedSubnet = Subnet::get(mappedSub);
 model::NetBuilder netBuilder;
 
 model::CellID cellIDArray[std::size(entries)];
@@ -300,8 +300,8 @@ entryIndex += subnetCell.more;
 }
 
 NetID net = netBuilder.make();
-eda::gate::model::NetPrinter& verilogPrinter =
-    eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+eda::gate::model::ModelPrinter& verilogPrinter =
+    eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
 std::ofstream outFile("test/data/gate/tech_mapper/print/techmappedNet.v");
 verilogPrinter.print(outFile,
     model::Net::get(net),
@@ -406,8 +406,8 @@ TEST(TechMapTest, SimpleSub) {
   }
 
   NetID net = netBuilder.make();
-  eda::gate::model::NetPrinter& verilogPrinter =
-      eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+  eda::gate::model::ModelPrinter& verilogPrinter =
+      eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
   std::ofstream outFile("test/data/gate/tech_mapper/print/techmappedNet.v");
 
 verilogPrinter.print(outFile,
@@ -434,9 +434,9 @@ TEST(TechMapTest, ANDNOTNOTAND) {
   const auto idx1 = builder.addInput();
   links.emplace_back(idx1);
 
-  const auto idx2 = builder.addCell(model::AND, Link(idx0, true), Link(idx1));
+  const auto idx2 = builder.addCell(model::AND, Link(idx0), Link(idx1));
 
-  const auto idx3 = builder.addCell(model::AND, Link(idx0), Link(idx1, true));
+  const auto idx3 = builder.addCell(model::AND, Link(idx0), Link(idx1));
 
   const auto idx4 = builder.addCell(model::AND, Link(idx2), Link(idx3));
 
@@ -457,7 +457,7 @@ TEST(TechMapTest, ANDNOTNOTAND) {
   std::cout << model::Subnet::get(mappedSub) << std::endl;
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
-Subnet mappedSubnet = Subnet::get(mappedSub);
+Subnet &mappedSubnet = Subnet::get(mappedSub);
 model::NetBuilder netBuilder;
 
 auto entries = mappedSubnet.getEntries();
@@ -495,8 +495,8 @@ entryIndex += subnetCell.more;
 }
 
 NetID net = netBuilder.make();
-eda::gate::model::NetPrinter& verilogPrinter =
-    eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+eda::gate::model::ModelPrinter& verilogPrinter =
+    eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
 std::ofstream outFile("test/data/gate/tech_mapper/print/techmappedNet.v");
 verilogPrinter.print(outFile,
     model::Net::get(net),

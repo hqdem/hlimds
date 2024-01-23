@@ -94,7 +94,7 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
 
     for (const auto idx : inID) {
       auto cellID = subnetBuilder.addInput();
-      (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID;
+      (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID.idx;
     }
 
     std::stack<EntryIndex> stack;
@@ -114,11 +114,11 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
         stack.pop();
       } else if (currentCell.isZero()) {
           auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::ZERO);
-        (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID;
+        (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
           stack.pop();
       } else if (currentCell.isOne()) {
           auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::ONE);
-        (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID;
+        (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
           stack.pop();
       } else {
         bool readyForCreate = true;
@@ -171,7 +171,7 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
       Subnet::Link link(bestReplacementMap->at(*(input.begin())).cellIDInMappedSubnet);
 
       auto cellID = subnetBuilder.addOutput(link);
-      (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID;
+      (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID.idx;
     }
 
     std::cout << "Count of New Cell = " << countOfCell << std::endl;

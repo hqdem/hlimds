@@ -20,6 +20,7 @@ namespace eda::gate::tech_optimizer {
   using Subnet = model::Subnet;
 
   std::vector<EntryIndex> outID;
+  std::vector<EntryIndex> inID;
 
   CutBasedTechMapper::CutBasedTechMapper(CellDB *cellDB) {
     this->cellDB = cellDB;
@@ -91,6 +92,11 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
     
     eda::gate::model::SubnetBuilder subnetBuilder;
 
+    for (const auto idx : inID) {
+      auto cellID = subnetBuilder.addInput();
+      (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID;
+    }
+
     std::stack<EntryIndex> stack;
     std::unordered_set<EntryIndex> visited;
 
@@ -105,8 +111,6 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
       auto currentCell = entries[currentEntryIDX].cell;
 
       if (currentCell.isIn()) {
-        auto cellID = subnetBuilder.addInput();
-        (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID;
         stack.pop();
       } else if (currentCell.isZero()) {
           auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::ZERO);
@@ -132,8 +136,6 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
 
         if (readyForCreate) {
           if (currentCell.isOut() || currentCell.type == eda::gate::model::CellSymbol::OUT) {
-            auto cellID = subnetBuilder.addOutput(linkList[0]);
-            (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID;
           } else {
 
             /*Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].getLibertySubnetID());
@@ -163,6 +165,15 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
         }
       }
     }
+
+    for (const auto idx : outID) {
+      auto input = bestReplacementMap->at(idx).entryIDxs;
+      Subnet::Link link(bestReplacementMap->at(*(input.begin())).cellIDInMappedSubnet);
+
+      auto cellID = subnetBuilder.addOutput(link);
+      (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID;
+    }
+
     std::cout << "Count of New Cell = " << countOfCell << std::endl;
     return subnetBuilder.make();
   }
@@ -203,6 +214,7 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
 void CutBasedTechMapper::addInputToTheMap(EntryIndex entryIndex) {
   BestReplacement bestReplacement{true};
   (*bestReplacementMap)[entryIndex] = bestReplacement;
+  inID.push_back(entryIndex);
 }
 void CutBasedTechMapper::addZeroToTheMap(EntryIndex entryIndex) {
   BestReplacement bestReplacement{};

@@ -319,26 +319,26 @@ TEST(TechMapTest, SimpleSub) {
 
   model::SubnetBuilder builder;
   LinkList links;
+  LinkList links1;
   LinkList links2;
 
   for (size_t i = 0; i < 2; i++) {
     const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
+  for (size_t i = 0; i < 2; i++) {
+    const auto idx = builder.addInput();
+    links1.emplace_back(idx);
+  }
 
   const auto idx1 = builder.addCell(model::AND, links);
   links2.emplace_back(idx1);
 
-  links.clear();
-  for (size_t i = 0; i < 2; i++) {
-    const auto idx = builder.addInput();
-    links.emplace_back(idx);
-  }
-  const auto idx2 = builder.addCell(model::AND, links);
+  const auto idx2 = builder.addCell(model::AND, links1);
   links2.emplace_back(idx2);
 
   const auto idx3 = builder.addCell(model::AND, links2);
-  const auto idxOUT = builder.addOutput(Link(idx3));
+  builder.addOutput(Link(idx3));
 
   SubnetID subnetID = builder.make();
 

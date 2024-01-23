@@ -30,12 +30,12 @@ TernaryBiClique::TernaryBiClique(const KittyTT &func, const KittyTT &care)
   uassert(fSize <= 32, "Too many inputs");
 
   for (size_t i{0}; i < fSize; ++i) {
-    inputs.push_back(i);
+    inputs.push_back(Link(i));
   }
 }
 
 TernaryBiClique::TernaryBiClique(ISOP onSet, ISOP offSet, uint32_t indices,
-                                 Inputs inputs, uint32_t oldIndices)
+                                 LinkList inputs, uint32_t oldIndices)
   : indices(indices),
     inputs(std::move(inputs)),
     onSet(std::move(onSet)),

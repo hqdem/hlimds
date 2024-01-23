@@ -91,24 +91,24 @@ LinkList AigMapper::getNewLinks(const CellIdMap &oldToNew, size_t idx,
 }
 
 size_t AigMapper::mapIn(Builder &builder) const {
-  return builder.addInput();
+  return builder.addInput().idx;
 }
 
 size_t AigMapper::mapOut(const LinkList &links, Builder &builder) const {
   assert(links.size() == 1 && "Only single input is allowed in OUT cell");
-  return builder.addOutput(links.front());
+  return builder.addOutput(links.front()).idx;
 }
 
 size_t AigMapper::mapVal(bool val, Builder &builder) const {
   if (val) {
-    return builder.addCell(CellSymbol::ONE);
+    return builder.addCell(CellSymbol::ONE).idx;
   }
-  return builder.addCell(CellSymbol::ZERO);
+  return builder.addCell(CellSymbol::ZERO).idx;
 }
 
 size_t AigMapper::mapBuf(const LinkList &links, Builder &builder) const {
   assert(links.size() == 1 && "Only single input is allowed in BUF cell");
-  return builder.addCell(CellSymbol::BUF, links);
+  return builder.addCell(CellSymbol::BUF, links).idx;
 }
 
 size_t AigMapper::mapAnd(const LinkList &links, size_t n0, size_t n1,
@@ -123,7 +123,7 @@ size_t AigMapper::mapAnd(const LinkList &links, size_t n0, size_t n1,
   if (n1 == links.size()) {
     return mapVal(true, builder);
   }
-  return builder.addCellTree(CellSymbol::AND, links, 2);
+  return builder.addCellTree(CellSymbol::AND, links, 2).idx;
 }
 
 size_t AigMapper::mapOr(LinkList &links, bool &inv, size_t n0, size_t n1,
@@ -173,11 +173,8 @@ size_t AigMapper::mapXor(LinkList &links, size_t n0, size_t n1,
     const Link nx(links[l].idx, !links[l].inv);
     const Link ny(links[r].idx, !links[r].inv);
 
-    const size_t andID1 = builder.addCell(CellSymbol::AND, x, y);
-    const size_t andID2 = builder.addCell(CellSymbol::AND, nx, ny);
-
-    const Link l1(andID1, true);
-    const Link l2(andID2, true);
+    const Link l1 = builder.addCell(CellSymbol::AND, x, y);
+    const Link l2 = builder.addCell(CellSymbol::AND, nx, ny);
 
     links.emplace_back(builder.addCell(CellSymbol::AND, l1, l2));
 
@@ -212,17 +209,9 @@ size_t AigMapper::mapMaj(LinkList &links, bool &inv, size_t n0, size_t n1,
 
 size_t AigMapper::addMaj3(LinkList &links, bool &inv, Builder &builder) const {
   // MAJ(x,y,z)=OR(AND(x,y), AND(y,z), AND(z,x))
-  const size_t and1 = builder.addCell(CellSymbol::AND, links[0], links[1]);
-  const size_t and2 = builder.addCell(CellSymbol::AND, links[1], links[2]);
-  const size_t and3 = builder.addCell(CellSymbol::AND, links[2], links[0]);
-
-  const Link l1(and1);
-  const Link l2(and2);
-  const Link l3(and3);
-
-  links[0] = l1;
-  links[1] = l2;
-  links[2] = l3;
+  links[0] = builder.addCell(CellSymbol::AND, links[0], links[1]);
+  links[1] = builder.addCell(CellSymbol::AND, links[1], links[2]);
+  links[2] = builder.addCell(CellSymbol::AND, links[2], links[0]);
 
   return mapOr(links, inv, 0, 0, builder);
 }

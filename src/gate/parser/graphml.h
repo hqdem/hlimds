@@ -29,6 +29,13 @@ namespace eda::gate::parser::graphml {
   using GateSymbol = eda::gate::model::GateSymbol;
 
 /**
+ * \brief Finds the element with a description of the graph in XML-document.
+ * \param root The root element of the XML-document.
+ * \return A pointer to a found element. 
+ */
+  XMLElement *findGraph(XMLElement *root);
+
+/**
  * \brief Builds GNet from GraphML/OpenABC-D description.
  */
   class GraphMLParser {
@@ -75,8 +82,6 @@ namespace eda::gate::parser::graphml {
     static model::GNet *parse(const std::string &filename, ParserData &data);
 
   private:
-    static XMLElement *findGraph(XMLElement *root);
-
     static void iterateFromGraphNode(XMLElement *graphNode, ParserData &data);
 
     static void parseNode(XMLElement *nodeElement, ParserData &data);

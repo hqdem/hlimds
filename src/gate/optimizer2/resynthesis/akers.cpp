@@ -46,7 +46,7 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
   // Create variables for building the Subnet.
   SubBuild subBuild;
   for (uint32_t i = 0; i < nVariables; i++) {
-    size_t cellId = subBuild.builder.addInput();
+    size_t cellId = subBuild.builder.addInput().idx;
     subBuild.idx.push_back(cellId);
   }
 
@@ -77,11 +77,11 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
     bool flag = false;
     switch (id) {
       case 62:
-        cellId = subBuild.builder.addCell(model::ZERO);
+        cellId = subBuild.builder.addCell(model::ZERO).idx;
         flag = true;
       break;
       case 63:
-        cellId = subBuild.builder.addCell(model::ONE);
+        cellId = subBuild.builder.addCell(model::ONE).idx;
         flag = true;
       break;
       default:
@@ -119,7 +119,7 @@ void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
     switch (id) {
       case 62:
         if (!cid.hasZero) {
-          cid.zeroId = subBuild.builder.addCell(model::ZERO);
+          cid.zeroId = subBuild.builder.addCell(model::ZERO).idx;
           cid.hasZero = true;
         }
         cellId = cid.zeroId;
@@ -127,7 +127,7 @@ void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
       break;
       case 63:
         if (!cid.hasOne) {
-          cid.oneId = subBuild.builder.addCell(model::ONE);
+          cid.oneId = subBuild.builder.addCell(model::ONE).idx;
           cid.hasOne = true;
         }
         cellId = cid.oneId;
@@ -150,7 +150,7 @@ void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
 
   const size_t majId = subBuild.builder.addCell(model::MAJ, links[0],
                                                             links[1],
-                                                            links[2]);
+                                                            links[2]).idx;
   subBuild.idx.push_back(majId);
 
   table.addMajColumn(gate);

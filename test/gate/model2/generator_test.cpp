@@ -118,7 +118,7 @@ bool netValid(const NetID &netID,
   if (!generatable) {
     return false;
   }
-  const Net net = Net::get(netID);
+  const Net &net = Net::get(netID);
   return netValid(net, nCells, nIn, nOut, generatable, nestingDepth);
 }
 

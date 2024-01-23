@@ -23,17 +23,14 @@ using SwitchAct     = eda::gate::analyzer::SwitchActivity;
 TEST(SwitchActivityTest, ProbabilisticEstimateTest) {
 
   SubnetBuilder subnetBuilder;
-  size_t in[4];
-  for (size_t i{0}; i < 4; ++i) {
-    in[i] = subnetBuilder.addInput();
-  }
-  size_t id{0};
-  id = subnetBuilder.addCell(CellSymbol::OR, Link(in[0]), Link(in[1]));
-  id = subnetBuilder.addCell(CellSymbol::AND, Link(id), Link(in[2]));
-  id = subnetBuilder.addCell(CellSymbol::XOR, Link(id), Link(in[3]));
-  subnetBuilder.addOutput(Link(id));
+  const auto in = subnetBuilder.addInputs(4);
+  
+  const auto link1 = subnetBuilder.addCell(CellSymbol::OR, in[0], in[1]);
+  const auto link2 = subnetBuilder.addCell(CellSymbol::AND, link1, in[2]);
+  const auto link3 = subnetBuilder.addCell(CellSymbol::XOR, link2, in[3]);
+  subnetBuilder.addOutput(link3);
 
-  const Subnet &subnet = Subnet::get(subnetBuilder.make());
+  const auto &subnet = Subnet::get(subnetBuilder.make());
   
   ProbEstimator probEstimat;
   SwitchAct switchActProb = probEstimat.estimate(subnet);

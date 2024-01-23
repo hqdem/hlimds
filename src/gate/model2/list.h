@@ -82,6 +82,9 @@ public:
     }
   }
 
+  ListBlock<T> &operator =(const ListBlock<T> &r) = delete;
+  ListBlock(const ListBlock<T> &r) = delete;
+
   /// Returns the pointer to the previous block.
   ListBlock<T> *prevBlock() const {
     return access<ListBlock<T>>(ListBlockID::makeFID(prevBlockSID));

@@ -20,7 +20,7 @@ namespace eda::gate::debugger2 {
 using Simulator = simulator2::Simulator;
 using CheckerResult = eda::gate::debugger2::CheckerResult;
 
-Simulator::DV getAllValues(size_t nIn, size_t count);
+Simulator::DataVector getAllValues(size_t nIn, size_t count);
 
 class RndChecker2 : public BaseChecker2, public util::Singleton<RndChecker2> {
 friend class util::Singleton<RndChecker2>;

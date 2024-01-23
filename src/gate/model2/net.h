@@ -114,4 +114,6 @@ private:
   List<CellID> softBlocks;
 };
 
+std::ostream &operator <<(std::ostream &out, const Net &net);
+ 
 } // namespace eda::gate::model

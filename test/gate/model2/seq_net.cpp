@@ -120,7 +120,7 @@ const Net &genSeqNet() {
 TEST(SeqNet, netWithLatch) {
 
   const Net &net = genSeqNet();
-  NetPrinter *dotPrinter = &NetPrinter::getDefaultPrinter();
+  ModelPrinter *dotPrinter = &ModelPrinter::getDefaultPrinter();
 
   if (!getenv("UTOPIA_HOME")) {
     FAIL() << "UTOPIA_HOME is not set.";

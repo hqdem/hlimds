@@ -32,8 +32,10 @@ public:
   struct Link final {
     Link(uint32_t idx, uint8_t out, bool inv): idx(idx), out(out), inv(inv) {}
     Link(uint32_t idx, bool inv): Link(idx, 0, inv) {}
-    Link(uint32_t idx): Link(idx, false) {}
+    explicit Link(uint32_t idx): Link(idx, false) {}
     Link(): Link(0) {}
+
+    Link operator~() const { return Link(idx, out, !inv); }
 
     /// Entry index.
     uint32_t idx : 28;
@@ -86,22 +88,25 @@ public:
     Cell(CellTypeID typeID, const LinkList &links, uint32_t flipFlopID):
         Cell(typeID, links, true, flipFlopID) {}
 
-    bool isIn()    const { return type == CELL_TYPE_SID_IN;    }
-    bool isOut()   const { return type == CELL_TYPE_SID_OUT;   }
-    bool isZero()  const { return type == CELL_TYPE_SID_ZERO;  }
-    bool isOne()   const { return type == CELL_TYPE_SID_ONE;   }
-    bool isBuf()   const { return type == CELL_TYPE_SID_BUF;   }
-    bool isAnd()   const { return type == CELL_TYPE_SID_AND;   }
-    bool isOr()    const { return type == CELL_TYPE_SID_OR;    }
-    bool isXor()   const { return type == CELL_TYPE_SID_XOR;   }
-    bool isMaj()   const { return type == CELL_TYPE_SID_MAJ;   }
-    bool isNull()  const { return type == CellTypeID::NullSID; }
+    bool isIn()   const { return type == CELL_TYPE_SID_IN;    }
+    bool isOut()  const { return type == CELL_TYPE_SID_OUT;   }
+    bool isZero() const { return type == CELL_TYPE_SID_ZERO;  }
+    bool isOne()  const { return type == CELL_TYPE_SID_ONE;   }
+    bool isBuf()  const { return type == CELL_TYPE_SID_BUF;   }
+    bool isAnd()  const { return type == CELL_TYPE_SID_AND;   }
+    bool isOr()   const { return type == CELL_TYPE_SID_OR;    }
+    bool isXor()  const { return type == CELL_TYPE_SID_XOR;   }
+    bool isMaj()  const { return type == CELL_TYPE_SID_MAJ;   }
+    bool isNull() const { return type == CellTypeID::NullSID; }
 
     bool isFlipFlop() const { return flipFlop; }
 
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
     CellSymbol getSymbol() const { return getType().getSymbol(); }
+
+    uint16_t getInNum() const { return arity; }
+    uint16_t getOutNum() const { return getType().getOutNum(); }
 
     /// Flip-flop input/output flag.
     uint64_t flipFlop : 1;
@@ -143,10 +148,26 @@ public:
   };
   static_assert(sizeof(Entry) == 32);
 
+  Subnet &operator =(const Subnet &r) = delete;
+  Subnet(const Subnet &r) = delete;
+
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
+
+  /// Returns the i-th input link.
+  Link getIn(size_t i) const {
+    assert(i < nIn);
+    return Link(i, 0, 0);
+  }
+
+  /// Returns the i-th output link.
+  Link getOut(size_t i) const {
+    assert(i < nOut);
+    const auto &entries = getEntries();
+    return entries[entries.size() - nOut + i].cell.link[0];
+  }
 
   /// Returns the minimum and maximum path lengths.
   std::pair<uint32_t, uint32_t> getPathLength() const;
@@ -224,75 +245,96 @@ public:
 
   SubnetBuilder(): nIn(0), nOut(0), entries() {}
 
-  size_t addInput() {
+  Link addInput() {
     return addCell(IN);
   }
 
-  size_t addOutput(Link link) {
+  Link addOutput(Link link) {
     return addCell(OUT, link);
   }
 
-  size_t addInput(uint32_t flipFlopID) {
-    const auto idx = addInput();
-    auto &cell = entries[idx].cell;
+  Link addInput(uint32_t flipFlopID) {
+    const auto result = addInput();
+    auto &cell = entries[result.idx].cell;
     cell.flipFlop = 1;
     cell.flipFlopID = flipFlopID;
-    return idx;
+    return result;
   }
 
-  size_t addOutput(Link link, uint32_t flipFlopID) {
-    const auto idx = addOutput(link);
-    auto &cell = entries[idx].cell;
+  Link addOutput(Link link, uint32_t flipFlopID) {
+    const auto result = addOutput(link);
+    auto &cell = entries[result.idx].cell;
     cell.flipFlop = 1;
     cell.flipFlopID = flipFlopID;
-    return idx;
+    return result;
   }
 
-  size_t addCell(CellTypeID typeID, const LinkList &links);
+  Link addCell(CellTypeID typeID, const LinkList &links);
 
   /// Adds a cell w/o inputs.
-  size_t addCell(CellSymbol symbol) {
+  Link addCell(CellSymbol symbol) {
     return addCell(getCellTypeID(symbol), LinkList{});
   }
 
   /// Adds a cell w/ the linked inputs.
-  size_t addCell(CellSymbol symbol, const LinkList &links) {
+  Link addCell(CellSymbol symbol, const LinkList &links) {
     return addCell(getCellTypeID(symbol), links);
   }
 
   /// Adds a single-input cell.
-  size_t addCell(CellSymbol symbol, Link link) {
+  Link addCell(CellSymbol symbol, Link link) {
     return addCell(symbol, LinkList{link});
   }
 
   /// Adds a two-inputs cell.
-  size_t addCell(CellSymbol symbol, Link l1, Link l2) {
+  Link addCell(CellSymbol symbol, Link l1, Link l2) {
     return addCell(symbol, LinkList{l1, l2});
   }
 
   /// Adds a three-inputs cell.
-  size_t addCell(CellSymbol symbol, Link l1, Link l2, Link l3) {
+  Link addCell(CellSymbol symbol, Link l1, Link l2, Link l3) {
     return addCell(symbol, LinkList{l1, l2, l3});
   }
 
   /// Adds a four-inputs cell.
-  size_t addCell(CellSymbol symbol, Link l1, Link l2, Link l3, Link l4) {
+  Link addCell(CellSymbol symbol, Link l1, Link l2, Link l3, Link l4) {
     return addCell(symbol, LinkList{l1, l2, l3, l4});
   }
 
   /// Adds a five-inputs cell.
-  size_t addCell(CellSymbol symbol,
+  Link addCell(CellSymbol symbol,
       Link l1, Link l2, Link l3, Link l4, Link l5) {
     return addCell(symbol, LinkList{l1, l2, l3, l4, l5});
   }
 
+  /// Adds the given number of inputs.
+  LinkList addInputs(size_t nIn) {
+    LinkList result(nIn);
+    for (size_t i = 0; i < nIn; ++i) {
+      result[i] = Link(addInput());
+    }
+    return result;
+  }
+
+  /// Returns the outputs connected to the given links.
+  void addOutputs(const LinkList &links) {
+    for (const auto link : links) {
+      addOutput(link);
+    }
+  }
+
   /// Adds a k-ary tree that implements the given function.
   /// The operation should be regroupable (associative).
-  size_t addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
+  Link addCellTree(CellSymbol symbol, const LinkList &links, uint16_t k);
 
-  /// Adds the single-output subnet (marks the root as an output if required).
-  /// The cells to link the subnet inputs to should have been already added.
-  size_t addSubnet(const SubnetID subnetID, const LinkList &links);
+  /// Adds the subnet and connects it via the specified links.
+  /// Does not add the output cells (it should be done explicitly).
+  /// Returns the output links.
+  LinkList addSubnet(const SubnetID subnetID, const LinkList &links);
+
+  /// Adds the single-output subnet and connects it via the specified links.
+  /// Returns the output link.
+  Link addSingleOutputSubnet(const SubnetID subnetID, const LinkList &links);
 
   SubnetID make() {
     assert(nIn > 0 && nOut > 0 && !entries.empty());

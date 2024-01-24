@@ -28,15 +28,10 @@ using SubnetID   = eda::gate::model::SubnetID;
 
 SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
   Builder builder;
-  LinkList links;
+  LinkList links = builder.addInputs(nIn);
 
-  for (size_t i = 0; i < nIn; i++) {
-    const auto idx = builder.addInput();
-    links.emplace_back(idx);
-  }
-
-  const auto idx = builder.addCellTree(symbol, links, arity);
-  builder.addOutput(Link(idx));
+  const auto link = builder.addCellTree(symbol, links, arity);
+  builder.addOutput(link);
 
   return builder.make();
 }
@@ -46,19 +41,15 @@ TEST(AigTransformer, MAJ) {
   Builder builder;
   LinkList links;
 
-  std::vector<size_t> idx;
   for (size_t i = 0; i < nIn; ++i) {
-    idx.push_back(builder.addInput());
+    const auto link = builder.addInput();
+    links.push_back(i % 2 ? ~link : link);
   }
 
-  for (size_t i = 0; i < nIn; ++i) {
-    links.emplace_back(idx[i], i % 2);
-  }
+  links.push_back(builder.addCell(CellSymbol::MAJ, links));
+  builder.addOutput(links.back());
 
-  idx.push_back(builder.addCell(CellSymbol::MAJ, links));
-  builder.addOutput(idx.back());
   const auto id = builder.make();
-
   const auto &oldSubnet = Subnet::get(id);
 
   AigMapper mapper;
@@ -115,35 +106,27 @@ TEST(AigTransformer, XOR) {
             eda::gate::model::evaluate(Subnet::get(transformedXorTree)));
 }
 
-/// TODO: The test doesn't work properly. Need issue?
-/*
 TEST(AigTransformer, RandomSubnet) {
   using AigMapper = eda::gate::transformer::AigMapper;
   using Subnet    = eda::gate::model::Subnet;
 
-  const size_t nIn      = 3u;
+  const size_t nIn      = 8u;
   const size_t nOut     = 1u;
-  const size_t nCell    = 5u;
+  const size_t nCell    = 20u;
   const size_t MinArity = 1u;
   const size_t MaxArity = 3u;
 
   const auto id = eda::gate::model::randomSubnet(nIn, nOut, nCell,
                                                  MinArity, MaxArity);
 
-  const auto &oldSubnet = Subnet::get(id);
-  std::cout << oldSubnet << std::endl;
-
   AigMapper mapper;
+
+  const auto &oldSubnet = Subnet::get(id);
   const auto transformed = mapper.transform(id);
-
-  std::cout << "Transformed subnet:" << std::endl;
-
   const auto &transformedSubnet = Subnet::get(transformed);
-  std::cout << transformedSubnet << std::endl;
 
   EXPECT_EQ(eda::gate::model::evaluate(oldSubnet),
             eda::gate::model::evaluate(transformedSubnet));
 }
-*/
 
 } // namespace eda::gate::transformer

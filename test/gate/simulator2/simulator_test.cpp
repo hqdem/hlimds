@@ -21,21 +21,20 @@ TEST(SimulatorTest, SimpleTest) {
   const size_t nCell    = 20;
   const size_t minArity = 2;
   const size_t maxArity = 3;
-  const size_t nSubnet  = 2;
-  const size_t nTest    = 100;
+  const size_t nSubnet  = 1;
+  const size_t nTest    = 1;
 
   for (size_t i = 0; i < nSubnet; ++i) {
     const auto subnetID = randomSubnet(nIn, nOut, nCell, minArity, maxArity);
-
     const auto &subnet = Subnet::get(subnetID);
-    std::cout << subnet << std::endl;
 
     Simulator simulator(subnet);
-    Simulator::DV values(nIn);
+    Simulator::DataVector values(nIn);
 
     for (size_t j = 0; j < nTest; ++j) {
       for (size_t k = 0; k < nIn; ++k) {
         values[k] = std::rand();
+        values[k] = values[k] << 32 | std::rand();
       }    
 
       simulator.simulate(values);

@@ -31,7 +31,6 @@ public:
   using Coverage      = TernaryBiClique::Coverage;
   using CoverageList  = std::vector<Coverage>;
   using CoveragePair  = std::pair<Coverage, Coverage>;
-  using Inputs        = std::vector<size_t>;
   using KittyTT       = kitty::dynamic_truth_table;
   using Link          = model::Subnet::Link;
   using LinkList      = model::Subnet::LinkList;
@@ -45,12 +44,12 @@ public:
   }
 
   /// Synthesizes the Subnet for a non-constant function.
-  Link run(const KittyTT &func, const Inputs &inputs, uint32_t &dummy,
+  Link run(const KittyTT &func, const LinkList &inputs,
            SubnetBuilder &subnetBuilder, uint16_t maxArity = -1) const;
 
 private:
 
-  static Link decompose(TernaryBiClique &initBiClique, uint32_t &dummy,
+  static Link decompose(TernaryBiClique &initBiClique,
                         SubnetBuilder &subnetBuilder, uint16_t maxArity = -1);
 
   static CoveragePair findBaseCoverage(CoverageList &stars);

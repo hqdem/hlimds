@@ -45,10 +45,8 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
   uint32_t nVariables = func.num_vars();
   // Create variables for building the Subnet.
   SubBuild subBuild;
-  std::set<unsigned> dummy;
   for (uint32_t i = 0; i < nVariables; i++) {
-    dummy.insert(i);
-    size_t cellId = subBuild.builder.addInput();
+    size_t cellId = subBuild.builder.addInput().idx;
     subBuild.idx.push_back(cellId);
   }
 
@@ -59,7 +57,7 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
 
   while ((table.nColumns() != 3) && (table.nColumns() != 1)) {
     Candidate candidate = findBestGate(table, onesInfo);
-    addMajGate(table, subBuild, candidate.args, nVariables, cid, dummy);
+    addMajGate(table, subBuild, candidate.args, nVariables, cid);
 
     if (!candidate.toRemove.empty()) {
       table.eraseCol(candidate.toRemove);
@@ -72,23 +70,22 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
   bool inv = false;
   if (table.nColumns() == 3) {
     Arguments gate = {0, 1, 2};
-    addMajGate(table, subBuild, gate, nVariables, cid, dummy);
+    addMajGate(table, subBuild, gate, nVariables, cid);
   } else {
     unsigned id = table.idColumn(0);
     size_t cellId = 0;
     bool flag = false;
     switch (id) {
       case 62:
-        cellId = subBuild.builder.addCell(model::ZERO);
+        cellId = subBuild.builder.addCell(model::ZERO).idx;
         flag = true;
       break;
       case 63:
-        cellId = subBuild.builder.addCell(model::ONE);
+        cellId = subBuild.builder.addCell(model::ONE).idx;
         flag = true;
       break;
       default:
         if ((id < 62) && (id > 30)) {
-          dummy.erase(id - 31);
           cellId = subBuild.idx[id - 31];
           flag = true;
           inv = true;
@@ -98,7 +95,6 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
       subBuild.idx.push_back(cellId);
     } else {
       if (id < 31) {
-        dummy.erase(id);
         cellId = subBuild.idx[id];
         subBuild.idx.push_back(cellId);
       }
@@ -106,18 +102,12 @@ SubnetID AkersAlgorithm::run(const TruthTable &func, const TruthTable &care) {
   }
   const Link link(subBuild.idx.back(), inv);
   subBuild.builder.addOutput(link);
-
-  // TODO: Needs to be checked.
-  //auto it = dummy.begin();
-  //for (; it != dummy.end(); it++) {
-  //  subBuild.builder.setDummy(subBuild.idx[*it]);
-  //}
   return subBuild.builder.make();
 }
 
 void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
                                 const Arguments &gate, uint32_t nVariables,
-                                ConstantId &cid, std::set<unsigned> &dummy) {
+                                ConstantId &cid) {
 
   assert(gate.size() == 3 && "Invalid number of inputs for a MAJ gate!");
 
@@ -129,7 +119,7 @@ void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
     switch (id) {
       case 62:
         if (!cid.hasZero) {
-          cid.zeroId = subBuild.builder.addCell(model::ZERO);
+          cid.zeroId = subBuild.builder.addCell(model::ZERO).idx;
           cid.hasZero = true;
         }
         cellId = cid.zeroId;
@@ -137,7 +127,7 @@ void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
       break;
       case 63:
         if (!cid.hasOne) {
-          cid.oneId = subBuild.builder.addCell(model::ONE);
+          cid.oneId = subBuild.builder.addCell(model::ONE).idx;
           cid.hasOne = true;
         }
         cellId = cid.oneId;
@@ -147,11 +137,9 @@ void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
         switch (id < 31 ? 1 : (id < 62 ? 2 : 3)) {
           case 1:
             links.push_back(Link(subBuild.idx[id]));
-            dummy.erase(id);
           break;
           case 2:
             links.push_back(Link(subBuild.idx[id - 31], true));
-            dummy.erase(id - 31);
           break;
           case 3:
             links.push_back(Link(subBuild.idx[id - 64 + nVariables]));
@@ -162,7 +150,7 @@ void AkersAlgorithm::addMajGate(UnitizedTable &table, SubBuild &subBuild,
 
   const size_t majId = subBuild.builder.addCell(model::MAJ, links[0],
                                                             links[1],
-                                                            links[2]);
+                                                            links[2]).idx;
   subBuild.idx.push_back(majId);
 
   table.addMajColumn(gate);

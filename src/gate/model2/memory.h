@@ -15,6 +15,8 @@
 #include <cstdlib>
 #include <unordered_map>
 
+#include <sys/mman.h>
+
 namespace eda::gate::model {
 
 typedef uint64_t ObjectPage;
@@ -23,7 +25,9 @@ typedef char *SystemPage;
 static constexpr uint64_t PAGE_SIZE = 64*1024*1024;
 static constexpr uint64_t PAGE_MASK = PAGE_SIZE - 1;
 
-class PageManager : public util::Singleton<PageManager> {
+class PageManager final : public util::Singleton<PageManager> {
+  friend class util::Singleton<PageManager>;
+
 public:
   /// Returns the object page.
   static constexpr uint64_t getPage(uint64_t objectID) {
@@ -55,7 +59,7 @@ public:
 
   // TODO: Dummy page manager.
   std::pair<ObjectPage, SystemPage> allocate() {
-    const SystemPage systemPage = static_cast<SystemPage>(malloc(PAGE_SIZE));
+    const SystemPage systemPage = allocatePage();
     const std::pair<ObjectPage, SystemPage> translation{objectPage, systemPage};
 
     const auto info = pageTable.insert(translation);
@@ -66,6 +70,18 @@ public:
   }
 
 private:
+  PageManager() {}
+
+  SystemPage allocatePage() {
+    void *page = aligned_alloc(PAGE_SIZE, PAGE_SIZE);
+    assert(page);
+
+    // Advice Linux kernel to use huge pages. 
+    madvise(page, PAGE_SIZE, MADV_HUGEPAGE);
+
+    return static_cast<SystemPage>(page);
+  }
+
   /// Current object page.
   ObjectPage objectPage = 0;
 

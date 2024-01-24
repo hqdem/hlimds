@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/net.h"
+#include "gate/model2/printer/printer.h"
 
 #include <cassert>
 
@@ -73,6 +74,11 @@ NetID NetBuilder::make() {
     nFlipFlops,
     nHardBlocks,
     nSoftBlocks);
+}
+
+std::ostream &operator <<(std::ostream &out, const Net &net) {
+  ModelPrinter::getDefaultPrinter().print(out, net);
+  return out;
 }
 
 } // namespace eda::gate::model

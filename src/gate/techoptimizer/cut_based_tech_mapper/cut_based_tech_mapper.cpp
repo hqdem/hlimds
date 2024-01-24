@@ -168,7 +168,8 @@ namespace eda::gate::tech_optimizer {
 
   void CutBasedTechMapper::printNet(const Net &model2) {
     // Create an instance of the NetPrinter class for the VERILOG format
-    eda::gate::model::NetPrinter& verilogPrinter = eda::gate::model::NetPrinter::getPrinter(eda::gate::model::VERILOG);
+    eda::gate::model::ModelPrinter& verilogPrinter =
+        eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
 
     // Open a stream for writing Verilog code to a file or console
     std::ofstream outFile("output.v");  // Or use std::cout to print to the console

@@ -14,31 +14,70 @@
 #include "gate/model2/list.h"
 #include "gate/model2/net.h"
 #include "gate/model2/string.h"
+#include "gate/model2/subnet.h"
 
+#include <cassert>
+#include <cstdint>
+#include <functional>
 #include <ostream>
+#include <sstream>
 #include <string>
+#include <vector>
 
 namespace eda::gate::model {
 
-/// Supported net formats.
-enum NetFormat {
-  DOT,
-  VERILOG
-};
-
-/// Base net printer class.
-class NetPrinter {
+/// Base Net/Subnet printer class.
+class ModelPrinter {
 public:
-  static NetPrinter &getDefaultPrinter() {
-    return getPrinter(DOT);
+  /// Supported output formats.
+  enum Format {
+    SIMPLE,
+    DOT,
+    VERILOG
+  };
+
+  static constexpr auto DefaultName = "Design";
+
+  static ModelPrinter &getDefaultPrinter() {
+    return getPrinter(SIMPLE);
   }
 
-  static NetPrinter &getPrinter(NetFormat format);
+  static ModelPrinter &getPrinter(Format format);
 
-  /// Outputs the net w/ the specified name.
-  void print(std::ostream &out, const Net &net, const std::string &name);
-  /// Outputs the net w/ the default name.
-  void print(std::ostream &out, const Net &net) { print(out, net, "Design"); }
+  /// Prints the net w/ the specified name.
+  template <typename T /* Net/Subnet */>
+  void print(std::ostream &out, const T &model, const std::string &name) {
+    onModelBegin(out, name);
+
+    onInterfaceBegin(out);
+    visitInputs (out, model);
+    visitOutputs(out, model);
+    onInterfaceEnd(out);
+
+    onDefinitionBegin(out);
+    for (const auto pass : passes) {
+      switch (pass.type) {
+      case Pass::LINK:
+        visitLinks(out, model, pass.num);
+        break;
+      case Pass::CELL:
+        visitCells(out, model, pass.num);
+        break;
+      default:
+        assert(false);
+        break;
+      }
+    }
+    onDefinitionEnd(out);
+
+    onModelEnd(out, name);
+  }
+
+  /// Prints the net w/ the default name.
+  template <typename T /* Net/Subnet */>
+  void print(std::ostream &out, const T &model) {
+    print(out, model, DefaultName);
+  }
 
 protected:
   /// Describes a print pass.
@@ -47,54 +86,119 @@ protected:
     unsigned num;
   };
 
-  NetPrinter(const std::vector<Pass> passes): passes(passes) {}
-  virtual ~NetPrinter() {}
+  /// Cell information.
+  struct CellInfo final {
+    CellInfo(const CellType &type, size_t cell):
+        type(type), cell(cell) {}
 
-  virtual void onNetBegin(
-      std::ostream &out, const Net &net, const std::string &name) = 0;
-  virtual void onNetEnd(
-      std::ostream &out, const Net &net, const std::string &name) = 0;
+    std::string getType() const {
+      return type.get().getName();
+    }
 
-  virtual void onInterfaceBegin(std::ostream &out) = 0;
-  virtual void onInterfaceEnd(std::ostream &out) = 0;
+    std::string getName() const {
+      std::stringstream ss;
 
-  virtual void onPort(std::ostream &out, const CellID &cellID) = 0;
+      ss << getType();
+      ss << "_";
+      ss << cell;
 
-  virtual void onDefinitionBegin(std::ostream &out) = 0;
-  virtual void onDefinitionEnd(std::ostream &out) = 0;
+      return ss.str();
+    }
 
-  virtual void onCell(
-      std::ostream &out, const CellID &cellID, unsigned pass) = 0;
-  virtual void onLink(
-      std::ostream &out, const Link &link, unsigned pass) = 0;
+    std::reference_wrapper<const CellType> type;
+    size_t cell;
+  };
+
+  /// Port information.
+  struct PortInfo final {
+    PortInfo(const CellInfo &cellInfo, uint16_t port):
+        cellInfo(cellInfo), port(port) {}
+
+    std::string getName() const {
+      if (cellInfo.type.get().getOutNum() <= 1) {
+        return cellInfo.getName();
+      }
+
+      std::stringstream ss;
+      ss << cellInfo.getName() << "_" << port;
+
+      return ss.str();
+    }
+
+    CellInfo cellInfo;
+    uint16_t port;
+  };
+
+  /// Link information.
+  struct LinkInfo final {
+    LinkInfo(const PortInfo &sourceInfo, const PortInfo &targetInfo, bool inv):
+        sourceInfo(sourceInfo), targetInfo(targetInfo), inv(inv) {}
+
+    std::string getSourceName() const { return sourceInfo.getName(); }
+    std::string getTargetName() const { return targetInfo.getName(); }
+
+    PortInfo sourceInfo;
+    PortInfo targetInfo;
+    bool inv;
+  };
+
+  /// Inputs information.
+  using LinksInfo = std::vector<LinkInfo>;
+
+  ModelPrinter(const std::vector<Pass> passes): passes(passes) {}
+  virtual ~ModelPrinter() {}
+
+  virtual void onModelBegin(std::ostream &out, const std::string &name) {}
+  virtual void onModelEnd(std::ostream &out, const std::string &name) {}
+
+  virtual void onInterfaceBegin(std::ostream &out) {}
+  virtual void onInterfaceEnd(std::ostream &out) {}
+
+  virtual void onDefinitionBegin(std::ostream &out) {}
+  virtual void onDefinitionEnd(std::ostream &out) {}
+
+  virtual void onPort(std::ostream &out,
+                      const CellInfo &cellInfo) {}
+
+  virtual void onCell(std::ostream &out,
+                      const CellInfo &cellInfo,
+                      const LinksInfo &linksInfo,
+                      unsigned pass) {}
+
+  virtual void onLink(std::ostream &out,
+                      const LinkInfo &linkInfo,
+                      unsigned pass) {}
 
 private:
+  const std::vector<Pass> passes;
+
+  //----------------------------------------------------------------------------
+  // Net-related methods
+  //----------------------------------------------------------------------------
+  static CellInfo getCellInfo(CellID cellID);
+  static PortInfo getPortInfo(CellID cellID, uint16_t port);
+  static LinkInfo getLinkInfo(const LinkEnd &source, const LinkEnd &target);
+  static LinksInfo getLinksInfo(CellID cellID);
+
+  void visitInputs(std::ostream &out, const Net &net);
+  void visitOutputs(std::ostream &out, const Net &net);
   void visitCells(std::ostream &out, const List<CellID> &cells, unsigned pass);
   void visitCells(std::ostream &out, const Net &net, unsigned pass);
-
   void visitLinks(std::ostream &out, const List<CellID> &cells, unsigned pass);
   void visitLinks(std::ostream &out, const Net &net, unsigned pass);
 
-  void visitItems(std::ostream &out, const Net &net, const Pass &pass) {
-    switch (pass.type) {
-    case Pass::LINK:
-      visitLinks(out, net, pass.num);
-      break;
-    case Pass::CELL:
-      visitCells(out, net, pass.num);
-      break;
-    default:
-      assert(false);
-      break;
-    }
-  }
+  //----------------------------------------------------------------------------
+  // Subnet-related methods
+  //----------------------------------------------------------------------------
+  static CellInfo getCellInfo(const Subnet &subnet, size_t idx);
+  static PortInfo getPortInfo(const Subnet &subnet, size_t idx, uint16_t j);
+  static LinkInfo getLinkInfo(const Subnet &subnet, size_t idx, uint16_t j);
+  static LinksInfo getLinksInfo(const Subnet &subnet, size_t idx);
 
-  const std::vector<Pass> passes;
+  void visitInputs(std::ostream &out, const Subnet &subnet);
+  void visitOutputs(std::ostream &out, const Subnet &subnet);
+  void visitCells(std::ostream &out, const Subnet &subnet, unsigned pass);
+  void visitLinks(std::ostream &out, const Subnet &subnet, unsigned pass);
 };
-
-inline std::ostream &operator <<(std::ostream &out, const Net &net) {
-  NetPrinter::getDefaultPrinter().print(out, net);
-  return out;
-}
 
 } // namespace eda::gate::model

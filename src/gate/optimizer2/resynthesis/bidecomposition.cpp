@@ -13,8 +13,7 @@
 namespace eda::gate::optimizer2::resynthesis {
 
 BiDecomposition::Link BiDecomposition::run(const KittyTT &func,
-                                           const Inputs &inputs,
-                                           uint32_t &dummy,
+                                           const LinkList &inputs,
                                            SubnetBuilder &subnetBuilder,
                                            uint16_t maxArity) const {
   
@@ -22,18 +21,17 @@ BiDecomposition::Link BiDecomposition::run(const KittyTT &func,
   kitty::create_from_binary_string(care, std::string(func.num_bits(), '1'));
   TernaryBiClique initBiClique(func, care);
 
-  return decompose(initBiClique, dummy, subnetBuilder, maxArity);
+  return decompose(initBiClique, subnetBuilder, maxArity);
 }
 
 BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
-                                                 uint32_t &dummy,
                                                  SubnetBuilder &subnetBuilder,
                                                  uint16_t maxArity) {
 
   if (initBiClique.getOnSet().size() == 1) {
     MinatoMorrealeAlg minatoMorrealeAlg;
     return minatoMorrealeAlg.synthFromISOP(initBiClique.getOnSet(),
-        initBiClique.getInputs(), dummy, subnetBuilder, maxArity);
+        initBiClique.getInputs(), subnetBuilder, maxArity);
   }
   
   auto starBiCliques = initBiClique.getStarCoverage();
@@ -53,10 +51,10 @@ BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
                                  std::move(initBiClique.getInputs()),
                                  initBiClique.getIndices());
 
-  Link lhs = decompose(firstBiClique, dummy, subnetBuilder);
-  Link rhs = decompose(secondBiClique, dummy, subnetBuilder);
+  Link lhs = decompose(firstBiClique, subnetBuilder, maxArity);
+  Link rhs = decompose(secondBiClique, subnetBuilder, maxArity);
 
-  return Link(subnetBuilder.addCell(model::AND, lhs, rhs), true);
+  return ~subnetBuilder.addCell(model::AND, lhs, rhs);
 }
 
 BiDecomposition::CoveragePair BiDecomposition::findBaseCoverage(

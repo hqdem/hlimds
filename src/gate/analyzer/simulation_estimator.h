@@ -24,8 +24,8 @@ namespace eda::gate::analyzer {
 class SimulationEstimator final : public SwitchActivityEstimator {
 public:
 
-  using Cache         = simulator2::Simulator::D;
-  using CacheList     = simulator2::Simulator::DV;
+  using Cache         = simulator2::Simulator::DataChunk;
+  using CacheList     = simulator2::Simulator::DataVector;
   using Distributions = std::vector<std::discrete_distribution<int>>;
   using InValuesList  = std::vector<CacheList>;
   using Simulator     = simulator2::Simulator;

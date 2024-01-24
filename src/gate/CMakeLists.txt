@@ -1,4 +1,5 @@
 add_library(Gate OBJECT
+  analyzer/probabilistic_estimate.cpp
   analyzer/simulation_estimator.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
@@ -58,12 +59,14 @@ add_library(Gate OBJECT
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/bidecomposition.cpp
   optimizer2/resynthesis/cascade.cpp
+  optimizer2/resynthesis/de_micheli.cpp
   optimizer2/resynthesis/isop.cpp
   optimizer2/resynthesis/reed_muller.cpp
   optimizer2/resynthesis/ternary_bi_clique.cpp
   optimizer2/resynthesis/unitized_table.cpp
   parser/gate_verilog.cpp
   parser/graphml.cpp
+  parser/graphml_to_subnet.cpp
   premapper/aigmapper.cpp
   premapper/migmapper.cpp
   premapper/premapper.cpp
@@ -82,6 +85,8 @@ add_library(Gate OBJECT
   transformer/aigmapper.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
+  transformer/mutator/mutator.cpp
+  transformer/mutator/mutator_visitor.cpp
   translator/yosys_converter_firrtl.cpp
   translator/firrtl.cpp)
 add_library(Utopia::Gate ALIAS Gate)

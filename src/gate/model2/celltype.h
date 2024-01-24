@@ -118,10 +118,33 @@ class CellType final : public Object<CellType, CellTypeID> {
 public:
   static constexpr uint16_t AnyArity = 0xffff;
 
+  CellType &operator =(const CellType &r) = delete;
+  CellType(const CellType &r) = delete;
+
   /// Returns the cell type name.
   std::string getName() const { return String::get(nameID); }
   /// Returns the cell type function/kind.
   CellSymbol getSymbol() const { return symbol; }
+
+  bool isIn()    const { return symbol == IN;    }
+  bool isOut()   const { return symbol == OUT;   }
+  bool isZero()  const { return symbol == ZERO;  }
+  bool isOne()   const { return symbol == ONE;   }
+  bool isBuf()   const { return symbol == BUF;   }
+  bool isNot()   const { return symbol == NOT;   }
+  bool isAnd()   const { return symbol == AND;   }
+  bool isOr()    const { return symbol == OR;    }
+  bool isXor()   const { return symbol == XOR;   }
+  bool isNand()  const { return symbol == NAND;  }
+  bool isNor()   const { return symbol == NOR;   }
+  bool isXnor()  const { return symbol == XNOR;  }
+  bool isMaj()   const { return symbol == MAJ;   }
+  bool isLatch() const { return symbol == LATCH; }
+  bool isDff()   const { return symbol == DFF;   }
+  bool isDffRs() const { return symbol == DFFrs; }
+  bool isCell()  const { return symbol == CELL;  }
+  bool isSoft()  const { return symbol == SOFT;  }
+  bool isHard()  const { return symbol == HARD;  }
 
   bool isCombinational() const { return props.combinational; }
   bool isConstant()      const { return props.constant;      }

@@ -27,6 +27,7 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
+  gate/analyzer/prob_estimator_test.cpp
   gate/analyzer/simulation_estimator_test.cpp
   gate/debugger/k_lec_test.cpp
   gate/debugger/lec_test.cpp
@@ -41,6 +42,7 @@ add_executable(${TEST_TARGET}
   gate/model2/list_test.cpp
   gate/model2/net_test.cpp
   gate/model2/seq_net.cpp
+  gate/model2/subnet_cnf_encoder_test.cpp
   gate/model2/subnet_test.cpp
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp
@@ -63,11 +65,13 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/resynthesis/akers_test.cpp
   gate/optimizer2/resynthesis/bidecomposition_test.cpp
   gate/optimizer2/resynthesis/cascade_test.cpp
+  gate/optimizer2/resynthesis/de_micheli_test.cpp
   gate/optimizer2/resynthesis/isop_test.cpp
   gate/optimizer2/resynthesis/reed_muller_test.cpp
   gate/optimizer2/resynthesis/resynthesis_contest.cpp
   gate/optimizer2/resynthesizer_test.cpp
   gate/parser/graphml_parser_test.cpp
+  gate/parser/graphml_to_subnet_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
   gate/premapper/mapper/mapper_test.cpp
@@ -85,6 +89,7 @@ add_executable(${TEST_TARGET}
   gate/tech_mapper/techmap_test.cpp
   gate/transformer/aigmapper_test.cpp
   gate/transformer/bdd_test.cpp
+  gate/transformer/mutator_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp
   rtl/library/arithmetic_test.cpp

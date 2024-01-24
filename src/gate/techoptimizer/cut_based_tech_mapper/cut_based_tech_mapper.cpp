@@ -85,21 +85,14 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
   }
 
   SubnetID CutBasedTechMapper::buildSubnet(SubnetID subnetID) {
-    int countOfCell = 0;
-
     Subnet &subnet = Subnet::get(subnetID);
-    eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
+    auto entries = subnet.getEntries();
     
-    eda::gate::model::SubnetBuilder subnetBuilder;
-
-    for (const auto idx : inID) {
-      auto cellID = subnetBuilder.addInput();
-      (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID.idx;
-    }
+    model::SubnetBuilder subnetBuilder;
+    addInputCells(subnetBuilder);
 
     std::stack<EntryIndex> stack;
     std::unordered_set<EntryIndex> visited;
-
 
     for (const auto& out : outID) {
       stack.push(out);
@@ -109,72 +102,11 @@ SubnetID CutBasedTechMapper::aigMap(SubnetID subnetID) {
     while (!stack.empty()) {
       EntryIndex currentEntryIDX = stack.top();
       auto currentCell = entries[currentEntryIDX].cell;
-
-      if (currentCell.isIn()) {
-        stack.pop();
-      } else if (currentCell.isZero()) {
-          auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::ZERO);
-        (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
-          stack.pop();
-      } else if (currentCell.isOne()) {
-          auto cellID = subnetBuilder.addCell(eda::gate::model::CellSymbol::ONE);
-        (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
-          stack.pop();
-      } else {
-        bool readyForCreate = true;
-        Subnet::LinkList linkList;
-
-        for (const auto &idx : bestReplacementMap->at(currentEntryIDX).entryIDxs) {
-          if (bestReplacementMap->at(idx).cellIDInMappedSubnet == ULLONG_MAX) {
-            readyForCreate = false;
-            break;
-          }
-
-          Subnet::Link link(bestReplacementMap->at(idx).cellIDInMappedSubnet);
-          linkList.push_back(link);
-        }
-
-        if (readyForCreate) {
-          if (currentCell.isOut() || currentCell.type == eda::gate::model::CellSymbol::OUT) {
-          } else {
-
-            /*Subnet &techSubnet = Subnet::get(bestReplacementMap[currentEntryIDX].getLibertySubnetID());
-            eda::gate::model::Array<Subnet::Entry> techCellEntries = techSubnet.getEntries();
-            for (const auto &techCellEntry : techCellEntries) {
-              auto techCell = techCellEntry.cell;
-              if (!techCell.isIn() && !techCell.isOut()) {
-                auto cellID = subnetBuilder.addCell(techCell.getTypeID(), linkList);
-                bestReplacementMap[currentEntryIDX].cellIDInMappedSubnet = cellID;
-                countOfCell++;
-              }
-            }*/
-            //std::cout << Subnet::get(bestReplacementMap[currentEntryIDX].subnetID) << std::endl;
-            auto cellID = subnetBuilder.addSingleOutputSubnet(bestReplacementMap->at(currentEntryIDX).subnetID,
-                                                  linkList);
-            (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
-            std::cout << "add subnet out index: " << cellID.idx << std::endl;
-          }
-          stack.pop();
-        }
-      }
-
-      for (const auto &link : bestReplacementMap->at(currentEntryIDX).entryIDxs) {
-        if (visited.find(link) == visited.end()) {
-          stack.push(link);
-          visited.insert(link);
-        }
-      }
+      processNode(currentEntryIDX,currentCell,subnetBuilder,stack);
+      processLinks(currentEntryIDX, stack, visited);
     }
 
-    for (const auto idx : outID) {
-      auto input = bestReplacementMap->at(idx).entryIDxs;
-      Subnet::Link link(bestReplacementMap->at(*(input.begin())).cellIDInMappedSubnet);
-
-      auto cellID = subnetBuilder.addOutput(link);
-      (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID.idx;
-    }
-
-    std::cout << "Count of New Cell = " << countOfCell << std::endl;
+    addOutputCells(subnetBuilder);
     return subnetBuilder.make();
   }
 
@@ -235,4 +167,66 @@ void CutBasedTechMapper::addOutToTheMap(EntryIndex entryIndex,
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 
+void CutBasedTechMapper::addInputCells(model::SubnetBuilder &subnetBuilder) {
+  for (const auto idx : inID) {
+    auto cellID = subnetBuilder.addInput();
+    (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID.idx;
+  }
+}
+
+void CutBasedTechMapper::addOutputCells(model::SubnetBuilder &subnetBuilder) {
+  for (const auto idx : outID) {
+    auto input = bestReplacementMap->at(idx).entryIDxs;
+    Subnet::Link link(bestReplacementMap->at(*(input.begin())).cellIDInMappedSubnet);
+    auto cellID = subnetBuilder.addOutput(link);
+    (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID.idx;
+  }
+}
+
+Subnet::LinkList CutBasedTechMapper::createLinkList(EntryIndex currentEntryIDX) {
+  Subnet::LinkList linkList;
+  for (const auto &idx : bestReplacementMap->at(
+      currentEntryIDX).entryIDxs) {
+    if (bestReplacementMap->at(idx).cellIDInMappedSubnet == ULLONG_MAX) {
+      return {}; // Return empty list to indicate not ready
+    }
+    Subnet::Link link(bestReplacementMap->at(idx).cellIDInMappedSubnet);
+    linkList.push_back(link);
+  }
+  return linkList;
+}
+
+void CutBasedTechMapper::processNode(EntryIndex currentEntryIDX,
+                                     model::Subnet::Cell &currentCell,
+                                     model::SubnetBuilder &subnetBuilder,
+                                     std::stack<EntryIndex> &stack) {
+  if (currentCell.isIn()) {
+    stack.pop();
+    return;
+  }
+  if (currentCell.isZero() || currentCell.isOne()) {
+    auto symbol = currentCell.isZero() ? model::CellSymbol::ZERO : model::CellSymbol::ONE;
+    auto cellID = subnetBuilder.addCell(symbol);
+    (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
+    stack.pop();
+    return;
+  }
+  Subnet::LinkList linkList = createLinkList(currentEntryIDX);
+  if (!linkList.empty()) {
+    if (!currentCell.isOut()) {
+      auto cellID = subnetBuilder.addSingleOutputSubnet(bestReplacementMap->at(currentEntryIDX).subnetID, linkList);
+      (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
+    }
+    stack.pop();
+  }
+}
+void CutBasedTechMapper::processLinks(EntryIndex currentEntryIDX,
+                                      std::stack<EntryIndex> &stack,
+                                      std::unordered_set<EntryIndex> &visited) {
+  for (const auto& link : bestReplacementMap->at(currentEntryIDX).entryIDxs) {
+    if (visited.insert(link).second) {
+      stack.push(link);
+    }
+  }
+}
 } // namespace eda::gate::tech_optimizer

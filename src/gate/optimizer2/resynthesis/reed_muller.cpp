@@ -17,9 +17,10 @@ namespace eda::gate::optimizer2::resynthesis {
   SubnetID ReedMuller::synthesize(const DinTruthTable &func,
                                   uint16_t maxArity) {
 
-    /// TODO: Take into account the restriction on arity.
     Polynomial resultFunction = getTT(func);
-    const size_t maxSize = (maxArity < Subnet::Cell::InPlaceLinks) ? maxArity : Subnet::Cell::InPlaceLinks;
+    const size_t maxSize = (maxArity < Subnet::Cell::InPlaceLinks) ? 
+                 maxArity : Subnet::Cell::InPlaceLinks;
+                 
     SubnetBuilder subnetBuilder;
     uint64_t argNum  = resultFunction[resultFunction.size() - 1];
     size_t idx[argNum];
@@ -40,50 +41,17 @@ namespace eda::gate::optimizer2::resynthesis {
 
       std::vector<int> temporaryInputNodes = eda::utils::popcnt(i);
       LinkList currentNode;
-      size_t currentSize = 0;
+
       for (auto n : temporaryInputNodes) {
         currentNode.push_back(Link(idx[n]));
-        ++currentSize;
-        if (currentSize == maxSize) {
-          Link partOfCurNode = subnetBuilder.addCell(model::AND, currentNode);
-          currentNode.clear();
-          currentNode.push_back(partOfCurNode);
-          currentSize = 1;
-        }
       }
-      resultOutput.push_back(subnetBuilder.addCell(model::AND, currentNode));
+
+      resultOutput.push_back(subnetBuilder.addCellTree(model::AND, currentNode, maxSize));
     }
 
     LinkList outputNodes;
-    std::size_t currentNodeSize = 0;
-    LinkList outNode;
-    
-    while (resultOutput.size() >= maxSize) {
-      for (auto node : resultOutput) {
-        outNode.push_back(node);
-        ++currentNodeSize;
-        if (currentNodeSize == maxSize) { 
-          outputNodes.push_back(subnetBuilder.addCell(model::XOR, outNode));
-          outNode.clear();
-          currentNodeSize = 0;
-        }
-      }
 
-      if (!outNode.empty()) {
-        outputNodes.push_back(subnetBuilder.addCell(model::XOR, outNode));
-        outNode.clear();
-        currentNodeSize = 0;
-      }
-
-      resultOutput = outputNodes;
-      outputNodes.clear();
-    }
-
-    for (auto node : resultOutput) {
-      outNode.push_back(node);
-    }
-
-    Link out = subnetBuilder.addCell(model::XOR, outNode);
+    Link out = subnetBuilder.addCellTree(model::XOR, resultOutput, maxSize);
     subnetBuilder.addOutput(out);
     return subnetBuilder.make();
   }

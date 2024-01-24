@@ -23,6 +23,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
   std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
+    std::cout << "Зашли в зону celltype" << std::endl;
     CellType &cellType = CellType::get(cellTypeID);
 
     std::vector<int> permutationVec;
@@ -30,14 +31,14 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
       permutationVec.push_back(i);
     }
     std::sort(permutationVec.begin(), permutationVec.end());
-    /*do {
+    do {
       count ++;
       SubnetBuilder subnetBuilder;
       std::vector<Link> linkList;
       size_t linkArray[cellType.getInNum()];
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
         auto inputIdx = subnetBuilder.addInput();
-        linkArray[permutationVec.at(i)] = inputIdx;
+        linkArray[permutationVec.at(i)] = inputIdx.idx;
       }
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
         linkList.emplace_back(linkArray[i]);
@@ -56,9 +57,12 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
 
       ttSubnet.emplace_back(model::evaluate(
           cellType.getSubnet()), subnetID);
-    } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));*/
+      linkList.clear();
+    } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
 
-    SubnetBuilder subnetBuilder;
+    permutationVec.clear();
+
+    /*SubnetBuilder subnetBuilder;
     std::vector<Link> linkList;
 
     for (size_t i = 0; i < cellType.getInNum(); ++i) {
@@ -77,7 +81,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
     subnetToAttr.emplace_back(subnetID, subnetattr);
 
     ttSubnet.emplace_back(model::evaluate(
-        cellType.getSubnet()), subnetID);
+        cellType.getSubnet()), subnetID);*/
   }
   std::cout << "Count of liberty Subnet = " << count << std::endl;
 }

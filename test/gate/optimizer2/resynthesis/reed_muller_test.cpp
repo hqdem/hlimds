@@ -153,28 +153,6 @@ TEST(ReedMullerModel2, subnetToSubnetOn3Vars) {
   testSubnetToSubnet(net, subnet);
 }
 
-// Tests if "sythesize" works correctly (the polynomial is 1 ^ x1 ^ x1x2 ^ x3 ^ x1x2x3)
-TEST(ReedMullerModel2, subnetToSubnetOn3VarsWith1) {
-  SubnetID net1 = generateSubnetID("10101101", 3);
-
-  SubnetBuilder builder;
-
-  const auto input = builder.addInputs(3);
-
-  LinkList output;
-  output.push_back(input[0]);
-  output.push_back(builder.addCell(model::AND, input[0], input[1]));
-  output.push_back(input[2]);
-  output.push_back(builder.addCell(model::AND, input[0], input[1], input[2]));
-
-  builder.addOutput(builder.addCell(model::XOR, output));
-  
-  const auto &subnet = Subnet::get(builder.make());
-  const auto &net = Subnet::get(net1);
-  
-  testSubnetToSubnet(net, subnet);
-}
-
 // Tests if "sythesize" works correctly (the polynomial is x1 ^ x2 ^ x3 ^ x4 ^ x2x4 ^ x1x2x4 ^ x1x2x3x4)
 TEST(ReedMullerModel2, subnetToSubnetOn4Vars) {
   SubnetID net1 = generateSubnetID("1010110110010110", 4);

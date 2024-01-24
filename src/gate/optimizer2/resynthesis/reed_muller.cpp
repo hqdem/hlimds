@@ -19,7 +19,7 @@ namespace eda::gate::optimizer2::resynthesis {
 
     /// TODO: Take into account the restriction on arity.
     Polynomial resultFunction = getTT(func);
-    const size_t maxSize = Subnet::Cell::InPlaceLinks - 1;
+    const size_t maxSize = (maxArity < Subnet::Cell::InPlaceLinks) ? maxArity : Subnet::Cell::InPlaceLinks;
     SubnetBuilder subnetBuilder;
     uint64_t argNum  = resultFunction[resultFunction.size() - 1];
     size_t idx[argNum];

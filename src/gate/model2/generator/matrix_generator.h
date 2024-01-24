@@ -21,23 +21,12 @@ class MatrixGenerator final : public Generator {
 
 public:
   MatrixGenerator() = delete;
-  MatrixGenerator(const MatrixGenerator &other) = default;
-  MatrixGenerator(MatrixGenerator &&other) = default;
-  MatrixGenerator &operator=(const MatrixGenerator &other) = default;
-  MatrixGenerator &operator=(MatrixGenerator &&other) = default;
-  ~MatrixGenerator() = default;
 
   /**
-   * @brief Matrix-based net generator constructor.
-   * Generator is able to generate net only if it is possible to create
-   * net with one primary output.
+   * @copydoc Generator::Generator(const std::size_t, const std::size_t, const std::vector<CellSymbol> &, const unsigned)
+   * Generates net with matrix. Generator is able to generate net only if it is
+   * possible to create net with one primary output.
    * @param nCells Number of inner cells.
-   * @param nIn Number of primary inputs.
-   * @param nOut Number of primary outputs.
-   * @param netBase Basis of allowed operations.
-   * Basis can contain predefined operation symbols only.
-   * Inputs, outputs and constants are not allowed.
-   * @param seed Seed for reproducibility of the result.
    */
   MatrixGenerator(const std::size_t nCells,
                   const std::size_t nIn,
@@ -45,6 +34,9 @@ public:
                   const std::vector<CellSymbol> &netBase,
                   const unsigned seed = 0u);
 
+  /**
+   * @copydoc MatrixGenerator(const std::size_t, const std::size_t, const std::size_t, const std::vector<CellSymbol> &, const unsigned)
+   */
   MatrixGenerator(const std::size_t nCells,
                   const std::size_t nIn,
                   const std::size_t nOut,
@@ -52,16 +44,10 @@ public:
                   const unsigned seed = 0u);
 
   /**
-   * @brief Matrix-based net generator constructor.
-   * Generator is able to generate net only if it is possible to create
-   * net with one primary output.
+   * @copydoc Generator::Generator(const std::size_t, const std::size_t, const std::vector<CellTypeID> &, const unsigned)
+   * Generates net with matrix. Generator is able to generate net only if it is
+   * possible to create net with one primary output.
    * @param nCells Number of inner cells.
-   * @param nIn Number of primary inputs.
-   * @param nOut Number of primary outputs.
-   * @param netBase Basis of allowed operations.
-   * Basis can contain predefined and custom operation identifiers only.
-   * Inputs, outputs and constants are not allowed.
-   * @param seed Seed for reproducibility of the result.
    */
   MatrixGenerator(const std::size_t nCells,
                   const std::size_t nIn,
@@ -69,12 +55,16 @@ public:
                   const std::vector<CellTypeID> &netBase,
                   const unsigned seed = 0u);
 
+  /**
+   * @copydoc MatrixGenerator(const std::size_t, const std::size_t, const std::size_t, const std::vector<CellTypeID> &, const unsigned)
+   */
   MatrixGenerator(const std::size_t nCells,
                   const std::size_t nIn,
                   const std::size_t nOut,
                   const CellTypeIDList &netBase,
                   const unsigned seed = 0u);
 
+  /// Get matrix generator name.
   std::string getName() const override;
 
 private:

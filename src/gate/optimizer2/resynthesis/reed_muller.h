@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 #include "gate/model2/celltype.h"
@@ -40,14 +40,14 @@ namespace eda::gate::optimizer2::resynthesis {
      * Transforms truth table for the function to subnet model 
      * using a Reed-Muller method.
      * 
-     * maxArity is a parameter, that defines the maximum for Arity of every node in subnet.
+     * maxArity is a parameter, that defines the maximal arity of every node in subnet.
      * By default it's set to Subnet::Cell::InPlaceLinks, 
      * to use other value pass it as the second argument.
      * 
      * If the second argument passed to "synthesize" is more than Subnet::Cell::InPlaceLinks,
      * it's forced to be equal to Subnet::Cell::InPlaceLinks.
      * 
-     * maxArity has to be more than 2, if it's not => assert.
+     * The maxArity param must be greater than 2.
      */
     SubnetID synthesize(const DinTruthTable &func,
                         uint16_t maxArity = -1) override;

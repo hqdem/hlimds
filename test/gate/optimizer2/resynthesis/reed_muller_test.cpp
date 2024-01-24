@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -41,14 +41,14 @@ namespace eda::gate::optimizer2::resynthesis {
     DinTruthTable t(numVars);
     std::string s = generateRandom(numVars);
     kitty::create_from_binary_string(t, s);
-    return r.synthesize(t, -1);
+    return r.synthesize(t);
   }
 
   SubnetID generateSubnetID(std::string s, const uint64_t numVars) {
     ReedMuller r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, s);
-    return r.synthesize(t, -1);
+    return r.synthesize(t);
   }
 
   void testSubnetToSubnet(const Subnet &net, const Subnet &subnet) {
@@ -63,7 +63,7 @@ namespace eda::gate::optimizer2::resynthesis {
     ReedMuller r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, generateRandom(numVars));
-    SubnetID subnet = r.synthesize(t, -1);
+    SubnetID subnet = r.synthesize(t);
 
     DinTruthTable resultTable = evaluate(Subnet::get(subnet));
     for (size_t i = 0; i < t.num_bits(); ++i) {
@@ -75,7 +75,7 @@ namespace eda::gate::optimizer2::resynthesis {
     ReedMuller r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, generateRandom(numVars));
-    SubnetID baseSubnet = r.synthesize(t, -1);
+    SubnetID baseSubnet = r.synthesize(t);
     DinTruthTable baseTable = evaluate(Subnet::get(baseSubnet));
 
     for(uint16_t arity = 3; arity < Subnet::Cell::InPlaceLinks + 1; ++arity){
@@ -223,4 +223,4 @@ TEST(ReedMullerModel2, DiffArityOn8Values) { subnetToSubnetWithDifferentArity(8)
 TEST(ReedMullerModel2, DiffArityOn9Values) { subnetToSubnetWithDifferentArity(9); }
 
 TEST(ReedMullerModel2, DiffArityOn10Values) { subnetToSubnetWithDifferentArity(10); }
-}//namespace eda::gate::optimizer2::resynthesis
+}// namespace eda::gate::optimizer2::resynthesis

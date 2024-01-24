@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -45,9 +45,9 @@ namespace eda::gate::optimizer2::resynthesis {
         currentNode.push_back(Link(idx[n]));
         ++currentSize;
         if (currentSize == maxSize) {
-          Link partOfCurrentNode = subnetBuilder.addCell(model::AND, currentNode);
+          Link partOfCurNode = subnetBuilder.addCell(model::AND, currentNode);
           currentNode.clear();
-          currentNode.push_back(partOfCurrentNode);
+          currentNode.push_back(partOfCurNode);
           currentSize = 1;
         }
       }
@@ -55,7 +55,7 @@ namespace eda::gate::optimizer2::resynthesis {
     }
 
     LinkList outputNodes;
-    int currentNodeSize = 0;
+    std::size_t currentNodeSize = 0;
     LinkList outNode;
     
     while (resultOutput.size() >= maxSize) {
@@ -69,7 +69,7 @@ namespace eda::gate::optimizer2::resynthesis {
         }
       }
 
-      if (outNode.size()) {
+      if (!outNode.empty()) {
         outputNodes.push_back(subnetBuilder.addCell(model::XOR, outNode));
         outNode.clear();
         currentNodeSize = 0;
@@ -153,4 +153,4 @@ namespace eda::gate::optimizer2::resynthesis {
     resultFunction[resultFunction.size() - 1] = numVar;
     return resultFunction;
   }
-} //namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::resynthesis

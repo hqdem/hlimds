@@ -76,6 +76,32 @@ class VerilogPrinter final : public ModelPrinter,
 }
 
 private:
+  static std::string getInstanceName(const CellInfo &cellInfo) { 
+    const auto &type = cellInfo.type.get();
+
+    // Standard logic gates do not require names.
+    if (!type.isCell() && !type.isSoft() && !type.isHard())
+      return "";
+
+    // Instances of technological cells and IPs should be named.
+    std::stringstream ss;
+
+    ss << "cell_" << cellInfo.getType();
+    ss << "_";
+    ss << cellInfo.cell;
+
+    return ss.str();
+  }
+
+  static std::string getLinkExpr(const LinkInfo &linkInfo) {
+    std::stringstream ss;
+
+    if (linkInfo.inv) ss << "~";
+    ss << linkInfo.getSourceName();
+
+    return ss.str();
+  }
+
   void declareWiresForCellOutputs(
       std::ostream &out, const CellInfo &cellInfo) {
     const auto &type = cellInfo.type.get();
@@ -85,8 +111,7 @@ private:
 
     for (uint16_t output = 0; output < type.getOutNum(); ++output) {
       printIndent(out, 1);
-      out << "wire " << PortInfo(cellInfo, output).getName();
-      out << ";\n";
+      out << "wire " << PortInfo(cellInfo, output).getName() << ";\n";
     }
   }
 
@@ -96,9 +121,8 @@ private:
     assert(type.isZero() || type.isOne());
 
     printIndent(out, 1);
-    out << "assign " << PortInfo(cellInfo, 0).getName() << " = ";
-    out << (type.isZero() ? "0" : "1");
-    out << ";\n";
+    out << "assign " << PortInfo(cellInfo, 0).getName()
+        << " = " << (type.isZero() ? "0" : "1") << ";\n";
   }
 
   void instantiateCell(std::ostream &out,
@@ -108,9 +132,7 @@ private:
     assert(!type.isIn() && !type.isOut());
 
     printIndent(out, 1);
-    out << cellInfo.getType();
-    printInstanceName(out, cellInfo);
-    out << "(";
+    out << cellInfo.getType() << " " << getInstanceName(cellInfo) << "(";
 
     bool comma = false;
     for (uint16_t output = 0; output < type.getOutNum(); ++output) {
@@ -121,7 +143,7 @@ private:
 
     for (auto linkInfo : linksInfo) {
       if (comma) out << ", ";
-      printLink(out, linkInfo);
+      out << getLinkExpr(linkInfo);
       comma = true;
     }
 
@@ -135,23 +157,8 @@ private:
     assert(type.isOut());
 
     printIndent(out, 1);
-    out << "assign " << PortInfo(cellInfo, 0).getName() << " = ";
-    printLink(out, linksInfo.front());
-    out << ";\n"; 
-  }
-
-  void printInstanceName(std::ostream &out, const CellInfo &cellInfo) {
-    const auto &type = cellInfo.type.get();
-
-    if (!type.isCell() && !type.isSoft() && !type.isHard())
-      return;
-   
-    out << "inst_" << cellInfo.getType() << "_" << cellInfo.cell;
-  }
-
-  void printLink(std::ostream &out, const LinkInfo &linkInfo) {
-    if (linkInfo.inv) out << "~";
-    out << linkInfo.getSourceName(); 
+    out << "assign " << PortInfo(cellInfo, 0).getName()
+        << " = " << getLinkExpr(linksInfo.front()) << ";\n"; 
   }
 
   void printIndent(std::ostream &out, size_t n) {

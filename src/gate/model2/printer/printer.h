@@ -56,7 +56,17 @@ public:
 
     onDefinitionBegin(out);
     for (const auto pass : passes) {
-      visitItems(out, model, pass);
+      switch (pass.type) {
+      case Pass::LINK:
+        visitLinks(out, model, pass.num);
+        break;
+      case Pass::CELL:
+        visitCells(out, model, pass.num);
+        break;
+      default:
+        assert(false);
+        break;
+      }
     }
     onDefinitionEnd(out);
 
@@ -76,7 +86,7 @@ protected:
     unsigned num;
   };
 
-  /// Cell information (unified representation).
+  /// Cell information.
   struct CellInfo final {
     CellInfo(const CellType &type, size_t cell):
         type(type), cell(cell) {}
@@ -99,7 +109,7 @@ protected:
     size_t cell;
   };
 
-  /// Port information (unified representation).
+  /// Port information.
   struct PortInfo final {
     PortInfo(const CellInfo &cellInfo, uint16_t port):
         cellInfo(cellInfo), port(port) {}
@@ -119,7 +129,7 @@ protected:
     uint16_t port;
   };
 
-  /// Link information (unified representation).
+  /// Link information.
   struct LinkInfo final {
     LinkInfo(const PortInfo &sourceInfo, const PortInfo &targetInfo, bool inv):
         sourceInfo(sourceInfo), targetInfo(targetInfo), inv(inv) {}
@@ -132,7 +142,7 @@ protected:
     bool inv;
   };
 
-  /// Inputs information (unified representation).
+  /// Inputs information.
   using LinksInfo = std::vector<LinkInfo>;
 
   ModelPrinter(const std::vector<Pass> passes): passes(passes) {}
@@ -160,21 +170,6 @@ protected:
                       unsigned pass) {}
 
 private:
-  template<typename T>
-  void visitItems(std::ostream &out, const T &model, const Pass &pass) {
-    switch (pass.type) {
-    case Pass::LINK:
-      visitLinks(out, model, pass.num);
-      break;
-    case Pass::CELL:
-      visitCells(out, model, pass.num);
-      break;
-    default:
-      assert(false);
-      break;
-    }
-  }
-
   const std::vector<Pass> passes;
 
   //----------------------------------------------------------------------------
@@ -187,10 +182,8 @@ private:
 
   void visitInputs(std::ostream &out, const Net &net);
   void visitOutputs(std::ostream &out, const Net &net);
-
   void visitCells(std::ostream &out, const List<CellID> &cells, unsigned pass);
   void visitCells(std::ostream &out, const Net &net, unsigned pass);
-
   void visitLinks(std::ostream &out, const List<CellID> &cells, unsigned pass);
   void visitLinks(std::ostream &out, const Net &net, unsigned pass);
 
@@ -204,7 +197,6 @@ private:
 
   void visitInputs(std::ostream &out, const Subnet &subnet);
   void visitOutputs(std::ostream &out, const Subnet &subnet);
-
   void visitCells(std::ostream &out, const Subnet &subnet, unsigned pass);
   void visitLinks(std::ostream &out, const Subnet &subnet, unsigned pass);
 };

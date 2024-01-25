@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -16,7 +16,7 @@ using namespace eda::gate::parser;
 namespace eda::gate::debugger {
 
 CheckerResult fileLecTest(const std::string &fileName,
-                          BaseChecker &checker,
+                          LecType lecType,
                           PreBasis basis,
                           const std::string &subPath) {
   Exts ext = getExt(fileName);
@@ -32,12 +32,12 @@ CheckerResult fileLecTest(const std::string &fileName,
 
   GateIdMap gatesMap;
   std::shared_ptr<GNet> premappedNet = premap(initialNet, gatesMap, basis);
-  return checker.equivalent(*initialNet, *premappedNet, gatesMap);
+  return getChecker(lecType).equivalent(*initialNet, *premappedNet, gatesMap);
 }
 
 CheckerResult twoFilesLecTest(const std::string &fileName1,
                               const std::string &fileName2,
-                              BaseChecker &checker,
+                              LecType lecType,
                               const std::string &subPath1,
                               const std::string &subPath2) {
   Exts ext1 = getExt(fileName1);
@@ -78,18 +78,18 @@ CheckerResult twoFilesLecTest(const std::string &fileName1,
     inOutMap[outputs1[i]] = outputs2[i];
   }
 
-  return checker.equivalent(compiledNet1, compiledNet2, inOutMap);
+  return getChecker(lecType).equivalent(compiledNet1, compiledNet2, inOutMap);
 }
 
-Checker::Hints checkerTestHints(unsigned N,
-                                const GNet &lhs,
-                                const Gate::SignalList &lhsInputs,
-                                Gate::Id lhsOutputId,
-                                const GNet &rhs,
-                                const Gate::SignalList &rhsInputs,
-                                Gate::Id rhsOutputId) {
+SatChecker::Hints checkerTestHints(unsigned N,
+                                   const GNet &lhs,
+                                   const Gate::SignalList &lhsInputs,
+                                   Gate::Id lhsOutputId,
+                                   const GNet &rhs,
+                                   const Gate::SignalList &rhsInputs,
+                                   Gate::Id rhsOutputId) {
   using Link = Gate::Link;
-  using GateBinding = Checker::GateBinding;
+  using GateBinding = SatChecker::GateBinding;
 
   GateBinding imap, omap;
 
@@ -104,11 +104,31 @@ Checker::Hints checkerTestHints(unsigned N,
   // Output bindings.
   omap.insert({Link(lhsOutputId), Link(rhsOutputId)});
 
-  Checker::Hints hints;
+  SatChecker::Hints hints;
   hints.sourceBinding = std::make_shared<GateBinding>(std::move(imap));
   hints.targetBinding = std::make_shared<GateBinding>(std::move(omap));
 
   return hints;
+}
+
+GateIdMap checkerTestMap(unsigned N,
+                         const GNet &lhs,
+                         const Gate::SignalList &lhsInputs,
+                         Gate::Id lhsOutputId,
+                         const GNet &rhs,
+                         const Gate::SignalList &rhsInputs,
+                         Gate::Id rhsOutputId) {
+  GateIdMap gmap = {};
+
+  // Input bindings.
+  for (unsigned i = 0; i < N; i++) {
+    gmap[lhsInputs[i].node()] = rhsInputs[i].node();
+  }
+
+  // Output bindings.
+  gmap[lhsOutputId] = rhsOutputId;
+
+  return gmap;
 }
 
 bool checkEquivTest(unsigned N,
@@ -118,10 +138,10 @@ bool checkEquivTest(unsigned N,
                     const GNet &rhs,
                     const Gate::SignalList &rhsInputs,
                     Gate::Id rhsOutputId) {
-  Checker checker;
-  Checker::Hints hints = checkerTestHints(N, lhs, lhsInputs, lhsOutputId,
-                                            rhs, rhsInputs, rhsOutputId);
-  return checker.equivalent(lhs, rhs, hints).equal();
+  SatChecker::Hints hints = checkerTestHints(N, lhs, lhsInputs, lhsOutputId,
+                                             rhs, rhsInputs, rhsOutputId);
+  return static_cast<SatChecker&>(
+         getChecker(options::SAT)).equivalent(lhs, rhs, hints).equal();
 }
 
 bool checkEquivMiterTest(unsigned N,
@@ -131,11 +151,11 @@ bool checkEquivMiterTest(unsigned N,
                          GNet &rhs,
                          const Gate::SignalList &rhsInputs,
                          Gate::Id rhsOutputId) {
-  Checker checker;
-  Checker::Hints hints = checkerTestHints(N, lhs, lhsInputs, lhsOutputId,
-                                            rhs, rhsInputs, rhsOutputId);
-  GNet mit = *miter(lhs, rhs, hints);
-  return checker.isEqualCombMiter(mit).equal();
+  GateIdMap gmap = checkerTestMap(N, lhs, lhsInputs, lhsOutputId,
+                                  rhs, rhsInputs, rhsOutputId);
+  GNet mit = *miter(lhs, rhs, gmap);
+  return static_cast<SatChecker&>(
+         getChecker(options::SAT)).isEqualCombMiter(mit).equal();
 }
 
 bool checkNorNorTest(unsigned N) {

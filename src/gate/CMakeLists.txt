@@ -1,18 +1,22 @@
+add_compile_options(-fno-rtti)
 add_library(Gate OBJECT
   analyzer/probabilistic_estimate.cpp
   analyzer/simulation_estimator.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
-  debugger/checker.cpp
+  debugger/sat_checker.cpp
   debugger/encoder.cpp
   debugger/fraig_checker.cpp
   debugger/k_checker.cpp
   debugger/miter.cpp
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
+  fir_to_model2/fir_to_model2.cpp
+  fir_to_model2/fir_to_model2_wrapper.cpp
   debugger2/base_checker2.cpp
   debugger2/miter2.cpp
   debugger2/rnd_checker2.cpp
+  fir_to_model2/fir_to_model2.cpp
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
@@ -94,6 +98,18 @@ add_library(Utopia::Gate ALIAS Gate)
 target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/lib)
 target_link_libraries(Gate
   PUBLIC
+  MLIRIR
+  MLIRSupport
+  CIRCTFIRRTL
+  CIRCTExportChiselInterface
+  CIRCTFIRRTLTransforms
+  CIRCTImportFIRFile
+  CIRCTTransforms
+  MLIRParser
+  MLIRRewrite
+  MLIRTransformUtils
+  MLIRTransforms
+
   minisat-lib-static
   Cudd::Cudd
   lorina
@@ -105,6 +121,7 @@ target_link_libraries(Gate
   Json
 
   PRIVATE
+
   Utopia::Util
   CLI
   Yosys::Yosys

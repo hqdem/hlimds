@@ -29,25 +29,25 @@ class Generator {
 
 public:
   /**
-   * @brief Sets fanin upper bound lim for each cell.
+   * @brief Set fanin upper bound lim for each cell.
    * If net base has irrelevant ops throws exception.
    */
   void setFaninHigh(const uint16_t faninHigh);
-
   /**
-   * @brief Sets fanin lower and upper bounds lim for each cell.
+   * @brief Set fanin lower and upper bounds lim for each cell.
    * If net base has irrelevant ops throws exception.
    */
   void setFaninLim(const uint16_t faninLow, const uint16_t faninHigh);
+  /// Set seed for generated net reproducibility.
   void setSeed(const unsigned seed);
+  /// Allow generator to generate hierarchical nets.
   void setHierarchical(const bool hierarchical);
-
-  /**
-   * @brief Sets upper bound of nesting depth.
-   */
+  /// Set upper bound of nesting depth.
   void setNestingMax(const std::size_t nestMax);
 
+  /// Get current generator seed.
   unsigned getSeed() const;
+  /// Get current generator name.
   virtual std::string getName() const = 0;
 
   /**
@@ -58,17 +58,30 @@ public:
 
 protected:
   Generator() = delete;
-  Generator(const Generator &other) = default;
-  Generator(Generator &&other) = default;
-  Generator &operator=(const Generator &other) = default;
-  Generator &operator=(Generator &&other) = default;
-  virtual ~Generator() = default;
 
+  /**
+   * @brief Generator constructor.
+   * @param nIn Number of primary inputs.
+   * @param nOut Number of primary outputs.
+   * @param netBase Basis of allowed operations.
+   * Basis can contain predefined operation symbols only.
+   * Inputs, outputs and constants are not allowed.
+   * @param seed Seed for reproducibility of the result.
+   */
   Generator(const std::size_t nIn,
             const std::size_t nOut,
             const std::vector<CellSymbol> &netBase,
             const unsigned seed);
 
+  /**
+   * @brief Generator constructor.
+   * @param nIn Number of primary inputs.
+   * @param nOut Number of primary outputs.
+   * @param netBase Basis of allowed operations.
+   * Basis can contain predefined and custom operation identifiers only.
+   * Inputs, outputs and constants are not allowed.
+   * @param seed Seed for reproducibility of the result.
+   */
   Generator(const std::size_t nIn,
             const std::size_t nOut,
             const std::vector<CellTypeID> &netBase,
@@ -96,6 +109,8 @@ protected:
    */
   CellTypeID chooseCellType(const uint16_t cellNIn,
                             const std::size_t nSourceCells);
+
+  /// Generates invalid net.
   NetID genInvalidNet() const;
 
 private:
@@ -115,13 +130,24 @@ private:
   CellTypeID createNetCell();
 
 protected:
-  std::size_t nIn, nOut;
+  /// Number of PIs in the resulting net.
+  std::size_t nIn;
+  /// Number of POs in the resulting net.
+  std::size_t nOut;
+  /// Seed for reproducibility of the generated net.
   unsigned seed;
-  uint16_t faninLow, faninHigh;
+  /// Fanin number lower bound in the resulting net.
+  uint16_t faninLow;
+  /// Fanin number upper bound in the resulting net.
+  uint16_t faninHigh;
+  /// Allows generator to make hierarchical nets.
   bool hierarchical;
+  /// Maximum nesting depth in current hierarchy level.
   std::size_t nestingDepth;
+  /// Possible cell type indexes.
   std::vector<CellTypeID> netBase;
 
+  /// Inputs number to possible cell type indexes (from net basis).
   std::map<uint16_t, std::vector<CellTypeID>> nInCellTIDs;
 
   /// Number of net cells (cells with net inside) in current net.

@@ -2,14 +2,14 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #pragma once
 
-#include "gate/debugger/bdd_checker.h"
-#include "gate/debugger/checker.h"
+#include "gate/debugger/base_checker.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/miter.h"
 #include "gate/debugger/rnd_checker.h"
@@ -39,23 +39,23 @@ using PreBasis = eda::gate::premapper::PreBasis;
  *  @return The result of the check.
  */
 CheckerResult fileLecTest(const std::string &fileName,
-                          BaseChecker &checker,
+                          LecType lecType,
                           PreBasis basis,
                           const std::string &subPath = "");
 
 CheckerResult twoFilesLecTest(const std::string &fileName1,
                               const std::string &fileName2,
-                              BaseChecker &checker,
+                              LecType lecType,
                               const std::string &subPath1 = "",
                               const std::string &subPath2 = "");
 
-Checker::Hints checkerTestHints(unsigned N,
-                                const GNet &lhs,
-                                const Gate::SignalList &lhsInputs,
-                                Gate::Id lhsOutputId,
-                                const GNet &rhs,
-                                const Gate::SignalList &rhsInputs,
-                                Gate::Id rhsOutputId);
+SatChecker::Hints checkerTestHints(unsigned N,
+                                   const GNet &lhs,
+                                   const Gate::SignalList &lhsInputs,
+                                   Gate::Id lhsOutputId,
+                                   const GNet &rhs,
+                                   const Gate::SignalList &rhsInputs,
+                                   Gate::Id rhsOutputId);
 
 bool checkEquivTest(unsigned N,
                     const GNet &lhs,

@@ -3,7 +3,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -17,7 +17,7 @@
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/min_delay.h"
 #include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/premapper/mapper/mapper_test.h"
-#include "gate/debugger/checker.h"
+#include "gate/debugger/sat_checker.h"
 
 #include "gtest/gtest.h"
 

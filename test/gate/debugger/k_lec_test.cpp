@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,7 +12,7 @@
 #include "gtest/gtest.h"
 
 using KChecker = eda::gate::debugger::KChecker;
-using Hints = eda::gate::debugger::Checker::Hints;
+using Hints = eda::gate::debugger::SatChecker::Hints;
 
 void createHints(GNet &net1, GNet &net2, Hints &hints) {
   GateBinding imap, omap;

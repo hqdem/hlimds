@@ -22,8 +22,8 @@ using Json = nlohmann::json;
 
 NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::debugger::options::LecType, {
   {eda::gate::debugger::options::BDD, "bdd"},
-  {eda::gate::debugger::options::DEFAULT, "default"},
   {eda::gate::debugger::options::RND, "rnd"},
+  {eda::gate::debugger::options::SAT, "sat"},
 })
 
 NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::premapper::PreBasis, {
@@ -155,8 +155,8 @@ struct RtlOptions final : public AppOptions {
 
   const std::map<std::string, LecType> lecTypeMap {
     {"bdd", LecType::BDD},
-    {"default", LecType::DEFAULT},
     {"rnd", LecType::RND},
+    {"sat", LecType::SAT},
   };
 
   const std::map<std::string, PreBasis> preBasisMap {
@@ -196,7 +196,7 @@ struct RtlOptions final : public AppOptions {
     get(json, GRAPHML, graphMl);
   }
 
-  LecType lecType = LecType::DEFAULT;
+  LecType lecType = LecType::SAT;
   PreBasis preBasis = PreBasis::AIG;
   std::string preLib;
   std::string graphMl;
@@ -231,10 +231,37 @@ struct FirRtlOptions final : public AppOptions {
   std::string top;
 };
 
+struct Model2Options final : public AppOptions {
+
+  static constexpr const char *ID = "to_model2";
+  static constexpr const char *OUTPUT = "outputFileName";
+
+  Model2Options(AppOptions &parent):
+      AppOptions(parent, ID, "Translator from FIRRTL to model2") {
+
+    options->add_option(cli(OUTPUT), outputFileName,
+                "Output file name")
+            ->expected(1);
+
+    // Input Verilog file(s).
+    options->allow_extras();
+  }
+
+  std::vector<std::string> files() const {
+    return options->remaining();
+  }
+
+  void fromJson(Json json) override {
+    get(json, OUTPUT, outputFileName);
+  }
+
+  std::string outputFileName;
+};
+
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), firrtl(*this) {
+      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this) {
 
     // Top-level options.
     options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
@@ -255,8 +282,10 @@ struct Options final : public AppOptions {
   void fromJson(Json json) override {
     rtl.fromJson(json[RtlOptions::ID]);
     firrtl.fromJson(json[FirRtlOptions::ID]);
+    model2.fromJson(json[Model2Options::ID]);
   }
 
   RtlOptions rtl;
   FirRtlOptions firrtl;
+  Model2Options model2;
 };

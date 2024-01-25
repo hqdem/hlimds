@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -317,11 +317,12 @@ TEST(GNetTest, GNetRandTestIssue11877) {
 }
 
 TEST(GNetTest, GNetWithCheckerTest) {
-  eda::gate::debugger::Checker checker;
   auto net = makeRand(7, 5);
   std::unordered_map<Gate::Id, Gate::Id> testMap = {};
   auto netCloned = net.get()->clone(testMap);
-  EXPECT_TRUE(checker.areEqual(*net, *netCloned, testMap));
+  EXPECT_TRUE(eda::gate::debugger::getChecker(
+              eda::gate::debugger::options::SAT).areEqual(
+              *net, *netCloned, testMap));
 }
 
 TEST(GNetTest, GNetEdgesTest) {

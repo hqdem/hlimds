@@ -148,10 +148,14 @@ public:
   /// TODO: Dummy (to be implemented).
   template<typename... Args>
   typename T::ID allocateExt(size_t size, Args&&... args) {
-    assert(size >= T::ID::Size && size <= PAGE_SIZE);
+    static constexpr auto SIZE = T::ID::Size;
+    assert(size >= SIZE && size <= PAGE_SIZE);
+
+    // Align the address (offset is enough).
+    offset = ((offset - 1) & ~(SIZE - 1)) + SIZE;
 
     // If there is no place in the current page, allocate a new one.
-    if (systemPage == nullptr || (offset + size) < PAGE_SIZE) {
+    if (systemPage == nullptr || (offset + size) > PAGE_SIZE) {
       const auto translation = PageManager::get().allocate();
 
       objectPage = translation.first;
@@ -160,9 +164,10 @@ public:
       offset = 0;
     }
 
-    new(PageManager::getObjectPtr(systemPage, offset)) T(args...);
-    auto untaggedID = PageManager::getObjectID(objectPage, offset);
+    auto *location = PageManager::getObjectPtr(systemPage, offset);
+    new(location) T(args...);
 
+    auto untaggedID = PageManager::getObjectID(objectPage, offset);
     offset += size;
 
     return T::ID::makeTaggedFID(untaggedID);

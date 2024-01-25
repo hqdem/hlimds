@@ -16,177 +16,166 @@ using Gate = eda::gate::model::Gate;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 using GNet = eda::gate::model::GNet;
 using PreBasis = eda::gate::premapper::PreBasis;
+using options::BDD;
+using options::FRAIG;
+using options::RND;
+using options::SAT;
 using PreBasis::AIG;
 using PreBasis::MIG;
 using PreBasis::XAG;
 using PreBasis::XMG;
 
 TEST(RilLecTest, sub) {
-  BddChecker bdd;
-  Checker def;
-  FraigChecker fraig;
-  RndChecker rnd(false, 1000);
+  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(false);
+  static_cast<RndChecker&>(getChecker(RND)).setTries(1000);
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
-  EXPECT_TRUE(fileLecTest("sub.ril", bdd, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", def, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", fraig, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", rnd, AIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("sub.ril", BDD, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("sub.ril", FRAIG, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("sub.ril", RND, AIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("sub.ril", SAT, AIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("sub.ril", bdd, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", def, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", fraig, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", rnd, XAG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("sub.ril", BDD, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("sub.ril", FRAIG, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("sub.ril", RND, XAG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("sub.ril", SAT, XAG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("sub.ril", bdd, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", def, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", rnd, MIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("sub.ril", BDD, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("sub.ril", RND, MIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("sub.ril", SAT, MIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("sub.ril", bdd, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", def, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("sub.ril", rnd, XMG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("sub.ril", BDD, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("sub.ril", RND, XMG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("sub.ril", SAT, XMG, subPath).equal());
 }
 
 TEST(RilLecTest, add) {
-  BddChecker bdd;
-  Checker def;
-  FraigChecker fraig;
-  RndChecker rnd(false, 1000);
+  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(false);
+  static_cast<RndChecker&>(getChecker(RND)).setTries(1000);
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
-  EXPECT_TRUE(fileLecTest("add.ril", bdd, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", def, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", fraig, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", rnd, AIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("add.ril", BDD, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add.ril", FRAIG, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add.ril", RND, AIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("add.ril", SAT, AIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("add.ril", bdd, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", def, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", fraig, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", rnd, XAG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("add.ril", BDD, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add.ril", FRAIG, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add.ril", RND, XAG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("add.ril", SAT, XAG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("add.ril", bdd, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", def, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", rnd, MIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("add.ril", BDD, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add.ril", RND, MIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("add.ril", SAT, MIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("add.ril", bdd, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", def, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add.ril", rnd, XMG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("add.ril", BDD, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add.ril", RND, XMG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("add.ril", SAT, XMG, subPath).equal());
 }
 
 TEST(RilLecTest, addSmall) {
-  BddChecker bdd;
-  Checker def;
-  FraigChecker fraig;
-  RndChecker rnd;
+  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(true);
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
-  EXPECT_TRUE(fileLecTest("add_small.ril", bdd, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", def, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", fraig, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", rnd, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", BDD, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", FRAIG, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", RND, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", SAT, AIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("add_small.ril", bdd, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", def, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", fraig, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", rnd, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", BDD, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", FRAIG, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", RND, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", SAT, XAG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("add_small.ril", bdd, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", def, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", rnd, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", BDD, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", RND, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", SAT, MIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("add_small.ril", bdd, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", def, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("add_small.ril", rnd, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", BDD, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", RND, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("add_small.ril", SAT, XMG, subPath).equal());
 }
 
 TEST(RilLecTest, test) {
-  BddChecker bdd;
-  Checker def;
-  RndChecker rnd(false, 1000);
+  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(false);
+  static_cast<RndChecker&>(getChecker(RND)).setTries(1000);
   std::filesystem::path subPath = "test/data/ril";
 
-  EXPECT_TRUE(fileLecTest("test.ril", bdd, AIG, subPath).isError());
-  EXPECT_TRUE(fileLecTest("test.ril", def, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("test.ril", rnd, AIG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", BDD, AIG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", RND, AIG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", SAT, AIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("test.ril", bdd, XAG, subPath).isError());
-  EXPECT_TRUE(fileLecTest("test.ril", def, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("test.ril", rnd, XAG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", BDD, XAG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", RND, XAG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", SAT, XAG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("test.ril", bdd, MIG, subPath).isError());
-  EXPECT_TRUE(fileLecTest("test.ril", def, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("test.ril", rnd, MIG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", BDD, MIG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", RND, MIG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", SAT, MIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("test.ril", bdd, XMG, subPath).isError());
-  EXPECT_TRUE(fileLecTest("test.ril", def, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("test.ril", rnd, XMG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", BDD, XMG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", RND, XMG, subPath).isError());
+  EXPECT_TRUE(fileLecTest("test.ril", SAT, XMG, subPath).equal());
 }
 
 TEST(RilLecTest, mulSmall) {
-  BddChecker bdd;
-  Checker def;
-  RndChecker rnd;
+  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(true);
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
-  EXPECT_TRUE(fileLecTest("mul_small.ril", bdd, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul_small.ril", def, AIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul_small.ril", rnd, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", BDD, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", RND, AIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", SAT, AIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("mul_small.ril", bdd, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul_small.ril", def, XAG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul_small.ril", rnd, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", BDD, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", RND, XAG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", SAT, XAG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("mul_small.ril", bdd, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul_small.ril", def, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul_small.ril", rnd, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", BDD, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", RND, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", SAT, MIG, subPath).equal());
 
-  EXPECT_TRUE(fileLecTest("mul_small.ril", bdd, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul_small.ril", def, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul_small.ril", rnd, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", BDD, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", RND, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul_small.ril", SAT, XMG, subPath).equal());
 }
 
 TEST(RilLecTest, mul) {
-  BddChecker bdd;
-  Checker def;
-  RndChecker rnd(false, 100);
+  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(false);
+  static_cast<RndChecker&>(getChecker(RND)).setTries(1000);
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
-  EXPECT_TRUE(fileLecTest("mul.ril", rnd, AIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("mul.ril", RND, AIG, subPath).isUnknown());
 
-  EXPECT_TRUE(fileLecTest("mul.ril", rnd, XAG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("mul.ril", RND, XAG, subPath).isUnknown());
 
-  EXPECT_TRUE(fileLecTest("mul.ril", bdd, MIG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul.ril", rnd, MIG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("mul.ril", BDD, MIG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul.ril", RND, MIG, subPath).isUnknown());
 
-  EXPECT_TRUE(fileLecTest("mul.ril", bdd, XMG, subPath).equal());
-  EXPECT_TRUE(fileLecTest("mul.ril", rnd, XMG, subPath).isUnknown());
+  EXPECT_TRUE(fileLecTest("mul.ril", BDD, XMG, subPath).equal());
+  EXPECT_TRUE(fileLecTest("mul.ril", RND, XMG, subPath).isUnknown());
 }
 
 TEST(RilLecTest, unequal) {
-  FraigChecker fraig;
   std::filesystem::path subPath = "test/data/ril/ril_arithmetic_tests";
 
   EXPECT_TRUE(twoFilesLecTest("mul_small.ril", "add6.ril",
-                              fraig, subPath, subPath).notEqual());
+                              FRAIG, subPath, subPath).notEqual());
   EXPECT_TRUE(twoFilesLecTest("mul_small.ril", "sub6.ril",
-                              fraig, subPath, subPath).notEqual());
+                              FRAIG, subPath, subPath).notEqual());
   EXPECT_TRUE(twoFilesLecTest("sub6.ril", "add6.ril",
-                              fraig, subPath, subPath).notEqual());
+                              FRAIG, subPath, subPath).notEqual());
 }
 
 // TODO The test takes too long.
 /* TEST(RilLecTest, func) {
-  BddChecker bdd;
-  Checker def;
-  RndChecker rnd(false, 1000);
   std::filesystem::path subFolder = "test/data/ril";
 
-  EXPECT_TRUE(fileLecTest("func.ril", bdd, AIG, subFolder).equal());
-  EXPECT_TRUE(fileLecTest("func.ril", def, AIG, subFolder).equal());
-  EXPECT_TRUE(fileLecTest("func.ril", rnd, AIG, subFolder).isUnknown());
+  EXPECT_TRUE(fileLecTest("func.ril", BDD, AIG, subFolder).equal());
+  EXPECT_TRUE(fileLecTest("func.ril", RND, AIG, subFolder).isUnknown());
+  EXPECT_TRUE(fileLecTest("func.ril", SAT, AIG, subFolder).equal());
 
-  EXPECT_TRUE(fileLecTest("func.ril", bdd, XAG, subFolder).equal());
-  EXPECT_TRUE(fileLecTest("func.ril", def, XAG, subFolder).equal());
-  EXPECT_TRUE(fileLecTest("func.ril", rnd, XAG, subFolder).isUnknown());
+  EXPECT_TRUE(fileLecTest("func.ril", BDD, XAG, subFolder).equal());
+  EXPECT_TRUE(fileLecTest("func.ril", RND, XAG, subFolder).isUnknown());
+  EXPECT_TRUE(fileLecTest("func.ril", SAT, XAG, subFolder).equal());
 } */
 } // namespace eda::gate::debugger

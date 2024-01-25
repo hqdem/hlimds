@@ -101,7 +101,8 @@ void synthTest(int vars, std::string str) {
 
   Cascade resynth;
   CNF form = resynth.normalForm(table);
-  CNF output = resynth.getFunction(table, form);
+  std::vector<int> values;
+  CNF output = resynth.getFunction(table, form, values);
   TruthTable tt(vars);
   tt = checkSynth(vars, table.num_bits(), output);
     
@@ -122,6 +123,28 @@ TEST(Cascade, SubnetTest) {
   const auto &subnet = Subnet::get(subnetId);
 
   EXPECT_TRUE(subnet.size() == 6);
+}
+
+TEST(Cascade, MaxArityTest) {
+  int vars = 3;
+  int maxArity = 3;
+  TruthTable table(vars);
+  kitty::create_from_binary_string(table, "10000110");
+
+  synthTest(vars, "10000110");
+
+  Cascade resynth;
+  const auto subnetId = resynth.synthesize(table, maxArity);
+  const auto &subnet = Subnet::get(subnetId);
+  bool check = true;
+  auto entries = subnet.getEntries();
+  for (uint64_t i = 0; i < entries.size(); i++) {
+    if (entries[i].cell.arity > maxArity) {
+      check = false;
+      break;
+    }
+  }
+
+  EXPECT_TRUE(check);
 } 
 }; // namespace eda::gate::optimizer2::resynthesis
-

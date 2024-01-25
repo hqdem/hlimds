@@ -11,6 +11,7 @@
 #include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/simplpe_area.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techmapper.h"
+#include "gate/transformer/aigmapper.h"
 
 //#include <list>
 #include <map>
@@ -28,10 +29,10 @@ void Techmapper::setLiberty(const std::string &dbPath) {
   //setSequenceDB(cellDB);
 }
 
-void Techmapper::setMapper(TechmapperType techmapSelector) {
+void Techmapper::setMapper(MapperType techmapSelector) {
   switch(techmapSelector) {
-    case TechmapperType::FUNC: // // cut-based matching
-      mapper = new CutBasedTechMapper(cellDB);
+    case MapperType::SIMPLE: // // cut-based matching
+      mapper = new s(cellDB);
       break;
 
     case TechmapperType::STRUCT: // DAGON matching
@@ -68,6 +69,12 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
 
 SubnetID Techmapper::techmap(model::CellID sequenceCell) {
   return mapSequenceCell(sequenceCell);;
+}
+
+SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {
+  transformer::AigMapper aigMapper;
+  const auto transformedSub  = aigMapper.transform(subnetID);
+  return transformedSub;
 }
 } // namespace eda::gate::tech_optimizer
 

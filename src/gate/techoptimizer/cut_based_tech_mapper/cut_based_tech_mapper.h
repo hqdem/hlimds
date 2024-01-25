@@ -11,7 +11,7 @@
 #include "gate/model2/celltype.h"
 #include "gate/model2/net.h"
 #include "gate/optimizer2/cut_extractor.h"
-#include "gate/techoptimizer/baseMapper.h"
+#include "gate/techoptimizer/mapper/baseMapper.h"
 #include "gate/techoptimizer/library/cellDB.h"
 
 using SubnetID = eda::gate::model::SubnetID;

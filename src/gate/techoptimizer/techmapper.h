@@ -8,7 +8,7 @@
 #pragma once
 
 #include "gate/model2/net.h"
-#include "gate/techoptimizer/baseMapper.h"
+#include "gate/techoptimizer/mapper/baseMapper.h"
 #include "gate/techoptimizer/library/cell.h"
 #include "gate/techoptimizer/library/cellDB.h"
 
@@ -19,12 +19,7 @@ namespace eda::gate::tech_optimizer {
 
 class Techmapper {
 public:
-  enum class TechmapperType {
-    FUNC,
-    STRUCT
-  };
-
-  enum class TechmapperStrategyType {
+  enum class MapperType {
     AREA_FLOW,
     DELAY,
     POWER,
@@ -32,14 +27,9 @@ public:
   };
 
   void setLiberty(const std::string &dbPath);
-  void setMapper(TechmapperType techmapSelector);
-  void setStrategy(TechmapperStrategyType strategySelector);
+  void setMapper(MapperType techmapSelector);
   SubnetID techmap(SubnetID subnetID);
   SubnetID techmap(model::CellID sequenceCell);
-
-  std::vector<Cell*> cells;
-  CellDB *cellDB;
-  BaseMapper *mapper = nullptr;
 
   ~Techmapper() {
     delete mapper;
@@ -48,5 +38,11 @@ public:
       delete cell;
     }
   }
+
+private:
+  std::vector<Cell*> cells;
+  CellDB *cellDB;
+  BaseMapper *mapper = nullptr;
+  SubnetID premapAIGSubnet(SubnetID subnetID);
 };
 } // namespace eda::gate::tech_optimizer

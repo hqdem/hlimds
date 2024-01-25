@@ -33,14 +33,18 @@ public:
   // Types
   //===------------------------------------------------------------------===//
 
+  /// Conjunctive normal form
   using CNF = std::vector<std::vector<int>>;
+  /// Subnet id
   using SubnetID = model::SubnetID;
+  /// Truth table of a function
   using TruthTable = kitty::dynamic_truth_table;
 
   //===------------------------------------------------------------------===//
   // Constructors/Destructors
   //===------------------------------------------------------------------===//
 
+  /// Constructor
   Cascade();
 
   //===------------------------------------------------------------------===//
@@ -51,14 +55,12 @@ public:
   SubnetID synthesize(const TruthTable &func, uint16_t maxArity = -1) override;
     
   /// Makes CNF for function using cascade method
-  CNF getFunction(const TruthTable &table, CNF &form);
+  CNF getFunction(const TruthTable &table, CNF &form, std::vector<int> &values);
 
   /// Calculates normal form
   CNF normalForm(const TruthTable &table);
 
 private:
-
-  std::vector<int> values;
     
   //===----------------------------------------------------------------===//
   // Internal Methods
@@ -69,11 +71,11 @@ private:
     int num3 = 0);
 
   /// Сalculates an expression when num_vars - 1 arguments are known
-  int calculate(int numVars, CNF &form);
+  int calculate(int numVars, CNF &form, std::vector<int> &values);
 
   /// Checks if out1 and out2 can be simplified and if so, does it;
   /// result is stored in out
-  void checkSimplify(int, CNF &out, CNF &out1, CNF &out2);
+  void checkSimplify(int, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values);
 
 };
 } // namespace eda::gate::optimizer2::resynthesis

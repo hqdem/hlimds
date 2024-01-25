@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 #include "gate/optimizer2/resynthesis/cascade.h"
 #include "kitty/kitty.hpp"
+
 #include <cstring>
 #include <memory>
 #include <vector>
@@ -42,7 +43,7 @@ void Cascade::initialize(CNF &output, int times, int num1, int num2, int num3) {
   }
 }
 
-int Cascade::calculate(int numVars, CNF &form) {
+int Cascade::calculate(int numVars, CNF &form, std::vector<int> &values) {
 
   // form[j][i] - current value in normal form table
   // values[j] : f(..., j, ...) - value of j
@@ -94,7 +95,7 @@ int Cascade::calculate(int numVars, CNF &form) {
 
 // Checks if x_i&f(1, ...) + !x_i&f(0, ...) can be simplified and if so, 
 // does it
-void Cascade::checkSimplify(int numVars, CNF &out, CNF &out1, CNF &out2) {
+void Cascade::checkSimplify(int numVars, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values) {
 
   int size1 = out1[0].size();
   int size2 = out2[0].size();
@@ -218,7 +219,7 @@ CNF Cascade::normalForm(const TruthTable &table) {
     // Main Methods
 //===--------------------------------------------------------------------===//
 
-CNF Cascade::getFunction(const TruthTable &table, CNF &form) {
+CNF Cascade::getFunction(const TruthTable &table, CNF &form, std::vector<int> &values) {
 
   unsigned int numVars = table.num_vars();
   CNF output(3);
@@ -240,7 +241,7 @@ CNF Cascade::getFunction(const TruthTable &table, CNF &form) {
 
   if (values.size() == numVars - 1) {
 
-    int res = calculate(numVars, form);
+    int res = calculate(numVars, form, values);
     if (res == 2) {
       res = numVars + 1;
     } else if (res == 3) {
@@ -256,31 +257,37 @@ CNF Cascade::getFunction(const TruthTable &table, CNF &form) {
   // double copying is used in x_i&f(1, ...) + !x_i&f(0, ...) to represent
   // f(1, ...) and f(0, ...) - stored in two different vectors
   values.push_back(1);
-  CNF output1 = getFunction(table, form);
+  CNF output1 = getFunction(table, form, values);
   values.pop_back();
   values.push_back(0);
-  CNF output2 = getFunction(table, form);
+  CNF output2 = getFunction(table, form, values);
   values.pop_back();
-  checkSimplify(numVars, output, output1, output2);
+  checkSimplify(numVars, output, output1, output2, values);
 
   return output;
 }
 
 SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
-  /// TODO: Take into account the restriction on arity.
   using Link = Subnet::Link;
+  using LinkList = Subnet::LinkList;
+  
   SubnetBuilder subnetBuilder;
 
+  std::vector<int> values;
   CNF form = Cascade::normalForm(func);
 
   int numVars = func.num_vars();
   // id of the first value in the output line
   int firstValId = numVars * 2 + 2; 
-  CNF output = Cascade::getFunction(func, form);
+  
+  CNF output = Cascade::getFunction(func, form, values);
+
   int size = output[0].size();
+  LinkList links;
   unsigned int InNum = size - 1; // number of cells in subnet
 
   size_t idx[InNum];
+  std::vector<bool> inverted(InNum, false);
   memset(idx, 0, sizeof(idx));
   for (size_t i = 0; i < (size_t)numVars; ++i) {
     idx[i] = subnetBuilder.addInput().idx;
@@ -298,28 +305,51 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
 
     return subnetBuilder.make();
   }
-  /// TODO: Exclude using a BUF cell.
-  for (int i = numVars; i < numVars * 2; i++) { // negotiation
-    const Link link(idx[i - numVars], true); // source
-    idx[i] = subnetBuilder.addCell(model::BUF, link).idx;
+  
+  for (size_t i = numVars; i < (size_t)numVars * 2; i++) {
+    idx[i] = idx[i - numVars]; // negotiation
+    inverted[i] = true;
   }
-
+  
   for (int i = firstValId; i < size; i++) { // building subnet
     if (!output[1][i] && !output[2][i]) { // one source case
-      int idx1 = output[0][i] - 2; // link to source
+      int idx1;
+      if (output[0][i] >= (numVars + 2) && output[0][i] < (numVars * 2 + 2)) {
+        idx1 = output[0][i] - 2 - numVars; // negative source
+        inverted[i - 2] = true;
+      } else {
+        idx1 = output[0][i] - 2; // non negative source
+      }
       idx[i - 2] = idx[idx1]; 
     } else { // two sources 
       int idx1 = output[1][i] - 2;
       int idx2 = output[2][i] - 2;
-
-      const Link lhs(idx[idx1]); // link to 1st source
-      const Link rhs(idx[idx2]); // link to 2nd source
+      
+      const Link lhs(idx[idx1], inverted[idx1]);
+      const Link rhs(idx[idx2], inverted[idx2]);
 
       // new cell
-      if(output[0][i] == 2) {
-        idx[i - 2] = subnetBuilder.addCell(model::AND, lhs, rhs).idx;
-      } else if (output[0][i] == 3) {
-        idx[i - 2] = subnetBuilder.addCell(model::OR, lhs, rhs).idx;
+      if (maxArity < 0) {
+        if (output[0][i] == 2) {
+          idx[i - 2] = subnetBuilder.addCell(model::AND, lhs, rhs).idx; 
+        } else if (output[0][i] == 3) {
+          idx[i - 2] = subnetBuilder.addCell(model::OR, lhs, rhs).idx;
+        }
+      } else { // new cell with arity
+        if (i != firstValId && output[0][i - 1] == output[0][i]) { // prev the same
+          links.push_back(Link(idx[idx2], inverted[idx2])); // link added
+        } else { // prev different
+          if (!links.empty()) {
+            if (output[0][i] == 2) {
+              idx[i - 2] = subnetBuilder.addCellTree(model::AND, links, maxArity).idx; 
+            } else if (output[0][i] == 3) {
+              idx[i - 2] = subnetBuilder.addCellTree(model::OR, links, maxArity).idx;
+            }
+            links.clear();
+          }
+          links.push_back(Link(idx[idx1], inverted[idx1]));
+          links.push_back(Link(idx[idx2], inverted[idx2]));
+        }
       }
     }
   }

@@ -28,7 +28,7 @@ namespace eda::gate::tech_optimizer {
     CutBasedTechMapper(CellDB *cellDB);
 
     void setStrategy(Strategy *strategy,
-        std::map<uint64_t, BestReplacement> *bestReplacementMap) override;
+                     std::map<uint64_t, BestReplacement> *bestReplacementMap) override;
 
     SubnetID techMap(SubnetID subnetID) override;
 
@@ -62,5 +62,16 @@ namespace eda::gate::tech_optimizer {
     void addOneToTheMap(EntryIndex entryIndex);
     void addOutToTheMap(EntryIndex entryIndex,
                         model::Subnet::Cell &cell);
-  };
+
+    void addInputCells(model::SubnetBuilder &subnetBuilder);
+    void addOutputCells(model::SubnetBuilder &subnetBuilder);
+    model::Subnet::LinkList createLinkList(EntryIndex currentEntryIDX);
+    void processNode(EntryIndex currentEntryIDX,
+                     model::Subnet::Cell &currentCell,
+                     model::SubnetBuilder &subnetBuilder,
+                     std::stack<EntryIndex> &stack);
+    void processLinks(EntryIndex currentEntryIDX,
+                      std::stack<EntryIndex> &stack,
+                      std::unordered_set<EntryIndex> &visited);
+    };
 } // namespace eda::gate::tech_optimizer

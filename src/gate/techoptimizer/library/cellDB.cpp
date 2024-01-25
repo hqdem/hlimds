@@ -25,39 +25,36 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
-    std::vector<int> permutationVec;
-    for (int i = 0; i < cellType.getInNum(); i++) {
-      permutationVec.push_back(i);
-    }
-    std::sort(permutationVec.begin(), permutationVec.end());
-    /*do {
-      count ++;
+    std::vector<int> permutationVec(cellType.getInNum());
+    std::iota(permutationVec.begin(), permutationVec.end(), 0);
+    do {
+      count++;
       SubnetBuilder subnetBuilder;
-      std::vector<Link> linkList;
-      size_t linkArray[cellType.getInNum()];
+      uint16_t linkArray[cellType.getInNum()];
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
         auto inputIdx = subnetBuilder.addInput();
-        linkArray[permutationVec.at(i)] = inputIdx;
+        linkArray[permutationVec.at(i)] = inputIdx.idx;
       }
+      std::vector<Link> linkList;
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
         linkList.emplace_back(linkArray[i]);
       }
 
       auto cellIdx = subnetBuilder.addCell(cellTypeID, linkList);
-
       subnetBuilder.addOutput(cellIdx);
-
       SubnetID subnetID = subnetBuilder.make();
 
       subnets.push_back(subnetID);
-
-      Subnetattr subnetattr{"LibraryCell", cellType.getAttr().area};
+      Subnetattr subnetattr{"LibertyCell", cellType.getAttr().area};
       subnetToAttr.emplace_back(subnetID, subnetattr);
+      ttSubnet.emplace_back(model::evaluate(cellType.getSubnet()), subnetID);
+    } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
+  }
+  std::cout << "Count of liberty Subnet = " << count << std::endl;
 
-      ttSubnet.emplace_back(model::evaluate(
-          cellType.getSubnet()), subnetID);
-    } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));*/
-
+ /* std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
+  int count = 0;
+  for (const CellTypeID &cellTypeID : cellTypeIDs) {
     SubnetBuilder subnetBuilder;
     std::vector<Link> linkList;
 
@@ -78,8 +75,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
 
     ttSubnet.emplace_back(model::evaluate(
         cellType.getSubnet()), subnetID);
-  }
-  std::cout << "Count of liberty Subnet = " << count << std::endl;
+  }*/
 }
 
 std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table& tt) const {

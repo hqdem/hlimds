@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "gate/debugger/base_checker.h"
+#include "gate/fir_to_model2/fir_to_model2_wrapper.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
 #include "gate/optimizer/rwmanager.h"
@@ -197,7 +198,9 @@ int main(int argc, char **argv) {
   try {
     options.initialize("config.json", argc, argv);
 
-    if (options.rtl.files().empty() && options.firrtl.files().empty()) {
+    if (options.rtl.files().empty() &&
+        options.firrtl.files().empty() &&
+        options.model2.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   } catch(const CLI::ParseError &e) {
@@ -213,6 +216,10 @@ int main(int argc, char **argv) {
 
   for (auto file : options.firrtl.files()) {
     result |= translateToFirrtl(file, options.firrtl);
+  }
+
+  for (auto file : options.model2.files()) {
+    result |= translateToModel2(file, options.model2.outputFileName);
   }
 
   return result;

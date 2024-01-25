@@ -10,11 +10,11 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ## Coding Style
 
-See `doc\CODE_STYLE.md` for more details about our coding convention.
+See `doc/CODE_STYLE.md` for more details about our coding convention.
 
 ## General Notes
 
-See `doc\NOTES.md` if you're not familiar with program building/installation on Linux.
+See `doc/NOTES.md` if you're not familiar with program building/installation on Linux.
 
 ## System Requirements
 
@@ -23,6 +23,7 @@ below are specific to this operating system:
 
 * `autoconf`
 * `bison`
+* `build-essential`
 * `clang`
 * `clang-tidy`
 * `cmake`
@@ -34,6 +35,7 @@ below are specific to this operating system:
 * `iverilog`
 * `libfmt-dev`
 * `liblpsolve55-dev`
+* `libssl-dev`
 * `libtool`
 * `lld`
 * `make`
@@ -45,13 +47,26 @@ below are specific to this operating system:
 
 To install them, do the following:
 ```
-sudo apt install autoconf bison clang clang-tidy cmake doxygen flex g++ gcc \
-    graphviz iverilog liblpsolve55-dev libtool lld make ninja-build python \
-    python3-pip zlib1g zlib1g-dev
+sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen flex \
+    g++ gcc graphviz iverilog libfmt-dev liblpsolve55-dev libssl-dev libtool lld make \
+    ninja-build python python3-pip zlib1g zlib1g-dev
 ```
 Several Python packages should be installed too. Do the following:
 ```
 pip install liberty-parser
+```
+
+### CMake Installation
+
+```
+cd <workdir>
+wget https://cmake.org/files/v3.28/cmake-3.28.1.tar.gz
+tar xzf cmake-3.28.1.tar.gz
+rm -rf cmake-3.28.1.tar.gz
+cd cmake-3.28.1
+./bootstrap
+make
+sudo make install
 ```
 
 ### C++ CTemplate Installation
@@ -99,6 +114,76 @@ to the `CUDD` actual installation directory.
 
 [^yosys]: https://github.com/YosysHQ/yosys
 
+### CIRCT Installation
+
+LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
+Please take this into account while moving through the guide.
+
+#### Check out LLVM and CIRCT repos
+
+```
+cd <workdir>
+git clone https://github.com/circt/circt.git
+cd circt
+git checkout 2d822ea
+git submodule init
+git submodule update
+```
+
+#### LLVM/MLIR Installation
+
+Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
+```
+export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
+```
+
+Type the following commands:
+```
+cd <workdir>/circt
+mkdir llvm/build
+cd llvm/build
+cmake -G Ninja ../llvm \
+    -DLLVM_ENABLE_PROJECTS="mlir;clang;clang-tools-extra;lld" \
+    -DLLVM_TARGETS_TO_BUILD="X86" \
+    -DCMAKE_BUILD_TYPE="Release" \
+    -DLLVM_ENABLE_ASSERTIONS=ON \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DLLVM_ENABLE_LLD=ON \
+    -DLLVM_PARALLEL_LINK_JOBS=8 \
+    -DLLVM_PARALLEL_COMPILE_JOBS=8
+ninja
+```
+
+#### CIRCT Installation
+
+Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
+to your `PATH` environment variable:
+```
+export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
+```
+
+Set `CIRCT_DIR` environment variable to the directory with CIRCT:
+```
+export CIRCT_DIR=<workdir>/circt/
+```
+
+Type the following commands:
+```
+cd <workdir>/circt
+mkdir build
+cd build
+cmake -G Ninja .. \
+    -DCMAKE_BUILD_TYPE="Release" \
+    -DLLVM_ENABLE_ASSERTIONS=ON \
+    -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
+    -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DVERILATOR_DISABLE=ON \
+    -DIVERILOG_DISABLE=ON
+ninja
+```
 
 ## Working in Command Line
 
@@ -140,7 +225,7 @@ To list the Utopia EDA options, do the following:
 ./build/src/umain --help-all
 ```
 
-#### Run Verilog-to-FIRRTL translator
+#### Run Verilog-to-FIRRTL Translator
 
 ```
 ./build/src/umain to_firrtl <file> --top <module-name>
@@ -151,6 +236,11 @@ The results of the translation are: `*.fir` description and a file with
 debugging information. These files will be generated in the same directory
 as the input Verilog file.
 
+### Running FIRRTL-to-model2 Translator
+
+```
+./build/src/umain to_model2 <file> --outputFileName <verilog file>
+```
 
 ### Tests Running
 

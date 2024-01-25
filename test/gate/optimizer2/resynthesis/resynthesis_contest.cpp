@@ -150,7 +150,7 @@ void runTest(const DynTruthTable &table) {
       continue;
     }
     clock_t start = clock();
-    const auto id = registry[i]->synthesize(table);
+    const auto id = registry[i]->synthesize(table, -1);
     clock_t end = clock();
     if ((i == 3) && (id == eda::gate::model::OBJ_NULL_ID)) {
       writeLogs(fout, table, Algorithm::DeMicheli, 0, 0, 0, true);

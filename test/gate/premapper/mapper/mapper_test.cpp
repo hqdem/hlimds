@@ -53,6 +53,7 @@ std::shared_ptr<GNet> premap(std::shared_ptr<GNet> net,
 bool checkEquivalence(const std::shared_ptr<GNet> net,
                       const std::shared_ptr<GNet> premapped,
                       GateIdMap &gmap) {
-  eda::gate::debugger::Checker checker;
-  return checker.areEqual(*net, *premapped, gmap);
+  return eda::gate::debugger::getChecker(
+         eda::gate::debugger::options::SAT).areEqual(
+         *net, *premapped, gmap);
 }

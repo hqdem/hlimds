@@ -62,7 +62,7 @@ void FraigChecker::mergeConsts(std::vector<GateId> &consts,
   for (auto link : premapped->sourceLinks()) {
     cutNodes.push_back(link.target);
   }
-  Checker checker;
+
   for (auto gid : consts) {
     if (Gate::get(gid)->func() == value) {
       premapped->mergeGates(gid, mergeConst);
@@ -74,8 +74,10 @@ void FraigChecker::mergeConsts(std::vector<GateId> &consts,
       continue;
     }
     cone.sortTopologically();
-    CheckerResult coneResult = checker.isEqualCombSatMiter(cone);
-    if (coneResult.equal()) {
+    CheckerResult coneRes = static_cast<SatChecker&>(
+                            getChecker(
+                            options::SAT)).isEqualCombSatMiter(cone);
+    if (coneRes.equal()) {
       premapped->mergeGates(gid, mergeConst);
     }
   }
@@ -140,9 +142,9 @@ void FraigChecker::saturation(Compiled &compiled,
   }    
 }
 
-CheckerResult FraigChecker::equivalent(GNet &lhs,
-                                       GNet &rhs,
-                                       Checker::GateIdMap &gmap) {
+CheckerResult FraigChecker::equivalent(const GNet &lhs,
+                                       const GNet &rhs,
+                                       const GateIdMap &gmap) const {
   if (!lhs.isComb() || !rhs.isComb()) {
     LOG_ERROR << "Checker works with combinational circuits only!" << std::endl;
     return CheckerResult::ERROR;
@@ -152,8 +154,7 @@ CheckerResult FraigChecker::equivalent(GNet &lhs,
     return CheckerResult::ERROR;
   }
   // Creates the miter
-  Checker::Hints hints = makeHints(lhs, rhs, gmap);
-  GNet *mit = miter(lhs, rhs, hints);
+  GNet *mit = miter(lhs, rhs, gmap);
   premapper::AigMapper mapper;
   GNet *premapped = (*mapper.map(*mit)).clone();
   premapped->sortTopologically();
@@ -172,7 +173,6 @@ CheckerResult FraigChecker::equivalent(GNet &lhs,
   // Is used to check that no gid pairs are going to be traversed more than once
   std::set<GidPair> checked;
 
-  Checker checker;
   size_t time = 0;
   if (!classes.empty()) {
     mergeConsts(classes.front(), premapped, false);
@@ -271,11 +271,12 @@ CheckerResult FraigChecker::equivalent(GNet &lhs,
       inOutMap[inputs1[i]] = inputs2[i];
     }
     inOutMap[out1] = out2;
-    Checker::Hints coneHints = makeHints(cone1, cone2, inOutMap);
-    GNet *coneMiter = miter(cone1, cone2, coneHints);
+    GNet *coneMiter = miter(cone1, cone2, inOutMap);
 
     std::vector<size_t> indexes = {};
-    CheckerResult coneResult = checker.isEqualCombSatMiter(*coneMiter);
+    CheckerResult coneRes = static_cast<SatChecker&>(
+                            getChecker(
+                            options::SAT)).isEqualCombSatMiter(*coneMiter);
     bool sameInputsFlag = 1;
     for (size_t i = 0; i < bind1.inputBindings.size(); i++) {
       if ((bind1.inputBindings[i] == Gate::INVALID) &&
@@ -287,7 +288,7 @@ CheckerResult FraigChecker::equivalent(GNet &lhs,
     if (sameInputsFlag != 1) {
       continue;
     }
-    if (coneResult.equal()) {
+    if (coneRes.equal()) {
       premapped->mergeGates(first, second);
       // If a gate is merged, it should be deleted.
       classes[classIndex].erase(std::remove(classes[classIndex].begin(),
@@ -300,7 +301,7 @@ CheckerResult FraigChecker::equivalent(GNet &lhs,
       }
     } else {
       // If a gate is not merged, only the current pair should be deleted.
-      BoolVector coneProof = coneResult.getCounterExample();
+      BoolVector coneProof = coneRes.getCounterExample();
       BoolVector proof;
       size_t valIndex = 0;
       for (size_t i = 0; i < premapped->nSourceLinks(); i++) {
@@ -323,7 +324,8 @@ CheckerResult FraigChecker::equivalent(GNet &lhs,
     }
   }
   // TODO Add AIG rewriting.
-  return checker.isEqualCombSatMiter(*premapped);
+  return static_cast<SatChecker&>(
+         getChecker(options::SAT)).isEqualCombSatMiter(*premapped);
 }
 
 } // namespace eda::gate::debugger

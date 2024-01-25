@@ -2,14 +2,14 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #pragma once
 
 #include "gate/debugger/base_checker.h"
-#include "gate/debugger/checker.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/model/gnet.h"
 #include "gate/premapper/aigmapper.h"
 
@@ -22,7 +22,7 @@
 namespace eda::gate::debugger {
 using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
-using Hints = eda::gate::debugger::Checker::Hints;
+using Hints = eda::gate::debugger::SatChecker::Hints;
 
 /**
  * \brief Implements a logic equivalence checker (LEC) using Kuehlmann's method.
@@ -107,7 +107,9 @@ public:
   }
 
   CheckerResult equivalent(GNet &lhs, GNet &rhs, const Hints &hints);
-  CheckerResult equivalent(GNet &lhs, GNet &rhs, GateIdMap &gmap) override;
+  CheckerResult equivalent(const GNet &lhs,
+                           const GNet &rhs,
+                           const GateIdMap &gmap) const override;
 
 private:
   static const int maxBddSize = 50;

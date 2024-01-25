@@ -22,8 +22,8 @@ using Json = nlohmann::json;
 
 NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::debugger::options::LecType, {
   {eda::gate::debugger::options::BDD, "bdd"},
-  {eda::gate::debugger::options::DEFAULT, "default"},
   {eda::gate::debugger::options::RND, "rnd"},
+  {eda::gate::debugger::options::SAT, "sat"},
 })
 
 NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::premapper::PreBasis, {
@@ -155,8 +155,8 @@ struct RtlOptions final : public AppOptions {
 
   const std::map<std::string, LecType> lecTypeMap {
     {"bdd", LecType::BDD},
-    {"default", LecType::DEFAULT},
     {"rnd", LecType::RND},
+    {"sat", LecType::SAT},
   };
 
   const std::map<std::string, PreBasis> preBasisMap {
@@ -196,7 +196,7 @@ struct RtlOptions final : public AppOptions {
     get(json, GRAPHML, graphMl);
   }
 
-  LecType lecType = LecType::DEFAULT;
+  LecType lecType = LecType::SAT;
   PreBasis preBasis = PreBasis::AIG;
   std::string preLib;
   std::string graphMl;

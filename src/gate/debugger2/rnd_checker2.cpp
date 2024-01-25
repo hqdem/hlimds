@@ -38,9 +38,9 @@ void RndChecker2::setExhaustive(bool exhaustive) {
   this->exhaustive = exhaustive;
 }
 
-CheckerResult RndChecker2::equivalent(Subnet &lhs,
-                                      Subnet &rhs,
-                                      CellToCell &gmap) {
+CheckerResult RndChecker2::equivalent(const Subnet &lhs,
+                                      const Subnet &rhs,
+                                      const CellToCell &gmap) const {
   if (lhs.getInNum() != rhs.getInNum()) {
     LOG_ERROR << "Nets have different number of inputs." << std::endl;
     return CheckerResult::ERROR;
@@ -50,8 +50,7 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
     return CheckerResult::ERROR;
   }
 
-  MiterHints hints = makeHints(lhs, gmap);
-  const Subnet &miter = miter2(lhs, rhs, hints);
+  const Subnet &miter = miter2(lhs, rhs, gmap);
 
   std::uint64_t outNum = miter.getOutNum();
 

@@ -21,7 +21,7 @@ namespace eda::gate::tech_optimizer {
 
 CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
   std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
-  int count = 0;
+  /*int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
@@ -50,11 +50,13 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
       ttSubnet.emplace_back(model::evaluate(cellType.getSubnet()), subnetID);
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
-  std::cout << "Count of liberty Subnet = " << count << std::endl;
+  std::cout << "Count of liberty Subnet = " << count << std::endl;*/
 
- /* std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
+  std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
+    count++;
+    CellType &cellType = CellType::get(cellTypeID);
     SubnetBuilder subnetBuilder;
     std::vector<Link> linkList;
 
@@ -75,7 +77,8 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
 
     ttSubnet.emplace_back(model::evaluate(
         cellType.getSubnet()), subnetID);
-  }*/
+  }
+  std::cout << "Count of liberty Subnet = " << count << std::endl;
 }
 
 std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table& tt) const {

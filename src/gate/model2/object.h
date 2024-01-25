@@ -151,7 +151,7 @@ public:
     assert(size >= T::ID::Size && size <= PAGE_SIZE);
 
     // If there is no place in the current page, allocate a new one.
-    if (systemPage == nullptr || (offset + size) < PAGE_SIZE) {
+    if (systemPage == nullptr || (offset + size) > PAGE_SIZE) {
       const auto translation = PageManager::get().allocate();
 
       objectPage = translation.first;

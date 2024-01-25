@@ -23,7 +23,7 @@ namespace eda::gate::optimizer2::resynthesis {
                  
     SubnetBuilder subnetBuilder;
     uint64_t argNum  = resultFunction[resultFunction.size() - 1];
-    size_t idx[argNum];
+    std::vector<size_t> idx (argNum);
     LinkList resultOutput;
 
     for (size_t i = 0; i < argNum; ++i) {

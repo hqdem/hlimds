@@ -8,6 +8,7 @@
 #pragma once
 
 #include "gate/techoptimizer/mapper/baseMapper.h"
+#include "gate/optimizer2/cut_extractor.h"
 
 #include <map>
 
@@ -17,17 +18,12 @@
  */
 
 namespace eda::gate::tech_optimizer {
-class CutBaseMapper : BaseMapper {
-public:
-  void map(SubnetID subnetID,
-           CellDB &cellDB,
-           std::map<EntryIndex, BestReplacement> *bestReplacementMap) override;
+class CutBaseMapper : public BaseMapper {
 
 protected:
-  virtual void findBest(SubnetID subnetID,
-                        CellDB &cellDB,
-                        CutExtractor &cutExtractor,
-                        std::map<EntryIndex, BestReplacement>
-                            *bestReplacementMap) = 0;
+  optimizer2::CutExtractor *cutExtractor;
+
+  void baseMap() override;
+  virtual void findBest() = 0;
 };
 } // namespace eda::gate::tech_optimizer

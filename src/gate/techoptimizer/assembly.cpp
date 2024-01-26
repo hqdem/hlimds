@@ -10,7 +10,7 @@
 
 namespace eda::gate::tech_optimizer {
 
-SubnetID assembly::assemblySubnet(std::map<uint64_t, BestReplacement> *replacementMap,
+SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *replacementMap,
                                SubnetID subnetID) {
   model::Subnet &subnet = model::Subnet::get(subnetID);
   bestReplacementMap = replacementMap;
@@ -41,7 +41,7 @@ SubnetID assembly::assemblySubnet(std::map<uint64_t, BestReplacement> *replaceme
   return mappedSubnetID;
 }
 
-void assembly::findInOutCells(model::Array<model::Subnet::Entry> entries) {
+void AssemblySubnet::findInOutCells(model::Array<model::Subnet::Entry> entries) {
   for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
        entryIndex++) {
     auto cell = entries[entryIndex].cell;
@@ -55,14 +55,14 @@ void assembly::findInOutCells(model::Array<model::Subnet::Entry> entries) {
   }
 }
 
-void assembly::addInputCells() {
+void AssemblySubnet::addInputCells() {
   for (const auto idx : inID) {
     auto cellID = subnetBuilder->addInput();
     (*bestReplacementMap)[idx].cellIDInMappedSubnet = cellID.idx;
   }
 }
 
-void assembly::addOutputCells() {
+void AssemblySubnet::addOutputCells() {
   for (const auto idx : outID) {
     auto input = bestReplacementMap->at(idx).entryIDxs;
     model::Subnet::Link link(bestReplacementMap->at
@@ -72,7 +72,7 @@ void assembly::addOutputCells() {
   }
 }
 
-model::Subnet::LinkList assembly::createLinkList(EntryIndex currentEntryIDX) {
+model::Subnet::LinkList AssemblySubnet::createLinkList(EntryIndex currentEntryIDX) {
   model::Subnet::LinkList linkList;
   for (const auto &idx : bestReplacementMap->at(
       currentEntryIDX).entryIDxs) {
@@ -85,7 +85,7 @@ model::Subnet::LinkList assembly::createLinkList(EntryIndex currentEntryIDX) {
   return linkList;
 }
 
-void assembly::processNode(EntryIndex currentEntryIDX,
+void AssemblySubnet::processNode(EntryIndex currentEntryIDX,
                            model::Subnet::Cell &currentCell,
                            std::stack<EntryIndex> &stack) {
   if (currentCell.isIn()) {
@@ -108,7 +108,7 @@ void assembly::processNode(EntryIndex currentEntryIDX,
     stack.pop();
   }
 }
-void assembly::processLinks(EntryIndex currentEntryIDX,
+void AssemblySubnet::processLinks(EntryIndex currentEntryIDX,
                             std::stack<EntryIndex> &stack,
                             std::unordered_set<EntryIndex> &visited) {
   for (const auto& link : bestReplacementMap->at(currentEntryIDX).entryIDxs) {

@@ -11,12 +11,7 @@
 #include "gate/model2/utils/subnet_truth_table.h"
 
 namespace eda::gate::tech_optimizer {
-void SimpleAreaMapper::findBest(SubnetID subnetID,
-                                CellDB &cellDB,
-                                CutExtractor &cutExtractor,
-                                std::map<EntryIndex, BestReplacement>
-                                    *replacementMap) {
-  bestReplacementMap = replacementMap;
+void SimpleAreaMapper::findBest() {
   Subnet &subnet = Subnet::get(subnetID);
 
   eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
@@ -34,18 +29,16 @@ void SimpleAreaMapper::findBest(SubnetID subnetID,
       addOutToTheMap(entryIndex, cell);
     } else {
       // Save best tech cells subnet to bestReplMap
-      saveBest(entryIndex, cutExtractor.getCuts(entryIndex),cellDB, subnetID);
+      saveBest(entryIndex, cutExtractor->getCuts(entryIndex));
     }
     entryIndex += cell.more;
   }
 }
 
 
-float SimpleAreaMapper::calculateArea(const std::unordered_set<uint64_t> &entryIdxs,
-                                      const SubnetID &subID,
-                                      const CellDB &cellDb) {
+float SimpleAreaMapper::calculateArea(const std::unordered_set<uint64_t> &entryIdxs){
   float area = 0;
-  Subnet &subnet = Subnet::get(subID);
+  Subnet &subnet = Subnet::get(subnetID);
   eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
 
   std::stack<uint64_t> stack;
@@ -61,7 +54,7 @@ float SimpleAreaMapper::calculateArea(const std::unordered_set<uint64_t> &entryI
     auto currentCell = entries[currentEntryIDX].cell;
     if ((!currentCell.isIn() || currentCell.getSymbol() != model::CellSymbol::IN)
         && (!currentCell.isOut() || currentCell.getSymbol() != model::CellSymbol::OUT)) {
-      area += cellDb.getSubnetAttrBySubnetID(bestReplacementMap->at(
+      area += cellDB->getSubnetAttrBySubnetID(bestReplacementMap->at(
           currentEntryIDX).subnetID).area;
     }
     stack.pop();
@@ -77,9 +70,7 @@ float SimpleAreaMapper::calculateArea(const std::unordered_set<uint64_t> &entryI
 
 void SimpleAreaMapper::saveBest(
     EntryIndex entryIndex,
-    const CutsList &cutsList,
-    CellDB &cellDB,
-    SubnetID subnetID) {
+    const optimizer2::CutExtractor::CutsList &cutsList) {
   eda::gate::optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   BestReplacement bestSimpleReplacement{};
   float bestArea = MAXFLOAT;
@@ -92,10 +83,10 @@ void SimpleAreaMapper::saveBest(
       auto truthTable = eda::gate::model::evaluate(
           model::Subnet::get(coneSubnetID));
 
-      for (const SubnetID &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable)) {
-        auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
+      for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable)) {
+        auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
 
-        float area = calculateArea(cut.entryIdxs, subnetID, cellDB)
+        float area = calculateArea(cut.entryIdxs)
                      + currentAttr.area;
 
         if (area < bestArea) {

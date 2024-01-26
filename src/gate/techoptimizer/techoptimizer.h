@@ -23,24 +23,22 @@ public:
     AREA_FLOW,
     DELAY,
     POWER,
-    SIMPLE
+    SIMPLE_AREA_FUNC
   };
 
-  void setLiberty(const std::string &dbPath);
-  void setMapper(MapperType techmapSelector);
+  Techmapper(const std::string &dbPath, MapperType techmapSelector);
+
   SubnetID techmap(SubnetID subnetID);
   SubnetID techmap(model::CellID sequenceCell);
 
   ~Techmapper() {
     delete mapper;
     delete cellDB;
-    for(auto *cell : cells) {
-      delete cell;
-    }
   }
 
 private:
-  std::vector<Cell*> cells;
+  void setLiberty(const std::string &dbPath);
+  void setMapper(MapperType techmapSelector);
   CellDB *cellDB;
   BaseMapper *mapper = nullptr;
   SubnetID premapAIGSubnet(SubnetID subnetID);

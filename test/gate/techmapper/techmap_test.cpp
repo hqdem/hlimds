@@ -11,7 +11,7 @@
 
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/parser_test.h"
-#include "gate/techoptimizer/techmapper.h"
+#include "gate/techoptimizer/techoptimizer.h"
 #include "gate/model2/utils/subnet_random.h"
 
 #include "gtest/gtest.h"
@@ -99,10 +99,8 @@ TEST(TechMapTest, SimpleANDSubnet) {
   const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 13, 2);
   std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
 
-  Techmapper techmapper;
-  techmapper.setLiberty(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
-  techmapper.setMapper(Techmapper::TechmapperType::FUNC);
-  techmapper.setStrategy(Techmapper::TechmapperStrategyType::SIMPLE);
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC);
 
   SubnetID mappedSub = techmapper.techmap(primitiveANDSub);
 
@@ -115,11 +113,8 @@ TEST(TechMapTest, SimpleANDSubnet) {
 TEST(TechMapTest, SimpleORSubnet) {
   const auto primitiveORSub  = createPrimitiveSubnet(CellSymbol::OR, 3, 13);
 
-  Techmapper techmapper;
-
-  techmapper.setLiberty(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
-  techmapper.setMapper(Techmapper::TechmapperType::FUNC);
-  techmapper.setStrategy(Techmapper::TechmapperStrategyType::SIMPLE);
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
 
   SubnetID mappedSub = techmapper.techmap(primitiveORSub);
 
@@ -171,12 +166,9 @@ TEST(TechMapTest, SimpleSub) {
   //SubnetID subnetID = model::randomSubnet(5, 1, 7, 1, 2);
   auto &subnet = model::Subnet::get(subnetID);
   std::cout << subnet << std::endl;
-  Techmapper techmapper;
 
-  techmapper.setLiberty(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
-
-  techmapper.setMapper(Techmapper::TechmapperType::FUNC);
-  techmapper.setStrategy(Techmapper::TechmapperStrategyType::SIMPLE);
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
 
   SubnetID mappedSub = techmapper.techmap(subnetID);
 
@@ -226,11 +218,9 @@ TEST(TechMapTest, ANDNOTNOTAND) {
 
   const auto &subnet = model::Subnet::get(subnetID);
   std::cout << subnet << std::endl;
-  Techmapper techmapper;
 
-  techmapper.setLiberty(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
-  techmapper.setMapper(Techmapper::TechmapperType::FUNC);
-  techmapper.setStrategy(Techmapper::TechmapperStrategyType::SIMPLE);
+    Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
 
   SubnetID mappedSub = techmapper.techmap(subnetID);
 

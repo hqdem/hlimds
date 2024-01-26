@@ -5,6 +5,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#pragma once
 
 namespace eda::gate::tech_optimizer {
 struct Subnetattr {

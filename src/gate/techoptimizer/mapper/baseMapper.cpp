@@ -6,11 +6,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/mapper/cut_base/cut_base_mapper.h"
+#include "gate/techoptimizer/mapper/baseMapper.h"
 
 namespace eda::gate::tech_optimizer {
-void CutBaseMapper::baseMap() {
-  cutExtractor = new optimizer2::CutExtractor(&model::Subnet::get(subnetID), 6);
-  findBest();
+void BaseMapper::mapping(SubnetID subnetID,
+                     CellDB *cellDB,
+    std::map<EntryIndex, BestReplacement> *bestReplacementMap) {
+  this->subnetID = subnetID;
+  this->cellDB = cellDB;
+  this->bestReplacementMap = bestReplacementMap;
+
+  baseMap();
 }
 }

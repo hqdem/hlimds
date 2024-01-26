@@ -7,14 +7,14 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
+#include "gate/techoptimizer/mapper/bestReplacement.h"
 
-#include "map"
-#include "stack"
-#include "unordered_set"
+#include <map>
+#include <stack>
+#include <unordered_set>
 
 namespace eda::gate::tech_optimizer {
-class assembly {
+class AssemblySubnet {
 public:
   SubnetID assemblySubnet(std::map<uint64_t, BestReplacement> *bestReplacementMap,
                                  SubnetID subnetID);
@@ -35,4 +35,4 @@ private:
                     std::stack<EntryIndex> &stack,
                     std::unordered_set<EntryIndex> &visited);
 };
-}
+} // namespace eda::gate::tech_optimizer

@@ -7,11 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/celltype.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/simple/simplpe_area.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
-#include "gate/techoptimizer/techmapper.h"
+#include "gate/techoptimizer/techoptimizer.h"
+#include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
 #include "gate/transformer/aigmapper.h"
+#include "gate/techoptimizer/assembly.h"
 
 //#include <list>
 #include <map>
@@ -20,7 +20,14 @@ using CellID = eda::gate::model::CellID;
 
 namespace eda::gate::tech_optimizer {
 
+Techmapper::Techmapper(const std::string &dbPath,
+                            MapperType techmapSelector) {
+  setLiberty(dbPath);
+  setMapper(techmapSelector);
+}
+
 void Techmapper::setLiberty(const std::string &dbPath) {
+  std::vector<Cell*> cells;
   std::vector<CellTypeID> cellTypeIDs;
   LibraryCells::readLibertyFile(dbPath, cells);
   LibraryCells::makeCellTypeIDs(cells, cellTypeIDs);
@@ -31,40 +38,26 @@ void Techmapper::setLiberty(const std::string &dbPath) {
 
 void Techmapper::setMapper(MapperType techmapSelector) {
   switch(techmapSelector) {
-    case MapperType::SIMPLE: // // cut-based matching
-      mapper = new s(cellDB);
+    case MapperType::SIMPLE_AREA_FUNC: // // cut-based matching
+      mapper = new SimpleAreaMapper();
       break;
 
-    case TechmapperType::STRUCT: // DAGON matching
+    /*case TechmapperType::STRUCT: // DAGON matching
       //mapper = new DagonTechMapper(*cellDB);
-      break;
-  }
-}
-
-void Techmapper::setStrategy(TechmapperStrategyType strategySelector) {
-  switch(strategySelector) {
-    case TechmapperStrategyType::AREA_FLOW: // areaFlow
-      //AreaFlow *strategy = new AreaFlow();
-      //mapper->setStrategy(strategy);
-      break;
-
-    case TechmapperStrategyType::DELAY: // delay
-      break;
-
-    case TechmapperStrategyType::POWER: // power
-      break;
-    case TechmapperStrategyType::SIMPLE: // simple area
-      SimplifiedStrategy *strategy = new SimplifiedStrategy();
-      std::map<EntryIndex, BestReplacement> *bestReplacementMap
-          = new std::map<EntryIndex, BestReplacement>;
-      mapper->setStrategy(strategy, bestReplacementMap);
-      break;
+      break;*/
   }
 }
 
 SubnetID Techmapper::techmap(SubnetID subnetID) {
+  std::map<EntryIndex, BestReplacement> *bestReplacementMap =
+      new std::map<EntryIndex, BestReplacement>;
+
  assert(mapper != nullptr);
- return mapper->techMap(subnetID);
+
+  mapper->mapping(subnetID, cellDB, bestReplacementMap);
+
+  AssemblySubnet as;
+ return as.assemblySubnet(bestReplacementMap, subnetID);
 }
 
 SubnetID Techmapper::techmap(model::CellID sequenceCell) {

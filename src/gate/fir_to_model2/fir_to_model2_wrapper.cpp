@@ -15,6 +15,8 @@
 #include <fstream>
 #include <iostream>
 
+using Format = eda::gate::model::ModelPrinter::Format;
+
 namespace fs = std::filesystem;
 
 namespace eda::gate::model {
@@ -38,7 +40,7 @@ int translateToModel2(const std::string &inputFileName,
   }
   std::ofstream outputStream(outputFullName);
   for (const auto &cellTypeID : *resultNetlist) {
-    NetPrinter::getPrinter(NetFormat::VERILOG).print(outputStream,
+    ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
         CellType::get(cellTypeID).getNet());
   }
   outputStream.close();

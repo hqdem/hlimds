@@ -123,11 +123,9 @@ Please take this into account while moving through the guide.
 
 ```
 cd <workdir>
-git clone https://github.com/circt/circt.git
+git clone --recursive https://github.com/circt/circt.git
 cd circt
-git checkout 2d822ea
-git submodule init
-git submodule update
+git checkout 2d822ea --recurse-submodules
 ```
 
 #### LLVM/MLIR Installation
@@ -150,8 +148,8 @@ cmake -G Ninja ../llvm \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \
     -DLLVM_ENABLE_LLD=ON \
-    -DLLVM_PARALLEL_LINK_JOBS=8 \
-    -DLLVM_PARALLEL_COMPILE_JOBS=8
+    -DLLVM_PARALLEL_LINK_JOBS=$(nproc) \
+    -DLLVM_PARALLEL_COMPILE_JOBS=$(nproc)
 ninja
 ```
 

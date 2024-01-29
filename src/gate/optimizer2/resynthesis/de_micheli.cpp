@@ -413,17 +413,21 @@ bool DeMicheli::selectOtherArgs(std::vector<MajNode> &topNodes,
   const size_t invertedFirst = getInverted(firstArg);
   const size_t divisorsSize = divisors.size();
   uint64_t maxCount = 0;
-  uint64_t sum[divisorsSize];
+
+  std::vector<uint64_t> sum;
+  sum.reserve(divisorsSize);
+
   const TruthTable &f1 = divisors[firstArg];
   const TruthTable &notF1 = divisors[invertedFirst];
   for (size_t i = 0; i < divisorsSize; ++i) {
     if ((i == firstArg) || (i == invertedFirst)) {
-      sum[i] = 0;
+      sum.push_back(0);
       continue;
     }
-    sum[i] = calculate(f1, notF1, divisors[i], care);
-    if (sum[i] > maxCount) {
-      maxCount = sum[i];
+    const uint64_t rate = calculate(f1, notF1, divisors[i], care);
+    sum.push_back(rate);
+    if (rate > maxCount) {
+      maxCount = rate;
     }
   }
   for (size_t i = 0; i < divisorsSize; ++i) {
@@ -447,7 +451,10 @@ bool DeMicheli::selectLastArg(std::vector<MajNode> &topNodes,
   const size_t invertedSecond = getInverted(secondArg);
   const size_t divisorsSize = divisors.size();
   uint64_t maxCount = 0;
-  uint64_t sum[divisorsSize];
+
+  std::vector<uint64_t> sum;
+  sum.reserve(divisorsSize);
+
   const TruthTable coveredOnes = divisors[firstArg] ^ divisors[secondArg];
   const TruthTable notCovered = divisors[invertedFirst] & 
                                 divisors[invertedSecond];
@@ -456,12 +463,13 @@ bool DeMicheli::selectLastArg(std::vector<MajNode> &topNodes,
     bool skip = (i == firstArg) || (i == invertedFirst);
     skip = skip || (i == secondArg) || (i == invertedSecond);
     if (skip) {
-      sum[i] = 0;
+      sum.push_back(0);
       continue;
     }
-    sum[i] = calculate(coveredOnes, notCovered, divisors[i], care);
-    if (sum[i] > maxCount) {
-      maxCount = sum[i];
+    const uint64_t rate = calculate(coveredOnes, notCovered, divisors[i], care);
+    sum.push_back(rate);
+    if (rate > maxCount) {
+      maxCount = rate;
     }
   }
   for (size_t i = 0; i < divisorsSize; ++i) {

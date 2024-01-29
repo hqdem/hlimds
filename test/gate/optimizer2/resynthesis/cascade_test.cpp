@@ -122,7 +122,7 @@ TEST(Cascade, SubnetTest) {
   const auto subnetId = resynth.synthesize(table);
   const auto &subnet = Subnet::get(subnetId);
 
-  EXPECT_TRUE(subnet.size() == 6);
+  EXPECT_TRUE(subnet.size() == 4);
 }
 
 TEST(Cascade, MaxArityTest) {

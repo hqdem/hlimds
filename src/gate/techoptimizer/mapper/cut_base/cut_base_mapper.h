@@ -7,7 +7,10 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/bestReplacement.h"
+#include "gate/techoptimizer/mapper/baseMapper.h"
+#include "gate/optimizer2/cut_extractor.h"
+
+#include <map>
 
 /**
  * \brief Interface to handle node and its cuts.
@@ -15,10 +18,12 @@
  */
 
 namespace eda::gate::tech_optimizer {
+class CutBaseMapper : public BaseMapper {
 
-struct BestSimpleReplacement : public BestReplacement{
-  float area;
+protected:
+  optimizer2::CutExtractor *cutExtractor;
+
+  void baseMap() override;
+  virtual void findBest() = 0;
 };
-
 } // namespace eda::gate::tech_optimizer
-

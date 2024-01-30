@@ -7,7 +7,8 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techoptimizer/mapper/bestReplacement.h"
+#include "gate/techoptimizer/library/cellDB.h"
 
 #include <map>
 
@@ -17,12 +18,18 @@
  */
 
 namespace eda::gate::tech_optimizer {
- class BaseMapper {
- public:
-  virtual void setStrategy(Strategy *strategy,
-      std::map<uint64_t, BestReplacement> *bestReplacementMap) = 0;
-  virtual SubnetID techMap(SubnetID subnetID) = 0;
+class BaseMapper {
+public:
+  void mapping(SubnetID subnetID,
+           CellDB *cellDB,
+           std::map<EntryIndex, BestReplacement> *bestReplacementMap);
 
   virtual ~BaseMapper() = default;
+protected:
+  CellDB *cellDB;
+  SubnetID subnetID;
+  std::map<EntryIndex, BestReplacement> *bestReplacementMap;
+
+  virtual void baseMap() = 0;
  };
 } // namespace eda::gate::tech_optimizer

@@ -181,7 +181,10 @@ def read_information_from_library(path_to_library):
                                  'power': power,
                                  'clear' : clear,
                                  'data_in' : data_in,
-                                 'enable' : enable
+                                 'enable' : enable,
+                                 'ff' : isFF,
+                                 'ffrs' : isFFrs,
+                                 'latch' : isLatch,
                                  }
       last_output_pins = output_pins
 

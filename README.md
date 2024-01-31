@@ -194,6 +194,7 @@ cd utopia-eda
 export UTOPIA_HOME=<workdir>/utopia-eda
 ```
 Please keep `UTOPIA_HOME` variable and its value in your system permanently.
+
 ### Project Building 
 
 ```
@@ -252,6 +253,7 @@ or
 ```
 ./run-tests.sh
 ```
+
 #### Specific Tests Running
 
 ```

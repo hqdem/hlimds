@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -767,7 +767,7 @@ void GNet::sortTopologically() {
 // Cloning
 //===----------------------------------------------------------------------===//
 
-GNet *GNet::clone() {
+GNet *GNet::clone() const {
   if (_gates.empty()) {
     return new GNet(_level);
   }
@@ -776,7 +776,7 @@ GNet *GNet::clone() {
   return clone(oldToNewId);
 }
 
-GNet *GNet::clone(std::unordered_map<Gate::Id, Gate::Id> &oldToNewId) {
+GNet *GNet::clone(std::unordered_map<Gate::Id, Gate::Id> &oldToNewId) const {
   auto *resultNet = new GNet(_level);
   assert(oldToNewId.empty());
 

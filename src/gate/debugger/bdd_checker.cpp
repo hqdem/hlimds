@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -10,12 +10,14 @@
 
 namespace eda::gate::debugger {
 
-CheckerResult bddChecker(GNet &net1, GNet &net2, Hints &hints) {
-  if (!(net1.isComb() && net2.isComb())) {
+CheckerResult BddChecker::equivalent(const GNet &lhs,
+                                     const GNet &rhs,
+                                     const SatChecker::GateIdMap &gmap) const {
+  if (!(lhs.isComb() && rhs.isComb())) {
     return CheckerResult::ERROR;
   }
 
-  GNet *miterNet = miter(net1, net2, hints);
+  GNet *miterNet = miter(lhs, rhs, gmap);
   SignalList inputs;
   GateId outputId = 0;
 
@@ -43,13 +45,6 @@ CheckerResult bddChecker(GNet &net1, GNet &net2, Hints &hints) {
     return CheckerResult::EQUAL;
   }
   return CheckerResult::NOTEQUAL;
-} 
-
-CheckerResult BddChecker::equivalent(GNet &lhs,
-                                     GNet &rhs,
-                                     Checker::GateIdMap &gmap) {
-  Checker::Hints hints = makeHints(lhs, rhs, gmap);
-  return bddChecker(lhs, rhs, hints);
 }
 
 } // namespace eda::gate::debugger

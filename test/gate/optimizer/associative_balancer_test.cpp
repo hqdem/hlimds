@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -31,8 +31,9 @@ namespace eda::gate::optimizer {
   std::string verilogTestPath = testDataPath + "gate/optimizer/verilog/";
 
   bool areEquivalent(GNet *unbalancedNet , GNet *balancedNet, GateIdMap oldToNew) {
-    BddChecker checker;
-    return checker.equivalent(*balancedNet, *unbalancedNet, oldToNew).equal();
+    return eda::gate::debugger::getChecker(
+           eda::gate::debugger::options::BDD).equivalent(
+           *balancedNet, *unbalancedNet, oldToNew).equal();
   }
 
   void printBalancingInfo(GNet *net,

@@ -21,13 +21,14 @@ class SatChecker2 final : public BaseChecker2,
   friend class util::Singleton<SatChecker2>;
 
 public:
-  CheckerResult equivalent(Subnet &lhs, Subnet &rhs, CellToCell &map) override {
-    MiterHints hints = makeHints(lhs, map);
-    const Subnet &miter = miter2(lhs, rhs, hints);
+  CheckerResult equivalent(const Subnet &lhs,
+                           const Subnet &rhs,
+                           const CellToCell &map) const override {
+    const Subnet &miter = miter2(lhs, rhs, map);
 
-    const auto &encoder = SubnetEncoder::get();
+    const auto &encoder = model::SubnetEncoder::get();
     eda::gate::solver::Solver solver;
-    SubnetEncoderContext context(miter, solver);
+    model::SubnetEncoderContext context(miter, solver);
 
     encoder.encode(miter, context, solver);
     encoder.encodeEqual(miter, context, solver, miter.getOut(0), 1);

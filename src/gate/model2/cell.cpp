@@ -14,7 +14,7 @@ namespace eda::gate::model {
 Cell::Cell(CellTypeID typeID, const LinkList &links):
     typeSID(typeID.getSID()), fanin(links.size()), fanout(0) {
   if (fanin <= InPlaceLinks) {
-    for (auto i = 0u; i < fanin; ++i) {
+    for (size_t i = 0; i < fanin; ++i) {
       data.link[i] = links[i];
     }
   } else {
@@ -30,7 +30,7 @@ Cell::LinkList Cell::getLinks() const {
   LinkList links;
 
   if (fanin <= InPlaceLinks) {
-    for (auto i = 0u; i < fanin; ++i) {
+    for (size_t i = 0; i < fanin; ++i) {
       links.push_back(data.link[i]);
     }
   } else {

@@ -30,17 +30,9 @@ Simulator::DataVector getAllValues(size_t nIn, size_t count) {
   return res;
 }
 
-void RndChecker2::setTries(int tries) {
-  this->tries = tries;
-}
-
-void RndChecker2::setExhaustive(bool exhaustive) {
-  this->exhaustive = exhaustive;
-}
-
-CheckerResult RndChecker2::equivalent(Subnet &lhs,
-                                      Subnet &rhs,
-                                      CellToCell &gmap) {
+CheckerResult RndChecker2::equivalent(const Subnet &lhs,
+                                      const Subnet &rhs,
+                                      const CellToCell &gmap) const {
   if (lhs.getInNum() != rhs.getInNum()) {
     LOG_ERROR << "Nets have different number of inputs." << std::endl;
     return CheckerResult::ERROR;
@@ -50,34 +42,21 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
     return CheckerResult::ERROR;
   }
 
-  MiterHints hints = makeHints(lhs, gmap);
-  const Subnet &miter = miter2(lhs, rhs, hints);
+  const Subnet &miter = miter2(lhs, rhs, gmap);
+  assert(miter.getOutNum() == 1);
 
-  std::uint64_t outNum = miter.getOutNum();
+  const auto inputNum = miter.getInNum();
 
-  if (outNum != 1) {
-    LOG_ERROR << "Unsupported number of OUT gates: " << outNum << std::endl;
-    return CheckerResult::ERROR;
-  }
-  std::uint64_t inputNum = miter.getInNum();
-
-  if (inputNum < 2 || inputNum > 64) {
-    LOG_ERROR << "Unsupported number of inputs: " << inputNum << std::endl;
-    return CheckerResult::ERROR;
-  }
-
-  std::uint64_t output;
-  std::uint64_t inputPower = 1ULL << inputNum;
   Simulator simulator(miter);
   Simulator::DataVector values(inputNum);
 
   if (!exhaustive) {
-    for (std::uint64_t t = 0; t < tries; t++) {
-      for (std::uint64_t i = 0; i < inputNum; i++) {
-        values[i] = std::rand() % inputPower;
+    for (uint64_t t = 0; t < tries; t++) {
+      for (uint64_t i = 0; i < inputNum; i++) {
+        values[i] = std::rand();
       }
       simulator.simulate(values);
-      output = simulator.getValue(miter.getOut(0));
+      const auto output = simulator.getValue(miter.getOut(0));
       if (output) {
         return CheckerResult(CheckerResult::NOTEQUAL, values);
       }
@@ -86,10 +65,17 @@ CheckerResult RndChecker2::equivalent(Subnet &lhs,
   }
 
   if (exhaustive) {
-    size_t iterations = (inputPower <= 64) ? 1ULL : (inputPower >> 6);
+    if (inputNum > 32) {
+      LOG_ERROR << "Unsupported number of inputs: " << inputNum << std::endl;
+      return CheckerResult::ERROR;
+    }
+
+    const auto inputPower = (1ull << inputNum);
+
+    size_t iterations = (inputPower <= 64) ? 1ull : (inputPower >> 6);
     for (size_t i = 0; i < iterations; i++) {
       simulator.simulate(getAllValues(inputNum, i));
-      output = simulator.getValue(miter.getOut(0));
+      const auto output = simulator.getValue(miter.getOut(0));
       if (output) {
         return CheckerResult(CheckerResult::NOTEQUAL, values);
       }

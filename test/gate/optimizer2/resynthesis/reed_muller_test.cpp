@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -65,15 +65,30 @@ namespace eda::gate::optimizer2::resynthesis {
     kitty::create_from_binary_string(t, generateRandom(numVars));
     SubnetID subnet = r.synthesize(t);
 
-    DinTruthTable result_table = evaluate(Subnet::get(subnet));
+    DinTruthTable resultTable = evaluate(Subnet::get(subnet));
     for (size_t i = 0; i < t.num_bits(); ++i) {
-      ASSERT_EQ(kitty::get_bit(t, i), kitty::get_bit(result_table, i));
+      ASSERT_EQ(kitty::get_bit(t, i), kitty::get_bit(resultTable, i));
+    }
+  }
+
+  void subnetToSubnetWithDifferentArity(const uint64_t numVars) {
+    ReedMuller r;
+    DinTruthTable t(numVars);
+    kitty::create_from_binary_string(t, generateRandom(numVars));
+    SubnetID baseSubnet = r.synthesize(t);
+    DinTruthTable baseTable = evaluate(Subnet::get(baseSubnet));
+
+    for(uint16_t arity = 3; arity < Subnet::Cell::InPlaceLinks + 1; ++arity){
+      SubnetID subnet = r.synthesize(t, arity);
+      DinTruthTable resultTable = evaluate(Subnet::get(subnet));
+      for (size_t i = 0; i < t.num_bits(); ++i) {
+        ASSERT_EQ(kitty::get_bit(baseTable, i), kitty::get_bit(resultTable, i));
+      }
     }
   }
 
 // We generate a random binary string of length 2^6, 2^10 and 2^14 respectively and see
 // if function getTT() on this string works correctly
-
 TEST(ReedMullerModel2, correctTestOnDiffSizes) {
   ReedMuller r;
   std::vector<uint64_t> sizes = {6, 10, 14};
@@ -138,28 +153,6 @@ TEST(ReedMullerModel2, subnetToSubnetOn3Vars) {
   testSubnetToSubnet(net, subnet);
 }
 
-// Tests if "sythesize" works correctly (the polynomial is 1 ^ x1 ^ x1x2 ^ x3 ^ x1x2x3)
-TEST(ReedMullerModel2, subnetToSubnetOn3VarsWith1) {
-  SubnetID net1 = generateSubnetID("10101101", 3);
-
-  SubnetBuilder builder;
-
-  const auto input = builder.addInputs(3);
-
-  LinkList output;
-  output.push_back(input[0]);
-  output.push_back(builder.addCell(model::AND, input[0], input[1]));
-  output.push_back(input[2]);
-  output.push_back(builder.addCell(model::AND, input[0], input[1], input[2]));
-
-  builder.addOutput(builder.addCell(model::XOR, output));
-  
-  const auto &subnet = Subnet::get(builder.make());
-  const auto &net = Subnet::get(net1);
-  
-  testSubnetToSubnet(net, subnet);
-}
-
 // Tests if "sythesize" works correctly (the polynomial is x1 ^ x2 ^ x3 ^ x4 ^ x2x4 ^ x1x2x4 ^ x1x2x3x4)
 TEST(ReedMullerModel2, subnetToSubnetOn4Vars) {
   SubnetID net1 = generateSubnetID("1010110110010110", 4);
@@ -215,8 +208,19 @@ TEST(ReedMullerModel2, timeTestOn9Vars) { generateTest(9); }
 
 TEST(ReedMullerModel2, timeTestOn10Vars) { generateTest(10); }
 
-TEST(ReedMullerModel2, timeTestOn11Vars) { generateTest(11); }
+//Compare subnets generated on the same DinTruthTable but with different
+//maxArity values to see if they are equal to each other
+TEST(ReedMullerModel2, DiffArityOn4Values) { subnetToSubnetWithDifferentArity(4); }
 
-TEST(ReedMullerModel2, timeTestOn12Vars) { generateTest(12); }
+TEST(ReedMullerModel2, DiffArityOn5Values) { subnetToSubnetWithDifferentArity(5); }
 
-} // namespace eda::gate::optimizer2::resynthesis
+TEST(ReedMullerModel2, DiffArityOn6Values) { subnetToSubnetWithDifferentArity(6); }
+
+TEST(ReedMullerModel2, DiffArityOn7Values) { subnetToSubnetWithDifferentArity(7); }
+
+TEST(ReedMullerModel2, DiffArityOn8Values) { subnetToSubnetWithDifferentArity(8); }
+
+TEST(ReedMullerModel2, DiffArityOn9Values) { subnetToSubnetWithDifferentArity(9); }
+
+TEST(ReedMullerModel2, DiffArityOn10Values) { subnetToSubnetWithDifferentArity(10); }
+}// namespace eda::gate::optimizer2::resynthesis

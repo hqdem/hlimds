@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -26,8 +26,8 @@ namespace eda::gate::debugger {
  * \author <a href="mailto:kamkin@ispras.ru">Alexander Kamkin</a>
  */
 
-class Checker : public BaseChecker, public util::Singleton<Checker> {
-friend class util::Singleton<Checker>;
+class SatChecker : public BaseChecker, public util::Singleton<SatChecker> {
+friend class util::Singleton<SatChecker>;
 
 public:
   using Gate = eda::gate::model::Gate;
@@ -87,11 +87,11 @@ public:
                            const GNet &rhs,
                            const Hints &hints) const;
   /**
- *  @copydoc base_checker.h:equivalent
- */
-  CheckerResult equivalent(GNet &lhs,
-                           GNet &rhs,
-                           GateIdMap &gmap) override;
+   *  @copydoc BaseChecker::equivalent
+   */
+  CheckerResult equivalent(const GNet &lhs,
+                           const GNet &rhs,
+                           const GateIdMap &gmap) const override;
 
   /// Checks if the miter is satisfiable
   CheckerResult isEqualCombMiter(const GNet &miter) const;
@@ -100,6 +100,8 @@ public:
   CheckerResult isEqualCombSatMiter(const GNet &miter) const;
 
 private:
+  SatChecker() {};
+
   /// Checks logic equivalence of two hierarchical nets.
   CheckerResult areEqualHier(const GNet &lhs,
                              const GNet &rhs,
@@ -151,11 +153,13 @@ private:
 
   /// Handles an error (prints the diagnostics, etc.).
   void error(Context &context,
-	     const GateBinding &ibind,
-	     const GateBinding &obind) const;
+             const GateBinding &ibind,
+             const GateBinding &obind) const;
 
   const unsigned simCheckBound = 8;
 };
 
-Checker::Hints makeHints(GNet &lhs, GNet &rhs, GateIdMap &gmap);
+SatChecker::Hints makeHints(const GNet &lhs,
+                            const GNet &rhs,
+                            const GateIdMap &gmap);
 } // namespace eda::gate::debugger

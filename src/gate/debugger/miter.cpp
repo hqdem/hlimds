@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -10,7 +10,7 @@
 
 namespace eda::gate::debugger {
 
-bool areMiterable(GNet &net1, GNet &net2, Hints &hints) {
+bool areMiterable(const GNet &net1, const GNet &net2, const Hints &hints) {
   GateBinding *sources = hints.sourceBinding.get();
   GateBinding *targets = hints.targetBinding.get();
 
@@ -48,13 +48,14 @@ bool areMiterable(GNet &net1, GNet &net2, Hints &hints) {
   return true;
 }
 
-GNet *miter(GNet &net1, GNet &net2, Hints &hints) {
+GNet *miter(const GNet &net1, const GNet &net2, const GateIdMap &gmap) {
+  Hints hints = makeHints(net1, net2, gmap);
   if (not areMiterable(net1, net2, hints)) {
     return nullptr;
   }
 
-  std::unordered_map<Gate::Id, Gate::Id> map1 = {};
-  std::unordered_map<Gate::Id, Gate::Id> map2 = {};
+  GateIdMap map1 = {};
+  GateIdMap map2 = {};
   GNet *cloned1 = net1.clone(map1);
   GNet *cloned2 = net2.clone(map2);
 
@@ -73,7 +74,7 @@ GNet *miter(GNet &net1, GNet &net2, Hints &hints) {
     obind.insert({Gate::Link(newTargetId1), Gate::Link(newTargetId2)});
   }
 
-  Checker::Hints newHints;
+  SatChecker::Hints newHints;
   newHints.sourceBinding  = std::make_shared<GateBinding>(std::move(ibind));
   newHints.targetBinding  = std::make_shared<GateBinding>(std::move(obind));
 

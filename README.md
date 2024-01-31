@@ -132,7 +132,7 @@ git submodule update
 
 #### LLVM/MLIR Installation
 
-Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
+Set `MLIR_DIR` environment variable to the directory with MLIR CMake files:
 ```
 export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
@@ -157,15 +157,9 @@ ninja
 
 #### CIRCT Installation
 
-Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
-to your `PATH` environment variable:
+Set `CIRCT_DIR` environment variable to the directory with CIRCT CMake files:
 ```
-export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
-```
-
-Set `CIRCT_DIR` environment variable to the directory with CIRCT:
-```
-export CIRCT_DIR=<workdir>/circt/
+export CIRCT_DIR=<workdir>/circt/build/lib/cmake/circt/
 ```
 
 Type the following commands:
@@ -240,7 +234,13 @@ as the input Verilog file.
 ### Running FIRRTL-to-model2 Translator
 
 ```
-./build/src/umain to_model2 <file> --outputFileName <verilog file>
+./build/src/umain to_model2 <file> --out <verilog-file>
+```
+
+### Running the pipeline Translator
+
+```
+./build/src/umain translator <file> --out <verilog-file> --top <module-name>
 ```
 
 ### Tests Running

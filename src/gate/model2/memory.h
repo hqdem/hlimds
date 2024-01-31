@@ -76,9 +76,8 @@ private:
     void *page = aligned_alloc(PAGE_SIZE, PAGE_SIZE);
     assert(page);
 
-    // Advice Linux kernel to use huge pages. 
+    // Advice Linux kernel to use huge pages.
     madvise(page, PAGE_SIZE, MADV_HUGEPAGE);
-
     return static_cast<SystemPage>(page);
   }
 

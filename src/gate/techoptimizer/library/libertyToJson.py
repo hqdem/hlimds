@@ -14,7 +14,32 @@ def read_information_from_library(path_to_library):
   delay = {}
   power = {}
 
+  comb_cell = True
+
+  isFF = False
+  isFFrs = False
+  isLatch = False
+  clear = ''
+  clear_preset_var1xl = ''
+  clear_preset_var2 = ''
+  clocked_on= ''
+  next_state = ''
+  preset = ''
+  data_in = ''
+  enable = ''
+
   for cell_group in library.get_groups('cell'):
+    isFF = False
+    isFFrs = False
+    isLatch = False
+    clear = ''
+    clear_preset_var1xl = ''
+    clear_preset_var2 = ''
+    clocked_on= ''
+    next_state = ''
+    preset = ''
+    data_in = ''
+    enable = ''
     cell_name = (str(cell_group.args[0]))[1: -1]
 
     worstLeakege = 0
@@ -22,6 +47,26 @@ def read_information_from_library(path_to_library):
       curLeakege = leakege_grop['value']
       if curLeakege > worstLeakege:
         worstLeakege = curLeakege
+    for ff_grup in cell_group.get_groups('ff'):
+      clear = str(ff_grup['clear'])[1: -1]
+      clear_preset_var1xl = str(ff_grup['clear_preset_var1'])[1: -1]
+      clear_preset_var2 = str(ff_grup['clear_preset_var2'])[1: -1]
+      clocked_on = str(ff_grup['clocked_on'])[1: -1]
+      next_state = str(ff_grup['next_state'])[1: -1]
+      preset = str(ff_grup['preset'])[1: -1]
+
+      if (clocked_on != "" and next_state != "" and clear == ""):
+        isFF = True
+
+      elif (clocked_on != "" and next_state != "" and clear != ""):
+        isFFrs = True
+
+    for latch_grup in cell_group.get_groups('latch'):
+        clear = str(latch_grup['clear'])[1: -1]
+        data_in = str(latch_grup['data_in'])[1: -1]
+        enable = str(latch_grup['enable'])[1: -1]
+        if (data_in != ""):
+            isLatch = True
 
     for pin_group in cell_group.get_groups('pin'):
       pin_name_attribute = str(pin_group.args[0])[1: -1]
@@ -98,7 +143,8 @@ def read_information_from_library(path_to_library):
 
     if (("Q" not in output_pins)
         and ("CLK" not in input_pins) and (len(output_pins) != 0)):
-      cell_library[cell_name] = {'delay': delay,
+      cell_library[cell_name] = {'comb': True,
+                                 'delay': delay,
                                  'input': input_pins,
                                  'output': output_pins,
                                  'area' : cell_area,
@@ -106,12 +152,47 @@ def read_information_from_library(path_to_library):
                                  'power': power
                                  }
       last_output_pins = output_pins
+    elif isFF or isFFrs:
+      cell_library[cell_name] = {'comb': False,
+                                 'delay': delay,
+                                 'input': input_pins,
+                                 'output': output_pins,
+                                 'area' : cell_area,
+                                 'leakage' : worstLeakege,
+                                 'power': power,
+                                 'ff' : isFF,
+                                 'ffrs' : isFFrs,
+                                 'latch' : isLatch,
+                                 'clear' : clear,
+                                 'clear_preset_var1xl' : clear_preset_var1xl,
+                                 'clear_preset_var2' : clear_preset_var2,
+                                 'clocked_on' : clocked_on,
+                                 'next_state' : next_state,
+                                 'preset' : preset
+                                 }
+      last_output_pins = output_pins
+    elif isLatch:
+      cell_library[cell_name] = {'comb': False,
+                                 'delay': delay,
+                                 'input': input_pins,
+                                 'output': output_pins,
+                                 'area' : cell_area,
+                                 'leakage' : worstLeakege,
+                                 'power': power,
+                                 'clear' : clear,
+                                 'data_in' : data_in,
+                                 'enable' : enable,
+                                 'ff' : isFF,
+                                 'ffrs' : isFFrs,
+                                 'latch' : isLatch,
+                                 }
+      last_output_pins = output_pins
+
 
     input_pins = ""
     output_pins = {}
     delay = {}
     power = {}
-    
   return cell_library
 
 def write_to_json(cells, path_to_file):

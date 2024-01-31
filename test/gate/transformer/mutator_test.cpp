@@ -2,12 +2,12 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/bdd_checker.h"
-#include "gate/debugger/checker.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/debugger/rnd_checker.h"
 #include "gate/model/examples.h"
 #include "gate/parser/parser_test.h"
@@ -18,15 +18,16 @@
 
 namespace eda::gate::mutator {
   
-  using BddChecker = eda::gate::debugger::BddChecker;
-  using Checker = eda::gate::debugger::Checker;
   using CheckerResult = eda::gate::debugger::CheckerResult;
   using GateIdMap = std::unordered_map<GateId, GateId>;
+  using eda::gate::debugger::getChecker;
+  using eda::gate::debugger::options::BDD;
+  using eda::gate::debugger::options::RND;
+  using eda::gate::debugger::options::SAT;
   using eda::gate::optimizer::balanceAND;
   using eda::gate::optimizer::createLink;
   using eda::gate::optimizer::getNext;
   using eda::gate::parser::parseVerilog;
-  using RndChecker = eda::gate::debugger::RndChecker;
   using Signal = eda::gate::model::Gate::Signal;
   using SignalList = eda::gate::model::Gate::SignalList;
   using SubnetId = eda::gate::model::GNet::SubnetId;
@@ -96,12 +97,9 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(gNet, gates));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    BddChecker bddChk;
-    RndChecker rndChk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, bddChk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, rndChk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 
   TEST(Mutator, mutationAndOr) {
@@ -112,12 +110,9 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(counter, gNet, 3, {GateSymbol::AND, GateSymbol::OR}));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    BddChecker bddChk;
-    RndChecker rndChk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, bddChk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, rndChk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
     EXPECT_EQ(counter, 3);
   }
 
@@ -137,8 +132,7 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(gNet, 3));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
     //TODO: BDD checker returns 'Killed'
   }
 
@@ -149,10 +143,8 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(gNet, 3));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    BddChecker bddChk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, bddChk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 
   TEST(Mutator, verilogBar) {
@@ -162,10 +154,8 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(gNet, gNet.nGates()));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    BddChecker bddChk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, bddChk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 
   TEST(Mutator, verilogC17) {
@@ -175,12 +165,9 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(gNet, gNet.nGates(), {GateSymbol::NAND}));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    BddChecker bddChk;
-    RndChecker rndChk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, bddChk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, rndChk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 
   TEST(Mutator, verilogC499) {
@@ -190,12 +177,9 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(gNet, gNet.nGates()));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    BddChecker bddChk;
-    RndChecker rndChk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, bddChk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, rndChk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 
   TEST(Mutator, verilogC1908) {
@@ -205,12 +189,9 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(gNet, gNet.nGates()));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    BddChecker bddChk;
-    RndChecker rndChk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, bddChk));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, rndChk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 
   TEST(Mutator, verilogSquare) {
@@ -220,8 +201,7 @@ namespace eda::gate::mutator {
     mutatedGNet.addNet(Mutator::mutate(gNet, 1));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
-    Checker chk;
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, chk));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
     //TODO: BDD checker returns 'Killed'
     //TODO: RND checker returns 'Failure' and 'Equal'
   }

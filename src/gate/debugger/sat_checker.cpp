@@ -2,11 +2,11 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger/checker.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/debugger/encoder.h"
 #include "gate/debugger/miter.h"
 #include "gate/simulator/simulator.h"
@@ -15,16 +15,16 @@
 
 namespace eda::gate::debugger {
 
-CheckerResult Checker::equivalent(GNet &lhs,
-                                  GNet &rhs,
-                                  GateIdMap &gmap) {
-  Checker::Hints hints = makeHints(lhs, rhs, gmap);
+CheckerResult SatChecker::equivalent(const GNet &lhs,
+                                     const GNet &rhs,
+                                     const GateIdMap &gmap) const {
+  SatChecker::Hints hints = makeHints(lhs, rhs, gmap);
   return equivalent(lhs, rhs, hints);
 }
 
-CheckerResult Checker::equivalent(const GNet &lhs,
-                                  const GNet &rhs,
-                                  const Hints &hints) const {
+CheckerResult SatChecker::equivalent(const GNet &lhs,
+                                     const GNet &rhs,
+                                     const Hints &hints) const {
   const unsigned flatCheckBound = 64 * 1024;
 
   assert(hints.isKnownIoPortBinding());
@@ -68,9 +68,9 @@ CheckerResult Checker::equivalent(const GNet &lhs,
   return CheckerResult::ERROR;
 }
 
-CheckerResult Checker::areEqualHier(const GNet &lhs,
-                           const GNet &rhs,
-                           const Hints &hints) const {
+CheckerResult SatChecker::areEqualHier(const GNet &lhs,
+                                       const GNet &rhs,
+                                       const Hints &hints) const {
   assert(!lhs.isFlat() && !rhs.isFlat());
   assert(lhs.nSubnets() == rhs.nSubnets());
   assert(lhs.nSubnets() == hints.subnetBinding->size());
@@ -113,10 +113,10 @@ CheckerResult Checker::areEqualHier(const GNet &lhs,
   return CheckerResult::EQUAL;
 }
 
-CheckerResult Checker::areEqualComb(const GNet &lhs,
-                           const GNet &rhs,
-                           const GateBinding &ibind,
-                           const GateBinding &obind) const {
+CheckerResult SatChecker::areEqualComb(const GNet &lhs,
+                                       const GNet &rhs,
+                                       const GateBinding &ibind,
+                                       const GateBinding &obind) const {
   if (lhs.nSourceLinks() <= simCheckBound) {
     return areEqualCombSim(lhs, rhs, ibind, obind);
   }
@@ -124,7 +124,7 @@ CheckerResult Checker::areEqualComb(const GNet &lhs,
   return areEqualCombSat({ &lhs, &rhs }, nullptr, ibind, obind);
 }
 
-CheckerResult Checker::isEqualCombMiter(const GNet &miter) const {
+CheckerResult SatChecker::isEqualCombMiter(const GNet &miter) const {
   assert(miter.isComb());
   assert(miter.nOuts() == 1);
 
@@ -134,11 +134,11 @@ CheckerResult Checker::isEqualCombMiter(const GNet &miter) const {
   return isEqualCombSatMiter(miter);
 }
 
-CheckerResult Checker::areEqualSeq(const GNet &lhs,
-                          const GNet &rhs,
-                          const GateBinding &ibind,
-                          const GateBinding &obind,
-                          const GateBinding &tbind) const {
+CheckerResult SatChecker::areEqualSeq(const GNet &lhs,
+                                      const GNet &rhs,
+                                      const GateBinding &ibind,
+                                      const GateBinding &obind,
+                                      const GateBinding &tbind) const {
   GateBinding imap(ibind);
   GateBinding omap(obind);
 
@@ -163,16 +163,16 @@ CheckerResult Checker::areEqualSeq(const GNet &lhs,
   return areEqualComb(lhs, rhs, imap, omap);
 }
 
-CheckerResult Checker::areEqualSeq(const GNet &lhs,
-                          const GNet &rhs,
-                          const GNet &enc,
-                          const GNet &dec,
-                          const GateBinding &ibind,
-                          const GateBinding &obind,
-                          const GateBinding &lhsTriEncIn,
-                          const GateBinding &lhsTriDecOut,
-                          const GateBinding &rhsTriEncOut,
-                          const GateBinding &rhsTriDecIn) const {
+CheckerResult SatChecker::areEqualSeq(const GNet &lhs,
+                                      const GNet &rhs,
+                                      const GNet &enc,
+                                      const GNet &dec,
+                                      const GateBinding &ibind,
+                                      const GateBinding &obind,
+                                      const GateBinding &lhsTriEncIn,
+                                      const GateBinding &lhsTriDecOut,
+                                      const GateBinding &rhsTriEncOut,
+                                      const GateBinding &rhsTriDecIn) const {
 
   //=========================================//
   //                                         //
@@ -219,10 +219,10 @@ CheckerResult Checker::areEqualSeq(const GNet &lhs,
   return areEqualCombSat({&lhs, &rhs, &enc, &dec}, &connectTo, imap, omap);
 }
 
-CheckerResult Checker::areEqualCombSim(const GNet &lhs,
-                              const GNet &rhs,
-                              const GateBinding &ibind,
-                              const GateBinding &obind) const {
+CheckerResult SatChecker::areEqualCombSim(const GNet &lhs,
+                                          const GNet &rhs,
+                                          const GateBinding &ibind,
+                                          const GateBinding &obind) const {
   assert(lhs.nSourceLinks() == rhs.nSourceLinks());
   assert(lhs.nSourceLinks() <= simCheckBound);
 
@@ -267,7 +267,7 @@ CheckerResult Checker::areEqualCombSim(const GNet &lhs,
   return CheckerResult::EQUAL;
 }
 
-CheckerResult Checker::isEqualCombSimMiter(const GNet &miter) const {
+CheckerResult SatChecker::isEqualCombSimMiter(const GNet &miter) const {
   std::uint64_t inputNum = miter.nSourceLinks();
   assert(inputNum <= simCheckBound);
 
@@ -284,10 +284,10 @@ CheckerResult Checker::isEqualCombSimMiter(const GNet &miter) const {
     return CheckerResult::EQUAL;
 }
 
-CheckerResult Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
-                              const GateConnect *connectTo,
-                              const GateBinding &ibind,
-                              const GateBinding &obind) const {
+CheckerResult SatChecker::areEqualCombSat(const std::vector<const GNet*> &nets,
+                                          const GateConnect *connectTo,
+                                          const GateBinding &ibind,
+                                          const GateBinding &obind) const {
   Encoder encoder;
 
   // Equate the inputs.
@@ -336,7 +336,7 @@ CheckerResult Checker::areEqualCombSat(const std::vector<const GNet*> &nets,
   return CheckerResult(CheckerResult::NOTEQUAL, counterEx);
 }
 
-CheckerResult Checker::isEqualCombSatMiter(const GNet &miter) const {
+CheckerResult SatChecker::isEqualCombSatMiter(const GNet &miter) const {
   Encoder encoder;
   encoder.setConnectTo(nullptr);
 
@@ -368,9 +368,9 @@ CheckerResult Checker::isEqualCombSatMiter(const GNet &miter) const {
                    CheckerResult::EQUAL;
 }
 
-void Checker::error(Context &context,
-                    const GateBinding &ibind,
-                    const GateBinding &obind) const {
+void SatChecker::error(Context &context,
+                       const GateBinding &ibind,
+                       const GateBinding &obind) const {
   bool comma;
   context.dump("miter.cnf");
 
@@ -397,31 +397,36 @@ void Checker::error(Context &context,
   std::cout << std::endl;
 }
 
-Checker::Hints makeHints(GNet &lhs, GNet &rhs, GateIdMap &gmap) {
-  Checker::GateBinding ibind, obind, tbind;
+SatChecker::Hints makeHints(const GNet &lhs,
+                            const GNet &rhs,
+                            const GateIdMap &gmap) {
+  SatChecker::GateBinding ibind, obind, tbind;
 
   // Input-to-input correspondence.
   for (auto oldSourceLink : lhs.sourceLinks()) {
-    auto newSourceId = gmap[oldSourceLink.target];
+    auto newSourceId = gmap.at(oldSourceLink.target);
     ibind.insert({oldSourceLink, Gate::Link(newSourceId)});
   }
 
   // Output-to-output correspondence.
   for (auto oldTargetLink : lhs.targetLinks()) {
-    auto newTargetId = gmap[oldTargetLink.source];
+    auto newTargetId = gmap.at(oldTargetLink.source);
     obind.insert({oldTargetLink, Gate::Link(newTargetId)});
   }
 
   // Trigger-to-trigger correspondence.
   for (auto oldTriggerId : lhs.triggers()) {
-    auto newTriggerId = gmap[oldTriggerId];
+    auto newTriggerId = gmap.at(oldTriggerId);
     tbind.insert({Gate::Link(oldTriggerId), Gate::Link(newTriggerId)});
   }
 
-  Checker::Hints hints;
-  hints.sourceBinding  = std::make_shared<Checker::GateBinding>(std::move(ibind));
-  hints.targetBinding  = std::make_shared<Checker::GateBinding>(std::move(obind));
-  hints.triggerBinding = std::make_shared<Checker::GateBinding>(std::move(tbind));
+  SatChecker::Hints hints;
+  hints.sourceBinding = std::make_shared<SatChecker::GateBinding>(
+                        std::move(ibind));
+  hints.targetBinding = std::make_shared<SatChecker::GateBinding>(
+                        std::move(obind));
+  hints.triggerBinding = std::make_shared<SatChecker::GateBinding>(
+                        std::move(tbind));
 
   return hints;
 }

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -578,13 +578,13 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Clones the net.
-  GNet *clone();
+  GNet *clone() const;
 
   /** Clones the net.
    *  @param oldToNewId Stores correspondence between the gates.
    *  @return A clone of this net.
    */
-  GNet *clone(std::unordered_map<Gate::Id, Gate::Id> &oldToNewId);
+  GNet *clone(std::unordered_map<Gate::Id, Gate::Id> &oldToNewId) const;
 
 private:
   //===--------------------------------------------------------------------===//

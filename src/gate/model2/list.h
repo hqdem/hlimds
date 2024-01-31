@@ -53,8 +53,8 @@ public:
   /// Allocates a block and fills it w/ the given items.
   static inline ListBlockID allocate(
       const std::vector<T> &items, bool begin, bool end) {
-    const ListBlockID blockID = allocate(items.size(), begin, end);
-    ListBlock<T> *block = access<ListBlock<T>>(blockID);
+    const auto blockID = allocate(items.size(), begin, end);
+    auto *block = access<ListBlock<T>>(blockID);
     assert(block->capacity == items.size());
     for (size_t i = 0; i < items.size(); ++i) {
       block->items[i] = items[i];
@@ -87,12 +87,12 @@ public:
 
   /// Returns the pointer to the previous block.
   ListBlock<T> *prevBlock() const {
-    return access<ListBlock<T>>(ListBlockID::makeFID(prevBlockSID));
+    return access<ListBlock<T>>(ListBlockID::makeFID(prevSID));
   }
 
   /// Returns the pointer to the next block.
   ListBlock<T> *nextBlock() const {
-    return access<ListBlock<T>>(ListBlockID::makeFID(nextBlockSID));
+    return access<ListBlock<T>>(ListBlockID::makeFID(nextSID));
   }
 
   /// Number of items in the entire list (for the first block only).
@@ -104,9 +104,9 @@ public:
   /// Index of the last occupied item.
   uint32_t last;
   /// SID of the next block (the first block for the final one).
-  uint32_t nextBlockSID;
+  uint32_t nextSID;
   /// SID of the previous block (the final block for the first one).
-  uint32_t prevBlockSID;
+  uint32_t prevSID;
   /// First block of the list.
   uint32_t begin : 1;
   /// Final block of the list.
@@ -121,8 +121,8 @@ private:
       capacity(capacity),
       size(0),
       last(-1),
-      nextBlockSID(0),
-      prevBlockSID(0),
+      nextSID(0),
+      prevSID(0),
       begin(begin),
       end(end) {
     assert(capacity != 0);
@@ -206,7 +206,7 @@ private:
       blockID = OBJ_NULL_ID;
       block = nullptr;
     } else {
-      blockID = ListBlockID::makeFID(block->nextBlockSID);
+      blockID = ListBlockID::makeFID(block->nextSID);
       block = access<ListBlock<T>>(blockID);
     }
   }
@@ -235,17 +235,15 @@ class List final {
 
 public:
   /// Constructs a wrapper around the given list structure.
-  List(ListID listID):
-      listID(listID), block(access<ListBlock<T>>(listID)) {
-    assert(block != nullptr && block->begin);
+  explicit List(ListID listID):
+      listID(listID), head(access<ListBlock<T>>(listID)) {
+    assert(head != nullptr && head->begin);
   }
 
   /// Constructs a new list w/ the specified capacity.
-  List(uint32_t capacity):
+  explicit List(uint32_t capacity):
       List(ListBlock<T>::allocate(capacity, true, true)) {
-    const auto blockSID = listID.getSID();
-    block->prevBlockSID = blockSID;
-    block->nextBlockSID = blockSID;
+    head->prevSID = head->nextSID = listID.getSID();
   }
 
   /// Constructs a new list w/ the default capacity.
@@ -255,7 +253,7 @@ public:
   ListID getID() const { return listID; }
 
   /// Returns the size of the list.
-  uint64_t size() const { return block->totalSize; }
+  uint64_t size() const { return head->totalSize; }
   /// Checks whether the list is empty.
   bool empty() const { return size() == 0; }
 
@@ -268,29 +266,28 @@ public:
   void push_back(T value) {
     assert(!ListBlock<T>::isNull(value));
 
-    auto *lastBlock = block->prevBlock();
-    assert(lastBlock->end);
+    auto *tail = head->prevBlock();
+    assert(tail->end);
 
-    if (lastBlock->last + 1 != lastBlock->capacity) {
-      lastBlock->items[++lastBlock->last] = value;
-      lastBlock->size++;
-    } else {
-      auto nextBlockFID = ListBlock<T>::allocate(lastBlock->capacity, 0, 1);
-      auto nextBlockSID = nextBlockFID.getSID();
+    if (tail->last + 1 == tail->capacity) {
+      auto nextFID = ListBlock<T>::allocate(tail->capacity, 0, 1);
+      auto nextSID = nextFID.getSID();
 
-      auto *nextBlock = access<ListBlock<T>>(nextBlockFID);
+      auto *next = access<ListBlock<T>>(nextFID);
+      assert(next->end);
 
-      nextBlock->nextBlockSID = lastBlock->nextBlockSID;
-      nextBlock->prevBlockSID = block->prevBlockSID;
-      lastBlock->nextBlockSID = block->prevBlockSID = nextBlockSID;
+      next->nextSID = tail->nextSID;
+      next->prevSID = head->prevSID;
+      tail->nextSID = head->prevSID = nextSID;
 
-      lastBlock->end = 0;
-
-      nextBlock->items[++nextBlock->last] = value;
-      nextBlock->size++;
+      tail->end = 0;
+      tail = next;
     }
 
-    block->totalSize++;
+    tail->items[++tail->last] = value;
+    tail->size++;
+
+    head->totalSize++;
   }
 
   /// Erases the specified element from the list.
@@ -302,19 +299,19 @@ public:
 
     ListBlock<T>::setNull(item);
     pos.block->size--;
-    block->totalSize--;
+    head->totalSize--;
 
     if (pos.block->size == 0 && !pos.block->begin) {
-      auto *prevBlock = pos.block->prevBlock();
-      prevBlock->nextBlockSID = pos.block->nextBlockSID;
+      auto *prev = pos.block->prevBlock();
+      prev->nextSID = pos.block->nextSID;
 
-      auto *nextBlock = pos.block->nextBlock();
-      nextBlock->prevBlockSID = pos.block->prevBlockSID;
+      auto *next = pos.block->nextBlock();
+      next->prevSID = pos.block->prevSID;
 
-      prevBlock->end = pos.block->end;
+      prev->end = pos.block->end;
 
       release<ListBlock<T>>(pos.blockID);
-      return ListIterator<T>(ListBlockID::makeFID(pos.block->nextBlockSID));
+      return ListIterator<T>(ListBlockID::makeFID(pos.block->nextSID));
     }
 
     // Update the index of the last occupied item.
@@ -332,7 +329,7 @@ private:
   /// List identifier.
   const ListID listID;
   /// Pointer to the first block of the list.
-  ListBlock<T> *block;
+  ListBlock<T> *head;
 };
 
 } // namespace eda::gate::model

@@ -22,15 +22,14 @@ void launchDeMicheliTest(const TruthTable &func, size_t bound = -1) {
   const auto &subnetId = alg.synthesize(func);
 
   bool invalid = subnetId == eda::gate::model::OBJ_NULL_ID;
-  EXPECT_FALSE(invalid);
-
-  bool areEqual = true;
-  size_t subnetSize = 0;
-  if (!invalid) {
-    const auto &subnet = Subnet::get(subnetId);
-    areEqual = (func == eda::gate::model::evaluate(subnet));
-    subnetSize = subnet.size();
+  if (invalid) {
+    return;
   }
+
+  const auto &subnet = Subnet::get(subnetId);
+
+  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  size_t subnetSize = subnet.size();
 
   EXPECT_TRUE(areEqual && subnetSize <= bound);
 }

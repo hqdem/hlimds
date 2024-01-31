@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -13,7 +13,7 @@
 /// LEC test suites are based on synthetic (manually constructed) nets.
 
 //===----------------------------------------------------------------------===//
-// SAT-based checker ('default')
+// SAT-based checker ('SAT')
 //===----------------------------------------------------------------------===//
 namespace eda::gate::debugger {
 
@@ -45,17 +45,6 @@ TEST(CheckGNetTest, CheckNorAndTest) {
 // Random simulation based checker ('rnd')
 //===----------------------------------------------------------------------===//
 
-TEST(RndChecker, SimpleTest) {
-
-  Gate::SignalList inputs;
-  Gate::Id output;
-
-  auto net = makeNor(8, inputs, output);
-
-  CheckerResult a = rndChecker(*net, 0, true);
-  EXPECT_TRUE(a.notEqual());
-}
-
 TEST(RndChecker, MiterAndCheckerTest) {
   auto net = GNet(0);
   SignalList inps;
@@ -82,13 +71,16 @@ TEST(RndChecker, MiterAndCheckerTest) {
   std::unordered_map<Gate::Id, Gate::Id> testMap = {};
   auto netCloned = net.clone(testMap);
 
-  Checker::Hints hints = makeHints(net, *netCloned, testMap);
-  GNet* mit = miter(net, *netCloned, hints);
-  CheckerResult res = rndChecker(*mit, 0, true);
-  CheckerResult res2 = rndChecker(*mit, 2, false);
+  SatChecker::Hints hints = makeHints(net, *netCloned, testMap);
+  static_cast<RndChecker&>(getChecker(options::RND)).setExhaustive(true);
+  CheckerResult res = getChecker(
+                      options::RND).equivalent(net, *netCloned, testMap);
+  static_cast<RndChecker&>(getChecker(options::RND)).setExhaustive(false);
+  static_cast<RndChecker&>(getChecker(options::RND)).setTries(10);
+  CheckerResult res2 = getChecker(
+                       options::RND).equivalent(net, *netCloned, testMap);
   EXPECT_TRUE(res.equal());
   EXPECT_TRUE(res2.isUnknown());
-  EXPECT_TRUE(mit->nSourceLinks() == netCloned->nSourceLinks());
 }
 
 //===----------------------------------------------------------------------===//
@@ -112,16 +104,16 @@ TEST(CounterExample, OrAndTest) {
   net.sortTopologically();
   netCloned->sortTopologically();
 
-  RndChecker rnd;
-  Checker def;
+  static_cast<RndChecker&>(getChecker(options::RND)).setExhaustive(true);
 
-  CheckerResult resRnd = rnd.equivalent(net, *netCloned, testMap);
-  CheckerResult resDef = def.equivalent(net, *netCloned, testMap);
+  CheckerResult resRnd = getChecker(
+                         options::RND).equivalent(net, *netCloned, testMap);
+  CheckerResult resDef = getChecker(
+                         options::SAT).equivalent(net, *netCloned, testMap);
   EXPECT_TRUE(resRnd.notEqual());
   EXPECT_TRUE(resDef.notEqual());
 
-  Checker::Hints hints = makeHints(net, *netCloned, testMap);
-  GNet *mit = miter(net, *netCloned, hints);
+  GNet *mit = miter(net, *netCloned, testMap);
   Compiled compiled = makeCompiled(*mit);
 
   std::vector<bool> outRnd(1);

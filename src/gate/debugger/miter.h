@@ -2,13 +2,13 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #pragma once
 
-#include "gate/debugger/checker.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/simulator/simulator.h"
 #include "util/logging.h"
 
@@ -18,24 +18,26 @@ using Compiled = simulator::Simulator::Compiled;
 using Gate = model::Gate;
 using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
 using GateId = model::Gate::Id;
-using GateIdList  = std::vector<GateId>;
-using GateSymbol = model::GateSymbol;
+using GateIdMap = std::unordered_map<GateId, GateId>;
 using GNet = eda::gate::model::GNet;
-using Hints = eda::gate::debugger::Checker::Hints;
+using Hints = eda::gate::debugger::SatChecker::Hints;
 using Signal = model::Gate::Signal;
 using SignalList = model::Gate::SignalList;
 
 /**
- *  \brief Constructs a miter for the specified nets.
- *  @param hints Gate-to-gate mapping between nets.
- *  @return The miter.
+ * \brief Constructs a miter for the specified nets.
+ * @param net1 First net.
+ * @param net2 Second net.
+ * @param gmap Gate-to-gate mapping between corresponding PI/PO of two nets.
+ * @return The miter.
  */
-GNet *miter(GNet &net1, GNet &net2, Hints &hints);
+GNet *miter(const GNet &net1, const GNet &net2, const GateIdMap &gmap);
 
-// Checks if it is possible to construct a miter with given parameters.
-bool areMiterable(GNet &net1, GNet &net2, Hints &hints);
-
-// Prepares the miter for simulation
+/**
+ * \brief Prepares the miter for simulation.
+ * @param miter Miter.
+ * @return Simulatable representation of a given miter.
+ */
 Compiled makeCompiled(const GNet &miter);
 
 } // namespace eda::gate::debugger

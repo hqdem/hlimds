@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -22,24 +22,35 @@ using CheckerResult = eda::gate::debugger2::CheckerResult;
 
 Simulator::DataVector getAllValues(size_t nIn, size_t count);
 
+/// Checks the equivalence of the specified nets using simulation.
 class RndChecker2 : public BaseChecker2, public util::Singleton<RndChecker2> {
 friend class util::Singleton<RndChecker2>;
 
 public:
   /**
-   *  @copydoc base_checker.h:equivalent
+   * @copydoc BaseChecker2::equivalent
    */
-  CheckerResult equivalent(Subnet &lhs,
-                           Subnet &rhs,
-                           CellToCell &gmap) override;
-  void setTries(int tries);
-  void setExhaustive(bool exhaustive);
-  RndChecker2(bool exhaustive = true, int tries = 0) {
+
+  CheckerResult equivalent(const Subnet &lhs,
+                           const Subnet &rhs,
+                           const CellToCell &gmap) const override;
+
+  /// Sets the number of random values checked, if the check is inexhaustive.
+  void setTries(int tries) { this->tries = tries; }
+
+  /**
+   * \brief Sets the mode of the check.
+   * @param exhaustive True, if all possible input values are to be simulated,
+   * false otherwise.
+   */
+  void setExhaustive(bool exhaustive) { this->exhaustive = exhaustive; }
+
+private:
+  RndChecker2(bool exhaustive = true, unsigned tries = 0) {
     this->exhaustive = exhaustive;
     this->tries = tries;
   }
-private:
-  std::uint64_t tries;
+  unsigned tries;
   bool exhaustive;
 };
 

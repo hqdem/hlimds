@@ -41,8 +41,8 @@ namespace eda::gate::tech_optimizer{
     if (currentCell.isIn()){
       computedAreaFlow[entryIndex] = 0;
       return 0;
-    }
-    for (const auto &leafIdx : cut.entryIdxs){
+    }   
+    for (const auto &leafIdx : cut.entryIdxs){ 
       const auto leaf = cells[leafIdx].cell;
       if(leaf.isIn())continue;
       af += computedAreaFlow[leafIdx]/(leaf.refcount);
@@ -51,51 +51,15 @@ namespace eda::gate::tech_optimizer{
     return af;
   }
 
-  // void PowerMap::findBest(
-  //   EntryIndex entryIndex,
-  //   const CutsList &cutsList,
-  //   std::map<EntryIndex,BestReplacement> &bestReplacementMap,
-  //   CellDB &cellDB,
-  //   SubnetID subnetId){
-      
-  //     if(this->initialized == false)this->init(subnetId);
-  //     std::vector<BestReplacementPower> sortedRepls(cutsList.size());
-  //     ArrayEntry entries = Subnet::get(subnetId).getEntries();
-  //     for(size_t cutIdx=0; cutIdx < cutsList.size(); cutIdx++){
-  //       BestReplacementPower repl;
-  //       repl.cutIdx = cutIdx;
-  //       repl.areaFlow = areaFlow(entries,entryIndex,cutsList[cutIdx]);
-  //       repl.switchFlow = switchFlow(entries,entryIndex,cutsList[cutIdx]);
-  //       repl.entryIDxs = cutsList[cutIdx].entryIdxs;
-  //       sortedRepls[cutIdx] = repl;
-  //     }
-  //     std::sort(sortedRepls.begin(),sortedRepls.end(),costAreaSwitch);
-  //     std::reverse(sortedRepls.begin(),sortedRepls.end());
-
-  //     ConeBuilder coneBuilder(&Subnet::get(subnetId));
-
-  //     for(size_t replIdx=0; replIdx < sortedRepls.size(); replIdx++){
-  //       const Cut &curCut = cutsList[sortedRepls[replIdx].cutIdx];
-  //       SubnetID coneSubnetID = coneBuilder.getCone(curCut).subnetID;
-  //       auto truthTable = eda::gate::model::evaluate(Subnet::get(coneSubnetID));
-  //       const auto& cellList = cellDB.getSubnetIDsByTT(truthTable);
-  //       if(cellList.size() == 0) continue;
-  //       const SubnetID currentSubnetID = cellList[0];
-  //       sortedRepls[replIdx].subnetID = currentSubnetID;
-  //       bestReplacementMap[entryIndex] = sortedRepls[replIdx];
-        
-  //       break;
-  //     }
-  // }
     bool aproxEqual(const double &a , const double &b){
       return fabs(a-b) < 0.0001;
     }
     void PowerMap::findBest(
-    EntryIndex entryIndex,
-    const CutsList &cutsList,
-    std::map<EntryIndex,BestReplacement> &bestReplacementMap,
-    CellDB &cellDB,
-    SubnetID subnetId){
+      EntryIndex entryIndex,
+      const CutsList &cutsList,
+      std::map<EntryIndex,BestReplacement> &bestReplacementMap,
+      CellDB &cellDB,
+      SubnetID subnetId){
       
       if(this->initialized == false)this->init(subnetId);
       BestReplacementPower bestRepl = BestReplacementPower();
@@ -104,7 +68,8 @@ namespace eda::gate::tech_optimizer{
       for(const Cut &cut : cutsList){
         if(cut.entryIdxs.size() == 1)continue;
         double curAF = areaFlow(entries,entryIndex,cut);
-        double curSF = switchFlow(entries,entryIndex,cut);
+        // double curSF = switchFlow(entries,entryIndex,cut);
+        double curSF = 0;
 
         if((curAF < bestRepl.areaFlow) || 
           (aproxEqual(curAF,bestRepl.areaFlow) && curSF < bestRepl.switchFlow)){
@@ -121,10 +86,23 @@ namespace eda::gate::tech_optimizer{
           bestRepl.subnetID = currentSubnetID;
 
         }
+
       }
+      // std::cout << entryIndex << ": AF " << bestRepl.areaFlow << ": ";
+      // for (const auto& entry :  bestRepl.entryIDxs){
+      //   std::cout << entry << " " ; 
+      // }
+      // std:: cout <<std::endl;
+      
       bestReplacementMap[entryIndex] = bestRepl;
-      std::cout << entryIndex << std::endl;
   }
+
+  void PowerMap::findBest(
+    SubnetID subnetID,
+    CutExtractor &cutExtractor,
+    CellDB &cellDB,
+    std::map<EntryIndex, BestReplacement>
+    &bestReplacementMap){};
 
 
   double PowerMap::edgeFlow(

@@ -16,7 +16,6 @@
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/optimizer2/cut_extractor.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
 
 #include <iostream>
 #include <list>

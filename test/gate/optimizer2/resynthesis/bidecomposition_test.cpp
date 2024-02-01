@@ -33,7 +33,7 @@ bool BiDecompositionTest(size_t numVars) {
     }
     BiDecomposition::KittyTT tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
-    const auto &subnet = Subnet::get(biDecomposition.synthesize(tt, -1));
+    const auto &subnet = Subnet::get(biDecomposition.synthesize(tt));
     auto ttCopy = eda::gate::model::evaluate(subnet);
     flag &= (ttCopy == tt);
   }

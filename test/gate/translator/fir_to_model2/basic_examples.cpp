@@ -2,11 +2,11 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/fir_to_model2/fir_to_model2.h"
+#include "gate/translator/fir_to_model2/fir_to_model2.h"
 #include "gate/model2/printer/printer.h"
 
 #include "gtest/gtest.h"

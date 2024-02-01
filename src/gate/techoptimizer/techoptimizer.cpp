@@ -29,6 +29,9 @@ Techmapper::Techmapper(const std::string &dbPath,
 void Techmapper::setLiberty(const std::string &dbPath) {
   std::vector<Cell*> cells;
   std::vector<CellTypeID> cellTypeIDs;
+  std::vector<CellTypeID> ffCellTypeIDs;
+  std::vector<CellTypeID> ffrsCellTypeIDs;
+  std::vector<CellTypeID> LatchCellTypeIDs;
   LibraryCells::readLibertyFile(dbPath, cells);
   LibraryCells::makeCellTypeIDs(cells, cellTypeIDs);
   this->cellDB = new CellDB(cellTypeIDs);

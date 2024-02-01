@@ -11,12 +11,9 @@ add_library(Gate OBJECT
   debugger/miter.cpp
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
-  fir_to_model2/fir_to_model2.cpp
-  fir_to_model2/fir_to_model2_wrapper.cpp
   debugger2/base_checker2.cpp
   debugger2/miter2.cpp
   debugger2/rnd_checker2.cpp
-  fir_to_model2/fir_to_model2.cpp
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
@@ -95,8 +92,11 @@ add_library(Gate OBJECT
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp
   transformer/mutator/mutator_visitor.cpp
-  translator/yosys_converter_firrtl.cpp
-  translator/firrtl.cpp)
+  translator/fir_to_model2/fir_to_model2.cpp
+  translator/fir_to_model2/fir_to_model2_wrapper.cpp
+  translator/firrtl.cpp
+  translator/gate_verilog_translator.cpp
+  translator/yosys_converter_firrtl.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 
 target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/lib)

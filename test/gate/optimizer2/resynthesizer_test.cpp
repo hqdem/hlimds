@@ -40,7 +40,7 @@ TEST(ResynthesizerTest, SimpleTest) {
   
     resynthesis::AkersAlgorithm synthesizer;
 
-    const auto newID = synthesizer.synthesize(oldTable, -1);
+    const auto newID = synthesizer.synthesize(oldTable);
     const auto newTable = getTruthTable(newID);
 
     EXPECT_TRUE(newTable == oldTable);

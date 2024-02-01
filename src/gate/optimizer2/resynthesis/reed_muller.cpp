@@ -52,7 +52,7 @@ namespace eda::gate::optimizer2::resynthesis {
     LinkList outputNodes;
     Link out;
 
-    if(resultOutput.size() >= 2) {
+    if (resultOutput.size() >= 2) {
       out = subnetBuilder.addCellTree(model::XOR, resultOutput, maxSize);
     }
 

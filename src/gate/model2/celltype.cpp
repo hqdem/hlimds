@@ -39,9 +39,9 @@ CELL_TYPE("nand",  NAND,  1,0,0,1,0,0,1,  0xffff, 1);
 CELL_TYPE("nor",   NOR,   1,0,0,1,0,0,1,  0xffff, 1);
 CELL_TYPE("xnor",  XNOR,  1,0,0,1,1,0,1,  0xffff, 1);
 CELL_TYPE("maj",   MAJ,   1,0,0,1,0,0,0,  0xffff, 1);
-CELL_TYPE("latch", LATCH, 0,0,0,0,0,0,0,  3,      1);
-CELL_TYPE("dff",   DFF,   0,0,0,0,0,0,0,  3,      1);
-CELL_TYPE("dffrs", DFFrs, 0,0,0,0,0,0,0,  5,      1);
+CELL_TYPE("latch", LATCH, 0,0,0,0,0,0,0,  2,      1);
+CELL_TYPE("dff",   DFF,   0,0,0,0,0,0,0,  2,      1);
+CELL_TYPE("dffrs", DFFrs, 0,0,0,0,0,0,0,  4,      1);
 
 const Net &CellType::getNet() const {
   assert(isNet());

@@ -34,21 +34,23 @@ public:
   CheckerResult equivalent(const Subnet &lhs,
                            const Subnet &rhs,
                            const CellToCell &gmap) const override;
+
   /// Sets the number of random values checked, if the check is inexhaustive.
-  void setTries(int tries);
+  void setTries(int tries) { this->tries = tries; }
+
   /**
    * \brief Sets the mode of the check.
    * @param exhaustive True, if all possible input values are to be simulated,
    * false otherwise.
    */
-  void setExhaustive(bool exhaustive);
+  void setExhaustive(bool exhaustive) { this->exhaustive = exhaustive; }
 
 private:
-  RndChecker2(bool exhaustive = true, int tries = 0) {
+  RndChecker2(bool exhaustive = true, unsigned tries = 0) {
     this->exhaustive = exhaustive;
     this->tries = tries;
   }
-  std::uint64_t tries;
+  unsigned tries;
   bool exhaustive;
 };
 

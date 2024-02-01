@@ -2,18 +2,20 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/fir_to_model2/fir_to_model2_wrapper.h"
+#include "fir_to_model2_wrapper.h"
 
-#include "gate/fir_to_model2/fir_to_model2.h"
+#include "fir_to_model2.h"
 #include "gate/model2/printer/printer.h"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+
+using Format = eda::gate::model::ModelPrinter::Format;
 
 namespace fs = std::filesystem;
 
@@ -38,7 +40,7 @@ int translateToModel2(const std::string &inputFileName,
   }
   std::ofstream outputStream(outputFullName);
   for (const auto &cellTypeID : *resultNetlist) {
-    NetPrinter::getPrinter(NetFormat::VERILOG).print(outputStream,
+    ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
         CellType::get(cellTypeID).getNet());
   }
   outputStream.close();

@@ -270,6 +270,7 @@ CNF Cascade::getFunction(const TruthTable &table, CNF &form, std::vector<int> &v
 SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
+  const int undefinedArity = 65535;
   
   SubnetBuilder subnetBuilder;
 
@@ -286,9 +287,8 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
   LinkList links;
   unsigned int InNum = size - 1; // number of cells in subnet
 
-  size_t idx[InNum];
+  std::vector<int> idx(InNum, 0);
   std::vector<bool> inverted(InNum, false);
-  memset(idx, 0, sizeof(idx));
   for (size_t i = 0; i < (size_t)numVars; ++i) {
     idx[i] = subnetBuilder.addInput().idx;
   }
@@ -329,7 +329,7 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
       const Link rhs(idx[idx2], inverted[idx2]);
 
       // new cell
-      if (maxArity < 0) {
+      if (maxArity == undefinedArity) {
         if (output[0][i] == 2) {
           idx[i - 2] = subnetBuilder.addCell(model::AND, lhs, rhs).idx; 
         } else if (output[0][i] == 3) {

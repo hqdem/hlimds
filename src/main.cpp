@@ -2,13 +2,12 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include "config.h"
 #include "gate/debugger/base_checker.h"
-#include "gate/fir_to_model2/fir_to_model2_wrapper.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
 #include "gate/optimizer/rwmanager.h"
@@ -18,7 +17,9 @@
 #include "gate/premapper/xagmapper.h"
 #include "gate/premapper/xmgmapper.h"
 #include "gate/printer/graphml.h"
+#include "gate/translator/fir_to_model2/fir_to_model2_wrapper.h"
 #include "gate/translator/firrtl.h"
+#include "gate/translator/gate_verilog_translator.h"
 #include "options.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/arithmetic.h"
@@ -157,7 +158,8 @@ bool check(RtlContext &context) {
   assert(context.gnet0->nSourceLinks() == context.gnet1->nSourceLinks());
   assert(context.gnet0->nTargetLinks() == context.gnet1->nTargetLinks());
 
-  context.equal = checker.areEqual(*context.gnet0, *context.gnet1, context.gmap);
+  context.equal = checker.areEqual(*context.gnet0, *context.gnet1,
+                                    context.gmap);
   std::cout << "equivalent=" << context.equal << std::endl;
 
   return true;
@@ -199,8 +201,7 @@ int main(int argc, char **argv) {
     options.initialize("config.json", argc, argv);
 
     if (options.rtl.files().empty() &&
-        options.firrtl.files().empty() &&
-        options.model2.files().empty()) {
+        options.gateVerilog.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   } catch(const CLI::ParseError &e) {
@@ -214,12 +215,16 @@ int main(int argc, char **argv) {
     result |= rtlMain(context);
   }
 
-  for (auto file : options.firrtl.files()) {
+  for (auto file : options.gateVerilog.files()) {
+    result |= translateToGateVerilog(file, options.gateVerilog);
+  }
+
+  for (auto file : options.model2.files()) {
     result |= translateToFirrtl(file, options.firrtl);
   }
 
   for (auto file : options.model2.files()) {
-    result |= translateToModel2(file, options.model2.outputFileName);
+    result |= translateToModel2(file, options.model2.outFileName);
   }
 
   return result;

@@ -47,9 +47,9 @@ below are specific to this operating system:
 
 To install them, do the following:
 ```
-sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen flex \
-    g++ gcc graphviz iverilog libfmt-dev liblpsolve55-dev libssl-dev libtool lld make \
-    ninja-build python python3-pip zlib1g zlib1g-dev
+sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
+    flex g++ gcc graphviz iverilog libfmt-dev liblpsolve55-dev libssl-dev \
+    libtool lld make ninja-build python python3-pip zlib1g zlib1g-dev
 ```
 Several Python packages should be installed too. Do the following:
 ```
@@ -132,7 +132,7 @@ git submodule update
 
 #### LLVM/MLIR Installation
 
-Set `MLIR_DIR` environment variable to directory with MLIR CMake files:
+Set `MLIR_DIR` environment variable to the directory with MLIR CMake files:
 ```
 export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
@@ -150,22 +150,16 @@ cmake -G Ninja ../llvm \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \
     -DLLVM_ENABLE_LLD=ON \
-    -DLLVM_PARALLEL_LINK_JOBS=8 \
-    -DLLVM_PARALLEL_COMPILE_JOBS=8
+    -DLLVM_PARALLEL_LINK_JOBS=$(nproc) \
+    -DLLVM_PARALLEL_COMPILE_JOBS=$(nproc)
 ninja
 ```
 
 #### CIRCT Installation
 
-Add `<workdir>/circt/build/bin` and `<workdir>/circt/llvm/build/bin`
-to your `PATH` environment variable:
+Set `CIRCT_DIR` environment variable to the directory with CIRCT CMake files:
 ```
-export PATH=<workdir>/circt/build/bin:<workdir>/circt/llvm/build/bin:$PATH
-```
-
-Set `CIRCT_DIR` environment variable to the directory with CIRCT:
-```
-export CIRCT_DIR=<workdir>/circt/
+export CIRCT_DIR=<workdir>/circt/build/lib/cmake/circt/
 ```
 
 Type the following commands:
@@ -196,6 +190,7 @@ cd utopia-eda
 export UTOPIA_HOME=<workdir>/utopia-eda
 ```
 Please keep `UTOPIA_HOME` variable and its value in your system permanently.
+
 ### Project Building 
 
 ```
@@ -239,7 +234,13 @@ as the input Verilog file.
 ### Running FIRRTL-to-model2 Translator
 
 ```
-./build/src/umain to_model2 <file> --outputFileName <verilog file>
+./build/src/umain to_model2 <file> --out <verilog-file>
+```
+
+### Running the pipeline Translator
+
+```
+./build/src/umain translator <file> --out <verilog-file> --top <module-name>
 ```
 
 ### Tests Running
@@ -254,6 +255,7 @@ or
 ```
 ./run-tests.sh
 ```
+
 #### Specific Tests Running
 
 ```

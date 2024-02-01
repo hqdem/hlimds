@@ -16,6 +16,7 @@
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/optimizer2/cut_extractor.h"
+#include "gate/techoptimizer/mapper/cut_base/cut_base_mapper.h"
 
 #include <iostream>
 #include <list>
@@ -30,6 +31,7 @@ namespace eda::gate::tech_optimizer {
   using ArrayEntry = eda::gate::model::Array<Entry>;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using Cut = eda::gate::optimizer2::CutExtractor::Cut;
+  using CutsList = std::vector<Cut>;
   using ConeBuilder = eda::gate::optimizer2::ConeBuilder;
   using Cone = ConeBuilder::Cone;
   using EntryMap = std::unordered_map<uint64_t, uint64_t>;
@@ -39,11 +41,9 @@ namespace eda::gate::tech_optimizer {
       BestReplacementPower(){
         areaFlow = 1000000.0;
         switchFlow = 1000000.0;
-        cutIdx = 0;
       };
       double switchFlow;
       double areaFlow;
-      size_t cutIdx;
   };
 
   inline bool costAreaSwitch(const BestReplacementPower& left, const BestReplacementPower& right){
@@ -51,67 +51,30 @@ namespace eda::gate::tech_optimizer {
     return left.areaFlow < right.areaFlow;
   }
 
-  // bool operator<(const BestReplacementPower& left, const BestReplacementPower& right){
-  //   if(left.areaFlow == right.areaFlow)return left.switchFlow < right.switchFlow;
-  //   return left.areaFlow < right.areaFlow;
-  // } 
-  class PowerMap : public Strategy{
-    public:
 
-      PowerMap(){
-        this->initialized = false;
-      }
+class PowerMap : public CutBaseMapper{
+  protected:
+    
+    void findBest() override;
+  private:
 
-      void findBest(
-        EntryIndex entryIndex,
-        const CutsList &CutsList,
-        std::map<EntryIndex,BestReplacement> &bestReplacementMap,
-        CellDB &cellDB,
-        SubnetID subnetId);
+    double areaFlow(const ArrayEntry &cells,
+                    const EntryIndex entryIndex,const Cut &cut,
+                    std::vector<double> &computedAreaFlow);
 
-      double switchFlow(
-        const ArrayEntry &cells,
-        const EntryIndex entryIndex,
-        const Cut &cut
-      );
+    double switchFlow(const ArrayEntry &cells,
+                      const EntryIndex entryIndex, const Cut &cut,
+                      std::vector<double> &computedSwitchFlow,
+                      const std::vector<double> &cellActivities);
 
-      double areaFlow(
-        const ArrayEntry &cells,
-        const EntryIndex entryIndex,
-        const Cut &cut
-      );
-        
-      double edgeFlow(
-        const size_t entryIndex,
-        std::vector<double> &computedEdgeFlow,
-        const ArrayEntry &cells);
+    void addNotAnAndToTheMap(EntryIndex entryIndex,
+                      model::Subnet::Cell &cell);
 
-    private:
-
-      // init is called during first call of findBest()
-      void init(SubnetID subnetId){
-        this->initialized = true;
-        this->subnetId = subnetId;
-        auto& subnet = Subnet::get(subnetId);
-        const auto& entries = subnet.getEntries();
-        size_t subnetSize = entries.size();
-
-        this->computedAreaFlow = std::vector<double> (subnetSize, 0);
-        this->computedSwitchFlow = std::vector<double> (subnetSize, 0);
-
-        eda::gate::analyzer::SimulationEstimator simulationEstimator(64);
-        this->cellActivities = simulationEstimator.estimate(subnet).getCellActivities();
-      }
-
-      void reset(){
-        this->initialized =false;
-      }
-
-      SubnetID subnetId;
-      std::vector<double> cellActivities;
-      std::vector<double> computedAreaFlow;
-      std::vector<double> computedSwitchFlow;
-      bool initialized;
-  };
+    void addInputToTheMap(EntryIndex entryIndex);
+    void addZeroToTheMap(EntryIndex entryIndex);
+    void addOneToTheMap(EntryIndex entryIndex);
+    void addOutToTheMap(EntryIndex entryIndex,
+                      model::Subnet::Cell &cell);
+};
 
 } // namespace eda::gate::tech_optimizer

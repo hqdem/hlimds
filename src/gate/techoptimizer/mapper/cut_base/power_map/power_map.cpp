@@ -7,14 +7,16 @@
 //===----------------------------------------------------------------------===//
 
 // #include "power_map.h"
-#include "gate/techoptimizer/power_map/power_map.h"
+#include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
 #include <algorithm>
 namespace eda::gate::tech_optimizer{
 
   double PowerMap::switchFlow(
     const ArrayEntry &cells,
     const EntryIndex entryIndex,
-    const Cut &cut
+    const Cut &cut,
+    std::vector<double> &computedSwitchFlow,
+    const std::vector<double> &cellActivities
   ){
     double sf = cellActivities[entryIndex];
     auto currentCell  = cells[entryIndex].cell;
@@ -23,7 +25,7 @@ namespace eda::gate::tech_optimizer{
         const auto leaf = cells[leafIdx].cell;
         if(leaf.isIn()){
           computedSwitchFlow[leafIdx] = cellActivities[leafIdx];
-        }
+        } 
         sf += computedSwitchFlow[leafIdx]/(cells[leafIdx].cell.refcount);
       }
     }
@@ -34,7 +36,8 @@ namespace eda::gate::tech_optimizer{
   double PowerMap::areaFlow(
     const ArrayEntry &cells,
     const EntryIndex entryIndex,
-    const Cut &cut
+    const Cut &cut,
+    std::vector<double> &computedAreaFlow
   ){
     double af = 1;
     auto currentCell  = cells[entryIndex].cell;
@@ -54,63 +57,95 @@ namespace eda::gate::tech_optimizer{
     bool aproxEqual(const double &a , const double &b){
       return fabs(a-b) < 0.0001;
     }
-    void PowerMap::findBest(
-      EntryIndex entryIndex,
-      const CutsList &cutsList,
-      std::map<EntryIndex,BestReplacement> &bestReplacementMap,
-      CellDB &cellDB,
-      SubnetID subnetId){
-      
-      if(this->initialized == false)this->init(subnetId);
-      BestReplacementPower bestRepl = BestReplacementPower();
-      ArrayEntry entries = Subnet::get(subnetId).getEntries();
-      ConeBuilder coneBuilder(&Subnet::get(subnetId));
-      for(const Cut &cut : cutsList){
-        if(cut.entryIdxs.size() == 1)continue;
-        double curAF = areaFlow(entries,entryIndex,cut);
-        // double curSF = switchFlow(entries,entryIndex,cut);
-        double curSF = 0;
+  
+  void PowerMap::findBest(){
+    Subnet &subnet = Subnet::get(this->subnetID);
+    ArrayEntry entries = subnet.getEntries();
 
-        if((curAF < bestRepl.areaFlow) || 
-          (aproxEqual(curAF,bestRepl.areaFlow) && curSF < bestRepl.switchFlow)){
+    std::vector<double> computedAF(entries.size()),
+                       computedSF(entries.size());
 
-          SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-          auto truthTable = eda::gate::model::evaluate(Subnet::get(coneSubnetID));
-          const auto& cellList = cellDB.getSubnetIDsByTT(truthTable);
-          if(cellList.size() == 0) continue;
-          const SubnetID currentSubnetID = cellList[0];
+    //
+    eda::gate::analyzer::SimulationEstimator simulationEstimator(64);
+    eda::gate::analyzer::SwitchActivity switchActivity =
+                                  simulationEstimator.estimate(subnet);
+    const std::vector<double> &cellActivities = 
+                                  switchActivity.getCellActivities();
 
-          bestRepl.areaFlow = curAF;
-          bestRepl.switchFlow = curSF;
-          bestRepl.entryIDxs = cut.entryIdxs;
-          bestRepl.subnetID = currentSubnetID;
+    eda::gate::optimizer2::ConeBuilder coneBuilder(&subnet);
+    
+    for (uint64_t entryIndex = 0; entryIndex < std::size(entries);entryIndex++) {
+    auto cell = entries[entryIndex].cell;
 
+      if(!cell.isAnd()){
+        addNotAnAndToTheMap(entryIndex,cell);
+      } else {  
+        CutsList cutsList = cutExtractor->getCuts(entryIndex);
+        double bestAF = MAXFLOAT;
+        double bestSF = MAXFLOAT;
+        Cut bestCut = Cut();
+        SubnetID bestTechCellSubnetID = 0;
+
+        for(const Cut &cut : cutsList){
+          if(cut.entryIdxs.size() == 1)continue;
+          double curAF = areaFlow(entries,entryIndex,cut,computedAF);
+          double curSF = switchFlow(entries,entryIndex,cut,computedSF,cellActivities);
+
+          if((curAF < bestAF) || 
+            (aproxEqual(curAF,bestAF) && curSF < bestSF)){
+
+            SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
+            auto truthTable = eda::gate::model::evaluate(Subnet::get(coneSubnetID));
+            const auto& cellList = cellDB->getSubnetIDsByTT(truthTable);
+            if(cellList.size() == 0) continue;
+            const SubnetID techCellSubnetID = cellList[0];
+            bestAF = curAF;
+            bestSF = curSF;
+            bestCut = cut;
+            bestTechCellSubnetID = techCellSubnetID;
+          }
         }
 
+        (*bestReplacementMap)[entryIndex].entryIDxs = bestCut.entryIdxs;
+        (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
+        
       }
-      // std::cout << entryIndex << ": AF " << bestRepl.areaFlow << ": ";
-      // for (const auto& entry :  bestRepl.entryIDxs){
-      //   std::cout << entry << " " ; 
-      // }
-      // std:: cout <<std::endl;
-      
-      bestReplacementMap[entryIndex] = bestRepl;
+      entryIndex += cell.more;
   }
 
-  void PowerMap::findBest(
-    SubnetID subnetID,
-    CutExtractor &cutExtractor,
-    CellDB &cellDB,
-    std::map<EntryIndex, BestReplacement>
-    &bestReplacementMap){};
+  }
 
+  void PowerMap::addInputToTheMap(EntryIndex entryIndex) {
+  BestReplacement bestReplacement{true};
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+  }
+  void PowerMap::addZeroToTheMap(EntryIndex entryIndex) {
+    BestReplacement bestReplacement{};
+    bestReplacement.isZero = true;
+    (*bestReplacementMap)[entryIndex] = bestReplacement;
+  }
+  void PowerMap::addOneToTheMap(EntryIndex entryIndex) {
+    BestReplacement bestReplacement{};
+    bestReplacement.isOne = true;
+    (*bestReplacementMap)[entryIndex] = bestReplacement;
+  }
+  void PowerMap::addOutToTheMap(EntryIndex entryIndex,Subnet::Cell &cell) {
+    BestReplacement bestReplacement{false, true};
+    bestReplacement.entryIDxs.insert(cell.link[0].idx);
+    (*bestReplacementMap)[entryIndex] = bestReplacement;
+  }
 
-  double PowerMap::edgeFlow(
-    const size_t entryIndex,
-    std::vector<double> &computedEdgeFlow,
-    const ArrayEntry &cells){ return 0; }
-
-
+  void PowerMap::addNotAnAndToTheMap(EntryIndex entryIndex, model::Subnet::Cell &cell){
+    if (cell.isIn()) {
+      addInputToTheMap(entryIndex);
+    } else if (cell.isOne()) {
+      addOneToTheMap(entryIndex);
+    } else if (cell.isZero()) {
+      addZeroToTheMap(entryIndex);
+    } else if (cell.isOut()) {
+      addOutToTheMap(entryIndex, cell);
+    }
+  }
     
 } //namespace eda::gate::tech_optimizer
 

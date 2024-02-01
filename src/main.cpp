@@ -201,7 +201,8 @@ int main(int argc, char **argv) {
     options.initialize("config.json", argc, argv);
 
     if (options.rtl.files().empty() &&
-        options.gateVerilog.files().empty()) {
+        options.gateVerilog.files().empty() &&
+        options.firrtl.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   } catch(const CLI::ParseError &e) {
@@ -219,7 +220,7 @@ int main(int argc, char **argv) {
     result |= translateToGateVerilog(file, options.gateVerilog);
   }
 
-  for (auto file : options.model2.files()) {
+  for (auto file : options.firrtl.files()) {
     result |= translateToFirrtl(file, options.firrtl);
   }
 

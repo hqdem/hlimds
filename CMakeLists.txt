@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 
 project(Utopia VERSION 0.0)
 
@@ -30,7 +30,7 @@ include(UtopiaFindHelper)
 set_local_from_env(CTemplate_ROOT CT_DIR)
 set_local_from_env(Z3_ROOT Z3_DIR)
 set_local_from_env(Cudd_ROOT CUDD_DIR)
-set_local_from_env(CIRCT_ROOT CIRCT_DIR)
+set_local_from_env(CIRCT_DIR CIRCT_DIR)
 
 find_package(LpSolve REQUIRED)
 find_package(Z3 REQUIRED)
@@ -59,30 +59,17 @@ set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CIRCT_CMAKE_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${CIRCT_ROOT}/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${CIRCT_DIR}/../../../../cmake/modules")
 
 include(TableGen)
 include(AddCIRCT)
 include(AddLLVM)
 include(AddMLIR)
-# include(HandleLLVMOptions)
 
 include_directories(${MLIR_INCLUDE_DIRS})
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${CIRCT_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
-
-include(UtopiaFindHelper)
-set_local_from_env(CTemplate_ROOT CT_DIR)
-set_local_from_env(XercesC_ROOT XERCES_DIR)
-set_local_from_env(Z3_ROOT Z3_DIR)
-set_local_from_env(Cudd_ROOT CUDD_DIR)
-
-find_package(LpSolve REQUIRED)
-find_package(Z3 REQUIRED)
-find_package(XercesC REQUIRED)
-find_package(CTemplate REQUIRED COMPONENTS nothreads)
-find_package(Cudd REQUIRED)
 
 add_subdirectory(lib)
 add_subdirectory(src)

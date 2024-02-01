@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -171,16 +171,16 @@ struct RtlOptions final : public AppOptions {
 
     // Named options.
     options->add_option(cli(LEC_TYPE), lecType, "Type of LEC")
-            ->expected(1)
-            ->transform(CLI::CheckedTransformer(lecTypeMap, CLI::ignore_case));
+           ->expected(1)
+           ->transform(CLI::CheckedTransformer(lecTypeMap, CLI::ignore_case));
     options->add_option(cli(PREMAP_BASIS), preBasis, "Premapper basis")
-            ->expected(1)
-            ->transform(CLI::CheckedTransformer(preBasisMap, CLI::ignore_case));
+           ->expected(1)
+           ->transform(CLI::CheckedTransformer(preBasisMap, CLI::ignore_case));
     options->add_option(cli(PREMAP_LIB), preLib, "Premapper library")
            ->expected(1);
     options->add_option(cli(GRAPHML), graphMl,
                 "Path to GraphML file for the model to be stored")
-            ->expected(1);
+           ->expected(1);
     // Input file(s).
     options->allow_extras();
   }
@@ -206,7 +206,8 @@ struct FirRtlOptions final : public AppOptions {
 
   /// The command to run the Verilog-to-FIRRTL translator.
   static constexpr const char *ID = "to_firrtl";
-  /// The option to manually specify the top-level module. The top-level module is detected automatically if not specified.
+  /// The option to manually specify the top-level module.
+  /// The top-level module is detected automatically if not specified.
   static constexpr const char *FIRRTL = "top";
 
   FirRtlOptions(AppOptions &parent):
@@ -234,12 +235,12 @@ struct FirRtlOptions final : public AppOptions {
 struct Model2Options final : public AppOptions {
 
   static constexpr const char *ID = "to_model2";
-  static constexpr const char *OUTPUT = "outputFileName";
+  static constexpr const char *OUT = "out";
 
   Model2Options(AppOptions &parent):
       AppOptions(parent, ID, "Translator from FIRRTL to model2") {
 
-    options->add_option(cli(OUTPUT), outputFileName,
+    options->add_option(cli(OUT), outFileName,
                 "Output file name")
             ->expected(1);
 
@@ -252,20 +253,55 @@ struct Model2Options final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, OUTPUT, outputFileName);
+    get(json, OUT, outFileName);
   }
 
-  std::string outputFileName;
+  std::string outFileName;
+};
+
+struct TranslatorOptions final : public AppOptions {
+  static constexpr const char *ID = "translator";
+  static constexpr const char *TOP = "top";
+  static constexpr const char *OUT = "out";
+
+  TranslatorOptions(AppOptions &parent):
+      AppOptions(parent, ID, "Translator from Verilog to gate-level Verilog") {
+
+    options->add_option(cli(OUT), outFileName,
+                "Output file name")
+           ->expected(1);
+    options->add_option(cli(TOP), topModuleName,
+                "Name of top module in Verilog")
+           ->expected(1);
+
+    // Input Verilog file(s).
+    options->allow_extras();
+  }
+
+  std::vector<std::string> files() const {
+    return options->remaining();
+  }
+
+  void fromJson(Json json) override {
+    get(json, OUT, outFileName);
+    get(json, TOP, topModuleName);
+  }
+
+  std::string outFileName;
+  std::string topModuleName;
 };
 
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this) {
+      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this), 
+                 gateVerilog(*this) {
 
     // Top-level options.
-    options->set_help_all_flag("-H,--help-all", "Print the extended help message and exit");
-    options->set_version_flag("-v,--version", version, "Print the tool version");
+    options->set_help_all_flag("-H,--help-all",
+                               "Print the extended help message and exit");
+    options->set_version_flag("-v,--version", version,
+                              "Print the tool version");
   }
 
   void initialize(const std::string &config, int argc, char **argv) {
@@ -283,9 +319,11 @@ struct Options final : public AppOptions {
     rtl.fromJson(json[RtlOptions::ID]);
     firrtl.fromJson(json[FirRtlOptions::ID]);
     model2.fromJson(json[Model2Options::ID]);
+    gateVerilog.fromJson(json[TranslatorOptions::ID]);
   }
 
   RtlOptions rtl;
   FirRtlOptions firrtl;
   Model2Options model2;
+  TranslatorOptions gateVerilog;
 };

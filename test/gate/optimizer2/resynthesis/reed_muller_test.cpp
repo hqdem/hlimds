@@ -177,6 +177,8 @@ TEST(ReedMullerModel2, subnetToSubnetOn4Vars) {
 }
 
 // Test if the "synthesize()" method works correctly (it generates Subnet that is equal to the truth table it's based on)
+TEST(ReedMullerModel2, subnetToTTOn2Vars) { testSubnetToTruthTable(2); }
+
 TEST(ReedMullerModel2, subnetToTTOn4Vars) { testSubnetToTruthTable(4); }
 
 TEST(ReedMullerModel2, subnetToTTOn5Vars) { testSubnetToTruthTable(5); }

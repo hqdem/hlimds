@@ -231,13 +231,13 @@ The results of the translation are: `*.fir` description and a file with
 debugging information. These files will be generated in the same directory
 as the input Verilog file.
 
-### Running FIRRTL-to-model2 Translator
+#### Running FIRRTL-to-model2 Translator
 
 ```
 ./build/src/umain to_model2 <file> --out <verilog-file>
 ```
 
-### Running the pipeline Translator
+#### Running Verilog-to-model2 Translator
 
 ```
 ./build/src/umain translator <file> --out <verilog-file> --top <module-name>

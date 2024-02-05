@@ -19,14 +19,8 @@ void SimpleAreaMapper::findBest() {
        entryIndex++) {
     auto cell = entries[entryIndex].cell;
 
-    if (cell.isIn()) {
-      addInputToTheMap(entryIndex);
-    } else if (cell.isOne()) {
-      addOneToTheMap(entryIndex);
-    } else if (cell.isZero()) {
-      addZeroToTheMap(entryIndex);
-    } else if (cell.isOut()) {
-      addOutToTheMap(entryIndex, cell);
+    if (!cell.isAnd()) {
+      addNotAnAndToTheMap(entryIndex, cell);
     } else {
       // Save best tech cells subnet to bestReplMap
       saveBest(entryIndex, cutExtractor->getCuts(entryIndex));
@@ -98,26 +92,5 @@ void SimpleAreaMapper::saveBest(
     }
   }
   (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;
-}
-
-void SimpleAreaMapper::addInputToTheMap(EntryIndex entryIndex) {
-  BestReplacement bestReplacement{true};
-  (*bestReplacementMap)[entryIndex] = bestReplacement;
-}
-void SimpleAreaMapper::addZeroToTheMap(EntryIndex entryIndex) {
-  BestReplacement bestReplacement{};
-  bestReplacement.isZero = true;
-  (*bestReplacementMap)[entryIndex] = bestReplacement;
-}
-void SimpleAreaMapper::addOneToTheMap(EntryIndex entryIndex) {
-  BestReplacement bestReplacement{};
-  bestReplacement.isOne = true;
-  (*bestReplacementMap)[entryIndex] = bestReplacement;
-}
-void SimpleAreaMapper::addOutToTheMap(EntryIndex entryIndex,
-                                        Subnet::Cell &cell) {
-  BestReplacement bestReplacement{false, true};
-  bestReplacement.entryIDxs.insert(cell.link[0].idx);
-  (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 }

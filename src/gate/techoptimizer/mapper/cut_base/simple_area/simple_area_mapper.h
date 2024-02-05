@@ -28,11 +28,5 @@ private:
   float calculateArea(const std::unordered_set<uint64_t> &entryIdxs);
   void saveBest(EntryIndex entryIndex,
                 const optimizer2::CutExtractor::CutsList &cutsList);
-
-  void addInputToTheMap(EntryIndex entryIndex);
-  void addZeroToTheMap(EntryIndex entryIndex);
-  void addOneToTheMap(EntryIndex entryIndex);
-  void addOutToTheMap(EntryIndex entryIndex,
-                      model::Subnet::Cell &cell);
 };
 } // namespace eda::gate::tech_optimizer

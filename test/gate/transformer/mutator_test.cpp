@@ -206,3 +206,4 @@ namespace eda::gate::mutator {
     //TODO: RND checker returns 'Failure' and 'Equal'
   }
 } // namespace eda::gate::mutator
+

@@ -33,4 +33,41 @@ RUN make -j$(nproc)
 RUN make install
 
 WORKDIR /workdir
+RUN git clone --recursive https://github.com/circt/circt.git
+WORKDIR /workdir/circt
+RUN git checkout 2d822ea
+RUN git submodule init
+RUN git submodule update
+ENV MLIR_DIR=/workdir/circt/llvm/build/lib/cmake/mlir/
+RUN mkdir llvm/build
+WORKDIR /workdir/circt/llvm/build
+RUN cmake -G Ninja ../llvm \
+    -DLLVM_ENABLE_PROJECTS="mlir;clang;clang-tools-extra;lld" \
+    -DLLVM_TARGETS_TO_BUILD="X86" \
+    -DCMAKE_BUILD_TYPE="Release" \
+    -DLLVM_ENABLE_ASSERTIONS=ON \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DLLVM_ENABLE_LLD=ON \
+    -DLLVM_PARALLEL_LINK_JOBS=$(nproc) \
+    -DLLVM_PARALLEL_COMPILE_JOBS=$(nproc)
+RUN ninja
+
+ENV PATH=/workdir/circt/build/bin:/workdir/circt/llvm/build/bin:$PATH
+ENV CIRCT_DIR=/workdir/circt/
+WORKDIR /workdir/circt
+RUN mkdir build
+WORKDIR /workdir/circt/build
+RUN cmake -G Ninja .. \
+    -DCMAKE_BUILD_TYPE="Release" \
+    -DLLVM_ENABLE_ASSERTIONS=ON \
+    -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
+    -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DVERILATOR_DISABLE=ON \
+    -DIVERILOG_DISABLE=ON
+RUN ninja
+
+WORKDIR /workdir
 CMD ["/bin/bash"]

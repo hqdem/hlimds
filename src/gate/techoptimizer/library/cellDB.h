@@ -25,7 +25,10 @@ namespace eda::gate::tech_optimizer {
 
   class CellDB final{
   public:
-    CellDB(const std::vector<CellTypeID> &cellTypeIDs);
+    CellDB(const std::vector<CellTypeID> &cellTypeIDs,
+           const std::vector<CellTypeID> &cellTypeFFIDs,
+           const std::vector<CellTypeID> &cellTypeFFrsIDs,
+           const std::vector<CellTypeID> &cellTypeLatchIDs);
 
     //CellDB();
     //void setFFTypeIDs(std::vectorCellTypeID> &triggTypeIDs);

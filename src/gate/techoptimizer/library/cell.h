@@ -71,7 +71,11 @@ struct LibraryCells {
       std::unordered_map<std::string, CellTypeID> &cellTypeMap);
 
   static void makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTypeID> &cellIDs);
-  static void readLibertyFile(const std::string &filename, std::vector<Cell*> &cells);
+  //static void readLibertyFile(const std::string &filename, std::vector<Cell*> &cells);
+  static void readLibertyFile(const std::string &filename, std::vector<CellTypeID> &cellTypeIDs,
+                                     std::vector<CellTypeID> &cellTypeFFIDs,
+                                     std::vector<CellTypeID> &cellTypeFFrsIDs,
+                                     std::vector<CellTypeID> &cellTypeLatchIDs);
 };
 
 } // namespace eda::gate::tech_optimizer

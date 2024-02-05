@@ -55,17 +55,17 @@ def read_information_from_library(path_to_library):
       next_state = str(ff_grup['next_state'])[1: -1]
       preset = str(ff_grup['preset'])[1: -1]
 
-      if (clocked_on != "" and next_state != "" and clear == ""):
+      if (clocked_on != "on" and next_state != "on" and clear == "on"):
         isFF = True
 
-      elif (clocked_on != "" and next_state != "" and clear != ""):
+      elif (clocked_on != "on" and next_state != "on" and clear != "on"):
         isFFrs = True
 
     for latch_grup in cell_group.get_groups('latch'):
         clear = str(latch_grup['clear'])[1: -1]
         data_in = str(latch_grup['data_in'])[1: -1]
         enable = str(latch_grup['enable'])[1: -1]
-        if (data_in != ""):
+        if (data_in != "on"):
             isLatch = True
 
     for pin_group in cell_group.get_groups('pin'):
@@ -152,39 +152,55 @@ def read_information_from_library(path_to_library):
                                  'power': power
                                  }
       last_output_pins = output_pins
-    elif isFF or isFFrs:
+    elif isFF:
       cell_library[cell_name] = {'comb': False,
-                                 'delay': delay,
-                                 'input': input_pins,
-                                 'output': output_pins,
-                                 'area' : cell_area,
-                                 'leakage' : worstLeakege,
-                                 'power': power,
                                  'ff' : isFF,
                                  'ffrs' : isFFrs,
                                  'latch' : isLatch,
-                                 'clear' : clear,
-                                 'clear_preset_var1xl' : clear_preset_var1xl,
-                                 'clear_preset_var2' : clear_preset_var2,
-                                 'clocked_on' : clocked_on,
-                                 'next_state' : next_state,
-                                 'preset' : preset
-                                 }
-      last_output_pins = output_pins
-    elif isLatch:
-      cell_library[cell_name] = {'comb': False,
-                                 'delay': delay,
                                  'input': input_pins,
                                  'output': output_pins,
+                                 'clocked_on' : clocked_on,
+                                 'next_state' : next_state,
+                                 'preset' : preset,
                                  'area' : cell_area,
                                  'leakage' : worstLeakege,
-                                 'power': power,
+                                 'delay': delay,
+                                 'power': power
+                                 }
+      last_output_pins = output_pins
+    elif isFFrs:
+        cell_library[cell_name] = {'comb': False,
+                                   'ff' : isFF,
+                                   'ffrs' : isFFrs,
+                                   'latch' : isLatch,
+                                   'input': input_pins,
+                                   'output': output_pins,
+                                   'clocked_on' : clocked_on,
+                                   'next_state' : next_state,
+                                   'preset' : preset,
+                                   'clear' : clear,
+                                   'clear_preset_var1xl' : clear_preset_var1xl,
+                                   'clear_preset_var2' : clear_preset_var2,
+                                   'area' : cell_area,
+                                   'leakage' : worstLeakege,
+                                   'delay': delay,
+                                   'power': power
+                                   }
+        last_output_pins = output_pins
+    elif isLatch:
+      cell_library[cell_name] = {'comb': False,
+                                 'ff' : isFF,
+                                 'ffrs' : isFFrs,
+                                 'latch' : isLatch,
+                                 'input': input_pins,
+                                 'output': output_pins,
                                  'clear' : clear,
                                  'data_in' : data_in,
                                  'enable' : enable,
-                                 'ff' : isFF,
-                                 'ffrs' : isFFrs,
-                                 'latch' : isLatch,
+                                 'area' : cell_area,
+                                 'leakage' : worstLeakege,
+                                 'delay': delay,
+                                 'power': power
                                  }
       last_output_pins = output_pins
 

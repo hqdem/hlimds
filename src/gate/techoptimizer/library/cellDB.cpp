@@ -100,7 +100,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     Subnetattr subnetattr{"FF", cellType.getAttr().area};
     DFF.emplace_back(subnetID, subnetattr);
   }
-  for (const CellTypeID &cellTypeID : cellTypeIDs) {
+  for (const CellTypeID &cellTypeID : cellTypeFFrsIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
     SubnetBuilder subnetBuilder;
@@ -124,7 +124,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     Subnetattr subnetattr{"FFrs", cellType.getAttr().area};
     DFFrs.emplace_back(subnetID, subnetattr);
   }
-  for (const CellTypeID &cellTypeID : cellTypeIDs) {
+  for (const CellTypeID &cellTypeID : cellTypeLatchIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
     SubnetBuilder subnetBuilder;

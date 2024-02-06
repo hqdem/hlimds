@@ -37,6 +37,7 @@ find_package(Z3 REQUIRED)
 find_package(CTemplate REQUIRED COMPONENTS nothreads)
 find_package(Cudd REQUIRED)
 find_package(Yosys REQUIRED)
+find_package(STACCATO REQUIRED)
 
 find_package(MLIR REQUIRED CONFIG)
 find_package(LLVM REQUIRED CONFIG)
@@ -47,7 +48,7 @@ set_property(TARGET MLIRSupport APPEND
   PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MLIR_INCLUDE_DIRS}")
 set_property(TARGET CIRCTSupport APPEND
   PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CIRCT_INCLUDE_DIRS}")
-  
+
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
 message(STATUS "Using CIRCTConfig.cmake in: ${CIRCT_DIR}")

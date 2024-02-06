@@ -11,6 +11,7 @@
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
 #include "gate/optimizer2/resynthesis/cascade.h"
 #include "gate/optimizer2/resynthesis/de_micheli.h"
+#include "gate/optimizer2/resynthesis/dsd_to_subnet.h"
 #include "gate/optimizer2/resynthesis/isop.h"
 #include "gate/optimizer2/resynthesis/reed_muller.h"
 #include "gate/optimizer2/synthesizer.h"
@@ -29,6 +30,7 @@ using AkersAlgorithm    = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
 using BiDecomposition   = eda::gate::optimizer2::resynthesis::BiDecomposition;
 using CascadeMethod     = eda::gate::optimizer2::resynthesis::Cascade;
 using DeMicheli         = eda::gate::optimizer2::resynthesis::DeMicheli;
+using DsdAlgorithm      = eda::gate::optimizer2::resynthesis::DsdToSubnet;
 using DynTruthTable     = kitty::dynamic_truth_table;
 using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
 using ReedMullerAlg     = eda::gate::optimizer2::resynthesis::ReedMuller;
@@ -56,10 +58,12 @@ enum class Algorithm {
   Cascade,
   /// De Micheli algorithm.
   DeMicheli,
+  /// Disjoint Support Decomposition algorithm.
+  DSD,
   /// Minato-Morreale algorithm.
   MinatoMorreale,
   /// Reed-Muller algorithm.
-  ReedMuller
+  ReedMuller,
 };
 
 void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
@@ -77,7 +81,10 @@ void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
       file << "Cascade,";
     break;
     case Algorithm::DeMicheli:
-      file << "De Micheli";
+      file << "De Micheli,";
+    break;
+    case Algorithm::DSD:
+      file << "DSD,";
     break;
     case Algorithm::MinatoMorreale:
       file << "Minato-Morreale,";
@@ -136,6 +143,7 @@ void runTest(const DynTruthTable &table) {
   registry.push_back(new BiDecomposition());
   registry.push_back(new CascadeMethod());
   registry.push_back(new DeMicheli());
+  registry.push_back(new DsdAlgorithm());
   registry.push_back(new MinatoMorrealeAlg());
   registry.push_back(new ReedMullerAlg());
   // Launching.
@@ -150,7 +158,7 @@ void runTest(const DynTruthTable &table) {
       continue;
     }
     clock_t start = clock();
-    const auto id = registry[i]->synthesize(table);
+    const auto id = registry[i]->synthesize(table, 3);
     clock_t end = clock();
     if ((i == 3) && (id == eda::gate::model::OBJ_NULL_ID)) {
       writeLogs(fout, table, Algorithm::DeMicheli, 0, 0, 0, true);

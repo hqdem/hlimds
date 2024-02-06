@@ -7,11 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/celltype.h"
+#include "gate/techoptimizer/assembly.h"
+#include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techoptimizer.h"
-#include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
 #include "gate/transformer/aigmapper.h"
-#include "gate/techoptimizer/assembly.h"
 
 //#include <list>
 #include <map>
@@ -42,7 +42,6 @@ void Techmapper::setLiberty(const std::string &dbPath) {
                             ffrsCellTypeIDs,
                             LatchCellTypeIDs);
 
-  //setSequenceDB(cellDB);
 }
 
 void Techmapper::setMapper(MapperType techmapSelector) {
@@ -72,7 +71,8 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
 
 SubnetID Techmapper::techmap(model::CellID sequenceCell,
                              MapperType techmapSelector) {
-  return mapSequenceCell(sequenceCell, techmapSelector);
+  SequentialMapper sequentialMapper(cellDB);
+  return sequentialMapper.mapSequenceCell(sequenceCell, techmapSelector);
 }
 
 SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {

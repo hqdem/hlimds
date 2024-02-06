@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/mapper/bestReplacement.h"
 #include "gate/techoptimizer/library/cellDB.h"
+#include "gate/techoptimizer/mapper/bestReplacement.h"
 
 #include <map>
 

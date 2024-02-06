@@ -7,29 +7,17 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
-#include "gate/techoptimizer/library/cellDB.h"
 
-using CellSymbol = eda::gate::model::CellSymbol;
+#include <cassert>
 
 namespace eda::gate::tech_optimizer {
 
-CellDB *cells;
+SequentialMapper::SequentialMapper(CellDB *cellDB)
+    : cells(std::move(cellDB)) {}
 
-model::SubnetID mapDFF(Techmapper::MapperType techmapSelector);
-model::SubnetID mapDFFrs(Techmapper::MapperType techmapSelector);
-model::SubnetID mapLATCH(Techmapper::MapperType techmapSelector);
-model::SubnetID areaStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>> &seqCells);
-model::SubnetID choiceOfStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>> &seqCells,
-                                 Techmapper::MapperType techmapSelector);
-
-void setSequenceDB(CellDB *cellDB) {
-  cells = cellDB;
-}
-
-model::SubnetID mapSequenceCell(model::CellID sequenceCellID,
-                                Techmapper::MapperType techmapSelector) {
-  auto &sequenceCell = model::Cell::get(sequenceCellID);
-
+model::SubnetID SequentialMapper::mapSequenceCell(model::CellID sequenceCellID,
+                                                  Techmapper::MapperType techmapSelector) {
+  auto& sequenceCell = model::Cell::get(sequenceCellID);
   assert(sequenceCell.isDff() || sequenceCell.isDffRs() || sequenceCell.isLatch());
 
   if (sequenceCell.isDff()) {
@@ -37,45 +25,41 @@ model::SubnetID mapSequenceCell(model::CellID sequenceCellID,
   } else if (sequenceCell.isDffRs()) {
     return mapDFFrs(techmapSelector);
   } else if (sequenceCell.isLatch()) {
-    return mapLATCH(techmapSelector);
-  } else {
-    return 1;
+    return mapLatch(techmapSelector);
   }
+
+  return model::SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
 }
 
-model::SubnetID mapLATCH(Techmapper::MapperType techmapSelector) {
-  return choiceOfStrategy(cells->getLatch(), techmapSelector);;
+model::SubnetID SequentialMapper::mapLatch(Techmapper::MapperType techmapSelector) {
+  return chooseMappingStrategy(cells->getLatch(), techmapSelector);
 }
 
-model::SubnetID mapDFFrs(Techmapper::MapperType techmapSelector) {
-  return choiceOfStrategy(cells->getDFFrs(), techmapSelector);
+model::SubnetID SequentialMapper::mapDFFrs(Techmapper::MapperType techmapSelector) {
+  return chooseMappingStrategy(cells->getDFFrs(), techmapSelector);
 }
 
-model::SubnetID mapDFF(Techmapper::MapperType techmapSelector) {
-  return choiceOfStrategy(cells->getDFF(), techmapSelector);
+model::SubnetID SequentialMapper::mapDFF(Techmapper::MapperType techmapSelector) {
+  return chooseMappingStrategy(cells->getDFF(), techmapSelector);
 }
 
-model::SubnetID choiceOfStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>> &seqCells,
-                                 Techmapper::MapperType techmapSelector) {
-  switch(techmapSelector) {
+model::SubnetID SequentialMapper::chooseMappingStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells,
+                                                        Techmapper::MapperType techmapSelector) {
+  switch (techmapSelector) {
     case Techmapper::MapperType::SIMPLE_AREA_FUNC:
-      return areaStrategy(seqCells);
-      break;
-
-    /*case TechmapperType::STRUCT: // DAGON matching
-      //mapper = new DagonTechMapper(*cellDB);
-      break;*/
+      return areaOptimizedMapping(seqCells);
+      /* More strategies can be added here */
+    default:
+      return model::SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
   }
 }
 
-model::SubnetID areaStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>> &seqCells) {
-  std::pair<model::SubnetID, Subnetattr> idMinArea;
-  for (const auto& cell : seqCells) {
-    if (cell.second.area < idMinArea.second.area) {
-      idMinArea = cell;
-    }
-  }
-  return idMinArea.first;
+model::SubnetID SequentialMapper::areaOptimizedMapping(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells) {
+  std::pair<model::SubnetID, Subnetattr> minAreaCell =
+      *std::min_element(seqCells.begin(), seqCells.end(),
+                        [](const auto& lhs, const auto& rhs) {
+                        return lhs.second.area < rhs.second.area;});
+  return minAreaCell.first;
 }
+
 } // namespace eda::gate::tech_optimizer
-

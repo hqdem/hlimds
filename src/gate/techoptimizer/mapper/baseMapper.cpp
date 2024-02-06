@@ -18,4 +18,4 @@ void BaseMapper::mapping(SubnetID subnetID,
 
   baseMap();
 }
-}
+} // namespace eda::gate::tech_optimizer

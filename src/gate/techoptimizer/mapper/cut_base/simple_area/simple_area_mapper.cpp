@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
-#include "gate/optimizer2/cone_builder.h"
 #include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/optimizer2/cone_builder.h"
+#include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
 
 namespace eda::gate::tech_optimizer {
 void SimpleAreaMapper::findBest() {
@@ -93,4 +93,4 @@ void SimpleAreaMapper::saveBest(
   }
   (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;
 }
-}
+} // namespace eda::gate::tech_optimizer

@@ -44,4 +44,4 @@ void CutBaseMapper::addOutToTheMap(EntryIndex entryIndex,
   bestReplacement.entryIDxs.insert(cell.link[0].idx);
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
-}
+} // namespace eda::gate::tech_optimizer

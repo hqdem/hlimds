@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/mapper/baseMapper.h"
 #include "gate/optimizer2/cut_extractor.h"
+#include "gate/techoptimizer/mapper/baseMapper.h"
 
 #include <map>
 

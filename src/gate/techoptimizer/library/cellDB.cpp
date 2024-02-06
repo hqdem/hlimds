@@ -98,9 +98,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     SubnetID subnetID = subnetBuilder.make();
 
     Subnetattr subnetattr{"FF", cellType.getAttr().area};
-    subnetToAttr.emplace_back(subnetID, subnetattr);
-
-    DFF.emplace_back(subnetID);
+    DFF.emplace_back(subnetID, subnetattr);
   }
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
@@ -124,9 +122,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     SubnetID subnetID = subnetBuilder.make();
 
     Subnetattr subnetattr{"FFrs", cellType.getAttr().area};
-    subnetToAttr.emplace_back(subnetID, subnetattr);
-
-    DFFrs.emplace_back(subnetID);
+    DFFrs.emplace_back(subnetID, subnetattr);
   }
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
@@ -144,9 +140,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     SubnetID subnetID = subnetBuilder.make();
 
     Subnetattr subnetattr{"Latch", cellType.getAttr().area};
-    subnetToAttr.emplace_back(subnetID, subnetattr);
-
-    Latch.emplace_back(subnetID);
+    Latch.emplace_back(subnetID, subnetattr);
   }
   std::cout << "Count of liberty Subnet = " << count << std::endl;
 }
@@ -210,13 +204,13 @@ std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getSubnetsAttr() {
   return ttSubnet;
  }
 
-const std::vector<SubnetID> &CellDB::getDFF() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFF() const {
   return DFF;
 }
-const std::vector<SubnetID> &CellDB::getDFFrs() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFrs() const {
   return DFFrs;
 }
-const std::vector<SubnetID> &CellDB::getLatch() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getLatch() const {
   return Latch;
 }
 

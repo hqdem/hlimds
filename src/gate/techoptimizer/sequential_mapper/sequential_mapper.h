@@ -10,11 +10,13 @@
 
 #include "gate/model2/cell.h"
 #include "gate/techoptimizer/library/cellDB.h"
+#include "gate/techoptimizer/techoptimizer.h"
 
 #include <list>
 
 namespace eda::gate::tech_optimizer {
 
   void setSequenceDB(CellDB *cellDB);
-  model::SubnetID mapSequenceCell(model::CellID sequenceCell);
+  model::SubnetID mapSequenceCell(model::CellID sequenceCell,
+                                  Techmapper::MapperType techmapSelector);
 } // namespace eda::gate::tech_optimizer

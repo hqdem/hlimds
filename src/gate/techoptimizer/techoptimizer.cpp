@@ -58,19 +58,21 @@ void Techmapper::setMapper(MapperType techmapSelector) {
 }
 
 SubnetID Techmapper::techmap(SubnetID subnetID) {
+  auto AIGSubnet = premapAIGSubnet(subnetID);
   std::map<EntryIndex, BestReplacement> *bestReplacementMap =
       new std::map<EntryIndex, BestReplacement>;
 
  assert(mapper != nullptr);
 
-  mapper->mapping(subnetID, cellDB, bestReplacementMap);
+  mapper->mapping(AIGSubnet, cellDB, bestReplacementMap);
 
   AssemblySubnet as;
- return as.assemblySubnet(bestReplacementMap, subnetID);
+ return as.assemblySubnet(bestReplacementMap, AIGSubnet);
 }
 
-SubnetID Techmapper::techmap(model::CellID sequenceCell) {
-  return mapSequenceCell(sequenceCell);;
+SubnetID Techmapper::techmap(model::CellID sequenceCell,
+                             MapperType techmapSelector) {
+  return mapSequenceCell(sequenceCell, techmapSelector);
 }
 
 SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {

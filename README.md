@@ -91,7 +91,7 @@ cd <workdir>
 git clone https://github.com/ivmai/cudd
 cd cudd
 touch aclocal.m4 Makefile.am Makefile.in configure
-./configure --enable-obj
+./configure --enable-obj --enable-shared
 make
 sudo make install
 ```
@@ -101,6 +101,18 @@ If you want to install `CUDD` not in default directory by using
 will require environment variable `CUDD_DIR` that contains the path
 to the `CUDD` actual installation directory.
 
+### STACCATO Installation
+
+The `<path_to_cudd_dir>` refers to the path to the CUDD sources directory.
+
+```
+cd <workdir>
+git clone https://github.com/ispras/staccato 
+cd staccato
+make BUILD_TYPE=shared CUDD_INCLUDE=<path_to_cudd_dir> SM="-DDISABLE_SM"
+sudo make install
+```
+ 
 ### Configuring with `Yosys`
 
 1. Get `Yosys` source code from the [^yosys] into `<yosys-dir>`

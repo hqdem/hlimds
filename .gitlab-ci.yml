@@ -1,4 +1,4 @@
-image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:circt
+image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:staccato
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive

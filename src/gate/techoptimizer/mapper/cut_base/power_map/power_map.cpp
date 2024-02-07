@@ -54,9 +54,31 @@ namespace eda::gate::tech_optimizer{
     return af;
   }
 
-    bool aproxEqual(const double &a , const double &b){
-      return fabs(a-b) < 0.0001;
+  int64_t getLevel(const Cut &cut, const Subnet &subnet){
+    int64_t levelMax = -99999999;
+    for(const EntryIndex &leaf: cut.entryIdxs){
+      
+      // levelMax= max(levelMax,subnet.getPathLength().second);
     }
+    return levelMax;
+  }
+
+  Cut PowerMap::findCutMinimizingDepth(const EntryIndex entryIndex, const Subnet &subnet){
+    Cut *cutBest = nullptr;
+    
+    CutsList cutsList = cutExtractor->getCuts(entryIndex);
+    for(const Cut &cut : cutsList){
+      if (cutBest == nullptr || getLevel(*cutBest,subnet) > getLevel(cut,subnet)){
+        *cutBest = cut;
+      }
+    }
+    return *cutBest;
+  }
+
+
+  bool aproxEqual(const double &a , const double &b){
+    return fabs(a-b) < 0.0001;
+  }
   
   void PowerMap::findBest(){
     Subnet &subnet = Subnet::get(this->subnetID);

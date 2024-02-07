@@ -70,6 +70,8 @@ class PowerMap : public CutBaseMapper{
     void addNotAnAndToTheMap(EntryIndex entryIndex,
                       model::Subnet::Cell &cell);
 
+    Cut findCutMinimizingDepth(EntryIndex entryIndex, const Subnet &subnet);
+
     void addInputToTheMap(EntryIndex entryIndex);
     void addZeroToTheMap(EntryIndex entryIndex);
     void addOneToTheMap(EntryIndex entryIndex);

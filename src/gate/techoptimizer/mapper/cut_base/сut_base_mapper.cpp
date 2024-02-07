@@ -13,4 +13,35 @@ void CutBaseMapper::baseMap() {
   cutExtractor = new optimizer2::CutExtractor(&model::Subnet::get(subnetID), 6);
   findBest();
 }
+void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, model::Subnet::Cell &cell) {
+  if (cell.isIn()) {
+    addInputToTheMap(entryIndex);
+  } else if (cell.isOne()) {
+    addOneToTheMap(entryIndex);
+  } else if (cell.isZero()) {
+    addZeroToTheMap(entryIndex);
+  } else if (cell.isOut()) {
+    addOutToTheMap(entryIndex, cell);
+  }
 }
+void CutBaseMapper::addInputToTheMap(EntryIndex entryIndex) {
+  BestReplacement bestReplacement{true};
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+}
+void CutBaseMapper::addZeroToTheMap(EntryIndex entryIndex) {
+  BestReplacement bestReplacement{};
+  bestReplacement.isZero = true;
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+}
+void CutBaseMapper::addOneToTheMap(EntryIndex entryIndex) {
+  BestReplacement bestReplacement{};
+  bestReplacement.isOne = true;
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+}
+void CutBaseMapper::addOutToTheMap(EntryIndex entryIndex,
+                                      model::Subnet::Cell &cell) {
+  BestReplacement bestReplacement{false, true};
+  bestReplacement.entryIDxs.insert(cell.link[0].idx);
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+}
+} // namespace eda::gate::tech_optimizer

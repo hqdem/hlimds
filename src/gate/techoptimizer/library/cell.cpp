@@ -84,7 +84,7 @@ const Pin &Cell::getInputPin(uint inputPinNumber) const {
 //LibraryCells::LibraryCells(const std::string &filename) {
 //  readLibertyFile(filename);
 //}
-
+/*
 void LibraryCells::readLibertyFile(const std::string &filename, std::vector<Cell*> &cells) {
 
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
@@ -133,9 +133,13 @@ void LibraryCells::readLibertyFile(const std::string &filename, std::vector<Cell
     Cell *cell = new Cell(it.key(), pins, truthTable, it.value()["area"]);
     cells.push_back(cell);
   }
-}
+}*/
 
-/*void LibraryCells::readLibertyFile(const std::string &filename, std::vector<CellTypeID> &cellTypeIDs) {
+void LibraryCells::readLibertyFile(const std::string &filename,
+                                   std::vector<CellTypeID> &cellTypeIDs,
+                                   std::vector<CellTypeID> &cellTypeFFIDs,
+                                   std::vector<CellTypeID> &cellTypeFFrsIDs,
+                                   std::vector<CellTypeID> &cellTypeLatchIDs) {
 
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path PythonScriptPath =
@@ -159,61 +163,125 @@ void LibraryCells::readLibertyFile(const std::string &filename, std::vector<Cell
 
   // Iterate over the objects in the JSON file
   for (json::iterator it = j.begin(); it != j.end(); ++it) {
+    std::vector<std::string> inputPinNames;
 
-    if (it.value()["comb"]) {
-      // Extract the truth table
-      const std::string truthTableName = it.value()["output"].begin().key();
-      const std::string plainTruthTable = it.value()["output"][truthTableName];
+    const std::string inputs = it.value()["input"];
+    std::string token;
+    std::stringstream ss(inputs);
+    while (getline(ss, token, ' ')) {
+      inputPinNames.push_back(token);
+    }
+    if (!inputPinNames.empty()) {
+      if (it.value()["comb"]) {
+        // Extract the truth table
+        const std::string truthTableName = it.value()["output"].begin().key();
+        const std::string plainTruthTable = it.value()["output"][truthTableName];
 
-      // Create a dynamic truth table with the appropriate number of inputs
-      std::vector<std::string> inputPinNames;
+        // Create a dynamic truth table with the appropriate number of inputs
 
-      const std::string inputs = it.value()["input"];
-      std::string token;
-      std::stringstream ss(inputs);
-      while (getline(ss, token, ' ')) {
-        inputPinNames.push_back(token);
+        /*std::vector<Pin> pins;
+        for (const auto &name: inputPinNames) {
+          const auto &cell = it.value()["delay"][name];
+          pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
+                             cell["fall_transition"], cell["rise_transition"]));
+        }*/
+
+        kitty::dynamic_truth_table *truthTable =
+            new kitty::dynamic_truth_table(inputPinNames.size());
+        kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
+
+        eda::gate::model::CellProperties
+            props(true, false, false, false, false, false, false);
+
+        model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+        model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
+
+        MinatoMorrealeAlg minatoMorrealeAlg;
+        const auto subnetID = minatoMorrealeAlg.synthesize(*truthTable);
+
+        CellTypeID cellID = eda::gate::model::makeCellType(
+            it.key(), subnetID, cellTypeAttrID,
+            eda::gate::model::CellSymbol::CELL,
+            props, static_cast<uint16_t>(inputPinNames.size()),
+            static_cast<uint16_t>(1));
+
+        cellTypeIDs.push_back(cellID);
+
+      } else {
+        if (it.value()["ff"]) {
+          if (inputPinNames.size() == 2) {
+            eda::gate::model::CellProperties
+                props(false, false, false, false, false, false, false);
+
+            model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+            model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
+
+            SubnetBuilder subnetBuilder;
+            auto in1 = subnetBuilder.addInput();
+            auto in2 = subnetBuilder.addInput();
+            auto dff = subnetBuilder.addCell(model::CellSymbol::DFF, in2, in1);
+            subnetBuilder.addOutput(dff);
+
+            CellTypeID cellID = eda::gate::model::makeCellType(
+                it.key(), subnetBuilder.make(), cellTypeAttrID,
+                eda::gate::model::CellSymbol::CELL,
+                props, static_cast<uint16_t>(inputPinNames.size()),
+                static_cast<uint16_t>(it.value()["output"].size()));
+
+            cellTypeFFIDs.push_back(cellID);
+          }
+        } else if (it.value()["ffrs"]) {
+          if (inputPinNames.size() == 4) {
+            eda::gate::model::CellProperties
+                props(false, false, false, false, false, false, false);
+
+            model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+            model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
+
+            SubnetBuilder subnetBuilder;
+            auto in1 = subnetBuilder.addInput();
+            auto in2 = subnetBuilder.addInput();
+            auto in3 = subnetBuilder.addInput();
+            auto in4 = subnetBuilder.addInput();
+            auto dffrs = subnetBuilder.addCell(model::CellSymbol::DFFrs, in2, in1, in3, in4);
+            subnetBuilder.addOutput(dffrs);
+
+            CellTypeID cellID = eda::gate::model::makeCellType(
+                it.key(), subnetBuilder.make(), cellTypeAttrID,
+                eda::gate::model::CellSymbol::CELL,
+                props, static_cast<uint16_t>(inputPinNames.size()),
+                static_cast<uint16_t>(it.value()["output"].size()));
+
+            cellTypeFFrsIDs.push_back(cellID);
+          }
+
+        } else if (it.value()["latch"]) {
+          if (inputPinNames.size() == 2) {
+            eda::gate::model::CellProperties
+                props(false, false, false, false, false, false, false);
+
+            model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+            model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
+
+            SubnetBuilder subnetBuilder;
+            auto in1 = subnetBuilder.addInput();
+            auto in2 = subnetBuilder.addInput();
+            auto latch = subnetBuilder.addCell(model::CellSymbol::LATCH, in1, in2);
+            subnetBuilder.addOutput(latch);
+
+            CellTypeID cellID = eda::gate::model::makeCellType(
+                it.key(), subnetBuilder.make(), cellTypeAttrID,
+                eda::gate::model::CellSymbol::CELL,
+                props, static_cast<uint16_t>(inputPinNames.size()),
+                static_cast<uint16_t>(it.value()["output"].size()));
+
+            cellTypeLatchIDs.push_back(cellID);
+          }
+        }
       }
-
-      std::vector<Pin> pins;
-      for (const auto &name: inputPinNames) {
-        const auto &cell = it.value()["delay"][name];
-        pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
-                           cell["fall_transition"], cell["rise_transition"]));
-      }
-
-      kitty::dynamic_truth_table *truthTable =
-          new kitty::dynamic_truth_table(inputPinNames.size());
-      kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
-
-      Cell *cell = new Cell(it.key(), pins, truthTable, it.value()["area"]);
-      cells.push_back(cell);
-    } else {
-      std::vector<std::string> inputPinNames;
-
-      const std::string inputs = it.value()["input"];
-      std::string token;
-      std::stringstream ss(inputs);
-      while (getline(ss, token, ' ')) {
-        inputPinNames.push_back(token);
-      }
-
-      eda::gate::model::CellProperties
-          props(false, false, false, false, false, false, false);
-
-      model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
-      model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
-
-      CellTypeID cellID = eda::gate::model::makeCellType(
-          it.key(), subnetID, cellTypeAttrID,
-          eda::gate::model::CellSymbol::CELL,
-          props, static_cast<uint16_t>(inputPinNames.size()),
-          static_cast<uint16_t>(it.value()["output"].size()));
-
-      cellTypeIDs.push_back(cellID);
     }
   }
-}*/
+}
 
 void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb, std::vector<Cell*> &cells,
     std::unordered_map<std::string, CellTypeID> &cellTypeMap) {

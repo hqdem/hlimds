@@ -159,7 +159,7 @@ TEST(TechMapTest, SimpleSub) {
   links2.emplace_back(idx2);
 
   const auto idx3 = builder.addCell(model::AND, links2);
-  const auto idxOUT = builder.addOutput(Link(idx3));
+  builder.addOutput(Link(idx3));
 
   SubnetID subnetID = builder.make();
 
@@ -226,6 +226,46 @@ TEST(TechMapTest, ANDNOTNOTAND) {
 
   std::cout << model::Subnet::get(mappedSub) << std::endl;
   printVerilog(mappedSub);
+  EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
+
+TEST(TechMapTest, DFFMapping) {
+  auto cellID = makeCell(model::CellSymbol::DFF);
+
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC);
+
+  SubnetID mappedSub = techmapper.techmap(cellID);
+
+  std::cout << model::Subnet::get(mappedSub) << std::endl;
+  printVerilog(mappedSub);
+
+  EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
+TEST(TechMapTest, DFFrsMapping) {
+  auto cellID = makeCell(model::CellSymbol::DFFrs);
+
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC);
+
+  SubnetID mappedSub = techmapper.techmap(cellID);
+
+  std::cout << model::Subnet::get(mappedSub) << std::endl;
+  printVerilog(mappedSub);
+
+  EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
+TEST(TechMapTest, LatchMapping) {
+  auto cellID = makeCell(model::CellSymbol::LATCH);
+
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC);
+
+  SubnetID mappedSub = techmapper.techmap(cellID);
+
+  std::cout << model::Subnet::get(mappedSub) << std::endl;
+  printVerilog(mappedSub);
+
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
 }
 }

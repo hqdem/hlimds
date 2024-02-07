@@ -19,7 +19,10 @@ using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
 namespace eda::gate::tech_optimizer {
 
-CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
+CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
+               const std::vector<CellTypeID> &cellTypeFFIDs,
+               const std::vector<CellTypeID> &cellTypeFFrsIDs,
+               const std::vector<CellTypeID> &cellTypeLatchIDs) {
   std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   /*int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
@@ -77,6 +80,67 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs) {
 
     ttSubnet.emplace_back(model::evaluate(
         cellType.getSubnet()), subnetID);
+  }
+
+  for (const CellTypeID &cellTypeID : cellTypeFFIDs) {
+    CellType &cellType = CellType::get(cellTypeID);
+
+    SubnetBuilder subnetBuilder;
+    std::vector<Link> linkList;
+
+    auto in1 = subnetBuilder.addInput();
+    auto in2 = subnetBuilder.addInput();
+    linkList.emplace_back(in2);
+    linkList.emplace_back(in1);
+    auto dff = subnetBuilder.addCell(cellTypeID, linkList);
+    subnetBuilder.addOutput(dff);
+
+    SubnetID subnetID = subnetBuilder.make();
+
+    Subnetattr subnetattr{"FF", cellType.getAttr().area};
+    DFF.emplace_back(subnetID, subnetattr);
+  }
+  for (const CellTypeID &cellTypeID : cellTypeFFrsIDs) {
+    CellType &cellType = CellType::get(cellTypeID);
+
+    SubnetBuilder subnetBuilder;
+    std::vector<Link> linkList;
+
+    auto in1 = subnetBuilder.addInput();
+    auto in2 = subnetBuilder.addInput();
+    auto in3 = subnetBuilder.addInput();
+    auto in4 = subnetBuilder.addInput();
+
+    linkList.emplace_back(in2);
+    linkList.emplace_back(in1);
+    linkList.emplace_back(in3);
+    linkList.emplace_back(in4);
+
+    auto dffrs = subnetBuilder.addCell(cellTypeID, linkList);
+    subnetBuilder.addOutput(dffrs);
+
+    SubnetID subnetID = subnetBuilder.make();
+
+    Subnetattr subnetattr{"FFrs", cellType.getAttr().area};
+    DFFrs.emplace_back(subnetID, subnetattr);
+  }
+  for (const CellTypeID &cellTypeID : cellTypeLatchIDs) {
+    CellType &cellType = CellType::get(cellTypeID);
+
+    SubnetBuilder subnetBuilder;
+    std::vector<Link> linkList;
+
+    auto in1 = subnetBuilder.addInput();
+    auto in2 = subnetBuilder.addInput();
+    linkList.emplace_back(in1);
+    linkList.emplace_back(in2);
+    auto latch = subnetBuilder.addCell(cellTypeID, linkList);
+    subnetBuilder.addOutput(latch);
+
+    SubnetID subnetID = subnetBuilder.make();
+
+    Subnetattr subnetattr{"Latch", cellType.getAttr().area};
+    Latch.emplace_back(subnetID, subnetattr);
   }
   std::cout << "Count of liberty Subnet = " << count << std::endl;
 }
@@ -140,13 +204,13 @@ std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getSubnetsAttr() {
   return ttSubnet;
  }
 
-const std::vector<SubnetID> &CellDB::getDFF() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFF() const {
   return DFF;
 }
-const std::vector<SubnetID> &CellDB::getDFFrs() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFrs() const {
   return DFFrs;
 }
-const std::vector<SubnetID> &CellDB::getLatch() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getLatch() const {
   return Latch;
 }
 

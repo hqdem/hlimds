@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/mapper/baseMapper.h"
 #include "gate/optimizer2/cut_extractor.h"
+#include "gate/techoptimizer/mapper/baseMapper.h"
 
 #include <map>
 
@@ -25,5 +25,13 @@ protected:
 
   void baseMap() override;
   virtual void findBest() = 0;
+
+  void addNotAnAndToTheMap(EntryIndex entryIndex, model::Subnet::Cell &cell);
+
+  void addInputToTheMap(EntryIndex entryIndex);
+  void addZeroToTheMap(EntryIndex entryIndex);
+  void addOneToTheMap(EntryIndex entryIndex);
+  void addOutToTheMap(EntryIndex entryIndex,
+                      model::Subnet::Cell &cell);
 };
 } // namespace eda::gate::tech_optimizer

@@ -8,9 +8,9 @@
 #pragma once
 
 #include "gate/model2/net.h"
-#include "gate/techoptimizer/mapper/baseMapper.h"
 #include "gate/techoptimizer/library/cell.h"
 #include "gate/techoptimizer/library/cellDB.h"
+#include "gate/techoptimizer/mapper/baseMapper.h"
 
 using NetID = eda::gate::model::NetID;
 using SubnetID = eda::gate::model::SubnetID;
@@ -29,7 +29,7 @@ public:
   Techmapper(const std::string &dbPath, MapperType techmapSelector);
 
   SubnetID techmap(SubnetID subnetID);
-  SubnetID techmap(model::CellID sequenceCell);
+  SubnetID techmap(model::CellID sequenceCell, MapperType techmapSelector = MapperType::SIMPLE_AREA_FUNC);
 
   ~Techmapper() {
     delete mapper;

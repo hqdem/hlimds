@@ -26,11 +26,14 @@ std::string techMapPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/
 
 bool checkLibParser(std::string libertyPath) {
   //const std::string pathToLiberty = libertyPath + "/liberty";
-  std::vector<eda::gate::tech_optimizer::Cell*> cells;
-  LibraryCells::readLibertyFile(libertyPath, cells);
+  std::vector<eda::gate::model::CellTypeID> combCells;
+  std::vector<eda::gate::model::CellTypeID> cellsFF;
+  std::vector<eda::gate::model::CellTypeID> cellsFFrs;
+  std::vector<eda::gate::model::CellTypeID> cellsLatch;
+  LibraryCells::readLibertyFile(libertyPath, combCells, cellsFF, cellsFFrs, cellsLatch);
 
 #ifdef UTOPIA_DEBUG
-  for(const auto& cell : libraryCells.cells) {
+  for(const auto& cell : combCells) {
     std::cout << cell->getName() << std::endl;
   }
 #endif

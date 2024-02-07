@@ -7,11 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/celltype.h"
+#include "gate/techoptimizer/assembly.h"
+#include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techoptimizer.h"
-#include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
 #include "gate/transformer/aigmapper.h"
-#include "gate/techoptimizer/assembly.h"
 
 //#include <list>
 #include <map>
@@ -27,16 +27,21 @@ Techmapper::Techmapper(const std::string &dbPath,
 }
 
 void Techmapper::setLiberty(const std::string &dbPath) {
-  std::vector<Cell*> cells;
   std::vector<CellTypeID> cellTypeIDs;
   std::vector<CellTypeID> ffCellTypeIDs;
   std::vector<CellTypeID> ffrsCellTypeIDs;
   std::vector<CellTypeID> LatchCellTypeIDs;
-  LibraryCells::readLibertyFile(dbPath, cells);
-  LibraryCells::makeCellTypeIDs(cells, cellTypeIDs);
-  this->cellDB = new CellDB(cellTypeIDs);
+  LibraryCells::readLibertyFile(dbPath,
+                                cellTypeIDs,
+                                ffCellTypeIDs,
+                                ffrsCellTypeIDs,
+                                LatchCellTypeIDs);
+  //LibraryCells::makeCellTypeIDs(cells, cellTypeIDs);
+  this->cellDB = new CellDB(cellTypeIDs,
+                            ffCellTypeIDs,
+                            ffrsCellTypeIDs,
+                            LatchCellTypeIDs);
 
-  //setSequenceDB(cellDB);
 }
 
 void Techmapper::setMapper(MapperType techmapSelector) {
@@ -52,19 +57,22 @@ void Techmapper::setMapper(MapperType techmapSelector) {
 }
 
 SubnetID Techmapper::techmap(SubnetID subnetID) {
+  auto AIGSubnet = premapAIGSubnet(subnetID);
   std::map<EntryIndex, BestReplacement> *bestReplacementMap =
       new std::map<EntryIndex, BestReplacement>;
 
  assert(mapper != nullptr);
 
-  mapper->mapping(subnetID, cellDB, bestReplacementMap);
+  mapper->mapping(AIGSubnet, cellDB, bestReplacementMap);
 
   AssemblySubnet as;
- return as.assemblySubnet(bestReplacementMap, subnetID);
+ return as.assemblySubnet(bestReplacementMap, AIGSubnet);
 }
 
-SubnetID Techmapper::techmap(model::CellID sequenceCell) {
-  return mapSequenceCell(sequenceCell);;
+SubnetID Techmapper::techmap(model::CellID sequenceCell,
+                             MapperType techmapSelector) {
+  SequentialMapper sequentialMapper(cellDB);
+  return sequentialMapper.mapSequenceCell(sequenceCell, techmapSelector);
 }
 
 SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {

@@ -18,15 +18,19 @@
 namespace eda::gate::model {
 
 using LinkList = std::vector<Link>;
+using LinkSet  = std::unordered_set<Link>;
 using LinkPair = std::pair<Link, size_t>;
+using LinkMap  = std::unordered_map<Link, size_t>;
 using CellList = std::vector<CellID>;
+using CellSet  = std::unordered_set<CellID>;
 using CellPair = std::pair<CellID, size_t>;
+using CellMap  = std::unordered_map<CellID, size_t>;
 
 /// Maps net cells/links to subnet cell indices.
 struct CellMapping final {
-  std::unordered_map<Link, size_t> inputs;
-  std::unordered_map<CellID, size_t> inners;
-  std::unordered_map<Link, size_t> outputs;
+  LinkMap inputs;
+  CellMap inners;
+  LinkMap outputs;
 };
 
 /// Aggregates cell information.
@@ -34,32 +38,6 @@ struct CellInfo final {
   const CellID cellID;
   const Cell &cell;
   const CellType &type;
-};
-
-/// Describes a subnet.
-struct NetComponent final {
-  /// Inputs are links of the form <(src-cell:src-port), (0:0)>,
-  /// i.e. only sources matter.
-  LinkList inputs;
-  /// Inner cells are just cells, not links.
-  CellList inners;
-  /// Outputs are links of the form <(src-cell:src-port), (dst-cell:dst-port)>,
-  /// i.e. targets matter (especially flip-flops).
-  LinkList outputs;
-
-  /// Resets the state.
-  void clear() {
-    inputs.clear();
-    inners.clear();
-    outputs.clear();
-  }
-
-  /// Merges the net component w/ this one.
-  void merge(const NetComponent &r)  {
-    inputs.insert(inputs.end(), r.inputs.begin(), r.inputs.end());
-    inners.insert(inners.end(), r.inners.begin(), r.inners.end());
-    outputs.insert(outputs.end(), r.outputs.begin(), r.outputs.end());
-  }
 };
 
 /// Gets information on the given cell.
@@ -99,8 +77,8 @@ inline Subnet::Link makeLink(LinkEnd source, const CellMapping &mapping) {
     return makeLink(i->second, source.getPort());
   }
 
-  const Link link{source.getCellID(), source.getPort(), 0, 0};
-  const auto j = mapping.inputs.find(link);
+  const Link inputLink{source.getCellID(), source.getPort(), 0, 0};
+  const auto j = mapping.inputs.find(inputLink);
   assert(j != mapping.inputs.end());
 
   return makeLink(j->second, 0);
@@ -115,54 +93,6 @@ inline Subnet::LinkList makeLinkList(const Cell &cell,
   }
   return links;
 }
-
-/// Makes a subnet for the given net component.
-static SubnetID makeSubnet(const Net &net, const NetComponent &component) {
-  SubnetBuilder subnetBuilder;
-  CellMapping mapping;
-
-  for (const auto &input : component.inputs) {
-    const auto info = getCellInfo(input.source);
-    const auto index = info.type.isCombinational()
-        ? subnetBuilder.addInput()
-        : subnetBuilder.addInput(info.cellID.getSID());
-
-    const auto inputLink = makeInputLink(input);
-    mapping.inputs.insert(LinkPair{inputLink, index.idx});
-  }
-
-  for (const auto &inner : component.inners) {
-    const auto info = getCellInfo(inner);
-    const auto links = makeLinkList(info.cell, mapping);
-    const auto index = subnetBuilder.addCell(info.type.getSymbol(), links);
-
-    mapping.inners.insert(CellPair{info.cellID, index.idx});
-  }
-
-  for (const auto &output : component.outputs) {
-    const auto info = getCellInfo(output.target);
-    const auto link = makeLink(output.source, mapping);
-    const auto index = info.type.isCombinational()
-        ? subnetBuilder.addOutput(link)
-        : subnetBuilder.addOutput(link, info.cellID.getSID());
-
-    const auto outputLink = makeOutputLink(output);
-    mapping.outputs.insert(LinkPair{outputLink, index.idx});
-  }
-
-  return subnetBuilder.make();
-}
-
-/// Entry of DFS traveral stack.
-struct NetTraversalEntry final {
-  const CellID cellID;
-  const LinkList links;
-  size_t index;
-};
-
-/// DFS traversal stack.
-using NetTraversalStack =
-    std::stack<NetTraversalEntry, std::vector<NetTraversalEntry>>;
 
 /// Checks if the link is an input (a primary input or a block output).
 inline bool isInputLink(const Link &link) {
@@ -212,93 +142,217 @@ inline LinkList extractOutputs(const Net &net) {
   return result;
 }
 
+/// Describes a subnet.
+struct NetComponent final {
+  /// Inputs are links of the form <(src-cell:src-port), (0:0)>,
+  /// i.e. only sources matter.
+  LinkSet inputs;
+  /// Inner cells are just cells, not links (topologically sorted).
+  CellList inners;
+  /// Outputs are links of the form <(src-cell:src-port), (dst-cell:dst-port)>,
+  /// i.e. targets matter (especially flip-flops).
+  LinkSet outputs;
+
+  /// Resets the component state.
+  void clear() {
+    inputs.clear();
+    inners.clear();
+    outputs.clear();
+  }
+
+  /// Merges the component w/ this one.
+  void merge(const NetComponent &r)  {
+    inputs.insert(r.inputs.begin(), r.inputs.end());
+    inners.insert(inners.end(), r.inners.begin(), r.inners.end());
+    outputs.insert(r.outputs.begin(), r.outputs.end());
+  }
+};
+
+/// Traveral stack entry.
+struct NetTraversalEntry final {
+  /// Checks if the entry corresponds to an input.
+  bool isInput() const { return isInputLink(getLink()); }
+  /// Checks if the entry corresponds to an output.
+  bool isOutput() const { return cellID == OBJ_NULL_ID; }
+  /// Checks if the entry is fully traversed.
+  bool isPassed() const { return index >= links.size(); }
+  /// Returns the current link of the entry.
+  const Link &getLink() const { return links[index]; }
+
+  const CellID cellID;
+  const LinkList links;
+  size_t index;
+};
+
+/// Traversal stack.
+using NetTraversalStack =
+    std::stack<NetTraversalEntry, std::vector<NetTraversalEntry>>;
+
+/// Traversal context.
+struct NetTraversalContext final {
+  /// Constructs the initial context.
+  NetTraversalContext(const Net &net) {
+    belongsTo.reserve(net.getCellNum());
+
+    components.reserve(1024*1024);     // FIXME:
+    componentCells.reserve(1024*1024); // FIXME:
+
+    stack.push(NetTraversalEntry{OBJ_NULL_ID, extractOutputs(net), 0});
+  }
+
+  /// Checks if the traversal is completed.
+  bool isCompleted() const { return stack.empty(); }
+  /// Returns the top entry of the stack.
+  NetTraversalEntry &top() { return stack.top(); }
+  /// Pops the top entry from the stack.
+  void pop() { stack.pop(); }
+
+  /// Checks if the cell is new and pushes it to the stack.
+  void push(CellID cellID) {
+    const auto i = belongsTo.find(cellID);
+    if (i != belongsTo.end()) {
+      componentIndex = i->second;
+      return;
+    }
+    const auto j = componentCells.find(cellID);
+    if (j == componentCells.end()) {
+      componentCells.insert(cellID);
+      stack.push(NetTraversalEntry{cellID, getLinks(cellID), 0});
+    }
+  }
+
+  /// Adds the input link to the current component.
+  void addInput(const Link &link) {
+    // Using a set avoids duplicates.
+    component.inputs.insert(link);
+  }
+
+  /// Adds the inner cell to the current component.
+  void addInner(CellID cellID) {
+    component.inners.push_back(cellID);
+  }
+
+  /// Adds the output link to the current component.
+  void addOutput(const Link &link) {
+    component.outputs.insert(link);
+  }
+
+  /// Adds the previously constructed component to the list.
+  void addComponent() {
+    if (componentIndex < components.size()) {
+      // Merge the current component w/ the existing one.
+      components[componentIndex].merge(component);
+    } else {
+      // Add the component as a new one.
+      components.push_back(component);
+    }
+
+    // Update the cell mapping.
+    for (const auto &componentCell : componentCells) {
+      belongsTo.insert({componentCell, componentIndex});
+    }
+
+    // Reset the component state (start building a new one).
+    component.clear();
+    componentCells.clear();
+    componentIndex = components.size();
+  }
+
+  /// Increments the link index of the top entry.
+  void nextLink() { stack.top().index++; }
+
+  /// Maps cells to components.
+  CellMap belongsTo;
+  /// Stores the constructed components.
+  std::vector<NetComponent> components;
+  /// Component under construction.
+  NetComponent component;
+  /// Index of the currently constructed component.
+  size_t componentIndex = 0;
+  /// Stores the current component's inner cells.
+  CellSet componentCells;
+  /// Traversal stack (DFS from outputs to inputs).
+  NetTraversalStack stack;
+};
+
 /// Returns the net components (connected subnets).
 static std::vector<NetComponent> extractComponents(const Net &net) {
-  // Maps cells to net components.
-  std::unordered_map<CellID, size_t> belongsTo;
-  belongsTo.reserve(net.getCellNum());
-
-  // Stores the constructed components.
-  std::vector<NetComponent> components;
-  components.reserve(1024*1024);
-
-  // DFS from outputs to inputs.
-  NetTraversalStack stack;
-  const auto outputs = extractOutputs(net);
-  stack.push(NetTraversalEntry{OBJ_NULL_ID, outputs, 0});
-
-  // Current net component.
-  NetComponent component;
-  size_t componentIndex = 0;
-  std::unordered_set<CellID> componentCells;
-  componentCells.reserve(1024*1024);
+  NetTraversalContext context(net);
 
   while (true) {
-    auto &entry = stack.top();
-    const auto isFinished = (entry.index >= entry.links.size());
+    auto &entry = context.top();
 
-    if (entry.cellID == OBJ_NULL_ID && entry.index > 0) {
-      // Add the previously constructed net component to the list.
-      if (componentIndex < components.size()) {
-        // Merge the net component w/ the existing one.
-        components[componentIndex].merge(component);
-      } else {
-        // Add the net component as a new one.
-        components.push_back(component);
-      }
+    if (entry.isOutput() && entry.index > 0) {
+      context.addComponent();
 
-      // Update the cell map.
-      for (const auto &componentCell : componentCells) {
-        belongsTo.insert({componentCell, componentIndex});
-      }
-
-      // Reset the current net component.
-      component.clear();
-      componentCells.clear();
-      componentIndex = components.size();
-
-      if (isFinished) {
-        stack.pop();
+      if (entry.isPassed()) {
+        context.pop();
         break;
       }
     }
 
-    // Go forward as far as possible.
-    if (!isFinished) {
-      const auto &link = entry.links[entry.index];
+    if (!entry.isPassed()) {
+      const auto &link = entry.getLink();
+      const auto isInput = entry.isInput();
+      const auto isOutput = entry.isOutput();
 
-      if (entry.cellID == OBJ_NULL_ID) {
-        // Add the output to the net component (promptly).
-        component.outputs.push_back(link);
-      } else if (isInputLink(link)) {
-        // Add the input to the net component.
-        component.inputs.push_back(link);
-      } else {
-        // Check if the cell belongs to a previously traversed component.
-        const auto cellID = link.source.getCellID();
-        const auto cellIt = belongsTo.find(cellID);
-
-        if (cellIt != belongsTo.end()) {
-          // Set the component index and stop moving forward.
-          componentIndex = cellIt->second;
-        } else {
-          // Move forward.
-          componentCells.insert(cellID);
-          stack.push(NetTraversalEntry{cellID, getLinks(cellID), 0});
-        }
+      if (isOutput) {
+        context.addOutput(makeOutputLink(link));
+      }
+      if (isInput) {
+        context.addInput(makeInputLink(link));
       }
 
-      // Next time choose the next link.
-      entry.index++; 
+      context.nextLink();
+
+      if (!isInput) {
+        context.push(link.source.getCellID());
+      }
     } else {
-      // Append the inner cell to the current net component.
-      component.inners.push_back(entry.cellID);
-      // Step back.
-      stack.pop();
+      // For topological ordering, add a cell right before popping.
+      context.addInner(entry.cellID);
+      context.pop();
     }
   }
 
-  return components;
+  return context.components;
+}
+
+/// Makes a subnet for the given net component.
+static SubnetID makeSubnet(const Net &net, const NetComponent &component) {
+  SubnetBuilder subnetBuilder;
+  CellMapping mapping;
+
+  for (const auto &input : component.inputs) {
+    const auto info = getCellInfo(input.source);
+    const auto index = info.type.isCombinational()
+        ? subnetBuilder.addInput()
+        : subnetBuilder.addInput(info.cellID.getSID());
+
+    const auto inputLink = makeInputLink(input);
+    mapping.inputs.insert(LinkPair{inputLink, index.idx});
+  }
+
+  for (const auto &inner : component.inners) {
+    const auto info = getCellInfo(inner);
+    const auto links = makeLinkList(info.cell, mapping);
+    const auto index = subnetBuilder.addCell(info.type.getSymbol(), links);
+
+    mapping.inners.insert(CellPair{info.cellID, index.idx});
+  }
+
+  for (const auto &output : component.outputs) {
+    const auto info = getCellInfo(output.target);
+    const auto link = makeLink(output.source, mapping);
+    const auto index = info.type.isCombinational()
+        ? subnetBuilder.addOutput(link)
+        : subnetBuilder.addOutput(link, info.cellID.getSID());
+
+    const auto outputLink = makeOutputLink(output);
+    mapping.outputs.insert(LinkPair{outputLink, index.idx});
+  }
+
+  return subnetBuilder.make();
 }
 
 std::vector<SubnetID> NetDecomposer::make(NetID netID) const {

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model2/array.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/link.h"
 #include "gate/model2/object.h"
@@ -65,6 +66,11 @@ public:
   /// Returns the input links of the cell.
   LinkList getLinks() const;
 
+  /// Returns the reference to input link of the cell.
+  LinkEnd &getLink(uint16_t port);
+  /// Returns the constant reference to input link of the cell.
+  const LinkEnd &getLink(uint16_t port) const;
+
 private:
   /// Number of links stored in place (the rest are located in a separate list).
   static constexpr size_t InPlaceLinks = 3;
@@ -84,7 +90,7 @@ private:
     LinkData() {}
 
     /// Links in the external list.
-    ListID listID;
+    ArrayID arrayID;
     /// In-place links.
     LinkEnd link[InPlaceLinks];
   } data;

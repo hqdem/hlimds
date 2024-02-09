@@ -71,6 +71,15 @@ enum CellSymbol : uint16_t {
 
 static_assert(sizeof(CellSymbol) == 2);
 
+static constexpr uint16_t LATCH_IN_D   = 0;
+static constexpr uint16_t LATCH_IN_ENA = 1;
+static constexpr uint16_t DFF_IN_D     = 0;
+static constexpr uint16_t DFF_IN_CLK   = 1;
+static constexpr uint16_t DFFrs_IN_D   = 0;
+static constexpr uint16_t DFFrs_IN_CLK = 1;
+static constexpr uint16_t DFFrs_IN_RST = 2;
+static constexpr uint16_t DFFrs_IN_SET = 3;
+
 //===----------------------------------------------------------------------===//
 // Cell Properties
 //===----------------------------------------------------------------------===//

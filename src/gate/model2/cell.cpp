@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model2/array.h"
 #include "gate/model2/cell.h"
-#include "gate/model2/list.h"
 
 namespace eda::gate::model {
 
@@ -18,11 +18,11 @@ Cell::Cell(CellTypeID typeID, const LinkList &links):
       data.link[i] = links[i];
     }
   } else {
-    List<uint64_t> list(fanin);
-    for (auto i = links.begin(); i != links.end(); ++i) {
-      list.push_back(LinkEnd::pack(*i));
+    Array<uint64_t> array(fanin);
+    for (size_t i = 0; i < links.size(); ++i) {
+      array[i] = LinkEnd::pack(links[i]);
     }
-    data.listID = list.getID();
+    data.arrayID = array.getID();
   }
 }
 
@@ -34,13 +34,31 @@ Cell::LinkList Cell::getLinks() const {
       links.push_back(data.link[i]);
     }
   } else {
-    List<uint64_t> list(data.listID);
-    for (auto i = list.begin(); i != list.end(); ++i) {
-      links.push_back(LinkEnd::unpack(*i));
+    Array<uint64_t> array(data.arrayID);
+    for (size_t i = 0; i < fanin; ++i) {
+      links.push_back(LinkEnd::unpack(array[i]));
     }
   }
 
   return links;
+}
+
+LinkEnd &Cell::getLink(uint16_t port) {
+  assert(port < fanin);
+  if (port <= InPlaceLinks) {
+    return data.link[port];
+  }
+  Array<uint64_t> array(data.arrayID);
+  return reinterpret_cast<LinkEnd&>(array[port]);
+}
+
+const LinkEnd &Cell::getLink(uint16_t port) const {
+  assert(port < fanin);
+  if (port <= InPlaceLinks) {
+    return data.link[port];
+  }
+  Array<uint64_t> array(data.arrayID);
+  return reinterpret_cast<const LinkEnd&>(array[port]);
 }
 
 } // namespace eda::gate::model

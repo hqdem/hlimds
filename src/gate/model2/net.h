@@ -115,6 +115,7 @@ class NetBuilder final {
 public:
   NetBuilder() {}
   void addCell(CellID cellID);
+  void connect(CellID cellID, uint16_t port, LinkEnd source);
   NetID make();
  
 private:

@@ -17,8 +17,6 @@ void NetBuilder::addCell(CellID cellID) {
   const auto &cell = Cell::get(cellID);
   const auto &type = cell.getType();
 
-  // TODO: Implement structural hashing.
-
   if (type.getSymbol() == IN) {
     inputs.push_back(cellID);
   } else if (type.getSymbol() == OUT) {
@@ -33,13 +31,23 @@ void NetBuilder::addCell(CellID cellID) {
     flipFlops.push_back(cellID);
   }
 
-  // Update the reference counts of the cell's sources.
   const auto links = cell.getLinks();
   for (auto link : links) {
+    if (link.getCellID() == OBJ_NULL_ID) {
+      // Skip unconnected links (required to support cycles).
+      continue;
+    }
+    // Update the reference counts of the cell's sources.
     auto &source = const_cast<Cell&>(link.getCell());
     assert(source.fanout != Cell::MaxFanout);
     source.fanout++;
   }
+}
+
+void NetBuilder::connect(CellID cellID, uint16_t port, LinkEnd source) {
+  auto &cell = Cell::get(cellID);
+  auto &link = cell.getLink(port);
+  link = source;
 }
 
 NetID NetBuilder::make() {

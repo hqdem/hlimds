@@ -51,7 +51,7 @@ public:
   const Cell &getCell() const;
   /// Returns the output port of the source cell.
   uint16_t getPort() const { return (value >> 8) & 0xffff; }
-  /// Checks whether the link is valid.
+  /// Checks whether the link-end is valid.
   bool isValid() const { return value & 1; }
 
 private:

@@ -23,8 +23,8 @@ using LinkPair = std::pair<Link, size_t>;
 using LinkMap  = std::unordered_map<Link, size_t>;
 using CellList = std::vector<CellID>;
 using CellSet  = std::unordered_set<CellID>;
-using CellPair = std::pair<CellID, size_t>;
-using CellMap  = std::unordered_map<CellID, size_t>;
+using CellPair = std::pair<CellID, std::pair<size_t, bool>>;
+using CellMap  = std::unordered_map<CellID, std::pair<size_t, bool>>;
 
 /// Maps net cells/links to subnet cell indices.
 struct CellMapping final {
@@ -64,24 +64,25 @@ inline Link makeOutputLink(const Link &link) {
 }
 
 /// Makes a subnet link.
-inline Subnet::Link makeLink(size_t index, uint16_t port) {
+inline Subnet::Link makeLink(size_t index, uint16_t port, bool inv) {
   const auto idx = static_cast<uint32_t>(index);
   const auto out = static_cast<uint8_t>(port);
-  return Subnet::Link{idx, out, 0};
+  return Subnet::Link{idx, out, inv};
 }
 
 /// Makes a subnet link for the given net link-end.
 inline Subnet::Link makeLink(LinkEnd source, const CellMapping &mapping) {
   const auto i = mapping.inners.find(source.getCellID());
   if (i != mapping.inners.end()) {
-    return makeLink(i->second, source.getPort());
+    const auto entry = i->second;
+    return makeLink(entry.first, source.getPort(), entry.second);
   }
 
   const Link inputLink{source.getCellID(), source.getPort(), 0, 0};
   const auto j = mapping.inputs.find(inputLink);
   assert(j != mapping.inputs.end());
 
-  return makeLink(j->second, 0);
+  return makeLink(j->second, 0, false);
 }
 
 /// Makes a subnet link list for the given net cell.
@@ -262,7 +263,7 @@ struct NetTraversalContext final {
   void nextLink() { stack.top().index++; }
 
   /// Maps cells to components.
-  CellMap belongsTo;
+  std::unordered_map<CellID, size_t> belongsTo;
   /// Stores the constructed components.
   std::vector<NetComponent> components;
   /// Component under construction.
@@ -325,31 +326,43 @@ static SubnetID makeSubnet(const Net &net, const NetComponent &component) {
 
   for (const auto &input : component.inputs) {
     const auto info = getCellInfo(input.source);
-    const auto index = info.type.isCombinational()
+    const auto link = info.type.isCombinational()
         ? subnetBuilder.addInput()
         : subnetBuilder.addInput(info.cellID.getSID());
 
     const auto inputLink = makeInputLink(input);
-    mapping.inputs.insert(LinkPair{inputLink, index.idx});
+    mapping.inputs.insert(LinkPair{inputLink, link.idx});
   }
 
   for (const auto &inner : component.inners) {
     const auto info = getCellInfo(inner);
-    const auto links = makeLinkList(info.cell, mapping);
-    const auto index = subnetBuilder.addCell(info.type.getSymbol(), links);
+    const auto ilinks = makeLinkList(info.cell, mapping);
 
-    mapping.inners.insert(CellPair{info.cellID, index.idx});
+    const auto neg = info.type.isNegative();
+    const auto sym = info.type.getSymbol();
+
+    Subnet::Link olink;
+
+    if (sym == BUF || sym == NOT) {
+      olink = makeLink(info.cell.getLink(0), mapping);
+    } else {
+      olink = subnetBuilder.addCell((neg ? getNegSymbol(sym) : sym), ilinks);
+    }
+
+    const auto idx = olink.idx;
+    const auto inv = olink.inv ^ neg;
+    mapping.inners.insert(CellPair{info.cellID, {idx, inv}});
   }
 
   for (const auto &output : component.outputs) {
     const auto info = getCellInfo(output.target);
-    const auto link = makeLink(output.source, mapping);
-    const auto index = info.type.isCombinational()
-        ? subnetBuilder.addOutput(link)
-        : subnetBuilder.addOutput(link, info.cellID.getSID());
+    const auto ilink = makeLink(output.source, mapping);
+    const auto olink = info.type.isCombinational()
+        ? subnetBuilder.addOutput(ilink)
+        : subnetBuilder.addOutput(ilink, info.cellID.getSID());
 
     const auto outputLink = makeOutputLink(output);
-    mapping.outputs.insert(LinkPair{outputLink, index.idx});
+    mapping.outputs.insert(LinkPair{outputLink, olink.idx});
   }
 
   return subnetBuilder.make();

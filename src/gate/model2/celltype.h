@@ -66,7 +66,10 @@ enum CellSymbol : uint16_t {
   /// Soft IP core (or a subnet).
   SOFT,
   /// Hard IP core.
-  HARD
+  HARD,
+
+  /// Incorrect type.
+  UNDEF
 };
 
 static_assert(sizeof(CellSymbol) == 2);
@@ -79,6 +82,23 @@ static constexpr uint16_t DFFrs_IN_D   = 0;
 static constexpr uint16_t DFFrs_IN_CLK = 1;
 static constexpr uint16_t DFFrs_IN_RST = 2;
 static constexpr uint16_t DFFrs_IN_SET = 3;
+
+inline CellSymbol getNegSymbol(CellSymbol symbol) {
+  switch (symbol) {
+  case ZERO: return ONE;
+  case ONE:  return ZERO;
+  case BUF:  return NOT;
+  case NOT:  return BUF;
+  case AND:  return NAND;
+  case OR:   return NOR;
+  case XOR:  return XNOR;
+  case NAND: return AND;
+  case NOR:  return OR;
+  case XNOR: return XOR;
+  default: assert(false);
+  }
+  return UNDEF;
+}
 
 //===----------------------------------------------------------------------===//
 // Cell Properties

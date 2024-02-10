@@ -2,7 +2,7 @@ FROM isprasmvg/ubuntu:base
 
 RUN apt-get update && apt install -y autoconf bison clang clang-tidy cmake flex g++ gcc \
     iverilog liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld \
-    make ninja-build python3 python3-pip zlib1g zlib1g-dev
+    make ninja-build python3 python3-pip zlib1g zlib1g-dev gtkwave
 RUN pip install liberty-parser
 RUN apt-get update && apt install -y lcov
 

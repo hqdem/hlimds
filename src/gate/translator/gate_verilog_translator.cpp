@@ -10,7 +10,7 @@
 
 #include "gate/model2/printer/printer.h"
 #include "gate/translator/fir_to_model2/fir_to_model2.h"
-#include "gate/translator/yosys_converter_firrtl.h"
+#include "gate/translator/firrtl.h"
 
 #include "options.h"
 
@@ -27,9 +27,15 @@ namespace eda::gate::model {
 int translateToGateVerilog(
     const std::string &inputFileName,
     const TranslatorOptions &gateVerilog) {
-  YosysConverterFirrtl(inputFileName, gateVerilog.topModuleName);
   fs::path firFileName = inputFileName;
   firFileName.replace_extension(".fir");
+
+  FirrtlConfig cfg;
+  cfg.debugMode = false;
+  cfg.outputNamefile = firFileName.string();
+  cfg.files.push_back(inputFileName);
+  translateToFirrtl(cfg);
+
   Translator translator{ MLIRModule::loadFromFIRFile(firFileName) };
 
   // Convert the 'FIRRTL' representation to the 'model2' representation.

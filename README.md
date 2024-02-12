@@ -107,12 +107,12 @@ The `<path_to_cudd_dir>` refers to the path to the CUDD sources directory.
 
 ```
 cd <workdir>
-git clone https://github.com/ispras/staccato 
+git clone https://github.com/ispras/staccato
 cd staccato
 make BUILD_TYPE=shared CUDD_INCLUDE=<path_to_cudd_dir> SM="-DDISABLE_SM"
 sudo make install
 ```
- 
+
 ### Configuring with `Yosys`
 
 1. Get `Yosys` source code from the [^yosys] into `<yosys-dir>`
@@ -200,14 +200,15 @@ cd <workdir>
 git clone --recursive https://gitlab.ispras.ru/mvg/utopia-eda.git
 cd utopia-eda
 export UTOPIA_HOME=<workdir>/utopia-eda
+export Yosys_ROOT=<workdir>/yosys
 ```
-Please keep `UTOPIA_HOME` variable and its value in your system permanently.
+Please keep `UTOPIA_HOME` and `Yosys_ROOT` variables and the values in your system permanently.
 
-### Project Building 
+### Project Building
 
 ```
 cd utopia-eda
-cmake -S . -B build -DYosys_ROOT=<yosys-dir> -G Ninja
+cmake -S . -B build -G Ninja
 cmake --build build
 ```
 or simply run the following script:
@@ -232,16 +233,35 @@ To list the Utopia EDA options, do the following:
 ./build/src/umain --help-all
 ```
 
-#### Run Verilog-to-FIRRTL Translator
+### Running Verilog-to-FIRRTL Translator
+```
+./build/src/umain to_firrtl <file(s)>
+```
+
+When selecting this option, you must specify the path to the Verilog file(s) (`file(s)`).
+The results of the translation will be in the standard output file.
+(Top module of the descriptions will be determined automatically).
 
 ```
-./build/src/umain to_firrtl <file> --top <module-name>
+./build/src/umain to_firrtl <file(s)> --top <module-name>
 ```
+
 When selecting this option, you must specify the name of the top module
-(`module-name`) in the Verilog file and the path to the file itself (`file`).
-The results of the translation are: `*.fir` description and a file with
-debugging information. These files will be generated in the same directory
-as the input Verilog file.
+(`module-name`) in the Verilog file(s) and the path to the file(s) itself (`file(s)`).
+The results of the translation will be as the first example.
+
+```
+./build/src/umain to_firrtl <file(s)> --output <namefile>
+```
+
+When selecting this option, you must specify the name of file (`namefile`), where will be result of
+the translation. The file will be placed in same directory with the application.
+
+```
+./build/src/umain to_firrtl <file(s)> --verbose
+```
+
+When selecting these option, debug information will be generated in standart error output file.
 
 #### Running FIRRTL-to-model2 Translator
 

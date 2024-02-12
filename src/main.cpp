@@ -220,8 +220,14 @@ int main(int argc, char **argv) {
     result |= translateToGateVerilog(file, options.gateVerilog);
   }
 
-  for (auto file : options.firrtl.files()) {
-    result |= translateToFirrtl(file, options.firrtl);
+  if (!options.firrtl.files().empty()) {
+    FirrtlConfig cfg;
+    FirRtlOptions &opts = options.firrtl;
+    cfg.debugMode = opts.debugMode;
+    cfg.outputNamefile = opts.outputNamefile;
+    cfg.topModule = opts.top;
+    cfg.files = opts.files();
+    result |= translateToFirrtl(cfg);
   }
 
   for (auto file : options.model2.files()) {

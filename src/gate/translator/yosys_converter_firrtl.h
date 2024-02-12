@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "gate/translator/firrtl.h"
+
 #include <kernel/yosys.h>
 
 #include <cassert>
@@ -22,10 +24,17 @@
  * destruction. Yosys has issues preventing to use it repeatedly
  * after shutdown.
  */
+
 class YosysConverterFirrtl {
 
-  std::ofstream out;
-  std::ofstream fout;
+  template<typename T>
+  using IdDict = Yosys::hashlib::dict<Yosys::RTLIL::IdString, T>;
+
+  std::ostream &outputFile;
+  std::ostream &debug;
+  std::fstream file;
+
+  static std::ostream devnull;
 
   enum PinMode {
     PM_Input,
@@ -124,7 +133,10 @@ class YosysConverterFirrtl {
     O_AsClock,
     O_AsAsyncReset,
     O_Memrd,
-    O_Memwr
+    O_Memwr,
+    O_Nor,
+    O_Nand,
+    O_Xnor
   };
 
   struct Operand {
@@ -186,6 +198,11 @@ class YosysConverterFirrtl {
     int bitRhsHi;
   };
 
+  struct FlipFlop {
+    int clk, data, lhs, out, rst;
+    std::pair<int, int> offsetDataPort;
+  };
+
   struct Module {
     std::string id;
     std::map<int, Signal *> signals;
@@ -237,6 +254,7 @@ class YosysConverterFirrtl {
   LhsStack stackLHS;
 
   std::map<int, Yosys::RTLIL::Module *> modules;
+  std::map<int, std::string> modulesName;
   std::map<std::pair<int, std::string>, PinMode> portsMode;
 
   std::string genName = "_GEN_";
@@ -244,64 +262,45 @@ class YosysConverterFirrtl {
 
 public:
 
-  YosysConverterFirrtl(const std::string &namefile,
-                const std::string &topModule);
+  YosysConverterFirrtl(const FirrtlConfig &opts);
 
-  static void declareSignal(
-      std::ostream &os,
-      const Signal &sig);
+  void deterTopModule(
+    Yosys::RTLIL::Design &design, const std::string &topModule);
 
-  void declareMemory(
-      std::ostream &os,
-      const Memory &memory);
+  static void declareSignal(std::ostream &os, const Signal &sig);
 
-  void declareModule(
-      std::ostream &os,
-      const Module &circuit);
+  void declareMemory(std::ostream &os, const Memory &memory);
+
+  void declareModule(std::ostream &os, const Module &circuit);
 
   static bool isMean(const std::string &mean);
 
-  static std::string getNameSignal(
-      const Signal *sig);
+  static std::string getNameSignal(const Signal *sig);
 
-  static std::string makeOperandPrint(
-      const Operand &instr);
+  static std::string makeOperandPrint(const Operand &instr);
 
-  static std::string makeNullary(
-      const SigAssign &instr);
+  static std::string makeNullary(const SigAssign &instr);
 
-  static std::string makeUnary(
-    const SigAssign &instr);
+  static std::string makeUnary(const SigAssign &instr);
 
-  static std::string makeBinary(
-      const SigAssign &instr);
+  static std::string makeBinary(const SigAssign &instr);
 
-  static std::string makeTernary(
-    const SigAssign &instr);
+  static std::string makeTernary(const SigAssign &instr);
 
   static void declareConnectInstruction(
-    std::ostream &os,
-    const Instruction &instr);
+      std::ostream &os, const Instruction &instr);
 
   static void declareWhenInstruction(
-    std::ostream &os,
-    const Instruction &instr);
+      std::ostream &os, const Instruction &instr);
 
-  void declareInstInstruction(
-    std::ostream &os,
-    const Instruction &instr);
+  void declareInstInstruction(std::ostream &os, const Instruction &instr);
 
-  static void declareSigAssign(
-      std::ostream &os,
-      const SigAssign &instr);
+  static void declareSigAssign(std::ostream &os, const SigAssign &instr);
 
-  void declareInstruction(
-      std::ostream &os,
-      const Instruction &instr);
+  void declareInstruction(std::ostream &os, const Instruction &instr);
 
   void declareInstructions(
-      std::ostream &os,
-      const std::vector<Instruction> &vec);
+      std::ostream &os, const std::vector<Instruction> &vec);
 
   ~YosysConverterFirrtl();
 
@@ -324,31 +323,24 @@ private:
 
   static std::string operatorToString(Operator op);
 
-  void makeMapModules(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Module *> &m_);
+  void makeMapModules(const IdDict<Yosys::RTLIL::Module *> &m_);
 
   void readModules(const Yosys::RTLIL::Design &des);
 
   static std::string readIdString(const Yosys::RTLIL::IdString &str);
 
-  static bool hasIllegalSymbols(
-      const std::string &inputStr);
+  static bool hasIllegalSymbols(const std::string &inputStr);
 
-  std::string checkName(
-      const std::string &wireName);
+  std::string checkName(std::string wireName);
 
-  void walkWires(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Wire *> &ywires);
+  void walkWires(const IdDict<Yosys::RTLIL::Wire *> &ywires);
 
   static bool isChunk(
-      const Yosys::RTLIL::SigSpec &first,
-      const Yosys::RTLIL::SigSpec &second);
+      const Yosys::RTLIL::SigSpec &first, const Yosys::RTLIL::SigSpec &second);
 
-  static std::string getConst(
-      const Yosys::RTLIL::Const &opConst);
+  static std::string getConst(const Yosys::RTLIL::Const &opConst);
 
-  static int getIdMemory(
-      const Yosys::RTLIL::Const &opConst);
+  static int getIdMemory(const Yosys::RTLIL::Const &opConst);
 
   static std::string getStateString(const Yosys::RTLIL::State state);
 
@@ -356,49 +348,36 @@ private:
 
   int genDontCareBits(Signal *sig);
 
-  int generateConstSig(
-      const Yosys::RTLIL::SigSpec &sigWire);
+  int generateConstSig(const Yosys::RTLIL::SigSpec &sigWire);
 
-  int generateConst(
-      const std::string &digit);
+  int generateConst(const std::string &digit);
 
-  void requireOperand(Operand &op,
-                      int index,
-                      int hi,
-                      int lo);
+  void requireOperand(
+      Operand &op, int index, int hi, int lo);
 
-  size_t countWidth(const int index);
+  size_t countWidth(int index);
 
-  int generateGenWire(const int width);
+  int generateGenWire(int width);
 
   int makeCat(const Yosys::RTLIL::SigSpec &sigWire);
 
-  int deterSigSpec(
-      const Yosys::RTLIL::SigSpec &sigWire);
+  int deterSigSpec(const Yosys::RTLIL::SigSpec &sigWire);
 
-  std::pair<int, int> deterSigSpecBits(
-      const Yosys::RTLIL::SigSpec &sigWire);
+  std::pair<int, int> deterSigSpecBits(const Yosys::RTLIL::SigSpec &sigWire);
 
-  std::string determineSigSpec(
-      const Yosys::RTLIL::SigSpec &sigWire);
+  std::string determineSigSpec(const Yosys::RTLIL::SigSpec &sigWire);
 
-  bool isMemoryType(const int index);
+  bool isMemoryType(int index);
 
   Statement determineStatement(int index);
 
-  bool determineClkPolarity(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Const> &parms_);
+  bool determineClkPolarity(const IdDict<Yosys::RTLIL::Const> &parms_);
 
-  bool determineRstPolarity(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Const> &parms_);
+  bool determineRstPolarity(const IdDict<Yosys::RTLIL::Const> &parms_);
 
-  int makePolarityDriverSig(
-      const bool posedge,
-      const int clk);
+  int makePolarityDriverSig(bool posedge, int clk);
 
-  int makePolarityRstSig(
-      const bool posedge,
-      const int rst);
+  int makePolarityRstSig(bool posedge, int rst);
 
   void makeRenameOutput(int index);
 
@@ -406,53 +385,42 @@ private:
 
   void makeDFF(const Yosys::RTLIL::Cell *cell, bool isAsync = false);
 
-  std::string determineInitValue(
-    const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Const> &parms_);
+  std::string determineInitValue(const IdDict<Yosys::RTLIL::Const> &parms_);
 
   void makeADFF(const Yosys::RTLIL::Cell *cell);
 
   void makeInstance(
       const int typeFunction,
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::SigSpec> &cons,
+      const IdDict<Yosys::RTLIL::SigSpec> &cons,
       const std::string &nameInst);
 
-  static std::string binaryToDecimal(
-      const std::string &binaryStr);
+  static std::string binaryToDecimal(const std::string &binaryStr);
 
-  void checkShiftOperator(
-      Operator &operator_,
-      RhsOperands &leafs);
+  void checkShiftOperator(Operator &operator_, RhsOperands &leafs);
 
   void checkPad(
-      const int firstParms,
-      const Operator operator_,
-      RhsOperands &leafs);
+      int firstParms, Operator operator_, RhsOperands &leafs);
 
   void makeUnaryConnect(
       const int typeFunction,
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::SigSpec> &cons);
+      const IdDict<Yosys::RTLIL::SigSpec> &cons);
 
   void makeBinaryConnect(
       const int typeFunction,
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::SigSpec> &cons);
+      const IdDict<Yosys::RTLIL::SigSpec> &cons);
 
   void printCell(const Yosys::RTLIL::Cell *cell);
 
   Memory *getMemory(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Const> &parameters);
+      const IdDict<Yosys::RTLIL::Const> &parameters);
 
-  bool isReadMemory(const int index);
+  bool isReadMemory(int index);
 
-  bool isWriteMemory(const int index);
+  bool isWriteMemory(int index);
 
-  void fillMask(
-      Memory *mem,
-      Instruction &instr,
-      Controller &controller);
+  void fillMask(Memory *mem, Instruction &instr, Controller &controller);
 
-  void makeController(
-      const Yosys::RTLIL::Cell *cell,
-      Memory *mem);
+  void makeController(const Yosys::RTLIL::Cell *cell, Memory *mem);
 
   TypeController determineTypeController(const int index);
 
@@ -473,21 +441,21 @@ private:
 
   int buildLHS(const Yosys::RTLIL::SigSpec &lhs);
 
-  void makeMux(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::SigSpec> &cons);
+  void makeMux(const IdDict<Yosys::RTLIL::SigSpec> &cons);
 
   bool isMux(const int index);
 
-  void walkCells(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Cell *> &ycells);
+  void walkCells(const IdDict<Yosys::RTLIL::Cell *> &ycells);
 
-  static bool isUnOperator(Operator func);
+  static bool isUnOperator(const Operator func);
 
-  static bool isBinOperator(Operator func);
+  static bool isBinOperator(const Operator func);
 
-  static bool isTernOperator(Operator func);
+  static bool isTernOperator(const Operator func);
 
-  static int determineTypeOperator(Operator func);
+  static bool isSpecifiedOperator(const Operator func);
+
+  static int determineTypeOperator(const Operator func);
 
   void buildAssigns(int root, bool isInvalid = false);
 
@@ -503,29 +471,25 @@ private:
 
   void walkDepsLhs();
 
-  void walkConnections(
-      const std::vector<std::pair<Yosys::RTLIL::SigSpec, Yosys::RTLIL::SigSpec>> &cons);
+  void walkConnections(const std::vector<Yosys::RTLIL::SigSig> &cons);
 
   void printConnections(
       const Yosys::RTLIL::SigSpec &op1,
       const Yosys::RTLIL::SigSpec &op2);
 
   void walkParameteres(
-      const Yosys::hashlib::idict<Yosys::RTLIL::IdString> &avail_parameters);
+      const Yosys::hashlib::idict<Yosys::RTLIL::IdString> &availParms);
 
   void walkPorts(const std::vector<Yosys::RTLIL::IdString> &ports);
 
-  bool isSigSpec(
-      const int op1,
-      const int op2);
+  bool isSigSpec(const int op1, const int op2);
 
-  bool isUndef(const Yosys::RTLIL::SigSpec &sig1,
-               const Yosys::RTLIL::SigSpec &sig2);
+  bool isUndef(
+      const Yosys::RTLIL::SigSpec &sig1, const Yosys::RTLIL::SigSpec &sig2);
 
   void determineInvalid(Signal *sig);
 
-  static bool containsIndex(
-      const std::vector<int>& vec, int index);
+  static bool containsIndex(const std::vector<int>& vec, int index);
 
   void fillLhsProc(
       const int lhs,
@@ -534,20 +498,15 @@ private:
       int &curBit,
       std::map<int, std::vector<RhsDeps>> &lhsProc);
 
-  static bool compareDataByBitLhs(
-      const RhsDeps &a,
-      const RhsDeps &b);
+  static bool compareDataByBitLhs(const RhsDeps &a, const RhsDeps &b);
 
   static void removeElementsByIndices(
       std::vector<RhsDeps> &targetVector,
       const std::vector<int> &indicesToRemove);
 
-  void keepLastElementsByBitLhs(
-      std::vector<RhsDeps> &dataVector);
+  void keepLastElementsByBitLhs(std::vector<RhsDeps> &dataVector);
 
-  void makeAssign(
-      const int lhs,
-      const std::vector<RhsDeps> &vec);
+  void makeAssign(const int lhs, const std::vector<RhsDeps> &vec);
 
   void makeLhs(
       const Yosys::RTLIL::SigSpec &sig,
@@ -560,32 +519,23 @@ private:
       const std::vector<Yosys::RTLIL::SigSig> &actions,
       bool isInvalid = false);
 
-  static std::vector<int> findDontCareBits(std::string &const_);
+  static std::vector<int> findDontCareBits(std::string &value);
 
-  int makeCatWire(
-      std::vector<int> &vec,
-      bool isInvalid = false);
+  int makeCatWire(std::vector<int> &vec, bool isInvalid = false);
 
-  int assignBit(const int op, const int bit);
+  int assignBit(int op, int bit);
 
-  std::pair<int, int> makeCat(
-      const int op2_,
-      const int op1_,
-      std::vector<int> &indices);
+  std::pair<int, int> makeCat(int op2_, int op1_, std::vector<int> &indices);
 
-  std::pair<int, int> giveDontCareBits(
-      const int op2_,
-      const int op1_);
+  std::pair<int, int> giveDontCareBits(int op2_, int op1_);
 
   int makeCondSignal(const Yosys::RTLIL::SigSpec &signal);
 
   void fillParameters(
-      const Yosys::RTLIL::SigSpec &op,
-      int &hi,
-      int &lo);
+      const Yosys::RTLIL::SigSpec &op, int &hi, int &lo);
 
-  int makeCase(const Yosys::RTLIL::SigSpec &op1,
-               const Yosys::RTLIL::SigSpec &op2);
+  int makeCase(
+      const Yosys::RTLIL::SigSpec &op1, const Yosys::RTLIL::SigSpec &op2);
 
   void requireCases();
 
@@ -606,89 +556,64 @@ private:
 
   void walkCaseRule(const Yosys::RTLIL::CaseRule &caseRule);
 
-  static std::string determineSyncType(
-      const Yosys::RTLIL::SyncType sync_type);
+  static std::string determineSyncType(Yosys::RTLIL::SyncType sync_type);
 
   int makeDriverSignal(int driverSig, SigAssign *sa_ = nullptr);
 
-  void addDelayedAssign(
-      Signal *lhs,
-      Signal *op1);
+  void addDelayedAssign(Signal *lhs, Signal *op1);
 
   int copySignal(Signal *sig);
 
   void redefPorts(
-      const std::vector<Yosys::RTLIL::SigSig> &ports,
-      const int driver);
+      const std::vector<Yosys::RTLIL::SigSig> &ports, int driver);
 
   int makeMyInit(const Yosys::RTLIL::SigSpec &op2);
 
   void redefRstPorts(
-      const std::vector<Yosys::RTLIL::SigSig> &ports,
-      const int driver);
+      const std::vector<Yosys::RTLIL::SigSig> &ports, int driver);
 
   void makeClockSignal(
-      const int driverSig,
+      int driverSig,
       bool isNegedge,
       const std::vector<Yosys::RTLIL::SigSig> &syncActions);
 
   void makeRstSignal(
-      const int driverSig,
+      int driverSig,
       bool isLevel0,
       const std::vector<Yosys::RTLIL::SigSig> &syncActions);
 
-  void makeListBlockedRHS(
-      const std::vector<Yosys::RTLIL::SigSig> &actions);
+  void makeListBlockedRHS(const std::vector<Yosys::RTLIL::SigSig> &actions);
 
-  void walkSyncRule(
-      std::vector<Yosys::RTLIL::SyncRule *> &syncs);
+  void walkSyncRule(std::vector<Yosys::RTLIL::SyncRule *> &syncs);
 
-  void walkProcesses(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Process *> &processes);
+  void walkProcesses(const IdDict<Yosys::RTLIL::Process *> &processes);
 
-  void walkMemories(
-      const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::Memory *> &processes);
+  void walkMemories(const IdDict<Yosys::RTLIL::Memory *> &processes);
 
   void requireDelayedAssign();
 
   void walkModule(const Yosys::RTLIL::Module *m);
 
-  static std::string getPinModeName(const PinMode mode);
+  static std::string getPinModeName(PinMode mode);
 
-  static std::string getTypeName(const Type type);
+  static std::string getTypeName(Type type);
 
-  static Operator logicFunction(const int type);
+  static Operator logicFunction(int type);
 
-  int makeCatSigSpec(
-    const Yosys::RTLIL::SigSpec &sigWire);
+  int makeCatSigSpec(const Yosys::RTLIL::SigSpec &sigWire);
 
   static int findDataByBitLhsHi(
-    const std::vector<RhsDeps> &vec,
-    int searchValue);
+      const std::vector<RhsDeps> &vec, int searchValue);
 
-  int deterSigSpecRHS(
-    const Yosys::RTLIL::SigSpec &sigWire);
+  int deterSigSpecRHS(const Yosys::RTLIL::SigSpec &sigWire);
 
-  std::pair<int, int> deterSigSpecBitsRHS(
-    const Yosys::RTLIL::SigSpec &sigWire);
+  std::pair<int, int> deterSigSpecBitsRHS(const Yosys::RTLIL::SigSpec &sigWire);
 
-  void createOutputFiles(
-    const std::string &namefile,
-    const std::string &topModule);
+  void createOutputFile(const std::string &outputNamefile);
 
-  int makePolaritySig(
-    const bool posedge,
-    const int clk);
+  int makePolaritySig(bool posedge, int clk);
 
-  void fillPortsDFF(
-    int &clk,
-    int &data,
-    int &outLHS,
-    int &out,
-    int &rst,
-    std::pair<int, int> &parmData,
-    bool isAsync,
-    const Yosys::hashlib::dict<Yosys::RTLIL::IdString, Yosys::RTLIL::SigSpec> &cons);
+  FlipFlop fillPortsDFF(bool isAsync, const IdDict<Yosys::RTLIL::SigSpec> &cons);
 
   const char *SID_A = "\\A";
   const char *SID_ADDR = "\\ADDR";
@@ -706,6 +631,3 @@ private:
   const char *SID_Q = "\\Q";
   const char *SID_Y = "\\Y";
 };
-
-
-

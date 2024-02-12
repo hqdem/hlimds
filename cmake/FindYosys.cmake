@@ -27,5 +27,3 @@ if(Yosys_FOUND)
         )
     endif()
 endif()
-
-

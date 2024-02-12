@@ -30,18 +30,21 @@ public:
   using Solver   = eda::gate::solver::Solver;
 
   static size_t estimateVarNum(const Subnet &subnet) {
-    const auto &entries = subnet.getEntries();
-    return static_cast<size_t>(1.25 * entries.size());
+    return static_cast<size_t>(1.25 * subnet.size());
   }
 
+/*
   SubnetEncoderContext(size_t expectedVarNum, Solver &solver):
       solver(solver) {
     next.reserve(expectedVarNum);
     vars.reserve(expectedVarNum);
   }
+*/
 
   SubnetEncoderContext(const Subnet &subnet, Solver &solver):
-    SubnetEncoderContext(estimateVarNum(subnet), solver) {}
+      solver(solver), next(subnet.size()) {
+    vars.reserve(estimateVarNum(subnet));
+  }
 
   Variable var(size_t idx, uint16_t out) const {
     return vars[pos(idx, out)];

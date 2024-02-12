@@ -172,8 +172,8 @@ public:
   /// Returns the minimum and maximum path lengths.
   std::pair<uint32_t, uint32_t> getPathLength() const;
 
-  /// Returns the overall number of cells including inputs and outputs.
-  uint32_t size() const { return nCell; }
+  /// Returns the overall number of entries including inputs and outputs.
+  uint32_t size() const { return nEntry; }
 
   /// Returns the array of entries.
   Array<Entry> getEntries() const { return Array<Entry>(entries); }
@@ -218,15 +218,15 @@ public:
 private:
   /// Constructs a subnet.
   Subnet(uint16_t nIn, uint16_t nOut, const std::vector<Entry> &entries):
-      nIn(nIn), nOut(nOut), nCell(entries.size()),
+      nIn(nIn), nOut(nOut), nEntry(entries.size()),
       entries(ArrayBlock<Entry>::allocate(entries, true, true)) {}
 
   /// Number of inputs.
   const uint16_t nIn;
   /// Number of outputs.
   const uint16_t nOut;
-  /// Total number of cells (including inputs and outputs).
-  const uint32_t nCell;
+  /// Total number of entries.
+  const uint32_t nEntry;
 
   /// Topologically sorted array of entries.
   const ArrayID entries;

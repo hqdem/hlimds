@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
+#include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
@@ -34,8 +35,7 @@ bool BiDecompositionTest(size_t numVars) {
     BiDecomposition::KittyTT tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
     const auto &subnet = Subnet::get(biDecomposition.synthesize(tt));
-    auto ttCopy = eda::gate::model::evaluate(subnet);
-    flag &= (ttCopy == tt);
+    flag &= eda::gate::model::utils::equalTruthTables(subnet, tt);
   }
 
   return flag;

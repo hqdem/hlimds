@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/resynthesis/de_micheli.h"
 
@@ -28,7 +29,7 @@ void launchDeMicheliTest(const TruthTable &func, size_t bound = -1) {
 
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
   size_t subnetSize = subnet.size();
 
   EXPECT_TRUE(areEqual && subnetSize <= bound);

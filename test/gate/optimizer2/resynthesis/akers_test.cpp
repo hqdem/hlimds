@@ -6,8 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/akers.h"
+#include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/optimizer2/resynthesis/akers.h"
 
 #include "gtest/gtest.h"
 #include "mockturtle/networks/mig.hpp"
@@ -84,7 +85,7 @@ TEST(AkersTest2, NOT1) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() == 2));
 }
@@ -99,7 +100,7 @@ TEST(AkersTest2, One3) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
@@ -114,7 +115,7 @@ TEST(AkersTest2, Zero3) {
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
@@ -129,7 +130,7 @@ TEST(AkersTest2, OR2) {
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
@@ -144,7 +145,7 @@ TEST(AkersTest2, AND2) {
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
@@ -159,7 +160,7 @@ TEST(AkersTest2, XOR2) {
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() <= 8));
 }
@@ -174,7 +175,7 @@ TEST(AkersTest2, XOR3) {
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() == 7));
 }
@@ -189,7 +190,7 @@ TEST(AkersTest2, XOR4) {
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() <= 18));
 }
@@ -208,7 +209,7 @@ TEST(AkersTest2, MAJ3) {
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() == 5));
 }
@@ -224,7 +225,7 @@ TEST(AkersTest2, MAJ5) {
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual && (subnet.size() == 10));
 }
@@ -242,7 +243,7 @@ TEST(AkersTest2, RandomFunc5) {
   const auto &subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual);
 }
@@ -256,7 +257,7 @@ TEST(AkersTest2, RandomFunc6) {
   const auto &subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual);
 }
@@ -270,7 +271,7 @@ TEST(AkersTest2, RandomFunc7) {
   const auto &subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual);
 }
@@ -284,7 +285,7 @@ TEST(AkersTest2, RandomFunc8) {
   const auto &subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
-  bool areEqual = (func == eda::gate::model::evaluate(subnet));
+  bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
 
   EXPECT_TRUE(areEqual);
 }

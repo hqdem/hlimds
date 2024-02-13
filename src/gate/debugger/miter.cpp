@@ -108,27 +108,16 @@ GNet *miter(const GNet &net1, const GNet &net2, const GateIdMap &gmap) {
 }
 
 Compiled makeCompiled(const GNet &miter) {
-  assert(miter.nOuts() == 1);
   static simulator::Simulator simulator;
-  GNet::In gnetInput(1);
-  auto &input = gnetInput[0];
 
-  for (auto srcLink : miter.sourceLinks()) {
-    input.push_back(srcLink.target);
-  }
-
-  Gate::SignalList inputs;
-  GateId outputId = (*miter.targetLinks().begin()).source;
   GNet::LinkList in;
-
-  for (size_t n = 0; n < miter.nSourceLinks(); n++) {
-    in.push_back(GNet::Link(input[n]));
+  for (auto srcLink : miter.sourceLinks()) {
+    in.push_back(GNet::Link(srcLink.target));
   }
 
-  GNet::LinkList out{Gate::Link(outputId)};
-
-  for (auto input : inputs) {
-    in.push_back(GNet::Link(input.node()));
+  GNet::LinkList out;
+  for (auto trgLink : miter.targetLinks()) {
+    out.push_back(GNet::Link(trgLink.source));
   }
 
   return simulator.compile(miter, in, out);

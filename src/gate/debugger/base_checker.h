@@ -77,27 +77,27 @@ struct CheckerResult {
   }
 
   /// Checks if the status is error.
-  bool isError() {
+  bool isError() const {
     return status == CheckerStatus::ERROR;
   }
 
   /// Checks if the status is unknown.
-  bool isUnknown() {
+  bool isUnknown() const {
     return status == CheckerStatus::UNKNOWN;
   }
 
   /// Checks if the status is equivalence.
-  bool equal() {
+  bool equal() const {
     return status == CheckerStatus::EQUAL;
   }
 
   /// Checks if the status is non-equivalence.
-  bool notEqual() {
+  bool notEqual() const {
     return status == CheckerStatus::NOTEQUAL;
   }
 
   /// Returns a counter example if the status is non-equivalence.
-  std::vector<bool> getCounterExample() {
+  std::vector<bool> getCounterExample() const {
     assert(status == CheckerStatus::NOTEQUAL);
     return this->counterEx;
   }

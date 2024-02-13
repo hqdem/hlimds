@@ -80,6 +80,7 @@ add_library(Gate OBJECT
   printer/dot.cpp
   printer/gate_verilog.cpp
   printer/graphml.cpp
+  printer/vcd.cpp
   simulator/simulator.cpp
   techoptimizer/library/cell.cpp
   techoptimizer/cut_based_tech_mapper/strategy/min_delay.cpp

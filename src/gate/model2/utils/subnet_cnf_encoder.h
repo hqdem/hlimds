@@ -33,14 +33,6 @@ public:
     return static_cast<size_t>(1.25 * subnet.size());
   }
 
-/*
-  SubnetEncoderContext(size_t expectedVarNum, Solver &solver):
-      solver(solver) {
-    next.reserve(expectedVarNum);
-    vars.reserve(expectedVarNum);
-  }
-*/
-
   SubnetEncoderContext(const Subnet &subnet, Solver &solver):
       solver(solver), next(subnet.size()) {
     vars.reserve(estimateVarNum(subnet));
@@ -67,6 +59,7 @@ public:
   }
 
   void setVars(size_t idx, uint16_t nOut) {
+    assert(idx < next.size());
     next[idx] = pos(idx, nOut);
 
     while (next[idx] > vars.size()) {
@@ -84,6 +77,7 @@ public:
 
 private:
   size_t pos(size_t idx, uint16_t out) const {
+    assert(idx < next.size());
     return idx == 0 ? out : next[idx - 1] + out;
   }
 

@@ -130,7 +130,7 @@ public:
         assert(innerSubnet.getOutNum() == type.getOutNum());
 
         // New subnet encoding context w/ the same solver.
-        SubnetEncoderContext innerContext(innerSubnet, solver);
+        SubnetEncoderContext innerContext(innerSubnet, solver /* the same */);
         encode(innerSubnet, innerContext, solver);
 
         // Create boolean variables for the cell outputs.
@@ -144,7 +144,7 @@ public:
         }
 
         // Encode the output bindings.
-        const size_t out = subnet.getEntries().size() - subnet.getOutNum();
+        const size_t out = innerSubnet.size() - innerSubnet.getOutNum();
         for (size_t j = 0; j < type.getOutNum(); ++j) {
           // The j-th cell output <= the j-th subnet output.
           const auto k = out + j;

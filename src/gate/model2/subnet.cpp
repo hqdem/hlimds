@@ -65,12 +65,11 @@ Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
 
   const bool in  = (typeID == CELL_TYPE_ID_IN);
   const bool out = (typeID == CELL_TYPE_ID_OUT);
-  const auto idx = entries.size();
 
   assert((!in || entries.size() == nIn)
       && "Input cells after non-input cells are not allowed");
-  assert((out || nOut == 0)
-      && "Non-output cells after output cells are not allowed");
+
+  const auto idx = allocEntry();
 
   for (const auto link : links) {
     auto &cell = entries[link.idx].cell;
@@ -81,7 +80,10 @@ Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
     cell.refcount++;
   }
 
-  entries.emplace_back(typeID, links);
+  entries[idx] = Subnet::Entry(typeID, links);
+  if (subnetEnd != boundEntryID) {
+    setOrder(subnetEnd, idx);
+  }
   if (in)  nIn++;
   if (out) nOut++;
 
@@ -126,7 +128,7 @@ Subnet::Link SubnetBuilder::addCellTree(
 
 Subnet::LinkList SubnetBuilder::addSubnet(
     const SubnetID subnetID, const LinkList &links) {
-  
+
   const auto &subnet = Subnet::get(subnetID);
   const auto &subnetEntries = subnet.getEntries();
 
@@ -157,7 +159,7 @@ Subnet::LinkList SubnetBuilder::addSubnet(
     }
   }
 
-  return outs; 
+  return outs;
 }
 
 Subnet::Link SubnetBuilder::addSingleOutputSubnet(
@@ -166,6 +168,131 @@ Subnet::Link SubnetBuilder::addSingleOutputSubnet(
   assert(subnet.getOutNum() == 1);
 
   return addSubnet(subnetID, links).front();
+}
+
+void SubnetBuilder::replace(
+    const SubnetID rhsID,
+    std::unordered_map<std::size_t, std::size_t> &rhsToLhs) {
+
+  if (subnetEnd == boundEntryID) {
+    subnetEnd = entries.size() - 1;
+  }
+  const Subnet &rhs = Subnet::get(rhsID);
+  assert(rhs.getOutNum() == 1);
+  std::size_t prevNewCellID = (std::size_t)-1;
+  const auto &rhsEntries = rhs.getEntries();
+
+  for (std::size_t i = 0; i < rhsEntries.size() - 1; ++i) {
+    const Subnet::Cell &cell = rhsEntries[i].cell;
+    assert(cell.arity <= Subnet::Cell::InPlaceLinks);
+    if (cell.isIn()) {
+      continue;
+    }
+
+    LinkList curCellLinks;
+    for (const auto &link : rhs.getLinks(i)) {
+      curCellLinks.push_back(Link(rhsToLhs[link.idx], link.out, link.inv));
+    }
+
+    std::size_t prevEntriesN = entries.size();
+    std::size_t prevEmptyEntriesN = emptyEntryIDs.size();
+
+    std::size_t newEntryID;
+    bool isNewElem = false;
+    if (rhs.getOut(0).idx == i) {
+      newEntryID = replaceCell(rhsToLhs[rhsEntries.size() - 1],
+                               cell.getTypeID(), curCellLinks).idx;
+      isNewElem = true;
+    } else {
+      const std::size_t curSubnetEnd = subnetEnd;
+      newEntryID = addCell(cell.getTypeID(), curCellLinks).idx;
+      subnetEnd = curSubnetEnd;
+      if (prevEntriesN + 1 == entries.size() ||
+          prevEmptyEntriesN == emptyEntryIDs.size() + 1) {
+
+        isNewElem = true;
+        rhsToLhs[i] = newEntryID;
+      }
+    }
+
+    if (!isNewElem) {
+      continue;
+    }
+    if (prevNewCellID == (std::size_t)-1) {
+      setOrder(getPrev(rhsToLhs[rhsEntries.size() - 1]), newEntryID);
+    } else {
+      setOrder(prevNewCellID, newEntryID);
+    }
+    prevNewCellID = newEntryID;
+  }
+}
+
+void SubnetBuilder::sortEntries() {
+
+  std::vector<Subnet::Entry> newEntries;
+  std::unordered_map<std::size_t, std::size_t> relinkMapping;
+  std::size_t curID = 0;
+  do {
+    relinkMapping[curID] = newEntries.size();
+    LinkList links;
+    const auto cell = entries[curID].cell;
+    for (std::size_t i = 0; i < cell.arity; ++i) {
+      const auto &curLink = cell.link[i];
+      if (relinkMapping.find(curLink.idx) != relinkMapping.end()) {
+        links.push_back(Link(relinkMapping[curLink.idx], curLink.out,
+                             curLink.inv));
+      } else {
+        links.push_back(Link(curLink.idx, curLink.out, curLink.inv));
+      }
+    }
+    relinkCell(curID, links);
+
+    newEntries.push_back(entries[curID]);
+    curID = getNext(curID);
+  } while (curID != boundEntryID);
+
+  entries = std::move(newEntries);
+  clearContext();
+}
+
+void SubnetBuilder::deleteCell(const std::size_t entryID) {
+  auto &cell = entries[entryID].cell;
+  assert(cell.arity <= Subnet::Cell::InPlaceLinks);
+
+  deallocEntry(entryID);
+  for (std::size_t j = 0; j < cell.arity; ++j) {
+    const std::size_t inputEntryID = cell.link[j].idx;
+    auto &inputCell = entries[inputEntryID].cell;
+    inputCell.refcount--;
+    if (!inputCell.refcount) {
+      deleteCell(inputEntryID);
+    }
+  }
+}
+
+Subnet::Link SubnetBuilder::replaceCell(
+    const std::size_t entryID,
+    const CellTypeID typeID,
+    const LinkList &links) {
+
+  assert(links.size() <= Subnet::Cell::InPlaceLinks);
+
+  auto &cell = entries[entryID].cell;
+  for (const auto &link : links) {
+    entries[link.idx].cell.refcount++;
+  }
+  Subnet::Entry newCellEntry(typeID, links);
+  for (std::size_t j = 0; j < cell.arity; ++j) {
+    const std::size_t inputEntryID = cell.link[j].idx;
+    auto &inputCell = entries[inputEntryID].cell;
+    inputCell.refcount--;
+    if (!inputCell.refcount) {
+      deleteCell(inputEntryID);
+    }
+  }
+  newCellEntry.cell.refcount = cell.refcount;
+  entries[entryID] = std::move(newCellEntry);
+  return Link(entryID);
 }
 
 } // namespace eda::gate::model

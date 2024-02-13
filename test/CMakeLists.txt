@@ -42,6 +42,7 @@ add_executable(${TEST_TARGET}
   gate/model2/list_test.cpp
   gate/model2/net_decomposer_test.cpp
   gate/model2/net_test.cpp
+  gate/model2/replace_test.cpp
   gate/model2/seq_net.cpp
   gate/model2/subnet_cnf_encoder_test.cpp
   gate/model2/subnet_test.cpp

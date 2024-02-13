@@ -6,6 +6,8 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#include <filesystem>
+#include <cassert>
 
 #include "gate/model/examples.h"
 
@@ -19,6 +21,8 @@
 #include "gate/model2/printer/printer.h"
 #include "gate/debugger2/sat_checker2.h"
 
+#include "gate/parser/graphml_to_subnet.h"
+
 using Builder    = eda::gate::model::SubnetBuilder;
 using CellSymbol = eda::gate::model::CellSymbol;
 using Link       = eda::gate::model::Subnet::Link;
@@ -29,6 +33,21 @@ using SubnetID   = eda::gate::model::SubnetID;
 namespace eda::gate::tech_optimizer {
 
 const /*std::filesystem::path*/ std::string libertyPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/tech_mapper";
+
+SubnetID parseGraphML(std::string fileName) {
+
+  using path = std::filesystem::path;
+
+  fileName += ".bench.graphml";
+
+  const path dir = path("test") / "data" / "gate" / "parser"
+                   / "graphml" / "OpenABC" / "graphml_openabcd";
+  const path home = std::string(getenv("UTOPIA_HOME"));
+  const path file = home / dir / fileName;
+
+  eda::gate::parser::graphml::GraphMlSubnetParser parser;
+  return parser.parse(file.string());
+}
 
 SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
   Builder builder;
@@ -94,6 +113,25 @@ verilogPrinter.print(outFile,
 "techmappedNet");
 outFile.close();
 }*/
+
+TEST(TechMapTest, graphML) {
+
+SubnetID subnetId  = parseGraphML("aes_orig");
+
+Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
+
+/*auto entries = model::Subnet::get(subnetId).getEntries();
+
+std::cout <<  entries[17492].cell.getType().getName() << std::endl;*/
+//std::cout <<  entries[17681].cell.link[0].idx << " " << entries[17681].cell.link[1].idx<< std::endl;
+SubnetID mappedSub = techmapper.techmap(subnetId);
+
+std::cout << model::Subnet::get(mappedSub) << std::endl;
+printVerilog(mappedSub);
+
+EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
 
 TEST(TechMapTest, SimpleANDSubnet) {
   const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 13, 2);

@@ -5,6 +5,7 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#include <assert.h>
 
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/cone_builder.h"
@@ -12,6 +13,8 @@
 
 namespace eda::gate::tech_optimizer {
 void SimpleAreaMapper::findBest() {
+  auto startFB = std::chrono::high_resolution_clock::now();
+  std::cout << "Finding best tech cell for every cut" << std::endl;
   Subnet &subnet = Subnet::get(subnetID);
 
   eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
@@ -27,6 +30,10 @@ void SimpleAreaMapper::findBest() {
     }
     entryIndex += cell.more;
   }
+  auto endFB = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> FBTime = endFB - startFB;
+  std::cout << "Функция Finding best tech cell выполнялась " << FBTime.count()
+      << " секунд.\n";
 }
 
 
@@ -91,6 +98,7 @@ void SimpleAreaMapper::saveBest(
       }
     }
   }
+  assert(!bestSimpleReplacement.entryIDxs.empty());
   (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;
 }
 } // namespace eda::gate::tech_optimizer

@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include <iostream>
+#include <chrono>
 
 #include "gate/techoptimizer/assembly.h"
 
@@ -13,6 +14,7 @@ namespace eda::gate::tech_optimizer {
 
 SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *replacementMap,
                                SubnetID subnetID) {
+  auto startCreateMappedSubnet = std::chrono::high_resolution_clock::now();
   model::Subnet &subnet = model::Subnet::get(subnetID);
   bestReplacementMap = replacementMap;
   subnetBuilder = new model::SubnetBuilder;
@@ -43,6 +45,9 @@ SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *rep
   addOutputCells();
   SubnetID mappedSubnetID = subnetBuilder->make();
   delete(subnetBuilder);
+  auto endCreateMappedSubnet = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> CreateMappedSubnetTime = endCreateMappedSubnet - startCreateMappedSubnet;
+  std::cout << "Функция CreateMappedSubnetTime выполнялась " << CreateMappedSubnetTime.count() << " секунд.\n";
   return mappedSubnetID;
 }
 

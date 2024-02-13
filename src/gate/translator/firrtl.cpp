@@ -7,11 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/translator/yosys_converter_firrtl.h"
-#include "options.h"
 
-int translateToFirrtl(
-    const std::string &file,
-    const FirRtlOptions &options) {
-  YosysConverterFirrtl(file, options.top);
+int translateToFirrtl(const FirrtlConfig &config) {
+  YosysConverterFirrtl translator(config);
   return 0;
 }

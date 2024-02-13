@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/printer/dot.h"
+#include "util/logging.h"
 
 std::vector<std::string> Dot::funcNames = [] {
   std::vector<std::string> names;
@@ -41,6 +42,24 @@ std::vector<std::string> Dot::funcNames = [] {
 
 Dot::Dot(const Dot::GNet *gNet) : gNet(gNet) {}
 
+void Dot::fillColorGate(const std::string &filename, GateIdList &gateList) {
+  std::ofstream out(filename);
+  if (out.is_open()) {
+    gateList = createList(gateList);
+    out << "digraph substNet {" << std::endl;
+    for (const auto &gateId : gateList) {
+      out << "\t";
+      print(out, Gate::get(gateId));
+      out << " [fillcolor=red, fontcolor=white, style=filled]" << std::endl;
+    }
+    out << std::endl;
+    printGraph(out);
+    out.close();
+  } else {
+    std::cerr << "Failed to create file : " << filename << std::endl;
+  }
+}
+
 void Dot::print(const std::string &filename) const {
   std::ofstream out(filename);
   if (out.is_open()) {
@@ -53,6 +72,24 @@ void Dot::print(const std::string &filename) const {
 
 void Dot::print(std::ofstream &stream) const {
   stream << "digraph substNet {" << std::endl;
+  printGraph(stream);
+}
+
+GateIdList Dot::createList(GateIdList &gateList) {
+  if (!gNet->isEmpty()) {
+    GateId firstGate = gNet->gates()[0]->id();
+    GateIdList gateIdList = {};
+    for (auto gateId : gateList) {
+      gateIdList.push_back(firstGate + gateId);
+    }
+    return gateIdList;
+  }
+  else {
+    return {};
+  }
+}
+
+void Dot::printGraph(std::ofstream &stream) const {
   for (const auto &gate: gNet->gates()) {
     if (gate->links().empty()) {
       stream << "\t";

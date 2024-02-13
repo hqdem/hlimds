@@ -8,6 +8,7 @@
 
 #include "gate/model2/cell.h"
 #include "gate/model2/celltype.h"
+#include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/resynthesis/reed_muller.h"
 #include "util/arith.h"
@@ -54,21 +55,16 @@ namespace eda::gate::optimizer2::resynthesis {
   void testSubnetToSubnet(const Subnet &net, const Subnet &subnet) {
     DinTruthTable t1 = evaluate(net);
     DinTruthTable t2 = evaluate(subnet);
-    for (size_t i = 0; i < t1.num_bits(); ++i) {
-      ASSERT_EQ(kitty::get_bit(t1, i), kitty::get_bit(t2, i));
-    }
+    ASSERT_TRUE(t1 == t2);
   }
 
   void testSubnetToTruthTable(const uint64_t numVars) {
     ReedMuller r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, generateRandom(numVars));
-    SubnetID subnet = r.synthesize(t);
+    const auto &subnet = Subnet::get(r.synthesize(t));
 
-    DinTruthTable resultTable = evaluate(Subnet::get(subnet));
-    for (size_t i = 0; i < t.num_bits(); ++i) {
-      ASSERT_EQ(kitty::get_bit(t, i), kitty::get_bit(resultTable, i));
-    }
+    ASSERT_TRUE(eda::gate::model::utils::equalTruthTables(subnet, t));
   }
 
   void subnetToSubnetWithDifferentArity(const uint64_t numVars) {
@@ -79,11 +75,9 @@ namespace eda::gate::optimizer2::resynthesis {
     DinTruthTable baseTable = evaluate(Subnet::get(baseSubnet));
 
     for(uint16_t arity = 3; arity < Subnet::Cell::InPlaceLinks + 1; ++arity){
-      SubnetID subnet = r.synthesize(t, arity);
-      DinTruthTable resultTable = evaluate(Subnet::get(subnet));
-      for (size_t i = 0; i < t.num_bits(); ++i) {
-        ASSERT_EQ(kitty::get_bit(baseTable, i), kitty::get_bit(resultTable, i));
-      }
+      const auto &subnet = Subnet::get(r.synthesize(t, arity));
+      ASSERT_TRUE(eda::gate::model::utils::checkArity(subnet, arity));
+      ASSERT_TRUE(eda::gate::model::utils::equalTruthTables(subnet, baseTable));
     }
   }
 
@@ -177,6 +171,8 @@ TEST(ReedMullerModel2, subnetToSubnetOn4Vars) {
 }
 
 // Test if the "synthesize()" method works correctly (it generates Subnet that is equal to the truth table it's based on)
+TEST(ReedMullerModel2, subnetToTTOn2Vars) { testSubnetToTruthTable(2); }
+
 TEST(ReedMullerModel2, subnetToTTOn4Vars) { testSubnetToTruthTable(4); }
 
 TEST(ReedMullerModel2, subnetToTTOn5Vars) { testSubnetToTruthTable(5); }

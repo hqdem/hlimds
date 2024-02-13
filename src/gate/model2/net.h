@@ -44,6 +44,18 @@ public:
   /// Returns the number of soft blocks and subnets.
   uint16_t getSoftNum() const { return nSoftBlocks; }
 
+  /// Returns the overall number of cells.
+  size_t getCellNum() const {
+    size_t nIn   = getInNum();
+    size_t nOut  = getOutNum();
+    size_t nComb = getCombNum();
+    size_t nFlip = getFlipNum();
+    size_t nHard = getHardNum();
+    size_t nSoft = getSoftNum();
+
+    return nIn + nOut + nComb + nFlip + nHard + nSoft;
+  }
+
 private:
   Net(ListID inputs,
       ListID outputs,
@@ -103,9 +115,12 @@ class NetBuilder final {
 public:
   NetBuilder() {}
   void addCell(CellID cellID);
+  void connect(CellID cellID, uint16_t port, LinkEnd source);
   NetID make();
  
 private:
+  void incrementRefCount(LinkEnd link) const;
+
   List<CellID> inputs;
   List<CellID> outputs;
   List<CellID> combCells;

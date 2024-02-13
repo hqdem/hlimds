@@ -1,4 +1,4 @@
-image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:yosys
+image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:staccato
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -6,6 +6,8 @@ variables:
   BUILD: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"
   YOSYS_DIR: "/workdir/yosys"
+  MLIR_DIR: "/workdir/circt/llvm/build/lib/cmake/mlir/"
+  CIRCT_DIR: "/workdir/circt/build/lib/cmake/circt/"
 
 stages:
   - build

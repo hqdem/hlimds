@@ -57,3 +57,21 @@ bool checkEquivalence(const std::shared_ptr<GNet> net,
          eda::gate::debugger::options::SAT).areEqual(
          *net, *premapped, gmap);
 }
+
+bool parseFile(const std::string file, PreBasis basis, std::filesystem::path path) {
+  std::string infile = file;
+  std::string filename = path / infile;
+  text_diagnostics consumer;
+  diagnostic_engine diag(&consumer);
+  GateVerilogParser parser(infile);
+  return_code result = read_verilog(filename, parser, &diag);
+  EXPECT_EQ(result, return_code::success);
+
+  std::shared_ptr<GNet> net = std::make_shared<GNet>(*parser.getGnet());
+  net->sortTopologically();
+  GateIdMap gmap;
+
+  std::shared_ptr<GNet> premapped = premap(net, gmap, basis);
+  delete parser.getGnet();
+  return checkEquivalence(net, premapped, gmap);
+}

@@ -44,7 +44,7 @@ TEST(NetTest, SimpleTest) {
     netBuilder.addCell(cellID);
   }
 
-  const Net &net = Net::get(netBuilder.make());
+  const auto &net = Net::get(netBuilder.make());
   std::cout << net << std::endl;
 }
 

@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger/sat_checker.h"
 #include "gate/parser/gate_verilog.h"
 #include "gate/premapper/mapper/mapper_test.h"
 #include "gate/printer/dot.h"
@@ -27,35 +26,15 @@ using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
 using GateIdMap = std::unordered_map<Gate::Id, Gate::Id>;
 using Link = Gate::Link;
 
-const std::filesystem::path subCatalog = "test/data/gate/premapper/xagmapper";
+const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
 const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
 const std::filesystem::path prefixPath = homePath / subCatalog;
 const std::filesystem::path prefixPathIn = prefixPath;
 
-TEST(XagPremapperVerilogTest, orGateTest) {
-  parseFile("orGate.v", PreBasis::XAG, prefixPathIn);
+TEST(AigPremapperVerilogTest, c17) {
+  EXPECT_TRUE(parseFile("c17.v", PreBasis::AIG, prefixPathIn));
 }
 
-TEST(XagPremapperVerilogTest, xorGateTest) {
-  parseFile("xorGate.v", PreBasis::XAG, prefixPathIn);
-}
-
-TEST(XagPremapperVerilogTest, xnorGateTest) {
-  parseFile("xnorGate.v", PreBasis::XAG, prefixPathIn);
-}
-
-TEST(XagPremapperVerilogTest, norGateTest) {
-  parseFile("norGate.v", PreBasis::XAG, prefixPathIn);
-}
-
-TEST(XagPremapperVerilogTest, nandGateTest) {
-  parseFile("nandGate.v", PreBasis::XAG, prefixPathIn);
-}
-
-TEST(XagPremapperVerilogTest, MultiplexerTest) {
-  parseFile("multiplexer.v", PreBasis::XAG, prefixPathIn);
-}
-
-TEST(XagPremapperVerilogTest, halfSubtractorTest) {
-  parseFile("halfSubtractor.v", PreBasis::XAG, prefixPathIn);
+TEST(AigPremapperVerilogTest, c432) {
+  EXPECT_TRUE(parseFile("c432.v", PreBasis::AIG, prefixPathIn));
 }

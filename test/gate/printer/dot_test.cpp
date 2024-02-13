@@ -8,6 +8,7 @@
 
 #include "gate/model/examples.h"
 #include "gate/optimizer/optimizer_util.h"
+#include "gate/parser/parser_test.h"
 #include "gate/printer/dot.h"
 
 #include <gtest/gtest.h>
@@ -17,6 +18,9 @@
 #include <filesystem>
 
 namespace eda::gate::optimizer {
+
+  using GateIdList = eda::gate::model::GNet::GateIdList;
+  using eda::gate::parser::parseVerilog;
 
   /* in1   in2                          */
   /* ┌─┐   ┌─┐                          */
@@ -40,10 +44,6 @@ namespace eda::gate::optimizer {
   }
 
   TEST(DotPrinter, andOr) {
-    if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
-
     std::string graphFileName = "andOr.dot";
     std::string homePath = std::string(std::getenv("UTOPIA_HOME"));
     std::string fileDir = homePath + "/output/test/printer/";
@@ -53,6 +53,22 @@ namespace eda::gate::optimizer {
     andOr(net);
     Dot dot(&net);
     dot.print(fileDir + graphFileName);
+    bool b = (std::filesystem::exists(fileDir + graphFileName) &&
+              !std::filesystem::is_empty(fileDir + graphFileName));
+    EXPECT_TRUE(b);
+  }
+
+  TEST(DotPrinter, c17) {
+    GNet gNet;
+    gNet.addNet(*parseVerilog("c17.v"));
+    GateIdList list = {7, 8, 9};
+    std::string graphFileName = "c17.dot";
+    std::string homePath = std::string(std::getenv("UTOPIA_HOME"));
+    std::string fileDir = homePath + "/output/test/printer/";
+    std::string command = "mkdir -p " + fileDir;
+    std::system(command.c_str());
+    Dot dot(&gNet);
+    dot.fillColorGate(fileDir + graphFileName, list);
     bool b = (std::filesystem::exists(fileDir + graphFileName) &&
               !std::filesystem::is_empty(fileDir + graphFileName));
     EXPECT_TRUE(b);

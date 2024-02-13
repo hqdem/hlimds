@@ -92,3 +92,4 @@ namespace eda::gate::mutator {
                        GateSymbolList function = {GateSymbol::AND});
   };
 } // namespace eda::gate::mutator
+

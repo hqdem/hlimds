@@ -10,6 +10,8 @@
 
 #include "gate/model2/object.h"
 
+#include <functional>
+
 namespace eda::gate::model {
 
 class Cell;
@@ -41,6 +43,7 @@ public:
 
   LinkEnd(const LinkEnd &) = default;
   LinkEnd &operator =(const LinkEnd &) = default;
+  bool operator ==(const LinkEnd &r) const noexcept { return value == r.value; }
 
   /// Returns the identifier of the source cell.
   CellID getCellID() const { return CellID::makeFID(value >> 24); }
@@ -48,7 +51,7 @@ public:
   const Cell &getCell() const;
   /// Returns the output port of the source cell.
   uint16_t getPort() const { return (value >> 8) & 0xffff; }
-  /// Checks whether the link is valid.
+  /// Checks whether the link-end is valid.
   bool isValid() const { return value & 1; }
 
 private:
@@ -63,8 +66,19 @@ static_assert(sizeof(LinkEnd) == LinkEndID::Size);
 //===----------------------------------------------------------------------===//
 
 struct Link final : public Object<Link, LinkID> {
+  Link() {}
   Link(const LinkEnd &source, const LinkEnd &target):
       source(source), target(target) {}
+  Link(CellID sourceID, uint16_t sourcePort,
+       CellID targetID, uint16_t targetPort):
+      Link(LinkEnd{sourceID, sourcePort}, LinkEnd{targetID, targetPort}) {}
+
+  Link(const Link &) = default;
+  Link &operator =(const Link &) = default;
+
+  bool operator ==(const Link &r) const noexcept {
+    return source == r.source && target == r.target;
+  }
 
   LinkEnd source;
   LinkEnd target;
@@ -73,3 +87,17 @@ struct Link final : public Object<Link, LinkID> {
 static_assert(sizeof(Link) == LinkID::Size);
 
 } // namespace eda::gate::model
+
+template<>
+struct std::hash<eda::gate::model::Link> {
+  using Link = eda::gate::model::Link;
+  using LinkEnd = eda::gate::model::LinkEnd;
+
+  size_t operator()(const Link &link) const noexcept {
+    const auto h1 = std::hash<uint64_t>{}(LinkEnd::pack(link.source));
+    const auto h2 = std::hash<uint64_t>{}(LinkEnd::pack(link.target));
+    return h1 ^ (h2 << 1);
+  }
+};
+
+

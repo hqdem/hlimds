@@ -2,15 +2,17 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include "gate/analyzer/simulation_estimator.h"
+#include "gate/model2/utils/subnet_checking.h"
 #include "gate/optimizer2/resynthesis/akers.h"
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
 #include "gate/optimizer2/resynthesis/cascade.h"
 #include "gate/optimizer2/resynthesis/de_micheli.h"
+#include "gate/optimizer2/resynthesis/dsd_to_subnet.h"
 #include "gate/optimizer2/resynthesis/isop.h"
 #include "gate/optimizer2/resynthesis/reed_muller.h"
 #include "gate/optimizer2/synthesizer.h"
@@ -29,6 +31,7 @@ using AkersAlgorithm    = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
 using BiDecomposition   = eda::gate::optimizer2::resynthesis::BiDecomposition;
 using CascadeMethod     = eda::gate::optimizer2::resynthesis::Cascade;
 using DeMicheli         = eda::gate::optimizer2::resynthesis::DeMicheli;
+using DsdAlgorithm      = eda::gate::optimizer2::resynthesis::DsdToSubnet;
 using DynTruthTable     = kitty::dynamic_truth_table;
 using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
 using ReedMullerAlg     = eda::gate::optimizer2::resynthesis::ReedMuller;
@@ -37,6 +40,7 @@ using Subnet            = eda::gate::model::Subnet;
 using SubnetID          = eda::gate::model::SubnetID;
 using SynthTable        = eda::gate::optimizer2::Synthesizer<DynTruthTable>;
 
+constexpr unsigned ARITY         = 3;
 constexpr unsigned RAND3_TT_NUM  = 8;
 constexpr unsigned RAND4_TT_NUM  = 16;
 constexpr unsigned RAND5_TT_NUM  = 32;
@@ -56,10 +60,12 @@ enum class Algorithm {
   Cascade,
   /// De Micheli algorithm.
   DeMicheli,
+  /// Disjoint Support Decomposition algorithm.
+  DSD,
   /// Minato-Morreale algorithm.
   MinatoMorreale,
   /// Reed-Muller algorithm.
-  ReedMuller
+  ReedMuller,
 };
 
 void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
@@ -77,7 +83,10 @@ void writeLogs(std::ofstream &file, const DynTruthTable &table, Algorithm alg,
       file << "Cascade,";
     break;
     case Algorithm::DeMicheli:
-      file << "De Micheli";
+      file << "De Micheli,";
+    break;
+    case Algorithm::DSD:
+      file << "DSD,";
     break;
     case Algorithm::MinatoMorreale:
       file << "Minato-Morreale,";
@@ -136,6 +145,7 @@ void runTest(const DynTruthTable &table) {
   registry.push_back(new BiDecomposition());
   registry.push_back(new CascadeMethod());
   registry.push_back(new DeMicheli());
+  registry.push_back(new DsdAlgorithm());
   registry.push_back(new MinatoMorrealeAlg());
   registry.push_back(new ReedMullerAlg());
   // Launching.
@@ -149,13 +159,25 @@ void runTest(const DynTruthTable &table) {
       writeLogs(fout, table, Algorithm::BiDecomposition, 0, 0, 0, true);
       continue;
     }
+
     clock_t start = clock();
-    const auto id = registry[i]->synthesize(table);
+    const auto id = registry[i]->synthesize(table, ARITY);
     clock_t end = clock();
+
     if ((i == 3) && (id == eda::gate::model::OBJ_NULL_ID)) {
       writeLogs(fout, table, Algorithm::DeMicheli, 0, 0, 0, true);
       continue;
     }
+
+    const Subnet &subnet = Subnet::get(id);
+    bool equalCheck = eda::gate::model::utils::equalTruthTables(subnet, table);
+    bool arityCheck = eda::gate::model::utils::checkArity(subnet, ARITY);
+
+    if (!equalCheck || !arityCheck) {
+      writeLogs(fout, table, static_cast<Algorithm>(i), 0, 0, 0, true);
+      continue;
+    }
+
     writeLogs(fout, table, static_cast<Algorithm>(i), id, start, end);
   }
   // Delete objects of the registry.

@@ -16,17 +16,17 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 
 std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
-  uint32_t minLength = nCell, maxLength = 0;
-  std::vector<uint32_t> min(nCell), max(nCell);
+  uint32_t minLength = nEntry, maxLength = 0;
+  std::vector<uint32_t> min(nEntry), max(nEntry);
 
   const auto &entries = getEntries();
-  for (size_t i = 0; i < nCell; ++i) {
+  for (size_t i = 0; i < nEntry; ++i) {
     const auto &cell = entries[i].cell;
 
     if (cell.isIn()) {
       min[i] = max[i] = 0;
     } else {
-      min[i] = nCell; max[i] = 0;
+      min[i] = nEntry; max[i] = 0;
 
       for (size_t j = 0; j < cell.arity; ++j) {
         auto link = getLink(i, j);

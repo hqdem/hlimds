@@ -8,10 +8,18 @@
 
 #pragma once
 
-struct FirRtlOptions;
+#include <string>
+#include <vector>
+
+struct FirrtlConfig {
+    bool debugMode;
+    std::string topModule;
+    std::string outputNamefile;
+    std::vector<std::string> files;
+};
 
 /**
- * Translates the Verilog file to FIRRTL, the result is written
- * to the file named after the input file with the '.fir' suffix.
+ * Translates the Verilog file to FIRRTL.
  */
-int translateToFirrtl(const std::string &file, const FirRtlOptions &options);
+
+int translateToFirrtl(const FirrtlConfig &config);

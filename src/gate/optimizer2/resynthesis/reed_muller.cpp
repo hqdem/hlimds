@@ -23,7 +23,7 @@ namespace eda::gate::optimizer2::resynthesis {
                  
     SubnetBuilder subnetBuilder;
     uint64_t argNum  = resultFunction[resultFunction.size() - 1];
-    size_t idx[argNum];
+    std::vector<size_t> idx (argNum);
     LinkList resultOutput;
 
     for (size_t i = 0; i < argNum; ++i) {
@@ -50,8 +50,16 @@ namespace eda::gate::optimizer2::resynthesis {
     }
 
     LinkList outputNodes;
+    Link out;
 
-    Link out = subnetBuilder.addCellTree(model::XOR, resultOutput, maxSize);
+    if (resultOutput.size() >= 2) {
+      out = subnetBuilder.addCellTree(model::XOR, resultOutput, maxSize);
+    }
+
+    else if (resultOutput.size() == 1) {
+      out = resultOutput[0];
+    }
+
     subnetBuilder.addOutput(out);
     return subnetBuilder.make();
   }

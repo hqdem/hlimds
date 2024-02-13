@@ -13,11 +13,15 @@
 
 namespace eda::gate::model {
 
+void NetBuilder::incrementRefCount(LinkEnd link) const {
+  auto &source = const_cast<Cell&>(link.getCell());
+  assert(source.fanout != Cell::MaxFanout);
+  source.fanout++;
+}
+
 void NetBuilder::addCell(CellID cellID) {
   const auto &cell = Cell::get(cellID);
   const auto &type = cell.getType();
-
-  // TODO: Implement structural hashing.
 
   if (type.getSymbol() == IN) {
     inputs.push_back(cellID);
@@ -33,13 +37,20 @@ void NetBuilder::addCell(CellID cellID) {
     flipFlops.push_back(cellID);
   }
 
-  // Update the reference counts of the cell's sources.
   const auto links = cell.getLinks();
   for (auto link : links) {
-    auto &source = const_cast<Cell&>(link.getCell());
-    assert(source.fanout != Cell::MaxFanout);
-    source.fanout++;
+    if (link.getCellID() == OBJ_NULL_ID) {
+      // Skip unconnected links (required to support cycles).
+      continue;
+    }
+    incrementRefCount(link);
   }
+}
+
+void NetBuilder::connect(CellID cellID, uint16_t port, LinkEnd source) {
+  auto &cell = Cell::get(cellID);
+  cell.setLink(port, source);
+  incrementRefCount(source);
 }
 
 NetID NetBuilder::make() {

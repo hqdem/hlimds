@@ -43,22 +43,25 @@ Cell::LinkList Cell::getLinks() const {
   return links;
 }
 
-LinkEnd &Cell::getLink(uint16_t port) {
+LinkEnd Cell::getLink(uint16_t port) const {
   assert(port < fanin);
-  if (port <= InPlaceLinks) {
+  if (fanin <= InPlaceLinks) {
     return data.link[port];
   }
   Array<uint64_t> array(data.arrayID);
-  return reinterpret_cast<LinkEnd&>(array[port]);
+  return LinkEnd::unpack(array[port]);
 }
 
-const LinkEnd &Cell::getLink(uint16_t port) const {
+void Cell::setLink(uint16_t port, const LinkEnd &source) {
   assert(port < fanin);
-  if (port <= InPlaceLinks) {
-    return data.link[port];
+  if (fanin <= InPlaceLinks) {
+    assert(data.link[port].getCellID() == OBJ_NULL_ID);
+    data.link[port] = source;
+  } else {
+    Array<uint64_t> array(data.arrayID);
+    assert(LinkEnd::unpack(array[port]).getCellID() == OBJ_NULL_ID);
+    array[port] = LinkEnd::pack(source);
   }
-  Array<uint64_t> array(data.arrayID);
-  return reinterpret_cast<const LinkEnd&>(array[port]);
 }
 
 } // namespace eda::gate::model

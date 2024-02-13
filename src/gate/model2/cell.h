@@ -66,10 +66,8 @@ public:
   /// Returns the input links of the cell.
   LinkList getLinks() const;
 
-  /// Returns the reference to input link of the cell.
-  LinkEnd &getLink(uint16_t port);
-  /// Returns the constant reference to input link of the cell.
-  const LinkEnd &getLink(uint16_t port) const;
+  /// Returns the input link of the cell.
+  LinkEnd getLink(uint16_t port) const;
 
 private:
   /// Number of links stored in place (the rest are located in a separate list).
@@ -79,6 +77,9 @@ private:
       typeSID(typeID.getSID()), fanin(0), fanout(0) {}
 
   Cell(CellTypeID typeID, const LinkList &links);
+
+  /// Set the input link (used by NetBuilder).
+  void setLink(uint16_t port, const LinkEnd &source);
 
   /// Cell type SID.
   const uint32_t typeSID;

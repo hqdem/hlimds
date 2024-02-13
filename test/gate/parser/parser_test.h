@@ -8,6 +8,7 @@
 
 #include "gate/model/gnet.h"
 
+#include <memory>
 #include <string>
 
 namespace eda::gate::parser {

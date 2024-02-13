@@ -85,6 +85,7 @@ add_executable(${TEST_TARGET}
   gate/printer/dot_test.cpp
   gate/printer/gate_verilog_printer_test.cpp
   gate/printer/graphml_test.cpp
+  gate/printer/vcd_test.cpp
   gate/simulator/simulator_memory_test.cpp
   gate/simulator/simulator_test.cpp
   gate/simulator2/simulator_test.cpp

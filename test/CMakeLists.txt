@@ -90,8 +90,8 @@ add_executable(${TEST_TARGET}
   gate/simulator/simulator_test.cpp
   gate/simulator2/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
-  gate/tech_mapper/parser_lib_test.cpp
-  gate/tech_mapper/techmap_test.cpp
+  gate/techmapper/parser_lib_test.cpp
+  gate/techmapper/techmap_test.cpp
   gate/techmapper/strategy/strategy_example.cpp
   gate/techmapper/strategy/example_test.cpp
   gate/transformer/aigmapper_test.cpp

@@ -197,7 +197,7 @@ TEST(TechMapTest, SimpleSub) {
   links2.emplace_back(idx2);
 
   const auto idx3 = builder.addCell(model::AND, links2);
-  builder.addOutput(Link(idx3));
+  const auto idxOUT = builder.addOutput(Link(idx3));
 
   SubnetID subnetID = builder.make();
 
@@ -205,7 +205,7 @@ TEST(TechMapTest, SimpleSub) {
   auto &subnet = model::Subnet::get(subnetID);
   std::cout << subnet << std::endl;
 
-  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_.lib",
                       Techmapper::MapperType::SIMPLE_AREA_FUNC);
 
   SubnetID mappedSub = techmapper.techmap(subnetID);
@@ -215,17 +215,17 @@ TEST(TechMapTest, SimpleSub) {
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
   printVerilog(mappedSub);
 
- /* Subnet &mappedSubnet = model::Subnet::get(mappedSub);
+  Subnet &mappedSubnet = model::Subnet::get(mappedSub);
   std::unordered_map<size_t, size_t> map;
 
   map[0] = 0;
   map[1] = 1;
-  map[3] = 2;
-  map[4] = 3;
-  map[idxOUT.idx] = 5;*/
+  map[2] = 2;
+  map[3] = 3;
+  map[idxOUT.idx] = 5;
 
-  //debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
-  //EXPECT_TRUE(checker.equivalent(subnet, mappedSubnet, map).equal());
+  debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
+  EXPECT_TRUE(checker.equivalent(subnet, mappedSubnet, map).equal());
 }
 
 TEST(TechMapTest, ANDNOTNOTAND) {

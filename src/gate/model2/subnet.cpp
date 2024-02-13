@@ -84,6 +84,7 @@ Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
   if (subnetEnd != boundEntryID) {
     setOrder(subnetEnd, idx);
   }
+
   if (in)  nIn++;
   if (out) nOut++;
 
@@ -172,17 +173,17 @@ Subnet::Link SubnetBuilder::addSingleOutputSubnet(
 
 void SubnetBuilder::replace(
     const SubnetID rhsID,
-    std::unordered_map<std::size_t, std::size_t> &rhsToLhs) {
+    std::unordered_map<size_t, size_t> &rhsToLhs) {
 
   if (subnetEnd == boundEntryID) {
     subnetEnd = entries.size() - 1;
   }
   const Subnet &rhs = Subnet::get(rhsID);
   assert(rhs.getOutNum() == 1);
-  std::size_t prevNewCellID = (std::size_t)-1;
+  size_t prevNewCellID = (size_t)-1;
   const auto &rhsEntries = rhs.getEntries();
 
-  for (std::size_t i = 0; i < rhsEntries.size() - 1; ++i) {
+  for (size_t i = 0; i < rhsEntries.size() - 1; ++i) {
     const Subnet::Cell &cell = rhsEntries[i].cell;
     assert(cell.arity <= Subnet::Cell::InPlaceLinks);
     if (cell.isIn()) {
@@ -194,17 +195,17 @@ void SubnetBuilder::replace(
       curCellLinks.push_back(Link(rhsToLhs[link.idx], link.out, link.inv));
     }
 
-    std::size_t prevEntriesN = entries.size();
-    std::size_t prevEmptyEntriesN = emptyEntryIDs.size();
+    size_t prevEntriesN = entries.size();
+    size_t prevEmptyEntriesN = emptyEntryIDs.size();
 
-    std::size_t newEntryID;
+    size_t newEntryID;
     bool isNewElem = false;
     if (rhs.getOut(0).idx == i) {
       newEntryID = replaceCell(rhsToLhs[rhsEntries.size() - 1],
                                cell.getTypeID(), curCellLinks).idx;
       isNewElem = true;
     } else {
-      const std::size_t curSubnetEnd = subnetEnd;
+      const size_t curSubnetEnd = subnetEnd;
       newEntryID = addCell(cell.getTypeID(), curCellLinks).idx;
       subnetEnd = curSubnetEnd;
       if (prevEntriesN + 1 == entries.size() ||
@@ -218,7 +219,7 @@ void SubnetBuilder::replace(
     if (!isNewElem) {
       continue;
     }
-    if (prevNewCellID == (std::size_t)-1) {
+    if (prevNewCellID == (size_t)-1) {
       setOrder(getPrev(rhsToLhs[rhsEntries.size() - 1]), newEntryID);
     } else {
       setOrder(prevNewCellID, newEntryID);
@@ -228,15 +229,14 @@ void SubnetBuilder::replace(
 }
 
 void SubnetBuilder::sortEntries() {
-
   std::vector<Subnet::Entry> newEntries;
-  std::unordered_map<std::size_t, std::size_t> relinkMapping;
-  std::size_t curID = 0;
+  std::unordered_map<size_t, size_t> relinkMapping;
+  size_t curID = 0;
   do {
     relinkMapping[curID] = newEntries.size();
     LinkList links;
     const auto cell = entries[curID].cell;
-    for (std::size_t i = 0; i < cell.arity; ++i) {
+    for (size_t i = 0; i < cell.arity; ++i) {
       const auto &curLink = cell.link[i];
       if (relinkMapping.find(curLink.idx) != relinkMapping.end()) {
         links.push_back(Link(relinkMapping[curLink.idx], curLink.out,
@@ -255,13 +255,13 @@ void SubnetBuilder::sortEntries() {
   clearContext();
 }
 
-void SubnetBuilder::deleteCell(const std::size_t entryID) {
+void SubnetBuilder::deleteCell(const size_t entryID) {
   auto &cell = entries[entryID].cell;
   assert(cell.arity <= Subnet::Cell::InPlaceLinks);
 
   deallocEntry(entryID);
-  for (std::size_t j = 0; j < cell.arity; ++j) {
-    const std::size_t inputEntryID = cell.link[j].idx;
+  for (size_t j = 0; j < cell.arity; ++j) {
+    const size_t inputEntryID = cell.link[j].idx;
     auto &inputCell = entries[inputEntryID].cell;
     inputCell.refcount--;
     if (!inputCell.refcount) {
@@ -271,10 +271,9 @@ void SubnetBuilder::deleteCell(const std::size_t entryID) {
 }
 
 Subnet::Link SubnetBuilder::replaceCell(
-    const std::size_t entryID,
+    const size_t entryID,
     const CellTypeID typeID,
     const LinkList &links) {
-
   assert(links.size() <= Subnet::Cell::InPlaceLinks);
 
   auto &cell = entries[entryID].cell;
@@ -282,8 +281,8 @@ Subnet::Link SubnetBuilder::replaceCell(
     entries[link.idx].cell.refcount++;
   }
   Subnet::Entry newCellEntry(typeID, links);
-  for (std::size_t j = 0; j < cell.arity; ++j) {
-    const std::size_t inputEntryID = cell.link[j].idx;
+  for (size_t j = 0; j < cell.arity; ++j) {
+    const size_t inputEntryID = cell.link[j].idx;
     auto &inputCell = entries[inputEntryID].cell;
     inputCell.refcount--;
     if (!inputCell.refcount) {

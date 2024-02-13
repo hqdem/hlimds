@@ -342,7 +342,7 @@ public:
   /// with maximum cells arity <= Subnet::Cell::InPlaceLinks.
   void replace(
       const SubnetID rhsID,
-      std::unordered_map<std::size_t, std::size_t> &rhsToLhs);
+      std::unordered_map<size_t, size_t> &rhsToLhs);
 
   /// Sorts entries in topological order accoring to prev and next.
   void sortEntries();
@@ -358,9 +358,9 @@ public:
 
 private:
   /// Finds free entry or creates new one and returns its index.
-  std::size_t allocEntry() {
+  size_t allocEntry() {
     if (!emptyEntryIDs.empty()) {
-      std::size_t allocatedID = emptyEntryIDs.back();
+      size_t allocatedID = emptyEntryIDs.back();
       emptyEntryIDs.pop_back();
       return allocatedID;
     }
@@ -369,13 +369,13 @@ private:
   }
 
   /// Saves passed entry index as free and maintains topological order.
-  void deallocEntry(const std::size_t entryID) {
+  void deallocEntry(const size_t entryID) {
     setOrder(getPrev(entryID), getNext(entryID));
     emptyEntryIDs.push_back(entryID);
   }
 
   /// Returns next entry index in topological order.
-  std::size_t getNext(const std::size_t entryID) const {
+  size_t getNext(const size_t entryID) const {
     assert(entryID < entries.size());
     if (entryID == subnetEnd) {
       return boundEntryID;
@@ -385,7 +385,7 @@ private:
   }
 
   /// Returns previous entry index in topological order.
-  std::size_t getPrev(const std::size_t entryID) const {
+  size_t getPrev(const size_t entryID) const {
     assert(entryID < entries.size());
     if (entryID == 0) {
       return boundEntryID;
@@ -396,7 +396,7 @@ private:
 
   /// Records that secondID is the next entry ID after firstID in topological
   /// order.
-  void setOrder(const std::size_t firstID, const std::size_t secondID) {
+  void setOrder(const size_t firstID, const size_t secondID) {
     if (firstID == boundEntryID && secondID == boundEntryID) {
       return;
     }
@@ -422,7 +422,7 @@ private:
 
   /// Assigns cell on entryID new links and deletes old. The number of new links
   /// must be the same as the number of old links.
-  void relinkCell(const std::size_t entryID, const LinkList &newLinks) {
+  void relinkCell(const size_t entryID, const LinkList &newLinks) {
     auto &cell = entries[entryID].cell;
     assert(cell.arity == newLinks.size());
 
@@ -439,13 +439,13 @@ private:
   }
 
   /// Recursively deletes cell on entryID and fanins with refcount == 0.
-  void deleteCell(const std::size_t entryID);
+  void deleteCell(const size_t entryID);
 
   /// Replaces cell on entryID with new one and recursively deletes cells with
   /// refcount == 0. Number of links of both old and new cells
   /// must be <= Subnet::Cell::InPlaceLinks.
   Link replaceCell(
-      const std::size_t entryID,
+      const size_t entryID,
       const CellTypeID typeID,
       const LinkList &links);
 
@@ -457,7 +457,7 @@ private:
     }
     bool outsVisited = false;
 
-    for (std::size_t curID = 0; curID < entries.size(); ++curID) {
+    for (size_t curID = 0; curID < entries.size(); ++curID) {
       const auto &cell = entries[curID].cell;
       const auto typeID = cell.getTypeID();
       if (typeID == CELL_TYPE_ID_OUT) {
@@ -481,16 +481,19 @@ private:
   }
 
 private:
-  constexpr static auto commonOrderEntryID = (std::size_t)-1;
-  constexpr static auto boundEntryID = (std::size_t)-2;
+  static constexpr size_t commonOrderEntryID = -1u;
+  static constexpr size_t boundEntryID = -2u;
 
   uint16_t nIn;
   uint16_t nOut;
+
   std::vector<Subnet::Entry> entries;
-  std::vector<std::size_t> prev;
-  std::vector<std::size_t> next;
-  std::vector<std::size_t> emptyEntryIDs;
-  std::size_t subnetEnd{ boundEntryID };
+
+  std::vector<size_t> prev;
+  std::vector<size_t> next;
+  std::vector<size_t> emptyEntryIDs;
+
+  size_t subnetEnd{boundEntryID};
 };
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet);

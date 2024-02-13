@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer2/resynthesis/isop.h"
+#include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
 #include "gtest/gtest.h"
@@ -31,8 +32,7 @@ bool ISOPTest(size_t numVars) {
     MinatoMorrealeAlg::KittyTT tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
     const auto &subnet = Subnet::get(minatoMorrealeAlg.synthesize(tt, 3));
-    auto ttCopy = eda::gate::model::evaluate(subnet);
-    flag &= (ttCopy == tt);
+    flag &= eda::gate::model::utils::equalTruthTables(subnet, tt);
   }
 
   return flag;

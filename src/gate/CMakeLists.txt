@@ -28,6 +28,7 @@ add_library(Gate OBJECT
   model2/net.cpp
   model2/printer/printer.cpp
   model2/subnet.cpp
+  model2/utils/subnet_checking.cpp
   model2/utils/subnet_to_bdd.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp

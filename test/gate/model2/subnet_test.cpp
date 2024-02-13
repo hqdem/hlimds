@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
+#include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_cnf_encoder.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
@@ -37,6 +38,7 @@ inline void checkMakeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   const auto &cellSubnet = Subnet::get(makeTreeSubnet(symbol, arity, arity));
   const auto &treeSubnet = Subnet::get(makeTreeSubnet(symbol, arity, k));
 
+  EXPECT_TRUE(utils::checkArity(treeSubnet, k));
   EXPECT_EQ(evaluate(cellSubnet), evaluate(treeSubnet));
 }
 

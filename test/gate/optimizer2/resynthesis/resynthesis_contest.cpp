@@ -2,11 +2,12 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include "gate/analyzer/simulation_estimator.h"
+#include "gate/model2/utils/subnet_checking.h"
 #include "gate/optimizer2/resynthesis/akers.h"
 #include "gate/optimizer2/resynthesis/bidecomposition.h"
 #include "gate/optimizer2/resynthesis/cascade.h"
@@ -39,6 +40,7 @@ using Subnet            = eda::gate::model::Subnet;
 using SubnetID          = eda::gate::model::SubnetID;
 using SynthTable        = eda::gate::optimizer2::Synthesizer<DynTruthTable>;
 
+constexpr unsigned ARITY         = 3;
 constexpr unsigned RAND3_TT_NUM  = 8;
 constexpr unsigned RAND4_TT_NUM  = 16;
 constexpr unsigned RAND5_TT_NUM  = 32;
@@ -157,13 +159,25 @@ void runTest(const DynTruthTable &table) {
       writeLogs(fout, table, Algorithm::BiDecomposition, 0, 0, 0, true);
       continue;
     }
+
     clock_t start = clock();
-    const auto id = registry[i]->synthesize(table, 3);
+    const auto id = registry[i]->synthesize(table, ARITY);
     clock_t end = clock();
+
     if ((i == 3) && (id == eda::gate::model::OBJ_NULL_ID)) {
       writeLogs(fout, table, Algorithm::DeMicheli, 0, 0, 0, true);
       continue;
     }
+
+    const Subnet &subnet = Subnet::get(id);
+    bool equalCheck = eda::gate::model::utils::equalTruthTables(subnet, table);
+    bool arityCheck = eda::gate::model::utils::checkArity(subnet, ARITY);
+
+    if (!equalCheck || !arityCheck) {
+      writeLogs(fout, table, static_cast<Algorithm>(i), 0, 0, 0, true);
+      continue;
+    }
+
     writeLogs(fout, table, static_cast<Algorithm>(i), id, start, end);
   }
   // Delete objects of the registry.

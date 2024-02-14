@@ -127,7 +127,7 @@ std::cout <<  entries[17492].cell.getType().getName() << std::endl;*/
 //std::cout <<  entries[17681].cell.link[0].idx << " " << entries[17681].cell.link[1].idx<< std::endl;
 SubnetID mappedSub = techmapper.techmap(subnetId);
 
-std::cout << model::Subnet::get(mappedSub) << std::endl;
+//std::cout << model::Subnet::get(mappedSub) << std::endl;
 printVerilog(mappedSub);
 
 EXPECT_TRUE(checkAllCellsMapped(mappedSub));

@@ -17,6 +17,10 @@ void SimpleAreaMapper::findBest() {
   std::cout << "Finding best tech cell for every cut" << std::endl;
   Subnet &subnet = Subnet::get(subnetID);
 
+  for (uint16_t i = 0; i < subnet.getInNum(); i++) {
+    areaVec[i] = BestReplacementArea{0,{}};
+  }
+
   eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
   for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
        entryIndex++) {
@@ -37,35 +41,18 @@ void SimpleAreaMapper::findBest() {
 }
 
 
-float SimpleAreaMapper::calculateArea(const std::unordered_set<uint64_t> &entryIdxs){
+float SimpleAreaMapper::calculateArea(const std::unordered_set<uint64_t> &entryIdxs, EntryIndex currnetEntry){
+  std::unordered_set<uint64_t> incomingEntries;
   float area = 0;
-  Subnet &subnet = Subnet::get(subnetID);
-  eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
-
-  std::stack<uint64_t> stack;
-  std::unordered_set<uint64_t> visited;
-
-  for (const auto& out : entryIdxs) {
-    stack.push(out);
-    visited.insert(out);
-  }
-
-  while (!stack.empty()) {
-    EntryIndex currentEntryIDX = stack.top();
-    auto currentCell = entries[currentEntryIDX].cell;
-    if ((!currentCell.isIn() || currentCell.getSymbol() != model::CellSymbol::IN)
-        && (!currentCell.isOut() || currentCell.getSymbol() != model::CellSymbol::OUT)) {
-      area += cellDB->getSubnetAttrBySubnetID(bestReplacementMap->at(
-          currentEntryIDX).subnetID).area;
-    }
-    stack.pop();
-    for (const auto &link : currentCell.link) {
-      if (visited.find(link.idx) == visited.end()) {
-        stack.push(link.idx);
-        visited.insert(link.idx);
+  for (const auto &in : entryIdxs) {
+    area += areaVec.at(in).area;
+    for (const auto &inEntry : areaVec.at(in).incomingEntries) {
+      if (!incomingEntries.insert(inEntry).second) {
+        area -= areaVec.at(inEntry).area;
       }
     }
   }
+  areaVec[currnetEntry] = BestReplacementArea{area, incomingEntries};
   return area;
 }
 
@@ -87,7 +74,7 @@ void SimpleAreaMapper::saveBest(
       for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable)) {
         auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
 
-        float area = calculateArea(cut.entryIdxs)
+        float area = calculateArea(cut.entryIdxs, entryIndex)
                      + currentAttr.area;
 
         if (area < bestArea) {
@@ -98,6 +85,7 @@ void SimpleAreaMapper::saveBest(
       }
     }
   }
+  areaVec[entryIndex] = {bestArea, bestSimpleReplacement.entryIDxs};
   assert(!bestSimpleReplacement.entryIDxs.empty());
   (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;
 }

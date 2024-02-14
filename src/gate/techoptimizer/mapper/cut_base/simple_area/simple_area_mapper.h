@@ -19,13 +19,19 @@
 using Subnet = eda::gate::model::Subnet;
 
 namespace eda::gate::tech_optimizer {
-class SimpleAreaMapper : public CutBaseMapper {
+struct BestReplacementArea{
+  double area;
+  std::unordered_set<EntryIndex> incomingEntries;
+};
 
+class SimpleAreaMapper : public CutBaseMapper {
 protected:
   void findBest() override;
-private:
 
-  float calculateArea(const std::unordered_set<uint64_t> &entryIdxs);
+private:
+  std::map<EntryIndex, BestReplacementArea> areaVec;
+
+  float calculateArea(const std::unordered_set<uint64_t> &entryIdxs, EntryIndex currnetEntry);
   void saveBest(EntryIndex entryIndex,
                 const optimizer2::CutExtractor::CutsList &cutsList);
 };

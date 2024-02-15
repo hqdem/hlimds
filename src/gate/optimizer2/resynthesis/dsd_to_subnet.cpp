@@ -243,7 +243,7 @@ Link DsdToSubnet::recursiveBddStep(DdNode *bdd,
     // Find the link corresponding to the top variable
     Link c = getLinkToCorrectActual(dsd,
                                     manager,
-                                    Cudd_Regular(bdd)->index,
+                                    Cudd_NodeReadIndex(bdd),
                                     inputsList);
     Link d;
     if (Cudd_IsConstant(e)) {
@@ -278,7 +278,7 @@ Link DsdToSubnet::recursiveBddStep(DdNode *bdd,
      * PS: This cannot be the top node, because Prime has >= 3 inputs. */
 
     return getLinkToCorrectActual(dsd, manager,
-                                  Cudd_Regular(bdd)->index,
+                                  Cudd_NodeReadIndex(bdd),
                                   inputsList);
   }
 
@@ -297,7 +297,7 @@ Link DsdToSubnet::recursiveBddStep(DdNode *bdd,
   // Create valves according to the formula z*a + !z*b
   Link z = getLinkToCorrectActual(dsd,
                                   manager,
-                                  Cudd_Regular(bdd)->index,
+                                  Cudd_NodeReadIndex(bdd),
                                   inputsList);
   Link za = subnetBuilder.addCell(CellSymbol::AND, z, a);
   Link notzb = subnetBuilder.addCell(CellSymbol::AND,

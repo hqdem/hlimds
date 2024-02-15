@@ -67,16 +67,23 @@ class PowerMap : public CutBaseMapper{
                       std::vector<double> &computedSwitchFlow,
                       const std::vector<double> &cellActivities);
 
-    void addNotAnAndToTheMap(EntryIndex entryIndex,
-                      model::Subnet::Cell &cell);
+    // void addNotAnAndToTheMap(EntryIndex entryIndex,
+    //                   model::Subnet::Cell &cell);
 
-    Cut findCutMinimizingDepth(EntryIndex entryIndex, const Subnet &subnet);
+    BestReplacement findCutMinimizingDepth(const EntryIndex entryIndex, const ArrayEntry &entries,
+                                  std::vector<int64_t> &computedLevel, const ConeBuilder &coneBuilder);
 
-    void addInputToTheMap(EntryIndex entryIndex);
-    void addZeroToTheMap(EntryIndex entryIndex);
-    void addOneToTheMap(EntryIndex entryIndex);
-    void addOutToTheMap(EntryIndex entryIndex,
-                      model::Subnet::Cell &cell);
+    void traditionalMapDepthOriented(const ArrayEntry &entries,
+                                          std::vector<int64_t> &computedLevel,
+                                          const ConeBuilder &coneBuilder);
+
+    std::vector<SubnetID> getTechIdsList(const Cut cut, ConeBuilder coneBuilder);
+
+    // void addInputToTheMap(EntryIndex entryIndex);
+    // void addZeroToTheMap(EntryIndex entryIndex);
+    // void addOneToTheMap(EntryIndex entryIndex);
+    // void addOutToTheMap(EntryIndex entryIndex,
+    //                   model::Subnet::Cell &cell);
 };
 
 } // namespace eda::gate::tech_optimizer

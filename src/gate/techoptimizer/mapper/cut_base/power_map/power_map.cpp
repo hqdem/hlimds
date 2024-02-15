@@ -54,26 +54,62 @@ namespace eda::gate::tech_optimizer{
     return af;
   }
 
-  int64_t getLevel(const Cut &cut, const Subnet &subnet){
+
+  int64_t getLevel(const Cut &cut, const ArrayEntry &entries,std::vector<int64_t> &computedLevel){
     int64_t levelMax = -99999999;
     for(const EntryIndex &leaf: cut.entryIdxs){
       
-      // levelMax= max(levelMax,subnet.getPathLength().second);
+      levelMax= std::max(levelMax,computedLevel[leaf]);
     }
-    return levelMax;
+    return levelMax+1;
   }
 
-  Cut PowerMap::findCutMinimizingDepth(const EntryIndex entryIndex, const Subnet &subnet){
-    Cut *cutBest = nullptr;
-    
-    CutsList cutsList = cutExtractor->getCuts(entryIndex);
+  BestReplacement PowerMap::findCutMinimizingDepth(const EntryIndex entryIndex,
+                                  const ArrayEntry &entries,
+                                  std::vector<int64_t> &computedLevel,
+                                  const ConeBuilder &coneBuilder){
+    BestReplacement bestRepl;
+    SubnetID techSubnetId;
+    const Cut *cutBest = nullptr;
+    int64_t cutBestLevel = 9999999999;
+    const CutsList &cutsList = cutExtractor->getCuts(entryIndex);
     for(const Cut &cut : cutsList){
-      if (cutBest == nullptr || getLevel(*cutBest,subnet) > getLevel(cut,subnet)){
-        *cutBest = cut;
+      if(cut.entryIdxs.size() == 1){
+        computedLevel[entryIndex] = 0;
+      }
+      int64_t curLevel = getLevel(cut,entries,computedLevel);
+      if (cutBest == nullptr || cutBestLevel > curLevel){
+        const auto techIdsList = getTechIdsList(cut,coneBuilder);
+        if(techIdsList.size() == 0)continue;
+        techSubnetId = techIdsList[0];
+        cutBestLevel = curLevel;
+        cutBest = &cut;
       }
     }
-    return *cutBest;
+    computedLevel[entryIndex]= cutBestLevel;
+    bestRepl.entryIDxs =cutBest->entryIdxs;
+    bestRepl.subnetID = techSubnetId;
+    return bestRepl;
   }
+
+  void PowerMap::traditionalMapDepthOriented(const ArrayEntry &entries,
+                                  std::vector<int64_t> &computedLevel,
+                                  const ConeBuilder &coneBuilder){
+    
+    for (uint64_t entryIndex = 0; entryIndex < std::size(entries);entryIndex++){
+      (*bestReplacementMap)[entryIndex] = findCutMinimizingDepth(entryIndex,entries,computedLevel,coneBuilder);    
+    }
+
+    
+  }
+
+  class AigAtrs {
+    public:
+      AigAtrs(const Subnet);
+      ArrayEntry entries;
+      std::vector<double> computedAF,computedSF;
+      std::vector<int64_t> computedLevel;
+  };
 
 
   bool aproxEqual(const double &a , const double &b){
@@ -86,6 +122,8 @@ namespace eda::gate::tech_optimizer{
 
     std::vector<double> computedAF(entries.size()),
                        computedSF(entries.size());
+
+    std::vector<int64_t> computedLevel(entries.size());
 
     //
     eda::gate::analyzer::SimulationEstimator simulationEstimator(64);
@@ -115,12 +153,9 @@ namespace eda::gate::tech_optimizer{
 
           if((curAF < bestAF) || 
             (aproxEqual(curAF,bestAF) && curSF < bestSF)){
-
-            SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-            auto truthTable = eda::gate::model::evaluate(Subnet::get(coneSubnetID));
-            const auto& cellList = cellDB->getSubnetIDsByTT(truthTable);
-            if(cellList.size() == 0) continue;
-            const SubnetID techCellSubnetID = cellList[0];
+            const auto techIdsList = getTechIdsList(cut,coneBuilder);
+            if(techIdsList.size() == 0) continue;
+            const SubnetID techCellSubnetID = techIdsList[0];
             bestAF = curAF;
             bestSF = curSF;
             bestCut = cut;
@@ -133,41 +168,17 @@ namespace eda::gate::tech_optimizer{
         
       }
       entryIndex += cell.more;
-  }
-
-  }
-
-  void PowerMap::addInputToTheMap(EntryIndex entryIndex) {
-  BestReplacement bestReplacement{true};
-  (*bestReplacementMap)[entryIndex] = bestReplacement;
-  }
-  void PowerMap::addZeroToTheMap(EntryIndex entryIndex) {
-    BestReplacement bestReplacement{};
-    bestReplacement.isZero = true;
-    (*bestReplacementMap)[entryIndex] = bestReplacement;
-  }
-  void PowerMap::addOneToTheMap(EntryIndex entryIndex) {
-    BestReplacement bestReplacement{};
-    bestReplacement.isOne = true;
-    (*bestReplacementMap)[entryIndex] = bestReplacement;
-  }
-  void PowerMap::addOutToTheMap(EntryIndex entryIndex,Subnet::Cell &cell) {
-    BestReplacement bestReplacement{false, true};
-    bestReplacement.entryIDxs.insert(cell.link[0].idx);
-    (*bestReplacementMap)[entryIndex] = bestReplacement;
-  }
-
-  void PowerMap::addNotAnAndToTheMap(EntryIndex entryIndex, model::Subnet::Cell &cell){
-    if (cell.isIn()) {
-      addInputToTheMap(entryIndex);
-    } else if (cell.isOne()) {
-      addOneToTheMap(entryIndex);
-    } else if (cell.isZero()) {
-      addZeroToTheMap(entryIndex);
-    } else if (cell.isOut()) {
-      addOutToTheMap(entryIndex, cell);
     }
+
   }
+
+   std::vector<SubnetID> PowerMap::getTechIdsList(const Cut cut, ConeBuilder coneBuilder){
+    SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
+    auto truthTable = eda::gate::model::evaluate(Subnet::get(coneSubnetID));
+    const auto cellList = cellDB->getSubnetIDsByTT(truthTable);
+    return cellList;
+  }
+
     
 } //namespace eda::gate::tech_optimizer
 

@@ -21,6 +21,7 @@ using GateId = model::Gate::Id;
 using GateIdMap = std::unordered_map<GateId, GateId>;
 using GNet = eda::gate::model::GNet;
 using Hints = eda::gate::debugger::SatChecker::Hints;
+using LinkSet = std::unordered_set<Gate::Link>;
 using Signal = model::Gate::Signal;
 using SignalList = model::Gate::SignalList;
 

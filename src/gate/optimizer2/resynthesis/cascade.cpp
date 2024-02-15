@@ -176,32 +176,15 @@ CNF Cascade::normalForm(const TruthTable &table) {
 
   int numVars = table.num_vars();
   int bits = 1 << numVars;
-  // number of ones/zeroes between alternations in a table row
-  // example: 1100, numOnes == 2; 1010, numOnes == 1;
 
-  // numOnes and numOnesPrev are 2 copies of the same value
-  // so that we can remember the value of the variable
-  // on the previous iteration of the loop
-  int numOnes = bits;
-  int numOnesPrev = bits;
   CNF form(numVars);
-
   std::vector <TruthTable> variables;
 
   // creating table
   for (int i = 0; i < numVars; i++) {
     TruthTable a(numVars);
+    kitty::create_nth_var(a, i);
     variables.push_back(a);
-    numOnes /= 2;
-
-    for (int j = 0; j < bits; j++) {
-      if (numOnesPrev && ((j%numOnesPrev) < numOnes)) {
-        set_bit(variables[i], j);
-      } else {
-        clear_bit(variables[i], j);
-      }
-    }
-    numOnesPrev = numOnes;
   }
 
   // creating normal form
@@ -311,6 +294,20 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
     inverted[i] = true;
   }
   
+  if (size == (3 + numVars * 2)) { // 1 source
+    int idx1;
+    int id = size - 1;
+    if (output[0][id] >= (numVars + 2) && output[0][id] < (numVars * 2 + 2)) {
+      idx1 = output[0][id] - 2 - numVars; // negative source
+      idx[InNum - 1] = subnetBuilder.addOutput(~Link(idx[idx1])).idx;
+    } else {
+      idx1 = output[0][id] - 2; // non negative source
+      idx[InNum - 1] = subnetBuilder.addOutput(Link(idx[idx1])).idx;
+    }
+    
+    return subnetBuilder.make();
+  }
+  
   for (int i = firstValId; i < size; i++) { // building subnet
     if (!output[1][i] && !output[2][i]) { // one source case
       int idx1;
@@ -321,6 +318,14 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
         idx1 = output[0][i] - 2; // non negative source
       }
       idx[i - 2] = idx[idx1]; 
+      if (output[1][i - 1] && output[2][i - 1]) {
+        if (!links.empty() && output[0][i - 1] == 2) {
+          idx[i - 3] = subnetBuilder.addCellTree(model::AND, links, maxArity).idx;
+        } else if (output[0][i - 1] == 3) {
+          idx[i - 3] = subnetBuilder.addCellTree(model::OR, links, maxArity).idx;
+        }   
+        links.clear();
+      }
     } else { // two sources 
       int idx1 = output[1][i] - 2;
       int idx2 = output[2][i] - 2;
@@ -341,9 +346,9 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
         } else { // prev different
           if (!links.empty()) {
             if (output[0][i] == 2) {
-              idx[i - 2] = subnetBuilder.addCellTree(model::AND, links, maxArity).idx; 
+              idx[i - 3] = subnetBuilder.addCellTree(model::OR, links, maxArity).idx; 
             } else if (output[0][i] == 3) {
-              idx[i - 2] = subnetBuilder.addCellTree(model::OR, links, maxArity).idx;
+              idx[i - 3] = subnetBuilder.addCellTree(model::AND, links, maxArity).idx;
             }
             links.clear();
           }
@@ -353,6 +358,15 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
       }
     }
   }
+  
+  if (!links.empty()) { 
+    if (output[0][output[0].size() - 1] == 2) {
+      idx[InNum - 2] = subnetBuilder.addCellTree(model::AND, links, maxArity).idx;
+    } else if (output[0][output[0].size() - 1] == 3) {
+      idx[InNum - 2] = subnetBuilder.addCellTree(model::OR, links, maxArity).idx;
+    }
+  }
+  
   idx[InNum - 1] = subnetBuilder.addOutput(Link(idx[InNum - 2])).idx;
         
   return subnetBuilder.make();

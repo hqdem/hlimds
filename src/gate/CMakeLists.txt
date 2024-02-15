@@ -12,6 +12,7 @@ add_library(Gate OBJECT
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
   debugger2/base_checker2.cpp
+  debugger2/bdd_checker2.cpp
   debugger2/miter2.cpp
   debugger2/rnd_checker2.cpp
   model/gate.cpp
@@ -60,6 +61,7 @@ add_library(Gate OBJECT
   optimizer/walker.cpp
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
+  optimizer2/reconvergence_cut.cpp
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/dsd_to_subnet.cpp
   optimizer2/resynthesis/bidecomposition.cpp

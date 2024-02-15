@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "base_checker2.h"
+#include "bdd_checker2.h"
 #include "rnd_checker2.h"
 #include "sat_checker2.h"
 
@@ -16,6 +17,7 @@ using LecType = eda::gate::debugger2::options::LecType;
 
 BaseChecker2 &getChecker(LecType lec) {
   switch (lec) {
+    case LecType::BDD: return BddChecker2::get();
     case LecType::RND: return RndChecker2::get();
     case LecType::SAT: return SatChecker2::get();
     default: return SatChecker2::get();

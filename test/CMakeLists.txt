@@ -42,6 +42,7 @@ add_executable(${TEST_TARGET}
   gate/model2/list_test.cpp
   gate/model2/net_decomposer_test.cpp
   gate/model2/net_test.cpp
+  gate/model2/replace_test.cpp
   gate/model2/seq_net.cpp
   gate/model2/subnet_cnf_encoder_test.cpp
   gate/model2/subnet_test.cpp
@@ -63,6 +64,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/util_test.cpp
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
+  gate/optimizer2/reconvergence_cut_test.cpp
   gate/optimizer2/resynthesis/akers_test.cpp
   gate/optimizer2/resynthesis/bidecomposition_test.cpp
   gate/optimizer2/resynthesis/cascade_test.cpp

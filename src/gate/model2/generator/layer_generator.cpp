@@ -16,14 +16,14 @@ namespace eda::gate::model {
  * a' -- a raised to max power with result < 0xffff, k -- the number of residual
  * exponentiations.
  */
-std::pair<std::size_t, uint32_t> binpow(uint16_t a, std::size_t n) {
+std::pair<std::size_t, std::size_t> binpow(std::size_t a, std::size_t n) {
   std::size_t res = 1;
   std::size_t residualExp = 1;
   while (n) {
+    if (res * a >= 0xffff) {
+      return { res, n * residualExp };
+    }
     if (n & 1) {
-      if (res * a >= 0xffff) {
-        return { res, n * residualExp };
-      }
       res *= a;
     }
     a *= a;
@@ -261,8 +261,8 @@ bool LayerGenerator::generateLayerNCells(const std::size_t nLayers,
                              netBaseNInMax, faninHigh);
   // Maximum number of cells on the current layer if it is one primary output
   // in the net.
-  std::pair<std::size_t, uint32_t> oneOutlayerNCellsMax = binpow(maxNIn,
-                                                                 nLayers - 1);
+  std::pair<std::size_t, std::size_t> oneOutlayerNCellsMax =
+      binpow(maxNIn, nLayers - 1);
   for (std::size_t i = 0; i < nLayers; ++i) {
     std::size_t curLayerNCellsMin = std::max((std::size_t)layerNCellsMin,
                                              prevLayerNCells / maxNIn +

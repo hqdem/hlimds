@@ -19,7 +19,7 @@ namespace eda::gate::model::utils {
 inline bool equalTruthTables(const model::Subnet &subnet,
                              const kitty::dynamic_truth_table &table) {
 
-  return table == model::evaluate(subnet);
+  return table == model::evaluateSingleOut(subnet);
 }
 
 /// Checks if arity of the cells in 'subnet' is less or equal than 'arity'.

@@ -39,7 +39,7 @@ inline void checkMakeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   const auto &treeSubnet = Subnet::get(makeTreeSubnet(symbol, arity, k));
 
   EXPECT_TRUE(utils::checkArity(treeSubnet, k));
-  EXPECT_EQ(evaluate(cellSubnet), evaluate(treeSubnet));
+  EXPECT_EQ(evaluateSingleOut(cellSubnet), evaluateSingleOut(treeSubnet));
 }
 
 inline void testMakeTreeSubnet(CellSymbol symbol, size_t maxArity, uint16_t k) {
@@ -82,7 +82,7 @@ TEST(SubnetTest, AddCellTest) {
   EXPECT_EQ(subnet.size(), 1u << (Depth + 1));
 
   std::cout << subnet << std::endl;
-  std::cout << kitty::to_hex(evaluate(subnet)) << std::endl;
+  std::cout << kitty::to_hex(evaluateSingleOut(subnet)) << std::endl;
 
   const auto length = subnet.getPathLength();
   std::cout << "Path lenth: min=" << length.first

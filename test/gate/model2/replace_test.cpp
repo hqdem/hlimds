@@ -15,6 +15,26 @@
 
 namespace eda::gate::model {
 
+template<typename IterT>
+void printCellsTrav(SubnetBuilder &builder, IterT it, IterT contaiterEnd) {
+  for (; it != contaiterEnd; ++it) {
+    const auto &cell = builder.getEntry(*it).cell;
+    std::cout << "Current entry ID: " << *it << "; input entries IDs: ";
+    for (std::size_t i = 0; i < cell.arity; ++i) {
+      std::cout << cell.link[i].idx << ' ';
+    }
+    std::cout << '\n';
+  }
+  std::cout << '\n';
+}
+
+void printBidirectCellsTrav(SubnetBuilder &builder) {
+  std::cout << "Forward entries traversal:\n";
+  printCellsTrav(builder, builder.begin(), builder.end());
+  std::cout << "Reverse entries traversal:\n";
+  printCellsTrav(builder, builder.rbegin(), builder.rend());
+}
+
 bool linksEqual(const Subnet::Link &targetLink, const Subnet::Link &srcLink) {
   return targetLink.idx == srcLink.idx &&
          targetLink.out == srcLink.out &&
@@ -78,6 +98,7 @@ TEST(ReplaceTest, SimpleTest) {
   mapping[4] = 2;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(resultID);
   std::cout << result << '\n';
@@ -110,6 +131,7 @@ TEST(ReplaceTest, SmallerRhs) {
   mapping[4] = 5;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(resultID);
   std::cout << result << '\n';
@@ -147,6 +169,7 @@ TEST(ReplaceTest, LargerRhs) {
   mapping[8] = 5;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(resultID);
   std::cout << result << '\n';
@@ -182,6 +205,7 @@ TEST(ReplaceTest, NoInner) {
   mapping[3] = 5;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(resultID);
   std::cout << result << '\n';
@@ -214,6 +238,7 @@ TEST(ReplaceTest, ReplaceTwice) {
   mapping[7] = 5;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
 
   SubnetBuilder rhsBuilder2;
   const auto rhs2Inputs = rhsBuilder2.addInputs(1);
@@ -227,6 +252,7 @@ TEST(ReplaceTest, ReplaceTwice) {
   mapping2[3] = 7;
 
   builder.replace(rhs2ID, mapping2);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(resultID);
   std::cout << result << '\n';
@@ -258,6 +284,7 @@ TEST(ReplaceTest, OneCell) {
   mapping[1] = 3;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(resultID);
   std::cout << result << '\n';
@@ -294,6 +321,7 @@ TEST(ReplaceTest, ExternalRefs) {
   mapping[4] = orLink1.idx;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(builder.make());
   std::cout << result << '\n';
@@ -337,6 +365,7 @@ TEST(ReplaceTest, LessRootInputs) {
   mapping[4] = xorLink0.idx;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(builder.make());
   std::cout << result << '\n';
@@ -371,6 +400,7 @@ TEST(ReplaceTest, InvLink) {
   mapping[3] = xorLink0.idx;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(builder.make());
   std::cout << result << '\n';
@@ -406,6 +436,7 @@ TEST(ReplaceTest, AddCellAfterReplace) {
   mapping[5] = andLink0.idx;
 
   builder.replace(rhsID, mapping);
+  printBidirectCellsTrav(builder);
   const auto bufLink0 = builder.addCell(model::BUF, andLink0);
   builder.addOutput(bufLink0);
 
@@ -423,6 +454,12 @@ TEST(ReplaceTest, AddCellAfterReplace) {
     builder.addOutput(bufLink2);
     subnetsEqual(resultID, builder.make());
   }
+}
+
+TEST(ReplaceTest, OneEntryTraversal) {
+  SubnetBuilder builder;
+  builder.addInput();
+  printBidirectCellsTrav(builder);
 }
 
 } // namespace eda::gate::model

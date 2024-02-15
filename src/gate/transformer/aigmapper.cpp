@@ -173,8 +173,11 @@ size_t AigMapper::mapXor(LinkList &links, size_t n0, size_t n1,
     const Link nx(links[l].idx, !links[l].inv);
     const Link ny(links[r].idx, !links[r].inv);
 
-    const Link l1 = builder.addCell(CellSymbol::AND, x, y);
-    const Link l2 = builder.addCell(CellSymbol::AND, nx, ny);
+    Link l1 = builder.addCell(CellSymbol::AND, x, y);
+    Link l2 = builder.addCell(CellSymbol::AND, nx, ny);
+
+    l1.inv = true;
+    l2.inv = true;
 
     links.emplace_back(builder.addCell(CellSymbol::AND, l1, l2));
 
@@ -208,10 +211,11 @@ size_t AigMapper::mapMaj(LinkList &links, bool &inv, size_t n0, size_t n1,
 }
 
 size_t AigMapper::addMaj3(LinkList &links, bool &inv, Builder &builder) const {
+  Link link = links[0];
   // MAJ(x,y,z)=OR(AND(x,y), AND(y,z), AND(z,x))
   links[0] = builder.addCell(CellSymbol::AND, links[0], links[1]);
   links[1] = builder.addCell(CellSymbol::AND, links[1], links[2]);
-  links[2] = builder.addCell(CellSymbol::AND, links[2], links[0]);
+  links[2] = builder.addCell(CellSymbol::AND, links[2], link    );
 
   return mapOr(links, inv, 0, 0, builder);
 }

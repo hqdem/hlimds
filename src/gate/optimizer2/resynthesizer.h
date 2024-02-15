@@ -50,7 +50,7 @@ private:
 template<>
 kitty::dynamic_truth_table construct<kitty::dynamic_truth_table>(
     const eda::gate::model::Subnet &subnet) {
-  return eda::gate::model::evaluate(subnet);
+  return eda::gate::model::evaluateSingleOut(subnet);
 }
 
 } // namespace eda::gate::optimizer2

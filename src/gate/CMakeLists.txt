@@ -31,6 +31,7 @@ add_library(Gate OBJECT
   model2/subnet.cpp
   model2/utils/subnet_checking.cpp
   model2/utils/subnet_to_bdd.cpp
+  model2/utils/subnet_truth_table.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp
   optimizer/cut_walker.cpp

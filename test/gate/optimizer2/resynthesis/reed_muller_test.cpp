@@ -53,8 +53,8 @@ namespace eda::gate::optimizer2::resynthesis {
   }
 
   void testSubnetToSubnet(const Subnet &net, const Subnet &subnet) {
-    DinTruthTable t1 = evaluate(net);
-    DinTruthTable t2 = evaluate(subnet);
+    DinTruthTable t1 = evaluateSingleOut(net);
+    DinTruthTable t2 = evaluateSingleOut(subnet);
     ASSERT_TRUE(t1 == t2);
   }
 
@@ -72,7 +72,7 @@ namespace eda::gate::optimizer2::resynthesis {
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, generateRandom(numVars));
     SubnetID baseSubnet = r.synthesize(t);
-    DinTruthTable baseTable = evaluate(Subnet::get(baseSubnet));
+    DinTruthTable baseTable = evaluateSingleOut(Subnet::get(baseSubnet));
 
     for(uint16_t arity = 3; arity < Subnet::Cell::InPlaceLinks + 1; ++arity){
       const auto &subnet = Subnet::get(r.synthesize(t, arity));

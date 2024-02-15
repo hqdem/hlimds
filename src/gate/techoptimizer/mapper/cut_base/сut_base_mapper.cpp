@@ -10,7 +10,12 @@
 
 namespace eda::gate::tech_optimizer {
 void CutBaseMapper::baseMap() {
+  std::cout << "Find Cuts" << std::endl;
+  auto startCut = std::chrono::high_resolution_clock::now();
   cutExtractor = new optimizer2::CutExtractor(&model::Subnet::get(subnetID), 6);
+  auto endCut = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> CutFindTime = endCut - startCut;
+  std::cout << "Функция CutExtractor выполнялась " << CutFindTime.count() << " секунд.\n";
   findBest();
 }
 void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, model::Subnet::Cell &cell) {

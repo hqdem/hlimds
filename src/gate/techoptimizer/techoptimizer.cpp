@@ -63,10 +63,11 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
 
  assert(mapper != nullptr);
 
-  mapper->mapping(AIGSubnet, cellDB, bestReplacementMap);
+  mapper->mapping(subnetID, cellDB, bestReplacementMap);
 
+  std::cout << "start to create new mapped Subnet" << std::endl;
   AssemblySubnet as;
- return as.assemblySubnet(bestReplacementMap, AIGSubnet);
+ return as.assemblySubnet(bestReplacementMap, subnetID);
 }
 
 SubnetID Techmapper::techmap(model::CellID sequenceCell,
@@ -76,8 +77,13 @@ SubnetID Techmapper::techmap(model::CellID sequenceCell,
 }
 
 SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {
+  auto startAIG = std::chrono::high_resolution_clock::now();
+  std::cout << "Convert to AIG" << std::endl;
   transformer::AigMapper aigMapper;
   const auto transformedSub  = aigMapper.transform(subnetID);
+  auto endAIG = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> AIGTime = endAIG - startAIG;
+  std::cout << "Функция AIG выполнялась " << AIGTime.count() << " секунд.\n";
   return transformedSub;
 }
 } // namespace eda::gate::tech_optimizer

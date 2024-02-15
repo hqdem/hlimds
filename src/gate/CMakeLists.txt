@@ -18,6 +18,7 @@ add_library(Gate OBJECT
   model/gnet.cpp
   model/gsymbol.cpp
   model/utils.cpp
+  model2/decomposer/net_decomposer.cpp
   model2/cell.cpp
   model2/celltype.cpp
   model2/generator/generator.cpp
@@ -27,6 +28,8 @@ add_library(Gate OBJECT
   model2/net.cpp
   model2/printer/printer.cpp
   model2/subnet.cpp
+  model2/utils/subnet_checking.cpp
+  model2/utils/subnet_to_bdd.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp
   optimizer/cut_walker.cpp
@@ -58,6 +61,7 @@ add_library(Gate OBJECT
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
   optimizer2/resynthesis/akers.cpp
+  optimizer2/resynthesis/dsd_to_subnet.cpp
   optimizer2/resynthesis/bidecomposition.cpp
   optimizer2/resynthesis/cascade.cpp
   optimizer2/resynthesis/de_micheli.cpp
@@ -76,6 +80,7 @@ add_library(Gate OBJECT
   printer/dot.cpp
   printer/gate_verilog.cpp
   printer/graphml.cpp
+  printer/vcd.cpp
   simulator/simulator.cpp
         techoptimizer/mapper/cut_base/сut_base_mapper.cpp
   techoptimizer/mapper/cut_base/power_map/power_map.cpp
@@ -99,9 +104,22 @@ add_library(Gate OBJECT
   translator/yosys_converter_firrtl.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 
-target_include_directories(Gate PUBLIC ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/lib)
+target_include_directories(Gate
+  PUBLIC
+  ${PROJECT_SOURCE_DIR}/src
+  ${PROJECT_SOURCE_DIR}/lib
+  ${STACCATO_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd
+  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/cudd
+  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/st
+  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/mtr
+  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/epd
+  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/util
+)
+
 target_link_libraries(Gate
   PUBLIC
+  ${STACCATO_LIBRARIES}
   MLIRIR
   MLIRSupport
   CIRCTFIRRTL
@@ -113,7 +131,6 @@ target_link_libraries(Gate
   MLIRRewrite
   MLIRTransformUtils
   MLIRTransforms
-
   minisat-lib-static
   Cudd::Cudd
   lorina

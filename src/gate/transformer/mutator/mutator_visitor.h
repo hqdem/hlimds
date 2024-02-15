@@ -89,3 +89,4 @@ private:
     bool connectedWithOut(const GateId &startGate);
   };
 } //namespace eda::gate::mutator
+

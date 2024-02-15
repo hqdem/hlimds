@@ -5,6 +5,8 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#include <iostream>
+#include <chrono>
 
 #include "gate/techoptimizer/assembly.h"
 
@@ -12,6 +14,7 @@ namespace eda::gate::tech_optimizer {
 
 SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *replacementMap,
                                SubnetID subnetID) {
+  auto startCreateMappedSubnet = std::chrono::high_resolution_clock::now();
   model::Subnet &subnet = model::Subnet::get(subnetID);
   bestReplacementMap = replacementMap;
   subnetBuilder = new model::SubnetBuilder;
@@ -30,6 +33,10 @@ SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *rep
 
   while (!stack.empty()) {
     EntryIndex currentEntryIDX = stack.top();
+    if (bestReplacementMap->at(currentEntryIDX).cellIDInMappedSubnet != ULLONG_MAX) {
+      stack.pop();
+      continue;
+    }
     auto currentCell = entries[currentEntryIDX].cell;
     processNode(currentEntryIDX,currentCell,stack);
     processLinks(currentEntryIDX, stack, visited);
@@ -38,6 +45,9 @@ SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *rep
   addOutputCells();
   SubnetID mappedSubnetID = subnetBuilder->make();
   delete(subnetBuilder);
+  auto endCreateMappedSubnet = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> CreateMappedSubnetTime = endCreateMappedSubnet - startCreateMappedSubnet;
+  std::cout << "Функция CreateMappedSubnetTime выполнялась " << CreateMappedSubnetTime.count() << " секунд.\n";
   return mappedSubnetID;
 }
 
@@ -46,9 +56,9 @@ void AssemblySubnet::findInOutCells(model::Array<model::Subnet::Entry> entries) 
        entryIndex++) {
     auto cell = entries[entryIndex].cell;
 
-    if (cell.isIn()) {
+    if (cell.isIn() || cell.getSymbol() == model::CellSymbol::IN) {
       inID.push_back(entryIndex);
-    } else if (cell.isOut()) {
+    } else if (cell.isOut()|| cell.getSymbol() == model::CellSymbol::OUT) {
       outID.push_back(entryIndex);
     }
     entryIndex += cell.more;
@@ -88,7 +98,7 @@ model::Subnet::LinkList AssemblySubnet::createLinkList(EntryIndex currentEntryID
 void AssemblySubnet::processNode(EntryIndex currentEntryIDX,
                            model::Subnet::Cell &currentCell,
                            std::stack<EntryIndex> &stack) {
-  if (currentCell.isIn()) {
+  if (currentCell.isIn() || currentCell.getSymbol() == model::CellSymbol::IN) {
     stack.pop();
     return;
   }
@@ -101,7 +111,7 @@ void AssemblySubnet::processNode(EntryIndex currentEntryIDX,
   }
   model::Subnet::LinkList linkList = createLinkList(currentEntryIDX);
   if (!linkList.empty()) {
-    if (!currentCell.isOut()) {
+    if (!currentCell.isOut() || currentCell.getSymbol() != model::CellSymbol::OUT) {
       auto cellID = subnetBuilder->addSingleOutputSubnet(bestReplacementMap->at(currentEntryIDX).subnetID, linkList);
       (*bestReplacementMap)[currentEntryIDX].cellIDInMappedSubnet = cellID.idx;
     }
@@ -112,9 +122,15 @@ void AssemblySubnet::processLinks(EntryIndex currentEntryIDX,
                             std::stack<EntryIndex> &stack,
                             std::unordered_set<EntryIndex> &visited) {
   for (const auto& link : bestReplacementMap->at(currentEntryIDX).entryIDxs) {
-    if (visited.insert(link).second) {
+    stack.push(link);
+    /*if (visited.find(link) == visited.end()) {
+      visited.insert(link);
       stack.push(link);
-    }
+    } else {
+    }*/
+    //if (visited.insert(link).second) {
+    // stack.push(link);
+    //}
   }
 }
 }

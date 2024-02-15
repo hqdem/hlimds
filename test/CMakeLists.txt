@@ -40,6 +40,7 @@ add_executable(${TEST_TARGET}
   gate/model2/array_test.cpp
   gate/model2/generator_test.cpp
   gate/model2/list_test.cpp
+  gate/model2/net_decomposer_test.cpp
   gate/model2/net_test.cpp
   gate/model2/seq_net.cpp
   gate/model2/subnet_cnf_encoder_test.cpp
@@ -66,6 +67,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/resynthesis/bidecomposition_test.cpp
   gate/optimizer2/resynthesis/cascade_test.cpp
   gate/optimizer2/resynthesis/de_micheli_test.cpp
+  gate/optimizer2/resynthesis/dsd_test.cpp
   gate/optimizer2/resynthesis/isop_test.cpp
   gate/optimizer2/resynthesis/reed_muller_test.cpp
   gate/optimizer2/resynthesis/resynthesis_contest.cpp
@@ -74,6 +76,7 @@ add_executable(${TEST_TARGET}
   gate/parser/graphml_to_subnet_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
+  gate/premapper/aigmapper/aig_verilog_test.cpp
   gate/premapper/mapper/mapper_test.cpp
   gate/premapper/migmapper/migmapper_test.cpp
   gate/premapper/xagmapper/xag_test.cpp
@@ -82,9 +85,11 @@ add_executable(${TEST_TARGET}
   gate/printer/dot_test.cpp
   gate/printer/gate_verilog_printer_test.cpp
   gate/printer/graphml_test.cpp
+  gate/printer/vcd_test.cpp
   gate/simulator/simulator_memory_test.cpp
   gate/simulator/simulator_test.cpp
   gate/simulator2/simulator_test.cpp
+  gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/techmap_test.cpp
   gate/techmapper/power_map_test.cpp

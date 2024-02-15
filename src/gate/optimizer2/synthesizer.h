@@ -10,6 +10,7 @@
 
 #include "gate/model2/subnet.h"
 
+#include "cudd.h"
 #include "kitty/dynamic_truth_table.hpp"
 
 namespace eda::gate::optimizer2 {

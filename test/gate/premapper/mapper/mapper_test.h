@@ -8,11 +8,21 @@
 
 #pragma once
 
+#include "gate/parser/gate_verilog.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/premapper/migmapper.h"
 #include "gate/premapper/xagmapper.h"
 #include "gate/premapper/xmgmapper.h"
 #include "gate/debugger/sat_checker.h"
+
+#include <filesystem>
+
+#include "gtest/gtest.h"
+#include <lorina/diagnostics.hpp>
+#include <lorina/verilog.hpp>
+
+using namespace eda::gate::parser::verilog;
+using namespace lorina;
 
 using Gate = eda::gate::model::Gate;
 using GateBinding = std::unordered_map<Gate::Link, Gate::Link>;
@@ -31,3 +41,4 @@ std::shared_ptr<GNet> premap(std::shared_ptr<GNet> net,
 bool checkEquivalence(const std::shared_ptr<GNet> net,
                       const std::shared_ptr<GNet> premapped,
                       GateIdMap &gmap);
+bool parseFile(const std::string file, PreBasis basis, std::filesystem::path path);

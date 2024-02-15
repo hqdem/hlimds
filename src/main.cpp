@@ -201,7 +201,8 @@ int main(int argc, char **argv) {
     options.initialize("config.json", argc, argv);
 
     if (options.rtl.files().empty() &&
-        options.gateVerilog.files().empty()) {
+        options.gateVerilog.files().empty() &&
+        options.firrtl.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   } catch(const CLI::ParseError &e) {
@@ -219,8 +220,14 @@ int main(int argc, char **argv) {
     result |= translateToGateVerilog(file, options.gateVerilog);
   }
 
-  for (auto file : options.model2.files()) {
-    result |= translateToFirrtl(file, options.firrtl);
+  if (!options.firrtl.files().empty()) {
+    FirrtlConfig cfg;
+    FirRtlOptions &opts = options.firrtl;
+    cfg.debugMode = opts.debugMode;
+    cfg.outputNamefile = opts.outputNamefile;
+    cfg.topModule = opts.top;
+    cfg.files = opts.files();
+    result |= translateToFirrtl(cfg);
   }
 
   for (auto file : options.model2.files()) {

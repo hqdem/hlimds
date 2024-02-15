@@ -6,6 +6,8 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#include <filesystem>
+#include <cassert>
 
 #include "gate/model/examples.h"
 
@@ -19,6 +21,8 @@
 #include "gate/model2/printer/printer.h"
 #include "gate/debugger2/sat_checker2.h"
 
+#include "gate/parser/graphml_to_subnet.h"
+
 using Builder    = eda::gate::model::SubnetBuilder;
 using CellSymbol = eda::gate::model::CellSymbol;
 using Link       = eda::gate::model::Subnet::Link;
@@ -29,6 +33,21 @@ using SubnetID   = eda::gate::model::SubnetID;
 namespace eda::gate::tech_optimizer {
 
 const /*std::filesystem::path*/ std::string libertyPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/tech_mapper";
+
+SubnetID parseGraphML(std::string fileName) {
+
+  using path = std::filesystem::path;
+
+  fileName += ".bench.graphml";
+
+  const path dir = path("test") / "data" / "gate" / "parser"
+                   / "graphml" / "OpenABC" / "graphml_openabcd";
+  const path home = std::string(getenv("UTOPIA_HOME"));
+  const path file = home / dir / fileName;
+
+  eda::gate::parser::graphml::GraphMlSubnetParser parser;
+  return parser.parse(file.string());
+}
 
 SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
   Builder builder;
@@ -95,6 +114,25 @@ verilogPrinter.print(outFile,
 outFile.close();
 }*/
 
+TEST(TechMapTest, graphML) {
+
+SubnetID subnetId  = parseGraphML("aes_orig");
+
+Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
+
+/*auto entries = model::Subnet::get(subnetId).getEntries();
+
+std::cout <<  entries[17492].cell.getType().getName() << std::endl;*/
+//std::cout <<  entries[17681].cell.link[0].idx << " " << entries[17681].cell.link[1].idx<< std::endl;
+SubnetID mappedSub = techmapper.techmap(subnetId);
+
+//std::cout << model::Subnet::get(mappedSub) << std::endl;
+printVerilog(mappedSub);
+
+EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
+
 TEST(TechMapTest, SimpleANDSubnet) {
   const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 13, 2);
   std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
@@ -159,7 +197,7 @@ TEST(TechMapTest, SimpleSub) {
   links2.emplace_back(idx2);
 
   const auto idx3 = builder.addCell(model::AND, links2);
-  builder.addOutput(Link(idx3));
+  const auto idxOUT = builder.addOutput(Link(idx3));
 
   SubnetID subnetID = builder.make();
 
@@ -167,7 +205,7 @@ TEST(TechMapTest, SimpleSub) {
   auto &subnet = model::Subnet::get(subnetID);
   std::cout << subnet << std::endl;
 
-  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_.lib",
                       Techmapper::MapperType::SIMPLE_AREA_FUNC);
 
   SubnetID mappedSub = techmapper.techmap(subnetID);
@@ -177,17 +215,17 @@ TEST(TechMapTest, SimpleSub) {
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
   printVerilog(mappedSub);
 
- /* Subnet &mappedSubnet = model::Subnet::get(mappedSub);
+  Subnet &mappedSubnet = model::Subnet::get(mappedSub);
   std::unordered_map<size_t, size_t> map;
 
   map[0] = 0;
   map[1] = 1;
-  map[3] = 2;
-  map[4] = 3;
-  map[idxOUT.idx] = 5;*/
+  map[2] = 2;
+  map[3] = 3;
+  map[idxOUT.idx] = 5;
 
-  //debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
-  //EXPECT_TRUE(checker.equivalent(subnet, mappedSubnet, map).equal());
+  debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
+  EXPECT_TRUE(checker.equivalent(subnet, mappedSubnet, map).equal());
 }
 
 TEST(TechMapTest, ANDNOTNOTAND) {

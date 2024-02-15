@@ -6,15 +6,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <lorina/diagnostics.hpp>
-#include <lorina/verilog.hpp>
-
 #include "gate/debugger/sat_checker.h"
 #include "gate/parser/gate_verilog.h"
-#include "gate/printer/dot.h"
 #include "gate/premapper/mapper/mapper_test.h"
+#include "gate/printer/dot.h"
 
 #include "gtest/gtest.h"
+#include <lorina/diagnostics.hpp>
+#include <lorina/verilog.hpp>
 
 #include <filesystem>
 #include <unordered_map>
@@ -33,48 +32,30 @@ const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
 const std::filesystem::path prefixPath = homePath / subCatalog;
 const std::filesystem::path prefixPathIn = prefixPath;
 
-bool parseFile(const std::string g) {
-  std::string infile = g;
-  std::string filename = prefixPathIn / infile;
-  text_diagnostics consumer;
-  diagnostic_engine diag(&consumer);
-  GateVerilogParser parser(infile);
-  return_code result = read_verilog(filename, parser, &diag);
-  EXPECT_EQ(result, return_code::success);
-
-  std::shared_ptr<GNet> net = std::make_shared<GNet>(*parser.getGnet());
-  net->sortTopologically();
-  GateIdMap gmap;
-
-  std::shared_ptr<GNet> premapped = premap(net, gmap, PreBasis::XAG);
-  delete parser.getGnet();
-  return checkEquivalence(net, premapped, gmap);
-}
-
 TEST(XagPremapperVerilogTest, orGateTest) {
-  parseFile("orGate.v");
+  parseFile("orGate.v", PreBasis::XAG, prefixPathIn);
 }
 
 TEST(XagPremapperVerilogTest, xorGateTest) {
-  parseFile("xorGate.v");
+  parseFile("xorGate.v", PreBasis::XAG, prefixPathIn);
 }
 
 TEST(XagPremapperVerilogTest, xnorGateTest) {
-  parseFile("xnorGate.v");
+  parseFile("xnorGate.v", PreBasis::XAG, prefixPathIn);
 }
 
 TEST(XagPremapperVerilogTest, norGateTest) {
-  parseFile("norGate.v");
+  parseFile("norGate.v", PreBasis::XAG, prefixPathIn);
 }
 
 TEST(XagPremapperVerilogTest, nandGateTest) {
-  parseFile("nandGate.v");
+  parseFile("nandGate.v", PreBasis::XAG, prefixPathIn);
 }
 
 TEST(XagPremapperVerilogTest, MultiplexerTest) {
-  parseFile("multiplexer.v");
+  parseFile("multiplexer.v", PreBasis::XAG, prefixPathIn);
 }
 
 TEST(XagPremapperVerilogTest, halfSubtractorTest) {
-  parseFile("halfSubtractor.v");
+  parseFile("halfSubtractor.v", PreBasis::XAG, prefixPathIn);
 }

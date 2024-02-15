@@ -30,18 +30,13 @@ public:
   using Solver   = eda::gate::solver::Solver;
 
   static size_t estimateVarNum(const Subnet &subnet) {
-    const auto &entries = subnet.getEntries();
-    return static_cast<size_t>(1.25 * entries.size());
-  }
-
-  SubnetEncoderContext(size_t expectedVarNum, Solver &solver):
-      solver(solver) {
-    next.reserve(expectedVarNum);
-    vars.reserve(expectedVarNum);
+    return static_cast<size_t>(1.25 * subnet.size());
   }
 
   SubnetEncoderContext(const Subnet &subnet, Solver &solver):
-    SubnetEncoderContext(estimateVarNum(subnet), solver) {}
+      solver(solver), next(subnet.size()) {
+    vars.reserve(estimateVarNum(subnet));
+  }
 
   Variable var(size_t idx, uint16_t out) const {
     return vars[pos(idx, out)];
@@ -64,6 +59,7 @@ public:
   }
 
   void setVars(size_t idx, uint16_t nOut) {
+    assert(idx < next.size());
     next[idx] = pos(idx, nOut);
 
     while (next[idx] > vars.size()) {
@@ -81,6 +77,7 @@ public:
 
 private:
   size_t pos(size_t idx, uint16_t out) const {
+    assert(idx < next.size());
     return idx == 0 ? out : next[idx - 1] + out;
   }
 
@@ -133,7 +130,7 @@ public:
         assert(innerSubnet.getOutNum() == type.getOutNum());
 
         // New subnet encoding context w/ the same solver.
-        SubnetEncoderContext innerContext(innerSubnet, solver);
+        SubnetEncoderContext innerContext(innerSubnet, solver /* the same */);
         encode(innerSubnet, innerContext, solver);
 
         // Create boolean variables for the cell outputs.
@@ -147,7 +144,7 @@ public:
         }
 
         // Encode the output bindings.
-        const size_t out = subnet.getEntries().size() - subnet.getOutNum();
+        const size_t out = innerSubnet.size() - innerSubnet.getOutNum();
         for (size_t j = 0; j < type.getOutNum(); ++j) {
           // The j-th cell output <= the j-th subnet output.
           const auto k = out + j;

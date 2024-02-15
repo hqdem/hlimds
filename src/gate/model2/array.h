@@ -85,14 +85,14 @@ template <typename T>
 class Array final {
 public:
   /// Constructs a wrapper around the given list structure.
-  Array(ArrayID arrayID):
+  explicit Array(ArrayID arrayID):
       arrayID(arrayID), block(access<ArrayBlock<T>>(arrayID)) {
     // Only single-block arrays are supported.
     assert(block != nullptr && block->begin && block->end);
   }
 
   /// Constructs a new array w/ the specified capacity.
-  Array(uint32_t capacity):
+  explicit Array(uint32_t capacity):
       Array(ArrayBlock<T>::allocate(capacity, true, true)) {
     assert(block->capacity == capacity);
   }

@@ -206,17 +206,24 @@ struct FirRtlOptions final : public AppOptions {
 
   /// The command to run the Verilog-to-FIRRTL translator.
   static constexpr const char *ID = "to_firrtl";
-  /// The option to manually specify the top-level module.
-  /// The top-level module is detected automatically if not specified.
-  static constexpr const char *FIRRTL = "top";
+  /// The option to manually specify the top-level module. The top-level module is detected automatically if not specified.
+  static constexpr const char *FIRRTL = "--top";
+  /// The option to specify name of result translation.
+  static constexpr const char *OUTPUT_NAMEFILE = "-o,--output";
+  /// When debug mode is enabled, additional debug information may be generated in standard error output file.
+  static constexpr const char *DEBUG_MODE = "-v,--verbose";
 
   FirRtlOptions(AppOptions &parent):
       AppOptions(parent, ID, "Translator from Verilog to FIRRTL") {
 
-    options->add_option(cli(FIRRTL), top,
+    options->add_option(FIRRTL, top,
                 "Name of top module in Verilog")
             ->expected(1);
-
+    options->add_option(OUTPUT_NAMEFILE, outputNamefile,
+                "Name of output file")
+            ->expected(1);
+    options->add_flag(DEBUG_MODE, debugMode,
+                "Enable debug mode");
     // Input Verilog file(s).
     options->allow_extras();
   }
@@ -230,6 +237,8 @@ struct FirRtlOptions final : public AppOptions {
   }
 
   std::string top;
+  std::string outputNamefile;
+  bool debugMode = false;
 };
 
 struct Model2Options final : public AppOptions {
@@ -294,7 +303,7 @@ struct TranslatorOptions final : public AppOptions {
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this), 
+      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this),
                  gateVerilog(*this) {
 
     // Top-level options.

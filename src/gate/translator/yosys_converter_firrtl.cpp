@@ -8,72 +8,72 @@
 
 #include "gate/translator/yosys_converter_firrtl.h"
 
-#include "mockturtle/lib/fmt/fmt/ostream.h"
+#include "fmt/ostream.h"
+
+#include <sstream>
 
 namespace RTLIL = Yosys::RTLIL;
-namespace YLib = Yosys::hashlib;
 
-YosysConverterFirrtl::YosysConverterFirrtl(
-    const std::string &namefile,
-    const std::string &topModule) {
+std::ostream YosysConverterFirrtl::devnull(nullptr);
+
+YosysConverterFirrtl::YosysConverterFirrtl(const FirrtlConfig &config)
+    : outputFile(config.outputNamefile.empty() ? std::cout : file)
+    , debug(config.debugMode ? std::cerr : devnull) {
   Yosys::yosys_setup();
   RTLIL::Design design;
-  Yosys::run_frontend(namefile,
-                      "verilog",
-                      &design,
-                      nullptr);
+  std::string files;
+  for (const auto &file: config.files) {
+    files += file + " ";
+  }
+  files.pop_back();
+  std::string command = "read_verilog " + files;
+  Yosys::run_pass(command, &design);
+  deterTopModule(design, config.topModule);
   Yosys::run_pass("proc", &design);
   Yosys::run_pass("opt -nodffe -nosdff", &design);
   Yosys::run_pass("memory", &design);
   Yosys::run_pass("opt -nodffe -nosdff", &design);
   Yosys::run_pass("pmuxtree", &design);
-  createOutputFiles(namefile, topModule);
+  createOutputFile(config.outputNamefile);
   readModules(design);
 }
 
-static std::string replaceExt(
-    const std::string &name,
-    const std::string &newExt) {
-  std::string filename = name;
-  size_t pos = filename.rfind(".");
-  if (pos != std::string::npos) {
-    filename.replace(pos,
-                     newExt.length(),
-                     newExt);
+void YosysConverterFirrtl::deterTopModule(
+    RTLIL::Design &design, const std::string &topModule) {
+  if (topModule.empty()) {
+    Yosys::run_pass("hierarchy -auto-top", &design);
+    RTLIL::Module *module = design.top_module();
+    nameTopModule = module->name.str();
+    nameTopModule.erase(0, 1);
   } else {
-    filename += newExt;
+    nameTopModule = topModule;
   }
-  return filename;
 }
 
-void YosysConverterFirrtl::createOutputFiles(
-    const std::string &namefile,
-    const std::string &topModule) {
-  nameTopModule  = topModule;
-  fout.open(replaceExt(namefile, ".fir"));
-  out.open(replaceExt(namefile, "DEBUG.txt"));
+void YosysConverterFirrtl::createOutputFile(const std::string &outputNamefile) {
+  if (!outputNamefile.empty()) {
+    file.open(outputNamefile, std::ios::out | std::ios::binary);
+    file.exceptions(std::ios::failbit | std::ios::badbit);
+  }
 }
 
 void YosysConverterFirrtl::declareSignal(
-    std::ostream &os,
-    const Signal &sig) {
+    std::ostream &os, const Signal &sig) {
   if (sig.isUsed && !sig.isConst) {
     std::string width;
     if (sig.width != -1 && sig.width != 0) {
       width = fmt::format("<{}>", sig.width);
     }
     os << fmt::format("    {} {} : {}{}",
-                      getPinModeName(sig.mode),
-                      sig.id,
-                      getTypeName(sig.type),
-                      width);
+        getPinModeName(sig.mode),
+        sig.id,
+        getTypeName(sig.type),
+        width);
     if (sig.driverSig != "") {
       os << fmt::format(", {}", sig.driverSig);
     }
     if (sig.resetSig != "") {
-      os << fmt::format(", {}, UInt({})",
-                        sig.resetSig,
-                        sig.resetMean);
+      os << fmt::format(", {}, UInt({})", sig.resetSig, sig.resetMean);
     }
     os << "\n";
     if (sig.isInvalid && (sig.mode == PM_Wire)) {
@@ -95,8 +95,7 @@ bool YosysConverterFirrtl::isReg(Signal *sig) {
 }
 
 void YosysConverterFirrtl::declareMemory(
-    std::ostream &os,
-    const Memory &memory) {
+    std::ostream &os, const Memory &memory) {
   os << fmt::format("    mem {} :\n", memory.name);
   os << fmt::format("    data-type => UInt<{}> :\n", memory.widthData);
   os << fmt::format("    depth => {}\n", memory.depth);
@@ -109,8 +108,8 @@ void YosysConverterFirrtl::declareMemory(
       mode = "writer";
     }
     os << fmt::format("     {} => {}\n",
-                      mode,
-                      memory.controllers[i].name);
+        mode,
+        memory.controllers[i].name);
   }
   os << fmt::format("     read-latency => {}\n", memory.readLatency);
   os << fmt::format("     write-latency => {}\n", memory.writeLatency);
@@ -118,8 +117,7 @@ void YosysConverterFirrtl::declareMemory(
 }
 
 void YosysConverterFirrtl::declareModule(
-    std::ostream &os,
-    const Module &circuit) {
+    std::ostream &os, const Module &circuit) {
   os << "  module " << circuit.id << " :\n";
   const std::map<int, Signal *> &circtSignals = circuit.signals;
   for (const auto &[index, sig]: circtSignals) {
@@ -151,8 +149,7 @@ bool YosysConverterFirrtl::isMean(const std::string &mean) {
   return false;
 }
 
-std::string YosysConverterFirrtl::getNameSignal(
-    const Signal *sig) {
+std::string YosysConverterFirrtl::getNameSignal(const Signal *sig) {
   std::string nameSignal;
   if (sig->isConst) {
     if (isMean(sig->mean)) {
@@ -171,9 +168,9 @@ std::string YosysConverterFirrtl::makeOperandPrint(const Operand &op) {
   std::string operand;
   if (op.hi != -1) {
     operand = fmt::format("bits({}, {}, {})",
-                          getNameSignal(op.sig),
-                          op.hi,
-                          op.lo);
+        getNameSignal(op.sig),
+        op.hi,
+        op.lo);
   } else {
     operand = getNameSignal(op.sig);
   }
@@ -195,33 +192,45 @@ std::string YosysConverterFirrtl::makeUnary(const SigAssign &instr) {
   return rhs;
 }
 
+bool YosysConverterFirrtl::isSpecifiedOperator(Operator func) {
+  switch(func) {
+  case O_Xnor:
+  case O_Nor:
+  case O_Nand:
+    return true;
+  default:
+    return false;
+  }
+}
+
 std::string YosysConverterFirrtl::makeBinary(const SigAssign &instr) {
   std::string rhs;
   std::string operand1 = makeOperandPrint(instr.op1);
   std::string operand2 = makeOperandPrint(instr.op2);
   rhs = fmt::format("{}({}, {})",
-                    operatorToString(instr.func),
-                    operand2,
-                    operand1);
+      operatorToString(instr.func),
+      operand2,
+      operand1);
+  if (isSpecifiedOperator(instr.func)) {
+    rhs = fmt::format("not({})", rhs);
+  }
   return rhs;
 }
 
 std::string YosysConverterFirrtl::makeTernary(const SigAssign &instr) {
-  std::string rhs;
   std::string operand1 = makeOperandPrint(instr.op1);
   std::string operand2 = makeOperandPrint(instr.op2);
   std::string operand3 = makeOperandPrint(instr.op3);
-  rhs += fmt::format("{}({}, {}, {})",
-                     operatorToString(instr.func),
-                     operand1,
-                     operand2,
-                     operand3);
+  std::string rhs = fmt::format("{}({}, {}, {})",
+      operatorToString(instr.func),
+      operand1,
+      operand2,
+      operand3);
   return rhs;
 }
 
 void YosysConverterFirrtl::declareSigAssign(
-    std::ostream &os,
-    const SigAssign &instr) {
+    std::ostream &os, const SigAssign &instr) {
   std::string rhs;
   int arity = determineTypeOperator(instr.func);
   if (arity == 0) {
@@ -236,14 +245,11 @@ void YosysConverterFirrtl::declareSigAssign(
   if (arity == 3) {
     rhs = makeTernary(instr);
   }
-  os << fmt::format("{} <= {}\n",
-                    getNameSignal(instr.lhs),
-                    rhs);
+  os << fmt::format("{} <= {}\n", getNameSignal(instr.lhs), rhs);
 }
 
 void YosysConverterFirrtl::declareConnectInstruction(
-    std::ostream &os,
-    const Instruction &instr) {
+    std::ostream &os, const Instruction &instr) {
   const std::vector<SigAssign> &instrSA = instr.connects;
   for (const auto &sa: instrSA) {
     os << "    ";
@@ -252,15 +258,13 @@ void YosysConverterFirrtl::declareConnectInstruction(
 }
 
 void YosysConverterFirrtl::declareWhenInstruction(
-    std::ostream &os,
-    const Instruction &instr) {
+    std::ostream &os, const Instruction &instr) {
   const std::vector<CondStatement> &instrCS = instr.branches;
   for (const auto &statement: instrCS) {
     countIndent(os, statement.branch.size());
     os << "    ";
     if (statement.branch.back() == CKW_If) {
-      os << fmt::format("when {} :\n",
-                        getNameSignal(statement.sig));
+      os << fmt::format("when {} :\n", getNameSignal(statement.sig));
     } else {
       os << "else :\n";
     }
@@ -280,44 +284,40 @@ void YosysConverterFirrtl::declareWhenInstruction(
 }
 
 void YosysConverterFirrtl::declareInstInstruction(
-    std::ostream &os,
-    const Instruction &instr) {
+    std::ostream &os, const Instruction &instr) {
   std::string id = instr.instance.idInstance;
   os << fmt::format("    inst {} of {}\n",
-                    id,
-                    instr.instance.nameNestedModule);
+      id,
+      instr.instance.nameNestedModule);
   const std::vector<DataPorts> &ports = instr.instance.ports;
   for (const auto &port: ports) {
     const std::pair<Signal *, Signal *> &op = port.signals;
     const std::pair<int, int> &parms = port.params;
     std::pair<int, std::string> key = { instr.instance.indexNestedModule, op.first->id };
     if (portsMode.find(key) == portsMode.end()) {
-      out << fmt::format("{} {}\nMap of ports: \n", key.first, key.second);
+      debug << fmt::format("{} {}\nMap of ports: \n", key.first, key.second);
       for (auto it: portsMode) {
-        out << fmt::format("{} {}\n",
-                           it.first.first,
-                           it.first.second);
+        debug << fmt::format("{} {}\n", it.first.first, it.first.second);
       }
       assert(0 && "Incorrect port data");
     }
     if (portsMode[key] == PM_Input) {
       os << fmt::format("    {}.{} <= ",
-                        id,
-                        getNameSignal(op.first));
+          id,
+          getNameSignal(op.first));
       os << makeOperandPrint({ op.second, parms.first, parms.second });
     } else {
       os << fmt::format("    {} <= {}.{}",
-                        getNameSignal(op.second),
-                        id,
-                        getNameSignal(op.first));
+          getNameSignal(op.second),
+          id,
+          getNameSignal(op.first));
     }
     os << "\n";
   }
 }
 
 void YosysConverterFirrtl::declareInstruction(
-    std::ostream &os,
-    const Instruction &instr) {
+    std::ostream &os, const Instruction &instr) {
   if (instr.statement == S_Connect) {
     declareConnectInstruction(os, instr);
   }
@@ -330,35 +330,31 @@ void YosysConverterFirrtl::declareInstruction(
 }
 
 void YosysConverterFirrtl::declareInstructions(
-    std::ostream &os,
-    const std::vector<Instruction> &vec) {
+    std::ostream &os, const std::vector<Instruction> &vec) {
   for (const auto &instr: vec) {
     declareInstruction(os, instr);
   }
 }
 
 YosysConverterFirrtl::~YosysConverterFirrtl() {
-  fout << "FIRRTL version 3.2.0\n";
-  fout << "circuit " << nameTopModule << " :\n";
+  outputFile << "FIRRTL version 3.2.0\n";
+  outputFile << "circuit " << nameTopModule << " :\n";
   std::vector<Module> &modules = finalModules;
   for (const auto &curModule: modules) {
 
-    declareModule(fout, curModule);
-    declareInstructions(fout, curModule.instructions);
+    declareModule(outputFile, curModule);
+    declareInstructions(outputFile, curModule.instructions);
 
     const std::map<int, Signal *> &signals = curModule.signals;
-    for (auto &[index, sig]: signals) {
+    for (const auto &[index, sig]: signals) {
       delete sig;
     }
 
     const std::vector<Signal *> &genSignals = curModule.genSig;
-    for (auto &sig: genSignals) {
+    for (const auto &sig: genSignals) {
       delete sig;
     }
   }
-
-  fout.close();
-  out.close();
 
   Yosys::yosys_shutdown();
 }
@@ -367,16 +363,13 @@ std::string YosysConverterFirrtl::getName() {
   return genName + "_" + std::to_string(numbGenName++);
 }
 
-void YosysConverterFirrtl::countIndent(
-    std::ostream &os,
-    size_t indent) {
+void YosysConverterFirrtl::countIndent(std::ostream &os, size_t indent) {
   for (size_t i = 0; i < indent - 1; ++i) {
     os << "  ";
   }
 }
 
-std::string YosysConverterFirrtl::operatorToString(
-    Operator op) {
+std::string YosysConverterFirrtl::operatorToString(Operator op) {
   switch (op) {
   case O_Add: return "add";
   case O_Sub: return "sub";
@@ -384,11 +377,14 @@ std::string YosysConverterFirrtl::operatorToString(
   case O_Div: return "div";
   case O_Not: return "not";
   case O_And: return "and";
+  case O_Nand: return "not(and";
   case O_Or: return "or";
+  case O_Nor: return "not(or";
   case O_Orr: return "orr";
   case O_Andr: return "andr";
   case O_Xorr: return "xorr";
   case O_Xor: return "xor";
+  case O_Xnor: return "not(or";
   case O_Cat: return "cat";
   case O_Shl: return "shl";
   case O_Shr: return "shr";
@@ -413,19 +409,19 @@ std::string YosysConverterFirrtl::operatorToString(
 }
 
 void YosysConverterFirrtl::makeMapModules(
-    const YLib::dict<RTLIL::IdString, RTLIL::Module *> &modulesYosys) {
+    const IdDict<RTLIL::Module *> &modulesYosys) {
   for (const auto &[str, module]: modulesYosys) {
     modules.emplace(str.index_, module);
+    std::string nameModule = module->name.c_str();
+    modulesName.emplace(str.index_, checkName(nameModule));
   }
 }
 
 void YosysConverterFirrtl::readModules(const RTLIL::Design &des) {
   makeMapModules(des.modules_);
-  const YLib::dict<RTLIL::IdString, RTLIL::Module *> &modules = des.modules_;
+  const IdDict<RTLIL::Module *> &modules = des.modules_;
   for (const auto &[str, module]: modules) {
-    out << fmt::format("Module:\n name: {} index: {}\n",
-                       str.c_str(),
-                       str.index_);
+    debug << fmt::format("Module:\n name: {} index: {}\n", str.str(), str.index_);
     curModule.indexModule = str.index_;
     walkModule(module);
   }
@@ -437,29 +433,31 @@ std::string YosysConverterFirrtl::readIdString(const RTLIL::IdString &str) {
   return id;
 }
 
-bool YosysConverterFirrtl::hasIllegalSymbols(
-    const std::string &inputStr) {
-  if (inputStr.find('$') != std::string::npos ||
-      inputStr.find('\\') != std::string::npos ||
-      inputStr.find('[') != std::string::npos ||
-      inputStr.find('.') != std::string::npos) {
-    return true;
+bool YosysConverterFirrtl::hasIllegalSymbols(const std::string &inputStr) {
+  for (char c: inputStr) {
+    switch(c) {
+    default:
+      continue;
+    case '$':
+    case '\\':
+    case '[':
+    case '.':
+      return true;
+    }
   }
   return false;
 }
 
-std::string YosysConverterFirrtl::checkName(
-    const std::string &wireName) {
-  std::string newWireName = wireName;
-  newWireName.erase(0, 1);
-  if (hasIllegalSymbols(newWireName)) {
-    newWireName = getName();
+std::string YosysConverterFirrtl::checkName(std::string wireName) {
+  wireName.erase(0, 1);
+  if (hasIllegalSymbols(wireName)) {
+    wireName = getName();
   }
-  return newWireName;
+  return wireName;
 }
 
 void YosysConverterFirrtl::walkWires(
-    const YLib::dict<RTLIL::IdString, RTLIL::Wire *> &ywires) {
+    const IdDict<RTLIL::Wire *> &ywires) {
   for (const auto &[str, ywire]: ywires) {
     Signal *newSig = new Signal;
     bool portOutput = ywire->port_output;
@@ -484,30 +482,28 @@ void YosysConverterFirrtl::walkWires(
     }
     PinMode modePinSig = newSig->mode;
     if (modePinSig != PM_Wire) {
-      std::pair<int, std::string> key = {curModule.indexModule, newSig->id};
+      std::pair<int, std::string> key = { curModule.indexModule, newSig->id };
       portsMode.emplace(key, modePinSig);
       newSig->isUsed = true;
     }
     newSig->type = T_UInt;
     newSig->isDecl = true;
     curModule.signals.emplace(index, newSig);
-    out << fmt::format("  index: {} {} {} width: {}, name FIRRTL: {}\n",
-                       index,
-                       wireName,
-                       modePinSig,
-                       std::to_string(ywire->width),
-                       newSig->id);
+    fmt::print(debug, "  index: {} {} {} width: {}, name FIRRTL: {}\n",
+        index,
+        wireName,
+        modePinSig,
+        std::to_string(ywire->width),
+        newSig->id);
   }
 }
 
 bool YosysConverterFirrtl::isChunk(
-    const RTLIL::SigSpec &first,
-    const RTLIL::SigSpec &second) {
+    const RTLIL::SigSpec &first, const RTLIL::SigSpec &second) {
   return first.is_chunk() && second.is_chunk();
 }
 
-std::string YosysConverterFirrtl::getConst(
-    const RTLIL::Const &opConst) {
+std::string YosysConverterFirrtl::getConst(const RTLIL::Const &opConst) {
   std::string mean;
   const std::vector<RTLIL::State> &bits = opConst.bits;
   for (const auto &c: bits) {
@@ -516,8 +512,7 @@ std::string YosysConverterFirrtl::getConst(
   return "0b" + mean;
 }
 
-int YosysConverterFirrtl::getIdMemory(
-    const RTLIL::Const &opConst) {
+int YosysConverterFirrtl::getIdMemory(const RTLIL::Const &opConst) {
   std::string decode = opConst.decode_string();
   return RTLIL::IdString::get_reference(decode.c_str());
 }
@@ -541,11 +536,9 @@ std::string YosysConverterFirrtl::getStateString(const RTLIL::State state) {
   }
 }
 
-bool YosysConverterFirrtl::hasDontCareBits(const std::string &const_) {
-  std::string newConst = const_;
-  newConst.erase(0, 2);
-  for (char c : newConst) {
-    if (c == 'x') {
+bool YosysConverterFirrtl::hasDontCareBits(const std::string &value) {
+  for (auto it = value.begin() + 2, end = value.end(); it != end; ++it) {
+    if (*it == 'x') {
       return true;
     }
   }
@@ -553,12 +546,8 @@ bool YosysConverterFirrtl::hasDontCareBits(const std::string &const_) {
 }
 
 template <typename T>
-static void addToEndVec(
-    std::vector<T>& vec1,
-    const std::vector<T>& vec2) {
-  vec1.insert(vec1.end(),
-              vec2.begin(),
-              vec2.end());
+static void addToEndVec(std::vector<T> &vec1, const std::vector<T> &vec2) {
+  vec1.insert(vec1.end(), vec2.begin(), vec2.end());
 }
 
 int YosysConverterFirrtl::genDontCareBits(Signal *sig) {
@@ -583,7 +572,7 @@ int YosysConverterFirrtl::genDontCareBits(Signal *sig) {
       sa.op1.hi = length - i - 2;
       sa.op1.lo = length - i - 2;
     } else {
-      out << mean << "\n";
+      debug << mean << "\n";
       assert(0 && "Unsupported Const");
     }
     sa.func = O_Assign;
@@ -598,8 +587,7 @@ int YosysConverterFirrtl::genDontCareBits(Signal *sig) {
   return newWire;
 }
 
-int YosysConverterFirrtl::generateConstSig(
-    const RTLIL::SigSpec &sigWire) {
+int YosysConverterFirrtl::generateConstSig(const RTLIL::SigSpec &sigWire) {
   std::string mean = getConst(sigWire.as_const());
   int curIndex = generateConst(mean);
   Signal *sig = getSignal(curIndex);
@@ -609,8 +597,7 @@ int YosysConverterFirrtl::generateConstSig(
   return curIndex;
 }
 
-int YosysConverterFirrtl::generateConst(
-    const std::string &digit) {
+int YosysConverterFirrtl::generateConst(const std::string &digit) {
   Signal *sig = new Signal;
   sig->mean = digit;
   sig->isConst = true;
@@ -620,12 +607,12 @@ int YosysConverterFirrtl::generateConst(
   return curIndex;
 }
 
-size_t YosysConverterFirrtl::countWidth(const int index) {
+size_t YosysConverterFirrtl::countWidth(int index) {
   Signal *sig = getSignal(index);
   return sig->width;
 }
 
-int YosysConverterFirrtl::generateGenWire(const int width) {
+int YosysConverterFirrtl::generateGenWire(int width) {
   auto *sig = new Signal;
   sig->isDecl = true;
   sig->mode = PM_Wire;
@@ -658,14 +645,13 @@ int YosysConverterFirrtl::makeCat(const RTLIL::SigSpec &sigWire) {
     curModule.operators.emplace(indWire, O_Cat);
     RhsOperands leafs;
     leafs.indexOperands = {oldWire, vecSig[ind]};
-    leafs.parmsOperands = {{-1, 0}, vecSigParms[ind]};
+    leafs.parmsOperands = {{ -1, 0 }, vecSigParms[ind]};
     curModule.yosysCells.emplace(indWire, leafs);
   }
   return indWire;
 }
 
-int YosysConverterFirrtl::deterSigSpec(
-    const RTLIL::SigSpec &sigWire) {
+int YosysConverterFirrtl::deterSigSpec(const RTLIL::SigSpec &sigWire) {
   int idWire = 0;
   if (sigWire.is_chunk()) {
     const RTLIL::Wire *sig = sigWire.as_chunk().wire;
@@ -708,19 +694,17 @@ std::string YosysConverterFirrtl::determineSigSpec(
     if (chunk.is_wire()) {
       const RTLIL::IdString &id = chunk.wire->name;
       idWire = fmt::format("{} index: {} width: {} offset: {} upto: {}",
-                           readIdString(id),
-                           id.index_,
-                           chunk.width,
-                           chunk.offset,
-                           chunk.wire->upto);
+          readIdString(id),
+          id.index_,
+          chunk.width,
+          chunk.offset,
+          chunk.wire->upto);
     } else {
       idWire = "mean: " + getConst(sigWire.as_const());
     }
   } else if (sigWire.is_wire()) {
     const RTLIL::IdString &id = sigWire.as_wire()->name;
-    idWire = fmt::format("{} index: {}",
-                         readIdString(id),
-                         id.index_);
+    idWire = fmt::format("{} index: {}", readIdString(id), id.index_);
   } else if (sigWire.is_fully_const()) {
     idWire = "fully const";
   } else if (sigWire.is_fully_def()) {
@@ -731,14 +715,15 @@ std::string YosysConverterFirrtl::determineSigSpec(
   return idWire;
 }
 
-bool YosysConverterFirrtl::isMemoryType(const int index) {
-  return (index == ID($memrd).index_) ||
-      (index == ID($memrd_v2).index_) ||
-      (index == ID($memwr).index_) ||
-      (index == ID($memwr_v2).index_);
+bool YosysConverterFirrtl::isMemoryType(int index) {
+  return (index == ID($memrd).index_)
+         || (index == ID($memrd_v2).index_)
+         || (index == ID($memwr).index_)
+         || (index == ID($memwr_v2).index_);
 }
 
-YosysConverterFirrtl::Statement YosysConverterFirrtl::determineStatement(int index) {
+YosysConverterFirrtl::Statement
+YosysConverterFirrtl::determineStatement(int index) {
   if (modules.find(index) != modules.end()) {
     return S_Inst;
   }
@@ -755,7 +740,7 @@ YosysConverterFirrtl::Statement YosysConverterFirrtl::determineStatement(int ind
 }
 
 bool YosysConverterFirrtl::determineClkPolarity(
-    const YLib::dict<RTLIL::IdString, RTLIL::Const> &parms) {
+    const IdDict<RTLIL::Const> &parms) {
   for (const auto &[str, mean]: parms) {
     if (str.str() == SID_CLK_POLARITY) {
       return mean.as_bool();
@@ -766,7 +751,7 @@ bool YosysConverterFirrtl::determineClkPolarity(
 }
 
 bool YosysConverterFirrtl::determineRstPolarity(
-    const YLib::dict<RTLIL::IdString, RTLIL::Const> &parms) {
+    const IdDict<RTLIL::Const> &parms) {
   for (const auto &[str, mean]: parms) {
     if (str.str() == SID_ARST_POLARITY) {
       return mean.as_bool();
@@ -776,9 +761,7 @@ bool YosysConverterFirrtl::determineRstPolarity(
   return false;
 }
 
-int YosysConverterFirrtl::makePolaritySig(
-    const bool posedge,
-    const int sig) {
+int YosysConverterFirrtl::makePolaritySig(bool posedge, int sig) {
   int indexSig = 0;
   if (!posedge) {
     SigAssign sa;
@@ -791,9 +774,7 @@ int YosysConverterFirrtl::makePolaritySig(
   return indexSig;
 }
 
-int YosysConverterFirrtl::makePolarityDriverSig(
-    const bool posedge,
-    const int clk) {
+int YosysConverterFirrtl::makePolarityDriverSig(bool posedge, int clk) {
   int indexSig = makePolaritySig(posedge, clk);
   SigAssign sa;
   int newClk;
@@ -806,9 +787,7 @@ int YosysConverterFirrtl::makePolarityDriverSig(
   return newClk;
 }
 
-int YosysConverterFirrtl::makePolarityRstSig(
-    const bool posedge,
-    const int rst) {
+int YosysConverterFirrtl::makePolarityRstSig(bool posedge, const int rst) {
   int indexSig = makePolaritySig(posedge, rst);
   if (indexSig == 0) {
     return rst;
@@ -828,7 +807,7 @@ void YosysConverterFirrtl::makeRenameOutput(int index) {
   output->id = newNameReg;
   RhsOperands leafs;
   leafs.indexOperands.push_back(index);
-  leafs.parmsOperands.push_back({-1, 0});
+  leafs.parmsOperands.push_back({ -1, 0 });
   curModule.yosysCells.emplace(newSig, leafs);
   curModule.operators.emplace(newSig, O_Assign);
 }
@@ -845,73 +824,56 @@ int YosysConverterFirrtl::deterDffLHS(const RTLIL::SigSpec &sig) {
   return 0;
 }
 
-void YosysConverterFirrtl::fillPortsDFF(
-    int &clk,
-    int &data,
-    int &outLHS,
-    int &out,
-    int &rst,
-    std::pair<int, int> &parmData,
-    bool isAsync,
-    const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &cons) {
+YosysConverterFirrtl::FlipFlop YosysConverterFirrtl::fillPortsDFF(
+    bool isAsync, const IdDict<RTLIL::SigSpec> &cons) {
+  FlipFlop info;
   for (const auto &[str, sig]: cons) {
     std::string strParm = str.str();
     if (strParm == SID_CLK) {
-      clk = deterSigSpec(sig);
+      info.clk = deterSigSpec(sig);
     } else if (strParm == SID_D) {
-      data = deterSigSpec(sig);
-      parmData = deterSigSpecBits(sig);
+      info.data = deterSigSpec(sig);
+      info.offsetDataPort = deterSigSpecBits(sig);
     } else if (strParm == SID_Q) {
-      outLHS = deterDffLHS(sig);
-      if (getSignal(outLHS)->mode == PM_Output) {
-        makeRenameOutput(outLHS);
+      info.lhs = deterDffLHS(sig);
+      if (getSignal(info.lhs)->mode == PM_Output) {
+        makeRenameOutput(info.lhs);
       }
-      out = buildLHS(sig);
+      info.out = buildLHS(sig);
     } else if (strParm == SID_ARST && isAsync) {
-      rst = deterSigSpec(sig);
+      info.rst = deterSigSpec(sig);
     } else {
       assert(0 && "Unsupported format dff cells\n");
     }
   }
+  return info;
 }
 
-void YosysConverterFirrtl::makeDFF(
-    const RTLIL::Cell *cell,
-    bool isAsync) {
-  int clk = 0, data = 0, outLHS = 0, out = 0, rst = 0;
-  std::pair<int, int> parmData = {-1, 0};
+void YosysConverterFirrtl::makeDFF(const RTLIL::Cell *cell, bool isAsync) {
   std::string initValue;
-  fillPortsDFF(clk,
-               data,
-               outLHS,
-               out,
-               rst,
-               parmData,
-               isAsync,
-               cell->connections_);
-  Signal *output = getSignal(out);
+  FlipFlop info = fillPortsDFF(isAsync, cell->connections_);
+  Signal *output = getSignal(info.out);
   bool posedge = determineClkPolarity(cell->parameters);
-  int oldClk = clk;
-  clk = makePolarityDriverSig(posedge, oldClk);
-  output->driverSig = getSignal(clk)->id;
+  info.clk = makePolarityDriverSig(posedge, info.clk);
+  output->driverSig = getSignal(info.clk)->id;
   output->mode = PM_Reg;
   if (isAsync) {
     output->mode = PM_Regreset;
     posedge = determineRstPolarity(cell->parameters);
-    rst = makePolarityRstSig(posedge, rst);
+    info.rst = makePolarityRstSig(posedge, info.rst);
     initValue = determineInitValue(cell->parameters);
-    output->resetSig = getSignal(rst)->id;
+    output->resetSig = getSignal(info.rst)->id;
     output->resetMean = initValue;
   }
   RhsOperands leafs;
-  leafs.indexOperands.push_back(data);
-  leafs.parmsOperands.push_back(parmData);
-  curModule.yosysCells.emplace(out, leafs);
-  curModule.operators.emplace(out, O_Assign);
+  leafs.indexOperands.push_back(info.data);
+  leafs.parmsOperands.push_back(info.offsetDataPort);
+  curModule.yosysCells.emplace(info.out, leafs);
+  curModule.operators.emplace(info.out, O_Assign);
 }
 
 std::string YosysConverterFirrtl::determineInitValue(
-    const YLib::dict<RTLIL::IdString, RTLIL::Const> &parms) {
+    const IdDict<RTLIL::Const> &parms) {
   auto it = parms.find(SID_ARST_VALUE);
   if (it != parms.end()) {
     return getConst(it->second);
@@ -926,16 +888,15 @@ void YosysConverterFirrtl::makeADFF(const RTLIL::Cell *cell) {
 
 void YosysConverterFirrtl::makeInstance(
     const int typeFunction,
-    const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &cons,
+    const IdDict<RTLIL::SigSpec> &cons,
     const std::string &nameInst) {
   Instruction instr;
   instr.statement = S_Inst;
   Instance instance;
   instance.indexNestedModule = typeFunction;
   instance.idInstance = nameInst;
-  instance.nameNestedModule = modules[typeFunction]->name.c_str();
-  instance.nameNestedModule.erase(0, 1);
-  const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &connects = cons;
+  instance.nameNestedModule = modulesName[typeFunction];
+  const IdDict<RTLIL::SigSpec> &connects = cons;
   for (const auto &[str, sig]: connects) {
     Signal *op1, *op2;
     int ind = sig.as_chunk().wire->name.index_;
@@ -951,27 +912,25 @@ void YosysConverterFirrtl::makeInstance(
     curModule.genSig.push_back(op1);
     DataPorts ports;
     ports.params = deterSigSpecBits(sig);
-    ports.signals = {op1, op2};
+    ports.signals = { op1, op2 };
     instance.ports.push_back(ports);
   }
   instr.instance = instance;
   curModule.instructions.push_back(instr);
 }
 
-std::string YosysConverterFirrtl::binaryToDecimal(
-    const std::string &binaryStr) {
-  size_t decimal = std::stoul(binaryStr, nullptr, 2);
+std::string YosysConverterFirrtl::binaryToDecimal(const std::string &binStr) {
+  size_t decimal = std::stoul(binStr, nullptr, 2);
   return std::to_string(decimal);
 }
 
 void YosysConverterFirrtl::checkShiftOperator(
-    Operator &operator_,
-    RhsOperands &leafs) {
+    Operator &operator_, RhsOperands &leafs) {
   if (operator_ == O_Shl || operator_ == O_Shr) {
     std::string &value = getSignal(leafs.indexOperands[0])->mean;
     if (!value.empty()) {
       value = binaryToDecimal(value);
-      leafs.parmsOperands[0] = {-1, 0};
+      leafs.parmsOperands[0] = { -1, 0 };
     } else {
       if (operator_ == O_Shl) {
         operator_ = O_Dshl;
@@ -988,24 +947,21 @@ static void reverse(T &vec) {
 }
 
 void YosysConverterFirrtl::checkPad(
-    const int firstParms,
-    const Operator operator_,
-    RhsOperands &leafs) {
+    int firstParms, Operator operator_, RhsOperands &leafs) {
   if (operator_ == O_Pad) {
     int parm = firstParms - (leafs.parmsOperands[0].first - leafs.parmsOperands[0].second + 1);
     leafs.indexOperands.push_back(generateConst(std::to_string(parm)));
     reverse(leafs.indexOperands);
-    leafs.parmsOperands.push_back({-1, 0});
+    leafs.parmsOperands.push_back({ -1, 0 });
     reverse(leafs.parmsOperands);
   }
 }
 
 void YosysConverterFirrtl::makeUnaryConnect(
-    const int typeFunction,
-    const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &cons) {
+    int typeFunction, const IdDict<RTLIL::SigSpec> &cons) {
   int root;
   RhsOperand leafA;
-  const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &connects = cons;
+  const IdDict<RTLIL::SigSpec> &connects = cons;
   for (const auto &[str, sig]: connects) {
     std::string strParm = str.str();
     if (strParm == SID_Y) {
@@ -1018,21 +974,20 @@ void YosysConverterFirrtl::makeUnaryConnect(
     }
   }
   RhsOperands leafs;
-  std::vector<RhsOperand> leafsInit = {leafA};
+  std::vector<RhsOperand> leafsInit = { leafA };
   unifyRhsOperands(leafs, leafsInit);
   curModule.operators.emplace(root, logicFunction(typeFunction));
   curModule.yosysCells.emplace(root, leafs);
 }
 
 void YosysConverterFirrtl::makeBinaryConnect(
-    const int typeFunction,
-    const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &cons) {
+    int typeFunction, const IdDict<RTLIL::SigSpec> &cons) {
   int root;
   Operator operator_ = logicFunction(typeFunction);
   RhsOperand leafA, leafB;
-  const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &connects = cons;
+  const IdDict<RTLIL::SigSpec> &connects = cons;
   std::pair<int, int> pairParm;
-  int firstParms;
+  int firstParms = 0;
   for (const auto &[str, sig]: connects) {
     std::string strParm = str.str();
     if (strParm == SID_Y) {
@@ -1059,39 +1014,39 @@ void YosysConverterFirrtl::makeBinaryConnect(
 }
 
 void YosysConverterFirrtl::printCell(const RTLIL::Cell *cell) {
-  out << " Connections:\n";
-  const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &cons = cell->connections_;
+  debug << " Connections:\n";
+  const IdDict<RTLIL::SigSpec> &cons = cell->connections_;
   std::string connections;
   for (const auto &[str, sig]: cons) {
     std::string parms;
     if (sig.chunks().size() == 1) {
       parms = fmt::format(" width: {} offset: {}",
-                         sig.as_chunk().width,
-                         sig.as_chunk().offset);
+          sig.as_chunk().width,
+          sig.as_chunk().offset);
     }
     connections += fmt::format("   {} index: {} : {}{}\n",
-                       readIdString(str),
-                       std::to_string(str.index_),
-                       Yosys::log_signal(sig),
-                       parms);
+        readIdString(str),
+        std::to_string(str.index_),
+        Yosys::log_signal(sig),
+        parms);
   }
-  out << " Parameters:\n";
-  const YLib::dict<RTLIL::IdString, RTLIL::Const> &parameters = cell->parameters;
+  debug << " Parameters:\n";
+  const IdDict<RTLIL::Const> &parameters = cell->parameters;
   for (const auto &[str, constant]: parameters) {
-    out << fmt::format("   {} index: {} : {}\n",
-                       readIdString(str),
-                       std::to_string(str.index_),
-                       getConst(constant));
+    debug << fmt::format("   {} index: {} : {}\n",
+        readIdString(str),
+        std::to_string(str.index_),
+        getConst(constant));
   }
-  out << "\n";
+  debug << "\n";
 }
 
 YosysConverterFirrtl::Memory *YosysConverterFirrtl::getMemory(
-    const YLib::dict<RTLIL::IdString, RTLIL::Const> &parameters) {
+    const IdDict<RTLIL::Const> &parameters) {
   for (const auto &[str, constant]: parameters) {
     if (str.str() == SID_MEMID) {
       int idMemory = getIdMemory(constant);
-      out << fmt::format("{} memory \n", idMemory);
+      debug << fmt::format("{} memory \n", idMemory);
       return &curModule.memories[idMemory];
     }
   }
@@ -1099,14 +1054,14 @@ YosysConverterFirrtl::Memory *YosysConverterFirrtl::getMemory(
   return nullptr;
 }
 
-bool YosysConverterFirrtl::isReadMemory(const int index) {
-  return (index == ID($memrd).index_) ||
-      (index == ID($memrd_v2).index_);
+bool YosysConverterFirrtl::isReadMemory(int index) {
+  return (index == ID($memrd).index_)
+         || (index == ID($memrd_v2).index_);
 }
 
-bool YosysConverterFirrtl::isWriteMemory(const int index) {
-  return (index == ID($memwr).index_) ||
-      (index == ID($memwr_v2).index_);
+bool YosysConverterFirrtl::isWriteMemory(int index) {
+  return (index == ID($memwr).index_)
+         || (index == ID($memwr_v2).index_);
 }
 
 void YosysConverterFirrtl::fillMask(
@@ -1117,9 +1072,7 @@ void YosysConverterFirrtl::fillMask(
     Signal *sig = getSignal(generateGenWire(-1));
     sig->isUsed = false;
     sig->isDecl = false;
-    sig->id = fmt::format("{}.{}.mask",
-                           mem->name,
-                           controller.name);
+    sig->id = fmt::format("{}.{}.mask", mem->name, controller.name);
     Signal *rhs = getSignal(generateGenWire(1));
     controller.mask = sig;
     rhs->isInvalid = true;
@@ -1133,19 +1086,16 @@ void YosysConverterFirrtl::fillMask(
 }
 
 void YosysConverterFirrtl::makeController(
-    const RTLIL::Cell *cell,
-    Memory *mem) {
+    const RTLIL::Cell *cell, Memory *mem) {
   Controller controller;
   controller.type = determineTypeController(cell->type.index_);
   controller.name = getName();
   Instruction instr;
   instr.statement = S_Connect;
-  const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &cons = cell->connections_;
+  const IdDict<RTLIL::SigSpec> &cons = cell->connections_;
   for (const auto &[str, sig]: cons) {
     Signal *sigNew = getSignal(generateGenWire(-1));
-    sigNew->id = fmt::format("{}.{}",
-                           mem->name,
-                           controller.name);
+    sigNew->id = fmt::format("{}.{}", mem->name, controller.name);
     Signal **fieldController;
     SigAssign sa;
     sa.func = O_Assign;
@@ -1188,7 +1138,8 @@ void YosysConverterFirrtl::makeController(
   mem->controllers.push_back(controller);
 }
 
-YosysConverterFirrtl::TypeController YosysConverterFirrtl::determineTypeController(const int index) {
+YosysConverterFirrtl::TypeController
+YosysConverterFirrtl::determineTypeController(int index) {
   TypeController type = TC_ReadWriter;
   if (isReadMemory(index)) {
     type = TC_Reader;
@@ -1207,8 +1158,7 @@ void YosysConverterFirrtl::makeMemory(const RTLIL::Cell *cell) {
 }
 
 void YosysConverterFirrtl::unifyRhsOperands(
-    RhsOperands &leafs,
-    const std::vector<RhsOperand> &leafsVec) {
+    RhsOperands &leafs, const std::vector<RhsOperand> &leafsVec) {
   for (const auto &leaf: leafsVec) {
     leafs.indexOperands.push_back(leaf.index);
     leafs.parmsOperands.push_back(leaf.parm);
@@ -1243,18 +1193,17 @@ void YosysConverterFirrtl::insertData(
 void YosysConverterFirrtl::printDeps() {
   std::string lhsPrint;
   for (auto [index, vec]: curModule.depsLHS) {
-    lhsPrint += fmt::format("LHS: {} Data: \n",
-                            getSignal(index)->id);
+    lhsPrint += fmt::format("LHS: {} Data: \n", getSignal(index)->id);
     for (auto it: vec) {
       lhsPrint += fmt::format(" LhsBitLo {}\n LhsBitHi {}\n RhsBitLo {}\n RhsBitHi {}\n  RhsIndex {}\n",
-                              it.bitLhsLo,
-                              it.bitLhsHi,
-                              it.bitRhsLo,
-                              it.bitRhsHi,
-                              getSignal(it.indexRhs)->id);
+          it.bitLhsLo,
+          it.bitLhsHi,
+          it.bitRhsLo,
+          it.bitRhsHi,
+          getSignal(it.indexRhs)->id);
     }
   }
-  out << fmt::format(":::::Deps:\n{}:::endDeps\n", lhsPrint);
+  debug << fmt::format(":::::Deps:\n{}:::endDeps\n", lhsPrint);
 }
 
 int YosysConverterFirrtl::deterLengthLhs(const RTLIL::SigSpec &lhs) {
@@ -1283,15 +1232,13 @@ int YosysConverterFirrtl::buildLHS(const RTLIL::SigSpec &lhs) {
   return lhsWire;
 }
 
-
-void YosysConverterFirrtl::makeMux(
-    const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &cons) {
+void YosysConverterFirrtl::makeMux(const IdDict<RTLIL::SigSpec> &cons) {
   int root;
   RhsOperand leafS, leafA, leafB;
-  const YLib::dict<RTLIL::IdString, RTLIL::SigSpec> &connects = cons;
+  const IdDict<RTLIL::SigSpec> &connects = cons;
   for (const auto &[str, sig]: connects) {
-    int index;
-    std::pair<int, int> parm;
+    int index = 0;
+    std::pair<int, int> parm = { -1, 0 };
     std::string strParm = str.str();
     if (strParm != SID_Y) {
       index = deterSigSpec(sig);
@@ -1311,27 +1258,26 @@ void YosysConverterFirrtl::makeMux(
       leafB.index = index;
       leafB.parm = parm;
     } else {
-      out << strParm;
+      debug << strParm;
       assert(0 && "Unsupported format mux cells");
     }
   }
   RhsOperands leafs;
-  std::vector<RhsOperand> leafVec = {leafS, leafB, leafA};
+  std::vector<RhsOperand> leafVec = { leafS, leafB, leafA };
   unifyRhsOperands(leafs, leafVec);
   curModule.operators.emplace(root, O_Mux);
   curModule.yosysCells.emplace(root, leafs);
 }
 
-bool YosysConverterFirrtl::isMux(const int index) {
+bool YosysConverterFirrtl::isMux(int index) {
   return (index == ID($mux).index_) || (index == ID($ternary).index_);
 }
 
-void YosysConverterFirrtl::walkCells(
-    const YLib::dict<RTLIL::IdString, RTLIL::Cell *> &ycells) {
+void YosysConverterFirrtl::walkCells(const IdDict<RTLIL::Cell *> &ycells) {
   for (const auto &[str, cell]: ycells) {
     std::string nameCell = str.c_str();
     nameCell.erase(0, 1);
-    out << "=================================================\n";
+    debug << "=================================================\n";
     int typeFunction = cell->type.index_;
     Statement statement = determineStatement(typeFunction);
     if (statement == S_Connect) {
@@ -1357,51 +1303,58 @@ void YosysConverterFirrtl::walkCells(
     } else if (statement == S_Adff) {
       makeADFF(cell);
     }
-    out << fmt::format(" Cell: {} index: {}\nType of cell: {}\n",
-                       nameCell,
-                       str.index_,
-                       typeFunction);
+    debug << fmt::format(" Cell: {} index: {}\nType of cell: {}\n",
+        nameCell,
+        str.index_,
+        typeFunction);
     printCell(cell);
   }
 }
 
 bool YosysConverterFirrtl::isUnOperator(Operator func) {
-  if (func == O_Not ||
-      func == O_Orr ||
-      func == O_Xorr ||
-      func == O_Andr ||
-      func == O_Neg ||
-      func == O_Bits ||
-      func == O_AsClock||
-      func == O_AsAsyncReset) {
+  switch (func) {
+  case O_Not:
+  case O_Orr:
+  case O_Xorr:
+  case O_Andr:
+  case O_Neg:
+  case O_Bits:
+  case O_AsClock:
+  case O_AsAsyncReset:
     return true;
+  default:
+    return false;
   }
-  return false;
 }
 
 bool YosysConverterFirrtl::isBinOperator(Operator func) {
-  if (func == O_Add ||
-      func == O_Sub ||
-      func == O_Or ||
-      func == O_And ||
-      func == O_Xor ||
-      func == O_Mul ||
-      func == O_Div ||
-      func == O_Cat ||
-      func == O_Shl ||
-      func == O_Shr ||
-      func == O_Dshl ||
-      func == O_Dshr ||
-      func == O_Pad ||
-      func == O_Geq ||
-      func == O_Gt ||
-      func == O_Lt ||
-      func == O_Leq ||
-      func == O_Neq ||
-      func == O_Eq) {
+  switch (func) {
+  case O_Add:
+  case O_Sub:
+  case O_Or:
+  case O_And:
+  case O_Xor:
+  case O_Mul:
+  case O_Div:
+  case O_Cat:
+  case O_Shl:
+  case O_Shr:
+  case O_Dshl:
+  case O_Dshr:
+  case O_Pad:
+  case O_Geq:
+  case O_Gt:
+  case O_Lt:
+  case O_Leq:
+  case O_Neq:
+  case O_Eq:
+  case O_Xnor:
+  case O_Nor:
+  case O_Nand:
     return true;
+  default:
+    return false;
   }
-  return false;
 }
 
 bool YosysConverterFirrtl::isTernOperator(Operator func) {
@@ -1424,10 +1377,11 @@ int YosysConverterFirrtl::determineTypeOperator(Operator func) {
   return 0;
 }
 
-void YosysConverterFirrtl::requireOperand(Operand &op,
-                                   int index,
-                                   int hi,
-                                   int lo) {
+void YosysConverterFirrtl::requireOperand(
+    Operand &op,
+    int index,
+    int hi,
+    int lo) {
   op.sig = getSignal(index);
   op.sig->isUsed = true;
   op.hi = hi;
@@ -1448,34 +1402,38 @@ void YosysConverterFirrtl::buildAssigns(int root, bool isInvalid) {
     sa.lhs->isUsed = true;
     RhsOperands &leafs = curModule.yosysCells[root];
     buildAssigns(leafs.indexOperands[0], isInvalid);
-    requireOperand(sa.op1,
-            leafs.indexOperands[0],
-            leafs.parmsOperands[0].first,
-            leafs.parmsOperands[0].second);
+    requireOperand(
+        sa.op1,
+        leafs.indexOperands[0],
+        leafs.parmsOperands[0].first,
+        leafs.parmsOperands[0].second);
     if (arity == 2) {
       buildAssigns(leafs.indexOperands[1], isInvalid);
-      requireOperand(sa.op2,
-              leafs.indexOperands[1],
-              leafs.parmsOperands[1].first,
-              leafs.parmsOperands[1].second);
+      requireOperand(
+          sa.op2,
+          leafs.indexOperands[1],
+          leafs.parmsOperands[1].first,
+          leafs.parmsOperands[1].second);
     }
     if (arity == 3) {
       buildAssigns(leafs.indexOperands[1], isInvalid);
-      requireOperand(sa.op2,
-              leafs.indexOperands[1],
-              leafs.parmsOperands[1].first,
-              leafs.parmsOperands[1].second);
+      requireOperand(
+          sa.op2,
+          leafs.indexOperands[1],
+          leafs.parmsOperands[1].first,
+          leafs.parmsOperands[1].second);
       buildAssigns(leafs.indexOperands[2], isInvalid);
-      requireOperand(sa.op3,
-              leafs.indexOperands[2],
-              leafs.parmsOperands[2].first,
-              leafs.parmsOperands[2].second);
+      requireOperand(
+          sa.op3,
+          leafs.indexOperands[2],
+          leafs.parmsOperands[2].first,
+          leafs.parmsOperands[2].second);
     }
     tempAssigns.push_back(sa);
   }
 }
 
-YosysConverterFirrtl::Signal *YosysConverterFirrtl::getSignal(const int index) {
+YosysConverterFirrtl::Signal *YosysConverterFirrtl::getSignal(int index) {
   Signal *sig;
   if (curModule.signals.find(index) != curModule.signals.end()) {
     sig = curModule.signals[index];
@@ -1495,17 +1453,17 @@ void YosysConverterFirrtl::printAllYosysCells() {
     for (int i = 0; i < arity; ++i) {
       idOp[i] = getSignal(leafs.indexOperands[0])->id;
     }
-    out << fmt::format("Yosys cells:\n  Lhs: {} RHS: {} {} {}",
-                       lhs->id,
-                       idOp[0],
-                       idOp[1],
-                       idOp[2]);
+    fmt::print(debug, "Yosys cells:\n  Lhs: {} RHS: {} {} {}",
+        lhs->id,
+        idOp[0],
+        idOp[1],
+        idOp[2]);
   }
 }
 
 void YosysConverterFirrtl::walkAllYosysCells() {
   const std::map<int, RhsOperands> &ycell = curModule.yosysCells;
-  out << "Yosys cells:\n";
+  debug << "Yosys cells:\n";
   for (const auto &[root, leaf]: ycell) {
     Operator func = curModule.operators[root];
     int arity = determineTypeOperator(func);
@@ -1516,36 +1474,35 @@ void YosysConverterFirrtl::walkAllYosysCells() {
     sa.lhs->isUsed = true;
     RhsOperands &leafs = curModule.yosysCells[root];
     requireOperand(
-          sa.op1,
-          leafs.indexOperands[0],
-          leafs.parmsOperands[0].first,
-          leafs.parmsOperands[0].second);
+        sa.op1,
+        leafs.indexOperands[0],
+        leafs.parmsOperands[0].first,
+        leafs.parmsOperands[0].second);
     if (arity == 2) {
       requireOperand(
-            sa.op2,
-            leafs.indexOperands[1],
-            leafs.parmsOperands[1].first,
-            leafs.parmsOperands[1].second);
+          sa.op2,
+          leafs.indexOperands[1],
+          leafs.parmsOperands[1].first,
+          leafs.parmsOperands[1].second);
     }
     if (arity == 3) {
       requireOperand(
-            sa.op2,
-            leafs.indexOperands[1],
-            leafs.parmsOperands[1].first,
-            leafs.parmsOperands[1].second);
+          sa.op2,
+          leafs.indexOperands[1],
+          leafs.parmsOperands[1].first,
+          leafs.parmsOperands[1].second);
       requireOperand(
-            sa.op3,
-            leafs.indexOperands[2],
-            leafs.parmsOperands[2].first,
-            leafs.parmsOperands[2].second);
+          sa.op3,
+          leafs.indexOperands[2],
+          leafs.parmsOperands[2].first,
+          leafs.parmsOperands[2].second);
     }
     tempAssigns.push_back(sa);
   }
 }
 
 bool YosysConverterFirrtl::compareByBitLhsLo(
-    const RhsDeps &lhs1,
-    const RhsDeps &lhs2) {
+    const RhsDeps &lhs1, const RhsDeps &lhs2) {
   if (lhs1.bitLhsLo == lhs2.bitLhsLo) {
     assert(0 && "Intersection in the bits");
   }
@@ -1553,8 +1510,7 @@ bool YosysConverterFirrtl::compareByBitLhsLo(
 }
 
 void YosysConverterFirrtl::makeCatRhs(
-    int indexLhs,
-    const std::vector<RhsDeps> &vec) {
+    int indexLhs, const std::vector<RhsDeps> &vec) {
   const int lastIndex = static_cast<int>(vec.size()) - 1;
 
   RhsOperand leaf2;
@@ -1593,8 +1549,7 @@ void YosysConverterFirrtl::walkDepsLhs() {
   }
 }
 
-int YosysConverterFirrtl::makeCatSigSpec(
-    const RTLIL::SigSpec &sigWire) {
+int YosysConverterFirrtl::makeCatSigSpec(const RTLIL::SigSpec &sigWire) {
   std::vector<int> vecSig;
   std::vector<std::pair<int, int>> vecSigParms;
   const std::vector<RTLIL::SigChunk> &vec = sigWire.chunks();
@@ -1632,8 +1587,7 @@ int YosysConverterFirrtl::makeCatSigSpec(
 }
 
 int YosysConverterFirrtl::findDataByBitLhsHi(
-    const std::vector<RhsDeps> &vec,
-    int searchValue) {
+    const std::vector<RhsDeps> &vec, int searchValue) {
   int result = 0;
   for (const auto &data : vec) {
     if (data.bitLhsHi == searchValue) {
@@ -1643,8 +1597,7 @@ int YosysConverterFirrtl::findDataByBitLhsHi(
   return result;
 }
 
-int YosysConverterFirrtl::deterSigSpecRHS(
-    const RTLIL::SigSpec &sigWire) {
+int YosysConverterFirrtl::deterSigSpecRHS(const RTLIL::SigSpec &sigWire) {
   int idWire = 0;
   if (sigWire.is_chunk()) {
     const RTLIL::Wire *sig = sigWire.as_chunk().wire;
@@ -1673,7 +1626,7 @@ int YosysConverterFirrtl::deterSigSpecRHS(
 
 std::pair<int, int> YosysConverterFirrtl::deterSigSpecBitsRHS(
     const RTLIL::SigSpec &sigWire) {
-  std::pair<int, int> pair = {-1, 0};
+  std::pair<int, int> pair = { -1, 0 };
   if (sigWire.is_chunk()) {
     const RTLIL::Wire *sig = sigWire.as_chunk().wire;
     if (sig != nullptr) {
@@ -1712,42 +1665,37 @@ void YosysConverterFirrtl::walkConnections(
 }
 
 void YosysConverterFirrtl::printConnections(
-    const RTLIL::SigSpec &op1,
-    const RTLIL::SigSpec &op2) {
-  out << " Connect:\n";
-  out << fmt::format("  1st operand {} size: {}\n  2st operand {} size: {}\n",
-                     Yosys::log_signal(op1),
-                     op1.chunks().size(),
-                     Yosys::log_signal(op2),
-                     op2.chunks().size());
+    const RTLIL::SigSpec &op1, const RTLIL::SigSpec &op2) {
+  debug << " Connect:\n";
+  debug << fmt::format("  1st operand {} size: {}\n  2st operand {} size: {}\n",
+      Yosys::log_signal(op1),
+      op1.chunks().size(),
+      Yosys::log_signal(op2),
+      op2.chunks().size());
 }
 
 void YosysConverterFirrtl::walkParameteres(
-    const YLib::idict<RTLIL::IdString> &avail_parameters) {
-  for (const auto &parameter: avail_parameters) {
-    out << fmt::format(" index: {}  name: {}\n",
-                       parameter.index_,
-                       parameter.c_str());
+    const Yosys::hashlib::idict<RTLIL::IdString> &availParms) {
+  for (const auto &parameter: availParms) {
+    debug << fmt::format(" index: {}  name: {}\n",
+        parameter.index_,
+        parameter.c_str());
   }
 }
 
 void YosysConverterFirrtl::walkPorts(const std::vector<RTLIL::IdString> &ports) {
   for (const auto &port: ports) {
     int index = port.index_;
-    out << fmt::format(" {} index: {}\n",
-                       readIdString(port),
-                       index);
+    debug << fmt::format(" {} index: {}\n", readIdString(port), index);
   }
 }
 
-bool YosysConverterFirrtl::isSigSpec(
-    const int op1,
-    const int op2) {
+bool YosysConverterFirrtl::isSigSpec(int op1, int op2) {
   return op1 && op2;
 }
 
-bool YosysConverterFirrtl::isUndef(const RTLIL::SigSpec &sig1,
-                            const RTLIL::SigSpec &sig2) {
+bool YosysConverterFirrtl::isUndef(
+    const RTLIL::SigSpec &sig1, const RTLIL::SigSpec &sig2) {
   return sig1.is_fully_undef() && sig2.is_fully_undef();
 }
 
@@ -1785,8 +1733,7 @@ void YosysConverterFirrtl::fillLhsProc(
 }
 
 bool YosysConverterFirrtl::compareDataByBitLhs(
-    const RhsDeps &a,
-    const RhsDeps &b) {
+    const RhsDeps &a, const RhsDeps &b) {
   return a.bitLhs < b.bitLhs;
 }
 
@@ -1815,14 +1762,11 @@ void YosysConverterFirrtl::keepLastElementsByBitLhs(
     }
   }
   removeElementsByIndices(dataVector, deletedElements);
-  std::sort(dataVector.begin(),
-            dataVector.end(),
-            compareDataByBitLhs);
+  std::sort(dataVector.begin(), dataVector.end(), compareDataByBitLhs);
 }
 
 void YosysConverterFirrtl::makeAssign(
-    const int lhs,
-    const std::vector<RhsDeps> &vec) {
+    int lhs, const std::vector<RhsDeps> &vec) {
   SigAssign sa;
   sa.func = O_Assign;
   int curBit = 0;
@@ -1879,7 +1823,7 @@ void YosysConverterFirrtl::makeLhs(
   }
 }
 
-void YosysConverterFirrtl::declareOperand(const int op, const bool SA) {
+void YosysConverterFirrtl::declareOperand(int op, bool SA) {
   Signal *sig = getSignal(op);
   if (!sig->isConst) {
     sig->isUsed = true;
@@ -1891,10 +1835,9 @@ void YosysConverterFirrtl::declareOperand(const int op, const bool SA) {
 }
 
 void YosysConverterFirrtl::walkActions(
-    const std::vector<RTLIL::SigSig> &actions,
-    const bool isInvalid) {
+    const std::vector<RTLIL::SigSig> &actions, bool isInvalid) {
   for (const auto &[sig1, sig2]: actions) {
-    out << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+    debug << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
     printConnections(sig1, sig2);
     int op2 = 0;
     if (!isUndef(sig1, sig2)) {
@@ -1902,11 +1845,11 @@ void YosysConverterFirrtl::walkActions(
       op2 = deterSigSpec(sig2);
       if (containsIndex(tmpBlockedRHS, op2)) {
         if (getSignal(op2)->mode == PM_Output) {
-          out << "***Blocked assign***\n";
+          debug << "***Blocked assign***\n";
           continue;
         }
       }
-      out << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+      debug << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
       makeLhs(sig1, sig2, stackLHS.lhs);
       stackLHS.pushBack(stackLHS.lhs);
       declareOperand(op1);
@@ -1915,20 +1858,18 @@ void YosysConverterFirrtl::walkActions(
   }
 }
 
-std::vector<int> YosysConverterFirrtl::findDontCareBits(std::string &const_) {
+std::vector<int> YosysConverterFirrtl::findDontCareBits(std::string &value) {
   std::vector<int> indices;
-  for (int i = const_.length() - 1; i >= 0; --i) {
-    if (const_[i] == '4') {
-      const_[i] = '1';
-      indices.push_back(const_.length() - i);
+  for (int i = value.length() - 1; i >= 0; --i) {
+    if (value[i] == '4') {
+      value[i] = '1';
+      indices.push_back(value.length() - i);
     }
   }
   return indices;
 }
 
-int YosysConverterFirrtl::makeCatWire(
-    std::vector<int> &vec,
-    bool isInvalid) {
+int YosysConverterFirrtl::makeCatWire(std::vector<int> &vec, bool isInvalid) {
   SigAssign sa;
   int newWire = generateGenWire(-1);
   sa.lhs = getSignal(newWire);
@@ -1954,7 +1895,7 @@ int YosysConverterFirrtl::makeCatWire(
   return newWire;
 }
 
-int YosysConverterFirrtl::assignBit(const int op, const int bit) {
+int YosysConverterFirrtl::assignBit(int op, int bit) {
   SigAssign sa;
   sa.func = O_Assign;
   int newWire = generateGenWire(-1);
@@ -1969,9 +1910,7 @@ int YosysConverterFirrtl::assignBit(const int op, const int bit) {
 }
 
 std::pair<int, int> YosysConverterFirrtl::makeCat(
-    const int op2Init,
-    const int op1Init,
-    std::vector<int> &indices) {
+    int op2Init, int op1Init, std::vector<int> &indices) {
   std::vector<int> wiresCatOp1;
   std::vector<int> wiresCatOp2;
   int i = 0;
@@ -1985,13 +1924,12 @@ std::pair<int, int> YosysConverterFirrtl::makeCat(
   }
   int op1 = makeCatWire(wiresCatOp1);
   int op2 = makeCatWire(wiresCatOp2);
-  std::pair<int, int> operands = {op1, op2};
+  std::pair<int, int> operands = { op1, op2 };
   return operands;
 }
 
 std::pair<int, int> YosysConverterFirrtl::giveDontCareBits(
-    const int op2Init,
-    const int op1Init) {
+    const int op2Init, const int op1Init) {
   Signal *sig = getSignal(op2Init);
   if (sig->isConst) {
     std::vector<int> indices = findDontCareBits(sig->mean);
@@ -2002,7 +1940,7 @@ std::pair<int, int> YosysConverterFirrtl::giveDontCareBits(
       return operands;
     }
   }
-  return {op1Init, op2Init};
+  return { op1Init, op2Init };
 }
 
 int YosysConverterFirrtl::makeCondSignal(const RTLIL::SigSpec &signal) {
@@ -2014,17 +1952,14 @@ int YosysConverterFirrtl::makeCondSignal(const RTLIL::SigSpec &signal) {
 }
 
 void YosysConverterFirrtl::fillParameters(
-    const RTLIL::SigSpec &op,
-    int &hi,
-    int &lo) {
+    const RTLIL::SigSpec &op, int &hi, int &lo) {
   std::pair<int, int> parms = deterSigSpecBits(op);
   hi = parms.first;
   lo = parms.second;
 }
 
 int YosysConverterFirrtl::makeCase(
-    const RTLIL::SigSpec &op1,
-    const RTLIL::SigSpec &op2) {
+    const RTLIL::SigSpec &op1, const RTLIL::SigSpec &op2) {
   int op1Init = makeCondSignal(op1);
   int op2Init = makeCondSignal(op2);
   std::pair<int, int> operands = giveDontCareBits(op2Init, op1Init);
@@ -2100,14 +2035,14 @@ void YosysConverterFirrtl::walkSimpleCase(
     Instruction &instr) {
   RTLIL::SigSpec op2;
   const std::vector<RTLIL::SigSpec> &compare = case_->compare;
-  out << " case:" << "\n";
+  debug << " case:" << "\n";
   for (const auto &it: compare) {
-    out << "      " << Yosys::log_signal(it) << "\n";
+    debug << "      " << Yosys::log_signal(it) << "\n";
     op2 = it;
   }
   CondKeyWord keyWord = CKW_If;
   if (compare.empty()) {
-    out << "    else\n";
+    debug << "    else\n";
     int elseWire = makeElse(switchers);
     tempCondStatement.sig = getSignal(elseWire);
   } else {
@@ -2125,28 +2060,25 @@ void YosysConverterFirrtl::walkSimpleCase(
 }
 
 void YosysConverterFirrtl::walkSwitch(
-    const std::vector<RTLIL::SwitchRule *> &switches,
-    Instruction &instr) {
+    const std::vector<RTLIL::SwitchRule *> &switches, Instruction &instr) {
   std::vector<int> switchers;
   for (const auto &switcher: switches) {
     std::string typeSignal = determineSigSpec(switcher->signal);
-    out << "   Signal: " << typeSignal << " "
-        << Yosys::log_signal(switcher->signal) << "\n";
+    fmt::print(debug, "   Signal: {} {}\n",
+        typeSignal,
+        Yosys::log_signal(switcher->signal));
 
     std::vector<RTLIL::CaseRule *> &cases = switcher->cases;
     for (const auto &case_: cases) {
       if (typeSignal != "fully def") {
-        walkSimpleCase(switcher->signal,
-                         case_,
-                         switchers,
-                         instr);
+        walkSimpleCase(
+          switcher->signal, case_, switchers, instr);
       } else {
         walkActions(case_->actions, true);
         if (instr.branches.empty()) {
           addToEndVec(tempCases, tempAssigns);
         } else {
-          addToEndVec(instr.branches.back().connects,
-                      tempAssigns);
+          addToEndVec(instr.branches.back().connects, tempAssigns);
         }
         tempAssigns.clear();
         break;
@@ -2158,27 +2090,27 @@ void YosysConverterFirrtl::walkSwitch(
 }
 
 void YosysConverterFirrtl::walkCaseRule(const RTLIL::CaseRule &caseRule) {
-  out << "  Compare:\n";
+  debug << "  Compare:\n";
   const std::vector<RTLIL::SigSpec> &compare = caseRule.compare;
   for (const auto &sig: compare) {
-    out << "   " << determineSigSpec(sig) << "\n";
+    debug << "   " << determineSigSpec(sig) << "\n";
   }
   Instruction instr;
   instr.statement = S_Connect;
-  out << "  Actions:\n";
+  debug << "  Actions:\n";
   walkActions(caseRule.actions, true);
   instr.connects = tempAssigns;
   tempAssigns.clear();
   curModule.instructions.push_back(instr);
-  out << "  Switches:\n";
-  out << "______________________\n";
+  debug << "  Switches:\n";
+  debug << "______________________\n";
   const std::vector<RTLIL::SwitchRule *> &switches = caseRule.switches;
   walkSwitches(switches);
-  out << "______________________\n";
+  debug << "______________________\n";
 }
 
 std::string YosysConverterFirrtl::determineSyncType(
-    const RTLIL::SyncType sync_type) {
+    RTLIL::SyncType sync_type) {
   switch (sync_type) {
   case RTLIL::SyncType::ST0:
     return "level0";
@@ -2216,9 +2148,7 @@ int YosysConverterFirrtl::makeDriverSignal(int driverSig, SigAssign *saInit) {
   return newSig;
 }
 
-void YosysConverterFirrtl::addDelayedAssign(
-    Signal *lhs,
-    Signal *op1) {
+void YosysConverterFirrtl::addDelayedAssign(Signal *lhs, Signal *op1) {
   SigAssign sa;
   sa.lhs = lhs;
   sa.lhs->isUsed = true;
@@ -2246,8 +2176,7 @@ int YosysConverterFirrtl::copySignal(Signal *sig) {
 }
 
 void YosysConverterFirrtl::redefPorts(
-    const std::vector<RTLIL::SigSig> &ports,
-    const int driver) {
+    const std::vector<RTLIL::SigSig> &ports, int driver) {
   const std::vector<RTLIL::SigSig> &portsVec = ports;
   for (const auto &[op1, op2]: portsVec) {
     Signal *sig1 = getSignal(deterSigSpec(op1));
@@ -2272,8 +2201,7 @@ int YosysConverterFirrtl::makeMyInit(const RTLIL::SigSpec &op2) {
 }
 
 void YosysConverterFirrtl::redefRstPorts(
-    const std::vector<RTLIL::SigSig> &ports,
-    const int driver) {
+    const std::vector<RTLIL::SigSig> &ports, int driver) {
   const std::vector<RTLIL::SigSig> &portsVec = ports;
   for (const auto &[op1, op2]: portsVec) {
     Signal *sig1 = getSignal(deterSigSpec(op1));
@@ -2288,7 +2216,7 @@ void YosysConverterFirrtl::redefRstPorts(
 }
 
 void YosysConverterFirrtl::makeClockSignal(
-    const int driverSig,
+    int driverSig,
     bool isNegedge,
     const std::vector<RTLIL::SigSig> &syncActions) {
   Instruction instr;
@@ -2311,7 +2239,7 @@ void YosysConverterFirrtl::makeClockSignal(
 }
 
 void YosysConverterFirrtl::makeRstSignal(
-    const int driverSig,
+    int driverSig,
     bool isLevel0,
     const std::vector<RTLIL::SigSig> &syncActions) {
   Instruction instr;
@@ -2354,14 +2282,12 @@ void YosysConverterFirrtl::makeListBlockedRHS(
 void YosysConverterFirrtl::walkSyncRule(
     std::vector<RTLIL::SyncRule *> &syncs) {
   for (const auto &sync: syncs) {
-    out << "   Sync:\n";
-    out << "    Type: " << determineSyncType(sync->type)
-        << "\n";
-    out << "    Signal: " << determineSigSpec(sync->signal)
-        << "\n";
+    debug << fmt::format("   Sync:\n    Type: {}\n    Signal: {}\n",
+                         determineSyncType(sync->type),
+                         determineSigSpec(sync->signal));
     int driverSig = deterSigSpec(sync->signal);
     buildAssigns(driverSig);
-    out << "    Actions:\n";
+    debug << "    Actions:\n";
     std::string syncType = determineSyncType(sync->type);
     if (syncType == "negedge") {
       makeClockSignal(driverSig, true, sync->actions);
@@ -2385,31 +2311,31 @@ void YosysConverterFirrtl::walkSyncRule(
 }
 
 void YosysConverterFirrtl::walkProcesses(
-    const YLib::dict<RTLIL::IdString, RTLIL::Process *> &processes) {
+    const IdDict<RTLIL::Process *> &processes) {
   for (const auto &[str, proc]: processes) {
-    out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    out << " Process: " << readIdString(str)
-        << " index: " << str.index_ << "\n";
-    out << "  Syncs:\n";
+    debug << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    debug << fmt::format(" Process: {} index: {}\n  Syncs:\n",
+        readIdString(str),
+        str.index_ );
     walkSyncRule(proc->syncs);
-    out << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    out << "++++++++++++++++++++++++++++++++\n";
-    out << "  Root case:\n";
+    debug << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    debug << "++++++++++++++++++++++++++++++++\n";
+    debug << "  Root case:\n";
     walkCaseRule(proc->root_case);
-    out << "++++++++++++++++++++++++++++++++\n";
-    out << " End the process\n";
+    debug << "++++++++++++++++++++++++++++++++\n";
+    debug << " End the process\n";
     tmpBlockedRHS.clear();
   }
 }
 
 void YosysConverterFirrtl::walkMemories(
-    const YLib::dict<RTLIL::IdString, RTLIL::Memory *> &processes) {
+    const IdDict<RTLIL::Memory *> &processes) {
   for (const auto &[str, memory]: processes) {
-    out << fmt::format("  {} index: {} width: {} start_offset: {} size: {}\n",
-                       readIdString(str),
-                       str.index_, memory->width,
-                       memory->start_offset,
-                       memory->size);
+    fmt::print(debug, "  {} index: {} width: {} start_offset: {} size: {}\n",
+        readIdString(str),
+        str.index_, memory->width,
+        memory->start_offset,
+        memory->size);
     Memory mem;
     mem.depth = memory->size;
     mem.widthData = memory->width;
@@ -2427,29 +2353,28 @@ void YosysConverterFirrtl::requireDelayedAssign() {
 }
 
 void YosysConverterFirrtl::walkModule(const RTLIL::Module *m) {
-  curModule.id = m->name.c_str();
-  curModule.id.erase(0, 1);
-  out << "Wires:\n";
+  curModule.id = modulesName[m->name.index_];
+  debug << "Wires:\n";
   walkWires(m->wires_);
-  out << "End Wires\n\n";
-  out << "Memories\n";
+  debug << "End Wires\n\n";
+  debug << "Memories\n";
   walkMemories(m->memories);
-  out << "End Memories\n";
-  out << "Cells:\n\n";
+  debug << "End Memories\n";
+  debug << "Cells:\n\n";
   walkCells(m->cells_);
-  out << "End Cells\n\n";
-  out << "Connections:\n";
+  debug << "End Cells\n\n";
+  debug << "Connections:\n";
   walkConnections(m->connections_);
-  out << "End Connections\n\n";
-  out << "Avail parameters:\n";
+  debug << "End Connections\n\n";
+  debug << "Avail parameters:\n";
   walkParameteres(m->avail_parameters);
-  out << "End Avail parameteres\n\n";
-  out << "Ports:\n";
+  debug << "End Avail parameteres\n\n";
+  debug << "Ports:\n";
   walkPorts(m->ports);
-  out << "End Ports\n\n";
-  out << "Processes:\n";
+  debug << "End Ports\n\n";
+  debug << "Processes:\n";
   walkProcesses(m->processes);
-  out << "End processes\n\n";
+  debug << "End processes\n\n";
   requireDelayedAssign();
   finalModules.push_back(curModule);
   Module defaultModule;
@@ -2457,7 +2382,7 @@ void YosysConverterFirrtl::walkModule(const RTLIL::Module *m) {
   tempAssigns.clear();
 }
 
-std::string YosysConverterFirrtl::getPinModeName(const PinMode mode) {
+std::string YosysConverterFirrtl::getPinModeName(PinMode mode) {
   switch (mode) {
   case PM_Input:
     return "input";
@@ -2474,7 +2399,7 @@ std::string YosysConverterFirrtl::getPinModeName(const PinMode mode) {
   }
 }
 
-std::string YosysConverterFirrtl::getTypeName(const Type type) {
+std::string YosysConverterFirrtl::getTypeName(Type type) {
   switch (type) {
   case T_UInt:
     return "UInt";
@@ -2491,8 +2416,7 @@ std::string YosysConverterFirrtl::getTypeName(const Type type) {
   }
 }
 
-YosysConverterFirrtl::Operator YosysConverterFirrtl::logicFunction(const int type) {
-
+YosysConverterFirrtl::Operator YosysConverterFirrtl::logicFunction(int type) {
   if (type == ID($add).index_) {
     return O_Add;
   }
@@ -2581,7 +2505,15 @@ YosysConverterFirrtl::Operator YosysConverterFirrtl::logicFunction(const int typ
       type == ID($memwr_v2).index_) {
     return O_Memwr;
   }
+  if (type == ID($xnor).index_) {
+    return O_Xnor;
+  }
+  if (type == ID($nor).index_) {
+    return O_Nor;
+  }
+  if (type == ID($nand).index_) {
+    return O_Nand;
+  }
   assert(false && "Unsupport operator ");
   return O_Not;
 }
-

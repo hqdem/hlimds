@@ -61,6 +61,7 @@ add_library(Gate OBJECT
   optimizer/walker.cpp
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
+  optimizer2/reconvergence_cut.cpp
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/dsd_to_subnet.cpp
   optimizer2/resynthesis/bidecomposition.cpp

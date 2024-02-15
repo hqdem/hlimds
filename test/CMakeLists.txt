@@ -64,6 +64,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/util_test.cpp
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
+  gate/optimizer2/reconvergence_cut_test.cpp
   gate/optimizer2/resynthesis/akers_test.cpp
   gate/optimizer2/resynthesis/bidecomposition_test.cpp
   gate/optimizer2/resynthesis/cascade_test.cpp

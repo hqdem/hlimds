@@ -16,7 +16,9 @@ inline float getArea(model::SubnetID subnetID) {
   float area = 0;
   auto entr = model::Subnet::get(subnetID).getEntries();
   for (uint64_t entryIndex = 0; entryIndex < std::size(entr); entryIndex++) {
-    area += entr[entryIndex].cell.getType().getAttr().area;
+    if (!entr[entryIndex].cell.isIn() && !entr[entryIndex].cell.isOut() ) {
+      area += entr[entryIndex].cell.getType().getAttr().area;
+    }
     entryIndex += entr[entryIndex].cell.more;
   }
   return area;

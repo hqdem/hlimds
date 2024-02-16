@@ -7,6 +7,7 @@ image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:staccato
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
   UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
   BUILD: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"

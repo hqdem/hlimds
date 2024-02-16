@@ -45,7 +45,7 @@ const Subnet& handle(const Subnet &subnet) {
   unsigned outputId = subnet.size() - 1;
   BDD netBDD = SubnetToBdd::convert(subnet, outputId, manager);
 
-  LOG_DEBUG(cuddP(netBDD.manager(), netBDD.getNode()));
+  LOG_DEBUG(Cudd_PrintDebug(netBDD.manager(), netBDD.getNode(), 0, 3));
 
   /* Resynthesis */
   DsdToSubnet test;

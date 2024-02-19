@@ -61,267 +61,276 @@ int firrtlTranslatorTest(const std::string &inputFileName,
 }
 
 // 'MLIR' tests.
-TEST(FIRRTLTranslatorTest, InToOutTest) {
+TEST(FIRRTLTranslatorTestBasic, InToOutTest) {
   EXPECT_EQ(firrtlTranslatorTest("in_to_out.mlir", "in_to_out.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SimpleMuxTest) {
+TEST(FIRRTLTranslatorTestBasic, OutToTest) {
+  EXPECT_EQ(firrtlTranslatorTest("out_to.mlir", "out_to.dot"), 0);
+}
+
+TEST(FIRRTLTranslatorTestBasic, SimpleMuxTest) {
   EXPECT_EQ(firrtlTranslatorTest("simple_mux.mlir", "simple_mux.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SimpleAddTest) {
+TEST(FIRRTLTranslatorTestBasic, SimpleAddTest) {
   EXPECT_EQ(firrtlTranslatorTest("simple_add.mlir", "simple_add.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, TwoLevelAddTest) {
+TEST(FIRRTLTranslatorTestBasic, TwoLevelAddTest) {
   EXPECT_EQ(firrtlTranslatorTest("two_level_add.mlir", "two_level_add.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SimpleInstanceTest) {
+TEST(FIRRTLTranslatorTestBasic, SimpleInstanceTest) {
   EXPECT_EQ(firrtlTranslatorTest("simple_instance.mlir",
                                  "simple_instance.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, TwoLevelInstanceTest) {
+TEST(FIRRTLTranslatorTestBasic, TwoLevelInstanceTest) {
   EXPECT_EQ(firrtlTranslatorTest("two_level_instance.mlir",
                                  "two_level_instance.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SimpleXorTest) {
+TEST(FIRRTLTranslatorTestBasic, SimpleXorTest) {
   EXPECT_EQ(firrtlTranslatorTest("simple_xor.mlir", "simple_xor.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, TwoLevelXorTest) {
+TEST(FIRRTLTranslatorTestBasic, TwoLevelXorTest) {
   EXPECT_EQ(firrtlTranslatorTest("two_level_xor.mlir", "two_level_xor.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SimpleRegisterTest) {
+TEST(FIRRTLTranslatorTestBasic, SimpleRegisterTest) {
   EXPECT_EQ(firrtlTranslatorTest("simple_reg.mlir", "simple_reg.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SimpleRegisterWithResetTest) {
+TEST(FIRRTLTranslatorTestBasic, SimpleRegisterWithResetTest) {
   EXPECT_EQ(firrtlTranslatorTest("simple_regreset.mlir",
                                  "simple_regreset.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SimpleConstantTest) {
+TEST(FIRRTLTranslatorTestBasic, SimpleConstantTest) {
   EXPECT_EQ(firrtlTranslatorTest("simple_constant.mlir",
                                  "simple_constant.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, DotProductTest) {
+TEST(FIRRTLTranslatorTestBasic, DotProductTest) {
   EXPECT_EQ(firrtlTranslatorTest("dot_product.mlir", "dot_product.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, AddSameInputsTest) {
+TEST(FIRRTLTranslatorTestBasic, AddSameInputsTest) {
   EXPECT_EQ(firrtlTranslatorTest("add_same_inputs.mlir",
                                  "add_same_inputs.dot"), 0);
 }
 
-TEST(FIRRTLTranslatorTest, InToOutTestFir) {
-  EXPECT_EQ(firrtlTranslatorTest("in_to_out.fir",
-                                 "in_to_out.dot",
-                                 InputFIRFile), 0);
+TEST(FIRRTLTranslatorTestBasic, AddInstanceMixTest) {
+  EXPECT_EQ(firrtlTranslatorTest("add_instance_mix.mlir",
+                                 "add_instance_mix.dot"), 0);
 }
 
 // 'Picorv' tests.
-TEST(FIRRTLTranslatorTest, Fir0Test) {
+TEST(FIRRTLTranslatorTestPicorv, Fir0Test) {
   EXPECT_EQ(firrtlTranslatorTest("fir_0.fir",
                                  "fir_0.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, Fir1Test) {
+TEST(FIRRTLTranslatorTestPicorv, Fir1Test) {
   EXPECT_EQ(firrtlTranslatorTest("fir_1.fir",
                                  "fir_1.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, Fir2Test) {
+TEST(FIRRTLTranslatorTestPicorv, Fir2Test) {
   EXPECT_EQ(firrtlTranslatorTest("fir_2.fir",
                                  "fir_2.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, Fir3Test) {
+TEST(FIRRTLTranslatorTestPicorv, Fir3Test) {
   EXPECT_EQ(firrtlTranslatorTest("fir_3.fir",
                                  "fir_3.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, CompareFirTest) {
+TEST(FIRRTLTranslatorTestPicorv, CompareFirTest) {
   EXPECT_EQ(firrtlTranslatorTest("compare.fir",
                                  "compare.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, CatFirTest) {
+TEST(FIRRTLTranslatorTestPicorv, CatFirTest) {
   EXPECT_EQ(firrtlTranslatorTest("cat.fir",
                                  "cat.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, CondFirTest) {
+TEST(FIRRTLTranslatorTestPicorv, CondFirTest) {
   EXPECT_EQ(firrtlTranslatorTest("cond.fir",
                                  "cond.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, CycleFirTest) {
+TEST(FIRRTLTranslatorTestPicorv, CycleFirTest) {
   EXPECT_EQ(firrtlTranslatorTest("cycle.fir",
                                  "cycle.dot",
                                  InputFIRFile), 0);
 }
 
+TEST(FIRRTLTranslatorTestPicorv, SinFirTest) {
+  EXPECT_EQ(firrtlTranslatorTest("sin.fir",
+                                 "sin.dot",
+                                 InputFIRFile), 0);
+}
+
 // 'FIRRTL 3.2.0' specification tests.
-TEST(FIRRTLTranslatorTest, SpecCircuitsTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecCircuitsTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_circuits.fir",
                                  "spec_circuits.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecGroupsTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecGroupsTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_groups.fir",
                                  "spec_groups.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecNestedGroupsTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecNestedGroupsTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_nested_groups.fir",
                                  "spec_nested_groups.dot",
                                  InputFIRFile), 0);
 }
 
 /// TODO: Not supported (for now).
-// TEST(FIRRTLTranslatorTest, SpecGroupsDefineTest) {
+// TEST(FIRRTLTranslatorTestSpec, SpecGroupsDefineTest) {
 //   EXPECT_EQ(firrtlTranslatorTest("spec_groups_define.fir",
 //                                  "spec_groups_define.dot",
 //                                  InputFIRFile), 0);
 // }
 
-TEST(FIRRTLTranslatorTest, SpecExternalModulesTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecExternalModulesTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_extmodules.fir",
                                  "spec_extmodules.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecExternalModulesRefTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecExternalModulesRefTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_extmodules_ref.fir",
                                  "spec_extmodules_ref.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecIntrinsicModulesRefTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecIntrinsicModulesRefTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_intmodules.fir",
                                  "spec_intmodules.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecProbesTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecProbesTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_probes.fir",
                                  "spec_probes.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecProbesInferTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecProbesInferTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_probes_infer.fir",
                                  "spec_probes_infer.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecAliasesTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecAliasesTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_aliases.fir",
                                  "spec_aliases.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecSkipTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecSkipTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_skip.fir",
                                  "spec_skip.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecInvalidateTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecInvalidateTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_invalidate.fir",
                                  "spec_invalidate.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecWhenTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecWhenTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_when.fir",
                                  "spec_when.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecWhenShortTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecWhenShortTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_when_short.fir",
                                  "spec_when_short.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecMultipleWhenTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecMultipleWhenTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_multiple_when.fir",
                                  "spec_multiple_when.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecWhenOneLineTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecWhenOneLineTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_when_one_line.fir",
                                  "spec_when_one_line.dot",
                                  InputFIRFile), 0);
 }
 
 /// TODO: Ask about the strange lowered circuit (tag, subtag, zero width, etc.). 
-// TEST(FIRRTLTranslatorTest, SpecMatchTest) {
+// TEST(FIRRTLTranslatorTestSpec, SpecMatchTest) {
 //   EXPECT_EQ(firrtlTranslatorTest("spec_match.fir",
 //                                  "spec_match.dot",
 //                                  InputFIRFile), 0);
 // }
 
-TEST(FIRRTLTranslatorTest, SpecNestedDeclarationsTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecNestedDeclarationsTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_nested_decls.fir",
                                  "spec_nested_decls.dot",
                                  InputFIRFile), 0);
 }
 
 /// TODO: Ask why the lowered circuit contains bundles. 
-// TEST(FIRRTLTranslatorTest, SpecMemoryTest) {
+// TEST(FIRRTLTranslatorTestSpec, SpecMemoryTest) {
 //   EXPECT_EQ(firrtlTranslatorTest("spec_mem.fir",
 //                                  "spec_mem.dot",
 //                                  InputFIRFile), 0);
 // }
 
-TEST(FIRRTLTranslatorTest, SpecInstTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecInstTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_inst.fir",
                                  "spec_inst.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecStopTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecStopTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_stop.fir",
                                  "spec_stop.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecPrintfTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecPrintfTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_printf.fir",
                                  "spec_printf.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecAssumeTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecAssumeTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_assume.fir",
                                  "spec_assume.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecCoverTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecCoverTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_cover.fir",
                                  "spec_cover.dot",
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTest, SpecPropertyAssignmentTest) {
+TEST(FIRRTLTranslatorTestSpec, SpecPropertyAssignmentTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_propassign.fir",
                                  "spec_propassign.dot",
                                  InputFIRFile), 0);

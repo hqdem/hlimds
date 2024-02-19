@@ -12,13 +12,13 @@ namespace eda::gate::optimizer2 {
 
 ConeBuilder::ConeBuilder(const Subnet *subnet): subnet(subnet) {};
 
-void ConeBuilder::addInput(const uint64_t origEntryIdx,
-                           const uint64_t rootEntryIdx,
+void ConeBuilder::addInput(const size_t origEntryIdx,
+                           const size_t rootEntryIdx,
                            SubnetBuilder &builder,
                            EntryMap &origEntryToCone,
                            EntryMap &coneEntryToOrig) const {
 
-  uint64_t coneEntryIdx = builder.addInput().idx;
+  size_t coneEntryIdx = builder.addInput().idx;
   if (origEntryIdx == rootEntryIdx) {
     builder.addOutput(Link(coneEntryIdx));
   }
@@ -37,18 +37,18 @@ void ConeBuilder::addInsFromCut(const Cut &cut,
   }
 }
 
-void ConeBuilder::addInsForMaxCone(const uint64_t rootEntryIdx,
+void ConeBuilder::addInsForMaxCone(const size_t rootEntryIdx,
                                    SubnetBuilder &builder,
                                    EntryMap &origEntryToCone,
                                    EntryMap &coneEntryToOrig) const {
 
   const auto entries = subnet->getEntries();
-  std::unordered_map<uint64_t, char> used;
-  std::vector<uint64_t> subnetEntriesStack;
+  std::unordered_map<size_t, char> used;
+  std::vector<size_t> subnetEntriesStack;
   subnetEntriesStack.push_back(rootEntryIdx);
-  std::size_t stackIdx = 0;
+  size_t stackIdx = 0;
   while (stackIdx < subnetEntriesStack.size()) {
-    uint64_t origEntryIdx = subnetEntriesStack[stackIdx];
+    size_t origEntryIdx = subnetEntriesStack[stackIdx];
     used[origEntryIdx] = true;
     stackIdx++;
     const auto &origCell = entries[origEntryIdx].cell;
@@ -58,7 +58,7 @@ void ConeBuilder::addInsForMaxCone(const uint64_t rootEntryIdx,
       continue;
     }
     for (const auto &newLink : subnet->getLinks(origEntryIdx)) {
-      uint64_t newLinkIdx = newLink.idx;
+      size_t newLinkIdx = newLink.idx;
       if (used.find(newLinkIdx) != used.end()) {
         continue;
       }
@@ -76,7 +76,7 @@ ConeBuilder::Cone ConeBuilder::getCone(const Cut &cut) const {
   return getCone(cut.rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
 }
 
-ConeBuilder::Cone ConeBuilder::getMaxCone(const uint64_t rootEntryIdx) const {
+ConeBuilder::Cone ConeBuilder::getMaxCone(const size_t rootEntryIdx) const {
   SubnetBuilder builder;
   EntryMap origEntryToCone;
   EntryMap coneEntryToOrig;
@@ -85,17 +85,17 @@ ConeBuilder::Cone ConeBuilder::getMaxCone(const uint64_t rootEntryIdx) const {
   return getCone(rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
 }
 
-ConeBuilder::Cone ConeBuilder::getCone(const uint64_t rootEntryIdx,
+ConeBuilder::Cone ConeBuilder::getCone(const size_t rootEntryIdx,
                                        SubnetBuilder &builder,
                                        EntryMap &origEntryToCone,
                                        EntryMap &coneEntryToOrig) const {
 
   const auto &entries = subnet->getEntries();
-  std::stack<uint64_t> subnetEntriesStack;
+  std::stack<size_t> subnetEntriesStack;
   subnetEntriesStack.push(rootEntryIdx);
 
   while (!subnetEntriesStack.empty()) {
-    uint64_t curEntryIdx = subnetEntriesStack.top();
+    size_t curEntryIdx = subnetEntriesStack.top();
     if (origEntryToCone.find(curEntryIdx) != origEntryToCone.end()) {
       subnetEntriesStack.pop();
       continue;
@@ -120,7 +120,7 @@ ConeBuilder::Cone ConeBuilder::getCone(const uint64_t rootEntryIdx,
       continue;
     }
     subnetEntriesStack.pop();
-    uint64_t coneEntryIdx;
+    size_t coneEntryIdx;
     coneEntryIdx = builder.addCell(curCell.getSymbol(), links).idx;
     origEntryToCone[curEntryIdx] = coneEntryIdx;
     coneEntryToOrig[coneEntryIdx] = curEntryIdx;

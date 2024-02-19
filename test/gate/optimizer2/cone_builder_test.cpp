@@ -48,7 +48,7 @@ bool inputsAtTheBeginning(const Cone &cone) {
 
 bool coneValid(const Subnet &subnet,
                Cone cone,
-               const uint64_t coneEntryIdx,
+               const size_t coneEntryIdx,
                const bool isMaxCone) {
 
   const Subnet &coneSubnet = Subnet::get(cone.subnetID);
@@ -60,7 +60,7 @@ bool coneValid(const Subnet &subnet,
   if (cone.coneEntryToOrig.find(coneEntryIdx) == cone.coneEntryToOrig.end()) {
     return false;
   }
-  const uint64_t subnetEntryIdx = cone.coneEntryToOrig[coneEntryIdx];
+  const size_t subnetEntryIdx = cone.coneEntryToOrig[coneEntryIdx];
   const auto &subnetCell = subnet.getEntries()[subnetEntryIdx].cell;
   if (!coneCell.isIn() && (subnetCell.getSymbol() != coneCell.getSymbol() ||
                            subnet.getLinks(subnetEntryIdx).size() !=
@@ -75,8 +75,8 @@ bool coneValid(const Subnet &subnet,
   const auto &subnetEntryLinks = subnet.getLinks(subnetEntryIdx);
   for (const auto coneInputLink : coneSubnet.getLinks(coneEntryIdx)) {
     const auto subnetInputLink = subnetEntryLinks[inputN];
-    uint64_t subnetInputLinkIdx = subnetInputLink.idx;
-    uint64_t coneInputLinkIdx = coneInputLink.idx;
+    size_t subnetInputLinkIdx = subnetInputLink.idx;
+    size_t coneInputLinkIdx = coneInputLink.idx;
     if (cone.coneEntryToOrig[coneInputLinkIdx] != subnetInputLinkIdx ||
         subnetInputLink.out != coneInputLink.out ||
         subnetInputLink.inv != coneInputLink.inv) {
@@ -92,7 +92,7 @@ bool coneValid(const Subnet &subnet,
 
 bool cutConeValid(const Subnet &subnet,
                   const CutExtractor &cutExtractor,
-                  const uint64_t subnetEntryIdx,
+                  const size_t subnetEntryIdx,
                   const ConeBuilder &coneBuilder) {
 
   const auto &cuts = cutExtractor.getCuts(subnetEntryIdx);
@@ -112,7 +112,7 @@ bool cutConeValid(const Subnet &subnet,
 }
 
 bool maxConeValid(const Subnet &subnet,
-                  const uint64_t subnetEntryIdx,
+                  const size_t subnetEntryIdx,
                   const ConeBuilder &coneBuilder) {
 
   const Cone cone = coneBuilder.getMaxCone(subnetEntryIdx);
@@ -131,7 +131,7 @@ void conesValid(const Subnet &subnet,
     FAIL() << "UTOPIA_HOME is not set.";
   }
   const auto &subnetEntries = subnet.getEntries();
-  for (uint64_t entryIdx = 0; entryIdx < subnetEntries.size(); ++entryIdx) {
+  for (size_t entryIdx = 0; entryIdx < subnetEntries.size(); ++entryIdx) {
     const auto subnetCell = subnetEntries[entryIdx].cell;
     if (subnetCell.isOut()) {
       entryIdx += subnetCell.more;

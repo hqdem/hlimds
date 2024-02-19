@@ -28,11 +28,11 @@ CutExtractor::CutExtractor(const Subnet *subnet,
   }
 };
 
-const CutExtractor::CutsList CutExtractor::getCuts(uint64_t entryIdx) const {
+const CutExtractor::CutsList CutExtractor::getCuts(size_t entryIdx) const {
   return entriesCuts[entryIdx];
 }
 
-auto CutExtractor::getCutsEntries(uint64_t entryIdx) const ->
+auto CutExtractor::getCutsEntries(size_t entryIdx) const ->
   CutExtractor::CutsEntries {
 
   CutsEntries cutsEntries;
@@ -42,7 +42,7 @@ auto CutExtractor::getCutsEntries(uint64_t entryIdx) const ->
   return cutsEntries;
 }
 
-CutExtractor::CutsList CutExtractor::findCuts(const uint64_t entryIdx,
+CutExtractor::CutsList CutExtractor::findCuts(const size_t entryIdx,
                                               const uint64_t cellArity,
                                               const unsigned int k) const {
 
@@ -64,7 +64,7 @@ CutExtractor::CutsList CutExtractor::findCuts(const uint64_t entryIdx,
 }
 
 void CutExtractor::addCut(const unsigned int k,
-                          const uint64_t entryIdx,
+                          const size_t entryIdx,
                           const uint64_t cellArity,
                           unsigned long long cutsCombinationIdx,
                           RawCutsList &addedCuts,
@@ -74,8 +74,8 @@ void CutExtractor::addCut(const unsigned int k,
   Cut newCut;
   newCut.rootEntryIdx = entryIdx;
   for (std::size_t j = 0; j < cellArity; ++j) {
-    uint64_t inEntryIdx = subnet->getLink(entryIdx, j).idx;
-    uint64_t inEntryCutIdx = cutsCombinationIdx;
+    size_t inEntryIdx = subnet->getLink(entryIdx, j).idx;
+    size_t inEntryCutIdx = cutsCombinationIdx;
     if (j + 1 != cellArity) {
       inEntryCutIdx = cutsCombinationIdx / suffCutsCombN[j + 1];
       cutsCombinationIdx %= suffCutsCombN[j + 1];
@@ -95,10 +95,10 @@ void CutExtractor::addCut(const unsigned int k,
   }
 }
 
-auto CutExtractor::getOneElemCut(const uint64_t entryIdx) const ->
+auto CutExtractor::getOneElemCut(const size_t entryIdx) const ->
   CutExtractor::Cut {
 
-  return Cut(entryIdx, (uint64_t)1 << (entryIdx % 64), { entryIdx });
+  return Cut(entryIdx, (size_t)1 << (entryIdx % 64), { entryIdx });
 }
 
 bool CutExtractor::checkViable(const Cut &cut,

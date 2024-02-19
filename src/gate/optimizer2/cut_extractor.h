@@ -24,16 +24,16 @@ public:
   struct Cut;
 
   using Subnet = model::Subnet;
-  using CutsEntries = std::vector<std::unordered_set<uint64_t>>;
+  using CutsEntries = std::vector<std::unordered_set<size_t>>;
   using CutsList = std::vector<Cut>;
   using RawCutsList = std::vector<std::pair<Cut, char>>;
 
   /// Cut class with its signature and indexes.
   struct Cut {
     Cut() = default;
-    Cut(const uint64_t rootEntryIdx,
+    Cut(const size_t rootEntryIdx,
         const uint64_t sign,
-        const std::unordered_set<uint64_t> &entryIdxs):
+        const std::unordered_set<size_t> &entryIdxs):
       rootEntryIdx(rootEntryIdx), signature(sign), entryIdxs(entryIdxs) {};
 
     /// Unite other cut to current.
@@ -44,9 +44,9 @@ public:
       signature |= other.signature;
     }
 
-    uint64_t rootEntryIdx {0};
+    size_t rootEntryIdx {0};
     uint64_t signature {0};
-    std::unordered_set<uint64_t> entryIdxs;
+    std::unordered_set<size_t> entryIdxs;
   };
 
   CutExtractor() = delete;
@@ -63,27 +63,27 @@ public:
                const unsigned int k);
 
   /// Get cuts (entries indexes and signatures) for cell with entryIdx index.
-  const CutsList getCuts(uint64_t entryIdx) const;
+  const CutsList getCuts(size_t entryIdx) const;
 
   /// Get cuts (entries indexes) for cell with entryIdx index.
-  CutsEntries getCutsEntries(uint64_t entryIdx) const;
+  CutsEntries getCutsEntries(size_t entryIdx) const;
 
 private:
   /// Find all cuts for cell with entryIdx index.
-  CutsList findCuts(const uint64_t entryIdx,
+  CutsList findCuts(const size_t entryIdx,
                     const uint64_t cellArity,
                     const unsigned int k) const;
 
   /// Add new cut into addedCuts if it is not dominated and its size < k.
   void addCut(const unsigned int k,
-              const uint64_t entryIdx,
+              const size_t entryIdx,
               const uint64_t cellArity,
               unsigned long long cutsCombinationIdx,
               RawCutsList &addedCuts,
-              const std::vector<std::size_t> &suffCutsCombinationsN) const;
+              const std::vector<size_t> &suffCutsCombinationsN) const;
 
   /// Create and get cut with passed cell.
-  Cut getOneElemCut(const uint64_t entryIdx) const;
+  Cut getOneElemCut(const size_t entryIdx) const;
 
   /**
    * @brief Check if cut can be added to cuts.

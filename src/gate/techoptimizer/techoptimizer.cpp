@@ -46,8 +46,14 @@ void Techmapper::setLiberty(const std::string &dbPath) {
 
 void Techmapper::setMapper(MapperType techmapSelector) {
   switch(techmapSelector) {
-    case MapperType::SIMPLE_AREA_FUNC: // // cut-based matching
+    case MapperType::SIMPLE_AREA_FUNC:
       mapper = new SimpleAreaMapper();
+      break;
+    case MapperType::AREA_FLOW:
+      break;
+    case MapperType::DELAY:
+      break;
+    case MapperType::POWER:
       break;
 
     /*case TechmapperType::STRUCT: // DAGON matching
@@ -63,11 +69,11 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
 
  assert(mapper != nullptr);
 
-  mapper->mapping(subnetID, cellDB, bestReplacementMap);
+  mapper->mapping(AIGSubnet, cellDB, bestReplacementMap);
 
   std::cout << "start to create new mapped Subnet" << std::endl;
   AssemblySubnet as;
- return as.assemblySubnet(bestReplacementMap, subnetID);
+ return as.assemblySubnet(bestReplacementMap, AIGSubnet);
 }
 
 SubnetID Techmapper::techmap(model::CellID sequenceCell,

@@ -5,8 +5,8 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
 #include "gate/techoptimizer/assembly.h"
 
@@ -133,4 +133,4 @@ void AssemblySubnet::processLinks(EntryIndex currentEntryIDX,
     //}
   }
 }
-}
+} // namespace eda::gate::tech_optimizer

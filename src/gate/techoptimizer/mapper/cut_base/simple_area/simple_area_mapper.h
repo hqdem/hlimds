@@ -9,7 +9,7 @@
 
 #include "gate/techoptimizer/mapper/cut_base/cut_base_mapper.h"
 
-#include <map>
+#include <unordered_map>
 
 /**
  * \brief Interface to handle node and its cuts.
@@ -29,7 +29,7 @@ protected:
   void findBest() override;
 
 private:
-  std::map<EntryIndex, BestReplacementArea> areaVec;
+  std::unordered_map<EntryIndex, BestReplacementArea> areaVec;
 
   float calculateArea(const std::unordered_set<uint64_t> &entryIdxs, EntryIndex currnetEntry);
   void saveBest(EntryIndex entryIndex,

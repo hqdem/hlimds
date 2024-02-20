@@ -12,7 +12,7 @@
 
 namespace eda::gate::tech_optimizer {
 
-SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *replacementMap,
+SubnetID AssemblySubnet::assemblySubnet(std::unordered_map<uint64_t, BestReplacement> *replacementMap,
                                SubnetID subnetID) {
   auto startCreateMappedSubnet = std::chrono::high_resolution_clock::now();
   model::Subnet &subnet = model::Subnet::get(subnetID);

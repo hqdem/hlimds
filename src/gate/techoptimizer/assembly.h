@@ -9,18 +9,18 @@
 
 #include "gate/techoptimizer/mapper/bestReplacement.h"
 
-#include <map>
+#include <unordered_map>
 #include <stack>
 #include <unordered_set>
 
 namespace eda::gate::tech_optimizer {
 class AssemblySubnet {
 public:
-  SubnetID assemblySubnet(std::map<uint64_t, BestReplacement> *bestReplacementMap,
+  SubnetID assemblySubnet(std::unordered_map<uint64_t, BestReplacement> *bestReplacementMap,
                                  SubnetID subnetID);
 private:
   model::SubnetBuilder *subnetBuilder;
-  std::map<uint64_t, BestReplacement> *bestReplacementMap;
+  std::unordered_map<uint64_t, BestReplacement> *bestReplacementMap;
   std::vector<EntryIndex> outID;
   std::vector<EntryIndex> inID;
 

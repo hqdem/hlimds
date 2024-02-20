@@ -48,6 +48,8 @@ SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *rep
   auto endCreateMappedSubnet = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> CreateMappedSubnetTime = endCreateMappedSubnet - startCreateMappedSubnet;
   std::cout << "Функция CreateMappedSubnetTime выполнялась " << CreateMappedSubnetTime.count() << " секунд.\n";
+
+  bestReplacementMap->clear();
   return mappedSubnetID;
 }
 

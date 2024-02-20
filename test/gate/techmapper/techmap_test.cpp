@@ -144,6 +144,11 @@ TEST(TechMapTest, SimpleANDSubnet) {
   SubnetID mappedSub = techmapper.techmap(primitiveANDSub);
 
   std::cout << model::Subnet::get(mappedSub) << std::endl;
+
+  SubnetID mappedSub2 = techmapper.techmap(primitiveANDSub);
+
+  std::cout << model::Subnet::get(mappedSub2) << std::endl;
+
   printVerilog(mappedSub);
 
   std::cout << getArea(mappedSub) << std::endl;

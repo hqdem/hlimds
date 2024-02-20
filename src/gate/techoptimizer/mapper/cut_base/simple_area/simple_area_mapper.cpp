@@ -38,6 +38,7 @@ void SimpleAreaMapper::findBest() {
   std::chrono::duration<double> FBTime = endFB - startFB;
   std::cout << "Функция Finding best tech cell выполнялась " << FBTime.count()
       << " секунд.\n";
+  areaVec.clear();
 }
 
 

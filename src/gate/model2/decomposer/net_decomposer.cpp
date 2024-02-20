@@ -20,18 +20,13 @@ namespace eda::gate::model {
 using LinkList = std::vector<Link>;
 using LinkSet  = std::unordered_set<Link>;
 using LinkPair = std::pair<Link, size_t>;
-using LinkMap  = std::unordered_map<Link, size_t>;
 using CellList = std::vector<CellID>;
 using CellSet  = std::unordered_set<CellID>;
 using CellPair = std::pair<CellID, std::pair<size_t, bool>>;
-using CellMap  = std::unordered_map<CellID, std::pair<size_t, bool>>;
 
-/// Maps net cells/links to subnet cell indices.
-struct CellMapping final {
-  LinkMap inputs;
-  CellMap inners;
-  LinkMap outputs;
-};
+using LinkMap = NetDecomposer::LinkMap;
+using CellMap = NetDecomposer::CellMap;
+using CellMapping = NetDecomposer::CellMapping;
 
 /// Aggregates cell information.
 struct CellInfo final {
@@ -52,6 +47,10 @@ inline CellInfo getCellInfo(CellID cellID) {
 inline CellInfo getCellInfo(LinkEnd linkEnd) {
   return getCellInfo(linkEnd.getCellID());
 }
+
+//===----------------------------------------------------------------------===//
+// Net Decompositor
+//===----------------------------------------------------------------------===//
 
 /// Prepares the link to be an input mapping key.
 inline Link makeInputLink(const Link &link) {
@@ -320,9 +319,9 @@ static std::vector<NetComponent> extractComponents(const Net &net) {
 }
 
 /// Makes a subnet for the given net component.
-static SubnetID makeSubnet(const Net &net, const NetComponent &component) {
+static SubnetID makeSubnet(
+    const Net &net, const NetComponent &component, CellMapping &mapping) {
   SubnetBuilder subnetBuilder;
-  CellMapping mapping;
 
   for (const auto &input : component.inputs) {
     const auto info = getCellInfo(input.source);
@@ -368,18 +367,59 @@ static SubnetID makeSubnet(const Net &net, const NetComponent &component) {
   return subnetBuilder.make();
 }
 
-std::vector<SubnetID> NetDecomposer::make(NetID netID) const {
+std::vector<SubnetID> NetDecomposer::decompose(
+    NetID netID, std::vector<CellMapping> &mapping) const {
   const auto &net = Net::get(netID);
   const auto components = extractComponents(net);
 
   std::vector<SubnetID> subnets;
   subnets.reserve(components.size());
 
+  assert(mapping.empty());
+  mapping.reserve(components.size());
+
   for (const auto &component : components) {
-    subnets.push_back(makeSubnet(net, component));
+    CellMapping subnetMapping;
+    subnets.push_back(makeSubnet(net, component, subnetMapping));
+    mapping.push_back(subnetMapping);
   }
 
   return subnets;
+}
+
+//===----------------------------------------------------------------------===//
+// Net Compositor
+//===----------------------------------------------------------------------===//
+
+static void addSubnet(
+    NetBuilder &netBuilder, SubnetID subnetID, const CellMapping &mapping) {
+  const auto &subnet = Subnet::get(subnetID);
+  const auto &entries = subnet.getEntries();
+
+  // Create cells for input/output links (if have not created yet).
+  // TODO: OldNetCellID -> NewNetCellID.
+  // TODO: SubnetIdx -> NewNetCellID.
+  // TODO: makeLink: SubnetLink -> NetLink.
+  // TODO: makeLinks: SubnetLinks -> NetLinks.
+  // TODO: makeCell: SubnetCell -> Cell.
+
+  for (size_t i = 0; i < entries.size(); ++i) {
+    const auto &cell = entries[i].cell;
+    // TODO: makeCell + update the maps.
+    i += cell.more;
+  }
+}
+
+NetID NetDecomposer::compose(const std::vector<SubnetID> &subnets,
+                             const std::vector<CellMapping> &mapping) const {
+  assert(subnets.size() == mapping.size());
+
+  NetBuilder netBuilder;
+  for (size_t i = 0; i < subnets.size(); ++i) {
+    addSubnet(netBuilder, subnets[i], mapping[i]);
+  }
+
+  return netBuilder.make();
 }
 
 } // namespace eda::gate::model

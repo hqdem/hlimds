@@ -71,7 +71,7 @@ void SimpleAreaMapper::saveBest(
       auto truthTable = eda::gate::model::evaluate(
           model::Subnet::get(coneSubnetID));
 
-      for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable)) {
+      for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable.at(0))) {
         auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
 
         float area = calculateArea(cut.entryIdxs, entryIndex)

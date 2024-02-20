@@ -79,7 +79,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     subnetToAttr.emplace_back(subnetID, subnetattr);
 
     ttSubnet.emplace_back(model::evaluate(
-        cellType.getSubnet()), subnetID);
+        cellType.getSubnet()).at(0), subnetID);
   }
 
   for (const CellTypeID &cellTypeID : cellTypeFFIDs) {

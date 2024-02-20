@@ -20,7 +20,7 @@ static kitty::dynamic_truth_table getTruthTable(SubnetID subnetID) {
   const auto &subnet = Subnet::get(subnetID);
   std::cout << subnet << std::endl;
 
-  const auto table = evaluate(subnet);
+  const auto table = evaluateSingleOut(subnet);
   std::cout << kitty::to_hex(table) << std::endl << std::endl;
 
   return table;

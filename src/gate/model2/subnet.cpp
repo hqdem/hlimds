@@ -81,7 +81,7 @@ Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
   }
 
   entries[idx] = Subnet::Entry(typeID, links);
-  if (subnetEnd != boundEntryID) {
+  if (subnetEnd != commonOrderEntryID) {
     setOrder(subnetEnd, idx);
   }
 
@@ -174,8 +174,7 @@ Subnet::Link SubnetBuilder::addSingleOutputSubnet(
 void SubnetBuilder::replace(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> &rhsToLhs) {
-
-  if (subnetEnd == boundEntryID) {
+  if (subnetEnd == commonOrderEntryID) {
     subnetEnd = entries.size() - 1;
   }
   const Subnet &rhs = Subnet::get(rhsID);
@@ -249,7 +248,7 @@ void SubnetBuilder::sortEntries() {
 
     newEntries.push_back(entries[curID]);
     curID = getNext(curID);
-  } while (curID != boundEntryID);
+  } while (curID != rBoundEntryID);
 
   entries = std::move(newEntries);
   clearContext();
@@ -292,6 +291,36 @@ Subnet::Link SubnetBuilder::replaceCell(
   newCellEntry.cell.refcount = cell.refcount;
   entries[entryID] = std::move(newCellEntry);
   return Link(entryID);
+}
+
+EntryIterator::reference EntryIterator::operator*() const {
+  return entry;
+}
+
+EntryIterator::pointer EntryIterator::operator->() const {
+  return &operator*();
+}
+
+EntryIterator &EntryIterator::operator++() {
+  entry = builder->getNext(entry);
+  return *this;
+}
+
+EntryIterator EntryIterator::operator++(int) {
+  EntryIterator copyIter(*this);
+  ++(*this);
+  return copyIter;
+}
+
+EntryIterator &EntryIterator::operator--() {
+  entry = builder->getPrev(entry);
+  return *this;
+}
+
+EntryIterator EntryIterator::operator--(int) {
+  EntryIterator copyIter(*this);
+  --(*this);
+  return copyIter;
 }
 
 } // namespace eda::gate::model

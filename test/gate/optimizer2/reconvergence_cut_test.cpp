@@ -13,7 +13,37 @@
 
 namespace eda::gate::optimizer2 {
 
-TEST(ReconvergenceCutTest, Simple) {
+TEST(ReconvergenceCutTest, CorrectnessTest) {
+  using CellSymbol    = eda::gate::model::CellSymbol;
+  using Subnet        = eda::gate::model::Subnet;
+  using SubnetBuilder = eda::gate::model::SubnetBuilder;
+  /*
+  * in(0)  in(1) CONST - Inputs
+  *     \ /    \ /
+  *      3      4
+  *        \ /
+  *         5          - Root
+  *         |
+  *        out
+  */
+  SubnetBuilder builder;
+  auto links = builder.addInputs(2);
+  links.push_back(builder.addCell(CellSymbol::ONE));
+
+  links.push_back(builder.addCell(CellSymbol::AND, links[0], links[1]));
+  links.push_back(builder.addCell(CellSymbol::AND, links[1], links[2]));
+  links.push_back(builder.addCell(CellSymbol::AND, links[3], links[4]));
+  builder.addOutput(links.back());
+
+  const auto &subnet = Subnet::get(builder.make());
+
+  const std::vector<size_t> cut = getReconvergenceCut(subnet, 5, 4);
+  const std::vector<size_t> check = {0, 1};
+
+  EXPECT_EQ(check, cut);
+}
+
+TEST(ReconvergenceCutTest, SimpleTest) {
   using CellSymbol    = eda::gate::model::CellSymbol;
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;

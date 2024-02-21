@@ -56,7 +56,7 @@ TEST(ReconvergenceCutTest, Simple) {
   const auto &subnet = Subnet::get(builder.make());
   const auto cut = getReconvergenceCut(subnet, rootId, cutSize);
   
-  const std::vector<uint32_t> check = {11, 12, 13, 14};
+  const std::vector<size_t> check = {11, 12, 13, 14};
 
   EXPECT_EQ(cut, check);
 }

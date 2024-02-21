@@ -10,9 +10,9 @@
 
 namespace eda::gate::optimizer2 {
 
-size_t computeCost(const model::Subnet &subnet,
-                   uint32_t idx,
-                   const std::unordered_set<uint32_t> &visited) {
+unsigned computeCost(const model::Subnet &subnet,
+                     size_t idx,
+                     const std::unordered_set<size_t> &visited) {
 
   const auto &entries = subnet.getEntries();
   const auto &cell = entries[idx].cell;
@@ -21,7 +21,7 @@ size_t computeCost(const model::Subnet &subnet,
     return -1;
   }
 
-  size_t cost = 0;
+  unsigned cost = 0;
 
   const auto links = subnet.getLinks(idx);
   for (const auto &link : links) {
@@ -32,25 +32,25 @@ size_t computeCost(const model::Subnet &subnet,
   return cost;
 }
 
-std::vector<uint32_t> getReconvergenceCut(const model::Subnet &subnet,
-                                          const std::vector<uint32_t> &roots,
-                                          size_t cutSize) {
+std::vector<size_t> getReconvergenceCut(const model::Subnet &subnet,
+                                        const std::vector<size_t> &roots,
+                                        size_t cutSize) {
 
   assert(roots.size() <= cutSize && "Number of roots more than cut size");
 
-  std::unordered_set<uint32_t> visited(roots.begin(), roots.end());
-  std::vector<uint32_t> leaves(roots.begin(), roots.end());
+  std::unordered_set<size_t> visited(roots.begin(), roots.end());
+  std::vector<size_t> leaves(roots.begin(), roots.end());
   leaves.reserve(cutSize);
 
   const auto &entries = subnet.getEntries();
 
   // Construct a cut.
   while (true) {
-    size_t bestCost = -1;
+    unsigned bestCost = -1;
     size_t bestLeave = 0;
     // Choose a leave with the best cost.
     for (size_t i = 0; i < leaves.size(); ++i) {
-      const size_t cost = computeCost(subnet, leaves[i], visited);
+      const unsigned cost = computeCost(subnet, leaves[i], visited);
       if (cost < bestCost) {
         bestCost = cost;
         bestLeave = i;

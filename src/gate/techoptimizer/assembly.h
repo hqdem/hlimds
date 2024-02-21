@@ -9,8 +9,8 @@
 
 #include "gate/techoptimizer/mapper/bestReplacement.h"
 
-#include <unordered_map>
 #include <stack>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace eda::gate::tech_optimizer {

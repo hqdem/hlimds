@@ -85,14 +85,14 @@ add_library(Gate OBJECT
   printer/graphml.cpp
   printer/vcd.cpp
   simulator/simulator.cpp
-        techoptimizer/mapper/cut_base/сut_base_mapper.cpp
+  techoptimizer/mapper/cut_base/сut_base_mapper.cpp
   techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.cpp
   techoptimizer/assembly.cpp
   techoptimizer/mapper/baseMapper.cpp
   techoptimizer/library/cell.cpp
   techoptimizer/library/cellDB.cpp
   techoptimizer/sequential_mapper/sequential_mapper.cpp
-        techoptimizer/techoptimizer.cpp
+  techoptimizer/techoptimizer.cpp
   simulator2/simulator.cpp
   transformer/aigmapper.cpp
   transformer/bdd.cpp

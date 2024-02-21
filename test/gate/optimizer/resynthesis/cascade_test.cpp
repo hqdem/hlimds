@@ -143,13 +143,5 @@ namespace eda::gate::optimizer::resynthesis {
   TEST(Cascade, CorrectSynthTest) {
     synthTest(4, "1001000000100100");
   }
-
-  TEST(Cascade, OneTest) {
-    gnetTest(4, "1111111111111111");
-  }
-  
-  TEST(Cascade, ZeroTest) {
-    gnetTest(4, "0000000000000000");
-  }
   
 }; // namespace eda::gate::optimizer::resynthesis

@@ -22,6 +22,7 @@
 #include "gate/debugger2/sat_checker2.h"
 
 #include "gate/parser/graphml_to_subnet.h"
+#include "gate/techoptimizer/util/get_tech_attr.h"
 
 using Builder    = eda::gate::model::SubnetBuilder;
 using CellSymbol = eda::gate::model::CellSymbol;
@@ -143,7 +144,14 @@ TEST(TechMapTest, SimpleANDSubnet) {
   SubnetID mappedSub = techmapper.techmap(primitiveANDSub);
 
   std::cout << model::Subnet::get(mappedSub) << std::endl;
+
+  SubnetID mappedSub2 = techmapper.techmap(primitiveANDSub);
+
+  std::cout << model::Subnet::get(mappedSub2) << std::endl;
+
   printVerilog(mappedSub);
+
+  std::cout << getArea(mappedSub) << std::endl;
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
 }
@@ -165,6 +173,8 @@ TEST(TechMapTest, SimpleORSubnet) {
   }
   std::cout << model::Subnet::get(mappedSub) << std::endl;
   printVerilog(mappedSub);
+
+  std::cout << getArea(mappedSub) << std::endl;
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
 }

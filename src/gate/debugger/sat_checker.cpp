@@ -410,8 +410,11 @@ SatChecker::Hints makeHints(const GNet &lhs,
 
   // Output-to-output correspondence.
   for (auto oldTargetLink : lhs.targetLinks()) {
-    auto newTargetId = gmap.at(oldTargetLink.source);
-    obind.insert({oldTargetLink, Gate::Link(newTargetId)});
+    GateId source = oldTargetLink.source;
+    if (gmap.count(source)) {
+      auto newTargetId = gmap.at(source);
+      obind.insert({oldTargetLink, Gate::Link(newTargetId)});
+    }
   }
 
   // Trigger-to-trigger correspondence.

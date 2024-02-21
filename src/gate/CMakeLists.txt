@@ -12,6 +12,7 @@ add_library(Gate OBJECT
   debugger/rnd_checker.cpp
   debugger/symexec.cpp
   debugger2/base_checker2.cpp
+  debugger2/bdd_checker2.cpp
   debugger2/miter2.cpp
   debugger2/rnd_checker2.cpp
   model/gate.cpp
@@ -30,6 +31,7 @@ add_library(Gate OBJECT
   model2/subnet.cpp
   model2/utils/subnet_checking.cpp
   model2/utils/subnet_to_bdd.cpp
+  model2/utils/subnet_truth_table.cpp
   optimizer/cone_visitor.cpp
   optimizer/cuts_finder_visitor.cpp
   optimizer/cut_walker.cpp
@@ -60,6 +62,7 @@ add_library(Gate OBJECT
   optimizer/walker.cpp
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
+  optimizer2/reconvergence_cut.cpp
   optimizer2/resynthesis/akers.cpp
   optimizer2/resynthesis/dsd_to_subnet.cpp
   optimizer2/resynthesis/bidecomposition.cpp
@@ -82,15 +85,14 @@ add_library(Gate OBJECT
   printer/graphml.cpp
   printer/vcd.cpp
   simulator/simulator.cpp
-        techoptimizer/mapper/cut_base/сut_base_mapper.cpp
-  techoptimizer/mapper/cut_base/power_map/power_map.cpp
+  techoptimizer/mapper/cut_base/сut_base_mapper.cpp
   techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.cpp
   techoptimizer/assembly.cpp
   techoptimizer/mapper/baseMapper.cpp
   techoptimizer/library/cell.cpp
   techoptimizer/library/cellDB.cpp
   techoptimizer/sequential_mapper/sequential_mapper.cpp
-        techoptimizer/techoptimizer.cpp
+  techoptimizer/techoptimizer.cpp
   simulator2/simulator.cpp
   transformer/aigmapper.cpp
   transformer/bdd.cpp

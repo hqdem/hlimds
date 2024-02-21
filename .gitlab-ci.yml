@@ -1,13 +1,18 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:staccato
 
 variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-  UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
   BUILD: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"
-  YOSYS_DIR: "/workdir/yosys"
-  MLIR_DIR: "/workdir/circt/llvm/build/lib/cmake/mlir/"
   CIRCT_DIR: "/workdir/circt/build/lib/cmake/circt/"
+  GIT_SUBMODULE_STRATEGY: recursive
+  MLIR_DIR: "/workdir/circt/llvm/build/lib/cmake/mlir/"
+  UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
+  YOSYS_DIR: "/workdir/yosys"
 
 stages:
   - build

@@ -23,94 +23,105 @@ using TruthTable = kitty::dynamic_truth_table;
 //===----------------------------------------------------------------------===//
 // Convenience Methods
 //===----------------------------------------------------------------------===//
-  
-/// Transforms output into string
-TruthTable checkSynth(int numVars, int bits, CNF &output) {
-
-  int numOnes = bits, numOnesPrev = bits; // creating table
+TruthTable checkSynthSubnet(int numVars, int bits, model::SubnetID &subnetId) {
 
   std::vector<TruthTable> result;
 
-  for (int i = 0; i < 2; i++) {
+  // creating table
+  for (int i = 0; i < numVars; i++) {
     TruthTable a(numVars);
+    kitty::create_nth_var(a, i);
     result.push_back(a);
-    for (int j = 0; j < bits; j++) {
-      if (!i) {
-        clear_bit(result[i], j);
-      } else {
-        set_bit(result[i], j);
-      }
-    }
-  }
-  for (int i = 2; i < numVars + 2; i++) {
-    TruthTable a(numVars);
-    result.push_back(a);
-    numOnes /= 2;
-
-    for (int j = 0; j < bits; j++) {
-      if ((j % numOnesPrev) < numOnes) {
-        set_bit(result[i], j);
-      } else {
-        clear_bit(result[i], j);
-      }
-    }
-    numOnesPrev = numOnes;
   }
   
-  numOnes = bits, numOnesPrev = bits;
-  for (int i = numVars + 2; i < numVars * 2 + 2; i++) {
-    TruthTable a(numVars);
-    result.push_back(a);
-    numOnes /= 2;
-
-    for (int j = 0; j < bits; j++) {
-      if ((j % numOnesPrev) < numOnes) {
-        clear_bit(result[i], j);
-      } else {
-        set_bit(result[i], j);
+  const auto &subnet = Subnet::get(subnetId);
+  
+  auto entries = subnet.getEntries();
+  
+  for (size_t i = 0; i < entries.size(); i++) {
+    auto gate = entries[i];
+    if (gate.cell.isAnd()) {
+      TruthTable table(numVars);
+      table = result[gate.cell.link[0].idx];
+      if (gate.cell.link[0].inv) {
+        table = ~table;
       }
+      for (int j = 1; j < gate.cell.arity; j++) {
+        int id;
+        id = gate.cell.link[j].idx;
+        if (gate.cell.link[j].inv) {
+          table &= (~result[id]);
+        } else {
+          table &= result[id];
+        }
+      }
+      result.push_back(table);
     }
-    numOnesPrev = numOnes;
-  }
-
-  for (long unsigned int i = numVars * 2 + 2; i < output[0].size(); i++) {
-    if (!output[1][i] && !output[2][i]) { // constant
-      int id = output[0][i];
-      result.push_back(result[id]);
-    } else if (output[0][i] == 2) { // &
-      int id1 = output[1][i];
-      int id2 = output[2][i];
-      TruthTable tt = result[id1];
-      tt &= result[id2];
-      result.push_back(tt);
-    } else if (output[0][i] == 3) { // |
-      int id1 = output[1][i];
-      int id2 = output[2][i];
-      TruthTable tt = result[id1];
-      tt |= result[id2];
-      result.push_back(tt);
+    else if (gate.cell.isOr()) {
+      TruthTable table(numVars);
+      table = result[gate.cell.link[0].idx];
+      if (gate.cell.link[0].inv) {
+        table = ~table;
+      }
+      for (int j = 1; j < gate.cell.arity; j++) {
+        int id;
+        id = gate.cell.link[j].idx;
+        if (gate.cell.link[j].inv) {
+          table |= (~result[id]);
+        } else {
+          table |= result[id];
+        }
+      }
+      result.push_back(table);
     }
+    
   }
   return result[result.size() - 1];
 }
 
-/// Checks if input string and output are equal
-void synthTest(int vars, std::string str) {
+void subnetEquivalenceTest(int vars) {
   TruthTable table(vars);
-  kitty::create_from_binary_string(table, str);
+  kitty::create_random(table);
 
   Cascade resynth;
-  CNF form = resynth.normalForm(table);
-  std::vector<int> values;
-  CNF output = resynth.getFunction(table, form, values);
-  TruthTable tt(vars);
-  tt = checkSynth(vars, table.num_bits(), output);
-    
-  EXPECT_TRUE(tt == table);
+  const auto subnetId = resynth.synthesize(table);
+  auto subnetIdNew = subnetId;
+  
+  TruthTable tableSubnet = checkSynthSubnet(vars, 1<<vars, subnetIdNew); 
+
+  EXPECT_TRUE(table == tableSubnet);
 }
 
-TEST(Cascade, CorrectSynthTest) {
-  synthTest(4, "1001000000100100");
+TEST(Cascade, SubnetEquivalenceTest3) {
+  subnetEquivalenceTest(3);
+}
+
+TEST(Cascade, SubnetEquivalenceTest4) {
+  subnetEquivalenceTest(4);
+}
+
+TEST(Cascade, SubnetEquivalenceTest5) {
+  subnetEquivalenceTest(5);
+}
+
+TEST(Cascade, SubnetEquivalenceTest6) {
+  subnetEquivalenceTest(6);
+}
+
+TEST(Cascade, SubnetEquivalenceTest7) {
+  subnetEquivalenceTest(7);
+}
+
+TEST(Cascade, SubnetEquivalenceTest8) {
+  subnetEquivalenceTest(8);
+}
+
+TEST(Cascade, SubnetEquivalenceTest9) {
+  subnetEquivalenceTest(9);
+}
+
+TEST(Cascade, SubnetEquivalenceTest10) {
+  subnetEquivalenceTest(10);
 }
 
 TEST(Cascade, SubnetTest) {
@@ -131,11 +142,13 @@ TEST(Cascade, MaxArityTest) {
   TruthTable table(vars);
   kitty::create_from_binary_string(table, "10000110");
 
-  synthTest(vars, "10000110");
-
   Cascade resynth;
   const auto subnetId = resynth.synthesize(table, maxArity);
   const auto &subnet = Subnet::get(subnetId);
+   
+  auto subnetIdNew = subnetId;
+  TruthTable tableSubnet = checkSynthSubnet(vars, 1<<vars, subnetIdNew); 
+  
   bool check = true;
   auto entries = subnet.getEntries();
   for (uint64_t i = 0; i < entries.size(); i++) {
@@ -145,6 +158,6 @@ TEST(Cascade, MaxArityTest) {
     }
   }
 
-  EXPECT_TRUE(check);
+  EXPECT_TRUE(check && tableSubnet == table);
 } 
 }; // namespace eda::gate::optimizer2::resynthesis

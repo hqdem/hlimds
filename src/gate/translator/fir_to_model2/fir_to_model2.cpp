@@ -63,6 +63,9 @@ using ConnectOp = circt::firrtl::ConnectOp;
 using ConstCastOp = circt::firrtl::ConstCastOp;
 using ConstantOp = circt::firrtl::ConstantOp;
 using ConventionAttr = circt::firrtl::ConventionAttr;
+using DShlPrimOp = circt::firrtl::DShlPrimOp;
+using DShlwPrimOp = circt::firrtl::DShlwPrimOp;
+using DShrPrimOp = circt::firrtl::DShrPrimOp;
 using DefaultTimingManager = mlir::DefaultTimingManager;
 using DialectRegistry = mlir::DialectRegistry;
 using Direction = circt::firrtl::Direction;
@@ -134,13 +137,14 @@ using WireOp = circt::firrtl::WireOp;
 using XorPrimOp = circt::firrtl::XorPrimOp;
 using XorRPrimOp = circt::firrtl::XorRPrimOp;
 
+namespace PreserveAggregate = circt::firrtl::PreserveAggregate;
+namespace PreserveValues = circt::firrtl::PreserveValues;
 namespace chirrtl = circt::chirrtl;
 namespace firrtl = circt::firrtl;
 namespace hw = circt::hw;
+namespace model = eda::gate::model;
 namespace om = circt::om;
 namespace sv = circt::sv;
-namespace PreserveAggregate = firrtl::PreserveAggregate;
-namespace PreserveValues = firrtl::PreserveValues;
 
 namespace eda::gate::model {
 
@@ -242,7 +246,7 @@ std::shared_ptr<std::vector<CellTypeID>> Translator::translate() {
   addPass(createCHIRRTLToLowFIRRTLPass());
   runPasses();
   clearPasses();
-  // printFIRRTL();
+  printFIRRTL();
   addPass(createLowFIRRTLToModel2Pass(resultNetList));
   runPasses();
   clearPasses();
@@ -275,27 +279,30 @@ bool isAnyReg(const std::string &operationName) {
 }
 
 bool isSynthesizable(const std::string &operationName) {
-  return (operationName == EQPrimOp::getOperationName()   ||
-          operationName == NEQPrimOp::getOperationName()  ||
-          operationName == LTPrimOp::getOperationName()   ||
-          operationName == LEQPrimOp::getOperationName()  ||
-          operationName == GTPrimOp::getOperationName()   ||
-          operationName == GEQPrimOp::getOperationName()  ||
-          operationName == NegPrimOp::getOperationName()  ||
-          operationName == AddPrimOp::getOperationName()  ||
-          operationName == SubPrimOp::getOperationName()  ||
-          operationName == MulPrimOp::getOperationName()  ||
-          operationName == DivPrimOp::getOperationName()  ||
-          operationName == RemPrimOp::getOperationName()  ||
-          operationName == MuxPrimOp::getOperationName()  ||
-          operationName == ShlPrimOp::getOperationName()  ||
-          operationName == ShrPrimOp::getOperationName()  ||
-          operationName == CatPrimOp::getOperationName()  ||
-          operationName == HeadPrimOp::getOperationName() ||
-          operationName == TailPrimOp::getOperationName() ||
-          operationName == BitsPrimOp::getOperationName() ||
-          operationName == AndRPrimOp::getOperationName() ||
-          operationName == XorRPrimOp::getOperationName() ||
+  return (operationName == EQPrimOp::getOperationName()    ||
+          operationName == NEQPrimOp::getOperationName()   ||
+          operationName == LTPrimOp::getOperationName()    ||
+          operationName == LEQPrimOp::getOperationName()   ||
+          operationName == GTPrimOp::getOperationName()    ||
+          operationName == GEQPrimOp::getOperationName()   ||
+          operationName == NegPrimOp::getOperationName()   ||
+          operationName == AddPrimOp::getOperationName()   ||
+          operationName == SubPrimOp::getOperationName()   ||
+          operationName == MulPrimOp::getOperationName()   ||
+          operationName == DivPrimOp::getOperationName()   ||
+          operationName == RemPrimOp::getOperationName()   ||
+          operationName == MuxPrimOp::getOperationName()   ||
+          operationName == ShlPrimOp::getOperationName()   ||
+          operationName == ShrPrimOp::getOperationName()   ||
+          operationName == DShlPrimOp::getOperationName()  ||
+          operationName == DShlwPrimOp::getOperationName() ||
+          operationName == DShrPrimOp::getOperationName()  ||
+          operationName == CatPrimOp::getOperationName()   ||
+          operationName == HeadPrimOp::getOperationName()  ||
+          operationName == TailPrimOp::getOperationName()  ||
+          operationName == BitsPrimOp::getOperationName()  ||
+          operationName == AndRPrimOp::getOperationName()  ||
+          operationName == XorRPrimOp::getOperationName()  ||
           operationName == OrRPrimOp::getOperationName());
 }
 
@@ -304,10 +311,13 @@ bool isTriviallySynthesizable(const std::string &operationName) {
           operationName == OrPrimOp::getOperationName()      ||
           operationName == XorPrimOp::getOperationName()     ||
           operationName == NotPrimOp::getOperationName()     ||
-          operationName == WireOp::getOperationName()        ||
           operationName == AsClockPrimOp::getOperationName() ||
           operationName == ConstCastOp::getOperationName()   ||
           operationName == AsAsyncResetPrimOp::getOperationName());
+}
+
+bool isStrictConnect(const std::string &operationName) {
+  return (operationName == StrictConnectOp::getOperationName());
 }
 
 bool isWire(const std::string &operationName) {
@@ -320,9 +330,8 @@ bool isOutput(const std::string &operationName) {
 
 bool isOmitted(const std::string &operationName) {
   return (operationName == PropAssignOp::getOperationName()    ||
-          operationName == StrictConnectOp::getOperationName() ||
-          operationName == ConnectOp::getOperationName()       ||
           operationName == ConstantOp::getOperationName()      ||
+          operationName == WireOp::getOperationName()          ||
           operationName == FModuleOp::getOperationName());
 }
 
@@ -332,13 +341,25 @@ uint findOpResultNumber(Value value,
   uint opResultNumber = 0;
   // If the source operation does not exist - it is the input.
   if (operation == nullptr) {
+    uint inputCount = 0;
     for (size_t i = 0; i < fModuleOp.getNumPorts(); i++) {
       if (fModuleOp.getPortDirection(i) == Direction::In) {
         auto &&inputValue = fModuleOp.getArgument(i);
         if (inputValue == value) {
-          opResultNumber = i;
-          break;
+          opResultNumber = inputCount;
+          return opResultNumber;
         }
+        inputCount++;
+      }
+    }
+    for (size_t i = 0; i < fModuleOp.getNumPorts(); i++) {
+       if (fModuleOp.getPortDirection(i) == Direction::Out) {
+        auto &&inputValue = fModuleOp.getArgument(i);
+        if (inputValue == value) {
+          opResultNumber = inputCount;
+          return opResultNumber;
+        }
+        inputCount++;
       }
     }
   } else {
@@ -351,7 +372,7 @@ uint findOpResultNumber(Value value,
         if (instanceOp.getPortDirection(i) == Direction::Out) {
           if (instanceOp->getResult(i) == value) {
             opResultNumber = resultCount;
-            break;
+            return opResultNumber;
           }
           resultCount++;
         }
@@ -360,15 +381,80 @@ uint findOpResultNumber(Value value,
       for (uint i = 0; i < operation->getNumResults(); i++) {
         if (operation->getResult(i) == value) {
           opResultNumber = i;
-          break;
+          return opResultNumber;
         }
       }
     }
   }
 
-  uassert(true, "Operation result is not found!");
+  uassert(false, "Operation result is not found!");
 
   return opResultNumber;
+}
+
+uint findOpOperandNumber(Value value,
+                         Operation *operation,
+                         FModuleOp fModuleOp) {
+  uint opOperandNumber = 0;
+  // If the source operation does not exist - it is the output.
+  if (operation == nullptr) {
+    uint outputCount = 0;
+    for (size_t i = 0; i < fModuleOp.getNumPorts(); i++) {
+      if (fModuleOp.getPortDirection(i) == Direction::Out) {
+        auto &&outputValue = fModuleOp.getArgument(i);
+        if (outputValue == value) {
+          opOperandNumber = outputCount;
+          return opOperandNumber;
+        }
+        outputCount++;
+      }
+    }
+  } else {
+    // 'InstanceOp's are processed diffirently from other operations.
+    std::string operationName = operation->getName().getIdentifier().str();
+    if (isInstance(operationName)) {
+      auto instanceOp = mlir::dyn_cast<InstanceOp>(operation);
+      uint argumentCount = 0;
+      for (uint i = 0; i < instanceOp->getNumResults(); i++) {
+        if (instanceOp.getPortDirection(i) == Direction::In) {
+          if (instanceOp->getResult(i) == value) {
+            opOperandNumber = argumentCount;
+            return opOperandNumber;
+          }
+          argumentCount++;
+        }
+      }
+    } else if (isAnyReg(operationName)) {
+      uint i = 0;
+      if (operation->getResult(i) == value) {
+        opOperandNumber = i;
+        return opOperandNumber;
+      }
+      i++;
+      for (; i < operation->getNumOperands(); i++) {
+        if (operation->getOperand(i - 1) == value) {
+          opOperandNumber = i;
+          return opOperandNumber;
+        }
+      }
+    } else if (isWire(operationName)) {
+      if (operation->getResult(0) == value) {
+        opOperandNumber = 0;
+        return opOperandNumber;
+      }
+    } else {
+      for (uint i = 0; i < operation->getNumOperands(); i++) {
+        if (operation->getOperand(i) == value) {
+          opOperandNumber = i;
+          return opOperandNumber;
+        }
+      }
+    }
+  }
+
+  uassert(false, "Operation operand is not found!");
+
+  return opOperandNumber;
 }
 
 uint getTypeWidth(Type type) {
@@ -490,8 +576,7 @@ Operation *getSourceOperation(Operation *destOp, std::string &destOpName,
                               uint inputCount) {
   Operation *srcOp = nullptr;
   if (isInstance(destOpName) ||
-      isWire(destOpName)     ||
-     (isAnyReg(destOpName) && (inputNumber == inputCount - 1))) {
+      isWire(destOpName)) {
     for (auto *user : operand.getUsers()) {
       if (auto connect = mlir::dyn_cast<FConnectLike>(user)) {
         if (connect.getDest() != operand)
@@ -510,8 +595,7 @@ Value getDestValue(Operation *destOp, std::string &destOpName,
   Value operand;
   if (isInstance(destOpName)) {
     operand = destOp->getResult(inputNumber);
-  } else if (isWire(destOpName) ||
-            (isAnyReg(destOpName) && (inputNumber == (inputCount - 1)))) {
+  } else if (isWire(destOpName)) {
     operand = destOp->getResult(0);
   } else {
     operand = destOp->getOperand(inputNumber);
@@ -519,86 +603,125 @@ Value getDestValue(Operation *destOp, std::string &destOpName,
   return operand;
 }
 
-std::vector<LinkEnd> getLinkEnds(Operation *destOp, uint inputNumber,
-    FModuleOp fModuleOp,
-    std::unordered_map<CellKey, CellID> &cellKeyToCellIDs) {
+std::vector<LinkEnd> getLinkEnds(Operation *destOp, FModuleOp fModuleOp,
+    std::unordered_map<CellKey, CellID> &cellKeyToCellIDOuts) {
   std::vector<LinkEnd> linkEnds;
   std::string destOpName = destOp->getName().getIdentifier().str();
-  uint inputCount = getInputCount(destOp, destOpName);
-  Value operand = getDestValue(destOp, destOpName, inputNumber, inputCount);
-  Operation *srcOp = getSourceOperation(destOp, destOpName, operand,
-                                        inputNumber, inputCount);
-  uint resNumber = findOpResultNumber(operand, srcOp, fModuleOp);
-  uint inWidth = getTypeWidth(operand.getType());
+  uint operandCount = destOp->getNumOperands();
+  for (uint i = 0; i < operandCount; i++) {
+    Value operand = getDestValue(destOp, destOpName, i, operandCount);
+    Operation *srcOp = getSourceOperation(destOp, destOpName, operand,
+                                          i, operandCount);
+    uint resNumber = findOpResultNumber(operand, srcOp, fModuleOp);
+    uint inWidth = getTypeWidth(operand.getType());
 
-  for (uint j = 0; j < inWidth; j++) {
-    CellKey srcKey(srcOp, resNumber, j);
-    CellID cellSrcID = cellKeyToCellIDs[srcKey];
+    for (uint j = 0; j < inWidth; j++) {
+      CellKey srcKey(srcOp, resNumber, j);
+      CellID cellSrcID = cellKeyToCellIDOuts[srcKey];
 
-    uassert((cellSrcID != eda::gate::model::OBJ_NULL_ID),
-            "No CellIDs for a CellKey have been found!");
+      uassert((cellSrcID != model::OBJ_NULL_ID),
+              "No CellIDs for a CellKey have been found!");
 
-    linkEnds.push_back(LinkEnd(cellSrcID));
+      linkEnds.push_back(LinkEnd(cellSrcID));
+    }
   }
   return linkEnds;
 }
 
 void generateInputs(FModuleOp fModuleOp,
                     NetBuilder *netBuilder,
-                    std::unordered_map<CellKey, CellID> &cellKeyToCellIDs) {
+                    std::unordered_map<CellKey, CellID> &cellKeyToCellIDOuts) {
   // Inputs.
+  uint inNumber = 0;
   for (size_t i = 0; i < fModuleOp.getNumPorts(); i++) {
     if (fModuleOp.getPortDirection(i) == Direction::In &&
         !(mlir::dyn_cast<PropertyType>(fModuleOp.getPortType(i)))) {
       uint portWidth = getTypeWidth(fModuleOp.getPortType(i));
       for (uint j = 0; j < portWidth; j++) {
         CellID cellID = makeCell(CellSymbol::IN);
-        CellKey cellKey(nullptr, i, j);
-        cellKeyToCellIDs.emplace(std::make_pair(cellKey, cellID));
+        CellKey cellKey(nullptr, inNumber, j);
+        cellKeyToCellIDOuts.emplace(std::make_pair(cellKey, cellID));
         netBuilder->addCell(cellID);
       }
-    } 
+      inNumber++;
+    }
   }
   // Constants.
+  CellID cellIDForOne = model::OBJ_NULL_ID;
+  CellID cellIDForZero = model::OBJ_NULL_ID;
   fModuleOp.walk([&](ConstantOp constantOp) {
-      uint outputWidth = getTypeWidth(constantOp.getResult().getType());
-      auto &&value = constantOp.getValue();
-      for (size_t i = 0; i < outputWidth; i++) {
-        uint extractedBit = value.extractBitsAsZExtValue(1, i);
-        CellID cellID = (extractedBit == 1) ? makeCell(CellSymbol::ONE) :
-                                              makeCell(CellSymbol::ZERO);
-        CellKey cellKey(constantOp, 0, i);
-        cellKeyToCellIDs.emplace(std::make_pair(cellKey, cellID));
-        netBuilder->addCell(cellID);
+    uint outputWidth = getTypeWidth(constantOp.getResult().getType());
+    auto &&value = constantOp.getValue();
+    for (size_t i = 0; i < outputWidth; i++) {
+      uint extractedBit = value.extractBitsAsZExtValue(1, i);
+      CellID cellID = model::OBJ_NULL_ID;
+      if (extractedBit == 1) {
+        if (cellIDForOne == model::OBJ_NULL_ID) {
+          cellIDForOne = makeCell(CellSymbol::ONE);
+        }
+        cellID = cellIDForOne;
+      } else {
+        if (cellIDForZero == model::OBJ_NULL_ID) {
+          cellIDForZero = makeCell(CellSymbol::ZERO);
+        }
+        cellID = cellIDForZero;
       }
+      CellKey cellKey(constantOp, 0, i);
+      cellKeyToCellIDOuts.emplace(std::make_pair(cellKey, cellID));
+      netBuilder->addCell(cellID);
+    }
   });
 }
 
 void generateOutputs(FModuleOp fModuleOp,
                      NetBuilder *netBuilder,
-                     std::unordered_map<CellKey, CellID> &cellKeyToCellIDs) {
+                     std::unordered_map<CellKey, CellID> &cellKeyToCellIDIns,
+                     std::unordered_map<CellKey, CellID> &cellKeyToCellIDOuts) {
+  size_t outNumber = 0;
+  size_t inCount = 0;
+  for (size_t i = 0; i < fModuleOp.getNumPorts(); i++) {
+    if (fModuleOp.getPortDirection(i) == Direction::In &&
+        !(mlir::dyn_cast<PropertyType>(fModuleOp.getPortType(i)))) {
+      inCount++;
+    }
+  }
   for (size_t i = 0; i < fModuleOp.getNumPorts(); i++) {
     if (fModuleOp.getPortDirection(i) == Direction::Out &&
         !(mlir::dyn_cast<PropertyType>(fModuleOp.getPortType(i)))) {
-      auto &&value = fModuleOp.getArgument(i);
-      FConnectLike connectToOutput =
-          mlir::dyn_cast<FConnectLike>(**(value.getUsers().begin()));
-      Operation *srcOp = connectToOutput.getSrc().getDefiningOp();
-      uint resNumber = findOpResultNumber(value, srcOp, fModuleOp);
-      uint outPortWidth = getTypeWidth(fModuleOp.getPortType(i));
+      uint portWidth = getTypeWidth(fModuleOp.getPortType(i));
 
-      for (uint j = 0; j < outPortWidth; j++) {
-        CellKey srcKey(srcOp, resNumber, j);
-        CellID cellSrcID = cellKeyToCellIDs[srcKey];
-
-        uassert((cellSrcID != eda::gate::model::OBJ_NULL_ID),
-                "No CellIDs for a CellKey have been found!");
-
-        CellID cellID = makeCell(CellSymbol::OUT, LinkEnd(cellSrcID));
-        netBuilder->addCell(cellID);
+      for (uint j = 0; j < portWidth; j++) {
+        CellID cellBufID = makeCell(CellSymbol::BUF,
+                                    LinkEnd(model::OBJ_NULL_ID));
+        netBuilder->addCell(cellBufID);
+        CellID cellOutID = makeCell(CellSymbol::OUT, LinkEnd(cellBufID));
+        netBuilder->addCell(cellOutID);
+        CellKey cellKeyIn(nullptr, outNumber, j);
+        CellKey cellKeyOut(nullptr, outNumber + inCount, j);
+        cellKeyToCellIDIns.emplace(std::make_pair(cellKeyIn, cellBufID));
+        cellKeyToCellIDOuts.emplace(std::make_pair(cellKeyOut, cellBufID));
       }
+      outNumber++;
     }
   }
+}
+
+void generateWires(FModuleOp fModuleOp,
+                   NetBuilder *netBuilder,
+                   std::unordered_map<CellKey, CellID> &cellKeyToCellIDIns,
+                   std::unordered_map<CellKey, CellID> &cellKeyToCellIDOuts) {
+  fModuleOp.walk([&](WireOp wireOp) {
+    uint outputWidth = getTypeWidth(wireOp.getResult().getType());
+    for (size_t i = 0; i < outputWidth; i++) {
+      CellID cellID = makeCell(CellSymbol::BUF, LinkEnd(model::OBJ_NULL_ID));
+      netBuilder->addCell(cellID);
+      CellKey cellKeyIn(wireOp, 0, i);
+      CellKey cellKeyOut(wireOp, 0, i);
+      cellKeyToCellIDIns.emplace(std::make_pair(cellKeyIn, cellID));
+      cellKeyToCellIDOuts.emplace(std::make_pair(cellKeyOut, cellID));
+      // At the beginning wires exist without any connections.
+    }
+  });
 }
 
 CellSymbol getCellSymbol(Operation *operation) {
@@ -606,8 +729,7 @@ CellSymbol getCellSymbol(Operation *operation) {
   if (operation != nullptr) {
     std::string operationName =
         operation->getName().getIdentifier().str();
-    if (operationName == WireOp::getOperationName()        ||
-        operationName == ConstCastOp::getOperationName()   ||
+    if (operationName == ConstCastOp::getOperationName()   ||
         operationName == AsClockPrimOp::getOperationName() ||
         operationName == AsAsyncResetPrimOp::getOperationName()) {
       cellSymbol = CellSymbol::BUF;
@@ -636,123 +758,220 @@ CellSymbol getCellSymbol(Operation *operation) {
   return cellSymbol;
 }
 
+uint getModel2InPortNum(Operation *operation, uint portNumber, uint bitNumber) {
+  uint model2InPortNum = 0;
+  if (operation == nullptr) {
+    return model2InPortNum;
+  } else {
+    // 'InstanceOp's are processed diffirently from other operations.
+    std::string operationName = operation->getName().getIdentifier().str();
+    if (isInstance(operationName)) {
+      auto instanceOp = mlir::dyn_cast<InstanceOp>(operation);
+      for (uint i = 0; i < portNumber; i++) {
+        if (instanceOp.getPortDirection(i) == Direction::In) {
+          model2InPortNum += getTypeWidth(instanceOp->getResult(i).getType());
+        }
+      }
+      model2InPortNum += bitNumber;
+    } else if (isTriviallySynthesizable(operationName) ||
+               isWire(operationName)) {
+      for (; model2InPortNum < portNumber; model2InPortNum++);
+    } else if (isAnyReg(operationName)) {
+      for (; model2InPortNum < portNumber; model2InPortNum++);
+    } else {
+      for (uint i = 0; i < portNumber; i++) {
+          model2InPortNum += getTypeWidth(operation->getOperand(i).getType());
+      }
+      model2InPortNum += bitNumber;
+    }
+  }
+  return model2InPortNum;
+}
+
+uint getModel2OutPortNum(Operation *operation,
+                         uint portNumber,
+                         uint bitNumber) {
+  uint model2OutPortNum = 0;
+  if (operation == nullptr) {
+    return model2OutPortNum;
+  } else {
+    // 'InstanceOp's are processed diffirently from other operations.
+    std::string operationName = operation->getName().getIdentifier().str();
+    if (isInstance(operationName)) {
+      auto instanceOp = mlir::dyn_cast<InstanceOp>(operation);
+      for (uint i = 0; i < portNumber; i++) {
+        if (instanceOp.getPortDirection(i) == Direction::Out) {
+          model2OutPortNum += getTypeWidth(instanceOp->getResult(i).getType());
+        }
+      }
+      model2OutPortNum += bitNumber;
+    } else if (isTriviallySynthesizable(operationName) ||
+               isWire(operationName)) {
+      for (; model2OutPortNum < portNumber; model2OutPortNum++);
+    } else if (isAnyReg(operationName)) {
+      for (; model2OutPortNum < portNumber; model2OutPortNum++);
+    } else {
+      for (uint i = 0; i < portNumber; i++) {
+        model2OutPortNum += getTypeWidth(operation->getResult(i).getType());
+      }
+      model2OutPortNum += bitNumber;
+    }
+  }
+  return model2OutPortNum;
+}
+
 void processOperation(Operation *destOp, std::string &destOpName,
     FModuleOp fModuleOp, NetBuilder *netBuilder,
-    std::unordered_map<CellKey, CellID> &cellKeyToCellIDs) {
+    std::unordered_map<CellKey, CellID> &cellKeyToCellIDIns,
+    std::unordered_map<CellKey, CellID> &cellKeyToCellIDOuts) {
   CellSymbol cellSymbol = getCellSymbol(destOp);
   uint inputCount = getInputCount(destOp, destOpName);
   uint faninCount = getFaninCount(destOp, destOpName);
-  std::vector<LinkEnd> linkEnds;
-  for (uint inputNumber = 0; inputNumber < inputCount; inputNumber++) {
-    std::vector<LinkEnd> inputLinkEnds = getLinkEnds(destOp,
-                                                     inputNumber,
-                                                     fModuleOp,
-                                                     cellKeyToCellIDs);
-    for (const auto &inputLinkEnd : inputLinkEnds) {
-      linkEnds.push_back(inputLinkEnd);
-    }
-  }
-  if (isInstance(destOpName)) {
-    uint fanoutCount = getFanoutCount(destOp, destOpName);
-    auto instanceOp = mlir::dyn_cast<InstanceOp>(destOp);
-    const auto &cellTypeName = instanceOp.getModuleName().str();
-    CellTypeID cellTypeID = makeCellType(cellTypeName,
-                                         cellSymbol,
-                                         CellProperties(false, false,
-                                                        false, false,
-                                                        false, false,
-                                                        false),
-                                         faninCount,
-                                         fanoutCount);
-    CellID cellDestID = makeCell(cellTypeID, linkEnds);
-    netBuilder->addCell(cellDestID);
-    uint outputCount = getOutputCount(destOp, destOpName);
-    for (uint i = 0; i < outputCount; i++) {
-      auto &&result = destOp->getResult(i + inputCount);
-      uint outWidth = getTypeWidth(result.getType());
-      for (uint j = 0; j < outWidth; j++) {
-        CellKey destKey(destOp, i, j);
-        cellKeyToCellIDs.emplace(std::make_pair(destKey, cellDestID));
+  if (!isOmitted(destOpName)) {
+    if (isInstance(destOpName)) {
+      uint fanoutCount = getFanoutCount(destOp, destOpName);
+      auto instanceOp = mlir::dyn_cast<InstanceOp>(destOp);
+      const auto &cellTypeName = instanceOp.getModuleName().str();
+      CellTypeID cellTypeID = makeCellType(cellTypeName,
+                                           cellSymbol,
+                                           CellProperties(false, false,
+                                                          false, false,
+                                                          false, false,
+                                                          false),
+                                           faninCount,
+                                           fanoutCount);
+      std::vector<LinkEnd> linkEnds;
+      for (uint i = 0; i < faninCount; i++) {
+        linkEnds.push_back(LinkEnd(model::OBJ_NULL_ID));
       }
-    }
-  } else if (isSynthesizable(destOpName)) {
-    uint fanoutCount = getFanoutCount(destOp, destOpName);
-    const auto &cellTypeName = destOp->getName().stripDialect().str();
-    CellTypeID cellTypeID = makeCellType(cellTypeName,
-                                         cellSymbol,
-                                         CellProperties(false, false,
-                                                        false, false,
-                                                        false, false,
-                                                        false),
-                                         faninCount,
-                                         fanoutCount);
-    CellID cellDestID = makeCell(cellTypeID, linkEnds);
-    netBuilder->addCell(cellDestID);
-    uint outputCount = getOutputCount(destOp, destOpName);
-    for (uint i = 0; i < outputCount; i++) {
-      auto &&result = destOp->getResult(i);
-      uint outWidth = getTypeWidth(result.getType());
-      for (uint j = 0; j < outWidth; j++) {
-        CellKey destKey(destOp, i, j);
-        cellKeyToCellIDs.emplace(std::make_pair(destKey, cellDestID));
+      CellID cellDestID = makeCell(cellTypeID, linkEnds);
+      netBuilder->addCell(cellDestID);
+      uint outputCount = getOutputCount(destOp, destOpName);
+      for (uint i = 0; i < outputCount; i++) {
+        auto &&result = destOp->getResult(i + inputCount);
+        uint outWidth = getTypeWidth(result.getType());
+        for (uint j = 0; j < outWidth; j++) {
+          CellKey outKey(destOp, i, j);
+          cellKeyToCellIDOuts.emplace(std::make_pair(outKey, cellDestID));
+        }
       }
-    }
-  } else if (isTriviallySynthesizable(destOpName)) {
-    CellTypeID cellTypeID = getCellTypeID(cellSymbol);
-    uint dataWidth = getTypeWidth(destOp->getResult(0).getType());
-    for (uint j = 0; j < dataWidth; j++) {
-      std::vector<LinkEnd> linkEndsForOne;
       for (uint i = 0; i < inputCount; i++) {
-        linkEndsForOne.push_back(linkEnds[i * dataWidth + j]);
+        auto &&result = destOp->getResult(i);
+        uint inWidth = getTypeWidth(result.getType());
+        for (uint j = 0; j < inWidth; j++) {
+          CellKey inKey(destOp, i, j);
+          cellKeyToCellIDIns.emplace(std::make_pair(inKey, cellDestID));
+        }
       }
-      CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
+    } else if (isSynthesizable(destOpName)) {
+      uint fanoutCount = getFanoutCount(destOp, destOpName);
+      auto linkEnds = getLinkEnds(destOp, fModuleOp, cellKeyToCellIDOuts);
+      const auto &cellTypeName = destOp->getName().stripDialect().str();
+      CellTypeID cellTypeID = makeCellType(cellTypeName,
+                                           cellSymbol,
+                                           CellProperties(false, false,
+                                                          false, false,
+                                                          false, false,
+                                                          false),
+                                           faninCount,
+                                           fanoutCount);
+      CellID cellDestID = makeCell(cellTypeID, linkEnds);
       netBuilder->addCell(cellDestID);
-      CellKey destKey(destOp, 0, j);
-      cellKeyToCellIDs.emplace(std::make_pair(destKey, cellDestID));
-    }
-  } else if (isReg(destOpName)) {
-    CellTypeID cellTypeID = getCellTypeID(cellSymbol);
-    uint dataWidth = faninCount - 1;
-    for (uint j = 0; j < dataWidth; j++) {
-      // DFF(q, d, clk).
-      std::vector<LinkEnd> linkEndsForOne;
-      linkEndsForOne.push_back(linkEnds[j + 1]);
-      linkEndsForOne.push_back(linkEnds[0]);
-      CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
-      netBuilder->addCell(cellDestID);
-      CellKey destKey(destOp, 0, j);
-      cellKeyToCellIDs.emplace(std::make_pair(destKey, cellDestID));
-    }
-  } else if (isRegReset(destOpName)) {
-    CellTypeID cellTypeID = getCellTypeID(cellSymbol);
-    uint dataWidth = getTypeWidth(destOp->getResult(0).getType());
-    uint resetValueWidth = getTypeWidth(destOp->getOperand(2).getType());
-    for (uint j = 0, k = 0; j < dataWidth; j++) {
-      // DFFrs(q, d, clk, rst, set).
-      std::vector<LinkEnd> linkEndsForOne;
-      linkEndsForOne.push_back(linkEnds[j + resetValueWidth + 2]);
-      linkEndsForOne.push_back(linkEnds[0]);
-      CellID negMidID = makeCell(CellSymbol::NOT, linkEnds[k + 2]);
-      netBuilder->addCell(negMidID);
-      CellID andMidRID = makeCell(CellSymbol::AND,
-                                  LinkEnd(negMidID),
-                                  linkEnds[1]);
-      netBuilder->addCell(andMidRID);
-      CellID andMidSID = makeCell(CellSymbol::AND,
-                                  linkEnds[k + 2],
-                                  linkEnds[1]);
-      netBuilder->addCell(andMidSID);
-      linkEndsForOne.push_back(LinkEnd(andMidRID));
-      linkEndsForOne.push_back(LinkEnd(andMidSID));
-      CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
-      netBuilder->addCell(cellDestID);
-      CellKey destKey(destOp, 0, j);
-      cellKeyToCellIDs.emplace(std::make_pair(destKey, cellDestID));
-      // If a reset value doesn't have got a width of one - it width must be...
-      // ...equal to the width of the data.
-      if (resetValueWidth != 1) {
-        k++;
+      uint outputCount = getOutputCount(destOp, destOpName);
+      for (uint i = 0; i < outputCount; i++) {
+        auto &&result = destOp->getResult(i);
+        uint outWidth = getTypeWidth(result.getType());
+        for (uint j = 0; j < outWidth; j++) {
+          CellKey destKey(destOp, i, j);
+          cellKeyToCellIDOuts.emplace(std::make_pair(destKey, cellDestID));
+        }
       }
+    } else if (isTriviallySynthesizable(destOpName)) {
+      auto linkEnds = getLinkEnds(destOp, fModuleOp, cellKeyToCellIDOuts);
+      CellTypeID cellTypeID = getCellTypeID(cellSymbol);
+      uint dataWidth = getTypeWidth(destOp->getResult(0).getType());
+      for (uint j = 0; j < dataWidth; j++) {
+        std::vector<LinkEnd> linkEndsForOne;
+        for (uint i = 0; i < inputCount; i++) {
+          linkEndsForOne.push_back(linkEnds[i * dataWidth + j]);
+        }
+        CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
+        netBuilder->addCell(cellDestID);
+        CellKey destKey(destOp, 0, j);
+        cellKeyToCellIDOuts.emplace(std::make_pair(destKey, cellDestID));
+      }
+    } else if (isReg(destOpName)) {
+      auto linkEnds = getLinkEnds(destOp, fModuleOp, cellKeyToCellIDOuts);
+      CellTypeID cellTypeID = getCellTypeID(cellSymbol);
+      uint dataWidth = faninCount - 1;
+      for (uint j = 0; j < dataWidth; j++) {
+        // DFF(q, d, clk).
+        std::vector<LinkEnd> linkEndsForOne;
+        linkEndsForOne.push_back(LinkEnd(model::OBJ_NULL_ID));
+        linkEndsForOne.push_back(linkEnds.front());
+        CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
+        netBuilder->addCell(cellDestID);
+        CellKey outKey(destOp, 0, j);
+        cellKeyToCellIDOuts.emplace(std::make_pair(outKey, cellDestID));
+        CellKey inKey(destOp, 0, j);
+        cellKeyToCellIDIns.emplace(std::make_pair(inKey, cellDestID));
+      }
+    } else if (isRegReset(destOpName)) {
+      auto linkEnds = getLinkEnds(destOp, fModuleOp, cellKeyToCellIDOuts);
+      CellTypeID cellTypeID = getCellTypeID(cellSymbol);
+      uint dataWidth = getTypeWidth(destOp->getResult(0).getType());
+      uint resetValueWidth = getTypeWidth(destOp->getOperand(2).getType());
+      for (uint j = 0, k = 0; j < dataWidth; j++) {
+        // DFFrs(q, d, clk, rst, set).
+        std::vector<LinkEnd> linkEndsForOne;
+        linkEndsForOne.push_back(LinkEnd(model::OBJ_NULL_ID));
+        linkEndsForOne.push_back(linkEnds.front());
+        CellID negMidID = makeCell(CellSymbol::NOT, linkEnds[k + 2]);
+        netBuilder->addCell(negMidID);
+        CellID andMidRID = makeCell(CellSymbol::AND,
+                                    LinkEnd(negMidID),
+                                    linkEnds[1]);
+        linkEndsForOne.push_back(LinkEnd(andMidRID));
+        netBuilder->addCell(andMidRID);
+        CellID andMidSID = makeCell(CellSymbol::AND,
+                                    linkEnds[k + 2],
+                                    linkEnds[1]);
+        linkEndsForOne.push_back(LinkEnd(andMidSID));
+        netBuilder->addCell(andMidSID);
+        CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
+        netBuilder->addCell(cellDestID);
+        CellKey outKey(destOp, 0, j);
+        cellKeyToCellIDOuts.emplace(std::make_pair(outKey, cellDestID));
+        CellKey inKey(destOp, 0, j);
+        cellKeyToCellIDIns.emplace(std::make_pair(inKey, cellDestID));
+        // If a reset value doesn't have got a width of one - it width must be
+        // equal to the width of the data.
+        if (resetValueWidth != 1) {
+          k++;
+        }
+      }
+    } else if (isStrictConnect(destOpName)) {
+      auto strictConnectOp = mlir::dyn_cast<StrictConnectOp>(destOp);
+      Value fromValue = strictConnectOp.getSrc();
+      Value toValue = strictConnectOp.getDest();
+      Operation *fromOp = fromValue.getDefiningOp();
+      Operation *toOp = toValue.getDefiningOp();
+      Type type = fromValue.getType();
+      uint typeWidth = getTypeWidth(type);
+      uint outPortNum = findOpResultNumber(fromValue, fromOp, fModuleOp);
+      uint inPortNum = findOpOperandNumber(toValue, toOp, fModuleOp);
+      for (uint i = 0; i < typeWidth; i++) {
+        CellKey srcKey(fromOp, outPortNum, i);
+        CellID srcCellID = cellKeyToCellIDOuts[srcKey];
+        CellKey destKey(toOp, inPortNum, i);
+        CellID destCellID = cellKeyToCellIDIns[destKey];
+        uint model2InPortNum = getModel2InPortNum(toOp, inPortNum, i);
+        uint model2OutPortNum = getModel2OutPortNum(fromOp, outPortNum, i);
+        netBuilder->connect(destCellID, model2InPortNum,
+            LinkEnd(srcCellID, model2OutPortNum));
+      }
+    } else {
+      uassert(false, "Unknown operation: " + destOpName + "! Abort.");
     }
   }
 }
@@ -764,54 +983,23 @@ LogicalResult generateModel(ModuleOp moduleOp,
       *(moduleOp.getRegion().begin()->getOps<CircuitOp>().begin());
   for (auto &&fModuleOp : circuitOp.getBodyBlock()->getOps<FModuleOp>()) {
     NetBuilder netBuilder;
-    std::unordered_map<CellKey, CellID> cellKeyToCellIDs;
-    std::unordered_set<Operation*> processedOps;
-    generateInputs(fModuleOp, &netBuilder, cellKeyToCellIDs);
+    std::unordered_map<CellKey, CellID> cellKeyToCellIDOuts;
+    std::unordered_map<CellKey, CellID> cellKeyToCellIDIns;
+    generateInputs(fModuleOp, &netBuilder, cellKeyToCellIDOuts);
+    generateOutputs(fModuleOp, &netBuilder, cellKeyToCellIDIns,
+                    cellKeyToCellIDOuts);
+    generateWires(fModuleOp, &netBuilder, cellKeyToCellIDIns,
+                  cellKeyToCellIDOuts);
     fModuleOp.walk([&](Operation *destOp) {
       std::string destOpName = destOp->getName().getIdentifier().str();
-      if (!isOmitted(destOpName)) {
-        if (processedOps.count(destOp) == 0) {
-          std::stack<Operation*> batchOfOps;
-          std::stack<Operation*> lastLevelOps;
-          batchOfOps.push(destOp);
-          lastLevelOps.push(destOp);
-          while (!lastLevelOps.empty()) {
-            Operation *topOp = lastLevelOps.top();
-            lastLevelOps.pop();
-            std::string topOpName = topOp->getName().getIdentifier().str();
-            uint topOpinputCount = getInputCount(topOp, topOpName);
-            for (uint i = 0; i < topOpinputCount; i++) {
-              Value operand = getDestValue(topOp, topOpName, i,
-                                           topOpinputCount);
-              Operation *inputFromTopOp = getSourceOperation(topOp, topOpName,
-                                                             operand, i,
-                                                             topOpinputCount);
-              if (processedOps.count(inputFromTopOp) == 0 &&
-                  inputFromTopOp != nullptr) {
-                batchOfOps.push(inputFromTopOp);
-                lastLevelOps.push(inputFromTopOp);
-              }
-            }
-          }
-          while (!batchOfOps.empty()) {
-            Operation *topOp = batchOfOps.top();
-            auto &&topOpName = topOp->getName().getIdentifier().str();
-            batchOfOps.pop();
-            if (processedOps.count(topOp) == 0) {
-              processOperation(topOp, topOpName, fModuleOp, &netBuilder,
-                               cellKeyToCellIDs);
-              processedOps.insert(topOp);
-            }
-          }
-        }
-      }
+      processOperation(destOp, destOpName, fModuleOp, &netBuilder,
+                       cellKeyToCellIDIns, cellKeyToCellIDOuts);
     });
-    generateOutputs(fModuleOp, &netBuilder, cellKeyToCellIDs);
     NetID netID = netBuilder.make();
     const std::string &cellName = fModuleOp->getName().getIdentifier().str();
     CellTypeID cellTypeID = makeCellType(cellName,
                                          netID,
-                                         eda::gate::model::OBJ_NULL_ID,
+                                         model::OBJ_NULL_ID,
                                          CellSymbol::SOFT,
                                          CellProperties(false, false, false,
                                                         false, false, false,

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -120,14 +120,16 @@ inline kitty::dynamic_truth_table evaluateDummy() {
   return kitty::create<kitty::dynamic_truth_table>(0);
 }
 
-inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
+inline std::vector<kitty::dynamic_truth_table> evaluate(const Subnet &subnet) {
   assert(subnet.getInNum() > 0);
-  assert(subnet.getOutNum() == 1);
+  assert(subnet.getOutNum() > 0);
 
   const auto &entries = subnet.getEntries();
 
   std::vector<kitty::dynamic_truth_table> tables;
+  std::vector<kitty::dynamic_truth_table> result;
   tables.reserve(entries.size());
+  result.reserve(subnet.getOutNum());
 
   for (size_t i = 0; i < entries.size(); ++i) {
     const auto &cell = entries[i].cell;
@@ -147,6 +149,9 @@ inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
     else                    { assert(false && "Unsupported operation");      }
 
     tables.push_back(table);
+    if (cell.isOut()) {
+      result.push_back(table);
+    }
     i += cell.more;
 
     if (i < entries.size()) {
@@ -155,8 +160,19 @@ inline kitty::dynamic_truth_table evaluate(const Subnet &subnet) {
       }
     }
   }
-
-  return tables.back();
+  return result;
 }
+
+inline kitty::dynamic_truth_table evaluateSingleOut(const Subnet &subnet) {
+  assert(subnet.getInNum() > 0);
+  assert(subnet.getOutNum() == 1);
+
+  const auto table = evaluate(subnet);
+
+  return table[0];
+}
+
+/// Returns a truth table in which care sets are marked with 1.
+kitty::dynamic_truth_table computeCare(const Subnet &subnet);
 
 } // namespace eda::gate::model

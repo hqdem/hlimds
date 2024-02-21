@@ -37,13 +37,6 @@ bool areMiterable(const GNet &net1, const GNet &net2, const Hints &hints) {
       return false;
     }
   }
-  for (auto target : net1.targetLinks()) {
-    if (targets->find(target) ==
-        targets->end()) {
-      CHECK(false) << "Can't find target, id=" << target.source << std::endl;
-      return false;
-    }
-  }
 
   return true;
 }
@@ -90,19 +83,24 @@ GNet *miter(const GNet &net1, const GNet &net2, const GateIdMap &gmap) {
   }
 
   for (auto bind : *newHints.targetBinding.get()) {
-    GateId newOutId = miter->addXor(bind.first.source, bind.second.source);
+    GateId left = Gate::get(bind.first.source)->inputs()[0].node();
+    GateId right = Gate::get(bind.second.source)->inputs()[0].node();
+    miter->eraseGate(bind.first.source);
+    miter->eraseGate(bind.second.source);
+    GateId newOutId = miter->addXor(left, right);
     xorSignalList.push_back(Signal::always(newOutId));
   }
 
-  GateId finalOutId = miter->addOr(xorSignalList);
-  miter->addOut(finalOutId);
-  miter->setOr(finalOutId, xorSignalList);
-
-  for (auto bind : *newHints.targetBinding.get()) {
-    miter->setNop(bind.first.source, Gate::get(bind.first.source)->inputs());
-    miter->setNop(bind.second.source, Gate::get(bind.second.source)->inputs());
+  GateId finalOrId = miter->addOr(xorSignalList);
+  GateId finalOutId = miter->addOut(finalOrId);
+  const LinkSet outs = miter->targetLinks();
+  for (auto out: outs) {
+    GateId gid = out.source;
+    if (gid == finalOutId) {
+      continue;
+    }
+    miter->mergeGates(gid, Gate::get(gid)->inputs()[0].node());
   }
-
   miter->sortTopologically();
   return miter;
 }

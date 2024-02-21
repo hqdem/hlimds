@@ -22,13 +22,13 @@ class BaseMapper {
 public:
   void mapping(SubnetID subnetID,
            CellDB *cellDB,
-           std::map<EntryIndex, BestReplacement> *bestReplacementMap);
+           std::unordered_map<EntryIndex, BestReplacement> *bestReplacementMap);
 
   virtual ~BaseMapper() = default;
 protected:
   CellDB *cellDB;
   SubnetID subnetID;
-  std::map<EntryIndex, BestReplacement> *bestReplacementMap;
+  std::unordered_map<EntryIndex, BestReplacement> *bestReplacementMap;
 
   virtual void baseMap() = 0;
  };

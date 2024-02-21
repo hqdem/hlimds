@@ -79,7 +79,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     subnetToAttr.emplace_back(subnetID, subnetattr);
 
     ttSubnet.emplace_back(model::evaluate(
-        cellType.getSubnet()), subnetID);
+        cellType.getSubnet()).at(0), subnetID);
   }
 
   for (const CellTypeID &cellTypeID : cellTypeFFIDs) {
@@ -161,6 +161,7 @@ const Subnetattr &CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
       return pair.second;
     }
   }
+  throw std::runtime_error("Subnet attr not found");
 }
 /*
     void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs) {

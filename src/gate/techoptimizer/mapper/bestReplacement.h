@@ -17,24 +17,23 @@ namespace eda::gate::tech_optimizer {
   using SubnetID = eda::gate::model::SubnetID;
 
   struct BestReplacement {
+    // Flag default cells
     bool isIN = false;
     bool isOUT = false;
     bool isOne = false;
     bool isZero = false;
 
-    size_t cellIDInMappedSubnet = ULLONG_MAX;
-
-    // Sunbnet with custom cell from CellDB
+    // Best liberty cell
     SubnetID subnetID = 0;
     SubnetID getLibertySubnetID() const {
       assert(subnetID != 0);
       return subnetID;
     }
 
-    // matching technology cells inputs CellID with circuits CellID
-    //std::unordered_map<EntryIndex, EntryIndex> matchMap;
-
-    // Entry indices in the mapped circuit
+    // Entry idx for connecting the best cut in the initial subnet
     std::unordered_set<uint64_t> entryIDxs;
+
+    // Entry idx in mapped Subnet
+    size_t cellIDInMappedSubnet = ULLONG_MAX;
   };
 } // namespace eda::gate::tech_optimizer

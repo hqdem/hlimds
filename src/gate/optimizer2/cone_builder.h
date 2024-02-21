@@ -25,8 +25,7 @@ public:
   using SubnetBuilder = model::SubnetBuilder;
   using Cut = optimizer2::CutExtractor::Cut;
 
-  using EntryMap = std::unordered_map<uint64_t, uint64_t>;
-  using EntryCheckFunc = std::function<bool(uint64_t)>;
+  using EntryMap = std::unordered_map<size_t, size_t>;
 
   /// Cone struct with SubnetID and mapping from cone subnet to original.
   struct Cone {
@@ -50,13 +49,13 @@ public:
   ConeBuilder(const Subnet *subnet);
 
   Cone getCone(const Cut &cut) const;
-  Cone getMaxCone(const uint64_t entryIdx) const;
+  Cone getMaxCone(const size_t entryIdx) const;
 
 private:
   /**
    * @brief Adds inner cells and primary output cells to cone and returns cone.
    */
-  Cone getCone(const uint64_t rootEntryIdx,
+  Cone getCone(const size_t rootEntryIdx,
                SubnetBuilder &builder,
                EntryMap &origEntryToCone,
                EntryMap &coneEntryToOrig) const;
@@ -72,7 +71,7 @@ private:
   /**
    * @brief Adds primary inputs to maximum cone.
    */
-  void addInsForMaxCone(const uint64_t rootEntryIdx,
+  void addInsForMaxCone(const size_t rootEntryIdx,
                         SubnetBuilder &builder,
                         EntryMap &origEntryToCone,
                         EntryMap &coneEntryToOrig) const;
@@ -80,8 +79,8 @@ private:
   /**
    * @brief Adds primary input to cone.
    */
-  void addInput(const uint64_t origEntryIdx,
-                const uint64_t rootEntryIdx,
+  void addInput(const size_t origEntryIdx,
+                const size_t rootEntryIdx,
                 SubnetBuilder &builder,
                 EntryMap &origEntryToCone,
                 EntryMap &coneEntryToOrig) const;

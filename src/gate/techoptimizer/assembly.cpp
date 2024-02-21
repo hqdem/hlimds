@@ -5,14 +5,14 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
 #include "gate/techoptimizer/assembly.h"
 
 namespace eda::gate::tech_optimizer {
 
-SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *replacementMap,
+SubnetID AssemblySubnet::assemblySubnet(std::unordered_map<uint64_t, BestReplacement> *replacementMap,
                                SubnetID subnetID) {
   auto startCreateMappedSubnet = std::chrono::high_resolution_clock::now();
   model::Subnet &subnet = model::Subnet::get(subnetID);
@@ -48,6 +48,8 @@ SubnetID AssemblySubnet::assemblySubnet(std::map<uint64_t, BestReplacement> *rep
   auto endCreateMappedSubnet = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> CreateMappedSubnetTime = endCreateMappedSubnet - startCreateMappedSubnet;
   std::cout << "Функция CreateMappedSubnetTime выполнялась " << CreateMappedSubnetTime.count() << " секунд.\n";
+
+  bestReplacementMap->clear();
   return mappedSubnetID;
 }
 
@@ -133,4 +135,4 @@ void AssemblySubnet::processLinks(EntryIndex currentEntryIDX,
     //}
   }
 }
-}
+} // namespace eda::gate::tech_optimizer

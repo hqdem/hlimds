@@ -28,6 +28,9 @@ using LinkMap = NetDecomposer::LinkMap;
 using CellMap = NetDecomposer::CellMap;
 using CellMapping = NetDecomposer::CellMapping;
 
+using InverseCellInfo = NetDecomposer::InverseCellInfo;
+using InverseCellMapping = NetDecomposer::InverseCellMapping;
+
 /// Aggregates cell information.
 struct CellInfo final {
   const CellID cellID;
@@ -391,23 +394,134 @@ std::vector<SubnetID> NetDecomposer::decompose(
 // Net Compositor
 //===----------------------------------------------------------------------===//
 
-static void addSubnet(
-    NetBuilder &netBuilder, SubnetID subnetID, const CellMapping &mapping) {
-  const auto &subnet = Subnet::get(subnetID);
+inline LinkEnd makeLink(NetBuilder &netBuilder,
+                     const Subnet::Link &link,
+                     const InverseCellMapping &inverse) {
+  const auto &info = inverse[link.idx];
+
+  const LinkEnd source = (info.type == InverseCellInfo::INNER)
+      ? LinkEnd{info.cellID, static_cast<uint16_t>(link.out)}
+      : info.link.source;
+
+  if (!link.inv) {
+    return source;
+  }
+
+  const auto cellID = makeCell(NOT, source);
+  netBuilder.addCell(cellID);
+
+  return LinkEnd{cellID, 0};
+}
+
+inline Cell::LinkList makeLinkList(NetBuilder &netBuilder,
+                                   const Subnet::LinkList &links,
+                                   const InverseCellMapping &inverse) {
+  Cell::LinkList result(links.size());
+  for (uint16_t port = 0; port < links.size(); ++port) {
+    result[port] = makeLink(netBuilder, links[port], inverse);
+  }
+
+  return result;
+}
+
+static CellID makeCell(NetBuilder &netBuilder,
+                       CellID oldCellID,
+                       std::unordered_map<CellID, CellID> &cells) {
+  const auto i = cells.find(oldCellID);
+  if (i != cells.end()) {
+    return i->second;
+  }
+
+  const auto &oldCell = Cell::get(oldCellID);
+  const Cell::LinkList invalidLinks(oldCell.getFanin());
+  const auto newCellID = makeCell(oldCell.getTypeID(), invalidLinks);
+
+  netBuilder.addCell(newCellID);
+  cells.insert({oldCellID, newCellID});
+
+  return newCellID;
+}
+
+static CellID makeCell(NetBuilder &netBuilder,
+                       const Subnet &subnet,
+                       size_t idx,
+                       const InverseCellMapping &inverse) {
+  const auto &entries = subnet.getEntries();
+  const auto &cell = entries[idx].cell;
+
+  const auto links = makeLinkList(netBuilder, subnet.getLinks(idx), inverse);
+  const auto newCellID = makeCell(cell.getTypeID(), links);
+  netBuilder.addCell(newCellID);
+
+  return newCellID;
+}
+
+static void addCellsForInputs(NetBuilder &netBuilder,
+                              const CellMapping &mapping,
+                              InverseCellMapping &inverse,
+                              std::unordered_map<CellID, CellID> &cells) {
+  for (const auto &[oldLink, idx] : mapping.inputs) {
+    const auto oldSourceID = oldLink.source.getCellID();
+    const auto newSourceID = makeCell(netBuilder, oldSourceID, cells);
+
+    Link newLink{newSourceID, oldLink.source.getPort(), 0, 0};
+    inverse[idx] = InverseCellInfo{InverseCellInfo::INPUT, newLink, OBJ_NULL_ID};
+  }
+}
+
+static void addCellsForInners(NetBuilder &netBuilder,
+                              const Subnet &subnet,
+                              const CellMapping &mapping,
+                              InverseCellMapping &inverse) {
+  const auto nIn = subnet.getInNum();
+  const auto nOut = subnet.getOutNum();
   const auto &entries = subnet.getEntries();
 
-  // Create cells for input/output links (if have not created yet).
-  // TODO: OldNetCellID -> NewNetCellID.
-  // TODO: SubnetIdx -> NewNetCellID.
-  // TODO: makeLink: SubnetLink -> NetLink.
-  // TODO: makeLinks: SubnetLinks -> NetLinks.
-  // TODO: makeCell: SubnetCell -> Cell.
-
-  for (size_t i = 0; i < entries.size(); ++i) {
+  for (size_t i = nIn; i < (entries.size() - nOut); ++i) {
     const auto &cell = entries[i].cell;
-    // TODO: makeCell + update the maps.
+    const auto newCellID = makeCell(netBuilder, subnet, i, inverse);
+
+    inverse[i] = InverseCellInfo{InverseCellInfo::INNER, Link{}, newCellID};
     i += cell.more;
   }
+}
+
+static void addCellsForOutputs(NetBuilder &netBuilder,
+                               const CellMapping &mapping,
+                               InverseCellMapping &inverse,
+                               std::unordered_map<CellID, CellID> &cells) {
+  for (const auto &[oldLink, idx] : mapping.outputs) {
+    const auto oldSourceID = oldLink.source.getCellID();
+    const auto newSourceID = makeCell(netBuilder, oldSourceID, cells);
+
+    const auto oldTargetID = oldLink.target.getCellID();
+    const auto newTargetID = makeCell(netBuilder, oldTargetID, cells); 
+
+    const auto sourcePort = oldLink.source.getPort();
+    const auto targetPort = oldLink.target.getPort();
+
+    netBuilder.connect(
+        newTargetID, targetPort, LinkEnd{newSourceID, sourcePort});
+
+    Link newLink{newSourceID, sourcePort, newTargetID, targetPort};
+    inverse[idx] = InverseCellInfo{InverseCellInfo::OUTPUT, newLink, OBJ_NULL_ID};
+  }
+}
+
+static void addSubnet(NetBuilder &netBuilder,
+                      SubnetID subnetID,
+                      const CellMapping &mapping) {
+  const auto &subnet = Subnet::get(subnetID);
+
+  InverseCellMapping inverse;
+  inverse.reserve(subnet.size());
+
+  std::unordered_map<CellID, CellID> cells;
+  cells.reserve(subnet.getInNum() + subnet.getOutNum());
+
+  addCellsForInputs(netBuilder, mapping, inverse, cells);
+  addCellsForInners(netBuilder, subnet, mapping, inverse);
+  addCellsForOutputs(netBuilder, mapping, inverse, cells);
 }
 
 NetID NetDecomposer::compose(const std::vector<SubnetID> &subnets,

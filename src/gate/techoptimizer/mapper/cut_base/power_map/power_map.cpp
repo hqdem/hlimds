@@ -174,7 +174,7 @@ namespace eda::gate::tech_optimizer{
 
    std::vector<SubnetID> PowerMap::getTechIdsList(const Cut cut, ConeBuilder coneBuilder){
     SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-    auto truthTable = eda::gate::model::evaluate(Subnet::get(coneSubnetID));
+    const auto truthTable = eda::gate::model::evaluate(Subnet::get(coneSubnetID))[0];
     const auto cellList = cellDB->getSubnetIDsByTT(truthTable);
     return cellList;
   }

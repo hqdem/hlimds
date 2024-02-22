@@ -28,35 +28,31 @@ namespace eda::gate::mutator {
     GateIdList replacedGates;
     GateSymbolList replacedFunc;
     GNet mVGNet;
-    int numChangedGates = 0;
-    int numGates;
-    std::list<GateIdList> childGateList;
+    unsigned int numChangedGates = 0;
+    unsigned int numGates;
+    std::unordered_map<GateId, GateIdList> childGateList;
   public:
 
-    //===--------------------------------------------------------------------===//
+    //===------------------------------------------------------------------===//
     // Constructor
-    //===--------------------------------------------------------------------===//
+    //===------------------------------------------------------------------===//
     /**
      * \brief Initializes visitor for gate-level mutant generation.
      * \param[in] inputGNet input net that will be mutated
      * \param[in] numOfGates The number of gates that will be mutated
-     * \param[in] listGates The list of gates that need to be mutated if requirements are met
-     * \param[in] listSymbol The list of gate's symbol based on which the gate from the 
+     * \param[in] listGates The list of gates that need to 
+     * be mutated if requirements are met
+     * \param[in] listSymbol The list of gate's symbol based on which 
+     * the gate from the 
      * previous list will be mutated
-     * \details The list of functions shows exactly which gates will be mutated, that is if gate's symbol is not in the list, 
+     * \details The list of functions shows exactly which gates 
+     * will be mutated, that is if gate's symbol is not in the list, 
      * this gate will not be mutated.
     */
     MutatorVisitor(const GNet &inputGNet, 
                   int numOfGates,
                   GateIdList &listGates,
-                  GateSymbolList &listSymbol) 
-                  :
-                  replacedGates(listGates),
-                  replacedFunc(listSymbol),
-                  numGates(numOfGates) {
-      mVGNet.addNet(inputGNet);
-    };
-
+                  GateSymbolList &listSymbol);
     /// Function returns mutated net
     GNet getGNet() {
       return mVGNet;
@@ -64,6 +60,10 @@ namespace eda::gate::mutator {
     /// Function returns number of mutated gates
     int getNumChangedGates() {
       return numChangedGates;
+    }
+
+    GateIdList listMutatedGate() {
+      return replacedGates;
     }
     
 private:
@@ -87,6 +87,8 @@ private:
      * was found, otherwise false
     */
     bool connectedWithOut(const GateId &startGate);
+
+    GateIdList filterListGate(GateIdList &listGate);
   };
 } //namespace eda::gate::mutator
 

@@ -8,7 +8,7 @@
 
 #include "gate/model/gnet.h"
 #include "gate/optimizer/optimizer.h"
-#include "gate/transformer/mutator/mutator_visitor.h"
+#include "gate/transformer/mutator/mutator.h"
 #include "util/logging.h"
 
 #include <list>
@@ -21,9 +21,26 @@ namespace eda::gate::mutator {
   using Signal = eda::gate::model::Gate::Signal;
   using SignalList = eda::gate::model::Gate::SignalList;
 
+  MutatorVisitor::MutatorVisitor(const GNet &inputGNet, 
+                  int numOfGates,
+                  GateIdList &listGates,
+                  GateSymbolList &listSymbol) 
+                  :
+                  replacedFunc(listSymbol),
+                  numGates(numOfGates) {
+    mVGNet.addNet(inputGNet);
+    for (auto *gate : mVGNet.gates()) {
+      childGateList.insert(std::pair<GateId, GateIdList>(gate->id(), 
+                           getNext(gate->id(), true)));
+    }
+    replacedGates = filterListGate(listGates);
+  }
+
   VisitorFlags MutatorVisitor::onNodeBegin(const GateId &gateId) {
-    auto findGate = std::find(replacedGates.begin(), replacedGates.end(), gateId);
-    if ((findGate == replacedGates.end()) || (numChangedGates >= numGates)) {
+    auto findGate = std::find(replacedGates.begin(), 
+                              replacedGates.end(), 
+                              gateId);
+    if (findGate == replacedGates.end()) {
       return VisitorFlags::SKIP;
     }
     changeGate(gateId);
@@ -40,31 +57,23 @@ namespace eda::gate::mutator {
     for (size_t i = 0; i < parents.size(); i++) {
       inputs.push_back(Signal::always(parents[i]));
     }
-    for (auto *gate : mVGNet.gates()) {
-      childGateList.push_back(getNext(gate->id(), true));
-    }
     GateSymbol function = Gate::get(gateId)->func();
-    auto findFunc = std::find(replacedFunc.begin(), replacedFunc.end(), function);
-    bool gateHasOut = connectedWithOut(gateId);
-    if ((findFunc != replacedFunc.end()) && gateHasOut) {
-      numChangedGates += 1;
-      switch (function) {
-        case GateSymbol::AND:
-        case GateSymbol::XOR:
-        case GateSymbol::NAND:
-          mVGNet.setGate(gateId, GateSymbol::OR, inputs);
-          return;
-        case GateSymbol::OR:
-        case GateSymbol::NOR:
-          mVGNet.setGate(gateId, GateSymbol::AND, inputs);
-          return;
-        case GateSymbol::XNOR:
-          mVGNet.setGate(gateId, GateSymbol::NOR, inputs);
-          return;
-        default:
-          LOG_WARN << "Unexpected symbol: " << function;
-          return;
-      }
+    switch (function) {
+      case GateSymbol::AND:
+      case GateSymbol::XOR:
+      case GateSymbol::NAND:
+        mVGNet.setGate(gateId, GateSymbol::OR, inputs);
+        return;
+      case GateSymbol::OR:
+      case GateSymbol::NOR:
+        mVGNet.setGate(gateId, GateSymbol::AND, inputs);
+        return;
+      case GateSymbol::XNOR:
+        mVGNet.setGate(gateId, GateSymbol::NOR, inputs);
+        return;
+      default:
+        LOG_WARN << "Unexpected symbol: " << function;
+        return;
     }
   }
 
@@ -72,15 +81,12 @@ namespace eda::gate::mutator {
   bool MutatorVisitor::connectedWithOut(const GateId &startGate) {
     std::vector<GateId> visited;
     std::list<GateId> queue;
-    GateId firstGateId = mVGNet.gates()[0]->id();
     visited.push_back(startGate);
     queue.push_back(startGate);
     while (!queue.empty()) {
       GateId currGate = queue.front();
       queue.pop_front();
-      auto i = childGateList.begin();
-      advance(i, (currGate-firstGateId));
-      std::vector<GateId> childGates = *i;
+      std::vector<GateId> childGates = childGateList[currGate];
       for (GateId gateId : childGates) {
         auto isGateVisited = std::find(visited.begin(), visited.end(), gateId);
         if (isGateVisited == visited.end()) {
@@ -93,6 +99,24 @@ namespace eda::gate::mutator {
       }
     }
     return false;
+  }
+
+  GateIdList MutatorVisitor::filterListGate(GateIdList &listGate) {
+    GateIdList answerList;
+    for (GateId gateId : listGate) {
+      GateSymbol function = Gate::get(gateId)->func();
+      auto findFunc = std::find(replacedFunc.begin(), 
+                                replacedFunc.end(), 
+                                function);
+      bool gateHasOut = connectedWithOut(gateId);
+      if ((findFunc != replacedFunc.end()) && 
+           gateHasOut && 
+           answerList.size() < numGates) {
+        answerList.push_back(gateId);
+      }
+    }
+    numChangedGates = answerList.size();
+    return answerList;
   }
 } //namespace eda::gate::mutator
 

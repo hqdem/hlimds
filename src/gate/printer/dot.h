@@ -28,7 +28,6 @@ public:
   void print(std::ofstream &stream) const;
 
 private:
-  GateIdList createList(GateIdList &gateList);
   const GNet *gNet;
   void print(std::ofstream &stream, const Gate *gate) const;
   void printGraph(std::ofstream &stream) const;

@@ -32,24 +32,9 @@ public:
     LinkMap outputs;
   };
 
-  struct InverseCellInfo final {
-    enum { INPUT, OUTPUT, INNER } type;
-    Link link;
-    CellID cellID;
-  };
-
-  /// Maps subnet cell indices to net cells links.
-  using InverseCellMapping = std::vector<InverseCellInfo>;
-
   /// Decomposes the net into subnets and fills the cell mapping.
-  std::vector<SubnetID> decompose(
-      NetID netID, std::vector<CellMapping> &mapping) const;
-
-  /// Decomposes the net into subnets.
-  std::vector<SubnetID> decompose(NetID netID) const {
-    std::vector<CellMapping> mapping;
-    return decompose(netID, mapping);
-  }
+  std::vector<SubnetID> decompose(NetID netID,
+                                  std::vector<CellMapping> &mapping) const;
 
   /// Composes the subnets into a net.
   NetID compose(const std::vector<SubnetID> &subnets,

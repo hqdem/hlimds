@@ -21,10 +21,15 @@ namespace eda::gate::model {
 static std::vector<SubnetID> decomposeNet(NetID netID) {
   std::cout << Net::get(netID) << std::endl;
 
-  const auto result = NetDecomposer::get().decompose(netID);
+  std::vector<NetDecomposer::CellMapping> mapping;
+  const auto result = NetDecomposer::get().decompose(netID, mapping);
+
   for (const auto subnetID : result) {
     std::cout << Subnet::get(subnetID) << std::endl;
   }
+
+  const auto newNetID = NetDecomposer::get().compose(result, mapping);
+  std::cout << Net::get(newNetID) << std::endl;
 
   return result;
 }

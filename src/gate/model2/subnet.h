@@ -151,6 +151,9 @@ public:
   Subnet &operator =(const Subnet &r) = delete;
   Subnet(const Subnet &r) = delete;
 
+  /// Returns the overall number of entries including inputs and outputs.
+  uint32_t size() const { return nEntry; }
+
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
@@ -168,12 +171,6 @@ public:
     const auto &entries = getEntries();
     return entries[entries.size() - nOut + i].cell.link[0];
   }
-
-  /// Returns the minimum and maximum path lengths.
-  std::pair<uint32_t, uint32_t> getPathLength() const;
-
-  /// Returns the overall number of entries including inputs and outputs.
-  uint32_t size() const { return nEntry; }
 
   /// Returns the array of entries.
   Array<Entry> getEntries() const { return Array<Entry>(entries); }
@@ -214,6 +211,9 @@ public:
 
     return links;
   }
+
+  /// Returns the minimum and maximum path lengths.
+  std::pair<uint32_t, uint32_t> getPathLength() const;
 
 private:
   /// Constructs a subnet.

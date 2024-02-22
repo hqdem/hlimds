@@ -45,12 +45,17 @@ Dot::Dot(const Dot::GNet *gNet) : gNet(gNet) {}
 void Dot::fillColorGate(const std::string &filename, GateIdList &gateList) {
   std::ofstream out(filename);
   if (out.is_open()) {
-    gateList = createList(gateList);
     out << "digraph substNet {" << std::endl;
+    GateId firstGate = gNet->gates()[0]->id();
+    GateId lastGate = firstGate + gNet->nGates() - 1;
     for (const auto &gateId : gateList) {
-      out << "\t";
-      print(out, Gate::get(gateId));
-      out << " [fillcolor=red, fontcolor=white, style=filled]" << std::endl;
+      if (gateId >= firstGate && gateId <= lastGate) {
+        out << "\t";
+        print(out, Gate::get(gateId));
+        out << " [fillcolor=red, fontcolor=white, style=filled]" << std::endl;
+      } else {
+        LOG_WARN << "Wrong gate's id : " << gateId << std::endl;
+      }
     }
     out << std::endl;
     printGraph(out);
@@ -73,20 +78,6 @@ void Dot::print(const std::string &filename) const {
 void Dot::print(std::ofstream &stream) const {
   stream << "digraph substNet {" << std::endl;
   printGraph(stream);
-}
-
-GateIdList Dot::createList(GateIdList &gateList) {
-  if (!gNet->isEmpty()) {
-    GateId firstGate = gNet->gates()[0]->id();
-    GateIdList gateIdList = {};
-    for (auto gateId : gateList) {
-      gateIdList.push_back(firstGate + gateId);
-    }
-    return gateIdList;
-  }
-  else {
-    return {};
-  }
 }
 
 void Dot::printGraph(std::ofstream &stream) const {

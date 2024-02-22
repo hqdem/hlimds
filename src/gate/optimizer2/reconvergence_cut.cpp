@@ -46,7 +46,8 @@ std::vector<size_t> getReconvergenceCut(const model::Subnet &subnet,
 
   // Construct a cut.
   while (true) {
-    unsigned bestCost = -1;
+    const unsigned worstCost = -1;
+    unsigned bestCost = worstCost;
     size_t bestLeave = 0;
     // Choose a leave with the best cost.
     for (size_t i = 0; i < leaves.size(); ++i) {
@@ -60,7 +61,7 @@ std::vector<size_t> getReconvergenceCut(const model::Subnet &subnet,
       }
     }
 
-    if ((bestCost == (size_t)-1) || (bestCost + leaves.size() - 1 > cutSize)) {
+    if ((bestCost == worstCost) || (bestCost + leaves.size() - 1 > cutSize)) {
       return leaves;
     }
     // Replace the best leave with it inputs.

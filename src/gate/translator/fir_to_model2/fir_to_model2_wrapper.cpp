@@ -21,29 +21,63 @@ namespace fs = std::filesystem;
 
 namespace eda::gate::model {
 
-int translateToModel2(const std::string &inputFileName,
-    const std::string &outputFileName,
-    const InputFormat inputFormat) {
+int translateToModel2(const FirrtlConfig &firrtlConfig,
+                      const Model2Config &model2Config) {
+  fs::path inputFilePath = model2Config.files.back();
+  const std::string extension = inputFilePath.extension();
+  if (extension != ".sv" && extension != ".v" && extension != ".fir") {
+    std::cerr << "The input files are not supported! Abort." << std::endl;
+    return 1;
+  }
+  if (!(model2Config.files.size() == 1 && extension == ".fir")) {
+    bool areAllVerilog = true;
+    for (const auto &file : firrtlConfig.files) {
+      const fs::path filePath = file;
+      std::string extension = filePath.extension();
+      if (extension != ".sv" && extension != ".v") {
+        areAllVerilog = false;
+      }
+    }
+    if (areAllVerilog) {
+      if (!firrtlConfig.outputNamefile.empty()) {
+        if (!translateToFirrtl(firrtlConfig)) {
+          inputFilePath = firrtlConfig.outputNamefile;
+        } else {
+          return 1;
+        }
+      } else {
+        std::cerr << "The output file name is missing! Abort." << std::endl;
+        return 1;
+      }
+    } else {
+      std::cerr << "The input files are not supported! Abort." << std::endl;
+      return 1;
+    }
+  }
   // Parse the input 'FIRRTL' file.
-  Translator translator{inputFormat == InputFormat::InputFIRFile ?
-      MLIRModule::loadFromFIRFile(inputFileName) :
-      MLIRModule::loadFromMLIRFile(inputFileName)};
+  Translator translator{ MLIRModule::loadFromFIRFile(inputFilePath.c_str()) };
 
   // Convert the 'FIRRTL' representation to the 'model2' representation.
   const auto resultNetlist = translator.translate();
 
-  // Dump the output net to the '.dot' file.
-  const fs::path outputFullName = outputFileName;
-  const fs::path outputFullPath = outputFullName.parent_path();
-  if (!outputFullPath.empty()) {
-    fs::create_directories(outputFullPath);
-  }
-  std::ofstream outputStream(outputFullName);
+  // Print the resulting 'model2' representation.
   for (const auto &cellTypeID : *resultNetlist) {
-    ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
-        CellType::get(cellTypeID).getNet());
+    std::cout << CellType::get(cellTypeID).getNet() << std::endl;
   }
-  outputStream.close();
+  // Dump the output net to the '.v' file.
+  if (!model2Config.outNetFileName.empty()) {
+    const fs::path outputFullName = model2Config.outNetFileName;
+    const fs::path outputFullPath = outputFullName.parent_path();
+    if (!outputFullPath.empty()) {
+      fs::create_directories(outputFullPath);
+    }
+    std::ofstream outputStream(outputFullName);
+    for (const auto &cellTypeID : *resultNetlist) {
+      ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
+          CellType::get(cellTypeID).getNet());
+    }
+    outputStream.close();
+  }
 
   return 0;
 }

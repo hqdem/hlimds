@@ -261,20 +261,31 @@ the translation. The file will be placed in same directory with the application.
 ```
 ./build/src/umain to_firrtl <file(s)> --verbose
 ```
+To translate input description into inner representation (so called model2), you must specify:
 
 When selecting these option, debug information will be generated in standart error output file.
 
-#### Running FIRRTL-to-model2 Translator
+#### Running Translator to Model2
 
 ```
-./build/src/umain to_model2 <file> --out <verilog-file>
+./build/src/umain to_model2 <in-file-1> <in-file-2> ... <in-file-n> \
+    --net <out-file> --top <name> --fir <fir-file> --verbose
 ```
+To translate input description into inner representation (so called model2), you
+must specify:
 
-#### Running Verilog-to-model2 Translator
+1. (Necessary) the input description (<in-file-1> <in-file-2> ... <in-file-n>,
+FIRRTL and Verilog are supported)*;
+2. (Optional) for Verilog output model2 representation -- the path to output 
+file (--net <out-file>);
+3. (Optional) for Verilog input descriptions -- top module name
+(--top <name>);
+4. (Optional) for Verilog input descriptions -- FIRRTL intermediate file
+(--fir <fir-file>);
+5. (Optional) for Verilog input descriptions you can also specify additional
+debug print. (--verbose)
 
-```
-./build/src/umain translator <file> --out <verilog-file> --top <module-name>
-```
+*NOTE: For FIRRTL files n = 1!
 
 ### Tests Running
 

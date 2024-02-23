@@ -274,18 +274,18 @@ When selecting these option, debug information will be generated in standart err
 To translate input description into inner representation (so called model2), you
 must specify:
 
-1. (Necessary) the input description (<in-file-1> <in-file-2> ... <in-file-n>,
+1. (Necessary) the input description (`<in-file-1> <in-file-2> ... <in-file-n>`,
 FIRRTL and Verilog are supported)*;
 2. (Optional) for Verilog output model2 representation -- the path to output 
-file (--net <out-file>);
+file (`--net <out-file>`);
 3. (Optional) for Verilog input descriptions -- top module name
-(--top <name>);
+(`--top <name>`);
 4. (Optional) for Verilog input descriptions -- FIRRTL intermediate file
-(--fir <fir-file>);
+(`--fir <fir-file>`);
 5. (Optional) for Verilog input descriptions you can also specify additional
-debug print. (--verbose)
+debug print. (`--verbose`).
 
-*NOTE: For FIRRTL files n = 1!
+*NOTE: For FIRRTL files n == 1
 
 ### Tests Running
 

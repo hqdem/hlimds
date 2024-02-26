@@ -163,6 +163,14 @@ const Subnetattr &CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
   }
   throw std::runtime_error("Subnet attr not found");
 }
+
+std::vector<SubnetID> CellDB::getPatterns() {
+  std::vector<SubnetID> patterns;
+  for (const auto &pair: subnetToAttr) {
+    patterns.push_back(pair.first);
+  }
+  return patterns;
+}
 /*
     void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs) {
       for (const CellTypeID& cellTypeID : cellTypeIDs) {

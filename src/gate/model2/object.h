@@ -219,7 +219,6 @@ typename T::ID allocate(Args&&... args) {
 
 template<typename T>
 T *access(typename T::ID objectID) {
-  assert(objectID != OBJ_NULL_ID);
   return Storage<T>::get().access(objectID);
 }
 

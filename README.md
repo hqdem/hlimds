@@ -129,6 +129,9 @@ sudo make install
 
 ### CIRCT Installation
 
+To configure the build process using a CIRCT binary distribution avoiding the
+need to build from the source, see `doc/circt_prebuilt.md`.
+
 LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
 Please take this into account while moving through the guide.
 

@@ -290,13 +290,23 @@ public:
     next.reserve(n);
   }
 
-  /// Returns the i-th entry.
+  /// Returns the constant reference to the i-th entry.
   const Subnet::Entry &getEntry(size_t i) const {
     return entries[i];
   }
 
-  /// Returns the i-th cell.
+  /// Returns the non-constant reference to the i-th entry.
+  Subnet::Entry &getEntry(size_t i) {
+    return entries[i];
+  }
+
+  /// Returns the constant reference to the i-th cell.
   const Subnet::Cell &getCell(size_t i) const {
+    return entries[i].cell;
+  }
+
+  /// Returns the non-constant reference to the i-th cell.
+  Subnet::Cell &getCell(size_t i) {
     return entries[i].cell;
   }
 
@@ -402,26 +412,12 @@ public:
   /// with maximum cells arity <= Subnet::Cell::InPlaceLinks.
   void replace(SubnetID rhsID, std::unordered_map<size_t, size_t> &rhsToLhs);
 
-  /// Sorts entries in topological order accoring to prev and next.
-  void sortEntries();
-
-  SubnetID make() {
-    assert(nIn > 0 && nOut > 0 && !entries.empty());
-
-    if (subnetEnd != commonOrderEntryID) {
-      sortEntries();
-    }
-    assert(outsOrderCorrect());
-
-    return allocate<Subnet>(nIn, nOut, std::move(entries));
-  }
-
   EntryIterator begin() const {
     return EntryIterator(this, 0);
   }
 
   EntryIterator end() const {
-    return EntryIterator(this, rBoundEntryID);
+    return EntryIterator(this, upperBoundID);
   }
 
   std::reverse_iterator<EntryIterator> rbegin() const {
@@ -430,6 +426,17 @@ public:
 
   std::reverse_iterator<EntryIterator> rend() const {
     return std::make_reverse_iterator(begin());
+  }
+
+  SubnetID make() {
+    assert(nIn > 0 && nOut > 0 && !entries.empty());
+
+    if (subnetEnd != normalOrderID) {
+      sortEntries();
+    }
+    assert(checkInputsOrder() && checkOutputsOrder());
+
+    return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 
 private:
@@ -461,16 +468,21 @@ private:
   /// The number of links in both cells must be <= Subnet::Cell::InPlaceLinks.
   Link replaceCell(size_t entryID, CellTypeID typeID, const LinkList &links);
 
-  /// Checks if the outputs are located in the end of the entries array.
-  bool outsOrderCorrect() const;
+  /// Checks if the inputs are located at the beginning of the array.
+  bool checkInputsOrder() const;
+  /// Checks if the outputs are located at the end of the array.
+  bool checkOutputsOrder() const;
+
+  /// Sorts entries in topological order accoring to prev and next.
+  void sortEntries();
 
   /// Clears the replacement context.
   void clearContext();
 
 private:
-  static constexpr size_t commonOrderEntryID = -1u;
-  static constexpr size_t lBoundEntryID = -2u;
-  static constexpr size_t rBoundEntryID = -3u;
+  static constexpr size_t normalOrderID = -1u;
+  static constexpr size_t lowerBoundID = -2u;
+  static constexpr size_t upperBoundID = -3u;
 
   uint16_t nIn;
   uint16_t nOut;
@@ -481,7 +493,7 @@ private:
   std::vector<size_t> next;
   std::vector<size_t> emptyEntryIDs;
 
-  size_t subnetEnd{commonOrderEntryID};
+  size_t subnetEnd{normalOrderID};
 };
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet);

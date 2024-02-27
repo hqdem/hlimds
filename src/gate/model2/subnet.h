@@ -12,9 +12,13 @@
 #include "gate/model2/cell.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/object.h"
+#include "util/hash.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <ostream>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::gate::model {
@@ -104,6 +108,14 @@ public:
     CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
     const CellType &getType() const { return CellType::get(getTypeID()); }
     CellSymbol getSymbol() const { return getType().getSymbol(); }
+
+    LinkList getInPlaceLinks() const {
+      LinkList links(std::min(arity, InPlaceLinks));
+      for (size_t i = 0; i < links.size(); ++i) {
+        links[i] = link[i];
+      }
+      return links;
+    }
 
     uint16_t getInNum() const { return arity; }
     uint16_t getOutNum() const { return getType().getOutNum(); }
@@ -276,6 +288,87 @@ private:
   value_type entry;
 };
 
+/// Structural hashing (strashing) key.
+struct StrashKey final {
+  using Cell = Subnet::Cell;
+  using Link = Subnet::Link;
+  using LinkList = Subnet::LinkList;
+
+  static bool isEnabled(CellTypeID cellTypeID, const LinkList &cellLinks) {
+    return (cellTypeID != CELL_TYPE_ID_IN)
+        && (cellTypeID != CELL_TYPE_ID_OUT)
+        && (cellLinks.size() <= Subnet::Cell::InPlaceLinks);
+  }
+
+  static bool isEnabled(const Cell &cell) {
+    return !cell.isIn()
+        && !cell.isOut()
+        && cell.arity <= Subnet::Cell::InPlaceLinks;
+  }
+
+  StrashKey(): StrashKey(0, LinkList{}) {}
+
+  StrashKey(const Cell &cell): StrashKey(cell.getTypeID(), cell.getInPlaceLinks()) {}
+
+  StrashKey(CellTypeID cellTypeID, const LinkList &cellLinks):
+    typeID(cellTypeID.getSID()), arity(cellLinks.size()) {
+    assert(isEnabled(cellTypeID, cellLinks));
+
+    for (size_t i = 0; i < cellLinks.size(); ++i) {
+      links[i] = cellLinks[i];
+    }
+
+    const auto &type = CellType::get(cellTypeID);
+    if (type.isCommutative()) {
+      std::sort(links, links + arity, [](Link lhs, Link rhs) {
+        if (lhs.idx != rhs.idx) { return lhs.idx < rhs.idx; }
+        if (lhs.out != rhs.out) { return lhs.out < rhs.out; }
+        return lhs.inv < rhs.inv;
+      });
+    }
+  }
+
+  bool operator==(const StrashKey &other) const {
+    return typeID == other.typeID && arity == other.arity
+        && !memcmp(links, other.links, sizeof(links));
+  }
+
+  uint32_t typeID;
+  uint16_t arity;
+  Link links[Subnet::Cell::InPlaceLinks];
+};
+
+} // namespace eda::gate::model
+
+template<>
+struct std::hash<eda::gate::model::Subnet::Link> {
+  using Link = eda::gate::model::Subnet::Link;
+
+  size_t operator()(const Link &link) const noexcept {
+    return (link.idx << 4) | (link.out << 1) | link.inv;
+  }
+};
+
+template<>
+struct std::hash<eda::gate::model::StrashKey> {
+  using StrashKey = eda::gate::model::StrashKey;
+
+  size_t operator()(const StrashKey &key) const noexcept {
+    size_t h = 0;
+
+    for (size_t i = 0; i < key.arity; ++i) {
+      eda::util::hash_combine<>(h, key.links[i]);
+    }
+
+    eda::util::hash_combine<>(h, key.arity);
+    eda::util::hash_combine<>(h, key.typeID);
+
+    return h;
+  }
+};
+
+namespace eda::gate::model {
+
 class SubnetBuilder final {
   friend EntryIterator;
 
@@ -288,6 +381,7 @@ public:
     entries.reserve(n);
     prev.reserve(n);
     next.reserve(n);
+    strash.reserve(n);
   }
 
   /// Returns the constant reference to the i-th entry.
@@ -429,7 +523,7 @@ public:
   }
 
   SubnetID make() {
-    assert(nIn > 0 && nOut > 0 && !entries.empty());
+    assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
     if (subnetEnd != normalOrderID) {
       sortEntries();
@@ -442,6 +536,8 @@ public:
 private:
   /// Allocates an entry and returns its index.
   size_t allocEntry();
+  /// Returns an entry of the given type or allocates a new one.
+  size_t allocEntry(CellTypeID typeID, const LinkList &links);
 
   /// Deallocates the given entry.
   void deallocEntry(size_t entryID);
@@ -494,6 +590,8 @@ private:
   std::vector<size_t> emptyEntryIDs;
 
   size_t subnetEnd{normalOrderID};
+
+  std::unordered_map<StrashKey, size_t> strash;
 };
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet);

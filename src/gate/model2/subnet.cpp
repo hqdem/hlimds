@@ -99,30 +99,10 @@ Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
   assert((!in || entries.size() == nIn)
       && "Input cells after non-input cells are not allowed");
 
-  const auto idx = allocEntry();
-
-  for (const auto link : links) {
-    auto &cell = getCell(link.idx);
-    assert(!cell.isOut());
-
-    // Update reference counts.
-    assert(cell.refcount < Subnet::Cell::MaxRefCount);
-    cell.refcount++;
-  }
-
-  entries[idx] = Subnet::Entry(typeID, links);
-  if (subnetEnd != normalOrderID) {
-    setOrder(subnetEnd, idx);
-  }
+  const auto idx = allocEntry(typeID, links);
 
   if (in)  nIn++;
   if (out) nOut++;
-
-  const auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
-  const auto InEntryLinks = Subnet::Cell::InEntryLinks;
-  for (size_t i = InPlaceLinks; i < links.size(); i += InEntryLinks) {
-    entries.emplace_back(links, i);
-  }
 
   return Link(idx);
 }
@@ -285,7 +265,7 @@ void SubnetBuilder::sortEntries() {
 
 size_t SubnetBuilder::allocEntry() {
   if (!emptyEntryIDs.empty()) {
-    size_t allocatedID = emptyEntryIDs.back();
+    const auto allocatedID = emptyEntryIDs.back();
     emptyEntryIDs.pop_back();
     return allocatedID;
   }
@@ -293,7 +273,55 @@ size_t SubnetBuilder::allocEntry() {
   return entries.size() - 1;
 }
 
+size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
+  size_t idx = -1u;
+
+  if (StrashKey::isEnabled(typeID, links)) {
+    const StrashKey key(typeID, links);
+    const auto i = strash.find(key);
+
+    if (i != strash.end()) {
+      return i->second;
+    }
+
+    idx = allocEntry();
+    strash.insert({key, idx});
+  } else {
+    idx = allocEntry();
+  }
+
+  for (const auto link : links) {
+    auto &cell = getCell(link.idx);
+    assert(!cell.isOut());
+
+    // Update reference counts.
+    assert(cell.refcount < Subnet::Cell::MaxRefCount);
+    cell.refcount++;
+  }
+
+  entries[idx] = Subnet::Entry(typeID, links);
+  if (subnetEnd != normalOrderID) {
+    setOrder(subnetEnd, idx);
+  }
+
+  const auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
+  const auto InEntryLinks = Subnet::Cell::InEntryLinks;
+  for (size_t i = InPlaceLinks; i < links.size(); i += InEntryLinks) {
+    entries.emplace_back(links, i);
+  }
+
+  return idx;
+}
+
 void SubnetBuilder::deallocEntry(size_t entryID) {
+  const auto &cell = getCell(entryID);
+  assert(cell.refcount == 0);
+
+  if (StrashKey::isEnabled(cell)) {
+    const StrashKey key(cell);
+    strash.erase(key);
+  }
+
   setOrder(getPrev(entryID), getNext(entryID));
   emptyEntryIDs.push_back(entryID);
 }

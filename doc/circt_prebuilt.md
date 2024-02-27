@@ -27,3 +27,6 @@
   * Pass the option `-DCMAKE_PREFIX_PATH=<CIRCT_LIBDIR>/firtool-X.YY.Z` in
     addition to the configuration options of your choice
     * e.g. `cmake -S $UTOPIA_HOME -B $UTOPIA_HOME/build -G Ninja -DCMAKE_PREFIX_PATH=<CIRCT_LIBDIR/firtool-1.61.0`
+* Configure the runtime to use the downloaded shared libraries
+  * Add the path to the downloaded shared libaries to `LD_LIBRARY_PATH`
+    * e.g. `export LD_LIBRARY_PATH=<CIRCT_LIBDIR>/firtool-1.61.0/lib:$LD_LIRARY_PATH`

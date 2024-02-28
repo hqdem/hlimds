@@ -10,11 +10,17 @@
 
 #include <string>
 
+#include "gate/translator/firrtl.h"
+
+#include "options.h"
+
 namespace eda::gate::model {
 
-enum InputFormat { InputMLIRFile, InputFIRFile };
+struct Model2Config {
+    std::string outNetFileName;
+    std::vector<std::string> files;
+};
 
-int translateToModel2(const std::string &inputFileName,
-    const std::string &outputFileName,
-    const InputFormat inputFormat = InputFormat::InputFIRFile);
+int translateToModel2(const FirrtlConfig &firrtlConfig,
+                      const Model2Config &model2Config);
 } // namespace eda::gate::model

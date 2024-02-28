@@ -12,9 +12,13 @@
 #include "gate/model2/cell.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/object.h"
+#include "util/hash.h"
 
+#include <algorithm>
 #include <cstdint>
-#include <ostream>
+#include <cstring>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace eda::gate::model {
@@ -28,6 +32,17 @@ class Subnet final : public Object<Subnet, SubnetID> {
   friend class Storage<Subnet>;
 
 public:
+  /// Returns the entry/link indices of the j-th link of the i-th entry.
+  static std::pair<size_t, size_t> getLinkIndices(size_t i, size_t j) {
+    if (j < Cell::InPlaceLinks) {
+      return {i, j};
+    }
+
+    const auto k = j - Cell::InPlaceLinks;
+    const auto n = Cell::InEntryLinks;
+    return {i + 1 + (k / n), k % n};
+  }
+
   /// Link source.
   struct Link final {
     Link(uint32_t idx, uint8_t out, bool inv): idx(idx), out(out), inv(inv) {}
@@ -108,6 +123,24 @@ public:
     uint16_t getInNum() const { return arity; }
     uint16_t getOutNum() const { return getType().getOutNum(); }
 
+    LinkList getInPlaceLinks() const {
+      LinkList links(std::min(arity, InPlaceLinks));
+      for (size_t i = 0; i < links.size(); ++i) {
+        links[i] = link[i];
+      }
+      return links;
+    }
+
+    void incRefCount() {
+      assert(refcount < Subnet::Cell::MaxRefCount);
+      refcount++;
+    }
+
+    void decRefCount() {
+      assert(refcount);
+      refcount--;
+    }
+
     /// Flip-flop input/output flag.
     uint64_t flipFlop : 1;
     /// Unique flip-flop identifier (for flip-flip inputs/outputs).
@@ -151,10 +184,18 @@ public:
   Subnet &operator =(const Subnet &r) = delete;
   Subnet(const Subnet &r) = delete;
 
+  /// Returns the overall number of entries including inputs and outputs.
+  uint32_t size() const { return nEntry; }
+
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
+
+  /// Returns the j-th link of the i-th cell.
+  const Link &getLink(size_t i, size_t j) const;
+  /// Returns the links of the i-th cell.
+  LinkList getLinks(size_t i) const;
 
   /// Returns the i-th input link.
   Link getIn(size_t i) const {
@@ -169,51 +210,11 @@ public:
     return entries[entries.size() - nOut + i].cell.link[0];
   }
 
-  /// Returns the minimum and maximum path lengths.
-  std::pair<uint32_t, uint32_t> getPathLength() const;
-
-  /// Returns the overall number of entries including inputs and outputs.
-  uint32_t size() const { return nEntry; }
-
   /// Returns the array of entries.
   Array<Entry> getEntries() const { return Array<Entry>(entries); }
 
-  /// Returns the j-th link of the i-th cell.
-  Link getLink(size_t i, size_t j) const {
-    const auto &entries = getEntries();
-    const auto &cell = entries[i].cell;
-
-    if (j < Cell::InPlaceLinks) {
-      return cell.link[j];
-    }
-
-    const auto k = j - Cell::InPlaceLinks;
-    const auto n = Cell::InEntryLinks;
-
-    return entries[i + 1 + (k / n)].link[k % n];
-  }
-
-  /// Returns the links of the i-th cell.
-  LinkList getLinks(size_t i) const {
-    const auto &entries = getEntries();
-    const auto &cell = entries[i].cell;
-
-    LinkList links(cell.arity);
-
-    size_t j = 0;
-    for (; j < cell.arity && j < Cell::InPlaceLinks; ++j) {
-      links[j] = cell.link[j];
-    }
-
-    for (; j < cell.arity; ++j) {
-      const auto k = j - Cell::InPlaceLinks;
-      const auto n = Cell::InEntryLinks;
-
-      links[j] = entries[i + 1 + (k / n)].link[k % n];
-    }
-
-    return links;
-  }
+  /// Returns the minimum and maximum path lengths.
+  std::pair<uint32_t, uint32_t> getPathLength() const;
 
 private:
   /// Constructs a subnet.
@@ -234,6 +235,10 @@ private:
 
 static_assert(sizeof(Subnet) == SubnetID::Size);
 
+//===----------------------------------------------------------------------===//
+// Subnet Builder
+//===----------------------------------------------------------------------===//
+
 class SubnetBuilder;
 
 /// SubnetBuilder entries bidirectional iterator.
@@ -243,8 +248,8 @@ class EntryIterator final {
 public:
   typedef size_t value_type;
   typedef std::ptrdiff_t difference_type;
-  typedef const value_type * pointer;
-  typedef const value_type & reference;
+  typedef const value_type *pointer;
+  typedef const value_type &reference;
   typedef std::bidirectional_iterator_tag iterator_category;
 
 private:
@@ -272,31 +277,139 @@ private:
   value_type entry;
 };
 
-//===----------------------------------------------------------------------===//
-// Subnet Builder
-//===----------------------------------------------------------------------===//
+/// Structural hashing (strashing) key.
+struct StrashKey final {
+  using Cell = Subnet::Cell;
+  using Link = Subnet::Link;
+  using LinkList = Subnet::LinkList;
+
+  static bool isEnabled(CellTypeID cellTypeID, const LinkList &cellLinks) {
+    return (cellTypeID != CELL_TYPE_ID_IN)
+        && (cellTypeID != CELL_TYPE_ID_OUT)
+        && (cellLinks.size() <= Subnet::Cell::InPlaceLinks);
+  }
+
+  static bool isEnabled(const Cell &cell) {
+    return !cell.isIn()
+        && !cell.isOut()
+        && cell.arity <= Subnet::Cell::InPlaceLinks;
+  }
+
+  StrashKey(): StrashKey(0, LinkList{}) {}
+
+  StrashKey(const Cell &cell): StrashKey(cell.getTypeID(), cell.getInPlaceLinks()) {}
+
+  StrashKey(CellTypeID cellTypeID, const LinkList &cellLinks):
+    typeID(cellTypeID.getSID()), arity(cellLinks.size()) {
+    assert(isEnabled(cellTypeID, cellLinks));
+
+    for (size_t i = 0; i < cellLinks.size(); ++i) {
+      links[i] = cellLinks[i];
+    }
+
+    const auto &type = CellType::get(cellTypeID);
+    if (type.isCommutative()) {
+      std::sort(links, links + arity, [](Link lhs, Link rhs) {
+        if (lhs.idx != rhs.idx) { return lhs.idx < rhs.idx; }
+        if (lhs.out != rhs.out) { return lhs.out < rhs.out; }
+        return lhs.inv < rhs.inv;
+      });
+    }
+  }
+
+  bool operator==(const StrashKey &other) const {
+    return typeID == other.typeID && arity == other.arity
+        && !memcmp(links, other.links, sizeof(links));
+  }
+
+  uint32_t typeID;
+  uint16_t arity;
+  Link links[Subnet::Cell::InPlaceLinks];
+};
+
+} // namespace eda::gate::model
+
+template<>
+struct std::hash<eda::gate::model::Subnet::Link> {
+  using Link = eda::gate::model::Subnet::Link;
+
+  size_t operator()(const Link &link) const noexcept {
+    return (link.idx << 4) | (link.out << 1) | link.inv;
+  }
+};
+
+template<>
+struct std::hash<eda::gate::model::StrashKey> {
+  using StrashKey = eda::gate::model::StrashKey;
+
+  size_t operator()(const StrashKey &key) const noexcept {
+    size_t h = 0;
+
+    for (size_t i = 0; i < key.arity; ++i) {
+      eda::util::hash_combine<>(h, key.links[i]);
+    }
+
+    eda::util::hash_combine<>(h, key.arity);
+    eda::util::hash_combine<>(h, key.typeID);
+
+    return h;
+  }
+};
+
+namespace eda::gate::model {
 
 class SubnetBuilder final {
   friend EntryIterator;
 
 public:
+  using Cell = Subnet::Cell;
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
-  SubnetBuilder(): nIn(0), nOut(0), entries() {}
+  SubnetBuilder(): nIn(0), nOut(0) {
+    const size_t n = 1024*1024; // FIXME
+    entries.reserve(n);
+    prev.reserve(n);
+    next.reserve(n);
+    strash.reserve(n);
+  }
 
-  const Subnet::Entry &getEntry(const size_t i) {
+  /// Returns the constant reference to the i-th entry.
+  const Subnet::Entry &getEntry(size_t i) const {
     return entries[i];
   }
 
+  /// Returns the non-constant reference to the i-th entry.
+  Subnet::Entry &getEntry(size_t i) {
+    return entries[i];
+  }
+
+  /// Returns the constant reference to the i-th cell.
+  const Subnet::Cell &getCell(size_t i) const {
+    return entries[i].cell;
+  }
+
+  /// Returns the non-constant reference to the i-th cell.
+  Subnet::Cell &getCell(size_t i) {
+    return entries[i].cell;
+  }
+
+  /// Returns the j-th link of the i-th cell.
+  const Link &getLink(size_t i, size_t j) const;
+  /// Returns the links of the i-th cell.
+  LinkList getLinks(size_t i) const;
+
+  /// Adds an input.
   Link addInput() {
     return addCell(IN);
   }
 
+  /// Adds an output.
   Link addOutput(Link link) {
     return addCell(OUT, link);
   }
 
+  /// Adds a flip-flop-related input.
   Link addInput(uint32_t flipFlopID) {
     const auto result = addInput();
     auto &cell = entries[result.idx].cell;
@@ -305,6 +418,7 @@ public:
     return result;
   }
 
+  /// Adds a flip-flop-related output.
   Link addOutput(Link link, uint32_t flipFlopID) {
     const auto result = addOutput(link);
     auto &cell = entries[result.idx].cell;
@@ -313,6 +427,7 @@ public:
     return result;
   }
 
+  /// Adds a general-type cell.
   Link addCell(CellTypeID typeID, const LinkList &links);
 
   /// Adds a cell w/o inputs.
@@ -374,38 +489,26 @@ public:
   /// Adds the subnet and connects it via the specified links.
   /// Does not add the output cells (it should be done explicitly).
   /// Returns the output links.
-  LinkList addSubnet(const SubnetID subnetID, const LinkList &links);
+  LinkList addSubnet(SubnetID subnetID, const LinkList &links);
 
   /// Adds the single-output subnet and connects it via the specified links.
   /// Returns the output link.
-  Link addSingleOutputSubnet(const SubnetID subnetID, const LinkList &links);
+  Link addSingleOutputSubnet(SubnetID subnetID, const LinkList &links);
 
-  /// Replaces one output subnet from original subnet with rhs subnet.
-  /// rhsToLhs should contain mapping from rhs PIs and PO to original subnet
-  /// inputs and output, respectively. Replace can be called only for subnets
-  /// with maximum cells arity <= Subnet::Cell::InPlaceLinks.
-  void replace(
-      const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> &rhsToLhs);
+  /// Replaces a single-output fragment with the given subnet (rhs).
+  /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
+  /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
+  void replace(SubnetID rhsID, std::unordered_map<size_t, size_t> &rhsToLhs);
 
-  /// Sorts entries in topological order accoring to prev and next.
-  void sortEntries();
-
-  SubnetID make() {
-    assert(nIn > 0 && nOut > 0 && !entries.empty());
-    if (subnetEnd != commonOrderEntryID) {
-      sortEntries();
-    }
-    assert(outsOrderCorrect());
-    return allocate<Subnet>(nIn, nOut, std::move(entries));
-  }
+  /// Merges the given cells (leaves the first one).
+  void mergeCells(size_t entryID, const std::unordered_set<size_t> &otherIDs);
 
   EntryIterator begin() const {
     return EntryIterator(this, 0);
   }
 
   EntryIterator end() const {
-    return EntryIterator(this, rBoundEntryID);
+    return EntryIterator(this, upperBoundID);
   }
 
   std::reverse_iterator<EntryIterator> rbegin() const {
@@ -416,139 +519,66 @@ public:
     return std::make_reverse_iterator(begin());
   }
 
-private:
-  /// Finds free entry or creates new one and returns its index.
-  size_t allocEntry() {
-    if (!emptyEntryIDs.empty()) {
-      size_t allocatedID = emptyEntryIDs.back();
-      emptyEntryIDs.pop_back();
-      return allocatedID;
+  SubnetID make() {
+    assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
+
+    if (subnetEnd != normalOrderID) {
+      sortEntries();
     }
-    entries.resize(entries.size() + 1);
-    return entries.size() - 1;
-  }
+    assert(checkInputsOrder() && checkOutputsOrder());
 
-  /// Saves passed entry index as free and maintains topological order.
-  void deallocEntry(const size_t entryID) {
-    setOrder(getPrev(entryID), getNext(entryID));
-    emptyEntryIDs.push_back(entryID);
-  }
-
-  /// Returns next entry index in topological order.
-  size_t getNext(const size_t entryID) const {
-    if (entryID == lBoundEntryID) {
-      return 0;
-    }
-    assert(entryID < entries.size());
-    if (entryID == subnetEnd ||
-        (subnetEnd == commonOrderEntryID && entryID == entries.size() - 1)) {
-      return rBoundEntryID;
-    }
-    return entryID >= next.size() || next[entryID] == commonOrderEntryID ?
-           entryID + 1 : next[entryID];
-  }
-
-  /// Returns previous entry index in topological order.
-  size_t getPrev(const size_t entryID) const {
-    if (entryID == rBoundEntryID) {
-      return subnetEnd == commonOrderEntryID ? entries.size() - 1 : subnetEnd;
-    }
-    assert(entryID < entries.size());
-    if (entryID == 0) {
-      return lBoundEntryID;
-    }
-    return entryID >= prev.size() || prev[entryID] == commonOrderEntryID ?
-           entryID - 1 : prev[entryID];
-  }
-
-  /// Records that secondID is the next entry ID after firstID in topological
-  /// order.
-  void setOrder(const size_t firstID, const size_t secondID) {
-    assert(firstID != rBoundEntryID && secondID != lBoundEntryID);
-
-    if (secondID != rBoundEntryID && firstID != lBoundEntryID) {
-      if (firstID == subnetEnd) {
-        subnetEnd = secondID;
-      }
-    }
-    if (secondID != rBoundEntryID && getPrev(secondID) != firstID) {
-      if (secondID >= prev.size()) {
-        prev.resize(secondID + 1, commonOrderEntryID);
-      }
-      prev[secondID] = firstID;
-    }
-    if (firstID != lBoundEntryID && getNext(firstID) != secondID) {
-      if (firstID >= next.size()) {
-        next.resize(firstID + 1, commonOrderEntryID);
-      }
-      next[firstID] = secondID;
-    }
-  }
-
-  /// Assigns cell on entryID new links and deletes old. The number of new links
-  /// must be the same as the number of old links.
-  void relinkCell(const size_t entryID, const LinkList &newLinks) {
-    auto &cell = entries[entryID].cell;
-    assert(cell.arity == newLinks.size());
-
-    size_t j = 0;
-    for (; j < cell.arity && j < Subnet::Cell::InPlaceLinks; ++j) {
-      cell.link[j] = newLinks[j];
-    }
-
-    for (; j < cell.arity; ++j) {
-      const auto k = j - Subnet::Cell::InPlaceLinks;
-      const auto n = Subnet::Cell::InEntryLinks;
-      entries[entryID + 1 + (k / n)].link[k % n] = newLinks[j];
-    }
-  }
-
-  /// Recursively deletes cell on entryID and fanins with refcount == 0.
-  void deleteCell(const size_t entryID);
-
-  /// Replaces cell on entryID with new one and recursively deletes cells with
-  /// refcount == 0. Number of links of both old and new cells
-  /// must be <= Subnet::Cell::InPlaceLinks.
-  Link replaceCell(
-      const size_t entryID,
-      const CellTypeID typeID,
-      const LinkList &links);
-
-  /// Checks if the outputs order is correct. Outputs must be at the and of
-  /// the entries array.
-  bool outsOrderCorrect() const {
-    if (!nOut) {
-      return false;
-    }
-    bool outsVisited = false;
-
-    for (size_t curID = 0; curID < entries.size(); ++curID) {
-      const auto &cell = entries[curID].cell;
-      const auto typeID = cell.getTypeID();
-      if (typeID == CELL_TYPE_ID_OUT) {
-        outsVisited = true;
-        continue;
-      }
-      if (outsVisited) {
-        return false;
-      }
-      curID += cell.more;
-    }
-    return true;
-  }
-
-  /// Clears replacements context.
-  void clearContext() {
-    prev.clear();
-    next.clear();
-    emptyEntryIDs.clear();
-    subnetEnd = commonOrderEntryID;
+    return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 
 private:
-  static constexpr size_t commonOrderEntryID = -1u;
-  static constexpr size_t lBoundEntryID = -2u;
-  static constexpr size_t rBoundEntryID = -3u;
+  /// Return the reference to the j-th link of the given cell.
+  Link &getLinkRef(size_t entryID, size_t j);
+
+  /// Allocates an entry and returns its index.
+  size_t allocEntry();
+  /// Returns an entry of the given type or allocates a new one.
+  size_t allocEntry(CellTypeID typeID, const LinkList &links);
+
+  /// Deallocates the given entry.
+  void deallocEntry(size_t entryID);
+
+  /// Returns the index of the next entry (topological ordering).
+  size_t getNext(size_t entryID) const;
+
+  /// Returns the index of the previous entry (topological ordering).
+  size_t getPrev(size_t entryID) const;
+
+  /// Specifies the order between the given entries.
+  void setOrder(size_t firstID, size_t secondID);
+
+  /// Assigns the new links to the given cell.
+  /// The number of new links must be the same as the number of old links.
+  void relinkCell(size_t entryID, const LinkList &newLinks);
+
+  /// Deletes the given cell and the cells from the transitive fanin cone
+  /// whose reference counts have become zero (recursively).
+  void deleteCell(size_t entryID);
+
+  /// Replaces the given cell w/ the new one and deletes the cells from the
+  /// transitive fanin cone whose reference counts have become zero (recursively).
+  /// The number of links in both cells must be <= Subnet::Cell::InPlaceLinks.
+  Link replaceCell(size_t entryID, CellTypeID typeID, const LinkList &links);
+
+  /// Checks if the inputs are located at the beginning of the array.
+  bool checkInputsOrder() const;
+  /// Checks if the outputs are located at the end of the array.
+  bool checkOutputsOrder() const;
+
+  /// Sorts entries in topological order accoring to prev and next.
+  void sortEntries();
+
+  /// Clears the replacement context.
+  void clearContext();
+
+private:
+  static constexpr size_t normalOrderID = -1u;
+  static constexpr size_t lowerBoundID = -2u;
+  static constexpr size_t upperBoundID = -3u;
 
   uint16_t nIn;
   uint16_t nOut;
@@ -559,7 +589,9 @@ private:
   std::vector<size_t> next;
   std::vector<size_t> emptyEntryIDs;
 
-  size_t subnetEnd{commonOrderEntryID};
+  size_t subnetEnd{normalOrderID};
+
+  std::unordered_map<StrashKey, size_t> strash;
 };
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet);

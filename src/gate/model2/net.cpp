@@ -20,6 +20,8 @@ void NetBuilder::incrementRefCount(LinkEnd link) const {
 }
 
 void NetBuilder::addCell(CellID cellID) {
+  assert(cellID != OBJ_NULL_ID);
+
   const auto &cell = Cell::get(cellID);
   const auto &type = cell.getType();
 
@@ -39,7 +41,7 @@ void NetBuilder::addCell(CellID cellID) {
 
   const auto links = cell.getLinks();
   for (auto link : links) {
-    if (link.getCellID() == OBJ_NULL_ID) {
+    if (!link.isValid()) {
       // Skip unconnected links (required to support cycles).
       continue;
     }

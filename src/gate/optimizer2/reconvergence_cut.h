@@ -16,21 +16,21 @@
 namespace eda::gate::optimizer2 {
 
 /// Returns the cost of a node.
-size_t computeCost(const model::Subnet &subnet,
-                   uint32_t idx,
-                   const std::unordered_set<uint32_t> &visited);
+unsigned computeCost(const model::Subnet &subnet,
+                     size_t idx,
+                     const std::unordered_set<size_t> &visited);
 
 /// Returns a reconvergence-driven cut.
-std::vector<uint32_t> getReconvergenceCut(const model::Subnet &subnet,
-                                          const std::vector<uint32_t> &roots,
-                                          size_t cutSize);
+std::vector<size_t> getReconvergenceCut(const model::Subnet &subnet,
+                                        const std::vector<size_t> &roots,
+                                        size_t cutSize);
 
 /// Returns a reconvergence-driven cut.
-inline std::vector<uint32_t> getReconvergenceCut(const model::Subnet &subnet,
-                                                 uint32_t root,
-                                                 size_t cutSize) {
+inline std::vector<size_t> getReconvergenceCut(const model::Subnet &subnet,
+                                               size_t root,
+                                               size_t cutSize) {
 
-  return getReconvergenceCut(subnet, std::vector<uint32_t>{root}, cutSize);
+  return getReconvergenceCut(subnet, std::vector<size_t>{root}, cutSize);
 }
 
 } // namespace eda::gate::optimizer2

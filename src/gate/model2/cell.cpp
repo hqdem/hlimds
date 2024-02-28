@@ -55,11 +55,11 @@ LinkEnd Cell::getLink(uint16_t port) const {
 void Cell::setLink(uint16_t port, const LinkEnd &source) {
   assert(port < fanin);
   if (fanin <= InPlaceLinks) {
-    assert(data.link[port].getCellID() == OBJ_NULL_ID);
+    assert(!data.link[port].isValid());
     data.link[port] = source;
   } else {
     Array<uint64_t> array(data.arrayID);
-    assert(LinkEnd::unpack(array[port]).getCellID() == OBJ_NULL_ID);
+    assert(!LinkEnd::unpack(array[port]).isValid());
     array[port] = LinkEnd::pack(source);
   }
 }

@@ -298,12 +298,22 @@ void SubnetBuilder::mergeCells(
     size_t entryID, const std::unordered_set<size_t> &otherIDs) {
   assert(otherIDs.find(entryID) == otherIDs.end());
 
+  size_t refcount = 0;
+  for (const auto otherID : otherIDs) {
+    refcount += getCell(otherID).refcount;
+  }
+  assert(refcount);
+
   auto &remain = getCell(entryID);
   assert((remain.getOutNum() == 1) && "Multiple outputs are not allowed");
 
-  // TODO: Improve performance.
-  for (auto i = begin(); i != end(); ++i) {
-    if (*i == entryID || otherIDs.find(*i) != otherIDs.end()) {
+  auto i = begin();
+
+  // Skip the entries precedings the ones begin removed.
+  for (; i != end() && otherIDs.find(*i) == otherIDs.end(); ++i);
+
+  for (; refcount && i != end(); ++i) {
+    if (*i == entryID) {
       continue;
     }
 
@@ -319,10 +329,15 @@ void SubnetBuilder::mergeCells(
         link.idx = entryID;
         source.decRefCount();
         remain.incRefCount();
-      }
-    }
-  }
 
+        if (!--refcount) {
+          break;
+        }
+      }
+    } // for links
+  } // for cells
+
+  // Remove the given cells.
   for (const auto otherID : otherIDs) {
     assert(!getCell(otherID).refcount);
     deleteCell(otherID);

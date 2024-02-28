@@ -249,6 +249,8 @@ void SubnetBuilder::replace(
   size_t prevNewCellID = invalidID;
   const auto &rhsEntries = rhs.getEntries();
 
+  destrashEntry(rhsToLhs[rhsEntries.size() - 1]);
+
   for (size_t i = 0; i < rhsEntries.size() - 1; ++i) {
     const Subnet::Cell &cell = rhsEntries[i].cell;
     assert(cell.arity <= Subnet::Cell::InPlaceLinks);

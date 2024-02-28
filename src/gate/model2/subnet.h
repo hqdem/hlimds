@@ -17,8 +17,8 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <ostream>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace eda::gate::model {
@@ -32,6 +32,17 @@ class Subnet final : public Object<Subnet, SubnetID> {
   friend class Storage<Subnet>;
 
 public:
+  /// Returns the entry/link indices of the j-th link of the i-th entry.
+  static std::pair<size_t, size_t> getLinkIndices(size_t i, size_t j) {
+    if (j < Cell::InPlaceLinks) {
+      return {i, j};
+    }
+
+    const auto k = j - Cell::InPlaceLinks;
+    const auto n = Cell::InEntryLinks;
+    return {i + 1 + (k / n), k % n};
+  }
+
   /// Link source.
   struct Link final {
     Link(uint32_t idx, uint8_t out, bool inv): idx(idx), out(out), inv(inv) {}
@@ -109,6 +120,9 @@ public:
     const CellType &getType() const { return CellType::get(getTypeID()); }
     CellSymbol getSymbol() const { return getType().getSymbol(); }
 
+    uint16_t getInNum() const { return arity; }
+    uint16_t getOutNum() const { return getType().getOutNum(); }
+
     LinkList getInPlaceLinks() const {
       LinkList links(std::min(arity, InPlaceLinks));
       for (size_t i = 0; i < links.size(); ++i) {
@@ -117,8 +131,15 @@ public:
       return links;
     }
 
-    uint16_t getInNum() const { return arity; }
-    uint16_t getOutNum() const { return getType().getOutNum(); }
+    void incRefCount() {
+      assert(refcount < Subnet::Cell::MaxRefCount);
+      refcount++;
+    }
+
+    void decRefCount() {
+      assert(refcount);
+      refcount--;
+    }
 
     /// Flip-flop input/output flag.
     uint64_t flipFlop : 1;
@@ -171,6 +192,11 @@ public:
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
 
+  /// Returns the j-th link of the i-th cell.
+  const Link &getLink(size_t i, size_t j) const;
+  /// Returns the links of the i-th cell.
+  LinkList getLinks(size_t i) const;
+
   /// Returns the i-th input link.
   Link getIn(size_t i) const {
     assert(i < nIn);
@@ -186,43 +212,6 @@ public:
 
   /// Returns the array of entries.
   Array<Entry> getEntries() const { return Array<Entry>(entries); }
-
-  /// Returns the j-th link of the i-th cell.
-  Link getLink(size_t i, size_t j) const {
-    const auto &entries = getEntries();
-    const auto &cell = entries[i].cell;
-
-    if (j < Cell::InPlaceLinks) {
-      return cell.link[j];
-    }
-
-    const auto k = j - Cell::InPlaceLinks;
-    const auto n = Cell::InEntryLinks;
-
-    return entries[i + 1 + (k / n)].link[k % n];
-  }
-
-  /// Returns the links of the i-th cell.
-  LinkList getLinks(size_t i) const {
-    const auto &entries = getEntries();
-    const auto &cell = entries[i].cell;
-
-    LinkList links(cell.arity);
-
-    size_t j = 0;
-    for (; j < cell.arity && j < Cell::InPlaceLinks; ++j) {
-      links[j] = cell.link[j];
-    }
-
-    for (; j < cell.arity; ++j) {
-      const auto k = j - Cell::InPlaceLinks;
-      const auto n = Cell::InEntryLinks;
-
-      links[j] = entries[i + 1 + (k / n)].link[k % n];
-    }
-
-    return links;
-  }
 
   /// Returns the minimum and maximum path lengths.
   std::pair<uint32_t, uint32_t> getPathLength() const;
@@ -373,6 +362,7 @@ class SubnetBuilder final {
   friend EntryIterator;
 
 public:
+  using Cell = Subnet::Cell;
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
@@ -403,6 +393,11 @@ public:
   Subnet::Cell &getCell(size_t i) {
     return entries[i].cell;
   }
+
+  /// Returns the j-th link of the i-th cell.
+  const Link &getLink(size_t i, size_t j) const;
+  /// Returns the links of the i-th cell.
+  LinkList getLinks(size_t i) const;
 
   /// Adds an input.
   Link addInput() {
@@ -500,11 +495,13 @@ public:
   /// Returns the output link.
   Link addSingleOutputSubnet(SubnetID subnetID, const LinkList &links);
 
-  /// Replaces one output subnet from original subnet with rhs subnet.
-  /// rhsToLhs should contain mapping from rhs PIs and PO to original subnet
-  /// inputs and output, respectively. Replace can be called only for subnets
-  /// with maximum cells arity <= Subnet::Cell::InPlaceLinks.
+  /// Replaces a single-output fragment with the given subnet (rhs).
+  /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
+  /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(SubnetID rhsID, std::unordered_map<size_t, size_t> &rhsToLhs);
+
+  /// Merges the given cells (leaves the first one).
+  void mergeCells(size_t entryID, const std::unordered_set<size_t> &otherIDs);
 
   EntryIterator begin() const {
     return EntryIterator(this, 0);
@@ -534,6 +531,9 @@ public:
   }
 
 private:
+  /// Return the reference to the j-th link of the given cell.
+  Link &getLinkRef(size_t entryID, size_t j);
+
   /// Allocates an entry and returns its index.
   size_t allocEntry();
   /// Returns an entry of the given type or allocates a new one.

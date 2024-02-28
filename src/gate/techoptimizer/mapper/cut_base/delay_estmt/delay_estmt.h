@@ -43,8 +43,8 @@ namespace eda::gate::tech_optimizer::delay_estimation
     *  SkyWalker is calling Parser
     *  for searching concrete cell's timing.
     */
-    void delayEstimation(std::string& cell_name,
-                         const char* file_name,
+  void delayEstimation(std::string& cell_name,
+                         std::string& file_name,
                          float& input_net_transition_f,
                          float& total_output_net_capacitance_f );
 

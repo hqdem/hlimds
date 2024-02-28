@@ -296,39 +296,40 @@ void SubnetBuilder::replace(
   }
 }
 
-void SubnetBuilder::mergeCells(
-    size_t entryID, const std::unordered_set<size_t> &otherIDs) {
-  assert(otherIDs.find(entryID) == otherIDs.end());
-
+void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
   size_t refcount = 0;
-  for (const auto otherID : otherIDs) {
-    refcount += getCell(otherID).refcount;
+
+  std::unordered_map<size_t, size_t> mergeTo;
+  for (const auto &[entryID, otherIDs] : entryIDs) {
+    assert(getCell(entryID).getOutNum() == 1);
+    assert(otherIDs.find(entryID) == otherIDs.end());
+
+    for (const auto otherID : otherIDs) {
+      assert(getCell(otherID).getOutNum() == 1);
+      mergeTo.insert({otherID, entryID});
+      refcount += getCell(otherID).refcount;
+    }
   }
   assert(refcount);
 
-  auto &remain = getCell(entryID);
-  assert((remain.getOutNum() == 1) && "Multiple outputs are not allowed");
-
+  // Skip the entries precedings the ones being removed.
   auto i = begin();
+  for (; i != end() && mergeTo.find(*i) == mergeTo.end(); ++i);
 
-  // Skip the entries precedings the ones begin removed.
-  for (; i != end() && otherIDs.find(*i) == otherIDs.end(); ++i);
-
+  if (i != end()) ++i;
   for (; refcount && i != end(); ++i) {
-    if (*i == entryID) {
-      continue;
-    }
-
     auto &target = getCell(*i);
     for (size_t j = 0; j < target.arity; ++j) {
       auto &link = getLinkRef(*i, j);
 
-      if (otherIDs.find(link.idx) != otherIDs.end()) {
+      const auto r = mergeTo.find(link.idx);
+      if (r != mergeTo.end()) {
+        // The remaining entry should not depend on the entry being removed.
+        auto &remain = getCell(r->second);
         auto &source = getCell(link.idx);
-        assert((source.getOutNum() == 1) && "Multiple outputs are not allowed");
 
         // Redirect the link to the remaining cell.
-        link.idx = entryID;
+        link.idx = r->second;
         source.decRefCount();
         remain.incRefCount();
 
@@ -340,9 +341,9 @@ void SubnetBuilder::mergeCells(
   } // for cells
 
   // Remove the given cells.
-  for (const auto otherID : otherIDs) {
-    assert(!getCell(otherID).refcount);
-    deleteCell(otherID);
+  for (const auto other : mergeTo) {
+    assert(!getCell(other.first).refcount);
+    deleteCell(other.first);
   }
 }
 

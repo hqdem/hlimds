@@ -500,8 +500,11 @@ public:
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(SubnetID rhsID, std::unordered_map<size_t, size_t> &rhsToLhs);
 
-  /// Merges the given cells (leaves the first one).
-  void mergeCells(size_t entryID, const std::unordered_set<size_t> &otherIDs);
+  /// Merges the cells from each map item leaving the one stored in the key.
+  /// Precondition: remaining entries do not depend on entries being removed.
+  using EntrySet = std::unordered_set<size_t>;
+  using MergeMap = std::unordered_map<size_t, EntrySet>;
+  void mergeCells(const MergeMap &entryIDs);
 
   EntryIterator begin() const {
     return EntryIterator(this, 0);

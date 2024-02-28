@@ -97,6 +97,7 @@ add_executable(${TEST_TARGET}
   gate/techmapper/techmap_test.cpp
   gate/techmapper/strategy/strategy_example.cpp
   gate/techmapper/strategy/example_test.cpp
+  gate/techmapper/strategy/delay_estmt/delay_test.cpp
   gate/transformer/aigmapper_test.cpp
   gate/transformer/bdd_test.cpp
   gate/transformer/mutator_test.cpp

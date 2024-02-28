@@ -394,16 +394,7 @@ void SubnetBuilder::deallocEntry(size_t entryID) {
   const auto &cell = getCell(entryID);
   assert(!cell.refcount);
 
-  if (StrashKey::isEnabled(cell)) {
-    const StrashKey key(cell);
-    const auto i = strash.find(key);
-
-    if (i != strash.end()) {
-      assert(i->second == entryID);
-      strash.erase(i);
-    }
-  }
-
+  destrashEntry(entryID);
   setOrder(getPrev(entryID), getNext(entryID));
   emptyEntryIDs.push_back(entryID);
 }
@@ -473,7 +464,7 @@ void SubnetBuilder::deleteCell(size_t entryID) {
   for (size_t j = 0; j < cell.arity; ++j) {
     const size_t inputEntryID = cell.link[j].idx;
 
-    auto &inputCell = entries[inputEntryID].cell;
+    auto &inputCell = getCell(inputEntryID);
     inputCell.decRefCount();
 
     if (!inputCell.refcount) {
@@ -535,16 +526,19 @@ bool SubnetBuilder::checkOutputsOrder() const {
 }
 
 void SubnetBuilder::sortEntries() {
-  std::vector<Subnet::Entry> newEntries;
+  std::vector<Subnet::Entry> newEntries; // FIXME: known size.
   std::unordered_map<size_t, size_t> relinkMapping;
   size_t curID = 0;
   do {
     relinkMapping[curID] = newEntries.size();
     LinkList links;
-    const auto cell = entries[curID].cell;
+
+    const auto cell = getCell(curID);
+    assert(!cell.refcount);
+
     for (size_t i = 0; i < cell.arity; ++i) {
       const auto &curLink = cell.link[i];
-      if (relinkMapping.find(curLink.idx) != relinkMapping.end()) {
+      if (relinkMapping.find(curLink.idx) != relinkMapping.end()) { // FIXME: two map accesses.
         links.push_back(Link(relinkMapping[curLink.idx], curLink.out,
                              curLink.inv));
       } else {

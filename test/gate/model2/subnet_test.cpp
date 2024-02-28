@@ -48,7 +48,7 @@ inline void testMakeTreeSubnet(CellSymbol symbol, size_t maxArity, uint16_t k) {
   }
 }
 
-TEST(SubnetTest, CellTreeTest) {
+TEST(SubnetTest, AddCellTreeTest) {
   constexpr size_t MaxArity = 10u;
   constexpr size_t K = 2u;
 
@@ -119,6 +119,23 @@ TEST(SubnetTest, AddSingleOutputSubnetTest) {
 
   const auto &result = Subnet::get(builder.make());
   EXPECT_EQ(result.size(), SubnetNum * subnet.size());
+}
+
+TEST(SubnetTest, SimpleStrashTest) {
+  constexpr size_t InNum = 5;
+  constexpr size_t OutNum = 10;
+
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(InNum);
+
+  for (size_t i = 0; i < OutNum; ++i) {
+    Subnet::Link link = builder.addCell(AND, inputs);
+    builder.addOutput(link);
+  }
+
+  const auto &result = Subnet::get(builder.make());
+  EXPECT_EQ(result.size(), InNum + OutNum + 1);
 }
 
 } // namespace eda::gate::model

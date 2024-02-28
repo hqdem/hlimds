@@ -120,18 +120,19 @@ void WLM::set_wire_load_model(std::string &wlm_name) {
   }
 
   void NLDM::delayEstimation(string& cell_name,
-                       const char* file_name,
+                       std::string& file_name,
                        float& input_net_transition,
                        float& total_output_net_capacitance )   {
-    /*const path homePath = string(getenv("UTOPIA_HOME"));
+    //===----------------------------------------------------------------------===//
+    //  Connecting paths
+    //===----------------------------------------------------------------------===//
+    const path homePath = string(getenv("UTOPIA_HOME"));
     const path filePath = homePath / "src" / "gate" 
                         / "techoptimizer" 
-                        / "cut_based_tech_mapper" 
-                        / "strategy" 
+                        / "mapper"
+                        / "cut_base" 
                         / "delay_estmt"
-                        / "attrs.txt";
-    string file = filePath.generic_string();
-    ifstream f(file);*/
+                        / file_name;
     //===----------------------------------------------------------------------===//
     //  Properties
     //===----------------------------------------------------------------------===//
@@ -148,8 +149,8 @@ void WLM::set_wire_load_model(std::string &wlm_name) {
     //  Call for parser
     //===----------------------------------------------------------------------===//
       TokenParser tokParser;
-      FILE *file = fopen(file_name, "rb");
-      Group *ast = tokParser.parseLibrary(file, file_name);
+      FILE *file = fopen(filePath.generic_string().c_str(), "rb");
+      Group *ast = tokParser.parseLibrary(file, filePath.generic_string().c_str());
       Library lib;
       AstParser parser(lib, tokParser);
       parser.run(*ast);
@@ -158,7 +159,6 @@ void WLM::set_wire_load_model(std::string &wlm_name) {
     //===----------------------------------------------------------------------===//
     //  Delay and Slew estimation
     //===----------------------------------------------------------------------===//
-
       const Cell *cell = lib.getCell(cell_name);
 
       for (const Pin &pin : (*cell).getPins()) {

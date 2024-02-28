@@ -319,7 +319,12 @@ void SubnetBuilder::deallocEntry(size_t entryID) {
 
   if (StrashKey::isEnabled(cell)) {
     const StrashKey key(cell);
-    strash.erase(key);
+    const auto i = strash.find(key);
+
+    if (i != strash.end()) {
+      assert(i->second == entryID);
+      strash.erase(i);
+    }
   }
 
   setOrder(getPrev(entryID), getNext(entryID));

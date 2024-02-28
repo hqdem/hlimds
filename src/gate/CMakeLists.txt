@@ -86,6 +86,7 @@ add_library(Gate OBJECT
   printer/vcd.cpp
   simulator/simulator.cpp
   techoptimizer/mapper/cut_base/сut_base_mapper.cpp
+  techoptimizer/mapper/cut_base/delay_estmt/delay_estmt.cpp
   techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.cpp
   techoptimizer/assembly.cpp
   techoptimizer/mapper/baseMapper.cpp
@@ -135,6 +136,7 @@ target_link_libraries(Gate
   minisat-lib-static
   Cudd::Cudd
   lorina
+  readcells
   sqlite3
   CTemplate::nothreads
   Kitty

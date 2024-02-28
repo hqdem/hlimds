@@ -700,7 +700,7 @@ void generateOutputs(FModuleOp fModuleOp,
 
       for (uint j = 0; j < portWidth; j++) {
         CellID cellBufID = makeCell(CellSymbol::BUF,
-                                    LinkEnd(model::OBJ_NULL_ID));
+                                    LinkEnd());
         netBuilder->addCell(cellBufID);
         CellID cellOutID = makeCell(CellSymbol::OUT, LinkEnd(cellBufID));
         netBuilder->addCell(cellOutID);
@@ -721,7 +721,7 @@ void generateWires(FModuleOp fModuleOp,
   fModuleOp.walk([&](WireOp wireOp) {
     uint outputWidth = getTypeWidth(wireOp.getResult().getType());
     for (size_t i = 0; i < outputWidth; i++) {
-      CellID cellID = makeCell(CellSymbol::BUF, LinkEnd(model::OBJ_NULL_ID));
+      CellID cellID = makeCell(CellSymbol::BUF, LinkEnd());
       netBuilder->addCell(cellID);
       CellKey cellKeyIn(wireOp, 0, i);
       CellKey cellKeyOut(wireOp, 0, i);
@@ -860,7 +860,7 @@ void processOperation(Operation *destOp, std::string &destOpName,
                                            fanoutCount);
       std::vector<LinkEnd> linkEnds;
       for (uint i = 0; i < faninCount; i++) {
-        linkEnds.push_back(LinkEnd(model::OBJ_NULL_ID));
+        linkEnds.push_back(LinkEnd());
       }
       CellID cellDestID = makeCell(cellTypeID, linkEnds);
       netBuilder->addCell(cellDestID);
@@ -927,7 +927,7 @@ void processOperation(Operation *destOp, std::string &destOpName,
       for (uint j = 0; j < dataWidth; j++) {
         // DFF(q, d, clk).
         std::vector<LinkEnd> linkEndsForOne;
-        linkEndsForOne.push_back(LinkEnd(model::OBJ_NULL_ID));
+        linkEndsForOne.push_back(LinkEnd());
         linkEndsForOne.push_back(linkEnds.front());
         CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
         netBuilder->addCell(cellDestID);
@@ -944,7 +944,7 @@ void processOperation(Operation *destOp, std::string &destOpName,
       for (uint j = 0, k = 0; j < dataWidth; j++) {
         // DFFrs(q, d, clk, rst, set).
         std::vector<LinkEnd> linkEndsForOne;
-        linkEndsForOne.push_back(LinkEnd(model::OBJ_NULL_ID));
+        linkEndsForOne.push_back(LinkEnd());
         linkEndsForOne.push_back(linkEnds.front());
         CellID negMidID = makeCell(CellSymbol::NOT, linkEnds[k + 2]);
         netBuilder->addCell(negMidID);

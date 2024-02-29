@@ -9,6 +9,8 @@
 #include "gate/model2/subnet.h"
 #include "gate/model2/printer/printer.h"
 
+#include <iostream>
+
 namespace eda::gate::model {
 
 //===----------------------------------------------------------------------===//
@@ -525,31 +527,31 @@ bool SubnetBuilder::checkOutputsOrder() const {
   return true;
 }
 
-void SubnetBuilder::sortEntries() {
-  std::vector<Subnet::Entry> newEntries; // FIXME: known size.
+void SubnetBuilder::rearrangeEntries() {
+  std::vector<Subnet::Entry> newEntries;
+  newEntries.reserve(entries.size());
+
   std::unordered_map<size_t, size_t> relinkMapping;
-  size_t curID = 0;
-  do {
-    relinkMapping[curID] = newEntries.size();
+  relinkMapping.reserve(entries.size());
+
+  for(size_t i = 0; i != upperBoundID; i = getNext(i)) {
+    relinkMapping[i] = newEntries.size();
+
+    const auto &cell = getCell(i);
+    assert(cell.isOut() || cell.refcount);
+
     LinkList links;
+    for (size_t j = 0; j < cell.arity; ++j) {
+      const auto &link = cell.link[j];
+      const auto it = relinkMapping.find(link.idx);
+      const auto idx = (it != relinkMapping.end()) ? it->second : link.idx;
 
-    const auto cell = getCell(curID);
-    assert(!cell.refcount);
-
-    for (size_t i = 0; i < cell.arity; ++i) {
-      const auto &curLink = cell.link[i];
-      if (relinkMapping.find(curLink.idx) != relinkMapping.end()) { // FIXME: two map accesses.
-        links.push_back(Link(relinkMapping[curLink.idx], curLink.out,
-                             curLink.inv));
-      } else {
-        links.push_back(Link(curLink.idx, curLink.out, curLink.inv));
-      }
+      links.emplace_back(idx, link.out, link.inv);
     }
-    relinkCell(curID, links);
 
-    newEntries.push_back(entries[curID]);
-    curID = getNext(curID);
-  } while (curID != upperBoundID);
+    relinkCell(i, links);
+    newEntries.push_back(entries[i]);
+  }
 
   entries = std::move(newEntries);
   clearContext();

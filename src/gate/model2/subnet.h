@@ -525,8 +525,8 @@ public:
   SubnetID make() {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    if (subnetEnd != normalOrderID) {
-      sortEntries();
+    if (!next.empty()) {
+      rearrangeEntries();
     }
     assert(checkInputsOrder() && checkOutputsOrder());
 
@@ -572,8 +572,9 @@ private:
   /// Checks if the outputs are located at the end of the array.
   bool checkOutputsOrder() const;
 
-  /// Sorts entries in topological order accoring to prev and next.
-  void sortEntries();
+  /// Sorts entries in topological order accoring to the prev and next arrays.
+  /// Removes the holes.
+  void rearrangeEntries();
 
   /// Clears the replacement context.
   void clearContext();

@@ -21,7 +21,9 @@ SubnetId DsdToSubnet::synthesize(const BddWithDdManager &pair,
   /* Always reference after creation */
   DSD_Ref(dmanager, dsd);
   /* Debug print */
-  LOG_DEBUG(Recursive_Decomposition_Print(dsd));
+#ifdef UTOPIA_DEBUG
+  Recursive_Decomposition_Print(dsd);
+#endif
 
   SubnetBuilder subnetBuilder;
   LinkList inputsList;

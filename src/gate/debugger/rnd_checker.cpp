@@ -25,21 +25,21 @@ CheckerResult RndChecker::equivalent(const GNet &lhs,
   GNet *net = miter(lhs, rhs, gmap);
 
   if (!(net->isComb())) {
-    LOG_DEBUG(LOG_ERROR << "Checker works with combinational circuits only!");
+    LOG_DEBUG("Checker works with combinational circuits only!");
     return CheckerResult::ERROR;
   }
 
   std::uint64_t outNum = net->nTargetLinks();
 
   if (outNum != 1) {
-    LOG_DEBUG(LOG_ERROR << "Unsupported number of OUT gates: " << outNum);
+    LOG_DEBUG("Unsupported number of OUT gates: " << outNum);
     return CheckerResult::ERROR;
   }
 
   std::uint64_t inputNum = net->nSourceLinks();
 
   if (inputNum < 2 || inputNum >= 64) {
-    LOG_DEBUG(LOG_ERROR << "Unsupported number of inputs: " << inputNum);
+    LOG_DEBUG("Unsupported number of inputs: " << inputNum);
     return CheckerResult::ERROR;
   }
 

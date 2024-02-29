@@ -33,9 +33,9 @@ namespace eda::gate::parser::graphml {
       }
       if (gate.invertedNumber != realNotsNumber) {
         correct = false;
-        LOG_DEBUG(LOG_ERROR << "Incorrect NOT's inputs number in gate " << id << '\n'
+        LOG_DEBUG("Incorrect NOT's inputs number in gate " << id << '\n'
                       << "Expected: " << gate.invertedNumber << " Found: "
-                      << realNotsNumber << std::endl)
+                      << realNotsNumber)
       }
     }
     return correct;

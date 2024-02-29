@@ -74,7 +74,6 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/resynthesis/dsd_test.cpp
   gate/optimizer2/resynthesis/isop_test.cpp
   gate/optimizer2/resynthesis/reed_muller_test.cpp
-  gate/optimizer2/resynthesis/resynthesis_contest.cpp
   gate/optimizer2/resynthesizer_test.cpp
   gate/parser/graphml_parser_test.cpp
   gate/parser/graphml_to_subnet_test.cpp

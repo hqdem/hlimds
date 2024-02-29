@@ -9,10 +9,11 @@
 #include "../model/examples.h"
 #include "../premapper/mapper/mapper_test.h"
 #include "gate/debugger/k_checker.h"
-#include "gtest/gtest.h"
+#include "util/logging.h"
 
 using KChecker = eda::gate::debugger::KChecker;
 using Hints = eda::gate::debugger::SatChecker::Hints;
+using CheckerResult = eda::gate::debugger::CheckerResult;
 
 void createHints(GNet &net1, GNet &net2, Hints &hints) {
   GateBinding imap, omap;
@@ -95,14 +96,15 @@ TEST(KLecTest, TwoInputAndTwoInputOrTest) {
   KChecker checker;
   Hints hints;
   createHints(*net1, *net2, hints);
-  checker.equivalent(*net1, *net2, hints);
+  EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).isUnknown());
+  LOG_DEBUG(checker.printHashTable());
 
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 0, 0}).id == 3);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 0, 0}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 0, 0}).outputSign == false);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).id == 2);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).outputSign == true);
+  EXPECT_TRUE(checker.hashTableContains({0, 1, 0, 0}, 3));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 1, 0, 0}));
+  EXPECT_FALSE(checker.primaryOutputSign({0, 1, 0, 0}));
+  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 2));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 1, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({0, 1, 1, 1}));
 
   EXPECT_TRUE(checker.getMergedVertices().empty());
 }
@@ -116,13 +118,16 @@ TEST(KLecTest, TwoInputAndTwoInputAndTest) {
   KChecker checker;
   Hints hints;
   createHints(*net1, *net2, hints);
-  checker.equivalent(*net1, *net2, hints);
+  EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).equal());
+  LOG_DEBUG(checker.printHashTable());
 
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).id == 2);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).outputSign == true);
+  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 2));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 1, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({0, 1, 1, 1}));
 
-  EXPECT_TRUE(checker.getMergedVertices()[0].id == 2);
+  EXPECT_TRUE(checker.getMergedVertices().size() == 1);
+  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 2);
+  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 3);
 }
 
 TEST(KLecTest, ThreeInputAndThreeInputAndTest) {
@@ -150,18 +155,22 @@ TEST(KLecTest, ThreeInputAndThreeInputAndTest) {
   KChecker checker;
   Hints hints;
   createHints(*net1, net2, hints);
-  checker.equivalent(*net1, net2, hints);
+  EXPECT_TRUE(checker.equivalent(*net1, net2, hints).equal());
+  LOG_DEBUG(checker.printHashTable());
 
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).id == 3);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).isPrimaryOutput == false);
-  EXPECT_TRUE(checker.getHashTable().at({2, 3, 1, 1}).id == 4);
-  EXPECT_TRUE(checker.getHashTable().at({2, 3, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).outputSign == true);
-  EXPECT_TRUE(checker.getHashTable().at({3, 2, 1, 1}).id == 6);
-  EXPECT_TRUE(checker.getHashTable().at({3, 2, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({3, 2, 1, 1}).outputSign == true);
+  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 3));
+  EXPECT_TRUE(checker.hashTableContains({2, 3, 1, 1}, 4));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({2, 3, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({2, 3, 1, 1}));
+  EXPECT_TRUE(checker.hashTableContains({3, 2, 1, 1}, 6));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({3, 2, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({3, 2, 1, 1}));
 
-  EXPECT_TRUE(checker.getMergedVertices()[0].id == 3);
+  EXPECT_TRUE(checker.getMergedVertices().size() == 2);
+  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 3);
+  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 5);
+  EXPECT_TRUE(checker.getMergedVertices()[1].first->id == 4);
+  EXPECT_TRUE(checker.getMergedVertices()[1].second->id == 6);
 }
 
 TEST(KLecTest, SixInputAndSixInputAndTest) {
@@ -173,25 +182,28 @@ TEST(KLecTest, SixInputAndSixInputAndTest) {
   KChecker checker;
   Hints hints;
   createHints(*net1, *net2, hints);
-  checker.equivalent(*net1, *net2, hints);
+  EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).equal());
+  LOG_DEBUG(checker.printHashTable());
 
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).id == 6);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).isPrimaryOutput == false);
-  EXPECT_TRUE(checker.getHashTable().at({2, 3, 1, 1}).id == 7);
-  EXPECT_TRUE(checker.getHashTable().at({2, 3, 1, 1}).isPrimaryOutput == false);
-  EXPECT_TRUE(checker.getHashTable().at({4, 5, 1, 1}).id == 8);
-  EXPECT_TRUE(checker.getHashTable().at({4, 5, 1, 1}).isPrimaryOutput == false);
-  EXPECT_TRUE(checker.getHashTable().at({6, 7, 1, 1}).id == 9);
-  EXPECT_TRUE(checker.getHashTable().at({6, 7, 1, 1}).isPrimaryOutput == false);
-  EXPECT_TRUE(checker.getHashTable().at({8, 9, 1, 1}).id == 10);
-  EXPECT_TRUE(checker.getHashTable().at({8, 9, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({8, 9, 1, 1}).outputSign == true);
+  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 6));
+  EXPECT_TRUE(checker.hashTableContains({2, 3, 1, 1}, 7));
+  EXPECT_TRUE(checker.hashTableContains({4, 5, 1, 1}, 8));
+  EXPECT_TRUE(checker.hashTableContains({6, 7, 1, 1}, 9));
+  EXPECT_TRUE(checker.hashTableContains({8, 9, 1, 1}, 10));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({8, 9, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({8, 9, 1, 1}));
 
-  EXPECT_TRUE(checker.getMergedVertices()[0].id == 8);
-  EXPECT_TRUE(checker.getMergedVertices()[1].id == 7);
-  EXPECT_TRUE(checker.getMergedVertices()[2].id == 6);
-  EXPECT_TRUE(checker.getMergedVertices()[3].id == 9);
-  EXPECT_TRUE(checker.getMergedVertices()[4].id == 10);
+  EXPECT_TRUE(checker.getMergedVertices().size() == 5);
+  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 8);
+  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 13);
+  EXPECT_TRUE(checker.getMergedVertices()[1].first->id == 7);
+  EXPECT_TRUE(checker.getMergedVertices()[1].second->id == 12);
+  EXPECT_TRUE(checker.getMergedVertices()[2].first->id == 6);
+  EXPECT_TRUE(checker.getMergedVertices()[2].second->id == 11);
+  EXPECT_TRUE(checker.getMergedVertices()[3].first->id == 9);
+  EXPECT_TRUE(checker.getMergedVertices()[3].second->id == 14);
+  EXPECT_TRUE(checker.getMergedVertices()[4].first->id == 10);
+  EXPECT_TRUE(checker.getMergedVertices()[4].second->id == 15);
 }
 
 TEST(KLecTest, SeveralPrimaryOutputsTest) {
@@ -215,26 +227,27 @@ TEST(KLecTest, SeveralPrimaryOutputsTest) {
   KChecker checker;
   Hints hints;
   createHints(net1, net2, hints);
-  checker.equivalent(net1, net2, hints);
+  EXPECT_TRUE(checker.equivalent(net1, net2, hints).isUnknown());
+  LOG_DEBUG(checker.printHashTable());
 
-  EXPECT_TRUE(checker.getHashTable().at({0, 8, 1, 1}).id == 9);
-  EXPECT_TRUE(checker.getHashTable().at({0, 8, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({0, 8, 1, 1}).outputSign == true);
-  EXPECT_TRUE(checker.getHashTable().at({2, 3, 1, 1}).id == 7);
-  EXPECT_TRUE(checker.getHashTable().at({2, 3, 1, 1}).isPrimaryOutput == false);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).id == 4);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).isPrimaryOutput == false);
-  EXPECT_TRUE(checker.getHashTable().at({1, 7, 1, 1}).id == 8);
-  EXPECT_TRUE(checker.getHashTable().at({1, 7, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({1, 7, 1, 1}).outputSign == true);
-  EXPECT_TRUE(checker.getHashTable().at({4, 2, 1, 1}).id == 5);
-  EXPECT_TRUE(checker.getHashTable().at({4, 2, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({4, 2, 1, 1}).outputSign == true);
-  EXPECT_TRUE(checker.getHashTable().at({5, 3, 1, 1}).id == 6);
-  EXPECT_TRUE(checker.getHashTable().at({5, 3, 1, 1}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({5, 3, 1, 1}).outputSign == true);
+  EXPECT_TRUE(checker.hashTableContains({0, 8, 1, 1}, 9));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 8, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({0, 8, 1, 1}));
+  EXPECT_TRUE(checker.hashTableContains({2, 3, 1, 1}, 7));
+  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 4));
+  EXPECT_TRUE(checker.hashTableContains({1, 7, 1, 1}, 8));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({1, 7, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({1, 7, 1, 1}));
+  EXPECT_TRUE(checker.hashTableContains({4, 2, 1, 1}, 5));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({4, 2, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({4, 2, 1, 1}));
+  EXPECT_TRUE(checker.hashTableContains({5, 3, 1, 1}, 6));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({5, 3, 1, 1}));
+  EXPECT_TRUE(checker.primaryOutputSign({5, 3, 1, 1}));
 
-  EXPECT_TRUE(checker.getMergedVertices().empty());
+  EXPECT_TRUE(checker.getMergedVertices().size() == 1);
+  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 6);
+  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 9);
 }
 
 TEST(KLecTest, SeveralGatesTest) {
@@ -284,20 +297,26 @@ TEST(KLecTest, SeveralGatesTest) {
   KChecker checker;
   Hints hints;
   createHints(net1, net2, hints);
-  checker.equivalent(net1, net2, hints);
+  EXPECT_TRUE(checker.equivalent(net1, net2, hints).equal());
+  LOG_DEBUG(checker.printHashTable());
 
-  EXPECT_TRUE(checker.getHashTable().at({3, 2, 1, 0}).id == 10);
-  EXPECT_TRUE(checker.getHashTable().at({3, 2, 0, 1}).id == 9);
-  EXPECT_TRUE(checker.getHashTable().at({0, 1, 1, 1}).id == 3);
-  EXPECT_TRUE(checker.getHashTable().at({3, 2, 1, 1}).id == 4);
-  EXPECT_TRUE(checker.getHashTable().at({4, 2, 0, 1}).id == 5);
-  EXPECT_TRUE(checker.getHashTable().at({3, 4, 1, 0}).id == 6);
-  EXPECT_TRUE(checker.getHashTable().at({10, 9, 0, 0}).id == 11);
-  EXPECT_TRUE(checker.getHashTable().at({10, 9, 0, 0}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({10, 9, 0, 0}).outputSign == false);
-  EXPECT_TRUE(checker.getHashTable().at({6, 5, 0, 0}).id == 7);
-  EXPECT_TRUE(checker.getHashTable().at({6, 5, 0, 0}).isPrimaryOutput == true);
-  EXPECT_TRUE(checker.getHashTable().at({6, 5, 0, 0}).outputSign == false);
+  EXPECT_TRUE(checker.hashTableContains({3, 2, 1, 0}, 10));
+  EXPECT_TRUE(checker.hashTableContains({3, 2, 0, 1}, 9));
+  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 3));
+  EXPECT_TRUE(checker.hashTableContains({3, 2, 1, 1}, 4));
+  EXPECT_TRUE(checker.hashTableContains({4, 2, 0, 1}, 5));
+  EXPECT_TRUE(checker.hashTableContains({3, 4, 1, 0}, 6));
+  EXPECT_TRUE(checker.hashTableContains({6, 5, 0, 0}, 7));
+  EXPECT_TRUE(checker.valueIsPrimaryOutput({6, 5, 0, 0}));
+  EXPECT_FALSE(checker.primaryOutputSign({6, 5, 0, 0}));
 
-  EXPECT_TRUE(checker.getMergedVertices()[0].id == 3);
+  EXPECT_TRUE(checker.getMergedVertices().size() == 4);
+  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 3);
+  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 8);
+  EXPECT_TRUE(checker.getMergedVertices()[1].first->id == 5);
+  EXPECT_TRUE(checker.getMergedVertices()[1].second->id == 9);
+  EXPECT_TRUE(checker.getMergedVertices()[2].first->id == 6);
+  EXPECT_TRUE(checker.getMergedVertices()[2].second->id == 10);
+  EXPECT_TRUE(checker.getMergedVertices()[3].first->id == 7);
+  EXPECT_TRUE(checker.getMergedVertices()[3].second->id == 11);
 }

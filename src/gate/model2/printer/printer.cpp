@@ -66,7 +66,7 @@ ModelPrinter::LinksInfo ModelPrinter::getLinksInfo(CellID cellID) {
 
 void ModelPrinter::visitInputs(
     std::ostream &out, const Net &net) {
-  List<CellID> inputs = net.getInputs();
+  const List<CellID> inputs = net.getInputs();
   for (auto i = inputs.begin(); i != inputs.end(); ++i) {
     onPort(out, getCellInfo(*i));
   }
@@ -74,7 +74,7 @@ void ModelPrinter::visitInputs(
 
 void ModelPrinter::visitOutputs(
     std::ostream &out, const Net &net) {
-  List<CellID> outputs = net.getOutputs();
+  const List<CellID> outputs = net.getOutputs();
   for (auto i = outputs.begin(); i != outputs.end(); ++i) {
     onPort(out, getCellInfo(*i));
   }

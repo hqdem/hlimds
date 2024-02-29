@@ -61,7 +61,8 @@ namespace eda::gate::optimizer {
   TEST(DotPrinter, c17) {
     GNet gNet;
     gNet.addNet(*parseVerilog("c17.v"));
-    GateIdList list = {7, 8, 9};
+    const auto &gate = gNet.gates();
+    GateIdList list = {gate[0]->id(), gate[7]->id(), gate[9]->id()};
     std::string graphFileName = "c17.dot";
     std::string homePath = std::string(std::getenv("UTOPIA_HOME"));
     std::string fileDir = homePath + "/output/test/printer/";

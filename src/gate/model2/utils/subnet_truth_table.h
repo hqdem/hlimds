@@ -97,7 +97,7 @@ inline kitty::dynamic_truth_table evaluateMaj(
     const std::vector<kitty::dynamic_truth_table> &tables) {
   auto table = evaluateZero(subnet);
 
-  kitty::dynamic_truth_table args[cell.arity];
+  std::vector<kitty::dynamic_truth_table> args(cell.arity);
   for (size_t j = 0; j < cell.arity; ++j) {
     args[j] = getLinkTable(subnet.getLink(i, j), tables);
   }

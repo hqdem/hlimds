@@ -19,7 +19,6 @@
 #include "gate/printer/graphml.h"
 #include "gate/translator/fir_to_model2/fir_to_model2_wrapper.h"
 #include "gate/translator/firrtl.h"
-#include "gate/translator/gate_verilog_translator.h"
 #include "options.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/arithmetic.h"
@@ -201,11 +200,12 @@ int main(int argc, char **argv) {
     options.initialize("config.json", argc, argv);
 
     if (options.rtl.files().empty() &&
-        options.gateVerilog.files().empty() &&
-        options.firrtl.files().empty()) {
+        options.firrtl.files().empty() &&
+        options.model2.files().empty()) {
       throw CLI::CallForAllHelp();
     }
-  } catch(const CLI::ParseError &e) {
+  }
+   catch(const CLI::ParseError &e) {
     return options.exit(e);
   }
 
@@ -214,10 +214,6 @@ int main(int argc, char **argv) {
   for (auto file : options.rtl.files()) {
     RtlContext context(file, options.rtl);
     result |= rtlMain(context);
-  }
-
-  for (auto file : options.gateVerilog.files()) {
-    result |= translateToGateVerilog(file, options.gateVerilog);
   }
 
   if (!options.firrtl.files().empty()) {
@@ -230,8 +226,17 @@ int main(int argc, char **argv) {
     result |= translateToFirrtl(cfg);
   }
 
-  for (auto file : options.model2.files()) {
-    result |= translateToModel2(file, options.model2.outFileName);
+  if (!options.model2.files().empty()) {
+    Model2Options &opts = options.model2;
+    FirrtlConfig firrtlConfig;
+    firrtlConfig.debugMode = opts.debugMode;
+    firrtlConfig.outputNamefile = opts.firrtlFileName;
+    firrtlConfig.topModule = opts.topModuleName;
+    firrtlConfig.files = opts.files();
+    Model2Config model2Config;
+    model2Config.outNetFileName = opts.outNetFileName;
+    model2Config.files = opts.files();
+    result |= translateToModel2(firrtlConfig, model2Config);
   }
 
   return result;

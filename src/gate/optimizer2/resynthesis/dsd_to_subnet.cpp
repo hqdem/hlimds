@@ -35,7 +35,8 @@ SubnetId DsdToSubnet::synthesize(const BddWithDdManager &pair,
   subnetBuilder.addCell(CellSymbol::OUT, buildNet(dsd,
                                                   dmanager,
                                                   subnetBuilder,
-                                                  inputsList));
+                                                  inputsList,
+                                                  maxArity));
   SubnetId ret = subnetBuilder.make();
   DSD_Quit(dmanager);
   return ret;
@@ -44,7 +45,7 @@ SubnetId DsdToSubnet::synthesize(const BddWithDdManager &pair,
 SubnetId DsdToSubnet::synthesize(const TruthTable &table, uint16_t maxArity) {
   /* Initial subnet */
   MinatoMorrealeAlg k;
-  const auto &subnet = Subnet::get(k.synthesize(table));
+  const auto &subnet = Subnet::get(k.synthesize(table, maxArity));
 
   /* Subnet to BDD convertion */
   Cudd manager(0, 0);
@@ -74,7 +75,8 @@ SubnetId DsdToSubnet::synthesize(const TruthTable &table, uint16_t maxArity) {
   subnetBuilder.addCell(CellSymbol::OUT, buildNet(dsd,
                                                   dmanager,
                                                   subnetBuilder,
-                                                  inputsList));
+                                                  inputsList,
+                                                  maxArity));
   SubnetId ret = subnetBuilder.make();
   DSD_Quit(dmanager);
   return ret;
@@ -119,7 +121,8 @@ Link DsdToSubnet::buildNet(DSDNode *dsd,
       Subnet::Link ret = buildNet(iter->decomposition,
                                   dmanager,
                                   subnetBuilder,
-                                  inputsList);
+                                  inputsList,
+                                  maxArity);
       currentGateInputs.emplace_back(ret);
     }
     iter = iter->next;

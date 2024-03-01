@@ -21,32 +21,45 @@ namespace eda::gate::analyzer {
 class SwitchActivity final {
 public:
 
-  using CellActivities = std::vector<double>;
-
-  explicit SwitchActivity(const CellActivities &cellActivities)
-      : cellActivities(cellActivities) { }
-
-  explicit SwitchActivity(CellActivities &&cellActivities)
-      : cellActivities(cellActivities) { }
-
-  const CellActivities &getCellActivities() const {
-    return cellActivities;
-  }
+  /// Сells switching probabilities.
+  using Probabilities = std::vector<double>;
+  /// The switches of cells.
+  using Switches = std::vector<size_t>;
 
   /**
-   * Returns the sum of the activities of all cells.
+   * @brief Constructor from cell switching probabilities and switches of cells.
+   * @param probabilities Сell switching probabilities.
+   * @param on The switches of cells from one to zero.
+   * @param off The switches of cells from zero to one.
+   */
+  SwitchActivity(Probabilities &&probabilities, Switches &&on, Switches &&off)
+      : probabilities(probabilities), switchesOn(on), switchesOff(off) { }
+
+  /**
+   * @brief Constructor from cells switching probabilities.
+   * @param probabilities Сells switching probabilities.
+   */
+  explicit SwitchActivity(Probabilities &&probabilities)
+      : probabilities(probabilities), switchesOn(), switchesOff() { }
+
+  /**
+   * @brief Returns the sum of the activities of all cells.
    */
   double getActivitySum() const {
     double result{0.0};
-    for (double activity : cellActivities) {
+    for (double activity : probabilities) {
       result += activity;
     }
     return result;
   }
 
 private:
-  // Сontains the switching activity of cells (accessed via cell indices).
-  CellActivities cellActivities;
+  /// Сontains the switching activity of cells (accessed via cell indices).
+  Probabilities probabilities;
+  /// Switches from one to zero.
+  Switches switchesOn;
+  /// Switches from zero to one.
+  Switches switchesOff;
 };
 
 /**
@@ -55,18 +68,20 @@ private:
 class SwitchActivityEstimator {
 public:
 
-  using Probabilities = std::vector<double>;
+  /// @cond ALIASES
+  using Probabilities = SwitchActivity::Probabilities;
   using Subnet        = model::Subnet;
+  /// @endcond
 
   /**
    * @brief Estimates the switching activity of each cell in the subnet.
-   * @param subnet        The subnet for estimating.
-   * @param probabilities The probabilities of getting 1 for each input in
+   * @param subnet The subnet for estimating.
+   * @param inputProbabilities The probabilities of getting 1 for each input in
    * the subnet. If it is not passed, the probability of getting 1
    * for each input is 0.5.
    */
   virtual SwitchActivity estimate(const Subnet &subnet,
-      const Probabilities &probabilities = {}) = 0;
+      const Probabilities &inputProbabilities = {}) = 0;
 
   virtual ~SwitchActivityEstimator() = default;
 };

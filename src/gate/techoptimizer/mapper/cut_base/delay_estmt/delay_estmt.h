@@ -24,10 +24,10 @@ namespace eda::gate::tech_optimizer::delay_estimation
    */
   class NLDM {
   friend float interpolation(float x0, float y0,
-                            float x1, float x2, 
-                            float y1, float y2, 
-                            float T11, float T12, 
-                            float T21, float T22);
+                             float x1, float x2, 
+                             float y1, float y2, 
+                             float T11, float T12, 
+                             float T21, float T22);
 
   public:
   /// Constructors
@@ -44,9 +44,9 @@ namespace eda::gate::tech_optimizer::delay_estimation
     *  for searching concrete cell's timing.
     */
   void delayEstimation(std::string& cell_name,
-                         std::string& file_name,
-                         float& input_net_transition_f,
-                         float& total_output_net_capacitance_f );
+                       std::string& file_name,
+                       float& input_net_transition_f,
+                       float& total_output_net_capacitance_f );
 
 
   /// Properties
@@ -85,27 +85,41 @@ namespace eda::gate::tech_optimizer::delay_estimation
     ~WLM() = default;
 
     /// Setters
-    void set_wire_load_model(std::string &wlm_name);
+    void set_wire_load_model(std::string wlm_name);
 
     /// Getters
-    float getFanoutCap(int& fanout_count);
+    float getLength(size_t& fanout_count);
+    float getFanoutCap(size_t& fanout_count);
+    float getFanoutRes(size_t& fanout_count);
 
     /// Properties
   private:
-    /* WLM names = { "top", "10k", "5k", "2k", "1k", "500" }*/
-    std::string wire_load_name;
-    /// Resistance, Capacitance, Area, extrapolation slope
-    float R, C, Area, slope;
-    std::pair<int, float> fanout_length[7];
-    std::pair<int, float> fanout_resistance[7];
-    std::pair<int, float> fanout_capacitance[7];
     /* length_top = the length of one side of a square die                *
      * length_10k = the length of one side of a block containing          *
      * 10k gates                                                          */
     float length_top = 2500.0;
     float length_10k = 900;
     /* fudge = correction factor, routing, placement, etc. */
-    float fudge = 0.1;
+    float fudge = 1.0;
+    /* WLM names = { "top", "10k", "5k", "2k", "1k", "500" }*/
+    std::string wire_load_name;
+    /// Resistance, Capacitance, Area, extrapolation slope
+    float R, C, Area, slope;
+    std::pair<size_t, float> fanout_length[7];
+    std::pair<size_t, float> fanout_resistance[7];
+    std::pair<size_t, float> fanout_capacitance[7];
   };
 
+  //===----------------------------------------------------------------------===//
+  // Delay estimator
+  //===----------------------------------------------------------------------===//
+
+  class DelayEstimator{
+  public:
+    DelayEstimator() = default;
+    ~DelayEstimator() = default;
+
+    NLDM nldm;
+    WLM wlm;
+  };
 } // namespace eda::gate::tech_optimizer::delay_estimation

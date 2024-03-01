@@ -9,7 +9,7 @@
 #include "gate/model2/subnet.h"
 #include "gate/model2/printer/printer.h"
 
-#include <iostream>
+#include <queue>
 
 namespace eda::gate::model {
 
@@ -459,20 +459,28 @@ void SubnetBuilder::relinkCell(size_t entryID, const LinkList &newLinks) {
 }
 
 void SubnetBuilder::deleteCell(size_t entryID) {
-  auto &cell = getCell(entryID);
-  assert(cell.arity <= Subnet::Cell::InPlaceLinks);
+  std::queue<size_t> queue;
+  queue.push(entryID);
 
-  deallocEntry(entryID);
-  for (size_t j = 0; j < cell.arity; ++j) {
-    const size_t inputEntryID = cell.link[j].idx;
+  do {
+    const size_t currentID = queue.front();
+    queue.pop();
 
-    auto &inputCell = getCell(inputEntryID);
-    inputCell.decRefCount();
+    auto &cell = getCell(currentID);
+    assert(cell.arity <= Subnet::Cell::InPlaceLinks);
+    deallocEntry(currentID);
 
-    if (!inputCell.refcount) {
-      deleteCell(inputEntryID); // FIXME: recursion.
+    for (size_t j = 0; j < cell.arity; ++j) {
+      const size_t inputID = cell.link[j].idx;
+
+      auto &inputCell = getCell(inputID);
+      inputCell.decRefCount();
+
+      if (!inputCell.refcount) {
+        queue.push(inputID);
+      }
     }
-  }
+  } while (!queue.empty());
 }
 
 Subnet::Link SubnetBuilder::replaceCell(
@@ -492,7 +500,7 @@ Subnet::Link SubnetBuilder::replaceCell(
     inputCell.decRefCount();
 
     if (!inputCell.refcount) {
-      deleteCell(inputEntryID); // FIXME: recursion.
+      deleteCell(inputEntryID);
     }
   }
 

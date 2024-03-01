@@ -120,8 +120,8 @@ TEST(CutExtractorTest, Domination) {
 
   const auto inputs = builder.addInputs(2);
   const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
-  const auto notLink0 = builder.addCell(model::BUF, andLink0);
-  const auto andLink1 = builder.addCell(model::AND, andLink0, notLink0);
+  const auto bufLink0 = builder.addCell(model::BUF, andLink0);
+  const auto andLink1 = builder.addCell(model::AND, andLink0, bufLink0);
   builder.addOutput(andLink1);
   const auto &subnet = Subnet::get(builder.make());
 
@@ -142,17 +142,18 @@ TEST(CutExtractorTest, LimitedK) {
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(1);
-  const auto notLink0 = builder.addCell(model::BUF, inputs[0]);
-  const auto notLink1 = builder.addCell(model::BUF, inputs[0]);
-  const auto notLink2 = builder.addCell(model::BUF, notLink0);
-  const auto notLink3 = builder.addCell(model::BUF, notLink0);
-  const auto notLink4 = builder.addCell(model::BUF, notLink1);
-  const auto notLink5 = builder.addCell(model::BUF, notLink1);
-  const auto andLink0 = builder.addCell(model::AND, notLink2, notLink3);
-  const auto andLink1 = builder.addCell(model::AND, notLink4, notLink5);
+  const auto bufLink0 = builder.addCell(model::BUF, inputs[0]);
+  const auto bufLink1 = builder.addCell(model::BUF, Link(inputs[0].idx, 0, 1));
+  const auto bufLink2 = builder.addCell(model::BUF, bufLink0);
+  const auto bufLink3 = builder.addCell(model::BUF, Link(bufLink0.idx, 0, 1));
+  const auto bufLink4 = builder.addCell(model::BUF, bufLink1);
+  const auto bufLink5 = builder.addCell(model::BUF, Link(bufLink1.idx, 0, 1));
+  const auto andLink0 = builder.addCell(model::AND, bufLink2, bufLink3);
+  const auto andLink1 = builder.addCell(model::AND, bufLink4, bufLink5);
   const auto andLink2 = builder.addCell(model::AND, andLink0, andLink1);
   builder.addOutput(andLink2);
   const auto &subnet = Subnet::get(builder.make());
+  std::cout << subnet << '\n';
 
   CutExtractor cutExtractor(&subnet, 2);
   const std::vector<CutsList> validRes {
@@ -225,9 +226,9 @@ TEST(CutExtractorTest, SameElementsInCuts) {
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(1);
-  const auto notLink0 = builder.addCell(model::BUF, inputs[0]);
-  const auto notLink1 = builder.addCell(model::BUF, inputs[0]);
-  const auto andLink0 = builder.addCell(model::AND, notLink0, notLink1);
+  const auto bufLink0 = builder.addCell(model::BUF, inputs[0]);
+  const auto bufLink1 = builder.addCell(model::BUF, Link(inputs[0].idx, 0, 1));
+  const auto andLink0 = builder.addCell(model::AND, bufLink0, bufLink1);
   builder.addOutput(andLink0);
   const auto &subnet = Subnet::get(builder.make());
 

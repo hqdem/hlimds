@@ -246,8 +246,10 @@ void SubnetBuilder::replace(
   }
   const Subnet &rhs = Subnet::get(rhsID);
   assert(rhs.getOutNum() == 1);
-  size_t prevNewCellID = (size_t)-1;
+  size_t prevNewCellID = invalidID;
   const auto &rhsEntries = rhs.getEntries();
+
+  destrashEntry(rhsToLhs[rhsEntries.size() - 1]);
 
   for (size_t i = 0; i < rhsEntries.size() - 1; ++i) {
     const Subnet::Cell &cell = rhsEntries[i].cell;
@@ -285,7 +287,7 @@ void SubnetBuilder::replace(
     if (!isNewElem) {
       continue;
     }
-    if (prevNewCellID == (size_t)-1) {
+    if (prevNewCellID == invalidID) {
       setOrder(getPrev(rhsToLhs[rhsEntries.size() - 1]), newEntryID);
     } else {
       setOrder(prevNewCellID, newEntryID);
@@ -294,38 +296,54 @@ void SubnetBuilder::replace(
   }
 }
 
-void SubnetBuilder::mergeCells(
-    size_t entryID, const std::unordered_set<size_t> &otherIDs) {
-  assert(otherIDs.find(entryID) == otherIDs.end());
+void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
+  size_t refcount = 0;
 
-  auto &remain = getCell(entryID);
-  assert((remain.getOutNum() == 1) && "Multiple outputs are not allowed");
+  std::unordered_map<size_t, size_t> mergeTo;
+  for (const auto &[entryID, otherIDs] : entryIDs) {
+    assert(getCell(entryID).getOutNum() == 1);
+    assert(otherIDs.find(entryID) == otherIDs.end());
 
-  // TODO: Improve performance.
-  for (auto i = begin(); i != end(); ++i) {
-    if (*i == entryID || otherIDs.find(*i) != otherIDs.end()) {
-      continue;
+    for (const auto otherID : otherIDs) {
+      assert(getCell(otherID).getOutNum() == 1);
+      mergeTo.insert({otherID, entryID});
+      refcount += getCell(otherID).refcount;
     }
+  }
+  assert(refcount);
 
+  // Skip the entries precedings the ones being removed.
+  auto i = begin();
+  for (; i != end() && mergeTo.find(*i) == mergeTo.end(); ++i);
+
+  if (i != end()) ++i;
+  for (; refcount && i != end(); ++i) {
     auto &target = getCell(*i);
     for (size_t j = 0; j < target.arity; ++j) {
       auto &link = getLinkRef(*i, j);
 
-      if (otherIDs.find(link.idx) != otherIDs.end()) {
+      const auto r = mergeTo.find(link.idx);
+      if (r != mergeTo.end()) {
+        // The remaining entry should not depend on the entry being removed.
+        auto &remain = getCell(r->second);
         auto &source = getCell(link.idx);
-        assert((source.getOutNum() == 1) && "Multiple outputs are not allowed");
 
         // Redirect the link to the remaining cell.
-        link.idx = entryID;
+        link.idx = r->second;
         source.decRefCount();
         remain.incRefCount();
-      }
-    }
-  }
 
-  for (const auto otherID : otherIDs) {
-    assert(!getCell(otherID).refcount);
-    deleteCell(otherID);
+        if (!--refcount) {
+          break;
+        }
+      }
+    } // for links
+  } // for cells
+
+  // Remove the given cells.
+  for (const auto other : mergeTo) {
+    assert(!getCell(other.first).refcount);
+    deleteCell(other.first);
   }
 }
 
@@ -339,26 +357,18 @@ size_t SubnetBuilder::allocEntry() {
     emptyEntryIDs.pop_back();
     return allocatedID;
   }
+
   entries.resize(entries.size() + 1);
   return entries.size() - 1;
 }
 
 size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
-  size_t idx = -1u;
-
-  if (StrashKey::isEnabled(typeID, links)) {
-    const StrashKey key(typeID, links);
-    const auto i = strash.find(key);
-
-    if (i != strash.end()) {
-      return i->second;
-    }
-
-    idx = allocEntry();
-    strash.insert({key, idx});
-  } else {
-    idx = allocEntry();
+  const auto status = strashEntry(typeID, links);
+  if (status.first != invalidID && !status.second) {
+    return status.first;
   }
+
+  size_t idx = (status.first != invalidID) ? status.first : allocEntry();
 
   for (const auto link : links) {
     auto &cell = getCell(link.idx);
@@ -371,8 +381,8 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
     setOrder(subnetEnd, idx);
   }
 
-  const auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
-  const auto InEntryLinks = Subnet::Cell::InEntryLinks;
+  constexpr auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
+  constexpr auto InEntryLinks = Subnet::Cell::InEntryLinks;
   for (size_t i = InPlaceLinks; i < links.size(); i += InEntryLinks) {
     entries.emplace_back(links, i);
   }
@@ -384,16 +394,7 @@ void SubnetBuilder::deallocEntry(size_t entryID) {
   const auto &cell = getCell(entryID);
   assert(!cell.refcount);
 
-  if (StrashKey::isEnabled(cell)) {
-    const StrashKey key(cell);
-    const auto i = strash.find(key);
-
-    if (i != strash.end()) {
-      assert(i->second == entryID);
-      strash.erase(i);
-    }
-  }
-
+  destrashEntry(entryID);
   setOrder(getPrev(entryID), getNext(entryID));
   emptyEntryIDs.push_back(entryID);
 }
@@ -463,7 +464,7 @@ void SubnetBuilder::deleteCell(size_t entryID) {
   for (size_t j = 0; j < cell.arity; ++j) {
     const size_t inputEntryID = cell.link[j].idx;
 
-    auto &inputCell = entries[inputEntryID].cell;
+    auto &inputCell = getCell(inputEntryID);
     inputCell.decRefCount();
 
     if (!inputCell.refcount) {
@@ -525,16 +526,19 @@ bool SubnetBuilder::checkOutputsOrder() const {
 }
 
 void SubnetBuilder::sortEntries() {
-  std::vector<Subnet::Entry> newEntries;
+  std::vector<Subnet::Entry> newEntries; // FIXME: known size.
   std::unordered_map<size_t, size_t> relinkMapping;
   size_t curID = 0;
   do {
     relinkMapping[curID] = newEntries.size();
     LinkList links;
-    const auto cell = entries[curID].cell;
+
+    const auto cell = getCell(curID);
+    assert(!cell.refcount);
+
     for (size_t i = 0; i < cell.arity; ++i) {
       const auto &curLink = cell.link[i];
-      if (relinkMapping.find(curLink.idx) != relinkMapping.end()) {
+      if (relinkMapping.find(curLink.idx) != relinkMapping.end()) { // FIXME: two map accesses.
         links.push_back(Link(relinkMapping[curLink.idx], curLink.out,
                              curLink.inv));
       } else {
@@ -556,6 +560,40 @@ void SubnetBuilder::clearContext() {
   next.clear();
   emptyEntryIDs.clear();
   subnetEnd = normalOrderID;
+  strash.clear();
+}
+
+std::pair<size_t, bool> SubnetBuilder::strashEntry(
+    CellTypeID typeID, const LinkList &links) {
+  if (StrashKey::isEnabled(typeID, links)) {
+    const StrashKey key(typeID, links);
+    const auto i = strash.find(key);
+
+    if (i != strash.end()) {
+      return {i->second, false /* old */};
+    }
+
+    const auto idx = allocEntry();
+    strash.insert({key, idx});
+
+    return {idx, true /* new */};
+  }
+
+  return {invalidID, false};
+}
+
+void SubnetBuilder::destrashEntry(size_t entryID) {
+  const auto &cell = getCell(entryID);
+
+  if (StrashKey::isEnabled(cell)) {
+    const StrashKey key(cell);
+    const auto i = strash.find(key);
+
+    if (i != strash.end()) {
+      assert(i->second == entryID);
+      strash.erase(i);
+    }
+  }
 }
 
 } // namespace eda::gate::model

@@ -500,8 +500,11 @@ public:
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(SubnetID rhsID, std::unordered_map<size_t, size_t> &rhsToLhs);
 
-  /// Merges the given cells (leaves the first one).
-  void mergeCells(size_t entryID, const std::unordered_set<size_t> &otherIDs);
+  /// Merges the cells from each map item leaving the one stored in the key.
+  /// Precondition: remaining entries do not depend on entries being removed.
+  using EntrySet = std::unordered_set<size_t>;
+  using MergeMap = std::unordered_map<size_t, EntrySet>;
+  void mergeCells(const MergeMap &entryIDs);
 
   EntryIterator begin() const {
     return EntryIterator(this, 0);
@@ -576,9 +579,21 @@ private:
   void clearContext();
 
 private:
-  static constexpr size_t normalOrderID = -1u;
-  static constexpr size_t lowerBoundID = -2u;
-  static constexpr size_t upperBoundID = -3u;
+  using StrashMap = std::unordered_map<StrashKey, size_t>;
+
+  /// Returns {invalidID, false} unless strashing is enabled.
+  /// Otherwise, returns {entryID, existed (false) / newly created (true)}.
+  std::pair<size_t, bool> strashEntry(CellTypeID typeID, const LinkList &links);
+
+  /// Removes the given entry from the strashing map.
+  void destrashEntry(size_t entryID);
+
+private:
+  static constexpr size_t invalidID = static_cast<size_t>(-1);
+
+  static constexpr size_t normalOrderID = invalidID;
+  static constexpr size_t lowerBoundID  = invalidID - 1;
+  static constexpr size_t upperBoundID  = invalidID - 2;
 
   uint16_t nIn;
   uint16_t nOut;
@@ -591,7 +606,7 @@ private:
 
   size_t subnetEnd{normalOrderID};
 
-  std::unordered_map<StrashKey, size_t> strash;
+  StrashMap strash;
 };
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet);

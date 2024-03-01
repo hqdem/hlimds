@@ -1,4 +1,3 @@
-/*
 //===----------------------------------------------------------------------===//
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
@@ -139,5 +138,28 @@ TEST(SubnetTest, SimpleStrashTest) {
   EXPECT_EQ(result.size(), InNum + OutNum + 1);
 }
 
+TEST(SubnetTest, SimpleMergeTest) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(2);
+
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(OR, ~inputs[0], ~inputs[1]);
+  Subnet::Link link3 = builder.addCell(BUF, ~link2);
+
+  builder.addOutput(link1);
+  builder.addOutput(link3);
+
+  SubnetBuilder::MergeMap mergeMap;
+  SubnetBuilder::EntrySet entrySet;
+
+  entrySet.insert(link3.idx);
+  mergeMap[link1.idx] = entrySet;
+
+  builder.mergeCells(mergeMap);
+
+  const auto &result = Subnet::get(builder.make());
+  std::cout << result << std::endl;
+}
+
 } // namespace eda::gate::model
-*/

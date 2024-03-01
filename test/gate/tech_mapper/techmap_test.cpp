@@ -76,7 +76,7 @@ namespace eda::gate::tech_optimizer {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-    GNet *net = parseVerilog("c432.v");
+    GNet *net = parseVerilogTest("c432.v");
 
     CutBasedTechMapper cutBasedTechMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
@@ -88,7 +88,7 @@ namespace eda::gate::tech_optimizer {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-    GNet *net = parseVerilog("adder.v");
+    GNet *net = parseVerilogTest("adder.v");
 
     CutBasedTechMapper cutBasedTechMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     
@@ -100,7 +100,7 @@ namespace eda::gate::tech_optimizer {
     if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-    GNet *net = parseVerilog("c17.v");
+    GNet *net = parseVerilogTest("c17.v");
 
     CutBasedTechMapper cutBasedTechMapper(libertyDirrectTechMap.string() + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
     

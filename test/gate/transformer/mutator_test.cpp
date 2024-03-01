@@ -27,7 +27,6 @@ namespace eda::gate::mutator {
   using eda::gate::optimizer::balanceAND;
   using eda::gate::optimizer::createLink;
   using eda::gate::optimizer::getNext;
-  using eda::gate::parser::parseVerilog;
   using Signal = eda::gate::model::Gate::Signal;
   using SignalList = eda::gate::model::Gate::SignalList;
   using SubnetId = eda::gate::model::GNet::SubnetId;
@@ -152,7 +151,7 @@ namespace eda::gate::mutator {
 
   TEST(Mutator, verilogAdder) {
     GNet gNet;
-    gNet.addNet(*parseVerilog("adder.v"));
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("adder.v"));
     GNet mutatedGNet;
     mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, 3));
     gNet.sortTopologically();
@@ -163,7 +162,7 @@ namespace eda::gate::mutator {
 
   TEST(Mutator, verilogC17) {
     GNet gNet;
-    gNet.addNet(*parseVerilog("c17.v"));
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("c17.v"));
     GNet mutatedGNet;
     GateIdList list;
     mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, list, gNet, 
@@ -181,7 +180,7 @@ namespace eda::gate::mutator {
 
   TEST(Mutator, verilogSquare) {
     GNet gNet;
-    gNet.addNet(*parseVerilog("square.v"));
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("square.v"));
     GNet mutatedGNet;
     mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, 1));
     gNet.sortTopologically();
@@ -252,7 +251,7 @@ namespace eda::gate::mutator {
 
   TEST(Mutator, cutC17) {
     GNet gNet;
-    gNet.addNet(*parseVerilog("c17.v"));
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("c17.v"));
     GNet mutatedGNet;
     GateIdList list = {9};
     mutatedGNet.addNet(Mutator::mutate(MutatorMode::CUT, gNet, list, 
@@ -266,7 +265,7 @@ namespace eda::gate::mutator {
 
   TEST(Mutator, cutNumberC499) {
     GNet gNet;
-    gNet.addNet(*parseVerilog("c499.v"));
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("c499.v"));
     GNet mutatedGNet;
     mutatedGNet.addNet(Mutator::mutate(MutatorMode::CUT, gNet, 3, 
                                       {GateSymbol::AND, GateSymbol::XOR}, 2));

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -20,7 +20,6 @@
 namespace eda::gate::optimizer {
 
   using GateIdList = eda::gate::model::GNet::GateIdList;
-  using eda::gate::parser::parseVerilog;
 
   /* in1   in2                          */
   /* ┌─┐   ┌─┐                          */
@@ -60,7 +59,7 @@ namespace eda::gate::optimizer {
 
   TEST(DotPrinter, c17) {
     GNet gNet;
-    gNet.addNet(*parseVerilog("c17.v"));
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("c17.v"));
     const auto &gate = gNet.gates();
     GateIdList list = {gate[0]->id(), gate[7]->id(), gate[9]->id()};
     std::string graphFileName = "c17.dot";

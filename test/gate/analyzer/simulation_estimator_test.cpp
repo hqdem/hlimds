@@ -45,9 +45,13 @@ TEST(SwitchActivityTest, ToggleRateTest) {
   data.push_back({0x5bd062c2515f007c, 0x4db127f812200854,
                   0x1f16e9e80216231b, 0x66ef438d1190cde7});
 
-  Switches preCalculatedSwitches{91, 95, 91, 106, 77, 83, 85, 85};
+  auto [switchesOn, switchesOff] = simEstimator.countSwitches(subnet, data);
+  Switches switches(switchesOn.size());
+  for (size_t i{0}; i < switches.size(); ++i) {
+    switches[i] = switchesOn[i] + switchesOff[i];
+  }
 
-  Switches switches = simEstimator.countSwitches(subnet, data);
+  Switches preCalculatedSwitches{91, 95, 91, 106, 77, 83, 85, 85};
 
   EXPECT_EQ(switches, preCalculatedSwitches);
 }

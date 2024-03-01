@@ -14,6 +14,7 @@
 
 #include <bitset>
 #include <random>
+#include <utility>
 #include <vector>
 
 namespace eda::gate::analyzer {
@@ -24,25 +25,25 @@ namespace eda::gate::analyzer {
 class SimulationEstimator final : public SwitchActivityEstimator {
 public:
 
+  /// @cond ALIASES
   using Cache         = simulator2::Simulator::DataChunk;
   using CacheList     = simulator2::Simulator::DataVector;
   using Distributions = std::vector<std::discrete_distribution<int>>;
   using InValuesList  = std::vector<CacheList>;
   using Simulator     = simulator2::Simulator;
-  using Switches      = std::vector<size_t>;
+  using Switches      = SwitchActivity::Switches;
+  /// @endcond
 
   /**
    * @brief Creates simulator-based estimator.
-   * 
    * @param ticks The number of ticks for subnet simulation.
    */
   explicit SimulationEstimator(size_t ticks = 1024) : ticks(ticks),
       generator((std::random_device())()) { }
 
   /**
-   * Sets the number of simulation ticks.
-   * 
-   * @param ticks The number of ticks for subnet simulation.
+   * @brief Sets the number of simulation ticks.
+   * @param newTicks The number of ticks for subnet simulation.
    */
   void setTicks(size_t newTicks) {
 
@@ -61,10 +62,11 @@ public:
    *  tc - the number of 0->1 and 0->1 switches for the cell,
    *  n  - the number of the ticks.
    *  
-   * @param subnet        The subnet for estimating.
+   * @param subnet The subnet for estimating.
    * @param probabilities The probabilities of getting 1 for each input in
    * the subnet. If it is not passed, the probability of getting 1
    * for each input is 0.5.
+   * @return Switching activity of the subnet.
    */
   SwitchActivity estimate(const Subnet &subnet,
                           const Probabilities &probabilities = {}) override;
@@ -73,11 +75,13 @@ public:
    * Сounts only the switches from 0 to 1 and from 1 to 0 for
    * passed input values.
    * 
-   * @param subnet       The subnet for counting switches.
+   * @param subnet The subnet for counting switches.
    * @param inValuesList The input values for simulation of the subnet.
+   * @return Switches from 1 to 0 and from 0 to 1 for the subnet.
    */
-  Switches countSwitches(const Subnet &subnet,
-                         const InValuesList &inValuesList);
+
+  std::pair<Switches, Switches> countSwitches(const Subnet &subnet,
+      const InValuesList &inValuesList);
 
 private:
 
@@ -88,14 +92,15 @@ private:
   }
 
   /**
-   * Returns all switched bits in cache (last bit can not switch).
+   * @brief Returns all switched bits in cache (last bit can not switch).
    */
-  static uint64_t getToggledBits(uint64_t cache) {
+  static uint64_t getSwitchedBits(uint64_t cache) {
     return (cache ^ (cache >> 1)) & ~(1ull << 63);
   }
 
-  // TODO: Decide about default value for the ticks.
+  /// The number of simulation ticks.
   size_t ticks{1024};
+  /// Random numbers generator.
   std::mt19937 generator;
 };
 

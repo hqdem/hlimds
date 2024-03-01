@@ -18,4 +18,4 @@
 	url = https://github.com/ispras/OpenABC
 [submodule "lib/readcells"]
 	path = lib/readcells
-	url = https://gitlab.ispras.ru/mvg/readcells
+	url = ../../mvg/readcells.git

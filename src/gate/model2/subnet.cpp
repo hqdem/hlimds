@@ -349,6 +349,18 @@ void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
   }
 }
 
+void SubnetBuilder::replaceWithZero(const EntrySet &entryIDs) {
+  const size_t zeroID = addCell(ZERO).idx;
+  // FIXME: Place just after inputs.
+  mergeCells(MergeMap{{zeroID, entryIDs}});
+}
+
+void SubnetBuilder::replaceWithOne(const EntrySet &entryIDs) {
+  const size_t oneID = addCell(ONE).idx;
+  // FIXME: Place just after inputs.
+  mergeCells(MergeMap{{oneID, entryIDs}});
+}
+
 Subnet::Link &SubnetBuilder::getLinkRef(size_t entryID, size_t j) {
   return const_cast<Subnet::Link&>(getLink(entryID, j));
 }
@@ -476,7 +488,7 @@ void SubnetBuilder::deleteCell(size_t entryID) {
       auto &inputCell = getCell(inputID);
       inputCell.decRefCount();
 
-      if (!inputCell.refcount) {
+      if (!inputCell.refcount && !inputCell.isIn() /* leave inputs */) {
         queue.push(inputID);
       }
     }
@@ -546,7 +558,7 @@ void SubnetBuilder::rearrangeEntries() {
     relinkMapping[i] = newEntries.size();
 
     const auto &cell = getCell(i);
-    assert(cell.isOut() || cell.refcount);
+    assert(cell.isIn() || cell.isOut() || cell.refcount);
 
     LinkList links;
     for (size_t j = 0; j < cell.arity; ++j) {

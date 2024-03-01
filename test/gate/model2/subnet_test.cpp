@@ -162,4 +162,21 @@ TEST(SubnetTest, SimpleMergeTest) {
   std::cout << result << std::endl;
 }
 
+TEST(SubnetTest, SimpleReplaceConstTest) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(2);
+
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(OR, ~inputs[0], ~inputs[1]);
+  Subnet::Link link3 = builder.addCell(OR, link1, link2);
+
+  builder.addOutput(link3);
+
+  builder.replaceWithZero(SubnetBuilder::EntrySet{link3.idx});
+
+  const auto &result = Subnet::get(builder.make());
+  std::cout << result << std::endl;
+}
+
 } // namespace eda::gate::model

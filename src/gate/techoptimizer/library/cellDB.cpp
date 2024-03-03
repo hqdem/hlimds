@@ -9,6 +9,10 @@
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/techoptimizer/library/cellDB.h"
 
+#include "nlohmann/json.hpp"
+#include <filesystem>
+#include <fstream>
+
 #include <algorithm>
 #include <random>
 
@@ -74,6 +78,39 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     SubnetID subnetID = subnetBuilder.make();
 
     subnets.push_back(subnetID);
+
+    bool needPower = true;
+    if (needPower) {
+      const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+      const std::filesystem::path jsonPath =
+          homePath / "test" / "data" / "gate" / "tech_mapper" / "liberty.json";
+      std::ifstream file(jsonPath.string());
+      nlohmann::json j;
+      file >> j;
+
+      std::vector<Power> powers;
+
+      std::string cell_name = cellType.getName();
+
+      if (j.contains(cell_name)) {
+        auto& cell_power = j[cell_name]["power"];
+
+        for (auto& [key, value] : cell_power.items()) {
+          Power power;
+          power.fall_power = value["fall_power"];
+          power.rise_power = value["rise_power"];
+          powers.push_back(power);
+        }
+      } else {
+        std::cout << "Cell not found in JSON." << std::endl;
+      }
+
+      // Вывод значений для проверки
+      for (auto& p : powers) {
+        std::cout << "Fall Power: " << p.fall_power << ", Rise Power: " << p.rise_power << std::endl;
+      }
+
+    }
 
     Subnetattr subnetattr{"LibraryCell", cellType.getAttr().area};
     subnetToAttr.emplace_back(subnetID, subnetattr);

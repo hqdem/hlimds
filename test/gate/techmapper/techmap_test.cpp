@@ -20,6 +20,8 @@
 #include "gate/model2/object.h"
 #include "gate/model2/printer/printer.h"
 #include "gate/debugger2/sat_checker2.h"
+#include "gate/debugger2/rnd_checker2.h"
+#include "gate/debugger2/bdd_checker2.h"
 
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/techoptimizer/util/get_tech_attr.h"
@@ -215,7 +217,7 @@ TEST(TechMapTest, SimpleSub) {
   auto &subnet = model::Subnet::get(subnetID);
   std::cout << subnet << std::endl;
 
-  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_.lib",
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
                       Techmapper::MapperType::SIMPLE_AREA_FUNC);
 
   SubnetID mappedSub = techmapper.techmap(subnetID);

@@ -7,9 +7,18 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace eda::gate::tech_optimizer {
+struct Power {
+  float fall_power;
+  float rise_power;
+};
+
 struct Subnetattr {
   std::string name;
   float area;
+  std::vector <Power> pinsPower;
   };
 } // namespace eda::gate::tech_optimizer

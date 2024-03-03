@@ -79,7 +79,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
     subnets.push_back(subnetID);
 
-    bool needPower = true;
+    bool needPower = false;
     if (needPower) {
       const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
       const std::filesystem::path jsonPath =

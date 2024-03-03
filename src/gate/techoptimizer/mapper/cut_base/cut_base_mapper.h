@@ -26,12 +26,12 @@ protected:
   void baseMap() override;
   virtual void findBest() = 0;
 
-  void addNotAnAndToTheMap(EntryIndex entryIndex, model::Subnet::Cell &cell);
+  void addNotAnAndToTheMap(EntryIndex entryIndex,const model::Subnet::Cell &cell);
 
   void addInputToTheMap(EntryIndex entryIndex);
   void addZeroToTheMap(EntryIndex entryIndex);
   void addOneToTheMap(EntryIndex entryIndex);
   void addOutToTheMap(EntryIndex entryIndex,
-                      model::Subnet::Cell &cell);
+                      const model::Subnet::Cell &cell);
 };
 } // namespace eda::gate::tech_optimizer

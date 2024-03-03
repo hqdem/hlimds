@@ -18,10 +18,11 @@
 #include "gate/optimizer2/cut_extractor.h"
 #include "gate/techoptimizer/mapper/cut_base/cut_base_mapper.h"
 
+#include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <list>
 #include <map>
-#include <stack>
 #include <unordered_map>
 
 namespace eda::gate::tech_optimizer {
@@ -36,54 +37,42 @@ namespace eda::gate::tech_optimizer {
   using Cone = ConeBuilder::Cone;
   using EntryMap = std::unordered_map<uint64_t, uint64_t>;
 
-  class BestReplacementPower : public BestReplacement{
-    public:
-      BestReplacementPower(){
-        areaFlow = 1000000.0;
-        switchFlow = 1000000.0;
-      };
-      double switchFlow;
-      double areaFlow;
-  };
-
-  inline bool costAreaSwitch(const BestReplacementPower& left, const BestReplacementPower& right){
-    if(left.areaFlow == right.areaFlow)return left.switchFlow < right.switchFlow;
-    return left.areaFlow < right.areaFlow;
-  }
-
-
 class PowerMap : public CutBaseMapper{
+  public:
+    PowerMap() = default;
   protected:
-    
     void findBest() override;
+    
+    ~PowerMap(){
+      delete computedAF;
+      delete computedSF;
+      delete computedLevel;
+      delete coneBuilder;
+      delete entries;
+    }
+    
   private:
 
-    double areaFlow(const ArrayEntry &cells,
-                    const EntryIndex entryIndex,const Cut &cut,
-                    std::vector<double> &computedAreaFlow);
+    double areaFlow(const EntryIndex entryIndex,const Cut &cut);
 
-    double switchFlow(const ArrayEntry &cells,
-                      const EntryIndex entryIndex, const Cut &cut,
-                      std::vector<double> &computedSwitchFlow,
+    double switchFlow(const EntryIndex entryIndex, const Cut &cut,
                       const std::vector<double> &cellActivities);
 
-    // void addNotAnAndToTheMap(EntryIndex entryIndex,
-    //                   model::Subnet::Cell &cell);
+    int64_t getLevel(const EntryIndex entryIdx);
+    int64_t getLevel(const Cut &cut);
+    BestReplacement findCutMinimizingDepth(const EntryIndex entryIndex);
+    
+    void traditionalMapDepthOriented();
+    void globalSwitchAreaRecovery(const std::vector<double> &cellActivities);
+    void computeRequiredTimes();
+    std::vector<SubnetID> getTechIdsList(const Cut cut);
 
-    BestReplacement findCutMinimizingDepth(const EntryIndex entryIndex, const ArrayEntry &entries,
-                                  std::vector<int64_t> &computedLevel, const ConeBuilder &coneBuilder);
-
-    void traditionalMapDepthOriented(const ArrayEntry &entries,
-                                          std::vector<int64_t> &computedLevel,
-                                          const ConeBuilder &coneBuilder);
-
-    std::vector<SubnetID> getTechIdsList(const Cut cut, ConeBuilder coneBuilder);
-
-    // void addInputToTheMap(EntryIndex entryIndex);
-    // void addZeroToTheMap(EntryIndex entryIndex);
-    // void addOneToTheMap(EntryIndex entryIndex);
-    // void addOutToTheMap(EntryIndex entryIndex,
-    //                   model::Subnet::Cell &cell);
+    std::vector<double> *computedAF;
+    std::vector<double> *computedSF;
+    std::vector<int64_t> *computedLevel;
+    std::vector<uint32_t> *requiredTimes;
+    eda::gate::optimizer2::ConeBuilder *coneBuilder;
+    ArrayEntry *entries;
 };
 
 } // namespace eda::gate::tech_optimizer

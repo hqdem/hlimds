@@ -171,8 +171,9 @@ void LibraryCells::readLibertyFile(const std::string &filename,
     while (getline(ss, token, ' ')) {
       inputPinNames.push_back(token);
     }
-    if (!inputPinNames.empty()) {
+    if (!inputPinNames.empty() ) {
       if (it.value()["comb"]) {
+      //if (it.value()["comb"] && it.value()["output"].size() == 1) {
         // Extract the truth table
         const std::string truthTableName = it.value()["output"].begin().key();
         const std::string plainTruthTable = it.value()["output"][truthTableName];

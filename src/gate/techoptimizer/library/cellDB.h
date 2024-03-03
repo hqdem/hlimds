@@ -37,6 +37,8 @@ namespace eda::gate::tech_optimizer {
     std::vector<std::pair<kitty::dynamic_truth_table, 
         SubnetID>> &getTTSubnet();
 
+    std::vector<SubnetID> getPatterns();
+
     std::vector<SubnetID> getSubnetIDsByTT(const kitty::dynamic_truth_table &tt) const;
     const Subnetattr &getSubnetAttrBySubnetID(const SubnetID id) const;
 

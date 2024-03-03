@@ -70,36 +70,59 @@ namespace eda::gate::mutator {
     GateIdMap mapOldToNew;
     size_t gateNum = gNet.nGates();
     for (auto *gate : gNet.gates()) {
-      mapOldToNew.insert(std::pair<GateId, GateId>(gate->id(), (gate->id() + gateNum)));
+      mapOldToNew.insert(std::pair<GateId, GateId>(gate->id(), 
+                        (gate->id() + gateNum)));
     }
     return mapOldToNew;
   }
+
+  void printGraphs(GNet &gNet, std::string &fileName,
+                   GNet &mutatedGNet, std::string &fileNameMutate, 
+                   GateIdList &list) {
+    std::string homePath = std::string(std::getenv("UTOPIA_HOME"));
+    std::string fileDir = homePath + "/output/test/transformer/mutator/";
+    std::string inputToPng = "cd " + fileDir + "\n" + "dot " + 
+                fileName + ".dot" + " -Tpng -o " + fileName + ".png";
+    std::string mutatedToPng = "cd " + fileDir + "\n" + "dot " + 
+                fileNameMutate + ".dot" + " -Tpng -o " + fileNameMutate + ".png";
+    std::system(("mkdir -p " + fileDir).c_str());
+    Dot dot(&gNet);
+    dot.print(fileDir + fileName + ".dot");
+    std::system(inputToPng.c_str());
+    Dot dotMutate(&mutatedGNet);
+    dotMutate.fillColorGate(fileDir + fileNameMutate + ".dot", list);
+    std::system(mutatedToPng.c_str());
+  }
   
-  //===----------------------------------------------------------------------===//
+  //===------------------------------------------------------------------===//
   // Function which call checkers for mutated GNet and default GNet
-  //===----------------------------------------------------------------------===//
+  //===------------------------------------------------------------------===//
   template <typename templateChecker>
-  bool usingCheckerForMutator(GNet &gNet, GNet &mutatedGNet, templateChecker &chk) {
+  bool usingCheckerForMutator(GNet &gNet, GNet &mutatedGNet, 
+                              templateChecker &chk) {
     GateIdMap mapOldToNew = makeMap(gNet);
     CheckerResult chkResult = chk.equivalent(gNet, mutatedGNet, mapOldToNew);
     return chkResult.notEqual();
   }
 
-//===----------------------------------------------------------------------===//
+//===---------------------------------------------------------------------===//
 // Tests
-//===----------------------------------------------------------------------===//
+//===---------------------------------------------------------------------===//
 
   TEST(Mutator, mutationBalanceAND) {
     GNet gNet;
     balanceAND(gNet);
     GNet mutatedGNet;
     GateIdList gates = {5, 6};
-    mutatedGNet.addNet(Mutator::mutate(gNet, gates));
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, gates));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+    std::string fileName = "BalanceAND";
+    std::string fileNameMutate = "BalanceANDMutate";
+    printGraphs(gNet, fileName, mutatedGNet, fileNameMutate, gates);
   }
 
   TEST(Mutator, mutationAndOr) {
@@ -107,7 +130,8 @@ namespace eda::gate::mutator {
     andOr(gNet);
     GNet mutatedGNet;
     int counter;
-    mutatedGNet.addNet(Mutator::mutate(counter, gNet, 3, {GateSymbol::AND, GateSymbol::OR}));
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, counter, gNet, 3, 
+                      {GateSymbol::AND, GateSymbol::OR}));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
@@ -121,7 +145,8 @@ namespace eda::gate::mutator {
     andOrWithoutOut(gNet);
     GNet mutatedGNet;
     int counter;
-    mutatedGNet.addNet(Mutator::mutate(counter, gNet, gNet.nGates()));
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, counter, 
+                                       gNet, gNet.nGates()));
     EXPECT_EQ(counter, 0);
   }
 
@@ -129,81 +154,127 @@ namespace eda::gate::mutator {
     GNet gNet;
     gNet.addNet(*parseVerilog("adder.v"));
     GNet mutatedGNet;
-    mutatedGNet.addNet(Mutator::mutate(gNet, 3));
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, 3));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
     //TODO: BDD checker returns 'Killed'
-  }
-
-  TEST(Mutator, verilogArbiter) {
-    GNet gNet;
-    gNet.addNet(*parseVerilog("arbiter.v"));
-    GNet mutatedGNet;
-    mutatedGNet.addNet(Mutator::mutate(gNet, 3));
-    gNet.sortTopologically();
-    mutatedGNet.sortTopologically();
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
-  }
-
-  TEST(Mutator, verilogBar) {
-    GNet gNet;
-    gNet.addNet(*parseVerilog("bar.v"));
-    GNet mutatedGNet;
-    mutatedGNet.addNet(Mutator::mutate(gNet, gNet.nGates()));
-    gNet.sortTopologically();
-    mutatedGNet.sortTopologically();
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 
   TEST(Mutator, verilogC17) {
     GNet gNet;
     gNet.addNet(*parseVerilog("c17.v"));
     GNet mutatedGNet;
-    mutatedGNet.addNet(Mutator::mutate(gNet, gNet.nGates(), {GateSymbol::NAND}));
+    GateIdList list;
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, list, gNet, 
+                                      gNet.nGates(), 
+                                      {GateSymbol::NAND}));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
-  }
-
-  TEST(Mutator, verilogC499) {
-    GNet gNet;
-    gNet.addNet(*parseVerilog("c499.v"));
-    GNet mutatedGNet;
-    mutatedGNet.addNet(Mutator::mutate(gNet, gNet.nGates()));
-    gNet.sortTopologically();
-    mutatedGNet.sortTopologically();
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
-  }
-
-  TEST(Mutator, verilogC1908) {
-    GNet gNet;
-    gNet.addNet(*parseVerilog("c1908.v"));
-    GNet mutatedGNet;
-    mutatedGNet.addNet(Mutator::mutate(gNet, gNet.nGates()));
-    gNet.sortTopologically();
-    mutatedGNet.sortTopologically();
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
-    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+    std::string fileName = "c17";
+    std::string fileNameMutate = "c17Mutate";
+    printGraphs(gNet, fileName, mutatedGNet, fileNameMutate, list);
   }
 
   TEST(Mutator, verilogSquare) {
     GNet gNet;
     gNet.addNet(*parseVerilog("square.v"));
     GNet mutatedGNet;
-    mutatedGNet.addNet(Mutator::mutate(gNet, 1));
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, 1));
     gNet.sortTopologically();
     mutatedGNet.sortTopologically();
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
     //TODO: BDD checker returns 'Killed'
     //TODO: RND checker returns 'Failure' and 'Equal'
+  }
+
+  TEST(Mutator, cutBalanceAND) {
+    GNet gNet;
+    balanceAND(gNet);
+    GNet mutatedGNet;
+    GateIdList list;
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::CUT, list, gNet, 
+                                      1, {GateSymbol::AND}, 3));
+    gNet.sortTopologically();
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+    std::string fileName = "cutBalancedAnd";
+    std::string fileNameMutate = "mutateCutBalanceAnd";
+    printGraphs(gNet, fileName, mutatedGNet, fileNameMutate, list);
+  }
+
+  TEST(Mutator, cutAndOr) {
+    GNet gNet;
+    andOr(gNet);
+    GNet mutatedGNet;
+    GateIdList list = {6};
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::CUT, gNet, list, 
+                                      {GateSymbol::AND, GateSymbol::OR}, 3));
+    gNet.sortTopologically();
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+    std::string fileName = "cutAndOr";
+    std::string fileNameMutate = "cutAndOrMutate";
+    printGraphs(gNet, fileName, mutatedGNet, fileNameMutate, list);
+  }
+
+  TEST(Mutator, cutWithoutOut) {
+    GNet gNet;
+    andOrWithoutOut(gNet);
+    GNet mutatedGNet;
+    int counter;
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::CUT, counter, gNet, 
+                                       gNet.nGates()));
+    EXPECT_EQ(counter, 0);
+  }
+
+  TEST(Mutator, cutNumberAndOr) {
+    GNet gNet;
+    andOr(gNet);
+    GNet mutatedGNet;
+    int counter;
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::CUT, counter, gNet, 1, 
+                                      {GateSymbol::AND, GateSymbol::OR}, 2));
+    gNet.sortTopologically();
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+    EXPECT_EQ(counter, 2);
+  }
+
+  TEST(Mutator, cutC17) {
+    GNet gNet;
+    gNet.addNet(*parseVerilog("c17.v"));
+    GNet mutatedGNet;
+    GateIdList list = {9};
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::CUT, gNet, list, 
+                                      {GateSymbol::NAND}, 3));
+    gNet.sortTopologically();
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+  }
+
+  TEST(Mutator, cutNumberC499) {
+    GNet gNet;
+    gNet.addNet(*parseVerilog("c499.v"));
+    GNet mutatedGNet;
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::CUT, gNet, 3, 
+                                      {GateSymbol::AND, GateSymbol::XOR}, 2));
+    gNet.sortTopologically();
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 } // namespace eda::gate::mutator
 

@@ -9,13 +9,69 @@
 #include "gate/debugger/k_checker.h"
 
 namespace eda::gate::debugger {
-using StructHashKey = eda::gate::debugger::KChecker::StructHashKey;
+using HashTableKey = eda::gate::debugger::KChecker::HashTableKey;
 using Vertex = eda::gate::debugger::KChecker::Vertex;
+using BDDClass = eda::gate::debugger::KChecker::BDDClass;
 using AigMapper = eda::gate::premapper::AigMapper;
 using PreBasis = eda::gate::premapper::PreBasis;
 
 int Vertex::primaryCountId = 0;
 int Vertex::countId = 0;
+
+void BDDClass::storeVertexAtBdd(std::shared_ptr<Vertex> vertex) { v = vertex; }
+
+void BDDClass::storeLevelAtBdd(int newLevel) { level = newLevel; }
+
+int BDDClass::getLevelFromBdd() { return level; }
+
+void Vertex::storeBddAtVertex(std::set<BDDClass>::iterator newBdd,
+                              int newLevel) {
+  bdd.emplace(level, *newBdd);
+  containBDD = true;
+  if (newLevel > level) {
+    level = newLevel;
+  }
+}
+
+bool HashTableKey::operator ==(const HashTableKey &other) const {
+  return ((((v1 == nullptr && other.v1 == nullptr) ||
+      (v1 != nullptr && other.v1 != nullptr && v1->id == other.v1->id)) &&
+      ((v2 == nullptr && other.v2 == nullptr) ||
+      (v2 != nullptr && other.v2 != nullptr && v2->id == other.v2->id)) &&
+      sign1 == other.sign1 && sign2 == other.sign2));
+}
+
+bool KChecker::hashTableContains(std::vector<int> key, int value) {
+  std::shared_ptr<Vertex> v1 = getVertexById(key[0]);
+  std::shared_ptr<Vertex> v2 = getVertexById(key[1]);
+  bool sign1 = key[2] == 1;
+  bool sign2 = key[3] == 1;
+  return hashTable.at({v1, v2, sign1, sign2}) == getVertexById(value);
+}
+
+bool KChecker::valueIsPrimaryOutput(std::vector<int> key) {
+  std::shared_ptr<Vertex> v1 = getVertexById(key[0]);
+  std::shared_ptr<Vertex> v2 = getVertexById(key[1]);
+  bool sign1 = key[2] == 1;
+  bool sign2 = key[3] == 1;
+  return hashTable.at({v1, v2, sign1, sign2})->isPrimaryOutput;
+}
+
+bool KChecker::primaryOutputSign(std::vector<int> key) {
+  std::shared_ptr<Vertex> v1 = getVertexById(key[0]);
+  std::shared_ptr<Vertex> v2 = getVertexById(key[1]);
+  bool sign1 = key[2] == 1;
+  bool sign2 = key[3] == 1;
+  return hashTable.at({v1, v2, sign1, sign2})->outputSign;
+}
+
+void KChecker::printHashTable() {
+  for (const auto &pair : hashTable) {
+    std::cout << "{" << pair.first.v1->id << ", " << pair.first.v2->id << ", "
+              << pair.first.sign1 << ", " << pair.first.sign2
+              << "} : " << pair.second->id << "\n";
+  }
+}
 
 void KChecker::structHashing(GNet &net1, GNet &net2) {
   GateIdMap gmap1;
@@ -57,7 +113,7 @@ void KChecker::structHashingSingle(std::shared_ptr<GNet> premapped) {
       bool isLeftPrimaryInput = false;
       bool isRightPrimaryInput = false;
 
-      Vertex tempVertex(tempVertexId);
+      std::shared_ptr<Vertex> tempVertex = getVertexById(tempVertexId, true);
       tempVertexId--;
 
       if (Gate::get(leftInputId)->isNegation()) {
@@ -118,27 +174,35 @@ void KChecker::structHashingSingle(std::shared_ptr<GNet> premapped) {
       for (const auto &gate : Gate::get(tempGateId)->links()) {
         if (Gate::get(gate.target)->isTarget() ||
             isNegativeTarget(gate.target)) {
-          tempVertex.isPrimaryOutput = true;
+          tempVertex->isPrimaryOutput = true;
 
           auto outputGateId = gate.target;
-          tempVertex.outputSign = true;
+          tempVertex->outputSign = true;
           if (isNegativeTarget(gate.target)) {
-            tempVertex.outputSign = false;
+            tempVertex->outputSign = false;
             outputGateId = Gate::get(gate.target)->link(0).target;
           }
 
-          outputsBinding[tempVertex.id] = outputsBinding[outputGateId];
+          outputsBinding[tempVertex->id] = outputsBinding[outputGateId];
           outputsBinding.erase(outputGateId);
-          outputsBinding[outputsBinding.find(tempVertex.id)->second] =
-              tempVertex.id;
-          outputsBinding.erase(tempVertex.id);
+          outputsBinding[outputsBinding.find(tempVertex->id)->second] =
+              tempVertex->id;
+          outputsBinding.erase(tempVertex->id);
         }
       }
 
-      Vertex vLeft(leftVertexId), vRight(rightVertexId);
-      vLeft.isPrimaryInput = isLeftPrimaryInput;
-      vRight.isPrimaryInput = isRightPrimaryInput;
-      StructHashKey key(vLeft, vRight, leftSign, rightSign);
+      std::shared_ptr<Vertex> vLeft = getVertexById(leftVertexId, true);
+      std::shared_ptr<Vertex> vRight = getVertexById(rightVertexId, true);
+
+      if (isLeftPrimaryInput) {
+        primaryInputs.emplace(vLeft);
+      }
+      if (isRightPrimaryInput) {
+        primaryInputs.emplace(vRight);
+      }
+      vLeft->isPrimaryInput = isLeftPrimaryInput;
+      vRight->isPrimaryInput = isRightPrimaryInput;
+      HashTableKey key(vLeft, vRight, leftSign, rightSign);
       if (hashTable.find(key) != hashTable.end()) {
         equalKeys(key, tempVertex);
       } else {
@@ -148,19 +212,90 @@ void KChecker::structHashingSingle(std::shared_ptr<GNet> premapped) {
   }
 }
 
-void KChecker::equalKeys(StructHashKey key, Vertex v) {
+std::shared_ptr<Vertex> KChecker::getVertexById(int id, bool createNew) {
+  auto it =
+      std::find_if(hashTable.begin(), hashTable.end(), [id](const auto &pair) {
+        return (pair.first.v1 != nullptr && pair.first.v1->id == id) ||
+               (pair.first.v2 != nullptr && pair.first.v2->id == id) ||
+               (pair.second != nullptr && pair.second->id == id);
+      });
+  if (it == hashTable.end()) {
+    if (createNew) {
+      return std::make_shared<Vertex>(id);
+    }
+    return nullptr;
+  }
+  if (it->first.v1 != nullptr && it->first.v1->id == id) {
+    return it->first.v1;
+  }
+  if (it->first.v2 != nullptr && it->first.v2->id == id) {
+    return it->first.v2;
+  }
+  if (it->second != nullptr && it->second->id == id) {
+    return it->second;
+  }
+  return nullptr;
+}
+
+std::shared_ptr<Vertex> KChecker::getPrimaryOutput(int id) {
+  if (countV(id) > 0) {
+    return findValueInHashTable(id).second;
+  }
+
+  auto it = std::find_if(
+      mergedVertices.begin(), mergedVertices.end(),
+      [id](std::pair<std::shared_ptr<Vertex>, std::shared_ptr<Vertex>> pair) {
+        return (pair.first != nullptr && pair.first->id == id) ||
+               (pair.second != nullptr && pair.second->id == id);
+      });
+  if (it != mergedVertices.end()) {
+    if (it->first->id == id) {
+      return it->first;
+    }
+    return it->second;
+  }
+  return nullptr;
+}
+
+int KChecker::countV(int id) {
+  int count = 0;
   for (const auto &pair : hashTable) {
-    StructHashKey tempKey = pair.first;
-    Vertex tempVertex = pair.second;
-    if (tempKey.v1.id == v.id || tempKey.v2.id == v.id) {
-      StructHashKey newKey = {hashTable[key], tempKey.v2, tempKey.sign1,
-                              tempKey.sign2};
-      if (tempKey.v2.id == v.id) {
+    if (pair.first.v1->id == id || pair.first.v2->id == id ||
+        pair.second->id == id) {
+      count++;
+    }
+  }
+  return count;
+}
+
+bool KChecker::verticesAreMerged(std::shared_ptr<Vertex> v1,
+                                 std::shared_ptr<Vertex> v2) {
+  auto it = std::find_if(
+      mergedVertices.begin(), mergedVertices.end(),
+      [v1,
+       v2](std::pair<std::shared_ptr<Vertex>, std::shared_ptr<Vertex>> pair) {
+        return (pair.first->id == v1->id && pair.second->id == v2->id) ||
+               (pair.first->id == v2->id && pair.second->id == v1->id);
+      });
+  return it != mergedVertices.end();
+}
+
+void KChecker::equalKeys(HashTableKey key, std::shared_ptr<Vertex> v) {
+  for (const auto &pair : hashTable) {
+    HashTableKey tempKey = pair.first;
+    std::shared_ptr<Vertex> tempVertex = pair.second;
+    if (tempKey.v1->id == v->id || tempKey.v2->id == v->id) {
+      HashTableKey newKey = {hashTable[key], tempKey.v2, tempKey.sign1,
+                             tempKey.sign2};
+      std::shared_ptr<Vertex> mergedVertex = tempKey.v1;
+      if (tempKey.v2->id == v->id) {
         newKey = {tempKey.v1, hashTable[key], tempKey.sign1, tempKey.sign2};
+        mergedVertex = tempKey.v2;
       }
-      mergedVertices.push_back(hashTable[key]);
-      auto it = hashTable.find(newKey);
-      if (it != hashTable.end()) {
+      if (!verticesAreMerged(hashTable[key], mergedVertex)) {
+        mergedVertices.push_back(std::make_pair(hashTable[key], mergedVertex));
+      }
+      if (hashTable.find(newKey) != hashTable.end()) {
         hashTable.erase(tempKey);
         equalKeys(newKey, tempVertex);
         return;
@@ -168,8 +303,8 @@ void KChecker::equalKeys(StructHashKey key, Vertex v) {
 
       hashTable.erase(tempKey);
       hashTable.emplace(newKey, tempVertex);
-    } else if (tempKey == key && v.isPrimaryOutput) {
-      mergedVertices.push_back(hashTable[key]);
+    } else if (tempKey == key && v->isPrimaryOutput) {
+      mergedVertices.push_back(std::make_pair(hashTable[key], v));
       return;
     }
   }
@@ -221,16 +356,204 @@ bool KChecker::leftIsBigger(uint32_t left, uint32_t right, uint32_t lOrR) {
   return (left > right && !Gate::get(lOrR)->isSource());
 }
 
-CheckerResult KChecker::equivalent(GNet &lhs, GNet &rhs, const Hints &hints) {
-  fillBindings(hints);
-  structHashing(lhs, rhs);
-  return CheckerResult::EQUAL;
+std::pair<HashTableKey, std::shared_ptr<Vertex>> KChecker::findValueInHashTable(
+    int id) {
+  auto it =
+      std::find_if(hashTable.begin(), hashTable.end(),
+                   [&id](const auto &pair) { return pair.second->id == id; });
+  return std::make_pair(it->first, it->second);
 }
 
-CheckerResult KChecker::equivalent(const GNet &lhs,
-                                   const GNet &rhs,
+void KChecker::putOnHeap(BDDClass &bddRes) {
+  if (bddRes.bddValue.nodeCount() < maxBddSize) {
+    heap.emplace(bddRes);
+  }
+}
+
+void KChecker::mergeVertices(std::shared_ptr<Vertex> vRes,
+                             std::shared_ptr<Vertex> vOut) {
+  for (auto it = heap.begin(); it != heap.end();) {
+    if (it->v->id == vRes->id) {
+      it = heap.erase(it);
+    } else {
+      ++it;
+    }
+  }
+  equalKeys(findValueInHashTable(vOut->id).first, vRes);
+}
+
+std::vector<HashTableKey> KChecker::fanouts(std::shared_ptr<Vertex> v) {
+  std::vector<HashTableKey> keyVector;
+  for (const auto &pair : hashTable) {
+    if (pair.first.v1->id == v->id || pair.first.v2->id == v->id) {
+      keyVector.push_back(pair.first);
+    }
+  }
+  return keyVector;
+}
+
+bool KChecker::vProcessedOrMerged(std::shared_ptr<Vertex> v) {
+  bool processed =
+      std::find_if(heap.begin(), heap.end(), [&v](const BDDClass &el) {
+          return el.v && el.v->id == v->id;
+      }) != heap.end();
+  bool merged = !v->isPrimaryOutput && fanouts(v).empty();
+  return processed || merged;
+}
+
+std::shared_ptr<Vertex> KChecker::getVertexFromBdd(
+    std::set<BDDClass>::iterator bdd) {
+  return bdd->v;
+}
+
+std::shared_ptr<Vertex> KChecker::getVertexFromBdd(BDD &bddRes) {
+  auto it = std::find_if(
+      heap.begin(), heap.end(),
+      [bddRes](const BDDClass &el) { return el.bddValue == bddRes; });
+  if (it != heap.end()) {
+    return it->v;
+  }
+  return nullptr;
+}
+
+BDD KChecker::getBddFromVertex(std::shared_ptr<Vertex> vOut, bool left,
+                               int level) {
+  HashTableKey key = findValueInHashTable(vOut->id).first;
+  BDD bdd;
+  std::shared_ptr<Vertex> childV = nullptr;
+  bool childSign;
+
+  childV = left ? key.v1 : key.v2;
+  childSign = left ? key.sign1 : key.sign2;
+  if (childV->containBDD) {
+    bdd = childV->bdd.at(level).bddValue;
+  } else {
+    auto it = std::find_if(
+        heap.begin(), heap.end(),
+        [childV](const BDDClass &el) { return el.v->id == childV->id; });
+    if (it != heap.end()) {
+      bdd = it->bddValue;
+    } else {
+      bdd = getBddFromVertex(childV, true) * getBddFromVertex(childV, false);
+    }
+  }
+  if (!childSign) {
+    bdd = ~bdd;
+  }
+  return bdd;
+}
+
+bool KChecker::equalOutputs(std::shared_ptr<Vertex> v1,
+                            std::shared_ptr<Vertex> v2) {
+  // checking only 0 level
+  return (v1->outputSign == v2->outputSign && verticesAreMerged(v1, v2)) ||
+         (v1->containBDD && v2->containBDD &&
+          v1->bdd.at(0).bddValue == v2->bdd.at(0).bddValue);
+}
+
+bool KChecker::notEqualOutputs(std::shared_ptr<Vertex> v1,
+                               std::shared_ptr<Vertex> v2) {
+  // checking only 0 level
+  return (v1->outputSign != v2->outputSign && verticesAreMerged(v1, v2)) ||
+         (v1->containBDD && v2->containBDD &&
+          v1->bdd.at(0).bddValue == ~v2->bdd.at(0).bddValue);
+}
+
+CheckerResult KChecker::getResult() {
+  if (result.size() == 2) {
+    if (std::find(result.begin(), result.end(), CheckerResult::UNKNOWN) !=
+        result.end()) {
+      return CheckerResult::UNKNOWN;
+    }
+    return CheckerResult::NOTEQUAL;
+  }
+  if (result.size() == 1) {
+    if (*result.begin() == CheckerResult::EQUAL) {
+      return CheckerResult::EQUAL;
+    }
+    if (*result.begin() == CheckerResult::NOTEQUAL) {
+      return CheckerResult::NOTEQUAL;
+    }
+    return CheckerResult::UNKNOWN;
+  }
+  return CheckerResult::UNKNOWN;
+}
+
+void KChecker::checkEquivalenceBasic() {
+  for (const auto &output : outputsBinding) {
+    std::shared_ptr<Vertex> v1 = getPrimaryOutput(output.first);
+    std::shared_ptr<Vertex> v2 = getPrimaryOutput(output.second);
+
+    checkEquivalenceBasicSingle(v1, v2);
+  }
+  heap.clear();
+}
+
+void KChecker::checkEquivalenceBasicSingle(std::shared_ptr<Vertex> v1,
+                                           std::shared_ptr<Vertex> v2) {
+  if (equalOutputs(v1, v2)) {
+    result.emplace(CheckerResult::EQUAL);
+    return;
+  }
+  if (notEqualOutputs(v1, v2)) {
+    result.emplace(CheckerResult::NOTEQUAL);
+    return;
+  }
+
+  for (std::shared_ptr<Vertex> i : primaryInputs) {
+    BDDClass bdd(mgr.bddVar());
+    bdd.storeVertexAtBdd(i);
+    putOnHeap(bdd);
+  }
+
+  while (!heap.empty()) {
+    auto bdd = heap.begin();
+    heap.erase(heap.begin());
+    std::shared_ptr<Vertex> v = getVertexFromBdd(bdd);
+    v->storeBddAtVertex(bdd);
+
+    for (const HashTableKey &kOut : fanouts(v)) {
+      std::shared_ptr<Vertex> vOut = hashTable[kOut];
+      if (!vProcessedOrMerged(vOut)) {
+        BDD bddLeft = getBddFromVertex(vOut, true);
+        BDD bddRight = getBddFromVertex(vOut, false);
+        BDDClass bddRes(bddLeft * bddRight);
+
+        std::shared_ptr<Vertex> vRes = getVertexFromBdd(bddRes.bddValue);
+        if (vRes != nullptr) {
+          mergeVertices(vRes, vOut);
+          if (equalOutputs(v1, v2)) {
+            result.emplace(CheckerResult::EQUAL);
+            return;
+          }
+          if (notEqualOutputs(v1, v2)) {
+            result.emplace(CheckerResult::NOTEQUAL);
+            return;
+          }
+        }
+        bddRes.storeVertexAtBdd(vOut);
+
+        putOnHeap(bddRes);
+      }
+    }
+  }
+
+  result.emplace(CheckerResult::UNKNOWN);
+}
+
+CheckerResult KChecker::equivalent(GNet &lhs, GNet &rhs, const Hints &hints) {
+  if (!lhs.isComb() || !rhs.isComb()) {
+    return CheckerResult::ERROR;
+  }
+  fillBindings(hints);
+  structHashing(lhs, rhs);
+  checkEquivalenceBasic();
+  return getResult();
+}
+
+CheckerResult KChecker::equivalent(const GNet &lhs, const GNet &rhs,
                                    const GateIdMap &gmap) const {
   return CheckerResult::EQUAL;
 }
 
-} // namespace eda::gate::debugger
+}  // namespace eda::gate::debugger

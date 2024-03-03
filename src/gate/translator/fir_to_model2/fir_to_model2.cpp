@@ -49,6 +49,7 @@ template<typename Type>
 using ArrayRef = mlir::ArrayRef<Type>;
 using AsAsyncResetPrimOp = circt::firrtl::AsAsyncResetPrimOp;
 using AsClockPrimOp = circt::firrtl::AsClockPrimOp;
+using AssumeOp = circt::firrtl::AssumeOp;
 using Attribute = mlir::Attribute;
 using BitsPrimOp = circt::firrtl::BitsPrimOp;
 using CHIRRTLDialect = circt::chirrtl::CHIRRTLDialect;
@@ -63,6 +64,7 @@ using ConnectOp = circt::firrtl::ConnectOp;
 using ConstCastOp = circt::firrtl::ConstCastOp;
 using ConstantOp = circt::firrtl::ConstantOp;
 using ConventionAttr = circt::firrtl::ConventionAttr;
+using CoverOp = circt::firrtl::CoverOp;
 using DShlPrimOp = circt::firrtl::DShlPrimOp;
 using DShlwPrimOp = circt::firrtl::DShlwPrimOp;
 using DShrPrimOp = circt::firrtl::DShrPrimOp;
@@ -113,6 +115,7 @@ using OwningOpRef = mlir::OwningOpRef<Type>;
 using Pass = mlir::Pass;
 using PassManager = mlir::PassManager;
 using PortInfo = circt::firrtl::PortInfo;
+using PrintFOp = circt::firrtl::PrintFOp;
 using PropAssignOp = circt::firrtl::PropAssignOp;
 using PropertyType = circt::firrtl::PropertyType;
 using RegOp = circt::firrtl::RegOp;
@@ -124,6 +127,7 @@ using SVDialect = circt::sv::SVDialect;
 using ShlPrimOp = circt::firrtl::ShlPrimOp;
 using ShrPrimOp = circt::firrtl::ShrPrimOp;
 using SourceMgr = llvm::SourceMgr;
+using StopOp = circt::firrtl::StopOp;
 using StrictConnectOp = circt::firrtl::StrictConnectOp;
 template<typename Type>
 using StringAttr = mlir::StringAttr;
@@ -329,7 +333,11 @@ bool isOutput(const std::string &operationName) {
 }
 
 bool isOmitted(const std::string &operationName) {
-  return (operationName == PropAssignOp::getOperationName()    ||
+  return (operationName == AssumeOp::getOperationName()        ||
+          operationName == CoverOp::getOperationName()         ||
+          operationName == StopOp::getOperationName()          ||
+          operationName == PrintFOp::getOperationName()        ||
+          operationName == PropAssignOp::getOperationName()    ||
           operationName == ConstantOp::getOperationName()      ||
           operationName == WireOp::getOperationName()          ||
           operationName == FModuleOp::getOperationName());
@@ -692,7 +700,7 @@ void generateOutputs(FModuleOp fModuleOp,
 
       for (uint j = 0; j < portWidth; j++) {
         CellID cellBufID = makeCell(CellSymbol::BUF,
-                                    LinkEnd(model::OBJ_NULL_ID));
+                                    LinkEnd());
         netBuilder->addCell(cellBufID);
         CellID cellOutID = makeCell(CellSymbol::OUT, LinkEnd(cellBufID));
         netBuilder->addCell(cellOutID);
@@ -713,7 +721,7 @@ void generateWires(FModuleOp fModuleOp,
   fModuleOp.walk([&](WireOp wireOp) {
     uint outputWidth = getTypeWidth(wireOp.getResult().getType());
     for (size_t i = 0; i < outputWidth; i++) {
-      CellID cellID = makeCell(CellSymbol::BUF, LinkEnd(model::OBJ_NULL_ID));
+      CellID cellID = makeCell(CellSymbol::BUF, LinkEnd());
       netBuilder->addCell(cellID);
       CellKey cellKeyIn(wireOp, 0, i);
       CellKey cellKeyOut(wireOp, 0, i);
@@ -767,9 +775,14 @@ uint getModel2InPortNum(Operation *operation, uint portNumber, uint bitNumber) {
     std::string operationName = operation->getName().getIdentifier().str();
     if (isInstance(operationName)) {
       auto instanceOp = mlir::dyn_cast<InstanceOp>(operation);
-      for (uint i = 0; i < portNumber; i++) {
+      uint inputCount = 0;
+      for (uint i = 0; i < operation->getNumResults(); i++) {
+        if (inputCount == portNumber) {
+          break;
+        }
         if (instanceOp.getPortDirection(i) == Direction::In) {
           model2InPortNum += getTypeWidth(instanceOp->getResult(i).getType());
+          inputCount++;
         }
       }
       model2InPortNum += bitNumber;
@@ -799,9 +812,14 @@ uint getModel2OutPortNum(Operation *operation,
     std::string operationName = operation->getName().getIdentifier().str();
     if (isInstance(operationName)) {
       auto instanceOp = mlir::dyn_cast<InstanceOp>(operation);
-      for (uint i = 0; i < portNumber; i++) {
+      uint outputCount = 0;
+      for (uint i = 0; i < operation->getNumResults(); i++) {
+        if (outputCount == portNumber) {
+          break;
+        }
         if (instanceOp.getPortDirection(i) == Direction::Out) {
           model2OutPortNum += getTypeWidth(instanceOp->getResult(i).getType());
+          outputCount++;
         }
       }
       model2OutPortNum += bitNumber;
@@ -824,10 +842,10 @@ void processOperation(Operation *destOp, std::string &destOpName,
     FModuleOp fModuleOp, NetBuilder *netBuilder,
     std::unordered_map<CellKey, CellID> &cellKeyToCellIDIns,
     std::unordered_map<CellKey, CellID> &cellKeyToCellIDOuts) {
-  CellSymbol cellSymbol = getCellSymbol(destOp);
-  uint inputCount = getInputCount(destOp, destOpName);
-  uint faninCount = getFaninCount(destOp, destOpName);
   if (!isOmitted(destOpName)) {
+    CellSymbol cellSymbol = getCellSymbol(destOp);
+    uint inputCount = getInputCount(destOp, destOpName);
+    uint faninCount = getFaninCount(destOp, destOpName);
     if (isInstance(destOpName)) {
       uint fanoutCount = getFanoutCount(destOp, destOpName);
       auto instanceOp = mlir::dyn_cast<InstanceOp>(destOp);
@@ -842,25 +860,27 @@ void processOperation(Operation *destOp, std::string &destOpName,
                                            fanoutCount);
       std::vector<LinkEnd> linkEnds;
       for (uint i = 0; i < faninCount; i++) {
-        linkEnds.push_back(LinkEnd(model::OBJ_NULL_ID));
+        linkEnds.push_back(LinkEnd());
       }
       CellID cellDestID = makeCell(cellTypeID, linkEnds);
       netBuilder->addCell(cellDestID);
-      uint outputCount = getOutputCount(destOp, destOpName);
-      for (uint i = 0; i < outputCount; i++) {
-        auto &&result = destOp->getResult(i + inputCount);
-        uint outWidth = getTypeWidth(result.getType());
-        for (uint j = 0; j < outWidth; j++) {
-          CellKey outKey(destOp, i, j);
-          cellKeyToCellIDOuts.emplace(std::make_pair(outKey, cellDestID));
-        }
-      }
-      for (uint i = 0; i < inputCount; i++) {
+      uint outputNum = 0;
+      uint inputNum = 0;
+      for (uint i = 0; i < destOp->getNumResults(); i++) {
         auto &&result = destOp->getResult(i);
-        uint inWidth = getTypeWidth(result.getType());
-        for (uint j = 0; j < inWidth; j++) {
-          CellKey inKey(destOp, i, j);
-          cellKeyToCellIDIns.emplace(std::make_pair(inKey, cellDestID));
+        uint width = getTypeWidth(result.getType());
+        if (instanceOp.getPortDirection(i) == Direction::Out) {
+          for (uint j = 0; j < width; j++) {
+            CellKey outKey(destOp, outputNum, j);
+            cellKeyToCellIDOuts.emplace(std::make_pair(outKey, cellDestID));
+          }
+          outputNum++;
+        } else {
+          for (uint j = 0; j < width; j++) {
+            CellKey inKey(destOp, inputNum, j);
+            cellKeyToCellIDIns.emplace(std::make_pair(inKey, cellDestID));
+          }
+          inputNum++;
         }
       }
     } else if (isSynthesizable(destOpName)) {
@@ -907,7 +927,7 @@ void processOperation(Operation *destOp, std::string &destOpName,
       for (uint j = 0; j < dataWidth; j++) {
         // DFF(q, d, clk).
         std::vector<LinkEnd> linkEndsForOne;
-        linkEndsForOne.push_back(LinkEnd(model::OBJ_NULL_ID));
+        linkEndsForOne.push_back(LinkEnd());
         linkEndsForOne.push_back(linkEnds.front());
         CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
         netBuilder->addCell(cellDestID);
@@ -924,7 +944,7 @@ void processOperation(Operation *destOp, std::string &destOpName,
       for (uint j = 0, k = 0; j < dataWidth; j++) {
         // DFFrs(q, d, clk, rst, set).
         std::vector<LinkEnd> linkEndsForOne;
-        linkEndsForOne.push_back(LinkEnd(model::OBJ_NULL_ID));
+        linkEndsForOne.push_back(LinkEnd());
         linkEndsForOne.push_back(linkEnds.front());
         CellID negMidID = makeCell(CellSymbol::NOT, linkEnds[k + 2]);
         netBuilder->addCell(negMidID);

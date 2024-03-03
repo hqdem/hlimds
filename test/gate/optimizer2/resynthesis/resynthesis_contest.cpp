@@ -16,6 +16,7 @@
 #include "gate/optimizer2/resynthesis/isop.h"
 #include "gate/optimizer2/resynthesis/reed_muller.h"
 #include "gate/optimizer2/synthesizer.h"
+#include "util/npn.h"
 
 #include "gtest/gtest.h"
 #include "kitty/constructors.hpp"
@@ -25,6 +26,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <random>
 #include <vector>
 
 using AkersAlgorithm    = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
@@ -49,6 +51,7 @@ constexpr unsigned RAND7_TT_NUM  = 128;
 constexpr unsigned RAND8_TT_NUM  = 256;
 constexpr unsigned RAND9_TT_NUM  = 512;
 constexpr unsigned RAND10_TT_NUM = 1024;
+constexpr unsigned NPN4_TT_NUM   = 31;
 
 /// Defines the names of the resynthesis algorithms.
 enum class Algorithm {
@@ -320,5 +323,33 @@ TEST(ResynthesisContest, RAND10) {
   for (size_t i = 0; i < RAND10_TT_NUM; i++) {
     kitty::create_random(table);
     runTest(table);
+  }
+}
+
+//===----------------------------------------------------------------------===//
+// NPN distribution for four inputs classes of equivalence.
+//===----------------------------------------------------------------------===//
+
+TEST(ResynthesisContestNPN, NPN4) {
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::uniform_real_distribution<> distribution(0.0, 1.0);
+
+  DynTruthTable table(4);
+
+  for (size_t i = 0; i < NPN4_TT_NUM; ++i) {
+
+    double sum = 0;
+    double gen = distribution(generator);
+
+    for (size_t j = 0; j < 62; ++j) {
+      sum += fourInputs[j].second;
+
+      if (gen < sum) {
+        kitty::create_from_binary_string(table, fourInputs[j].first);
+        runTest(table);
+        break;
+      }
+    }
   }
 }

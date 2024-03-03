@@ -12,6 +12,8 @@
 #include "gate/model2/subnet.h"
 #include "util/singleton.h"
 
+#include <cstddef>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::gate::model {
@@ -20,7 +22,23 @@ class NetDecomposer final : public util::Singleton<NetDecomposer> {
   friend class util::Singleton<NetDecomposer>;
 
 public:
-  std::vector<SubnetID> make(NetID netID) const;
+  using LinkMap = std::unordered_map<Link, size_t>;
+  using CellMap = std::unordered_map<CellID, std::pair<size_t, bool>>;
+
+  /// Maps net cells/links to subnet cell indices.
+  struct CellMapping final {
+    LinkMap inputs;
+    CellMap inners;
+    LinkMap outputs;
+  };
+
+  /// Decomposes the net into subnets and fills the cell mapping.
+  std::vector<SubnetID> decompose(NetID netID,
+                                  std::vector<CellMapping> &mapping) const;
+
+  /// Composes the subnets into a net.
+  NetID compose(const std::vector<SubnetID> &subnets,
+                const std::vector<CellMapping> &mapping) const;
 
 private:
   NetDecomposer() {}

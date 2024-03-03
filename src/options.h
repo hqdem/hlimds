@@ -244,14 +244,23 @@ struct FirRtlOptions final : public AppOptions {
 struct Model2Options final : public AppOptions {
 
   static constexpr const char *ID = "to_model2";
-  static constexpr const char *OUT = "out";
+  static constexpr const char *NET = "--net";
+  static constexpr const char *TOP = "--top";
+  static constexpr const char *FIRRTL = "--fir";
+  static constexpr const char *DEBUG_MODE = "--verbose";
 
   Model2Options(AppOptions &parent):
-      AppOptions(parent, ID, "Translator from FIRRTL to model2") {
-
-    options->add_option(cli(OUT), outFileName,
-                "Output file name")
-            ->expected(1);
+      AppOptions(parent, ID, "Translator from FIRRTL/Verilog to model2") {
+    options->add_option(NET, outNetFileName, "Output Verilog file name")
+           ->expected(1);
+    options->add_option(TOP, topModuleName,
+                        "Name of top module in Verilog")
+           ->expected(1);
+    options->add_option(FIRRTL, firrtlFileName,
+                        "Name of FIRRTL file name")
+           ->expected(1);
+    options->add_flag(DEBUG_MODE, debugMode,
+                "Enable debug mode");
 
     // Input Verilog file(s).
     options->allow_extras();
@@ -262,49 +271,21 @@ struct Model2Options final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, OUT, outFileName);
-  }
-
-  std::string outFileName;
-};
-
-struct TranslatorOptions final : public AppOptions {
-  static constexpr const char *ID = "translator";
-  static constexpr const char *TOP = "top";
-  static constexpr const char *OUT = "out";
-
-  TranslatorOptions(AppOptions &parent):
-      AppOptions(parent, ID, "Translator from Verilog to gate-level Verilog") {
-
-    options->add_option(cli(OUT), outFileName,
-                "Output file name")
-           ->expected(1);
-    options->add_option(cli(TOP), topModuleName,
-                "Name of top module in Verilog")
-           ->expected(1);
-
-    // Input Verilog file(s).
-    options->allow_extras();
-  }
-
-  std::vector<std::string> files() const {
-    return options->remaining();
-  }
-
-  void fromJson(Json json) override {
-    get(json, OUT, outFileName);
+    get(json, NET, outNetFileName);
     get(json, TOP, topModuleName);
+    get(json, FIRRTL, firrtlFileName);
   }
 
-  std::string outFileName;
-  std::string topModuleName;
+  std::string outNetFileName = "";
+  std::string firrtlFileName = "temp.fir";
+  std::string topModuleName = "";
+  bool debugMode = false;
 };
 
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this),
-                 gateVerilog(*this) {
+      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this) {
 
     // Top-level options.
     options->set_help_all_flag("-H,--help-all",
@@ -328,11 +309,9 @@ struct Options final : public AppOptions {
     rtl.fromJson(json[RtlOptions::ID]);
     firrtl.fromJson(json[FirRtlOptions::ID]);
     model2.fromJson(json[Model2Options::ID]);
-    gateVerilog.fromJson(json[TranslatorOptions::ID]);
   }
 
   RtlOptions rtl;
   FirRtlOptions firrtl;
   Model2Options model2;
-  TranslatorOptions gateVerilog;
 };

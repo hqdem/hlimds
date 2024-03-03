@@ -106,11 +106,15 @@ static_assert(sizeof(Cell) == CellID::Size);
 //===----------------------------------------------------------------------===//
 
 inline CellID makeCell(CellTypeID typeID) {
-  return allocate<Cell>(typeID);
+  const auto cellID = allocate<Cell>(typeID);
+  assert(cellID != OBJ_NULL_ID);
+  return cellID;
 }
 
 inline CellID makeCell(CellTypeID typeID, const Cell::LinkList &links) {
-  return allocate<Cell>(typeID, links);
+  const auto cellID = allocate<Cell>(typeID, links);
+  assert(cellID != OBJ_NULL_ID);
+  return cellID;
 }
 
 inline CellID makeCell(CellSymbol symbol) {

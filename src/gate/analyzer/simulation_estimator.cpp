@@ -65,18 +65,18 @@ std::pair<Switches, Switches> SimulationEstimator::countSwitches(
   Switches switchesOff(cells.size());
 
   size_t ttSize = std::ceil(std::log2(cells.size()));
-  kitty::dynamic_truth_table lastBits(ttSize ? ttSize : 1);
+  kitty::dynamic_truth_table prevBits(ttSize ? ttSize : 1);
 
-  auto getLastBit = [&lastBits](size_t id) {
-    return kitty::get_bit(lastBits, id);
+  auto getPrevBit = [&prevBits](size_t id) {
+    return kitty::get_bit(prevBits, id);
   };
 
-  auto setLastBit = [&lastBits](size_t id) {
-    return kitty::set_bit(lastBits, id);
+  auto setPrevBit = [&prevBits](size_t id) {
+    return kitty::set_bit(prevBits, id);
   };
 
-  auto reSetLastBit = [&lastBits](size_t id) {
-    return kitty::clear_bit(lastBits, id);
+  auto reSetPrevBit = [&prevBits](size_t id) {
+    return kitty::clear_bit(prevBits, id);
   };
 
   for (size_t i{0}; i < inValuesList.size(); ++i) {
@@ -90,11 +90,10 @@ std::pair<Switches, Switches> SimulationEstimator::countSwitches(
     for (size_t id{0}; id < cells.size(); ++id) {
       Cache cache = simulator.getValue(id);
       uint64_t bits = getSwitchedBits(cache);
-      uint64_t lastBit = ((i) && ((cache & 1ull) ^ getLastBit(id)));
-      bits |= (lastBit << 63);
-      switchesOn[id] += popCount(bits & cache);
-      switchesOff[id] += popCount(bits & ~cache);
-      (cache & (1ull << 63)) ? setLastBit(id) : reSetLastBit(id);
+      uint64_t prevBit = ((i) && ((cache & 1ull) ^ getPrevBit(id)));
+      switchesOn[id] += popCount(bits & ~cache) + (prevBit & cache);
+      switchesOff[id] += popCount(bits & cache) + (prevBit & ~cache);
+      (cache & (1ull << 63)) ? setPrevBit(id) : reSetPrevBit(id);
       id += cells[id].cell.more;
     }
   }

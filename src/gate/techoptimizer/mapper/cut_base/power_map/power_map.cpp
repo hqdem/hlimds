@@ -6,18 +6,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/analyzer/simulation_estimator.h"
+#include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
 
-namespace eda::gate::tech_optimizer{
+namespace eda::gate::tech_optimizer {
 
   double PowerMap::switchFlow(const EntryIndex entryIndex,
                               const Cut &cut,
                               const std::vector<double> &cellActivities){
     double sf = cellActivities[entryIndex];
-    const auto &currentCell  = (*entries)[entryIndex].cell; 
+    const auto &currentCell = (*entries)[entryIndex].cell; 
     if (!currentCell.isIn()){
       for (const auto &leafIdx : cut.entryIdxs){
-        const auto leaf = (*entries)[leafIdx].cell;
+        const auto &leaf = (*entries)[leafIdx].cell;
         if(leaf.isIn()){
           computedSF->at(leafIdx) = cellActivities[leafIdx];
         } 
@@ -35,7 +37,7 @@ namespace eda::gate::tech_optimizer{
     if (!currentCell.isIn()){
       af = 1;
       for (const auto &leafIdx : cut.entryIdxs){ 
-        const auto leaf = (*entries)[leafIdx].cell;
+        const auto &leaf = (*entries)[leafIdx].cell;
         if(leaf.isIn())continue;
         af += computedAF->at(leafIdx)/(leaf.refcount);
       }
@@ -51,9 +53,9 @@ namespace eda::gate::tech_optimizer{
   int64_t PowerMap::getLevel(const Cut &cut){
     int64_t levelMax = INT64_MIN;
     for(const EntryIndex &leafIdx: cut.entryIdxs){
-      levelMax= std::max(levelMax,getLevel(leafIdx));
+      levelMax = std::max(levelMax,getLevel(leafIdx));
     }
-    return levelMax+1;
+    return levelMax + 1;
   }
 
   BestReplacement PowerMap::findCutMinimizingDepth(const EntryIndex entryIndex){
@@ -85,8 +87,8 @@ namespace eda::gate::tech_optimizer{
 
   void PowerMap::traditionalMapDepthOriented(){
     for (uint64_t entryIndex = 0; entryIndex < entries->size(); entryIndex++){
-      if(!(*entries)[entryIndex].cell.isAnd()){
-        addNotAnAndToTheMap(entryIndex,(*entries)[entryIndex].cell);
+      if (!(*entries)[entryIndex].cell.isAnd()){
+        addNotAnAndToTheMap(entryIndex, (*entries)[entryIndex].cell);
         computedLevel->at(entryIndex) = 0;
         continue;
       }
@@ -94,15 +96,15 @@ namespace eda::gate::tech_optimizer{
     }  
   }
 
-  bool aproxEqual(const double &a , const double &b){
-    return fabs(a-b) < 0.0001;
+  bool aproxEqual(const double &a, const double &b, const double &eps = 0.0001){
+    return fabs(a-b) < eps;
   }
 
-  uint32_t getDepth(const EntryIndex idx,const Cut &cut,const ArrayEntry &entries){
+  uint32_t getDepth(const EntryIndex idx, const Cut &cut, const ArrayEntry &entries){
     uint32_t depth = 1;
-    if(cut.entryIdxs.find(idx) != cut.entryIdxs.end())return 1;
+    if (cut.entryIdxs.find(idx) != cut.entryIdxs.end()) return 1;
     
-    for (uint32_t i =0; i< entries[idx].cell.arity;i++ ){
+    for (uint32_t i = 0; i < entries[idx].cell.arity; i++ ){
       depth = std::max(depth, 1 + getDepth(entries[idx].cell.link[i].idx, cut, entries));
     }
     return depth;
@@ -188,7 +190,7 @@ namespace eda::gate::tech_optimizer{
     // traditionalMapDepthOriented();
     // computeRequiredTimes();
     globalSwitchAreaRecovery(cellActivities);
-
+    clear();
   }
 
   std::vector<SubnetID> PowerMap::getTechIdsList(const Cut cut){
@@ -198,7 +200,19 @@ namespace eda::gate::tech_optimizer{
     return cellList;
   }
 
-    
+  void PowerMap::clear(){
+      delete computedAF;
+      delete computedSF;
+      delete computedLevel;
+      delete coneBuilder;
+      delete entries;
+
+      computedAF = nullptr;
+      computedSF = nullptr;
+      computedLevel = nullptr;
+      coneBuilder = nullptr;
+      entries = nullptr;
+  }
 } //namespace eda::gate::tech_optimizer
 
 

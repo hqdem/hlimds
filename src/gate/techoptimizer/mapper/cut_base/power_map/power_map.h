@@ -7,23 +7,8 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/analyzer/simulation_estimator.h"
-#include "gate/model2/array.h"
-#include "gate/model2/celltype.h"
-#include "gate/model2/object.h"
-#include "gate/model2/subnet.h"
-#include "gate/model2/utils/subnet_random.h"
-#include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/cone_builder.h"
-#include "gate/optimizer2/cut_extractor.h"
 #include "gate/techoptimizer/mapper/cut_base/cut_base_mapper.h"
-
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-#include <list>
-#include <map>
-#include <unordered_map>
 
 namespace eda::gate::tech_optimizer {
 
@@ -44,11 +29,7 @@ class PowerMap : public CutBaseMapper{
     void findBest() override;
     
     ~PowerMap(){
-      delete computedAF;
-      delete computedSF;
-      delete computedLevel;
-      delete coneBuilder;
-      delete entries;
+      clear();
     }
     
   private:
@@ -67,12 +48,14 @@ class PowerMap : public CutBaseMapper{
     void computeRequiredTimes();
     std::vector<SubnetID> getTechIdsList(const Cut cut);
 
-    std::vector<double> *computedAF;
-    std::vector<double> *computedSF;
-    std::vector<int64_t> *computedLevel;
-    std::vector<uint32_t> *requiredTimes;
-    eda::gate::optimizer2::ConeBuilder *coneBuilder;
-    ArrayEntry *entries;
+    void clear();
+
+    std::vector<double> *computedAF = nullptr;
+    std::vector<double> *computedSF = nullptr;
+    std::vector<int64_t> *computedLevel = nullptr;
+    std::vector<uint32_t> *requiredTimes = nullptr;
+    eda::gate::optimizer2::ConeBuilder *coneBuilder = nullptr;
+    ArrayEntry *entries = nullptr;
 };
 
 } // namespace eda::gate::tech_optimizer

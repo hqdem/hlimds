@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 /// The positon of a node related to a parent.
 struct Position {
@@ -37,7 +37,7 @@ struct MajNode {
 };
 
 /**
- * @brief Implements a De Micheli approach of resynthesis based on MAJ gates.
+ * @brief Implements a De Micheli approach of synthesis based on MAJ gates.
  * 
  * The algorithm is based on the article "Logic Resynthesis of
  * Majority-Based Logic using Top-Down Decomposition" by Siang-Yun Lee,
@@ -190,4 +190,4 @@ private:
 
 };
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

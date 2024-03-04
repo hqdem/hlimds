@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 /// Synthesizes the Subnet by using a concrete algorithm.
 template<typename Algorithm>
@@ -45,10 +45,10 @@ model::SubnetID launchAlgorithm(const kitty::dynamic_truth_table &func,
 }
 
 /**
- * \brief Implements method of resynthesis, by Minato-Morreale algorithm, which
+ * \brief Implements method of synthesis, by Minato-Morreale algorithm, which
  * was included from kitty library.
 */
-class MinatoMorrealeAlg final : public Synthesizer<kitty::dynamic_truth_table> {
+class MMSynthesizer final : public Synthesizer<kitty::dynamic_truth_table> {
 public:
 
   using Cube          = kitty::cube;
@@ -61,7 +61,7 @@ public:
 
   /// Synthesizes the Subnet.
   SubnetID synthesize(const KittyTT &func, uint16_t maxArity = -1) override {
-    return launchAlgorithm<MinatoMorrealeAlg>(func, *this, maxArity);
+    return launchAlgorithm<MMSynthesizer>(func, *this, maxArity);
   }
 
   /// Synthesizes the Subnet for a non-constant function.
@@ -85,4 +85,4 @@ private:
 
 };
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

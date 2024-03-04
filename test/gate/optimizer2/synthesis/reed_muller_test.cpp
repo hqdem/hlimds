@@ -10,12 +10,12 @@
 #include "gate/model2/celltype.h"
 #include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/optimizer2/resynthesis/reed_muller.h"
+#include "gate/optimizer2/synthesis/reed_muller.h"
 #include "util/arith.h"
 
 #include "gtest/gtest.h"
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
   using DinTruthTable = kitty::dynamic_truth_table;
   using Link = model::Subnet::Link;
@@ -219,4 +219,4 @@ TEST(ReedMullerModel2, DiffArityOn8Values) { subnetToSubnetWithDifferentArity(8)
 TEST(ReedMullerModel2, DiffArityOn9Values) { subnetToSubnetWithDifferentArity(9); }
 
 TEST(ReedMullerModel2, DiffArityOn10Values) { subnetToSubnetWithDifferentArity(10); }
-}// namespace eda::gate::optimizer2::resynthesis
+}// namespace eda::gate::optimizer2::synthesis

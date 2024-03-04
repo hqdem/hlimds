@@ -11,8 +11,8 @@
 #include "gate/model2/utils/subnet_random.h"
 #include "gate/model2/utils/subnet_to_bdd.h"
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/optimizer2/resynthesis/dsd_to_subnet.h"
-#include "gate/optimizer2/resynthesis/isop.h"
+#include "gate/optimizer2/synthesis/dsd_to_subnet.h"
+#include "gate/optimizer2/synthesis/isop.h"
 #include "gate/simulator2/simulator.h"
 
 #include "gtest/gtest.h"
@@ -21,8 +21,8 @@ using namespace eda::gate::model;
 using namespace eda::gate::model::utils;
 using namespace eda::gate::simulator2;
 
-using DsdToSubnet = eda::gate::optimizer2::resynthesis::DsdToSubnet;
-using BddWithDdManager = eda::gate::optimizer2::resynthesis::BddWithDdManager;
+using DsdToSubnet = eda::gate::optimizer2::synthesis::DsdToSubnet;
+using BddWithDdManager = eda::gate::optimizer2::synthesis::BddWithDdManager;
 using LinkList = Subnet::LinkList;
 
 Subnet::Link addITE(Subnet::Link first,
@@ -899,7 +899,7 @@ TEST(DsdTest, minMor) {
 TEST(DsdTest, fourZERO) {
   kitty::dynamic_truth_table tt(2);
   kitty::create_from_binary_string(tt, "0000");
-  eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg minato;
+  eda::gate::optimizer2::synthesis::MMSynthesizer minato;
   const auto &subnet = Subnet::get(minato.synthesize(tt));
 
   DsdToSubnet dsd;

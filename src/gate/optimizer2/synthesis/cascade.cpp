@@ -5,14 +5,14 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/optimizer2/resynthesis/cascade.h"
+#include "gate/optimizer2/synthesis/cascade.h"
 #include "kitty/kitty.hpp"
 
 #include <cstring>
 #include <memory>
 #include <vector>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 //===----------------------------------------------------------------------===//
 // Types
@@ -371,4 +371,4 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
         
   return subnetBuilder.make();
 }
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

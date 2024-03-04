@@ -222,9 +222,20 @@ or simply run the following script:
 If you've modified some of the project files, you can use `rebuild.sh` script
 for incremental build.
 
-During the project building, Doxygen (if installed) generates the documentation
-in HTML and LaTeX formats. The generated documentation is stored
-at the `build/doc` directory.
+#### Documentation generation
+During the project building, HTML documentation can be generated.
+Doxygen (if installed) is used for that purpose; the result is stored
+at the `build/doc` directory. To enable that, use `GEN_DOC` option:
+```
+cmake <...many args...> -DGEN_DOC=ON
+```
+
+#### Debug printing
+An extended debug printing is used by some components & tests. By default this
+feature is disabled; to enable that, use `UTOPIA_DEBUG` option:
+```
+cmake <...many args...> -DUTOPIA_DEBUG=ON
+```
 
 ### Running Utopia EDA
 
@@ -279,7 +290,7 @@ must specify:
 
 1. (Necessary) the input description (`<in-file-1> <in-file-2> ... <in-file-n>`,
 FIRRTL and Verilog are supported)*;
-2. (Optional) for Verilog output model2 representation -- the path to output 
+2. (Optional) for Verilog output model2 representation -- the path to output
 file (`--net <out-file>`);
 3. (Optional) for Verilog input descriptions -- top module name
 (`--top <name>`);

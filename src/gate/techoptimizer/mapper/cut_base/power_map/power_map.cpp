@@ -214,5 +214,3 @@ namespace eda::gate::tech_optimizer {
       entries = nullptr;
   }
 } //namespace eda::gate::tech_optimizer
-
-

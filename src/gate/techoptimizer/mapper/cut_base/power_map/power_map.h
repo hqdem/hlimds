@@ -22,13 +22,13 @@ namespace eda::gate::tech_optimizer {
   using Cone = ConeBuilder::Cone;
   using EntryMap = std::unordered_map<uint64_t, uint64_t>;
 
-class PowerMap : public CutBaseMapper{
+class PowerMap : public CutBaseMapper {
   public:
     PowerMap() = default;
   protected:
     void findBest() override;
     
-    ~PowerMap(){
+    ~PowerMap() {
       clear();
     }
     

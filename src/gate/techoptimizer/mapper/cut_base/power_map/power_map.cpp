@@ -205,12 +205,14 @@ namespace eda::gate::tech_optimizer {
       delete computedSF;
       delete computedLevel;
       delete coneBuilder;
+      delete requiredTimes;
       delete entries;
 
       computedAF = nullptr;
       computedSF = nullptr;
       computedLevel = nullptr;
       coneBuilder = nullptr;
+      requiredTimes = nullptr;
       entries = nullptr;
   }
 } //namespace eda::gate::tech_optimizer

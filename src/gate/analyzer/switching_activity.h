@@ -53,6 +53,27 @@ public:
     return result;
   }
 
+  /**
+   * @brief Returns cells switching probabilities.
+   */
+  const Probabilities &getActivities() const {
+    return probabilities;
+  }
+
+  /**
+   * @brief Returns switches from 0 to 1.
+   */
+  const Switches &getSwitchesOn() const {
+    return switchesOn;
+  }
+
+  /**
+   * @brief Returns switches from 1 to 0.
+   */
+  const Switches &getSwitchesOff() const {
+    return switchesOff;
+  }  
+
 private:
   /// Сontains the switching activity of cells (accessed via cell indices).
   Probabilities probabilities;

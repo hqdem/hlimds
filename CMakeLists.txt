@@ -79,7 +79,7 @@ add_subdirectory(test)
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
   message("Doxygen is installed. Generating documentation...")
-  execute_process(COMMAND doxygen doc/Doxyfile)
+  execute_process(COMMAND doxygen ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
 
 else ()
   message("Can't find doxygen; to generate docs from sources please install it.")

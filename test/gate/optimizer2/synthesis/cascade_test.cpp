@@ -5,7 +5,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/optimizer2/resynthesis/cascade.h"
+#include "gate/optimizer2/synthesis/cascade.h"
 
 #include "gtest/gtest.h"
 
@@ -14,7 +14,7 @@
 #include <memory>
 #include <string>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
   
 using CNF = std::vector<std::vector<int>>;
 using Subnet = model::Subnet;
@@ -160,4 +160,4 @@ TEST(Cascade, MaxArityTest) {
 
   EXPECT_TRUE(check && tableSubnet == table);
 } 
-}; // namespace eda::gate::optimizer2::resynthesis
+}; // namespace eda::gate::optimizer2::synthesis

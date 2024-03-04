@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/bidecomposition.h"
+#include "gate/optimizer2/synthesis/bidecomposition.h"
 #include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
@@ -16,14 +16,14 @@
 #include <random>
 #include <string>
 
-using BiDecomposition = eda::gate::optimizer2::resynthesis::BiDecomposition;
-using KittyTT         = BiDecomposition::KittyTT;
-using Subnet          = eda::gate::model::Subnet;
-using TernaryBiClique = eda::gate::optimizer2::resynthesis::TernaryBiClique;
+using BiDecSynthesizer = eda::gate::optimizer2::synthesis::BiDecSynthesizer;
+using KittyTT          = BiDecSynthesizer::KittyTT;
+using Subnet           = eda::gate::model::Subnet;
+using TernaryBiClique  = eda::gate::optimizer2::synthesis::TernaryBiClique;
 
 bool BiDecompositionTest(size_t numVars) {
 
-  BiDecomposition biDecomposition;
+  BiDecSynthesizer biDecomposition;
 
   bool flag{true};
   const size_t funcCount = 10;
@@ -32,7 +32,7 @@ bool BiDecompositionTest(size_t numVars) {
     for (int i = 0; i < (1 << numVars); ++i) {
       funcString += std::to_string(std::rand() & 1);
     }
-    BiDecomposition::KittyTT tt(numVars);
+    BiDecSynthesizer::KittyTT tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
     const auto &subnet = Subnet::get(biDecomposition.synthesize(tt));
     flag &= eda::gate::model::utils::equalTruthTables(subnet, tt);

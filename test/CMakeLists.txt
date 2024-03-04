@@ -67,14 +67,14 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
   gate/optimizer2/reconvergence_cut_test.cpp
-  gate/optimizer2/resynthesis/akers_test.cpp
-  gate/optimizer2/resynthesis/bidecomposition_test.cpp
-  gate/optimizer2/resynthesis/cascade_test.cpp
-  gate/optimizer2/resynthesis/de_micheli_test.cpp
-  gate/optimizer2/resynthesis/dsd_test.cpp
-  gate/optimizer2/resynthesis/isop_test.cpp
-  gate/optimizer2/resynthesis/reed_muller_test.cpp
   gate/optimizer2/resynthesizer_test.cpp
+  gate/optimizer2/synthesis/akers_test.cpp
+  gate/optimizer2/synthesis/bidecomposition_test.cpp
+  gate/optimizer2/synthesis/cascade_test.cpp
+  gate/optimizer2/synthesis/de_micheli_test.cpp
+  gate/optimizer2/synthesis/dsd_test.cpp
+  gate/optimizer2/synthesis/isop_test.cpp
+  gate/optimizer2/synthesis/reed_muller_test.cpp
   gate/parser/graphml_parser_test.cpp
   gate/parser/graphml_to_subnet_test.cpp
   gate/parser/parser_test.cpp

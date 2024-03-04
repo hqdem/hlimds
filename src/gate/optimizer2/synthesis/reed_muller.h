@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 #include "gate/model2/celltype.h"
 #include "gate/model2/subnet.h"
-#include "gate/optimizer/resynthesis/reed_muller.h"
 #include "gate/optimizer2/synthesizer.h"
 #include "util/arith.h"
 
@@ -16,7 +15,7 @@
 #include <iostream>
 #include <vector>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
   using DinTruthTable = kitty::dynamic_truth_table;
   using Link = model::Subnet::Link;
@@ -105,4 +104,4 @@ namespace eda::gate::optimizer2::resynthesis {
      */
     Polynomial charFromFunction(Polynomial &func);
   };
-} //namespace eda::gate::optimizer2::resynthesis
+} //namespace eda::gate::optimizer2::synthesis

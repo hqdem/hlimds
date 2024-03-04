@@ -11,7 +11,7 @@
 
 #include "gate/model2/subnet.h"
 #include "gate/model2/utils/subnet_to_bdd.h"
-#include "gate/optimizer2/resynthesis/isop.h"
+#include "gate/optimizer2/synthesis/isop.h"
 #include "gate/optimizer2/synthesizer.h"
 #include "util/logging.h"
 
@@ -30,7 +30,7 @@ static constexpr int DSD_XOR = XOR;
 #undef OR
 #undef XOR
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 //===--------------------------------------------------------------------===//
 // Types
@@ -76,7 +76,7 @@ public:
   // Convenience Methods
   //===--------------------------------------------------------------------===//
 
-  /// Resynthesize.
+  /// Synthesize.
   SubnetId synthesize(const BddWithDdManager &pair,
                       uint16_t maxArity = -1) override;
   SubnetId synthesize(const TruthTable &table,
@@ -156,5 +156,5 @@ bool isDependentOnVariable(const DdManager* manager,
                            DdNode* bdd,
                            uint32_t variableIndex);
 
-}; //namespace eda::gate::optimizer2::resynthesis
+}; //namespace eda::gate::optimizer2::synthesis
 #endif // DSD_TO_GNET_H

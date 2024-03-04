@@ -6,27 +6,24 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/isop.h"
+#include "gate/optimizer2/synthesis/isop.h"
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
-using Link = MinatoMorrealeAlg::Link;
-using LinkList = MinatoMorrealeAlg::LinkList;
+using Link = MMSynthesizer::Link;
+using LinkList = MMSynthesizer::LinkList;
 
-Link MinatoMorrealeAlg::run(const KittyTT &func,
-                            const LinkList &inputs,
-                            SubnetBuilder &subnetBuilder,
-                            uint16_t maxArity) const {
+Link MMSynthesizer::run(const KittyTT &func, const LinkList &inputs,
+                        SubnetBuilder &subnetBuilder, uint16_t maxArity) const {
   return synthFromISOP(kitty::isop(func),
                        inputs,
                        subnetBuilder,
                        maxArity);
 }
 
-Link MinatoMorrealeAlg::synthFromISOP(const ISOP &cubes,
-                                      const LinkList &inputs,
-                                      SubnetBuilder &subnetBuilder,
-                                      uint16_t maxArity) const {
+Link MMSynthesizer::synthFromISOP(const ISOP &cubes, const LinkList &inputs,
+                                  SubnetBuilder &subnetBuilder,
+                                  uint16_t maxArity) const {
   if (cubes.size() == 1) {
     return synthFromCube(cubes[0], inputs, subnetBuilder, maxArity);
   }
@@ -40,10 +37,9 @@ Link MinatoMorrealeAlg::synthFromISOP(const ISOP &cubes,
   return ~subnetBuilder.addCellTree(model::AND, links, maxArity);
 }
 
-Link MinatoMorrealeAlg::synthFromCube(Cube cube,
-                                      const LinkList &inputs,
-                                      SubnetBuilder &subnetBuilder,
-                                      uint16_t maxArity) const {
+Link MMSynthesizer::synthFromCube(Cube cube, const LinkList &inputs,
+                                  SubnetBuilder &subnetBuilder,
+                                  uint16_t maxArity) const {
   uint32_t mask {cube._mask};
   LinkList links;
   for (; mask; mask &= (mask - 1)) {
@@ -58,4 +54,4 @@ Link MinatoMorrealeAlg::synthFromCube(Cube cube,
   return subnetBuilder.addCellTree(model::AND, links, maxArity);
 }
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

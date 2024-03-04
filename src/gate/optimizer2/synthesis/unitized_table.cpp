@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/unitized_table.h"
+#include "gate/optimizer2/synthesis/unitized_table.h"
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 //===----------------------------------------------------------------------===//
 // Constructors/Destructors
@@ -371,4 +371,4 @@ std::ostream& operator <<(std::ostream &out, const UnitizedTable &t) {
   return out;
 }
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

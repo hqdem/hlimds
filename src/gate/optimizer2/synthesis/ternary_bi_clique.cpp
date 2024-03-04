@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/ternary_bi_clique.h"
+#include "gate/optimizer2/synthesis/ternary_bi_clique.h"
 #include "util/assert.h"
 
 // Removes a bit from the number by shifting the left bits to the right
@@ -14,7 +14,7 @@
   bits = ((bits >> 1) & (0xffffffff << idx)) +\
          (bits & (0x00000000 | ((1u << idx) - 1)));\
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 using Coverage = TernaryBiClique::Coverage;
 
@@ -172,4 +172,4 @@ void TernaryBiClique::eraseExtraInputs(ISOP &isop, uint32_t oldIndices) {
   isop = kitty::isop(tt);
 }
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

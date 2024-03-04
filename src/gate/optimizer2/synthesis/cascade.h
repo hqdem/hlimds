@@ -16,10 +16,10 @@
 #include <memory>
 #include <vector>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 /**
-* \brief Implements Cascade method of resynthesis.
+* \brief Implements Cascade method of synthesis.
 *
 * The algorithm based on the article "Method for the synthesis of 
 * computational and control contact circuits" by G. N. Povarov,
@@ -78,4 +78,4 @@ private:
   void checkSimplify(int, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values);
 
 };
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

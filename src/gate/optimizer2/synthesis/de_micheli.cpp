@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/de_micheli.h"
+#include "gate/optimizer2/synthesis/de_micheli.h"
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 //===----------------------------------------------------------------------===//
 // Types
@@ -576,4 +576,4 @@ Link DeMicheli::createLink(int64_t arg,
   return Link(zero.first, !arg);
 }
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

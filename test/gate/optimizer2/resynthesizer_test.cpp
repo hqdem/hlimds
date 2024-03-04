@@ -8,8 +8,9 @@
 
 #include "gate/model2/subnet.h"
 #include "gate/model2/utils/subnet_random.h"
-#include "gate/optimizer2/resynthesis/akers.h"
-#include "gate/optimizer2/resynthesizer.h"
+#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/optimizer2/synthesis/akers.h"
+#include "gate/optimizer2/synthesizer.h"
 
 #include "gtest/gtest.h"
 
@@ -38,7 +39,7 @@ TEST(ResynthesizerTest, SimpleTest) {
     const auto oldID = randomSubnet(nIn, nOut, nCell, minArity, maxArity);
     const auto oldTable = getTruthTable(oldID);
   
-    resynthesis::AkersAlgorithm synthesizer;
+    synthesis::AkersAlgorithm synthesizer;
 
     const auto newID = synthesizer.synthesize(oldTable);
     const auto newTable = getTruthTable(newID);

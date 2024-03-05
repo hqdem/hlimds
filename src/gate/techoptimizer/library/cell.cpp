@@ -172,9 +172,10 @@ void LibraryCells::readLibertyFile(const std::string &filename,
       inputPinNames.push_back(token);
     }
     if (!inputPinNames.empty() ) {
-      if (it.value()["comb"]) {
-      //if (it.value()["comb"] && it.value()["output"].size() == 1) {
-        // Extract the truth table
+      if (it.value().contains("comb")  &&
+          it.value()["comb"].get<bool>() &&
+          it.value().contains("output") &&
+          it.value()["output"].size() == 1) {
         const std::string truthTableName = it.value()["output"].begin().key();
         const std::string plainTruthTable = it.value()["output"][truthTableName];
 
@@ -209,7 +210,7 @@ void LibraryCells::readLibertyFile(const std::string &filename,
         cellTypeIDs.push_back(cellID);
 
       } else {
-        if (it.value()["ff"]) {
+        if (it.value().contains("ff") && it.value()["ff"].get<bool>()) {
           if (inputPinNames.size() == 2) {
             eda::gate::model::CellProperties
                 props(false, false, false, false, false, false, false);
@@ -231,7 +232,7 @@ void LibraryCells::readLibertyFile(const std::string &filename,
 
             cellTypeFFIDs.push_back(cellID);
           }
-        } else if (it.value()["ffrs"]) {
+        } else if (it.value().contains("ffrs") && it.value()["ffrs"].get<bool>()) {
           if (inputPinNames.size() == 4) {
             eda::gate::model::CellProperties
                 props(false, false, false, false, false, false, false);
@@ -256,7 +257,7 @@ void LibraryCells::readLibertyFile(const std::string &filename,
             cellTypeFFrsIDs.push_back(cellID);
           }
 
-        } else if (it.value()["latch"]) {
+        } else if (it.value().contains("latch") && it.value()["latch"].get<bool>()) {
           if (inputPinNames.size() == 2) {
             eda::gate::model::CellProperties
                 props(false, false, false, false, false, false, false);

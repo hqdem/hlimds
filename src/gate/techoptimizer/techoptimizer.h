@@ -29,6 +29,7 @@ public:
   Techmapper(const std::string &dbPath, MapperType techmapSelector);
 
   SubnetID techmap(SubnetID subnetID);
+  NetID techmap(NetID netID);
   SubnetID techmap(model::CellID sequenceCell, MapperType techmapSelector = MapperType::SIMPLE_AREA_FUNC);
 
   ~Techmapper() {

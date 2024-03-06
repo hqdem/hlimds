@@ -12,6 +12,7 @@
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techoptimizer.h"
 #include "gate/transformer/aigmapper.h"
+#include "gate/model2/decomposer/net_decomposer.h"
 
 //#include <list>
 #include <map>
@@ -76,6 +77,28 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
   AssemblySubnet as;
  return as.assemblySubnet(bestReplacementMap, AIGSubnet);
 }
+
+NetID Techmapper::techmap(NetID netID) {
+  auto& decomposer = eda::gate::model::NetDecomposer::get();
+  std::vector<eda::gate::model::NetDecomposer::CellMapping> mapping;
+  std::vector<SubnetID> subnets = decomposer.decompose(netID, mapping);
+  std::vector<SubnetID> mappedSubnetsID;
+
+  for (auto const subnet : subnets) {
+    mappedSubnetsID.push_back(techmap(subnet));
+  }
+  eda::gate::model::NetID composedNetID = decomposer.compose(subnets, mapping);
+
+  return composedNetID;
+}
+
+/*NetID Techmapper::sequenseTechMapping(NetID netID) {
+  model::NetBuilder netBuilder;
+
+  model::Net::get(netID).
+
+  return netBuilder.make();
+}*/
 
 SubnetID Techmapper::techmap(model::CellID sequenceCell,
                              MapperType techmapSelector) {

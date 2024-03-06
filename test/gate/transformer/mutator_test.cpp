@@ -160,6 +160,28 @@ namespace eda::gate::mutator {
     //TODO: BDD checker returns 'Killed'
   }
 
+  TEST(Mutator, verilogArbiter) {
+    GNet gNet;
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("arbiter.v"));
+    GNet mutatedGNet;
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, 3));
+    gNet.sortTopologically();
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+  }
+
+  TEST(Mutator, verilogBar) {
+    GNet gNet;
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("bar.v"));
+    GNet mutatedGNet;
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, gNet.nGates()));
+    gNet.sortTopologically();
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+  }
+
   TEST(Mutator, verilogC17) {
     GNet gNet;
     gNet.addNet(*eda::gate::parser::parseVerilogTest("c17.v"));
@@ -176,6 +198,30 @@ namespace eda::gate::mutator {
     std::string fileName = "c17";
     std::string fileNameMutate = "c17Mutate";
     printGraphs(gNet, fileName, mutatedGNet, fileNameMutate, list);
+  }
+
+  TEST(Mutator, verilogC499) {
+    GNet gNet;
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("c499.v"));
+    GNet mutatedGNet;
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, gNet.nGates()));
+    gNet.sortTopologically();
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
+  }
+
+  TEST(Mutator, verilogC1908) {
+    GNet gNet;
+    gNet.addNet(*eda::gate::parser::parseVerilogTest("c1908.v"));
+    GNet mutatedGNet;
+    gNet.sortTopologically();
+    mutatedGNet.addNet(Mutator::mutate(MutatorMode::GATE, gNet, gNet.nGates()));
+    mutatedGNet.sortTopologically();
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(RND)));
+    EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 
   TEST(Mutator, verilogSquare) {
@@ -276,4 +322,3 @@ namespace eda::gate::mutator {
     EXPECT_TRUE(usingCheckerForMutator(gNet, mutatedGNet, getChecker(SAT)));
   }
 } // namespace eda::gate::mutator
-

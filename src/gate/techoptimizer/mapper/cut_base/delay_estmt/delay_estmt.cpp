@@ -25,58 +25,74 @@ using std::string;
 using std::vector;
 
 WLM::WLM() :
-  wire_load_name("top"),
-  R(fudge * 0.08), C(fudge * 0.002),
-  Area(1), slope(0.5) {
-  /* Resistance is 0.03ff/micron for avg metal         */
-  /* Capacitance is 80 m-ohm/square, in kohm units     */
+  wire_load_name("sky"),
+  R(fudge * 0.08), C(fudge * 0.00002),
+  Area(1), slope(8.3631) {
+  /* Capacitance is 0.02ff/micron for avg metal         */
+  /* Resistance is 80 m-ohm/square, in kohm units     */
   /* (remember that our capacitance unit is 1.0pf)     */
 
   set_wire_load_model(wire_load_name);
 }
 
 WLM::WLM(string name) :
-  R(fudge * 0.08), C(fudge * 0.002),
-  Area(1), slope(0.5) {
+  R(fudge * 0.004), C(fudge * 0.2),
+  Area(1), slope(6.2836) {
 
   set_wire_load_model(name);
 }
 
 void WLM::set_wire_load_model(std::string wlm_name) {
-  if ((wlm_name == "top") || (wlm_name == "10k") ||
-      (wlm_name == "5k")  || (wlm_name == "2k")  ||
-      (wlm_name == "1k")  || (wlm_name == "500")) {
+  if ((wlm_name == "sky") || (wlm_name == "5k") ||
+      (wlm_name == "3k")  || (wlm_name == "1k") ) {
     
     wire_load_name = wlm_name;
-  
     float length;
-    float mp = 1;
     
-    if (wire_load_name == "top")
-      length = length_top;
-    else if (wire_load_name == "10k")
-      length = length_10k;
-    /* sqrt(5000/10000) = .71  *
-    * sqrt(2000/10000) = .45   *
-    * sqrt(1000/10000) = .32   *
-    * sqrt(500/10000) = .22    */
-    else if (wire_load_name == "5k")
-      length = length_10k * round(sqrt(5000.0/10000.0)*100)/100;
-    else if (wire_load_name == "2k")
-      length = length_10k * round(sqrt(2000.0/10000.0)*100)/100;
-    else if (wire_load_name == "1k")
-      length = length_10k * round(sqrt(1000.0/10000.0)*100)/100;
-    else if (wire_load_name == "500")
-      length = length_10k * round(sqrt(500.0/10000.0)*100)/100;
-    for (size_t i = 0; i < 7; ++i) {
-        fanout_length[i] = std::make_pair(i+1,length*mp);
-        mp += 0.5;
-      }
+    for (size_t i = 0; i < 6; ++i) 
+      fanout_length[i].first = i+1;
+
+    if (wire_load_name == "sky") {
+      length = length_sky;
+      fanout_length[0].second = length;
+      fanout_length[1].second = length*1.38;
+      fanout_length[2].second = length*2.08;
+      fanout_length[3].second = length*2.75;
+      fanout_length[4].second = length*3.71;
+      fanout_length[5].second = length*3.62;
+    }
+    else if (wire_load_name == "5k") {
+      length = length_5k;
+      fanout_length[0].second = length;
+      fanout_length[1].second = length*2.1;
+      fanout_length[2].second = length*3.53;
+      fanout_length[3].second = length*5.51;
+      fanout_length[4].second = length*8.31;
+      fanout_length[5].second = length*11.70;
+    }
+    else if (wire_load_name == "3k") {
+      length = length_3k;
+      fanout_length[0].second = length;
+      fanout_length[1].second = length*2.49;
+      fanout_length[2].second = length*3.20;
+      fanout_length[3].second = length*6.19;
+      fanout_length[4].second = length*8.59;
+      fanout_length[5].second = length*11.50;
+    }
+    else if (wire_load_name == "1k") {
+      length = length_1k;
+      fanout_length[0].second = length;
+      fanout_length[1].second = length*2.26;
+      fanout_length[2].second = length*3.70;
+      fanout_length[3].second = length*5.28;
+      fanout_length[4].second = length*6.82;
+      fanout_length[5].second = length*8.50;
+    }
       
-    for (size_t i = 0; i < 7; ++i) 
+    for (size_t i = 0; i < 6; ++i) 
       fanout_resistance[i] = std::make_pair(i+1, fanout_length[i].second*R);
 
-    for (size_t i = 0; i < 7; ++i) 
+    for (size_t i = 0; i < 6; ++i) 
       fanout_capacitance[i] = std::make_pair(i+1, fanout_length[i].second*C);
   }
 
@@ -95,7 +111,7 @@ void WLM::set_wire_load_model(std::string wlm_name) {
   }
 
   float WLM::getLength(size_t& fanout_count) {
-    if ((fanout_count > 0) && (fanout_count < 8)) 
+    if ((fanout_count > 0) && (fanout_count < 6)) 
       return fanout_length[fanout_count-1].second;
     else
       return 0;
@@ -103,7 +119,7 @@ void WLM::set_wire_load_model(std::string wlm_name) {
   }
 
   float WLM::getFanoutCap(size_t& fanout_count) {
-    if ((fanout_count > 0) && (fanout_count < 8)) 
+    if ((fanout_count > 0) && (fanout_count < 6)) 
       return fanout_capacitance[fanout_count-1].second;
     else
       return 0;
@@ -111,7 +127,7 @@ void WLM::set_wire_load_model(std::string wlm_name) {
   }
 
   float WLM::getFanoutRes(size_t& fanout_count) {
-    if ((fanout_count > 0) && (fanout_count < 8)) 
+    if ((fanout_count > 0) && (fanout_count < 6)) 
       return fanout_resistance[fanout_count-1].second;
     else
       return 0;
@@ -150,15 +166,15 @@ void WLM::set_wire_load_model(std::string wlm_name) {
       //===----------------------------------------------------------------------===//
       //  Properties
       //===----------------------------------------------------------------------===//
-        size_t ind_1 = -1, ind_2 = -1;
+        int ind_1 = -1, ind_2 = -1;
         std::vector<float> temp = {};
         std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
         bool ivar = false;
         capacitance = 0;
 
         float x1, x2, y1, y2, T11, T12, T21, T22, T00;
-        int tback1 = 0, tfront1 = 0;
-        int tback2 = 0, tfront2 = 0;
+        size_t tback1 = 0, tfront1 = 0;
+        size_t tback2 = 0, tfront2 = 0;
       //===----------------------------------------------------------------------===//
       //  Call for parser
       //===----------------------------------------------------------------------===//
@@ -204,7 +220,7 @@ void WLM::set_wire_load_model(std::string wlm_name) {
                   }
                 }
                 else if (ivar && (std::find(it.values.begin(), it.values.end(), total_output_net_capacitance) != std::end(it.values))) {
-                  for (int i = 0; i < it.values.size(); ++i) {
+                  for (size_t i = 0; i < it.values.size(); ++i) {
                     if (it.values[i] == total_output_net_capacitance) {
                       ind_2 = i;
                       cfall.push_back(temp[ind_1 * it.values.size() + ind_2]);
@@ -295,7 +311,7 @@ void WLM::set_wire_load_model(std::string wlm_name) {
                 tback2 = 0, tfront2 = 0;
                 for (const auto &it : (*lutP2)) {
                 if (!ivar) {
-                    for (int i = 0; i < it.values.size(); ++i) {
+                    for (size_t i = 0; i < it.values.size(); ++i) {
                       if (it.values[i] < input_net_transition) {
                         tback1 = i;
                         x1 = it.values[i];

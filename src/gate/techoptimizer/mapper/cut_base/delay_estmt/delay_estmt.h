@@ -95,19 +95,21 @@ namespace eda::gate::tech_optimizer::delay_estimation
     /// Properties
   private:
     /* length_top = the length of one side of a square die                *
-     * length_10k = the length of one side of a block containing          *
-     * 10k gates                                                          */
-    float length_top = 2500.0;
-    float length_10k = 900;
+     * length_5k = the length of one side of a block containing          *
+     * 5k gates                                                          */
+    float length_sky = 23.2746;
+    float length_5k = 1.7460;
+    float length_3k = 1.5771;
+    float length_1k = 1.3446;
     /* fudge = correction factor, routing, placement, etc. */
     float fudge = 1.0;
-    /* WLM names = { "top", "10k", "5k", "2k", "1k", "500" }*/
+    /* WLM names = { "sky", "5k", "3k", "1k" }*/
     std::string wire_load_name;
     /// Resistance, Capacitance, Area, extrapolation slope
     float R, C, Area, slope;
-    std::pair<size_t, float> fanout_length[7];
-    std::pair<size_t, float> fanout_resistance[7];
-    std::pair<size_t, float> fanout_capacitance[7];
+    std::pair<size_t, float> fanout_length[6];
+    std::pair<size_t, float> fanout_resistance[6];
+    std::pair<size_t, float> fanout_capacitance[6];
   };
 
   //===----------------------------------------------------------------------===//

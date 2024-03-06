@@ -18,7 +18,7 @@ void CutBaseMapper::baseMap() {
   std::cout << "Функция CutExtractor выполнялась " << CutFindTime.count() << " секунд.\n";
   findBest();
 }
-void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, model::Subnet::Cell &cell) {
+void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, const model::Subnet::Cell &cell) {
   if (cell.isIn()) {
     addInputToTheMap(entryIndex);
   } else if (cell.isOne()) {

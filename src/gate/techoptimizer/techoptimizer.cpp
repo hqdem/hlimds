@@ -84,10 +84,23 @@ NetID Techmapper::techmap(NetID netID) {
   std::vector<SubnetID> subnets = decomposer.decompose(netID, mapping);
   std::vector<SubnetID> mappedSubnetsID;
 
+  int i = 0;
   for (auto const subnet : subnets) {
-    mappedSubnetsID.push_back(techmap(subnet));
+    for (const auto cellID : mapping.at(i).inners) {
+      std::cout << "Name of cell" << model::Cell::get(cellID.first).getType().getName() << std::endl;
+    }
+    i++;
+    auto mappedSubnet = techmap(subnet);
+    if (model::Subnet::get(subnet).getEntries().size() == model::Subnet::get(mappedSubnet).getEntries().size()){
+      mappedSubnetsID.push_back(mappedSubnet);
+    } else {
+      mappedSubnetsID.push_back(subnet);
+    }
+    //mappedSubnetsID.push_back(mappedSubnet);
+    std::cout << model::Subnet::get(subnet);
+    std::cout << model::Subnet::get(mappedSubnet);
   }
-  eda::gate::model::NetID composedNetID = decomposer.compose(subnets, mapping);
+  eda::gate::model::NetID composedNetID = decomposer.compose(mappedSubnetsID, mapping);
 
   return composedNetID;
 }

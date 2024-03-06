@@ -26,7 +26,7 @@ protected:
   void baseMap() override;
   virtual void findBest() = 0;
 
-  void addNotAnAndToTheMap(EntryIndex entryIndex, model::Subnet::Cell &cell);
+  void addNotAnAndToTheMap(EntryIndex entryIndex,const model::Subnet::Cell &cell);
 
   void addInputToTheMap(EntryIndex entryIndex);
   void addZeroToTheMap(EntryIndex entryIndex);

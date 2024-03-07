@@ -21,12 +21,12 @@ namespace eda::gate::tech_optimizer {
       for (const auto &leafIdx : cut.entryIdxs) {
         const auto &leaf = (*entries)[leafIdx].cell;
         if(leaf.isIn()) {
-          computedSF->at(leafIdx) = cellActivities[leafIdx];
+          computedSF.at(leafIdx) = cellActivities[leafIdx];
         } 
-        sf += computedSF->at(leafIdx)/((*entries)[leafIdx].cell.refcount);
+        sf += computedSF[leafIdx]/(leaf.refcount);
       }
     }
-    computedSF->at(entryIndex) = sf;
+    computedSF[entryIndex] = sf;
     return sf;
   }
   
@@ -39,15 +39,15 @@ namespace eda::gate::tech_optimizer {
       for (const auto &leafIdx : cut.entryIdxs) { 
         const auto &leaf = (*entries)[leafIdx].cell;
         if(leaf.isIn())continue;
-        af += computedAF->at(leafIdx)/(leaf.refcount);
+        af += computedAF[leafIdx]/(leaf.refcount);
       }
     }
-    computedAF->at(entryIndex) = af;
+    computedAF[entryIndex] = af;
     return af;
   }
 
   int64_t PowerMap::getLevel(const EntryIndex entryIdx) {
-    return computedLevel->at(entryIdx);
+    return computedLevel[entryIdx];
   }
 
   int64_t PowerMap::getLevel(const Cut &cut) {
@@ -79,7 +79,7 @@ namespace eda::gate::tech_optimizer {
     }
 
     BestReplacement bestRepl;
-    computedLevel->at(entryIndex) = cutBestLevel; // setLevel(n, getLevel(cut))
+    computedLevel[entryIndex] = cutBestLevel; // setLevel(n, getLevel(cut))
     bestRepl.entryIDxs =cutBest->entryIdxs;
     bestRepl.subnetID = techSubnetId;
     return bestRepl;
@@ -89,7 +89,7 @@ namespace eda::gate::tech_optimizer {
     for (uint64_t entryIndex = 0; entryIndex < entries->size(); entryIndex++) {
       if (!(*entries)[entryIndex].cell.isAnd()) {
         addNotAnAndToTheMap(entryIndex, (*entries)[entryIndex].cell);
-        computedLevel->at(entryIndex) = 0;
+        computedLevel[entryIndex] = 0;
         continue;
       }
       (*bestReplacementMap)[entryIndex] = findCutMinimizingDepth(entryIndex);    
@@ -115,19 +115,19 @@ namespace eda::gate::tech_optimizer {
     const Subnet &subnet =Subnet::get(subnetID); 
     uint32_t timeMax = subnet.getPathLength().second;
 
-    for(auto& reqTime : *requiredTimes)reqTime = UINT32_MAX;
+    for(auto& reqTime : requiredTimes)reqTime = UINT32_MAX;
 
     for(int32_t i = 0; i < subnet.getOutNum();i++) {
-      requiredTimes->at(subnet.getOut(i).idx) = timeMax;
+      requiredTimes[subnet.getOut(i).idx] = timeMax;
     }
     //propagate the required times 
     //in reverse topological order
     for(int32_t entryIdx = entries->size()-1; entryIdx >= 0; entryIdx--) {
-      uint32_t timeReqNew = requiredTimes->at(entryIdx) - 1;
+      uint32_t timeReqNew = requiredTimes[entryIdx] - 1;
       // for each leaf in Representative Cut
       for(const auto &leafIdx : bestReplacementMap->at(entryIdx).entryIDxs) {
-        uint32_t timeReqOld = requiredTimes->at(leafIdx);
-        requiredTimes->at(leafIdx) = std::min(timeReqOld,timeReqNew);
+        uint32_t timeReqOld = requiredTimes[leafIdx];
+        requiredTimes[leafIdx] = std::min(timeReqOld,timeReqNew);
       }
     }
   }
@@ -168,15 +168,23 @@ namespace eda::gate::tech_optimizer {
       entryIndex += cell.more;
     }
   }
+  PowerMap::PowerMap(){
+    computedAF = std::vector<double>();
+    computedSF = std::vector<double>();
+    computedLevel = std::vector<int64_t>();
+    requiredTimes = std::vector<uint32_t>();
+    entries = nullptr;
+    coneBuilder = nullptr;
+  }
 
   void PowerMap::findBest() {
     Subnet &subnet = Subnet::get(this->subnetID);
-
-    entries = new ArrayEntry(subnet.getEntries().getID());
-    computedAF = new std::vector<double>(entries->size());
-    computedSF = new std::vector<double>(entries->size());
-    computedLevel =  new std::vector<int64_t>(entries->size());
-    requiredTimes = new std::vector<uint32_t>(entries->size(),UINT32_MAX);
+    
+    entries = new ArrayEntry(subnet.getEntries());
+    computedAF.resize(entries->size());
+    computedSF.resize(entries->size());
+    computedLevel.resize(entries->size());
+    requiredTimes.resize(entries->size(),UINT32_MAX);
     coneBuilder = new eda::gate::optimizer2::ConeBuilder(&subnet);
 
     eda::gate::analyzer::SimulationEstimator simulationEstimator(64);
@@ -201,18 +209,15 @@ namespace eda::gate::tech_optimizer {
   }
 
   void PowerMap::clear() {
-      delete computedAF;
-      delete computedSF;
-      delete computedLevel;
-      delete coneBuilder;
-      delete requiredTimes;
-      delete entries;
 
-      computedAF = nullptr;
-      computedSF = nullptr;
-      computedLevel = nullptr;
+      computedAF.clear();
+      computedSF.clear();
+      computedLevel.clear();
+      requiredTimes.clear();
+      
+      delete entries;
+      delete coneBuilder;
       coneBuilder = nullptr;
-      requiredTimes = nullptr;
       entries = nullptr;
   }
 } //namespace eda::gate::tech_optimizer

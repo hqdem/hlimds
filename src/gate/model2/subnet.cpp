@@ -283,9 +283,9 @@ void SubnetBuilder::replace(
           prevEmptyEntriesN == emptyEntryIDs.size() + 1) {
 
         isNewElem = true;
-        rhsToLhs[i] = newEntryID;
       }
     }
+    rhsToLhs[i] = newEntryID;
 
     if (!isNewElem) {
       continue;

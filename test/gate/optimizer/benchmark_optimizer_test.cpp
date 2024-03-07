@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -67,7 +67,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = parseVerilog("c17.v");
+    auto net = parseVerilogTest("c17.v");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << std::endl;
 
@@ -83,7 +83,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = parseVerilog("c432.v");
+    auto net = parseVerilogTest("c432.v");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << std::endl;
 
@@ -100,7 +100,7 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    auto net = parseVerilog("adder.v");
+    auto net = parseVerilogTest("adder.v");
 
     std::cout << "Gates number before rewrite : " << net->nGates() << std::endl;
 

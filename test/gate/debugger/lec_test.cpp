@@ -19,13 +19,8 @@ CheckerResult fileLecTest(const std::string &fileName,
                           LecType lecType,
                           PreBasis basis,
                           const std::string &subPath) {
-  Exts ext = getExt(fileName);
-  if (ext == Exts::UNSUPPORTED) {
-    CHECK(false) << "Unsupported HDL!" << std::endl;
-    return CheckerResult::ERROR;
-  }
 
-  GNet compiledNet = getModel(fileName, subPath, ext);
+  GNet compiledNet = getModel(fileName, subPath);
 
   compiledNet.sortTopologically();
   std::shared_ptr<GNet> initialNet = std::make_shared<GNet>(compiledNet);
@@ -40,15 +35,9 @@ CheckerResult twoFilesLecTest(const std::string &fileName1,
                               LecType lecType,
                               const std::string &subPath1,
                               const std::string &subPath2) {
-  Exts ext1 = getExt(fileName1);
-  Exts ext2 = getExt(fileName2);
-  if (ext1 == Exts::UNSUPPORTED || ext2 == Exts::UNSUPPORTED) {
-    CHECK(false) << "Unsupported HDL!\n";
-    return CheckerResult::ERROR;
-  }
 
-  GNet compiledNet1 = getModel(fileName1, subPath1, ext1);
-  GNet compiledNet2 = getModel(fileName2, subPath2, ext2);
+  GNet compiledNet1 = getModel(fileName1, subPath1);
+  GNet compiledNet2 = getModel(fileName2, subPath2);
 
   compiledNet1.sortTopologically();
   compiledNet2.sortTopologically();

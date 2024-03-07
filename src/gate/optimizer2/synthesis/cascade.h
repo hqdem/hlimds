@@ -16,7 +16,7 @@
 #include <memory>
 #include <vector>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 /**
 * \brief Implements Cascade method of resynthesis.
@@ -25,7 +25,7 @@ namespace eda::gate::optimizer2::resynthesis {
 * computational and control contact circuits" by G. N. Povarov,
 * Avtomat i Telemekh., 1957, volume 18, issue 2, 145–162
 */
-class Cascade : public Synthesizer<kitty::dynamic_truth_table> {
+class CascadeSynthesizer : public Synthesizer<kitty::dynamic_truth_table> {
 
 public:
 
@@ -45,7 +45,7 @@ public:
   //===------------------------------------------------------------------===//
 
   /// Constructor
-  Cascade();
+  CascadeSynthesizer();
 
   //===------------------------------------------------------------------===//
   // Main Methods
@@ -78,4 +78,4 @@ private:
   void checkSimplify(int, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values);
 
 };
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

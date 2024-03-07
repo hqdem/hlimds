@@ -102,17 +102,14 @@ namespace eda::gate::optimizer {
       FAIL() << "UTOPIA_HOME is not set.";
     }
 
-    GNet rawNet = getModel(testFileName,
-                           rilTestPath,
-                           eda::gate::parser::getExt(testFileName));
+    GNet rawNet = eda::gate::parser::getModel(testFileName, rilTestPath);
     rawNet.sortTopologically();
     std::shared_ptr<GNet> netToBalance = std::make_shared<GNet>(rawNet);
     if (needToPremap) {
       GateIdMap oldToNewGates;
       netToBalance = premap(std::make_shared<GNet>(rawNet),
                             oldToNewGates,
-                            eda::gate::premapper::PreBasis::AIG
-                            );
+                            eda::gate::premapper::PreBasis::AIG);
     }
 
     printBalancingInfo(netToBalance.get(), graphFileName,

@@ -163,7 +163,7 @@ SwitchActivity ProbabilisticEstimate::estimate(const Subnet &subnet,
     cellEstimate[j] = 2 * p * (1 - p);
   }
 
-  return SwitchActivity(cellEstimate);
+  return SwitchActivity(std::move(cellEstimate));
 }
 
 } // namespace eda::gate::analyzer

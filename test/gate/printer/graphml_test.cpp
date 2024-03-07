@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -51,7 +51,7 @@ void printGNet(GNet* gnet,
  */
 void fromVerilog(const std::string &infile, const std::string &outfile) {
 
-  GNet *net = eda::gate::parser::parseVerilog(infile);
+  GNet *net = eda::gate::parser::parseVerilogTest(infile);
 
   printGNet(net, infile, outfile);
 

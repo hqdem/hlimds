@@ -63,15 +63,15 @@ add_library(Gate OBJECT
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
   optimizer2/reconvergence_cut.cpp
-  optimizer2/resynthesis/akers.cpp
-  optimizer2/resynthesis/dsd_to_subnet.cpp
-  optimizer2/resynthesis/bidecomposition.cpp
-  optimizer2/resynthesis/cascade.cpp
-  optimizer2/resynthesis/de_micheli.cpp
-  optimizer2/resynthesis/isop.cpp
-  optimizer2/resynthesis/reed_muller.cpp
-  optimizer2/resynthesis/ternary_bi_clique.cpp
-  optimizer2/resynthesis/unitized_table.cpp
+  optimizer2/synthesis/akers.cpp
+  optimizer2/synthesis/dsd_to_subnet.cpp
+  optimizer2/synthesis/bidecomposition.cpp
+  optimizer2/synthesis/cascade.cpp
+  optimizer2/synthesis/de_micheli.cpp
+  optimizer2/synthesis/isop.cpp
+  optimizer2/synthesis/reed_muller.cpp
+  optimizer2/synthesis/ternary_bi_clique.cpp
+  optimizer2/synthesis/unitized_table.cpp
   parser/gate_verilog.cpp
   parser/graphml.cpp
   parser/graphml_to_subnet.cpp

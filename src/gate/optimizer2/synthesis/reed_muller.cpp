@@ -8,7 +8,7 @@
 
 #include "reed_muller.h"
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
   using Subnet = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
@@ -129,4 +129,4 @@ namespace eda::gate::optimizer2::resynthesis {
     resultFunction[resultFunction.size() - 1] = numVar;
     return resultFunction;
   }
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

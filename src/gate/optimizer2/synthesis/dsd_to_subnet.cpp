@@ -8,7 +8,7 @@
 
 #include "dsd_to_subnet.h"
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 SubnetId DsdToSubnet::synthesize(const BddWithDdManager &pair,
                                  uint16_t maxArity) {
@@ -21,7 +21,9 @@ SubnetId DsdToSubnet::synthesize(const BddWithDdManager &pair,
   /* Always reference after creation */
   DSD_Ref(dmanager, dsd);
   /* Debug print */
-  LOG_DEBUG(Recursive_Decomposition_Print(dsd));
+#ifdef UTOPIA_DEBUG
+  Recursive_Decomposition_Print(dsd);
+#endif
 
   SubnetBuilder subnetBuilder;
   LinkList inputsList;
@@ -44,7 +46,7 @@ SubnetId DsdToSubnet::synthesize(const BddWithDdManager &pair,
 
 SubnetId DsdToSubnet::synthesize(const TruthTable &table, uint16_t maxArity) {
   /* Initial subnet */
-  MinatoMorrealeAlg k;
+  MMSynthesizer k;
   const auto &subnet = Subnet::get(k.synthesize(table, maxArity));
 
   /* Subnet to BDD convertion */
@@ -310,4 +312,4 @@ Link DsdToSubnet::recursiveBddStep(DdNode *bdd,
   return result;
 }
 
-}; // namespace eda::gate::optimizer2::resynthesis
+}; // namespace eda::gate::optimizer2::synthesis

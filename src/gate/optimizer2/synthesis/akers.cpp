@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/akers.h"
+#include "gate/optimizer2/synthesis/akers.h"
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 //===----------------------------------------------------------------------===//
 // Types
 //===----------------------------------------------------------------------===//
@@ -460,4 +460,4 @@ bool AkersAlgorithm::mayDeleteRows(UnitizedTable &table,
   return false;
 }
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

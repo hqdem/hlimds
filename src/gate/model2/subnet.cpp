@@ -9,6 +9,8 @@
 #include "gate/model2/subnet.h"
 #include "gate/model2/printer/printer.h"
 
+#include <queue>
+
 namespace eda::gate::model {
 
 //===----------------------------------------------------------------------===//
@@ -347,6 +349,18 @@ void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
   }
 }
 
+void SubnetBuilder::replaceWithZero(const EntrySet &entryIDs) {
+  const size_t zeroID = addCell(ZERO).idx;
+  // FIXME: Place just after inputs.
+  mergeCells(MergeMap{{zeroID, entryIDs}});
+}
+
+void SubnetBuilder::replaceWithOne(const EntrySet &entryIDs) {
+  const size_t oneID = addCell(ONE).idx;
+  // FIXME: Place just after inputs.
+  mergeCells(MergeMap{{oneID, entryIDs}});
+}
+
 Subnet::Link &SubnetBuilder::getLinkRef(size_t entryID, size_t j) {
   return const_cast<Subnet::Link&>(getLink(entryID, j));
 }
@@ -457,20 +471,28 @@ void SubnetBuilder::relinkCell(size_t entryID, const LinkList &newLinks) {
 }
 
 void SubnetBuilder::deleteCell(size_t entryID) {
-  auto &cell = getCell(entryID);
-  assert(cell.arity <= Subnet::Cell::InPlaceLinks);
+  std::queue<size_t> queue;
+  queue.push(entryID);
 
-  deallocEntry(entryID);
-  for (size_t j = 0; j < cell.arity; ++j) {
-    const size_t inputEntryID = cell.link[j].idx;
+  do {
+    const size_t currentID = queue.front();
+    queue.pop();
 
-    auto &inputCell = getCell(inputEntryID);
-    inputCell.decRefCount();
+    auto &cell = getCell(currentID);
+    assert(cell.arity <= Subnet::Cell::InPlaceLinks);
+    deallocEntry(currentID);
 
-    if (!inputCell.refcount) {
-      deleteCell(inputEntryID); // FIXME: recursion.
+    for (size_t j = 0; j < cell.arity; ++j) {
+      const size_t inputID = cell.link[j].idx;
+
+      auto &inputCell = getCell(inputID);
+      inputCell.decRefCount();
+
+      if (!inputCell.refcount && !inputCell.isIn() /* leave inputs */) {
+        queue.push(inputID);
+      }
     }
-  }
+  } while (!queue.empty());
 }
 
 Subnet::Link SubnetBuilder::replaceCell(
@@ -490,7 +512,7 @@ Subnet::Link SubnetBuilder::replaceCell(
     inputCell.decRefCount();
 
     if (!inputCell.refcount) {
-      deleteCell(inputEntryID); // FIXME: recursion.
+      deleteCell(inputEntryID);
     }
   }
 
@@ -525,31 +547,31 @@ bool SubnetBuilder::checkOutputsOrder() const {
   return true;
 }
 
-void SubnetBuilder::sortEntries() {
-  std::vector<Subnet::Entry> newEntries; // FIXME: known size.
+void SubnetBuilder::rearrangeEntries() {
+  std::vector<Subnet::Entry> newEntries;
+  newEntries.reserve(entries.size());
+
   std::unordered_map<size_t, size_t> relinkMapping;
-  size_t curID = 0;
-  do {
-    relinkMapping[curID] = newEntries.size();
+  relinkMapping.reserve(entries.size());
+
+  for(size_t i = 0; i != upperBoundID; i = getNext(i)) {
+    relinkMapping[i] = newEntries.size();
+
+    const auto &cell = getCell(i);
+    assert(cell.isIn() || cell.isOut() || cell.refcount);
+
     LinkList links;
+    for (size_t j = 0; j < cell.arity; ++j) {
+      const auto &link = cell.link[j];
+      const auto it = relinkMapping.find(link.idx);
+      const auto idx = (it != relinkMapping.end()) ? it->second : link.idx;
 
-    const auto cell = getCell(curID);
-    assert(!cell.refcount);
-
-    for (size_t i = 0; i < cell.arity; ++i) {
-      const auto &curLink = cell.link[i];
-      if (relinkMapping.find(curLink.idx) != relinkMapping.end()) { // FIXME: two map accesses.
-        links.push_back(Link(relinkMapping[curLink.idx], curLink.out,
-                             curLink.inv));
-      } else {
-        links.push_back(Link(curLink.idx, curLink.out, curLink.inv));
-      }
+      links.emplace_back(idx, link.out, link.inv);
     }
-    relinkCell(curID, links);
 
-    newEntries.push_back(entries[curID]);
-    curID = getNext(curID);
-  } while (curID != upperBoundID);
+    relinkCell(i, links);
+    newEntries.push_back(entries[i]);
+  }
 
   entries = std::move(newEntries);
   clearContext();

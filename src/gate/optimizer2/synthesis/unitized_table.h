@@ -22,15 +22,15 @@
 #include "kitty/bit_operations.hpp"
 #include "kitty/dynamic_truth_table.hpp"
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
   class AkersAlgorithm;
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis
 
 namespace eda::gate::optimizer::resynthesis {
   class AkersAlgorithm;
 } // namespace eda::gate::optimizer::resynthesis
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 constexpr unsigned varLimit = 31;
 
@@ -164,4 +164,4 @@ private:
 /// Outputs the table
 std::ostream& operator <<(std::ostream &out, const UnitizedTable &t);
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

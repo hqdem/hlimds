@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -26,6 +26,8 @@ public:
   /// Resynthesizes the given subnet.
   /// Returns the identifier of the newly constructed subnet.
   virtual SubnetID resynthesize(SubnetID subnetID) = 0;
+
+  virtual ~ResynthesizerBase() =  default;
 };
 
 template<typename IR>
@@ -48,7 +50,7 @@ private:
 };
 
 template<>
-kitty::dynamic_truth_table construct<kitty::dynamic_truth_table>(
+inline kitty::dynamic_truth_table construct<kitty::dynamic_truth_table>(
     const eda::gate::model::Subnet &subnet) {
   return eda::gate::model::evaluateSingleOut(subnet);
 }

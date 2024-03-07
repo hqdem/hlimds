@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -68,7 +68,7 @@ void printerTest(const std::string &filename, std::function
 }
 
 void printerParserTest(const std::string designName) {
-  GNet *net = eda::gate::parser::parseVerilog(designName + ".v");
+  GNet *net = eda::gate::parser::parseVerilogTest(designName + ".v");
   printerTest(designName + "_gate.v", *net);
   delete net;
 }

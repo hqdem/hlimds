@@ -15,17 +15,16 @@
 
 namespace eda::gate::printer {
 
+namespace fs = std::filesystem;
 using GNet = eda::gate::model::GNet;
 
 void VCDTest(const std::string &fileName) {
-  using eda::gate::parser::Exts::VERILOG;
-  GNet net = eda::gate::parser::getModel(fileName + ".v", "", VERILOG);
+  GNet net = eda::gate::parser::getModel(fileName + ".v", "");
   net.sortTopologically();
-  const std::string VCDFile = fileName + ".vcd";
-  namespace fs = std::filesystem;
+  const std::string VcdFile = fileName + ".vcd";
   const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
   const fs::path outputPath = "output/test/vcd_printer";
-  fs::path file = homePath / outputPath / VCDFile;
+  fs::path file = homePath / outputPath / VcdFile;
   fs::path dir = file.parent_path();
   if (!fs::exists(dir)) {
     fs::create_directories(dir);

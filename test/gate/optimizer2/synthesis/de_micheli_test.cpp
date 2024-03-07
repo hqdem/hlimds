@@ -8,13 +8,13 @@
 
 #include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/optimizer2/resynthesis/de_micheli.h"
+#include "gate/optimizer2/synthesis/de_micheli.h"
 
 #include "gtest/gtest.h"
 
 #include <string>
 
-using DeMicheli  = eda::gate::optimizer2::resynthesis::DeMicheli;
+using DeMicheli  = eda::gate::optimizer2::synthesis::DeMicheli;
 using Subnet     = eda::gate::model::Subnet;
 using TruthTable = kitty::dynamic_truth_table;
 

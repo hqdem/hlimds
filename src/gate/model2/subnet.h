@@ -495,16 +495,21 @@ public:
   /// Returns the output link.
   Link addSingleOutputSubnet(SubnetID subnetID, const LinkList &links);
 
-  /// Replaces a single-output fragment with the given subnet (rhs).
+  /// Replaces the given single-output fragment w/ the given subnet (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(SubnetID rhsID, std::unordered_map<size_t, size_t> &rhsToLhs);
 
   /// Merges the cells from each map item leaving the one stored in the key.
-  /// Precondition: remaining entries do not depend on entries being removed.
+  /// Precondition: remaining entries precede the entries being removed.
   using EntrySet = std::unordered_set<size_t>;
   using MergeMap = std::unordered_map<size_t, EntrySet>;
   void mergeCells(const MergeMap &entryIDs);
+
+  /// Replaces the given cells w/ zero.
+  void replaceWithZero(const EntrySet &entryIDs);
+  /// Replaces the given cells w/ one.
+  void replaceWithOne(const EntrySet &entryIDs);
 
   EntryIterator begin() const {
     return EntryIterator(this, 0);
@@ -525,8 +530,8 @@ public:
   SubnetID make() {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    if (subnetEnd != normalOrderID) {
-      sortEntries();
+    if (!next.empty()) {
+      rearrangeEntries();
     }
     assert(checkInputsOrder() && checkOutputsOrder());
 
@@ -572,8 +577,9 @@ private:
   /// Checks if the outputs are located at the end of the array.
   bool checkOutputsOrder() const;
 
-  /// Sorts entries in topological order accoring to prev and next.
-  void sortEntries();
+  /// Sorts entries in topological order accoring to the prev and next arrays.
+  /// Removes the holes.
+  void rearrangeEntries();
 
   /// Clears the replacement context.
   void clearContext();

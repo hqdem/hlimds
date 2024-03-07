@@ -6,16 +6,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/bidecomposition.h"
+#include "gate/optimizer2/synthesis/bidecomposition.h"
 
 #include <algorithm>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
-BiDecomposition::Link BiDecomposition::run(const KittyTT &func,
-                                           const LinkList &inputs,
-                                           SubnetBuilder &subnetBuilder,
-                                           uint16_t maxArity) const {
+BiDecSynthesizer::Link BiDecSynthesizer::run(const KittyTT &func,
+                                             const LinkList &inputs,
+                                             SubnetBuilder &subnetBuilder,
+                                             uint16_t maxArity) const {
   
   KittyTT care(func.num_vars());
   kitty::create_from_binary_string(care, std::string(func.num_bits(), '1'));
@@ -24,12 +24,12 @@ BiDecomposition::Link BiDecomposition::run(const KittyTT &func,
   return decompose(initBiClique, subnetBuilder, maxArity);
 }
 
-BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
-                                                 SubnetBuilder &subnetBuilder,
-                                                 uint16_t maxArity) {
+BiDecSynthesizer::Link BiDecSynthesizer::decompose(TernaryBiClique &initBiClique,
+                                                   SubnetBuilder &subnetBuilder,
+                                                   uint16_t maxArity) {
 
   if (initBiClique.getOnSet().size() == 1) {
-    MinatoMorrealeAlg minatoMorrealeAlg;
+    MMSynthesizer minatoMorrealeAlg;
     return minatoMorrealeAlg.synthFromISOP(initBiClique.getOnSet(),
         initBiClique.getInputs(), subnetBuilder, maxArity);
   }
@@ -57,7 +57,7 @@ BiDecomposition::Link BiDecomposition::decompose(TernaryBiClique &initBiClique,
   return ~subnetBuilder.addCell(model::AND, lhs, rhs);
 }
 
-BiDecomposition::CoveragePair BiDecomposition::findBaseCoverage(
+BiDecSynthesizer::CoveragePair BiDecSynthesizer::findBaseCoverage(
     CoverageList &stars) {
 
   auto first = stars.end() - 2;
@@ -88,7 +88,7 @@ BiDecomposition::CoveragePair BiDecomposition::findBaseCoverage(
   return result;
 }
 
-void BiDecomposition::expandBaseCoverage(CoverageList &stars, Coverage &first,
+void BiDecSynthesizer::expandBaseCoverage(CoverageList &stars, Coverage &first,
                                          Coverage &second) {
   while (!stars.empty()) {
     bool shouldWiden = true;
@@ -116,7 +116,7 @@ void BiDecomposition::expandBaseCoverage(CoverageList &stars, Coverage &first,
   }
 }
 
-bool BiDecomposition::checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
+bool BiDecSynthesizer::checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
                                      Coverage &first, Coverage &second) {
   uint8_t newMerge = __builtin_popcount(first.vars | second.vars);
   uint8_t newDifBase = newMerge - __builtin_popcount(first.vars);
@@ -130,4 +130,4 @@ bool BiDecomposition::checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
   return false;
 }
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

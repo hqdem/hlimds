@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/optimizer2/resynthesis/unitized_table.h"
+#include "gate/optimizer2/synthesis/unitized_table.h"
 #include "gate/optimizer2/synthesizer.h"
 
 #include "kitty/constructors.hpp"
@@ -16,7 +16,7 @@
 #include <map>
 #include <memory>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 /** 
  *  The information about the number of inner columns and
@@ -53,7 +53,7 @@ struct Candidate {
 };
 
 /**
- * \brief Implements an Akers method of resynthesis.
+ * \brief Implements an Akers method of synthesis.
  * 
  * The algorithm based on the article "Synthesis of combinational logic using
  * three-input majority gates" by Sheldon B. Akers, Jr. (1962).
@@ -77,7 +77,7 @@ public:
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID      = eda::gate::model::SubnetID;
   using TruthTable    = kitty::dynamic_truth_table;
-  using UnitizedTable = eda::gate::optimizer2::resynthesis::UnitizedTable;
+  using UnitizedTable = eda::gate::optimizer2::synthesis::UnitizedTable;
 
   //===--------------------------------------------------------------------===//
   // Constructors/Destructors
@@ -159,4 +159,4 @@ private:
                   RowNums &toRemove, uint32_t rowNum);
 };
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

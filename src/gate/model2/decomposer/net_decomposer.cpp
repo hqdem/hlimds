@@ -369,7 +369,13 @@ static SubnetID makeSubnet(const Net &net,
     mapping.outputs.insert({outputLink, olink.idx});
   }
 
-  return subnetBuilder.make();
+  const auto subnetID = subnetBuilder.make();
+  const auto &subnet = Subnet::get(subnetID);
+
+  // Subnet size is required for proper composition.
+  mapping.size = subnet.size();
+
+  return subnetID;
 }
 
 std::vector<SubnetID> NetDecomposer::decompose(
@@ -486,14 +492,18 @@ static void makeCellsForInputs(NetBuilder &netBuilder,
                                const CellMapping &mapping,
                                InverseCellMapping &inverse,
                                InOutMapping &inout) {
-  for (const auto &[oldLink, idx] : mapping.inputs) {
-    assert(idx < subnet.getInNum());
+  assert(subnet.getInNum() == mapping.inputs.size());
+
+  for (const auto &[oldLink, oldIdx] : mapping.inputs) {
+    // Inputs are located at the beginning.
+    const auto newIdx = oldIdx;
+    assert(newIdx < subnet.getInNum());
 
     const auto oldSourceID = oldLink.source.getCellID();
     const auto newSourceID = makeCell(netBuilder, oldSourceID, inout);
 
     Link newLink{newSourceID, oldLink.source.getPort(), 0, 0};
-    inverse[idx] = CellDescriptor{CellDescriptor::INPUT, newLink, OBJ_NULL_ID};
+    inverse[newIdx] = CellDescriptor{CellDescriptor::INPUT, newLink, OBJ_NULL_ID};
   }
 }
 
@@ -522,10 +532,18 @@ static void makeCellsForOutputs(NetBuilder &netBuilder,
                                 const CellMapping &mapping,
                                 InverseCellMapping &inverse,
                                 InOutMapping &inout) {
-  for (const auto &[oldLink, idx] : mapping.outputs) {
-    assert(idx + subnet.getOutNum() >= subnet.size());
+  assert(subnet.getOutNum() == mapping.outputs.size());
 
-    const auto link = subnet.getLink(idx, 0);
+  for (const auto &[oldLink, oldIdx] : mapping.outputs) {
+    const auto oldSize = mapping.size;
+    const auto newSize = subnet.size();
+    assert((oldIdx + newSize) >= oldSize);
+
+    // Outputs are located at the end.
+    const size_t newIdx = (oldIdx + newSize) - oldSize;
+    assert(newIdx + subnet.getOutNum() >= subnet.size());
+
+    const auto link = subnet.getLink(newIdx, 0);
     const auto newSource = makeLinkEnd(netBuilder, link, inverse);
 
     const auto oldTargetID = oldLink.target.getCellID();
@@ -535,7 +553,7 @@ static void makeCellsForOutputs(NetBuilder &netBuilder,
     netBuilder.connect(newTargetID, targetPort, newSource);
 
     Link newLink{newSource, LinkEnd{newTargetID, targetPort}};
-    inverse[idx] = CellDescriptor{CellDescriptor::OUTPUT, newLink, OBJ_NULL_ID};
+    inverse[newIdx] = CellDescriptor{CellDescriptor::OUTPUT, newLink, OBJ_NULL_ID};
   }
 }
 

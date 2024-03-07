@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/resynthesis/isop.h"
+#include "gate/optimizer2/synthesis/isop.h"
 #include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
@@ -15,12 +15,12 @@
 
 #include <string>
 
-using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
+using MMSynthesizer = eda::gate::optimizer2::synthesis::MMSynthesizer;
 using Subnet      = eda::gate::model::Subnet;
 
 bool ISOPTest(size_t numVars) {
 
-  MinatoMorrealeAlg minatoMorrealeAlg;
+  MMSynthesizer minatoMorrealeAlg;
 
   bool flag = true;
   static const size_t funcCount = 10;
@@ -29,7 +29,7 @@ bool ISOPTest(size_t numVars) {
     for (int i = 0; i < (1 << numVars); ++i) {
       funcString += std::to_string(std::rand() & 1);
     }
-    MinatoMorrealeAlg::KittyTT tt(numVars);
+    MMSynthesizer::KittyTT tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
     const auto &subnet = Subnet::get(minatoMorrealeAlg.synthesize(tt, 3));
     flag &= eda::gate::model::utils::equalTruthTables(subnet, tt);

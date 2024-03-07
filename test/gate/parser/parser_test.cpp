@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -29,7 +29,7 @@ using namespace lorina;
 
 namespace eda::gate::parser {
 
-GNet *parseVerilog(const std::string &infile) {
+GNet *parseVerilogTest(const std::string &infile) {
   const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path prefixPath = homePath / subCatalog;
@@ -50,11 +50,12 @@ std::unique_ptr<GNet> parseRil(const std::string &fileName,
 }
 
 GNet getModel(const std::string &fileName,
-              const std::string &subPath,
-              Exts ext) {
+              const std::string &subPath) {
+
+  Exts ext = getExt(fileName);
   switch (ext) {
   case Exts::VERILOG:
-    return *parseVerilog(fileName);
+    return *parseVerilogTest(fileName);
   case Exts::RIL:
     return *parseRil(fileName, subPath);
   default:
@@ -128,7 +129,7 @@ void noParse(const std::string &infile) {
 }
 
 size_t parseOuts(const std::string &infile) {
-  return parseVerilog(infile)->nOuts();
+  return parseVerilogTest(infile)->nOuts();
 }
 } // namespace eda::gate::parser
 

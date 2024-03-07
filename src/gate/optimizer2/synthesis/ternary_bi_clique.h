@@ -16,7 +16,7 @@
 #include <set>
 #include <vector>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 /**
  * \brief Represents a complete bipartite graph (bi-clique), whose nodes
@@ -87,4 +87,4 @@ inline bool operator==(const TernaryBiClique::Coverage &lhs,
   return (lhs.offSet == rhs.offSet) && (lhs.vars == rhs.vars);
 }
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

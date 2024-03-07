@@ -8,7 +8,7 @@
 
 #include "gate/model2/utils/subnet_checking.h"
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/optimizer2/resynthesis/akers.h"
+#include "gate/optimizer2/synthesis/akers.h"
 
 #include "gtest/gtest.h"
 #include "mockturtle/networks/mig.hpp"
@@ -16,7 +16,7 @@
 #include <ctime>
 #include <string>
 
-using AkersAlgorithm = eda::gate::optimizer2::resynthesis::AkersAlgorithm;
+using AkersAlgorithm = eda::gate::optimizer2::synthesis::AkersAlgorithm;
 using KittyTT        = kitty::dynamic_truth_table;
 using MIGnetwork     = mockturtle::mig_network;
 using Subnet         = eda::gate::model::Subnet;

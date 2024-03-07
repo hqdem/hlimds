@@ -14,6 +14,8 @@
 
 namespace eda::gate::analyzer {
 
+using Switches = SimulationEstimator::Switches;
+
 SwitchActivity SimulationEstimator::estimate(const Subnet &subnet,
     const Probabilities &probabilities) {
 
@@ -37,17 +39,19 @@ SwitchActivity SimulationEstimator::estimate(const Subnet &subnet,
     inValuesList.push_back(std::move(cacheList));
   }
 
-  Switches switches = countSwitches(subnet, inValuesList);
+  auto [switchesOn, switchesOff] = countSwitches(subnet, inValuesList);
   
-  SwitchActivity::CellActivities result(switches.size());
-  for (size_t id{0}; id < switches.size(); ++id) {
-    result[id] = static_cast<double>(switches[id]) / (ticks - 1);
+  Probabilities result(switchesOn.size());
+  for (size_t id{0}; id < switchesOn.size(); ++id) {
+    result[id] = static_cast<double>(switchesOn[id] + switchesOff[id]) /
+        (ticks - 1);
   }
 
-  return SwitchActivity{std::move(result)};
+  return SwitchActivity{std::move(result),
+      std::move(switchesOn), std::move(switchesOff)};
 }
 
-SimulationEstimator::Switches SimulationEstimator::countSwitches(
+std::pair<Switches, Switches> SimulationEstimator::countSwitches(
     const Subnet &subnet, const InValuesList &inValuesList) {
 
   const size_t inputs = subnet.getInNum();
@@ -57,25 +61,25 @@ SimulationEstimator::Switches SimulationEstimator::countSwitches(
 
   Simulator simulator(subnet);
 
-  Switches result(cells.size());
+  Switches switchesOn(cells.size());
+  Switches switchesOff(cells.size());
 
   size_t ttSize = std::ceil(std::log2(cells.size()));
-  kitty::dynamic_truth_table lastBits(ttSize ? ttSize : 1);
+  kitty::dynamic_truth_table prevBits(ttSize ? ttSize : 1);
 
-  auto getLastBit = [&lastBits](size_t id) {
-    return kitty::get_bit(lastBits, id);
+  auto getPrevBit = [&prevBits](size_t id) {
+    return kitty::get_bit(prevBits, id);
   };
 
-  auto setLastBit = [&lastBits](size_t id) {
-    return kitty::set_bit(lastBits, id);
+  auto setPrevBit = [&prevBits](size_t id) {
+    return kitty::set_bit(prevBits, id);
   };
 
-  auto reSetLastBit = [&lastBits](size_t id) {
-    return kitty::clear_bit(lastBits, id);
+  auto reSetPrevBit = [&prevBits](size_t id) {
+    return kitty::clear_bit(prevBits, id);
   };
 
   for (size_t i{0}; i < inValuesList.size(); ++i) {
-
     const CacheList &values = inValuesList[i];
 
     uassert(values.size() == inputs,
@@ -85,14 +89,16 @@ SimulationEstimator::Switches SimulationEstimator::countSwitches(
 
     for (size_t id{0}; id < cells.size(); ++id) {
       Cache cache = simulator.getValue(id);
-      result[id] += popCount(getToggledBits(cache));
-      result[id] += (i) && ((cache & 1ull) ^ getLastBit(id)) ? 1 : 0;
-      (cache & (1ull << 63)) ? setLastBit(id) : reSetLastBit(id);
+      uint64_t bits = getSwitchedBits(cache);
+      uint64_t prevBit = ((i) && ((cache & 1ull) ^ getPrevBit(id)));
+      switchesOn[id] += popCount(bits & ~cache) + (prevBit & cache);
+      switchesOff[id] += popCount(bits & cache) + (prevBit & ~cache);
+      (cache & (1ull << 63)) ? setPrevBit(id) : reSetPrevBit(id);
       id += cells[id].cell.more;
     }
   }
 
-  return result;
+  return {std::move(switchesOn), std::move(switchesOff)};
 }
 
 SimulationEstimator::Cache SimulationEstimator::generateInValues(

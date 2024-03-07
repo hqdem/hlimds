@@ -18,15 +18,19 @@
 
 namespace eda::gate::model {
 
+/// Implements Net <-> {Subnet} decomposition/composition.
 class NetDecomposer final : public util::Singleton<NetDecomposer> {
   friend class util::Singleton<NetDecomposer>;
 
 public:
+  /// Maps net links to subnet cell indices.
   using LinkMap = std::unordered_map<Link, size_t>;
+  /// Maps net cells to subnet cell indices w/ inversion flags.
   using CellMap = std::unordered_map<CellID, std::pair<size_t, bool>>;
 
   /// Maps net cells/links to subnet cell indices.
   struct CellMapping final {
+    size_t size;
     LinkMap inputs;
     CellMap inners;
     LinkMap outputs;

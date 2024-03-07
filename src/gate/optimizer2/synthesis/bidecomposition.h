@@ -9,23 +9,23 @@
 #pragma once
 
 #include "gate/model2/subnet.h"
-#include "gate/optimizer2/resynthesis/isop.h"
-#include "gate/optimizer2/resynthesis/ternary_bi_clique.h"
+#include "gate/optimizer2/synthesis/isop.h"
+#include "gate/optimizer2/synthesis/ternary_bi_clique.h"
 #include "gate/optimizer2/synthesizer.h"
 
 #include <utility>
 #include <vector>
 
-namespace eda::gate::optimizer2::resynthesis {
+namespace eda::gate::optimizer2::synthesis {
 
 /**
- * \brief Implements method of resynthesis, by means of a heuristic method for
+ * \brief Implements method of synthesis, by means of a heuristic method for
  * bi-decomposition of Boolean functions.
  *
  * The algorithm based on the article "Synthesis of combinational circuits by
  * means of bi-decomposition of Boolean functions" by Yuri V. Pottosin (2022).
 */
-class BiDecomposition final : public Synthesizer<kitty::dynamic_truth_table> {
+class BiDecSynthesizer final : public Synthesizer<kitty::dynamic_truth_table> {
 public:
 
   using Coverage      = TernaryBiClique::Coverage;
@@ -40,7 +40,7 @@ public:
 
   /// Synthesizes the Subnet.
   SubnetID synthesize(const KittyTT &func, uint16_t maxArity = -1) override {
-    return launchAlgorithm<BiDecomposition>(func, *this, maxArity);
+    return launchAlgorithm<BiDecSynthesizer>(func, *this, maxArity);
   }
 
   /// Synthesizes the Subnet for a non-constant function.
@@ -62,4 +62,4 @@ private:
   
 };
 
-} // namespace eda::gate::optimizer2::resynthesis
+} // namespace eda::gate::optimizer2::synthesis

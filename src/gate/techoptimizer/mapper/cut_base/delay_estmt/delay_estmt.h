@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <readcells/groups.h>
+
 #include <iostream>
 #include <vector>
 
@@ -45,8 +47,8 @@ namespace eda::gate::tech_optimizer::delay_estimation
     */
   void delayEstimation(std::string& cell_name,
                        std::string& file_name,
-                       float& input_net_transition_f,
-                       float& total_output_net_capacitance_f );
+                       float& input_net_transition,
+                       float& total_output_net_capacitance);
 
 
   /// Properties
@@ -58,6 +60,11 @@ namespace eda::gate::tech_optimizer::delay_estimation
     /// cell capacitance
     float capacitance;
   };
+
+  float timingVisitor(const Timing &timing,
+               std::string dtype,
+               float& input_net_transition,
+               float& total_output_net_capacitance );
 
   float interpolation(float x0, float y0,
                       float x1, float x2,
@@ -85,7 +92,7 @@ namespace eda::gate::tech_optimizer::delay_estimation
     ~WLM() = default;
 
     /// Setters
-    void set_wire_load_model(std::string wlm_name);
+    void setWireLoadModel(std::string wlm_name);
 
     /// Getters
     float getLength(size_t& fanout_count);
@@ -94,14 +101,17 @@ namespace eda::gate::tech_optimizer::delay_estimation
 
     /// Properties
   private:
-    /* length_top = the length of one side of a square die                *
-     * length_5k = the length of one side of a block containing          *
-     * 5k gates                                                          */
+    /* length_top = the length of one side of a square die
+     * length_5k = the length of one side of a block containing
+     * 5k gates
+     */              
     float length_sky = 23.2746;
     float length_5k = 1.7460;
     float length_3k = 1.5771;
     float length_1k = 1.3446;
-    /* fudge = correction factor, routing, placement, etc. */
+    /* 
+    *  fudge = correction factor, routing, placement, etc. 
+    */
     float fudge = 1.0;
     /* WLM names = { "sky", "5k", "3k", "1k" }*/
     std::string wire_load_name;

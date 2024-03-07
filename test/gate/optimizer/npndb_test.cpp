@@ -9,7 +9,7 @@
 #include "gate/model/examples.h"
 #include "gate/model/gnet_test.h"
 #include "gate/optimizer/npndb.h"
-#include "util/kitty.h"
+#include "util/kitty_utils.h"
 
 #include "gtest/gtest.h"
 

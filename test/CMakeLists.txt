@@ -69,6 +69,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/reconvergence_cut_test.cpp
   gate/optimizer2/resynthesizer_test.cpp
   gate/optimizer2/synthesis/akers_test.cpp
+  gate/optimizer2/synthesis/algebraic_factor_test.cpp 
   gate/optimizer2/synthesis/bidecomposition_test.cpp
   gate/optimizer2/synthesis/cascade_test.cpp
   gate/optimizer2/synthesis/de_micheli_test.cpp
@@ -105,6 +106,7 @@ add_executable(${TEST_TARGET}
   rtl/parser/ril/ril_test.cpp
   test_main.cpp
   util/fm_test.cpp
+  util/kitty_utils_test.cpp
 )
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET}

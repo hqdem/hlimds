@@ -86,12 +86,12 @@ add_library(Gate OBJECT
   printer/vcd.cpp
   simulator/simulator.cpp
   techoptimizer/mapper/cut_base/сut_base_mapper.cpp
+  techoptimizer/mapper/cut_base/power_map/power_map.cpp
   techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.cpp
   techoptimizer/assembly.cpp
   techoptimizer/mapper/baseMapper.cpp
   techoptimizer/library/cell.cpp
   techoptimizer/library/cellDB.cpp
-  techoptimizer/power_map/power_map.cpp
   techoptimizer/sequential_mapper/sequential_mapper.cpp
   techoptimizer/techoptimizer.cpp
   simulator2/simulator.cpp

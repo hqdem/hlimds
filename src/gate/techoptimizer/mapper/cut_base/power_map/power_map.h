@@ -24,13 +24,11 @@ namespace eda::gate::tech_optimizer {
 
 class PowerMap : public CutBaseMapper {
   public:
-    PowerMap() = default;
+    PowerMap();
   protected:
     void findBest() override;
     
-    ~PowerMap() {
-      clear();
-    }
+    ~PowerMap() = default;
     
   private:
 
@@ -50,12 +48,12 @@ class PowerMap : public CutBaseMapper {
 
     void clear();
 
-    std::vector<double> *computedAF = nullptr;
-    std::vector<double> *computedSF = nullptr;
-    std::vector<int64_t> *computedLevel = nullptr;
-    std::vector<uint32_t> *requiredTimes = nullptr;
-    eda::gate::optimizer2::ConeBuilder *coneBuilder = nullptr;
-    ArrayEntry *entries = nullptr;
+    std::vector<double> computedAF;
+    std::vector<double> computedSF;
+    std::vector<int64_t> computedLevel;
+    std::vector<uint32_t> requiredTimes;
+    eda::gate::optimizer2::ConeBuilder *coneBuilder;
+    ArrayEntry *entries;
 };
 
 } // namespace eda::gate::tech_optimizer

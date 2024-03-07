@@ -32,62 +32,54 @@ WLM::WLM() :
   /* Resistance is 80 m-ohm/square, in kohm units     */
   /* (remember that our capacitance unit is 1.0pf)     */
 
-  set_wire_load_model(wire_load_name);
+  setWireLoadModel(wire_load_name);
 }
 
 WLM::WLM(string name) :
   R(fudge * 0.004), C(fudge * 0.2),
   Area(1), slope(6.2836) {
 
-  set_wire_load_model(name);
+  setWireLoadModel(name);
 }
 
-void WLM::set_wire_load_model(std::string wlm_name) {
+void WLM::setWireLoadModel(string wlm_name) {
   if ((wlm_name == "sky") || (wlm_name == "5k") ||
       (wlm_name == "3k")  || (wlm_name == "1k") ) {
     
     wire_load_name = wlm_name;
     float length;
-    
+    float mp_sky[] = {1.0, 1.38, 2.08, 2.75, 3.71, 3.62};
+    float mp_5k[] = {1.0, 2.1, 3.53, 5.51, 8.31, 11.70};
+    float mp_3k[] = {1.0, 2.49, 3.20, 6.19, 8.59, 11.50};
+    float mp_1k[] = {1.0, 2.26, 3.70, 5.28, 6.82, 8.50};
+    float multip[6];
+
     for (size_t i = 0; i < 6; ++i) 
       fanout_length[i].first = i+1;
 
     if (wire_load_name == "sky") {
       length = length_sky;
-      fanout_length[0].second = length;
-      fanout_length[1].second = length*1.38;
-      fanout_length[2].second = length*2.08;
-      fanout_length[3].second = length*2.75;
-      fanout_length[4].second = length*3.71;
-      fanout_length[5].second = length*3.62;
+      for (size_t i = 0; i < 6; ++i)
+        multip[i] = mp_sky[i];
     }
     else if (wire_load_name == "5k") {
       length = length_5k;
-      fanout_length[0].second = length;
-      fanout_length[1].second = length*2.1;
-      fanout_length[2].second = length*3.53;
-      fanout_length[3].second = length*5.51;
-      fanout_length[4].second = length*8.31;
-      fanout_length[5].second = length*11.70;
+      for (size_t i = 0; i < 6; ++i)
+        multip[i] = mp_5k[i];
     }
     else if (wire_load_name == "3k") {
       length = length_3k;
-      fanout_length[0].second = length;
-      fanout_length[1].second = length*2.49;
-      fanout_length[2].second = length*3.20;
-      fanout_length[3].second = length*6.19;
-      fanout_length[4].second = length*8.59;
-      fanout_length[5].second = length*11.50;
+      for (size_t i = 0; i < 6; ++i)
+        multip[i] = mp_3k[i];
     }
     else if (wire_load_name == "1k") {
       length = length_1k;
-      fanout_length[0].second = length;
-      fanout_length[1].second = length*2.26;
-      fanout_length[2].second = length*3.70;
-      fanout_length[3].second = length*5.28;
-      fanout_length[4].second = length*6.82;
-      fanout_length[5].second = length*8.50;
+      for (size_t i = 0; i < 6; ++i)
+        multip[i] = mp_1k[i];
     }
+
+    for (size_t i = 0; i < 6; ++i)
+      fanout_length[i].second = length*multip[i];
       
     for (size_t i = 0; i < 6; ++i) 
       fanout_resistance[i] = std::make_pair(i+1, fanout_length[i].second*R);
@@ -153,10 +145,103 @@ void WLM::set_wire_load_model(std::string wlm_name) {
     return T00;
   }
 
+  float timingVisitor(const Timing &timing,
+               string dtype,
+               float& input_net_transition,
+               float& total_output_net_capacitance ) {
+
+    const auto *lut = timing.getLut(dtype);
+
+    if (lut != nullptr) {
+      //===----------------------------------------------------------------------===//
+      //  Properties
+      //===----------------------------------------------------------------------===//
+      bool ivar = false;
+      float capacitance = 0;
+      int ind_1 = -1, ind_2 = -1;
+      std::vector<float> temp = {};
+      float x1, x2, y1, y2, T11, T12, T21, T22, T00;
+      size_t tback1 = 0, tfront1 = 0;
+      size_t tback2 = 0, tfront2 = 0;
+
+
+      temp = lut->getValues();
+      ind_1 = -1, ind_2 = -1;
+      ivar = false;
+      for (const auto &it : (*lut)) {
+        if (!ivar && (std::find(it.values.begin(), it.values.end(), input_net_transition) == std::end(it.values))) {
+          break;
+        }
+        else if (std::find(it.values.begin(), it.values.end(), input_net_transition) != std::end(it.values)) {
+          if (!ivar) {
+            ivar = true;
+            for (size_t i = 0; i < it.values.size(); ++i) {
+              if (it.values[i] == input_net_transition) {
+                ind_1 = i;
+                break;
+              }
+            }
+          }
+        }
+        else if (ivar && (std::find(it.values.begin(), it.values.end(), total_output_net_capacitance) != std::end(it.values))) {
+          for (size_t i = 0; i < it.values.size(); ++i) {
+            if (it.values[i] == total_output_net_capacitance) {
+              ind_2 = i;
+              return temp[ind_1 * it.values.size() + ind_2];
+            }
+          } 
+        }
+      }
+
+      /// INTERPOLATION
+      if ((ind_1 == -1) && (ind_2 == -1)) {
+        T11 = 0, T12 = 0, T21 = 0, T22 = 0;
+        tback1 = 0, tfront1 = 0;
+        tback2 = 0, tfront2 = 0;
+        for (const auto &it : (*lut)) {
+          if (!ivar) {
+            for (size_t i = 0; i < it.values.size(); ++i) {
+              if (it.values[i] < input_net_transition) {
+                tback1 = i;
+                x1 = it.values[i];
+              }
+              else if (it.values[i] > input_net_transition) {
+                tfront1 = i;
+                x2 = it.values[i];
+                break;
+              }
+            }
+            ivar = true;
+          }
+          else if (ivar) {
+            for (size_t i = 0; i < it.values.size(); ++i) {
+              if (it.values[i] < total_output_net_capacitance) {
+                  tback2 = i;
+                  y1 = it.values[i];
+              }
+              else if (it.values[i] > total_output_net_capacitance) {
+                tfront2 = i;
+                y2 = it.values[i];
+                break;
+              }
+            }
+            T11 = temp[tback1 * it.values.size() + tback2];
+            T12 = temp[tback1 * it.values.size() + tfront2];
+            T21 = temp[tfront1 * it.values.size() + tback2];
+            T22 = temp[tfront1 * it.values.size() + tfront2];
+            T00 = interpolation(input_net_transition, total_output_net_capacitance, 
+                                x1, x2, y1, y2, T11, T12, T21, T22);
+            return T00;
+          }
+        }
+      }
+    }
+  }
+
   void NLDM::delayEstimation(string& cell_name,
-                             std::string& file_name,
+                             string& file_name,
                              float& input_net_transition,
-                             float& total_output_net_capacitance )   {
+                             float& total_output_net_capacitance)   {
     //===----------------------------------------------------------------------===//
     //  Connecting paths
     //===----------------------------------------------------------------------===//
@@ -166,347 +251,44 @@ void WLM::set_wire_load_model(std::string wlm_name) {
       //===----------------------------------------------------------------------===//
       //  Properties
       //===----------------------------------------------------------------------===//
-        int ind_1 = -1, ind_2 = -1;
-        std::vector<float> temp = {};
-        std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
-        bool ivar = false;
-        capacitance = 0;
-
-        float x1, x2, y1, y2, T11, T12, T21, T22, T00;
-        size_t tback1 = 0, tfront1 = 0;
-        size_t tback2 = 0, tfront2 = 0;
+      std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
+      capacitance = 0;
+      
       //===----------------------------------------------------------------------===//
       //  Call for parser
       //===----------------------------------------------------------------------===//
-        TokenParser tokParser;
-        FILE *file = fopen(filePath.generic_string().c_str(), "rb");
-        Group *ast = tokParser.parseLibrary(file, filePath.generic_string().c_str());
-        Library lib;
-        AstParser parser(lib, tokParser);
-        parser.run(*ast);
-        fclose(file);
-        
+      TokenParser tokParser;
+      FILE *file = fopen(filePath.generic_string().c_str(), "rb");
+      Group *ast = tokParser.parseLibrary(file, filePath.generic_string().c_str());
+      Library lib;
+      AstParser parser(lib, tokParser);
+      parser.run(*ast);
+      fclose(file);
+      
       //===----------------------------------------------------------------------===//
       //  Delay and Slew estimation
       //===----------------------------------------------------------------------===//
-        const Cell *cell = lib.getCell(cell_name);
+      const Cell *cell = lib.getCell(cell_name);
 
-        for (const Pin &pin : (*cell).getPins()) {
-          capacitance += pin.getFloatAttribute("capacitance", 0);
-          for (const Timing &timing : pin.getTimings()) {
-            auto *lutP1 = timing.getLut("cell_fall");
-            auto *lutP2 = timing.getLut("cell_rise");
-            auto *lutP3 = timing.getLut("fall_transition");
-            auto *lutP4 = timing.getLut("rise_transition");
-
-          /// CELL FALL
-            if (lutP1 != nullptr) {
-              temp = lutP1->getValues();
-              ind_1 = -1, ind_2 = -1;
-              ivar = false;
-              for (const auto &it : (*lutP1)) {
-                if (!ivar && (std::find(it.values.begin(), it.values.end(), input_net_transition) == std::end(it.values))) {
-                  break;
-                }
-                else if (std::find(it.values.begin(), it.values.end(), input_net_transition) != std::end(it.values)) {
-                  if (!ivar) {
-                    ivar = true;
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] == input_net_transition) {
-                        ind_1 = i;
-                        break;
-                      }
-                    }
-                  }
-                }
-                else if (ivar && (std::find(it.values.begin(), it.values.end(), total_output_net_capacitance) != std::end(it.values))) {
-                  for (size_t i = 0; i < it.values.size(); ++i) {
-                    if (it.values[i] == total_output_net_capacitance) {
-                      ind_2 = i;
-                      cfall.push_back(temp[ind_1 * it.values.size() + ind_2]);
-                      break;
-                    }
-                  } 
-                }
-              }
-
-              /// INTERPOLATION
-              if ((ind_1 == -1) && (ind_2 == -1)) {
-                T11 = 0, T12 = 0, T21 = 0, T22 = 0;
-                tback1 = 0, tfront1 = 0;
-                tback2 = 0, tfront2 = 0;
-                for (const auto &it : (*lutP1)) {
-                  if (!ivar) {
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] < input_net_transition) {
-                        tback1 = i;
-                        x1 = it.values[i];
-                      }
-                      else if (it.values[i] > input_net_transition) {
-                        tfront1 = i;
-                        x2 = it.values[i];
-                        break;
-                      }
-                    }
-                    ivar = true;
-                  }
-                  else if (ivar) {
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] < total_output_net_capacitance) {
-                          tback2 = i;
-                          y1 = it.values[i];
-                      }
-                      else if (it.values[i] > total_output_net_capacitance) {
-                        tfront2 = i;
-                        y2 = it.values[i];
-                        break;
-                      }
-                    }
-                    T11 = temp[tback1 * it.values.size() + tback2];
-                    T12 = temp[tback1 * it.values.size() + tfront2];
-                    T21 = temp[tfront1 * it.values.size() + tback2];
-                    T22 = temp[tfront1 * it.values.size() + tfront2];
-                    T00 = interpolation(input_net_transition, total_output_net_capacitance, 
-                                        x1, x2, y1, y2, T11, T12, T21, T22);
-                    cfall.push_back(T00);
-                  }
-                }
-              }
-            }
-          /// CELL RISE
-            if (lutP2 != nullptr) {
-              temp = lutP2->getValues();
-              ind_1 = -1, ind_2 = -1;
-              ivar = false;
-              for (const auto &it : (*lutP2)) {
-                if (!ivar && (std::find(it.values.begin(), it.values.end(), input_net_transition) == std::end(it.values))) {
-                  break;
-                }
-                else if (std::find(it.values.begin(), it.values.end(), input_net_transition) != std::end(it.values)) {
-                  if (!ivar) {
-                    ivar = true;
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] == input_net_transition) {
-                        ind_1 = i;
-                        break;
-                      }
-                    }
-                  }
-                }
-                else if (ivar && (std::find(it.values.begin(), it.values.end(), total_output_net_capacitance) != std::end(it.values))) {
-                  for (size_t i = 0; i < it.values.size(); ++i) {
-                    if (it.values[i] == total_output_net_capacitance) {
-                      ind_2 = i;
-                      crise.push_back(temp[ind_1 * it.values.size() + ind_2]);
-                      break;
-                    }
-                  } 
-                }
-              }
-
-              /// INTERPOLATION
-              if ((ind_1 == -1) && (ind_2 == -1)) {
-                T11 = 0, T12 = 0, T21 = 0, T22 = 0;
-                tback1 = 0, tfront1 = 0;
-                tback2 = 0, tfront2 = 0;
-                for (const auto &it : (*lutP2)) {
-                if (!ivar) {
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] < input_net_transition) {
-                        tback1 = i;
-                        x1 = it.values[i];
-                      }
-                      else if (it.values[i] > input_net_transition) {
-                        tfront1 = i;
-                        x2 = it.values[i];
-                        break;
-                      }
-                    }
-                    ivar = true;
-                  }
-                  else if (ivar) {
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] < total_output_net_capacitance) {
-                          tback2 = i;
-                          y1 = it.values[i];
-                      }
-                      else if (it.values[i] > total_output_net_capacitance) {
-                        tfront2 = i;
-                        y2 = it.values[i];
-                        break;
-                      }
-                    }
-                    T11 = temp[tback1 * it.values.size() + tback2];
-                    T12 = temp[tback1 * it.values.size() + tfront2];
-                    T21 = temp[tfront1 * it.values.size() + tback2];
-                    T22 = temp[tfront1 * it.values.size() + tfront2];
-                    T00 = interpolation(input_net_transition, total_output_net_capacitance, 
-                                        x1, x2, y1, y2, T11, T12, T21, T22);
-                    crise.push_back(T00);
-                  }
-                }
-              }
-            }
-            /// FALL TRANSITION
-            if (lutP3 != nullptr) {
-              temp = lutP3->getValues();
-              ind_1 = -1, ind_2 = -1;
-              ivar = false;
-              for (const auto &it : (*lutP3)) {
-                if (!ivar && (std::find(it.values.begin(), it.values.end(), input_net_transition) == std::end(it.values))) {
-                  break;
-                }
-                else if (std::find(it.values.begin(), it.values.end(), input_net_transition) != std::end(it.values)) {
-                  if (!ivar) {
-                    ivar = true;
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] == input_net_transition) {
-                        ind_1 = i;
-                        break;
-                      }
-                    }
-                  }
-                }
-                else if (ivar && (std::find(it.values.begin(), it.values.end(), total_output_net_capacitance) != std::end(it.values))) {
-                  for (size_t i = 0; i < it.values.size(); ++i) {
-                    if (it.values[i] == total_output_net_capacitance) {
-                      ind_2 = i;
-                      tfall.push_back(temp[ind_1 * it.values.size() + ind_2]);
-                      break;
-                    }
-                  } 
-                }
-              }
-
-              /// INTERPOLATION
-              if ((ind_1 == -1) && (ind_2 == -1)) {
-                T11 = 0, T12 = 0, T21 = 0, T22 = 0;
-                tback1 = 0, tfront1 = 0;
-                tback2 = 0, tfront2 = 0;
-                for (const auto &it : (*lutP3)) {
-                  if (!ivar) {
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] < input_net_transition) {
-                        tback1 = i;
-                        x1 = it.values[i];
-                      }
-                      else if (it.values[i] > input_net_transition) {
-                        tfront1 = i;
-                        x2 = it.values[i];
-                        break;
-                      }
-                    }
-                    ivar = true;
-                  }
-                  else if (ivar) {
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] < total_output_net_capacitance) {
-                        tback2 = i;
-                        y1 = it.values[i];
-                      }
-                      else if (it.values[i] > total_output_net_capacitance) {
-                        tfront2 = i;
-                        y2 = it.values[i];
-                        break;
-                      }
-                    }
-                    T11 = temp[tback1 * it.values.size() + tback2];
-                    T12 = temp[tback1 * it.values.size() + tfront2];
-                    T21 = temp[tfront1 * it.values.size() + tback2];
-                    T22 = temp[tfront1 * it.values.size() + tfront2];
-                    T00 = interpolation(input_net_transition, total_output_net_capacitance, 
-                                        x1, x2, y1, y2, T11, T12, T21, T22);
-                    tfall.push_back(T00);
-                  }
-                }
-              }
-            }
-            /// RISE TRANSITION
-            if (lutP4 != nullptr) {
-              temp = lutP4->getValues();
-              ivar = false;
-              ind_1 = -1, ind_2 = -1;
-              for (const auto &it : (*lutP4)) {
-                if (!ivar && (std::find(it.values.begin(), it.values.end(), input_net_transition) == std::end(it.values))) {
-                  break;
-                }
-                else if (std::find(it.values.begin(), it.values.end(), input_net_transition) != std::end(it.values)) {
-                  if (!ivar) {
-                    ivar = true;
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] == input_net_transition) {
-                        ind_1 = i;
-                        break;
-                      }
-                    }
-                  }
-                }
-                else if (ivar && (std::find(it.values.begin(), it.values.end(), total_output_net_capacitance) != std::end(it.values))) {
-                  for (size_t i = 0; i < it.values.size(); ++i) {
-                    if (it.values[i] == total_output_net_capacitance) {
-                      ind_2 = i;
-                      trise.push_back(temp[ind_1 * it.values.size() + ind_2]);
-                      break;
-                    }
-                  } 
-                }
-              }
-
-              /// INTERPOLATION
-              if ((ind_1 == -1) && (ind_2 == -1)) {
-                T11 = 0, T12 = 0, T21 = 0, T22 = 0;
-                tback1 = 0, tfront1 = 0;
-                tback2 = 0, tfront2 = 0;
-                for (const auto &it : (*lutP4)) {
-                  if (!ivar) {
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] < input_net_transition) {
-                        tback1 = i;
-                        x1 = it.values[i];
-                      }
-                      else if (it.values[i] > input_net_transition) {
-                        tfront1 = i;
-                        x2 = it.values[i];
-                        break;
-                      }
-                    }
-                    ivar = true;
-                  }
-                  else if (ivar) {
-                    for (size_t i = 0; i < it.values.size(); ++i) {
-                      if (it.values[i] < total_output_net_capacitance) {
-                        tback2 = i;
-                        y1 = it.values[i];
-                      }
-                      else if (it.values[i] > total_output_net_capacitance) {
-                        tfront2 = i;
-                        y2 = it.values[i];
-                        break;
-                      }
-                    }
-                    T11 = temp[tback1 * it.values.size() + tback2];
-                    T12 = temp[tback1 * it.values.size() + tfront2];
-                    T21 = temp[tfront1 * it.values.size() + tback2];
-                    T22 = temp[tfront1 * it.values.size() + tfront2];
-                    T00 = interpolation(input_net_transition, total_output_net_capacitance, 
-                                        x1, x2, y1, y2, T11, T12, T21, T22);
-                    trise.push_back(T00);
-                  }
-                }
-              }
-            }
-          }
+      for (const Pin &pin : (*cell).getPins()) {
+        capacitance += pin.getFloatAttribute("capacitance", 0);
+        for (const Timing &timing : pin.getTimings()) {
+          cfall.push_back(timingVisitor(timing,"cell_fall", input_net_transition, total_output_net_capacitance));
+          crise.push_back(timingVisitor(timing,"cell_rise", input_net_transition, total_output_net_capacitance));
+          tfall.push_back(timingVisitor(timing,"fall_transition", input_net_transition, total_output_net_capacitance));
+          trise.push_back(timingVisitor(timing,"rise_transition", input_net_transition, total_output_net_capacitance));
         }
+      }
 
-        delay = *max_element(crise.begin(), crise.end());
-        for (size_t i = 0; i < crise.size(); ++i) 
-          if (crise[i] == delay) {
-            slew = (tfall[i] + trise[i])/2;
-            break;
-          }
-    }
-    else
-      std::cerr << "File wasn't found\n";
+      delay = *max_element(crise.begin(), crise.end());
+      for (size_t i = 0; i < crise.size(); ++i) 
+        if (crise[i] == delay) {
+          slew = (tfall[i] + trise[i])/2;
+          break;
+        }
+  }
+  else
+    std::cerr << "File wasn't found\n";
   }
 
 } // namespace eda::gate::tech_optimizer::delay_estimation

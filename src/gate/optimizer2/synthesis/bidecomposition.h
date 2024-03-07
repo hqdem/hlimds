@@ -40,14 +40,17 @@ public:
 
   /// Synthesizes the Subnet.
   SubnetID synthesize(const KittyTT &func, uint16_t maxArity = -1) override {
-    return launchAlgorithm<BiDecSynthesizer>(func, *this, maxArity);
+    bool one{kitty::is_const0(~func)};
+    bool zero{ kitty::is_const0(func)};
+    if (one || zero) {
+      return synthConstFunc(func.num_vars(), one);
+    }
+    return run(func, maxArity);
   }
 
-  /// Synthesizes the Subnet for a non-constant function.
-  Link run(const KittyTT &func, const LinkList &inputs,
-           SubnetBuilder &subnetBuilder, uint16_t maxArity = -1) const;
-
 private:
+
+  static SubnetID run(const KittyTT &func, uint16_t maxArity);
 
   static Link decompose(TernaryBiClique &initBiClique,
                         SubnetBuilder &subnetBuilder, uint16_t maxArity = -1);

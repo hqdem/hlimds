@@ -23,7 +23,7 @@ bool ISOPTest(size_t numVars) {
   MMSynthesizer minatoMorrealeAlg;
 
   bool flag = true;
-  static const size_t funcCount = 10;
+  static const size_t funcCount = 100;
   for (size_t i { 0 }; i < funcCount; ++i) {
     std::string funcString;
     for (int i = 0; i < (1 << numVars); ++i) {

@@ -64,11 +64,11 @@ add_library(Gate OBJECT
   optimizer2/cut_extractor.cpp
   optimizer2/reconvergence_cut.cpp
   optimizer2/synthesis/akers.cpp
-  optimizer2/synthesis/dsd_to_subnet.cpp
+  optimizer2/synthesis/algebraic_factor.cpp
   optimizer2/synthesis/bidecomposition.cpp
   optimizer2/synthesis/cascade.cpp
   optimizer2/synthesis/de_micheli.cpp
-  optimizer2/synthesis/isop.cpp
+  optimizer2/synthesis/dsd_to_subnet.cpp
   optimizer2/synthesis/reed_muller.cpp
   optimizer2/synthesis/ternary_bi_clique.cpp
   optimizer2/synthesis/unitized_table.cpp

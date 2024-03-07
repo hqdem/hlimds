@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "npndb.h"
-#include "util/kitty.h"
+#include "util/kitty_utils.h"
 
 namespace eda::gate::optimizer {
 

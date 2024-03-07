@@ -18,7 +18,7 @@ namespace eda::gate::optimizer2::synthesis {
 // Types
 //===----------------------------------------------------------------------===//
 
-using CNF = Cascade::CNF;
+using CNF = CascadeSynthesizer::CNF;
 using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetID = model::SubnetID;
@@ -28,13 +28,13 @@ using TruthTable = kitty::dynamic_truth_table;
 // Constructors/Destructors
 //===----------------------------------------------------------------------===//
 
-Cascade::Cascade() {}
+CascadeSynthesizer::CascadeSynthesizer() {}
 
 //===----------------------------------------------------------------------===//
 // Internal Methods
 //===----------------------------------------------------------------------===//
 
-void Cascade::initialize(CNF &output, int times, int num1, int num2, int num3) {
+void CascadeSynthesizer::initialize(CNF &output, int times, int num1, int num2, int num3) {
 
   for (int i = 0; i < times; i++) {
     output[0].push_back(num1);
@@ -43,7 +43,7 @@ void Cascade::initialize(CNF &output, int times, int num1, int num2, int num3) {
   }
 }
 
-int Cascade::calculate(int numVars, CNF &form, std::vector<int> &values) {
+int CascadeSynthesizer::calculate(int numVars, CNF &form, std::vector<int> &values) {
 
   // form[j][i] - current value in normal form table
   // values[j] : f(..., j, ...) - value of j
@@ -95,7 +95,7 @@ int Cascade::calculate(int numVars, CNF &form, std::vector<int> &values) {
 
 // Checks if x_i&f(1, ...) + !x_i&f(0, ...) can be simplified and if so, 
 // does it
-void Cascade::checkSimplify(int numVars, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values) {
+void CascadeSynthesizer::checkSimplify(int numVars, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values) {
 
   int size1 = out1[0].size();
   int size2 = out2[0].size();
@@ -172,7 +172,7 @@ void Cascade::checkSimplify(int numVars, CNF &out, CNF &out1, CNF &out2, std::ve
   }
 }
 
-CNF Cascade::normalForm(const TruthTable &table) {
+CNF CascadeSynthesizer::normalForm(const TruthTable &table) {
 
   int numVars = table.num_vars();
   int bits = 1 << numVars;
@@ -202,7 +202,7 @@ CNF Cascade::normalForm(const TruthTable &table) {
     // Main Methods
 //===--------------------------------------------------------------------===//
 
-CNF Cascade::getFunction(const TruthTable &table, CNF &form, std::vector<int> &values) {
+CNF CascadeSynthesizer::getFunction(const TruthTable &table, CNF &form, std::vector<int> &values) {
 
   unsigned int numVars = table.num_vars();
   CNF output(3);
@@ -250,7 +250,7 @@ CNF Cascade::getFunction(const TruthTable &table, CNF &form, std::vector<int> &v
   return output;
 }
 
-SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
+SubnetID CascadeSynthesizer::synthesize(const TruthTable &func, uint16_t maxArity) {
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
   const int undefinedArity = 65535;
@@ -258,13 +258,13 @@ SubnetID Cascade::synthesize(const TruthTable &func, uint16_t maxArity) {
   SubnetBuilder subnetBuilder;
 
   std::vector<int> values;
-  CNF form = Cascade::normalForm(func);
+  CNF form = CascadeSynthesizer::normalForm(func);
 
   int numVars = func.num_vars();
   // id of the first value in the output line
   int firstValId = numVars * 2 + 2; 
   
-  CNF output = Cascade::getFunction(func, form, values);
+  CNF output = CascadeSynthesizer::getFunction(func, form, values);
 
   int size = output[0].size();
   LinkList links;

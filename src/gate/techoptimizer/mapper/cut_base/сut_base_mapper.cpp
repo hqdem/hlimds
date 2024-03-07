@@ -16,13 +16,7 @@ void CutBaseMapper::baseMap() {
   auto endCut = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> CutFindTime = endCut - startCut;
   std::cout << "Функция CutExtractor выполнялась " << CutFindTime.count() << " секунд.\n";
-
-  std::cout << "start Findbest" << std::endl;
-  auto startFindBest = std::chrono::high_resolution_clock::now();
   findBest();
-  auto endFindBest = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> FindBestTime = endFindBest - startFindBest;
-  std::cout << "Функция findBest выполнялась " << FindBestTime.count() << " секунд.\n";
 }
 void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, const model::Subnet::Cell &cell) {
   if (cell.isIn()) {
@@ -50,7 +44,7 @@ void CutBaseMapper::addOneToTheMap(EntryIndex entryIndex) {
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 void CutBaseMapper::addOutToTheMap(EntryIndex entryIndex,
-                                      const model::Subnet::Cell &cell) {
+                                      model::Subnet::Cell &cell) {
   BestReplacement bestReplacement{false, true};
   bestReplacement.entryIDxs.insert(cell.link[0].idx);
   (*bestReplacementMap)[entryIndex] = bestReplacement;

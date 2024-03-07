@@ -32,6 +32,6 @@ protected:
   void addZeroToTheMap(EntryIndex entryIndex);
   void addOneToTheMap(EntryIndex entryIndex);
   void addOutToTheMap(EntryIndex entryIndex,
-                      const model::Subnet::Cell &cell);
+                      model::Subnet::Cell &cell);
 };
 } // namespace eda::gate::tech_optimizer

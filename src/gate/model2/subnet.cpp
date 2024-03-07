@@ -199,7 +199,6 @@ Subnet::Link SubnetBuilder::addCellTree(
 
 Subnet::LinkList SubnetBuilder::addSubnet(
     SubnetID subnetID, const LinkList &links) {
-
   const auto &subnet = Subnet::get(subnetID);
   const auto &subnetEntries = subnet.getEntries();
 
@@ -214,7 +213,9 @@ Subnet::LinkList SubnetBuilder::addSubnet(
     for (size_t j = 0; j < newLinks.size(); ++j) {
       auto &newLink = newLinks[j];
       if (newLink.idx < subnet.getInNum()) {
+        const bool inv = newLink.inv;
         newLink = links[newLink.idx];
+        newLink.inv ^= inv;
       } else {
         newLink.idx += offset;
       }

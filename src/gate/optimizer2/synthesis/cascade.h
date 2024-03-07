@@ -19,13 +19,13 @@
 namespace eda::gate::optimizer2::synthesis {
 
 /**
-* \brief Implements Cascade method of synthesis.
+* \brief Implements Cascade method of resynthesis.
 *
 * The algorithm based on the article "Method for the synthesis of 
 * computational and control contact circuits" by G. N. Povarov,
 * Avtomat i Telemekh., 1957, volume 18, issue 2, 145–162
 */
-class Cascade : public Synthesizer<kitty::dynamic_truth_table> {
+class CascadeSynthesizer : public Synthesizer<kitty::dynamic_truth_table> {
 
 public:
 
@@ -45,7 +45,7 @@ public:
   //===------------------------------------------------------------------===//
 
   /// Constructor
-  Cascade();
+  CascadeSynthesizer();
 
   //===------------------------------------------------------------------===//
   // Main Methods

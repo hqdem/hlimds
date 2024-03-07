@@ -92,6 +92,41 @@ bool checkAllCellsMapped(SubnetID subnetID) {
   }
   return isTotalMapped;
 }
+
+TEST(TechMapTest, SimpleNet) {
+  model::NetBuilder netBuilder;
+   std::vector<model::CellID> cells;
+  for (size_t i = 0; i < 5; i++) {
+    auto cellID = makeCell(model::CellSymbol::IN);
+    cells.push_back(cellID);
+    netBuilder.addCell(cellID);
+  }
+  auto cellIDAND0 = makeCell(model::CellSymbol::AND, cells[1], cells[2]);
+  netBuilder.addCell(cellIDAND0);
+
+/*auto cellIDAND1 = makeCell(model::CellSymbol::AND, cells[3], cells[4]);
+netBuilder.addCell(cellIDAND1);*/
+
+auto cellIDDFF = makeCell(model::CellSymbol::DFF, cellIDAND0, cells[0]);
+netBuilder.addCell(cellIDDFF);
+
+auto cellIDAND2 = makeCell(model::CellSymbol::AND, cellIDDFF, cells[3]);
+netBuilder.addCell(cellIDAND2);
+
+auto cellOUT = makeCell(model::CellSymbol::OUT, cellIDAND2);
+netBuilder.addCell(cellOUT);
+
+Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
+
+auto mappedNetID = techmapper.techmap(netBuilder.make());
+
+std::cout << model::Net::get(mappedNetID) << std::endl;
+
+//printVerilog(mappedNetID);
+
+//`EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
 /*
 TEST(TechMapTest, RandomSubnet) {
   SubnetID randomSubnet = model::randomSubnet(6, 3, 50, 2, 6);

@@ -24,7 +24,7 @@ void CutBaseMapper::baseMap() {
   std::chrono::duration<double> FindBestTime = endFindBest - startFindBest;
   std::cout << "Функция findBest выполнялась " << FindBestTime.count() << " секунд.\n";
 }
-void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex,const model::Subnet::Cell &cell) {
+void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, const model::Subnet::Cell &cell) {
   if (cell.isIn()) {
     addInputToTheMap(entryIndex);
   } else if (cell.isOne()) {

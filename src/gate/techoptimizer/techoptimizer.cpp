@@ -13,6 +13,7 @@
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techoptimizer.h"
 #include "gate/transformer/aigmapper.h"
+#include "gate/model2/decomposer/net_decomposer.h"
 
 //#include <list>
 #include <map>
@@ -78,6 +79,41 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
   AssemblySubnet as;
  return as.assemblySubnet(bestReplacementMap, AIGSubnet);
 }
+
+NetID Techmapper::techmap(NetID netID) {
+  auto& decomposer = eda::gate::model::NetDecomposer::get();
+  std::vector<eda::gate::model::NetDecomposer::CellMapping> mapping;
+  std::vector<SubnetID> subnets = decomposer.decompose(netID, mapping);
+  std::vector<SubnetID> mappedSubnetsID;
+
+  int i = 0;
+  for (auto const subnet : subnets) {
+    for (const auto cellID : mapping.at(i).inners) {
+      std::cout << "Name of cell" << model::Cell::get(cellID.first).getType().getName() << std::endl;
+    }
+    i++;
+    auto mappedSubnet = techmap(subnet);
+    if (model::Subnet::get(subnet).getEntries().size() == model::Subnet::get(mappedSubnet).getEntries().size()){
+      mappedSubnetsID.push_back(mappedSubnet);
+    } else {
+      mappedSubnetsID.push_back(subnet);
+    }
+    //mappedSubnetsID.push_back(mappedSubnet);
+    std::cout << model::Subnet::get(subnet);
+    std::cout << model::Subnet::get(mappedSubnet);
+  }
+  eda::gate::model::NetID composedNetID = decomposer.compose(mappedSubnetsID, mapping);
+
+  return composedNetID;
+}
+
+/*NetID Techmapper::sequenseTechMapping(NetID netID) {
+  model::NetBuilder netBuilder;
+
+  model::Net::get(netID).
+
+  return netBuilder.make();
+}*/
 
 SubnetID Techmapper::techmap(model::CellID sequenceCell,
                              MapperType techmapSelector) {

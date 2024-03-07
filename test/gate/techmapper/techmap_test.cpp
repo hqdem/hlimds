@@ -104,13 +104,13 @@ TEST(TechMapTest, SimpleNet) {
   auto cellIDAND0 = makeCell(model::CellSymbol::AND, cells[1], cells[2]);
   netBuilder.addCell(cellIDAND0);
 
-/*auto cellIDAND1 = makeCell(model::CellSymbol::AND, cells[3], cells[4]);
-netBuilder.addCell(cellIDAND1);*/
+auto cellIDAND1 = makeCell(model::CellSymbol::AND, cells[3], cells[4]);
+netBuilder.addCell(cellIDAND1);
 
 auto cellIDDFF = makeCell(model::CellSymbol::DFF, cellIDAND0, cells[0]);
 netBuilder.addCell(cellIDDFF);
 
-auto cellIDAND2 = makeCell(model::CellSymbol::AND, cellIDDFF, cells[3]);
+auto cellIDAND2 = makeCell(model::CellSymbol::AND, cellIDDFF, cellIDAND1);
 netBuilder.addCell(cellIDAND2);
 
 auto cellOUT = makeCell(model::CellSymbol::OUT, cellIDAND2);

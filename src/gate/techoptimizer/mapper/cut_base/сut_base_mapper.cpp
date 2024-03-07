@@ -44,7 +44,7 @@ void CutBaseMapper::addOneToTheMap(EntryIndex entryIndex) {
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 void CutBaseMapper::addOutToTheMap(EntryIndex entryIndex,
-                                      model::Subnet::Cell &cell) {
+                                   const model::Subnet::Cell &cell) {
   BestReplacement bestReplacement{false, true};
   bestReplacement.entryIDxs.insert(cell.link[0].idx);
   (*bestReplacementMap)[entryIndex] = bestReplacement;

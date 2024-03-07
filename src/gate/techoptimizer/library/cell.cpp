@@ -8,7 +8,7 @@
 
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/visitor.h"
-#include "gate/optimizer2/resynthesis/isop.h"
+#include "gate/optimizer2/synthesis/isop.h"
 #include "gate/techoptimizer/library/cell.h"
 
 #include "nlohmann/json.hpp"
@@ -28,7 +28,7 @@ using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
 
-using MinatoMorrealeAlg = eda::gate::optimizer2::resynthesis::MinatoMorrealeAlg;
+using MinatoMorrealeAlg = eda::gate::optimizer2::synthesis::MMSynthesizer;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using NetID = eda::gate::model::NetID;
 

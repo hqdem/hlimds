@@ -8,11 +8,11 @@ using namespace eda::gate::tech_optimizer::delay_estimation;
 
 TEST(DelayEstmt, firstTest) {
   std::string file = "test/data/gate/tech_mapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
-  
+
   DelayEstimator d1;
   DelayEstimator d2;
   DelayEstimator d3;
-  
+
   std::string cell_name1 = "sky130_fd_sc_hd__a2111o_4";
   float input_net_transition = 0.053133;
   float total_output_net_capacitance1 = 0.191204;

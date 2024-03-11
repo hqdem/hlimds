@@ -16,8 +16,8 @@ TEST(DelayEstmt, secondTest) {
 
   std::cout << "Length\tCap\tRes\n";
   for (size_t i = 1; i < 6; ++i)
-    std::cout << d1.wlm.getLength(i) 
-              << '\t' 
+    std::cout << d1.wlm.getLength(i)
+              << '\t'
               << d1.wlm.getFanoutCap(i)
               << '\t'
               << d1.wlm.getFanoutRes(i)

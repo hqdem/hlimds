@@ -11,9 +11,11 @@
 namespace eda::gate::tech_optimizer {
 void BaseMapper::mapping(SubnetID subnetID,
                      CellDB *cellDB,
+                     SDC &sdc,
     std::unordered_map<EntryIndex, BestReplacement> *bestReplacementMap) {
   this->subnetID = subnetID;
   this->cellDB = cellDB;
+  this->sdc = sdc;
   this->bestReplacementMap = bestReplacementMap;
 
   baseMap();

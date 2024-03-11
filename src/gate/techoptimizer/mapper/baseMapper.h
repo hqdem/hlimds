@@ -9,6 +9,7 @@
 
 #include "gate/techoptimizer/library/cellDB.h"
 #include "gate/techoptimizer/mapper/bestReplacement.h"
+#include "gate/techoptimizer/library/SDC.h"
 
 #include <map>
 
@@ -22,12 +23,14 @@ class BaseMapper {
 public:
   void mapping(SubnetID subnetID,
            CellDB *cellDB,
+           SDC &sdc,
            std::unordered_map<EntryIndex, BestReplacement> *bestReplacementMap);
 
   virtual ~BaseMapper() = default;
 protected:
   CellDB *cellDB;
   SubnetID subnetID;
+  SDC sdc;
   std::unordered_map<EntryIndex, BestReplacement> *bestReplacementMap;
 
   virtual void baseMap() = 0;

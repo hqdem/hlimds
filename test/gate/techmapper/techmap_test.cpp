@@ -36,7 +36,7 @@ using SubnetID   = eda::gate::model::SubnetID;
 namespace eda::gate::tech_optimizer {
 
 const /*std::filesystem::path*/ std::string libertyPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/tech_mapper";
-
+SDC sdc{1, 1};
 SubnetID parseGraphML(std::string fileName) {
 
   using path = std::filesystem::path;
@@ -115,9 +115,9 @@ netBuilder.addCell(cellIDAND2);
 
 auto cellOUT = makeCell(model::CellSymbol::OUT, cellIDAND2);
 netBuilder.addCell(cellOUT);
-
 Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
+                      Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                      sdc);
 
 auto mappedNetID = techmapper.techmap(netBuilder.make());
 
@@ -156,8 +156,9 @@ TEST(TechMapTest, graphML) {
 
 SubnetID subnetId  = parseGraphML("aes_orig");
 
-Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                        sdc);
 
 /*auto entries = model::Subnet::get(subnetId).getEntries();
 
@@ -176,7 +177,8 @@ TEST(TechMapTest, SimpleANDSubnet) {
   std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                        Techmapper::MapperType::SIMPLE_AREA_FUNC);
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                        sdc);
 
   SubnetID mappedSub = techmapper.techmap(primitiveANDSub);
 
@@ -197,7 +199,8 @@ TEST(TechMapTest, SimpleORSubnet) {
   const auto primitiveORSub  = createPrimitiveSubnet(CellSymbol::OR, 3, 13);
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                        sdc);
 
   SubnetID mappedSub = techmapper.techmap(primitiveORSub);
 
@@ -253,7 +256,8 @@ TEST(TechMapTest, SimpleSub) {
   std::cout << subnet << std::endl;
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                        sdc);
 
   SubnetID mappedSub = techmapper.techmap(subnetID);
 
@@ -304,8 +308,9 @@ TEST(TechMapTest, ANDNOTNOTAND) {
   const auto &subnet = model::Subnet::get(subnetID);
   std::cout << subnet << std::endl;
 
-    Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                      Techmapper::MapperType::SIMPLE_AREA_FUNC);
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                        sdc);
 
   SubnetID mappedSub = techmapper.techmap(subnetID);
 
@@ -318,7 +323,8 @@ TEST(TechMapTest, DFFMapping) {
   auto cellID = makeCell(model::CellSymbol::DFF);
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                        Techmapper::MapperType::SIMPLE_AREA_FUNC);
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                        sdc);
 
   SubnetID mappedSub = techmapper.techmap(cellID);
 
@@ -331,7 +337,8 @@ TEST(TechMapTest, DFFrsMapping) {
   auto cellID = makeCell(model::CellSymbol::DFFrs);
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                        Techmapper::MapperType::SIMPLE_AREA_FUNC);
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                        sdc);
 
   SubnetID mappedSub = techmapper.techmap(cellID);
 
@@ -344,7 +351,8 @@ TEST(TechMapTest, LatchMapping) {
   auto cellID = makeCell(model::CellSymbol::LATCH);
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                        Techmapper::MapperType::SIMPLE_AREA_FUNC);
+                        Techmapper::MapperType::SIMPLE_AREA_FUNC,
+                        sdc);
 
   SubnetID mappedSub = techmapper.techmap(cellID);
 

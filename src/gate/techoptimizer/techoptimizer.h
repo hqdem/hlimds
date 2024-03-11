@@ -26,7 +26,7 @@ public:
     SIMPLE_AREA_FUNC
   };
 
-  Techmapper(const std::string &dbPath, MapperType techmapSelector);
+  Techmapper(const std::string &dbPath, MapperType techmapSelector, SDC& sdc);
 
   SubnetID techmap(SubnetID subnetID);
   NetID techmap(NetID netID);
@@ -40,6 +40,7 @@ public:
 private:
   void setLiberty(const std::string &dbPath);
   void setMapper(MapperType techmapSelector);
+  SDC sdc;
   CellDB *cellDB;
   BaseMapper *mapper = nullptr;
   SubnetID premapAIGSubnet(SubnetID subnetID);

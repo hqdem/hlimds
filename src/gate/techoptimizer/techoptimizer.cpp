@@ -23,7 +23,9 @@ using CellID = eda::gate::model::CellID;
 namespace eda::gate::tech_optimizer {
 
 Techmapper::Techmapper(const std::string &dbPath,
-                            MapperType techmapSelector) {
+                            MapperType techmapSelector,
+                            SDC& sdc) {
+  this->sdc = sdc;
   setLiberty(dbPath);
   setMapper(techmapSelector);
 }
@@ -71,7 +73,7 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
 
  assert(mapper != nullptr);
 
-  mapper->mapping(AIGSubnet, cellDB, bestReplacementMap);
+  mapper->mapping(AIGSubnet, cellDB, sdc, bestReplacementMap);
 
   std::cout << "start to create new mapped Subnet" << std::endl;
   AssemblySubnet as;

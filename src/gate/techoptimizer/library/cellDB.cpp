@@ -95,7 +95,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
       if (j.contains(cell_name)) {
         auto& cell_power = j[cell_name]["power"];
 
-        for (auto& [key, value] : cell_power.items()) {
+        for (const auto &[key, value] : cell_power.items()) {
           Power power;
           power.fall_power = value["fall_power"];
           power.rise_power = value["rise_power"];

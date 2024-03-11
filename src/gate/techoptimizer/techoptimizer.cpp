@@ -7,13 +7,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/celltype.h"
+#include "gate/model2/decomposer/net_decomposer.h"
 #include "gate/techoptimizer/assembly.h"
 #include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
 #include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techoptimizer.h"
 #include "gate/transformer/aigmapper.h"
-#include "gate/model2/decomposer/net_decomposer.h"
 
 //#include <list>
 #include <map>
@@ -88,7 +88,7 @@ NetID Techmapper::techmap(NetID netID) {
   std::vector<SubnetID> subnets = decomposer.decompose(netID, mapping);
   std::vector<SubnetID> mappedSubnetsID;
 
-  for (auto const subnet : subnets) {
+  for (auto const &subnet : subnets) {
     mappedSubnetsID.push_back(techmap(subnet));
   }
   eda::gate::model::NetID composedNetID = decomposer.compose(mappedSubnetsID, mapping);

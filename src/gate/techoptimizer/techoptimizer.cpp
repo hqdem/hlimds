@@ -8,6 +8,7 @@
 
 #include "gate/model2/celltype.h"
 #include "gate/techoptimizer/assembly.h"
+#include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
 #include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techoptimizer.h"
@@ -58,6 +59,7 @@ void Techmapper::setMapper(MapperType techmapSelector) {
     case MapperType::DELAY:
       break;
     case MapperType::POWER:
+      mapper = new PowerMap();
       break;
 
     /*case TechmapperType::STRUCT: // DAGON matching

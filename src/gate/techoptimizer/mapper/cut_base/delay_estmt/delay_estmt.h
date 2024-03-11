@@ -10,7 +10,7 @@
 
 #include <readcells/groups.h>
 
-#include <iostream>
+#include <string>
 #include <vector>
 
 namespace eda::gate::tech_optimizer::delay_estimation
@@ -116,7 +116,7 @@ namespace eda::gate::tech_optimizer::delay_estimation
     /* WLM names = { "sky", "5k", "3k", "1k" }*/
     std::string wire_load_name;
     /// Resistance, Capacitance, Area, extrapolation slope
-    float R, C, Area, slope;
+    float r, c/*, area, slope TODO*/;
     std::pair<size_t, float> fanout_length[6];
     std::pair<size_t, float> fanout_resistance[6];
     std::pair<size_t, float> fanout_capacitance[6];

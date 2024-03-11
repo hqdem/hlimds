@@ -26,8 +26,8 @@ using std::vector;
 
 WLM::WLM() :
   wire_load_name("sky"),
-  R(fudge * 0.08), C(fudge * 0.00002),
-  Area(1), slope(8.3631) {
+  r(fudge * 0.08), c(fudge * 0.00002)/*,
+  area(1), slope(8.3631) TODO*/ {
   /* Capacitance is 0.02ff/micron for avg metal         */
   /* Resistance is 80 m-ohm/square, in kohm units     */
   /* (remember that our capacitance unit is 1.0pf)     */
@@ -36,8 +36,8 @@ WLM::WLM() :
 }
 
 WLM::WLM(string name) :
-  R(fudge * 0.004), C(fudge * 0.2),
-  Area(1), slope(6.2836) {
+  r(fudge * 0.004), c(fudge * 0.2)/*,
+  area(1), slope(6.2836) TODO*/ {
 
   setWireLoadModel(name);
 }
@@ -82,10 +82,10 @@ void WLM::setWireLoadModel(string wlm_name) {
       fanout_length[i].second = length*multip[i];
       
     for (size_t i = 0; i < 6; ++i) 
-      fanout_resistance[i] = std::make_pair(i+1, fanout_length[i].second*R);
+      fanout_resistance[i] = std::make_pair(i+1, fanout_length[i].second * r);
 
     for (size_t i = 0; i < 6; ++i) 
-      fanout_capacitance[i] = std::make_pair(i+1, fanout_length[i].second*C);
+      fanout_capacitance[i] = std::make_pair(i+1, fanout_length[i].second * c);
   }
 
   else
@@ -157,7 +157,7 @@ void WLM::setWireLoadModel(string wlm_name) {
       //  Properties
       //===----------------------------------------------------------------------===//
       bool ivar = false;
-      float capacitance = 0;
+      // float capacitance = 0; TODO
       int ind_1 = -1, ind_2 = -1;
       std::vector<float> temp = {};
       float x1, x2, y1, y2, T11, T12, T21, T22, T00;
@@ -195,9 +195,10 @@ void WLM::setWireLoadModel(string wlm_name) {
 
       /// INTERPOLATION
       if ((ind_1 == -1) && (ind_2 == -1)) {
-        T11 = 0, T12 = 0, T21 = 0, T22 = 0;
+        //T11 = 0, T12 = 0, T21 = 0, T22 = 0; TODO
         tback1 = 0, tfront1 = 0;
         tback2 = 0, tfront2 = 0;
+        x1 = 0, x2 = 0, y1 = 0, y2 = 0;
         for (const auto &it : (*lut)) {
           if (!ivar) {
             for (size_t i = 0; i < it.values.size(); ++i) {
@@ -213,7 +214,7 @@ void WLM::setWireLoadModel(string wlm_name) {
             }
             ivar = true;
           }
-          else if (ivar) {
+          else {
             for (size_t i = 0; i < it.values.size(); ++i) {
               if (it.values[i] < total_output_net_capacitance) {
                   tback2 = i;
@@ -236,6 +237,7 @@ void WLM::setWireLoadModel(string wlm_name) {
         }
       }
     }
+    return -1; //TODO
   }
 
   void NLDM::delayEstimation(string& cell_name,

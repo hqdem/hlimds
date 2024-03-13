@@ -197,9 +197,9 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
       arwdb->set(TT, list);
     }
 
-    eda::gate::model::CellProperties props{0, 0, 0, 0, 0, 0, 0};
+    eda::gate::model::CellProperties props{1, 0, 0, 0, 0, 0, 0, 0, 0};
     CellTypeID cellID = eda::gate::model::makeCellType(
-        cell->getName(), eda::gate::model::CellSymbol::CELL,
+        cell->getName(), eda::gate::model::CellSymbol::UNDEF,
         props, static_cast<uint16_t>(cell->getInputPinsNumber()), 
         static_cast<uint16_t>(1));
     cellTypeMap.insert(std::pair<std::string, CellTypeID>

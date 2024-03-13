@@ -57,6 +57,8 @@ public:
   CellTypeID getTypeID() const { return CellTypeID::makeFID(typeSID); }
   /// Returns the reference to the cell type.
   const CellType &getType() const { return CellType::get(getTypeID()); }
+  /// Returns the cell symbol.
+  CellSymbol getSymbol() const { return getType().getSymbol(); }
 
   /// Returns the cell fan-in (the number of inputs).
   uint16_t getFanin() const { return fanin; }

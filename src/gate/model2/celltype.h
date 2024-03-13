@@ -61,14 +61,52 @@ enum CellSymbol : uint16_t {
   /// Q(t) = RST(level1) ? 0 : (SET(level1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
   DFFrs,
 
-  /// Standard cell.
-  CELL,
-  /// Soft IP core (or a subnet).
-  SOFT,
-  /// Hard IP core.
-  HARD,
+  /// Multiplexor 2-to-1: OUT = S == 0 ? X : Y.
+  MUX2,
+  /// Equality comparison (signed): OUT = X == Y.
+  EQs,
+  /// Equality comparison (unsigned): OUT = X == Y.
+  EQu,
+  /// Non-equality comparison (signed): OUT = X != Y.
+  NEQs,
+  /// Non-equality comparison (unsigned): OUT = X != Y.
+  NEQu,
+  /// Less-than comparison (signed): OUT = X < Y.
+  LTs,
+  /// Less-than comparison (unsigned): OUT = X < Y.
+  LTu,
+  /// Less-than-equal comparison (signed): OUT = X <= Y.
+  LTEs,
+  /// Less-than-equal comparison (unsigned): OUT = X <= Y.
+  LTEu,
+  /// Greater-than comparison (signed): OUT = X > Y.
+  GTs,
+  /// Greater-than comparison (unsigned): OUT = X > Y.
+  GTu,
+  /// Greater-than-equal comparison (signed): OUT = X >= Y.
+  GTEs,
+  /// Greater-than-equal comparison (unsigned): OUT = X >= Y.
+  GTEu,
+  /// Addition: OUT = X + Y.
+  ADD,
+  /// Subtraction: OUT = X - Y.
+  SUB,
+  /// Multiplication (signed): OUT = X * Y.
+  MULs,
+  /// Multiplication (unsigned): OUT = X * Y.
+  MULu,
+  /// Division (signed): OUT = X / Y.
+  DIVs,
+  /// Division (unsigned): OUT = X / Y.
+  DIVu,
+  /// Remainder (signed): OUT = X rem Y = sign(X)*(|X| rem |Y|).
+  REMs,
+  /// Remainder (unsigned): OUT = X rem Y.
+  REMu,
+  /// Modulo (signed): OUT = X mod Y = sign(Y)*(|X| rem |Y|).
+  MODs,
 
-  /// Incorrect type.
+  /// Custom block.
   UNDEF
 };
 
@@ -106,13 +144,17 @@ inline CellSymbol getNegSymbol(CellSymbol symbol) {
 
 #pragma pack(push, 1)
 struct CellProperties {
-  CellProperties(bool combinational,
+  CellProperties(bool cell,
+                 bool soft,
+                 bool combinational,
                  bool constant,
                  bool identity,
                  bool commutative,
                  bool associative,
                  bool regroupable,
                  bool negative):
+    cell(cell),
+    soft(soft),
     combinational(combinational),
     constant(constant),
     identity(identity),
@@ -121,6 +163,15 @@ struct CellProperties {
     regroupable(regroupable),
     negative(negative) {}
 
+  /// Cell/soft flags identify the cell kind:
+  /// 00: Hard (block w/ unknown structure);
+  /// 01: Soft (block w/ known structure);
+  /// 10: Gate (elementary logic function);
+  /// 11: Cell (technology-dependent cell).
+  unsigned cell : 1;
+  unsigned soft : 1;
+
+  /// Describes the function properties.
   unsigned combinational : 1;
   unsigned constant      : 1;
   unsigned identity      : 1;
@@ -129,7 +180,7 @@ struct CellProperties {
   unsigned regroupable   : 1;
   unsigned negative      : 1;
 
-  unsigned reserved      : 9;
+  unsigned reserved : 7;
 };
 #pragma pack(pop)
 
@@ -171,9 +222,34 @@ public:
   bool isLatch() const { return symbol == LATCH; }
   bool isDff()   const { return symbol == DFF;   }
   bool isDffRs() const { return symbol == DFFrs; }
-  bool isCell()  const { return symbol == CELL;  }
-  bool isSoft()  const { return symbol == SOFT;  }
-  bool isHard()  const { return symbol == HARD;  }
+  bool isMux2()  const { return symbol == MUX2;  }
+  bool isEqS()   const { return symbol == EQs;   }
+  bool isEqU()   const { return symbol == EQu;   }
+  bool isNeqS()  const { return symbol == NEQs;  }
+  bool isNeqU()  const { return symbol == NEQu;  }
+  bool isLtS()   const { return symbol == LTs;   }
+  bool isLtU()   const { return symbol == LTu;   }
+  bool isLteS()  const { return symbol == LTEs;  }
+  bool isLteU()  const { return symbol == LTEu;  }
+  bool isGtS()   const { return symbol == GTs;   }
+  bool isGtU()   const { return symbol == GTu;   }
+  bool isGteS()  const { return symbol == GTEs;  }
+  bool isGteU()  const { return symbol == GTEu;  }
+  bool isAdd()   const { return symbol == ADD;   }
+  bool isSub()   const { return symbol == SUB;   }
+  bool isMulS()  const { return symbol == MULs;  }
+  bool isMulU()  const { return symbol == MULu;  }
+  bool isDivS()  const { return symbol == DIVs;  }
+  bool isDivU()  const { return symbol == DIVu;  }
+  bool isRemS()  const { return symbol == REMs;  }
+  bool isRemU()  const { return symbol == REMu;  }
+  bool isModS()  const { return symbol == MODs;  }
+  bool isUndef() const { return symbol == UNDEF; }
+
+  bool isGate() const { return  props.cell &&  props.soft; }
+  bool isCell() const { return  props.cell && !props.soft; }
+  bool isSoft() const { return !props.cell &&  props.soft; }
+  bool isHard() const { return !props.cell && !props.soft; }
 
   bool isCombinational() const { return props.combinational; }
   bool isConstant()      const { return props.constant;      }

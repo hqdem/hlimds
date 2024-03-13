@@ -15,6 +15,8 @@ using namespace eda::gate::model;
 namespace eda::gate::debugger2 {CellTypeID customFourInANDCellType() {
   CellProperties props(true,
                        false,
+                       true,
+                       false,
                        false,
                        false,
                        false,
@@ -33,7 +35,7 @@ namespace eda::gate::debugger2 {CellTypeID customFourInANDCellType() {
 
   CellTypeID cellTypeID = eda::gate::model::makeCellType(
       "LibCell", libSubnet.make(), model::makeCellTypeAttr(),
-      eda::gate::model::CellSymbol::CELL,
+      eda::gate::model::CellSymbol::UNDEF,
       props, 4,1);
   return cellTypeID;
 }

@@ -119,7 +119,7 @@ public:
   NetID make();
  
 private:
-  void incrementRefCount(LinkEnd link) const;
+  void incRefCount(LinkEnd link) const;
 
   List<CellID> inputs;
   List<CellID> outputs;

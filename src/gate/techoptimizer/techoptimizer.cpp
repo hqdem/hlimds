@@ -53,6 +53,7 @@ void Techmapper::setMapper(MapperType techmapSelector) {
   switch(techmapSelector) {
     case MapperType::SIMPLE_AREA_FUNC:
       mapper = new SimpleAreaMapper();
+      //mapper = new GeneticMapper();
       break;
     case MapperType::AREA_FLOW:
       break;

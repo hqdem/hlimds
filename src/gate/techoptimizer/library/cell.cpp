@@ -11,6 +11,11 @@
 #include "gate/optimizer2/synthesis/isop.h"
 #include "gate/techoptimizer/library/cell.h"
 
+#include <readcells/ast.h>
+#include <readcells/ast_parser.h>
+#include <readcells/groups.h>
+#include <readcells/token_parser.h>
+
 #include "nlohmann/json.hpp"
 
 #include <filesystem>
@@ -20,6 +25,10 @@
 //#include <list>
 
 using json = nlohmann::json;
+using std::filesystem::exists;
+using std::filesystem::path;
+using std::getline;
+using std::ifstream;
 
 namespace eda::gate::tech_optimizer {
 
@@ -31,6 +40,7 @@ using BoundGNet = eda::gate::optimizer::RWDatabase::BoundGNet;
 using MinatoMorrealeAlg = eda::gate::optimizer2::synthesis::MMSynthesizer;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using NetID = eda::gate::model::NetID;
+
 
 //===----------------------------------------------------------------------===//
 // Pin
@@ -140,6 +150,55 @@ void LibraryCells::readLibertyFile(const std::string &filename,
                                    std::vector<CellTypeID> &cellTypeFFIDs,
                                    std::vector<CellTypeID> &cellTypeFFrsIDs,
                                    std::vector<CellTypeID> &cellTypeLatchIDs) {
+
+/*
+  const path homePath1 = std::string(getenv("UTOPIA_HOME"));
+  const path filePath = homePath1 / filename;
+  if (exists(filePath)) {
+    TokenParser tokParser;
+    FILE *file = fopen(filePath.generic_string().c_str(), "rb");
+    Group *ast = tokParser.parseLibrary(file,
+                                        filePath.generic_string().c_str());
+    Library lib;
+    AstParser parser(lib, tokParser);
+    parser.run(*ast);
+    fclose(file);
+
+    for (const auto &cell: lib.getCells()) {
+      auto name = cell.getName();
+      auto pins = cell.getPins();
+
+      int nIn = 0;
+      std::vector<std::string> inputPinNames;
+      for (const auto &pin: pins) {
+        //if (pin)
+        //inputPinNames.push_back(pin.)
+      }
+      eda::gate::model::CellProperties
+          props(true, false, false, false, false, false, false);
+
+      model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+      model::CellTypeAttr::get(cellTypeAttrID).area = cell.getIntegerAttribute("area", 0);
+
+      auto func = cell.getStringAttribute("function", "");
+      kitty::dynamic_truth_table *truthTable =
+          new kitty::dynamic_truth_table(nIn);
+      kitty::create_from_formula(*truthTable, func, inputPinNames);
+
+      MinatoMorrealeAlg minatoMorrealeAlg;
+      const auto subnetID = minatoMorrealeAlg.synthesize(*truthTable);
+
+      CellTypeID cellID = eda::gate::model::makeCellType(
+          cell.getName(), subnetID, cellTypeAttrID,
+          eda::gate::model::CellSymbol::CELL,
+          props, static_cast<uint16_t>(2),
+          static_cast<uint16_t>(1));
+
+      cellTypeIDs.push_back(cellID);
+    }
+  } else {
+    std::cerr << "File wasn't found\n";
+  }*/
 
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path PythonScriptPath =

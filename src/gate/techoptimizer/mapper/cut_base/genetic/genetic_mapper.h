@@ -16,13 +16,14 @@
  * \author <a href="mailto:dGaryaev@ispras.ru">Daniil Gariaev</a>
  */
 
-using Subnet = eda::gate::model::Subnet;
+using SubnetID = eda::gate::model::SubnetID;
 
 namespace eda::gate::tech_optimizer {
 struct Gen{
   bool emptyGen = true;
   bool isIn = false;
-  Subnet subnet;
+  bool isOut = false;
+  SubnetID subnetID;
   std::string name;
   float area;
   std::unordered_set<size_t> entryIdxs;
@@ -51,10 +52,12 @@ private:
 
   Chromosome bestChromosome;
 
-  int nBasePopulation;
-  int nParents;
-  int nPairs;
-  int nChild;
+  std::vector<std::vector<std::shared_ptr<Gen>>> genBank;
+
+  int nBasePopulation = 100;
+  int nParents = 50;
+  int nPairs = 100;
+  int nChild = 100;
 
   int nGenerations;
 
@@ -73,6 +76,7 @@ private:
   void rewriteCrossover(Chromosome &child,
                         const Chromosome &parent,
                         const std::shared_ptr<Gen> &parentGen);
+  void fillChromosomeFromOutput(Chromosome& chromosome, size_t outputIndex);
   void saveInBestMap();
 };
 } // namespace eda::gate::tech_optimizer

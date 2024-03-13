@@ -22,6 +22,86 @@ void GeneticMapper::findBest() {
   saveInBestMap();
 }
 
+void GeneticMapper::initialization() {
+  optimizer2::ConeBuilder coneBuilder(&model::Subnet::get(subnetID));
+  auto entries = model::Subnet::get(subnetID).getEntries();
+  genBank.resize(std::size(entries));
+
+  for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
+       entryIndex++) {
+    auto cutsList = cutExtractor->getCuts(entryIndex);
+    for (const auto &cut : cutsList) {
+      SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
+      auto truthTable = eda::gate::model::evaluate(
+          model::Subnet::get(coneSubnetID));
+
+      for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable.at(0))) {
+        //fill gen bank with currentSubnetID and currentAttr
+        if (entries[entryIndex].cell.isIn()) {
+          auto gen = std::make_shared<Gen>();
+          gen->emptyGen = false;
+          gen->isIn = true;
+          genBank[entryIndex].push_back(gen);
+        } else {
+          auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
+          auto gen = std::make_shared<Gen>();
+          gen->emptyGen = false;
+          gen->subnetID = currentSubnetID;
+          gen->name = currentAttr.name;
+          gen->area = currentAttr.area;
+          gen->entryIdxs = cut.entryIdxs;
+
+          if (entries[entryIndex].cell.isOut()) {
+            gen->isOut = true;
+          }
+
+          genBank[entryIndex].push_back(gen);
+        }
+      }
+    }
+  }
+
+  // and now we fill std::vector<Chromosome> nextGeneration with random chromosome
+  nextGeneration.clear();
+
+  std::vector<size_t> outputGenIndexes;
+  for (size_t i = 0; i < genBank.size(); ++i) {
+      if (genBank[i][0]->isOut) {
+        outputGenIndexes.push_back(i);
+        break;
+    }
+  }
+
+  for (int i = 0; i < nBasePopulation; ++i) {
+    Chromosome newChromosome;
+    newChromosome.gens.resize(genBank.size());
+
+    for (const auto& index : outputGenIndexes) {
+      fillChromosomeFromOutput(newChromosome, index);
+    }
+
+    nextGeneration.push_back(newChromosome);
+  }
+}
+
+void GeneticMapper::fillChromosomeFromOutput(Chromosome& chromosome, size_t outputIndex) {
+  if (chromosome.gens[outputIndex] != nullptr) return;
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distrib(0, genBank[outputIndex].size() - 1);
+  size_t genIndex = distrib(gen);
+  std::shared_ptr<Gen> selectedGen = genBank[outputIndex][genIndex];
+  if (!selectedGen->isIn) {
+    for (const auto &entryIdx: selectedGen->entryIdxs) {
+      fillChromosomeFromOutput(chromosome, entryIdx);
+    }
+  }
+
+  chromosome.gens[outputIndex] = selectedGen;
+}
+
+
 void GeneticMapper::startEvolution() {
   auto startTime = std::chrono::steady_clock::now();
   auto endTime = startTime + std::chrono::minutes(1);
@@ -202,6 +282,23 @@ void GeneticMapper::saveBestChromosome() {
 int GeneticMapper::getRandomIndex(int min, int max, std::mt19937& gen) {
   std::uniform_int_distribution<> distr(min, max);
   return distr(gen);
+}
+
+void GeneticMapper::mutation() {
+
+}
+
+void GeneticMapper::saveInBestMap() {
+  for (uint64_t entryIndex = 0; entryIndex < bestChromosome.gens.size();
+       entryIndex++) {
+    BestReplacement replacement;
+    auto bestGen = bestChromosome.gens.at(entryIndex);
+    replacement.isIN = bestGen->isIn;
+    replacement.isOUT = bestGen->isOut;
+    replacement.subnetID = bestGen->subnetID;
+    replacement.entryIDxs = bestGen->entryIdxs;
+    (*bestReplacementMap)[entryIndex] = replacement;
+  }
 }
 
 void Chromosome::calculateFitness() {

@@ -96,6 +96,7 @@ add_library(Gate OBJECT
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp
   transformer/mutator/mutator_visitor.cpp
+  transformer/rewriter.cpp
   translator/fir_to_model2/fir_to_model2.cpp
   translator/fir_to_model2/fir_to_model2_wrapper.cpp
   translator/firrtl.cpp

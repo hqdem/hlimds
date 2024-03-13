@@ -72,9 +72,6 @@ public:
   LinkEnd getLink(uint16_t port) const;
 
 private:
-  /// Number of links stored in place (the rest are located in a separate list).
-  static constexpr size_t InPlaceLinks = 3;
-
   Cell(CellTypeID typeID):
       typeSID(typeID.getSID()), fanin(0), fanout(0) {}
 
@@ -89,16 +86,8 @@ private:
   uint16_t fanin;
   uint16_t fanout;
 
-  union LinkData {
-    LinkData() {}
-
-    /// Links in the external list.
-    ArrayID arrayID;
-    /// In-place links.
-    LinkEnd link[InPlaceLinks];
-  } data;
-
-  static_assert(sizeof(LinkEnd) == sizeof(ListID));
+  /// Links in the external list.
+  ArrayID arrayID;
 };
 
 static_assert(sizeof(Cell) == CellID::Size);

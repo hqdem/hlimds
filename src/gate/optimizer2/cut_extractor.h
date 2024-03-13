@@ -24,6 +24,8 @@ public:
   struct Cut;
 
   using Subnet = model::Subnet;
+  using LinkList = Subnet::LinkList;
+  using SubnetBuilder = model::SubnetBuilder;
   using CutsEntries = std::vector<std::unordered_set<size_t>>;
   using CutsList = std::vector<Cut>;
   using RawCutsList = std::vector<std::pair<Cut, char>>;
@@ -59,8 +61,9 @@ public:
    * @param subnet Subnet to find cuts.
    * @param k Maximum cut size.
    */
-  CutExtractor(const Subnet *subnet,
-               const unsigned int k);
+  CutExtractor(const Subnet *subnet, const unsigned int k);
+
+  CutExtractor(SubnetBuilder *builder, const unsigned k);
 
   /// Get cuts (entries indexes and signatures) for cell with entryIdx index.
   const CutsList getCuts(size_t entryIdx) const;
@@ -68,15 +71,19 @@ public:
   /// Get cuts (entries indexes) for cell with entryIdx index.
   CutsEntries getCutsEntries(size_t entryIdx) const;
 
+  /// Recomputes cuts for passed entry. All entries used by passed entry must be
+  /// computed.
+  void recomputeCuts(size_t entryIdx);
+
 private:
+  LinkList getLinks(size_t entryID) const;
+
   /// Find all cuts for cell with entryIdx index.
   CutsList findCuts(const size_t entryIdx,
-                    const uint64_t cellArity,
-                    const unsigned int k) const;
+                    const uint64_t cellArity) const;
 
   /// Add new cut into addedCuts if it is not dominated and its size < k.
-  void addCut(const unsigned int k,
-              const size_t entryIdx,
+  void addCut(const size_t entryIdx,
               const uint64_t cellArity,
               unsigned long long cutsCombinationIdx,
               RawCutsList &addedCuts,
@@ -92,7 +99,7 @@ private:
    * This method also marks elements from cuts as unviable if they are dominated
    * by the passed cut.
    */
-  bool checkViable(const Cut &cut, RawCutsList &cuts, unsigned int k) const;
+  bool checkViable(const Cut &cut, RawCutsList &cuts) const;
 
   /// Get only viable cuts (with set flag) from passed cuts.
   CutsList getViable(const RawCutsList &cuts) const;
@@ -102,6 +109,8 @@ private:
 
 private:
   const Subnet *subnet;
+  const SubnetBuilder *builder;
+  unsigned k;
   std::vector<CutsList> entriesCuts;
 };
 

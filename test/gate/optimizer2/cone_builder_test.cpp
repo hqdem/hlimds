@@ -48,19 +48,19 @@ bool inputsAtTheBeginning(const Cone &cone) {
 
 bool coneValid(const Subnet &subnet,
                Cone cone,
-               const size_t coneEntryIdx,
+               size_t coneEntryIdx,
                const bool isMaxCone) {
 
   const Subnet &coneSubnet = Subnet::get(cone.subnetID);
-  const auto &coneCell = coneSubnet.getEntries()[coneEntryIdx].cell;
-  if (coneCell.isOut()) {
-    const Link coneCellIn = coneSubnet.getLinks(coneEntryIdx)[0];
-    return coneValid(subnet, cone, coneCellIn.idx, isMaxCone);
-  }
+  const auto &coneEntries = coneSubnet.getEntries();
   if (cone.coneEntryToOrig.find(coneEntryIdx) == cone.coneEntryToOrig.end()) {
     return false;
   }
   const size_t subnetEntryIdx = cone.coneEntryToOrig[coneEntryIdx];
+  if (coneEntryIdx == coneEntries.size() - 1) {
+    coneEntryIdx = coneSubnet.getOut(0).idx;
+  }
+  const auto &coneCell = coneEntries[coneEntryIdx].cell;
   const auto &subnetCell = subnet.getEntries()[subnetEntryIdx].cell;
   if (!coneCell.isIn() && (subnetCell.getSymbol() != coneCell.getSymbol() ||
                            subnet.getLinks(subnetEntryIdx).size() !=
@@ -137,11 +137,9 @@ void conesValid(const Subnet &subnet,
       entryIdx += subnetCell.more;
       continue;
     }
-    if (cutExtractor) {
-      EXPECT_TRUE(cutConeValid(subnet, *cutExtractor, entryIdx, coneBuilder));
-    } else {
-      EXPECT_TRUE(maxConeValid(subnet, entryIdx, coneBuilder));
-    }
+    EXPECT_TRUE(cutExtractor ?
+                cutConeValid(subnet, *cutExtractor, entryIdx, coneBuilder) :
+                maxConeValid(subnet, entryIdx, coneBuilder));
     entryIdx += subnetCell.more;
   }
 }
@@ -191,7 +189,8 @@ TEST(ConeBuilderTest, OverlapLinks3UsagesCut) {
   const auto bufLink0 = builder.addCell(model::BUF, inputs[2]);
   const auto andLink0 = builder.addCell(model::AND, bufLink0, inputs[1]);
   const auto andLink1 = builder.addCell(model::AND, bufLink0, inputs[0]);
-  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0, andLink1);
+  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0,
+                                        andLink1);
   builder.addOutput(andLink2);
 
   const auto &subnet = Subnet::get(builder.make());
@@ -247,7 +246,8 @@ TEST(ConeBuilderTest, OverlapLinks3UsagesMax) {
   const auto bufLink0 = builder.addCell(model::BUF, inputs[2]);
   const auto andLink0 = builder.addCell(model::AND, bufLink0, inputs[1]);
   const auto andLink1 = builder.addCell(model::AND, bufLink0, inputs[0]);
-  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0, andLink1);
+  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0,
+                                        andLink1);
   builder.addOutput(andLink2);
 
   const auto &subnet = Subnet::get(builder.make());
@@ -262,7 +262,8 @@ TEST(ConeBuilderTest, OutputPort) {
   const auto bufLink0 = builder.addCell(model::BUF, ~inputs[2]);
   const auto andLink0 = builder.addCell(model::AND, bufLink0, inputs[1]);
   const auto andLink1 = builder.addCell(model::AND, bufLink0, inputs[0]);
-  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0, ~andLink1);
+  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0,
+                                        ~andLink1);
   builder.addOutput(andLink2);
 
   const auto &subnet = Subnet::get(builder.make());
@@ -278,7 +279,8 @@ TEST(ConeBuilderTest, InvertorFlag) {
   const auto bufLink0 = builder.addCell(model::BUF, inputs[2]);
   const auto andLink0 = builder.addCell(model::AND, bufLink0, ~inputs[1]);
   const auto andLink1 = builder.addCell(model::AND, bufLink0, inputs[0]);
-  const auto andLink2 = builder.addCell(model::AND, bufLink0, ~andLink0, andLink1);
+  const auto andLink2 = builder.addCell(model::AND, bufLink0, ~andLink0,
+                                        andLink1);
   builder.addOutput(andLink2);
 
   const auto &subnet = Subnet::get(builder.make());

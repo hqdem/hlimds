@@ -10,7 +10,11 @@
 
 namespace eda::gate::optimizer2 {
 
-ConeBuilder::ConeBuilder(const Subnet *subnet): subnet(subnet) {};
+ConeBuilder::ConeBuilder(const Subnet *subnet):
+    subnet(subnet), builder(nullptr) {};
+
+ConeBuilder::ConeBuilder(const SubnetBuilder *builder):
+    subnet(nullptr), builder(builder) {};
 
 void ConeBuilder::addInput(const size_t origEntryIdx,
                            const size_t rootEntryIdx,
@@ -20,10 +24,24 @@ void ConeBuilder::addInput(const size_t origEntryIdx,
 
   size_t coneEntryIdx = builder.addInput().idx;
   if (origEntryIdx == rootEntryIdx) {
-    builder.addOutput(Link(coneEntryIdx));
+    origEntryToCone[origEntryIdx] = coneEntryIdx;
+    coneEntryToOrig[coneEntryIdx] = origEntryIdx;
+    coneEntryIdx = builder.addOutput(Link(coneEntryIdx)).idx;
   }
   origEntryToCone[origEntryIdx] = coneEntryIdx;
   coneEntryToOrig[coneEntryIdx] = origEntryIdx;
+}
+
+const ConeBuilder::Entry ConeBuilder::getEntry(const size_t entryID) const {
+  if (subnet) {
+    const auto &entries = subnet->getEntries();
+    return entries[entryID];
+  }
+  return builder->getEntry(entryID);
+}
+
+const ConeBuilder::LinkList ConeBuilder::getLinks(const size_t entryID) const {
+  return subnet ? subnet->getLinks(entryID) : builder->getLinks(entryID);
 }
 
 void ConeBuilder::addInsFromCut(const Cut &cut,
@@ -57,7 +75,7 @@ void ConeBuilder::addInsForMaxCone(const size_t rootEntryIdx,
                coneEntryToOrig);
       continue;
     }
-    for (const auto &newLink : subnet->getLinks(origEntryIdx)) {
+    for (const auto &newLink : getLinks(origEntryIdx)) {
       size_t newLinkIdx = newLink.idx;
       if (used.find(newLinkIdx) != used.end()) {
         continue;
@@ -90,7 +108,6 @@ ConeBuilder::Cone ConeBuilder::getCone(const size_t rootEntryIdx,
                                        EntryMap &origEntryToCone,
                                        EntryMap &coneEntryToOrig) const {
 
-  const auto &entries = subnet->getEntries();
   std::stack<size_t> subnetEntriesStack;
   subnetEntriesStack.push(rootEntryIdx);
 
@@ -100,11 +117,11 @@ ConeBuilder::Cone ConeBuilder::getCone(const size_t rootEntryIdx,
       subnetEntriesStack.pop();
       continue;
     }
-    auto curCell = entries[curEntryIdx].cell;
+    auto curCell = getEntry(curEntryIdx).cell;
 
     LinkList links;
     bool allInputsVisited = true;
-    for (const auto &newLink : subnet->getLinks(curEntryIdx)) {
+    for (const auto &newLink : getLinks(curEntryIdx)) {
       const auto newLinkIdx = newLink.idx;
       if (origEntryToCone.find(newLinkIdx) == origEntryToCone.end()) {
         subnetEntriesStack.push(newLinkIdx);
@@ -120,13 +137,12 @@ ConeBuilder::Cone ConeBuilder::getCone(const size_t rootEntryIdx,
       continue;
     }
     subnetEntriesStack.pop();
-    size_t coneEntryIdx;
-    coneEntryIdx = builder.addCell(curCell.getSymbol(), links).idx;
+    size_t coneEntryIdx = builder.addCell(curCell.getSymbol(), links).idx;
+    if (curEntryIdx == rootEntryIdx) {
+      coneEntryIdx = builder.addOutput(Link(coneEntryIdx)).idx;
+    }
     origEntryToCone[curEntryIdx] = coneEntryIdx;
     coneEntryToOrig[coneEntryIdx] = curEntryIdx;
-    if (curEntryIdx == rootEntryIdx) {
-      builder.addOutput(Link(coneEntryIdx));
-    }
   }
   return Cone(builder.make(), coneEntryToOrig);
 }

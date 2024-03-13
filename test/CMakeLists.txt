@@ -99,6 +99,7 @@ add_executable(${TEST_TARGET}
   gate/transformer/aigmapper_test.cpp
   gate/transformer/bdd_test.cpp
   gate/transformer/mutator_test.cpp
+  gate/transformer/rewriter_test.cpp
   gate/translator/fir_to_model2/basic_examples.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp

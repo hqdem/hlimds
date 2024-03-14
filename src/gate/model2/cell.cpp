@@ -15,19 +15,24 @@ namespace eda::gate::model {
 
 Cell::Cell(CellTypeID typeID, const LinkList &links):
     typeSID(typeID.getSID()), fanin(links.size()), fanout(0) {
-  Array<uint64_t> array(fanin);
-  for (size_t i = 0; i < links.size(); ++i) {
-    array[i] = LinkEnd::pack(links[i]);
+  if (!links.empty()) {
+    Array<uint64_t> array(links.size());
+    for (size_t i = 0; i < links.size(); ++i) {
+      array[i] = LinkEnd::pack(links[i]);
+    }
+    arrayID = array.getID();
   }
-  arrayID = array.getID();
 }
 
 Cell::LinkList Cell::getLinks() const {
-  LinkList links;
+  if (!fanin) {
+    return LinkList{};
+  }
 
+  LinkList links(fanin);
   Array<uint64_t> array(arrayID);
   for (size_t i = 0; i < fanin; ++i) {
-    links.push_back(LinkEnd::unpack(array[i]));
+    links[i] = LinkEnd::unpack(array[i]);
   }
 
   return links;

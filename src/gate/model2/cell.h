@@ -72,8 +72,7 @@ public:
   LinkEnd getLink(uint16_t port) const;
 
 private:
-  Cell(CellTypeID typeID):
-      typeSID(typeID.getSID()), fanin(0), fanout(0) {}
+  Cell(CellTypeID typeID): typeSID(typeID.getSID()) {}
 
   Cell(CellTypeID typeID, const LinkList &links);
 
@@ -83,11 +82,11 @@ private:
   /// Cell type SID.
   const uint32_t typeSID;
 
-  uint16_t fanin;
-  uint16_t fanout;
+  uint16_t fanin{0};
+  uint16_t fanout{0};
 
   /// Links in the external list.
-  ArrayID arrayID;
+  ArrayID arrayID{OBJ_NULL_ID};
 };
 
 static_assert(sizeof(Cell) == CellID::Size);

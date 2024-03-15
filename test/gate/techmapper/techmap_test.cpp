@@ -212,6 +212,25 @@ TEST(TechMapTest, SimpleANDSubnetGenetic) {
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
 }
 
+TEST(TechMapTest, SimpleANDSubnetDelay) {
+  const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 50, 15);
+  std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
+
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                        Techmapper::MapperType::SIMPLE_DELAY_FUNC,
+                        sdc);
+
+  SubnetID mappedSub = techmapper.techmap(primitiveANDSub);
+
+  std::cout << model::Subnet::get(mappedSub) << std::endl;
+
+  printVerilog(mappedSub);
+
+  std::cout << getArea(mappedSub) << std::endl;
+
+  EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
+
 TEST(TechMapTest, SimpleORSubnet) {
   const auto primitiveORSub  = createPrimitiveSubnet(CellSymbol::OR, 3, 13);
 

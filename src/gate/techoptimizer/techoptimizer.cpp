@@ -9,14 +9,14 @@
 #include "gate/model2/celltype.h"
 #include "gate/model2/decomposer/net_decomposer.h"
 #include "gate/techoptimizer/assembly.h"
+#include "gate/techoptimizer/mapper/cut_base/genetic/genetic_mapper.h"
 #include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
 #include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
-#include "gate/techoptimizer/mapper/cut_base/genetic/genetic_mapper.h"
+#include "gate/techoptimizer/mapper/cut_base/simple_delay/simple_delay_mapper.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techoptimizer.h"
 #include "gate/transformer/aigmapper.h"
 
-//#include <list>
 #include <map>
 #include <unordered_map>
 
@@ -65,7 +65,9 @@ void Techmapper::setMapper(MapperType techmapSelector) {
     case MapperType::GENETIC:
       mapper = new GeneticMapper();
       break;
-
+    case MapperType::SIMPLE_DELAY_FUNC:
+      mapper = new SimpleDelayMapper();
+      break;
     /*case TechmapperType::STRUCT: // DAGON matching
       //mapper = new DagonTechMapper(*cellDB);
       break;*/

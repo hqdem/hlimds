@@ -20,5 +20,6 @@ struct Subnetattr {
   std::string name;
   float area;
   std::vector <Power> pinsPower;
+  size_t fanout_count = 1;
   };
 } // namespace eda::gate::tech_optimizer

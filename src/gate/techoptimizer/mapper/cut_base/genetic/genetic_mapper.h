@@ -54,12 +54,12 @@ private:
 
   std::vector<std::vector<std::shared_ptr<Gen>>> genBank;
 
-  int nBasePopulation = 1000;
+  int nBasePopulation = 10000;
   int nParents = 500;
   int nPairs = 500;
-  int nChild = 500;
+  long unsigned int nChild = 500;
 
-  int nGenerations = 1000;
+  int nGenerations = 10;
 
   void startEvolution();
 

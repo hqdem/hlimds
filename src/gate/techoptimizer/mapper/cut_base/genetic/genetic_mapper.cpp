@@ -11,9 +11,9 @@
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/techoptimizer/mapper/cut_base/genetic/genetic_mapper.h"
 
-#include <vector>
 #include <numeric>
 #include <random>
+#include <vector>
 
 namespace eda::gate::tech_optimizer {
 void GeneticMapper::findBest() {
@@ -99,7 +99,7 @@ void GeneticMapper::initialization() {
       fillChromosomeFromOutput(newChromosome, index);
     }
 
-    for (int j = 0; j < genBank.size(); j++) {
+    for (long unsigned int j = 0; j < genBank.size(); j++) {
       if (newChromosome.gens[j] == nullptr) {
         auto gen = std::make_shared<Gen>();
         gen->emptyGen = true;

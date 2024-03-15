@@ -89,6 +89,7 @@ add_library(Gate OBJECT
   techoptimizer/mapper/cut_base/power_map/power_map.cpp
   techoptimizer/mapper/cut_base/delay_estmt/delay_estmt.cpp
   techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.cpp
+  techoptimizer/mapper/cut_base/simple_delay/simple_delay_mapper.cpp
   techoptimizer/mapper/cut_base/genetic/genetic_mapper.cpp
   techoptimizer/assembly.cpp
   techoptimizer/mapper/baseMapper.cpp

@@ -36,7 +36,7 @@ using SubnetID   = eda::gate::model::SubnetID;
 namespace eda::gate::tech_optimizer {
 
 const /*std::filesystem::path*/ std::string libertyPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/tech_mapper";
-SDC sdc{1, 1};
+SDC sdc{100000000, 10000000000};
 SubnetID parseGraphML(std::string fileName) {
 
   using path = std::filesystem::path;
@@ -166,6 +166,8 @@ std::cout <<  entries[17492].cell.getType().getName() << std::endl;*/
 //std::cout <<  entries[17681].cell.link[0].idx << " " << entries[17681].cell.link[1].idx<< std::endl;
 SubnetID mappedSub = techmapper.techmap(subnetId);
 
+std::cout << getArea(mappedSub) << std::endl;
+
 //std::cout << model::Subnet::get(mappedSub) << std::endl;
 printVerilog(mappedSub);
 
@@ -173,7 +175,7 @@ EXPECT_TRUE(checkAllCellsMapped(mappedSub));
 }
 
 TEST(TechMapTest, SimpleANDSubnet) {
-  const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 13, 2);
+  const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 50, 15);
   std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
@@ -184,9 +186,24 @@ TEST(TechMapTest, SimpleANDSubnet) {
 
   std::cout << model::Subnet::get(mappedSub) << std::endl;
 
-  SubnetID mappedSub2 = techmapper.techmap(primitiveANDSub);
+  printVerilog(mappedSub);
 
-  std::cout << model::Subnet::get(mappedSub2) << std::endl;
+  std::cout << getArea(mappedSub) << std::endl;
+
+  EXPECT_TRUE(checkAllCellsMapped(mappedSub));
+}
+
+TEST(TechMapTest, SimpleANDSubnetGenetic) {
+  const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 50, 15);
+  std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
+
+  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
+                        Techmapper::MapperType::GENETIC,
+                        sdc);
+
+  SubnetID mappedSub = techmapper.techmap(primitiveANDSub);
+
+  std::cout << model::Subnet::get(mappedSub) << std::endl;
 
   printVerilog(mappedSub);
 

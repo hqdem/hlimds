@@ -112,7 +112,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
     }
 
-    Subnetattr subnetattr{"LibraryCell", cellType.getAttr().area};
+    Subnetattr subnetattr{cellType.getName(), cellType.getAttr().area};
     subnetToAttr.emplace_back(subnetID, subnetattr);
 
     ttSubnet.emplace_back(model::evaluate(

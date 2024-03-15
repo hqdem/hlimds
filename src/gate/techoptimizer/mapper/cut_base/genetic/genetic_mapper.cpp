@@ -23,43 +23,62 @@ void GeneticMapper::findBest() {
 }
 
 void GeneticMapper::initialization() {
+  //////
+  //Create gen bank for each entry
+  /////
   optimizer2::ConeBuilder coneBuilder(&model::Subnet::get(subnetID));
   auto entries = model::Subnet::get(subnetID).getEntries();
   genBank.resize(std::size(entries));
 
   for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
        entryIndex++) {
-    auto cutsList = cutExtractor->getCuts(entryIndex);
-    for (const auto &cut : cutsList) {
-      SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-      auto truthTable = eda::gate::model::evaluate(
-          model::Subnet::get(coneSubnetID));
+    if (entries[entryIndex].cell.isIn()) {
+      auto gen = std::make_shared<Gen>();
+      gen->emptyGen = false;
+      gen->isIn = true;
+      gen->name = "IN";
+      genBank[entryIndex].push_back(gen);
+      continue;
+    }
+    if (entries[entryIndex].cell.isOut()) {
+      auto gen = std::make_shared<Gen>();
+      gen->emptyGen = false;
+      gen->isIn = false;
+      gen->isOut = true;
+      gen->name = "OUT";
+      gen->entryIdxs.insert(entries[entryIndex].cell.link[0].idx);
+      genBank[entryIndex].push_back(gen);
+      continue;
+    } else {
+      auto cutsList = cutExtractor->getCuts(entryIndex);
+      for (const auto &cut: cutsList) {
+        if (cut.entryIdxs.size() != 1) {
 
-      for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable.at(0))) {
-        //fill gen bank with currentSubnetID and currentAttr
-        if (entries[entryIndex].cell.isIn()) {
-          auto gen = std::make_shared<Gen>();
-          gen->emptyGen = false;
-          gen->isIn = true;
-          genBank[entryIndex].push_back(gen);
-        } else {
-          auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
-          auto gen = std::make_shared<Gen>();
-          gen->emptyGen = false;
-          gen->subnetID = currentSubnetID;
-          gen->name = currentAttr.name;
-          gen->area = currentAttr.area;
-          gen->entryIdxs = cut.entryIdxs;
+          SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
+          auto truthTable = eda::gate::model::evaluate(
+              model::Subnet::get(coneSubnetID));
 
-          if (entries[entryIndex].cell.isOut()) {
-            gen->isOut = true;
+          for (const SubnetID &currentSubnetID: cellDB->getSubnetIDsByTT(
+              truthTable.at(0))) {
+            //fill gen bank with currentSubnetID and currentAttr
+            auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
+            auto gen = std::make_shared<Gen>();
+            gen->emptyGen = false;
+            gen->subnetID = currentSubnetID;
+            gen->name = currentAttr.name;
+            gen->area = currentAttr.area;
+            gen->entryIdxs = cut.entryIdxs;
+
+            genBank[entryIndex].push_back(gen);
           }
-
-          genBank[entryIndex].push_back(gen);
         }
       }
     }
   }
+
+  //////
+  //Create nBasePopulation random set of cells
+  /////
 
   // and now we fill std::vector<Chromosome> nextGeneration with random chromosome
   nextGeneration.clear();
@@ -80,6 +99,16 @@ void GeneticMapper::initialization() {
       fillChromosomeFromOutput(newChromosome, index);
     }
 
+    for (int j = 0; j < genBank.size(); j++) {
+      if (newChromosome.gens[j] == nullptr) {
+        auto gen = std::make_shared<Gen>();
+        gen->emptyGen = true;
+        gen->name = "Empty";
+        newChromosome.gens[j] = gen;
+      }
+    }
+    newChromosome.calculateFitness();
+
     nextGeneration.push_back(newChromosome);
   }
 }
@@ -97,7 +126,7 @@ void GeneticMapper::fillChromosomeFromOutput(Chromosome& chromosome, size_t outp
       fillChromosomeFromOutput(chromosome, entryIdx);
     }
   }
-
+  std::cout << selectedGen->name << std::endl;
   chromosome.gens[outputIndex] = selectedGen;
 }
 
@@ -252,7 +281,7 @@ void GeneticMapper::rewriteCrossover(Chromosome &child,
                                      const Chromosome &parent,
                                      const std::shared_ptr<Gen> &parentGen) {
   for (const auto &genIn : parentGen->entryIdxs) {
-    if (child.gens.at(genIn)->emptyGen || child.gens.at(genIn)->isIn) {
+    if (child.gens.at(genIn)->emptyGen) {
       child.gens.at(genIn) = parent.gens.at(genIn);
       rewriteCrossover(child, parent, parent.gens.at(genIn));
     }

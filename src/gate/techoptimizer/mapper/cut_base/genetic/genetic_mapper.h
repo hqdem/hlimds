@@ -25,14 +25,14 @@ struct Gen{
   bool isOut = false;
   SubnetID subnetID;
   std::string name;
-  float area;
+  float area = 0;
   std::unordered_set<size_t> entryIdxs;
 };
 
 struct Chromosome{
   std::vector<std::shared_ptr<Gen>> gens;
   float area = 0;
-  float arrivalTime = 0;
+  float arrivalTime = 1;
 
   // 1 / (area * arrivalTime)
   float fitness;
@@ -54,12 +54,12 @@ private:
 
   std::vector<std::vector<std::shared_ptr<Gen>>> genBank;
 
-  int nBasePopulation = 100;
-  int nParents = 50;
-  int nPairs = 100;
-  int nChild = 100;
+  int nBasePopulation = 1000;
+  int nParents = 500;
+  int nPairs = 500;
+  int nChild = 500;
 
-  int nGenerations;
+  int nGenerations = 1000;
 
   void startEvolution();
 

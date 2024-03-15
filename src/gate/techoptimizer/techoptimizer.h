@@ -23,7 +23,8 @@ public:
     AREA_FLOW,
     DELAY,
     POWER,
-    SIMPLE_AREA_FUNC
+    SIMPLE_AREA_FUNC,
+    GENETIC
   };
 
   Techmapper(const std::string &dbPath, MapperType techmapSelector, SDC& sdc);

@@ -11,6 +11,7 @@
 #include "gate/techoptimizer/assembly.h"
 #include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
 #include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
+#include "gate/techoptimizer/mapper/cut_base/genetic/genetic_mapper.h"
 #include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
 #include "gate/techoptimizer/techoptimizer.h"
 #include "gate/transformer/aigmapper.h"
@@ -53,7 +54,6 @@ void Techmapper::setMapper(MapperType techmapSelector) {
   switch(techmapSelector) {
     case MapperType::SIMPLE_AREA_FUNC:
       mapper = new SimpleAreaMapper();
-      //mapper = new GeneticMapper();
       break;
     case MapperType::AREA_FLOW:
       break;
@@ -61,6 +61,9 @@ void Techmapper::setMapper(MapperType techmapSelector) {
       break;
     case MapperType::POWER:
       mapper = new PowerMap();
+      break;
+    case MapperType::GENETIC:
+      mapper = new GeneticMapper();
       break;
 
     /*case TechmapperType::STRUCT: // DAGON matching

@@ -322,6 +322,12 @@ static_assert(sizeof(CellType) == CellTypeID::Size);
 // Cell Type Builder
 //===----------------------------------------------------------------------===//
 
+inline std::string getCellTypeName(CellSymbol symbol,
+                                   const CellType::PortWidths &widthIn,
+                                   const CellType::PortWidths &widthOut) {
+  return "cell_type_name"; // FIXME:
+}
+
 inline CellTypeID makeCellType(CellSymbol symbol,
                                const std::string &name,
                                uint64_t implID,

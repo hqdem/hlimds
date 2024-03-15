@@ -850,8 +850,8 @@ void processOperation(Operation *destOp, std::string &destOpName,
       uint fanoutCount = getFanoutCount(destOp, destOpName);
       auto instanceOp = mlir::dyn_cast<InstanceOp>(destOp);
       const auto &cellTypeName = instanceOp.getModuleName().str();
-      CellTypeID cellTypeID = makeCellType(cellTypeName,
-                                           cellSymbol,
+      CellTypeID cellTypeID = makeCellType(cellSymbol,
+                                           cellTypeName,
                                            CellProperties(false, true,  false, // FIXME:
                                                           false, false, false,
                                                           false, false, false),
@@ -886,8 +886,8 @@ void processOperation(Operation *destOp, std::string &destOpName,
       uint fanoutCount = getFanoutCount(destOp, destOpName);
       auto linkEnds = getLinkEnds(destOp, fModuleOp, cellKeyToCellIDOuts);
       const auto &cellTypeName = destOp->getName().stripDialect().str();
-      CellTypeID cellTypeID = makeCellType(cellTypeName,
-                                           cellSymbol,
+      CellTypeID cellTypeID = makeCellType(cellSymbol,
+                                           cellTypeName,
                                            CellProperties(false, true,  false, // FIXME:
                                                           false, false, false,
                                                           false, false, false),
@@ -1015,10 +1015,10 @@ LogicalResult generateModel(ModuleOp moduleOp,
     });
     NetID netID = netBuilder.make();
     const std::string &cellName = fModuleOp->getName().getIdentifier().str();
-    CellTypeID cellTypeID = makeCellType(cellName,
+    CellTypeID cellTypeID = makeCellType(CellSymbol::UNDEF, // FIXME: CellSymbol::SOFT
+                                         cellName,
                                          netID,
                                          model::OBJ_NULL_ID,
-                                         CellSymbol::UNDEF, // FIXME: CellSymbol::SOFT,
                                          CellProperties(false, true,  false,
                                                         false, false, false,
                                                         false, false, false),

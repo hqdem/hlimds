@@ -17,8 +17,8 @@
 
 #define CELL_TYPE(name, symbol, p0, p1, p2, p3, p4, p5, p6, p7, p8, nIn, nOut) \
   const CellTypeID CELL_TYPE_ID(symbol) = makeCellType( \
-    name, \
     symbol, \
+    name, \
     CellProperties{p0, p1, p2, p3, p4, p5, p6, p7, p8}, \
     nIn, \
     nOut); \

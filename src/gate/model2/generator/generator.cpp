@@ -106,8 +106,8 @@ CellTypeID Generator::createNetCell() {
   }
   nestingDepth--;
   setSeed(seed + 1);
-  CellTypeID cellTID = makeCellType("net" + std::to_string(netCellsN),
-                                    generate(), OBJ_NULL_ID, UNDEF,
+  CellTypeID cellTID = makeCellType(UNDEF, "net" + std::to_string(netCellsN),
+                                    generate(), OBJ_NULL_ID,
                                     CellProperties(0, 1, 1, 0, 0, 0, 0, 0, 0),
                                     nIn, nOut);
   nestingDepth++;

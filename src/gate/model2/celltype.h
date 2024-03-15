@@ -196,6 +196,8 @@ class CellType final : public Object<CellType, CellTypeID> {
   friend class Storage<CellType>;
 
 public:
+  using PortWidths = CellTypeAttr::PortWidths;
+
   static constexpr uint16_t AnyArity = 0xffff;
 
   CellType &operator =(const CellType &r) = delete;
@@ -286,10 +288,10 @@ public:
   const CellTypeAttr &getAttr() const { return CellTypeAttr::get(attrID); }
 
 private:
-  CellType(const std::string &name,
+  CellType(CellSymbol symbol,
+           const std::string &name,
            uint64_t implID,
            CellTypeAttrID attrID,
-           CellSymbol symbol,
            CellProperties props,
            uint16_t nIn,
            uint16_t nOut):
@@ -303,11 +305,10 @@ private:
 
   const StringID nameID;
 
-  /// NetID or SubnetID.
+  /// Implementation: NetID or SubnetID.
   const uint64_t implID;
 
   const CellTypeAttrID attrID;
-
   const CellSymbol symbol;
   const CellProperties props;
 
@@ -321,22 +322,108 @@ static_assert(sizeof(CellType) == CellTypeID::Size);
 // Cell Type Builder
 //===----------------------------------------------------------------------===//
 
-inline CellTypeID makeCellType(const std::string &name,
+inline CellTypeID makeCellType(CellSymbol symbol,
+                               const std::string &name,
                                uint64_t implID,
                                CellTypeAttrID attrID,
-                               CellSymbol symbol,
                                CellProperties props,
                                uint16_t nIn,
                                uint16_t nOut) {
-  return allocate<CellType>(name, implID, attrID, symbol, props, nIn, nOut);
+  return allocate<CellType>(symbol, name, implID, attrID, props, nIn, nOut);
 }
 
-inline CellTypeID makeCellType(const std::string &name,
-                               CellSymbol symbol,
+inline CellTypeID makeCellType(CellSymbol symbol,
+                               const std::string &name,
                                CellProperties props,
                                uint16_t nIn,
                                uint16_t nOut) {
-  return makeCellType(name, OBJ_NULL_ID, OBJ_NULL_ID, symbol, props, nIn, nOut);
+  return makeCellType(symbol, name, OBJ_NULL_ID, OBJ_NULL_ID, props, nIn, nOut);
+}
+
+inline CellTypeID makeSoftType(CellSymbol symbol,
+                               const std::string &name,
+                               uint64_t implID,
+                               const CellType::PortWidths &widthIn,
+                               const CellType::PortWidths &widthOut) {
+  const auto attrID = makeCellTypeAttr(widthIn, widthOut);
+  const CellProperties props{0, 1, 0, 0, 0, 0, 0, 0, 0};
+  const auto nIn  = CellTypeAttr::getBitWidth(widthIn);
+  const auto nOut = CellTypeAttr::getBitWidth(widthOut);
+  return makeCellType(symbol, name, implID, attrID, props, nIn, nOut);
+}
+
+inline CellTypeID makeSoftType(CellSymbol symbol,
+                               const std::string &name,
+                               uint64_t implID,
+                               uint16_t widthArg,
+                               uint16_t widthRes) {
+  const CellType::PortWidths widthIn{widthArg};
+  const CellType::PortWidths widthOut{widthRes};
+  return makeSoftType(symbol, name, implID, widthIn, widthOut);
+}
+
+inline CellTypeID makeSoftType(CellSymbol symbol,
+                               const std::string &name,
+                               uint64_t implID,
+                               uint16_t widthLhs,
+                               uint16_t widthRhs,
+                               uint16_t widthRes) {
+  const CellType::PortWidths widthIn{widthLhs, widthRhs};
+  const CellType::PortWidths widthOut{widthRes};
+  return makeSoftType(symbol, name, implID, widthIn, widthOut);
+}
+
+inline CellTypeID makeSoftType(CellSymbol symbol,
+                               const std::string &name,
+                               uint64_t implID,
+                               uint16_t widthArg1,
+                               uint16_t widthArg2,
+                               uint16_t widthArg3,
+                               uint16_t widthRes) {
+  const CellType::PortWidths widthIn{widthArg1, widthArg2, widthArg3};
+  const CellType::PortWidths widthOut{widthRes};
+  return makeSoftType(symbol, name, implID, widthIn, widthOut);
+}
+
+inline CellTypeID makeHardType(CellSymbol symbol,
+                               const std::string &name,
+                               const CellType::PortWidths &widthIn,
+                               const CellType::PortWidths &widthOut) {
+  const auto attrID = makeCellTypeAttr(widthIn, widthOut);
+  const CellProperties props{0, 0, 0, 0, 0, 0, 0, 0, 0};
+  const auto nIn  = CellTypeAttr::getBitWidth(widthIn);
+  const auto nOut = CellTypeAttr::getBitWidth(widthOut);
+  return makeCellType(symbol, name, OBJ_NULL_ID, attrID, props, nIn, nOut);
+}
+
+inline CellTypeID makeHardType(CellSymbol symbol,
+                               const std::string &name,
+                               uint16_t widthArg,
+                               uint16_t widthRes) {
+  const CellType::PortWidths widthIn{widthArg};
+  const CellType::PortWidths widthOut{widthRes};
+  return makeHardType(symbol, name, widthIn, widthOut);
+}
+
+inline CellTypeID makeHardType(CellSymbol symbol,
+                               const std::string &name,
+                               uint16_t widthLhs,
+                               uint16_t widthRhs,
+                               uint16_t widthRes) {
+  const CellType::PortWidths widthIn{widthLhs, widthRhs};
+  const CellType::PortWidths widthOut{widthRes};
+  return makeHardType(symbol, name, widthIn, widthOut);
+}
+
+inline CellTypeID makeHardType(CellSymbol symbol,
+                               const std::string &name,
+                               uint16_t widthArg1,
+                               uint16_t widthArg2,
+                               uint16_t widthArg3,
+                               uint16_t widthRes) {
+  const CellType::PortWidths widthIn{widthArg1, widthArg2, widthArg3};
+  const CellType::PortWidths widthOut{widthRes};
+  return makeHardType(symbol, name, widthIn, widthOut);
 }
 
 //===----------------------------------------------------------------------===//

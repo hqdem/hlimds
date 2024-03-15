@@ -11,6 +11,8 @@
 #include "gate/model2/object.h"
 
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 namespace eda::gate::model {
@@ -18,7 +20,6 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 // Cell Type Attributes
 //===----------------------------------------------------------------------===//
-
 struct PhysicalProperties {
   float area{0.0};
   float delay{0.0};
@@ -29,8 +30,19 @@ class CellTypeAttr final : public Object<CellTypeAttr, CellTypeAttrID> {
   friend class Storage<CellTypeAttr>;
 
 public:
+  using PortWidths = std::vector<uint16_t>;
+
   static constexpr uint16_t Unknown = 0xffff;
   static constexpr uint16_t MaxPorts = 256;
+
+  static uint16_t getBitWidth(const PortWidths &widths) {
+    size_t n = 0;
+    for (const auto width : widths) {
+      n += width;
+    }
+    assert(n < 0xffff);
+    return n;
+  }
 
   /// Number of input (multi-bit) ports.
   uint16_t nInPort{Unknown};
@@ -46,12 +58,10 @@ public:
 private:
   CellTypeAttr() {}
 
-  CellTypeAttr(const std::vector<uint16_t> &widthIn,
-               const std::vector<uint16_t> &widthOut):
+  CellTypeAttr(const PortWidths &widthIn, const PortWidths &widthOut):
       nInPort(widthIn.size()), nOutPort(widthOut.size()) {
     assert(widthIn.size() + widthOut.size() <= MaxPorts);
-    size_t i = 0;
-    size_t n = 0;
+    size_t i = 0, n = 0;
     for (const auto w : widthIn) {
       width[i++] = w;
       n += w;
@@ -77,15 +87,16 @@ inline CellTypeAttrID makeCellTypeAttr() {
   return allocate<CellTypeAttr>();
 }
 
-inline CellTypeAttrID makeCellTypeAttr(const std::vector<uint16_t> &widthIn,
-                                       const std::vector<uint16_t> &widthOut) {
+inline CellTypeAttrID makeCellTypeAttr(const CellTypeAttr::PortWidths &widthIn,
+                                       const CellTypeAttr::PortWidths &widthOut) {
   return allocate<CellTypeAttr>(widthIn, widthOut);
 }
 
-inline CellTypeAttrID makeCellTypeAttr(uint16_t widthLhs, uint16_t widthRhs,
+inline CellTypeAttrID makeCellTypeAttr(uint16_t widthLhs,
+                                       uint16_t widthRhs,
                                        uint16_t widthRes) {
-  std::vector<uint16_t> widthIn{widthLhs, widthRhs};
-  std::vector<uint16_t> widthOut{widthRes};
+  CellTypeAttr::PortWidths widthIn{widthLhs, widthRhs};
+  CellTypeAttr::PortWidths widthOut{widthRes};
 
   return makeCellTypeAttr(widthIn, widthOut);
 }

@@ -170,7 +170,7 @@ CellTypeID createNetCell() {
   netBuilder.addCell(cellANDID);
   netBuilder.addCell(cellOUTID);
 
-  return makeCellType("net", netBuilder.make(), OBJ_NULL_ID, UNDEF,
+  return makeCellType(UNDEF, "net", netBuilder.make(), OBJ_NULL_ID,
                       CellProperties(0, 1, 1, 0, 0, 0, 0, 0, 0), 2, 1);
 }
 

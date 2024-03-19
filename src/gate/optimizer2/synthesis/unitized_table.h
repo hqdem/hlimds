@@ -36,7 +36,7 @@ constexpr unsigned varLimit = 31;
 
 /**
  * \brief Implements a unitized truth table for Akers algorithm.
-*/
+ */
 class UnitizedTable {
   friend class AkersAlgorithm;
   friend class eda::gate::optimizer::resynthesis::AkersAlgorithm;

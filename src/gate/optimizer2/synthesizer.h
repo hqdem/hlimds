@@ -16,7 +16,7 @@
 
 #define CONST_CHECK(func)\
   bool one{kitty::is_const0(~func)};\
-  bool zero{ kitty::is_const0(func)};\
+  bool zero{kitty::is_const0(func)};\
   if (one || zero) {\
     return synthConstFunc(func.num_vars(), one);\
   }\
@@ -40,7 +40,7 @@ public:
                                            uint16_t maxArity = -1) {
     assert(false && "The method is not overridden");
     return model::OBJ_NULL_ID;
-  };
+  }
 
 protected:
 

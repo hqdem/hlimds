@@ -96,7 +96,7 @@ private:
 
   const LinkList getLinks(const size_t entryID) const;
 
-  private:
+private:
   const Subnet *subnet;
   const SubnetBuilder *builder;
 };

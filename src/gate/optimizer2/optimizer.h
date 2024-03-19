@@ -44,14 +44,14 @@ public:
     replacer.finalize();
   }
 
-  virtual ~OptimizerBase() {};
+  virtual ~OptimizerBase() {}
 
 protected:
   
   OptimizerBase(SubnetBuilder &subnetBuilder, Iterator &&iterator,
                 Resynthesizer &&resynthesizer, Replacer &&replacer) :
       subnetBuilder(subnetBuilder), iterator(iterator),
-      resynthesizer(resynthesizer), replacer(replacer) {};
+      resynthesizer(resynthesizer), replacer(replacer) {}
 
   /// The subnet for optimization.
   SubnetBuilder &subnetBuilder;

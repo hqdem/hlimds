@@ -86,10 +86,11 @@ TEST(NetDecomposerTest, CellReductionTest) {
 
   std::cout << Net::get(netID) << std::endl;
 
+  std::vector<SubnetID> subnets;
   std::vector<NetDecomposer::CellMapping> mapping;
-  const auto result = NetDecomposer::get().decompose(netID, mapping);
+  NetDecomposer::get().decompose(netID, subnets, mapping);
 
-  for (const auto subnetID : result) {
+  for (const auto subnetID : subnets) {
     std::cout << Subnet::get(subnetID) << std::endl;
   }
 

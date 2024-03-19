@@ -378,12 +378,13 @@ static SubnetID makeSubnet(const Net &net,
   return subnetID;
 }
 
-std::vector<SubnetID> NetDecomposer::decompose(
-    NetID netID, std::vector<CellMapping> &mapping) const {
+void NetDecomposer::decompose(NetID netID,
+                              std::vector<SubnetID> &subnets,
+                              std::vector<CellMapping> &mapping) const {
   const auto &net = Net::get(netID);
   const auto components = extractComponents(net);
 
-  std::vector<SubnetID> subnets;
+  assert(subnets.empty());
   subnets.reserve(components.size());
 
   assert(mapping.empty());
@@ -394,8 +395,6 @@ std::vector<SubnetID> NetDecomposer::decompose(
     subnets.push_back(makeSubnet(net, component, subnetMapping));
     mapping.push_back(subnetMapping);
   }
-
-  return subnets;
 }
 
 //===----------------------------------------------------------------------===//

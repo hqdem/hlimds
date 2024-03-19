@@ -23,7 +23,7 @@ class NetDecomposer final : public util::Singleton<NetDecomposer> {
   friend class util::Singleton<NetDecomposer>;
 
 public:
-  /// Maps net links to subnet cell indices.
+  /// Maps net links to subnet input/output cell indices.
   using LinkMap = std::unordered_map<Link, size_t>;
   /// Maps net cells to subnet cell indices w/ inversion flags.
   using CellMap = std::unordered_map<CellID, std::pair<size_t, bool>>;
@@ -31,14 +31,15 @@ public:
   /// Maps net cells/links to subnet cell indices.
   struct CellMapping final {
     size_t size;
-    LinkMap inputs;
-    CellMap inners;
-    LinkMap outputs;
+    LinkMap inputs;  // Decomposition => composition.
+    CellMap inners;  // Temporal result of decomposition.
+    LinkMap outputs; // Decomposition => composition.
   };
 
   /// Decomposes the net into subnets and fills the cell mapping.
-  std::vector<SubnetID> decompose(NetID netID,
-                                  std::vector<CellMapping> &mapping) const;
+  void decompose(NetID netID,
+                 std::vector<SubnetID> &subnets,
+                 std::vector<CellMapping> &mapping) const;
 
   /// Composes the subnets into a net.
   NetID compose(const std::vector<SubnetID> &subnets,

@@ -34,20 +34,38 @@ public:
   NLDM() : delay(0.0), slew(0.0), capacitance(0.0) {};
   ~NLDM() = default;
 
-  // Getters
-  float getCellDelay();
-  float getSlew();
+  /// Getters
+  float getCellDelay() {
+    return delay;
+  };
+
+  float getCellCap() {
+    return capacitance;
+  };
+
+  float getSlew() {
+    return slew;
+  };
 
   /*
-   *  SkyWalker is calling parser to look for
-   *  the concrete cell's timing.
+   *  delayEstimation is calling Parser to look for
+   *  the concrete cell's timing values.
    */
   void delayEstimation(std::string& cell_name,
                        std::string& file_name,
                        float& input_net_transition,
                        float& total_output_net_capacitance);
 
-  // Properties
+  /*
+   *  delayEstimation uses Library to look for
+   *  the concrete cell's timing values.
+   */
+  void delayEstimation(std::string& cell_name,
+                       Library& lib,
+                       float& input_net_transition,
+                       float& total_output_net_capacitance);
+
+  /// Properties
   private:
     /// cell delay
     float delay;
@@ -58,9 +76,9 @@ public:
   };
 
   float timingVisitor(const Timing &timing,
-               std::string dtype,
-               float& input_net_transition,
-               float& total_output_net_capacitance );
+                      std::string dtype,
+                      float& input_net_transition,
+                      float& total_output_net_capacitance );
 
   float interpolation(float x0, float y0,
                       float x1, float x2,

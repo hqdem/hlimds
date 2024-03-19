@@ -59,6 +59,58 @@ TEST(NetDecomposerTest, SimplePosTest) {
   EXPECT_EQ(result.size(), 2);
 }
 
+
+TEST(NetDecomposerTest, CellReductionTest) {
+  NetBuilder netBuilder;
+
+  const auto input1 = makeCell(IN);
+  netBuilder.addCell(input1);
+  const auto input2 = makeCell(IN);
+  netBuilder.addCell(input2);
+  const auto input3 = makeCell(IN);
+  netBuilder.addCell(input1);
+  const auto input4 = makeCell(IN);
+  netBuilder.addCell(input2);
+
+  const auto cell1 = makeCell(AND, input1, input2);
+  netBuilder.addCell(cell1);
+  const auto cell2 = makeCell(AND, input3, input4);
+  netBuilder.addCell(cell1);
+  const auto cell3 = makeCell(AND, cell1, cell2);
+  netBuilder.addCell(cell1);
+
+  const auto output2 = makeCell(OUT, cell3);
+  netBuilder.addCell(output2);
+
+  const auto netID = netBuilder.make();
+
+  std::cout << Net::get(netID) << std::endl;
+
+  std::vector<NetDecomposer::CellMapping> mapping;
+  const auto result = NetDecomposer::get().decompose(netID, mapping);
+
+  for (const auto subnetID : result) {
+    std::cout << Subnet::get(subnetID) << std::endl;
+  }
+
+  SubnetBuilder subnetBuilder;
+
+  auto in1 = subnetBuilder.addInput();
+  auto in2 = subnetBuilder.addInput();
+  auto in3 = subnetBuilder.addInput();
+  auto in4 = subnetBuilder.addInput();
+
+  auto cell = subnetBuilder.addCell(AND, in1, in2, in3, in4);
+
+  subnetBuilder.addOutput(cell);
+
+  std::vector<SubnetID> reducedSubnet;
+  reducedSubnet.push_back(subnetBuilder.make());
+
+  const auto newNetID = NetDecomposer::get().compose(reducedSubnet, mapping);
+  std::cout << Net::get(newNetID) << std::endl;
+}
+
 TEST(NetDecomposerTest, SimpleNegTest) {
   NetBuilder netBuilder;
 

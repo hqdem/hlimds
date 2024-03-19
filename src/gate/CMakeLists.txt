@@ -64,6 +64,7 @@ add_library(Gate OBJECT
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
   optimizer2/reconvergence_cut.cpp
+  optimizer2/synthesis/abc_npn4.cpp
   optimizer2/synthesis/akers.cpp
   optimizer2/synthesis/algebraic_factor.cpp
   optimizer2/synthesis/bidecomposition.cpp

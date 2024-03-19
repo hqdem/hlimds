@@ -30,6 +30,7 @@ template<typename IR>
 class Synthesizer {
 public:
   using SubnetID = eda::gate::model::SubnetID;
+  using FunctionIR = IR;
 
   Synthesizer() {}
   virtual ~Synthesizer() {}
@@ -54,5 +55,8 @@ protected:
     return subnetBuilder.make();
   }
 };
+
+/// Truth-table based synthesizer.
+using TruthTableSynthesizer = Synthesizer<kitty::dynamic_truth_table>;
 
 } // namespace eda::gate::optimizer2

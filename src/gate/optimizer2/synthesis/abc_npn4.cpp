@@ -12,161 +12,170 @@
 
 #include <cassert>
 #include <cstddef>
+#include <iostream>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+extern unsigned short s_RwrPracticalClasses[];
+extern unsigned short s_RwtAigSubgraphs[];
 
 namespace eda::gate::optimizer2 {
 
 model::SubnetID AbcNpn4Synthesizer::synthesize(
     const TruthTable &tt, uint16_t maxArity) {
-  static constexpr auto k = 4;
-
-  // Functions of more than 4 variables are not supported.
-  if (tt.num_vars() > k) {
+  if (tt.num_vars() > Database::k) {
     return model::OBJ_NULL_ID;
   }
 
-  const TruthTable ttk = tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
-
-  const auto res = kitty::exact_npn_canonization(ttk);
-  const auto npn = std::get<0>(res);
-
-  const auto table = static_cast<uint16_t>(*npn.begin());
-
-  const auto iterator = database.find(table);
-  if (iterator == database.end()) {
-    return model::OBJ_NULL_ID;
+  const auto index = static_cast<uint16_t>(*tt.begin());
+  if (cache[index] != model::OBJ_NULL_ID) {
+    return cache[index];
   }
 
-  std::vector<size_t> cells;
-  cells.push_back(iterator->second.idx);
-
-  for (size_t i = 0; i < cells.size(); ++i) {
-    for (auto link: builder.getLinks(cells[i])) {
-      cells.push_back(link.idx);
-    }
-  }
-
-  const auto n = std::get<1>(res); // Negations.
-  const auto p = std::get<2>(res); // Permutation.
-
-  // FIXME: Not very fast.
-  model::SubnetBuilder subnetBuilder;
-  std::unordered_map<size_t, model::Subnet::Link> oldToNewLink;
-
-  const auto inputs = subnetBuilder.addInputs(k);
-  for (size_t i = 0; i < k; ++i) {
-    oldToNewLink[i] = n & (1 << i) ? ~inputs[i] : inputs[i];
-  }
-
-  for (auto i = cells.rbegin(); i != cells.rend(); ++i) {
-    if (oldToNewLink.find(*i) == oldToNewLink.end()) {
-      const auto &cell = builder.getCell(*i);
-
-      auto links = builder.getLinks(*i);
-      for (size_t j = 0; j < links.size(); ++j) {
-        const auto oldLink = links[j];
-        const auto newLink = oldToNewLink[oldLink.idx];
-        links[j] = oldLink.inv ? ~newLink : newLink;
-      }
-
-      oldToNewLink[*i] = subnetBuilder.addCell(cell.getSymbol(), links);
-    }
-  }
-
-  const auto newLink = oldToNewLink[cells[0]];
-  subnetBuilder.addOutput(n & (1 << k) ? ~newLink : newLink);
-
-  return subnetBuilder.make();
+  return (cache[index] = database.find(tt));
 }
 
-extern unsigned short s_RwrPracticalClasses[];
-extern unsigned short s_RwtAigSubgraphs[];
+AbcNpn4Synthesizer::Database::Database() {
+  static constexpr auto npn4Num = 222;
 
-/// The number of NPN classes of 4-variable functions.
-static constexpr auto Npn4ClassNum = 222;
-
-/// The code below is based on ABC.
-static std::vector<std::pair<model::Subnet::Link, uint16_t>> buildAbcSubnet(
-    model::SubnetBuilder &builder) {
-  const unsigned short *graph = s_RwtAigSubgraphs;
-
-  std::vector<std::pair<model::Subnet::Link, uint16_t>> links;
-  links.reserve(Npn4ClassNum);
-
-  // Create 4 inputs and a zero.
-  const auto inputs = builder.addInputs(4);
-  const auto const0 = builder.addCell(model::ZERO);
-
-  links.emplace_back(const0,    0x0000); // Constant 0
-  links.emplace_back(inputs[0], 0xaaaa); // Variable x0
-  links.emplace_back(inputs[1], 0xcccc); // Variable x1
-  links.emplace_back(inputs[2], 0xf0f0); // Variable x2
-  links.emplace_back(inputs[3], 0xff00); // Varaible x3
+  aig.emplace_back();
+  aig.emplace_back(kitty::nth_var<TruthTable>(k, 0), model::IN);
+  aig.emplace_back(kitty::nth_var<TruthTable>(k, 1), model::IN);
+  aig.emplace_back(kitty::nth_var<TruthTable>(k, 2), model::IN);
+  aig.emplace_back(kitty::nth_var<TruthTable>(k, 3), model::IN);
 
   // Reconstruct the ABC forest.
   for (size_t i = 0;; ++i) {
-    unsigned entry0 = graph[(i << 1) | 0];
-    unsigned entry1 = graph[(i << 1) | 1];
+    unsigned entry0 = s_RwtAigSubgraphs[(i << 1) | 0];
+    unsigned entry1 = s_RwtAigSubgraphs[(i << 1) | 1];
 
     if (!entry0 && !entry1) {
       break;
     }
 
-    // Get the XOR flag.
-    bool isXor = (entry0 & 1);
+    const bool isXor = (entry0 & 1);
     entry0 >>= 1;
 
-    // Get the nodes.
-    const auto &[link0, table0] = links[entry0 >> 1];
-    const auto &[link1, table1] = links[entry1 >> 1];
+    const model::CellSymbol symbol = isXor ? model::XOR : model::AND;
 
-    const auto not0 = (entry0 & 1);
-    const auto not1 = (entry1 & 1);
+    const model::Subnet::Link link0{entry0 >> 1, (entry0 & 1) != 0};
+    const model::Subnet::Link link1{entry1 >> 1, (entry1 & 1) != 0};
 
-    const auto l0 = not0 ? ~link0  : link0;
-    const auto l1 = not1 ? ~link1  : link1;
-    const auto t0 = not0 ? ~table0 : table0;
-    const auto t1 = not1 ? ~table1 : table1;
+    assert(link0.idx < aig.size());
+    assert(link1.idx < aig.size());
 
-    const auto link = builder.addCell(isXor ? model::XOR : model::AND, l0, l1);
-    const auto table = (isXor ? (t0 ^ t1) : (t0 & t1)) & 0xffff;
+    const auto table0 = aig[link0.idx].table;
+    const auto table1 = aig[link1.idx].table;
 
-    links.emplace_back(link, table);
+    const auto t0 = link0.inv ? ~table0 : table0;
+    const auto t1 = link1.inv ? ~table1 : table1;
+    const auto table = isXor ? (t0 ^ t1) : (t0 & t1);
+
+    aig.emplace_back(table, symbol, link0, link1);
   }
 
-  return links;
+  // Initialize the table-to-index mapping.
+  std::unordered_set<uint16_t> npn;
+  npn.reserve(npn4Num);
+  npn.insert(0x0000);
+
+  for (size_t i = 1; s_RwrPracticalClasses[i]; ++i) {
+    npn.insert(s_RwrPracticalClasses[i]);
+  }
+
+  map.reserve(npn.size());
+
+  for (size_t i = 0; i < aig.size(); ++i) {
+    const auto canon = kitty::exact_npn_canonization(aig[i].table);
+    const auto table = static_cast<uint16_t>(*std::get<0>(canon).begin());
+
+    // FIXME: Store negation and permutation.
+    std::cout << "TABLE " << std::hex << table << " -> " << std::dec << i << std::endl;
+
+    if (npn.find(table) != npn.end() && map.find(table) == map.end()) {
+      std::cout << "ADD " << std::hex << table << " -> " << std::dec << i << std::endl;
+      map.emplace(table, i);
+    }
+  }
 }
 
-static std::unordered_map<uint16_t, model::Subnet::Link> buildAbcDatabase(
-    model::SubnetBuilder &builder) {
-  const unsigned short *classes = s_RwrPracticalClasses;
+model::SubnetID AbcNpn4Synthesizer::Database::find(const TruthTable &tt) const {
+  static constexpr auto k = 4;
 
-  const auto links = buildAbcSubnet(builder);
+  // For 3 and less variables, the truth table is extended.
+  const TruthTable ttk = tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
 
-  std::unordered_set<uint16_t> practicalNpnClasses;
-  practicalNpnClasses.reserve(Npn4ClassNum);
-  practicalNpnClasses.emplace(0);
+  const auto res = kitty::exact_npn_canonization(ttk);
+  const auto npn = std::get<0>(res);
+  const auto neg = std::get<1>(res);
+  const auto per = std::get<2>(res);
 
-  for (size_t i = 1; classes[i]; ++i) {
-    practicalNpnClasses.emplace(classes[i]);
+  const auto table = static_cast<uint16_t>(*npn.begin());
+  std::cout << "NPN Table: " << std::hex << table << std::endl;
+
+  const auto iterator = map.find(table);
+  if (iterator == map.end()) {
+    return model::OBJ_NULL_ID;
   }
 
-  std::unordered_map<uint16_t, model::Subnet::Link> processedNpnClasses;
-  processedNpnClasses.reserve(practicalNpnClasses.size());
+  bool isUsed[] = {
+      false, // Constant 0
+      false, // Variable x0
+      false, // Variable x1
+      false, // Variable x2
+      false  // Variable x3
+  };
 
-  for (const auto &[link, table]: links) {
-    if (practicalNpnClasses.find(table) != practicalNpnClasses.end() &&
-        processedNpnClasses.find(table) == processedNpnClasses.end()) {
-      processedNpnClasses.emplace(table, link);
+  std::vector<size_t> indices;
+  indices.push_back(iterator->second);
+
+  for (size_t i = 0; i < indices.size(); ++i) {
+    const auto &node = aig[indices[i]];
+
+    if (node.symbol == model::ZERO || node.symbol == model::IN) {
+      isUsed[indices[i]] = true;
+    } else {
+      indices.push_back(node.link[0].idx);
+      indices.push_back(node.link[1].idx);
     }
   }
 
-  return processedNpnClasses;
+  model::SubnetBuilder builder;
+  std::unordered_map<size_t, model::Subnet::Link> links;
+
+  for (size_t i = 0; i < k; ++i) {
+    if (isUsed[i + 1]) {
+      const auto input = builder.addInput();
+      links[i + 1] = neg & (1 << i) ? ~input : input;
+    }
+  }
+
+  if (isUsed[0]) {
+    links[0] = builder.addCell(model::ZERO);
+  }
+
+  for (auto i = indices.rbegin(); i != indices.rend(); ++i) {
+    if (*i <= k || links.find(*i) != links.end()) {
+      continue;
+    }
+
+    const auto &node = aig[*i];
+
+    const auto link0 = links[node.link[0].idx];
+    const auto link1 = links[node.link[1].idx];
+
+    links[*i] = builder.addCell(node.symbol,
+        node.link[0].inv ? ~link0 : link0,
+        node.link[1].inv ? ~link1 : link1);
+  }
+
+  const auto link = links[indices[0]];
+  builder.addOutput(neg & (1 << k) ? ~link : link);
+
+  return builder.make();
 }
 
-AbcNpn4Synthesizer::AbcNpn4Synthesizer():
-    builder(), database(buildAbcDatabase(builder)) {}
+
 
 } // namespace eda::gate::optimizer2

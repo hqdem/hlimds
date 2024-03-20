@@ -21,7 +21,7 @@ namespace eda::gate::tech_optimizer {
 class SequentialMapper {
 public:
   explicit SequentialMapper(CellDB *cellDB);
-  model::SubnetID mapSequenceCell(model::CellID sequenceCellID, Techmapper::MapperType techmapSelector);
+  model::CellTypeID mapSequenceCell(model::CellID sequenceCellID, Techmapper::MapperType techmapSelector);
 
 private:
   CellDB *cells;

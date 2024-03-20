@@ -32,7 +32,7 @@ public:
 
   SubnetID techmap(SubnetID subnetID);
   NetID techmap(NetID netID);
-  SubnetID techmap(model::CellID sequenceCell, MapperType techmapSelector = MapperType::SIMPLE_AREA_FUNC);
+  model::CellTypeID techmap(model::CellID sequenceCell, MapperType techmapSelector = MapperType::SIMPLE_AREA_FUNC);
 
   ~Techmapper() {
     delete mapper;
@@ -46,5 +46,6 @@ private:
   CellDB *cellDB;
   BaseMapper *mapper = nullptr;
   SubnetID premapAIGSubnet(SubnetID subnetID);
+  NetID sequenseTechMapping(NetID netID);
 };
 } // namespace eda::gate::tech_optimizer

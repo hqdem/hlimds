@@ -15,20 +15,25 @@ namespace eda::gate::tech_optimizer {
 SequentialMapper::SequentialMapper(CellDB *cellDB)
     : cells(std::move(cellDB)) {}
 
-model::SubnetID SequentialMapper::mapSequenceCell(model::CellID sequenceCellID,
+model::CellTypeID SequentialMapper::mapSequenceCell(model::CellID sequenceCellID,
                                                   Techmapper::MapperType techmapSelector) {
   auto& sequenceCell = model::Cell::get(sequenceCellID);
   assert(sequenceCell.isDff() || sequenceCell.isDffRs() || sequenceCell.isLatch());
 
+  model::SubnetID subnetId;
+
   if (sequenceCell.isDff()) {
-    return mapDFF(techmapSelector);
+    subnetId = mapDFF(techmapSelector);
   } else if (sequenceCell.isDffRs()) {
-    return mapDFFrs(techmapSelector);
+    subnetId = mapDFFrs(techmapSelector);
   } else if (sequenceCell.isLatch()) {
-    return mapLatch(techmapSelector);
+    subnetId = mapLatch(techmapSelector);
   }
 
-  return model::SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
+  auto &subnet = model::Subnet::get(subnetId);
+  return subnet.getEntries()[subnet.getInNum()].cell.getTypeID();
+
+  //return model::CellType{}; // Assuming model::SubnetID{} is a valid default or error value
 }
 
 model::SubnetID SequentialMapper::mapLatch(Techmapper::MapperType techmapSelector) {

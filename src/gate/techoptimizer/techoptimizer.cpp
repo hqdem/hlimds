@@ -99,18 +99,75 @@ NetID Techmapper::techmap(NetID netID) {
   }
   eda::gate::model::NetID composedNetID = decomposer.compose(mappedSubnetsID, mapping);
 
-  return composedNetID;
+
+
+  return sequenseTechMapping(composedNetID);
 }
 
-/*NetID Techmapper::sequenseTechMapping(NetID netID) {
+NetID Techmapper::sequenseTechMapping(NetID netID) {
   model::NetBuilder netBuilder;
 
-  model::Net::get(netID).
+  model::Net &net = model::Net::get(netID);
+  model::List<model::CellID> outs = net.getOutputs();
+
+  std::unordered_map<model::CellID, model::CellID> buildMap;
+
+  std::stack<model::CellID> stack;
+  std::unordered_set<model::CellID> visited;
+
+  for (const auto& out : outs) {
+    stack.push(out);
+    visited.insert(out);
+  }
+
+  while (!stack.empty()) {
+    model::CellID currentCellID = stack.top();
+    if (buildMap.find(currentCellID) != buildMap.end()) {
+      stack.pop();
+      continue;
+    }
+
+    auto &currentCell = model::Cell::get(currentCellID);
+    // TODO: add zero/one
+    if (currentCell.isIn()) {
+      auto cellID = makeCell(model::CellSymbol::IN);
+      netBuilder.addCell(cellID);
+      buildMap[currentCellID] = cellID;
+      stack.pop();
+      continue;
+    } else {
+      model::Cell::LinkList linkList;
+      bool add = true;
+      for (const auto &inputLink : currentCell.getLinks()) {
+        if (buildMap.find(inputLink.getCellID()) != buildMap.end()) {
+          linkList.push_back(model::LinkEnd{inputLink.getCellID()});
+        } else {
+          add = false;
+        }
+      }
+      if (add) {
+        model::CellID cellID;
+        if (currentCell.isDff() || currentCell.isDffRs() || currentCell.isLatch()) {
+          // Change cellType
+          cellID = makeCell(techmap(currentCellID), linkList);
+        } else {
+          cellID = makeCell(currentCell.getTypeID(), linkList);
+        }
+        buildMap[currentCellID] = cellID;
+        netBuilder.addCell(cellID);
+        stack.pop();
+      }
+
+      for (const auto& link : currentCell.getLinks()) {
+        stack.push(link.getCellID());
+      }
+    }
+  }
 
   return netBuilder.make();
-}*/
+}
 
-SubnetID Techmapper::techmap(model::CellID sequenceCell,
+model::CellTypeID Techmapper::techmap(model::CellID sequenceCell,
                              MapperType techmapSelector) {
   SequentialMapper sequentialMapper(cellDB);
   return sequentialMapper.mapSequenceCell(sequenceCell, techmapSelector);

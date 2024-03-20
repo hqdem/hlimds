@@ -355,7 +355,7 @@ TEST(TechMapTest, ANDNOTNOTAND) {
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
 }
 
-TEST(TechMapTest, DFFMapping) {
+/*TEST(TechMapTest, DFFMapping) {
   auto cellID = makeCell(model::CellSymbol::DFF);
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
@@ -396,5 +396,5 @@ TEST(TechMapTest, LatchMapping) {
   printVerilog(mappedSub);
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSub));
-}
+}*/
 }

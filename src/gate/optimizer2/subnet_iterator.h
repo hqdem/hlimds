@@ -11,7 +11,7 @@
 #include "gate/model2/object.h"
 #include "gate/model2/subnet.h"
 
-#include <vector>
+#include <unordered_map>
 
 namespace eda::gate::optimizer2 {
 
@@ -32,7 +32,7 @@ public:
     SubnetID subnetID;
     /// Mapping the fragment to the original subnet.
     /// (fragment cell -> original subnet cell).
-    std::vector<size_t> entryMap;
+    std::unordered_map<size_t, size_t> entryMap;
 
     bool isValid() {
       return subnetID != model::OBJ_NULL_ID;

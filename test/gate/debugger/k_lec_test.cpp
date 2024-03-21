@@ -97,7 +97,10 @@ TEST(KLecTest, TwoInputAndTwoInputOrTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).isUnknown());
-  LOG_DEBUG(checker.printHashTable());
+
+#ifdef UTOPIA_DEBUG
+  checker.printHashTable();
+#endif
 
   EXPECT_TRUE(checker.hashTableContains({0, 1, 0, 0}, 3));
   EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 1, 0, 0}));
@@ -119,7 +122,10 @@ TEST(KLecTest, TwoInputAndTwoInputAndTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).equal());
-  LOG_DEBUG(checker.printHashTable());
+
+#ifdef UTOPIA_DEBUG
+  checker.printHashTable();
+#endif
 
   EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 2));
   EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 1, 1, 1}));
@@ -156,7 +162,10 @@ TEST(KLecTest, ThreeInputAndThreeInputAndTest) {
   Hints hints;
   createHints(*net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, net2, hints).equal());
-  LOG_DEBUG(checker.printHashTable());
+
+#ifdef UTOPIA_DEBUG
+  checker.printHashTable();
+#endif
 
   EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 3));
   EXPECT_TRUE(checker.hashTableContains({2, 3, 1, 1}, 4));
@@ -183,7 +192,10 @@ TEST(KLecTest, SixInputAndSixInputAndTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).equal());
-  LOG_DEBUG(checker.printHashTable());
+
+#ifdef UTOPIA_DEBUG
+  checker.printHashTable();
+#endif
 
   EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 6));
   EXPECT_TRUE(checker.hashTableContains({2, 3, 1, 1}, 7));
@@ -228,7 +240,10 @@ TEST(KLecTest, SeveralPrimaryOutputsTest) {
   Hints hints;
   createHints(net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(net1, net2, hints).isUnknown());
-  LOG_DEBUG(checker.printHashTable());
+
+#ifdef UTOPIA_DEBUG
+  checker.printHashTable();
+#endif
 
   EXPECT_TRUE(checker.hashTableContains({0, 8, 1, 1}, 9));
   EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 8, 1, 1}));
@@ -298,7 +313,10 @@ TEST(KLecTest, SeveralGatesTest) {
   Hints hints;
   createHints(net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(net1, net2, hints).equal());
-  LOG_DEBUG(checker.printHashTable());
+
+#ifdef UTOPIA_DEBUG
+  checker.printHashTable();
+#endif
 
   EXPECT_TRUE(checker.hashTableContains({3, 2, 1, 0}, 10));
   EXPECT_TRUE(checker.hashTableContains({3, 2, 0, 1}, 9));

@@ -33,45 +33,10 @@ public:
   SubnetID synthesize(const TruthTable &tt, uint16_t maxArity = -1) override;
 
 private:
-  struct Database final {
-    static constexpr auto k = 4;
-
-    struct Node final {
-      Node():
-          table(4), symbol(model::ZERO) {}
-
-      Node(TruthTable table,
-           model::CellSymbol symbol):
-          table(table), symbol(symbol) {}
-
-      Node(TruthTable table,
-           model::CellSymbol symbol,
-           model::Subnet::Link link0,
-           model::Subnet::Link link1):
-          table(table), symbol(symbol), link{link0, link1} {}
-
-      const TruthTable table;
-      const model::CellSymbol symbol;
-      const model::Subnet::Link link[2];
-    };
-
-    Database();
-
-    /// Returns the subnetID for the given table.
-    model::SubnetID find(const TruthTable &tt) const;
-
-    /// Stores precomputed AIGs for practical NPN classes.
-    std::vector<Node> aig;
-    /// Maps NPN-canonical truth tables to the links in the builder.
-    std::unordered_map<uint16_t, size_t> map;
-  };
-
-  AbcNpn4Synthesizer(): cache(1 << (1 << 4)), database() {}
+  AbcNpn4Synthesizer();
 
   /// Stores synthesized subnets (index = truth table).
   std::vector<SubnetID> cache;
-  /// Stores AIGs of frequent 4-variable functions.
-  Database database;
 };
 
 } // namespace eda::gate::optimizer2

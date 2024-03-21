@@ -71,3 +71,27 @@ TEST(AbcNpn4Test, NotX2Test) {
 TEST(AbcNpn4Test, NotX3Test) {
   testHexString(4, "00ff");
 }
+
+TEST(AbcNpn4Test, X0X1Test) {
+  testHexString(4, "8888");
+}
+
+TEST(AbcNpn4Test, X1X2Test) {
+  testHexString(4, "c0c0");
+}
+
+TEST(AbcNpn4Test, X2X3Test) {
+  testHexString(4, "f000");
+}
+
+TEST(AbcNpn4Test, X0X1X2Test) {
+  testHexString(4, "8080");
+}
+
+TEST(AbcNpn4Test, X1X2X3Test) {
+  testHexString(4, "c000");
+}
+
+TEST(AbcNpn4Test, X0X1X2X3Test) {
+  testHexString(4, "8000");
+}

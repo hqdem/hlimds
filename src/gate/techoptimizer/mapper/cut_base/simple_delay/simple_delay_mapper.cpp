@@ -9,10 +9,16 @@
 
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/cone_builder.h"
-#include "gate/techoptimizer/mapper/cut_base/simple_delay/simple_delay_mapper.h"
 #include "gate/techoptimizer/mapper/cut_base/delay_estmt/delay_estmt.h"
+#include "gate/techoptimizer/mapper/cut_base/simple_delay/simple_delay_mapper.h"
+
+#include <readcells/ast.h>
+#include <readcells/ast_parser.h>
+#include <readcells/groups.h>
+#include <readcells/token_parser.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <limits>
 
 namespace eda::gate::tech_optimizer {
@@ -65,6 +71,23 @@ void SimpleDelayMapper::saveBest(
   eda::gate::optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   BestReplacement bestSimpleReplacement{};
   float bestArrivalTime = MAXFLOAT;
+
+  delay_estimation::DelayEstimator d1;
+
+  std::string file_name = "test/data/gate/tech_mapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
+
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path filePath = homePath / file_name;
+
+  TokenParser tokParser;
+  FILE *file = fopen(filePath.generic_string().c_str(), "rb");
+  Group *ast = tokParser.parseLibrary(file,
+              filePath.generic_string().c_str());
+  Library lib;
+  AstParser parser(lib, tokParser);
+  parser.run(*ast);
+  fclose(file);
+
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.size() != 1) {
@@ -77,16 +100,14 @@ void SimpleDelayMapper::saveBest(
       for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable.at(0))) {
         auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
 
-        delay_estimation::DelayEstimator d1;
-
-        std::string file = "test/data/gate/tech_mapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
         float inputNetTransition = findMaxArrivalTime(cut.entryIdxs);
-        float fanoutCount = d1.wlm.getFanoutCap(currentAttr.fanout_count);
+        float fanoutCap = d1.wlm.getFanoutCap(currentAttr.fanout_count) + 
+                          d1.nldm.getCellCap();
 
         d1.nldm.delayEstimation(currentAttr.name,
-                                file,
+                                lib,
                                 inputNetTransition,
-                                fanoutCount);
+                                fanoutCap);
 
         float arrivalTime = d1.nldm.getSlew();
 

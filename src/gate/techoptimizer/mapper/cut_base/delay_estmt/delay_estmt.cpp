@@ -94,14 +94,6 @@ void WLM::setWireLoadModel(string wlm_name) {
 
 
 /// Getters
-float NLDM::getCellDelay()   {
-  return delay;
-}
-
-float NLDM::getSlew()   {
-  return slew;
-}
-
 float WLM::getLength(size_t& fanout_count) {
   if ((fanout_count > 0) && (fanout_count < 6))
     return fanout_length[fanout_count-1].second;
@@ -157,10 +149,9 @@ float timingVisitor(const Timing &timing,
     //  Properties
     //===-----------------------------------------------------------------===//
     bool ivar = false;
-    // float capacitance = 0; TODO
     int ind_1 = -1, ind_2 = -1;
     std::vector<float> temp = {};
-    float x1, x2, y1, y2, T11, T12, T21, T22, T00;
+    float x1, x2, y1, y2, T00, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
     size_t tback1 = 0, tfront1 = 0;
     size_t tback2 = 0, tfront2 = 0;
 
@@ -197,7 +188,6 @@ float timingVisitor(const Timing &timing,
 
     /// INTERPOLATION
     if ((ind_1 == -1) && (ind_2 == -1)) {
-      //T11 = 0, T12 = 0, T21 = 0, T22 = 0; TODO
       tback1 = 0, tfront1 = 0;
       tback2 = 0, tfront2 = 0;
       x1 = 0, x2 = 0, y1 = 0, y2 = 0;
@@ -252,53 +242,89 @@ void NLDM::delayEstimation(string& cell_name,
   //===-------------------------------------------------------------------===//
   const path homePath = string(getenv("UTOPIA_HOME"));
   const path filePath = homePath / file_name;
-    if (exists(filePath)) {
-      //===---------------------------------------------------------------===//
-      //  Properties
-      //===---------------------------------------------------------------===//
-      std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
-      capacitance = 0;
+  if (exists(filePath)) {
+    //===---------------------------------------------------------------===//
+    //  Properties
+    //===---------------------------------------------------------------===//
+    std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
+    capacitance = 0;
 
-      //===---------------------------------------------------------------===//
-      //  Call parser
-      //===---------------------------------------------------------------===//
-      TokenParser tokParser;
-      FILE *file = fopen(filePath.generic_string().c_str(), "rb");
-      Group *ast = tokParser.parseLibrary(file,
-                                          filePath.generic_string().c_str());
-      Library lib;
-      AstParser parser(lib, tokParser);
-      parser.run(*ast);
-      fclose(file);
+    //===---------------------------------------------------------------===//
+    //  Call parser
+    //===---------------------------------------------------------------===//
+    TokenParser tokParser;
+    FILE *file = fopen(filePath.generic_string().c_str(), "rb");
+    Group *ast = tokParser.parseLibrary(file,
+                                        filePath.generic_string().c_str());
+    Library lib;
+    AstParser parser(lib, tokParser);
+    parser.run(*ast);
+    fclose(file);
 
-      //===---------------------------------------------------------------===//
-      //  Delay and Slew estimation
-      //===---------------------------------------------------------------===//
-      const Cell *cell = lib.getCell(cell_name);
+    //===---------------------------------------------------------------===//
+    //  Delay and Slew estimation
+    //===---------------------------------------------------------------===//
+    const Cell *cell = lib.getCell(cell_name);
 
-      for (const Pin &pin : (*cell).getPins()) {
-        capacitance += pin.getFloatAttribute("capacitance", 0);
-        for (const Timing &timing : pin.getTimings()) {
-          cfall.push_back(timingVisitor(timing,"cell_fall",
-            input_net_transition, total_output_net_capacitance));
-          crise.push_back(timingVisitor(timing,"cell_rise",
-            input_net_transition, total_output_net_capacitance));
-          tfall.push_back(timingVisitor(timing,"fall_transition",
-            input_net_transition, total_output_net_capacitance));
-          trise.push_back(timingVisitor(timing,"rise_transition",
-            input_net_transition, total_output_net_capacitance));
-        }
+    for (const Pin &pin : (*cell).getPins()) {
+      capacitance += pin.getFloatAttribute("capacitance", 0);
+      for (const Timing &timing : pin.getTimings()) {
+        cfall.push_back(timingVisitor(timing,"cell_fall",
+          input_net_transition, total_output_net_capacitance));
+        crise.push_back(timingVisitor(timing,"cell_rise",
+          input_net_transition, total_output_net_capacitance));
+        tfall.push_back(timingVisitor(timing,"fall_transition",
+          input_net_transition, total_output_net_capacitance));
+        trise.push_back(timingVisitor(timing,"rise_transition",
+          input_net_transition, total_output_net_capacitance));
       }
+    }
 
-      delay = *max_element(crise.begin(), crise.end());
-      for (size_t i = 0; i < crise.size(); ++i)
-        if (crise[i] == delay) {
-          slew = (tfall[i] + trise[i])/2;
-          break;
-        }
+    delay = *max_element(crise.begin(), crise.end());
+    for (size_t i = 0; i < crise.size(); ++i)
+      if (crise[i] == delay) {
+        slew = (tfall[i] + trise[i])/2;
+        break;
+      }
   }
   else
     std::cerr << "File wasn't found\n";
+}
+
+void NLDM::delayEstimation(string& cell_name,
+                           Library& lib,
+                           float& input_net_transition,
+                           float& total_output_net_capacitance)   {
+  //===---------------------------------------------------------------===//
+  //  Properties
+  //===---------------------------------------------------------------===//
+  std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
+  capacitance = 0;
+
+  //===---------------------------------------------------------------===//
+  //  Delay and Slew estimation
+  //===---------------------------------------------------------------===//
+  const Cell *cell = lib.getCell(cell_name);
+  for (const Pin &pin : (*cell).getPins()) {
+    capacitance += pin.getFloatAttribute("capacitance", 0);
+    for (const Timing &timing : pin.getTimings()) {
+      cfall.push_back(timingVisitor(timing,"cell_fall",
+        input_net_transition, total_output_net_capacitance));
+      crise.push_back(timingVisitor(timing,"cell_rise",
+        input_net_transition, total_output_net_capacitance));
+      tfall.push_back(timingVisitor(timing,"fall_transition",
+        input_net_transition, total_output_net_capacitance));
+      trise.push_back(timingVisitor(timing,"rise_transition",
+        input_net_transition, total_output_net_capacitance));
+    }
   }
+
+  delay = *max_element(crise.begin(), crise.end());
+  for (size_t i = 0; i < crise.size(); ++i)
+    if (crise[i] == delay) {
+      slew = (tfall[i] + trise[i])/2;
+      break;
+    }
+}
 
 } // namespace eda::gate::tech_optimizer::delay_estimation

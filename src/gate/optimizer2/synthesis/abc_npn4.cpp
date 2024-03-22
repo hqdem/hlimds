@@ -12,7 +12,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <iostream>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -25,10 +24,11 @@ namespace eda::gate::optimizer2 {
 struct Database final {
   using TruthTable = AbcNpn4Synthesizer::TruthTable;
 
+  using I = size_t;
   using N = uint32_t;
   using P = std::vector<uint8_t>;
 
-  static constexpr auto k = 4;
+  static constexpr auto k = AbcNpn4Synthesizer::k;
 
   static bool isVarIdx(size_t idx) {
     return 0 < idx && idx <= k;
@@ -52,22 +52,32 @@ struct Database final {
     return n & (1 << k);
   }
 
-  static bool negateIdx(size_t idx0, size_t idx1, N n0, N n1) {
-    const auto neg0 = isVarIdx(idx0) ? isNegVar(idx2Var(idx0), n0) : false;
-    const auto neg1 = isVarIdx(idx1) ? isNegVar(idx2Var(idx1), n1) : false;
-    return neg0 ^ neg1;
+  static bool isNegIdx(size_t idx, N n) {
+    return isVarIdx(idx) ? isNegVar(idx2Var(idx), n) : false;
   }
 
-  static size_t permuteIdx(size_t idx, const P &p0, const P &p1) {
-    return isVarIdx(idx) ? var2Idx(p1[p0[idx2Var(idx)]]) : idx;
+  static bool isNegIdx(size_t idx0, size_t idx1, N n0, N n1) {
+    return isNegIdx(idx0, n0) ^ isNegIdx(idx1, n1);
+  }
+
+  static P invert(const P &p) {
+    P inverted(p.size());
+    for (size_t i = 0; i < p.size(); ++i) {
+      inverted[p[i]] = i;
+    }
+    return inverted;
+  }
+
+  static size_t permIdx(size_t idx, const P &p0, const P &p1) {
+    auto pi{invert(p0)};
+    return isVarIdx(idx) ? var2Idx(p1[pi[idx2Var(idx)]]) : idx;
   }
 
   struct Node final {
     Node():
         table(k), symbol(model::ZERO) {}
 
-    Node(const TruthTable &table,
-         model::CellSymbol symbol):
+    Node(const TruthTable &table, model::CellSymbol symbol):
         table(table), symbol(symbol) {}
 
     Node(const TruthTable &table,
@@ -82,13 +92,11 @@ struct Database final {
   };
 
   struct Entry final {
-    Entry():
-        index(0), n(0), p{} {}
+    Entry(): i(0), n(0), p{} {}
 
-    Entry(size_t index, N n, const P &p):
-        index(index), n(n), p(p) {}
+    Entry(I i, N n, const P &p): i(i), n(n), p(p) {}
 
-    const size_t index;
+    const I i;
     const N n;
     const P p;
   };
@@ -157,6 +165,9 @@ Database::Database() {
     const auto npnCanon = kitty::exact_npn_canonization(aig[i].table);
     const auto npnTable = static_cast<uint16_t>(*std::get<0>(npnCanon).begin());
 
+    // Self-checking.
+    assert(kitty::create_from_npn_config(npnCanon) == aig[i].table);
+
     const auto n0 = std::get<1>(npnCanon);
     const auto p0 = std::get<2>(npnCanon);
 
@@ -189,7 +200,7 @@ model::SubnetID Database::find(const TruthTable &tt) const {
   };
 
   std::vector<size_t> indices;
-  indices.push_back(iterator->second.index);
+  indices.push_back(iterator->second.i);
 
   for (size_t i = 0; i < indices.size(); ++i) {
     const auto &node = aig[indices[i]];
@@ -212,9 +223,7 @@ model::SubnetID Database::find(const TruthTable &tt) const {
   // Add inputs.
   for (size_t i = 0; i < tt.num_vars(); i++) {
     assert(i == 0 || !isUsed[i + 1] || isUsed[i]);
-
-    const auto input = builder.addInput();
-    links[i + 1] = isNegVar(i, n1) ? ~input : input;
+    links[i + 1] = builder.addInput();
   }
 
   // Add zero (if required).
@@ -232,40 +241,48 @@ model::SubnetID Database::find(const TruthTable &tt) const {
     const auto i0 = node.link[0].idx;
     const auto i1 = node.link[1].idx;
 
-    const auto j0 = permuteIdx(i0, p0, p1);
-    const auto j1 = permuteIdx(i1, p0, p1);
+    const auto j0 = permIdx(i0, p0, p1);
+    const auto j1 = permIdx(i1, p0, p1);
 
-    const auto neg0 = node.link[0].inv ^ negateIdx(i0, j0, n0, n1);
-    const auto neg1 = node.link[1].inv ^ negateIdx(i1, j1, n0, n1);
+    const auto neg0 = node.link[0].inv ^ isNegIdx(i0, j0, n0, n1);
+    const auto neg1 = node.link[1].inv ^ isNegIdx(i1, j1, n0, n1);
 
     links[*i] = builder.addCell(node.symbol,
         neg0 ? ~links[j0] : links[j0],
         neg1 ? ~links[j1] : links[j1]);
   }
 
-  const auto link = links[permuteIdx(indices[0], p0, p1)];
-  builder.addOutput(isNegOut(n1) ? ~link : link);
+  const auto link = links[permIdx(indices[0], p0, p1)];
+  builder.addOutput(isNegOut(n0) ^ isNegOut(n1) ? ~link : link);
 
   return builder.make();
 }
 
 AbcNpn4Synthesizer::AbcNpn4Synthesizer():
-  cache(1 << (1 << Database::k)) {}
+  cache {
+      std::vector<SubnetID>(1 << (1 << 0)),
+      std::vector<SubnetID>(1 << (1 << 1)),
+      std::vector<SubnetID>(1 << (1 << 2)),
+      std::vector<SubnetID>(1 << (1 << 3)),
+      std::vector<SubnetID>(1 << (1 << 4)),
+  } {}
 
 model::SubnetID AbcNpn4Synthesizer::synthesize(
     const TruthTable &tt, uint16_t maxArity) {
   static Database database;
 
-  if (tt.num_vars() > Database::k) {
+  const auto n = tt.num_vars();
+
+  if (n > k) {
     return model::OBJ_NULL_ID;
   }
 
   const auto index = static_cast<uint16_t>(*tt.begin());
-  if (cache[index] != model::OBJ_NULL_ID) {
-    return cache[index];
+  if (cache[n][index] != model::OBJ_NULL_ID) {
+    return cache[n][index];
   }
 
-  return (cache[index] = database.find(tt));
+  return (cache[n][index] = database.find(tt));
 }
 
 

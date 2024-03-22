@@ -18,7 +18,6 @@
 
 namespace eda::gate::optimizer2 {
 
-
 /**
  * \brief Searches for an implementation of a 4-variable function in the database
  *        of precomputed AIGs for practical NPN classes (as it is done in ABC).
@@ -29,6 +28,7 @@ class AbcNpn4Synthesizer final : public TruthTableSynthesizer,
 
 public:
   using TruthTable = FunctionIR;
+  static constexpr auto k = 4;
 
   SubnetID synthesize(const TruthTable &tt, uint16_t maxArity = -1) override;
 
@@ -36,7 +36,7 @@ private:
   AbcNpn4Synthesizer();
 
   /// Stores synthesized subnets (index = truth table).
-  std::vector<SubnetID> cache;
+  std::vector<SubnetID> cache[k + 1];
 };
 
 } // namespace eda::gate::optimizer2

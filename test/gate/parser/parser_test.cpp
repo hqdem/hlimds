@@ -29,10 +29,13 @@ using namespace lorina;
 
 namespace eda::gate::parser {
 
+// Relative path to test data for parsers
+const std::filesystem::path subCatalog = "test/data/gate/parser";
+
 GNet *parseVerilogTest(const std::string &infile) {
-  const std::filesystem::path subCatalog = "test/data/gate/parser/verilog";
+
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path prefixPath = homePath / subCatalog;
+  const std::filesystem::path prefixPath = homePath / subCatalog / "verilog";
 
   std::string filename = prefixPath / infile;
 
@@ -78,7 +81,7 @@ Exts getExt(const std::string &fileName) {
 }
 
 std::filesystem::path inputFile(const std::string &infile) {
-  const std::filesystem::path subCatalog = "test/data/gate/parser";
+
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path prefixPathIn =  homePath / subCatalog / "verilog";
   std::string filename = prefixPathIn / infile;
@@ -86,7 +89,7 @@ std::filesystem::path inputFile(const std::string &infile) {
 }
 
 std::filesystem::path outFile(const std::string &infile) {
-  const std::filesystem::path subCatalog = "test/data/gate/parser";
+
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path prefixPathOut = homePath / "build" / subCatalog / "output";
 

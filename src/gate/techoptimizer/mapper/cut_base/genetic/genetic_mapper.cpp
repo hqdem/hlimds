@@ -11,12 +11,31 @@
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/techoptimizer/mapper/cut_base/genetic/genetic_mapper.h"
 
+#include <readcells/ast.h>
+#include <readcells/ast_parser.h>
+#include <readcells/groups.h>
+#include <readcells/token_parser.h>
+
+#include <filesystem>
 #include <numeric>
 #include <random>
 #include <vector>
 
 namespace eda::gate::tech_optimizer {
 void GeneticMapper::findBest() {
+  std::string file_name = "test/data/gate/tech_mapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
+
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path filePath = homePath / file_name;
+
+  TokenParser tokParser;
+  FILE *file = fopen(filePath.generic_string().c_str(), "rb");
+  Group *ast = tokParser.parseLibrary(file,
+                                      filePath.generic_string().c_str());
+
+  AstParser parser(lib, tokParser);
+  parser.run(*ast);
+  fclose(file);
   initialization();
   startEvolution();
   saveInBestMap();
@@ -107,10 +126,11 @@ void GeneticMapper::initialization() {
         newChromosome.gens[j] = gen;
       }
     }
-    newChromosome.calculateFitness();
+    newChromosome.calculateFitness(lib);
 
     nextGeneration.push_back(newChromosome);
   }
+
 }
 
 void GeneticMapper::fillChromosomeFromOutput(Chromosome& chromosome, size_t outputIndex) {
@@ -273,7 +293,7 @@ Chromosome GeneticMapper::createChild(const Chromosome &parent1, const Chromosom
     child.gens.push_back(parent2.gens[i]);
   }
 
-  child.calculateFitness();
+  child.calculateFitness(lib);
   return child;
 }
 
@@ -330,12 +350,47 @@ void GeneticMapper::saveInBestMap() {
   }
 }
 
-void Chromosome::calculateFitness() {
+void Chromosome::calculateFitness(Library &lib) {
   for (const auto &gen: gens) {
     area += gen->area;
   }
-  arrivalTime = 1;
+  arrivalTime = calculateChromosomeMaxArrivalTime(lib);
   fitness = 1 / area * arrivalTime;
 }
+
+float Chromosome::calculateChromosomeMaxArrivalTime(Library &lib) {
+  float maxArrivalTime = 0;
+  for (auto& gen : gens) {
+    if (!gen->emptyGen) {
+      if (gen->isIn || gen->isOut) {
+        continue;
+      } else {
+        delay_estimation::DelayEstimator d1;
+        float inputNetTransition = findMaxArrivalTime(gen->entryIdxs);
+        size_t nIn = 1;
+        float fanoutCap = d1.wlm.getFanoutCap(nIn) +
+                          d1.nldm.getCellCap();
+
+        d1.nldm.delayEstimation(gen->name,
+                                lib,
+                                inputNetTransition,
+                                fanoutCap);
+
+        gen->arrivalTime = d1.nldm.getSlew();
+        (maxArrivalTime < gen->arrivalTime) ? maxArrivalTime = gen->arrivalTime : 0;
+      }
+    }
+  }
+  return maxArrivalTime;
+}
+
+float Chromosome::findMaxArrivalTime(std::unordered_set<size_t> inputs) {
+  float maxArrivalTime = 0;
+  for (const auto &in : inputs) {
+    (gens[in]->arrivalTime > maxArrivalTime) ? maxArrivalTime = gens[in]->arrivalTime : 0;
+  }
+  return maxArrivalTime;
+}
+
 
 } // namespace eda::gate::tech_optimizer

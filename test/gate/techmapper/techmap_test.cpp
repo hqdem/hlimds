@@ -194,14 +194,16 @@ TEST(TechMapTest, SimpleANDSubnet) {
 }
 
 TEST(TechMapTest, SimpleANDSubnetGenetic) {
-  const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 50, 15);
-  std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
+  //const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 4, 15);
+  //std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
+
+  SubnetID subnetId  = parseGraphML("simple_spi_orig");
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
                         Techmapper::MapperType::GENETIC,
                         sdc);
 
-  SubnetID mappedSub = techmapper.techmap(primitiveANDSub);
+  SubnetID mappedSub = techmapper.techmap(subnetId);
 
   std::cout << model::Subnet::get(mappedSub) << std::endl;
 

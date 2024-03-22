@@ -8,6 +8,7 @@
 #pragma once
 
 #include "gate/techoptimizer/mapper/cut_base/cut_base_mapper.h"
+#include "gate/techoptimizer/mapper/cut_base/delay_estmt/delay_estmt.h"
 
 #include <unordered_map>
 
@@ -23,21 +24,27 @@ struct Gen{
   bool emptyGen = true;
   bool isIn = false;
   bool isOut = false;
+
   SubnetID subnetID;
   std::string name;
+
   float area = 0;
+  float arrivalTime = 0;
+
   std::unordered_set<size_t> entryIdxs;
 };
 
 struct Chromosome{
   std::vector<std::shared_ptr<Gen>> gens;
   float area = 0;
-  float arrivalTime = 1;
+  float arrivalTime = 0;
 
   // 1 / (area * arrivalTime)
   float fitness;
 
-  void calculateFitness();
+  void calculateFitness(Library &lib);
+  float calculateChromosomeMaxArrivalTime(Library &lib);
+  float findMaxArrivalTime(std::unordered_set<size_t> inputs);
 };
 
 class GeneticMapper : public CutBaseMapper {
@@ -54,12 +61,14 @@ private:
 
   std::vector<std::vector<std::shared_ptr<Gen>>> genBank;
 
-  int nBasePopulation = 10000;
-  int nParents = 500;
-  int nPairs = 500;
-  long unsigned int nChild = 500;
+  int nBasePopulation = 1000;
+  int nParents = 250;
+  int nPairs = 250;
+  long unsigned int nChild = 1000;
 
-  int nGenerations = 10;
+  int nGenerations = 50;
+
+  Library lib;
 
   void startEvolution();
 

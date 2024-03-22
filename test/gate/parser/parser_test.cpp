@@ -96,7 +96,7 @@ std::filesystem::path outFile(const std::string &infile) {
   return outFilename;
 }
 
-void parse(const std::string &infile) {
+void parsePassed(const std::string &infile) {
   if (!getenv("UTOPIA_HOME")) {
     FAIL() << "UTOPIA_HOME is not set.";
   }
@@ -117,7 +117,7 @@ void parse(const std::string &infile) {
   delete parser.getGnet();
 }
 
-void noParse(const std::string &infile) {
+void parseFailed(const std::string &infile) {
   std::string filename = inputFile(infile);
 
   text_diagnostics consumer;
@@ -133,124 +133,124 @@ size_t parseOuts(const std::string &infile) {
 }
 } // namespace eda::gate::parser
 
-TEST(ParserVTest, adder) {
-  parse("adder.v");
+TEST(LorinaTest, adder) {
+  parsePassed("adder.v");
 }
 
-TEST(ParserVTest, c17) {
-  parse("c17.v");
+TEST(LorinaTest, c17) {
+  parsePassed("c17.v");
 }
 
-TEST(ParserVTest, c17_modified) {
-  parse("c17_modified.v");
+TEST(LorinaTest, c17_modified) {
+  parsePassed("c17_modified.v");
 }
 
-TEST(ParserVTest, arbiter) {
-  parse("arbiter.v");
+TEST(LorinaTest, arbiter) {
+  parsePassed("arbiter.v");
 }
 
-TEST(ParserVTest, bar) {
-  parse("bar.v");
+TEST(LorinaTest, bar) {
+  parsePassed("bar.v");
 }
 
-TEST(ParserVTest, c1355) {
-  parse("c1355.v");
+TEST(LorinaTest, c1355) {
+  parsePassed("c1355.v");
 }
 
-TEST(ParserVTest, c1908) {
-  parse("c1908.v");
+TEST(LorinaTest, c1908) {
+  parsePassed("c1908.v");
 }
 
-TEST(ParserVTest, c3540) {
-  parse("c3540.v");
+TEST(LorinaTest, c3540) {
+  parsePassed("c3540.v");
 }
 
-TEST(ParserVTest, c432) {
-  parse("c432.v");
+TEST(LorinaTest, c432) {
+  parsePassed("c432.v");
 }
 
-TEST(ParserVTest, c499) {
-  parse("c499.v");
+TEST(LorinaTest, c499) {
+  parsePassed("c499.v");
 }
 
-TEST(ParserVTest, c6288) {
-  parse("c6288.v");
+TEST(LorinaTest, c6288) {
+  parsePassed("c6288.v");
 }
 
-TEST(ParserVTest, c7552) {
-  noParse("c7552.v");
+TEST(LorinaTest, c7552) {
+  parseFailed("c7552.v");
 }
 
-TEST(ParserVTest, c880) {
-  parse("c880.v");
+TEST(LorinaTest, c880) {
+  parsePassed("c880.v");
 }
 
-TEST(ParserVTest, cavlc) {
-  parse("cavlc.v");
+TEST(LorinaTest, cavlc) {
+  parsePassed("cavlc.v");
 }
 
-TEST(ParserVTest, ctrl) {
-  parse("ctrl.v");
+TEST(LorinaTest, ctrl) {
+  parsePassed("ctrl.v");
 }
 
-TEST(ParserVTest, dec) {
-  parse("dec.v");
+TEST(LorinaTest, dec) {
+  parsePassed("dec.v");
 }
 
-TEST(ParserVTest, div) {
-  parse("div.v");
+TEST(LorinaTest, div) {
+  parsePassed("div.v");
 }
 
-TEST(ParserVTest, i2c) {
-  parse("i2c.v");
+TEST(LorinaTest, i2c) {
+  parsePassed("i2c.v");
 }
 
-TEST(ParserVTest, int2float) {
-  parse("int2float.v");
+TEST(LorinaTest, int2float) {
+  parsePassed("int2float.v");
 }
 
-TEST(ParserVTest, log2) {
-  parse("log2.v");
+TEST(LorinaTest, log2) {
+  parsePassed("log2.v");
 }
 
-TEST(ParserVTest, max) {
-  parse("max.v");
+TEST(LorinaTest, max) {
+  parsePassed("max.v");
 }
 
-TEST(ParserVTest, multiplier) {
-  parse("multiplier.v");
+TEST(LorinaTest, multiplier) {
+  parsePassed("multiplier.v");
 }
 
-TEST(ParserVTest, router) {
-  parse("router.v");
+TEST(LorinaTest, router) {
+  parsePassed("router.v");
 }
 
-TEST(ParserVTest, sin) {
-  parse("sin.v");
+TEST(LorinaTest, sin) {
+  parsePassed("sin.v");
 }
 
-TEST(ParserVTest, sqrt) {
-  parse("sqrt.v");
+TEST(LorinaTest, sqrt) {
+  parsePassed("sqrt.v");
 }
 
-TEST(ParserVTest, square) {
-  parse("square.v");
+TEST(LorinaTest, square) {
+  parsePassed("square.v");
 }
 
-TEST(ParserVTest, voter) {
-  parse("voter.v");
+TEST(LorinaTest, voter) {
+  parsePassed("voter.v");
 }
 
 // The test suite checks if the nets, built according to gate-level Verilog
 // descriptions, contain the correct number of outputs.
-TEST(ParserVOutTest, sqrt) {
+TEST(LorinaOutTest, sqrt) {
   EXPECT_EQ(parseOuts("sqrt.v"), 64);
 }
 
-TEST(ParserVOutTest, adder) {
+TEST(LorinaOutTest, adder) {
   EXPECT_EQ(parseOuts("adder.v"), 129);
 }
 
-TEST(ParserVOutTest, c17) {
+TEST(LorinaOutTest, c17) {
   EXPECT_EQ(parseOuts("c17.v"), 2);
 }

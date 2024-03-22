@@ -285,5 +285,4 @@ model::SubnetID AbcNpn4Synthesizer::synthesize(
   return (cache[n][index] = database.find(tt));
 }
 
-
 } // namespace eda::gate::optimizer2

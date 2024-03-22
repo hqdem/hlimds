@@ -35,7 +35,7 @@ public:
 private:
   AbcNpn4Synthesizer();
 
-  /// Stores synthesized subnets (index = truth table).
+  /// Caches synthesized subnets (index = [number-of-variables][truth-table]).
   std::vector<SubnetID> cache[k + 1];
 };
 

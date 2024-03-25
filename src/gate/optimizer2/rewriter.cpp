@@ -8,7 +8,7 @@
 
 #include "rewriter.h"
 
-namespace eda::gate::transformer {
+namespace eda::gate::optimizer2 {
 
 Rewriter::SubnetBuilder &Rewriter::rewrite(
     SubnetBuilder &builder,
@@ -66,4 +66,4 @@ void Rewriter::rewriteOnNode(
   }
 }
 
-} // namespace eda::gate::transformer
+} // namespace eda::gate::optimizer2

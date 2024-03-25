@@ -65,6 +65,7 @@ add_library(Gate OBJECT
   optimizer2/cut_extractor.cpp
   optimizer2/npndb.cpp
   optimizer2/reconvergence_cut.cpp
+  optimizer2/rewriter.cpp
   optimizer2/synthesis/abc_npn4.cpp
   optimizer2/synthesis/akers.cpp
   optimizer2/synthesis/algebraic_factor.cpp
@@ -99,7 +100,6 @@ add_library(Gate OBJECT
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp
   transformer/mutator/mutator_visitor.cpp
-  transformer/rewriter.cpp
   translator/fir_to_model2/fir_to_model2.cpp
   translator/fir_to_model2/fir_to_model2_wrapper.cpp
   translator/firrtl.cpp

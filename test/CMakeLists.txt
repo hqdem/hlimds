@@ -71,6 +71,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/npndb_test.cpp
   gate/optimizer2/reconvergence_cut_test.cpp
   gate/optimizer2/resynthesizer_test.cpp
+  gate/optimizer2/rewriter_test.cpp
   gate/optimizer2/synthesis/abc_npn4_test.cpp
   gate/optimizer2/synthesis/akers_test.cpp
   gate/optimizer2/synthesis/algebraic_factor_test.cpp
@@ -103,7 +104,6 @@ add_executable(${TEST_TARGET}
   gate/techmapper/techmap_test.cpp
   gate/transformer/bdd_test.cpp
   gate/transformer/mutator_test.cpp
-  gate/transformer/rewriter_test.cpp
   gate/translator/fir_to_model2/basic_examples.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp

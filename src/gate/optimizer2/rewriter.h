@@ -11,7 +11,7 @@
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/optimizer2/resynthesizer.h"
 
-namespace eda::gate::transformer {
+namespace eda::gate::optimizer2 {
 
 /**
  * @brief Finds and applies the best rewritings on each node according to the
@@ -48,4 +48,4 @@ private:
       CutExtractor &cutExtractor) const;
 };
 
-} // namespace eda::gate::transformer
+} // namespace eda::gate::optimizer2

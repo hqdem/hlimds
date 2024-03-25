@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/transformer/rewriter.h"
+#include "gate/optimizer2/rewriter.h"
 
 #include "gtest/gtest.h"
 
-namespace eda::gate::transformer {
+namespace eda::gate::optimizer2 {
 
 using ResynthesizerBase = optimizer2::ResynthesizerBase;
 using Subnet = model::Subnet;
@@ -217,4 +217,4 @@ TEST(RewriterTest, EqualTest2) {
   runTest(resynthesizer, subnetID, getBufsSubnet2());
 }
 
-} // namespace eda::gate::transformer
+} // namespace eda::gate::optimizer2

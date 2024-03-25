@@ -57,6 +57,8 @@ bool areMiterable(const Subnet &net1,
 const Subnet &miter2(const Subnet &net1,
                      const Subnet &net2,
                      const CellToCell &gmap) {
+  const size_t orArity = 2;
+
   MiterHints hints = makeHints(net1, gmap);
   if (not areMiterable(net1, net2, hints)) {
     return net1;
@@ -88,7 +90,7 @@ const Subnet &miter2(const Subnet &net1,
   if (xors.size() == 1) {
     subnetBuilder.addOutput(xors[0]);
   } else {
-    Link orLink = subnetBuilder.addCell(CellSymbol::OR, xors);
+    Link orLink = subnetBuilder.addCellTree(CellSymbol::OR, xors, orArity);
     subnetBuilder.addOutput(orLink);
   }
   return Subnet::get(subnetBuilder.make());

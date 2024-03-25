@@ -94,7 +94,7 @@ public:
   /// Constructs a new array w/ the specified capacity.
   explicit Array(uint32_t capacity):
       Array(ArrayBlock<T>::allocate(capacity, true, true)) {
-    assert(block->capacity == capacity);
+    assert(block->capacity >= capacity);
   }
 
   /// Returns the array identifier.

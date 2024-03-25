@@ -170,8 +170,8 @@ CellTypeID createNetCell() {
   netBuilder.addCell(cellANDID);
   netBuilder.addCell(cellOUTID);
 
-  return makeCellType("net", netBuilder.make(), OBJ_NULL_ID, SOFT,
-                      CellProperties(1, 0, 0, 0, 0, 0, 0), 2, 1);
+  return makeCellType(UNDEF, "net", netBuilder.make(), OBJ_NULL_ID,
+                      CellProperties(0, 1, 1, 0, 0, 0, 0, 0, 0), 2, 1);
 }
 
 // Matrix generator tests.
@@ -409,7 +409,7 @@ TEST(MatrixGeneratorTest, InvalidBasisException) {
   checkEnvVarSet();
 
   try {
-    MatrixGenerator generator(13, 5, 1, { AND, DFFrs, SOFT });
+    MatrixGenerator generator(13, 5, 1, { AND, DFFrs, UNDEF });
     generator.setFaninLim(3, 5);
   } catch (std::invalid_argument &e) {
     EXPECT_STREQ("Generator's base has invalid cell types.", e.what());

@@ -39,11 +39,13 @@ add_executable(${TEST_TARGET}
   gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp
+  gate/model2/examples.cpp
   gate/model2/generator_test.cpp
   gate/model2/list_test.cpp
   gate/model2/net_decomposer_test.cpp
   gate/model2/net_test.cpp
   gate/model2/replace_test.cpp
+  gate/optimizer2/rwdatabase_test.cpp
   gate/model2/seq_net.cpp
   gate/model2/subnet_cnf_encoder_test.cpp
   gate/model2/subnet_test.cpp
@@ -66,9 +68,13 @@ add_executable(${TEST_TARGET}
   gate/optimizer/util_test.cpp
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
+  gate/optimizer2/npndb_test.cpp
   gate/optimizer2/reconvergence_cut_test.cpp
   gate/optimizer2/resynthesizer_test.cpp
+  gate/optimizer2/rewriter_test.cpp
+  gate/optimizer2/synthesis/abc_npn4_test.cpp
   gate/optimizer2/synthesis/akers_test.cpp
+  gate/optimizer2/synthesis/algebraic_factor_test.cpp
   gate/optimizer2/synthesis/bidecomposition_test.cpp
   gate/optimizer2/synthesis/cascade_test.cpp
   gate/optimizer2/synthesis/de_micheli_test.cpp
@@ -85,6 +91,7 @@ add_executable(${TEST_TARGET}
   gate/premapper/xagmapper/xag_test.cpp
   gate/premapper/xagmapper/xag_verilog_test.cpp
   gate/premapper/xmgmapper/xmgmapper_test.cpp
+  gate/premapper2/aigmapper_test.cpp
   gate/printer/dot_test.cpp
   gate/printer/gate_verilog_printer_test.cpp
   gate/printer/graphml_test.cpp
@@ -94,13 +101,7 @@ add_executable(${TEST_TARGET}
   gate/simulator2/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/techmapper/parser_lib_test.cpp
-  gate/techmapper/techmapper_test_util.cpp
-  gate/techmapper/strategy/genetic_test.cpp
-  gate/techmapper/strategy/simple_area_test.cpp
-  gate/techmapper/strategy/simple_delay_test.cpp
-  gate/techmapper/strategy/delay_estmt/delay_test.cpp
-  gate/techmapper/strategy/delay_estmt/wlm_test.cpp
-  gate/transformer/aigmapper_test.cpp
+  gate/techmapper/techmap_test.cpp
   gate/transformer/bdd_test.cpp
   gate/transformer/mutator_test.cpp
   gate/translator/fir_to_model2/basic_examples.cpp
@@ -110,6 +111,7 @@ add_executable(${TEST_TARGET}
   rtl/parser/ril/ril_test.cpp
   test_main.cpp
   util/fm_test.cpp
+  util/kitty_utils_test.cpp
 )
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET}

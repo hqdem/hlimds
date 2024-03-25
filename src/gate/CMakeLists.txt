@@ -19,9 +19,10 @@ add_library(Gate OBJECT
   model/gnet.cpp
   model/gsymbol.cpp
   model/utils.cpp
-  model2/decomposer/net_decomposer.cpp
   model2/cell.cpp
   model2/celltype.cpp
+  model2/decomposer/net_decomposer.cpp
+  model2/design.cpp
   model2/generator/generator.cpp
   model2/generator/layer_generator.cpp
   model2/generator/matrix_generator.cpp
@@ -62,13 +63,16 @@ add_library(Gate OBJECT
   optimizer/walker.cpp
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
+  optimizer2/npndb.cpp
   optimizer2/reconvergence_cut.cpp
+  optimizer2/rewriter.cpp
+  optimizer2/synthesis/abc_npn4.cpp
   optimizer2/synthesis/akers.cpp
-  optimizer2/synthesis/dsd_to_subnet.cpp
+  optimizer2/synthesis/algebraic_factor.cpp
   optimizer2/synthesis/bidecomposition.cpp
   optimizer2/synthesis/cascade.cpp
   optimizer2/synthesis/de_micheli.cpp
-  optimizer2/synthesis/isop.cpp
+  optimizer2/synthesis/dsd_to_subnet.cpp
   optimizer2/synthesis/reed_muller.cpp
   optimizer2/synthesis/ternary_bi_clique.cpp
   optimizer2/synthesis/unitized_table.cpp
@@ -80,25 +84,18 @@ add_library(Gate OBJECT
   premapper/premapper.cpp
   premapper/xagmapper.cpp
   premapper/xmgmapper.cpp
+  premapper2/aigmapper.cpp
   printer/dot.cpp
   printer/gate_verilog.cpp
   printer/graphml.cpp
   printer/vcd.cpp
   simulator/simulator.cpp
-  techoptimizer/mapper/cut_base/сut_base_mapper.cpp
-  techoptimizer/mapper/cut_base/power_map/power_map.cpp
-  techoptimizer/mapper/cut_base/delay_estmt/delay_estmt.cpp
-  techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.cpp
-  techoptimizer/mapper/cut_base/simple_delay/simple_delay_mapper.cpp
-  techoptimizer/mapper/cut_base/genetic/genetic_mapper.cpp
-  techoptimizer/assembly.cpp
-  techoptimizer/mapper/baseMapper.cpp
-  techoptimizer/library/cell.cpp
-  techoptimizer/library/cellDB.cpp
-  techoptimizer/sequential_mapper/sequential_mapper.cpp
-  techoptimizer/techoptimizer.cpp
   simulator2/simulator.cpp
-  transformer/aigmapper.cpp
+  techmapper/library/cell.cpp
+  techmapper/cut_based_tech_mapper/strategy/min_delay.cpp
+  techmapper/cut_based_tech_mapper/cut_based_tech_mapper.cpp
+  techmapper/cut_based_tech_mapper/tech_map_visitor.cpp
+  techmapper/tech_optimizer.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp
@@ -139,7 +136,6 @@ target_link_libraries(Gate
   minisat-lib-static
   Cudd::Cudd
   lorina
-  readcells
   sqlite3
   CTemplate::nothreads
   Kitty

@@ -1,8 +1,8 @@
 //===----------------------------------------------------------------------===//
 //
-// part of the utopia eda project, under the apache license v2.0
-// spdx-license-identifier: apache-2.0
-// copyright 2021 isp ras (http://www.ispras.ru)
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -99,5 +99,3 @@ struct std::hash<eda::gate::model::Link> {
     return h1 ^ (h2 << 1);
   }
 };
-
-

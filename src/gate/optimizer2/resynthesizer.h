@@ -24,7 +24,7 @@ public:
   using SubnetID = eda::gate::model::SubnetID;
 
   /// Resynthesizes the given subnet.
-  /// Returns the identifier of the newly constructed subnet.
+  /// Returns the identifier of the newly constructed subnet or OBJ_NULL_ID.
   virtual SubnetID resynthesize(SubnetID subnetID) = 0;
 
   virtual ~ResynthesizerBase() =  default;

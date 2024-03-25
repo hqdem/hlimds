@@ -11,65 +11,68 @@
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
 #include "gate/optimizer/bgnet.h"
+#include "util/citerator.h"
+#include "util/kitty_utils.h"
 
-#include "kitty/kitty.hpp"
-
-#include <bitset>
-#include <memory>
 #include <sstream>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace eda::gate::optimizer {
+
+class NPNDBResultIterator : public ConstIterator<BoundGNet> {
+public:
+  using BoundGNetList = BoundGNet::BoundGNetList;
+  using NPNTransformation = utils::NPNTransformation;
+
+  NPNDBResultIterator(const BoundGNetList &l, const NPNTransformation &t) :
+                      transformation(t), list(l), ind(0) { }
+  NPNDBResultIterator(const BoundGNetList &&l, const NPNTransformation &t) :
+                      transformation(t), list(std::move(l)), ind(0) { }
+
+  bool isEnd() const override {
+    return ind >= list.size();
+  }
+
+  bool next() override {
+    if (isEnd()) {
+      return false;
+    }
+    ind++;
+    return isEnd();
+  }
+
+  BoundGNet get() const override {
+    assert(!isEnd() && "End of the result.");
+    return utils::npnTransform(list[ind], transformation);
+  }
+
+  size_t size() const override {
+    return list.size();
+  }
+
+  operator bool() const override {
+    return !isEnd();
+  }
+
+private:
+  NPNTransformation transformation;
+  BoundGNetList list;
+  size_t ind;
+
+};
 
 /**
  * \brief Implements rewrite database which uses NPN matching to store nets.
  */
 class NPNDatabase {
 public:
-  using InputPermutation = std::vector<uint8_t>;
-
-  /**
-   * Represents NPN transformation.
-   * Includes input/output negation and input permutation.
-   * First (n-1) bits of negationMask are responsible for inputs negation.
-   * n'th bit of negationMask stores output negation.
-   * Where *n* is number of inputs.
-   */
-  struct NPNTransformation {
-    uint32_t negationMask;
-    InputPermutation permutation;
-  };
-
   using BoundGNetList = BoundGNet::BoundGNetList;
   using Gate = model::Gate;
   using GateSymbol = model::GateSymbol;
-  using GetResult = std::tuple<BoundGNetList, NPNTransformation>;
+  using ResultIterator = NPNDBResultIterator;
+  using InputPermutation = std::vector<uint8_t>;
+  using NPNTransformation = utils::NPNTransformation;
   using TT = kitty::dynamic_truth_table;
-
-  /**
-   * \brief Builds truth table for bGNet.
-   */
-  static TT buildTT(const BoundGNet &bGNet);
-
-  /**
-   * \brief Inverses NPN transformation.
-   */
-  static NPNTransformation inverse(const NPNTransformation &t);
-
-  /**
-   * \brief Transforms bGNet by permuting inputs and negating inputs/outputs.
-   * \param bGNet bound net to transform
-   * \param t NPN-transformation to apply
-   */
-  static void npnTransformInplace(BoundGNet &bGNet, const NPNTransformation &t);
-
-  /**
-   * \brief Returns transformed clone of *bGNet* without changing *bGNet* itself.
-   */
-  static BoundGNet npnTransform(const BoundGNet &bGNet,
-                                const NPNTransformation &t);
 
   /**
    * \brief Finds nets equivalent to representative function of *tt* NPN-class.
@@ -77,8 +80,8 @@ public:
    * function of class representative, negation mask and permutation to
    * apply to representative.
    */
-  GetResult get(const TT &tt);
-  GetResult get(const BoundGNet &bnet);
+  ResultIterator get(const TT &tt);
+  ResultIterator get(const BoundGNet &bnet);
 
   /**
    * \brief Push *bnet*'s NPN representative function net in database.
@@ -88,11 +91,9 @@ public:
   void erase(const TT &tt);
 
 private:
-  static TT applyGateFunc(const model::GateSymbol::Value func,
-                          const std::vector<TT> &inputList);
-
   // Storage only contains NPN class representatives.
   std::map<TT, BoundGNetList> storage;
 };
 
 } // namespace eda::gate::optimizer
+

@@ -498,7 +498,15 @@ public:
   /// Replaces the given single-output fragment w/ the given subnet (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
-  void replace(SubnetID rhsID, std::unordered_map<size_t, size_t> &rhsToLhs);
+  void replace(
+      const SubnetID rhsID,
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const std::function<void(const size_t)> *onNewCell = nullptr);
+
+  /// Returns [the number of deleted entries - the number of added entries]
+  /// after replacement.
+  int evaluateReplace(const SubnetID rhsID,
+                      std::unordered_map<size_t, size_t> &rhsToLhs) const;
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
@@ -512,7 +520,7 @@ public:
   void replaceWithOne(const EntrySet &entryIDs);
 
   EntryIterator begin() const {
-    return EntryIterator(this, 0);
+    return EntryIterator(this, getSubnetBegin());
   }
 
   EntryIterator end() const {
@@ -530,7 +538,7 @@ public:
   SubnetID make() {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    if (!next.empty()) {
+    if (!next.empty() || getSubnetBegin()) {
       rearrangeEntries();
     }
     assert(checkInputsOrder() && checkOutputsOrder());
@@ -539,6 +547,17 @@ public:
   }
 
 private:
+  /// Returns the number of new entries after replacement.
+  int cntNewEntries(
+      const SubnetID rhsID,
+      const std::unordered_map<size_t, size_t> rhsToLhs,
+      std::unordered_set<size_t> &reusedEntries) const;
+
+  /// Returns the number of entries to delete after deleting root.
+  int cntDeletedEntries(
+      const size_t rootEntryID,
+      const std::unordered_set<size_t> &reusedEntries) const;
+
   /// Return the reference to the j-th link of the given cell.
   Link &getLinkRef(size_t entryID, size_t j);
 
@@ -549,6 +568,16 @@ private:
 
   /// Deallocates the given entry.
   void deallocEntry(size_t entryID);
+
+  /// Returns first entry index in topological order.
+  size_t getSubnetBegin() const {
+    return subnetBegin == normalOrderID ? 0 : subnetBegin;
+  }
+
+  /// Returns last entry index in topological order.
+  size_t getSubnetEnd() const {
+    return subnetEnd == normalOrderID ? entries.size() - 1 : subnetEnd;
+  }
 
   /// Returns the index of the next entry (topological ordering).
   size_t getNext(size_t entryID) const;
@@ -604,12 +633,14 @@ private:
   uint16_t nIn;
   uint16_t nOut;
 
+  /// Context.
   std::vector<Subnet::Entry> entries;
 
   std::vector<size_t> prev;
   std::vector<size_t> next;
   std::vector<size_t> emptyEntryIDs;
 
+  size_t subnetBegin{normalOrderID};
   size_t subnetEnd{normalOrderID};
 
   StrashMap strash;

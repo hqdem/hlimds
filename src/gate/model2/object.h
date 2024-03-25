@@ -126,7 +126,7 @@ enum ObjectTag : uint8_t {
   TAG_LIST_BLOCK
 };
 
-using CellID         = ObjectID<TAG_CELL, 32, 40, 5>;
+using CellID         = ObjectID<TAG_CELL, 16, 40, 4>;
 using CellTypeID     = ObjectID<TAG_CELL_TYPE, 32, 32, 5>;
 using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 1024, 32, 10>;
 using LinkEndID      = ObjectID<TAG_LINK_END, 8, 50, 3>;

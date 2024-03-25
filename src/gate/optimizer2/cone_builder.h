@@ -19,6 +19,7 @@ namespace eda::gate::optimizer2 {
 class ConeBuilder {
 public:
   using Subnet = model::Subnet;
+  using Entry = Subnet::Entry;
   using SubnetID = model::SubnetID;
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
@@ -27,11 +28,15 @@ public:
 
   using EntryMap = std::unordered_map<size_t, size_t>;
 
-  /// Cone struct with SubnetID and mapping from cone subnet to original.
+  /**
+   * @brief Cone struct with SubnetID and mapping from cone subnet to original.
+   * Mapping contains all cells entries from the cone except root cell. Root
+   * cell from the original subnet is referenced by PO from the cone subnet.
+   */
   struct Cone {
     Cone() = default;
     Cone(const SubnetID subnetID, const EntryMap &coneEntryToOrig):
-      subnetID(subnetID), coneEntryToOrig(coneEntryToOrig) {};
+        subnetID(subnetID), coneEntryToOrig(coneEntryToOrig) {};
 
     SubnetID subnetID;
     EntryMap coneEntryToOrig;
@@ -47,6 +52,8 @@ public:
    * @param subnet Subnet to find cones.
    */
   ConeBuilder(const Subnet *subnet);
+
+  ConeBuilder(const SubnetBuilder *builder);
 
   Cone getCone(const Cut &cut) const;
   Cone getMaxCone(const size_t entryIdx) const;
@@ -85,8 +92,13 @@ private:
                 EntryMap &origEntryToCone,
                 EntryMap &coneEntryToOrig) const;
 
+  const Entry getEntry(const size_t entryID) const;
+
+  const LinkList getLinks(const size_t entryID) const;
+
 private:
   const Subnet *subnet;
+  const SubnetBuilder *builder;
 };
 
 } // namespace eda::gate::optimizer2

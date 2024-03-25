@@ -10,7 +10,7 @@
 
 #include "gate/model2/subnet.h"
 
-namespace eda::gate::transformer {
+namespace eda::gate::optimizer2 {
 
 /// @brief Common interface for subnet transformers.
 class SubnetTransformer {
@@ -23,4 +23,4 @@ public:
   virtual SubnetID transform(SubnetID id) = 0;
 };
 
-} // namespace eda::gate::transformer
+} // namespace eda::gate::optimizer2

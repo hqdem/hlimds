@@ -742,9 +742,9 @@ CellSymbol getCellSymbol(Operation *operation) {
         operationName == AsAsyncResetPrimOp::getOperationName()) {
       cellSymbol = CellSymbol::BUF;
     } else if (operationName == InstanceOp::getOperationName()) {
-      cellSymbol = CellSymbol::HARD;
+      cellSymbol = CellSymbol::UNDEF; // FIXME: CellSymbol::HARD;
     } else if (isSynthesizable(operationName)) {
-      cellSymbol = CellSymbol::SOFT;
+      cellSymbol = CellSymbol::UNDEF; // FIXME: CellSymbol::SOFT;
     } else if (operationName == AndPrimOp::getOperationName()) {
       cellSymbol = CellSymbol::AND;
     } else if (operationName == OrPrimOp::getOperationName()) {
@@ -758,7 +758,7 @@ CellSymbol getCellSymbol(Operation *operation) {
     } else if (operationName == RegResetOp::getOperationName()) {
       cellSymbol = CellSymbol::DFFrs;
     } else {
-      cellSymbol = CellSymbol::HARD;
+      cellSymbol = CellSymbol::UNDEF; // FIXME: CellSymbol::HARD;
     }
   } else {
     cellSymbol = CellSymbol::OUT;
@@ -850,12 +850,11 @@ void processOperation(Operation *destOp, std::string &destOpName,
       uint fanoutCount = getFanoutCount(destOp, destOpName);
       auto instanceOp = mlir::dyn_cast<InstanceOp>(destOp);
       const auto &cellTypeName = instanceOp.getModuleName().str();
-      CellTypeID cellTypeID = makeCellType(cellTypeName,
-                                           cellSymbol,
-                                           CellProperties(false, false,
-                                                          false, false,
-                                                          false, false,
-                                                          false),
+      CellTypeID cellTypeID = makeCellType(cellSymbol,
+                                           cellTypeName,
+                                           CellProperties(false, true,  false, // FIXME:
+                                                          false, false, false,
+                                                          false, false, false),
                                            faninCount,
                                            fanoutCount);
       std::vector<LinkEnd> linkEnds;
@@ -887,12 +886,11 @@ void processOperation(Operation *destOp, std::string &destOpName,
       uint fanoutCount = getFanoutCount(destOp, destOpName);
       auto linkEnds = getLinkEnds(destOp, fModuleOp, cellKeyToCellIDOuts);
       const auto &cellTypeName = destOp->getName().stripDialect().str();
-      CellTypeID cellTypeID = makeCellType(cellTypeName,
-                                           cellSymbol,
-                                           CellProperties(false, false,
-                                                          false, false,
-                                                          false, false,
-                                                          false),
+      CellTypeID cellTypeID = makeCellType(cellSymbol,
+                                           cellTypeName,
+                                           CellProperties(false, true,  false, // FIXME:
+                                                          false, false, false,
+                                                          false, false, false),
                                            faninCount,
                                            fanoutCount);
       CellID cellDestID = makeCell(cellTypeID, linkEnds);
@@ -1017,13 +1015,13 @@ LogicalResult generateModel(ModuleOp moduleOp,
     });
     NetID netID = netBuilder.make();
     const std::string &cellName = fModuleOp->getName().getIdentifier().str();
-    CellTypeID cellTypeID = makeCellType(cellName,
+    CellTypeID cellTypeID = makeCellType(CellSymbol::UNDEF, // FIXME: CellSymbol::SOFT
+                                         cellName,
                                          netID,
                                          model::OBJ_NULL_ID,
-                                         CellSymbol::SOFT,
-                                         CellProperties(false, false, false,
+                                         CellProperties(false, true,  false,
                                                         false, false, false,
-                                                        false),
+                                                        false, false, false),
                                          Net::get(netID).getInNum(),
                                          Net::get(netID).getOutNum());
     resultNetList->push_back(cellTypeID);

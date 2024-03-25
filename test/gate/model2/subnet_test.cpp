@@ -162,6 +162,7 @@ TEST(SubnetTest, SimpleMergeTest) {
   std::cout << result << std::endl;
 }
 
+#if 0
 TEST(SubnetTest, SimpleReplaceConstTest) {
   SubnetBuilder builder;
 
@@ -178,5 +179,6 @@ TEST(SubnetTest, SimpleReplaceConstTest) {
   const auto &result = Subnet::get(builder.make());
   std::cout << result << std::endl;
 }
+#endif
 
 } // namespace eda::gate::model

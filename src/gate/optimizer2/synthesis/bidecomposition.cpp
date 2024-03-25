@@ -12,25 +12,27 @@
 
 namespace eda::gate::optimizer2::synthesis {
 
-BiDecSynthesizer::Link BiDecSynthesizer::run(const KittyTT &func,
-                                             const LinkList &inputs,
-                                             SubnetBuilder &subnetBuilder,
-                                             uint16_t maxArity) const {
-  
+/// @cond ALIASES
+using CoveragePair = BiDecSynthesizer::CoveragePair;
+using Link         = BiDecSynthesizer::Link;
+using SubnetID     = BiDecSynthesizer::SubnetID;
+/// @endcond
+
+SubnetID BiDecSynthesizer::run(const KittyTT &func, uint16_t maxArity) {
+  SubnetBuilder subnetBuilder;
+  LinkList inputs = subnetBuilder.addInputs(func.num_vars());
   KittyTT care(func.num_vars());
   kitty::create_from_binary_string(care, std::string(func.num_bits(), '1'));
   TernaryBiClique initBiClique(func, care);
-
-  return decompose(initBiClique, subnetBuilder, maxArity);
+  subnetBuilder.addOutput(decompose(initBiClique, subnetBuilder, maxArity));
+  return subnetBuilder.make();
 }
 
-BiDecSynthesizer::Link BiDecSynthesizer::decompose(TernaryBiClique &initBiClique,
-                                                   SubnetBuilder &subnetBuilder,
-                                                   uint16_t maxArity) {
-
+Link BiDecSynthesizer::decompose(TernaryBiClique &initBiClique,
+                                 SubnetBuilder &subnetBuilder,
+                                 uint16_t maxArity) {
   if (initBiClique.getOnSet().size() == 1) {
-    MMSynthesizer minatoMorrealeAlg;
-    return minatoMorrealeAlg.synthFromISOP(initBiClique.getOnSet(),
+    return utils::synthFromSOP(initBiClique.getOnSet(),
         initBiClique.getInputs(), subnetBuilder, maxArity);
   }
   
@@ -57,8 +59,7 @@ BiDecSynthesizer::Link BiDecSynthesizer::decompose(TernaryBiClique &initBiClique
   return ~subnetBuilder.addCell(model::AND, lhs, rhs);
 }
 
-BiDecSynthesizer::CoveragePair BiDecSynthesizer::findBaseCoverage(
-    CoverageList &stars) {
+CoveragePair BiDecSynthesizer::findBaseCoverage(CoverageList &stars) {
 
   auto first = stars.end() - 2;
   auto second = stars.end() - 1;
@@ -89,7 +90,7 @@ BiDecSynthesizer::CoveragePair BiDecSynthesizer::findBaseCoverage(
 }
 
 void BiDecSynthesizer::expandBaseCoverage(CoverageList &stars, Coverage &first,
-                                         Coverage &second) {
+                                          Coverage &second) {
   while (!stars.empty()) {
     bool shouldWiden = true;
     auto absorbed = stars.end();
@@ -117,7 +118,7 @@ void BiDecSynthesizer::expandBaseCoverage(CoverageList &stars, Coverage &first,
 }
 
 bool BiDecSynthesizer::checkExpanding(uint8_t &difBase, uint8_t &difAbsorbed,
-                                     Coverage &first, Coverage &second) {
+                                      Coverage &first, Coverage &second) {
   uint8_t newMerge = __builtin_popcount(first.vars | second.vars);
   uint8_t newDifBase = newMerge - __builtin_popcount(first.vars);
   uint8_t newDifAbsorbed = newMerge - __builtin_popcount(second.vars);

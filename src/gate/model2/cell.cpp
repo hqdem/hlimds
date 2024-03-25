@@ -9,59 +9,45 @@
 #include "gate/model2/array.h"
 #include "gate/model2/cell.h"
 
+#include <cassert>
+
 namespace eda::gate::model {
 
 Cell::Cell(CellTypeID typeID, const LinkList &links):
     typeSID(typeID.getSID()), fanin(links.size()), fanout(0) {
-  if (fanin <= InPlaceLinks) {
-    for (size_t i = 0; i < fanin; ++i) {
-      data.link[i] = links[i];
-    }
-  } else {
-    Array<uint64_t> array(fanin);
+  if (!links.empty()) {
+    Array<uint64_t> array(links.size());
     for (size_t i = 0; i < links.size(); ++i) {
       array[i] = LinkEnd::pack(links[i]);
     }
-    data.arrayID = array.getID();
+    arrayID = array.getID();
   }
 }
 
 Cell::LinkList Cell::getLinks() const {
-  LinkList links;
+  if (!fanin) {
+    return LinkList{};
+  }
 
-  if (fanin <= InPlaceLinks) {
-    for (size_t i = 0; i < fanin; ++i) {
-      links.push_back(data.link[i]);
-    }
-  } else {
-    Array<uint64_t> array(data.arrayID);
-    for (size_t i = 0; i < fanin; ++i) {
-      links.push_back(LinkEnd::unpack(array[i]));
-    }
+  LinkList links(fanin);
+  Array<uint64_t> array(arrayID);
+  for (size_t i = 0; i < fanin; ++i) {
+    links[i] = LinkEnd::unpack(array[i]);
   }
 
   return links;
 }
 
 LinkEnd Cell::getLink(uint16_t port) const {
-  assert(port < fanin);
-  if (fanin <= InPlaceLinks) {
-    return data.link[port];
-  }
-  Array<uint64_t> array(data.arrayID);
+  Array<uint64_t> array(arrayID);
   return LinkEnd::unpack(array[port]);
 }
 
 void Cell::setLink(uint16_t port, const LinkEnd &source) {
   assert(port < fanin);
-  if (fanin <= InPlaceLinks) {
-    assert(!data.link[port].isValid());
-    data.link[port] = source;
-  } else {
-    Array<uint64_t> array(data.arrayID);
-    assert(!LinkEnd::unpack(array[port]).isValid());
-    array[port] = LinkEnd::pack(source);
-  }
+  Array<uint64_t> array(arrayID);
+  assert(!LinkEnd::unpack(array[port]).isValid());
+  array[port] = LinkEnd::pack(source);
 }
 
 } // namespace eda::gate::model

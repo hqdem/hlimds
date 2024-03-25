@@ -57,6 +57,8 @@ public:
   CellTypeID getTypeID() const { return CellTypeID::makeFID(typeSID); }
   /// Returns the reference to the cell type.
   const CellType &getType() const { return CellType::get(getTypeID()); }
+  /// Returns the cell symbol.
+  CellSymbol getSymbol() const { return getType().getSymbol(); }
 
   /// Returns the cell fan-in (the number of inputs).
   uint16_t getFanin() const { return fanin; }
@@ -70,11 +72,7 @@ public:
   LinkEnd getLink(uint16_t port) const;
 
 private:
-  /// Number of links stored in place (the rest are located in a separate list).
-  static constexpr size_t InPlaceLinks = 3;
-
-  Cell(CellTypeID typeID):
-      typeSID(typeID.getSID()), fanin(0), fanout(0) {}
+  Cell(CellTypeID typeID): typeSID(typeID.getSID()) {}
 
   Cell(CellTypeID typeID, const LinkList &links);
 
@@ -84,19 +82,11 @@ private:
   /// Cell type SID.
   const uint32_t typeSID;
 
-  uint16_t fanin;
-  uint16_t fanout;
+  uint16_t fanin{0};
+  uint16_t fanout{0};
 
-  union LinkData {
-    LinkData() {}
-
-    /// Links in the external list.
-    ArrayID arrayID;
-    /// In-place links.
-    LinkEnd link[InPlaceLinks];
-  } data;
-
-  static_assert(sizeof(LinkEnd) == sizeof(ListID));
+  /// Links in the external list.
+  ArrayID arrayID{OBJ_NULL_ID};
 };
 
 static_assert(sizeof(Cell) == CellID::Size);

@@ -187,7 +187,6 @@ private:
   bool mayImprove(const TruthTable &divisor, const TruthTable &care) const {
     return !kitty::is_const0(~divisor & care);
   }
-
 };
 
 } // namespace eda::gate::optimizer2::synthesis

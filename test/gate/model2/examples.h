@@ -6,11 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model2/subnet.h"
+
 /**
  * \brief Synthetic nets examples.
  */
 namespace eda::gate::model {
 
+model::SubnetID make3AndOrXor();
 
+model::SubnetID makeXorNorAndAndOr();
+
+model::SubnetID makeXorOrXor();
 
 } // namespace eda::gate::model

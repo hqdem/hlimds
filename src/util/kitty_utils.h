@@ -9,7 +9,8 @@
 #pragma once
 
 #include "gate/model2/subnet.h"
-#include "gate/optimizer/npndb.h"
+#include "gate/optimizer/bgnet.h"
+#include "util/npn_transformation.h"
 
 #include "kitty/kitty.hpp"
 
@@ -21,17 +22,40 @@
  */
 namespace eda::utils {
 
+kitty::dynamic_truth_table toTT(uint64_t x);
+
 template<typename TT>
-eda::gate::optimizer::NPNDatabase::NPNTransformation
-getTransformation(const std::tuple<TT, uint32_t, std::vector<uint8_t> > &t) {
-  return eda::gate::optimizer::NPNDatabase::NPNTransformation{std::get<1>(t),
-                                                              std::get<2>(t)};
+NPNTransformation getTransformation(const std::tuple<TT, uint32_t,
+                                    std::vector<uint8_t> > &t) {
+  return NPNTransformation{std::get<1>(t), std::get<2>(t)};
 }
 
-template<typename TT> TT
-getTT(const std::tuple<TT, uint32_t, std::vector<uint8_t>> &t) {
+template<typename TT> TT getTT(const std::tuple<TT, uint32_t,
+                               std::vector<uint8_t>> &t) {
   return std::get<0>(t);
 }
+
+/**
+ * \brief Transforms bGNet by permuting inputs and negating inputs/outputs.
+ * \param bGNet bound net to transform
+ * \param t NPN-transformation to apply
+ */
+void npnTransformInplace(gate::optimizer::BoundGNet &bGNet,
+                         const NPNTransformation &t);
+
+/**
+ * \brief Returns transformed clone of *bGNet* without changing *bGNet* itself.
+ */
+gate::optimizer::BoundGNet npnTransform(const gate::optimizer::BoundGNet &bGNet,
+                                        const NPNTransformation &t);
+
+gate::model::SubnetID npnTransform(const gate::model::Subnet &subnet,
+                                   const NPNTransformation &t);
+
+/**
+ * \brief Builds truth table for bGNet.
+ */
+kitty::dynamic_truth_table buildTT(const gate::optimizer::BoundGNet &bGNet);
 
 //===----------------------------------------------------------------------===//
 // SOP operations

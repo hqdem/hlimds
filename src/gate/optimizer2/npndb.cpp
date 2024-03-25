@@ -2,39 +2,38 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "npndb.h"
-#include "util/kitty_utils.h"
+#include "gate/optimizer2/npndb.h"
 
 namespace eda::gate::optimizer {
 
-NPNDatabase::ResultIterator NPNDatabase::get(const TT &tt) {
+using TT = NPNDatabase2::TT;
+
+NPNDatabase2::ResultIterator NPNDatabase2::get(const TT &tt) {
   auto config = kitty::exact_npn_canonization(tt);
   NPNTransformation t = utils::getTransformation(config);
   return ResultIterator(storage[utils::getTT(config)], utils::inverse(t));
 }
 
-NPNDatabase::ResultIterator NPNDatabase::get(const BoundGNet &bnet) {
-  TT tt = utils::buildTT(bnet);
+NPNDatabase2::ResultIterator NPNDatabase2::get(const Subnet &subnet) {
+  TT tt = model::evaluate(subnet)[0];
   return get(tt);
 }
 
-NPNDatabase::NPNTransformation NPNDatabase::push(const BoundGNet &bnet) {
-  BoundGNet bnetClone = bnet.clone();
-  TT tt = utils::buildTT(bnetClone);
+NPNDatabase2::NPNTransformation NPNDatabase2::push(const SubnetID &id) {
+  TT tt = model::evaluate(Subnet::get(id))[0];
   auto config = kitty::exact_npn_canonization(tt);
   NPNTransformation t = utils::getTransformation(config);
-  utils::npnTransformInplace(bnetClone, t);
-  storage[std::get<0>(config)].push_back(bnetClone);
+  auto newId = utils::npnTransform(Subnet::get(id), t);
+  storage[std::get<0>(config)].push_back(newId);
   return t;
 }
 
-void NPNDatabase::erase(const TT &tt) {
+void NPNDatabase2::erase(const TT &tt) {
   storage.erase(tt);
 }
 
 } // namespace eda::gate::optimizer
-

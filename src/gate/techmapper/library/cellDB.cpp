@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/techoptimizer/library/cellDB.h"
+#include "gate/techmapper/library/cellDB.h"
 
 #include "nlohmann/json.hpp"
 #include <filesystem>
@@ -112,7 +112,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
     }
 
-    Subnetattr subnetattr{cellType.getName(), cellType.getAttr().area};
+    Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area};
     subnetToAttr.emplace_back(subnetID, subnetattr);
 
     ttSubnet.emplace_back(model::evaluate(
@@ -134,7 +134,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
     SubnetID subnetID = subnetBuilder.make();
 
-    Subnetattr subnetattr{"FF", cellType.getAttr().area};
+    Subnetattr subnetattr{"FF", cellType.getAttr().props.area};
     DFF.emplace_back(subnetID, subnetattr);
   }
   for (const CellTypeID &cellTypeID : cellTypeFFrsIDs) {
@@ -158,7 +158,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
     SubnetID subnetID = subnetBuilder.make();
 
-    Subnetattr subnetattr{"FFrs", cellType.getAttr().area};
+    Subnetattr subnetattr{"FFrs", cellType.getAttr().props.area};
     DFFrs.emplace_back(subnetID, subnetattr);
   }
   for (const CellTypeID &cellTypeID : cellTypeLatchIDs) {
@@ -176,7 +176,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
     SubnetID subnetID = subnetBuilder.make();
 
-    Subnetattr subnetattr{"Latch", cellType.getAttr().area};
+    Subnetattr subnetattr{"Latch", cellType.getAttr().props.area};
     Latch.emplace_back(subnetID, subnetattr);
   }
   std::cout << "Count of liberty Subnet = " << count << std::endl;

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/mapper/baseMapper.h"
+#include "gate/techmapper/mapper/baseMapper.h"
 
 namespace eda::gate::tech_optimizer {
 void BaseMapper::mapping(SubnetID subnetID,

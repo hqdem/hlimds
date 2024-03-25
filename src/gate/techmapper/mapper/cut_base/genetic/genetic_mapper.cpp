@@ -9,7 +9,7 @@
 
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/cone_builder.h"
-#include "gate/techoptimizer/mapper/cut_base/genetic/genetic_mapper.h"
+#include "gate/techmapper/mapper/cut_base/genetic/genetic_mapper.h"
 
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>

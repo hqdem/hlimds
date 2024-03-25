@@ -14,8 +14,7 @@
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/parser/parser_test.h"
 #include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techoptimizer/techoptimizer.h"
-#include "gate/techoptimizer/util/get_tech_attr.h"
+#include "gate/techmapper/util/get_tech_attr.h"
 #include "gtest/gtest.h"
 
 #include <filesystem>
@@ -81,7 +80,7 @@ bool checkAllCellsMapped(SubnetID subnetID) {
     if (cell.isIn() || cell.isOut() || cell.isZero() || cell.isOne()) {
       continue;
     }
-    if (cell.getSymbol() != model::CellSymbol::CELL) {
+    if (cell.getSymbol() != model::CellSymbol::UNDEF) {
       isTotalMapped = false;
     }
     entryIndex += cell.more;
@@ -98,30 +97,30 @@ void checkEQ(SubnetID origSubnetId, SubnetID mappedSubnetId) {
     map[i] = i;
   }
   for (int i = origSubnet.getOutNum(); i < 0; i--) {
-    map[origSubnet.getEntries().size() - i] = mappedSubnet.getEntries().size() - i;
+    map[mappedSubnet.getEntries().size() - i] = origSubnet.getEntries().size() - i;
   }
 
   debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
 
-  //EXPECT_TRUE(checker.equivalent(origSubnet, mappedSubnet, map).equal());
+  EXPECT_TRUE(checker.equivalent(origSubnet, mappedSubnet, map).equal());
 }
 
 SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
-  #ifdef UTOPIA_DEBUG
+  //#ifdef UTOPIA_DEBUG
   std::cout << model::Subnet::get(subnetId) << std::endl;
-  #endif
+  //#endif
 
   Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
                         mapperType,
                         sdc);
   SubnetID mappedSubnet = techmapper.techmap(subnetId);
 
-  #ifdef UTOPIA_DEBUG
+  //#ifdef UTOPIA_DEBUG
   std::cout << model::Subnet::get(mappedSubnet) << std::endl;
-  #endif
+  //#endif
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSubnet));
-  checkEQ(subnetId, mappedSubnet);
+  //checkEQ(subnetId, mappedSubnet);
   printVerilog(mappedSubnet);
 
   return mappedSubnet;

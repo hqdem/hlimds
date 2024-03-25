@@ -9,7 +9,7 @@
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/visitor.h"
 #include "gate/optimizer2/synthesis/isop.h"
-#include "gate/techoptimizer/library/cell.h"
+#include "gate/techmapper/library/cell.h"
 
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>
@@ -252,18 +252,19 @@ void LibraryCells::readLibertyFile(const std::string &filename,
         kitty::create_from_formula(*truthTable, plainTruthTable, inputPinNames);
 
         eda::gate::model::CellProperties
-            props(true, false, false, false, false, false, false);
+            props(true, true, true, false, false, false, false, false, false);
 
         model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
-        model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
+        model::CellTypeAttr::get(cellTypeAttrID).props.area = it.value()["area"];
 
         MinatoMorrealeAlg minatoMorrealeAlg;
         const auto subnetID = minatoMorrealeAlg.synthesize(*truthTable);
 
         CellTypeID cellID = eda::gate::model::makeCellType(
-            it.key(), subnetID, cellTypeAttrID,
-            eda::gate::model::CellSymbol::CELL,
-            props, static_cast<uint16_t>(inputPinNames.size()),
+            eda::gate::model::CellSymbol::UNDEF,
+            it.key(), subnetID,
+            cellTypeAttrID, props,
+            static_cast<uint16_t>(inputPinNames.size()),
             static_cast<uint16_t>(1));
 
         cellTypeIDs.push_back(cellID);
@@ -272,10 +273,11 @@ void LibraryCells::readLibertyFile(const std::string &filename,
         if (it.value().contains("ff") && it.value()["ff"].get<bool>()) {
           if (inputPinNames.size() == 2) {
             eda::gate::model::CellProperties
-                props(false, false, false, false, false, false, false);
+                props(false, false, false, false, false, false, false, false,
+                      false);
 
             model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
-            model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
+            model::CellTypeAttr::get(cellTypeAttrID).props.area = it.value()["area"];
 
             SubnetBuilder subnetBuilder;
             auto in1 = subnetBuilder.addInput();
@@ -284,9 +286,10 @@ void LibraryCells::readLibertyFile(const std::string &filename,
             subnetBuilder.addOutput(dff);
 
             CellTypeID cellID = eda::gate::model::makeCellType(
-                it.key(), subnetBuilder.make(), cellTypeAttrID,
-                eda::gate::model::CellSymbol::CELL,
-                props, static_cast<uint16_t>(inputPinNames.size()),
+                eda::gate::model::CellSymbol::UNDEF,
+                it.key(), subnetBuilder.make(),
+                cellTypeAttrID, props,
+                static_cast<uint16_t>(inputPinNames.size()),
                 static_cast<uint16_t>(it.value()["output"].size()));
 
             cellTypeFFIDs.push_back(cellID);
@@ -294,10 +297,11 @@ void LibraryCells::readLibertyFile(const std::string &filename,
         } else if (it.value().contains("ffrs") && it.value()["ffrs"].get<bool>()) {
           if (inputPinNames.size() == 4) {
             eda::gate::model::CellProperties
-                props(false, false, false, false, false, false, false);
+                props(false, false, false, false, false, false, false, false,
+                      false);
 
             model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
-            model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
+            model::CellTypeAttr::get(cellTypeAttrID).props.area = it.value()["area"];
 
             SubnetBuilder subnetBuilder;
             auto in1 = subnetBuilder.addInput();
@@ -308,9 +312,10 @@ void LibraryCells::readLibertyFile(const std::string &filename,
             subnetBuilder.addOutput(dffrs);
 
             CellTypeID cellID = eda::gate::model::makeCellType(
-                it.key(), subnetBuilder.make(), cellTypeAttrID,
-                eda::gate::model::CellSymbol::CELL,
-                props, static_cast<uint16_t>(inputPinNames.size()),
+                eda::gate::model::CellSymbol::UNDEF,
+                it.key(), subnetBuilder.make(),
+                cellTypeAttrID, props,
+                static_cast<uint16_t>(inputPinNames.size()),
                 static_cast<uint16_t>(it.value()["output"].size()));
 
             cellTypeFFrsIDs.push_back(cellID);
@@ -319,10 +324,11 @@ void LibraryCells::readLibertyFile(const std::string &filename,
         } else if (it.value().contains("latch") && it.value()["latch"].get<bool>()) {
           if (inputPinNames.size() == 2) {
             eda::gate::model::CellProperties
-                props(false, false, false, false, false, false, false);
+                props(false, false, false, false, false, false, false, false,
+                      false);
 
             model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
-            model::CellTypeAttr::get(cellTypeAttrID).area = it.value()["area"];
+            model::CellTypeAttr::get(cellTypeAttrID).props.area = it.value()["area"];
 
             SubnetBuilder subnetBuilder;
             auto in1 = subnetBuilder.addInput();
@@ -331,9 +337,10 @@ void LibraryCells::readLibertyFile(const std::string &filename,
             subnetBuilder.addOutput(latch);
 
             CellTypeID cellID = eda::gate::model::makeCellType(
-                it.key(), subnetBuilder.make(), cellTypeAttrID,
-                eda::gate::model::CellSymbol::CELL,
-                props, static_cast<uint16_t>(inputPinNames.size()),
+                eda::gate::model::CellSymbol::UNDEF,
+                it.key(), subnetBuilder.make(),
+                cellTypeAttrID, props,
+                static_cast<uint16_t>(inputPinNames.size()),
                 static_cast<uint16_t>(it.value()["output"].size()));
 
             cellTypeLatchIDs.push_back(cellID);
@@ -344,92 +351,17 @@ void LibraryCells::readLibertyFile(const std::string &filename,
   }
 }
 
-void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb, std::vector<Cell*> &cells,
-    std::unordered_map<std::string, CellTypeID> &cellTypeMap) {
-  for(auto& cell : cells) {
-    uint64_t truthTable = 0;
-
-    if (cell->getInputPinsNumber() == 0 ) {
-      continue;
-    }
-
-    truthTable = 0;
-    uint64_t _1 = 1;
-    for (uint64_t i = 0; i < 64; i++) {
-      if (kitty::get_bit(*(cell->getTruthTable()), 
-          i % cell->getTruthTable()->num_bits())) {
-        truthTable |= (_1 << i);
-      }
-    }
-
-    Gate::SignalList inputs;
-    Gate::Id outputId;
-
-    model::GateSymbol customName =
-        model::GateSymbol::create(cell->getName());
-
-    auto cellNet = std::make_shared<GNet>();
-    for (unsigned i = 0; i < cell->getInputPinsNumber(); i++) {
-      const Gate::Id inputId = cellNet->addIn();
-      inputs.push_back(Gate::Signal::always(inputId));
-    }
-
-    auto gateId = cellNet->addGate(customName, inputs);
-    outputId = cellNet->addOut(gateId);
-
-    cellNet->sortTopologically();
-    
-    std::shared_ptr<GNet> dummy = cellNet;
-
-    BoundGNet::GateBindings bindings;
-    std::vector<double> delay;
-
-    for (unsigned int i = 0; i < cell->getInputPinsNumber(); i++) {
-        bindings.push_back(inputs[i].node());
-
-      
-        Pin pin = cell->getInputPin(i);
-        double pinDelay = pin.getMaxDelay();
-        delay.push_back(pinDelay);
-      }
-
-    dummy->sortTopologically();
-
-    BoundGNet::BoundGNetList bgl;
-    BoundGNet bg {dummy, bindings, {outputId}, delay, cell->getName(), cell->getArea()};
-    bgl.push_back(bg);
-
-    RWDatabase::TruthTable TT(truthTable);
-
-    auto list = arwdb->get(truthTable);
-    if (list.size() == 0) {
-       arwdb->set(TT, bgl);
-    } else {
-      list.push_back(bg);
-      arwdb->set(TT, list);
-    }
-
-    eda::gate::model::CellProperties props{0, 0, 0, 0, 0, 0, 0};
-    CellTypeID cellID = eda::gate::model::makeCellType(
-        cell->getName(), eda::gate::model::CellSymbol::CELL,
-        props, static_cast<uint16_t>(cell->getInputPinsNumber()), 
-        static_cast<uint16_t>(1));
-    cellTypeMap.insert(std::pair<std::string, CellTypeID>
-          (cell->getName(), cellID));
-  }
-}
-
-void LibraryCells::makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTypeID> &cellTypeIDs) {
+/*void LibraryCells::makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTypeID> &cellTypeIDs) {
   for(auto& cell : cells) {
     if (cell->getInputPinsNumber() == 0 ) {
       continue;
     }
 
     eda::gate::model::CellProperties
-      props(true, false, false, false, false, false, false);
+      props(true, true, false, false, false, false, false, false, false);
 
     model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
-    model::CellTypeAttr::get(cellTypeAttrID).area = cell->getArea();
+    model::CellTypeAttr::get(cellTypeAttrID).props.area = cell->getArea();
 
     MinatoMorrealeAlg minatoMorrealeAlg;
     const auto subnetID = minatoMorrealeAlg.synthesize(*cell->getTruthTable());
@@ -447,7 +379,6 @@ void LibraryCells::makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTy
     delete ptr;
   }
   cells.clear();
-}
-
+}*/
 
 } // namespace eda::gate::tech_optimizer

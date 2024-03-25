@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
+#include "gate/techmapper/sequential_mapper/sequential_mapper.h"
 
 #include <cassert>
 

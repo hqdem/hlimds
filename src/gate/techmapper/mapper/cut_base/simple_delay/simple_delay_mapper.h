@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/mapper/cut_base/cut_base_mapper.h"
+#include "gate/techmapper/mapper/cut_base/cut_base_mapper.h"
 
 #include <unordered_map>
 

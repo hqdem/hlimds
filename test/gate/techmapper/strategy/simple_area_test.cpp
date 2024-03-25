@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techoptimizer/techoptimizer.h"
-#include "gate/techoptimizer/util/get_tech_attr.h"
+#include "gate/techmapper/techmapper.h"
+#include "gate/techmapper/util/get_tech_attr.h"
 
 namespace eda::gate::tech_optimizer {
 

@@ -1,4 +1,4 @@
-#include "gate/techoptimizer/mapper/cut_base/delay_estmt/delay_estmt.h"
+#include "gate/techmapper/mapper/cut_base/delay_estmt/delay_estmt.h"
 
 #include "gtest/gtest.h"
 

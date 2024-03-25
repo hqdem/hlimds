@@ -8,7 +8,7 @@
 
 #include "gate/analyzer/simulation_estimator.h"
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
+#include "gate/techmapper/mapper/cut_base/power_map/power_map.h"
 
 namespace eda::gate::tech_optimizer {
 

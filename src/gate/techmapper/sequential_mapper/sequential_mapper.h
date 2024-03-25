@@ -9,8 +9,8 @@
 #pragma once
 
 #include "gate/model2/cell.h"
-#include "gate/techoptimizer/library/cellDB.h"
-#include "gate/techoptimizer/techoptimizer.h"
+#include "gate/techmapper/library/cellDB.h"
+#include "gate/techmapper/techmapper.h"
 
 #include <memory>
 #include <utility>

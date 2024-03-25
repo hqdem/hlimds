@@ -5,10 +5,9 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include <chrono>
 #include <iostream>
 
-#include "gate/techoptimizer/assembly.h"
+#include "gate/techmapper/assembly.h"
 
 namespace eda::gate::tech_optimizer {
 

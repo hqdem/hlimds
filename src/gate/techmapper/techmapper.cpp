@@ -8,14 +8,14 @@
 
 #include "gate/model2/celltype.h"
 #include "gate/model2/decomposer/net_decomposer.h"
-#include "gate/techoptimizer/assembly.h"
-#include "gate/techoptimizer/mapper/cut_base/genetic/genetic_mapper.h"
-#include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
-#include "gate/techoptimizer/mapper/cut_base/simple_area/simple_area_mapper.h"
-#include "gate/techoptimizer/mapper/cut_base/simple_delay/simple_delay_mapper.h"
-#include "gate/techoptimizer/sequential_mapper/sequential_mapper.h"
-#include "gate/techoptimizer/techoptimizer.h"
-#include "gate/transformer/aigmapper.h"
+#include "gate/techmapper/assembly.h"
+#include "gate/techmapper/mapper/cut_base/genetic/genetic_mapper.h"
+#include "gate/techmapper/mapper/cut_base/power_map/power_map.h"
+#include "gate/techmapper/mapper/cut_base/simple_area/simple_area_mapper.h"
+#include "gate/techmapper/mapper/cut_base/simple_delay/simple_delay_mapper.h"
+#include "gate/techmapper/sequential_mapper/sequential_mapper.h"
+#include "gate/techmapper/techmapper.h"
+#include "gate/premapper2/aigmapper.h"
 
 #include <map>
 #include <unordered_map>
@@ -90,7 +90,8 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
 NetID Techmapper::techmap(NetID netID) {
   auto& decomposer = eda::gate::model::NetDecomposer::get();
   std::vector<eda::gate::model::NetDecomposer::CellMapping> mapping;
-  std::vector<SubnetID> subnets = decomposer.decompose(netID, mapping);
+  std::vector<SubnetID> subnets;
+  decomposer.decompose(netID, subnets, mapping);
   std::vector<SubnetID> mappedSubnetsID;
 
   for (auto const &subnet : subnets) {
@@ -173,13 +174,8 @@ model::CellTypeID Techmapper::techmap(model::CellID sequenceCell,
 }
 
 SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {
-  auto startAIG = std::chrono::high_resolution_clock::now();
-  std::cout << "Convert to AIG" << std::endl;
-  transformer::AigMapper aigMapper;
+  premapper2::AigMapper aigMapper;
   const auto transformedSub  = aigMapper.transform(subnetID);
-  auto endAIG = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> AIGTime = endAIG - startAIG;
-  std::cout << "Функция AIG выполнялась " << AIGTime.count() << " секунд.\n";
   return transformedSub;
 }
 } // namespace eda::gate::tech_optimizer

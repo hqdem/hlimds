@@ -66,11 +66,7 @@ struct LibraryCells {
   LibraryCells() = default;
   //LibraryCells(const std::string &filename);
 
-  void initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
-      std::vector<Cell*> &cells,
-      std::unordered_map<std::string, CellTypeID> &cellTypeMap);
-
-  static void makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTypeID> &cellIDs);
+/*  static void makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTypeID> &cellIDs);*/
   //static void readLibertyFile(const std::string &filename, std::vector<Cell*> &cells);
   static void readLibertyFile(const std::string &filename, std::vector<CellTypeID> &cellTypeIDs,
                                      std::vector<CellTypeID> &cellTypeFFIDs,

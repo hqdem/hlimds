@@ -9,7 +9,7 @@
 
 #include "gate/model2/celltype.h"
 #include "gate/model2/subnet.h"
-#include "gate/techoptimizer/library/subnetattr.h"
+#include "gate/techmapper/library/subnetattr.h"
 
 #include "kitty/print.hpp"
 

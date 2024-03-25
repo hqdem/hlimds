@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/hard_ip_mapper/hard_ip_mapper.h"
+#include "gate/techmapper/hard_ip_mapper/hard_ip_mapper.h"
 
 #include <cassert>
 

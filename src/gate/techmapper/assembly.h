@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/mapper/bestReplacement.h"
+#include "gate/techmapper/mapper/bestReplacement.h"
 
 #include <stack>
 #include <unordered_map>

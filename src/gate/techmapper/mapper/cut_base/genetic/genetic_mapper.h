@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "gate/techoptimizer/mapper/cut_base/cut_base_mapper.h"
-#include "gate/techoptimizer/mapper/cut_base/delay_estmt/delay_estmt.h"
+#include "gate/techmapper/mapper/cut_base/cut_base_mapper.h"
+#include "gate/techmapper/mapper/cut_base/delay_estmt/delay_estmt.h"
 
 #include <unordered_map>
 

@@ -10,7 +10,7 @@
 
 #include "gate/model2/subnet.h"
 #include "gate/model2/cell.h"
-#include "gate/techoptimizer/techoptimizer.h"
+#include "gate/techmapper/techmapper.h"
 
 #include <filesystem>
 #include <cassert>

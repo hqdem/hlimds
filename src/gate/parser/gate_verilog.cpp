@@ -184,17 +184,23 @@ namespace eda::gate::parser::verilog {
   GateSymbol GateVerilogParser::symbol(const std::string &s) const {
     if (s == "not") {
       return GateSymbol::NOT;
-    } else if (s == "or") {
+    }
+    if (s == "or") {
       return GateSymbol::OR;
-    } else if (s == "xor") {
+    }
+    if (s == "xor") {
       return GateSymbol::XOR;
-    } else if (s == "nand") {
+    }
+    if (s == "nand") {
       return GateSymbol::NAND;
-    } else if (s == "nor") {
+    }
+    if (s == "nor") {
       return GateSymbol::NOR;
-    } else if (s == "xnor") {
+    }
+    if (s == "xnor") {
       return GateSymbol::XNOR;
-    } else if (s == "and") {
+    }
+    if (s == "and") {
       return GateSymbol::AND;
     }
     return GateSymbol::NOP;

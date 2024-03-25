@@ -88,6 +88,7 @@ add_executable(${TEST_TARGET}
   gate/premapper/xagmapper/xag_test.cpp
   gate/premapper/xagmapper/xag_verilog_test.cpp
   gate/premapper/xmgmapper/xmgmapper_test.cpp
+  gate/premapper2/aigmapper_test.cpp
   gate/printer/dot_test.cpp
   gate/printer/gate_verilog_printer_test.cpp
   gate/printer/graphml_test.cpp
@@ -98,7 +99,6 @@ add_executable(${TEST_TARGET}
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/tech_mapper/parser_lib_test.cpp
   gate/tech_mapper/techmap_test.cpp
-  gate/transformer/aigmapper_test.cpp
   gate/transformer/bdd_test.cpp
   gate/transformer/mutator_test.cpp
   gate/transformer/rewriter_test.cpp

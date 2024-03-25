@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <gate/transformer/aigmapper.h>
+#include <gate/premapper2/aigmapper.h>
 
-namespace eda::gate::transformer {
+namespace eda::gate::premapper2 {
 
 using SubnetID = AigMapper::SubnetID;
 using LinkList = AigMapper::LinkList;
@@ -220,4 +220,4 @@ size_t AigMapper::addMaj3(LinkList &links, bool &inv, Builder &builder) const {
   return mapOr(links, inv, 0, 0, builder);
 }
 
-} // namespace eda::gate::transformer
+} // namespace eda::gate::premapper2

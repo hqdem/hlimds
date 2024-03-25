@@ -82,6 +82,7 @@ add_library(Gate OBJECT
   premapper/premapper.cpp
   premapper/xagmapper.cpp
   premapper/xmgmapper.cpp
+  premapper2/aigmapper.cpp
   printer/dot.cpp
   printer/gate_verilog.cpp
   printer/graphml.cpp
@@ -93,7 +94,6 @@ add_library(Gate OBJECT
   techoptimizer/cut_based_tech_mapper/tech_map_visitor.cpp
   techoptimizer/tech_optimizer.cpp
   simulator2/simulator.cpp
-  transformer/aigmapper.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp

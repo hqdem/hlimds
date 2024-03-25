@@ -16,10 +16,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace eda::gate::transformer {
+namespace eda::gate::premapper2 {
 
 /// @brief Transforms a subnet to an AIG basis.
-class AigMapper : public SubnetTransformer {
+class AigMapper : public transformer::SubnetTransformer {
 public:
   using Builder    = eda::gate::model::SubnetBuilder;
   using CellIdMap  = std::unordered_map<size_t, size_t>;
@@ -64,4 +64,4 @@ protected:
   size_t addMaj3(LinkList &links, bool &inv, Builder &builder) const;
 };
 
-} // namespace eda::gate::transformer
+} // namespace eda::gate::premapper2

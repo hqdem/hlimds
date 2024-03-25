@@ -94,9 +94,10 @@ add_executable(${TEST_TARGET}
   gate/simulator2/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/techmapper/parser_lib_test.cpp
-  gate/techmapper/techmap_test.cpp
-  gate/techmapper/strategy/strategy_example.cpp
-  gate/techmapper/strategy/example_test.cpp
+  gate/techmapper/techmapper_test_util.cpp
+  gate/techmapper/strategy/genetic_test.cpp
+  gate/techmapper/strategy/simple_area_test.cpp
+  gate/techmapper/strategy/simple_delay_test.cpp
   gate/techmapper/strategy/delay_estmt/delay_test.cpp
   gate/techmapper/strategy/delay_estmt/wlm_test.cpp
   gate/transformer/aigmapper_test.cpp

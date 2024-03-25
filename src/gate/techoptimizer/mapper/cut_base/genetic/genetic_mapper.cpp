@@ -32,19 +32,16 @@ void GeneticMapper::findBest() {
   FILE *file = fopen(filePath.generic_string().c_str(), "rb");
   Group *ast = tokParser.parseLibrary(file,
                                       filePath.generic_string().c_str());
-
   AstParser parser(lib, tokParser);
   parser.run(*ast);
   fclose(file);
+
   initialization();
   startEvolution();
   saveInBestMap();
 }
 
 void GeneticMapper::initialization() {
-  //////
-  //Create gen bank for each entry
-  /////
   optimizer2::ConeBuilder coneBuilder(&model::Subnet::get(subnetID));
   auto entries = model::Subnet::get(subnetID).getEntries();
   genBank.resize(std::size(entries));
@@ -95,9 +92,6 @@ void GeneticMapper::initialization() {
     }
   }
 
-  //////
-  //Create nBasePopulation random set of cells
-  /////
 
   // and now we fill std::vector<Chromosome> nextGeneration with random chromosome
   nextGeneration.clear();
@@ -146,7 +140,6 @@ void GeneticMapper::fillChromosomeFromOutput(Chromosome& chromosome, size_t outp
       fillChromosomeFromOutput(chromosome, entryIdx);
     }
   }
-  std::cout << selectedGen->name << std::endl;
   chromosome.gens[outputIndex] = selectedGen;
 }
 

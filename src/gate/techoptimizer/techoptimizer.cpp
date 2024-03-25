@@ -83,7 +83,6 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
 
   mapper->mapping(AIGSubnet, cellDB, sdc, bestReplacementMap);
 
-  std::cout << "start to create new mapped Subnet" << std::endl;
   AssemblySubnet as;
  return as.assemblySubnet(bestReplacementMap, AIGSubnet);
 }

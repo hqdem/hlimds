@@ -13,8 +13,6 @@
 
 namespace eda::gate::tech_optimizer {
 void SimpleAreaMapper::findBest() {
-  auto startFB = std::chrono::high_resolution_clock::now();
-  std::cout << "Finding best tech cell for every cut" << std::endl;
   Subnet &subnet = Subnet::get(subnetID);
 
   for (uint16_t i = 0; i < subnet.getInNum(); i++) {
@@ -34,10 +32,6 @@ void SimpleAreaMapper::findBest() {
     }
     entryIndex += cell.more;
   }
-  auto endFB = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> FBTime = endFB - startFB;
-  std::cout << "Функция Finding best tech cell выполнялась " << FBTime.count()
-      << " секунд.\n";
   areaVec.clear();
 }
 

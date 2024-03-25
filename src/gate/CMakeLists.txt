@@ -89,12 +89,12 @@ add_library(Gate OBJECT
   printer/graphml.cpp
   printer/vcd.cpp
   simulator/simulator.cpp
-  techoptimizer/library/cell.cpp
-  techoptimizer/cut_based_tech_mapper/strategy/min_delay.cpp
-  techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.cpp
-  techoptimizer/cut_based_tech_mapper/tech_map_visitor.cpp
-  techoptimizer/tech_optimizer.cpp
   simulator2/simulator.cpp
+  techmapper/library/cell.cpp
+  techmapper/cut_based_tech_mapper/strategy/min_delay.cpp
+  techmapper/cut_based_tech_mapper/cut_based_tech_mapper.cpp
+  techmapper/cut_based_tech_mapper/tech_map_visitor.cpp
+  techmapper/tech_optimizer.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp

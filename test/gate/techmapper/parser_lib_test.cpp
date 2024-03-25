@@ -5,22 +5,23 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #include "kitty/kitty.hpp"
 
-#include "gate/techoptimizer/library/cell.h"
 #include "gate/model/gnet_test.h"
 #include "gate/optimizer/rwdatabase.h"
+#include "gate/techmapper/library/cell.h"
 #include "util/logging.h"
 
 #include "gtest/gtest.h"
 #include <filesystem>
 
 using namespace eda::gate::optimizer;
-using namespace eda::gate::tech_optimizer;
+using namespace eda::gate::techmapper;
 using namespace eda::gate::model;
 
 const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-const std::filesystem::path libertyDirrect = homePath / "test" / "data" / "gate" / "tech_mapper";
+const std::filesystem::path libertyDirrect = homePath / "test" / "data" / "gate" / "techmapper";
 
 
 bool checkLibParser(std::string liberty) {

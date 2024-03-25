@@ -10,9 +10,11 @@
 
 #include "gate/model/gnet.h"
 
-namespace eda::gate::tech_optimizer {
-  using GNet = eda::gate::model::GNet;
+namespace eda::gate::techmapper {
 
-  void read_db(const std::string &dbPath);
-  void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*/);
-} // namespace eda::gate::tech_optimizer
+using GNet = eda::gate::model::GNet;
+
+void read_db(const std::string &dbPath);
+void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*/);
+
+} // namespace eda::gate::techmapper

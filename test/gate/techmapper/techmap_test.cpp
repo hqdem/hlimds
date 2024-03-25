@@ -7,24 +7,23 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/debugger/sat_checker.h"
 #include "gate/model/examples.h"
-#include "gate/printer/dot.h"
-
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/parser_test.h"
-#include "gate/techoptimizer/tech_optimizer.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/min_delay.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
 #include "gate/premapper/mapper/mapper_test.h"
-#include "gate/debugger/sat_checker.h"
+#include "gate/printer/dot.h"
+#include "gate/techmapper/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techmapper/cut_based_tech_mapper/strategy/min_delay.h"
+#include "gate/techmapper/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/techmapper/tech_optimizer.h"
 
 #include "gtest/gtest.h"
 
 using namespace eda::gate::parser;
 using namespace eda::gate::optimizer;
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
   using GNet = eda::gate::model::GNet;
   using lorina::text_diagnostics;

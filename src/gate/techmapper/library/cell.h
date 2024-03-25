@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 using SQLiteRWDatabase = eda::gate::optimizer::SQLiteRWDatabase;
 using CellTypeID = eda::gate::model::CellTypeID;
@@ -69,7 +69,6 @@ struct LibraryCells {
 
   private:
   void readLibertyFile(const std::string &filename);
-  
 };
 
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

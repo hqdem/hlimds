@@ -7,13 +7,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/celltype.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/cut_based_tech_mapper.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/min_delay.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
-#include "gate/techoptimizer/library/cell.h"
-#include "gate/techoptimizer/tech_optimizer.h"
+#include "gate/techmapper/cut_based_tech_mapper/cut_based_tech_mapper.h"
+#include "gate/techmapper/cut_based_tech_mapper/strategy/min_delay.h"
+#include "gate/techmapper/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techmapper/library/cell.h"
+#include "gate/techmapper/tech_optimizer.h"
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 // TODO: do we indeed need it in such a format?
 // what if we use a structural matching?
@@ -83,6 +83,7 @@ void tech_optimize(GNet *net, uint approachSelector/*, Constraints &constraints*
   // TODO: checking for functional equivalence
   //functionalEquivalence
 }
-} // namespace eda::gate::tech_optimizer
+
+} // namespace eda::gate::techmapper
 
 

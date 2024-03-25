@@ -14,10 +14,10 @@
 #include "gate/optimizer/cut_storage.h"
 #include "gate/optimizer/net_substitute.h"
 #include "gate/optimizer/rwdatabase.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/replacement_struct.h"
-#include "gate/techoptimizer/cut_based_tech_mapper/strategy/strategy.h"
+#include "gate/techmapper/cut_based_tech_mapper/replacement_struct.h"
+#include "gate/techmapper/cut_based_tech_mapper/strategy/strategy.h"
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
   using GNet = eda::gate::model::GNet;
   using Net = eda::gate::model::Net;
@@ -53,4 +53,5 @@ namespace eda::gate::tech_optimizer {
         std::unordered_map<GateID, Replacement> &bestSubstitutions);
     void printNet(const Net &model2);
   };
-} // namespace eda::gate::tech_optimizer
+
+} // namespace eda::gate::techmapper

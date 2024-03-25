@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techoptimizer/library/cell.h"
 #include "gate/optimizer/rwdatabase.h"
 #include "gate/optimizer/visitor.h"
+#include "gate/techmapper/library/cell.h"
 
 #include "nlohmann/json.hpp"
 
@@ -18,7 +18,7 @@
 
 using json = nlohmann::json;
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 using RWDatabase = eda::gate::optimizer::RWDatabase;
 using Gate = eda::gate::model::Gate;
@@ -205,6 +205,6 @@ void LibraryCells::initializeLibraryRwDatabase(SQLiteRWDatabase *arwdb,
     cellTypeMap.insert(std::pair<std::string, CellTypeID>
           (cell->getName(), cellID));
   }
-
 }
-} // namespace eda::gate::tech_optimizer
+
+} // namespace eda::gate::techmapper

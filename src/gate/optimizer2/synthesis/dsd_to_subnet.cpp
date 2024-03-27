@@ -10,7 +10,7 @@
 
 namespace eda::gate::optimizer2::synthesis {
 
-SubnetId DsdToSubnet::synthesize(const BddWithDdManager &pair,
+SubnetId DsdSynthesizer::synthesize(const BddWithDdManager &pair,
                                  uint16_t maxArity) {
   DSDNode *dsd;
   DSDManager *dmanager;
@@ -44,7 +44,7 @@ SubnetId DsdToSubnet::synthesize(const BddWithDdManager &pair,
   return ret;
 }
 
-SubnetId DsdToSubnet::synthesize(const TruthTable &table, uint16_t maxArity) {
+SubnetId DsdSynthesizer::synthesize(const TruthTable &table, uint16_t maxArity) {
   /* Initial subnet */
   MMSynthesizer k;
   const auto &subnet = Subnet::get(k.synthesize(table, maxArity));
@@ -84,7 +84,7 @@ SubnetId DsdToSubnet::synthesize(const TruthTable &table, uint16_t maxArity) {
   return ret;
 }
 
-Link DsdToSubnet::buildNet(DSDNode *dsd,
+Link DsdSynthesizer::buildNet(DSDNode *dsd,
                            const DSDManager *dmanager,
                            SubnetBuilder &subnetBuilder,
                            const LinkList &inputsList,
@@ -179,7 +179,7 @@ bool isDependentOnVariable(const DdManager* manager,
       isDependentOnVariable(manager, Cudd_E(bdd), variableIndex);
 }
 
-Link DsdToSubnet::getLinkToCorrectActual(const DSDNode *dsd,
+Link DsdSynthesizer::getLinkToCorrectActual(const DSDNode *dsd,
                                          const DdManager *manager,
                                          uint32_t variableIndex,
                                          const LinkList &inputsList) {
@@ -200,7 +200,7 @@ Link DsdToSubnet::getLinkToCorrectActual(const DSDNode *dsd,
   exit(EXIT_FAILURE);
 }
 
-Link DsdToSubnet::decomposePrimeGate(DSDNode *dsd,
+Link DsdSynthesizer::decomposePrimeGate(DSDNode *dsd,
                                      const DSDManager *dmanager,
                                      SubnetBuilder &subnetBuilder,
                                      const LinkList &inputsList) {
@@ -219,7 +219,7 @@ Link DsdToSubnet::decomposePrimeGate(DSDNode *dsd,
   return ret;
 }
 
-Link DsdToSubnet::recursiveBddStep(DdNode *bdd,
+Link DsdSynthesizer::recursiveBddStep(DdNode *bdd,
                                    const DdManager *manager,
                                    SubnetBuilder &subnetBuilder,
                                    const LinkList &inputsList,

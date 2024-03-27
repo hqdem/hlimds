@@ -58,7 +58,7 @@ struct Candidate {
  * The algorithm based on the article "Synthesis of combinational logic using
  * three-input majority gates" by Sheldon B. Akers, Jr. (1962).
 */
-class AkersAlgorithm : public Synthesizer<kitty::dynamic_truth_table> {
+class AkersSynthesizer : public Synthesizer<kitty::dynamic_truth_table> {
 
 public:
 
@@ -71,7 +71,7 @@ public:
   using CanditateList = std::map<std::set<unsigned>, std::vector<unsigned>>;
   using Columns       = std::vector<unsigned>;
   using EssentialEdge =
-    std::unordered_map<unsigned, std::vector<std::pair<uint32_t, uint32_t>>>;
+      std::unordered_map<unsigned, std::vector<std::pair<uint32_t, uint32_t>>>;
   using RowNums       = std::unordered_set<uint32_t>;
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
@@ -84,7 +84,7 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Empty constructor.
-  AkersAlgorithm() {}
+  AkersSynthesizer() {}
 
   //===--------------------------------------------------------------------===//
   // Synthesize Methods

@@ -23,11 +23,11 @@
 #include "kitty/dynamic_truth_table.hpp"
 
 namespace eda::gate::optimizer2::synthesis {
-  class AkersAlgorithm;
+  class AkersSynthesizer;
 } // namespace eda::gate::optimizer2::synthesis
 
 namespace eda::gate::optimizer::resynthesis {
-  class AkersAlgorithm;
+  class AkersResynthesizer;
 } // namespace eda::gate::optimizer::resynthesis
 
 namespace eda::gate::optimizer2::synthesis {
@@ -38,8 +38,8 @@ constexpr unsigned varLimit = 31;
  * \brief Implements a unitized truth table for Akers algorithm.
  */
 class UnitizedTable {
-  friend class AkersAlgorithm;
-  friend class eda::gate::optimizer::resynthesis::AkersAlgorithm;
+  friend class AkersSynthesizer;
+  friend class eda::gate::optimizer::resynthesis::AkersResynthesizer;
 
 public:
 

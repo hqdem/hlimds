@@ -39,7 +39,7 @@ TEST(ResynthesizerTest, SimpleTest) {
     const auto oldID = randomSubnet(nIn, nOut, nCell, minArity, maxArity);
     const auto oldTable = getTruthTable(oldID);
   
-    synthesis::AkersAlgorithm synthesizer;
+    synthesis::AkersSynthesizer synthesizer;
 
     const auto newID = synthesizer.synthesize(oldTable);
     const auto newTable = getTruthTable(newID);

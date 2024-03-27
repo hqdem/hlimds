@@ -16,10 +16,10 @@
 #include <ctime>
 #include <string>
 
-using AkersAlgorithm = eda::gate::optimizer2::synthesis::AkersAlgorithm;
-using KittyTT        = kitty::dynamic_truth_table;
-using MIGnetwork     = mockturtle::mig_network;
-using Subnet         = eda::gate::model::Subnet;
+using AkersSynthesizer = eda::gate::optimizer2::synthesis::AkersSynthesizer;
+using KittyTT          = kitty::dynamic_truth_table;
+using MIGnetwork       = mockturtle::mig_network;
+using Subnet           = eda::gate::model::Subnet;
 
 //===----------------------------------------------------------------------===//
 // Convenience Methods
@@ -48,7 +48,7 @@ TEST(Akers62_2, Example1) {
   KittyTT care(3);
   initializeTT2(func, care, "11011110", "01101111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnet = alg.synthesize(func, care);
 
   std::cout << Subnet::get(subnet) << std::endl;
@@ -63,7 +63,7 @@ TEST(Akers62_2, Example2) {
   initializeTT2(func, care, "0010001100101010",
                             "1111111111111111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnet = alg.synthesize(func, care);
 
   std::cout << Subnet::get(subnet) << std::endl;
@@ -81,7 +81,7 @@ TEST(AkersTest2, NOT1) {
   KittyTT care(1);
   initializeTT2(func, care, "01", "11");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -96,7 +96,7 @@ TEST(AkersTest2, One3) {
   KittyTT care(3);
   initializeTT2(func, care, "11111111", "11111111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -111,7 +111,7 @@ TEST(AkersTest2, Zero3) {
   KittyTT care(3);
   initializeTT2(func, care, "00000000", "11111111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -126,7 +126,7 @@ TEST(AkersTest2, OR2) {
   KittyTT care(2);
   initializeTT2(func, care, "1110", "1111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -141,7 +141,7 @@ TEST(AkersTest2, AND2) {
   KittyTT care(2);
   initializeTT2(func, care, "1000", "1111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -156,7 +156,7 @@ TEST(AkersTest2, XOR2) {
   KittyTT care(2);
   initializeTT2(func, care, "0110", "1111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -171,7 +171,7 @@ TEST(AkersTest2, XOR3) {
   KittyTT care(3);
   initializeTT2(func, care, "01101001", "11111111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -186,7 +186,7 @@ TEST(AkersTest2, XOR4) {
   KittyTT care(4);
   initializeTT2(func, care, "0110100110010110", "1111111111111111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -205,7 +205,7 @@ TEST(AkersTest2, MAJ3) {
   KittyTT care(3);
   initializeTT2(func, care, "11101000", "11111111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -221,7 +221,7 @@ TEST(AkersTest2, MAJ5) {
   initializeTT2(func, care, "11111110111010001110100010000000",
                             "11111111111111111111111111111111");
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func, care);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -239,7 +239,7 @@ TEST(AkersTest2, RandomFunc5) {
   KittyTT func(5);
   kitty::create_random(func);
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -253,7 +253,7 @@ TEST(AkersTest2, RandomFunc6) {
   KittyTT func(6);
   kitty::create_random(func);
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -267,7 +267,7 @@ TEST(AkersTest2, RandomFunc7) {
   KittyTT func(7);
   kitty::create_random(func);
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 
@@ -281,7 +281,7 @@ TEST(AkersTest2, RandomFunc8) {
   KittyTT func(8);
   kitty::create_random(func);
 
-  AkersAlgorithm alg;
+  AkersSynthesizer alg;
   const auto &subnetId = alg.synthesize(func);
   const auto &subnet = Subnet::get(subnetId);
 

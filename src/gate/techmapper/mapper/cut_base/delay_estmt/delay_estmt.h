@@ -48,7 +48,16 @@ public:
   };
 
   /*
-   *  delayEstimation is calling Parser to look for
+   *  timingVisitor gets values 
+   *   from Timing's LookUp-Tables
+   */
+  float timingVisitor(const Timing &timing,
+                      std::string dtype,
+                      float& input_net_transition,
+                      float& total_output_net_capacitance );
+
+  /*
+   *  delayEstimation calls Parser to look for
    *  the concrete cell's timing values.
    */
   void delayEstimation(std::string& cell_name,
@@ -75,10 +84,6 @@ public:
     float capacitance;
   };
 
-  float timingVisitor(const Timing &timing,
-                      std::string dtype,
-                      float& input_net_transition,
-                      float& total_output_net_capacitance );
 
   float interpolation(float x0, float y0,
                       float x1, float x2,
@@ -131,7 +136,7 @@ private:
   std::string wire_load_name;
 
   // Resistance, Capacitance, Area, extrapolation slope
-  float r, c/*, area, slope TODO*/;
+  float r, c, slope;
   std::pair<size_t, float> fanout_length[6];
   std::pair<size_t, float> fanout_resistance[6];
   std::pair<size_t, float> fanout_capacitance[6];

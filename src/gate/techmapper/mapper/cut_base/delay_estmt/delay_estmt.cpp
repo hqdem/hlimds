@@ -26,8 +26,8 @@ using std::vector;
 
 WLM::WLM() :
   wire_load_name("sky"),
-  r(fudge * 0.08), c(fudge * 0.00002)/*,
-  area(1), slope(8.3631) TODO*/ {
+  r(fudge * 0.08), c(fudge * 0.00002),
+  slope(8.3631) {
   /* Capacitance is 0.02ff/micron for avg metal         */
   /* Resistance is 80 m-ohm/square, in kohm units     */
   /* (remember that our capacitance unit is 1.0pf)     */
@@ -36,8 +36,8 @@ WLM::WLM() :
 }
 
 WLM::WLM(string name) :
-  r(fudge * 0.004), c(fudge * 0.2)/*,
-  area(1), slope(6.2836) TODO*/ {
+  r(fudge * 0.004), c(fudge * 0.2),
+  slope(6.2836) {
 
   setWireLoadModel(name);
 }
@@ -97,25 +97,34 @@ void WLM::setWireLoadModel(string wlm_name) {
 float WLM::getLength(size_t& fanout_count) {
   if ((fanout_count > 0) && (fanout_count < 6))
     return fanout_length[fanout_count-1].second;
-  else
-    return 0;
-  // TODO: make an extrapolation
+  else if (fanout_count > 6)
+    return fanout_length[5].second + (fanout_count - 6) * slope;
+
+  std::cerr << "Uncorrect fanout_count\n";
+  return 0;
 }
 
 float WLM::getFanoutCap(size_t& fanout_count) {
   if ((fanout_count > 0) && (fanout_count < 6))
     return fanout_capacitance[fanout_count-1].second;
-  else
-    return 0;
-  // TODO: make an extrapolation
+  else if (fanout_count > 6) {
+    float length = fanout_length[5].second + (fanout_count - 6) * slope;
+    return length * c;
+  }
+  
+  std::cerr << "Uncorrect fanout_count\n";
+  return 0;
 }
 
 float WLM::getFanoutRes(size_t& fanout_count) {
   if ((fanout_count > 0) && (fanout_count < 6))
     return fanout_resistance[fanout_count-1].second;
-  else
-    return 0;
-  // TODO: make an extrapolation
+  else if (fanout_count > 6) {
+    float length = fanout_length[5].second + (fanout_count - 6) * slope;
+    return length * r;
+  }
+  std::cerr << "Uncorrect fanout_count\n";
+  return 0;
 }
 
 /// Inter-/Extra-polation
@@ -137,7 +146,7 @@ float interpolation(float x0, float y0,
   return T00;
 }
 
-float timingVisitor(const Timing &timing,
+float NLDM::timingVisitor(const Timing &timing,
         string dtype,
         float& input_net_transition,
         float& total_output_net_capacitance) {
@@ -158,6 +167,12 @@ float timingVisitor(const Timing &timing,
     temp = lut->getValues();
     ind_1 = -1, ind_2 = -1;
     ivar = false;
+
+    //===-----------------------------------------------------------------===//
+    //  Assigning values from LookUp-Tables
+    //===-----------------------------------------------------------------===//
+
+    /// FOUND VALUES
     for (const auto &it : (*lut)) {
       if (!ivar && (std::find(it.values.begin(), it.values.end(),
           input_net_transition) == std::end(it.values))) {
@@ -230,7 +245,7 @@ float timingVisitor(const Timing &timing,
       }
     }
   }
-  return -1; // TODO
+  return -1;
 }
 
 void NLDM::delayEstimation(string& cell_name,
@@ -248,6 +263,7 @@ void NLDM::delayEstimation(string& cell_name,
     //===---------------------------------------------------------------===//
     std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
     capacitance = 0;
+    float checker = 0;
 
     //===---------------------------------------------------------------===//
     //  Call parser
@@ -269,14 +285,26 @@ void NLDM::delayEstimation(string& cell_name,
     for (const Pin &pin : (*cell).getPins()) {
       capacitance += pin.getFloatAttribute("capacitance", 0);
       for (const Timing &timing : pin.getTimings()) {
-        cfall.push_back(timingVisitor(timing,"cell_fall",
-          input_net_transition, total_output_net_capacitance));
-        crise.push_back(timingVisitor(timing,"cell_rise",
-          input_net_transition, total_output_net_capacitance));
-        tfall.push_back(timingVisitor(timing,"fall_transition",
-          input_net_transition, total_output_net_capacitance));
-        trise.push_back(timingVisitor(timing,"rise_transition",
-          input_net_transition, total_output_net_capacitance));
+        checker = timingVisitor(timing,"cell_fall",
+          input_net_transition, total_output_net_capacitance);
+        if (checker > 0) {
+          cfall.push_back(timingVisitor(timing,"cell_fall",
+            input_net_transition, total_output_net_capacitance));
+          crise.push_back(timingVisitor(timing,"cell_rise",
+            input_net_transition, total_output_net_capacitance));
+          tfall.push_back(timingVisitor(timing,"fall_transition",
+            input_net_transition, total_output_net_capacitance));
+          trise.push_back(timingVisitor(timing,"rise_transition",
+            input_net_transition, total_output_net_capacitance));
+        }
+        else {
+          std::cerr << "Error occured in NLDM::timingVisitor.\n";
+          std::cerr << "Filling values with zeros.\n";
+          cfall.push_back(0);
+          crise.push_back(0);
+          tfall.push_back(0);
+          trise.push_back(0);
+        }
       }
     }
 
@@ -300,22 +328,36 @@ void NLDM::delayEstimation(string& cell_name,
   //===---------------------------------------------------------------===//
   std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
   capacitance = 0;
+  float checker = 0;
 
   //===---------------------------------------------------------------===//
   //  Delay and Slew estimation
   //===---------------------------------------------------------------===//
   const Cell *cell = lib.getCell(cell_name);
+  
   for (const Pin &pin : (*cell).getPins()) {
     capacitance += pin.getFloatAttribute("capacitance", 0);
     for (const Timing &timing : pin.getTimings()) {
-      cfall.push_back(timingVisitor(timing,"cell_fall",
-        input_net_transition, total_output_net_capacitance));
-      crise.push_back(timingVisitor(timing,"cell_rise",
-        input_net_transition, total_output_net_capacitance));
-      tfall.push_back(timingVisitor(timing,"fall_transition",
-        input_net_transition, total_output_net_capacitance));
-      trise.push_back(timingVisitor(timing,"rise_transition",
-        input_net_transition, total_output_net_capacitance));
+      checker = timingVisitor(timing,"cell_fall",
+        input_net_transition, total_output_net_capacitance);
+      if (checker > 0) {
+        cfall.push_back(timingVisitor(timing,"cell_fall",
+          input_net_transition, total_output_net_capacitance));
+        crise.push_back(timingVisitor(timing,"cell_rise",
+          input_net_transition, total_output_net_capacitance));
+        tfall.push_back(timingVisitor(timing,"fall_transition",
+          input_net_transition, total_output_net_capacitance));
+        trise.push_back(timingVisitor(timing,"rise_transition",
+          input_net_transition, total_output_net_capacitance));
+      }
+      else {
+        std::cerr << "Error occured in NLDM::timingVisitor.\n";
+        std::cerr << "Filling values with zeros.\n";
+        cfall.push_back(0);
+        crise.push_back(0);
+        tfall.push_back(0);
+        trise.push_back(0);
+      }
     }
   }
 

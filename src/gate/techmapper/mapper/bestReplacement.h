@@ -31,7 +31,7 @@ namespace eda::gate::tech_optimizer {
     }
 
     // Entry idx for connecting the best cut in the initial subnet
-    std::unordered_set<uint64_t> entryIDxs;
+    std::vector<uint64_t> entryIDxs;
 
     // Entry idx in mapped Subnet
     size_t cellIDInMappedSubnet = ULLONG_MAX;

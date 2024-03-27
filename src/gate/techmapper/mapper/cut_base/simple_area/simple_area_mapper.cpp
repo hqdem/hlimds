@@ -47,7 +47,11 @@ float SimpleAreaMapper::calculateArea(const std::unordered_set<uint64_t> &entryI
       }
     }
   }
-  areaVec[currnetEntry] = BestReplacementArea{area, incomingEntries};
+  std::vector<EntryIndex> inEntry;
+  for (const auto &in : incomingEntries) {
+    inEntry.push_back(in);
+  }
+  areaVec[currnetEntry] = BestReplacementArea{area, inEntry};
   return area;
 }
 
@@ -75,11 +79,14 @@ void SimpleAreaMapper::saveBest(
         if (area < bestArea) {
           bestArea = area;
           bestSimpleReplacement.subnetID = currentSubnetID;
-          bestSimpleReplacement.entryIDxs = cut.entryIdxs;
+          for (const auto &in : cut.entryIdxs) {
+            bestSimpleReplacement.entryIDxs.push_back(in);
+          }
         }
       }
     }
   }
+
   areaVec[entryIndex] = {bestArea, bestSimpleReplacement.entryIDxs};
   assert(!bestSimpleReplacement.entryIDxs.empty());
   (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;

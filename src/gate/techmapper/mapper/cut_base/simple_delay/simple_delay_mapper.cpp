@@ -108,7 +108,9 @@ void SimpleDelayMapper::saveBest(
         if (arrivalTime < bestArrivalTime) {
           bestArrivalTime = arrivalTime;
           bestSimpleReplacement.subnetID = currentSubnetID;
-          bestSimpleReplacement.entryIDxs = cut.entryIdxs;
+          for (const auto &in : cut.entryIdxs) {
+            bestSimpleReplacement.entryIDxs.push_back(in);
+          }
         }
         delayVec[entryIndex] = {arrivalTime};
       }

@@ -41,7 +41,7 @@ void CutBaseMapper::addOneToTheMap(EntryIndex entryIndex) {
 void CutBaseMapper::addOutToTheMap(EntryIndex entryIndex,
                                    const model::Subnet::Cell &cell) {
   BestReplacement bestReplacement{false, true};
-  bestReplacement.entryIDxs.insert(cell.link[0].idx);
+  bestReplacement.entryIDxs.push_back(cell.link[0].idx);
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 } // namespace eda::gate::tech_optimizer

@@ -80,7 +80,9 @@ namespace eda::gate::tech_optimizer {
 
     BestReplacement bestRepl;
     computedLevel[entryIndex] = cutBestLevel; // setLevel(n, getLevel(cut))
-    bestRepl.entryIDxs =cutBest->entryIdxs;
+    for (const auto &in : cutBest->entryIdxs) {
+      bestRepl.entryIDxs.push_back(in);
+    }
     bestRepl.subnetID = techSubnetId;
     return bestRepl;
   }
@@ -162,7 +164,9 @@ namespace eda::gate::tech_optimizer {
             bestTechCellSubnetID = techCellSubnetID;
           }
         }
-        (*bestReplacementMap)[entryIndex].entryIDxs = bestCut.entryIdxs;
+        for (const auto &in : bestCut.entryIdxs) {
+          (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
+        }
         (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
       }
       entryIndex += cell.more;

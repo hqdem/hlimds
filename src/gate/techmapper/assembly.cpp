@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include <iostream>
+#include <cassert>
 
 #include "gate/techmapper/assembly.h"
 
@@ -31,6 +32,7 @@ SubnetID AssemblySubnet::assemblySubnet(std::unordered_map<uint64_t, BestReplace
 
   while (!stack.empty()) {
     EntryIndex currentEntryIDX = stack.top();
+    assert(bestReplacementMap->find(currentEntryIDX) != bestReplacementMap->end());
     if (bestReplacementMap->at(currentEntryIDX).cellIDInMappedSubnet != ULLONG_MAX) {
       stack.pop();
       continue;
@@ -70,6 +72,7 @@ void AssemblySubnet::addInputCells() {
 
 void AssemblySubnet::addOutputCells() {
   for (const auto idx : outID) {
+    assert(bestReplacementMap->find(idx) != bestReplacementMap->end());
     auto input = bestReplacementMap->at(idx).entryIDxs;
     model::Subnet::Link link(bestReplacementMap->at
         (*(input.begin())).cellIDInMappedSubnet);
@@ -82,6 +85,7 @@ model::Subnet::LinkList AssemblySubnet::createLinkList(EntryIndex currentEntryID
   model::Subnet::LinkList linkList;
   for (const auto &idx : bestReplacementMap->at(
       currentEntryIDX).entryIDxs) {
+    assert(bestReplacementMap->find(idx) != bestReplacementMap->end());
     if (bestReplacementMap->at(idx).cellIDInMappedSubnet == ULLONG_MAX) {
       return {}; // Return empty list to indicate not ready
     }

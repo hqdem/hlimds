@@ -68,7 +68,7 @@ void SimpleDelayMapper::saveBest(
 
   delay_estimation::DelayEstimator d1;
 
-  std::string file_name = "test/data/gate/tech_mapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
+  std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
 
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path filePath = homePath / file_name;

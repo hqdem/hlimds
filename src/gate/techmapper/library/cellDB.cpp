@@ -83,7 +83,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     if (needPower) {
       const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
       const std::filesystem::path jsonPath =
-          homePath / "test" / "data" / "gate" / "tech_mapper" / "liberty.json";
+          homePath / "test" / "data" / "gate" / "techmapper" / "liberty.json";
       std::ifstream file(jsonPath.string());
       nlohmann::json j;
       file >> j;

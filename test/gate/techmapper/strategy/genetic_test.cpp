@@ -22,6 +22,12 @@ TEST(TechmapGeneticTest, SimpleSubnet) {
   std::cout << getArea(mappedSubnetId) << std::endl;
 }
 
+TEST(TechmapGeneticTest, GraphMLSubnet) {
+  std::string fileName = "simple_spi_orig";
+  SubnetID mappedSubnetId = graphMLMapping(geneticMapperType, fileName);
+  std::cout << getArea(mappedSubnetId) << std::endl;
+}
+
 TEST(TechmapGeneticTest, DISABLED_GraphMLSubnet) {
   std::string fileName = "aes_orig";
   SubnetID mappedSubnetId = graphMLMapping(geneticMapperType, fileName);

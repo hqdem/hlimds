@@ -2,6 +2,7 @@
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/techmapper.h"
 #include "gate/techmapper/util/get_tech_attr.h"
+#include "gate/techmapper/util/get_statistic.h"
 
 namespace eda::gate::tech_optimizer {
 
@@ -20,11 +21,13 @@ TEST(TechmapAreaTest, SimpleORSubnet) {
 TEST(TechmapAreaTest, SimpleSubnet) {
   SubnetID mappedSubnetId = andNotMapping(areaMapperType);
   std::cout << getArea(mappedSubnetId) << std::endl;
+  printStatistic(mappedSubnetId, "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib");
 }
 
 TEST(TechmapAreaTest, GraphMLSubnet) {
   std::string fileName = "simple_spi_orig";
   SubnetID mappedSubnetId = graphMLMapping(areaMapperType, fileName);
+  std::cout << getArea(mappedSubnetId) << std::endl;
   std::cout << getArea(mappedSubnetId) << std::endl;
 }
 

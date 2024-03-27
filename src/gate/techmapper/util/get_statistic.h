@@ -19,7 +19,7 @@
 
 namespace eda::gate::tech_optimizer {
 
-inline float getStatistic(model::SubnetID subnetID, std::string file_name) {
+inline void printStatistic(model::SubnetID subnetID, std::string file_name) {
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path filePath = homePath / file_name;
 
@@ -32,19 +32,21 @@ inline float getStatistic(model::SubnetID subnetID, std::string file_name) {
   parser.run(*ast);
   fclose(file);
 
+  //auto *cells = lib.getCells;
 
-}
-
-inline float getArea(model::SubnetID subnetID) {
-  float area = 0;
-  auto entr = model::Subnet::get(subnetID).getEntries();
-  for (uint64_t entryIndex = 0; entryIndex < std::size(entr); entryIndex++) {
-    if (!entr[entryIndex].cell.isIn() && !entr[entryIndex].cell.isOut() ) {
-      area += entr[entryIndex].cell.getType().getAttr().props.area;
-    }
-    entryIndex += entr[entryIndex].cell.more;
+  std::unordered_map<std::string, int> statistic;
+  for (const auto& cell : lib.getCells()) {
+    statistic[std::string(cell.getName())] = 0;
   }
-  return area;
+  const auto &entries = model::Subnet::get(subnetID).getEntries();
+  for (int i = 0; i < entries.size(); i++) {
+    auto cellName = entries[i].cell.getType().getName();
+    if (statistic.find(cellName) != statistic.end() ) {
+      statistic[cellName] ++;
+    }
+  }
+  for (const auto& pair : statistic) {
+    std::cout << pair.first << ": " << pair.second << std::endl;
+  }
 }
-
 } // namespace eda::gate::tech_optimizer

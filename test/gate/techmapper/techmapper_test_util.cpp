@@ -29,7 +29,7 @@ using SubnetID   = eda::gate::model::SubnetID;
 namespace eda::gate::tech_optimizer {
 
 const std::string libertyPath = std::string(getenv("UTOPIA_HOME"))
-                                 + "/test/data/gate/tech_mapper";
+                                 + "/test/data/gate/techmapper";
 SDC sdc{100000000, 10000000000};
 
 SubnetID parseGraphML(std::string fileName) {
@@ -65,7 +65,7 @@ SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
 void printVerilog(SubnetID subnet) {
   eda::gate::model::ModelPrinter& verilogPrinter =
       eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
-  std::ofstream outFile("test/data/gate/tech_mapper/print/techmappedNet.v");
+  std::ofstream outFile("test/data/gate/techmapper/print/techmappedNet.v");
   verilogPrinter.print(outFile,
                        model::Subnet::get(subnet),
                        "techmappedNet");

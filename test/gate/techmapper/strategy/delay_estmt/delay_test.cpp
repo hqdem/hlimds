@@ -15,7 +15,7 @@ using std::filesystem::path;
 using namespace eda::gate::tech_optimizer::delay_estimation;
 
 TEST(DelayEstmt, firstTest) {
-  std::string file_name = "test/data/gate/tech_mapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
+  std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
   
   const path homePath = std::string(getenv("UTOPIA_HOME"));
   const path filePath = homePath / file_name;

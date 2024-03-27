@@ -17,7 +17,7 @@ using namespace eda::gate::optimizer;
 using namespace eda::gate::tech_optimizer;
 using namespace eda::gate::model;
 
-std::string techMapPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/tech_mapper";
+std::string techMapPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/techmapper";
 
 bool checkLibParser(std::string libertyPath) {
   //const std::string pathToLiberty = libertyPath + "/liberty";

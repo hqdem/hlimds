@@ -49,10 +49,14 @@ inline void printStatistic(model::SubnetID subnetID, std::string file_name) {
     nWires += entries[i].cell.getInPlaceLinks().size() + entries[i].cell.more;
     i += entries[i].cell.more;
   }
-  std::cout << "Count of Cells = " << nCells << std::endl;
-  std::cout << "Count of Wires = " << nWires << std::endl;
+  std::cout << "Printing statistics:" << std::endl;
+  std::cout << "   Number of wires: " << std::setw(10) << nWires << std::endl;
+  std::cout << "   Number of cells: " << std::setw(10) << nCells << std::endl;
   for (const auto& pair : statistic) {
-    std::cout << pair.first << ": " << pair.second << std::endl;
+    if (pair.second != 0)
+      std::cout << "     " <<
+        std::left << std::setw(36) << pair.first <<
+        std::right << std::setw(8) << pair.second << std::endl;
   }
 }
 } // namespace eda::gate::tech_optimizer

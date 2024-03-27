@@ -69,12 +69,14 @@ LinkList AigMapper::getNewLinks(const CellIdMap &oldToNew, size_t idx,
 
     const auto &cell = cells[oldId].cell;
     const auto symbol = cell.getSymbol();
+
     bool isZero = ((symbol == CellSymbol::ZERO) && !link.inv) ||
                   ((symbol == CellSymbol::ONE) && link.inv);
-    bool isOne = ((symbol == CellSymbol::ONE) && !link.inv) ||
-                 ((symbol == CellSymbol::ZERO) && link.inv);
+    bool isOne  = ((symbol == CellSymbol::ONE) && !link.inv) ||
+                  ((symbol == CellSymbol::ZERO) && link.inv);
+
     if (isZero) n0++;
-    if (isOne) n1++;
+    if (isOne ) n1++;
 
     const auto search = oldToNew.find(oldId);
     assert(search != oldToNew.end() && "Old cell ID not found");
@@ -96,7 +98,13 @@ size_t AigMapper::mapIn(Builder &builder) const {
 
 size_t AigMapper::mapOut(const LinkList &links, Builder &builder) const {
   assert(links.size() == 1 && "Only single input is allowed in OUT cell");
-  return builder.addOutput(links.front()).idx;
+  Link link = links.front();
+
+  if (link.inv) {
+    link = builder.addCell(CellSymbol::BUF, links);
+  }
+
+  return builder.addOutput(link).idx;
 }
 
 size_t AigMapper::mapVal(bool val, Builder &builder) const {

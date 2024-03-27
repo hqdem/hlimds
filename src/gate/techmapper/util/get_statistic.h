@@ -32,7 +32,8 @@ inline void printStatistic(model::SubnetID subnetID, std::string file_name) {
   parser.run(*ast);
   fclose(file);
 
-  //auto *cells = lib.getCells;
+  int nWires = 0;
+  int nCells = 0;
 
   std::unordered_map<std::string, int> statistic;
   for (const auto& cell : lib.getCells()) {
@@ -43,8 +44,13 @@ inline void printStatistic(model::SubnetID subnetID, std::string file_name) {
     auto cellName = entries[i].cell.getType().getName();
     if (statistic.find(cellName) != statistic.end() ) {
       statistic[cellName] ++;
+      nCells++;
     }
+    nWires += entries[i].cell.getInPlaceLinks().size() + entries[i].cell.more;
+    i += entries[i].cell.more;
   }
+  std::cout << "Count of Cells = " << nCells << std::endl;
+  std::cout << "Count of Wires = " << nWires << std::endl;
   for (const auto& pair : statistic) {
     std::cout << pair.first << ": " << pair.second << std::endl;
   }

@@ -374,6 +374,13 @@ public:
     strash.reserve(n);
   }
 
+  SubnetBuilder(SubnetID subnetID) {
+    const auto &subnet = Subnet::get(subnetID);
+    const auto inputs = addInputs(subnet.getInNum());
+    const auto outputs = addSubnet(subnetID, inputs);
+    addOutputs(outputs);
+  }
+
   /// Returns the constant reference to the i-th entry.
   const Subnet::Entry &getEntry(size_t i) const {
     return entries[i];

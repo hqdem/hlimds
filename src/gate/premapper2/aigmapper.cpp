@@ -10,14 +10,13 @@
 
 namespace eda::gate::premapper2 {
 
-using SubnetID = AigMapper::SubnetID;
-using LinkList = AigMapper::LinkList;
+std::unique_ptr<AigMapper::SubnetBuilder> AigMapper::make(
+    const SubnetID subnetID) {
+  auto builder = std::make_unique<SubnetBuilder>();
 
-SubnetID AigMapper::transform(SubnetID id) {
-  Builder builder;
   CellIdMap oldToNew;
   InvCells toInvert;
-  const auto &oldSubnet = Subnet::get(id);
+  const auto &oldSubnet = Subnet::get(subnetID);
   const auto cells = oldSubnet.getEntries();
   for (size_t i = 0; i < oldSubnet.size(); ++i) {
     const auto &cell = cells[i].cell;
@@ -29,7 +28,7 @@ SubnetID AigMapper::transform(SubnetID id) {
                                  n0, n1, toInvert);
 
     bool inv = false;
-    const size_t cellId = mapCell(symbol, links, inv, n0, n1, builder);
+    const size_t cellId = mapCell(symbol, links, inv, n0, n1, *builder);
     oldToNew[i] = cellId;
     if (inv) {
       toInvert.insert(cellId);
@@ -38,11 +37,11 @@ SubnetID AigMapper::transform(SubnetID id) {
     i += cell.more;
   }
 
-  return builder.make();
+  return builder;
 }
 
 size_t AigMapper::mapCell(CellSymbol symbol, LinkList &links, bool &inv,
-                          size_t n0, size_t n1, Builder &builder) const {
+                          size_t n0, size_t n1, SubnetBuilder &builder) const {
 
   switch (symbol) {
     case CellSymbol::IN   : return mapIn (                    builder);
@@ -58,11 +57,13 @@ size_t AigMapper::mapCell(CellSymbol symbol, LinkList &links, bool &inv,
   }
 }
 
-LinkList AigMapper::getNewLinks(const CellIdMap &oldToNew, size_t idx,
-                                const Subnet &oldSubnet, const Entries &cells,
-                                size_t &n0, size_t &n1,
-                                InvCells &toInvert) const {
-
+AigMapper::LinkList AigMapper::getNewLinks(const CellIdMap &oldToNew,
+                                           size_t idx,
+                                           const Subnet &oldSubnet,
+                                           const Entries &cells,
+                                           size_t &n0,
+                                           size_t &n1,
+                                           InvCells &toInvert) const {
   LinkList links = oldSubnet.getLinks(idx);
   for (auto &link : links) {
     const size_t oldId = link.idx;
@@ -92,11 +93,11 @@ LinkList AigMapper::getNewLinks(const CellIdMap &oldToNew, size_t idx,
   return links;
 }
 
-size_t AigMapper::mapIn(Builder &builder) const {
+size_t AigMapper::mapIn(SubnetBuilder &builder) const {
   return builder.addInput().idx;
 }
 
-size_t AigMapper::mapOut(const LinkList &links, Builder &builder) const {
+size_t AigMapper::mapOut(const LinkList &links, SubnetBuilder &builder) const {
   assert(links.size() == 1 && "Only single input is allowed in OUT cell");
   Link link = links.front();
 
@@ -107,20 +108,20 @@ size_t AigMapper::mapOut(const LinkList &links, Builder &builder) const {
   return builder.addOutput(link).idx;
 }
 
-size_t AigMapper::mapVal(bool val, Builder &builder) const {
+size_t AigMapper::mapVal(bool val, SubnetBuilder &builder) const {
   if (val) {
     return builder.addCell(CellSymbol::ONE).idx;
   }
   return builder.addCell(CellSymbol::ZERO).idx;
 }
 
-size_t AigMapper::mapBuf(const LinkList &links, Builder &builder) const {
+size_t AigMapper::mapBuf(const LinkList &links, SubnetBuilder &builder) const {
   assert(links.size() == 1 && "Only single input is allowed in BUF cell");
   return builder.addCell(CellSymbol::BUF, links).idx;
 }
 
 size_t AigMapper::mapAnd(const LinkList &links, size_t n0, size_t n1,
-                         Builder &builder) const {
+                         SubnetBuilder &builder) const {
 
   if (links.size() == 1) {
     return mapBuf(links, builder);
@@ -135,7 +136,7 @@ size_t AigMapper::mapAnd(const LinkList &links, size_t n0, size_t n1,
 }
 
 size_t AigMapper::mapOr(LinkList &links, bool &inv, size_t n0, size_t n1,
-                        Builder &builder) const {
+                        SubnetBuilder &builder) const {
 
   if (links.size() == 1) {
     return mapBuf(links, builder);
@@ -156,7 +157,7 @@ size_t AigMapper::mapOr(LinkList &links, bool &inv, size_t n0, size_t n1,
 }
 
 size_t AigMapper::mapXor(LinkList &links, size_t n0, size_t n1,
-                         Builder &builder) const {
+                         SubnetBuilder &builder) const {
 
   const size_t linksSize = links.size();
   if (linksSize == 1) {
@@ -197,7 +198,7 @@ size_t AigMapper::mapXor(LinkList &links, size_t n0, size_t n1,
 }
 
 size_t AigMapper::mapMaj(LinkList &links, bool &inv, size_t n0, size_t n1,
-                         Builder &builder) const {
+                         SubnetBuilder &builder) const {
 
   size_t linksSize = links.size();
   if (linksSize == 1) {
@@ -218,7 +219,7 @@ size_t AigMapper::mapMaj(LinkList &links, bool &inv, size_t n0, size_t n1,
   return addMaj3(links, inv, builder);
 }
 
-size_t AigMapper::addMaj3(LinkList &links, bool &inv, Builder &builder) const {
+size_t AigMapper::addMaj3(LinkList &links, bool &inv, SubnetBuilder &builder) const {
   Link link = links[0];
   // MAJ(x,y,z)=OR(AND(x,y), AND(y,z), AND(z,x))
   links[0] = builder.addCell(CellSymbol::AND, links[0], links[1]);

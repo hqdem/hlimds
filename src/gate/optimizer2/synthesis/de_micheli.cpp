@@ -21,7 +21,7 @@ using SubnetID = eda::gate::model::SubnetID;
 // Synthesis
 //===----------------------------------------------------------------------===//
 
-SubnetID DeMicheli::synthesize(const TruthTable &func, uint16_t maxArity) {
+SubnetID DMSynthesizer::synthesize(const TruthTable &func, uint16_t maxArity) {
   assert(maxArity > 2 && "Arity of MAJ gate should be > 2");
   std::vector<TruthTable> divisors;
   std::vector<uint64_t> nOnes;
@@ -49,9 +49,9 @@ SubnetID DeMicheli::synthesize(const TruthTable &func, uint16_t maxArity) {
   return buildSubnet(tree, divisors);
 }
 
-bool DeMicheli::createDivisors(const TruthTable &func,
-                               std::vector<TruthTable> &divisors,
-                               std::vector<uint64_t> &nOnes) const {
+bool DMSynthesizer::createDivisors(const TruthTable &func,
+                                   std::vector<TruthTable> &divisors,
+                                   std::vector<uint64_t> &nOnes) const {
 
   const uint32_t nVars = func.num_vars();
   const uint64_t maxOnes = 1ull << nVars;
@@ -86,9 +86,9 @@ bool DeMicheli::createDivisors(const TruthTable &func,
   return false;
 }
 
-void DeMicheli::run(std::vector<MajNode> &topNodes,
-                    std::vector<MajNode> &tree,
-                    const std::vector<TruthTable> &divisors) const {
+void DMSynthesizer::run(std::vector<MajNode> &topNodes,
+                        std::vector<MajNode> &tree,
+                        const std::vector<TruthTable> &divisors) const {
 
   for (auto &top : topNodes) {
     std::vector<MajNode> tmpTree;
@@ -111,8 +111,8 @@ void DeMicheli::run(std::vector<MajNode> &topNodes,
 // Heuristics
 //===----------------------------------------------------------------------===//
 
-uint64_t DeMicheli::heuristicArg1(const std::vector<TruthTable> &divisors,
-                                  const TruthTable &care) const {
+uint64_t DMSynthesizer::heuristicArg1(const std::vector<TruthTable> &divisors,
+                                      const TruthTable &care) const {
 
   const size_t divisorsSize = divisors.size();
   uint64_t nOnes;
@@ -128,9 +128,9 @@ uint64_t DeMicheli::heuristicArg1(const std::vector<TruthTable> &divisors,
   return result;
 }
 
-uint64_t DeMicheli::heuristicArg2(uint64_t arg1,
-                                  const std::vector<TruthTable> &divisors,
-                                  const TruthTable &care) const {
+uint64_t DMSynthesizer::heuristicArg2(uint64_t arg1,
+                                      const std::vector<TruthTable> &divisors,
+                                      const TruthTable &care) const {
 
   const size_t divisorsSize = divisors.size();
   const size_t invertedArg1 = getInverted(arg1);
@@ -155,10 +155,10 @@ uint64_t DeMicheli::heuristicArg2(uint64_t arg1,
   return result;
 }
 
-uint64_t DeMicheli::heuristicArg3(uint64_t arg1,
-                                  uint64_t arg2,
-                                  const std::vector<TruthTable> &divisors,
-                                  const TruthTable &care) const {
+uint64_t DMSynthesizer::heuristicArg3(uint64_t arg1,
+                                      uint64_t arg2,
+                                      const std::vector<TruthTable> &divisors,
+                                      const TruthTable &care) const {
 
   const size_t divisorsSize = divisors.size();
   const size_t invertedArg1 = getInverted(arg1);
@@ -186,10 +186,10 @@ uint64_t DeMicheli::heuristicArg3(uint64_t arg1,
   return result;
 }
 
-uint64_t DeMicheli::calculate(const TruthTable &table1,
-                              const TruthTable &table2,
-                              const TruthTable &candidate,
-                              const TruthTable &care) const {
+uint64_t DMSynthesizer::calculate(const TruthTable &table1,
+                                  const TruthTable &table2,
+                                  const TruthTable &candidate,
+                                  const TruthTable &care) const {
 
   uint64_t summand1 = kitty::count_ones(table1 & candidate & care);
   uint64_t summand2 = kitty::count_ones(table2 & candidate & care);
@@ -200,9 +200,9 @@ uint64_t DeMicheli::calculate(const TruthTable &table1,
 // Building a MAJ tree
 //===----------------------------------------------------------------------===//
 
-bool DeMicheli::isSuccessBuild(std::vector<MajNode> &tree,
-                               std::vector<Position> &toExpand,
-                               const std::vector<TruthTable> &divisors) const {
+bool DMSynthesizer::isSuccessBuild(std::vector<MajNode> &tree,
+                                   std::vector<Position> &toExpand,
+                                   const std::vector<TruthTable> &divs) const {
 
   const uint32_t nVars = tree[0].func.num_vars();
   while (!toExpand.empty() && tree.size() < BOUND) {
@@ -222,10 +222,10 @@ bool DeMicheli::isSuccessBuild(std::vector<MajNode> &tree,
         continue;
       }
 
-      const auto &divisor = getDivisor(divisors, idx);
+      const auto &divisor = getDivisor(divs, idx);
       const auto &parentCare = tree[parent].care;
-      const auto &sibling1 = getSiblingFunc(tree, divisors, parent, arg, 1);
-      const auto &sibling2 = getSiblingFunc(tree, divisors, parent, arg, 2);
+      const auto &sibling1 = getSiblingFunc(tree, divs, parent, arg, 1);
+      const auto &sibling2 = getSiblingFunc(tree, divs, parent, arg, 2);
 
       const TruthTable care = parentCare & ~(sibling1 & sibling2);
       if (!mayImprove(divisor, care)) {
@@ -251,7 +251,7 @@ bool DeMicheli::isSuccessBuild(std::vector<MajNode> &tree,
     toExpand.erase(toExpand.begin() + pos);
 
     MajNode expanded;
-    expandNode(divisors, oldCare, expanded, position);
+    expandNode(divs, oldCare, expanded, position);
 
     const uint64_t oldCovered = kitty::count_ones(oldFunc & oldCare);
     const uint64_t nowCovered = kitty::count_ones(expanded.func & oldCare);
@@ -262,7 +262,7 @@ bool DeMicheli::isSuccessBuild(std::vector<MajNode> &tree,
     expanded.care = oldCare;
     tree.emplace_back(expanded);
     tree[position.parent].args[position.arg] = tree.size() - 1;
-    updateTree(tree, divisors, toExpand, position, oldFunc);
+    updateTree(tree, divs, toExpand, position, oldFunc);
 
     if (!mayImprove(tree[0].func, tree[0].care)) {
       return true;
@@ -275,10 +275,10 @@ bool DeMicheli::isSuccessBuild(std::vector<MajNode> &tree,
   return false;
 }
 
-void DeMicheli::expandNode(const std::vector<TruthTable> &divisors,
-                           const TruthTable &care,
-                           MajNode &expanded,
-                           Position position) const {
+void DMSynthesizer::expandNode(const std::vector<TruthTable> &divisors,
+                               const TruthTable &care,
+                               MajNode &expanded,
+                               Position position) const {
 
   uint64_t arg1 = heuristicArg1(divisors, care);
   uint64_t arg2 = heuristicArg2(arg1, divisors, care);
@@ -297,11 +297,11 @@ void DeMicheli::expandNode(const std::vector<TruthTable> &divisors,
 // Tree updating
 //===----------------------------------------------------------------------===//
 
-void DeMicheli::updateTree(std::vector<MajNode> &tree,
-                           const std::vector<TruthTable> &divisors,
-                           std::vector<Position> &toExpand,
-                           Position position,
-                           const TruthTable &funcOld) const {
+void DMSynthesizer::updateTree(std::vector<MajNode> &tree,
+                               const std::vector<TruthTable> &divisors,
+                               std::vector<Position> &toExpand,
+                               Position position,
+                               const TruthTable &funcOld) const {
 
   const uint64_t parent = position.parent;
   const uint8_t arg = position.arg;
@@ -325,14 +325,14 @@ void DeMicheli::updateTree(std::vector<MajNode> &tree,
   }
 }
 
-void DeMicheli::updateSibling(std::vector<MajNode> &tree,
-                              const std::vector<TruthTable> &divisors,
-                              std::vector<Position> &toExpand,
-                              Position pos,
-                              uint8_t idx,
-                              const TruthTable &funcOld,
-                              const TruthTable &sibling0,
-                              const TruthTable &sibling1) const {
+void DMSynthesizer::updateSibling(std::vector<MajNode> &tree,
+                                  const std::vector<TruthTable> &divisors,
+                                  std::vector<Position> &toExpand,
+                                  Position pos,
+                                  uint8_t idx,
+                                  const TruthTable &funcOld,
+                                  const TruthTable &sibling0,
+                                  const TruthTable &sibling1) const {
 
   const uint64_t parent = pos.parent;
   const uint8_t arg = pos.arg;
@@ -352,12 +352,12 @@ void DeMicheli::updateSibling(std::vector<MajNode> &tree,
   }
 }
 
-void DeMicheli::updateNode(std::vector<MajNode> &tree,
-                           const std::vector<TruthTable> &divisors,
-                           std::vector<Position> toExpand,
-                           uint64_t siblingPos,
-                           const TruthTable &careOld,
-                           const TruthTable &careNew) const {
+void DMSynthesizer::updateNode(std::vector<MajNode> &tree,
+                               const std::vector<TruthTable> &divisors,
+                               std::vector<Position> toExpand,
+                               uint64_t siblingPos,
+                               const TruthTable &careOld,
+                               const TruthTable &careNew) const {
 
   const TruthTable &siblingFunc = tree[siblingPos].func;
   if (!mayImprove(siblingFunc, careOld) && mayImprove(siblingFunc, careNew)) {
@@ -387,11 +387,11 @@ void DeMicheli::updateNode(std::vector<MajNode> &tree,
 // Enumeration of suitable top nodes
 //===----------------------------------------------------------------------===//
 
-void DeMicheli::createTopNodes(std::vector<MajNode> &topNodes,
-                               std::vector<MajNode> &tree,
-                               const std::vector<TruthTable> &divisors,
-                               const std::vector<uint64_t> &nOnes,
-                               const TruthTable &care) const {
+void DMSynthesizer::createTopNodes(std::vector<MajNode> &topNodes,
+                                   std::vector<MajNode> &tree,
+                                   const std::vector<TruthTable> &divisors,
+                                   const std::vector<uint64_t> &nOnes,
+                                   const TruthTable &care) const {
 
   const uint64_t maxEl = *std::max_element(nOnes.begin(), nOnes.end());
   for (size_t i = 0; i < nOnes.size(); ++i) {
@@ -405,10 +405,10 @@ void DeMicheli::createTopNodes(std::vector<MajNode> &topNodes,
   }
 }
 
-bool DeMicheli::selectOtherArgs(std::vector<MajNode> &topNodes,
-                                const std::vector<TruthTable> &divisors,
-                                size_t firstArg,
-                                const TruthTable &care) const {
+bool DMSynthesizer::selectOtherArgs(std::vector<MajNode> &topNodes,
+                                    const std::vector<TruthTable> &divisors,
+                                    size_t firstArg,
+                                    const TruthTable &care) const {
 
   const size_t invertedFirst = getInverted(firstArg);
   const size_t divisorsSize = divisors.size();
@@ -441,11 +441,11 @@ bool DeMicheli::selectOtherArgs(std::vector<MajNode> &topNodes,
   return false;
 }
 
-bool DeMicheli::selectLastArg(std::vector<MajNode> &topNodes,
-                              const std::vector<TruthTable> &divisors,
-                              size_t firstArg,
-                              size_t secondArg,
-                              const TruthTable &care) const {
+bool DMSynthesizer::selectLastArg(std::vector<MajNode> &topNodes,
+                                  const std::vector<TruthTable> &divisors,
+                                  size_t firstArg,
+                                  size_t secondArg,
+                                  const TruthTable &care) const {
 
   const size_t invertedFirst = getInverted(firstArg);
   const size_t invertedSecond = getInverted(secondArg);
@@ -500,9 +500,9 @@ bool DeMicheli::selectLastArg(std::vector<MajNode> &topNodes,
 // Build a subnet
 //===----------------------------------------------------------------------===//
 
-SubnetID DeMicheli::buildSubnet(const std::vector<MajNode> &tree,
-                                const std::vector<TruthTable> &divisors,
-                                bool simplest) const {
+SubnetID DMSynthesizer::buildSubnet(const std::vector<MajNode> &tree,
+                                    const std::vector<TruthTable> &divisors,
+                                    bool simplest) const {
 
   const uint32_t nVars = divisors[0].num_vars();
   const size_t treeSize = tree.size();
@@ -547,12 +547,12 @@ SubnetID DeMicheli::buildSubnet(const std::vector<MajNode> &tree,
   return builder.make();
 }
 
-Link DeMicheli::createLink(int64_t arg,
-                           uint32_t nVars,
-                           size_t treeSize,
-                           Builder &builder,
-                           const std::vector<size_t> &idx,
-                           std::pair<size_t, bool> &zero) const {
+Link DMSynthesizer::createLink(int64_t arg,
+                               uint32_t nVars,
+                               size_t treeSize,
+                               Builder &builder,
+                               const std::vector<size_t> &idx,
+                               std::pair<size_t, bool> &zero) const {
 
   // IN or NOT(IN).
   if (arg < -2) {

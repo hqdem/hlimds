@@ -47,7 +47,7 @@ struct MajNode {
  * DOI: 10.1109/DDECS52668.2021.9417058
  * Publisher: IEEE
  */
-class DeMicheli : public Synthesizer<kitty::dynamic_truth_table> {
+class DMSynthesizer : public Synthesizer<kitty::dynamic_truth_table> {
 
 public:
 
@@ -62,7 +62,7 @@ public:
   static constexpr size_t OUTID = 4611686018427387903;
 
   /// Empty constructor.
-  DeMicheli() {}
+  DMSynthesizer() {}
 
   /// Synthesize function without "don't care" bits.
   SubnetID synthesize(const TruthTable &func, uint16_t maxArity = -1) override;

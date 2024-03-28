@@ -60,7 +60,7 @@ struct BddWithDdManager {
  * the article "Achieving Scalable Hardware Verification
  * with Symbolic Simulation" by Valeria Bertacco (2003).
 */
-class DsdToSubnet : public Synthesizer<BddWithDdManager>,
+class DsdSynthesizer : public Synthesizer<BddWithDdManager>,
                     public Synthesizer<TruthTable> {
 
 public:
@@ -70,7 +70,7 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Empty constructor.
-  DsdToSubnet() {}
+  DsdSynthesizer() {}
 
   //===--------------------------------------------------------------------===//
   // Convenience Methods

@@ -65,7 +65,8 @@ public:
   DMSynthesizer() {}
 
   /// Synthesize function without "don't care" bits.
-  SubnetID synthesize(const TruthTable &func, uint16_t maxArity = -1) override;
+  SubnetID synthesize(const TruthTable &func,
+                      uint16_t maxArity = -1) const override;
 
 private:
 

@@ -36,7 +36,7 @@ IR construct(const eda::gate::model::Subnet &subnet);
 template<typename IR>
 class Resynthesizer final : public ResynthesizerBase {
 public:
-  Resynthesizer(const Synthesizer<IR> &&synthesizer):
+  Resynthesizer(const Synthesizer<IR> &synthesizer):
     synthesizer(synthesizer) {}
 
   SubnetID resynthesize(SubnetID subnetID) const override {

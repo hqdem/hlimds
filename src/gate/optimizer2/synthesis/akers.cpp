@@ -23,7 +23,8 @@ using SubnetID     = eda::gate::model::SubnetID;
 // Synthesize Methods
 //===----------------------------------------------------------------------===//
 
-SubnetID AkersSynthesizer::synthesize(const TruthTable &func, uint16_t arity) {
+SubnetID AkersSynthesizer::synthesize(const TruthTable &func,
+                                      uint16_t arity) const {
   /// TODO: Wrong argument processing is needed.
   assert(arity > 2 && "Arity of MAJ gate should be >= 3!");
   TruthTable care(func.num_vars());
@@ -38,7 +39,8 @@ SubnetID AkersSynthesizer::synthesize(const TruthTable &func, uint16_t arity) {
 // Internal Methods
 //===----------------------------------------------------------------------===//
 
-SubnetID AkersSynthesizer::run(const TruthTable &func, const TruthTable &care) {
+SubnetID AkersSynthesizer::run(const TruthTable &func,
+                               const TruthTable &care) const {
   // Initialize the unitized table.
   UnitizedTable table;
   table.initialize(func, care);
@@ -107,7 +109,7 @@ SubnetID AkersSynthesizer::run(const TruthTable &func, const TruthTable &care) {
 
 void AkersSynthesizer::addMajGate(UnitizedTable &table, SubBuild &subBuild,
                                   const Arguments &gate, uint32_t nVariables,
-                                  ConstantId &cid) {
+                                  ConstantId &cid) const {
 
   assert(gate.size() == 3 && "Invalid number of inputs for a MAJ gate!");
 
@@ -157,7 +159,7 @@ void AkersSynthesizer::addMajGate(UnitizedTable &table, SubBuild &subBuild,
 }
 
 Candidate AkersSynthesizer::findBestGate(UnitizedTable &table,
-                                         ElimOnesInfo &onesInfo) {
+                                         ElimOnesInfo &onesInfo) const {
 
   CanditateList gates;
   Candidate candidate;
@@ -222,7 +224,7 @@ Candidate AkersSynthesizer::chooseGate(UnitizedTable &table,
                                        EssentialEdge &edges,
                                        Candidate &candidate,
                                        const CanditateList &gates,
-                                       ElimOnesInfo &onesInfo) {
+                                       ElimOnesInfo &onesInfo) const {
 
   if ((candidate.toRemove.size() != 1) || (mayDeleteRows(table, candidate))) {
     return setWhatFound(candidate, onesInfo);
@@ -243,7 +245,7 @@ Candidate AkersSynthesizer::findEliminatingNColsGate(UnitizedTable &table,
                                                      EssentialEdge &edges,
                                                      CanditateList &gates,
                                                      ElimOnesInfo &onesInfo,
-                                                     const unsigned n) {
+                                                     const unsigned n) const {
 
   assert(((n == 2) || (n == 3)) && "Error of input variable n!");
 
@@ -294,14 +296,14 @@ Candidate AkersSynthesizer::findEliminatingNColsGate(UnitizedTable &table,
 }
 
 Candidate AkersSynthesizer::setWhatFound(const Candidate &candidate,
-                                         ElimOnesInfo &onesInfo) {
+                                         ElimOnesInfo &onesInfo) const {
 
   onesInfo.nCall = 0;
   return candidate;
 }
 
-ArgumentsSet AkersSynthesizer::findGatesForColumnRemoval
-  (const UnitizedTable &table, const RowNums &essentialRows, unsigned index) {
+ArgumentsSet AkersSynthesizer::findGatesForColumnRemoval(
+    const UnitizedTable &table, const RowNums &essentialRows, unsigned index) const {
 
   ArgumentsSet argsSet;
 
@@ -338,7 +340,9 @@ ArgumentsSet AkersSynthesizer::findGatesForColumnRemoval
 
 uint64_t AkersSynthesizer::countRemoved(const UnitizedTable &table,
                                         EssentialEdge &edges,
-                                        unsigned c1, unsigned c2, unsigned c3) {
+                                        unsigned c1,
+                                        unsigned c2,
+                                        unsigned c3) const {
 
   uint64_t counter = 0;
   std::vector<unsigned> args = {c1, c2, c3};
@@ -374,7 +378,7 @@ uint64_t AkersSynthesizer::countRemoved(const UnitizedTable &table,
 
 void AkersSynthesizer::incCounter(uint64_t &counter,
                                   RowNums &toRemove,
-                                  uint32_t rowNum) {
+                                  uint32_t rowNum) const {
 
   auto pair = toRemove.insert(rowNum);
   if (pair.second) {
@@ -383,7 +387,7 @@ void AkersSynthesizer::incCounter(uint64_t &counter,
 }
 
 void AkersSynthesizer::decCounter(uint64_t &counter, RowNums &cantRemove,
-                                  RowNums &toRemove, uint32_t rowNum) {
+                                  RowNums &toRemove, uint32_t rowNum) const {
 
   cantRemove.insert(rowNum);
   size_t flag = toRemove.erase(rowNum);
@@ -394,7 +398,7 @@ void AkersSynthesizer::decCounter(uint64_t &counter, RowNums &cantRemove,
 
 Candidate AkersSynthesizer::findEliminatingOnesGate(const UnitizedTable &table,
                                                     EssentialEdge &edges,
-                                                    ElimOnesInfo &onesInfo) {
+                                                    ElimOnesInfo &onesInfo) const {
 
   if (!onesInfo.nCall) {
     onesInfo.nInner = table.nColumns();
@@ -431,7 +435,7 @@ Candidate AkersSynthesizer::findEliminatingOnesGate(const UnitizedTable &table,
 }
 
 bool AkersSynthesizer::mayDeleteRows(UnitizedTable &table,
-                                     const Candidate &candidate) {
+                                     const Candidate &candidate) const {
 
   table.addMajColumn(candidate.args);
 

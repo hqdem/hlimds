@@ -9,8 +9,8 @@
 #pragma once
 
 #include "gate/optimizer2/cone_builder.h"
-#include "gate/optimizer2/transformer.h"
 #include "gate/optimizer2/resynthesizer.h"
+#include "gate/optimizer2/transformer.h"
 
 namespace eda::gate::optimizer2 {
 

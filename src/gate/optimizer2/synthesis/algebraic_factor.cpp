@@ -18,7 +18,7 @@ using SubnetID = AlgebraicFactor::SubnetID;
 /// @endcond
 
 SubnetID AlgebraicFactor::getSubnet(const SOP &func, size_t funcSize,
-                                    uint16_t maxArity, bool inv) {
+                                    uint16_t maxArity, bool inv) const {
   SubnetBuilder subnetBuilder;
   LinkList inputs = subnetBuilder.addInputs(funcSize);
   Link output = getFactoring(func, inputs, subnetBuilder, maxArity);
@@ -28,7 +28,7 @@ SubnetID AlgebraicFactor::getSubnet(const SOP &func, size_t funcSize,
 
 Link AlgebraicFactor::getFactoring(const SOP &func, const LinkList &inputs,
                                    SubnetBuilder &subnetBuilder,
-                                   uint16_t maxArity) {
+                                   uint16_t maxArity) const {
 
   SOP div = findDivisor(func);
 
@@ -70,7 +70,7 @@ Link AlgebraicFactor::getFactoring(const SOP &func, const LinkList &inputs,
 Link AlgebraicFactor::getLiteralFactoring(const SOP &func, const Cube lits,
                                           const LinkList &inputs,
                                           SubnetBuilder &subnetBuilder,
-    uint16_t maxArity) {                
+                                          uint16_t maxArity) const {
   Cube lit = utils::findBestLiteral(func, lits);
   SOP quo;
   SOP rem;
@@ -86,7 +86,7 @@ Link AlgebraicFactor::getLiteralFactoring(const SOP &func, const Cube lits,
       utils::synthFromCube(lit, inputs, subnetBuilder, maxArity));
 }
 
-AlgebraicFactor::SOP AlgebraicFactor::findDivisor(const SOP &func) {
+AlgebraicFactor::SOP AlgebraicFactor::findDivisor(const SOP &func) const {
   if ((func.size() <= 1) || (utils::findAnyRepeatLiteral(func)._mask == 0u)) {
     return {};
   }
@@ -94,7 +94,7 @@ AlgebraicFactor::SOP AlgebraicFactor::findDivisor(const SOP &func) {
 }
 
 void AlgebraicFactor::divide(const SOP &func, const SOP &div,
-                             SOP &quo, SOP &rem, bool needRem) {
+                             SOP &quo, SOP &rem, bool needRem) const {
 
   assert(func.size() >= div.size());
 
@@ -163,7 +163,7 @@ void AlgebraicFactor::divide(const SOP &func, const SOP &div,
 }
 
 void AlgebraicFactor::divideByCube(const SOP &func, const Cube div,
-                                   SOP &quo, SOP &rem) {
+                                   SOP &quo, SOP &rem) const {
   quo.reserve(func.size());
   rem.reserve(func.size());
   for (const Cube fCube : func) {

@@ -52,13 +52,15 @@ public:
   //===------------------------------------------------------------------===//
 
   /// Makes subnet using cascade method
-  SubnetID synthesize(const TruthTable &func, uint16_t maxArity = -1) override;
+  SubnetID synthesize(
+      const TruthTable &func, uint16_t maxArity = -1) const override;
     
   /// Makes CNF for function using cascade method
-  CNF getFunction(const TruthTable &table, CNF &form, std::vector<int> &values);
+  CNF getFunction(
+      const TruthTable &table, CNF &form, std::vector<int> &values) const;
 
   /// Calculates normal form
-  CNF normalForm(const TruthTable &table);
+  CNF normalForm(const TruthTable &table) const;
 
 private:
     
@@ -68,14 +70,15 @@ private:
 
   /// Initializes the cells of the vector
   void initialize(CNF &output, int times = 1, int num1 = 0, int num2 = 0, 
-    int num3 = 0);
+    int num3 = 0) const;
 
   /// Сalculates an expression when num_vars - 1 arguments are known
-  int calculate(int numVars, CNF &form, std::vector<int> &values);
+  int calculate(int numVars, CNF &form, std::vector<int> &values) const;
 
   /// Checks if out1 and out2 can be simplified and if so, does it;
   /// result is stored in out
-  void checkSimplify(int, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values);
+  void checkSimplify(
+      int, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values) const;
 };
 
 } // namespace eda::gate::optimizer2::synthesis

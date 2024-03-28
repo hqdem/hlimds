@@ -21,7 +21,8 @@ using SubnetID = eda::gate::model::SubnetID;
 // Synthesis
 //===----------------------------------------------------------------------===//
 
-SubnetID DMSynthesizer::synthesize(const TruthTable &func, uint16_t maxArity) {
+SubnetID DMSynthesizer::synthesize(const TruthTable &func,
+                                   uint16_t maxArity) const {
   assert(maxArity > 2 && "Arity of MAJ gate should be > 2");
   std::vector<TruthTable> divisors;
   std::vector<uint64_t> nOnes;

@@ -11,7 +11,7 @@
 namespace eda::gate::optimizer2::synthesis {
 
 SubnetId DsdSynthesizer::synthesize(const BddWithDdManager &pair,
-                                 uint16_t maxArity) {
+                                    uint16_t maxArity) const {
   DSDNode *dsd;
   DSDManager *dmanager;
   /* Initialize DSD manager by choosing a starting cache size */
@@ -44,7 +44,8 @@ SubnetId DsdSynthesizer::synthesize(const BddWithDdManager &pair,
   return ret;
 }
 
-SubnetId DsdSynthesizer::synthesize(const TruthTable &table, uint16_t maxArity) {
+SubnetId DsdSynthesizer::synthesize(const TruthTable &table,
+                                    uint16_t maxArity) const {
   /* Initial subnet */
   MMSynthesizer k;
   const auto &subnet = Subnet::get(k.synthesize(table, maxArity));
@@ -88,7 +89,7 @@ Link DsdSynthesizer::buildNet(DSDNode *dsd,
                            const DSDManager *dmanager,
                            SubnetBuilder &subnetBuilder,
                            const LinkList &inputsList,
-                           uint16_t maxArity) {
+                           uint16_t maxArity) const {
   if (INPUT_SIZE(dsd) == 0) {
     // No actuals, so PI, either ZERO or ONE.
     if (Cudd_IsConstant(get_bdd(dsd))) {
@@ -182,7 +183,7 @@ bool isDependentOnVariable(const DdManager* manager,
 Link DsdSynthesizer::getLinkToCorrectActual(const DSDNode *dsd,
                                          const DdManager *manager,
                                          uint32_t variableIndex,
-                                         const LinkList &inputsList) {
+                                         const LinkList &inputsList) const {
   size_t i = 0;
   auto *iter = DSD_Regular(dsd)->actual_list;
   while (iter != NULL) {
@@ -203,7 +204,7 @@ Link DsdSynthesizer::getLinkToCorrectActual(const DSDNode *dsd,
 Link DsdSynthesizer::decomposePrimeGate(DSDNode *dsd,
                                      const DSDManager *dmanager,
                                      SubnetBuilder &subnetBuilder,
-                                     const LinkList &inputsList) {
+                                     const LinkList &inputsList) const {
   // If there is a negation in the DSD tree, enters it into BDD.
   auto *bdd = get_symbolic_kernel(dsd);
   Link ret = recursiveBddStep(bdd,
@@ -223,7 +224,7 @@ Link DsdSynthesizer::recursiveBddStep(DdNode *bdd,
                                    const DdManager *manager,
                                    SubnetBuilder &subnetBuilder,
                                    const LinkList &inputsList,
-                                   const DSDNode *dsd) {
+                                   const DSDNode *dsd) const {
   /*  T - "Then" path (node variable is true)
    *  E - "Else" path (node variable is false) */
   DdNode *t = Cudd_T(bdd);

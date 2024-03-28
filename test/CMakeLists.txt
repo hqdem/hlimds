@@ -69,6 +69,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
   gate/optimizer2/npndb_test.cpp
+  gate/optimizer2/pass_test.cpp
   gate/optimizer2/reconvergence_cut_test.cpp
   gate/optimizer2/resynthesizer_test.cpp
   gate/optimizer2/rewriter_test.cpp

@@ -11,7 +11,7 @@
 #include "gate/model2/array.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/subnet.h"
-#include "gate/optimizer2/subnet_transformer.h"
+#include "gate/optimizer2/transformer.h"
 
 #include <unordered_map>
 #include <unordered_set>

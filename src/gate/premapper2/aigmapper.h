@@ -30,7 +30,7 @@ public:
   using LinkList   = eda::gate::model::Subnet::LinkList;
   using Subnet     = eda::gate::model::Subnet;
 
-  std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) override;
+  std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) const override;
 
 protected:
   size_t mapCell(CellSymbol symbol, LinkList &links, bool &inv,

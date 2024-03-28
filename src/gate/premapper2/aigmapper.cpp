@@ -11,7 +11,7 @@
 namespace eda::gate::premapper2 {
 
 std::unique_ptr<AigMapper::SubnetBuilder> AigMapper::make(
-    const SubnetID subnetID) {
+    const SubnetID subnetID) const {
   auto builder = std::make_unique<SubnetBuilder>();
 
   CellIdMap oldToNew;

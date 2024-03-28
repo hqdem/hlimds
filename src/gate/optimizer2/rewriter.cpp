@@ -10,10 +10,7 @@
 
 namespace eda::gate::optimizer2 {
 
-Rewriter::SubnetBuilder &Rewriter::rewrite(
-    SubnetBuilder &builder,
-    ResynthesizerBase &resynthesizer,
-    const unsigned int k) const {
+void Rewriter::transform(SubnetBuilder &builder) const {
 
   CutExtractor cutExtractor(&builder, k);
   for (const auto &entryID : builder) {
@@ -21,15 +18,13 @@ Rewriter::SubnetBuilder &Rewriter::rewrite(
       continue;
     }
     cutExtractor.recomputeCuts(entryID);
-    rewriteOnNode(builder, entryID, resynthesizer, cutExtractor);
+    rewriteOnNode(builder, entryID, cutExtractor);
   }
-  return builder;
 }
 
 void Rewriter::rewriteOnNode(
     SubnetBuilder &builder,
     const size_t entryID,
-    ResynthesizerBase &resynthesizer,
     CutExtractor &cutExtractor) const {
 
   ConeBuilder coneBuilder(&builder);

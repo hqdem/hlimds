@@ -24,10 +24,10 @@ public:
   virtual ~SubnetTransformer() {}
 
   /// Transforms the given subnet and stores the result in the builder.
-  virtual std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) = 0;
+  virtual std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) const = 0;
 
   /// Transforms the given subnet and returns the result of the transformation.
-  SubnetID transform(const SubnetID subnetID) {
+  SubnetID transform(const SubnetID subnetID) const {
     auto builder = make(subnetID);
     return builder->make();
   }
@@ -40,10 +40,10 @@ public:
   virtual ~SubnetInPlaceTransformer() {}
 
   /// Transforms the subnet stored in the builder (in-place).
-  virtual void transform(SubnetBuilder &builder) = 0;
+  virtual void transform(SubnetBuilder &builder) const = 0;
 
   /// Default implementation of the base method.
-  std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) override {
+  std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) const override {
     auto builder = std::make_unique<SubnetBuilder>(subnetID);
     transform(*builder);
     return builder;

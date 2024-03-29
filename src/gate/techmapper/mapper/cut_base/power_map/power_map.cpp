@@ -8,7 +8,7 @@
 
 #include "gate/analyzer/simulation_estimator.h"
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
+#include "gate/techmapper/mapper/cut_base/power_map/power_map.h"
 
 namespace eda::gate::tech_optimizer {
 
@@ -80,7 +80,9 @@ namespace eda::gate::tech_optimizer {
 
     BestReplacement bestRepl;
     computedLevel[entryIndex] = cutBestLevel; // setLevel(n, getLevel(cut))
-    bestRepl.entryIDxs =cutBest->entryIdxs;
+    for(const auto &in : cutBest->entryIdxs){
+       bestRepl.entryIDxs.push_back(in);
+    }
     bestRepl.subnetID = techSubnetId;
     return bestRepl;
   }
@@ -180,7 +182,9 @@ namespace eda::gate::tech_optimizer {
             // }
           }
         }
-        (*bestReplacementMap)[entryIndex].entryIDxs = bestCut.entryIdxs;
+        for(const auto &in : bestCut.entryIdxs){
+          (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
+        }
         (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
 
       }else {

@@ -250,7 +250,9 @@ std::shared_ptr<std::vector<CellTypeID>> Translator::translate() {
   addPass(createCHIRRTLToLowFIRRTLPass());
   runPasses();
   clearPasses();
+#ifdef UTOPIA_DEBUG
   printFIRRTL();
+#endif
   addPass(createLowFIRRTLToModel2Pass(resultNetList));
   runPasses();
   clearPasses();

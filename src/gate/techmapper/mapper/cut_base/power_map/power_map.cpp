@@ -8,7 +8,7 @@
 
 #include "gate/analyzer/simulation_estimator.h"
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/techmapper/mapper/cut_base/power_map/power_map.h"
+#include "gate/techoptimizer/mapper/cut_base/power_map/power_map.h"
 
 namespace eda::gate::tech_optimizer {
 
@@ -80,9 +80,7 @@ namespace eda::gate::tech_optimizer {
 
     BestReplacement bestRepl;
     computedLevel[entryIndex] = cutBestLevel; // setLevel(n, getLevel(cut))
-    for (const auto &in : cutBest->entryIdxs) {
-      bestRepl.entryIDxs.push_back(in);
-    }
+    bestRepl.entryIDxs =cutBest->entryIdxs;
     bestRepl.subnetID = techSubnetId;
     return bestRepl;
   }
@@ -91,7 +89,9 @@ namespace eda::gate::tech_optimizer {
     for (uint64_t entryIndex = 0; entryIndex < entries->size(); entryIndex++) {
       if (!(*entries)[entryIndex].cell.isAnd()) {
         addNotAnAndToTheMap(entryIndex, (*entries)[entryIndex].cell);
-        computedLevel[entryIndex] = 0;
+        if((*entries)[entryIndex].cell.isIn()){
+          computedLevel[entryIndex] = 0;
+        }
         continue;
       }
       (*bestReplacementMap)[entryIndex] = findCutMinimizingDepth(entryIndex);    
@@ -112,10 +112,13 @@ namespace eda::gate::tech_optimizer {
     return depth;
   }
 
+  //!!! it has to be computed with cuts, not with nodes!!!!
+
   void PowerMap::computeRequiredTimes() {
     // get latest Primary Output arival time
     const Subnet &subnet =Subnet::get(subnetID); 
-    uint32_t timeMax = subnet.getPathLength().second;
+    // uint32_t timeMax = subnet.getPathLength().second;
+    uint32_t timeMax = findLatestPoArivalTime();
 
     for(auto& reqTime : requiredTimes)reqTime = UINT32_MAX;
 
@@ -133,15 +136,17 @@ namespace eda::gate::tech_optimizer {
       }
     }
   }
+  
+  uint32_t PowerMap::findLatestPoArivalTime(){
+    return 1000;
+  };
 
   void PowerMap::globalSwitchAreaRecovery(const std::vector<double> &cellActivities) {
     
     for (uint64_t entryIndex = 0; entryIndex < entries->size();entryIndex++) {
       const auto &cell = (*entries)[entryIndex].cell;
 
-      if(!cell.isAnd()) {
-        addNotAnAndToTheMap(entryIndex,cell);
-      } else {  
+      if(cell.isAnd()) {  
         CutsList cutsList = cutExtractor->getCuts(entryIndex);
         double bestAF = MAXFLOAT;
         double bestSF = MAXFLOAT;
@@ -155,19 +160,31 @@ namespace eda::gate::tech_optimizer {
 
           if((curSF < bestSF) || 
             (aproxEqual(curSF,bestSF) && curAF < bestAF)) {
+
+            // if(getLevel(cut) <= requiredTimes[entryIndex]){
+
             const auto techIdsList = getTechIdsList(cut);
             if(techIdsList.size() == 0) continue;
-            const SubnetID techCellSubnetID = techIdsList[0];
-            bestAF = curAF;
-            bestSF = curSF;
-            bestCut = cut;
-            bestTechCellSubnetID = techCellSubnetID;
+            float localCellArea = MAXFLOAT;
+            for (const SubnetID &techCellSubnetID : techIdsList) {
+              auto currentAttr = cellDB->getSubnetAttrBySubnetID(techCellSubnetID);
+              if(currentAttr.area > localCellArea)continue;
+              localCellArea = currentAttr.area;
+              // const SubnetID techCellSubnetID = techIdsList[0];
+              computedLevel[entryIndex] = getLevel(cut);
+              bestAF = curAF;
+              bestSF = curSF;
+              bestCut = cut;
+              bestTechCellSubnetID = techCellSubnetID;
+            }
+            // }
           }
         }
-        for (const auto &in : bestCut.entryIdxs) {
-          (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
-        }
+        (*bestReplacementMap)[entryIndex].entryIDxs = bestCut.entryIdxs;
         (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
+
+      }else {
+        addNotAnAndToTheMap(entryIndex,cell);
       }
       entryIndex += cell.more;
     }
@@ -182,6 +199,9 @@ namespace eda::gate::tech_optimizer {
   }
 
   void PowerMap::findBest() {
+    std::cerr << "Start PowerMap::findBest" <<std::endl;
+    auto start = std::chrono::high_resolution_clock::now();
+
     Subnet &subnet = Subnet::get(this->subnetID);
     
     entries = new ArrayEntry(subnet.getEntries());
@@ -199,10 +219,19 @@ namespace eda::gate::tech_optimizer {
     const std::vector<double> &cellActivities =
                               switchActivity.getActivities();
 
+    // const std::vector<size_t> &riseActivities = 
+    //                           switchActivity.getSwitchesOn();
+    // const std::vector<size_t> &fallActivities = 
+    //                           switchActivity.getSwitchesOff();
+    
     // traditionalMapDepthOriented();
     // computeRequiredTimes();
     globalSwitchAreaRecovery(cellActivities);
     clear();
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> FindBestTime = end - start;
+    std::cerr << "PowerMap::findBest was running " << FindBestTime.count() << " seconds.\n";
   }
 
   std::vector<SubnetID> PowerMap::getTechIdsList(const Cut cut) {

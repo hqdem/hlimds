@@ -43,6 +43,7 @@ class PowerMap : public CutBaseMapper {
     
     void traditionalMapDepthOriented();
     void globalSwitchAreaRecovery(const std::vector<double> &cellActivities);
+    uint32_t findLatestPoArivalTime();
     void computeRequiredTimes();
     std::vector<SubnetID> getTechIdsList(const Cut cut);
 
@@ -50,7 +51,7 @@ class PowerMap : public CutBaseMapper {
 
     std::vector<double> computedAF;
     std::vector<double> computedSF;
-    std::vector<int64_t> computedLevel;
+    std::vector<int64_t> computedLevel; //arival
     std::vector<uint32_t> requiredTimes;
     eda::gate::optimizer2::ConeBuilder *coneBuilder;
     ArrayEntry *entries;

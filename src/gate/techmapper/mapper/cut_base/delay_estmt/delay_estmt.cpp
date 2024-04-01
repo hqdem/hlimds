@@ -100,7 +100,7 @@ float WLM::getLength(size_t& fanout_count) {
   else if (fanout_count > 6)
     return fanout_length[5].second + (fanout_count - 6) * slope;
 
-  std::cerr << "Uncorrect fanout_count\n";
+  std::cerr << "Wrong fanout_count\n";
   return 0;
 }
 
@@ -112,7 +112,7 @@ float WLM::getFanoutCap(size_t& fanout_count) {
     return length * c;
   }
   
-  std::cerr << "Uncorrect fanout_count\n";
+  std::cerr << "Wrong fanout_count\n";
   return 0;
 }
 
@@ -123,7 +123,7 @@ float WLM::getFanoutRes(size_t& fanout_count) {
     float length = fanout_length[5].second + (fanout_count - 6) * slope;
     return length * r;
   }
-  std::cerr << "Uncorrect fanout_count\n";
+  std::cerr << "Wrong fanout_count\n";
   return 0;
 }
 
@@ -165,8 +165,6 @@ float NLDM::timingVisitor(const Timing &timing,
     size_t tback2 = 0, tfront2 = 0;
 
     temp = lut->getValues();
-    ind_1 = -1, ind_2 = -1;
-    ivar = false;
 
     //===-----------------------------------------------------------------===//
     //  Assigning values from LookUp-Tables

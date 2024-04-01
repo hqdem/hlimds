@@ -150,6 +150,61 @@ void LibraryCells::readLibertyFile(const std::string &filename,
                                    std::vector<CellTypeID> &cellTypeFFIDs,
                                    std::vector<CellTypeID> &cellTypeFFrsIDs,
                                    std::vector<CellTypeID> &cellTypeLatchIDs) {
+/*
+  TokenParser tokParser;
+  FILE *file = fopen(filename.c_str(), "rb");
+  Group *ast = tokParser.parseLibrary(file,
+                                      filename.c_str());
+  Library lib;
+  AstParser parser(lib, tokParser);
+  parser.run(*ast);
+  fclose(file);
+
+  for (const auto& cell : lib.getCells()) {
+    auto name = std::string(cell.getName());
+
+    std::vector<std::string> inputs;
+    std::vector<std::string> outputs;
+
+    std::vector<std::string> funcs;
+
+    for (const auto &pin : cell.getPins()) {
+      if (pin.getIntegerAttribute("direction", 10) & (1 << 0)) {
+        inputs.push_back(std::string(pin.getName()));
+      }
+      if (pin.getIntegerAttribute("direction", 10) & (1 << 1)) {
+          outputs.push_back(std::string(pin.getName()));
+        if (pin.hasAttribute("function")) {
+          funcs.push_back(std::string(
+              pin.getStringAttribute("function" , "none")));
+        }
+      }
+    }
+
+    eda::gate::model::CellProperties
+        props(false, false, false, false, false, false, false, false, false);
+
+    model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
+    model::CellTypeAttr::get(cellTypeAttrID).props.area =
+        cell.getIntegerAttribute("area", 0);
+
+    kitty::dynamic_truth_table *truthTable =
+        new kitty::dynamic_truth_table(inputs.size());
+    kitty::create_from_formula(*truthTable, funcs.at(0), inputs);
+
+    MinatoMorrealeAlg minatoMorrealeAlg;
+    const auto subnetID = minatoMorrealeAlg.synthesize(*truthTable);
+
+    CellTypeID cellID = eda::gate::model::makeCellType(
+        eda::gate::model::CellSymbol::UNDEF,
+        name, subnetID,
+        cellTypeAttrID, props,
+        static_cast<uint16_t>(inputs.size()),
+        static_cast<uint16_t>(1));
+
+    cellTypeIDs.push_back(cellID);
+
+  }*/
 
 /*
   const path homePath1 = std::string(getenv("UTOPIA_HOME"));
@@ -240,12 +295,12 @@ void LibraryCells::readLibertyFile(const std::string &filename,
 
         // Create a dynamic truth table with the appropriate number of inputs
 
-        /*std::vector<Pin> pins;
+        *//*std::vector<Pin> pins;
         for (const auto &name: inputPinNames) {
           const auto &cell = it.value()["delay"][name];
           pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
                              cell["fall_transition"], cell["rise_transition"]));
-        }*/
+        }*//*
 
         kitty::dynamic_truth_table *truthTable =
             new kitty::dynamic_truth_table(inputPinNames.size());

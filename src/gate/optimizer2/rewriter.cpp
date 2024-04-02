@@ -13,12 +13,17 @@ namespace eda::gate::optimizer2 {
 void Rewriter::transform(SubnetBuilder &builder) const {
 
   CutExtractor cutExtractor(&builder, k);
-  for (const auto &entryID : builder) {
+  for (auto iter = builder.begin(); iter != builder.end(); ) {
+    const auto entryID = *iter;
     if (builder.getEntry(entryID).cell.isOut()) {
+      iter++;
       continue;
     }
     cutExtractor.recomputeCuts(entryID);
+    auto tmpIter = iter;
+    ++tmpIter;
     rewriteOnNode(builder, entryID, cutExtractor);
+    iter = tmpIter;
   }
 }
 
@@ -32,7 +37,7 @@ void Rewriter::rewriteOnNode(
   int bestMetricValue = 0;
   SubnetID bestRhsID = 0;
   std::unordered_map<size_t, size_t> bestRhsToLhs;
-  
+
   for (const auto &cut : cuts) {
     const auto &cone = coneBuilder.getCone(cut);
     const auto &coneSubnet = Subnet::get(cone.subnetID);
@@ -40,11 +45,11 @@ void Rewriter::rewriteOnNode(
     const Subnet &rhs = Subnet::get(rhsID);
     std::unordered_map<size_t, size_t> rhsToLhs;
     for (size_t i = 0; i < rhs.getInNum(); ++i) {
-      rhsToLhs[i] = cone.coneEntryToOrig.find(i)->second;
+      rhsToLhs[i] = cone.coneEntryToOrig[i];
     }
     for (size_t i = 1; i <= rhs.getOutNum(); ++i) {
       rhsToLhs[rhs.getEntries().size() - i] =
-          cone.coneEntryToOrig.find(coneSubnet.getEntries().size() - i)->second;
+          cone.coneEntryToOrig[coneSubnet.getEntries().size() - i];
     }
     int curMetricValue = builder.evaluateReplace(rhsID, rhsToLhs);
     if (curMetricValue > bestMetricValue) {

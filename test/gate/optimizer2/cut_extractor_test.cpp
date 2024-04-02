@@ -150,7 +150,6 @@ TEST(CutExtractorTest, LimitedK) {
   const auto andLink2 = builder.addCell(model::AND, andLink0, andLink1);
   builder.addOutput(andLink2);
   const auto &subnet = Subnet::get(builder.make());
-  std::cout << subnet << '\n';
 
   CutExtractor cutExtractor(&subnet, 2);
   const std::vector<CutsList> validRes {

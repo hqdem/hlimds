@@ -26,7 +26,8 @@ public:
   using SubnetBuilder = model::SubnetBuilder;
   using Cut = optimizer2::CutExtractor::Cut;
 
-  using EntryMap = std::unordered_map<size_t, size_t>;
+  using EntryVecMap = std::vector<size_t>;
+  using EntryMapMap = std::unordered_map<size_t, size_t>;
 
   /**
    * @brief Cone struct with SubnetID and mapping from cone subnet to original.
@@ -35,11 +36,11 @@ public:
    */
   struct Cone {
     Cone() = default;
-    Cone(const SubnetID subnetID, const EntryMap &coneEntryToOrig):
+    Cone(const SubnetID subnetID, const EntryVecMap &coneEntryToOrig):
         subnetID(subnetID), coneEntryToOrig(coneEntryToOrig) {};
 
     SubnetID subnetID;
-    EntryMap coneEntryToOrig;
+    EntryVecMap coneEntryToOrig;
   };
 
   ConeBuilder() = delete;
@@ -64,24 +65,24 @@ private:
    */
   Cone getCone(const size_t rootEntryIdx,
                SubnetBuilder &builder,
-               EntryMap &origEntryToCone,
-               EntryMap &coneEntryToOrig) const;
+               EntryMapMap &origEntryToCone,
+               EntryVecMap &coneEntryToOrig) const;
 
   /**
    * @brief Adds primary inputs to cone limited by cut.
    */
   void addInsFromCut(const Cut &cut,
                      SubnetBuilder &builder,
-                     EntryMap &origEntryToCone,
-                     EntryMap &coneEntryToOrig) const;
+                     EntryMapMap &origEntryToCone,
+                     EntryVecMap &coneEntryToOrig) const;
 
   /**
    * @brief Adds primary inputs to maximum cone.
    */
   void addInsForMaxCone(const size_t rootEntryIdx,
                         SubnetBuilder &builder,
-                        EntryMap &origEntryToCone,
-                        EntryMap &coneEntryToOrig) const;
+                        EntryMapMap &origEntryToCone,
+                        EntryVecMap &coneEntryToOrig) const;
 
   /**
    * @brief Adds primary input to cone.
@@ -89,8 +90,8 @@ private:
   void addInput(const size_t origEntryIdx,
                 const size_t rootEntryIdx,
                 SubnetBuilder &builder,
-                EntryMap &origEntryToCone,
-                EntryMap &coneEntryToOrig) const;
+                EntryMapMap &origEntryToCone,
+                EntryVecMap &coneEntryToOrig) const;
 
   const Entry getEntry(const size_t entryID) const;
 

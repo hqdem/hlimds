@@ -48,6 +48,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/rwdatabase_test.cpp
   gate/model2/seq_net.cpp
   gate/model2/subnet_cnf_encoder_test.cpp
+  gate/model2/subnet_depth_test.cpp
   gate/model2/subnet_test.cpp
   gate/model2/utils/subnet_truth_table_test.cpp
   gate/optimizer/associative_balancer_test.cpp

@@ -361,6 +361,14 @@ namespace eda::gate::model {
 class SubnetBuilder final {
   friend EntryIterator;
 
+  struct EntryDescriptor final {
+    EntryDescriptor(): prev(normalOrderID), next(normalOrderID),
+                       depth(invalidID) {};
+    size_t prev;
+    size_t next;
+    size_t depth;
+  };
+
 public:
   using Cell = Subnet::Cell;
   using Link = Subnet::Link;
@@ -369,9 +377,7 @@ public:
   SubnetBuilder(): nIn(0), nOut(0) {
     const size_t n = 1024*1024; // FIXME
     entries.reserve(n);
-    prev.reserve(n);
-    next.reserve(n);
-    depth.reserve(n);
+    desc.reserve(n);
     depthBounds.reserve(n);
     strash.reserve(n);
   }
@@ -549,9 +555,7 @@ public:
   SubnetID make(std::vector<size_t> &newToOldEntries) {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    if (!next.empty() || getSubnetBegin()) {
-      rearrangeEntries(newToOldEntries);
-    }
+    rearrangeEntries(newToOldEntries);
     assert(checkInputsOrder() && checkOutputsOrder());
 
     return allocate<Subnet>(nIn, nOut, std::move(entries));
@@ -579,7 +583,7 @@ private:
 
   /// Updates deleted entry depth bounds and deletes it from the topological
   /// order.
-  void deleteDepthBoubds(size_t entryID);
+  void deleteDepthBounds(size_t entryID);
 
   /// Updates added entry depth bounds and adds it to the topological order.
   void addDepthBounds(size_t entryID);
@@ -672,9 +676,7 @@ private:
   /// Context.
   std::vector<Subnet::Entry> entries;
 
-  std::vector<size_t> prev;
-  std::vector<size_t> next;
-  std::vector<size_t> depth;
+  std::vector<EntryDescriptor> desc;
   std::vector<std::pair<size_t, size_t>> depthBounds;
   std::vector<size_t> emptyEntryIDs;
 

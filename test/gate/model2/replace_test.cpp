@@ -100,7 +100,8 @@ TEST(ReplaceTest, SimpleTest) {
   mapping[rhsInputs[1].idx] = inputs[1].idx;
   mapping[rhsOutLink0.idx] = andLink0.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == -1);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) ==
+              std::make_pair(-1, -1));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -134,7 +135,7 @@ TEST(ReplaceTest, SmallerRhs) {
   mapping[rhsInputs[2].idx] = 2;
   mapping[rhsOutLink.idx] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 2);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(2, 1));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -173,7 +174,8 @@ TEST(ReplaceTest, LargerRhs) {
   mapping[rhsInputs[2].idx] = 2;
   mapping[rhsOutLink.idx] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == -2);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) ==
+              std::make_pair(-2, -1));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -210,7 +212,7 @@ TEST(ReplaceTest, NoInner) {
   mapping[1] = 4;
   mapping[3] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 0);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -244,7 +246,7 @@ TEST(ReplaceTest, ReplaceTwice) {
   mapping[2] = 2;
   mapping[7] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == -1);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(-1, 0));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
 
@@ -259,7 +261,8 @@ TEST(ReplaceTest, ReplaceTwice) {
   mapping2[0] = 0;
   mapping2[3] = 7;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) == -1);
+  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) ==
+              std::make_pair(-1, -1));
   builder.replace(rhs2ID, mapping2);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -293,7 +296,7 @@ TEST(ReplaceTest, OneCell) {
   mapping[0] = 3;
   mapping[1] = 3;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 0);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -331,7 +334,7 @@ TEST(ReplaceTest, ExternalRefs) {
   mapping[2] = inputs[3].idx;
   mapping[4] = orLink1.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 1);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(1, 1));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -355,11 +358,11 @@ TEST(ReplaceTest, ExternalRefs) {
 TEST(ReplaceTest, LessRootInputs) {
   SubnetBuilder builder;
   const auto inputs = builder.addInputs(3);
-  const auto BufLink0 = builder.addCell(model::BUF, inputs[0]);
-  const auto BufLink1 = builder.addCell(model::BUF, inputs[1]);
-  const auto BufLink2 = builder.addCell(model::BUF, inputs[2]);
-  const auto xorLink0 = builder.addCell(model::XOR, BufLink0, BufLink1,
-                                        BufLink2);
+  const auto bufLink0 = builder.addCell(model::BUF, inputs[0]);
+  const auto bufLink1 = builder.addCell(model::BUF, inputs[1]);
+  const auto bufLink2 = builder.addCell(model::BUF, inputs[2]);
+  const auto xorLink0 = builder.addCell(model::XOR, bufLink0, bufLink1,
+                                        bufLink2);
   builder.addOutput(xorLink0);
 
   SubnetBuilder rhsBuilder;
@@ -375,7 +378,7 @@ TEST(ReplaceTest, LessRootInputs) {
   mapping[2] = inputs[2].idx;
   mapping[4] = xorLink0.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 3);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(3, 1));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -410,7 +413,7 @@ TEST(ReplaceTest, InvLink) {
   mapping[1] = inputs[1].idx;
   mapping[3] = xorLink0.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 0);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -447,7 +450,8 @@ TEST(ReplaceTest, AddCellAfterReplace) {
   mapping[1] = inputs[1].idx;
   mapping[5] = andLink0.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == -2);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) ==
+              std::make_pair(-2, -1));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const auto bufLink0 = builder.addCell(model::BUF, andLink0);
@@ -489,7 +493,8 @@ TEST(ReplaceTest, SameCone) {
     i += curCell.more;
   }
 
-  EXPECT_TRUE(builder.evaluateReplace(coneSubnetID, mapping) == 0);
+  EXPECT_TRUE(builder.evaluateReplace(coneSubnetID, mapping) ==
+              std::make_pair(0, 0));
   builder.replace(coneSubnetID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -517,7 +522,7 @@ TEST(ReplaceTest, DeleteCell) {
   std::unordered_map<size_t, size_t> mapping;
   mapping[0] = 0;
   mapping[1] = 1;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 1);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(1, 1));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -549,7 +554,7 @@ TEST(ReplaceTest, DeleteSeveralCells) {
   std::unordered_map<size_t, size_t> mapping;
   mapping[0] = 0;
   mapping[1] = 3;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 3);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(3, 3));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -579,7 +584,7 @@ TEST(ReplaceTest, DeleteCellWithInvOut) {
   std::unordered_map<size_t, size_t> mapping;
   mapping[0] = 0;
   mapping[1] = 1;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 1);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(1, 1));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -609,7 +614,7 @@ TEST(ReplaceTest, InvertFanouts) {
   mapping[0] = 0;
   mapping[1] = 1;
   mapping[3] = 3;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 0);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -648,7 +653,7 @@ TEST(ReplaceTest, DublicateRoot) {
   mapping[0] = 0;
   mapping[1] = 1;
   mapping[3] = 4;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 2);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(2, 2));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -682,7 +687,7 @@ TEST(ReplaceTest, DeleteDublicatedRoot) {
   mapping[0] = 0;
   mapping[1] = 1;
   mapping[3] = 4;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 2);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(2, 2));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
 
@@ -697,7 +702,8 @@ TEST(ReplaceTest, DeleteDublicatedRoot) {
   mapping2[0] = 0;
   mapping2[1] = 1;
   mapping2[3] = 5;
-  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) == 1);
+  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) ==
+              std::make_pair(1, 1));
   builder.replace(rhs2ID, mapping2);
   printBidirectCellsTrav(builder);
 
@@ -731,7 +737,7 @@ TEST(ReplaceTest, ReuseReplacedCell) {
   mapping[0] = 1;
   mapping[1] = 2;
   mapping[3] = 4;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 0);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
 
@@ -749,7 +755,8 @@ TEST(ReplaceTest, ReuseReplacedCell) {
   mapping2[1] = 1;
   mapping2[2] = 2;
   mapping2[5] = 5;
-  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) == 1);
+  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) ==
+              std::make_pair(1, 0));
   builder.replace(rhs2ID, mapping2);
   printBidirectCellsTrav(builder);
 
@@ -798,7 +805,7 @@ TEST(ReplaceTest, ReuseCellsFollowingRoot) {
   mapping[2] = 2;
   mapping[7] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == 0);
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, -2));
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
 
@@ -820,6 +827,37 @@ TEST(ReplaceTest, ReuseCellsFollowingRoot) {
     builder.addOutput(bufLink0);
     subnetsEqual(resultID, builder.make());
   }
+}
+
+TEST(ReplaceTest, EvaluationTest) {
+  SubnetBuilder builder;
+  const auto &inLinks = builder.addInputs(3);
+  const auto &andLink0 = builder.addCell(model::AND, inLinks[0], inLinks[1]);
+  const auto &xorLink0 = builder.addCell(model::XOR, inLinks[1], inLinks[2]);
+  const auto &orLink0 = builder.addCell(model::OR, andLink0, xorLink0);
+  const auto &bufLink0 = builder.addCell(model::BUF, orLink0);
+  const auto &bufLink1 = builder.addCell(model::BUF, ~orLink0);
+  builder.addOutput(bufLink0);
+  builder.addOutput(bufLink1);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(3);
+  const auto &rhsAndLink0 = rhsBuilder.addCell(model::AND, rhsInLinks[0],
+                                               rhsInLinks[1]);
+  const auto &rhsXorLink0 = rhsBuilder.addCell(model::XOR, rhsInLinks[1],
+                                               inLinks[2]);
+  const auto &rhsOrLink0 = rhsBuilder.addCell(model::OR, rhsAndLink0,
+                                              rhsXorLink0);
+  const auto &rhsBufLink0 = rhsBuilder.addCell(model::BUF, rhsOrLink0);
+  rhsBuilder.addOutput(rhsBufLink0);
+
+  const auto rhsID = rhsBuilder.make();
+  std::unordered_map<size_t, size_t> mapping;
+  mapping[0] = 0;
+  mapping[1] = 1;
+  mapping[2] = 2;
+  mapping[7] = 6;
+  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
 }
 
 TEST(ReplaceTest, OneEntryTraversal) {

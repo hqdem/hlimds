@@ -9,6 +9,7 @@
 #include "fir_to_model2.h"
 
 #include "gate/model2/celltype.h"
+#include "gate/model2/printer/printer.h"
 #include "util/assert.h"
 
 #include "circt/Conversion/Passes.h"
@@ -34,6 +35,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/Passes.h"
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -80,6 +82,7 @@ using FModuleOp = circt::firrtl::FModuleOp;
 using FIRParserOptions = circt::firrtl::FIRParserOptions;
 using FIRRTLBaseType = circt::firrtl::FIRRTLBaseType;
 using FIRRTLDialect = circt::firrtl::FIRRTLDialect;
+using Format = eda::gate::model::ModelPrinter::Format;
 using GEQPrimOp = circt::firrtl::GEQPrimOp;
 using GTPrimOp = circt::firrtl::GTPrimOp;
 using HeadPrimOp = circt::firrtl::HeadPrimOp;
@@ -145,12 +148,59 @@ namespace PreserveAggregate = circt::firrtl::PreserveAggregate;
 namespace PreserveValues = circt::firrtl::PreserveValues;
 namespace chirrtl = circt::chirrtl;
 namespace firrtl = circt::firrtl;
+namespace fs = std::filesystem;
 namespace hw = circt::hw;
 namespace model = eda::gate::model;
 namespace om = circt::om;
 namespace sv = circt::sv;
 
 namespace eda::gate::model {
+
+bool printNetlist(const std::string &inputFilePath,
+                  const std::string &outputDir) {
+
+  const fs::path inPath = inputFilePath;
+  if (!fs::exists(inPath)) {
+    std::cerr << "File does not exist: " << inputFilePath << std::endl;
+    return false;
+  }
+  std::string extension = inPath.extension();
+  if (extension != ".fir" && extension != ".mlir") {
+    std::cerr << "Unsupported file type: " << extension << std::endl;
+    return false;
+  }
+
+  // Parse the input 'FIRRTL' / 'MLIR' file.
+  Translator translator{ extension == ".fir" ?
+      MLIRModule::loadFromFIRFile(inputFilePath) :
+      MLIRModule::loadFromMLIRFile(inputFilePath) };
+
+#ifdef UTOPIA_DEBUG
+  translator.printFIRRTL();
+#endif
+  // Translate the 'FIRRTL' representation to the 'model2' representation.
+  const auto resultNetlist = translator.translate();
+
+  // Dump the output net to the console (Format::SIMPLE).
+#ifdef UTOPIA_DEBUG
+  for (const auto &cellTypeID : *resultNetlist) {
+    std::cout << CellType::get(cellTypeID).getNet() << std::endl;
+  }
+#endif
+  // Dump the output net to the '.v' file.
+  fs::path outPath = inPath.filename();
+  outPath.replace_extension(".v");
+  fs::create_directories(outputDir);
+  const fs::path outputFullName = outputDir / outPath;
+  std::ofstream outputStream(outputFullName);
+  for (const auto &cellTypeID : *resultNetlist) {
+    ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
+        CellType::get(cellTypeID).getNet());
+  }
+  outputStream.close();
+
+  return true;
+}
 
 MLIRModule MLIRModule::loadFromMLIR(const std::string &string) {
   auto context = std::make_unique<MLIRContext>();

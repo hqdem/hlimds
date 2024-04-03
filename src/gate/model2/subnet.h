@@ -520,10 +520,15 @@ public:
       std::unordered_map<size_t, size_t> &rhsToLhs,
       const std::function<void(const size_t)> *onNewCell = nullptr);
 
-  /// Returns [the number of deleted entries - the number of added entries]
+  /// Returns
+  /// {
+  ///   [the number of deleted entries - the number of added entries];
+  ///   [old root depth - new root depth]
+  /// }
   /// after replacement.
-  int evaluateReplace(const SubnetID rhsID,
-                      std::unordered_map<size_t, size_t> &rhsToLhs) const;
+  std::pair<int, int> evaluateReplace(
+      const SubnetID rhsID,
+      std::unordered_map<size_t, size_t> &rhsToLhs) const;
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
@@ -567,14 +572,14 @@ public:
   }
 
 private:
-  /// Returns the number of new entries after replacement.
-  int cntNewEntries(
+  /// Returns {[the number of new entries]; [new root depth]} after replacement.
+  std::pair<size_t, size_t> newEntriesEval(
       const SubnetID rhsID,
       const std::unordered_map<size_t, size_t> rhsToLhs,
       std::unordered_set<size_t> &reusedEntries) const;
 
   /// Returns the number of entries to delete after deleting root.
-  int cntDeletedEntries(
+  int deletedEntriesEval(
       const size_t rootEntryID,
       const std::unordered_set<size_t> &reusedEntries) const;
 

@@ -324,7 +324,7 @@ void SubnetBuilder::replace(
   }
 }
 
-int SubnetBuilder::evaluateReplace(
+std::pair<int, int> SubnetBuilder::evaluateReplace(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> &rhsToLhs) const {
 
@@ -332,10 +332,13 @@ int SubnetBuilder::evaluateReplace(
   assert(rhs.getOutNum() == 1);
   const auto &rhsEntries = rhs.getEntries();
   std::unordered_set<size_t> reusedEntries;
-  int addedEntriesN = cntNewEntries(rhsID, rhsToLhs, reusedEntries);
-  int deletedEntriesN = cntDeletedEntries(rhsToLhs[rhsEntries.size() - 1],
-                                          reusedEntries);
-  return deletedEntriesN - addedEntriesN;
+  auto newEntriesMetric = newEntriesEval(rhsID, rhsToLhs, reusedEntries);
+  int deletedEntriesN = deletedEntriesEval(rhsToLhs[rhsEntries.size() - 1],
+                                           reusedEntries);
+  const int oldRootDepth = (int)desc[rhsToLhs[rhsEntries.size() - 1]].depth;
+  const int newRootDepth = (int)newEntriesMetric.second;
+  const size_t addedEntriesN = newEntriesMetric.first;
+  return {deletedEntriesN - addedEntriesN, oldRootDepth - newRootDepth};
 }
 
 void SubnetBuilder::replaceWithZero(const EntrySet &entryIDs) {
@@ -350,7 +353,7 @@ void SubnetBuilder::replaceWithOne(const EntrySet &entryIDs) {
   mergeCells(MergeMap{{oneID, entryIDs}});
 }
 
-int SubnetBuilder::cntNewEntries(
+std::pair<size_t, size_t> SubnetBuilder::newEntriesEval(
     const SubnetID rhsID,
     const std::unordered_map<size_t, size_t> rhsToLhs,
     std::unordered_set<size_t> &reusedEntries) const {
@@ -358,23 +361,30 @@ int SubnetBuilder::cntNewEntries(
   int addedEntriesN = 0;
   const auto &rhs = Subnet::get(rhsID);
   const auto &rhsEntries = rhs.getEntries();
+  std::vector<int> virtualDepth(rhsEntries.size(), -1);
   for (size_t rhsEntryID = 0; rhsEntryID < rhsEntries.size() - 1; ++rhsEntryID) {
     const Subnet::Cell &rhsCell = rhsEntries[rhsEntryID].cell;
 
     if (rhsCell.isIn()) {
-      reusedEntries.insert(rhsToLhs.find(rhsEntryID)->second);
+      const size_t lhsEntryID = rhsToLhs.find(rhsEntryID)->second;
+      reusedEntries.insert(lhsEntryID);
+      virtualDepth[rhsEntryID] = (int)desc[lhsEntryID].depth;
       continue;
     }
 
     bool isNewElem = false;
     LinkList newRhsLinks;
     for (const auto &rhsLink : rhs.getLinks(rhsEntryID)) {
-      if (rhsToLhs.find(rhsLink.idx) == rhsToLhs.end()) {
+      const auto rhsLinkIdx = rhsLink.idx;
+      const int rhsLinkDepth = virtualDepth[rhsLinkIdx];
+      virtualDepth[rhsEntryID] = std::max(virtualDepth[rhsEntryID],
+                                          rhsLinkDepth + 1);
+      if (reusedEntries.find(rhsLinkIdx) == reusedEntries.end()) {
         isNewElem = true;
-        break;
+      } else {
+        newRhsLinks.push_back(Link(*reusedEntries.find(rhsLinkIdx),
+                                   rhsLink.out, rhsLink.inv));
       }
-      newRhsLinks.push_back(Link(rhsToLhs.find(rhsLink.idx)->second,
-                                  rhsLink.out, rhsLink.inv));
     }
     if (isNewElem) {
       ++addedEntriesN;
@@ -388,10 +398,10 @@ int SubnetBuilder::cntNewEntries(
       ++addedEntriesN;
     }
   }
-  return addedEntriesN;
+  return {addedEntriesN, virtualDepth[rhsEntries.size() - 2]};
 }
 
-int SubnetBuilder::cntDeletedEntries(
+int SubnetBuilder::deletedEntriesEval(
     const size_t rootEntryID,
     const std::unordered_set<size_t> &reusedEntries) const {
   if (reusedEntries.find(rootEntryID) != reusedEntries.end()) {
@@ -671,7 +681,7 @@ void SubnetBuilder::recomputeFanoutDepths(size_t rootEntryID,
       continue;
     }
     const auto &curCell = getCell(curEntryID);
-    size_t newDepth = desc[curEntryID].depth;
+    size_t newDepth = 0;
     const size_t curDepth = desc[curEntryID].depth;
     for (const auto &link : getLinks(curEntryID)) {
       if (toRecompute.find(link.idx) != toRecompute.end()) {
@@ -679,8 +689,8 @@ void SubnetBuilder::recomputeFanoutDepths(size_t rootEntryID,
       }
       newDepth = std::max(newDepth, desc[link.idx].depth + 1);
     }
-    desc[curEntryID].depth = newDepth;
     if (newDepth == curDepth || curCell.getTypeID() == CELL_TYPE_ID_OUT) {
+      desc[curEntryID].depth = newDepth;
       curEntryID = getNext(curEntryID);
       continue;
     }
@@ -736,7 +746,6 @@ Subnet::Link SubnetBuilder::replaceCell(
 
   destrashEntry(entryID);
 
-  //const auto oldCell = getCell(entryID);
   const auto oldRootNext = getNext(entryID);
   const auto oldRefcount = getCell(entryID).refcount;
   const auto oldLinks = getLinks(entryID);

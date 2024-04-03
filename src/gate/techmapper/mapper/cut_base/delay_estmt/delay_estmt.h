@@ -47,14 +47,25 @@ public:
     return slew;
   };
 
+  float lutInterpolation(const LookupTable *lut, size_t variablesCount, 
+                       float& input_net_transition,
+                       float& total_output_net_capacitance,
+                       float& x1, float& x2, float& y1, float& y2, 
+                       size_t& back1, size_t& front1, size_t& back2, size_t& front2);
+
   /*
-   *  timingVisitor gets values 
-   *   from Timing's LookUp-Tables
+   *  timingVisitor gets value of 
+   *   concrete delay type from
+   *   Timing's LookUp-Tables.
    */
   float timingVisitor(const Timing &timing,
                       std::string dtype,
                       float& input_net_transition,
-                      float& total_output_net_capacitance );
+                      float& total_output_net_capacitance);
+
+  std::vector<float> timingVisitor(const Timing &timing,
+                                   float& input_net_transition,
+                                   float& total_output_net_capacitance);
 
   /*
    *  delayEstimation calls Parser to look for
@@ -82,7 +93,7 @@ public:
     float slew;
     /// cell capacitance
     float capacitance;
-  };
+};
 
 
   float interpolation(float x0, float y0,

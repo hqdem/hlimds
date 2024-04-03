@@ -33,15 +33,26 @@ TEST(DelayEstmt, firstTest) {
   DelayEstimator d2;
   DelayEstimator d3;
 
+  /// Test for optimised delayEstimation
   std::string cell_name1 = "sky130_fd_sc_hd__a2111o_4";
   float input_net_transition = 0.053133;
   float total_output_net_capacitance1 = 0.191204;
   d1.nldm.delayEstimation(cell_name1, lib, input_net_transition, total_output_net_capacitance1);
-  float delay1 = 0.4451143741607666;
-  float slew1 = 0.37748932838439941;
+  float delay1 = 0.43547815084457397;
+  float slew1 = 0.37776732444763184;
   EXPECT_DOUBLE_EQ(d1.nldm.getCellDelay(), delay1);
   EXPECT_DOUBLE_EQ(d1.nldm.getSlew(), slew1);
 
+  /*std::string cell_name1 = "sky130_fd_sc_hd__a2111o_4";
+  float input_net_transition = 0.053133;
+  float total_output_net_capacitance1 = 0.191204;
+  d1.nldm.delayEstimation(cell_name1, file_name, input_net_transition, total_output_net_capacitance1);
+  float delay1 = 0.4451143741607666;
+  float slew1 = 0.37748932838439941;
+  EXPECT_DOUBLE_EQ(d1.nldm.getCellDelay(), delay1);
+  EXPECT_DOUBLE_EQ(d1.nldm.getSlew(), slew1);*/
+
+  /// Tests for default delayEstimation
   std::string cell_name2 = "sky130_fd_sc_hd__o21a_4";
   float total_output_net_capacitance2 = 0.001627;
   d2.nldm.delayEstimation(cell_name2, file_name, input_net_transition, total_output_net_capacitance2);

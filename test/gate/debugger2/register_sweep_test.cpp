@@ -1,0 +1,46 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+#include "gate/debugger2/seq_checker.h"
+#include "gate/model2/utils/subnet_random.h"
+#include "../test/gate/model2/examples.h"
+
+#include "gtest/gtest.h"
+
+namespace eda::gate::debugger2 {
+
+TEST(RegisterSweepTest, custom1) {
+  Subnet &subnet = Subnet::get(eda::gate::model::makeStuckLatches());
+  const Subnet &clearedSubnet = structuralRegisterSweep(subnet, 10, false, 0);
+
+  EXPECT_TRUE(clearedSubnet.size() == 3);
+  EXPECT_TRUE(clearedSubnet.getInNum() == 0);
+  EXPECT_TRUE(clearedSubnet.getOutNum() == 2);
+  EXPECT_TRUE(clearedSubnet.getEntries()[0].cell.getSymbol() ==
+              CellSymbol::ZERO);
+}
+
+TEST(RegisterSweepTest, custom2) {
+  Subnet &subnet = Subnet::get(eda::gate::model::makeStuckLatche());
+  const Subnet &clearedSubnet = structuralRegisterSweep(subnet, 10, false, 0);
+
+  auto entries = clearedSubnet.getEntries();
+
+  EXPECT_TRUE(clearedSubnet.size() == 10);
+  EXPECT_TRUE(clearedSubnet.getInNum() == 4);
+  EXPECT_TRUE(clearedSubnet.getOutNum() == 5);
+  EXPECT_FALSE(entries[0].cell.isFlipFlop() || entries[1].cell.isFlipFlop());
+  EXPECT_TRUE(entries[2].cell.isFlipFlop() && entries[3].cell.isFlipFlop());
+  EXPECT_TRUE(entries[4].cell.getSymbol() == CellSymbol::ZERO);
+  EXPECT_TRUE(entries[5].cell.isFlipFlop() && entries[6].cell.isFlipFlop());
+  for (size_t i = 7; i <= 9; ++i) {
+    EXPECT_FALSE(entries[i].cell.isFlipFlop());
+  }
+}
+
+} // namespace eda::gate::debugger2

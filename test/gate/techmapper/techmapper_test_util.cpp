@@ -164,7 +164,7 @@ SubnetID andNotMapping(Techmapper::MapperType mapperType) {
   const auto idx3 = builder.addCell(model::AND, Link(idx0), Link(idx1));
   const auto idx4 = builder.addCell(model::AND, Link(idx2), Link(idx3));
 
-  builder.addOutput(idx4);
+  builder.addOutput(Link(idx4.idx, true));
 
   SubnetID subnetID = builder.make();
 

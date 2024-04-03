@@ -24,7 +24,7 @@ void SimpleAreaMapper::findBest() {
        entryIndex++) {
     auto cell = entries[entryIndex].cell;
 
-    if (!cell.isAnd()) {
+    if (!(cell.isAnd() || cell.isBuf())) {
       addNotAnAndToTheMap(entryIndex, cell);
     } else {
       // Save best tech cells subnet to bestReplMap

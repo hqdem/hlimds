@@ -27,8 +27,10 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
                const std::vector<CellTypeID> &cellTypeFFIDs,
                const std::vector<CellTypeID> &cellTypeFFrsIDs,
                const std::vector<CellTypeID> &cellTypeLatchIDs) {
+
+  /////////////////////////////////////////////////////////
   std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
-  /*int count = 0;
+  int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
@@ -52,14 +54,49 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
       SubnetID subnetID = subnetBuilder.make();
 
       subnets.push_back(subnetID);
-      Subnetattr subnetattr{"LibertyCell", cellType.getAttr().area};
+
+      bool needPower = false;
+      if (needPower) {
+        const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+        const std::filesystem::path jsonPath =
+            homePath / "test" / "data" / "gate" / "techmapper" / "liberty.json";
+        std::ifstream file(jsonPath.string());
+        nlohmann::json j;
+        file >> j;
+
+        std::vector<Power> powers;
+
+        std::string cell_name = cellType.getName();
+
+        if (j.contains(cell_name)) {
+          auto& cell_power = j[cell_name]["power"];
+
+          for (const auto &[key, value] : cell_power.items()) {
+            Power power;
+            power.fall_power = value["fall_power"];
+            power.rise_power = value["rise_power"];
+            powers.push_back(power);
+          }
+        } else {
+          std::cout << "Cell not found in JSON." << std::endl;
+        }
+
+        // Вывод значений для проверки
+        for (auto& p : powers) {
+          std::cout << "Fall Power: " << p.fall_power << ", Rise Power: " << p.rise_power << std::endl;
+        }
+
+      }
+
+      Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area};
       subnetToAttr.emplace_back(subnetID, subnetattr);
-      ttSubnet.emplace_back(model::evaluate(cellType.getSubnet()), subnetID);
+      ttSubnet.emplace_back(model::evaluate(cellType.getSubnet()).at(0), subnetID);
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
-  std::cout << "Count of liberty Subnet = " << count << std::endl;*/
 
-  std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
+
+  ////////////////////////////////////////////////////////////////////////
+  /*std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     count++;
@@ -117,7 +154,8 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
     ttSubnet.emplace_back(model::evaluate(
         cellType.getSubnet()).at(0), subnetID);
-  }
+  }*/
+  //////////////////////////////////////////////////////////////////////////////
 
   for (const CellTypeID &cellTypeID : cellTypeFFIDs) {
     CellType &cellType = CellType::get(cellTypeID);

@@ -15,6 +15,12 @@ TEST(TechmapAreaTest, SimpleAndSubnet) {
   printStatistic(mappedSubnetId, libertyName);
 }
 
+TEST(TechmapAreaTest, SimpleAndNotSubnet) {
+  SubnetID mappedSubnetId = andNotMapping(areaMapperType);
+  std::cout << getArea(mappedSubnetId) << std::endl;
+  printStatistic(mappedSubnetId, libertyName);
+}
+
 TEST(TechmapAreaTest, SimpleORSubnet) {
   SubnetID mappedSubnetId = simpleORMapping(areaMapperType);
   std::cout << getArea(mappedSubnetId) << std::endl;

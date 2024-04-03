@@ -22,7 +22,7 @@ TEST(TechmapDelayTest, SimpleSubnet) {
   std::cout << getArea(mappedSubnetId) << std::endl;
 }
 
-TEST(TechmapDelayTest, DISABLED_GraphMLSubnet) {
+TEST(TechmapDelayTest, GraphMLSubnet) {
   std::string fileName = "aes_orig";
   SubnetID mappedSubnetId = graphMLMapping(delayMapperType, fileName);
   std::cout << getArea(mappedSubnetId) << std::endl;

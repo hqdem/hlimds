@@ -34,7 +34,8 @@ CascadeSynthesizer::CascadeSynthesizer() {}
 // Internal Methods
 //===----------------------------------------------------------------------===//
 
-void CascadeSynthesizer::initialize(CNF &output, int times, int num1, int num2, int num3) {
+void CascadeSynthesizer::initialize(
+    CNF &output, int times, int num1, int num2, int num3) const {
 
   for (int i = 0; i < times; i++) {
     output[0].push_back(num1);
@@ -43,7 +44,8 @@ void CascadeSynthesizer::initialize(CNF &output, int times, int num1, int num2, 
   }
 }
 
-int CascadeSynthesizer::calculate(int numVars, CNF &form, std::vector<int> &values) {
+int CascadeSynthesizer::calculate(
+    int numVars, CNF &form, std::vector<int> &values) const {
 
   // form[j][i] - current value in normal form table
   // values[j] : f(..., j, ...) - value of j
@@ -95,7 +97,8 @@ int CascadeSynthesizer::calculate(int numVars, CNF &form, std::vector<int> &valu
 
 // Checks if x_i&f(1, ...) + !x_i&f(0, ...) can be simplified and if so, 
 // does it
-void CascadeSynthesizer::checkSimplify(int numVars, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values) {
+void CascadeSynthesizer::checkSimplify(
+    int numVars, CNF &out, CNF &out1, CNF &out2, std::vector<int> &values) const {
 
   int size1 = out1[0].size();
   int size2 = out2[0].size();
@@ -172,7 +175,7 @@ void CascadeSynthesizer::checkSimplify(int numVars, CNF &out, CNF &out1, CNF &ou
   }
 }
 
-CNF CascadeSynthesizer::normalForm(const TruthTable &table) {
+CNF CascadeSynthesizer::normalForm(const TruthTable &table) const {
 
   int numVars = table.num_vars();
   int bits = 1 << numVars;
@@ -199,10 +202,11 @@ CNF CascadeSynthesizer::normalForm(const TruthTable &table) {
 }
 
 //===--------------------------------------------------------------------===//
-    // Main Methods
+// Main Methods
 //===--------------------------------------------------------------------===//
 
-CNF CascadeSynthesizer::getFunction(const TruthTable &table, CNF &form, std::vector<int> &values) {
+CNF CascadeSynthesizer::getFunction(
+    const TruthTable &table, CNF &form, std::vector<int> &values) const {
 
   unsigned int numVars = table.num_vars();
   CNF output(3);
@@ -250,7 +254,8 @@ CNF CascadeSynthesizer::getFunction(const TruthTable &table, CNF &form, std::vec
   return output;
 }
 
-SubnetID CascadeSynthesizer::synthesize(const TruthTable &func, uint16_t maxArity) {
+SubnetID CascadeSynthesizer::synthesize(
+    const TruthTable &func, uint16_t maxArity) const {
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
   const int undefinedArity = 65535;
@@ -371,4 +376,5 @@ SubnetID CascadeSynthesizer::synthesize(const TruthTable &func, uint16_t maxArit
         
   return subnetBuilder.make();
 }
+
 } // namespace eda::gate::optimizer2::synthesis

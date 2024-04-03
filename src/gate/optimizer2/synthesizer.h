@@ -35,17 +35,17 @@ public:
   Synthesizer() {}
   virtual ~Synthesizer() {}
 
-  virtual SubnetID synthesize(const IR &ir, uint16_t maxArity = -1) = 0;
+  virtual SubnetID synthesize(const IR &ir, uint16_t maxArity = -1) const = 0;
 
   virtual SubnetID synthesizeWithFactoring(const IR &ir,
-                                           uint16_t maxArity = -1) {
+                                           uint16_t maxArity = -1) const {
     assert(false && "The method is not overridden");
     return model::OBJ_NULL_ID;
   }
 
 protected:
 
-  model::SubnetID synthConstFunc(size_t vars, bool one) {
+  model::SubnetID synthConstFunc(size_t vars, bool one) const {
     model::SubnetBuilder subnetBuilder;
     subnetBuilder.addInputs(vars);
 

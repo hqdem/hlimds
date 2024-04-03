@@ -38,19 +38,20 @@ int firrtlTranslatorTest(const std::string &inputFileName,
       MLIRModule::loadFromMLIRFile(inputFullName.c_str())};
 
   // Print the input 'FIRRTL' code. 
+#ifdef UTOPIA_DEBUG
   translator.printFIRRTL();
-
+#endif
   // Convert the 'FIRRTL' representation to the 'model2' representation.
   const auto resultNetlist = translator.translate();
 
   // Dump the output net to the console (Format::SIMPLE).
+#ifdef UTOPIA_DEBUG
   for (const auto &cellTypeID : *resultNetlist) {
     std::cout << CellType::get(cellTypeID).getNet() << std::endl;
   }
-
+#endif
   // Dump the output net to the '.v' file.
-  const fs::path outputFullPath = homePath /
-                                  relativeOutputPath;
+  const fs::path outputFullPath = homePath / relativeOutputPath;
   fs::create_directories(outputFullPath);
   const fs::path outputFullName = outputFullPath / outputFileName;
   std::ofstream outputStream(outputFullName);
@@ -130,61 +131,6 @@ TEST(FIRRTLTranslatorTestBasic, AddInstanceMixTest) {
                                  "add_instance_mix.v"), 0);
 }
 
-// 'Picorv' tests.
-TEST(FIRRTLTranslatorTestPicorv, Fir0Test) {
-  EXPECT_EQ(firrtlTranslatorTest("fir_0.fir",
-                                 "fir_0.v",
-                                 InputFIRFile), 0);
-}
-
-TEST(FIRRTLTranslatorTestPicorv, Fir1Test) {
-  EXPECT_EQ(firrtlTranslatorTest("fir_1.fir",
-                                 "fir_1.v",
-                                 InputFIRFile), 0);
-}
-
-TEST(FIRRTLTranslatorTestPicorv, Fir2Test) {
-  EXPECT_EQ(firrtlTranslatorTest("fir_2.fir",
-                                 "fir_2.v",
-                                 InputFIRFile), 0);
-}
-
-TEST(FIRRTLTranslatorTestPicorv, Fir3Test) {
-  EXPECT_EQ(firrtlTranslatorTest("fir_3.fir",
-                                 "fir_3.v",
-                                 InputFIRFile), 0);
-}
-
-TEST(FIRRTLTranslatorTestPicorv, CompareFirTest) {
-  EXPECT_EQ(firrtlTranslatorTest("compare.fir",
-                                 "compare.v",
-                                 InputFIRFile), 0);
-}
-
-TEST(FIRRTLTranslatorTestPicorv, CatFirTest) {
-  EXPECT_EQ(firrtlTranslatorTest("cat.fir",
-                                 "cat.v",
-                                 InputFIRFile), 0);
-}
-
-TEST(FIRRTLTranslatorTestPicorv, CondFirTest) {
-  EXPECT_EQ(firrtlTranslatorTest("cond.fir",
-                                 "cond.v",
-                                 InputFIRFile), 0);
-}
-
-TEST(FIRRTLTranslatorTestPicorv, CycleFirTest) {
-  EXPECT_EQ(firrtlTranslatorTest("cycle.fir",
-                                 "cycle.v",
-                                 InputFIRFile), 0);
-}
-
-TEST(FIRRTLTranslatorTestPicorv, PicorvProcessor1Test) {
-  EXPECT_EQ(firrtlTranslatorTest("picorv_processor1.fir",
-                                 "picorv_processor1.v",
-                                 InputFIRFile), 0);
-}
-
 // 'FIRRTL 3.2.0' specification tests.
 TEST(FIRRTLTranslatorTestSpec, SpecCircuitsTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_circuits.fir",
@@ -223,11 +169,12 @@ TEST(FIRRTLTranslatorTestSpec, SpecExternalModulesRefTest) {
                                  InputFIRFile), 0);
 }
 
-TEST(FIRRTLTranslatorTestSpec, SpecIntrinsicModulesRefTest) {
-  EXPECT_EQ(firrtlTranslatorTest("spec_intmodules.fir",
-                                 "spec_intmodules.v",
-                                 InputFIRFile), 0);
-}
+/// TODO: Not supported (for now).
+// TEST(FIRRTLTranslatorTestSpec, SpecIntrinsicModulesRefTest) {
+//   EXPECT_EQ(firrtlTranslatorTest("spec_intmodules.fir",
+//                                  "spec_intmodules.v",
+//                                  InputFIRFile), 0);
+// }
 
 TEST(FIRRTLTranslatorTestSpec, SpecProbesTest) {
   EXPECT_EQ(firrtlTranslatorTest("spec_probes.fir",

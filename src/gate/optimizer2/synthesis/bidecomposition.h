@@ -39,7 +39,8 @@ public:
   using SubnetID      = model::SubnetID;
 
   /// Synthesizes the Subnet.
-  SubnetID synthesize(const KittyTT &func, uint16_t maxArity = -1) override {
+  SubnetID synthesize(const KittyTT &func,
+                      uint16_t maxArity = -1) const override {
     bool one{kitty::is_const0(~func)};
     bool zero{ kitty::is_const0(func)};
     if (one || zero) {

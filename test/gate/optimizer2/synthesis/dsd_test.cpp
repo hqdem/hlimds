@@ -21,7 +21,7 @@ using namespace eda::gate::model;
 using namespace eda::gate::model::utils;
 using namespace eda::gate::simulator2;
 
-using DsdToSubnet = eda::gate::optimizer2::synthesis::DsdToSubnet;
+using DsdSynthesizer = eda::gate::optimizer2::synthesis::DsdSynthesizer;
 using BddWithDdManager = eda::gate::optimizer2::synthesis::BddWithDdManager;
 using LinkList = Subnet::LinkList;
 
@@ -48,7 +48,7 @@ const Subnet& handle(const Subnet &subnet) {
   LOG_DEBUG(Cudd_PrintDebug(netBDD.manager(), netBDD.getNode(), 0, 3));
 
   /* Resynthesis */
-  DsdToSubnet test;
+  DsdSynthesizer test;
   BddWithDdManager pair{netBDD.getNode(), manager.getManager()};
   const auto &result = Subnet::get(test.synthesize(pair));
   LOG_DEBUG(result);
@@ -902,7 +902,7 @@ TEST(DsdTest, fourZERO) {
   eda::gate::optimizer2::synthesis::MMSynthesizer minato;
   const auto &subnet = Subnet::get(minato.synthesize(tt));
 
-  DsdToSubnet dsd;
+  DsdSynthesizer dsd;
   const auto &subnet2 = Subnet::get(dsd.synthesize(tt));
   LOG_DEBUG(subnet2);
 

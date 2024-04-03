@@ -36,7 +36,7 @@ inline void printStatistic(model::SubnetID subnetID, std::string file_name) {
   int nCells = 0;
 
   std::unordered_map<std::string, int> statistic;
-  for (const auto& cell : lib.getCells()) {
+  for (const auto &cell : lib.getCells()) {
     statistic[std::string(cell.getName())] = 0;
   }
   const auto &entries = model::Subnet::get(subnetID).getEntries();

@@ -49,7 +49,7 @@ public:
    * The maxArity param must be greater than 2.
    */
   SubnetID synthesize(const DinTruthTable &func,
-                      uint16_t maxArity = -1) override;
+                      uint16_t maxArity = -1) const override;
 
   /**
    * Creates a function, represented by a given truth table. 
@@ -64,7 +64,7 @@ public:
    *
    * @return polynomical representation of truth table t
    */
-  Polynomial getTT(const DinTruthTable &t);
+  Polynomial getTT(const DinTruthTable &t) const;
 
   /**
    * Calculates the function of the variables given in the string.
@@ -79,7 +79,7 @@ public:
    * 
    * @return func(s)
    */
-  uint64_t apply(const Polynomial &func, const std::string &s);
+  uint64_t apply(const Polynomial &func, const std::string &s) const;
 
 private:
 
@@ -90,7 +90,7 @@ private:
    *
    * @return characterisitic ponynomial of a given truth table
    */
-  Polynomial charFromTruthTable(const DinTruthTable &t);
+  Polynomial charFromTruthTable(const DinTruthTable &t) const;
 
   /**
    * Generates a characteristic function from a given function.
@@ -102,7 +102,7 @@ private:
    * @return characteristic polynomial of a given polynomial
    *
    */
-  Polynomial charFromFunction(Polynomial &func);
+  Polynomial charFromFunction(Polynomial &func) const;
 };
 
 } //namespace eda::gate::optimizer2::synthesis

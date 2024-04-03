@@ -34,7 +34,8 @@ public:
   /// @endcond
 
   /// Synthesizes the Subnet.
-  SubnetID synthesize(const KittyTT &func, uint16_t maxArity = -1) override {
+  SubnetID synthesize(const KittyTT &func,
+                      uint16_t maxArity = -1) const override {
     CONST_CHECK(func)
     SubnetBuilder subnetBuilder;
     LinkList ins = subnetBuilder.addInputs(func.num_vars());
@@ -48,13 +49,12 @@ public:
 
   /// Synthesizes the Subnet with algebraic factoring.
   SubnetID synthesizeWithFactoring(const KittyTT &func,
-                                   uint16_t maxArity = -1) override {
+                                   uint16_t maxArity = -1) const override {
     CONST_CHECK(func)
     bool inv = (kitty::count_ones(func) > (func.num_bits() / 2));
     return factor.getSubnet(
         kitty::isop(inv ? ~func : func), func.num_vars(), maxArity, inv);
   }
-
 
 private:
 

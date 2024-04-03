@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/examples.h"
+
 #include "gate/model2/utils/subnet_truth_table.h"
 
 namespace eda::gate::model {
@@ -76,6 +77,149 @@ SubnetID makeXorOrXor() {
   links[3] = sb.addCell(XOR, links[0], links[1]);
   links[4] = sb.addCell(XOR, links[1], links[2]);
   links[5] = sb.addCell(OR, links[3], links[4]);
+  sb.addOutput(links[5]);
+  return sb.make();
+}
+
+/* in           and  out */
+/* ┌─┐───────┬─┌─┐──┌─┐  */
+/* └─┘     ┌─┼─└─┘  └─┘  */
+/* in      | │  or   out */
+/* ┌─┐     | ├─┌─┐──┌─┐  */
+/* └─┘─────┼─┼─└─┘  └─┘  */
+/*         | │  xor  out */
+/*         | └─┌─┐──┌─┐  */
+/*         └───└─┘  └─┘  */
+SubnetID makeAndOrXor() {
+  SubnetBuilder sb;
+  Subnet::Link links[8];
+  Subnet::LinkList inp = sb.addInputs(2);
+  std::copy(inp.begin(), inp.end(), links);
+  links[2] = sb.addCell(AND, links[0], links[1]);
+  links[3] = sb.addCell(OR, links[0], links[1]);
+  links[4] = sb.addCell(XOR, links[0], links[1]);
+  sb.addOutput(links[2]);
+  sb.addOutput(links[3]);
+  sb.addOutput(links[4]);
+  return sb.make();
+}
+
+/* in           and      and  out */
+/* ┌─┐───────┬─┌─┐──┬────┌─┐──┌─┐ */
+/* └─┘     ┌─┼─└─┘  |    └─┘  └─┘ */
+/*         | |      |    and  out */
+/*         | |      └────┌─┐──┌─┐ */
+/*         | |      ┌────└─┘  └─┘ */
+/* in      | │  or  |    or   out */
+/* ┌─┐     | └─┌─┐──┴────┌─┐──┌─┐ */
+/* └─┘─────┴───└─┘       └─┘  └─┘ */
+model::SubnetID make4AndOr() {
+  SubnetBuilder sb;
+  Subnet::Link links[10];
+  Subnet::LinkList inp = sb.addInputs(2);
+  std::copy(inp.begin(), inp.end(), links);
+  links[2] = sb.addCell(AND, links[0], links[1]);
+  links[3] = sb.addCell(OR, links[0], links[1]);
+  links[4] = sb.addCell(AND, links[2]);
+  links[5] = sb.addCell(AND, links[2], links[3]);
+  links[6] = sb.addCell(OR, links[3]);
+  sb.addOutput(links[4]);
+  sb.addOutput(links[5]);
+  sb.addOutput(links[6]);
+  return sb.make();
+}
+
+/*
+in   lat  out
+┌─┐──┌─┐──┌─┐
+└─┘  └─┘  └─┘
+in   lat  out
+┌─┐──┌─┐──┌─┐
+└─┘  └─┘  └─┘
+*/
+model::SubnetID make2Latches() {
+  SubnetBuilder sb;
+  Subnet::Link links[8];
+  Subnet::LinkList inp = sb.addInputs(2);
+  std::copy(inp.begin(), inp.end(), links);
+  links[2] = sb.addInput(0);
+  links[3] = sb.addInput(1);
+  sb.addOutput(links[0], 0);
+  sb.addOutput(links[1], 1);
+  sb.addOutput(links[2]);
+  sb.addOutput(links[3]);
+  return sb.make();
+}
+
+/* in           and                    */
+/* ┌─┐───────┬─┌─┐──┐                  */
+/* └─┘     ┌─┼─└─┘  |    or   lat  out */
+/*         | |      └────┌─┐──┌─┐──┌─┐ */
+/*         | |      ┌────└─┘  └─┘  └─┘ */
+/* in      | │  or  |                  */
+/* ┌─┐     | └─┌─┐──┘                  */
+/* └─┘─────┴───└─┘                     */
+model::SubnetID makeLatche() {
+  SubnetBuilder sb;
+  Subnet::Link links[8];
+  Subnet::LinkList inp = sb.addInputs(2);
+  std::copy(inp.begin(), inp.end(), links);
+  links[2] = sb.addInput(0);
+  links[3] = sb.addCell(AND, links[0], links[1]);
+  links[4] = sb.addCell(OR, links[0], links[1]);
+  links[5] = sb.addCell(OR, links[3], links[4]);
+  sb.addOutput(links[5], 0);
+  sb.addOutput(links[2]);
+  return sb.make();
+}
+
+/* in          or          lat  out */
+/* ┌─┐──┬──────┌─┐   and   ┌─┐──┌─┐ */
+/* └─┘  |      └─┘──┌─┐────└─┘  └─┘ */
+/*      | not  or  ┌└─┘──┐ lat  out */
+/*      └─┌─┐──┌─┐─┘     └─┌─┐──┌─┐ */
+/*        └─┘  └─┘         └─┘  └─┘ */
+model::SubnetID makeStuckLatches() {
+  SubnetBuilder sb;
+  Subnet::Link links[10];
+  links[0] = sb.addInput();
+  links[1] = sb.addInput(0);
+  links[2] = sb.addInput(1);
+  links[3] = sb.addCell(OR, links[0]);
+  links[4] = sb.addCell(OR, Subnet::Link(links[0].idx, true));
+  links[5] = sb.addCell(AND, links[3], links[4]);
+  sb.addOutput(links[5], 0);
+  sb.addOutput(links[5], 1);
+  sb.addOutput(links[1]);
+  sb.addOutput(links[2]);
+  return sb.make();
+}
+
+/*
+in   lat  out
+┌─┐──┌─┐──┌─┐
+└─┘  └─┘  └─┘
+in   lat  out
+┌─┐──┌─┐──┌─┐
+└─┘  └─┘  └─┘
+0    lat  out
+┌─┐──┌─┐──┌─┐
+└─┘  └─┘  └─┘
+*/
+model::SubnetID makeStuckLatche() {
+  SubnetBuilder sb;
+  Subnet::Link links[12];
+  links[0] = sb.addInput();
+  links[1] = sb.addInput();
+  links[3] = sb.addInput(0);
+  links[4] = sb.addInput(1);
+  links[5] = sb.addInput(2);
+  links[2] = sb.addCell(ZERO);
+  sb.addOutput(links[0], 0);
+  sb.addOutput(links[1], 1);
+  sb.addOutput(links[2], 2);
+  sb.addOutput(links[3]);
+  sb.addOutput(links[4]);
   sb.addOutput(links[5]);
   return sb.make();
 }

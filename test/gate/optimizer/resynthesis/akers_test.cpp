@@ -20,7 +20,8 @@
 #include <string>
 #include <time.h>
 
-using AkersAlgorithm = eda::gate::optimizer::resynthesis::AkersAlgorithm;
+using AkersResynthesizer =
+    eda::gate::optimizer::resynthesis::AkersResynthesizer;
 using BGNet = eda::gate::optimizer::BoundGNet;
 using Gate = eda::gate::model::Gate;
 using KittyTT = kitty::dynamic_truth_table;
@@ -71,7 +72,7 @@ TEST(Akers62, Example1) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node()};
   bGNet.outputBindings = {outputId};
@@ -96,7 +97,7 @@ TEST(Akers62, Example2) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(),
                          inputs[2].node(), inputs[3].node()};
@@ -125,7 +126,7 @@ TEST(AkersTest, NOT1) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node()};
   bGNet.outputBindings = {outputId};
@@ -147,7 +148,7 @@ TEST(AkersTest, One3) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node()};
   bGNet.outputBindings = {outputId};
@@ -169,7 +170,7 @@ TEST(AkersTest, Zero3) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node()};
   bGNet.outputBindings = {outputId};
@@ -191,7 +192,7 @@ TEST(AkersTest, OR2) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node()};
   bGNet.outputBindings = {outputId};
@@ -213,7 +214,7 @@ TEST(AkersTest, AND2) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node()};
   bGNet.outputBindings = {outputId};
@@ -235,7 +236,7 @@ TEST(AkersTest, XOR2) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node()};
   bGNet.outputBindings = {outputId};
@@ -257,7 +258,7 @@ TEST(AkersTest, XOR3) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node()};
   bGNet.outputBindings = {outputId};
@@ -279,7 +280,7 @@ TEST(AkersTest, XOR4) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(),
                          inputs[2].node(), inputs[3].node()};
@@ -306,7 +307,7 @@ TEST(AkersTest, MAJ3) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node()};
   bGNet.outputBindings = {outputId};
@@ -329,7 +330,7 @@ TEST(AkersTest, MAJ5) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node(),
                          inputs[3].node(), inputs[4].node()};
@@ -360,7 +361,7 @@ TEST(AkersTest, RandomFunc5) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node(),
                          inputs[3].node(), inputs[4].node()};
@@ -385,7 +386,7 @@ TEST(AkersTest, RandomCareFunc6) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node(),
                          inputs[3].node(), inputs[4].node(), inputs[5].node()};
@@ -412,7 +413,7 @@ TEST(AkersTest, RandomFunc6) {
   Gate::Id outputId;
   BGNet bGNet;
 
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   bGNet.net = alg.run(inputs, outputId);
   bGNet.inputBindings = {inputs[0].node(), inputs[1].node(), inputs[2].node(),
                          inputs[3].node(), inputs[4].node(), inputs[5].node()};
@@ -446,7 +447,7 @@ TEST(AkersTest, CompetitionWithMockturtle) {
   Gate::SignalList inputs;
   Gate::Id outputId;
   start = clock();
-  AkersAlgorithm alg(func, care);
+  AkersResynthesizer alg(func, care);
   auto net = alg.run(inputs, outputId);
   end = clock();
   double implTime = (double)(end - start)/CLOCKS_PER_SEC * 1000;

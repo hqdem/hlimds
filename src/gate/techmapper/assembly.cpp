@@ -5,8 +5,8 @@
 // Copyright 2021 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 #include "gate/techmapper/assembly.h"
 

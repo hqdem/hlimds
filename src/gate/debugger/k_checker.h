@@ -65,13 +65,13 @@ public:
     bool isPrimaryOutput = false;
     bool isPrimaryInput = false;
     bool containBDD = false;
+    bool beenMerged = false;
 
     Vertex() {}
     Vertex(int id) : id(id) {}
     ~Vertex() = default;
     void storeBddAtVertex(std::set<BDDClass>::iterator newBdd,
                           int newLevel = 0);
-    int cLevel();
 
     bool operator <(const Vertex &other) const { return (id < other.id); }
   };
@@ -121,8 +121,9 @@ public:
                            const GateIdMap &gmap) const override;
 
 private:
-  const int maxBddSize = 50;
-  static int maxPossibleBddSize;
+  int maxBddSize = 50;
+  const int maxPossibleBddSize = 200;
+  float step = 1.4;
   std::unordered_map<int, int> inputsBinding;
   std::unordered_map<int, int> outputsBinding;
   VectorOfVertexPairs mergedVertices;
@@ -144,6 +145,7 @@ private:
                              uint32_t gateId);
   bool isNegativeTarget(uint32_t target);
   bool leftIsBigger(uint32_t left, uint32_t right, uint32_t lOrR);
+  void eliminateHangingVertices();
   void structHashing(GNet &net1, GNet &net2);
   void structHashingSingle(std::shared_ptr<GNet> premapped);
 
@@ -158,9 +160,11 @@ private:
   BDD getBddFromVertex(std::shared_ptr<Vertex> vOut, bool left, int level = 0);
   bool equalOutputs(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2);
   bool notEqualOutputs(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2);
+  int cLevel(std::shared_ptr<Vertex> v);
+  void cleanMergedVertices();
   CheckerResult getResult();
-  void checkEquivalenceBasic();
-  void checkEquivalenceBasicSingle(std::shared_ptr<Vertex> v1,
-                                   std::shared_ptr<Vertex> v2);
+  void checkEquivalence(bool withCuts = false);
+  void checkEquivalenceSingle(std::shared_ptr<Vertex> v1,
+                              std::shared_ptr<Vertex> v2, bool withCuts);
 };
 }  // namespace eda::gate::debugger

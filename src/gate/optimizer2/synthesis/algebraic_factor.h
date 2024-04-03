@@ -42,23 +42,23 @@ public:
    * @return ID of the synthesized subnet.
    */ 
   SubnetID getSubnet(const SOP &func, size_t funcSize, uint16_t maxArity,
-                     bool inv = false);
+                     bool inv = false) const;
 
 private:
 
   Link getFactoring(const SOP &func, const LinkList &inputs,
-                    SubnetBuilder &subnetBuilder, uint16_t maxArity);
+                    SubnetBuilder &subnetBuilder, uint16_t maxArity) const;
 
   Link getLiteralFactoring(const SOP &func, const Cube cube,
                            const LinkList &inputs, SubnetBuilder &subnetBuilder,
-                           uint16_t maxArity);
+                           uint16_t maxArity) const;
 
-  SOP findDivisor(const SOP &func);
+  SOP findDivisor(const SOP &func) const;
 
   void divide(const SOP &func, const SOP &div, SOP &quo, SOP &rem,
-              bool needRem);
+              bool needRem) const;
 
-  void divideByCube(const SOP &func, const Cube div, SOP &quo, SOP &rem);
+  void divideByCube(const SOP &func, const Cube div, SOP &quo, SOP &rem) const;
 };
 
 } // namespace eda::gate::optimizer2::synthesis

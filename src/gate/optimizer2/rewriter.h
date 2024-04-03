@@ -10,6 +10,7 @@
 
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/optimizer2/resynthesizer.h"
+#include "gate/optimizer2/transformer.h"
 
 namespace eda::gate::optimizer2 {
 
@@ -17,7 +18,7 @@ namespace eda::gate::optimizer2 {
  * @brief Finds and applies the best rewritings on each node according to the
  * number of elements in the old and resynthesized cones.
  */
-class Rewriter {
+class Rewriter final : public SubnetInPlaceTransformer {
 public:
   using Subnet = eda::gate::model::Subnet;
   using SubnetID = eda::gate::model::SubnetID;
@@ -28,24 +29,30 @@ public:
   using ResynthesizerBase = eda::gate::optimizer2::ResynthesizerBase;
 
   /**
-   * @brief Rewrites subnet stored in the passed builder. Rewriting is based on
-   * cuts with size <= k used by the passed resythesizer.
+   * @brief Constructs a rewriter.
    *
-   * @param builder SubnetBuilder with the subnet to rewrite.
    * @param resynthesizer Resythesizer used to synthesize new cone for each cut.
    * @param k Maximum number of elements in the cut.
    */
-  SubnetBuilder &rewrite(
-      SubnetBuilder &builder,
-      ResynthesizerBase &resynthesizer,
-      const unsigned int k) const;
+  Rewriter(const ResynthesizerBase &resynthesizer, const unsigned k):
+    resynthesizer(resynthesizer), k(k) {}
+
+  /**
+   * @brief Rewrites the subnet stored in the builder by applying the
+   * resynthesizer to k-feasible cuts and choosing the best subnet.
+   *
+   * @param builder SubnetBuilder with the subnet to rewrite.
+   */
+  void transform(SubnetBuilder &builder) const override;
 
 private:
   void rewriteOnNode(
       SubnetBuilder &builder,
       const size_t entryID,
-      ResynthesizerBase &resynthesizer,
       CutExtractor &cutExtractor) const;
+
+  const ResynthesizerBase &resynthesizer;
+  const unsigned k;
 };
 
 } // namespace eda::gate::optimizer2

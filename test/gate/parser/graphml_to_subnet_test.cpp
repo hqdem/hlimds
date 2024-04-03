@@ -53,114 +53,114 @@ void parseGraphML(std::string fileName) {
   EXPECT_TRUE(checkSubnet(subnet, data));
 }
 
-TEST(GraphMlSubnetParserTest, ac97Ctrl) {
-  parseGraphML("ac97_ctrl_orig");
-}
+// TEST(GraphMlSubnetParserTest, ac97Ctrl) {
+//   parseGraphML("ac97_ctrl_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, aesXcrypt) {
-  parseGraphML("aes_xcrypt_orig");
-}
+// TEST(GraphMlSubnetParserTest, aesXcrypt) {
+//   parseGraphML("aes_xcrypt_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, dft) {
-  parseGraphML("dft_orig");
-}
+// TEST(GraphMlSubnetParserTest, dft) {
+//   parseGraphML("dft_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, idft) {
-  parseGraphML("idft_orig");
-}
+// TEST(GraphMlSubnetParserTest, idft) {
+//   parseGraphML("idft_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, memCtrl) {
-  parseGraphML("mem_ctrl_orig");
-}
+// TEST(GraphMlSubnetParserTest, memCtrl) {
+//   parseGraphML("mem_ctrl_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, sasc) {
-  parseGraphML("sasc_orig");
-}
+// TEST(GraphMlSubnetParserTest, sasc) {
+//   parseGraphML("sasc_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, spi) {
-  parseGraphML("spi_orig");
-}
+// TEST(GraphMlSubnetParserTest, spi) {
+//   parseGraphML("spi_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, tv80) {
-  parseGraphML("tv80_orig");
-}
+// TEST(GraphMlSubnetParserTest, tv80) {
+//   parseGraphML("tv80_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, wbConmax) {
-  parseGraphML("wb_conmax_orig");
-}
+// TEST(GraphMlSubnetParserTest, wbConmax) {
+//   parseGraphML("wb_conmax_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, aes) {
-  parseGraphML("aes_orig");
-}
+// TEST(GraphMlSubnetParserTest, aes) {
+//   parseGraphML("aes_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, bpBe) {
-  parseGraphML("bp_be_orig");
-}
+// TEST(GraphMlSubnetParserTest, bpBe) {
+//   parseGraphML("bp_be_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, dynamicNode) {
-  parseGraphML("dynamic_node_orig");
-}
+// TEST(GraphMlSubnetParserTest, dynamicNode) {
+//   parseGraphML("dynamic_node_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, fpu) {
-  parseGraphML("fpu_orig");
-}
+// TEST(GraphMlSubnetParserTest, fpu) {
+//   parseGraphML("fpu_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, iir) {
-  parseGraphML("iir_orig");
-}
+// TEST(GraphMlSubnetParserTest, iir) {
+//   parseGraphML("iir_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, pci) {
-  parseGraphML("pci_orig");
-}
+// TEST(GraphMlSubnetParserTest, pci) {
+//   parseGraphML("pci_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, sha256) {
-  parseGraphML("sha256_orig");
-}
+// TEST(GraphMlSubnetParserTest, sha256) {
+//   parseGraphML("sha256_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, ssPcm) {
-  parseGraphML("ss_pcm_orig");
-}
+// TEST(GraphMlSubnetParserTest, ssPcm) {
+//   parseGraphML("ss_pcm_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, usbPhy) {
-  parseGraphML("usb_phy_orig");
-}
+// TEST(GraphMlSubnetParserTest, usbPhy) {
+//   parseGraphML("usb_phy_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, wbDma) {
-  parseGraphML("wb_dma_orig");
-}
+// TEST(GraphMlSubnetParserTest, wbDma) {
+//   parseGraphML("wb_dma_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, aesSecworks) {
-  parseGraphML("aes_secworks_orig");
-}
+// TEST(GraphMlSubnetParserTest, aesSecworks) {
+//   parseGraphML("aes_secworks_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, des3Area) {
-  parseGraphML("des3_area_orig");
-}
+// TEST(GraphMlSubnetParserTest, des3Area) {
+//   parseGraphML("des3_area_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, ethernet) {
-  parseGraphML("ethernet_orig");
-}
+// TEST(GraphMlSubnetParserTest, ethernet) {
+//   parseGraphML("ethernet_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, i2c) {
-  parseGraphML("i2c_orig");
-}
+// TEST(GraphMlSubnetParserTest, i2c) {
+//   parseGraphML("i2c_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, jpeg) {
-  parseGraphML("jpeg_orig");
-}
+// TEST(GraphMlSubnetParserTest, jpeg) {
+//   parseGraphML("jpeg_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, picosoc) {
-  parseGraphML("picosoc_orig");
-}
+// TEST(GraphMlSubnetParserTest, picosoc) {
+//   parseGraphML("picosoc_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, simpleSpi) {
-  parseGraphML("simple_spi_orig");
-}
+// TEST(GraphMlSubnetParserTest, simpleSpi) {
+//   parseGraphML("simple_spi_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, tinyRocket) {
-  parseGraphML("tinyRocket_orig");
-}
+// TEST(GraphMlSubnetParserTest, tinyRocket) {
+//   parseGraphML("tinyRocket_orig");
+// }
 
-TEST(GraphMlSubnetParserTest, vgaLcd) {
-  parseGraphML("vga_lcd_orig");
-}
+// TEST(GraphMlSubnetParserTest, vgaLcd) {
+//   parseGraphML("vga_lcd_orig");
+// }

@@ -14,12 +14,12 @@
 
 #include <string>
 
-using DeMicheli  = eda::gate::optimizer2::synthesis::DeMicheli;
-using Subnet     = eda::gate::model::Subnet;
-using TruthTable = kitty::dynamic_truth_table;
+using DMSynthesizer = eda::gate::optimizer2::synthesis::DMSynthesizer;
+using Subnet        = eda::gate::model::Subnet;
+using TruthTable    = kitty::dynamic_truth_table;
 
-void launchDeMicheliTest(const TruthTable &func, size_t bound = -1) {
-  DeMicheli alg;
+void runDeMicheliTest(const TruthTable &func, size_t bound = -1) {
+  DMSynthesizer alg;
   const auto &subnetId = alg.synthesize(func);
 
   bool invalid = subnetId == eda::gate::model::OBJ_NULL_ID;
@@ -35,10 +35,10 @@ void launchDeMicheliTest(const TruthTable &func, size_t bound = -1) {
   EXPECT_TRUE(areEqual && subnetSize <= bound);
 }
 
-void launchDeMicheliRandomTest(size_t nVars) {
+void runDeMicheliRandomTest(size_t nVars) {
   TruthTable func(nVars);
   kitty::create_random(func);
-  launchDeMicheliTest(func);
+  runDeMicheliTest(func);
 }
 
 //===----------------------------------------------------------------------===//
@@ -49,34 +49,34 @@ TEST(DeMicheliTest, NOT1) {
   // Gate NOT(x).
   TruthTable func(1);
   kitty::create_from_binary_string(func, "01");
-  launchDeMicheliTest(func, 2);
+  runDeMicheliTest(func, 2);
 }
 
 TEST(DeMicheliTest, EQUAL3) {
   TruthTable func(3);
   kitty::create_from_binary_string(func, "11110000");
-  launchDeMicheliTest(func);
+  runDeMicheliTest(func);
 }
 
 TEST(DeMicheliTest, One3) {
   // Gate One().
   TruthTable func(3);
   kitty::create_from_binary_string(func, "11111111");
-  launchDeMicheliTest(func, 5);
+  runDeMicheliTest(func, 5);
 }
 
 TEST(DeMicheliTest, Zero3) {
   // Gate Zero().
   TruthTable func(3);
   kitty::create_from_binary_string(func, "00000000");
-  launchDeMicheliTest(func, 5);
+  runDeMicheliTest(func, 5);
 }
 
 TEST(DeMicheliTest, Xor3) {
   // Gate XOR(x, y, z).
   TruthTable func(3);
   kitty::create_from_binary_string(func, "10010110");
-  launchDeMicheliTest(func);
+  runDeMicheliTest(func);
 }
 
 //===----------------------------------------------------------------------===//
@@ -87,7 +87,7 @@ TEST(DeMicheliTest, MAJ3) {
   // Gate MAJ(x, y, z).
   TruthTable func(3);
   kitty::create_from_binary_string(func, "11101000");
-  launchDeMicheliTest(func, 5);
+  runDeMicheliTest(func, 5);
 }
 
 //===----------------------------------------------------------------------===//
@@ -96,20 +96,20 @@ TEST(DeMicheliTest, MAJ3) {
 
 TEST(DeMicheliTest, RandomFunc3) {
   // Random gate RAND(x, y, z).
-  launchDeMicheliRandomTest(3);
+  runDeMicheliRandomTest(3);
 }
 
 TEST(DeMicheliTest, RandomFunc4) {
   // Random gate RAND(x, y, z, u).
-  launchDeMicheliRandomTest(4);
+  runDeMicheliRandomTest(4);
 }
 
 TEST(DeMicheliTest, RandomFunc5) {
   // Random gate RAND(x, y, z, u, v).
-  launchDeMicheliRandomTest(5);
+  runDeMicheliRandomTest(5);
 }
 
 TEST(DeMicheliTest, RandomFunc6) {
   // Random gate RAND(x, y, z, u, v, l).
-  launchDeMicheliRandomTest(6);
+  runDeMicheliRandomTest(6);
 }

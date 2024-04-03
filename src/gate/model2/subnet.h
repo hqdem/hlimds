@@ -253,7 +253,7 @@ public:
   typedef std::bidirectional_iterator_tag iterator_category;
 
 private:
-  EntryIterator(const SubnetBuilder *builder, size_t entryID) :
+  EntryIterator(const SubnetBuilder *builder, value_type entryID) :
     builder(builder), entry(entryID) {};
 
 public:
@@ -361,6 +361,14 @@ namespace eda::gate::model {
 class SubnetBuilder final {
   friend EntryIterator;
 
+  struct EntryDescriptor final {
+    EntryDescriptor(): prev(normalOrderID), next(normalOrderID),
+                       depth(invalidID) {};
+    size_t prev;
+    size_t next;
+    size_t depth;
+  };
+
 public:
   using Cell = Subnet::Cell;
   using Link = Subnet::Link;
@@ -369,9 +377,16 @@ public:
   SubnetBuilder(): nIn(0), nOut(0) {
     const size_t n = 1024*1024; // FIXME
     entries.reserve(n);
-    prev.reserve(n);
-    next.reserve(n);
+    desc.reserve(n);
+    depthBounds.reserve(n);
     strash.reserve(n);
+  }
+
+  SubnetBuilder(SubnetID subnetID) {
+    const auto &subnet = Subnet::get(subnetID);
+    const auto inputs = addInputs(subnet.getInNum());
+    const auto outputs = addSubnet(subnetID, inputs);
+    addOutputs(outputs);
   }
 
   /// Returns the constant reference to the i-th entry.
@@ -394,6 +409,8 @@ public:
     return entries[i].cell;
   }
 
+  /// Returns the entry/link indices of the j-th link of the i-th entry.
+  const std::pair<size_t, size_t> getLinkIndices(size_t i, size_t j) const;
   /// Returns the j-th link of the i-th cell.
   const Link &getLink(size_t i, size_t j) const;
   /// Returns the links of the i-th cell.
@@ -503,10 +520,15 @@ public:
       std::unordered_map<size_t, size_t> &rhsToLhs,
       const std::function<void(const size_t)> *onNewCell = nullptr);
 
-  /// Returns [the number of deleted entries - the number of added entries]
+  /// Returns
+  /// {
+  ///   [the number of deleted entries - the number of added entries];
+  ///   [old root depth - new root depth]
+  /// }
   /// after replacement.
-  int evaluateReplace(const SubnetID rhsID,
-                      std::unordered_map<size_t, size_t> &rhsToLhs) const;
+  std::pair<int, int> evaluateReplace(
+      const SubnetID rhsID,
+      std::unordered_map<size_t, size_t> &rhsToLhs) const;
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
@@ -535,31 +557,41 @@ public:
     return std::make_reverse_iterator(begin());
   }
 
-  SubnetID make() {
+  SubnetID make(std::vector<size_t> &newToOldEntries) {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    if (!next.empty() || getSubnetBegin()) {
-      rearrangeEntries();
-    }
+    rearrangeEntries(newToOldEntries);
     assert(checkInputsOrder() && checkOutputsOrder());
 
     return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 
+  SubnetID make() {
+    std::vector<size_t> tmpMapping{};
+    return make(tmpMapping);
+  }
+
 private:
-  /// Returns the number of new entries after replacement.
-  int cntNewEntries(
+  /// Returns {[the number of new entries]; [new root depth]} after replacement.
+  std::pair<size_t, size_t> newEntriesEval(
       const SubnetID rhsID,
       const std::unordered_map<size_t, size_t> rhsToLhs,
       std::unordered_set<size_t> &reusedEntries) const;
 
   /// Returns the number of entries to delete after deleting root.
-  int cntDeletedEntries(
+  int deletedEntriesEval(
       const size_t rootEntryID,
       const std::unordered_set<size_t> &reusedEntries) const;
 
   /// Return the reference to the j-th link of the given cell.
   Link &getLinkRef(size_t entryID, size_t j);
+
+  /// Updates deleted entry depth bounds and deletes it from the topological
+  /// order.
+  void deleteDepthBounds(size_t entryID);
+
+  /// Updates added entry depth bounds and adds it to the topological order.
+  void addDepthBounds(size_t entryID);
 
   /// Allocates an entry and returns its index.
   size_t allocEntry();
@@ -588,6 +620,19 @@ private:
   /// Specifies the order between the given entries.
   void setOrder(size_t firstID, size_t secondID);
 
+  /// Places the given entry after the pivot.
+  /// The given entry should not be in the topological order.
+  void placeAfter(size_t entryID, size_t pivotEntryID);
+
+  /// Places the given entry before the pivot.
+  /// The given entry should not be in the topological order.
+  void placeBefore(size_t entryID, size_t pivotEntryID);
+
+  /// Recursively recomputes the root fanouts depths and updates positions in
+  /// the topological order.
+  void recomputeFanoutDepths(size_t rootEntryID,
+                             size_t oldRootNextEntryID);
+
   /// Assigns the new links to the given cell.
   /// The number of new links must be the same as the number of old links.
   void relinkCell(size_t entryID, const LinkList &newLinks);
@@ -608,7 +653,7 @@ private:
 
   /// Sorts entries in topological order accoring to the prev and next arrays.
   /// Removes the holes.
-  void rearrangeEntries();
+  void rearrangeEntries(std::vector<size_t> &newToOldEntries);
 
   /// Clears the replacement context.
   void clearContext();
@@ -626,9 +671,9 @@ private:
 private:
   static constexpr size_t invalidID = static_cast<size_t>(-1);
 
-  static constexpr size_t normalOrderID = invalidID;
-  static constexpr size_t lowerBoundID  = invalidID - 1;
-  static constexpr size_t upperBoundID  = invalidID - 2;
+  static constexpr size_t normalOrderID = invalidID - 1;
+  static constexpr size_t lowerBoundID  = invalidID - 2;
+  static constexpr size_t upperBoundID  = invalidID - 3;
 
   uint16_t nIn;
   uint16_t nOut;
@@ -636,12 +681,12 @@ private:
   /// Context.
   std::vector<Subnet::Entry> entries;
 
-  std::vector<size_t> prev;
-  std::vector<size_t> next;
+  std::vector<EntryDescriptor> desc;
+  std::vector<std::pair<size_t, size_t>> depthBounds;
   std::vector<size_t> emptyEntryIDs;
 
-  size_t subnetBegin{normalOrderID};
-  size_t subnetEnd{normalOrderID};
+  size_t subnetBegin{invalidID};
+  size_t subnetEnd{invalidID};
 
   StrashMap strash;
 };

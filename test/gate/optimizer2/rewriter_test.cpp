@@ -21,7 +21,7 @@ using DinTruthTable = kitty::dynamic_truth_table;
 
 class EqualResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetID subnetID) override {
+  SubnetID resynthesize(const SubnetID subnetID) const override {
     const Subnet &subnet = Subnet::get(subnetID);
     SubnetBuilder builder;
     const auto &inLinks = builder.addInputs(subnet.getInNum());
@@ -33,7 +33,7 @@ public:
 
 class AddBufsResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetID subnetID) override {
+  SubnetID resynthesize(const SubnetID subnetID) const override {
     const Subnet &subnet = Subnet::get(subnetID);
     const auto &entries = subnet.getEntries();
     SubnetBuilder builder;
@@ -66,7 +66,7 @@ public:
 
 class DelBufsResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetID subnetID) override {
+  SubnetID resynthesize(const SubnetID subnetID) const override {
     const Subnet &subnet = Subnet::get(subnetID);
     const auto &entries = subnet.getEntries();
     SubnetBuilder builder;
@@ -104,11 +104,11 @@ bool truthTablesEqual(const SubnetID subnetID, const SubnetID targetSubnetID) {
 }
 
 void runTest(
-    ResynthesizerBase &resynthesizer,
+    const ResynthesizerBase &resynthesizer,
     const SubnetID subnetID,
     const SubnetID targetSubnetID) {
 
-  Rewriter rewriter;
+  Rewriter rewriter(resynthesizer, 5);
   const auto &subnet = Subnet::get(subnetID);
   std::cout << "Before rewriting:\n" << subnet << '\n';
 
@@ -117,7 +117,7 @@ void runTest(
   const auto &links = builder.addSubnet(subnetID, inputs);
   builder.addOutputs(links);
 
-  rewriter.rewrite(builder, resynthesizer, 5);
+  rewriter.transform(builder);
   const SubnetID newSubnetID = builder.make();
   std::cout << "After rewriting:\n" << Subnet::get(newSubnetID);
 
@@ -162,19 +162,19 @@ SubnetID getBufsSubnet() {
 }
 
 TEST(RewriterTest, ReduceTest1) {
-  DelBufsResynthesizer resynthesizer;
+  const DelBufsResynthesizer resynthesizer;
   const SubnetID subnetID = getNoBufsSubnet();
   runTest(resynthesizer, subnetID, getNoBufsSubnet());
 }
 
 TEST(RewriterTest, ReduceTest2) {
-  DelBufsResynthesizer resynthesizer;
+  const DelBufsResynthesizer resynthesizer;
   const SubnetID subnetID = getBufsSubnet();
   runTest(resynthesizer, subnetID, getNoBufsSubnet());
 }
 
 TEST(RewriterTest, ReduceTest3) {
-  DelBufsResynthesizer resynthesizer;
+  const DelBufsResynthesizer resynthesizer;
   const SubnetID subnetID = getBufsSubnet2();
 
   SubnetBuilder builder;
@@ -193,26 +193,25 @@ TEST(RewriterTest, ReduceTest3) {
 }
 
 TEST(RewriterTest, EnlargeTest1) {
-  AddBufsResynthesizer resynthesizer;
+  const AddBufsResynthesizer resynthesizer;
   const SubnetID subnetID = getNoBufsSubnet();
-
   runTest(resynthesizer, subnetID, getNoBufsSubnet());
 }
 
 TEST(RewriterTest, EnlargeTest2) {
-  AddBufsResynthesizer resynthesizer;
+  const AddBufsResynthesizer resynthesizer;
   const SubnetID subnetID = getBufsSubnet2();
   runTest(resynthesizer, subnetID, getBufsSubnet2());
 }
 
 TEST(RewriterTest, EqualTest1) {
-  EqualResynthesizer resynthesizer;
+  const EqualResynthesizer resynthesizer;
   const SubnetID subnetID = getNoBufsSubnet();
   runTest(resynthesizer, subnetID, getNoBufsSubnet());
 }
 
 TEST(RewriterTest, EqualTest2) {
-  EqualResynthesizer resynthesizer;
+  const EqualResynthesizer resynthesizer;
   const SubnetID subnetID = getBufsSubnet2();
   runTest(resynthesizer, subnetID, getBufsSubnet2());
 }

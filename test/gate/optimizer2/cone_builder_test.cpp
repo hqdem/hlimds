@@ -53,7 +53,7 @@ bool coneValid(const Subnet &subnet,
 
   const Subnet &coneSubnet = Subnet::get(cone.subnetID);
   const auto &coneEntries = coneSubnet.getEntries();
-  if (cone.coneEntryToOrig.find(coneEntryIdx) == cone.coneEntryToOrig.end()) {
+  if (cone.coneEntryToOrig.size() <= coneEntryIdx) {
     return false;
   }
   const size_t subnetEntryIdx = cone.coneEntryToOrig[coneEntryIdx];

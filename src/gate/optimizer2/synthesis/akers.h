@@ -58,7 +58,7 @@ struct Candidate {
  * The algorithm based on the article "Synthesis of combinational logic using
  * three-input majority gates" by Sheldon B. Akers, Jr. (1962).
 */
-class AkersAlgorithm : public Synthesizer<kitty::dynamic_truth_table> {
+class AkersSynthesizer : public Synthesizer<kitty::dynamic_truth_table> {
 
 public:
 
@@ -71,7 +71,7 @@ public:
   using CanditateList = std::map<std::set<unsigned>, std::vector<unsigned>>;
   using Columns       = std::vector<unsigned>;
   using EssentialEdge =
-    std::unordered_map<unsigned, std::vector<std::pair<uint32_t, uint32_t>>>;
+      std::unordered_map<unsigned, std::vector<std::pair<uint32_t, uint32_t>>>;
   using RowNums       = std::unordered_set<uint32_t>;
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
@@ -84,17 +84,18 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Empty constructor.
-  AkersAlgorithm() {}
+  AkersSynthesizer() {}
 
   //===--------------------------------------------------------------------===//
   // Synthesize Methods
   //===--------------------------------------------------------------------===//
 
   /// Synthesize function without "don't care" bits.
-  SubnetID synthesize(const TruthTable &func, uint16_t maxArity = -1) override;
+  SubnetID synthesize(
+      const TruthTable &func, uint16_t maxArity = -1) const override;
 
   /// Synthesize function with "don't care" bits.
-  SubnetID synthesize(const TruthTable &func, const TruthTable &care) {
+  SubnetID synthesize(const TruthTable &func, const TruthTable &care) const {
     return run(func, care);
   }
 
@@ -105,33 +106,34 @@ private:
   //===--------------------------------------------------------------------===//
 
   /// Launch the Akers algorithm.
-  SubnetID run(const TruthTable &func, const TruthTable &care);
+  SubnetID run(const TruthTable &func, const TruthTable &care) const;
 
   /// Adds a majority gate.
   void addMajGate(UnitizedTable &table, SubBuild &subBuild,
                   const Arguments &gate, uint32_t nVariables,
-                  ConstantId &cid);
+                  ConstantId &cid) const;
 
   /// Finds the best set of arguments for a majority gate.
-  Candidate findBestGate(UnitizedTable &table, ElimOnesInfo &onesInfo);
+  Candidate findBestGate(UnitizedTable &table, ElimOnesInfo &onesInfo) const;
 
   /// Chooses one gate from the list of found gates.
   Candidate chooseGate(UnitizedTable &table, EssentialEdge &edges,
                        Candidate &candidate, const CanditateList &gates,
-                       ElimOnesInfo &onesInfo);
+                       ElimOnesInfo &onesInfo) const;
 
   /// Tries to find the best gate to remove N (2 <= N <= 3) columns.
   Candidate findEliminatingNColsGate(UnitizedTable &table, EssentialEdge &edges,
                                      CanditateList &gates, ElimOnesInfo &info,
-                                     const unsigned n);
+                                     const unsigned n) const;
 
   /// Returns best set of arguments that was found by others functions.
-  Candidate setWhatFound(const Candidate& candidate, ElimOnesInfo &onesInfo);
+  Candidate setWhatFound(const Candidate& candidate,
+                         ElimOnesInfo &onesInfo) const;
 
   /// Finds sets of arguments for a MAJ gate that lead to removal of the column.
   ArgumentsSet findGatesForColumnRemoval(const UnitizedTable &table,
                                          const RowNums &essentialRows,
-                                         unsigned index);
+                                         unsigned index) const;
 
   /**
    * Finds set of arguments for a MAJ gate
@@ -139,24 +141,24 @@ private:
    */
   Candidate findEliminatingOnesGate(const UnitizedTable &table,
                                     EssentialEdge &edges,
-                                    ElimOnesInfo &onesInfo);
+                                    ElimOnesInfo &onesInfo) const;
 
   /// Checks whether it is possible to remove rows after adding MAJ(args).
-  bool mayDeleteRows(UnitizedTable &table, const Candidate& candidate);
+  bool mayDeleteRows(UnitizedTable &table, const Candidate& candidate) const;
 
   /**
    * Counts number of "essential" ones
    * that will lose this property after adding MAJ(c1, c2, c3).
    */
   uint64_t countRemoved(const UnitizedTable &table, EssentialEdge &edges,
-                        unsigned c1, unsigned c2, unsigned c3);
+                        unsigned c1, unsigned c2, unsigned c3) const;
 
   /// Increments the counter of essential ones that may be eliminated.
-  void incCounter(uint64_t &counter, RowNums &toRemove, uint32_t rowNum);
+  void incCounter(uint64_t &counter, RowNums &toRemove, uint32_t rowNum) const;
 
   /// Decrements the counter of essential ones that may be eliminated.
   void decCounter(uint64_t &counter, RowNums &cantRemove,
-                  RowNums &toRemove, uint32_t rowNum);
+                  RowNums &toRemove, uint32_t rowNum) const;
 };
 
 } // namespace eda::gate::optimizer2::synthesis

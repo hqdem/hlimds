@@ -60,8 +60,8 @@ struct BddWithDdManager {
  * the article "Achieving Scalable Hardware Verification
  * with Symbolic Simulation" by Valeria Bertacco (2003).
 */
-class DsdToSubnet : public Synthesizer<BddWithDdManager>,
-                    public Synthesizer<TruthTable> {
+class DsdSynthesizer : public Synthesizer<BddWithDdManager>,
+                       public Synthesizer<TruthTable> {
 
 public:
 
@@ -70,7 +70,7 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Empty constructor.
-  DsdToSubnet() {}
+  DsdSynthesizer() {}
 
   //===--------------------------------------------------------------------===//
   // Convenience Methods
@@ -78,9 +78,9 @@ public:
 
   /// Synthesize.
   SubnetId synthesize(const BddWithDdManager &pair,
-                      uint16_t maxArity = -1) override;
+                      uint16_t maxArity = -1) const override;
   SubnetId synthesize(const TruthTable &table,
-                      uint16_t maxArity = -1) override;
+                      uint16_t maxArity = -1) const override;
 
 private:
 
@@ -101,7 +101,7 @@ private:
                 const DSDManager *dmanager,
                 SubnetBuilder &subnetBuilder,
                 const LinkList &inputsList,
-                uint16_t maxArity = -1);
+                uint16_t maxArity = -1) const;
 
   /**
   * Starts the PRIME gate decomposition procedure via bdd representation.
@@ -114,7 +114,7 @@ private:
   Link decomposePrimeGate(DSDNode *dsd,
                           const DSDManager *dmanager,
                           SubnetBuilder &subnetBuilder,
-                          const LinkList &inputsList);
+                          const LinkList &inputsList) const;
 
   /**
   * Select the actual whose BDD depends on a variable.
@@ -127,7 +127,7 @@ private:
   Link getLinkToCorrectActual(const DSDNode *dsd,
                               const DdManager *manager,
                               uint32_t variableIndex,
-                              const LinkList &inputsList);
+                              const LinkList &inputsList) const;
 
   /**
   * Recursive step of PRIME gate depomposition.
@@ -142,7 +142,7 @@ private:
                         const DdManager *manager,
                         SubnetBuilder &subnetBuilder,
                         const LinkList &inputsList,
-                        const DSDNode *dsd);
+                        const DSDNode *dsd) const;
 };
 
 /**
@@ -152,8 +152,8 @@ private:
 * @param variableIndex CUDD variable index whose dependency is being tested.
 * @return One if it depends, otherwise zero.
 */
-bool isDependentOnVariable(const DdManager* manager,
-                           DdNode* bdd,
+bool isDependentOnVariable(const DdManager *manager,
+                           DdNode *bdd,
                            uint32_t variableIndex);
 
 }; //namespace eda::gate::optimizer2::synthesis

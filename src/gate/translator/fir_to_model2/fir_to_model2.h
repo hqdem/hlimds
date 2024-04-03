@@ -116,6 +116,10 @@ private:
   std::shared_ptr<std::vector<CellTypeID>> resultNetList;
   PassManager passManager;
 };
+
+bool printNetlist(const std::string &inputFilePath,
+                  const std::string &outputDir);
+
 } // namespace eda::gate::model
 
 std::unique_ptr<Pass> createCHIRRTLToLowFIRRTLPass();

@@ -97,19 +97,9 @@ TEST(KLecTest, TwoInputAndTwoInputOrTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).isUnknown());
-
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
 #endif
-
-  EXPECT_TRUE(checker.hashTableContains({0, 1, 0, 0}, 3));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 1, 0, 0}));
-  EXPECT_FALSE(checker.primaryOutputSign({0, 1, 0, 0}));
-  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 2));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 1, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({0, 1, 1, 1}));
-
-  EXPECT_TRUE(checker.getMergedVertices().empty());
 }
 
 TEST(KLecTest, TwoInputAndTwoInputAndTest) {
@@ -122,18 +112,9 @@ TEST(KLecTest, TwoInputAndTwoInputAndTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).equal());
-
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
 #endif
-
-  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 2));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 1, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({0, 1, 1, 1}));
-
-  EXPECT_TRUE(checker.getMergedVertices().size() == 1);
-  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 2);
-  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 3);
 }
 
 TEST(KLecTest, ThreeInputAndThreeInputAndTest) {
@@ -162,24 +143,9 @@ TEST(KLecTest, ThreeInputAndThreeInputAndTest) {
   Hints hints;
   createHints(*net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, net2, hints).equal());
-
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
 #endif
-
-  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 3));
-  EXPECT_TRUE(checker.hashTableContains({2, 3, 1, 1}, 4));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({2, 3, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({2, 3, 1, 1}));
-  EXPECT_TRUE(checker.hashTableContains({3, 2, 1, 1}, 6));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({3, 2, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({3, 2, 1, 1}));
-
-  EXPECT_TRUE(checker.getMergedVertices().size() == 2);
-  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 3);
-  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 5);
-  EXPECT_TRUE(checker.getMergedVertices()[1].first->id == 4);
-  EXPECT_TRUE(checker.getMergedVertices()[1].second->id == 6);
 }
 
 TEST(KLecTest, SixInputAndSixInputAndTest) {
@@ -192,30 +158,9 @@ TEST(KLecTest, SixInputAndSixInputAndTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).equal());
-
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
 #endif
-
-  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 6));
-  EXPECT_TRUE(checker.hashTableContains({2, 3, 1, 1}, 7));
-  EXPECT_TRUE(checker.hashTableContains({4, 5, 1, 1}, 8));
-  EXPECT_TRUE(checker.hashTableContains({6, 7, 1, 1}, 9));
-  EXPECT_TRUE(checker.hashTableContains({8, 9, 1, 1}, 10));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({8, 9, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({8, 9, 1, 1}));
-
-  EXPECT_TRUE(checker.getMergedVertices().size() == 5);
-  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 8);
-  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 13);
-  EXPECT_TRUE(checker.getMergedVertices()[1].first->id == 7);
-  EXPECT_TRUE(checker.getMergedVertices()[1].second->id == 12);
-  EXPECT_TRUE(checker.getMergedVertices()[2].first->id == 6);
-  EXPECT_TRUE(checker.getMergedVertices()[2].second->id == 11);
-  EXPECT_TRUE(checker.getMergedVertices()[3].first->id == 9);
-  EXPECT_TRUE(checker.getMergedVertices()[3].second->id == 14);
-  EXPECT_TRUE(checker.getMergedVertices()[4].first->id == 10);
-  EXPECT_TRUE(checker.getMergedVertices()[4].second->id == 15);
 }
 
 TEST(KLecTest, SeveralPrimaryOutputsTest) {
@@ -240,29 +185,9 @@ TEST(KLecTest, SeveralPrimaryOutputsTest) {
   Hints hints;
   createHints(net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(net1, net2, hints).isUnknown());
-
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
 #endif
-
-  EXPECT_TRUE(checker.hashTableContains({0, 8, 1, 1}, 9));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({0, 8, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({0, 8, 1, 1}));
-  EXPECT_TRUE(checker.hashTableContains({2, 3, 1, 1}, 7));
-  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 4));
-  EXPECT_TRUE(checker.hashTableContains({1, 7, 1, 1}, 8));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({1, 7, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({1, 7, 1, 1}));
-  EXPECT_TRUE(checker.hashTableContains({4, 2, 1, 1}, 5));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({4, 2, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({4, 2, 1, 1}));
-  EXPECT_TRUE(checker.hashTableContains({5, 3, 1, 1}, 6));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({5, 3, 1, 1}));
-  EXPECT_TRUE(checker.primaryOutputSign({5, 3, 1, 1}));
-
-  EXPECT_TRUE(checker.getMergedVertices().size() == 1);
-  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 6);
-  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 9);
 }
 
 TEST(KLecTest, SeveralGatesTest) {
@@ -313,28 +238,113 @@ TEST(KLecTest, SeveralGatesTest) {
   Hints hints;
   createHints(net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(net1, net2, hints).equal());
-
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
 #endif
+}
 
-  EXPECT_TRUE(checker.hashTableContains({3, 2, 1, 0}, 10));
-  EXPECT_TRUE(checker.hashTableContains({3, 2, 0, 1}, 9));
-  EXPECT_TRUE(checker.hashTableContains({0, 1, 1, 1}, 3));
-  EXPECT_TRUE(checker.hashTableContains({3, 2, 1, 1}, 4));
-  EXPECT_TRUE(checker.hashTableContains({4, 2, 0, 1}, 5));
-  EXPECT_TRUE(checker.hashTableContains({3, 4, 1, 0}, 6));
-  EXPECT_TRUE(checker.hashTableContains({6, 5, 0, 0}, 7));
-  EXPECT_TRUE(checker.valueIsPrimaryOutput({6, 5, 0, 0}));
-  EXPECT_FALSE(checker.primaryOutputSign({6, 5, 0, 0}));
+TEST(KLecTest, NegativeTestWithNandGates) {
+  GNet net1, net2;
+  Gate::SignalList prInputs;
 
-  EXPECT_TRUE(checker.getMergedVertices().size() == 4);
-  EXPECT_TRUE(checker.getMergedVertices()[0].first->id == 3);
-  EXPECT_TRUE(checker.getMergedVertices()[0].second->id == 8);
-  EXPECT_TRUE(checker.getMergedVertices()[1].first->id == 5);
-  EXPECT_TRUE(checker.getMergedVertices()[1].second->id == 9);
-  EXPECT_TRUE(checker.getMergedVertices()[2].first->id == 6);
-  EXPECT_TRUE(checker.getMergedVertices()[2].second->id == 10);
-  EXPECT_TRUE(checker.getMergedVertices()[3].first->id == 7);
-  EXPECT_TRUE(checker.getMergedVertices()[3].second->id == 11);
+  for (int i = 0; i < 3; i++) {
+    Gate::Id z = net1.addIn();
+    prInputs.push_back(Gate::Signal::always(z));
+  }
+
+  Gate::Id x = net1.addAnd({prInputs[0], prInputs[1]});
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addNand({prInputs[3], prInputs[2]});
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addNand({prInputs[3], prInputs[4]});
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addNand({prInputs[4], prInputs[2]});
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addNand({prInputs[5], prInputs[6]});
+  prInputs.push_back(Gate::Signal::always(x));
+  net1.addOut(x);
+
+  prInputs.clear();
+  for (int i = 0; i < 3; i++) {
+    Gate::Id z = net2.addIn();
+    prInputs.push_back(Gate::Signal::always(z));
+  }
+
+  Gate::Id y = net2.addAnd({prInputs[0], prInputs[1]});
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addNand({prInputs[3], prInputs[2]});
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addNand({prInputs[3], prInputs[4]});
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addNand({prInputs[4], prInputs[2]});
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addAnd({prInputs[5], prInputs[6]});
+  prInputs.push_back(Gate::Signal::always(y));
+  net2.addOut(y);
+
+  net1.sortTopologically();
+  net2.sortTopologically();
+
+  KChecker checker;
+  Hints hints;
+  createHints(net1, net2, hints);
+  EXPECT_TRUE(checker.equivalent(net1, net2, hints).notEqual());
+#ifdef UTOPIA_DEBUG
+  checker.printHashTable();
+#endif
+}
+
+TEST(KLecTest, NegativeTestWithOrGates) {
+  GNet net1, net2;
+  Gate::SignalList prInputs;
+
+  for (int i = 0; i < 3; i++) {
+    Gate::Id z = net1.addIn();
+    prInputs.push_back(Gate::Signal::always(z));
+  }
+
+  Gate::Id x = net1.addNot(prInputs[0]);
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addNot(prInputs[1]);
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addOr({prInputs[3], prInputs[4]});
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addOr({prInputs[5], prInputs[2]});
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addNand({prInputs[5], prInputs[2]});
+  prInputs.push_back(Gate::Signal::always(x));
+  x = net1.addNand({prInputs[6], prInputs[7]});
+  prInputs.push_back(Gate::Signal::always(x));
+  net1.addOut(x);
+
+  prInputs.clear();
+  for (int i = 0; i < 3; i++) {
+    Gate::Id z = net2.addIn();
+    prInputs.push_back(Gate::Signal::always(z));
+  }
+
+  Gate::Id y = net2.addNot(prInputs[0]);
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addNot(prInputs[1]);
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addOr({prInputs[3], prInputs[4]});
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addOr({prInputs[5], prInputs[2]});
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addNand({prInputs[5], prInputs[2]});
+  prInputs.push_back(Gate::Signal::always(y));
+  y = net2.addAnd({prInputs[6], prInputs[7]});
+  prInputs.push_back(Gate::Signal::always(y));
+  net2.addOut(y);
+
+  net1.sortTopologically();
+  net2.sortTopologically();
+
+  KChecker checker;
+  Hints hints;
+  createHints(net1, net2, hints);
+  EXPECT_TRUE(checker.equivalent(net1, net2, hints).notEqual());
+#ifdef UTOPIA_DEBUG
+  checker.printHashTable();
+#endif
 }

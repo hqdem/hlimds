@@ -19,4 +19,16 @@ model::SubnetID makeXorNorAndAndOr();
 
 model::SubnetID makeXorOrXor();
 
+model::SubnetID makeAndOrXor();
+
+model::SubnetID make4AndOr();
+
+model::SubnetID make2Latches();
+
+model::SubnetID makeLatche();
+
+model::SubnetID makeStuckLatches();
+
+model::SubnetID makeStuckLatche();
+
 } // namespace eda::gate::model

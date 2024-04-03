@@ -14,6 +14,7 @@ add_library(Gate OBJECT
   debugger2/base_checker2.cpp
   debugger2/bdd_checker2.cpp
   debugger2/miter2.cpp
+  debugger2/seq_checker.cpp
   debugger2/rnd_checker2.cpp
   model/gate.cpp
   model/gnet.cpp

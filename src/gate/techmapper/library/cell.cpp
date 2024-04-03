@@ -295,12 +295,12 @@ void LibraryCells::readLibertyFile(const std::string &filename,
 
         // Create a dynamic truth table with the appropriate number of inputs
 
-        *//*std::vector<Pin> pins;
+        /*std::vector<Pin> pins;
         for (const auto &name: inputPinNames) {
           const auto &cell = it.value()["delay"][name];
           pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
                              cell["fall_transition"], cell["rise_transition"]));
-        }*//*
+        }*/
 
         kitty::dynamic_truth_table *truthTable =
             new kitty::dynamic_truth_table(inputPinNames.size());

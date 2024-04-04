@@ -8,6 +8,8 @@
 
 #include "gate/model2/examples.h"
 
+#include "gate/model2/design.h"
+#include "gate/model2/generator/matrix_generator.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 
 namespace eda::gate::model {
@@ -222,6 +224,21 @@ model::SubnetID makeStuckLatche() {
   sb.addOutput(links[4]);
   sb.addOutput(links[5]);
   return sb.make();
+}
+
+model::SubnetID makeRandomSubnetMatrix(const size_t nIn,
+                                       const size_t nOut,
+                                       const size_t nCell,
+                                       const size_t minArity,
+                                       const size_t maxArity,
+                                       const unsigned seed) {
+  MatrixGenerator generator(nCell, nIn, nOut,
+                            {AND, OR, XOR, NAND, NOR, XNOR}, seed);
+  generator.setFaninLim(minArity, maxArity);
+  const NetID &netID = generator.generate();
+  Design design(netID);
+
+  return design.getSubnets().front();
 }
 
 } // namespace eda::gate::model

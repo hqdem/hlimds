@@ -30,19 +30,23 @@ Simulator::DataVector getAllValues(size_t nIn, size_t count) {
   return res;
 }
 
-CheckerResult RndChecker2::equivalent(const Subnet &lhs,
-                                      const Subnet &rhs,
-                                      const CellToCell &gmap) const {
-  if (lhs.getInNum() != rhs.getInNum()) {
-    LOG_ERROR << "Nets have different number of inputs." << std::endl;
-    return CheckerResult::ERROR;
+std::vector<bool> getCounterEx(const std::bitset<64> output,
+                               const Simulator::DataVector values) {
+  std::vector<bool> counterEx = {};
+  for (uint8_t i = 0; i < 64; i++) {
+    if (output.test(i)) {
+      for (auto value : values) {
+        std::bitset<64> curVal(value);
+        counterEx.push_back(curVal.test(i));
+      }
+      break;
+    }
   }
-  if (lhs.getOutNum() != rhs.getOutNum()) {
-    LOG_ERROR << "Nets have different number of inputs." << std::endl;
-    return CheckerResult::ERROR;
-  }
+  return counterEx;
+}
 
-  const Subnet &miter = miter2(lhs, rhs, gmap);
+CheckerResult RndChecker2::isSat(const SubnetID id) const {
+  const Subnet &miter = Subnet::get(id);
   assert(miter.getOutNum() == 1);
 
   const auto inputNum = miter.getInNum();
@@ -56,9 +60,10 @@ CheckerResult RndChecker2::equivalent(const Subnet &lhs,
         values[i] = std::rand();
       }
       simulator.simulate(values);
-      const auto output = simulator.getValue(miter.getOut(0));
-      if (output) {
-        return CheckerResult(CheckerResult::NOTEQUAL, values);
+      const std::bitset<64> output = simulator.getValue(miter.getOut(0));
+      if (output.any()) {
+        return CheckerResult(CheckerResult::NOTEQUAL,
+                             getCounterEx(output, values));
       }
     }
     return CheckerResult::UNKNOWN;
@@ -75,9 +80,10 @@ CheckerResult RndChecker2::equivalent(const Subnet &lhs,
     size_t iterations = (inputPower <= 64) ? 1ull : (inputPower >> 6);
     for (size_t i = 0; i < iterations; i++) {
       simulator.simulate(getAllValues(inputNum, i));
-      const auto output = simulator.getValue(miter.getOut(0));
-      if (output) {
-        return CheckerResult(CheckerResult::NOTEQUAL, values);
+      const std::bitset<64> output = simulator.getValue(miter.getOut(0));
+      if (output.any()) {
+        return CheckerResult(CheckerResult::NOTEQUAL,
+                             getCounterEx(output, values));
       }
     }
     return CheckerResult::EQUAL;

@@ -12,7 +12,12 @@
 
 using namespace eda::gate::model;
 
-namespace eda::gate::debugger2 {CellTypeID customFourInANDCellType() {
+namespace eda::gate::debugger2 {
+
+using Link = model::Subnet::Link;
+using LinkList = model::Subnet::LinkList;
+
+CellTypeID customFourInANDCellType() {
   CellProperties props(true,
                        false,
                        true,
@@ -75,7 +80,7 @@ map[3] = 3;
 map[7] = 5;
 
 debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
-EXPECT_TRUE(checker.equivalent(Subnet::get(equalSubnetBuilder.make()),
-    Subnet::get(genOneCellMappedSubnet(customFourInANDCellType())), map).equal());
+EXPECT_TRUE(checker.areEquivalent(equalSubnetBuilder.make(),
+    genOneCellMappedSubnet(customFourInANDCellType()), map).equal());
 }
 } // namespace eda::gate::debugger2

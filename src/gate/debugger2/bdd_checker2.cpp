@@ -10,10 +10,9 @@
 
 namespace eda::gate::debugger2 {
 
-CheckerResult BddChecker2::equivalent(const Subnet &lhs,
-                                      const Subnet &rhs,
-                                      const CellToCell &gmap) const {
-  const Subnet &miter = miter2(lhs, rhs, gmap);
+CheckerResult BddChecker2::isSat(const SubnetID id) const {
+  const Subnet &miter = Subnet::get(id);
+  assert(miter.getOutNum() == 1);
 
   Cudd manager(0, 0);
   CellBddMap x;

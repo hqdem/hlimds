@@ -31,4 +31,11 @@ model::SubnetID makeStuckLatches();
 
 model::SubnetID makeStuckLatche();
 
+model::SubnetID makeRandomSubnetMatrix(const size_t nIn,
+                                       const size_t nOut,
+                                       const size_t nCell,
+                                       const size_t minArity,
+                                       const size_t maxArity,
+                                       const unsigned seed);
+
 } // namespace eda::gate::model

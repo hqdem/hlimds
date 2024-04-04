@@ -324,7 +324,7 @@ void SubnetBuilder::replace(
   }
 }
 
-std::pair<int, int> SubnetBuilder::evaluateReplace(
+SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> &rhsToLhs) const {
 
@@ -338,7 +338,12 @@ std::pair<int, int> SubnetBuilder::evaluateReplace(
   const int oldRootDepth = (int)desc[rhsToLhs[rhsEntries.size() - 1]].depth;
   const int newRootDepth = (int)newEntriesMetric.second;
   const size_t addedEntriesN = newEntriesMetric.first;
-  return {deletedEntriesN - addedEntriesN, oldRootDepth - newRootDepth};
+
+  const int deltaSize = deletedEntriesN - addedEntriesN;
+  const int deltaDepth = oldRootDepth - newRootDepth;
+  const float deltaWeight = 0.0; // FIXME:
+
+  return Effect{deltaSize, deltaDepth, deltaWeight};
 }
 
 void SubnetBuilder::replaceWithZero(const EntrySet &entryIDs) {

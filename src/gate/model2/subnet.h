@@ -361,18 +361,20 @@ namespace eda::gate::model {
 class SubnetBuilder final {
   friend EntryIterator;
 
-  struct EntryDescriptor final {
-    EntryDescriptor(): prev(normalOrderID), next(normalOrderID),
-                       depth(invalidID) {};
-    size_t prev;
-    size_t next;
-    size_t depth;
-  };
-
 public:
   using Cell = Subnet::Cell;
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
+
+  /// Represents a replacement effect.
+  struct Effect final {
+    /// Old size - new size.
+    int size;
+    /// Old depth - new depth.
+    int depth;
+    /// Old weight - new weigth.
+    float weigth;
+  };
 
   SubnetBuilder(): nIn(0), nOut(0) {
     const size_t n = 1024*1024; // FIXME
@@ -407,6 +409,21 @@ public:
   /// Returns the non-constant reference to the i-th cell.
   Subnet::Cell &getCell(size_t i) {
     return entries[i].cell;
+  }
+
+  /// Returns the depth of the i-th cell.
+  size_t getDepth(size_t i) const {
+    return desc[i].depth;
+  }
+
+  /// Returns the weigth of the i-th cell.
+  float getWeight(size_t i) const {
+    return desc[i].weight;
+  }
+
+  /// Sets the weigth of the i-th cell.
+  void setWeight(size_t i, float weight) {
+    desc[i].weight = weight;
   }
 
   /// Returns the entry/link indices of the j-th link of the i-th entry.
@@ -520,13 +537,8 @@ public:
       std::unordered_map<size_t, size_t> &rhsToLhs,
       const std::function<void(const size_t)> *onNewCell = nullptr);
 
-  /// Returns
-  /// {
-  ///   [the number of deleted entries - the number of added entries];
-  ///   [old root depth - new root depth]
-  /// }
-  /// after replacement.
-  std::pair<int, int> evaluateReplace(
+  /// Returns the effect of the replacement.
+  Effect evaluateReplace(
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs) const;
 
@@ -567,8 +579,8 @@ public:
   }
 
   SubnetID make() {
-    std::vector<size_t> tmpMapping{};
-    return make(tmpMapping);
+    std::vector<size_t> mapping{};
+    return make(mapping);
   }
 
 private:
@@ -669,6 +681,19 @@ private:
   void destrashEntry(size_t entryID);
 
 private:
+  struct EntryDescriptor final {
+    EntryDescriptor():
+        prev(normalOrderID),
+        next(normalOrderID),
+        depth(invalidID),
+        weight(1.0) {}
+
+    size_t prev;
+    size_t next;
+    size_t depth;
+    float weight;
+  };
+
   static constexpr size_t invalidID = static_cast<size_t>(-1);
 
   static constexpr size_t normalOrderID = invalidID - 1;
@@ -678,7 +703,6 @@ private:
   uint16_t nIn;
   uint16_t nOut;
 
-  /// Context.
   std::vector<Subnet::Entry> entries;
 
   std::vector<EntryDescriptor> desc;

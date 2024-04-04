@@ -54,7 +54,7 @@ void Rewriter::rewriteOnNode(
       rhsToLhs[rhs.getEntries().size() - i] =
           cone.coneEntryToOrig[coneSubnet.getEntries().size() - i];
     }
-    int curMetricValue = builder.evaluateReplace(rhsID, rhsToLhs).first;
+    int curMetricValue = builder.evaluateReplace(rhsID, rhsToLhs).size;
     if (curMetricValue > bestMetricValue) {
       bestMetricValue = curMetricValue;
       bestRhsID = rhsID;

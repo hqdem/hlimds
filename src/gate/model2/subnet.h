@@ -368,12 +368,20 @@ public:
 
   /// Represents a replacement effect.
   struct Effect final {
+    Effect operator+(const Effect &rhs) const {
+      return Effect{size + rhs.size, depth + rhs.depth, weight + rhs.weight};
+    }
+
+    Effect operator-(const Effect &rhs) const {
+      return Effect{size - rhs.size, depth - rhs.depth, weight - rhs.weight};
+    }
+
     /// Old size - new size.
     int size;
     /// Old depth - new depth.
     int depth;
     /// Old weight - new weigth.
-    float weigth;
+    float weight;
   };
 
   SubnetBuilder(): nIn(0), nOut(0) {
@@ -584,14 +592,16 @@ public:
   }
 
 private:
-  /// Returns {[the number of new entries]; [new root depth]} after replacement.
-  std::pair<size_t, size_t> newEntriesEval(
+  /// Returns the add-effect of the replacement:
+  /// the number of cells (value of weight) added and new depth of the root.
+  Effect newEntriesEval(
       const SubnetID rhsID,
       const std::unordered_map<size_t, size_t> rhsToLhs,
       std::unordered_set<size_t> &reusedEntries) const;
 
-  /// Returns the number of entries to delete after deleting root.
-  int deletedEntriesEval(
+  /// Returns the delete-effect of the replacement:
+  /// the number of cells (value of weight) deleted.
+  Effect deletedEntriesEval(
       const size_t rootEntryID,
       const std::unordered_set<size_t> &reusedEntries) const;
 

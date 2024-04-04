@@ -264,7 +264,7 @@ void SubnetBuilder::replace(
   assert(rhs.getOutNum() == 1);
   const auto &rhsEntries = rhs.getEntries();
   const auto lhsRootEntryID = rhsToLhs[rhsEntries.size() - 1];
-  const auto oldLhsRootDepth = desc[lhsRootEntryID].depth;
+  const auto oldLhsRootDepth = getDepth(lhsRootEntryID);
 
   // Deleting root entry from strash
   if (rhsToLhs[0] != lhsRootEntryID) {
@@ -300,7 +300,7 @@ void SubnetBuilder::replace(
     }
     rhsToLhs[i] = newEntryID;
 
-    if (onNewCell && (isNewElem || desc[newEntryID].depth >= oldLhsRootDepth)) {
+    if (onNewCell && (isNewElem || getDepth(newEntryID) >= oldLhsRootDepth)) {
       (*onNewCell)(newEntryID);
     }
   }
@@ -332,18 +332,11 @@ SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
   assert(rhs.getOutNum() == 1);
   const auto &rhsEntries = rhs.getEntries();
   std::unordered_set<size_t> reusedEntries;
-  auto newEntriesMetric = newEntriesEval(rhsID, rhsToLhs, reusedEntries);
-  int deletedEntriesN = deletedEntriesEval(rhsToLhs[rhsEntries.size() - 1],
-                                           reusedEntries);
-  const int oldRootDepth = (int)desc[rhsToLhs[rhsEntries.size() - 1]].depth;
-  const int newRootDepth = (int)newEntriesMetric.second;
-  const size_t addedEntriesN = newEntriesMetric.first;
+  const auto addEffect = newEntriesEval(rhsID, rhsToLhs, reusedEntries);
+  const auto deleteEffect = deletedEntriesEval(rhsToLhs[rhsEntries.size() - 1],
+                                               reusedEntries);
 
-  const int deltaSize = deletedEntriesN - addedEntriesN;
-  const int deltaDepth = oldRootDepth - newRootDepth;
-  const float deltaWeight = 0.0; // FIXME:
-
-  return Effect{deltaSize, deltaDepth, deltaWeight};
+  return deleteEffect - addEffect;
 }
 
 void SubnetBuilder::replaceWithZero(const EntrySet &entryIDs) {
@@ -358,12 +351,13 @@ void SubnetBuilder::replaceWithOne(const EntrySet &entryIDs) {
   mergeCells(MergeMap{{oneID, entryIDs}});
 }
 
-std::pair<size_t, size_t> SubnetBuilder::newEntriesEval(
+SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     const SubnetID rhsID,
     const std::unordered_map<size_t, size_t> rhsToLhs,
     std::unordered_set<size_t> &reusedEntries) const {
 
   int addedEntriesN = 0;
+  float addedWeight = 0.0;
   const auto &rhs = Subnet::get(rhsID);
   const auto &rhsEntries = rhs.getEntries();
   std::vector<int> virtualDepth(rhsEntries.size(), -1);
@@ -373,7 +367,7 @@ std::pair<size_t, size_t> SubnetBuilder::newEntriesEval(
     if (rhsCell.isIn()) {
       const size_t lhsEntryID = rhsToLhs.find(rhsEntryID)->second;
       reusedEntries.insert(lhsEntryID);
-      virtualDepth[rhsEntryID] = (int)desc[lhsEntryID].depth;
+      virtualDepth[rhsEntryID] = (int)getDepth(lhsEntryID);
       continue;
     }
 
@@ -393,6 +387,7 @@ std::pair<size_t, size_t> SubnetBuilder::newEntriesEval(
     }
     if (isNewElem) {
       ++addedEntriesN;
+      // TODO: update addedWeight.
       continue;
     }
     StrashKey key(rhsCell.getTypeID(), newRhsLinks);
@@ -401,20 +396,23 @@ std::pair<size_t, size_t> SubnetBuilder::newEntriesEval(
       reusedEntries.insert(it->second);
     } else {
       ++addedEntriesN;
+      // TODO: update addedWeight.
     }
   }
-  return {addedEntriesN, virtualDepth[rhsEntries.size() - 2]};
+  return Effect{addedEntriesN, virtualDepth[rhsEntries.size() - 2], addedWeight};
 }
 
-int SubnetBuilder::deletedEntriesEval(
+SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
     const size_t rootEntryID,
     const std::unordered_set<size_t> &reusedEntries) const {
   if (reusedEntries.find(rootEntryID) != reusedEntries.end()) {
-    return 0;
+    return Effect{};
   }
 
   int deletedEntriesN = 0;
+  float deletedWeight = 0.0;
   deletedEntriesN++;
+  deletedWeight += getWeight(rootEntryID);
   std::unordered_map<size_t, size_t> entryNewRefcount;
   std::queue<size_t> entryIDQueue;
   size_t entryID = rootEntryID;
@@ -434,11 +432,14 @@ int SubnetBuilder::deletedEntriesEval(
       --entryNewRefcount[linkIdx];
       if (!entryNewRefcount[linkIdx]) {
         ++deletedEntriesN;
+        deletedWeight += getWeight(linkIdx);
         entryIDQueue.push(linkIdx);
       }
     }
   }
-  return deletedEntriesN;
+
+  const int oldRootDepth = (int)getDepth(rootEntryID);
+  return Effect{deletedEntriesN, oldRootDepth, deletedWeight};
 }
 
 Subnet::Link &SubnetBuilder::getLinkRef(size_t entryID, size_t j) {
@@ -446,7 +447,7 @@ Subnet::Link &SubnetBuilder::getLinkRef(size_t entryID, size_t j) {
 }
 
 void SubnetBuilder::deleteDepthBounds(size_t entryID) {
-  const size_t entryDepth = desc[entryID].depth;
+  const size_t entryDepth = getDepth(entryID);
   assert(depthBounds.size() > entryDepth);
   if (depthBounds[entryDepth].first == depthBounds[entryDepth].second) {
     depthBounds[entryDepth].first = depthBounds[entryDepth].second = invalidID;
@@ -461,7 +462,7 @@ void SubnetBuilder::deleteDepthBounds(size_t entryID) {
 void SubnetBuilder::addDepthBounds(size_t entryID) {
   const auto &cell = getCell(entryID);
   const auto typeID = cell.getTypeID();
-  const size_t curDepth = desc[entryID].depth;
+  const size_t curDepth = getDepth(entryID);
   if (depthBounds.size() <= curDepth) {
     depthBounds.resize(curDepth + 1, {invalidID, invalidID});
   }
@@ -510,7 +511,7 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
   desc[idx].depth = 0;
 
   for (const auto link : links) {
-    desc[idx].depth = std::max(desc[idx].depth, desc[link.idx].depth + 1);
+    desc[idx].depth = std::max(getDepth(idx), getDepth(link.idx) + 1);
     auto &cell = getCell(link.idx);
     assert(!cell.isOut());
     cell.incRefCount();
@@ -518,7 +519,7 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
   entries[idx] = Subnet::Entry(typeID, links);
 
   addDepthBounds(idx);
-  const size_t curDepth = desc[idx].depth;
+  const size_t curDepth = getDepth(idx);
 
   constexpr auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
   constexpr auto InEntryLinks = Subnet::Cell::InEntryLinks;
@@ -687,12 +688,12 @@ void SubnetBuilder::recomputeFanoutDepths(size_t rootEntryID,
     }
     const auto &curCell = getCell(curEntryID);
     size_t newDepth = 0;
-    const size_t curDepth = desc[curEntryID].depth;
+    const size_t curDepth = getDepth(curEntryID);
     for (const auto &link : getLinks(curEntryID)) {
       if (toRecompute.find(link.idx) != toRecompute.end()) {
         toRecomputeN--;
       }
-      newDepth = std::max(newDepth, desc[link.idx].depth + 1);
+      newDepth = std::max(newDepth, getDepth(link.idx) + 1);
     }
     if (newDepth == curDepth || curCell.getTypeID() == CELL_TYPE_ID_OUT) {
       desc[curEntryID].depth = newDepth;
@@ -754,12 +755,12 @@ Subnet::Link SubnetBuilder::replaceCell(
   const auto oldRootNext = getNext(entryID);
   const auto oldRefcount = getCell(entryID).refcount;
   const auto oldLinks = getLinks(entryID);
-  const auto oldDepth = desc[entryID].depth;
+  const auto oldDepth = getDepth(entryID);
   size_t newDepth = 0;
 
   for (const auto &link : links) {
     getCell(link.idx).incRefCount();
-    newDepth = std::max(newDepth, desc[link.idx].depth + 1);
+    newDepth = std::max(newDepth, getDepth(link.idx) + 1);
   }
   for (const auto &link : oldLinks) {
     const size_t inputEntryID = link.idx;
@@ -837,19 +838,19 @@ void SubnetBuilder::rearrangeEntries(std::vector<size_t> &newToOldEntries) {
     }
 
     // Update depth and depth bounds
-    saveDepth[newEntries.size()] = desc[newEntries.size()].depth;
-    desc[newEntries.size()].depth = saveDepth[i] == invalidID ? desc[i].depth :
+    saveDepth[newEntries.size()] = getDepth(newEntries.size());
+    desc[newEntries.size()].depth = saveDepth[i] == invalidID ? getDepth(i) :
                                     saveDepth[i];
     if (lastCellDepth != invalidID && !outVisited &&
         desc[newEntries.size()].depth != lastCellDepth) {
       depthBounds[lastCellDepth].second = newEntries.size() - 1;
       if (getCell(i).getTypeID() != CELL_TYPE_ID_OUT) {
-        depthBounds[desc[newEntries.size()].depth].first = newEntries.size();
+        depthBounds[getDepth(newEntries.size())].first = newEntries.size();
       } else {
         outVisited = true;
       }
     }
-    lastCellDepth = desc[newEntries.size()].depth;
+    lastCellDepth = getDepth(newEntries.size());
 
     if (!newToOldEntries.empty()) {
       saveMapping[relinkMapping[i]] = newToOldEntries[relinkMapping[i]];

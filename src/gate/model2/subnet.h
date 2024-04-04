@@ -376,11 +376,11 @@ public:
       return Effect{size - rhs.size, depth - rhs.depth, weight - rhs.weight};
     }
 
-    /// Old size - new size.
+    /// Change in size: old-size - new-size.
     int size;
-    /// Old depth - new depth.
+    /// Change in depth: old-depth - new-depth.
     int depth;
-    /// Old weight - new weigth.
+    /// Change in weight: old-weight - new-weight.
     float weight;
   };
 
@@ -392,10 +392,13 @@ public:
     strash.reserve(n);
   }
 
-  SubnetBuilder(SubnetID subnetID): SubnetBuilder() {
+  SubnetBuilder(
+      SubnetID subnetID,
+      const std::function<float(const size_t)> *getCellWeight = nullptr):
+      SubnetBuilder() {
     const auto &subnet = Subnet::get(subnetID);
     const auto inputs = addInputs(subnet.getInNum());
-    const auto outputs = addSubnet(subnetID, inputs);
+    const auto outputs = addSubnet(subnetID, inputs, getCellWeight);
     addOutputs(outputs);
   }
 
@@ -531,7 +534,8 @@ public:
   /// Adds the subnet and connects it via the specified links.
   /// Does not add the output cells (it should be done explicitly).
   /// Returns the output links.
-  LinkList addSubnet(SubnetID subnetID, const LinkList &links);
+  LinkList addSubnet(SubnetID subnetID, const LinkList &links,
+                     const std::function<float(const size_t)> *getCellWeight = nullptr);
 
   /// Adds the single-output subnet and connects it via the specified links.
   /// Returns the output link.
@@ -543,27 +547,14 @@ public:
   void replace(
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs,
-      const std::vector<float> &weights,
-      const std::function<void(const size_t)> *onNewCell = nullptr);
-
-  void replace(
-      const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
-      const std::function<void(const size_t)> *onNewCell = nullptr) {
-    replace(rhsID, rhsToLhs, {}, onNewCell);
-  }
+      const std::function<float(const size_t /* index in subnet */)> *getCellWeight = nullptr,
+      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr);
 
   /// Returns the effect of the replacement.
   Effect evaluateReplace(
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs,
-      const std::vector<float> &weights) const;
-
-  Effect evaluateReplace(
-      const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> &rhsToLhs) const {
-    return evaluateReplace(rhsID, rhsToLhs, {});
-  }
+      const std::function<float(const size_t)> *getCellWeight = nullptr) const;
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
@@ -612,7 +603,7 @@ private:
   Effect newEntriesEval(
       const SubnetID rhsID,
       const std::unordered_map<size_t, size_t> rhsToLhs,
-      const std::vector<float> &weights,
+      const std::function<float(const size_t)> *getCellWeight,
       std::unordered_set<size_t> &reusedEntries) const;
 
   /// Returns the delete-effect of the replacement:

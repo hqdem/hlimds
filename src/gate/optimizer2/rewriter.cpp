@@ -65,7 +65,7 @@ void Rewriter::rewriteOnNode(
     cutExtractor.recomputeCuts(entryID);
   };
   if (bestMetricValue > 0) {
-    builder.replace(bestRhsID, bestRhsToLhs, &cutRecompute);
+    builder.replace(bestRhsID, bestRhsToLhs, nullptr, &cutRecompute);
   }
 }
 

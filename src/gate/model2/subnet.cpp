@@ -211,7 +211,9 @@ Subnet::Link SubnetBuilder::addCellTree(
 }
 
 Subnet::LinkList SubnetBuilder::addSubnet(
-    SubnetID subnetID, const LinkList &links) {
+    SubnetID subnetID,
+    const LinkList &links,
+    const std::function<float(const size_t)> *getCellWeight) {
   const auto &subnet = Subnet::get(subnetID);
   const auto &subnetEntries = subnet.getEntries();
 
@@ -240,7 +242,8 @@ Subnet::LinkList SubnetBuilder::addSubnet(
     if (cell.isOut()) {
       outs.push_back(newLinks[0]);
     } else {
-      addCell(cell.getTypeID(), newLinks);
+      const auto link = addCell(cell.getTypeID(), newLinks);
+      setWeight(link.idx, getCellWeight ? (*getCellWeight)(i) : 0.0);
     }
   }
 
@@ -258,7 +261,7 @@ Subnet::Link SubnetBuilder::addSingleOutputSubnet(
 void SubnetBuilder::replace(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> &rhsToLhs,
-    const std::vector<float> &weights,
+    const std::function<float(const size_t)> *getCellWeight,
     const std::function<void(const size_t)> *onNewCell) {
 
   const Subnet &rhs = Subnet::get(rhsID);
@@ -302,8 +305,8 @@ void SubnetBuilder::replace(
     rhsToLhs[i] = newEntryID;
 
     // Set the weight of the new entry.
-    if (isNewElem && !weights.empty()) {
-      setWeight(newEntryID, weights[i]);
+    if (isNewElem && getCellWeight) {
+      setWeight(newEntryID, (*getCellWeight)(i));
     }
 
     if (onNewCell && (isNewElem || getDepth(newEntryID) >= oldLhsRootDepth)) {
@@ -333,12 +336,12 @@ void SubnetBuilder::replace(
 SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> &rhsToLhs,
-    const std::vector<float> &weights) const {
+    const std::function<float(const size_t)> *getCellWeight) const {
   const Subnet &rhs = Subnet::get(rhsID);
   assert(rhs.getOutNum() == 1);
   const auto &rhsEntries = rhs.getEntries();
   std::unordered_set<size_t> reusedEntries;
-  const auto addEffect = newEntriesEval(rhsID, rhsToLhs, weights, reusedEntries);
+  const auto addEffect = newEntriesEval(rhsID, rhsToLhs, getCellWeight, reusedEntries);
   const auto delEffect = deletedEntriesEval(rhsToLhs[rhsEntries.size() - 1],
                                             reusedEntries);
 
@@ -360,7 +363,7 @@ void SubnetBuilder::replaceWithOne(const EntrySet &entryIDs) {
 SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     const SubnetID rhsID,
     const std::unordered_map<size_t, size_t> rhsToLhs,
-    const std::vector<float> &weights,
+    const std::function<float(const size_t)> *getCellWeight,
     std::unordered_set<size_t> &reusedEntries) const {
 
   int addedEntriesN = 0;
@@ -394,7 +397,7 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     }
     if (isNewElem) {
       ++addedEntriesN;
-      addedWeight += weights.empty() ? 0.0 : weights[rhsEntryID];
+      addedWeight += getCellWeight ? (*getCellWeight)(rhsEntryID) : 0.0;
       continue;
     }
     StrashKey key(rhsCell.getTypeID(), newRhsLinks);
@@ -403,7 +406,7 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
       reusedEntries.insert(it->second);
     } else {
       ++addedEntriesN;
-      addedWeight += weights.empty() ? 0.0 : weights[rhsEntryID];
+      addedWeight += getCellWeight ? (*getCellWeight)(rhsEntryID) : 0.0;
     }
   }
   return Effect{addedEntriesN, virtualDepth[rhsEntries.size() - 2], addedWeight};

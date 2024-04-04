@@ -543,12 +543,27 @@ public:
   void replace(
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs,
+      const std::vector<float> &weights,
       const std::function<void(const size_t)> *onNewCell = nullptr);
+
+  void replace(
+      const SubnetID rhsID,
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const std::function<void(const size_t)> *onNewCell = nullptr) {
+    replace(rhsID, rhsToLhs, {}, onNewCell);
+  }
 
   /// Returns the effect of the replacement.
   Effect evaluateReplace(
       const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> &rhsToLhs) const;
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const std::vector<float> &weights) const;
+
+  Effect evaluateReplace(
+      const SubnetID rhsID,
+      std::unordered_map<size_t, size_t> &rhsToLhs) const {
+    return evaluateReplace(rhsID, rhsToLhs, {});
+  }
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
@@ -597,6 +612,7 @@ private:
   Effect newEntriesEval(
       const SubnetID rhsID,
       const std::unordered_map<size_t, size_t> rhsToLhs,
+      const std::vector<float> &weights,
       std::unordered_set<size_t> &reusedEntries) const;
 
   /// Returns the delete-effect of the replacement:
@@ -696,7 +712,7 @@ private:
         prev(normalOrderID),
         next(normalOrderID),
         depth(invalidID),
-        weight(1.0) {}
+        weight(0.0) {}
 
     size_t prev;
     size_t next;

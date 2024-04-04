@@ -382,7 +382,7 @@ public:
     strash.reserve(n);
   }
 
-  SubnetBuilder(SubnetID subnetID) {
+  SubnetBuilder(SubnetID subnetID): SubnetBuilder() {
     const auto &subnet = Subnet::get(subnetID);
     const auto inputs = addInputs(subnet.getInNum());
     const auto outputs = addSubnet(subnetID, inputs);

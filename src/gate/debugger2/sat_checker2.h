@@ -9,7 +9,6 @@
 #pragma once
 
 #include "gate/debugger2/base_checker2.h"
-#include "gate/debugger2/miter2.h"
 #include "gate/model2/utils/subnet_cnf_encoder.h"
 
 #include <cassert>
@@ -21,10 +20,9 @@ class SatChecker2 final : public BaseChecker2,
   friend class util::Singleton<SatChecker2>;
 
 public:
-  CheckerResult equivalent(const Subnet &lhs,
-                           const Subnet &rhs,
-                           const CellToCell &map) const override {
-    const Subnet &miter = miter2(lhs, rhs, map);
+  CheckerResult isSat(const SubnetID id) const override {
+    const Subnet &miter = Subnet::get(id);
+    assert(miter.getOutNum() == 1);
 
     const auto &encoder = model::SubnetEncoder::get();
     eda::gate::solver::Solver solver;

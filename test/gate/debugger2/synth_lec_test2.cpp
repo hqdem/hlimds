@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/base_checker2.h"
+#include "gate/debugger2/bdd_checker2.h"
+#include "gate/debugger2/rnd_checker2.h"
 #include "gate/model2/examples.h"
-#include "gate/simulator2/simulator.h"
 
 #include "gtest/gtest.h"
 
@@ -16,8 +16,9 @@ using namespace eda::gate::model;
 
 namespace eda::gate::debugger2 {
 
-TEST(MiterTest, Random) {
-  using Simulator = eda::gate::simulator2::Simulator;
+TEST(LecTest, Random) {
+  using options::BDD;
+  using options::RND;
 
   const size_t nIn      = 10;
   const size_t nOut     = 10;
@@ -34,22 +35,14 @@ TEST(MiterTest, Random) {
     for (size_t i = 0; i < subnet.getEntries().size(); ++i) {
       map[i] = i;
     }
-    SubnetBuilder builder;
-    BaseChecker2::miter2(builder, id, id, map);
-    const Subnet &miter = Subnet::get(builder.make());
-    uint16_t miterInNum = miter.getInNum();
-    EXPECT_TRUE(miter.getOutNum() == 1);
-    EXPECT_TRUE(miterInNum == subnet.getInNum());
 
-    Simulator simulator(miter);
-    Simulator::DataVector values(miterInNum);
+    static_cast<RndChecker2&>(getChecker(RND)).setExhaustive(false);
+    static_cast<RndChecker2&>(getChecker(RND)).setTries(100);
+    EXPECT_TRUE(getChecker(RND).areEquivalent(id, id, map).isUnknown());
 
-    for (size_t k = 0; k < miterInNum; ++k) {
-      values[k] = std::rand();
-    }
-    simulator.simulate(values);
-    EXPECT_FALSE(simulator.getValue(miter.getOut(0)));
+    static_cast<RndChecker2&>(getChecker(RND)).setExhaustive(true);
+    EXPECT_TRUE(getChecker(RND).areEquivalent(id, id, map).equal());
+    EXPECT_TRUE(getChecker(BDD).areEquivalent(id, id, map).equal());
   }
-
 }
 } // namespace eda::gate::debugger2

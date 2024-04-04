@@ -14,9 +14,9 @@
 
 namespace eda::gate::debugger2 {
 
-CheckerResult SeqChecker::equivalent(const Subnet &lhs, const Subnet &rhs,
-                                     const CellToCell &cmap) const {
-  const Subnet &cmiter = miter2(lhs, rhs, cmap);
+CheckerResult SeqChecker::isSat(const SubnetID id) const {
+
+  const Subnet &cmiter = Subnet::get(id);
 
   const Subnet &miter = seqSweep(cmiter);
 

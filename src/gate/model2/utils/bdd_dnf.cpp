@@ -109,7 +109,7 @@ void convertToCubes(BddToDnf::Paths &paths,
 
     // String creation
     std::string result;
-    for (int i = 0; i < varCount; i++) {
+    for (size_t i = 0; i < varCount; i++) {
         result += "-";
     }
     for (auto pair : vec) {

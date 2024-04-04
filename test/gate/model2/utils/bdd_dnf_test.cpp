@@ -40,7 +40,7 @@ TEST(BddToDnfTest, test1) {
   BDD y = cudd.bddVar();
   BDD h = cudd.bddVar();
 
-  BDD bdd = h & !x & !y | !x & !z;
+  BDD bdd = (h & !x & !y) | ((!x) & !z);
 
   checkDnfCorrectness(bdd, cudd);
 }
@@ -52,7 +52,7 @@ TEST(BddToDnfTest, test2) {
   BDD y = cudd.bddVar();
   BDD z = cudd.bddVar();
 
-  BDD bdd = x & y | !z;
+  BDD bdd = (x & y) | (!z);
 
   checkDnfCorrectness(bdd, cudd);
 }
@@ -89,7 +89,7 @@ TEST(BddToDnfTest, test5) {
   BDD e = cudd.bddVar();
   BDD f = cudd.bddVar();
 
-  BDD bdd = (a | b) & c | d ^ e ^ !f;
+  BDD bdd = ((a | b) & c) | (d ^ e ^ !f);
 
   checkDnfCorrectness(bdd, cudd);
 }

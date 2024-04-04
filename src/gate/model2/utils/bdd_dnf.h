@@ -40,6 +40,6 @@ public:
 
 };
 
-} // namespace eda::gate::model2::utils
+} // namespace eda::gate::model::utils
 
 #endif // BDD_DNF_H

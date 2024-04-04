@@ -42,6 +42,9 @@ void Rewriter::rewriteOnNode(
     const auto &cone = coneBuilder.getCone(cut);
     const auto &coneSubnet = Subnet::get(cone.subnetID);
     const SubnetID rhsID = resynthesizer.resynthesize(cone.subnetID);
+    if (rhsID == model::OBJ_NULL_ID) {
+      continue;
+    }
     const Subnet &rhs = Subnet::get(rhsID);
     std::unordered_map<size_t, size_t> rhsToLhs;
     for (size_t i = 0; i < rhs.getInNum(); ++i) {

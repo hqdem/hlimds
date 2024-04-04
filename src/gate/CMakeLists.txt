@@ -31,6 +31,7 @@ add_library(Gate OBJECT
   model2/net.cpp
   model2/printer/printer.cpp
   model2/subnet.cpp
+  model2/utils/bdd_dnf.cpp
   model2/utils/subnet_checking.cpp
   model2/utils/subnet_to_bdd.cpp
   model2/utils/subnet_truth_table.cpp

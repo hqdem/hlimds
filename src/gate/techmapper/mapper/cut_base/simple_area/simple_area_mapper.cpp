@@ -58,12 +58,15 @@ float SimpleAreaMapper::calculateArea(const std::unordered_set<uint64_t> &entryI
 void SimpleAreaMapper::saveBest(
     EntryIndex entryIndex,
     const optimizer2::CutExtractor::CutsList &cutsList) {
-  eda::gate::optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
+  optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   BestReplacement bestSimpleReplacement{};
   float bestArea = MAXFLOAT;
+
+  assert(cutsList.size() > 1);
+
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
-    if (cut.entryIdxs.size() != 1) {
+    if (cut.entryIdxs.count(entryIndex) != 1) {
 
       SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
 
@@ -87,7 +90,12 @@ void SimpleAreaMapper::saveBest(
     }
   }
 
+  assert(bestArea != MAXFLOAT);
+
   areaVec[entryIndex] = {bestArea, bestSimpleReplacement.entryIDxs};
+  if (bestSimpleReplacement.entryIDxs.empty()) {
+    std::cout << entryIndex << std::endl;
+  }
   assert(!bestSimpleReplacement.entryIDxs.empty());
   (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;
 }

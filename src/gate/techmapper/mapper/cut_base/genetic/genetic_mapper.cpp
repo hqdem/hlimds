@@ -68,7 +68,7 @@ void GeneticMapper::initialization() {
     } else {
       auto cutsList = cutExtractor->getCuts(entryIndex);
       for (const auto &cut: cutsList) {
-        if (cut.entryIdxs.size() != 1) {
+        if (cut.entryIdxs.count(entryIndex) != 1) {
 
           SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
           auto truthTable = eda::gate::model::evaluate(

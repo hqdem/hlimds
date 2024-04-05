@@ -32,7 +32,7 @@ TEST(TechmapAreaTest, SimpleSubnet) {
   printStatistic(mappedSubnetId, libertyName);}
 
 TEST(TechmapAreaTest, GraphMLSubnet) {
-  std::string fileName = "simple_spi_orig";
+  std::string fileName = "sasc_orig";
   SubnetID mappedSubnetId = graphMLMapping(areaMapperType, fileName);
   std::cout << getArea(mappedSubnetId) << std::endl;
   printStatistic(mappedSubnetId, libertyName);}

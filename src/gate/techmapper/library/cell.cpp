@@ -150,7 +150,6 @@ void LibraryCells::readLibertyFile(const std::string &filename,
                                    std::vector<CellTypeID> &cellTypeFFIDs,
                                    std::vector<CellTypeID> &cellTypeFFrsIDs,
                                    std::vector<CellTypeID> &cellTypeLatchIDs) {
-/*
   TokenParser tokParser;
   FILE *file = fopen(filename.c_str(), "rb");
   Group *ast = tokParser.parseLibrary(file,
@@ -175,36 +174,46 @@ void LibraryCells::readLibertyFile(const std::string &filename,
       if (pin.getIntegerAttribute("direction", 10) & (1 << 1)) {
           outputs.push_back(std::string(pin.getName()));
         if (pin.hasAttribute("function")) {
-          funcs.push_back(std::string(
-              pin.getStringAttribute("function" , "none")));
+          const auto *func = pin.getBexprAttribute("function");
+
+          std::string_view strFunc;
+          if (func != nullptr) {
+            // Turn function to string
+            //funcs.push_back(std::string(strFunc));
+          }
         }
       }
     }
-
-    eda::gate::model::CellProperties
-        props(false, false, false, false, false, false, false, false, false);
 
     model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
     model::CellTypeAttr::get(cellTypeAttrID).props.area =
         cell.getIntegerAttribute("area", 0);
 
-    kitty::dynamic_truth_table *truthTable =
-        new kitty::dynamic_truth_table(inputs.size());
-    kitty::create_from_formula(*truthTable, funcs.at(0), inputs);
+    if (!cell.hasAttribute("ff") &&
+        !cell.hasAttribute("latch") &&
+        outputs.size() > 0 &&
+        std::find(outputs.begin(), outputs.end(),"CLK") == outputs.end()) {
 
-    MinatoMorrealeAlg minatoMorrealeAlg;
-    const auto subnetID = minatoMorrealeAlg.synthesize(*truthTable);
+      eda::gate::model::CellProperties
+          props(true, true, true, false, false, false, false, false, false);
 
-    CellTypeID cellID = eda::gate::model::makeCellType(
-        eda::gate::model::CellSymbol::UNDEF,
-        name, subnetID,
-        cellTypeAttrID, props,
-        static_cast<uint16_t>(inputs.size()),
-        static_cast<uint16_t>(1));
+      kitty::dynamic_truth_table *truthTable =
+          new kitty::dynamic_truth_table(inputs.size());
+      kitty::create_from_formula(*truthTable, funcs.at(0), inputs);
 
-    cellTypeIDs.push_back(cellID);
+      MinatoMorrealeAlg minatoMorrealeAlg;
+      const auto subnetID = minatoMorrealeAlg.synthesize(*truthTable);
 
-  }*/
+      CellTypeID cellID = eda::gate::model::makeCellType(
+          eda::gate::model::CellSymbol::UNDEF,
+          name, subnetID,
+          cellTypeAttrID, props,
+          static_cast<uint16_t>(inputs.size()),
+          static_cast<uint16_t>(1));
+
+      cellTypeIDs.push_back(cellID);
+    }
+  }
 
 /*
   const path homePath1 = std::string(getenv("UTOPIA_HOME"));
@@ -255,7 +264,7 @@ void LibraryCells::readLibertyFile(const std::string &filename,
     std::cerr << "File wasn't found\n";
   }*/
 
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  /*const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
   const std::filesystem::path PythonScriptPath =
       homePath / "src" / "gate" / "techmapper" / "library" /
       "libertyToJson.py";
@@ -295,12 +304,12 @@ void LibraryCells::readLibertyFile(const std::string &filename,
 
         // Create a dynamic truth table with the appropriate number of inputs
 
-        /*std::vector<Pin> pins;
+        *//*std::vector<Pin> pins;
         for (const auto &name: inputPinNames) {
           const auto &cell = it.value()["delay"][name];
           pins.push_back(Pin(name, cell["cell_fall"], cell["cell_rise"],
                              cell["fall_transition"], cell["rise_transition"]));
-        }*/
+        }*//*
 
         kitty::dynamic_truth_table *truthTable =
             new kitty::dynamic_truth_table(inputPinNames.size());
@@ -403,7 +412,7 @@ void LibraryCells::readLibertyFile(const std::string &filename,
         }
       }
     }
-  }
+  }*/
 }
 
 /*void LibraryCells::makeCellTypeIDs(std::vector<Cell*> &cells, std::vector<CellTypeID> &cellTypeIDs) {

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -49,8 +49,14 @@ GNet *CutBasedTechMapper::techMap(GNet *net, Strategy *strategy, bool aig) {
     replacementSearch(net, strategy, bestSubstitutions, cutStorage,
         cellTypeMap);
 
+/* NOTE: there is no usage for `model2` except dumping to file at working
+ * directory. This location is hard-coded, so this code can be used properly
+ * at debug mode only.
+ */
+#ifdef UTOPIA_DEBUG
     const Net &model2 = createModel2(net, bestSubstitutions);
     printNet(model2);
+#endif
 
     rwdb.closeDB();
   } catch (const char* msg) {

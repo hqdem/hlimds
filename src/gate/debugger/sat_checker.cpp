@@ -372,7 +372,9 @@ void SatChecker::error(Context &context,
                        const GateBinding &ibind,
                        const GateBinding &obind) const {
   bool comma;
+#ifdef UTOPIA_DEBUG
   context.dump("miter.cnf");
+#endif
 
   comma = false;
   std::cout << "Inputs: ";

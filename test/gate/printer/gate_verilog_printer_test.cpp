@@ -22,10 +22,18 @@ using namespace eda::gate::parser::verilog;
 
 namespace eda::gate::printer {
 
+namespace fs = std::filesystem;
+
 using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 
 const std::string IVERILOG = "iverilog";
+
+fs::path getOutputDir() {
+  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const fs::path outputPath = homePath / "output";
+  return outputPath;
+}
 
 std::shared_ptr<GNet> getNet(std::function
     <std::shared_ptr<GNet>(unsigned, Gate::SignalList&, Gate::Id&)> generator) {
@@ -37,7 +45,9 @@ std::shared_ptr<GNet> getNet(std::function
 }
 
 int compileVerilog(const std::string &filename) {
-  const std::string command = IVERILOG + " " + filename;
+
+  std::string outBinFile = filename + ".out";
+  const std::string command = IVERILOG + " " + filename + " -o " + outBinFile;
   return std::system(command.c_str());
 }
 
@@ -47,10 +57,9 @@ void printerTest(std::function
 }
 
 void printerTest(const std::string &fileName, const GNet &net) {
-  namespace fs = std::filesystem;
-  const fs::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const fs::path outputPath = "output/test/gate_verilog_printer";
-  fs::path file = homePath / outputPath / fileName;
+
+  const fs::path outputPath = getOutputDir() / "test/gate_verilog_printer";
+  fs::path file = outputPath / fileName;
   fs::path dir = file.parent_path();
   if (!fs::exists(dir)) {
     fs::create_directories(dir);

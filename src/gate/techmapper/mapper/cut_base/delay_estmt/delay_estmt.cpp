@@ -61,21 +61,41 @@ void WLM::setWireLoadModel(string wlm_name) {
       length = length_sky;
       for (size_t i = 0; i < 6; ++i)
         multip[i] = mp_sky[i];
+
+      /// Changing properties
+      r = fudge * 0.08;
+      c = fudge * 0.00002;
+      slope = 8.3631;
     }
     else if (wire_load_name == "5k") {
       length = length_5k;
       for (size_t i = 0; i < 6; ++i)
         multip[i] = mp_5k[i];
+
+      /// Changing properties
+      r = fudge * 0.004;
+      c = fudge * 0.2;
+      slope = 6.2836;
     }
     else if (wire_load_name == "3k") {
       length = length_3k;
       for (size_t i = 0; i < 6; ++i)
         multip[i] = mp_3k[i];
+      
+      /// Changing properties
+      r = fudge * 0.004;
+      c = fudge * 0.2;
+      slope = 6.2836;
     }
     else if (wire_load_name == "1k") {
       length = length_1k;
       for (size_t i = 0; i < 6; ++i)
         multip[i] = mp_1k[i];
+
+      /// Changing properties
+      r = fudge * 0.004;
+      c = fudge * 0.2;
+      slope = 6.2836;
     }
 
     for (size_t i = 0; i < 6; ++i)
@@ -283,7 +303,7 @@ vector<float> NLDM::timingVisitor(const Timing &timing,
   size_t variablesCount = 0;
   /// For interpolation
   float x1 = 0, x2 = 0, y1 = 0, y2 = 0,
-        T00= 0, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
+        T00 = 0, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
   size_t tback1 = 0, tfront1 = 0;
   size_t tback2 = 0, tfront2 = 0;
 

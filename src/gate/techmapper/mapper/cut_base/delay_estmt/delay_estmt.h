@@ -48,10 +48,12 @@ public:
   };
 
   float lutInterpolation(const LookupTable *lut, size_t variablesCount, 
-                       float& input_net_transition,
-                       float& total_output_net_capacitance,
-                       float& x1, float& x2, float& y1, float& y2, 
-                       size_t& back1, size_t& front1, size_t& back2, size_t& front2);
+                         float& input_net_transition,
+                         float& total_output_net_capacitance,
+                         float& x1, float& x2, 
+                         float& y1, float& y2, 
+                         size_t& back1, size_t& front1, 
+                         size_t& back2, size_t& front2);
 
   /*
    *  timingVisitor gets value of 
@@ -109,7 +111,7 @@ public:
 /*
  *  Wire-load Model
  *  Class for delay estimation, based on such attributes as:
- *   Resistance, Capacity, Area, Slope
+ *   Resistance, Capacitance, Slope
  */
 class WLM {
   friend class NLDM;
@@ -146,7 +148,7 @@ private:
   /* WLM names = { "sky", "5k", "3k", "1k" }*/
   std::string wire_load_name;
 
-  // Resistance, Capacitance, Area, extrapolation slope
+  // Resistance, Capacitance, extrapolation slope
   float r, c, slope;
   std::pair<size_t, float> fanout_length[6];
   std::pair<size_t, float> fanout_resistance[6];

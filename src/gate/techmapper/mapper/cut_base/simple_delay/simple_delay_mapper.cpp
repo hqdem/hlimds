@@ -82,6 +82,9 @@ void SimpleDelayMapper::saveBest(
   float bestArrivalTime = MAXFLOAT;
 
   delay_estimation::DelayEstimator d1;
+  
+  /// Switching WLM for SYRCoSE
+  d1.wlm.setWireLoadModel("5k");
 
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {

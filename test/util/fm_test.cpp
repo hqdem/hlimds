@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2022 ISP RAS (http://www.ispras.ru)
+// Copyright 2022-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -132,10 +132,17 @@ void testGate(const eda::gate::model::GNet &net, int passes, double r,
   //std::cout << "Kahypar cutset : " << cutsetK << std::endl;
 }
 
+std::string makeOutPath(const std::string fileName) {
+  fs::path path = std::string(getenv("UTOPIA_HOME"));
+  path /= "output/test/data/fm";
+  path /= fileName;
+  return path.string();
+}
+
 TEST(FMTest, BookPartitionTest) {
   const std::string pathIn = "test/data/fm/test_Kahng_in.txt";
-  const std::string pathOut = "test/data/fm/test_Kahng_out1.txt";
-  const std::string pathOut2 = "test/data/fm/test_Kahng_out2.txt";
+  const std::string pathOut = makeOutPath("test_Kahng_out1.txt");
+  const std::string pathOut2 = makeOutPath("test_Kahng_out2.txt");
 
   EXPECT_EQ(testInput(1, 0.375, "", pathIn, pathOut), 2);
   EXPECT_EQ(testInput(2, 0.375, "", pathIn, pathOut2), 1);
@@ -144,7 +151,7 @@ TEST(FMTest, BookPartitionTest) {
 TEST(FMTest, GatePartitionTest) {
   auto net = eda::gate::model::makeRand(1024, 256);
   std::cout << "NET GENERATED" << std::endl;
-  const std::string pathOut = "test/data/fm/test_gate_out.txt";
+  const std::string pathOut = makeOutPath("test_gate_out.txt");
 
   testGate(*net.get(), 1000, 0.375, "", pathOut);
 }
@@ -158,7 +165,7 @@ TEST(FMTest, RandPartitionTest) {
   config.edgeNumber = 250;
   config.edgeSizeLimit = 10;
   config.r = 0.375;
-  const std::string pathOut = "test/data/fm/graph_rand_250.txt";
+  const std::string pathOut = makeOutPath("graph_rand_250.txt");
 
   testRandom(config, "config_path", pathOut);
 }
@@ -171,7 +178,7 @@ TEST(FMTest, StructurePartitionGraphTest) {
   config.nodeNumber = 250;
   config.step = 30;
   config.r = 0.375;
-  const std::string pathOut = "test/data/fm/graph_link_250.txt";
+  const std::string pathOut = makeOutPath("graph_link_250.txt");
 
   testLinked(config, "config_path", pathOut);
 }
@@ -184,7 +191,7 @@ TEST(FMTest, BigPartitionTest) {
   config.nodeNumber = 100'000;
   config.step = 30;
   config.r = 0.375;
-  const std::string out = "test/data/fm/graph_link_100000.txt";
+  const std::string out = makeOutPath("graph_link_100000.txt");
 
   testLinked(config, "config_path", out);
 }

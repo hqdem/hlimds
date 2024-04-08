@@ -8,19 +8,12 @@
 
 #pragma once
 
-#include <string>
-
+#include "gate/model2/object.h"
 #include "gate/translator/firrtl.h"
 
-#include "options.h"
+#include <string>
 
 namespace eda::gate::model {
 
-struct Model2Config {
-    std::string outNetFileName;
-    std::vector<std::string> files;
-};
-
-int translateToModel2(const FirrtlConfig &firrtlConfig,
-                      const Model2Config &model2Config);
+int translateToModel2(const FirrtlConfig &firrtlConfig);
 } // namespace eda::gate::model

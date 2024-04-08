@@ -17,7 +17,7 @@ namespace RTLIL = Yosys::RTLIL;
 std::ostream YosysConverterFirrtl::devnull(nullptr);
 
 YosysConverterFirrtl::YosysConverterFirrtl(const FirrtlConfig &config)
-    : outputFile(config.outputNamefile.empty() ? std::cout : file)
+    : outputFile(config.outputFileName.empty() ? std::cout : file)
     , debug(config.debugMode ? std::cerr : devnull) {
   Yosys::yosys_setup();
   RTLIL::Design design;
@@ -34,7 +34,7 @@ YosysConverterFirrtl::YosysConverterFirrtl(const FirrtlConfig &config)
   Yosys::run_pass("memory", &design);
   Yosys::run_pass("opt -nodffe -nosdff", &design);
   Yosys::run_pass("pmuxtree", &design);
-  createOutputFile(config.outputNamefile);
+  createOutputFile(config.outputFileName);
   readModules(design);
 }
 

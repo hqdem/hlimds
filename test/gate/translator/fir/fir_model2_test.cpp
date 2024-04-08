@@ -6,22 +6,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/printer/printer.h"
-#include "gate/translator/fir_to_model2/fir_to_model2.h"
+#include "gate/translator/fir/fir_model2.h"
 
 #include "gtest/gtest.h"
 
 #include <filesystem>
-#include <fstream>
-
-using Format = eda::gate::model::ModelPrinter::Format;
 
 namespace fs = std::filesystem;
 
 namespace eda::gate::model {
 
-static constexpr const char *inPath = "test/data/gate/fir_to_model2";
-static constexpr const char *outPath = "output/test/gate/fir_to_model2";
+static constexpr const char *inPath = "test/data/gate/translator/fir";
+static constexpr const char *outPath = "output/test/gate/translator/fir";
 
 bool firrtlTranslatorTest(const std::string &inFileName) {
   const std::string &homePath = std::string(getenv("UTOPIA_HOME"));

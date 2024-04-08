@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "fir_to_model2.h"
+#include "fir_model2.h"
 
 #include "gate/model2/celltype.h"
 #include "gate/model2/printer/printer.h"
@@ -156,18 +156,16 @@ namespace sv = circt::sv;
 
 namespace eda::gate::model {
 
-bool printNetlist(const std::string &inputFilePath,
-                  const std::string &outputDir) {
-
+std::vector<CellTypeID> getModel2(const std::string &inputFilePath) {
   const fs::path inPath = inputFilePath;
   if (!fs::exists(inPath)) {
     std::cerr << "File does not exist: " << inputFilePath << std::endl;
-    return false;
+    return std::vector<CellTypeID>();
   }
   std::string extension = inPath.extension();
   if (extension != ".fir" && extension != ".mlir") {
     std::cerr << "Unsupported file type: " << extension << std::endl;
-    return false;
+    return std::vector<CellTypeID>();
   }
 
   // Parse the input 'FIRRTL' / 'MLIR' file.
@@ -179,27 +177,38 @@ bool printNetlist(const std::string &inputFilePath,
   translator.printFIRRTL();
 #endif
   // Translate the 'FIRRTL' representation to the 'model2' representation.
-  const auto resultNetlist = translator.translate();
+  return translator.translate();
+}
 
+bool printNetlist(const std::vector<CellTypeID> netlist,
+                  const std::string &outputFileName) {
   // Dump the output net to the console (Format::SIMPLE).
 #ifdef UTOPIA_DEBUG
-  for (const auto &cellTypeID : *resultNetlist) {
+  for (const auto &cellTypeID : netlist) {
     std::cout << CellType::get(cellTypeID).getNet() << std::endl;
   }
 #endif
-  // Dump the output net to the '.v' file.
-  fs::path outPath = inPath.filename();
-  outPath.replace_extension(".v");
-  fs::create_directories(outputDir);
-  const fs::path outputFullName = outputDir / outPath;
-  std::ofstream outputStream(outputFullName);
-  for (const auto &cellTypeID : *resultNetlist) {
+  std::ofstream outputStream(outputFileName);
+  for (const auto &cellTypeID : netlist) {
     ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
         CellType::get(cellTypeID).getNet());
   }
   outputStream.close();
-
   return true;
+}
+
+bool printNetlist(const std::string &inputFilePath,
+                  const std::string &outputDir) {
+  const auto resultNetlist = getModel2(inputFilePath);
+  if (resultNetlist.empty()) {
+    return false;
+  }
+  // Dump the output net to the '.v' file.
+  fs::path outPath = fs::path(inputFilePath).filename();
+  outPath.replace_extension(".v");
+  fs::create_directories(outputDir);
+  const fs::path outputFullName = outputDir / outPath;
+  return printNetlist(resultNetlist, outputFullName.c_str());
 }
 
 MLIRModule MLIRModule::loadFromMLIR(const std::string &string) {
@@ -270,7 +279,7 @@ MLIRModule::MLIRModule(std::shared_ptr<MLIRContext> context,
 Translator::Translator(MLIRModule &&module)
     : module(std::move(module)),
       passManager(this->module.getContext()) {
-  resultNetList = std::make_unique<std::vector<CellTypeID>>();
+  resultNetlist = std::make_unique<std::vector<CellTypeID>>();
 }
 
 
@@ -296,17 +305,17 @@ void Translator::printFIRRTL() {
   std::cout << buf << std::endl;
 }
 
-std::shared_ptr<std::vector<CellTypeID>> Translator::translate() {
+std::vector<CellTypeID> Translator::translate() {
   addPass(createCHIRRTLToLowFIRRTLPass());
   runPasses();
   clearPasses();
 #ifdef UTOPIA_DEBUG
   printFIRRTL();
 #endif
-  addPass(createLowFIRRTLToModel2Pass(resultNetList));
+  addPass(createLowFIRRTLToModel2Pass(resultNetlist));
   runPasses();
   clearPasses();
-  return resultNetList;
+  return *resultNetlist;
 }
 
 bool CellKey::operator==(const CellKey &cellKey) const {
@@ -1048,7 +1057,7 @@ void processOperation(Operation *destOp, std::string &destOpName,
  
 // Top-level operation.
 LogicalResult generateModel(ModuleOp moduleOp,
-    std::shared_ptr<std::vector<CellTypeID>> resultNetList) {
+    std::shared_ptr<std::vector<CellTypeID>> resultNetlist) {
   CircuitOp circuitOp =
       *(moduleOp.getRegion().begin()->getOps<CircuitOp>().begin());
   for (auto &&fModuleOp : circuitOp.getBodyBlock()->getOps<FModuleOp>()) {
@@ -1076,7 +1085,7 @@ LogicalResult generateModel(ModuleOp moduleOp,
                                                         false, false, false),
                                          Net::get(netID).getInNum(),
                                          Net::get(netID).getOutNum());
-    resultNetList->push_back(cellTypeID);
+    resultNetlist->push_back(cellTypeID);
   }
   return mlir::success();
 }
@@ -1353,15 +1362,15 @@ public:
 
 class LowFIRRTLToModel2Pass : public TranslatePass<LowFIRRTLToModel2Pass> {
 private:
-  std::shared_ptr<std::vector<CellTypeID>> resultNetList;
+  std::shared_ptr<std::vector<CellTypeID>> resultNetlist;
 public:
   LowFIRRTLToModel2Pass(
-      std::shared_ptr<std::vector<CellTypeID>> resultNetList) {
-    this->resultNetList = resultNetList;
+      std::shared_ptr<std::vector<CellTypeID>> resultNetlist) {
+    this->resultNetlist = resultNetlist;
   }
   void runOnOperation() override {
     ModuleOp moduleOp = getOperation();
-    if (failed(generateModel(moduleOp, resultNetList))) {
+    if (failed(generateModel(moduleOp, resultNetlist))) {
       signalPassFailure();
     }
   }
@@ -1374,6 +1383,6 @@ std::unique_ptr<Pass> createCHIRRTLToLowFIRRTLPass() {
 }
 
 std::unique_ptr<Pass> createLowFIRRTLToModel2Pass(
-    std::shared_ptr<std::vector<CellTypeID>> resultNetList) {
-  return std::make_unique<LowFIRRTLToModel2Pass>(resultNetList);
+    std::shared_ptr<std::vector<CellTypeID>> resultNetlist) {
+  return std::make_unique<LowFIRRTLToModel2Pass>(resultNetlist);
 }

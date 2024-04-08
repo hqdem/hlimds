@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model2/net.h"
+#include "gate/translator/firrtl.h"
 
 #include "llvm/Support/SourceMgr.h"
 
@@ -105,7 +106,7 @@ class Translator {
 public:
   Translator(MLIRModule &&module);
   void printFIRRTL();
-  std::shared_ptr<std::vector<CellTypeID>> translate();
+  std::vector<CellTypeID> translate();
 
 private:
   void addPass(std::unique_ptr<Pass> pass);
@@ -113,15 +114,19 @@ private:
   void clearPasses();
 
   MLIRModule module;
-  std::shared_ptr<std::vector<CellTypeID>> resultNetList;
+  std::shared_ptr<std::vector<CellTypeID>> resultNetlist;
   PassManager passManager;
 };
 
+std::vector<CellTypeID> getModel2(const std::string &inputFilePath);
+
 bool printNetlist(const std::string &inputFilePath,
                   const std::string &outputDir);
+bool printNetlist(const std::vector<CellTypeID> netlist,
+                  const std::string &outFileName);
 
 } // namespace eda::gate::model
 
 std::unique_ptr<Pass> createCHIRRTLToLowFIRRTLPass();
 std::unique_ptr<Pass> createLowFIRRTLToModel2Pass(
-    std::shared_ptr<std::vector<CellTypeID>> resultNetList);
+    std::shared_ptr<std::vector<CellTypeID>> resultNetlist);

@@ -32,7 +32,7 @@ int translateToGateVerilog(
 
   FirrtlConfig cfg;
   cfg.debugMode = false;
-  cfg.outputNamefile = firFileName.string();
+  cfg.outputFileName = firFileName.string();
   cfg.files.push_back(inputFileName);
   translateToFirrtl(cfg);
 

@@ -94,6 +94,7 @@ add_library(Gate OBJECT
   simulator2/simulator.cpp
   techmapper/library/cell.cpp
   techmapper/library/cellDB.cpp
+  techmapper/mapper/cut_base/area_recovery/area_recovery.cpp
   techmapper/mapper/cut_base/delay_estmt/delay_estmt.cpp
   techmapper/mapper/cut_base/genetic/genetic_mapper.cpp
   techmapper/mapper/cut_base/power_map/power_map.cpp

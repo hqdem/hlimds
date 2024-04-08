@@ -101,8 +101,8 @@ add_library(Gate OBJECT
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp
   transformer/mutator/mutator_visitor.cpp
-  translator/fir_to_model2/fir_to_model2.cpp
-  translator/fir_to_model2/fir_to_model2_wrapper.cpp
+  translator/fir/fir_model2.cpp
+  translator/verilog/verilog_model2.cpp
   translator/firrtl.cpp
   translator/yosys_converter_firrtl.cpp)
 add_library(Utopia::Gate ALIAS Gate)

@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "fir_to_model2_wrapper.h"
+#include "verilog_model2.h"
 
-#include "fir_to_model2.h"
 #include "gate/model2/printer/printer.h"
+#include "gate/translator/fir/fir_model2.h"
 
 #include <filesystem>
 #include <fstream>
@@ -21,36 +21,31 @@ namespace fs = std::filesystem;
 
 namespace eda::gate::model {
 
-int translateToModel2(const FirrtlConfig &firrtlConfig,
-                      const Model2Config &model2Config) {
-  fs::path inputFilePath = model2Config.files.back();
+int translateToModel2(const FirrtlConfig &firrtlConfig) {
+  fs::path inputFilePath = firrtlConfig.files.back();
   const std::string extension = inputFilePath.extension();
   if (extension != ".sv" && extension != ".v" && extension != ".fir") {
-    std::cerr << "The input files are not supported! Abort." << std::endl;
+    std::cerr << "Unsupported file type: " << extension << std::endl;
     return 1;
   }
-  if (!(model2Config.files.size() == 1 && extension == ".fir")) {
-    bool areAllVerilog = true;
+  if (!(firrtlConfig.files.size() == 1 && extension == ".fir")) {
     for (const auto &file : firrtlConfig.files) {
+      std::cout << file << std::endl;
       const fs::path filePath = file;
       std::string extension = filePath.extension();
       if (extension != ".sv" && extension != ".v") {
-        areAllVerilog = false;
+        std::cerr << "The input files are not supported!" << std::endl;
+        return 1;
       }
     }
-    if (areAllVerilog) {
-      if (!firrtlConfig.outputNamefile.empty()) {
-        if (!translateToFirrtl(firrtlConfig)) {
-          inputFilePath = firrtlConfig.outputNamefile;
-        } else {
-          return 1;
-        }
+    if (!firrtlConfig.outputFileName.empty()) {
+      if (!translateToFirrtl(firrtlConfig)) {
+        inputFilePath = firrtlConfig.outputFileName;
       } else {
-        std::cerr << "The output file name is missing! Abort." << std::endl;
         return 1;
       }
     } else {
-      std::cerr << "The input files are not supported! Abort." << std::endl;
+      std::cerr << "The output file name is missing!" << std::endl;
       return 1;
     }
   }
@@ -62,19 +57,23 @@ int translateToModel2(const FirrtlConfig &firrtlConfig,
 
   // Print the resulting 'model2' representation.
 #ifdef UTOPIA_DEBUG
-  for (const auto &cellTypeID : *resultNetlist) {
+  for (const auto &cellTypeID : resultNetlist) {
     std::cout << CellType::get(cellTypeID).getNet() << std::endl;
   }
 #endif
   // Dump the output net to the '.v' file.
-  if (!model2Config.outNetFileName.empty()) {
-    const fs::path outputFullName = model2Config.outNetFileName;
+  if (firrtlConfig.debugMode) {
+    if (firrtlConfig.outputFileName.empty()) {
+      std::cerr << "The output file name is missing!" << std::endl;
+    }
+    fs::path outputFullName = firrtlConfig.outputFileName;
+    outputFullName.replace_extension(".v");
     const fs::path outputFullPath = outputFullName.parent_path();
     if (!outputFullPath.empty()) {
       fs::create_directories(outputFullPath);
     }
     std::ofstream outputStream(outputFullName);
-    for (const auto &cellTypeID : *resultNetlist) {
+    for (const auto &cellTypeID : resultNetlist) {
       ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
           CellType::get(cellTypeID).getNet());
     }
@@ -83,4 +82,5 @@ int translateToModel2(const FirrtlConfig &firrtlConfig,
 
   return 0;
 }
+
 } // namespace eda::gate::model

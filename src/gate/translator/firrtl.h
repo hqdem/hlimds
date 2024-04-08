@@ -14,7 +14,7 @@
 struct FirrtlConfig {
     bool debugMode;
     std::string topModule;
-    std::string outputNamefile;
+    std::string outputFileName;
     std::vector<std::string> files;
 };
 

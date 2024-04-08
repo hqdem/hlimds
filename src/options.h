@@ -244,25 +244,22 @@ struct FirRtlOptions final : public AppOptions {
 struct Model2Options final : public AppOptions {
 
   static constexpr const char *ID = "to_model2";
-  static constexpr const char *NET = "--net";
-  static constexpr const char *TOP = "--top";
-  static constexpr const char *FIRRTL = "--fir";
-  static constexpr const char *DEBUG_MODE = "--verbose";
+  static constexpr const char *TOP_MODULE_NAME = "--top";
+  static constexpr const char *OUT_FILENAME = "--out";
+  static constexpr const char *VERBOSE = "--verbose";
 
   Model2Options(AppOptions &parent):
-      AppOptions(parent, ID, "Translator from FIRRTL/Verilog to model2") {
-    options->add_option(NET, outNetFileName, "Output Verilog file name")
-           ->expected(1);
-    options->add_option(TOP, topModuleName,
+      AppOptions(parent, ID, "Translator to model2") {
+
+    options->add_option(TOP_MODULE_NAME, top,
                         "Name of top module in Verilog")
            ->expected(1);
-    options->add_option(FIRRTL, firrtlFileName,
-                        "Name of FIRRTL file name")
+    options->add_option(OUT_FILENAME, outFileName,
+                        "Name of output file")
            ->expected(1);
-    options->add_flag(DEBUG_MODE, debugMode,
-                "Enable debug mode");
-
-    // Input Verilog file(s).
+    options->add_flag(VERBOSE, verbose,
+                      "Enable debug mode");
+    // Input file(s).
     options->allow_extras();
   }
 
@@ -271,15 +268,12 @@ struct Model2Options final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, NET, outNetFileName);
-    get(json, TOP, topModuleName);
-    get(json, FIRRTL, firrtlFileName);
+    get(json, TOP_MODULE_NAME, top);
   }
 
-  std::string outNetFileName = "";
-  std::string firrtlFileName = "temp.fir";
-  std::string topModuleName = "";
-  bool debugMode = false;
+  std::string top;
+  std::string outFileName;
+  bool verbose = false;
 };
 
 struct Options final : public AppOptions {

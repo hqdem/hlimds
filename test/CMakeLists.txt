@@ -72,6 +72,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
   gate/optimizer/util_test.cpp
+  gate/optimizer2/area_optimizer_test.cpp
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
   gate/optimizer2/npndb_test.cpp

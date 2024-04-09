@@ -37,7 +37,7 @@ TEST(ReconvergenceCutTest, CorrectnessTest) {
 
   const auto &subnet = Subnet::get(builder.make());
 
-  const std::vector<size_t> cut = getReconvergenceCut(subnet, 5, 4);
+  const std::vector<size_t> cut = getReconvCut(subnet, 5, 4);
   const std::vector<size_t> check = {0, 1};
 
   EXPECT_EQ(check, cut);
@@ -84,7 +84,7 @@ TEST(ReconvergenceCutTest, SimpleTest) {
   builder.addOutput(links.back());
 
   const auto &subnet = Subnet::get(builder.make());
-  const auto cut = getReconvergenceCut(subnet, rootId, cutSize);
+  const auto cut = getReconvCut(subnet, rootId, cutSize);
 
   const std::vector<size_t> check = {11, 12, 13, 14};
 

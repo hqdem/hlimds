@@ -36,25 +36,35 @@ public:
   /// Synthesizes the Subnet.
   SubnetID synthesize(const KittyTT &func,
                       uint16_t maxArity = -1) const override {
-    CONST_CHECK(func)
+    CONST_CHECK(func, false)
     SubnetBuilder subnetBuilder;
     LinkList ins = subnetBuilder.addInputs(func.num_vars());
     bool inv = (kitty::count_ones(func) > (func.num_bits() / 2));
     Link output = inv ?
         ~utils::synthFromSOP(kitty::isop(~func), ins, subnetBuilder, maxArity) :
-        utils::synthFromSOP(kitty::isop(func), ins, subnetBuilder, maxArity);                               
+        utils::synthFromSOP(kitty::isop(func), ins, subnetBuilder, maxArity);
     subnetBuilder.addOutput(output);
     return subnetBuilder.make();
   }
 
+  /// Synthesizes the Subnet accounting care bits.
+  SubnetID synthesize(const KittyTT &func,
+                      const KittyTT &care,
+                      uint16_t maxArity = -1) const;
+
   /// Synthesizes the Subnet with algebraic factoring.
   SubnetID synthesizeWithFactoring(const KittyTT &func,
                                    uint16_t maxArity = -1) const override {
-    CONST_CHECK(func)
+    CONST_CHECK(func, false)
     bool inv = (kitty::count_ones(func) > (func.num_bits() / 2));
     return factor.getSubnet(
         kitty::isop(inv ? ~func : func), func.num_vars(), maxArity, inv);
   }
+
+  /// Synthesizes the Subnet with algebraic factoring accounting care bits.
+  SubnetID synthesizeWithFactoring(const KittyTT &func,
+                                   const KittyTT &care,
+                                   uint16_t maxArity = -1) const;
 
 private:
 

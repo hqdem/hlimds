@@ -10,6 +10,7 @@
 
 #include "gate/model2/object.h"
 #include "gate/model2/subnet.h"
+#include "gate/optimizer2/reconvergence_cut.h"
 
 #include <unordered_map>
 

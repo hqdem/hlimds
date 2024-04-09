@@ -62,6 +62,8 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
+  optimizer2/area_resynthesizer.cpp
+  optimizer2/area_subnet_iterator.cpp
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
   optimizer2/npndb.cpp
@@ -74,6 +76,7 @@ add_library(Gate OBJECT
   optimizer2/synthesis/cascade.cpp
   optimizer2/synthesis/de_micheli.cpp
   optimizer2/synthesis/dsd_to_subnet.cpp
+  optimizer2/synthesis/isop.cpp
   optimizer2/synthesis/reed_muller.cpp
   optimizer2/synthesis/ternary_bi_clique.cpp
   optimizer2/synthesis/unitized_table.cpp

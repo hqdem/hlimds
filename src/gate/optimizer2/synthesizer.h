@@ -14,11 +14,11 @@
 #include "gate/model2/object.h"
 #include "kitty/dynamic_truth_table.hpp"
 
-#define CONST_CHECK(func)\
+#define CONST_CHECK(func, inv)\
   bool one{kitty::is_const0(~func)};\
   bool zero{kitty::is_const0(func)};\
   if (one || zero) {\
-    return synthConstFunc(func.num_vars(), one);\
+    return synthConstFunc(func.num_vars(), one ^ inv);\
   }\
 
 namespace eda::gate::optimizer2 {

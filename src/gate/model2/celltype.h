@@ -166,8 +166,8 @@ struct CellProperties {
   /// Cell/soft flags identify the cell kind:
   /// 00: Hard (block w/ unknown structure);
   /// 01: Soft (block w/ known structure);
-  /// 10: Gate (elementary logic function);
-  /// 11: Cell (technology-dependent cell).
+  /// 10: Cell (technology-dependent cell);
+  /// 11: Gate (elementary logic function).
   unsigned cell : 1;
   unsigned soft : 1;
 

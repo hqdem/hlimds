@@ -52,7 +52,7 @@ namespace eda::gate::tech_optimizer {
 
   int64_t PowerMap::getLevel(const Cut &cut) {
     int64_t levelMax = INT64_MIN;
-    for(const EntryIndex &leafIdx: cut.entryIdxs) {
+    for(const EntryIndex &leafIdx : cut.entryIdxs) {
       levelMax = std::max(levelMax,getLevel(leafIdx));
     }
     return levelMax + 1;
@@ -88,16 +88,19 @@ namespace eda::gate::tech_optimizer {
   }
 
   void PowerMap::traditionalMapDepthOriented() {
+
     for (uint64_t entryIndex = 0; entryIndex < entries->size(); entryIndex++) {
-      if (!(*entries)[entryIndex].cell.isAnd()) {
-        addNotAnAndToTheMap(entryIndex, (*entries)[entryIndex].cell);
-        if((*entries)[entryIndex].cell.isIn()){
-          computedLevel[entryIndex] = 0;
-        }
-        continue;
+      const auto& cell = (*entries)[entryIndex].cell;
+      if(cell.isAnd() || cell.isBuf()){
+        (*bestReplacementMap)[entryIndex] = findCutMinimizingDepth(entryIndex);
       }
-      (*bestReplacementMap)[entryIndex] = findCutMinimizingDepth(entryIndex);    
-    }  
+      else{
+        addNotAnAndToTheMap(entryIndex, (*entries)[entryIndex].cell);
+        computedLevel[entryIndex] = 0;
+      }
+
+    }
+
   }
 
   bool aproxEqual(const double &a, const double &b, const double &eps = 0.0001) {
@@ -143,12 +146,20 @@ namespace eda::gate::tech_optimizer {
     return 1000;
   };
 
-  void PowerMap::globalSwitchAreaRecovery(const std::vector<double> &cellActivities) {
-    
+  void PowerMap::globalSwitchAreaRecovery(eda::gate::analyzer::SwitchActivity &switchActivity) {
+
+    const std::vector<double> &cellActivities =
+                              switchActivity.getActivities();
+
+    const std::vector<size_t> &riseActivities = 
+                              switchActivity.getSwitchesOn();
+    const std::vector<size_t> &fallActivities = 
+                              switchActivity.getSwitchesOff();
+
     for (uint64_t entryIndex = 0; entryIndex < entries->size();entryIndex++) {
       const auto &cell = (*entries)[entryIndex].cell;
 
-      if(cell.isAnd()) {  
+      if(cell.isAnd() || cell.isBuf()) {  
         CutsList cutsList = cutExtractor->getCuts(entryIndex);
         double bestAF = MAXFLOAT;
         double bestSF = MAXFLOAT;
@@ -156,7 +167,7 @@ namespace eda::gate::tech_optimizer {
         SubnetID bestTechCellSubnetID = 0;
 
         for(const Cut &cut : cutsList) {
-          if(cut.entryIdxs.size() == 1)continue;
+          if(cut.entryIdxs.count(entryIndex) == 1)continue;
           double curAF = areaFlow(entryIndex,cut);
           double curSF = switchFlow(entryIndex,cut,cellActivities);
 
@@ -167,13 +178,19 @@ namespace eda::gate::tech_optimizer {
 
             const auto techIdsList = getTechIdsList(cut);
             if(techIdsList.size() == 0) continue;
-            float localCellArea = MAXFLOAT;
+            float localCellPower = MAXFLOAT;
             for (const SubnetID &techCellSubnetID : techIdsList) {
               auto currentAttr = cellDB->getSubnetAttrBySubnetID(techCellSubnetID);
-              if(currentAttr.area > localCellArea)continue;
-              localCellArea = currentAttr.area;
-              // const SubnetID techCellSubnetID = techIdsList[0];
-              computedLevel[entryIndex] = getLevel(cut);
+              float curLocalCellPower = 0;
+              int i=0;
+              for(const auto &leaf : cut.entryIdxs){
+                curLocalCellPower += currentAttr.pinsPower[i].rise_power * (float) riseActivities[leaf];
+                curLocalCellPower += currentAttr.pinsPower[i].fall_power * (float) fallActivities[leaf];
+                i++;
+              }
+              if(curLocalCellPower > localCellPower)continue;
+              localCellPower = curLocalCellPower;
+              // computedLevel[entryIndex] = getLevel(cut);
               bestAF = curAF;
               bestSF = curSF;
               bestCut = cut;
@@ -188,7 +205,7 @@ namespace eda::gate::tech_optimizer {
         (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
 
       }else {
-        addNotAnAndToTheMap(entryIndex,cell);
+        addNotAnAndToTheMap(entryIndex, cell);
       }
       entryIndex += cell.more;
     }
@@ -220,17 +237,11 @@ namespace eda::gate::tech_optimizer {
     eda::gate::analyzer::SwitchActivity switchActivity = 
                                   simulationEstimator.estimate(subnet);
 
-    const std::vector<double> &cellActivities =
-                              switchActivity.getActivities();
 
-    // const std::vector<size_t> &riseActivities = 
-    //                           switchActivity.getSwitchesOn();
-    // const std::vector<size_t> &fallActivities = 
-    //                           switchActivity.getSwitchesOff();
     
     // traditionalMapDepthOriented();
     // computeRequiredTimes();
-    globalSwitchAreaRecovery(cellActivities);
+    globalSwitchAreaRecovery(switchActivity);
     clear();
 
     auto end = std::chrono::high_resolution_clock::now();

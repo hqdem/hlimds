@@ -30,13 +30,11 @@ public:
   using TruthTable = FunctionIR;
   static constexpr auto k = 4;
 
-  SubnetID synthesize(const TruthTable &tt, uint16_t maxArity = -1) override;
+  SubnetID synthesize(
+      const TruthTable &tt, uint16_t maxArity = -1) const override;
 
 private:
-  AbcNpn4Synthesizer();
-
-  /// Caches synthesized subnets (index = [number-of-variables][truth-table]).
-  std::vector<SubnetID> cache[k + 1];
+  AbcNpn4Synthesizer() {}
 };
 
 } // namespace eda::gate::optimizer2

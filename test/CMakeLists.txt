@@ -34,8 +34,12 @@ add_executable(${TEST_TARGET}
   gate/debugger/ril_lec_test.cpp
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verilog_lec_test.cpp
+  gate/debugger2/merge_test.cpp
   gate/debugger2/miter2_test.cpp
+  gate/debugger2/register_sweep_test.cpp
   gate/debugger2/sat_checker2_test.cpp
+  gate/debugger2/register_sweep_test.cpp
+  gate/debugger2/seq_sweep_test.cpp
   gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp
@@ -48,6 +52,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/rwdatabase_test.cpp
   gate/model2/seq_net.cpp
   gate/model2/subnet_cnf_encoder_test.cpp
+  gate/model2/subnet_depth_test.cpp
   gate/model2/subnet_test.cpp
   gate/model2/utils/subnet_truth_table_test.cpp
   gate/optimizer/associative_balancer_test.cpp
@@ -69,6 +74,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
   gate/optimizer2/npndb_test.cpp
+  gate/optimizer2/pass_test.cpp
   gate/optimizer2/reconvergence_cut_test.cpp
   gate/optimizer2/resynthesizer_test.cpp
   gate/optimizer2/rewriter_test.cpp

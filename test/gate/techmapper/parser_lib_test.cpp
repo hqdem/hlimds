@@ -27,11 +27,11 @@ bool checkLibParser(std::string libertyPath) {
   std::vector<eda::gate::model::CellTypeID> cellsLatch;
   LibraryCells::readLibertyFile(libertyPath, combCells, cellsFF, cellsFFrs, cellsLatch);
 
-#ifdef UTOPIA_DEBUG
+//#ifdef UTOPIA_DEBUG
   for(const auto& cell : combCells) {
-    std::cout << cell->getName() << std::endl;
+    std::cout << CellType::get(cell).getName() << std::endl;
   }
-#endif
+//#endif
 
   return true;
 }

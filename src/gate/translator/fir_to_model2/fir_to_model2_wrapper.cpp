@@ -61,9 +61,11 @@ int translateToModel2(const FirrtlConfig &firrtlConfig,
   const auto resultNetlist = translator.translate();
 
   // Print the resulting 'model2' representation.
+#ifdef UTOPIA_DEBUG
   for (const auto &cellTypeID : *resultNetlist) {
     std::cout << CellType::get(cellTypeID).getNet() << std::endl;
   }
+#endif
   // Dump the output net to the '.v' file.
   if (!model2Config.outNetFileName.empty()) {
     const fs::path outputFullName = model2Config.outNetFileName;

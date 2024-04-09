@@ -13,8 +13,8 @@ namespace eda::gate::optimizer::resynthesis {
 // Types
 //===----------------------------------------------------------------------===//
 
-using Arguments = AkersAlgorithm::Arguments;
-using ArgumentsSet = AkersAlgorithm::ArgumentsSet;
+using Arguments = AkersResynthesizer::Arguments;
+using ArgumentsSet = AkersResynthesizer::ArgumentsSet;
 using Gate = eda::gate::model::Gate;
 using GNet = eda::gate::model::GNet;
 
@@ -22,16 +22,18 @@ using GNet = eda::gate::model::GNet;
 // Constructors/Destructors
 //===----------------------------------------------------------------------===//
 
-AkersAlgorithm::AkersAlgorithm(const TruthTable &func, const TruthTable &care):
-                               table(func, care), nVariables(func.num_vars()),
-                               net(std::make_shared<GNet>()) {}
+AkersResynthesizer::AkersResynthesizer(const TruthTable &func,
+                                       const TruthTable &care):
+  table(func, care),
+  nVariables(func.num_vars()),
+  net(std::make_shared<GNet>()) {}
 
 //===------------------------------------------------------------------------===//
 // Convenience Methods
 //===------------------------------------------------------------------------===//
 
-std::shared_ptr<GNet> AkersAlgorithm::run(SignalList &inputs,
-                                          Gate::Id &outputId) {
+std::shared_ptr<GNet> AkersResynthesizer::run(SignalList &inputs,
+                                              Gate::Id &outputId) {
 
   for (uint32_t i = 0; i < nVariables; i++) {
     const Gate::Id inputId = net->addIn();
@@ -87,7 +89,7 @@ std::shared_ptr<GNet> AkersAlgorithm::run(SignalList &inputs,
 // Internal Methods
 //===----------------------------------------------------------------------===//
 
-void AkersAlgorithm::addMajGate(const Arguments &gate) {
+void AkersResynthesizer::addMajGate(const Arguments &gate) {
   assert(gate.size() == 3 && "Invalid number of inputs for a MAJ gate!");
 
   Gate::SignalList majInputs;
@@ -128,7 +130,7 @@ void AkersAlgorithm::addMajGate(const Arguments &gate) {
   table.addMajColumn(gate);
 }
 
-Arguments AkersAlgorithm::findBestGate(ColumnsToRemove &columnsToRemove) {
+Arguments AkersResynthesizer::findBestGate(ColumnsToRemove &columnsToRemove) {
   columnsToRemove.clear();
 
   CanditateList gates;
@@ -191,10 +193,10 @@ Arguments AkersAlgorithm::findBestGate(ColumnsToRemove &columnsToRemove) {
   return chooseGate(args, forRemoval, gates, columnsToRemove);
 }
 
-Arguments AkersAlgorithm::chooseGate(Arguments &candidate,
-                                     ColumnsToRemove &forRemoval,
-                                     const CanditateList &gates,
-                                     ColumnsToRemove &columnsToRemove) {
+Arguments AkersResynthesizer::chooseGate(Arguments &candidate,
+                                         ColumnsToRemove &forRemoval,
+                                         const CanditateList &gates,
+                                         ColumnsToRemove &columnsToRemove) {
 
   if ((forRemoval.size() != 1) || (mayDeleteRows(candidate, forRemoval))) {
     return setWhatFound(candidate, forRemoval, columnsToRemove);
@@ -209,7 +211,7 @@ Arguments AkersAlgorithm::chooseGate(Arguments &candidate,
   return findEliminatingOnesGate();
 }
 
-Arguments AkersAlgorithm::findEliminatingNColsGate(CanditateList &gates,
+Arguments AkersResynthesizer::findEliminatingNColsGate(CanditateList &gates,
   ColumnsToRemove &columnsToRemove, const unsigned n) {
 
   assert(((n == 2) || (n == 3)) && "Error of input variable n!");
@@ -261,16 +263,16 @@ Arguments AkersAlgorithm::findEliminatingNColsGate(CanditateList &gates,
   return chooseGate(args, forRemoval, otherGates, columnsToRemove);
 }
 
-Arguments AkersAlgorithm::setWhatFound(const Arguments &args,
-                                       const ColumnsToRemove &forRemoval,
-                                       ColumnsToRemove &columnsToRemove) {
+Arguments AkersResynthesizer::setWhatFound(const Arguments &args,
+                                           const ColumnsToRemove &forRemoval,
+                                           ColumnsToRemove &columnsToRemove) {
 
   nCallElimFunc = 0;
   columnsToRemove = forRemoval;
   return args;
 }
 
-ArgumentsSet AkersAlgorithm::findGatesForColumnRemoval
+ArgumentsSet AkersResynthesizer::findGatesForColumnRemoval
   (const RowNums &essentialRows, unsigned index) {
 
   ArgumentsSet argsSet;
@@ -306,9 +308,9 @@ ArgumentsSet AkersAlgorithm::findGatesForColumnRemoval
   return argsSet;
 }
 
-uint64_t AkersAlgorithm::countRemovedOnes(unsigned c1,
-                                          unsigned c2,
-                                          unsigned c3) {
+uint64_t AkersResynthesizer::countRemovedOnes(unsigned c1,
+                                              unsigned c2,
+                                              unsigned c3) {
 
   uint64_t counter = 0;
   std::vector<unsigned> args = {c1, c2, c3};
@@ -342,9 +344,9 @@ uint64_t AkersAlgorithm::countRemovedOnes(unsigned c1,
   return counter;
 }
 
-void AkersAlgorithm::incCounter(uint64_t &counter,
-                                RowNums &toRemove,
-                                uint32_t rowNum) {
+void AkersResynthesizer::incCounter(uint64_t &counter,
+                                    RowNums &toRemove,
+                                    uint32_t rowNum) {
 
   auto pair = toRemove.insert(rowNum);
   if (pair.second) {
@@ -352,8 +354,8 @@ void AkersAlgorithm::incCounter(uint64_t &counter,
   }
 }
 
-void AkersAlgorithm::decCounter(uint64_t &counter, RowNums &cantRemove,
-                                RowNums &toRemove, uint32_t rowNum) {
+void AkersResynthesizer::decCounter(uint64_t &counter, RowNums &cantRemove,
+                                    RowNums &toRemove, uint32_t rowNum) {
 
   cantRemove.insert(rowNum);
   size_t flag = toRemove.erase(rowNum);
@@ -362,7 +364,7 @@ void AkersAlgorithm::decCounter(uint64_t &counter, RowNums &cantRemove,
   }
 }
 
-Arguments AkersAlgorithm::findEliminatingOnesGate() {
+Arguments AkersResynthesizer::findEliminatingOnesGate() {
   if (!nCallElimFunc) {
     nInnerColumns = table.nColumns();
   }
@@ -397,8 +399,8 @@ Arguments AkersAlgorithm::findEliminatingOnesGate() {
   return args;
 }
 
-bool AkersAlgorithm::mayDeleteRows(const Arguments &args,
-                                   const ColumnsToRemove &colsToErase) {
+bool AkersResynthesizer::mayDeleteRows(const Arguments &args,
+                                       const ColumnsToRemove &colsToErase) {
   table.addMajColumn(args);
 
   uint64_t mask = -1;

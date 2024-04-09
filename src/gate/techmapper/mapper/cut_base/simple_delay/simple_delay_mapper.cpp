@@ -23,6 +23,20 @@
 
 namespace eda::gate::tech_optimizer {
 void SimpleDelayMapper::findBest() {
+
+  std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path filePath = homePath / file_name;
+
+  TokenParser tokParser;
+  FILE *file = fopen(filePath.generic_string().c_str(), "rb");
+  Group *ast = tokParser.parseLibrary(file,
+                                      filePath.generic_string().c_str());
+  Library lib;
+  AstParser parser(lib, tokParser);
+  parser.run(*ast);
+  fclose(file);
+
   Subnet &subnet = Subnet::get(subnetID);
 
   for (uint16_t i = 0; i < subnet.getInNum(); i++) {
@@ -34,11 +48,11 @@ void SimpleDelayMapper::findBest() {
        entryIndex++) {
     auto cell = entries[entryIndex].cell;
 
-    if (!cell.isAnd()) {
+    if (!(cell.isAnd() || cell.isBuf())) {
       addNotAnAndToTheMap(entryIndex, cell);
     } else {
       // Save best tech cells subnet to bestReplMap
-      saveBest(entryIndex, cutExtractor->getCuts(entryIndex));
+      saveBest(entryIndex, cutExtractor->getCuts(entryIndex), lib);
     }
     entryIndex += cell.more;
   }
@@ -61,30 +75,17 @@ float SimpleDelayMapper::findMaxArrivalTime(const std::unordered_set<size_t> &en
 
 void SimpleDelayMapper::saveBest(
     EntryIndex entryIndex,
-    const optimizer2::CutExtractor::CutsList &cutsList) {
+    const optimizer2::CutExtractor::CutsList &cutsList,
+    Library &lib) {
   eda::gate::optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   BestReplacement bestSimpleReplacement{};
   float bestArrivalTime = MAXFLOAT;
 
   delay_estimation::DelayEstimator d1;
 
-  std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
-
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path filePath = homePath / file_name;
-
-  TokenParser tokParser;
-  FILE *file = fopen(filePath.generic_string().c_str(), "rb");
-  Group *ast = tokParser.parseLibrary(file,
-              filePath.generic_string().c_str());
-  Library lib;
-  AstParser parser(lib, tokParser);
-  parser.run(*ast);
-  fclose(file);
-
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
-    if (cut.entryIdxs.size() != 1) {
+    if (cut.entryIdxs.count(entryIndex) != 1) {
 
       SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
 

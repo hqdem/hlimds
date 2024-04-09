@@ -25,7 +25,7 @@ public:
 
   /// Resynthesizes the given subnet.
   /// Returns the identifier of the newly constructed subnet or OBJ_NULL_ID.
-  virtual SubnetID resynthesize(SubnetID subnetID) = 0;
+  virtual SubnetID resynthesize(SubnetID subnetID) const = 0;
 
   virtual ~ResynthesizerBase() =  default;
 };
@@ -36,10 +36,10 @@ IR construct(const eda::gate::model::Subnet &subnet);
 template<typename IR>
 class Resynthesizer final : public ResynthesizerBase {
 public:
-  Resynthesizer(const Synthesizer<IR> &&synthesizer):
+  Resynthesizer(const Synthesizer<IR> &synthesizer):
     synthesizer(synthesizer) {}
 
-  SubnetID resynthesize(SubnetID subnetID) override {
+  SubnetID resynthesize(SubnetID subnetID) const override {
     assert(subnetID != eda::gate::model::OBJ_NULL_ID);
     const auto ir = construct<IR>(eda::gate::model::Subnet::get(subnetID));
     return synthesizer.synthesize(ir);

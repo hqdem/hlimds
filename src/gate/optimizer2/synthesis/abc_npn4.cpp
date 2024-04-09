@@ -258,18 +258,17 @@ model::SubnetID Database::find(const TruthTable &tt) const {
   return builder.make();
 }
 
-AbcNpn4Synthesizer::AbcNpn4Synthesizer():
-  cache {
+model::SubnetID AbcNpn4Synthesizer::synthesize(
+    const TruthTable &tt, uint16_t maxArity) const {
+  static Database database;
+
+  static std::vector<SubnetID> cache[k + 1] {
       std::vector<SubnetID>(1 << (1 << 0)),
       std::vector<SubnetID>(1 << (1 << 1)),
       std::vector<SubnetID>(1 << (1 << 2)),
       std::vector<SubnetID>(1 << (1 << 3)),
       std::vector<SubnetID>(1 << (1 << 4)),
-  } {}
-
-model::SubnetID AbcNpn4Synthesizer::synthesize(
-    const TruthTable &tt, uint16_t maxArity) {
-  static Database database;
+  };
 
   const auto n = tt.num_vars();
 

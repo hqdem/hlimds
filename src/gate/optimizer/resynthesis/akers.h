@@ -23,7 +23,7 @@ namespace eda::gate::optimizer::resynthesis {
  * The algorithm based on the article "Synthesis of combinational logic using
  * three-input majority gates" by Sheldon B. Akers, Jr. (1962).
 */
-class AkersAlgorithm {
+class AkersResynthesizer {
 
 public:
 
@@ -49,7 +49,7 @@ public:
   //===--------------------------------------------------------------------===//
 
   /// Constructs unitized table of "func" without the sets where "care" has 0.
-  AkersAlgorithm(const TruthTable &func, const TruthTable &care);
+  AkersResynthesizer(const TruthTable &func, const TruthTable &care);
 
   //===--------------------------------------------------------------------===//
   // Convenience Methods

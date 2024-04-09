@@ -106,6 +106,7 @@ add_executable(${TEST_TARGET}
   gate/simulator/simulator_test.cpp
   gate/simulator2/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
+  gate/techmapper/openABC_D_test.cpp
   gate/techmapper/techmapper_test_util.cpp
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/strategy/genetic_test.cpp

@@ -94,7 +94,6 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
 
-
   ////////////////////////////////////////////////////////////////////////
   /*std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   int count = 0;

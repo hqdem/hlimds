@@ -31,14 +31,6 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
   /////////////////////////////////////////////////////////
   std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   int count = 0;
-
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path jsonPath =
-      homePath / "test" / "data" / "gate" / "techmapper" / "liberty.json";
-  std::ifstream file(jsonPath.string());
-  nlohmann::json j;
-  file >> j;
-  file.close();
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
@@ -62,11 +54,17 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
       SubnetID subnetID = subnetBuilder.make();
 
       subnets.push_back(subnetID);
-      std::vector<Power> powers;
-      bool needPower = true;
-      if (needPower) {
 
-        
+      bool needPower = false;
+      if (needPower) {
+        const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+        const std::filesystem::path jsonPath =
+            homePath / "test" / "data" / "gate" / "techmapper" / "liberty.json";
+        std::ifstream file(jsonPath.string());
+        nlohmann::json j;
+        file >> j;
+
+        std::vector<Power> powers;
 
         std::string cell_name = cellType.getName();
 
@@ -84,13 +82,13 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
         }
 
         // Вывод значений для проверки
-        // for (auto& p : powers) {
-        //   std::cout << "Fall Power: " << p.fall_power << ", Rise Power: " << p.rise_power << std::endl;
-        // }
+        for (auto& p : powers) {
+          std::cout << "Fall Power: " << p.fall_power << ", Rise Power: " << p.rise_power << std::endl;
+        }
 
       }
 
-      Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area,powers};
+      Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area};
       subnetToAttr.emplace_back(subnetID, subnetattr);
       ttSubnet.emplace_back(model::evaluate(cellType.getSubnet()).at(0), subnetID);
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));

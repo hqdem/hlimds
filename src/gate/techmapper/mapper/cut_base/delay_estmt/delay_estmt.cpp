@@ -26,7 +26,7 @@ using std::vector;
 
 WLM::WLM() :
   wire_load_name("sky"),
-  r(fudge * 0.08), c(fudge * 0.00002),
+  r(fudge * 0.08), c(fudge * 0.0002),
   slope(8.3631) {
   /* Capacitance is 0.02ff/micron for avg metal         */
   /* Resistance is 80 m-ohm/square, in kohm units     */

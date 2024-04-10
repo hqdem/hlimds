@@ -40,7 +40,7 @@ inline void printStatistic(model::SubnetID subnetID, std::string file_name) {
     statistic[std::string(cell.getName())] = 0;
   }
   const auto &entries = model::Subnet::get(subnetID).getEntries();
-  for (int i = 0; i < entries.size(); i++) {
+  for (uint64_t i = 0; i < entries.size(); i++) {
     auto cellName = entries[i].cell.getType().getName();
     if (statistic.find(cellName) != statistic.end() ) {
       statistic[cellName] ++;

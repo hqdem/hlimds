@@ -94,12 +94,13 @@ add_library(Gate OBJECT
   simulator2/simulator.cpp
   techmapper/library/cell.cpp
   techmapper/library/cellDB.cpp
+  techmapper/mapper/cut_base/area_recovery/area_recovery.cpp
   techmapper/mapper/cut_base/delay_estmt/delay_estmt.cpp
   techmapper/mapper/cut_base/genetic/genetic_mapper.cpp
   techmapper/mapper/cut_base/power_map/power_map.cpp
   techmapper/mapper/cut_base/simple_area/simple_area_mapper.cpp
   techmapper/mapper/cut_base/simple_delay/simple_delay_mapper.cpp
-  techmapper/mapper/cut_base/сut_base_mapper.cpp
+  techmapper/mapper/cut_base/cut_base_mapper.cpp
   techmapper/mapper/baseMapper.cpp
   techmapper/sequential_mapper/sequential_mapper.cpp
   techmapper/assembly.cpp

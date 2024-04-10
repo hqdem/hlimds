@@ -9,6 +9,11 @@
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/techmapper/library/cellDB.h"
 
+#include <readcells/ast.h>
+#include <readcells/ast_parser.h>
+#include <readcells/groups.h>
+#include <readcells/token_parser.h>
+
 #include "nlohmann/json.hpp"
 #include <filesystem>
 #include <fstream>
@@ -28,11 +33,52 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
                const std::vector<CellTypeID> &cellTypeFFrsIDs,
                const std::vector<CellTypeID> &cellTypeLatchIDs) {
 
+  std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
+  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path filePath = homePath / file_name;
+
+  TokenParser tokParser;
+  FILE *file = fopen(filePath.generic_string().c_str(), "rb");
+  Group *ast = tokParser.parseLibrary(file,
+                                      filePath.generic_string().c_str());
+  Library lib;
+  AstParser parser(lib, tokParser);
+  parser.run(*ast);
+  fclose(file);
+
   /////////////////////////////////////////////////////////
   std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
   int count = 0;
   for (const CellTypeID &cellTypeID : cellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
+
+    bool needPower = true;
+    std::vector<Power> powers;
+    if (needPower) {
+      std::string cell_name = cellType.getName();
+
+      auto *cell = lib.getCell(cell_name);
+
+      for (const auto &pin: (*cell).getPins()) {
+        if (pin.getIntegerAttribute("direction", 10) & (1 << 1)) {
+          for (const auto &inPwr: pin.getInternalPowerGroups()) {
+            Power power;
+
+            int i = 0;
+            for (const auto &lut: inPwr.getLuts()) {
+              float sum = 0;
+              for (const auto &it: lut.getValues()) {
+                sum += it;
+              }
+              float med = sum / lut.getValuesSize();
+              (i == 0) ? power.fall_power = med : power.rise_power = med;
+              i++;
+            }
+            powers.push_back(power);
+          }
+        }
+      }
+    }
 
     std::vector<int> permutationVec(cellType.getInNum());
     std::iota(permutationVec.begin(), permutationVec.end(), 0);
@@ -55,45 +101,17 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
       subnets.push_back(subnetID);
 
-      bool needPower = false;
-      if (needPower) {
-        const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-        const std::filesystem::path jsonPath =
-            homePath / "test" / "data" / "gate" / "techmapper" / "liberty.json";
-        std::ifstream file(jsonPath.string());
-        nlohmann::json j;
-        file >> j;
+      std::vector<Power> perPower;
 
-        std::vector<Power> powers;
-
-        std::string cell_name = cellType.getName();
-
-        if (j.contains(cell_name)) {
-          auto& cell_power = j[cell_name]["power"];
-
-          for (const auto &[key, value] : cell_power.items()) {
-            Power power;
-            power.fall_power = value["fall_power"];
-            power.rise_power = value["rise_power"];
-            powers.push_back(power);
-          }
-        } else {
-          std::cout << "Cell not found in JSON." << std::endl;
-        }
-
-        // Вывод значений для проверки
-        for (auto& p : powers) {
-          std::cout << "Fall Power: " << p.fall_power << ", Rise Power: " << p.rise_power << std::endl;
-        }
-
+      for (size_t i = 0; i < cellType.getInNum(); ++i) {
+        perPower.push_back(powers.at(permutationVec.at(i)));
       }
 
-      Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area};
+      Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area, perPower};
       subnetToAttr.emplace_back(subnetID, subnetattr);
       ttSubnet.emplace_back(model::evaluate(cellType.getSubnet()).at(0), subnetID);
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
-
 
   ////////////////////////////////////////////////////////////////////////
   /*std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;

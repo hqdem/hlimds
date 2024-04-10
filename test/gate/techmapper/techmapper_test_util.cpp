@@ -214,4 +214,33 @@ NetID simpleNetMapping(Techmapper::MapperType mapperType) {
   return mappedNetID;
 }
 
+SubnetID areaRecoveySubnetMapping(Techmapper::MapperType mapperType) {
+  using Link = model::Subnet::Link;
+
+  model::SubnetBuilder builder;
+
+  const auto idxI1 = builder.addInput();
+  const auto idxI2 = builder.addInput();
+  const auto idxI3 = builder.addInput();
+  const auto idxI4 = builder.addInput();
+  const auto idxI5 = builder.addInput();
+  const auto idxI6 = builder.addInput();
+
+  const auto idxV1 = builder.addCell(model::AND, Link(idxI3), Link(idxI4));
+  const auto idxV2 = builder.addCell(model::AND, Link(idxI5), Link(idxI6));
+  const auto idxV3 = builder.addCell(model::AND, Link(idxI2), Link(idxV1));
+  const auto idxV4 = builder.addCell(model::AND, Link(idxV1), Link(idxV2));
+  const auto idxV5 = builder.addCell(model::AND, Link(idxI1), Link(idxV3));
+  const auto idxV6 = builder.addCell(model::AND, Link(idxV3), Link(idxV5));
+
+  builder.addOutput(idxV6);
+  builder.addOutput(idxV4);
+
+  SubnetID subnetID = builder.make();
+
+  SubnetID mappedSubnet = mapper(mapperType, subnetID);
+
+  return mappedSubnet;
+}
+
 } // namespace eda::gate::tech_optimizer

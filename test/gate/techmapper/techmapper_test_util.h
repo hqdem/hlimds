@@ -27,5 +27,6 @@ SubnetID graphMLMapping(Techmapper::MapperType mapperType,
 SubnetID andNotMapping(Techmapper::MapperType mapperType);
 SubnetID randomMapping(Techmapper::MapperType mapperType);
 NetID simpleNetMapping(Techmapper::MapperType mapperType);
+SubnetID areaRecoveySubnetMapping(Techmapper::MapperType mapperType);
 
 } // namespace eda::gate::tech_optimizer

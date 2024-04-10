@@ -416,7 +416,9 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
     const size_t rootEntryID,
     const std::unordered_set<size_t> &reusedEntries) const {
   if (reusedEntries.find(rootEntryID) != reusedEntries.end()) {
-    return Effect{};
+    Effect effect;
+    effect.depth = (int)getDepth(rootEntryID);
+    return effect;
   }
 
   int deletedEntriesN = 0;

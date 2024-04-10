@@ -101,7 +101,13 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
       subnets.push_back(subnetID);
 
-      Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area, powers};
+      std::vector<Power> perPower;
+
+      for (size_t i = 0; i < cellType.getInNum(); ++i) {
+        perPower.push_back(powers.at(permutationVec.at(i)));
+      }
+
+      Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area, perPower};
       subnetToAttr.emplace_back(subnetID, subnetattr);
       ttSubnet.emplace_back(model::evaluate(cellType.getSubnet()).at(0), subnetID);
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));

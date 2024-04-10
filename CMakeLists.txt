@@ -76,8 +76,7 @@ add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)
 
-# Documentation generation with Doxygen (disabled by default)
-OPTION(GEN_DOC "Documentation generation" OFF)
+OPTION(GEN_DOC "Documentation generation" OFF) # Disabled by default
 
 if (NOT GEN_DOC)
   return()

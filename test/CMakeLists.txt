@@ -6,9 +6,6 @@ project(UtopiaTest VERSION 0.0)
 
 set(TEST_TARGET utest)
 
-# Karatsuba multiplier needed for some tests.
-set(MULGEN_TARGET mulgen)
-
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 # Check if the 'gtest' target has been already imported (e.g., by LLVM).

@@ -88,7 +88,7 @@ void SimpleDelayMapper::saveBest(
 
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
-    if (cut.entryIdxs.size() != 1) {
+    if (cut.entryIdxs.count(entryIndex) != 1) {
 
       SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
 

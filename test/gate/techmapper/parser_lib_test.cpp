@@ -13,7 +13,6 @@
 
 #include <vector>
 
-using namespace eda::gate::optimizer;
 using namespace eda::gate::tech_optimizer;
 using namespace eda::gate::model;
 

@@ -18,9 +18,14 @@
 
 #include "nlohmann/json.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <set>
 #include <sstream>
+#include <string>
+#include <vector>
 
 //#include <list>
 
@@ -145,6 +150,69 @@ void LibraryCells::readLibertyFile(const std::string &filename, std::vector<Cell
   }
 }*/
 
+std::string exprToString(const Expr* expr);
+
+std::string binOpToString(const Expr* lhs, const std::string& op, const Expr* rhs) {
+  return "(" + exprToString(lhs) + " " + op + " " + exprToString(rhs) + ")";
+}
+
+std::string exprToString(const Expr* expr) {
+  if (!expr) return "";
+
+  std::stringstream ss;
+
+  switch (expr->kind) {
+    case EK_Identifier:
+      ss << expr->name;
+      break;
+    case EK_Literal:
+      break;
+    case EK_Subscript:
+      ss << expr->name << "[" << exprToString(expr->opnd) << "]";
+      break;
+    case EK_Not:
+      ss << "!(" << exprToString(expr->opnd) << ")";
+      break;
+    case EK_Xor:
+      ss << binOpToString(expr->binop.lhs, "^", expr->binop.rhs);
+      break;
+    case EK_And:
+      ss << binOpToString(expr->binop.lhs, "&", expr->binop.rhs);
+      break;
+    case EK_Or:
+      ss << binOpToString(expr->binop.lhs, "|", expr->binop.rhs);
+      break;
+    default:
+      ss << "unknown";
+      break;
+  }
+
+  return ss.str();
+}
+
+
+bool areAllIdentifiersInVector(const std::string &expression, const std::vector<std::string> &identifiers) {
+  std::set<std::string> uniqueIdentifiers(identifiers.begin(), identifiers.end());
+  std::istringstream iss(expression);
+  std::string token;
+  std::set<std::string> foundIdentifiers;
+
+  while (iss >> token) {
+    token.erase(std::remove_if(token.begin(), token.end(), [](char c) { return !std::isalpha(c); }), token.end());
+    if (!token.empty()) {
+      foundIdentifiers.insert(token);
+    }
+  }
+
+  for (const auto& id : foundIdentifiers) {
+    if (uniqueIdentifiers.find(id) == uniqueIdentifiers.end()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void LibraryCells::readLibertyFile(const std::string &filename,
                                    std::vector<CellTypeID> &cellTypeIDs,
                                    std::vector<CellTypeID> &cellTypeFFIDs,
@@ -179,7 +247,8 @@ void LibraryCells::readLibertyFile(const std::string &filename,
           std::string_view strFunc;
           if (func != nullptr) {
             // Turn function to string
-            //funcs.push_back(std::string(strFunc));
+            funcs.push_back(exprToString(func));
+            std::cout << exprToString(func) << std::endl;
           }
         }
       }
@@ -187,11 +256,18 @@ void LibraryCells::readLibertyFile(const std::string &filename,
 
     model::CellTypeAttrID cellTypeAttrID = model::makeCellTypeAttr();
     model::CellTypeAttr::get(cellTypeAttrID).props.area =
-        cell.getIntegerAttribute("area", 0);
+        cell.getFloatAttribute("area", 0);
+
+    bool comb = false;
+    if (!funcs.empty()) {
+      comb = areAllIdentifiersInVector(funcs.at(0), inputs);
+    }
 
     if (!cell.hasAttribute("ff") &&
         !cell.hasAttribute("latch") &&
-        outputs.size() > 0 &&
+        outputs.size() == 1 &&
+        comb &&
+        inputs.size() != 0 &&
         std::find(outputs.begin(), outputs.end(),"CLK") == outputs.end()) {
 
       eda::gate::model::CellProperties

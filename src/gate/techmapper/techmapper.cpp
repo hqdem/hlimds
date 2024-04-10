@@ -10,6 +10,7 @@
 #include "gate/model2/decomposer/net_decomposer.h"
 #include "gate/premapper2/aigmapper.h"
 #include "gate/techmapper/assembly.h"
+#include "gate/techmapper/mapper/cut_base/area_recovery/area_recovery.h"
 #include "gate/techmapper/mapper/cut_base/genetic/genetic_mapper.h"
 #include "gate/techmapper/mapper/cut_base/power_map/power_map.h"
 #include "gate/techmapper/mapper/cut_base/simple_area/simple_area_mapper.h"
@@ -56,6 +57,7 @@ void Techmapper::setMapper(MapperType techmapSelector) {
       mapper = new SimpleAreaMapper();
       break;
     case MapperType::AREA_FLOW:
+      mapper = new AreaRecovery();
       break;
     case MapperType::DELAY:
       break;

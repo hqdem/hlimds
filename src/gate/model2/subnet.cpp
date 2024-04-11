@@ -663,9 +663,11 @@ void SubnetBuilder::setOrder(const size_t firstID, const size_t secondID) {
     subnetEnd = firstID;
   }
   if (secondID != upperBoundID && getPrev(secondID) != firstID) {
+    isDisassembled = true;
     desc[secondID].prev = firstID;
   }
   if (firstID != lowerBoundID && getNext(firstID) != secondID) {
+    isDisassembled = true;
     desc[firstID].next = secondID;
   }
 }
@@ -903,6 +905,7 @@ void SubnetBuilder::clearContext() {
     desc[i].prev = desc[i].next = normalOrderID;
   }
   strash.clear();
+  isDisassembled = false;
 }
 
 std::pair<size_t, bool> SubnetBuilder::strashEntry(

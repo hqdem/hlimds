@@ -47,8 +47,30 @@ public:
     return slew;
   };
 
+  float lutInterpolation(const LookupTable *lut, size_t variablesCount, 
+                         float& input_net_transition,
+                         float& total_output_net_capacitance,
+                         float& x1, float& x2, 
+                         float& y1, float& y2, 
+                         size_t& back1, size_t& front1, 
+                         size_t& back2, size_t& front2);
+
   /*
-   *  delayEstimation is calling Parser to look for
+   *  timingVisitor gets value of 
+   *   concrete delay type from
+   *   Timing's LookUp-Tables.
+   */
+  float timingVisitor(const Timing &timing,
+                      std::string dtype,
+                      float& input_net_transition,
+                      float& total_output_net_capacitance);
+
+  std::vector<float> timingVisitor(const Timing &timing,
+                                   float& input_net_transition,
+                                   float& total_output_net_capacitance);
+
+  /*
+   *  delayEstimation calls Parser to look for
    *  the concrete cell's timing values.
    */
   void delayEstimation(std::string& cell_name,
@@ -73,12 +95,8 @@ public:
     float slew;
     /// cell capacitance
     float capacitance;
-  };
+};
 
-  float timingVisitor(const Timing &timing,
-                      std::string dtype,
-                      float& input_net_transition,
-                      float& total_output_net_capacitance );
 
   float interpolation(float x0, float y0,
                       float x1, float x2,
@@ -93,7 +111,7 @@ public:
 /*
  *  Wire-load Model
  *  Class for delay estimation, based on such attributes as:
- *   Resistance, Capacity, Area, Slope
+ *   Resistance, Capacitance, Slope
  */
 class WLM {
   friend class NLDM;
@@ -130,8 +148,8 @@ private:
   /* WLM names = { "sky", "5k", "3k", "1k" }*/
   std::string wire_load_name;
 
-  // Resistance, Capacitance, Area, extrapolation slope
-  float r, c/*, area, slope TODO*/;
+  // Resistance, Capacitance, extrapolation slope
+  float r, c, slope;
   std::pair<size_t, float> fanout_length[6];
   std::pair<size_t, float> fanout_resistance[6];
   std::pair<size_t, float> fanout_capacitance[6];

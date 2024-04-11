@@ -385,7 +385,7 @@ public:
   };
 
   SubnetBuilder(): nIn(0), nOut(0) {
-    const size_t n = 1024*1024; // FIXME
+    const size_t n = 1024; // FIXME
     entries.reserve(n);
     desc.reserve(n);
     depthBounds.reserve(n);
@@ -586,7 +586,9 @@ public:
   SubnetID make(std::vector<size_t> &newToOldEntries) {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    rearrangeEntries(newToOldEntries);
+    if (isDisassembled) {
+      rearrangeEntries(newToOldEntries);
+    }
     assert(checkInputsOrder() && checkOutputsOrder());
 
     return allocate<Subnet>(nIn, nOut, std::move(entries));
@@ -721,6 +723,7 @@ private:
   uint16_t nOut;
 
   std::vector<Subnet::Entry> entries;
+  bool isDisassembled{false};
 
   std::vector<EntryDescriptor> desc;
   std::vector<std::pair<size_t, size_t>> depthBounds;

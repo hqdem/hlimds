@@ -7,9 +7,9 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
+#include "gate/analyzer/switching_activity.h"
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/techmapper/mapper/cut_base/cut_base_mapper.h"
-#include "gate/analyzer/switching_activity.h"
 
 namespace eda::gate::tech_optimizer {
 
@@ -52,7 +52,7 @@ class PowerMap : public CutBaseMapper {
 
     std::vector<double> computedAF;
     std::vector<double> computedSF;
-    std::vector<int64_t> computedLevel; //arival
+    std::vector<int64_t> computedLevel;
     std::vector<uint32_t> requiredTimes;
     eda::gate::optimizer2::ConeBuilder *coneBuilder;
     ArrayEntry *entries;

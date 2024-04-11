@@ -80,7 +80,8 @@ namespace eda::gate::tech_optimizer {
 
     BestReplacement bestRepl;
     computedLevel[entryIndex] = cutBestLevel; // setLevel(n, getLevel(cut))
-    for(const auto &in : cutBest->entryIdxs){
+    assert(cutBest != nullptr);
+    for (const auto &in : cutBest->entryIdxs) {
        bestRepl.entryIDxs.push_back(in);
     }
     bestRepl.subnetID = techSubnetId;
@@ -150,7 +151,6 @@ namespace eda::gate::tech_optimizer {
 
     const std::vector<double> &cellActivities =
                               switchActivity.getActivities();
-
     const std::vector<size_t> &riseActivities = 
                               switchActivity.getSwitchesOn();
     const std::vector<size_t> &fallActivities = 
@@ -166,7 +166,7 @@ namespace eda::gate::tech_optimizer {
         Cut bestCut = Cut();
         SubnetID bestTechCellSubnetID = 0;
 
-        for(const Cut &cut : cutsList) {
+        for (const Cut &cut : cutsList) {
           if(cut.entryIdxs.count(entryIndex) == 1)continue;
           double curAF = areaFlow(entryIndex,cut);
           double curSF = switchFlow(entryIndex,cut,cellActivities);
@@ -199,12 +199,12 @@ namespace eda::gate::tech_optimizer {
             // }
           }
         }
-        for(const auto &in : bestCut.entryIdxs){
+        for (const auto &in : bestCut.entryIdxs) {
           (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
         }
         (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
 
-      }else {
+      } else {
         addNotAnAndToTheMap(entryIndex, cell);
       }
       entryIndex += cell.more;

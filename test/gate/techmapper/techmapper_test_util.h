@@ -26,6 +26,7 @@ SubnetID graphMLMapping(Techmapper::MapperType mapperType,
                         std::string &fileName);
 SubnetID andNotMapping(Techmapper::MapperType mapperType);
 SubnetID randomMapping(Techmapper::MapperType mapperType);
+SubnetID notNotAndMapping(Techmapper::MapperType mapperType);
 NetID simpleNetMapping(Techmapper::MapperType mapperType);
 SubnetID areaRecoveySubnetMapping(Techmapper::MapperType mapperType);
 

@@ -220,9 +220,10 @@ namespace eda::gate::tech_optimizer {
   }
 
   void PowerMap::findBest() {
+    #ifdef UTOPIA_DEBUG
     std::cerr << "Start PowerMap::findBest" <<std::endl;
     auto start = std::chrono::high_resolution_clock::now();
-
+    #endif
     Subnet &subnet = Subnet::get(this->subnetID);
     
     entries = new ArrayEntry(subnet.getEntries());
@@ -243,10 +244,11 @@ namespace eda::gate::tech_optimizer {
     // computeRequiredTimes();
     globalSwitchAreaRecovery(switchActivity);
     clear();
-
+    #ifdef UTOPIA_DEBUG
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> FindBestTime = end - start;
     std::cerr << "PowerMap::findBest was running " << FindBestTime.count() << " seconds.\n";
+    #endif
   }
 
   std::vector<SubnetID> PowerMap::getTechIdsList(const Cut cut) {

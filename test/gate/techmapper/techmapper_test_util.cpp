@@ -173,6 +173,25 @@ SubnetID andNotMapping(Techmapper::MapperType mapperType) {
   return mappedSubnet;
 }
 
+SubnetID notNotAndMapping(Techmapper::MapperType mapperType) {
+  using Link = model::Subnet::Link;
+
+  model::SubnetBuilder builder;
+
+  const auto idx0 = builder.addInput();
+  const auto idx1 = builder.addInput();
+
+  const auto idx2 = builder.addCell(model::AND, Link(idx0.idx, true), Link(idx1.idx, true));
+
+  builder.addOutput(Link(idx2.idx, true));
+
+  SubnetID subnetID = builder.make();
+
+  SubnetID mappedSubnet = mapper(mapperType, subnetID);
+
+  return mappedSubnet;
+}
+
 SubnetID randomMapping(Techmapper::MapperType mapperType) {
   SubnetID randomSubnet = model::randomSubnet(6, 3, 50, 2, 6);
 

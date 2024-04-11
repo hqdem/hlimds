@@ -13,6 +13,7 @@
 #include <readcells/ast_parser.h>
 #include <readcells/groups.h>
 #include <readcells/token_parser.h>
+#include <regex>
 
 #include <algorithm>
 #include <filesystem>
@@ -38,7 +39,7 @@ using NetID = eda::gate::model::NetID;
 std::string exprToString(const Expr* expr);
 
 std::string binOpToString(const Expr* lhs, const std::string& op, const Expr* rhs) {
-  return "(" + exprToString(lhs) + " " + op + " " + exprToString(rhs) + ")";
+  return "(" + exprToString(lhs) + op + exprToString(rhs) + ")";
 }
 
 std::string exprToString(const Expr* expr) {
@@ -75,28 +76,23 @@ std::string exprToString(const Expr* expr) {
   return ss.str();
 }
 
-
-bool areAllIdentifiersInVector(const std::string &expression, const std::vector<std::string> &identifiers) {
+bool areAllIdentifiersInVector(const std::string& expression, const std::vector<std::string> &identifiers) {
   std::set<std::string> uniqueIdentifiers(identifiers.begin(), identifiers.end());
-  std::istringstream iss(expression);
-  std::string token;
-  std::set<std::string> foundIdentifiers;
-
-  while (iss >> token) {
-    token.erase(std::remove_if(token.begin(), token.end(), [](char c) { return !std::isalpha(c); }), token.end());
-    if (!token.empty()) {
-      foundIdentifiers.insert(token);
-    }
-  }
-
-  for (const auto& id : foundIdentifiers) {
-    if (uniqueIdentifiers.find(id) == uniqueIdentifiers.end()) {
+  std::regex wordRegex(R"(\b[a-zA-Z0-9]+\b)");
+  std::sregex_iterator next(expression.begin(), expression.end(), wordRegex);
+  std::sregex_iterator end;
+  while (next != end) {
+    std::smatch match = *next;
+    std::string token = match.str();
+    if (uniqueIdentifiers.find(token) == uniqueIdentifiers.end()) {
       return false;
     }
+    next++;
   }
 
   return true;
 }
+
 
 void LibraryCells::readLibertyFile(const std::string &filename,
                                    std::vector<CellTypeID> &cellTypeIDs,

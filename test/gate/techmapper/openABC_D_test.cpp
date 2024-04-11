@@ -6,22 +6,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/sat_checker2.h"
 #include "gate/model2/printer/printer.h"
-#include "gate/model2/utils/subnet_random.h"
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/graphml_to_subnet.h"
-#include "gate/parser/parser_test.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/util/get_tech_attr.h"
 #include "gtest/gtest.h"
 
 #include <filesystem>
 
-using Builder    = eda::gate::model::SubnetBuilder;
-using CellSymbol = eda::gate::model::CellSymbol;
-using Link       = eda::gate::model::Subnet::Link;
-using LinkList   = eda::gate::model::Subnet::LinkList;
 using Subnet     = eda::gate::model::Subnet;
 using SubnetID   = eda::gate::model::SubnetID;
 

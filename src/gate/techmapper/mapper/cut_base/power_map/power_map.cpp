@@ -82,7 +82,7 @@ namespace eda::gate::tech_optimizer {
     computedLevel[entryIndex] = cutBestLevel; // setLevel(n, getLevel(cut))
     assert(cutBest != nullptr);
     for (const auto &in : cutBest->entryIdxs) {
-       bestRepl.entryIDxs.push_back(in);
+      bestRepl.entryIDxs.push_back(in);
     }
     bestRepl.subnetID = techSubnetId;
     return bestRepl;
@@ -203,7 +203,6 @@ namespace eda::gate::tech_optimizer {
           (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
         }
         (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
-
       } else {
         addNotAnAndToTheMap(entryIndex, cell);
       }

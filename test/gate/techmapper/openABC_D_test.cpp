@@ -84,26 +84,24 @@ void testMapper(Techmapper::MapperType mapperType, std::string suff){
   }
 }
 
-
 TEST(TechMapTest, graphML_Power_group) {
   std::string suff = "powerMapped.v";
-  testMapper(Techmapper::MapperType::POWER,suff);
+  testMapper(Techmapper::MapperType::POWER, suff);
 }
 
 TEST(TechMapTest, graphML_SimpleArea_group) {
   std::string suff = "simpleAreaMapped.v";
-  testMapper(Techmapper::MapperType::SIMPLE_AREA_FUNC,suff);
+  testMapper(Techmapper::MapperType::SIMPLE_AREA_FUNC, suff);
 }
 
+TEST(TechMapTest, graphML_Delay_group) {
+  std::string suff = "delayMapped.v";
+  testMapper(Techmapper::MapperType::SIMPLE_DELAY_FUNC, suff);
+}
 
-// TEST(TechMapTest, graphML_Delay_group) {
-//   std::string suff = "delayMapped.v";
-//   testMapper(Techmapper::MapperType::DELAY,suff);
-// }
-
-// TEST(TechMapTest, graphML_AF_group) {
-//   std::string suff = "afMapped.v";
-//   testMapper(Techmapper::MapperType::AREA_FLOW,suff);
-// }
+TEST(TechMapTest, graphML_AF_group) {
+  std::string suff = "afMapped.v";
+  testMapper(Techmapper::MapperType::AREA_FLOW, suff);
+}
 
 } // namespace eda::gate::tech_optimizer

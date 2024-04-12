@@ -18,34 +18,19 @@
 
 namespace eda::gate::techmapper {
 
-class HardIPMapper {
+class SequentialMapper {
 public:
-  HardIPMapper(CellDB *cells);
-  model::SubnetID mapHardIPCell(std::string name, Techmapper::MapperType techmapSelector);
+  explicit SequentialMapper(CellDB *cellDB);
+  model::CellTypeID mapSequenceCell(model::CellID sequenceCellID, Techmapper::MapperType techmapSelector);
 
 private:
-  enum class HardIPMType {
-    MUX,
-    ADD
-  };
-
-  struct HardIPCell {
-    HardIPMType type;
-    std::vector<int> inputs;
-    std::vector<int> outputs;
-  };
-
-  HardIPCell parse(std::string name);
-
   CellDB *cells;
   model::SubnetID mapLatch(Techmapper::MapperType techmapSelector);
   model::SubnetID mapDFF(Techmapper::MapperType techmapSelector);
   model::SubnetID mapDFFrs(Techmapper::MapperType techmapSelector);
-  model::SubnetID chooseMappingStrategy(
-    const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells,
-                                  Techmapper::MapperType techmapSelector);
-  model::SubnetID areaOptimizedMapping(
-    const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells);
+  model::SubnetID chooseMappingStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells,
+                                        Techmapper::MapperType techmapSelector);
+  model::SubnetID areaOptimizedMapping(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells);
 };
 
 } // namespace eda::gate::techmapper

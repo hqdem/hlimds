@@ -2,20 +2,21 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #pragma once
 
 #include "gate/model2/net.h"
 #include "gate/techmapper/library/cell.h"
-#include "gate/techmapper/library/cellDB.h"
-#include "gate/techmapper/mapper/baseMapper.h"
+#include "gate/techmapper/library/cell_db.h"
+#include "gate/techmapper/comb_mapper/comb_mapper.h"
 
 using NetID = eda::gate::model::NetID;
 using SubnetID = eda::gate::model::SubnetID;
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 class Techmapper {
 public:
@@ -48,4 +49,4 @@ private:
   SubnetID premapAIGSubnet(SubnetID subnetID);
   NetID sequenseTechMapping(NetID netID);
 };
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

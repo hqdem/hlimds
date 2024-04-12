@@ -5,21 +5,21 @@
 // Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#pragma once
 
-#include <string>
-#include <vector>
+#include "gate/techmapper/comb_mapper/comb_mapper.h"
 
 namespace eda::gate::techmapper {
-struct Power {
-  float fall_power;
-  float rise_power;
-};
 
-struct Subnetattr {
-  std::string name;
-  float area;
-  std::vector <Power> pinsPower;
-  size_t fanout_count = 1;
-  };
+void BaseMapper::mapping(SubnetID subnetID,
+                     CellDB *cellDB,
+                     SDC &sdc,
+    std::unordered_map<EntryIndex, BestReplacement> *bestReplacementMap) {
+  this->subnetID = subnetID;
+  this->cellDB = cellDB;
+  this->sdc = sdc;
+  this->bestReplacementMap = bestReplacementMap;
+
+  baseMap();
+}
+
 } // namespace eda::gate::techmapper

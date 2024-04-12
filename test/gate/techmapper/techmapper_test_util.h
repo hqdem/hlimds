@@ -15,19 +15,23 @@
 #include <filesystem>
 #include <cassert>
 
-using CellSymbol = eda::gate::model::CellSymbol;
+namespace eda::gate::techmapper {
+
 using SubnetID   = eda::gate::model::SubnetID;
 
-namespace eda::gate::tech_optimizer {
+const std::string libTech = std::string(getenv("UTOPIA_HOME")) +
+  "/test/data/gate/techmapper" + "/sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
+
+void printResults(SubnetID mappedSubnetId);
 
 SubnetID simpleANDMapping(Techmapper::MapperType mapperType);
 SubnetID simpleORMapping(Techmapper::MapperType mapperType);
 SubnetID graphMLMapping(Techmapper::MapperType mapperType,
-                        std::string &fileName);
+                        const std::string fileName);
 SubnetID andNotMapping(Techmapper::MapperType mapperType);
 SubnetID randomMapping(Techmapper::MapperType mapperType);
 SubnetID notNotAndMapping(Techmapper::MapperType mapperType);
 NetID simpleNetMapping(Techmapper::MapperType mapperType);
 SubnetID areaRecoveySubnetMapping(Techmapper::MapperType mapperType);
 
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

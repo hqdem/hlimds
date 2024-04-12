@@ -7,19 +7,9 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include <string>
-#include <vector>
-
 namespace eda::gate::techmapper {
-struct Power {
-  float fall_power;
-  float rise_power;
-};
-
-struct Subnetattr {
-  std::string name;
+struct SDC {
   float area;
-  std::vector <Power> pinsPower;
-  size_t fanout_count = 1;
-  };
+  float arrivalTime;
+};
 } // namespace eda::gate::techmapper

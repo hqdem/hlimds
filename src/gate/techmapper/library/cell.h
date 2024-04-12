@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 using CellTypeID = eda::gate::model::CellTypeID;
 
@@ -29,4 +29,4 @@ struct LibraryCells {
                                      std::vector<CellTypeID> &cellTypeLatchIDs);
 };
 
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

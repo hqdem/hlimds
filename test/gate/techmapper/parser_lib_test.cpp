@@ -2,21 +2,23 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/library/cell.h"
 #include "gate/model/gnet_test.h"
+#include "gate/techmapper/library/cell.h"
 #include "util/logging.h"
+
 #include "gtest/gtest.h"
 
 #include <vector>
 
-using namespace eda::gate::tech_optimizer;
+using namespace eda::gate::techmapper;
 using namespace eda::gate::model;
 
-std::string techMapPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/techmapper";
+std::string techLibPath =
+  std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/techmapper";
 
 bool checkLibParser(std::string libertyPath) {
   //const std::string pathToLiberty = libertyPath + "/liberty";
@@ -31,7 +33,6 @@ bool checkLibParser(std::string libertyPath) {
     std::cout << CellType::get(cell).getName() << std::endl;
   }
 //#endif
-
   return true;
 }
 
@@ -39,12 +40,12 @@ TEST(ReadLibertyTest, sky130_fd_sc_hd__ff_n40C_1v95) {
   if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-  checkLibParser(techMapPath + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
+  checkLibParser(techLibPath + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
 }
 
 TEST(ReadLibertyTest, sky130_fd_sc_hd__ff_100C_1v65) {
   if (!getenv("UTOPIA_HOME")) {
       FAIL() << "UTOPIA_HOME is not set.";
     }
-  checkLibParser(techMapPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
-} // namespace eda::gate::tech_optimizer
+  checkLibParser(techLibPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
+} // namespace eda::gate::techmapper

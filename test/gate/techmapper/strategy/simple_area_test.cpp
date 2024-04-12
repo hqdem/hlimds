@@ -1,58 +1,57 @@
-#include "gtest/gtest.h"
-#include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techmapper/techmapper.h"
-#include "gate/techmapper/util/get_tech_attr.h"
-#include "gate/techmapper/util/get_statistic.h"
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
 
-namespace eda::gate::tech_optimizer {
+#include "gate/techmapper/techmapper.h"
+#include "gate/techmapper/techmapper_test_util.h"
+
+#include "gtest/gtest.h"
+
+namespace eda::gate::techmapper {
 
 auto areaMapperType = Techmapper::MapperType::SIMPLE_AREA_FUNC;
-std::string libertyName = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
 
 TEST(TechmapAreaTest, SimpleAndSubnet) {
   SubnetID mappedSubnetId = simpleANDMapping(areaMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
-  printStatistic(mappedSubnetId, libertyName);
+  printResults(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, SimpleAndNotSubnet) {
   SubnetID mappedSubnetId = andNotMapping(areaMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
-  printStatistic(mappedSubnetId, libertyName);
+  printResults(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, NotNotAndSubnet) {
   SubnetID mappedSubnetId = notNotAndMapping(areaMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
-  printStatistic(mappedSubnetId, libertyName);
+  printResults(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, SimpleORSubnet) {
   SubnetID mappedSubnetId = simpleORMapping(areaMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
-  printStatistic(mappedSubnetId, libertyName);
+  printResults(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, SimpleSubnet) {
   SubnetID mappedSubnetId = andNotMapping(areaMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
-  printStatistic(mappedSubnetId, libertyName);}
+  printResults(mappedSubnetId);
+}
 
 TEST(TechmapAreaTest, GraphMLSubnet) {
-  std::string fileName = "sasc_orig";
-  SubnetID mappedSubnetId = graphMLMapping(areaMapperType, fileName);
-  std::cout << getArea(mappedSubnetId) << std::endl;
-  printStatistic(mappedSubnetId, libertyName);}
+  SubnetID mappedSubnetId = graphMLMapping(areaMapperType, "ss_pcm_orig");
+  printResults(mappedSubnetId);
+}
 
-TEST(TechmapAreaTest, DISABLED_GraphMLSubnet) {
-  std::string fileName = "aes_orig";
-  SubnetID mappedSubnetId = graphMLMapping(areaMapperType, fileName);
-  std::cout << getArea(mappedSubnetId) << std::endl;
-  printStatistic(mappedSubnetId, libertyName);}
+TEST(TechmapAreaTest, DISABLED_GraphMLSubnet2) {
+  SubnetID mappedSubnetId = graphMLMapping(areaMapperType, "aes_orig");
+  printResults(mappedSubnetId);
+}
 
 TEST(TechmapAreaTest, DISABLED_RandomSubnet) {
   SubnetID mappedSubnetId = randomMapping(areaMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
-  printStatistic(mappedSubnetId, libertyName);}
-
-} // namespace eda::gate::tech_optimizer
+  printResults(mappedSubnetId);
+}
+} // namespace eda::gate::techmapper

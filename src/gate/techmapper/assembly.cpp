@@ -2,15 +2,16 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #include <cassert>
 #include <iostream>
 
 #include "gate/techmapper/assembly.h"
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 SubnetID AssemblySubnet::assemblySubnet(std::unordered_map<uint64_t, BestReplacement> *replacementMap,
                                SubnetID subnetID) {
@@ -133,4 +134,4 @@ void AssemblySubnet::processLinks(EntryIndex currentEntryIDX,
     //}
   }
 }
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

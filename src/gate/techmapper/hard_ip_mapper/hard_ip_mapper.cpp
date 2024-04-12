@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -10,18 +10,19 @@
 
 #include <cassert>
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 HardIPMapper::HardIPMapper(CellDB *cells) {
   this->cells = cells;
 }
 
-model::SubnetID HardIPMapper::mapHardIPCell(std::string name, Techmapper::MapperType techmapSelector) {
+model::SubnetID HardIPMapper::mapHardIPCell(
+                  std::string name, Techmapper::MapperType techmapSelector) {
   parse(name);
 
-
   auto& sequenceCell = model::Cell::get(sequenceCellID);
-  assert(sequenceCell.isDff() || sequenceCell.isDffRs() || sequenceCell.isLatch());
+  assert(sequenceCell.isDff() || sequenceCell.isDffRs() ||
+         sequenceCell.isLatch());
 
   if (sequenceCell.isDff()) {
     return mapDFF(techmapSelector);
@@ -31,20 +32,21 @@ model::SubnetID HardIPMapper::mapHardIPCell(std::string name, Techmapper::Mapper
     return mapLatch(techmapSelector);
   }
 
-  return model::SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
+  // Assuming model::SubnetID{} is a valid default or error value
+  return model::SubnetID{};
 }
 
 HardIPMapper::HardIPCell HardIPMapper::parse(std::string name) {
   HardIPCell cell;
 
-  // Определение типа
+  // Type selection
   if (name.find("add") == 0) {
     cell.type = HardIPMType::ADD;
   } else if (name.find("mux") == 0) {
     cell.type = HardIPMType::MUX;
   }
 
-  // Парсинг входов и выходов
+  // Parse inputs and outputs
   std::size_t iPos = name.find("_i");
   while (iPos != std::string::npos) {
     std::size_t nextPos = name.find("_", iPos + 1);
@@ -69,7 +71,8 @@ HardIPMapper::HardIPCell HardIPMapper::parse(std::string name) {
 
 model::SubnetID HardIPMapper::crateADD(HardIPMapper::HardIPCell hardIpCell) {
   model::SubnetBuilder subnetBuilder;
-  auto maxIt = std::max_element(hardIpCell.inputs.begin(), hardIpCell.inputs.end());
+  auto maxIt = std::max_element(hardIpCell.inputs.begin(),
+                                hardIpCell.inputs.end());
 
   std::vector<std::vector<model::Subnet::Link>> inputs;
   for (const auto &in : hardIpCell.inputs) {
@@ -92,24 +95,29 @@ model::SubnetID HardIPMapper::crateADD(HardIPMapper::HardIPCell hardIpCell) {
     subnetBuilder.addCell(model::CellSymbol::XOR, linkList);
 
     for (const auto &link: linkList)
-    carryFlag = subnetBuilder.addCell(model::CellSymbol::AND, linkList);
+      carryFlag = subnetBuilder.addCell(
+                    model::CellSymbol::AND, linkList);
   }
-
 }
-model::SubnetID SequentialMapper::mapLatch(Techmapper::MapperType techmapSelector) {
+
+model::SubnetID SequentialMapper::mapLatch(
+                  Techmapper::MapperType techmapSelector) {
   return chooseMappingStrategy(cells->getLatch(), techmapSelector);
 }
 
-model::SubnetID SequentialMapper::mapDFFrs(Techmapper::MapperType techmapSelector) {
+model::SubnetID SequentialMapper::mapDFFrs(
+                  Techmapper::MapperType techmapSelector) {
   return chooseMappingStrategy(cells->getDFFrs(), techmapSelector);
 }
 
-model::SubnetID SequentialMapper::mapDFF(Techmapper::MapperType techmapSelector) {
+model::SubnetID SequentialMapper::mapDFF(
+                  Techmapper::MapperType techmapSelector) {
   return chooseMappingStrategy(cells->getDFF(), techmapSelector);
 }
 
-model::SubnetID SequentialMapper::chooseMappingStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells,
-                                                        Techmapper::MapperType techmapSelector) {
+model::SubnetID SequentialMapper::chooseMappingStrategy(
+    const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells,
+    Techmapper::MapperType techmapSelector) {
   switch (techmapSelector) {
     case Techmapper::MapperType::SIMPLE_AREA_FUNC:
       return areaOptimizedMapping(seqCells);
@@ -119,7 +127,8 @@ model::SubnetID SequentialMapper::chooseMappingStrategy(const std::vector<std::p
   }
 }
 
-model::SubnetID SequentialMapper::areaOptimizedMapping(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells) {
+model::SubnetID SequentialMapper::areaOptimizedMapping(
+    const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells) {
   std::pair<model::SubnetID, Subnetattr> minAreaCell =
       *std::min_element(seqCells.begin(), seqCells.end(),
                         [](const auto& lhs, const auto& rhs) {
@@ -127,4 +136,4 @@ model::SubnetID SequentialMapper::areaOptimizedMapping(const std::vector<std::pa
   return minAreaCell.first;
 }
 
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

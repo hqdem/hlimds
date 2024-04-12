@@ -2,18 +2,19 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #pragma once
 
-#include "gate/techmapper/mapper/bestReplacement.h"
+#include "gate/techmapper/comb_mapper/best_replacement.h"
 
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 class AssemblySubnet {
 public:
   SubnetID assemblySubnet(std::unordered_map<uint64_t, BestReplacement> *bestReplacementMap,
@@ -35,4 +36,4 @@ private:
                     std::stack<EntryIndex> &stack,
                     std::unordered_set<EntryIndex> &visited);
 };
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

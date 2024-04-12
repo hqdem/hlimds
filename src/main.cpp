@@ -243,11 +243,11 @@ int main(int argc, char **argv) {
 
   if(!options.techMapOptions.files().empty()){
     TechMapOptions &opts = options.techMapOptions;
-    eda::gate::tech_optimizer::TechMapConfig config;
+    eda::gate::techmapper::TechMapConfig config;
     config.files = opts.files();
     config.outNetFileName = opts.outputPath;
     config.type = opts.mapperType;
-    result |= eda::gate::tech_optimizer::techMap(config);
+    result |= eda::gate::techmapper::techMap(config);
   }
   
   return result;

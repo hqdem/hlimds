@@ -289,7 +289,7 @@ struct TechMapOptions final : public AppOptions {
   static constexpr const char *MAPPER_TYPE = "type";
   static constexpr const char *VERILOG_OUTPUT = "out";
 
-  using MapperType = eda::gate::tech_optimizer::Techmapper::MapperType;
+  using MapperType = eda::gate::techmapper::Techmapper::MapperType;
   const std::map<std::string, MapperType> mapperTypeMap {
     {"af", MapperType::AREA_FLOW},
     {"power", MapperType::POWER},

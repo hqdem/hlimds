@@ -1,10 +1,18 @@
-#include "gate/techmapper/mapper/cut_base/delay_estmt/delay_estmt.h"
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+#include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
 
 #include "gtest/gtest.h"
 
 #include <iostream>
 
-using namespace eda::gate::tech_optimizer::delay_estimation;
+namespace eda::gate::techmapper {
 
 TEST(DelayEstmt, secondTest) {
   DelayEstimator d1;
@@ -23,3 +31,5 @@ TEST(DelayEstmt, secondTest) {
               << d1.wlm.getFanoutRes(i)
               << std::endl;
 }
+
+} // namespace eda::gate::techmapper

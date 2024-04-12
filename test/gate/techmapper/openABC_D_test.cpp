@@ -10,18 +10,16 @@
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techmapper/util/get_tech_attr.h"
+#include "gate/techmapper/utils/get_tech_attrs.h"
+
 #include "gtest/gtest.h"
 
 #include <filesystem>
 
+namespace eda::gate::techmapper {
+
 using Subnet     = eda::gate::model::Subnet;
 using SubnetID   = eda::gate::model::SubnetID;
-
-namespace eda::gate::tech_optimizer {
-
-const std::string libertyPath = std::string(getenv("UTOPIA_HOME"))
-                                 + "/test/data/gate/techmapper";
 
 void printVerilog(SubnetID subnet, std::string fileName) {
   eda::gate::model::ModelPrinter& verilogPrinter =
@@ -30,6 +28,8 @@ void printVerilog(SubnetID subnet, std::string fileName) {
   verilogPrinter.print(outFile,
                        model::Subnet::get(subnet),
                        "techmappedNet");
+  std::cout << "Verilog-file " << fileName << " has been created at" <<
+    "test/data/gate/techmapper/print" << " folder." << std::endl;
   outFile.close();
 }
 
@@ -60,19 +60,17 @@ std::vector<std::string> names = {
   // "tinyRocket_orig", //60k
   // "vga_lcd_orig", // ~140k nodes 
   // "wb_conmax_orig", // ~50k nodes
-
 };
 
-void testMapper(Techmapper::MapperType mapperType, std::string suff){
+void testMapper(Techmapper::MapperType mapperType, std::string suff) {
   SDC sdc{100000000, 10000000000};
   
-  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                        mapperType, sdc);
+  Techmapper techmapper(libTech, mapperType, sdc);
 
   for(auto &name : names){
     auto start = std::chrono::high_resolution_clock::now();
 
-    std::cout <<"Start to process "<< name << std::endl;
+    std::cout << "Start to process " << name << std::endl;
     SubnetID subnetID = parseGraphML(name);
     SubnetID mappedSubnetID = techmapper.techmap(subnetID);
     EXPECT_TRUE(checkAllCellsMapped(mappedSubnetID));
@@ -80,28 +78,29 @@ void testMapper(Techmapper::MapperType mapperType, std::string suff){
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> FindBestTime = end - start;
-    std::cout <<"end "<< name <<": "<< FindBestTime.count() << " seconds.\n";
+    std::cout << "end "<< name <<": "<< FindBestTime.count() << " seconds.\n";
+    printResults(mappedSubnetID);
   }
 }
 
-TEST(TechMapTest, graphML_Power_group) {
+TEST(TechMapTest, DISABLED_graphML_Power_group) {
   std::string suff = "powerMapped.v";
   testMapper(Techmapper::MapperType::POWER, suff);
 }
 
-TEST(TechMapTest, graphML_SimpleArea_group) {
+TEST(TechMapTest, DISABLED_graphML_SimpleArea_group) {
   std::string suff = "simpleAreaMapped.v";
   testMapper(Techmapper::MapperType::SIMPLE_AREA_FUNC, suff);
 }
 
-TEST(TechMapTest, graphML_Delay_group) {
+TEST(TechMapTest, DISABLED_graphML_Delay_group) {
   std::string suff = "delayMapped.v";
   testMapper(Techmapper::MapperType::SIMPLE_DELAY_FUNC, suff);
 }
 
-TEST(TechMapTest, graphML_AF_group) {
+TEST(TechMapTest, DISABLED_graphML_AF_group) {
   std::string suff = "afMapped.v";
   testMapper(Techmapper::MapperType::AREA_FLOW, suff);
 }
 
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

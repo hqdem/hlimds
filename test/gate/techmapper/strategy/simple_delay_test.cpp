@@ -1,36 +1,48 @@
-#include "gtest/gtest.h"
-#include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techmapper/techmapper.h"
-#include "gate/techmapper/util/get_tech_attr.h"
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
 
-namespace eda::gate::tech_optimizer {
+#include "gate/techmapper/techmapper.h"
+#include "gate/techmapper/techmapper_test_util.h"
+
+#include "gtest/gtest.h"
+
+namespace eda::gate::techmapper {
 
 auto delayMapperType = Techmapper::MapperType::SIMPLE_DELAY_FUNC;
 
 TEST(TechmapDelayTest, SimpleAndSubnet) {
   SubnetID mappedSubnetId = simpleANDMapping(delayMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
+  printResults(mappedSubnetId);
 }
 
 TEST(TechmapDelayTest, SimpleORSubnet) {
   SubnetID mappedSubnetId = simpleORMapping(delayMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
+  printResults(mappedSubnetId);
 }
 
 TEST(TechmapDelayTest, SimpleSubnet) {
   SubnetID mappedSubnetId = andNotMapping(delayMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
+  printResults(mappedSubnetId);
 }
 
-TEST(TechmapDelayTest, DISABLED_GraphMLSubnet) {
-  std::string fileName = "aes_orig";
-  SubnetID mappedSubnetId = graphMLMapping(delayMapperType, fileName);
-  std::cout << getArea(mappedSubnetId) << std::endl;
+TEST(TechmapDelayTest, GraphMLSubnet) {
+  SubnetID mappedSubnetId = graphMLMapping(delayMapperType, "ss_pcm_orig");
+  printResults(mappedSubnetId);
+}
+
+TEST(TechmapDelayTest, DISABLED_GraphMLSubnet2) {
+  SubnetID mappedSubnetId = graphMLMapping(delayMapperType, "aes_orig");
+  printResults(mappedSubnetId);
 }
 
 TEST(TechmapDelayTest, DISABLED_RandomSubnet) {
   SubnetID mappedSubnetId = randomMapping(delayMapperType);
-  std::cout << getArea(mappedSubnetId) << std::endl;
+  printResults(mappedSubnetId);
 }
 
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

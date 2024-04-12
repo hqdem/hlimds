@@ -1,9 +1,8 @@
-
 //===----------------------------------------------------------------------===//
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,10 +13,14 @@
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/parser/parser_test.h"
 #include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techmapper/util/get_tech_attr.h"
+#include "gate/techmapper/utils/get_statistics.h"
+#include "gate/techmapper/utils/get_tech_attrs.h"
+
 #include "gtest/gtest.h"
 
 #include <filesystem>
+
+namespace eda::gate::techmapper {
 
 using Builder    = eda::gate::model::SubnetBuilder;
 using CellSymbol = eda::gate::model::CellSymbol;
@@ -26,10 +29,6 @@ using LinkList   = eda::gate::model::Subnet::LinkList;
 using Subnet     = eda::gate::model::Subnet;
 using SubnetID   = eda::gate::model::SubnetID;
 
-namespace eda::gate::tech_optimizer {
-
-const std::string libertyPath = std::string(getenv("UTOPIA_HOME"))
-                                 + "/test/data/gate/techmapper";
 SDC sdc{100000000, 10000000000};
 
 SubnetID parseGraphML(std::string fileName) {
@@ -69,7 +68,15 @@ void printVerilog(SubnetID subnet) {
   verilogPrinter.print(outFile,
                        model::Subnet::get(subnet),
                        "techmappedNet");
+  std::cout << "Verilog-file: " <<
+    "test/data/gate/techmapper/print/techmappedNet.v" << " is created." <<
+    std::endl;
   outFile.close();
+}
+
+void printResults(SubnetID mappedSubnetId) {
+  std::cout << "Area=" << getArea(mappedSubnetId) << std::endl;
+  printStatistics(mappedSubnetId, libTech);
 }
 
 bool checkAllCellsMapped(SubnetID subnetID) {
@@ -110,9 +117,7 @@ SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
   std::cout << model::Subnet::get(subnetId) << std::endl;
   //#endif
 
-  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                        mapperType,
-                        sdc);
+  Techmapper techmapper(libTech, mapperType, sdc);
   SubnetID mappedSubnet = techmapper.techmap(subnetId);
 
   //#ifdef UTOPIA_DEBUG
@@ -144,7 +149,7 @@ SubnetID simpleORMapping(Techmapper::MapperType mapperType) {
   return mappedSubnet;
 }
 
-SubnetID graphMLMapping(Techmapper::MapperType mapperType, std::string &fileName) {
+SubnetID graphMLMapping(Techmapper::MapperType mapperType, const std::string fileName) {
   SubnetID subnetId  = parseGraphML(fileName);
 
   SubnetID mappedSubnet = mapper(mapperType, subnetId);
@@ -224,10 +229,7 @@ NetID simpleNetMapping(Techmapper::MapperType mapperType) {
   auto cellOUT = makeCell(model::CellSymbol::OUT, cellIDAND2);
   netBuilder.addCell(cellOUT);
 
-  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                        mapperType,
-                        sdc);
-
+  Techmapper techmapper(libTech, mapperType, sdc);
   auto mappedNetID = techmapper.techmap(netBuilder.make());
 
   return mappedNetID;
@@ -262,4 +264,4 @@ SubnetID areaRecoveySubnetMapping(Techmapper::MapperType mapperType) {
   return mappedSubnet;
 }
 
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

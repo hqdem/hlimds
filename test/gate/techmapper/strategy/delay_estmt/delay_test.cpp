@@ -1,4 +1,12 @@
-#include "gate/techmapper/mapper/cut_base/delay_estmt/delay_estmt.h"
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+#include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
 
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>
@@ -10,9 +18,9 @@
 #include <filesystem>
 #include <iostream>
 
-using std::filesystem::path;
+namespace eda::gate::techmapper {
 
-using namespace eda::gate::tech_optimizer::delay_estimation;
+using path = std::filesystem::path;
 
 TEST(DelayEstmt, firstTest) {
   std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
@@ -32,6 +40,8 @@ TEST(DelayEstmt, firstTest) {
   DelayEstimator d1;
   DelayEstimator d2;
   DelayEstimator d3;
+
+  // TODO separate the following tests into different TESTs
 
   /// Test for optimised delayEstimation
   std::string cell_name1 = "sky130_fd_sc_hd__a2111o_4";
@@ -70,3 +80,5 @@ TEST(DelayEstmt, firstTest) {
   EXPECT_DOUBLE_EQ(d3.nldm.getCellDelay(), delay3);
   EXPECT_DOUBLE_EQ(d3.nldm.getSlew(), slew3);
 }
+
+} // eda::gate::techmapper

@@ -1,0 +1,48 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+#include "gate/techmapper/comb_mapper/cut_based/cut_based_mapper.h"
+
+namespace eda::gate::techmapper {
+
+void CutBaseMapper::baseMap() {
+  cutExtractor = new optimizer2::CutExtractor(&model::Subnet::get(subnetID), 6);
+  findBest();
+}
+void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, const model::Subnet::Cell &cell) {
+  if (cell.isIn()) {
+    addInputToTheMap(entryIndex);
+  } else if (cell.isOne()) {
+    addOneToTheMap(entryIndex);
+  } else if (cell.isZero()) {
+    addZeroToTheMap(entryIndex);
+  } else if (cell.isOut()) {
+    addOutToTheMap(entryIndex, cell);
+  }
+}
+void CutBaseMapper::addInputToTheMap(EntryIndex entryIndex) {
+  BestReplacement bestReplacement{true};
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+}
+void CutBaseMapper::addZeroToTheMap(EntryIndex entryIndex) {
+  BestReplacement bestReplacement{};
+  bestReplacement.isZero = true;
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+}
+void CutBaseMapper::addOneToTheMap(EntryIndex entryIndex) {
+  BestReplacement bestReplacement{};
+  bestReplacement.isOne = true;
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+}
+void CutBaseMapper::addOutToTheMap(EntryIndex entryIndex,
+                                   const model::Subnet::Cell &cell) {
+  BestReplacement bestReplacement{false, true};
+  bestReplacement.entryIDxs.push_back(cell.link[0].idx);
+  (*bestReplacementMap)[entryIndex] = bestReplacement;
+}
+} // namespace eda::gate::techmapper

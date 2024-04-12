@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -10,12 +10,12 @@
 #include "gate/model2/decomposer/net_decomposer.h"
 #include "gate/premapper2/aigmapper.h"
 #include "gate/techmapper/assembly.h"
-#include "gate/techmapper/mapper/cut_base/area_recovery/area_recovery.h"
-#include "gate/techmapper/mapper/cut_base/genetic/genetic_mapper.h"
-#include "gate/techmapper/mapper/cut_base/power_map/power_map.h"
-#include "gate/techmapper/mapper/cut_base/simple_area/simple_area_mapper.h"
-#include "gate/techmapper/mapper/cut_base/simple_delay/simple_delay_mapper.h"
-#include "gate/techmapper/sequential_mapper/sequential_mapper.h"
+#include "gate/techmapper/comb_mapper/cut_based/area_recovery/area_recovery.h"
+#include "gate/techmapper/comb_mapper/cut_based/genetic/genetic_mapper.h"
+#include "gate/techmapper/comb_mapper/cut_based/power_map/power_map.h"
+#include "gate/techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.h"
+#include "gate/techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.h"
+#include "gate/techmapper/seq_mapper/sequential_mapper.h"
 #include "gate/techmapper/techmapper.h"
 
 #include <map>
@@ -23,7 +23,7 @@
 
 using CellID = eda::gate::model::CellID;
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 Techmapper::Techmapper(const std::string &dbPath,
                             MapperType techmapSelector,
@@ -81,12 +81,11 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
   std::unordered_map<EntryIndex, BestReplacement> *bestReplacementMap =
       new std::unordered_map<EntryIndex, BestReplacement>;
 
- assert(mapper != nullptr);
-
+  assert(mapper != nullptr);
   mapper->mapping(AIGSubnet, cellDB, sdc, bestReplacementMap);
 
   AssemblySubnet as;
- return as.assemblySubnet(bestReplacementMap, AIGSubnet);
+  return as.assemblySubnet(bestReplacementMap, AIGSubnet);
 }
 
 NetID Techmapper::techmap(NetID netID) {
@@ -100,8 +99,6 @@ NetID Techmapper::techmap(NetID netID) {
     mappedSubnetsID.push_back(techmap(subnet));
   }
   eda::gate::model::NetID composedNetID = decomposer.compose(mappedSubnetsID, mapping);
-
-
 
   return sequenseTechMapping(composedNetID);
 }
@@ -180,6 +177,4 @@ SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {
   const auto transformedSub  = aigMapper.transform(subnetID);
   return transformedSub;
 }
-} // namespace eda::gate::tech_optimizer
-
-
+} // namespace eda::gate::techmapper

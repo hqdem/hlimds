@@ -57,7 +57,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     if (needPower) {
       std::string cell_name = cellType.getName();
 
-      auto *cell = lib.getCell(cell_name);
+      const auto *cell = lib.getCell(cell_name);
 
       for (const auto &pin: (*cell).getPins()) {
         if (pin.getIntegerAttribute("direction", 10) & (1 << 1)) {

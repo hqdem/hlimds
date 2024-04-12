@@ -8,7 +8,7 @@
 
 #include "gate/model/gnet_test.h"
 #include "gate/techmapper/library/cell.h"
-#include "gate/techmapper/library/libertyManager.h"
+#include "gate/techmapper/library/liberty_manager.h"
 #include "util/logging.h"
 
 #include "gtest/gtest.h"

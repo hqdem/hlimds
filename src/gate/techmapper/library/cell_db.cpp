@@ -8,7 +8,7 @@
 
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/techmapper/library/cell_db.h"
-#include "gate/techmapper/library/libertyManager.h"
+#include "gate/techmapper/library/liberty_manager.h"
 
 #include <fstream>
 

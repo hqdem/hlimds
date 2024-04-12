@@ -8,7 +8,7 @@
 
 #include "gate/optimizer2/synthesis/isop.h"
 #include "gate/techmapper/library/cell.h"
-#include "gate/techmapper/library/libertyManager.h"
+#include "gate/techmapper/library/liberty_manager.h"
 
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>

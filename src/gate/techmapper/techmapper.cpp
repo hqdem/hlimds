@@ -16,7 +16,7 @@
 #include "gate/techmapper/comb_mapper/cut_based/power_map/power_map.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.h"
-#include "gate/techmapper/library/libertyManager.h"
+#include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/seq_mapper/sequential_mapper.h"
 #include "gate/techmapper/techmapper.h"
 

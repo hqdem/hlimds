@@ -9,7 +9,7 @@
 #include "gate/techmapper/techmapper.h"
 
 #include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techmapper/library/libertyManager.h"
+#include "gate/techmapper/library/liberty_manager.h"
 
 #include "gtest/gtest.h"
 

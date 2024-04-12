@@ -12,7 +12,7 @@
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/parser/parser_test.h"
-#include "gate/techmapper/library/libertyManager.h"
+#include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/techmapper/utils/get_tech_attrs.h"

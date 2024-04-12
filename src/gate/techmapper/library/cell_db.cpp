@@ -92,68 +92,6 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
 
-  ////////////////////////////////////////////////////////////////////////
-  /*std::cout << "Count of liberty CellType = " << cellTypeIDs.size() << std::endl;
-  int count = 0;
-  for (const CellTypeID &cellTypeID : cellTypeIDs) {
-    count++;
-    CellType &cellType = CellType::get(cellTypeID);
-    SubnetBuilder subnetBuilder;
-    std::vector<Link> linkList;
-
-    for (size_t i = 0; i < cellType.getInNum(); ++i) {
-      linkList.emplace_back(subnetBuilder.addInput());
-    }
-
-    auto cellIdx = subnetBuilder.addCell(cellTypeID, linkList);
-
-    subnetBuilder.addOutput(cellIdx);
-
-    SubnetID subnetID = subnetBuilder.make();
-
-    subnets.push_back(subnetID);
-
-    bool needPower = false;
-    if (needPower) {
-      const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-      const std::filesystem::path jsonPath =
-          homePath / "test" / "data" / "gate" / "techmapper" / "liberty.json";
-      std::ifstream file(jsonPath.string());
-      nlohmann::json j;
-      file >> j;
-
-      std::vector<Power> powers;
-
-      std::string cell_name = cellType.getName();
-
-      if (j.contains(cell_name)) {
-        auto& cell_power = j[cell_name]["power"];
-
-        for (const auto &[key, value] : cell_power.items()) {
-          Power power;
-          power.fall_power = value["fall_power"];
-          power.rise_power = value["rise_power"];
-          powers.push_back(power);
-        }
-      } else {
-        std::cout << "Cell not found in JSON." << std::endl;
-      }
-
-      // Вывод значений для проверки
-      for (auto& p : powers) {
-        std::cout << "Fall Power: " << p.fall_power << ", Rise Power: " << p.rise_power << std::endl;
-      }
-
-    }
-
-    Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area};
-    subnetToAttr.emplace_back(subnetID, subnetattr);
-
-    ttSubnet.emplace_back(model::evaluate(
-        cellType.getSubnet()).at(0), subnetID);
-  }*/
-  //////////////////////////////////////////////////////////////////////////////
-
   for (const CellTypeID &cellTypeID : cellTypeFFIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
@@ -172,6 +110,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     Subnetattr subnetattr{"FF", cellType.getAttr().props.area};
     DFF.emplace_back(subnetID, subnetattr);
   }
+
   for (const CellTypeID &cellTypeID : cellTypeFFrsIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
@@ -196,6 +135,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     Subnetattr subnetattr{"FFrs", cellType.getAttr().props.area};
     DFFrs.emplace_back(subnetID, subnetattr);
   }
+
   for (const CellTypeID &cellTypeID : cellTypeLatchIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
@@ -244,43 +184,11 @@ std::vector<SubnetID> CellDB::getPatterns() {
   }
   return patterns;
 }
-/*
-    void setFFTypeIDs(std::list<CellTypeID> &triggTypeIDs) {
-      for (const CellTypeID& cellTypeID : cellTypeIDs) {
-      CellType cellType = CellType::get(cellTypeID);
-      SubnetBuilder subnetBuilder;
-
-      size_t inNum = cellType.getInNum();
-
-      
-
-      size_t idx[inNum];
-      std::vector<eda::gate::model::Subnet::Link> linkList;
-      for (size_t i = 0; i < inNum; ++i) {
-        idx[i] = subnetBuilder.addCell(model::CellSymbol::IN, SubnetBuilder::INPUT);
-        linkList.push_back(idx[i]);
-      }
-
-      idx[inNum] = subnetBuilder.addCell(cellTypeID, linkList);
-
-      subnetBuilder.addCell(model::CellSymbol::OUT, 
-          eda::gate::model::Subnet::Link(idx[inNum]), SubnetBuilder::OUTPUT);
-
-      SubnetID subnetID = subnetBuilder.make();
-
-      subnets.push_back(subnetID);
-
-      Subnetattr subnetattr;
-      subnetMap.insert(std::pair<SubnetID, Subnetattr>
-          (subnetID, subnetattr));
-
-    }
-    }
-    */
 
 std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getSubnetsAttr() {
   return subnetToAttr;
 }
+
 std::vector<std::pair<kitty::dynamic_truth_table,
                       SubnetID>> &CellDB::getTTSubnet() {
   return ttSubnet;

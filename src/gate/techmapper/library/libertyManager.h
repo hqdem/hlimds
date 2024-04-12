@@ -16,17 +16,16 @@
 #include <readcells/token_parser.h>
 
 #include <cstdio>
-#include <string>
 #include <filesystem>
 #include <memory.h>
+#include <string>
 
-namespace eda::gate::tech_optimizer {
+namespace eda::gate::techmapper {
 
 class LibraryManager : public util::Singleton<LibraryManager> {
 public:
   bool loadLibrary(const std::string& filename) {
-
-    tokParser;
+    TokenParser tokParser;
     file = fopen(filename.c_str(), "rb");
     ast = tokParser.parseLibrary(file,
                                  filename.c_str());
@@ -56,4 +55,4 @@ private:
   friend class Singleton<LibraryManager>;
 };
 
-} // namespace eda::gate::tech_optimizer
+} // namespace eda::gate::techmapper

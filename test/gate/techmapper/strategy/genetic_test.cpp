@@ -44,6 +44,5 @@ TEST(TechmapGeneticTest, DISABLED_RandomSubnet) {
   SubnetID mappedSubnetId = randomMapping(geneticMapperType);
   printResults(mappedSubnetId);
 }
-}
 
 } // namespace eda::gate::techmapper

@@ -19,9 +19,9 @@
 
 namespace eda::gate::techmapper {
 
-inline void printStatistics(model::SubnetID subnetID, std::string file_name) {
+inline void printStatistics(model::SubnetID subnetID, std::string techLib) {
   const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path filePath = homePath / file_name;
+  const std::filesystem::path filePath = homePath / techLib;
 
   TokenParser tokParser;
   FILE *file = fopen(filePath.generic_string().c_str(), "rb");

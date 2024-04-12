@@ -77,7 +77,7 @@ void printVerilog(SubnetID subnet) {
 
 void printResults(SubnetID mappedSubnetId) {
   std::cout << "Area=" << getArea(mappedSubnetId) << std::endl;
-  printStatistics(mappedSubnetId, libTech);
+  printStatistics(mappedSubnetId, techLib);
 }
 
 bool checkAllCellsMapped(SubnetID subnetID) {
@@ -118,7 +118,7 @@ SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
   std::cout << model::Subnet::get(subnetId) << std::endl;
   //#endif
 
-  LibraryManager::get().loadLibrary(libTech);
+  LibraryManager::get().loadLibrary(techLib);
   Techmapper techmapper(mapperType, sdc);
   SubnetID mappedSubnet = techmapper.techmap(subnetId);
 
@@ -231,7 +231,7 @@ NetID simpleNetMapping(Techmapper::MapperType mapperType) {
   auto cellOUT = makeCell(model::CellSymbol::OUT, cellIDAND2);
   netBuilder.addCell(cellOUT);
 
-  Techmapper techmapper(libTech, mapperType, sdc);
+  Techmapper techmapper(techLib, mapperType, sdc);
   auto mappedNetID = techmapper.techmap(netBuilder.make());
 
   return mappedNetID;

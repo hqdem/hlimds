@@ -9,9 +9,9 @@
 #pragma once
 
 #include "gate/model2/net.h"
+#include "gate/techmapper/comb_mapper/comb_mapper.h"
 #include "gate/techmapper/library/cell.h"
 #include "gate/techmapper/library/cell_db.h"
-#include "gate/techmapper/comb_mapper/comb_mapper.h"
 
 using NetID = eda::gate::model::NetID;
 using SubnetID = eda::gate::model::SubnetID;

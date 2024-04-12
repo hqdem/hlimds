@@ -17,9 +17,9 @@
 
 namespace eda::gate::techmapper {
 
-using SubnetID   = eda::gate::model::SubnetID;
+using SubnetID = eda::gate::model::SubnetID;
 
-const std::string libTech = std::string(getenv("UTOPIA_HOME")) +
+const std::string techLib = std::string(getenv("UTOPIA_HOME")) +
   "/test/data/gate/techmapper" + "/sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
 
 void printResults(SubnetID mappedSubnetId);

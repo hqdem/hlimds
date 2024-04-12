@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
+#include "gate/analyzer/switching_activity.h"
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/techmapper/mapper/cut_base/cut_base_mapper.h"
 
@@ -42,7 +43,8 @@ class PowerMap : public CutBaseMapper {
     BestReplacement findCutMinimizingDepth(const EntryIndex entryIndex);
     
     void traditionalMapDepthOriented();
-    void globalSwitchAreaRecovery(const std::vector<double> &cellActivities);
+    void globalSwitchAreaRecovery(eda::gate::analyzer::SwitchActivity &switchActivity);
+    uint32_t findLatestPoArivalTime();
     void computeRequiredTimes();
     std::vector<SubnetID> getTechIdsList(const Cut cut);
 

@@ -105,6 +105,7 @@ add_library(Gate OBJECT
   techmapper/sequential_mapper/sequential_mapper.cpp
   techmapper/assembly.cpp
   techmapper/techmapper.cpp
+  techmapper/techmapper_wrapper.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp

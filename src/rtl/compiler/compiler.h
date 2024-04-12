@@ -31,6 +31,7 @@ namespace eda::rtl::compiler {
 class Compiler final : public eda::base::engine::Engine {
   using Context = eda::base::engine::Context;
   using Engine = eda::base::engine::Engine;
+  using Net = eda::rtl::model::Net;
   using Status = eda::base::engine::Status;
   using VNodeIdMap = std::unordered_map<VNode::Id, GNet::Out>;
 

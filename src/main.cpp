@@ -17,6 +17,7 @@
 #include "gate/premapper/xagmapper.h"
 #include "gate/premapper/xmgmapper.h"
 #include "gate/printer/graphml.h"
+#include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/translator/fir_to_model2/fir_to_model2_wrapper.h"
 #include "gate/translator/firrtl.h"
 #include "options.h"
@@ -201,7 +202,8 @@ int main(int argc, char **argv) {
 
     if (options.rtl.files().empty() &&
         options.firrtl.files().empty() &&
-        options.model2.files().empty()) {
+        options.model2.files().empty() &&
+        options.techMapOptions.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   }
@@ -239,5 +241,14 @@ int main(int argc, char **argv) {
     result |= translateToModel2(firrtlConfig, model2Config);
   }
 
+  if(!options.techMapOptions.files().empty()){
+    TechMapOptions &opts = options.techMapOptions;
+    eda::gate::tech_optimizer::TechMapConfig config;
+    config.files = opts.files();
+    config.outNetFileName = opts.outputPath;
+    config.type = opts.mapperType;
+    result |= eda::gate::tech_optimizer::techMap(config);
+  }
+  
   return result;
 }

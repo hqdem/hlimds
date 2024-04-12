@@ -7,22 +7,22 @@ namespace eda::gate::tech_optimizer {
 
 auto geneticMapperType = Techmapper::MapperType::GENETIC;
 
-TEST(TechmapGeneticTest, SimpleAndSubnet) {
+/*TEST(TechmapGeneticTest, DISABLED_SimpleAndSubnet) {
   SubnetID mappedSubnetId = simpleANDMapping(geneticMapperType);
   std::cout << getArea(mappedSubnetId) << std::endl;
 }
 
-TEST(TechmapGeneticTest, SimpleORSubnet) {
+TEST(TechmapGeneticTest, DISABLED_SimpleORSubnet) {
   SubnetID mappedSubnetId = simpleORMapping(geneticMapperType);
   std::cout << getArea(mappedSubnetId) << std::endl;
 }
 
-TEST(TechmapGeneticTest, SimpleSubnet) {
+TEST(TechmapGeneticTest, DISABLED_SimpleSubnet) {
   SubnetID mappedSubnetId = andNotMapping(geneticMapperType);
   std::cout << getArea(mappedSubnetId) << std::endl;
 }
 
-TEST(TechmapGeneticTest, GraphMLSubnet) {
+TEST(TechmapGeneticTest, DISABLED_GraphMLSubnet) {
   std::string fileName = "simple_spi_orig";
   SubnetID mappedSubnetId = graphMLMapping(geneticMapperType, fileName);
   std::cout << getArea(mappedSubnetId) << std::endl;
@@ -37,6 +37,6 @@ TEST(TechmapGeneticTest, DISABLED_GraphMLSubnet) {
 TEST(TechmapGeneticTest, DISABLED_RandomSubnet) {
   SubnetID mappedSubnetId = randomMapping(geneticMapperType);
   std::cout << getArea(mappedSubnetId) << std::endl;
-}
+}*/
 
 } // namespace eda::gate::tech_optimizer

@@ -13,6 +13,7 @@
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/parser/parser_test.h"
+#include "gate/techmapper/library/libertyManager.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/util/get_tech_attr.h"
 #include "gtest/gtest.h"
@@ -110,8 +111,9 @@ SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
   std::cout << model::Subnet::get(subnetId) << std::endl;
   //#endif
 
-  Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                        mapperType,
+  LibraryManager::get().loadLibrary(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
+
+  Techmapper techmapper(mapperType,
                         sdc);
   SubnetID mappedSubnet = techmapper.techmap(subnetId);
 

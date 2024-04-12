@@ -6,10 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/library/cell.h"
 #include "gate/model/gnet_test.h"
-#include "util/logging.h"
+#include "gate/techmapper/library/cell.h"
+#include "gate/techmapper/library/libertyManager.h"
 #include "gtest/gtest.h"
+#include "util/logging.h"
 
 #include <vector>
 
@@ -19,12 +20,12 @@ using namespace eda::gate::model;
 std::string techMapPath = std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/techmapper";
 
 bool checkLibParser(std::string libertyPath) {
-  //const std::string pathToLiberty = libertyPath + "/liberty";
+  LibraryManager::get().loadLibrary(libertyPath);
   std::vector<eda::gate::model::CellTypeID> combCells;
   std::vector<eda::gate::model::CellTypeID> cellsFF;
   std::vector<eda::gate::model::CellTypeID> cellsFFrs;
   std::vector<eda::gate::model::CellTypeID> cellsLatch;
-  LibraryCells::readLibertyFile(libertyPath, combCells, cellsFF, cellsFFrs, cellsLatch);
+  LibraryCells::readLibertyFile(combCells, cellsFF, cellsFFrs, cellsLatch);
 
 //#ifdef UTOPIA_DEBUG
   for(const auto& cell : combCells) {

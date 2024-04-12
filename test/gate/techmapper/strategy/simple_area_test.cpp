@@ -3,6 +3,7 @@
 #include "gate/techmapper/techmapper.h"
 #include "gate/techmapper/util/get_tech_attr.h"
 #include "gate/techmapper/util/get_statistic.h"
+#include "gate/techmapper/library/libertyManager.h"
 
 namespace eda::gate::tech_optimizer {
 
@@ -10,6 +11,7 @@ auto areaMapperType = Techmapper::MapperType::SIMPLE_AREA_FUNC;
 std::string libertyName = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
 
 TEST(TechmapAreaTest, SimpleAndSubnet) {
+  LibraryManager::get().loadLibrary(libertyName);
   SubnetID mappedSubnetId = simpleANDMapping(areaMapperType);
   std::cout << getArea(mappedSubnetId) << std::endl;
   printStatistic(mappedSubnetId, libertyName);
@@ -34,6 +36,7 @@ TEST(TechmapAreaTest, SimpleORSubnet) {
 }
 
 TEST(TechmapAreaTest, SimpleSubnet) {
+  LibraryManager::get().loadLibrary(libertyName);
   SubnetID mappedSubnetId = andNotMapping(areaMapperType);
   std::cout << getArea(mappedSubnetId) << std::endl;
   printStatistic(mappedSubnetId, libertyName);}

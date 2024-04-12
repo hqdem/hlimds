@@ -36,7 +36,7 @@ public:
   NetID techmap(NetID netID);
   model::CellTypeID techmap(model::CellID sequenceCell, MapperType techmapSelector = MapperType::SIMPLE_AREA_FUNC);
 
-  ~Techmapper() {
+  virtual ~Techmapper() {
     delete mapper;
     delete cellDB;
   }

@@ -94,7 +94,6 @@ void GeneticMapper::initialization() {
     }
   }
 
-
   // and now we fill std::vector<Chromosome> nextGeneration with random chromosome
   nextGeneration.clear();
 
@@ -126,7 +125,6 @@ void GeneticMapper::initialization() {
 
     nextGeneration.push_back(newChromosome);
   }
-
 }
 
 void GeneticMapper::fillChromosomeFromOutput(Chromosome& chromosome, size_t outputIndex) {
@@ -144,7 +142,6 @@ void GeneticMapper::fillChromosomeFromOutput(Chromosome& chromosome, size_t outp
   }
   chromosome.gens[outputIndex] = selectedGen;
 }
-
 
 void GeneticMapper::startEvolution() {
   auto startTime = std::chrono::steady_clock::now();
@@ -171,10 +168,11 @@ void GeneticMapper::startEvolution() {
 void GeneticMapper::selection() {
   hardSelection();
   // Calculating the total fitness for the entire population
-  float totalFitness = std::accumulate(nextGeneration.begin(),
-                                       nextGeneration.end(),
-                                       0.0f,
-                                       [](float sum, const Chromosome& c) { return sum + c.fitness; });
+  float totalFitness = std::accumulate(
+    nextGeneration.begin(),
+    nextGeneration.end(),
+    0.0f,
+    [](float sum, const Chromosome& c) {return sum + c.fitness; });
 
   // Creating a new vector for parent chromosomes
   std::vector<Chromosome> selectedParents;
@@ -206,11 +204,12 @@ void GeneticMapper::selection() {
 
 void GeneticMapper::hardSelection() {
   // Using the erase-remove idiom to remove chromosomes that do not meet the criteria
-  nextGeneration.erase(std::remove_if(nextGeneration.begin(), nextGeneration.end(),
-                                      [this](const Chromosome& chromosome) {
-                                        return chromosome.area > sdc.area || chromosome.arrivalTime > sdc.arrivalTime;
-                                      }),
-                       nextGeneration.end());
+  nextGeneration.erase(std::remove_if(
+    nextGeneration.begin(), nextGeneration.end(),
+    [this](const Chromosome& chromosome) {
+      return chromosome.area > sdc.area || chromosome.arrivalTime > sdc.arrivalTime;
+    }),
+    nextGeneration.end());
 }
 
 void GeneticMapper::reproduction() {
@@ -329,7 +328,7 @@ int GeneticMapper::getRandomIndex(int min, int max, std::mt19937& gen) {
 }
 
 void GeneticMapper::mutation() {
-
+  // TODO
 }
 
 void GeneticMapper::saveInBestMap() {

@@ -23,4 +23,4 @@ struct TechMapConfig {
 
 int techMap(TechMapConfig config);
 
-} // namespace  eda::gate::techmapper
+} // namespace eda::gate::techmapper

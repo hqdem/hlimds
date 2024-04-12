@@ -27,7 +27,7 @@ class PowerMap : public CutBaseMapper {
     PowerMap();
   protected:
     void findBest() override;
-    ~PowerMap() = default;
+    virtual ~PowerMap() = default;
 
   private:
     double areaFlow(const EntryIndex entryIndex,const Cut &cut);
@@ -53,5 +53,4 @@ class PowerMap : public CutBaseMapper {
     eda::gate::optimizer2::ConeBuilder *coneBuilder;
     ArrayEntry *entries;
 };
-
 } // namespace eda::gate::techmapper

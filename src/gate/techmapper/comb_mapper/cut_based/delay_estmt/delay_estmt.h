@@ -32,7 +32,7 @@ class NLDM {
 
 public:
   NLDM() : delay(0.0), slew(0.0), capacitance(0.0) {};
-  ~NLDM() = default;
+  virtual ~NLDM() = default;
 
   /// Getters
   float getCellDelay() {
@@ -87,22 +87,21 @@ public:
                        float& input_net_transition,
                        float& total_output_net_capacitance);
 
-  /// Properties
-  private:
-    /// cell delay
-    float delay;
-    /// transition delay
-    float slew;
-    /// cell capacitance
-    float capacitance;
+/// Properties
+private:
+  /// cell delay
+  float delay;
+  /// transition delay
+  float slew;
+  /// cell capacitance
+  float capacitance;
 };
 
-
-  float interpolation(float x0, float y0,
-                      float x1, float x2,
-                      float y1, float y2,
-                      float T11, float T12,
-                      float T21, float T22);
+float interpolation(float x0, float y0,
+                    float x1, float x2,
+                    float y1, float y2,
+                    float T11, float T12,
+                    float T21, float T22);
 
 //===---------------------------------------------------------------------===//
 // WLM
@@ -119,7 +118,7 @@ class WLM {
 public:
   WLM();
   WLM(std::string name);
-  ~WLM() = default;
+  virtual ~WLM() = default;
 
   // Setter
   void setWireLoadModel(std::string wlm_name);
@@ -161,7 +160,7 @@ private:
 class DelayEstimator{
 public:
   DelayEstimator() = default;
-  ~DelayEstimator() = default;
+  virtual ~DelayEstimator() = default;
 
   NLDM nldm;
   WLM wlm;

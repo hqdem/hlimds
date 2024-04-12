@@ -8,18 +8,9 @@
 
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/techmapper/library/cell_db.h"
+#include "gate/techmapper/library/libertyManager.h"
 
-#include <readcells/ast.h>
-#include <readcells/ast_parser.h>
-#include <readcells/groups.h>
-#include <readcells/token_parser.h>
-
-#include "nlohmann/json.hpp"
-#include <filesystem>
 #include <fstream>
-
-#include <algorithm>
-#include <random>
 
 namespace eda::gate::techmapper {
 
@@ -34,21 +25,6 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
                const std::vector<CellTypeID> &cellTypeFFrsIDs,
                const std::vector<CellTypeID> &cellTypeLatchIDs) {
 
-  std::string techLib =
-    "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  const std::filesystem::path filePath = homePath / techLib;
-
-  TokenParser tokParser;
-  FILE *file = fopen(filePath.generic_string().c_str(), "rb");
-  Group *ast = tokParser.parseLibrary(file,
-                                      filePath.generic_string().c_str());
-  Library lib;
-  AstParser parser(lib, tokParser);
-  parser.run(*ast);
-  fclose(file);
-
-  /////////////////////////////////////////////////////////
   std::cout << "The number of extracted from Liberty CellTypes is " <<
     cellTypeIDs.size() << std::endl; // TODO
   int count = 0;
@@ -60,7 +36,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     if (needPower) {
       std::string cell_name = cellType.getName();
 
-      const auto *cell = lib.getCell(cell_name);
+      auto *cell = LibraryManager::get().getLibrary().getCell(cell_name);
 
       for (const auto &pin: (*cell).getPins()) {
         if (pin.getIntegerAttribute("direction", 10) & (1 << 1)) {

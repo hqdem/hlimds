@@ -23,10 +23,10 @@ using CellTypeID = eda::gate::model::CellTypeID;
 struct LibraryCells {
   LibraryCells() = default;
 
-  static void readLibertyFile(const std::string &filename, std::vector<CellTypeID> &cellTypeIDs,
-                                     std::vector<CellTypeID> &cellTypeFFIDs,
-                                     std::vector<CellTypeID> &cellTypeFFrsIDs,
-                                     std::vector<CellTypeID> &cellTypeLatchIDs);
+  static void readLibertyFile(std::vector<CellTypeID> &cellTypeIDs,
+                              std::vector<CellTypeID> &cellTypeFFIDs,
+                              std::vector<CellTypeID> &cellTypeFFrsIDs,
+                              std::vector<CellTypeID> &cellTypeLatchIDs);
 };
 
 } // namespace eda::gate::techmapper

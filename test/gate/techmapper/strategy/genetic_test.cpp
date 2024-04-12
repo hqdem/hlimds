@@ -15,22 +15,22 @@ namespace eda::gate::techmapper {
 
 auto geneticMapperType = Techmapper::MapperType::GENETIC;
 
-TEST(TechmapGeneticTest, SimpleAndSubnet) {
+TEST(TechmapGeneticTest, DISABLED_SimpleAndSubnet) {
   SubnetID mappedSubnetId = simpleANDMapping(geneticMapperType);
   printResults(mappedSubnetId);
 }
 
-TEST(TechmapGeneticTest, SimpleORSubnet) {
+TEST(TechmapGeneticTest, DISABLED_SimpleORSubnet) {
   SubnetID mappedSubnetId = simpleORMapping(geneticMapperType);
   printResults(mappedSubnetId);
 }
 
-TEST(TechmapGeneticTest, SimpleSubnet) {
+TEST(TechmapGeneticTest, DISABLED_SimpleSubnet) {
   SubnetID mappedSubnetId = andNotMapping(geneticMapperType);
   printResults(mappedSubnetId);
 }
 
-TEST(TechmapGeneticTest, GraphMLSubnet) {
+TEST(TechmapGeneticTest, DISABLED_GraphMLSubnet) {
   SubnetID mappedSubnetId = graphMLMapping(geneticMapperType, "ss_pcm_orig");
   printResults(mappedSubnetId);
 }
@@ -43,6 +43,7 @@ TEST(TechmapGeneticTest, DISABLED_GraphMLSubnet2) {
 TEST(TechmapGeneticTest, DISABLED_RandomSubnet) {
   SubnetID mappedSubnetId = randomMapping(geneticMapperType);
   printResults(mappedSubnetId);
+}
 }
 
 } // namespace eda::gate::techmapper

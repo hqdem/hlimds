@@ -12,6 +12,7 @@
 #include "gate/parser/gate_verilog.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/parser/parser_test.h"
+#include "gate/techmapper/library/libertyManager.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/techmapper/utils/get_tech_attrs.h"
@@ -117,7 +118,8 @@ SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
   std::cout << model::Subnet::get(subnetId) << std::endl;
   //#endif
 
-  Techmapper techmapper(libTech, mapperType, sdc);
+  LibraryManager::get().loadLibrary(libTech);
+  Techmapper techmapper(mapperType, sdc);
   SubnetID mappedSubnet = techmapper.techmap(subnetId);
 
   //#ifdef UTOPIA_DEBUG

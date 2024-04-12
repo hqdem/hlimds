@@ -8,6 +8,7 @@
 
 #include "gate/optimizer2/synthesis/isop.h"
 #include "gate/techmapper/library/cell.h"
+#include "gate/techmapper/library/libertyManager.h"
 
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>
@@ -93,21 +94,18 @@ bool areAllIdentifiersInVector(const std::string& expression, const std::vector<
   return true;
 }
 
-void LibraryCells::readLibertyFile(const std::string &filename,
-                                   std::vector<CellTypeID> &cellTypeIDs,
+void LibraryCells::readLibertyFile(std::vector<CellTypeID> &cellTypeIDs,
                                    std::vector<CellTypeID> &cellTypeFFIDs,
                                    std::vector<CellTypeID> &cellTypeFFrsIDs,
                                    std::vector<CellTypeID> &cellTypeLatchIDs) {
-  TokenParser tokParser;
-  FILE *file = fopen(filename.c_str(), "rb");
-  Group *ast = tokParser.parseLibrary(file,
-                                      filename.c_str());
-  Library lib;
-  AstParser parser(lib, tokParser);
-  parser.run(*ast);
-  fclose(file);
+//  Library lib;
+//  try {
+//    lib = LibraryManager::get().getLibrary();
+//  } catch (const std::exception &e) {
+//    std::cerr << "Error: " << e.what() << std::endl;
+//  }
 
-  for (const auto& cell : lib.getCells()) {
+  for (const auto& cell : LibraryManager::get().getLibrary().getCells()) {
     auto name = std::string(cell.getName());
 
     std::vector<std::string> inputs;

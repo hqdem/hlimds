@@ -7,7 +7,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/techmapper/techmapper.h"
+
 #include "gate/techmapper/techmapper_test_util.h"
+#include "gate/techmapper/library/libertyManager.h"
 
 #include "gtest/gtest.h"
 
@@ -16,6 +18,7 @@ namespace eda::gate::techmapper {
 auto areaMapperType = Techmapper::MapperType::SIMPLE_AREA_FUNC;
 
 TEST(TechmapAreaTest, SimpleAndSubnet) {
+  LibraryManager::get().loadLibrary(libertyName);
   SubnetID mappedSubnetId = simpleANDMapping(areaMapperType);
   printResults(mappedSubnetId);
 }
@@ -36,6 +39,7 @@ TEST(TechmapAreaTest, SimpleORSubnet) {
 }
 
 TEST(TechmapAreaTest, SimpleSubnet) {
+  LibraryManager::get().loadLibrary(libertyName);
   SubnetID mappedSubnetId = andNotMapping(areaMapperType);
   printResults(mappedSubnetId);
 }

@@ -30,6 +30,7 @@ public:
   };
 
   Techmapper(const std::string &dbPath, MapperType techmapSelector, SDC& sdc);
+  Techmapper(MapperType techmapSelector, SDC& sdc);
 
   SubnetID techmap(SubnetID subnetID);
   NetID techmap(NetID netID);
@@ -41,7 +42,7 @@ public:
   }
 
 private:
-  void setLiberty(const std::string &dbPath);
+  void setLiberty();
   void setMapper(MapperType techmapSelector);
   SDC sdc;
   CellDB *cellDB;

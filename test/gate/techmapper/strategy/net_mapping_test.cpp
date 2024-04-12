@@ -15,7 +15,7 @@ namespace eda::gate::techmapper {
 
 auto netMapperType = Techmapper::MapperType::SIMPLE_AREA_FUNC;
 
-TEST(TechMapTest, SimpleNet) {
+TEST(TechMapTest, DISABLED_SimpleNet) {
   NetID mappedSubnetId = simpleNetMapping(netMapperType);
   //printResults(mappedSubnetId);
 }

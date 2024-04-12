@@ -10,11 +10,13 @@
 #include "gate/model2/decomposer/net_decomposer.h"
 #include "gate/premapper2/aigmapper.h"
 #include "gate/techmapper/assembly.h"
+
 #include "gate/techmapper/comb_mapper/cut_based/area_recovery/area_recovery.h"
 #include "gate/techmapper/comb_mapper/cut_based/genetic/genetic_mapper.h"
 #include "gate/techmapper/comb_mapper/cut_based/power_map/power_map.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.h"
+#include "gate/techmapper/library/libertyManager.h"
 #include "gate/techmapper/seq_mapper/sequential_mapper.h"
 #include "gate/techmapper/techmapper.h"
 
@@ -28,18 +30,25 @@ namespace eda::gate::techmapper {
 Techmapper::Techmapper(const std::string &dbPath,
                             MapperType techmapSelector,
                             SDC& sdc) {
+  LibraryManager::get().loadLibrary(dbPath);
   this->sdc = sdc;
-  setLiberty(dbPath);
+  setLiberty();
   setMapper(techmapSelector);
 }
 
-void Techmapper::setLiberty(const std::string &dbPath) {
+Techmapper::Techmapper(MapperType techmapSelector,
+                       SDC& sdc) {
+  this->sdc = sdc;
+  setLiberty();
+  setMapper(techmapSelector);
+}
+
+void Techmapper::setLiberty() {
   std::vector<CellTypeID> cellTypeIDs;
   std::vector<CellTypeID> ffCellTypeIDs;
   std::vector<CellTypeID> ffrsCellTypeIDs;
   std::vector<CellTypeID> LatchCellTypeIDs;
-  LibraryCells::readLibertyFile(dbPath,
-                                cellTypeIDs,
+  LibraryCells::readLibertyFile(cellTypeIDs,
                                 ffCellTypeIDs,
                                 ffrsCellTypeIDs,
                                 LatchCellTypeIDs);

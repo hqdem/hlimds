@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #pragma once
+
 #include "CLI/CLI.hpp"
 #include "gate/debugger/base_checker.h"
 #include "gate/premapper/premapper.h"
@@ -284,7 +285,7 @@ struct Model2Options final : public AppOptions {
 
 struct TechMapOptions final : public AppOptions {
 
-  static constexpr const char *ID = "tech_map";
+  static constexpr const char *ID = "techmap";
   static constexpr const char *MAPPER_TYPE = "type";
   static constexpr const char *VERILOG_OUTPUT = "out";
 
@@ -326,8 +327,8 @@ struct TechMapOptions final : public AppOptions {
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this),techMapOptions(*this) {
-
+      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this),
+      techMapOptions(*this) {
     // Top-level options.
     options->set_help_all_flag("-H,--help-all",
                                "Print the extended help message and exit");

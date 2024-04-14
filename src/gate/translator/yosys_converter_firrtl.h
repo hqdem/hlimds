@@ -205,6 +205,7 @@ class YosysConverterFirrtl {
 
   struct Module {
     std::string id;
+    std::vector<int> orderPorts;
     std::map<int, Signal *> signals;
     std::map<int, Memory> memories;
     std::vector<Signal *> genSig;

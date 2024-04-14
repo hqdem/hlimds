@@ -241,6 +241,39 @@ struct FirRtlOptions final : public AppOptions {
   bool debugMode = false;
 };
 
+struct YosysToModel2Options final : public AppOptions {
+
+  /// The command to run the Verilog-to-Model2 translator.
+  static constexpr const char *ID = "verilog_to_model2";
+  /// The option to manually specify the top-level module. The top-level module is detected automatically if not specified.
+  static constexpr const char *TOP = "--top";
+  /// When debug mode is enabled, additional debug information may be generated in standard error output file.
+  static constexpr const char *DEBUG_MODE = "-v,--verbose";
+
+  YosysToModel2Options(AppOptions &parent):
+      AppOptions(parent, ID, "Translator from Verilog to Model2") {
+
+    options->add_option(TOP, top,
+                "Name of top module in Verilog")
+            ->expected(1);
+    options->add_flag(DEBUG_MODE, debugMode,
+                "Enable debug mode");
+    // Input Verilog file(s).
+    options->allow_extras();
+  }
+
+  std::vector<std::string> files() const {
+    return options->remaining();
+  }
+
+  void fromJson(Json json) override {
+    get(json, TOP, top);
+  }
+
+  std::string top;
+  bool debugMode = false;
+};
+
 struct Model2Options final : public AppOptions {
 
   static constexpr const char *ID = "to_model2";
@@ -279,7 +312,7 @@ struct Model2Options final : public AppOptions {
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this) {
+      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this), verilogToModel2(*this) {
 
     // Top-level options.
     options->set_help_all_flag("-H,--help-all",
@@ -303,9 +336,11 @@ struct Options final : public AppOptions {
     rtl.fromJson(json[RtlOptions::ID]);
     firrtl.fromJson(json[FirRtlOptions::ID]);
     model2.fromJson(json[Model2Options::ID]);
+    verilogToModel2.fromJson(json[YosysToModel2Options::ID]);
   }
 
   RtlOptions rtl;
   FirRtlOptions firrtl;
   Model2Options model2;
+  YosysToModel2Options verilogToModel2;
 };

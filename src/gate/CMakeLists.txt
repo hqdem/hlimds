@@ -107,7 +107,9 @@ add_library(Gate OBJECT
   translator/fir/fir_model2.cpp
   translator/verilog/verilog_model2.cpp
   translator/firrtl.cpp
-  translator/yosys_converter_firrtl.cpp)
+  translator/yosys_converter_firrtl.cpp
+  translator/model2.cpp
+  translator/yosys_converter_model2.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 
 target_include_directories(Gate

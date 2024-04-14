@@ -110,6 +110,8 @@ add_executable(${TEST_TARGET}
   gate/transformer/bdd_test.cpp
   gate/transformer/mutator_test.cpp
   gate/translator/fir/fir_model2_test.cpp
+  gate/translator/verilog_to_fir/yosys_converter_firrtl_test.cpp
+  gate/translator/verilog_to_model2/yosys_converter_model2_tests.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp
   rtl/library/arithmetic_test.cpp

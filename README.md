@@ -116,7 +116,7 @@ sudo make install
 
 ### Configuring with `Yosys`
 
-1. Get `Yosys` source code from the [^yosys] into `<yosys-dir>`
+1. Get `Yosys` version 0.36 source code from the [^yosys] into `<yosys-dir>`.
 2. Make sure your system meets the requirements listed in `<yosys-dir>/README.md`
 3. Edit `<yosys-dir>/Makefile`
     - set `ENABLE_LIBYOSYS` to 1
@@ -125,7 +125,7 @@ sudo make install
     - add `-DYosys_ROOT=<yosys-dir>` to the `cmake` invocation
     - e.g. `cmake -S <utopia-source-dir> -B <utopia-build-dir> -DYosys_ROOT=<yosys-dir> -G Ninja`
 
-[^yosys]: https://github.com/YosysHQ/yosys
+[^yosys]: https://github.com/YosysHQ/yosys/tree/yosys-0.36
 
 ### CIRCT Installation
 
@@ -276,6 +276,29 @@ the translation. The file will be placed in same directory with the application.
 ./build/src/umain to_firrtl <file(s)> --verbose
 ```
 To translate input description into inner representation (so called model2), you must specify:
+
+When selecting these option, debug information will be generated in standart error output file.
+
+### Running Verilog-to-Model2 Translator
+The translator is used to translate input description into inner representation (so called model2).
+
+```
+./build/src/umain verilog_to_model2 <file(s)>
+```
+
+When selecting this option, you must specify the path to the Verilog file(s) (`file(s)`).
+(Top module of the descriptions will be determined automatically).
+
+```
+./build/src/umain verilog_to_model2 <file(s)> --top <module-name>
+```
+
+When selecting this option, you must specify the name of the top module
+(`module-name`) in the Verilog file(s) and the path to the file(s) itself (`file(s)`).
+
+```
+./build/src/umain verilog_to_model2 <file(s)> --verbose
+```
 
 When selecting these option, debug information will be generated in standart error output file.
 

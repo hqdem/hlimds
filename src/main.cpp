@@ -18,6 +18,7 @@
 #include "gate/premapper/xmgmapper.h"
 #include "gate/printer/graphml.h"
 #include "gate/translator/firrtl.h"
+#include "gate/translator/model2.h"
 #include "gate/translator/verilog/verilog_model2.h"
 #include "options.h"
 #include "rtl/compiler/compiler.h"
@@ -201,7 +202,8 @@ int main(int argc, char **argv) {
 
     if (options.rtl.files().empty() &&
         options.firrtl.files().empty() &&
-        options.model2.files().empty()) {
+        options.model2.files().empty() &&
+        options.verilogToModel2.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   }
@@ -224,6 +226,15 @@ int main(int argc, char **argv) {
     cfg.topModule = opts.top;
     cfg.files = opts.files();
     result |= translateToFirrtl(cfg);
+  }
+
+  if (!options.verilogToModel2.files().empty()) {
+    YosysToModel2Config cfg;
+    YosysToModel2Options &opts = options.verilogToModel2;
+    cfg.debugMode = opts.debugMode;
+    cfg.topModule = opts.top;
+    cfg.files = opts.files();
+    result |= translateVerilogToModel2(cfg);
   }
 
   if (!options.model2.files().empty()) {

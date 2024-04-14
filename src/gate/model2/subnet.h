@@ -377,11 +377,11 @@ public:
     }
 
     /// Change in size: old-size - new-size.
-    int size;
+    int size{0};
     /// Change in depth: old-depth - new-depth.
-    int depth;
+    int depth{0};
     /// Change in weight: old-weight - new-weight.
-    float weight;
+    float weight{0.};
   };
 
   SubnetBuilder(): nIn(0), nOut(0) {

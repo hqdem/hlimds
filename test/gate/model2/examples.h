@@ -13,6 +13,10 @@
  */
 namespace eda::gate::model {
 
+model::SubnetID make2AndOr();
+
+model::SubnetID make2AndOr2();
+
 model::SubnetID make3AndOrXor();
 
 model::SubnetID makeXorNorAndAndOr();

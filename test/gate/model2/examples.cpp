@@ -13,6 +13,56 @@
 #include "gate/model2/utils/subnet_truth_table.h"
 
 namespace eda::gate::model {
+
+/* in1   in2                          */
+/* ┌─┐   ┌─┐                          */
+/* └─┘─┐ └─┘─┐                        */
+/* ┌─┐ |_┌─┐ |_┌─┐                    */
+/* └─┘───└─┘───└─┘─┐                  */
+/* in0  and4   and5|                  */
+/*             ┌─┐ |_┌─┐   ┌─┐        */
+/*             └─┘───└─┘───└─┘        */
+/*             in3   or6   out7       */
+SubnetID make2AndOr() {
+  SubnetBuilder subnetBuilder;
+  Subnet::LinkList inputs = subnetBuilder.addInputs(4);
+  Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND, 
+                                          inputs[0], 
+                                          inputs[1]);
+  Subnet::Link andCell5 = subnetBuilder.addCell(CellSymbol::AND, 
+                                          inputs[2], 
+                                          andCell4);
+  Subnet::Link orCell6 = subnetBuilder.addCell(CellSymbol::OR, 
+                                         andCell5, 
+                                         inputs[3]);
+  subnetBuilder.addOutput(orCell6);
+  return subnetBuilder.make();
+}
+
+/* in1   in2                          */
+/* ┌─┐   ┌─┐                          */
+/* └─┘─┐ └─┘─┐─────┐                  */
+/* ┌─┐ |_┌─┐ |_┌─┐ |                  */
+/* └─┘───└─┘───└─┘ |                  */
+/* in0  and4   and5|                  */
+/*             ┌─┐ |_┌─┐   ┌─┐        */
+/*             └─┘───└─┘───└─┘        */
+/*             in3   or6   out7       */
+SubnetID make2AndOr2() {
+  SubnetBuilder subnetBuilder;
+  Subnet::LinkList inputs = subnetBuilder.addInputs(4);
+  Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND, 
+                                          inputs[0], 
+                                          inputs[1]);
+  subnetBuilder.addCell(CellSymbol::AND, inputs[2], andCell4);
+  Subnet::Link orCell6 = subnetBuilder.addCell(CellSymbol::OR, 
+                                         inputs[2], 
+                                         inputs[3]);
+  subnetBuilder.addOutput(orCell6);
+
+  return subnetBuilder.make();
+}
+
 /* in1 ┌─┐                        */
 /*     └─┘─┐ and                  */
 /* in2 ┌─┐ |_┌─┐                  */

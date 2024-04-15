@@ -271,6 +271,8 @@ public:
 
   /// Checks whether the cell type has implementation.
   bool hasImpl() const { return implID != OBJ_NULL_ID; }
+  /// Returns the implementation: NetID or SubnetID.
+  uint64_t getImpl() { return implID; }
 
   /// Checks whether the cell type is implemented by Net.
   bool isNet() const { return NetID::checkTag(implID); }

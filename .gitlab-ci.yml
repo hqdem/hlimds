@@ -53,6 +53,7 @@ test_project:
     expire_in: 10 min
     paths:
       - ${BUILD_PATH}
+    when: always
 
 get_coverage_info:
   stage: coverage
@@ -63,6 +64,7 @@ get_coverage_info:
     - lcov --capture --directory ${UTOPIA_HOME} -o lcoverage.info
     - lcov --remove lcoverage.info "${BUILD_PATH}/*" "${UTOPIA_HOME}/lib/*" "/usr/*" -o clean_cov.info
     - genhtml clean_cov.info -o clean_coverage
+  when: always
 
   dependencies:
     - test_project

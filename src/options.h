@@ -10,6 +10,7 @@
 
 #include "CLI/CLI.hpp"
 #include "gate/debugger/base_checker.h"
+#include "gate/optimizer2/optimizer.h"
 #include "gate/premapper/premapper.h"
 #include "gate/techmapper/techmapper.h"
 #include "nlohmann/json.hpp"
@@ -32,6 +33,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::premapper::PreBasis, {
   {eda::gate::premapper::MIG, "mig"},
   {eda::gate::premapper::XAG, "xag"},
   {eda::gate::premapper::XMG, "xmg"},
+})
+
+NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::optimizer2::OptimizationCriterion, {
+  {eda::gate::optimizer2::OptimizationCriterion::NoOpt, "no"},
+  {eda::gate::optimizer2::OptimizationCriterion::Area, "area"},
+  {eda::gate::optimizer2::OptimizationCriterion::Delay, "delay"},
+  {eda::gate::optimizer2::OptimizationCriterion::Power, "power"},
 })
 
 class AppOptions {
@@ -310,6 +318,49 @@ struct Model2Options final : public AppOptions {
   bool verbose = false;
 };
 
+struct GraphMlOptions final : public AppOptions {
+
+  static constexpr const char *ID = "graphMl";
+
+  using OptimizationCriterion = eda::gate::optimizer2::OptimizationCriterion;
+
+  static constexpr const char *OPT_CRIT = "lopt";
+  static constexpr const char *LEC = "lec";
+
+  const std::map<std::string, OptimizationCriterion> optCritMap {
+    {"no", OptimizationCriterion::NoOpt},
+    {"area", OptimizationCriterion::Area},
+    {"delay", OptimizationCriterion::Delay},
+    {"power", OptimizationCriterion::Power},
+  };
+
+  GraphMlOptions(AppOptions &parent):
+      AppOptions(parent, ID, "Logical synthesis") {
+
+    // Named options.
+    options->add_option(cli(OPT_CRIT), optCrit, "Optimisation criterion")
+           ->expected(1)
+           ->transform(CLI::CheckedTransformer(optCritMap, CLI::ignore_case));
+    options->add_option(cli(LEC), lec,
+                "Check the equivalence of the obtained circuit")
+           ->expected(1);
+    // Input file(s).
+    options->allow_extras();
+  }
+
+  std::vector<std::string> files() const {
+    return options->remaining();
+  }
+
+  void fromJson(Json json) override {
+    get(json, OPT_CRIT, optCrit);
+    get(json, LEC, lec);
+  }
+
+  OptimizationCriterion optCrit = OptimizationCriterion::NoOpt;
+  bool lec = false;
+};
+
 struct TechMapOptions final : public AppOptions {
 
   static constexpr const char *ID = "techmap";
@@ -354,8 +405,13 @@ struct TechMapOptions final : public AppOptions {
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this),
-      techMapOptions(*this), verilogToModel2(*this) {
+      AppOptions(title, version),
+        rtl(*this),
+        firrtl(*this),
+        model2(*this),
+        graphMl(*this),
+        techMapOptions(*this),
+        verilogToModel2(*this) {
     // Top-level options.
     options->set_help_all_flag("-H,--help-all",
                                "Print the extended help message and exit");
@@ -378,6 +434,7 @@ struct Options final : public AppOptions {
     rtl.fromJson(json[RtlOptions::ID]);
     firrtl.fromJson(json[FirRtlOptions::ID]);
     model2.fromJson(json[Model2Options::ID]);
+    graphMl.fromJson(json[GraphMlOptions::ID]);
     techMapOptions.fromJson(json[TechMapOptions::ID]);
     verilogToModel2.fromJson(json[YosysToModel2Options::ID]);
   }
@@ -385,6 +442,7 @@ struct Options final : public AppOptions {
   RtlOptions rtl;
   FirRtlOptions firrtl;
   Model2Options model2;
+  GraphMlOptions graphMl;
   TechMapOptions techMapOptions;
   YosysToModel2Options verilogToModel2;
 };

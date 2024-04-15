@@ -7,10 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "config.h"
+#include "gate/analyzer/simulation_estimator.h"
 #include "gate/debugger/base_checker.h"
+#include "gate/debugger2/sat_checker2.h"
 #include "gate/model/gate.h"
 #include "gate/model/gnet.h"
 #include "gate/optimizer/rwmanager.h"
+#include "gate/optimizer2/area_optimizer.h"
+#include "gate/parser/graphml_to_subnet.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/premapper/migmapper.h"
 #include "gate/premapper/premapper.h"
@@ -185,6 +189,71 @@ int rtlMain(RtlContext &context) {
   return 0;
 }
 
+SubnetID parseGraphML(std::string fileName) {
+  uassert(std::filesystem::exists(fileName),
+                                  "File doesn't exist" << std::endl);
+
+  eda::gate::parser::graphml::GraphMlSubnetParser parser;
+  eda::gate::parser::graphml::GraphMlSubnetParser::ParserData data;
+  return parser.parse(fileName, data);
+}
+
+int optimize(const SubnetID &oldSubnetId, GraphMlOptions &opts) {
+  using SatChecker2 = eda::gate::debugger2::SatChecker2;
+  using AreaOptimizer = eda::gate::optimizer2::AreaOptimizer;
+
+  const auto &oldSubnet = Subnet::get(oldSubnetId);
+  eda::gate::analyzer::SimulationEstimator estimator;
+  size_t depthBefore = oldSubnet.getPathLength().second;
+  size_t sizeBefore = oldSubnet.getEntries().size();
+  size_t powerBefore = estimator.estimate(oldSubnet).getActivitySum();
+  SubnetBuilder subnetBuilder;
+  auto inputs = subnetBuilder.addInputs(oldSubnet.getInNum());
+  auto outputs = subnetBuilder.addSubnet(oldSubnetId, inputs);
+  subnetBuilder.addOutputs(outputs);
+
+  if (opts.optCrit == eda::gate::optimizer2::Area) {
+    AreaOptimizer areaOptimizer(subnetBuilder, 2, 10);
+    areaOptimizer.optimize();
+  } else if (opts.optCrit == eda::gate::optimizer2::Delay) {
+    //TODO Depth
+  } else {
+    //TODO Switching Activity
+  }
+
+  const auto &newSubnetId = subnetBuilder.make();
+  const auto &newSubnet = Subnet::get(newSubnetId);
+  size_t depthAfter = newSubnet.getPathLength().second;
+  size_t powerAfter = estimator.estimate(newSubnet).getActivitySum();
+
+  if (opts.lec) {
+    SatChecker2 &checker = SatChecker2::get();
+
+    std::unordered_map<size_t, size_t> map;
+    for (size_t i{0}; i < oldSubnet.getInNum(); ++i) {
+      map[i] = i;
+    }
+
+    for (int c = oldSubnet.getOutNum(); c > 0; --c) {
+      map[oldSubnet.size() - c] = newSubnet.size() - c;
+    }
+    bool flag = checker.areEquivalent(oldSubnetId, newSubnetId, map).equal();
+    std::cout << "Equivalence: " << flag << std::endl;
+
+    if (!flag) {
+      return -1;
+    }
+  }
+
+  std::cout << "Size before: " << sizeBefore << std::endl;
+  std::cout << "Size after: " << newSubnet.getEntries().size() << std::endl;
+  std::cout << "Depth before: " << depthBefore << std::endl;
+  std::cout << "Depth after: " << depthAfter << std::endl;
+  std::cout << "Power before: " << powerBefore << std::endl;
+  std::cout << "Power after: " << powerAfter << std::endl;
+  return 0;
+}
+
 int main(int argc, char **argv) {
   START_EASYLOGGINGPP(argc, argv);
 
@@ -204,6 +273,7 @@ int main(int argc, char **argv) {
     if (options.rtl.files().empty() &&
         options.firrtl.files().empty() &&
         options.model2.files().empty() &&
+        options.graphMl.files().empty() &&
         options.techMapOptions.files().empty() &&
         options.verilogToModel2.files().empty()) {
       throw CLI::CallForAllHelp();
@@ -247,6 +317,15 @@ int main(int argc, char **argv) {
     firrtlConfig.topModule = opts.top;
     firrtlConfig.files = opts.files();
     result |= translateToModel2(firrtlConfig);
+  }
+
+  GraphMlOptions &opts = options.graphMl;
+  if (!options.graphMl.files().empty() &&
+      (opts.optCrit != eda::gate::optimizer2::NoOpt)) {
+    for (const auto &file : options.graphMl.files()) {
+      const auto &oldSubnetId = parseGraphML(file);
+      result |= optimize(oldSubnetId, options.graphMl);
+    }
   }
 
   if(!options.techMapOptions.files().empty()){

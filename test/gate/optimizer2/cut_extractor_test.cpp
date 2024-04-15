@@ -1,4 +1,3 @@
-/*
 //===----------------------------------------------------------------------===//
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
@@ -9,8 +8,6 @@
 
 #include "gate/model2/utils/subnet_random.h"
 #include "gate/optimizer2/cut_extractor.h"
-
-#include "gate/optimizer2/cone_builder.h"
 
 #include "gtest/gtest.h"
 
@@ -294,27 +291,5 @@ TEST(CutExtractorTest, LargeSubnet) {
   CutExtractor cutExtractor(&subnet, 3);
 }
 
-TEST(CutExtractorTest, bugTest) {
-SubnetBuilder builder;
-
-auto inputs = makeInputs<4>(builder);
-std::size_t andIdx0 = builder.addCell(model::AND,
-                                      { Link(inputs[0]), Link(inputs[1]) });
-std::size_t andIdx1 = builder.addCell(model::AND,
-                                      { Link(inputs[2]), Link(inputs[3]) });
-std::size_t andIdx2 = builder.addCell(model::AND,
-                                      { Link(andIdx0), Link(andIdx1) });
-builder.addOutput(andIdx2);
-SubnetID subID = builder.make();
-Subnet subnet = Subnet::get(subID);
-
-CutExtractor cutExtractor(&subnet, 6);
-eda::gate::optimizer2::ConeBuilder coneBuilder(&subnet);
-for (const auto &cut : cutExtractor.getCuts(andIdx2)) {
-  SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-  std::cout <<  model::Subnet::get(coneSubnetID) << std::endl;
-}
-}
-
 } // namespace eda::gate::optimizer2
-*/
+

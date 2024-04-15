@@ -71,4 +71,11 @@ public:
 };
 */
 
+enum OptimizationCriterion {
+  NoOpt,
+  Area,
+  Delay,
+  Power,
+};
+
 } // namespace eda::gate::optimizer2

@@ -52,10 +52,6 @@ sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
     flex g++ gcc graphviz gtkwave iverilog libfmt-dev liblpsolve55-dev \
     libssl-dev libtool lld make ninja-build python python3-pip zlib1g zlib1g-dev
 ```
-Several Python packages should be installed too. Do the following:
-```
-pip install liberty-parser
-```
 
 ### CMake Installation
 

@@ -292,4 +292,3 @@ TEST(CutExtractorTest, LargeSubnet) {
 }
 
 } // namespace eda::gate::optimizer2
-

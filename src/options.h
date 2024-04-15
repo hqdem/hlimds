@@ -11,6 +11,7 @@
 #include "CLI/CLI.hpp"
 #include "gate/debugger/base_checker.h"
 #include "gate/premapper/premapper.h"
+#include "gate/techmapper/techmapper.h"
 #include "nlohmann/json.hpp"
 
 #include <fstream>
@@ -309,11 +310,52 @@ struct Model2Options final : public AppOptions {
   bool verbose = false;
 };
 
+struct TechMapOptions final : public AppOptions {
+
+  static constexpr const char *ID = "techmap";
+  static constexpr const char *MAPPER_TYPE = "type";
+  static constexpr const char *VERILOG_OUTPUT = "out";
+
+  using MapperType = eda::gate::techmapper::Techmapper::MapperType;
+  const std::map<std::string, MapperType> mapperTypeMap {
+    {"af", MapperType::AREA_FLOW},
+    {"power", MapperType::POWER},
+    {"delay", MapperType::DELAY},
+    {"simple_area", MapperType::SIMPLE_AREA_FUNC},
+    {"simple_delay", MapperType::SIMPLE_DELAY_FUNC},
+  };
+
+  TechMapOptions(AppOptions &parent):
+      AppOptions(parent, ID, "Technological mapping") {
+
+    // Named options.
+    options->add_option(cli(MAPPER_TYPE), mapperType, "Type of mapper")
+           ->expected(1)
+           ->transform(CLI::CheckedTransformer(mapperTypeMap, CLI::ignore_case));
+
+    options->add_option(cli(VERILOG_OUTPUT), outputPath,
+                "Path to verilog file where the mapped design to be stored")
+           ->expected(1);
+    // Input file(s).
+    options->allow_extras();
+  }
+
+  std::vector<std::string> files() const {
+    return options->remaining();
+  }
+
+  void fromJson(Json json) override {
+    get(json, MAPPER_TYPE, mapperType);
+  }
+  MapperType mapperType = MapperType::SIMPLE_AREA_FUNC;
+  std::string outputPath = "out.v";
+};
+
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
-      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this), verilogToModel2(*this) {
-
+      AppOptions(title, version), rtl(*this), firrtl(*this), model2(*this),
+      techMapOptions(*this), verilogToModel2(*this) {
     // Top-level options.
     options->set_help_all_flag("-H,--help-all",
                                "Print the extended help message and exit");
@@ -336,11 +378,13 @@ struct Options final : public AppOptions {
     rtl.fromJson(json[RtlOptions::ID]);
     firrtl.fromJson(json[FirRtlOptions::ID]);
     model2.fromJson(json[Model2Options::ID]);
+    techMapOptions.fromJson(json[TechMapOptions::ID]);
     verilogToModel2.fromJson(json[YosysToModel2Options::ID]);
   }
 
   RtlOptions rtl;
   FirRtlOptions firrtl;
   Model2Options model2;
+  TechMapOptions techMapOptions;
   YosysToModel2Options verilogToModel2;
 };

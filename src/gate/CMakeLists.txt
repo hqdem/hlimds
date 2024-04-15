@@ -96,10 +96,19 @@ add_library(Gate OBJECT
   simulator/simulator.cpp
   simulator2/simulator.cpp
   techmapper/library/cell.cpp
-  techmapper/cut_based_tech_mapper/strategy/min_delay.cpp
-  techmapper/cut_based_tech_mapper/cut_based_tech_mapper.cpp
-  techmapper/cut_based_tech_mapper/tech_map_visitor.cpp
-  techmapper/tech_optimizer.cpp
+  techmapper/library/cell_db.cpp
+  techmapper/comb_mapper/cut_based/area_recovery/area_recovery.cpp
+  techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.cpp
+  techmapper/comb_mapper/cut_based/genetic/genetic_mapper.cpp
+  techmapper/comb_mapper/cut_based/power_map/power_map.cpp
+  techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.cpp
+  techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.cpp
+  techmapper/comb_mapper/cut_based/cut_based_mapper.cpp
+  techmapper/comb_mapper/comb_mapper.cpp
+  techmapper/seq_mapper/sequential_mapper.cpp
+  techmapper/assembly.cpp
+  techmapper/techmapper.cpp
+  techmapper/techmapper_wrapper.cpp
   transformer/bdd.cpp
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp
@@ -142,6 +151,7 @@ target_link_libraries(Gate
   minisat-lib-static
   Cudd::Cudd
   lorina
+  readcells
   sqlite3
   CTemplate::nothreads
   Kitty

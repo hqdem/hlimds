@@ -108,7 +108,8 @@ add_executable(${TEST_TARGET}
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/techmap_test.cpp
   gate/transformer/bdd_test.cpp
-  gate/transformer/mutator_test.cpp
+  gate/transformer/mutator/mutator_test.cpp
+  gate/transformer/mutator2/mutator2_test.cpp
   gate/translator/fir/fir_model2_test.cpp
   gate/translator/verilog_to_fir/yosys_converter_firrtl_test.cpp
   gate/translator/verilog_to_model2/yosys_converter_model2_tests.cpp

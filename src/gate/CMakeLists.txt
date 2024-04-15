@@ -104,6 +104,8 @@ add_library(Gate OBJECT
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp
   transformer/mutator/mutator_visitor.cpp
+  transformer/mutator2/mutator2.cpp
+  transformer/mutator2/mutator2_transformer.cpp
   translator/fir/fir_model2.cpp
   translator/verilog/verilog_model2.cpp
   translator/firrtl.cpp

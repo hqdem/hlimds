@@ -9,7 +9,6 @@
 #pragma once
 #include "base_checker2.h"
 #include "gate/simulator2/simulator.h"
-#include "miter2.h"
 #include "util/logging.h"
 
 #include <cassert>
@@ -28,12 +27,10 @@ friend class util::Singleton<RndChecker2>;
 
 public:
   /**
-   * @copydoc BaseChecker2::equivalent
+   * @copydoc BaseChecker2::isSat
    */
 
-  CheckerResult equivalent(const Subnet &lhs,
-                           const Subnet &rhs,
-                           const CellToCell &gmap) const override;
+  CheckerResult isSat(const SubnetID id) const override;
 
   /// Sets the number of random values checked, if the check is inexhaustive.
   void setTries(int tries) { this->tries = tries; }

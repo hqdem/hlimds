@@ -24,6 +24,8 @@ namespace eda::gate::debugger2 {
 using CellToCell = std::unordered_map<size_t, size_t>;
 using LecType = eda::gate::debugger2::options::LecType;
 using Subnet = model::Subnet;
+using SubnetBuilder = model::SubnetBuilder;
+using SubnetID = model::SubnetID;
 
 /// Equivalence checking result.
 struct CheckerResult {
@@ -54,7 +56,7 @@ struct CheckerResult {
    * @copydoc CheckerResult::CheckerResult(CheckerStatus)
    * @param counterEx Input values on which the nets are unequal.
    */
-  CheckerResult(CheckerStatus status, std::vector<uint64_t> counterEx) {
+  CheckerResult(CheckerStatus status, std::vector<bool> counterEx) {
     assert(status == CheckerStatus::NOTEQUAL);
     this->status = status;
     this->counterEx = counterEx;
@@ -81,18 +83,37 @@ struct CheckerResult {
   }
 
   /// Returns a counter example if the status is non-equivalence.
-  std::vector<uint64_t> getCounterExample() const {
+  std::vector<bool> getCounterExample() const {
     assert(status == CheckerStatus::NOTEQUAL);
     return this->counterEx;
   }
 
 private:
-  std::vector<uint64_t> counterEx = {};
+  std::vector<bool> counterEx = {};
 };
 
 /// Basic class for equivalence checkers.
 class BaseChecker2 {
 public:
+
+  /**
+   * \brief Constructs a miter for the specified nets.
+   * @param builder Builder, in which a miter is constructed.
+   * @param lhs First net.
+   * @param rhs Second net.
+   * @param gmap Gate-to-gate mapping between corresponding PI/PO of two nets.
+   */
+  static void miter2(SubnetBuilder &builder,
+                     const SubnetID lhs,
+                     const SubnetID rhs,
+                     const CellToCell &gmap);
+  /**
+   * \brief Checks if the given single-output net is satisfiable.
+   * @param id The net.
+   * @return The result of the check.
+   */
+  virtual CheckerResult isSat(const SubnetID id) const = 0;
+
   /**
    * \brief Checks the equivalence of the given nets.
    * @param lhs First net.
@@ -100,24 +121,14 @@ public:
    * @param gmap Gate-to-gate mapping between corresponding PI/PO of two nets.
    * @return The result of the check.
    */
-  virtual CheckerResult equivalent(const Subnet &lhs,
-                                   const Subnet &rhs,
-                                   const CellToCell &gmap) const = 0;
+  virtual CheckerResult areEquivalent(const SubnetID lhs,
+                                      const SubnetID rhs,
+                                      const CellToCell &gmap) const final {
+    SubnetBuilder builder;
+    miter2(builder, lhs, rhs, gmap);
+    return isSat(builder.make());
+  }
 
-//===----------------------------------------------------------------------===//
-// Utilities
-//===----------------------------------------------------------------------===//
-
-  /**
-   * \brief Utility. Checks if the given nets are equivalent.
-   * @param lhs First net.
-   * @param rhs Second net.
-   * @param gmap Gate-to-gate mapping between corresponding PI/PO of two nets.
-   * @return true if the nets are equivalent, false otherwise.
-   */
-  bool areEqual(const Subnet &lhs,
-                const Subnet &rhs,
-                const CellToCell &gmap) const;
   virtual ~BaseChecker2() = 0;
 };
 

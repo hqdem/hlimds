@@ -100,8 +100,8 @@ TEST(ReplaceTest, SimpleTest) {
   mapping[rhsInputs[1].idx] = inputs[1].idx;
   mapping[rhsOutLink0.idx] = andLink0.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) ==
-              std::make_pair(-1, -1));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == -1 && effect.depth == -1);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -135,7 +135,8 @@ TEST(ReplaceTest, SmallerRhs) {
   mapping[rhsInputs[2].idx] = 2;
   mapping[rhsOutLink.idx] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(2, 1));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 2 && effect.depth == 1);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -174,8 +175,8 @@ TEST(ReplaceTest, LargerRhs) {
   mapping[rhsInputs[2].idx] = 2;
   mapping[rhsOutLink.idx] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) ==
-              std::make_pair(-2, -1));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == -2 && effect.depth == -1);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -212,7 +213,8 @@ TEST(ReplaceTest, NoInner) {
   mapping[1] = 4;
   mapping[3] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 0 && effect.depth == 0);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -240,14 +242,15 @@ TEST(ReplaceTest, ReplaceTwice) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  std::unordered_map<std::size_t, std::size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[2] = 2;
-  mapping[7] = 5;
+  std::unordered_map<std::size_t, std::size_t> mapping1;
+  mapping1[0] = 0;
+  mapping1[1] = 1;
+  mapping1[2] = 2;
+  mapping1[7] = 5;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(-1, 0));
-  builder.replace(rhsID, mapping);
+  const auto effect1 = builder.evaluateReplace(rhsID, mapping1);
+  EXPECT_TRUE(effect1.size == -1 && effect1.depth == 0);
+  builder.replace(rhsID, mapping1);
   printBidirectCellsTrav(builder);
 
   SubnetBuilder rhs2Builder;
@@ -261,8 +264,8 @@ TEST(ReplaceTest, ReplaceTwice) {
   mapping2[0] = 0;
   mapping2[3] = 7;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) ==
-              std::make_pair(-1, -1));
+  const auto effect2 = builder.evaluateReplace(rhs2ID, mapping2);
+  EXPECT_TRUE(effect2.size == -1 && effect2.depth == -1);
   builder.replace(rhs2ID, mapping2);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -296,7 +299,8 @@ TEST(ReplaceTest, OneCell) {
   mapping[0] = 3;
   mapping[1] = 3;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 0 && effect.depth == 0);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -334,7 +338,8 @@ TEST(ReplaceTest, ExternalRefs) {
   mapping[2] = inputs[3].idx;
   mapping[4] = orLink1.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(1, 1));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 1 && effect.depth == 1);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -378,7 +383,8 @@ TEST(ReplaceTest, LessRootInputs) {
   mapping[2] = inputs[2].idx;
   mapping[4] = xorLink0.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(3, 1));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 3 && effect.depth == 1);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -413,7 +419,8 @@ TEST(ReplaceTest, InvLink) {
   mapping[1] = inputs[1].idx;
   mapping[3] = xorLink0.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 0 && effect.depth == 0);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -450,8 +457,8 @@ TEST(ReplaceTest, AddCellAfterReplace) {
   mapping[1] = inputs[1].idx;
   mapping[5] = andLink0.idx;
 
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) ==
-              std::make_pair(-2, -1));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == -2 && effect.depth == -1);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const auto bufLink0 = builder.addCell(model::BUF, andLink0);
@@ -493,8 +500,8 @@ TEST(ReplaceTest, SameCone) {
     i += curCell.more;
   }
 
-  EXPECT_TRUE(builder.evaluateReplace(coneSubnetID, mapping) ==
-              std::make_pair(0, 0));
+  const auto effect = builder.evaluateReplace(coneSubnetID, mapping);
+  EXPECT_TRUE(effect.size == 0 && effect.depth == 0);
   builder.replace(coneSubnetID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -522,7 +529,8 @@ TEST(ReplaceTest, DeleteCell) {
   std::unordered_map<size_t, size_t> mapping;
   mapping[0] = 0;
   mapping[1] = 1;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(1, 1));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 1 && effect.depth == 1);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -554,7 +562,8 @@ TEST(ReplaceTest, DeleteSeveralCells) {
   std::unordered_map<size_t, size_t> mapping;
   mapping[0] = 0;
   mapping[1] = 3;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(3, 3));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 3 && effect.depth == 3);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -584,7 +593,8 @@ TEST(ReplaceTest, DeleteCellWithInvOut) {
   std::unordered_map<size_t, size_t> mapping;
   mapping[0] = 0;
   mapping[1] = 1;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(1, 1));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 1 && effect.depth == 1);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -614,7 +624,8 @@ TEST(ReplaceTest, InvertFanouts) {
   mapping[0] = 0;
   mapping[1] = 1;
   mapping[3] = 3;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 0 && effect.depth == 0);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -653,7 +664,8 @@ TEST(ReplaceTest, DublicateRoot) {
   mapping[0] = 0;
   mapping[1] = 1;
   mapping[3] = 4;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(2, 2));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 2 && effect.depth == 2);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
@@ -683,12 +695,13 @@ TEST(ReplaceTest, DeleteDublicatedRoot) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[3] = 4;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(2, 2));
-  builder.replace(rhsID, mapping);
+  std::unordered_map<size_t, size_t> mapping1;
+  mapping1[0] = 0;
+  mapping1[1] = 1;
+  mapping1[3] = 4;
+  const auto effect1 = builder.evaluateReplace(rhsID, mapping1);
+  EXPECT_TRUE(effect1.size == 2 && effect1.depth == 2);
+  builder.replace(rhsID, mapping1);
   printBidirectCellsTrav(builder);
 
   SubnetBuilder rhs2Builder;
@@ -702,8 +715,8 @@ TEST(ReplaceTest, DeleteDublicatedRoot) {
   mapping2[0] = 0;
   mapping2[1] = 1;
   mapping2[3] = 5;
-  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) ==
-              std::make_pair(1, 1));
+  const auto effect2 = builder.evaluateReplace(rhs2ID, mapping2);
+  EXPECT_TRUE(effect2.size == 1 && effect2.depth == 1);
   builder.replace(rhs2ID, mapping2);
   printBidirectCellsTrav(builder);
 
@@ -733,12 +746,13 @@ TEST(ReplaceTest, ReuseReplacedCell) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 1;
-  mapping[1] = 2;
-  mapping[3] = 4;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
-  builder.replace(rhsID, mapping);
+  std::unordered_map<size_t, size_t> mapping1;
+  mapping1[0] = 1;
+  mapping1[1] = 2;
+  mapping1[3] = 4;
+  const auto effect1 = builder.evaluateReplace(rhsID, mapping1);
+  EXPECT_TRUE(effect1.size == 0 && effect1.depth == 0);
+  builder.replace(rhsID, mapping1);
   printBidirectCellsTrav(builder);
 
   SubnetBuilder rhs2Builder;
@@ -755,8 +769,8 @@ TEST(ReplaceTest, ReuseReplacedCell) {
   mapping2[1] = 1;
   mapping2[2] = 2;
   mapping2[5] = 5;
-  EXPECT_TRUE(builder.evaluateReplace(rhs2ID, mapping2) ==
-              std::make_pair(1, 0));
+  const auto effect2 = builder.evaluateReplace(rhs2ID, mapping2);
+  EXPECT_TRUE(effect2.size == 1 && effect2.depth == 0);
   builder.replace(rhs2ID, mapping2);
   printBidirectCellsTrav(builder);
 
@@ -804,8 +818,8 @@ TEST(ReplaceTest, ReuseCellsFollowingRoot) {
   mapping[1] = 1;
   mapping[2] = 2;
   mapping[7] = 5;
-
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, -2));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 0 && effect.depth == -2);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
 
@@ -857,7 +871,8 @@ TEST(ReplaceTest, EvaluationTest) {
   mapping[1] = 1;
   mapping[2] = 2;
   mapping[7] = 6;
-  EXPECT_TRUE(builder.evaluateReplace(rhsID, mapping) == std::make_pair(0, 0));
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_TRUE(effect.size == 0 && effect.depth == 0);
 }
 
 TEST(ReplaceTest, OneEntryTraversal) {

@@ -39,9 +39,9 @@ find_package(Cudd REQUIRED)
 find_package(Yosys REQUIRED)
 find_package(STACCATO REQUIRED)
 
-find_package(MLIR REQUIRED CONFIG)
-find_package(LLVM REQUIRED CONFIG)
-find_package(CIRCT REQUIRED CONFIG)
+find_package(MLIR CONFIG)
+find_package(LLVM CONFIG)
+find_package(CIRCT CONFIG)
 set_property(TARGET LLVMSupport APPEND
   PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LLVM_INCLUDE_DIRS}")
 set_property(TARGET MLIRSupport APPEND
@@ -76,8 +76,7 @@ add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)
 
-# Documentation generation with Doxygen (disabled by default)
-OPTION(GEN_DOC "Documentation generation" OFF)
+OPTION(GEN_DOC "Documentation generation" OFF) # Disabled by default
 
 if (NOT GEN_DOC)
   return()
@@ -90,3 +89,4 @@ if (DOXYGEN_FOUND)
 else ()
   message("Error: can't find doxygen, please install it!")
 endif()
+

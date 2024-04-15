@@ -18,8 +18,9 @@
 #include "gate/premapper/xmgmapper.h"
 #include "gate/printer/graphml.h"
 #include "gate/techmapper/techmapper_wrapper.h"
-#include "gate/translator/fir_to_model2/fir_to_model2_wrapper.h"
 #include "gate/translator/firrtl.h"
+#include "gate/translator/model2.h"
+#include "gate/translator/verilog/verilog_model2.h"
 #include "options.h"
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/arithmetic.h"
@@ -203,7 +204,8 @@ int main(int argc, char **argv) {
     if (options.rtl.files().empty() &&
         options.firrtl.files().empty() &&
         options.model2.files().empty() &&
-        options.techMapOptions.files().empty()) {
+        options.techMapOptions.files().empty() &&
+        options.verilogToModel2.files().empty()) {
       throw CLI::CallForAllHelp();
     }
   }
@@ -222,23 +224,29 @@ int main(int argc, char **argv) {
     FirrtlConfig cfg;
     FirRtlOptions &opts = options.firrtl;
     cfg.debugMode = opts.debugMode;
-    cfg.outputNamefile = opts.outputNamefile;
+    cfg.outputFileName = opts.outputNamefile;
     cfg.topModule = opts.top;
     cfg.files = opts.files();
     result |= translateToFirrtl(cfg);
   }
 
+  if (!options.verilogToModel2.files().empty()) {
+    YosysToModel2Config cfg;
+    YosysToModel2Options &opts = options.verilogToModel2;
+    cfg.debugMode = opts.debugMode;
+    cfg.topModule = opts.top;
+    cfg.files = opts.files();
+    result |= translateVerilogToModel2(cfg);
+  }
+
   if (!options.model2.files().empty()) {
     Model2Options &opts = options.model2;
     FirrtlConfig firrtlConfig;
-    firrtlConfig.debugMode = opts.debugMode;
-    firrtlConfig.outputNamefile = opts.firrtlFileName;
-    firrtlConfig.topModule = opts.topModuleName;
+    firrtlConfig.debugMode = opts.verbose;
+    firrtlConfig.outputFileName = opts.outFileName;
+    firrtlConfig.topModule = opts.top;
     firrtlConfig.files = opts.files();
-    Model2Config model2Config;
-    model2Config.outNetFileName = opts.outNetFileName;
-    model2Config.files = opts.files();
-    result |= translateToModel2(firrtlConfig, model2Config);
+    result |= translateToModel2(firrtlConfig);
   }
 
   if(!options.techMapOptions.files().empty()){

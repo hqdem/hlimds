@@ -22,6 +22,7 @@ class OptimizerBase {
 public:
 
   /// @cond ALIASES
+  using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID      = eda::gate::model::SubnetID;
   /// @endcond
@@ -31,7 +32,7 @@ public:
    */
   void optimize() {
     for (auto old{iterator->next()}; old.isValid(); old = iterator->next()) {
-      SubnetID update = resynthesizer->resynthesize(old.subnetID);
+      SubnetID update = resynthesizer->resynthesize(old);
       replacer->replace(old, update);
     }
     replacer->finalize();

@@ -110,7 +110,7 @@ void checkEQ(SubnetID origSubnetId, SubnetID mappedSubnetId) {
 
   debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
 
-  EXPECT_TRUE(checker.equivalent(origSubnet, mappedSubnet, map).equal());
+  EXPECT_TRUE(checker.areEquivalent(origSubnetId, mappedSubnetId, map).equal());
 }
 
 SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {

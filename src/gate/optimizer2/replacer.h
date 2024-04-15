@@ -20,9 +20,10 @@ class ReplacerBase {
 public:
 
   /// @cond ALIASES
+  using Subnet         = eda::gate::model::Subnet;
   using SubnetBuilder  = eda::gate::model::SubnetBuilder;
-  using SubnetID       = eda::gate::model::SubnetID;
   using SubnetFragment = SubnetIteratorBase::SubnetFragment;
+  using SubnetID       = eda::gate::model::SubnetID;
   /// @endcond
 
   /**

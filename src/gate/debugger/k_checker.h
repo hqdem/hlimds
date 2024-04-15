@@ -40,6 +40,8 @@ public:
     BDD bddValue;
     std::shared_ptr<Vertex> v;
     int level = 0;
+    bool containCutVar = false;
+    std::vector<std::shared_ptr<Vertex>> cutPoints;
 
     BDDClass() {}
     BDDClass(BDD newBdd) : bddValue(newBdd) {}
@@ -158,6 +160,7 @@ private:
   std::shared_ptr<Vertex> getVertexFromBdd(std::set<BDDClass>::iterator bddRes);
   std::shared_ptr<Vertex> getVertexFromBdd(BDD &bddRes);
   BDD getBddFromVertex(std::shared_ptr<Vertex> vOut, bool left, int level = 0);
+  BDDClass getBddFromVertex(std::shared_ptr<Vertex> vOut, int level = 0);
   bool equalOutputs(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2);
   bool notEqualOutputs(std::shared_ptr<Vertex> v1, std::shared_ptr<Vertex> v2);
   int cLevel(std::shared_ptr<Vertex> v);
@@ -166,5 +169,8 @@ private:
   void checkEquivalence(bool withCuts = false);
   void checkEquivalenceSingle(std::shared_ptr<Vertex> v1,
                               std::shared_ptr<Vertex> v2, bool withCuts);
+  void eliminateFalseNegatives();
+  void eliminateFalseNegativesSingle(std::shared_ptr<Vertex> v1,
+                                     std::shared_ptr<Vertex> v2);
 };
 }  // namespace eda::gate::debugger

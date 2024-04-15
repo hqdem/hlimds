@@ -17,7 +17,7 @@ namespace RTLIL = Yosys::RTLIL;
 std::ostream YosysConverterFirrtl::devnull(nullptr);
 
 YosysConverterFirrtl::YosysConverterFirrtl(const FirrtlConfig &config)
-    : outputFile(config.outputNamefile.empty() ? std::cout : file)
+    : outputFile(config.outputFileName.empty() ? std::cout : file)
     , debug(config.debugMode ? std::cerr : devnull) {
   Yosys::yosys_setup();
   RTLIL::Design design;
@@ -26,6 +26,7 @@ YosysConverterFirrtl::YosysConverterFirrtl(const FirrtlConfig &config)
     files += file + " ";
   }
   files.pop_back();
+  Yosys::run_pass("design -reset-vlog", &design);
   std::string command = "read_verilog " + files;
   Yosys::run_pass(command, &design);
   deterTopModule(design, config.topModule);
@@ -34,7 +35,7 @@ YosysConverterFirrtl::YosysConverterFirrtl(const FirrtlConfig &config)
   Yosys::run_pass("memory", &design);
   Yosys::run_pass("opt -nodffe -nosdff", &design);
   Yosys::run_pass("pmuxtree", &design);
-  createOutputFile(config.outputNamefile);
+  createOutputFile(config.outputFileName);
   readModules(design);
 }
 
@@ -43,7 +44,7 @@ void YosysConverterFirrtl::deterTopModule(
   if (topModule.empty()) {
     Yosys::run_pass("hierarchy -auto-top", &design);
     RTLIL::Module *module = design.top_module();
-    nameTopModule = module->name.str();
+    nameTopModule = module->name.c_str();
     nameTopModule.erase(0, 1);
   } else {
     nameTopModule = topModule;
@@ -119,10 +120,18 @@ void YosysConverterFirrtl::declareMemory(
 void YosysConverterFirrtl::declareModule(
     std::ostream &os, const Module &circuit) {
   os << "  module " << circuit.id << " :\n";
+  const std::vector<int> &orderPorts = circuit.orderPorts;
   const std::map<int, Signal *> &circtSignals = circuit.signals;
-  for (const auto &[index, sig]: circtSignals) {
-    if (hasInOutMode(sig)) {
-      declareSignal(os, *sig);
+  for (const auto &index: orderPorts) {
+    if (circtSignals.find(index) != circtSignals.end()) {
+      Signal *sig = circtSignals.at(index);
+      if (hasInOutMode(sig)) {
+        declareSignal(os, *sig);
+      } else {
+        assert(0 && "Problem with declaration of module: error with mode port");
+      }
+    } else {
+      assert(0 && "Problem with declaration of module: signal isn't registred");
     }
   }
   for (const auto &[index, sig]: circtSignals) {
@@ -355,8 +364,6 @@ YosysConverterFirrtl::~YosysConverterFirrtl() {
       delete sig;
     }
   }
-
-  Yosys::yosys_shutdown();
 }
 
 std::string YosysConverterFirrtl::getName() {
@@ -795,6 +802,14 @@ int YosysConverterFirrtl::makePolarityRstSig(bool posedge, const int rst) {
   return indexSig;
 }
 
+void replaceElementVector(std::vector<int> &vec, int num1, int num2) {
+  for (size_t i = 0; i < vec.size(); ++i) {
+    if (vec[i] == num1) {
+      vec[i] = num2;
+    }
+  }
+}
+
 void YosysConverterFirrtl::makeRenameOutput(int index) {
   Signal *output = getSignal(index);
   output->mode = PM_Wire;
@@ -802,6 +817,7 @@ void YosysConverterFirrtl::makeRenameOutput(int index) {
   Signal *newOutput = getSignal(newSig);
   newOutput->isUsed = true;
   newOutput->mode = PM_Output;
+  replaceElementVector(curModule.orderPorts, index, newSig);
   std::string newNameReg = newOutput->id;
   newOutput->id = output->id;
   output->id = newNameReg;
@@ -1687,6 +1703,7 @@ void YosysConverterFirrtl::walkPorts(const std::vector<RTLIL::IdString> &ports) 
   for (const auto &port: ports) {
     int index = port.index_;
     debug << fmt::format(" {} index: {}\n", readIdString(port), index);
+    curModule.orderPorts.push_back(index);
   }
 }
 
@@ -2179,9 +2196,13 @@ void YosysConverterFirrtl::redefPorts(
     const std::vector<RTLIL::SigSig> &ports, int driver) {
   const std::vector<RTLIL::SigSig> &portsVec = ports;
   for (const auto &[op1, op2]: portsVec) {
-    Signal *sig1 = getSignal(deterSigSpec(op1));
+    int oldIndex = deterSigSpec(op1);
+    Signal *sig1 = getSignal(oldIndex);
     if (sig1->mode != PM_Reg && sig1->mode != PM_Regreset) {
-      copySignal(sig1);
+      int newIndex = copySignal(sig1);
+      if (hasInOutMode(sig1)) {
+        replaceElementVector(curModule.orderPorts, oldIndex, newIndex);
+      }
       sig1->mode = PM_Reg;
     }
     sig1->driverSig = getSignal(driver)->id;
@@ -2204,11 +2225,15 @@ void YosysConverterFirrtl::redefRstPorts(
     const std::vector<RTLIL::SigSig> &ports, int driver) {
   const std::vector<RTLIL::SigSig> &portsVec = ports;
   for (const auto &[op1, op2]: portsVec) {
-    Signal *sig1 = getSignal(deterSigSpec(op1));
+    int oldIndex = deterSigSpec(op1);
+    Signal *sig1 = getSignal(oldIndex);
     if (sig1->mode != PM_Reg) {
-      copySignal(sig1);
+      int newIndex = copySignal(sig1);
+      if (hasInOutMode(sig1)) {
+        replaceElementVector(curModule.orderPorts, oldIndex, newIndex);
+      }
+      sig1->mode = PM_Regreset;
     }
-    sig1->mode = PM_Regreset;
     sig1->resetSig = getSignal(driver)->id;
     int myInit = makeMyInit(op2);
     sig1->resetMean = getSignal(myInit)->id;
@@ -2357,6 +2382,9 @@ void YosysConverterFirrtl::walkModule(const RTLIL::Module *m) {
   debug << "Wires:\n";
   walkWires(m->wires_);
   debug << "End Wires\n\n";
+  debug << "Ports:\n";
+  walkPorts(m->ports);
+  debug << "End Ports\n\n";
   debug << "Memories\n";
   walkMemories(m->memories);
   debug << "End Memories\n";
@@ -2369,9 +2397,6 @@ void YosysConverterFirrtl::walkModule(const RTLIL::Module *m) {
   debug << "Avail parameters:\n";
   walkParameteres(m->avail_parameters);
   debug << "End Avail parameteres\n\n";
-  debug << "Ports:\n";
-  walkPorts(m->ports);
-  debug << "End Ports\n\n";
   debug << "Processes:\n";
   walkProcesses(m->processes);
   debug << "End processes\n\n";

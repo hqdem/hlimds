@@ -9,7 +9,6 @@
 #pragma once
 
 #include "gate/debugger2/base_checker2.h"
-#include "gate/debugger2/miter2.h"
 #include "gate/simulator2/simulator.h"
 #include "util/logging.h"
 
@@ -19,8 +18,11 @@
 
 namespace eda::gate::debugger2 {
 
+using Cell = eda::gate::model::Subnet::Cell;
+using CellSymbol = eda::gate::model::CellSymbol;
 using CellToCell = eda::gate::debugger2::CellToCell;
 using LecType = eda::gate::debugger2::options::LecType;
+using LinkList = model::Subnet::LinkList;
 using SubnetID = eda::gate::model::SubnetID;
 using Simulator = eda::gate::simulator2::Simulator;
 
@@ -35,10 +37,9 @@ class SeqChecker : public BaseChecker2 {
 public:
 
   /**
-   * @copydoc BaseChecker2::equivalent
+   * @copydoc BaseChecker2::isSat
    */
-  CheckerResult equivalent(const Subnet &lhs, const Subnet &rhs,
-                           const CellToCell &cmap) const override;
+  CheckerResult isSat(const SubnetID id) const override;
 
   // Sets the number of attempts to find registers stuck at a constant
   void setSimulateTries(int tries);

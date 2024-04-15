@@ -361,31 +361,44 @@ namespace eda::gate::model {
 class SubnetBuilder final {
   friend EntryIterator;
 
-  struct EntryDescriptor final {
-    EntryDescriptor(): prev(normalOrderID), next(normalOrderID),
-                       depth(invalidID) {};
-    size_t prev;
-    size_t next;
-    size_t depth;
-  };
-
 public:
   using Cell = Subnet::Cell;
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
+  /// Represents a replacement effect.
+  struct Effect final {
+    Effect operator+(const Effect &rhs) const {
+      return Effect{size + rhs.size, depth + rhs.depth, weight + rhs.weight};
+    }
+
+    Effect operator-(const Effect &rhs) const {
+      return Effect{size - rhs.size, depth - rhs.depth, weight - rhs.weight};
+    }
+
+    /// Change in size: old-size - new-size.
+    int size{0};
+    /// Change in depth: old-depth - new-depth.
+    int depth{0};
+    /// Change in weight: old-weight - new-weight.
+    float weight{0.};
+  };
+
   SubnetBuilder(): nIn(0), nOut(0) {
-    const size_t n = 1024*1024; // FIXME
+    const size_t n = 1024; // FIXME
     entries.reserve(n);
     desc.reserve(n);
     depthBounds.reserve(n);
     strash.reserve(n);
   }
 
-  SubnetBuilder(SubnetID subnetID) {
+  SubnetBuilder(
+      SubnetID subnetID,
+      const std::function<float(const size_t)> *getCellWeight = nullptr):
+      SubnetBuilder() {
     const auto &subnet = Subnet::get(subnetID);
     const auto inputs = addInputs(subnet.getInNum());
-    const auto outputs = addSubnet(subnetID, inputs);
+    const auto outputs = addSubnet(subnetID, inputs, getCellWeight);
     addOutputs(outputs);
   }
 
@@ -407,6 +420,21 @@ public:
   /// Returns the non-constant reference to the i-th cell.
   Subnet::Cell &getCell(size_t i) {
     return entries[i].cell;
+  }
+
+  /// Returns the depth of the i-th cell.
+  size_t getDepth(size_t i) const {
+    return desc[i].depth;
+  }
+
+  /// Returns the weigth of the i-th cell.
+  float getWeight(size_t i) const {
+    return desc[i].weight;
+  }
+
+  /// Sets the weigth of the i-th cell.
+  void setWeight(size_t i, float weight) {
+    desc[i].weight = weight;
   }
 
   /// Returns the entry/link indices of the j-th link of the i-th entry.
@@ -506,7 +534,8 @@ public:
   /// Adds the subnet and connects it via the specified links.
   /// Does not add the output cells (it should be done explicitly).
   /// Returns the output links.
-  LinkList addSubnet(SubnetID subnetID, const LinkList &links);
+  LinkList addSubnet(SubnetID subnetID, const LinkList &links,
+                     const std::function<float(const size_t)> *getCellWeight = nullptr);
 
   /// Adds the single-output subnet and connects it via the specified links.
   /// Returns the output link.
@@ -518,17 +547,14 @@ public:
   void replace(
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs,
-      const std::function<void(const size_t)> *onNewCell = nullptr);
+      const std::function<float(const size_t /* index in subnet */)> *getCellWeight = nullptr,
+      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr);
 
-  /// Returns
-  /// {
-  ///   [the number of deleted entries - the number of added entries];
-  ///   [old root depth - new root depth]
-  /// }
-  /// after replacement.
-  std::pair<int, int> evaluateReplace(
+  /// Returns the effect of the replacement.
+  Effect evaluateReplace(
       const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> &rhsToLhs) const;
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const std::function<float(const size_t)> *getCellWeight = nullptr) const;
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
@@ -560,26 +586,31 @@ public:
   SubnetID make(std::vector<size_t> &newToOldEntries) {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    rearrangeEntries(newToOldEntries);
+    if (isDisassembled) {
+      rearrangeEntries(newToOldEntries);
+    }
     assert(checkInputsOrder() && checkOutputsOrder());
 
     return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 
   SubnetID make() {
-    std::vector<size_t> tmpMapping{};
-    return make(tmpMapping);
+    std::vector<size_t> mapping{};
+    return make(mapping);
   }
 
 private:
-  /// Returns {[the number of new entries]; [new root depth]} after replacement.
-  std::pair<size_t, size_t> newEntriesEval(
+  /// Returns the add-effect of the replacement:
+  /// the number of cells (value of weight) added and new depth of the root.
+  Effect newEntriesEval(
       const SubnetID rhsID,
       const std::unordered_map<size_t, size_t> rhsToLhs,
+      const std::function<float(const size_t)> *getCellWeight,
       std::unordered_set<size_t> &reusedEntries) const;
 
-  /// Returns the number of entries to delete after deleting root.
-  int deletedEntriesEval(
+  /// Returns the delete-effect of the replacement:
+  /// the number of cells (value of weight) deleted.
+  Effect deletedEntriesEval(
       const size_t rootEntryID,
       const std::unordered_set<size_t> &reusedEntries) const;
 
@@ -669,6 +700,19 @@ private:
   void destrashEntry(size_t entryID);
 
 private:
+  struct EntryDescriptor final {
+    EntryDescriptor():
+        prev(normalOrderID),
+        next(normalOrderID),
+        depth(invalidID),
+        weight(0.0) {}
+
+    size_t prev;
+    size_t next;
+    size_t depth;
+    float weight;
+  };
+
   static constexpr size_t invalidID = static_cast<size_t>(-1);
 
   static constexpr size_t normalOrderID = invalidID - 1;
@@ -678,8 +722,8 @@ private:
   uint16_t nIn;
   uint16_t nOut;
 
-  /// Context.
   std::vector<Subnet::Entry> entries;
+  bool isDisassembled{false};
 
   std::vector<EntryDescriptor> desc;
   std::vector<std::pair<size_t, size_t>> depthBounds;

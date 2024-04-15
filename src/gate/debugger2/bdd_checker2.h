@@ -9,7 +9,6 @@
 #pragma once
 #include "base_checker2.h"
 #include "gate/model2/utils/subnet_to_bdd.h"
-#include "miter2.h"
 
 namespace eda::gate::debugger2 {
 
@@ -22,11 +21,9 @@ friend class util::Singleton<BddChecker2>;
 
 public:
   /**
-   * @copydoc BaseChecker2::equivalent
+   * @copydoc BaseChecker2::isSat
    */
-  CheckerResult equivalent(const Subnet &lhs,
-                           const Subnet &rhs,
-                           const CellToCell &gmap) const override;
+  CheckerResult isSat(const SubnetID id) const override;
 
 private:
   BddChecker2() {}

@@ -6,9 +6,6 @@ project(UtopiaTest VERSION 0.0)
 
 set(TEST_TARGET utest)
 
-# Karatsuba multiplier needed for some tests.
-set(MULGEN_TARGET mulgen)
-
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 # Check if the 'gtest' target has been already imported (e.g., by LLVM).
@@ -38,8 +35,8 @@ add_executable(${TEST_TARGET}
   gate/debugger2/miter2_test.cpp
   gate/debugger2/register_sweep_test.cpp
   gate/debugger2/sat_checker2_test.cpp
-  gate/debugger2/register_sweep_test.cpp
   gate/debugger2/seq_sweep_test.cpp
+  gate/debugger2/synth_lec_test2.cpp
   gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp
@@ -54,6 +51,7 @@ add_executable(${TEST_TARGET}
   gate/model2/subnet_cnf_encoder_test.cpp
   gate/model2/subnet_depth_test.cpp
   gate/model2/subnet_test.cpp
+  gate/model2/utils/bdd_dnf_test.cpp
   gate/model2/utils/subnet_truth_table_test.cpp
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/benchmark_optimizer_test.cpp
@@ -71,6 +69,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
   gate/optimizer/util_test.cpp
+  gate/optimizer2/area_optimizer_test.cpp
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
   gate/optimizer2/npndb_test.cpp
@@ -118,7 +117,9 @@ add_executable(${TEST_TARGET}
   gate/techmapper/strategy/simple_delay_test.cpp
   gate/transformer/bdd_test.cpp
   gate/transformer/mutator_test.cpp
-  gate/translator/fir_to_model2/basic_examples.cpp
+  gate/translator/fir/fir_model2_test.cpp
+  gate/translator/verilog_to_fir/yosys_converter_firrtl_test.cpp
+  gate/translator/verilog_to_model2/yosys_converter_model2_tests.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp
   rtl/library/arithmetic_test.cpp

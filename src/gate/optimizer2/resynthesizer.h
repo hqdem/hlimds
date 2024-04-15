@@ -10,6 +10,10 @@
 
 #include "gate/model2/subnet.h"
 #include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/optimizer2/reconvergence_cut.h"
+#include "gate/optimizer2/subnet_iterator.h"
+#include "gate/optimizer2/synthesis/akers.h"
+#include "gate/optimizer2/synthesis/isop.h"
 #include "gate/optimizer2/synthesizer.h"
 
 #include "kitty/dynamic_truth_table.hpp"
@@ -21,13 +25,17 @@ namespace eda::gate::optimizer2 {
 /// Resynthesizer interface: Subnet -> Subnet.
 class ResynthesizerBase {
 public:
-  using SubnetID = eda::gate::model::SubnetID;
+  using SubnetFragment = SubnetIteratorBase::SubnetFragment;
+  using SubnetID       = eda::gate::model::SubnetID;
 
   /// Resynthesizes the given subnet.
   /// Returns the identifier of the newly constructed subnet or OBJ_NULL_ID.
   virtual SubnetID resynthesize(SubnetID subnetID) const = 0;
+  virtual SubnetID resynthesize(const SubnetFragment &sf) const {
+    return resynthesize(sf.subnetID);
+  }
 
-  virtual ~ResynthesizerBase() =  default;
+  virtual ~ResynthesizerBase() = default;
 };
 
 template<typename IR>

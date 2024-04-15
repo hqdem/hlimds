@@ -13,9 +13,8 @@ add_library(Gate OBJECT
   debugger/symexec.cpp
   debugger2/base_checker2.cpp
   debugger2/bdd_checker2.cpp
-  debugger2/miter2.cpp
-  debugger2/seq_checker.cpp
   debugger2/rnd_checker2.cpp
+  debugger2/seq_checker.cpp
   model/gate.cpp
   model/gnet.cpp
   model/gsymbol.cpp
@@ -31,6 +30,7 @@ add_library(Gate OBJECT
   model2/net.cpp
   model2/printer/printer.cpp
   model2/subnet.cpp
+  model2/utils/bdd_dnf.cpp
   model2/utils/subnet_checking.cpp
   model2/utils/subnet_to_bdd.cpp
   model2/utils/subnet_truth_table.cpp
@@ -62,6 +62,8 @@ add_library(Gate OBJECT
   optimizer/truthtable.cpp
   optimizer/util.cpp
   optimizer/walker.cpp
+  optimizer2/area_resynthesizer.cpp
+  optimizer2/area_subnet_iterator.cpp
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
   optimizer2/npndb.cpp
@@ -74,6 +76,7 @@ add_library(Gate OBJECT
   optimizer2/synthesis/cascade.cpp
   optimizer2/synthesis/de_micheli.cpp
   optimizer2/synthesis/dsd_to_subnet.cpp
+  optimizer2/synthesis/isop.cpp
   optimizer2/synthesis/reed_muller.cpp
   optimizer2/synthesis/ternary_bi_clique.cpp
   optimizer2/synthesis/unitized_table.cpp
@@ -110,10 +113,12 @@ add_library(Gate OBJECT
   transformer/hmetis.cpp
   transformer/mutator/mutator.cpp
   transformer/mutator/mutator_visitor.cpp
-  translator/fir_to_model2/fir_to_model2.cpp
-  translator/fir_to_model2/fir_to_model2_wrapper.cpp
+  translator/fir/fir_model2.cpp
+  translator/verilog/verilog_model2.cpp
   translator/firrtl.cpp
-  translator/yosys_converter_firrtl.cpp)
+  translator/yosys_converter_firrtl.cpp
+  translator/model2.cpp
+  translator/yosys_converter_model2.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 
 target_include_directories(Gate

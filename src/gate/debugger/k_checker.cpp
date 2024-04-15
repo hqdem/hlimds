@@ -487,6 +487,10 @@ BDD KChecker::getBddFromVertex(std::shared_ptr<Vertex> vOut, bool left,
   return bdd;
 }
 
+BDDClass KChecker::getBddFromVertex(std::shared_ptr<Vertex> vOut, int level) {
+  return vOut->bdd.at(level);
+}
+
 bool KChecker::equalOutputs(std::shared_ptr<Vertex> v1,
                             std::shared_ptr<Vertex> v2) {
   int maxLevel = std::min(v1->bdd.size(), v1->bdd.size());
@@ -592,6 +596,7 @@ void KChecker::checkEquivalenceSingle(std::shared_ptr<Vertex> v1,
     return;
   }
 
+  std::vector<std::vector<std::shared_ptr<Vertex>>> vertexVector;
   if (withCuts) {
     for (auto it = mergedVertices.begin(); it != mergedVertices.end(); ++it) {
       std::shared_ptr<Vertex> c = nullptr;
@@ -605,12 +610,21 @@ void KChecker::checkEquivalenceSingle(std::shared_ptr<Vertex> v1,
       int level = cLevel(c);
       bdd.storeLevelAtBdd(level);
       putOnHeap(bdd);
+      size_t size = level + 1;
+      if (vertexVector.size() < size) {
+        vertexVector.resize(level + 1);
+      }
+      vertexVector[level].push_back(c);
     }
   } else {
     for (std::shared_ptr<Vertex> i : primaryInputs) {
       BDDClass bdd(mgr.bddVar());
       bdd.storeVertexAtBdd(i);
       putOnHeap(bdd);
+      if (vertexVector.empty()) {
+        vertexVector.resize(1);
+      }
+      vertexVector[0].push_back(i);
     }
   }
 
@@ -627,6 +641,9 @@ void KChecker::checkEquivalenceSingle(std::shared_ptr<Vertex> v1,
         BDD bddLeft = getBddFromVertex(vOut, true, level);
         BDD bddRight = getBddFromVertex(vOut, false, level);
         BDDClass bddRes(bddLeft * bddRight);
+        for (std::shared_ptr<Vertex> elem : vertexVector[level]) {
+          bddRes.cutPoints.push_back(elem);
+        }
 
         std::shared_ptr<Vertex> vRes = getVertexFromBdd(bddRes.bddValue);
         if (vRes != nullptr) {
@@ -651,6 +668,66 @@ void KChecker::checkEquivalenceSingle(std::shared_ptr<Vertex> v1,
   result.emplace(CheckerResult::UNKNOWN);
 }
 
+void KChecker::eliminateFalseNegatives() {
+  for (const auto &output : outputsBinding) {
+    std::shared_ptr<Vertex> v1 = getPrimaryOutput(output.first);
+    std::shared_ptr<Vertex> v2 = getPrimaryOutput(output.second);
+
+    eliminateFalseNegativesSingle(v1, v2);
+    heap.clear();
+    if (getResult().isUnknown()) {
+      break;
+    }
+  }
+}
+
+void KChecker::eliminateFalseNegativesSingle(std::shared_ptr<Vertex> v1,
+                                             std::shared_ptr<Vertex> v2) {
+  for (int i = 0; i < v1->level; i++) {
+    BDDClass bdd = getBddFromVertex(v1, i);
+    putOnHeap(bdd);
+  }
+  for (int i = 0; i < v2->level; i++) {
+    BDDClass bdd = getBddFromVertex(v2, i);
+    putOnHeap(bdd);
+  }
+
+  while (!heap.empty()) {
+    auto bdd = heap.begin();
+    heap.erase(heap.begin());
+    std::shared_ptr<Vertex> v = getVertexFromBdd(bdd);
+    BDDClass tempBdd(*bdd);
+    if (tempBdd.containCutVar) {
+      BDDClass bddVar =
+          tempBdd.cutPoints[0]->bdd.at(tempBdd.cutPoints[0]->level);
+      std::shared_ptr<Vertex> vVar = tempBdd.cutPoints[0];
+      tempBdd.cutPoints.erase(tempBdd.cutPoints.begin());
+      BDD bddFunc = getBddFromVertex(vVar, vVar->level - 1).bddValue;
+      auto index = tempBdd.bddValue.NodeReadIndex();
+      BDDClass bddRes(tempBdd.bddValue.Compose(bddFunc, index));
+      bddRes.cutPoints = tempBdd.cutPoints;
+
+      std::shared_ptr<Vertex> vRes = getVertexFromBdd(bddRes.bddValue);
+      if (vRes != nullptr) {
+        mergeVertices(vRes, v);
+        if (equalOutputs(v1, v2)) {
+          result.emplace(CheckerResult::EQUAL);
+          return;
+        }
+        if (notEqualOutputs(v1, v2)) {
+          result.emplace(CheckerResult::NOTEQUAL);
+          return;
+        }
+      } else {
+        bddRes.storeVertexAtBdd(v);
+        putOnHeap(bddRes);
+      }
+    }
+  }
+
+  result.emplace(CheckerResult::UNKNOWN);
+}
+
 CheckerResult KChecker::equivalent(GNet &lhs, GNet &rhs, const Hints &hints) {
   if (!lhs.isComb() || !rhs.isComb()) {
     return CheckerResult::ERROR;
@@ -663,11 +740,22 @@ CheckerResult KChecker::equivalent(GNet &lhs, GNet &rhs, const Hints &hints) {
     if (!getResult().isUnknown()) {
       return getResult();
     }
+
     cleanMergedVertices();
     if (!mergedVertices.empty()) {
+      size_t mergedBefore = mergedVertices.size();
       result.clear();
       checkEquivalence(true);
-      return getResult();
+      if (!getResult().isUnknown()) {
+        return getResult();
+      }
+
+      if (mergedBefore < mergedVertices.size()) {
+        result.clear();
+        eliminateFalseNegatives();
+        return getResult();
+      }
+      maxBddSize *= step;
     }
     maxBddSize *= step;
   }

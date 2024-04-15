@@ -15,9 +15,11 @@ namespace eda::gate::techmapper {
 
 auto netMapperType = Techmapper::MapperType::SIMPLE_AREA_FUNC;
 
+// TODO Sequential mapper needs repairing
 TEST(TechMapTest, DISABLED_SimpleNet) {
-  NetID mappedSubnetId = simpleNetMapping(netMapperType);
-  //printResults(mappedSubnetId);
+  NetID mappedNetId = simpleNetMapping(netMapperType);
+  std::cout << mappedNetId;
+  //printResults(mappedNetId);
 }
 
 } // namespace eda::gate::techmapper

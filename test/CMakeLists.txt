@@ -72,6 +72,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/area_optimizer_test.cpp
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
+  gate/optimizer2/depth_optimizer_test.cpp
   gate/optimizer2/npndb_test.cpp
   gate/optimizer2/pass_test.cpp
   gate/optimizer2/reconvergence_cut_test.cpp
@@ -87,6 +88,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/synthesis/isop_test.cpp
   gate/optimizer2/synthesis/reed_muller_test.cpp
   gate/parser/graphml_parser_test.cpp
+  gate/parser/graphml_test_utils.cpp
   gate/parser/graphml_to_subnet_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp

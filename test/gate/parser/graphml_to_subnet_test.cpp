@@ -6,13 +6,14 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/parser/graphml_test_utils.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "util/assert.h"
 
+#include "gtest/gtest.h"
+
 #include <filesystem>
 #include <string>
-
-#include "gtest/gtest.h"
 
 using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
 using ParserData          = GraphMlSubnetParser::ParserData;
@@ -32,24 +33,9 @@ bool checkSubnet(const Subnet &subnet, const ParserData &data) {
 }
 
 void parseGraphML(std::string fileName) {
-  uassert(getenv("UTOPIA_HOME"), "UTOPIA_HOME is not set" << std::endl);
-
-  using path = std::filesystem::path;
-
-  fileName += ".bench.graphml";
-
-  const path dir = path("test") / "data" / "gate" / "parser"
-      / "graphml" / "OpenABC" / "graphml_openabcd";
-  const path home = std::string(getenv("UTOPIA_HOME"));
-  const path file = home / dir / fileName;
-
-  uassert(std::filesystem::exists(file.string()),
-                                  "File doesn't exist" << std::endl);
-
-  GraphMlSubnetParser parser;
   ParserData data;
-  const auto &subnet = Subnet::get(parser.parse(file.string(), data));
-  //std::cout << subnet << std::endl;
+  const auto &subnetId = eda::gate::parser::graphml::parse(fileName, data);
+  const auto &subnet = Subnet::get(subnetId);
   EXPECT_TRUE(checkSubnet(subnet, data));
 }
 

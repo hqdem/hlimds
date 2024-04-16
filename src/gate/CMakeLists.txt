@@ -66,6 +66,8 @@ add_library(Gate OBJECT
   optimizer2/area_subnet_iterator.cpp
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
+  optimizer2/depth_replacer.cpp
+  optimizer2/depth_subnet_iterator.cpp
   optimizer2/npndb.cpp
   optimizer2/reconvergence_cut.cpp
   optimizer2/rewriter.cpp

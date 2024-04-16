@@ -12,7 +12,10 @@
 #include "gate/model2/subnet.h"
 #include "gate/optimizer2/reconvergence_cut.h"
 
+#include <iostream>
+#include <map>
 #include <unordered_map>
+#include <vector>
 
 namespace eda::gate::optimizer2 {
 

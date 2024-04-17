@@ -242,7 +242,7 @@ static_assert(sizeof(Subnet) == SubnetID::Size);
 class SubnetBuilder;
 
 /// SubnetBuilder entries bidirectional iterator.
-class EntryIterator final {
+class EntryIterator {
   friend class SubnetBuilder;
 
 public:
@@ -272,7 +272,7 @@ public:
   EntryIterator &operator--();
   EntryIterator operator--(int);
 
-private:
+protected:
   const SubnetBuilder *builder;
   value_type entry;
 };
@@ -548,7 +548,9 @@ public:
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs,
       const std::function<float(const size_t /* index in subnet */)> *getCellWeight = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr);
+      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
+      const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
+      const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
 
   /// Returns the effect of the replacement.
   Effect evaluateReplace(
@@ -699,6 +701,13 @@ private:
   /// Removes the given entry from the strashing map.
   void destrashEntry(size_t entryID);
 
+public:
+  static constexpr size_t invalidID = static_cast<size_t>(-1);
+
+  static constexpr size_t normalOrderID = invalidID - 1;
+  static constexpr size_t lowerBoundID  = invalidID - 2;
+  static constexpr size_t upperBoundID  = invalidID - 3;
+
 private:
   struct EntryDescriptor final {
     EntryDescriptor():
@@ -712,12 +721,6 @@ private:
     size_t depth;
     float weight;
   };
-
-  static constexpr size_t invalidID = static_cast<size_t>(-1);
-
-  static constexpr size_t normalOrderID = invalidID - 1;
-  static constexpr size_t lowerBoundID  = invalidID - 2;
-  static constexpr size_t upperBoundID  = invalidID - 3;
 
   uint16_t nIn;
   uint16_t nOut;

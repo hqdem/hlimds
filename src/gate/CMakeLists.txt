@@ -71,6 +71,7 @@ add_library(Gate OBJECT
   optimizer2/npndb.cpp
   optimizer2/reconvergence_cut.cpp
   optimizer2/rewriter.cpp
+  optimizer2/safe_passer.cpp
   optimizer2/synthesis/abc_npn4.cpp
   optimizer2/synthesis/akers.cpp
   optimizer2/synthesis/algebraic_factor.cpp

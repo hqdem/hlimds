@@ -8,6 +8,7 @@
 
 #include "gate/model2/subnet.h"
 #include "gate/optimizer2/cone_builder.h"
+#include "gate/optimizer2/safe_passer.h"
 
 #include "gtest/gtest.h"
 
@@ -17,6 +18,8 @@
 namespace eda::gate::model {
 
 using ConeBuilder = optimizer2::ConeBuilder;
+using SafePasser = optimizer2::SafePasser;
+using ReverseSafePasser = optimizer2::ReverseSafePasser;
 
 template<typename IterT>
 void printCellsTrav(SubnetBuilder &builder, IterT it, IterT contaiterEnd) {
@@ -33,9 +36,11 @@ void printCellsTrav(SubnetBuilder &builder, IterT it, IterT contaiterEnd) {
 
 void printBidirectCellsTrav(SubnetBuilder &builder) {
   std::cout << "Forward entries traversal:\n";
-  printCellsTrav(builder, builder.begin(), builder.end());
+  printCellsTrav(builder, (SafePasser)builder.begin(),
+                 (SafePasser)builder.end());
   std::cout << "Reverse entries traversal:\n";
-  printCellsTrav(builder, builder.rbegin(), builder.rend());
+  printCellsTrav(builder, (ReverseSafePasser)builder.rbegin(),
+                 (ReverseSafePasser)builder.rend());
 }
 
 bool linksEqual(const Subnet::Link &targetLink, const Subnet::Link &srcLink) {

@@ -13,28 +13,24 @@ namespace eda::gate::optimizer2 {
 void Rewriter::transform(SubnetBuilder &builder) const {
 
   CutExtractor cutExtractor(&builder, k);
-  for (auto iter = builder.begin(); iter != builder.end(); ) {
+  for (SafePasser iter = builder.begin();
+       iter != builder.end() && !builder.getCell(*iter).isOut();
+       ++iter) {
     const auto entryID = *iter;
-    if (builder.getEntry(entryID).cell.isOut()) {
-      iter++;
-      continue;
-    }
     cutExtractor.recomputeCuts(entryID);
-    auto tmpIter = iter;
-    ++tmpIter;
-    rewriteOnNode(builder, entryID, cutExtractor);
-    iter = tmpIter;
+    rewriteOnNode(builder, iter, cutExtractor);
   }
 }
 
 void Rewriter::rewriteOnNode(
     SubnetBuilder &builder,
-    const size_t entryID,
+    SafePasser &iter,
     CutExtractor &cutExtractor) const {
 
+  const size_t entryID = *iter;
   ConeBuilder coneBuilder(&builder);
   const auto &cuts = cutExtractor.getCuts(entryID);
-  int bestMetricValue = 0;
+  int bestMetricValue = INT32_MIN;
   SubnetID bestRhsID = 0;
   std::unordered_map<size_t, size_t> bestRhsToLhs;
 
@@ -65,7 +61,8 @@ void Rewriter::rewriteOnNode(
     cutExtractor.recomputeCuts(entryID);
   };
   if (bestMetricValue > 0) {
-    builder.replace(bestRhsID, bestRhsToLhs, nullptr, &cutRecompute);
+    iter.replace(bestRhsID, bestRhsToLhs, nullptr, &cutRecompute, &cutRecompute,
+                 &cutRecompute);
   }
 }
 

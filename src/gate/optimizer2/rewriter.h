@@ -11,6 +11,7 @@
 #include "gate/model2/object.h"
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/optimizer2/resynthesizer.h"
+#include "gate/optimizer2/safe_passer.h"
 #include "gate/optimizer2/transformer.h"
 
 namespace eda::gate::optimizer2 {
@@ -25,6 +26,7 @@ public:
   using SubnetID = eda::gate::model::SubnetID;
   using LinkList = Subnet::LinkList;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
+  using SafePasser = eda::gate::optimizer2::SafePasser;
   using CutExtractor = eda::gate::optimizer2::CutExtractor;
   using ConeBuilder = eda::gate::optimizer2::ConeBuilder;
   using ResynthesizerBase = eda::gate::optimizer2::ResynthesizerBase;
@@ -49,7 +51,7 @@ public:
 private:
   void rewriteOnNode(
       SubnetBuilder &builder,
-      const size_t entryID,
+      SafePasser &iter,
       CutExtractor &cutExtractor) const;
 
   const ResynthesizerBase &resynthesizer;

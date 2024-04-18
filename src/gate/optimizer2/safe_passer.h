@@ -53,7 +53,7 @@ public:
       const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
 
   /// Clears information about unsafe entries in subnet builder.
-  void finilizePass();
+  void finalizePass();
 
 private:
   SubnetBuilder *builderToTransform;

@@ -87,8 +87,8 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
       }
 
       Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area, perPower};
-      subnetToAttr.emplace_back(subnetID, subnetattr);
-      ttSubnet.emplace_back(model::evaluate(cellType.getSubnet()).at(0), subnetID);
+      subnetToAttr[subnetID] = subnetattr;
+      ttSubnet[model::evaluate(cellType.getSubnet()).at(0)] = subnetID;
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
 
@@ -160,21 +160,16 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
 std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table& tt) const {
   std::vector<SubnetID> ids;
-  for (const auto& pair : ttSubnet) {
-    if (pair.first == tt) {
-      ids.push_back(pair.second);
-    }
+  auto range = ttSubnet.equal_range(tt);
+  for (auto it = range.first; it != range.second; ++it) {
+    ids.push_back(it->second);
   }
   return ids;
+
 }
 
 const Subnetattr &CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
-  for (const auto& pair : subnetToAttr) {
-    if (pair.first == id) {
-      return pair.second;
-    }
-  }
-  throw std::runtime_error("Subnet attr not found");
+  return subnetToAttr.at(id);
 }
 
 std::vector<SubnetID> CellDB::getPatterns() {
@@ -183,15 +178,6 @@ std::vector<SubnetID> CellDB::getPatterns() {
     patterns.push_back(pair.first);
   }
   return patterns;
-}
-
-std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getSubnetsAttr() {
-  return subnetToAttr;
-}
-
-std::vector<std::pair<kitty::dynamic_truth_table,
-                      SubnetID>> &CellDB::getTTSubnet() {
-  return ttSubnet;
 }
 
 const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFF() const {

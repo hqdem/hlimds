@@ -6,8 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#pragma once
-
+#include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/depth_replacer.h"
 
 namespace eda::gate::optimizer2 {

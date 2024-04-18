@@ -13,7 +13,6 @@
 #include "gate/optimizer2/reconvergence_cut.h"
 #include "gate/optimizer2/subnet_iterator.h"
 #include "gate/optimizer2/synthesis/akers.h"
-#include "gate/optimizer2/synthesis/dsd_to_subnet.h"
 #include "gate/optimizer2/synthesis/isop.h"
 #include "gate/optimizer2/synthesizer.h"
 

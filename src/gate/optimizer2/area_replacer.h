@@ -42,8 +42,8 @@ public:
     subnetBuilder.replace(rhs, lhs.entryMap);
   }
  
-  void finalize() {};
+  void finalize() override {};
 };
 
-} // namspace eda::gate::optimizer2
+} // namespace eda::gate::optimizer2
 

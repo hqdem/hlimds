@@ -10,7 +10,6 @@
 
 #include "gate/model2/subnet.h"
 #include "gate/optimizer2/subnet_iterator.h"
-#include "gate/optimizer2/synthesis/isop.h"
 
 namespace eda::gate::optimizer2 {
 

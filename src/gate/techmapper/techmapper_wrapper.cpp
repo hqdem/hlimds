@@ -9,15 +9,18 @@
 #include "gate/model2/printer/printer.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/techmapper/techmapper_wrapper.h"
+#include "gate/techmapper/utils/get_statistics.h"
+#include "gate/techmapper/utils/get_tech_attrs.h"
 
 namespace eda::gate::techmapper {
 
-  using Subnet     = eda::gate::model::Subnet;
-  using SubnetID   = eda::gate::model::SubnetID;
+  using ModelPrinter = eda::gate::model::ModelPrinter;
+  using Subnet       = eda::gate::model::Subnet;
+  using SubnetID     = eda::gate::model::SubnetID;
 
   void printVerilog(SubnetID subnet, std::string fileName) {
-    eda::gate::model::ModelPrinter& verilogPrinter =
-        eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
+    ModelPrinter& verilogPrinter =
+        ModelPrinter::getPrinter(ModelPrinter::VERILOG);
     std::ofstream outFile(fileName);
     verilogPrinter.print(outFile, Subnet::get(subnet), "techmappedNet");
     outFile.close();
@@ -29,24 +32,39 @@ namespace eda::gate::techmapper {
     std::ifstream check(name);
     if (!check) {
       check.close();
-      std::cerr << "File "<< name << " is not found!" << std::endl;
+      std::cerr << "File " << name << " is not found!" << std::endl;
       return -1;
     }
     check.close();
 
-    const std::string libertyPath = std::string(getenv("UTOPIA_HOME"))
-                                  + "/test/data/gate/techmapper";
+    // TODO: it should be an option
+    const std::string techLib = std::string(getenv("UTOPIA_HOME")) +
+                                "/test/data/gate/techmapper" +
+                                "/sky130_fd_sc_hd__ff_100C_1v65.lib";
+    // TODO: it should be an option too
     SDC sdc{100000000, 10000000000};
     const auto& mapperType = config.type;
+    Techmapper techmapper(techLib, mapperType, sdc);
+    auto startTime = std::chrono::high_resolution_clock::now();
 
-    Techmapper techmapper(libertyPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib",
-                          mapperType, sdc);
-    std::cout << "Start to process "<< name << std::endl;
+    std::cout << "Start to process " << name << std::endl;
+    std::cout << "Using Liberty library " << techLib << std::endl;
+
     eda::gate::parser::graphml::GraphMlSubnetParser parser;
-    
     SubnetID subnetID = parser.parse(name);
     SubnetID mappedSubnetID = techmapper.techmap(subnetID);
+
     printVerilog(mappedSubnetID, config.outNetFileName);
+    printStatistics(mappedSubnetID, techLib);
+    std::cout << "Esimated area: " << getArea(mappedSubnetID) <<
+                 " um^2" << std::endl;
+
+    auto finishTime = std::chrono::high_resolution_clock::now();
+    auto processingTime = finishTime - startTime;
+    std::cout << "Processing time: " <<
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+      processingTime).count() << " ms" << std::endl;
+
     return 0;
   }
-} // namespace  eda::gate::techmapper
+} // namespace eda::gate::techmapper

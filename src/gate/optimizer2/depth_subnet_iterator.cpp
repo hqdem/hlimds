@@ -81,7 +81,7 @@ DepthSubnetIterator::SubnetFragment
 
   while (true) {
     bool findFlag = false;
-    for (auto &i: leaves) {
+    for (const auto &i: leaves) {
       const auto &links = subnetBuilder.getLinks(i);
       const auto &cell = subnetBuilder.getCell(i);
 
@@ -97,7 +97,7 @@ DepthSubnetIterator::SubnetFragment
         leaves.erase(i);
         inners.insert(i);
         bool allConsts = true;
-        for (auto &j: links) {
+        for (const auto &j: links) {
           auto id = j.idx;
           const auto &entry = subnetBuilder.getEntry(id);
           const auto &cell = entry.cell;

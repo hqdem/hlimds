@@ -19,6 +19,22 @@
 
 namespace eda::gate::techmapper {
 
+struct DTTHash {
+  std::size_t operator()(const kitty::dynamic_truth_table& dtt) const {
+    std::size_t hash = 0;
+    for (auto block : dtt) {
+      hash ^= std::hash<uint64_t>{}(block) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    }
+    return hash;
+  }
+};
+
+struct DTTEqual {
+  bool operator()(const kitty::dynamic_truth_table& lhs, const kitty::dynamic_truth_table& rhs) const {
+    return kitty::equal(lhs, rhs);
+  }
+};
+
 class CellDB final {
   using CellTypeID = eda::gate::model::CellTypeID;
   using SubnetID = eda::gate::model::SubnetID;
@@ -28,10 +44,6 @@ public:
          const std::vector<CellTypeID> &cellTypeFFIDs,
          const std::vector<CellTypeID> &cellTypeFFrsIDs,
          const std::vector<CellTypeID> &cellTypeLatchIDs);
-
-  std::vector<std::pair<SubnetID, Subnetattr>> &getSubnetsAttr();
-  std::vector<std::pair<kitty::dynamic_truth_table,
-      SubnetID>> &getTTSubnet();
 
   std::vector<SubnetID> getPatterns();
 
@@ -48,8 +60,8 @@ private:
   std::vector<std::pair<SubnetID, Subnetattr>> DFFrs;
   std::vector<std::pair<SubnetID, Subnetattr>> Latch;
 
-  std::vector<std::pair<SubnetID, Subnetattr>> subnetToAttr;
-  std::vector<std::pair<kitty::dynamic_truth_table, SubnetID>> ttSubnet;
+  std::unordered_map<kitty::dynamic_truth_table, SubnetID, DTTHash, DTTEqual> ttSubnet;
+  std::unordered_map<SubnetID, Subnetattr> subnetToAttr;
 
 };
 } // namespace eda::gate::techmapper

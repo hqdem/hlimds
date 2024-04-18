@@ -96,7 +96,7 @@ void SafePasser::replace(
                               onEqualDepth, onGreaterDepth);
 }
 
-void SafePasser::finilizePass() {
+void SafePasser::finalizePass() {
   isNewEntry.clear();
   saveRoot = SubnetBuilder::invalidID;
   saveNext = SubnetBuilder::invalidID;

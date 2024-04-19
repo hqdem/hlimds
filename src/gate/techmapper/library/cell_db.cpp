@@ -8,9 +8,8 @@
 
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/techmapper/library/cell_db.h"
+#include "gate/techmapper/library/check_lib/aig/check_lib_for_aig.h"
 #include "gate/techmapper/library/liberty_manager.h"
-
-#include <fstream>
 
 namespace eda::gate::techmapper {
 
@@ -156,6 +155,16 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
   }
   std::cout << "The number of extracted from Liberty Subnets is " <<
     count << std::endl; // TODO
+
+  AIGCheckerLiberty aigCheckerLiberty;
+  std::vector<std::string> missing = aigCheckerLiberty.checkLiberty(ttSubnet);
+  if (missing.size() != 0) {
+    std::cout << "Missing expressions:" << std::endl;
+    for (const auto &expr: missing) {
+      std::cout << expr << std::endl;
+    }
+    assert(missing.size() == 0);
+  }
 }
 
 std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table& tt) const {
@@ -165,7 +174,6 @@ std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table&
     ids.push_back(it->second);
   }
   return ids;
-
 }
 
 const Subnetattr &CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
@@ -183,9 +191,11 @@ std::vector<SubnetID> CellDB::getPatterns() {
 const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFF() const {
   return DFF;
 }
+
 const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFrs() const {
   return DFFrs;
 }
+
 const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getLatch() const {
   return Latch;
 }

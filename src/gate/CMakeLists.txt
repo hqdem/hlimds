@@ -98,18 +98,19 @@ add_library(Gate OBJECT
   printer/vcd.cpp
   simulator/simulator.cpp
   simulator2/simulator.cpp
-  techmapper/library/cell.cpp
-  techmapper/library/cell_db.cpp
+  techmapper/assembly.cpp
+  techmapper/comb_mapper/comb_mapper.cpp
   techmapper/comb_mapper/cut_based/area_recovery/area_recovery.cpp
+  techmapper/comb_mapper/cut_based/cut_based_mapper.cpp
   techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.cpp
   techmapper/comb_mapper/cut_based/genetic/genetic_mapper.cpp
   techmapper/comb_mapper/cut_based/power_map/power_map.cpp
   techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.cpp
   techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.cpp
-  techmapper/comb_mapper/cut_based/cut_based_mapper.cpp
-  techmapper/comb_mapper/comb_mapper.cpp
+  techmapper/library/cell.cpp
+  techmapper/library/cell_db.cpp
+  techmapper/library/check_lib/aig/check_lib_for_aig.cpp
   techmapper/seq_mapper/sequential_mapper.cpp
-  techmapper/assembly.cpp
   techmapper/techmapper.cpp
   techmapper/techmapper_wrapper.cpp
   transformer/bdd.cpp

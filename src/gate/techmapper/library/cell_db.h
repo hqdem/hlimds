@@ -5,14 +5,14 @@
 // Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #pragma once
 
 #include "gate/model2/celltype.h"
 #include "gate/model2/subnet.h"
 #include "gate/techmapper/library/subnetattr.h"
 
-#include "kitty/print.hpp"
-
+#include <kitty/print.hpp>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -62,6 +62,5 @@ private:
 
   std::unordered_map<kitty::dynamic_truth_table, SubnetID, DTTHash, DTTEqual> ttSubnet;
   std::unordered_map<SubnetID, Subnetattr> subnetToAttr;
-
 };
 } // namespace eda::gate::techmapper

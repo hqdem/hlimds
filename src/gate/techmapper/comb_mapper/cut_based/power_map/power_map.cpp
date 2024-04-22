@@ -210,6 +210,7 @@ void PowerMap::globalSwitchAreaRecovery(
           // }
         }
       }
+      (*bestReplacementMap)[entryIndex].entryIDxs.clear();
       for (const auto &in : bestCut.entryIdxs) {
         (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
       }

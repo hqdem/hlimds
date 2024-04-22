@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/optimizer2/replacer.h"
+#include "gate/optimizer2/safe_passer.h"
 
 namespace eda::gate::optimizer2 {
 
@@ -17,11 +18,17 @@ namespace eda::gate::optimizer2 {
  */
 class AreaReplacer : public ReplacerBase {
 public:
+  using SafePasser = eda::gate::optimizer2::SafePasser;
   /**
    * @brief Area optimizer constructor for subnet builder.
    * @param subnetBuilder Subnet for replacing.
+   * @param iter An iterator for the subnet.
+   * @param delta Acceptable percentage of size deterioration.
    */
-  AreaReplacer(SubnetBuilder &subnetBuilder) : ReplacerBase(subnetBuilder) {}
+  AreaReplacer(SubnetBuilder &subnetBuilder,
+               SafePasser &iter,
+               double delta = 0.0)
+      : ReplacerBase(subnetBuilder), iter(iter), delta(delta) {}
 
   void replace(SubnetFragment lhs, SubnetID rhs) override {
     const auto &lhsSubnet = Subnet::get(lhs.subnetID);
@@ -35,15 +42,22 @@ public:
     }
 
     const auto gain = subnetBuilder.evaluateReplace(rhs, lhs.entryMap).size;
-    if (gain <= 0) {
-      return;
+    if (gain < 0) {
+      const auto &lhsSubnet = Subnet::get(lhs.subnetID);
+      const double lhsSize = lhsSubnet.size();
+      if ((-gain) / lhsSize * 100 > delta) {
+        return;
+      }
     }
 
-    subnetBuilder.replace(rhs, lhs.entryMap);
+    iter.replace(rhs, lhs.entryMap);
   }
  
-  void finalize() override {};
+  void finalize() override { };
+
+private:
+  SafePasser &iter;
+  double delta;
 };
 
 } // namespace eda::gate::optimizer2
-

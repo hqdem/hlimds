@@ -147,6 +147,7 @@ SubnetIteratorBase::SubnetFragment AreaSubnetIterator::next() {
   SubnetFragment sf;
   sf.subnetID = model::OBJ_NULL_ID;
 
+  ++iter;
   const auto rootId = *iter;
   if (subnetBuilder.getCell(rootId).isOut()) {
     return sf;
@@ -154,8 +155,6 @@ SubnetIteratorBase::SubnetFragment AreaSubnetIterator::next() {
 
   auto leaves = getReconvCut(subnetBuilder, rootId, nIn);
   sf.subnetID = getMffc(subnetBuilder, rootId, nIn, leaves, sf.entryMap);
-
-  ++iter;
 
   return sf;
 }

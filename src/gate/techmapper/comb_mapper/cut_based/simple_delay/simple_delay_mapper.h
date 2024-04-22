@@ -27,7 +27,6 @@ private:
 
   float findMaxArrivalTime(const std::unordered_set<size_t> &entryIdxs);
   void saveBest(EntryIndex entryIndex,
-                const optimizer2::CutExtractor::CutsList &cutsList,
-                Library &lib);
+                const optimizer2::CutExtractor::CutsList &cutsList);
 };
 } // namespace eda::gate::techmapper

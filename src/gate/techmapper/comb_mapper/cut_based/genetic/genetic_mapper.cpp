@@ -339,6 +339,7 @@ void GeneticMapper::saveInBestMap() {
     replacement.isIN = bestGen->isIn;
     replacement.isOUT = bestGen->isOut;
     replacement.subnetID = bestGen->subnetID;
+    replacement.entryIDxs.clear();
     for (const auto &in : bestGen->entryIdxs) {
       replacement.entryIDxs.push_back(in);
     }

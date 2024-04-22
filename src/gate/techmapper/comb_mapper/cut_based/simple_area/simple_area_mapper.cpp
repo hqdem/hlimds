@@ -12,9 +12,9 @@
 #include "gate/optimizer2/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.h"
 
-namespace eda::gate::techmapper {
-
 using Subnet = eda::gate::model::Subnet;
+
+namespace eda::gate::techmapper {
 
 void SimpleAreaMapper::findBest() {
   Subnet &subnet = Subnet::get(subnetID);
@@ -23,7 +23,7 @@ void SimpleAreaMapper::findBest() {
     areaVec[i] = BestReplacementArea{0,{}};
   }
 
-  eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
+  model::Array<Subnet::Entry> entries = subnet.getEntries();
   for (uint64_t entryIndex = 0; entryIndex < std::size(entries);
        entryIndex++) {
     auto cell = entries[entryIndex].cell;
@@ -31,7 +31,6 @@ void SimpleAreaMapper::findBest() {
     if (!(cell.isAnd() || cell.isBuf())) {
       addNotAnAndToTheMap(entryIndex, cell);
     } else {
-      // Save best tech cells subnet to bestReplMap
       saveBest(entryIndex, cutExtractor->getCuts(entryIndex));
     }
     entryIndex += cell.more;
@@ -60,49 +59,41 @@ float SimpleAreaMapper::calculateArea(
   return area;
 }
 
-void SimpleAreaMapper::saveBest(
-    EntryIndex entryIndex,
+void SimpleAreaMapper::saveBest( EntryIndex entryIndex,
     const optimizer2::CutExtractor::CutsList &cutsList) {
-  optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
-  BestReplacement bestSimpleReplacement{};
+
+  SubnetID bestTechCellSubnetID;
+  optimizer2::CutExtractor::Cut bestCut;
   float bestArea = MAXFLOAT;
 
-  assert(cutsList.size() > 1);
+  optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
 
-  // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.count(entryIndex) != 1) {
-
-      SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-
       auto truthTable = eda::gate::model::evaluate(
-          model::Subnet::get(coneSubnetID));
+          Subnet::get(coneBuilder.getCone(cut).subnetID)).at(0);
 
-      for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable.at(0))) {
-        auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
-
-        float area = calculateArea(cut.entryIdxs, entryIndex)
-                     + currentAttr.area;
+      for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable)) {
+        float area = calculateArea(cut.entryIdxs, entryIndex) +
+            cellDB->getSubnetAttrBySubnetID(currentSubnetID).area;
 
         if (area < bestArea) {
           bestArea = area;
-          bestSimpleReplacement.subnetID = currentSubnetID;
-          bestSimpleReplacement.entryIDxs.clear();
-          for (const auto &in : cut.entryIdxs) {
-            bestSimpleReplacement.entryIDxs.push_back(in);
-          }
+          bestTechCellSubnetID = currentSubnetID;
+          bestCut = cut;
         }
       }
     }
   }
 
   assert(bestArea != MAXFLOAT);
+  assert(!bestCut.entryIdxs.empty());
 
-  areaVec[entryIndex] = {bestArea, bestSimpleReplacement.entryIDxs};
-  if (bestSimpleReplacement.entryIDxs.empty()) {
-    std::cout << entryIndex << std::endl;
+  (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
+  for (const auto &in : bestCut.entryIdxs) {
+    (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
   }
-  assert(!bestSimpleReplacement.entryIDxs.empty());
-  (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;
+
+  areaVec[entryIndex] = {bestArea, (*bestReplacementMap)[entryIndex].entryIDxs};
 }
 } // namespace eda::gate::techmapper

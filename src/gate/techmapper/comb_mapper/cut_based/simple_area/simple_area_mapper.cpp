@@ -87,6 +87,7 @@ void SimpleAreaMapper::saveBest(
         if (area < bestArea) {
           bestArea = area;
           bestSimpleReplacement.subnetID = currentSubnetID;
+          bestSimpleReplacement.entryIDxs.clear();
           for (const auto &in : cut.entryIdxs) {
             bestSimpleReplacement.entryIDxs.push_back(in);
           }

@@ -116,6 +116,7 @@ void SimpleDelayMapper::saveBest(
         if (arrivalTime < bestArrivalTime) {
           bestArrivalTime = arrivalTime;
           bestSimpleReplacement.subnetID = currentSubnetID;
+          bestSimpleReplacement.entryIDxs.clear();
           for (const auto &in : cut.entryIdxs) {
             bestSimpleReplacement.entryIDxs.push_back(in);
           }

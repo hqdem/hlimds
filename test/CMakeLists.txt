@@ -115,6 +115,7 @@ add_executable(${TEST_TARGET}
   gate/techmapper/strategy/delay_estmt/wlm_test.cpp
   gate/techmapper/strategy/genetic_test.cpp
   gate/techmapper/strategy/net_mapping_test.cpp
+  gate/techmapper/strategy/power_test.cpp
   gate/techmapper/strategy/simple_area_test.cpp
   gate/techmapper/strategy/simple_delay_test.cpp
   gate/transformer/bdd_test.cpp

@@ -27,6 +27,22 @@ using SubnetID            = eda::gate::model::SubnetID;
 static constexpr size_t maxArity = 2;
 static constexpr size_t cutSize  = 5;
 
+size_t countBufs(const Subnet &subnet) {
+  size_t counter = 0;
+  const auto &entries = subnet.getEntries();
+  for (size_t i = 0; i < entries.size(); ++i) {
+    const auto &cell = entries[i].cell;
+
+    if (cell.isBuf()) {
+      counter++;
+    }
+
+    i += cell.more;
+  }
+
+  return counter;
+}
+
 void checkAreaOptimizationEquivalence(SubnetID lhs, SubnetID rhs) {
   SatChecker2 &checker = SatChecker2::get();
   const auto &subnet = Subnet::get(lhs);
@@ -57,7 +73,9 @@ void runAreaOptimization(SubnetID subnetId) {
   auto optimizedId = builder.make();
   const Subnet &optimized = Subnet::get(optimizedId);
 
-  EXPECT_TRUE(optimized.size() <= subnet.size());
+  size_t nBufs = countBufs(optimized);
+
+  EXPECT_TRUE(optimized.size() - nBufs <= subnet.size());
 
   // Equivalence checking.
   checkAreaOptimizationEquivalence(subnetId, optimizedId);

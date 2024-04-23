@@ -120,18 +120,6 @@ struct Database final {
   std::vector<Node> aig;
   /// Maps NPN-canonical truth tables to the links in the builder.
   std::unordered_map<uint16_t, Entry> map;
-
-#ifdef NPN4_USAGE_STATS
-  uint32_t count[1 << (1 << Database::k)]{0};
-
-  void printNpn4UsageStats() {
-    for (size_t i = 0; i < npn4Num; ++i) {
-      std::cout << std::fill('0') << std::setw(4)
-                << std::hex << npn4[i] << ": "
-                << std::dec << count[npn4[i]] << std::endl;
-    }
-  }
-#endif // NPN4_USAGE_STATS
 };
 
 Database::Database() {
@@ -204,10 +192,6 @@ model::SubnetID Database::find(const TruthTable &tt) const {
 
   const auto npnCanon = kitty::exact_npn_canonization(ttk);
   const auto npnTable = static_cast<uint16_t>(*std::get<0>(npnCanon).begin());
-
-#ifdef NPN4_USAGE_STATS
-  count[npnTable]++;
-#endif // NPN4_USAGE_STATS
 
   const auto iterator = map.find(npnTable);
   if (iterator == map.end()) {
@@ -290,6 +274,10 @@ static Database database;
 // AbcNpn4Synthesizer
 //===----------------------------------------------------------------------===//
 
+#ifdef NPN4_USAGE_STATS
+  static uint32_t count[1 << (1 << Database::k)]{0};
+#endif // NPN4_USAGE_STATS
+
 model::SubnetID AbcNpn4Synthesizer::synthesize(
     const TruthTable &tt, uint16_t maxArity) const {
 
@@ -300,6 +288,15 @@ model::SubnetID AbcNpn4Synthesizer::synthesize(
       std::vector<SubnetID>(1 << (1 << 3)),
       std::vector<SubnetID>(1 << (1 << 4)),
   };
+
+#ifdef NPN4_USAGE_STATS
+  const TruthTable ttk = tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
+
+  const auto npnCanon = kitty::exact_npn_canonization(ttk);
+  const auto npnTable = static_cast<uint16_t>(*std::get<0>(npnCanon).begin());
+
+  count[npnTable]++;
+#endif // NPN4_USAGE_STATS
 
   const auto n = tt.num_vars();
 
@@ -317,7 +314,11 @@ model::SubnetID AbcNpn4Synthesizer::synthesize(
 
 #ifdef NPN4_USAGE_STATS
 void AbcNpn4Synthesizer::printNpn4UsageStats() {
-  database.printNpn4UsageStats();
+  for (size_t i = 0; i < npn4Num; ++i) {
+    std::cout << std::setfill('0') << std::setw(4)
+              << std::hex << npn4[i] << ": "
+              << std::dec << count[npn4[i]] << std::endl;
+  }
 }
 #endif // NPN4_USAGE_STATS
 

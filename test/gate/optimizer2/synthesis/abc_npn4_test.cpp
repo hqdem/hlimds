@@ -28,9 +28,9 @@ inline void testHexString(uint16_t k, const std::string &hex) {
   if (subnetID != eda::gate::model::OBJ_NULL_ID) {
     const auto &subnet = eda::gate::model::Subnet::get(subnetID);
 
-#ifdef DEBUG
+#ifdef UTOPIA_DEBUG
     std::cout << subnet << std::endl;
-#endif
+#endif // UTOPIA_DEBUG
 
     if (subnet.getInNum() > 0) {
       EXPECT_TRUE(eda::gate::model::utils::equalTruthTables(subnet, func));
@@ -238,21 +238,21 @@ TEST(AbcNpn4Test, AllNpn4Test) {
 
     const auto subnetID = Synthesizer::get().synthesize(func);
 
-#ifdef DEBUG
+#ifdef UTOPIA_DEBUG
     std::cout << std::setfill('0') << std::setw(w)
               << std::hex << npnTable << std::endl;
-#endif
+#endif // UTOPIA_DEBUG
 
     if (subnetID != eda::gate::model::OBJ_NULL_ID) {
-#ifdef DEBUG
+#ifdef UTOPIA_DEBUG
       const auto &subnet = eda::gate::model::Subnet::get(subnetID);
       std::cout << std::dec << subnet << std::endl;
-#endif
+#endif // UTOPIA_DEBUG
       count++;
     } else {
-#ifdef DEBUG
+#ifdef UTOPIA_DEBUG
       std::cout << "Unsupported" << std::endl << std::endl;
-#endif
+#endif // UTOPIA_DEBUG
     }
   }
 

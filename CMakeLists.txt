@@ -14,8 +14,8 @@ OPTION(UTOPIA_DEBUG "Extended debug printing" OFF) # Disabled by default
 
 if(UTOPIA_DEBUG)
   add_definitions(-DUTOPIA_DEBUG)
-  add_definitions(-DNPN4_USAGE_STATS)
 endif()
+add_definitions(-DNPN4_USAGE_STATS)
 
 set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
 set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt

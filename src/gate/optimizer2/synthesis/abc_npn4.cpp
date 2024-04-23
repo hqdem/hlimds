@@ -6,12 +6,18 @@
 //
 //===----------------------------------------------------------------------===//
 
+#ifdef NPN4_USAGE_STATS
+  #include "gate/optimizer2/npn.h"
+#endif // NPN4_USAGE_STATS
 #include "gate/optimizer2/synthesis/abc_npn4.h"
 
 #include "kitty/kitty.hpp"
 
 #include <cassert>
 #include <cstddef>
+#ifdef NPN4_USAGE_STATS
+  #include <iostream>
+#endif // NPN4_USAGE_STATS
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -20,6 +26,10 @@ extern unsigned short s_RwrPracticalClasses[];
 extern unsigned short s_RwtAigSubgraphs[];
 
 namespace eda::gate::optimizer2 {
+
+//===----------------------------------------------------------------------===//
+// Database
+//===----------------------------------------------------------------------===//
 
 struct Database final {
   using TruthTable = AbcNpn4Synthesizer::TruthTable;
@@ -110,6 +120,18 @@ struct Database final {
   std::vector<Node> aig;
   /// Maps NPN-canonical truth tables to the links in the builder.
   std::unordered_map<uint16_t, Entry> map;
+
+#ifdef NPN4_USAGE_STATS
+  uint32_t count[1 << (1 << Database::k)]{0};
+
+  void printNpn4UsageStats() {
+    for (size_t i = 0; i < npn4Num; ++i) {
+      std::cout << std::fill('0') << std::setw(4)
+                << std::hex << npn4[i] << ": "
+                << std::dec << count[npn4[i]] << std::endl;
+    }
+  }
+#endif // NPN4_USAGE_STATS
 };
 
 Database::Database() {
@@ -182,6 +204,10 @@ model::SubnetID Database::find(const TruthTable &tt) const {
 
   const auto npnCanon = kitty::exact_npn_canonization(ttk);
   const auto npnTable = static_cast<uint16_t>(*std::get<0>(npnCanon).begin());
+
+#ifdef NPN4_USAGE_STATS
+  count[npnTable]++;
+#endif // NPN4_USAGE_STATS
 
   const auto iterator = map.find(npnTable);
   if (iterator == map.end()) {
@@ -258,9 +284,14 @@ model::SubnetID Database::find(const TruthTable &tt) const {
   return builder.make();
 }
 
+static Database database;
+
+//===----------------------------------------------------------------------===//
+// AbcNpn4Synthesizer
+//===----------------------------------------------------------------------===//
+
 model::SubnetID AbcNpn4Synthesizer::synthesize(
     const TruthTable &tt, uint16_t maxArity) const {
-  static Database database;
 
   static std::vector<SubnetID> cache[k + 1] {
       std::vector<SubnetID>(1 << (1 << 0)),
@@ -283,5 +314,11 @@ model::SubnetID AbcNpn4Synthesizer::synthesize(
 
   return (cache[n][index] = database.find(tt));
 }
+
+#ifdef NPN4_USAGE_STATS
+void AbcNpn4Synthesizer::printNpn4UsageStats() {
+  database.printNpn4UsageStats();
+}
+#endif // NPN4_USAGE_STATS
 
 } // namespace eda::gate::optimizer2

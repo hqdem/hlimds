@@ -33,6 +33,10 @@ public:
   SubnetID synthesize(
       const TruthTable &tt, uint16_t maxArity = -1) const override;
 
+#ifdef NPN4_USAGE_STATS
+  void printNpn4UsageStats();
+#endif // NPN4_USAGE_STATS
+
 private:
   AbcNpn4Synthesizer() {}
 };

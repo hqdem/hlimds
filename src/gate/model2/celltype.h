@@ -161,7 +161,8 @@ struct CellProperties {
     commutative(commutative),
     associative(associative),
     regroupable(regroupable),
-    negative(negative) {}
+    negative(negative),
+    reserved(0) {}
 
   /// Cell/soft flags identify the cell kind:
   /// 00: Hard (block w/ unknown structure);
@@ -179,8 +180,7 @@ struct CellProperties {
   unsigned associative   : 1;
   unsigned regroupable   : 1;
   unsigned negative      : 1;
-
-  unsigned reserved : 7;
+  unsigned reserved      : 7;
 };
 #pragma pack(pop)
 

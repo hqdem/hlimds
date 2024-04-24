@@ -17,33 +17,26 @@ unsigned short countSetBits(unsigned long long x) {
                            0x101010101010101UL) >> 56);
 }
 
-CutExtractor::CutExtractor(const Subnet *subnet,
-                           const unsigned int k) :
-    subnet(subnet), builder(nullptr), k(k) {
+CutExtractor::CutExtractor(const Subnet *subnet, const unsigned k) :
+    subnet(subnet),
+    saveSubnetEntries(new model::Array<Entry>(subnet->getEntries())),
+    builder(nullptr), k(k) {
 
-  const auto &entries = subnet->getEntries();
-  entriesCuts.resize(entries.size(), {});
-  for (std::size_t i = 0; i < entries.size(); ++i) {
-    entriesCuts[i] = findCuts(i, entries[i].cell.arity);
-    i += entries[i].cell.more;
+  entriesCuts.resize(saveSubnetEntries->size(), {});
+  for (std::size_t i = 0; i < saveSubnetEntries->size(); ++i) {
+    findCuts(i);
+    i += (*saveSubnetEntries)[i].cell.more;
   }
 };
 
 CutExtractor::CutExtractor(SubnetBuilder *builder, const unsigned k) :
-    subnet(nullptr), builder(builder), k(k) {};
+    subnet(nullptr), saveSubnetEntries(nullptr), builder(builder), k(k) {};
 
 void CutExtractor::recomputeCuts(size_t entryIdx) {
-  uint64_t cellArity;
-  if (builder) {
-    cellArity = builder->getEntry(entryIdx).cell.arity;
-  } else {
-    cellArity = subnet->getEntries()[entryIdx].cell.arity;
-  }
   if (entriesCuts.size() <= entryIdx) {
     entriesCuts.resize(entryIdx + 1);
   }
-  const auto &cuts = findCuts(entryIdx, cellArity);
-  entriesCuts[entryIdx] = cuts;
+  findCuts(entryIdx);
 }
 
 const CutExtractor::CutsList CutExtractor::getCuts(size_t entryIdx) const {
@@ -62,58 +55,71 @@ auto CutExtractor::getCutsEntries(size_t entryIdx) const ->
 
 CutExtractor::LinkList CutExtractor::getLinks(size_t entryID) const {
   if (subnet) {
-    return subnet->getLinks(entryID);
+    //TODO: fixme
+    const auto &cell = (*saveSubnetEntries)[entryID].cell;
+    LinkList links(cell.arity);
+    size_t j = 0;
+    for (; j < cell.arity && j < Subnet::Cell::InPlaceLinks; ++j) {
+      links[j] = cell.link[j];
+    }
+    for (; j < cell.arity; ++j) {
+      const auto k = subnet->getLinkIndices(entryID, j);
+      links[j] = (*saveSubnetEntries)[k.first].link[k.second];
+    }
+    return links;
   }
   return builder->getLinks(entryID);
 }
 
-CutExtractor::CutsList CutExtractor::findCuts(const size_t entryIdx,
-                                              const uint64_t cellArity) const {
-
+void CutExtractor::findCuts(const size_t entryIdx) {
+  const auto &entryLinks = getLinks(entryIdx);
   RawCutsList cuts;
   cuts.push_back({ getOneElemCut(entryIdx), true });
-  if (!cellArity) {
-    return getViable(cuts);
+  if (!entryLinks.size()) {
+    addViableCuts(cuts, entryIdx);
+    return;
   }
   unsigned long long cutsCombinationsN = 1;
-  std::vector<std::size_t> suffCutsCombinationsN(cellArity);
-  for (long long i = cellArity - 1; i >= 0; --i) {
-    cutsCombinationsN *= entriesCuts[getLinks(entryIdx)[i].idx].size();
+  std::vector<std::size_t> suffCutsCombinationsN(entryLinks.size());
+  for (long long i = entryLinks.size() - 1; i >= 0; --i) {
+    cutsCombinationsN *= entriesCuts[entryLinks[i].idx].size();
     suffCutsCombinationsN[i] = cutsCombinationsN;
   }
   for (std::size_t i = 0; i < cutsCombinationsN; ++i) {
-    addCut(entryIdx, cellArity, i, cuts, suffCutsCombinationsN);
+    addCut(entryIdx, i, cuts, suffCutsCombinationsN);
   }
-  return getViable(cuts);
+  addViableCuts(cuts, entryIdx);
 }
 
-void CutExtractor::addCut(const size_t entryIdx,
-                          const uint64_t cellArity,
-                          unsigned long long cutsCombinationIdx,
-                          RawCutsList &addedCuts,
-                          const std::vector<std::size_t> &suffCutsCombN) const {
+void CutExtractor::addCut(
+    const size_t entryIdx,
+    unsigned long long cutsCombinationIdx,
+    RawCutsList &addedCuts,
+    const std::vector<std::size_t> &suffCutsCombN) const {
 
-  bool newCutTooLarge = false;
   Cut newCut;
   newCut.rootEntryIdx = entryIdx;
-  for (std::size_t j = 0; j < cellArity; ++j) {
-    size_t inEntryIdx = getLinks(entryIdx)[j].idx;
+  const auto &entryLinks = getLinks(entryIdx);
+
+  if (countSetBits(getNewCutSign(cutsCombinationIdx,
+                                 entryLinks, suffCutsCombN)) > k) {
+    return;
+  }
+
+  for (std::size_t j = 0; j < entryLinks.size(); ++j) {
+    size_t inEntryIdx = entryLinks[j].idx;
     size_t inEntryCutIdx = cutsCombinationIdx;
-    if (j + 1 != cellArity) {
+    if (j + 1 != entryLinks.size()) {
       inEntryCutIdx = cutsCombinationIdx / suffCutsCombN[j + 1];
       cutsCombinationIdx %= suffCutsCombN[j + 1];
     }
     const Cut &cutToUnite = entriesCuts[inEntryIdx][inEntryCutIdx];
-
-    if (newCut.entryIdxs.size() > k ||
-        countSetBits(newCut.signature | cutToUnite.signature) > k) {
-
-      newCutTooLarge = true;
-      break;
-    }
     newCut.uniteCut(cutToUnite);
+    if (newCut.entryIdxs.size() > k) {
+      return;
+    }
   }
-  if (!newCutTooLarge && checkViable(newCut, addedCuts)) {
+  if (cutNotDominated(newCut, addedCuts)) {
     addedCuts.push_back({ newCut, true });
   }
 }
@@ -124,12 +130,7 @@ auto CutExtractor::getOneElemCut(const size_t entryIdx) const ->
   return Cut(entryIdx, (size_t)1 << (entryIdx % 64), { entryIdx });
 }
 
-bool CutExtractor::checkViable(const Cut &cut,
-                               RawCutsList &cuts) const {
-
-  if (cut.entryIdxs.size() > k) {
-    return false;
-  }
+bool CutExtractor::cutNotDominated(const Cut &cut, RawCutsList &cuts) const {
   for (std::size_t i = 0; i < cuts.size(); ++i) {
     if (cutDominates(cuts[i].first, cut)) {
       return false;
@@ -144,19 +145,20 @@ bool CutExtractor::checkViable(const Cut &cut,
   return true;
 }
 
-CutExtractor::CutsList CutExtractor::getViable(const RawCutsList &cuts) const {
+void CutExtractor::addViableCuts(
+    const RawCutsList &cuts,
+    const size_t entryIdx) {
 
-  CutsList viableCuts;
+  entriesCuts[entryIdx].clear();
   for (const auto &cut : cuts) {
     if (cut.second) {
-      viableCuts.push_back(cut.first);
+      entriesCuts[entryIdx].push_back(cut.first);
     }
   }
-  return viableCuts;
 }
 
 bool CutExtractor::cutDominates(const Cut &cut1, const Cut &cut2) const {
-  if (cut1.entryIdxs.size() > cut2.entryIdxs.size()) {
+  if (cut1.entryIdxs.size() >= cut2.entryIdxs.size()) {
     return false;
   }
   if ((cut1.signature | cut2.signature) != cut2.signature) {
@@ -168,6 +170,26 @@ bool CutExtractor::cutDominates(const Cut &cut1, const Cut &cut2) const {
     }
   }
   return true;
+}
+
+uint64_t CutExtractor::getNewCutSign(
+    unsigned long long cutsCombinationIdx,
+    const LinkList &entryLinks,
+    const std::vector<std::size_t> &suffCutsCombN) const {
+
+  uint64_t newCutSignature = 0;
+
+  for (std::size_t j = 0; j < entryLinks.size(); ++j) {
+    size_t inEntryIdx = entryLinks[j].idx;
+    size_t inEntryCutIdx = cutsCombinationIdx;
+    if (j + 1 != entryLinks.size()) {
+      inEntryCutIdx = cutsCombinationIdx / suffCutsCombN[j + 1];
+      cutsCombinationIdx %= suffCutsCombN[j + 1];
+    }
+    const Cut &cutToUnite = entriesCuts[inEntryIdx][inEntryCutIdx];
+    newCutSignature |= cutToUnite.signature;
+  }
+  return newCutSignature;
 }
 
 } // namespace eda::gate::optimizer2

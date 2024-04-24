@@ -60,7 +60,8 @@ int translateToModel2(const FirrtlConfig &firrtlConfig) {
   for (const auto &cellTypeID : resultNetlist) {
     std::cout << CellType::get(cellTypeID).getNet() << std::endl;
   }
-#endif
+#endif // UTOPIA_DEBUG
+
   // Dump the output net to the '.v' file.
   if (firrtlConfig.debugMode) {
     if (firrtlConfig.outputFileName.empty()) {

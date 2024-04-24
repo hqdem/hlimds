@@ -325,7 +325,7 @@ CheckerResult SatChecker::areEqualCombSat(const std::vector<const GNet*> &nets,
 
  #ifdef UTOPIA_DEBUG
   error(encoder.context(), ibind, obind);
- #endif
+ #endif // UTOPIA_DEBUG
 
   auto &cont = encoder.context();
   std::vector<bool> counterEx;
@@ -372,9 +372,10 @@ void SatChecker::error(Context &context,
                        const GateBinding &ibind,
                        const GateBinding &obind) const {
   bool comma;
+
 #ifdef UTOPIA_DEBUG
   context.dump("miter.cnf");
-#endif
+#endif // UTOPIA_DEBUG
 
   comma = false;
   std::cout << "Inputs: ";

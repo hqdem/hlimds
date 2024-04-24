@@ -114,17 +114,18 @@ void checkEQ(SubnetID origSubnetId, SubnetID mappedSubnetId) {
 }
 
 SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
-  //#ifdef UTOPIA_DEBUG
+
+#ifdef UTOPIA_DEBUG
   std::cout << model::Subnet::get(subnetId) << std::endl;
-  //#endif
+#endif // UTOPIA_DEBUG
 
   LibraryManager::get().loadLibrary(techLib);
   Techmapper techmapper(mapperType, sdc);
   SubnetID mappedSubnet = techmapper.techmap(subnetId);
 
-  //#ifdef UTOPIA_DEBUG
+#ifdef UTOPIA_DEBUG
   std::cout << model::Subnet::get(mappedSubnet) << std::endl;
-  //#endif
+#endif // UTOPIA_DEBUG
 
   EXPECT_TRUE(checkAllCellsMapped(mappedSubnet));
   //checkEQ(subnetId, mappedSubnet);

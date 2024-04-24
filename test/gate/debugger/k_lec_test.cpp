@@ -97,9 +97,10 @@ TEST(KLecTest, TwoInputAndTwoInputOrTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).isUnknown());
+
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
-#endif
+#endif // UTOPIA_DEBUG
 }
 
 TEST(KLecTest, TwoInputAndTwoInputAndTest) {
@@ -112,9 +113,10 @@ TEST(KLecTest, TwoInputAndTwoInputAndTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).equal());
+
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
-#endif
+#endif // UTOPIA_DEBUG
 }
 
 TEST(KLecTest, ThreeInputAndThreeInputAndTest) {
@@ -143,9 +145,10 @@ TEST(KLecTest, ThreeInputAndThreeInputAndTest) {
   Hints hints;
   createHints(*net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, net2, hints).equal());
+
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
-#endif
+#endif // UTOPIA_DEBUG
 }
 
 TEST(KLecTest, SixInputAndSixInputAndTest) {
@@ -158,9 +161,10 @@ TEST(KLecTest, SixInputAndSixInputAndTest) {
   Hints hints;
   createHints(*net1, *net2, hints);
   EXPECT_TRUE(checker.equivalent(*net1, *net2, hints).equal());
+
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
-#endif
+#endif // UTOPIA_DEBUG
 }
 
 TEST(KLecTest, SeveralPrimaryOutputsTest) {
@@ -185,9 +189,10 @@ TEST(KLecTest, SeveralPrimaryOutputsTest) {
   Hints hints;
   createHints(net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(net1, net2, hints).isUnknown());
+
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
-#endif
+#endif // UTOPIA_DEBUG
 }
 
 TEST(KLecTest, SeveralGatesTest) {
@@ -238,9 +243,10 @@ TEST(KLecTest, SeveralGatesTest) {
   Hints hints;
   createHints(net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(net1, net2, hints).equal());
+
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
-#endif
+#endif // UTOPIA_DEBUG
 }
 
 TEST(KLecTest, NegativeTestWithNandGates) {
@@ -289,9 +295,10 @@ TEST(KLecTest, NegativeTestWithNandGates) {
   Hints hints;
   createHints(net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(net1, net2, hints).notEqual());
+
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
-#endif
+#endif // UTOPIA_DEBUG
 }
 
 TEST(KLecTest, NegativeTestWithOrGates) {
@@ -344,7 +351,8 @@ TEST(KLecTest, NegativeTestWithOrGates) {
   Hints hints;
   createHints(net1, net2, hints);
   EXPECT_TRUE(checker.equivalent(net1, net2, hints).notEqual());
+
 #ifdef UTOPIA_DEBUG
   checker.printHashTable();
-#endif
+#endif // UTOPIA_DEBUG
 }

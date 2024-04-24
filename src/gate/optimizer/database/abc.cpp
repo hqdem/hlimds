@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -121,7 +121,8 @@ static BoundGNet clone(const BoundGNet &circuit) {
 
 #ifdef UTOPIA_DEBUG
   int inputId = 0;
- #endif
+ #endif // UTOPIA_DEBUG
+
   for (const auto &oldGateId: circuit.inputBindings) {
     const auto newGateId = oldToNewGates[oldGateId];
     newCircuit.inputBindings.push_back(newGateId);

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -19,7 +19,7 @@
 #define LOG_DEBUG(x) std::cerr << x << std::endl;
 #else
 #define LOG_DEBUG(x)
-#endif
+#endif // UTOPIA_DEBUG
 
 #define LOG(severity) LOG_##severity
 

@@ -14,16 +14,20 @@ SubnetId DsdSynthesizer::synthesize(const BddWithDdManager &pair,
                                     uint16_t maxArity) const {
   DSDNode *dsd;
   DSDManager *dmanager;
+
   /* Initialize DSD manager by choosing a starting cache size */
   dmanager = DSD_Init(pair.manager, Cudd_ReadMemoryInUse(pair.manager)/2);
+
   /* Create a DSD from a BDD */
   dsd = DSD_Create(dmanager, pair.bdd);
+
   /* Always reference after creation */
   DSD_Ref(dmanager, dsd);
+
   /* Debug print */
 #ifdef UTOPIA_DEBUG
   Recursive_Decomposition_Print(dsd);
-#endif
+#endif // UTOPIA_DEBUG
 
   SubnetBuilder subnetBuilder;
   LinkList inputsList;

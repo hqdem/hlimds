@@ -175,19 +175,22 @@ std::vector<CellTypeID> getModel2(const std::string &inputFilePath) {
 
 #ifdef UTOPIA_DEBUG
   translator.printFIRRTL();
-#endif
+#endif // UTOPIA_DEBUG
+
   // Translate the 'FIRRTL' representation to the 'model2' representation.
   return translator.translate();
 }
 
 bool printNetlist(const std::vector<CellTypeID> netlist,
                   const std::string &outputFileName) {
+
   // Dump the output net to the console (Format::SIMPLE).
 #ifdef UTOPIA_DEBUG
   for (const auto &cellTypeID : netlist) {
     std::cout << CellType::get(cellTypeID).getNet() << std::endl;
   }
-#endif
+#endif // UTOPIA_DEBUG
+
   std::ofstream outputStream(outputFileName);
   for (const auto &cellTypeID : netlist) {
     ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
@@ -309,9 +312,11 @@ std::vector<CellTypeID> Translator::translate() {
   addPass(createCHIRRTLToLowFIRRTLPass());
   runPasses();
   clearPasses();
+
 #ifdef UTOPIA_DEBUG
   printFIRRTL();
-#endif
+#endif // UTOPIA_DEBUG
+
   addPass(createLowFIRRTLToModel2Pass(resultNetlist));
   runPasses();
   clearPasses();

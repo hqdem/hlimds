@@ -233,10 +233,12 @@ PowerMap::PowerMap() {
 }
 
 void PowerMap::findBest() {
+
 #ifdef UTOPIA_DEBUG
   std::cerr << "Start PowerMap::findBest" << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
-#endif
+#endif // UTOPIA_DEBUG
+
   Subnet &subnet = Subnet::get(this->subnetID);
 
   entries = new ArrayEntry(subnet.getEntries());
@@ -255,11 +257,13 @@ void PowerMap::findBest() {
   // computeRequiredTimes();
   globalSwitchAreaRecovery(switchActivity);
   clear();
+
 #ifdef UTOPIA_DEBUG
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> FindBestTime = end - start;
   std::cerr << "PowerMap::findBest was running " << FindBestTime.count() << " seconds.\n";
-#endif
+#endif // UTOPIA_DEBUG
+
 }
 
 std::vector<SubnetID> PowerMap::getTechIdsList(const Cut cut) {

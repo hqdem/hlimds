@@ -11,15 +11,15 @@
 
 #include "gtest/gtest.h"
 
-namespace eda::gate::techmapper {
+#define TYPE Techmapper::MapperType::SIMPLE_AREA_FUNC
 
-auto netMapperType = Techmapper::MapperType::SIMPLE_AREA_FUNC;
+namespace eda::gate::techmapper {
 
 // TODO Sequential mapper needs repairing
 TEST(TechmapTest, DISABLED_SimpleNet) {
-  NetID mappedNetId = simpleNetMapping(netMapperType);
+  NetID mappedNetId = simpleNetMapping(TYPE);
   std::cout << mappedNetId;
-  //printResults(mappedNetId);
+  //printStatistics(mappedNetId);
 }
 
 } // namespace eda::gate::techmapper

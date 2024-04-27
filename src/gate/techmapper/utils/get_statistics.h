@@ -10,6 +10,7 @@
 
 #include "gate/model2/subnet.h"
 #include "gate/techmapper/library/liberty_manager.h"
+#include "gate/techmapper/utils/get_tech_attrs.h"
 
 #include <readcells/groups.h>
 
@@ -17,7 +18,8 @@
 
 namespace eda::gate::techmapper {
 
-inline void printStatistics(model::SubnetID subnetID, std::string techLib) {
+inline void printStatistics(model::SubnetID subnetID,
+  std::chrono::nanoseconds time = std::chrono::nanoseconds(0)) {
   int nWires = 0;
   int nCells = 0;
 
@@ -43,6 +45,14 @@ inline void printStatistics(model::SubnetID subnetID, std::string techLib) {
       std::cout << "     " <<
         std::left << std::setw(36) << pair.first <<
         std::right << std::setw(8) << pair.second << std::endl;
+  }
+  std::cout << "Estimated area: " << getArea(subnetID) <<
+    " um^2" << std::endl;
+
+  if (time != std::chrono::nanoseconds(0)) {
+    std::cout << "Techmapper processing time: " <<
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+        time).count() << " ms" << std::endl;
   }
 }
 } // namespace eda::gate::techmapper

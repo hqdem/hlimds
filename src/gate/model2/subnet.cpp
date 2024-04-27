@@ -500,8 +500,21 @@ void SubnetBuilder::addDepthBounds(size_t entryID) {
       placeAfter(entryID, depthBounds[curDepth - 1].second);
     }
   } else {
-    placeAfter(entryID, depthBounds[curDepth].second);
-    depthBounds[curDepth].second = entryID;
+    size_t entryToPlaceAfter = depthBounds[curDepth].second;
+    if (!curDepth && typeID == CELL_TYPE_ID_IN) {
+      auto cellToPlaceAfter = getCell(entryToPlaceAfter);
+      while (entryToPlaceAfter != lowerBoundID &&
+             (cellToPlaceAfter.getTypeID() == CELL_TYPE_ID_ZERO ||
+              cellToPlaceAfter.getTypeID() == CELL_TYPE_ID_ONE)) {
+
+        entryToPlaceAfter = getPrev(entryToPlaceAfter);
+        cellToPlaceAfter = getCell(entryToPlaceAfter);
+      }
+    }
+    placeAfter(entryID, entryToPlaceAfter);
+    if (depthBounds[curDepth].second == entryToPlaceAfter) {
+      depthBounds[curDepth].second = entryID;
+    }
   }
 }
 

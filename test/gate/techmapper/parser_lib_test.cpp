@@ -23,6 +23,7 @@ std::string techLibPath =
 
 bool checkLibParser(std::string libertyPath) {
   LibraryManager::get().loadLibrary(libertyPath);
+  std::cout << "Loaded Liberty: " << libertyPath << std::endl;
   std::vector<eda::gate::model::CellTypeID> combCells;
   std::vector<eda::gate::model::CellTypeID> cellsFF;
   std::vector<eda::gate::model::CellTypeID> cellsFFrs;

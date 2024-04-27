@@ -27,7 +27,6 @@ namespace eda::gate::techmapper {
   }
 
   int techMap(TechMapConfig config) {
-
     std::string name = config.files[0];
     std::ifstream check(name);
     if (!check) {
@@ -41,29 +40,26 @@ namespace eda::gate::techmapper {
     const std::string techLib = std::string(getenv("UTOPIA_HOME")) +
                                 "/test/data/gate/techmapper" +
                                 "/sky130_fd_sc_hd__ff_100C_1v65.lib";
+
     // TODO: it should be an option too
     SDC sdc{100000000, 10000000000};
+
     const auto& mapperType = config.type;
     Techmapper techmapper(techLib, mapperType, sdc);
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Start to process " << name << std::endl;
-    std::cout << "Using Liberty library " << techLib << std::endl;
+    std::cout << "Start to techmap " << name << std::endl;
 
     eda::gate::parser::graphml::GraphMlSubnetParser parser;
     SubnetID subnetID = parser.parse(name);
     SubnetID mappedSubnetID = techmapper.techmap(subnetID);
 
     printVerilog(mappedSubnetID, config.outNetFileName);
-    printStatistics(mappedSubnetID, techLib);
-    std::cout << "Esimated area: " << getArea(mappedSubnetID) <<
-                 " um^2" << std::endl;
 
     auto finishTime = std::chrono::high_resolution_clock::now();
     auto processingTime = finishTime - startTime;
-    std::cout << "Processing time: " <<
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-      processingTime).count() << " ms" << std::endl;
+
+    printStatistics(mappedSubnetID, processingTime);
 
     return 0;
   }

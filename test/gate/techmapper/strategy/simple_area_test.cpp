@@ -7,53 +7,52 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/techmapper/techmapper.h"
-
 #include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techmapper/library/liberty_manager.h"
+#include "gate/techmapper/utils/get_statistics.h"
 
 #include "gtest/gtest.h"
 
+#define TYPE Techmapper::MapperType::SIMPLE_AREA_FUNC
+
 namespace eda::gate::techmapper {
 
-auto areaMapperType = Techmapper::MapperType::SIMPLE_AREA_FUNC;
-
 TEST(TechmapAreaTest, SimpleAndSubnet) {
-  SubnetID mappedSubnetId = simpleANDMapping(areaMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = simpleANDMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, SimpleAndNotSubnet) {
-  SubnetID mappedSubnetId = andNotMapping(areaMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = andNotMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, NotNotAndSubnet) {
-  SubnetID mappedSubnetId = notNotAndMapping(areaMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = notNotAndMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, SimpleORSubnet) {
-  SubnetID mappedSubnetId = simpleORMapping(areaMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = simpleORMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, SimpleSubnet) {
-  SubnetID mappedSubnetId = andNotMapping(areaMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = andNotMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, GraphMLSubnet) {
-  SubnetID mappedSubnetId = graphMLMapping(areaMapperType, "ss_pcm_orig");
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = graphMLMapping(TYPE, "ss_pcm_orig");
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, DISABLED_GraphMLSubnet2) {
-  SubnetID mappedSubnetId = graphMLMapping(areaMapperType, "aes_orig");
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = graphMLMapping(TYPE, "aes_orig");
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapAreaTest, DISABLED_RandomSubnet) {
-  SubnetID mappedSubnetId = randomMapping(areaMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = randomMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 } // namespace eda::gate::techmapper

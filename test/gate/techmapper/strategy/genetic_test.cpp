@@ -8,41 +8,42 @@
 
 #include "gate/techmapper/techmapper.h"
 #include "gate/techmapper/techmapper_test_util.h"
+#include "gate/techmapper/utils/get_statistics.h"
 
 #include "gtest/gtest.h"
 
+#define TYPE Techmapper::MapperType::GENETIC
+
 namespace eda::gate::techmapper {
 
-auto geneticMapperType = Techmapper::MapperType::GENETIC;
-
 TEST(TechmapGeneticTest, DISABLED_SimpleAndSubnet) {
-  SubnetID mappedSubnetId = simpleANDMapping(geneticMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = simpleANDMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapGeneticTest, DISABLED_SimpleORSubnet) {
-  SubnetID mappedSubnetId = simpleORMapping(geneticMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = simpleORMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapGeneticTest, DISABLED_SimpleSubnet) {
-  SubnetID mappedSubnetId = andNotMapping(geneticMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = andNotMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapGeneticTest, DISABLED_GraphMLSubnet) {
-  SubnetID mappedSubnetId = graphMLMapping(geneticMapperType, "ss_pcm_orig");
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = graphMLMapping(TYPE, "ss_pcm_orig");
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapGeneticTest, DISABLED_GraphMLSubnet2) {
-  SubnetID mappedSubnetId = graphMLMapping(geneticMapperType, "aes_orig");
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = graphMLMapping(TYPE, "aes_orig");
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapGeneticTest, DISABLED_RandomSubnet) {
-  SubnetID mappedSubnetId = randomMapping(geneticMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = randomMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 } // namespace eda::gate::techmapper

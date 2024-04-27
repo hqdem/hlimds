@@ -28,9 +28,10 @@ using CellID = eda::gate::model::CellID;
 namespace eda::gate::techmapper {
 
 Techmapper::Techmapper(const std::string &dbPath,
-                            MapperType techmapSelector,
-                            SDC& sdc) {
+                       MapperType techmapSelector,
+                       SDC& sdc) {
   LibraryManager::get().loadLibrary(dbPath);
+  std::cout << "Loaded Liberty: " << dbPath << std::endl;
   this->sdc = sdc;
   setLiberty();
   setMapper(techmapSelector);
@@ -38,6 +39,7 @@ Techmapper::Techmapper(const std::string &dbPath,
 
 Techmapper::Techmapper(MapperType techmapSelector,
                        SDC& sdc) {
+  assert(LibraryManager::get().isInitialized());
   this->sdc = sdc;
   setLiberty();
   setMapper(techmapSelector);

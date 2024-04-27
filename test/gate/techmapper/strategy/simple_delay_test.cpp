@@ -8,41 +8,42 @@
 
 #include "gate/techmapper/techmapper.h"
 #include "gate/techmapper/techmapper_test_util.h"
+#include "gate/techmapper/utils/get_statistics.h"
 
 #include "gtest/gtest.h"
 
+#define TYPE Techmapper::MapperType::SIMPLE_DELAY_FUNC
+
 namespace eda::gate::techmapper {
 
-auto delayMapperType = Techmapper::MapperType::SIMPLE_DELAY_FUNC;
-
 TEST(TechmapDelayTest, SimpleAndSubnet) {
-  SubnetID mappedSubnetId = simpleANDMapping(delayMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = simpleANDMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapDelayTest, SimpleORSubnet) {
-  SubnetID mappedSubnetId = simpleORMapping(delayMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = simpleORMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapDelayTest, SimpleSubnet) {
-  SubnetID mappedSubnetId = andNotMapping(delayMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = andNotMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapDelayTest, GraphMLSubnet) {
-  SubnetID mappedSubnetId = graphMLMapping(delayMapperType, "ss_pcm_orig");
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = graphMLMapping(TYPE, "ss_pcm_orig");
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapDelayTest, DISABLED_GraphMLSubnet2) {
-  SubnetID mappedSubnetId = graphMLMapping(delayMapperType, "aes_orig");
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = graphMLMapping(TYPE, "aes_orig");
+  printStatistics(mappedSubnetId);
 }
 
 TEST(TechmapDelayTest, DISABLED_RandomSubnet) {
-  SubnetID mappedSubnetId = randomMapping(delayMapperType);
-  printResults(mappedSubnetId);
+  SubnetID mappedSubnetId = randomMapping(TYPE);
+  printStatistics(mappedSubnetId);
 }
 
 } // namespace eda::gate::techmapper

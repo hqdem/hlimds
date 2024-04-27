@@ -162,6 +162,28 @@ TEST(SubnetTest, SimpleMergeTest) {
   std::cout << result << std::endl;
 }
 
+TEST(SubnetTest, AddPIAfterConst) {
+  SubnetBuilder builder;
+
+  Subnet::Link inputLink1 = builder.addInput();
+  Subnet::Link link1 = builder.addCell(ZERO);
+  Subnet::Link inputLink2 = builder.addInput();
+  Subnet::Link link2 = builder.addCell(ONE);
+  Subnet::Link inputLink3 = builder.addInput();
+
+  builder.addOutput(link1);
+  builder.addOutput(link2);
+  builder.addOutput(inputLink2);
+
+  Subnet::Link link3 = builder.addCell(AND, inputLink1, inputLink3, link2);
+
+  builder.addOutput(link3);
+
+  const auto subnetID = builder.make();
+
+  std::cout << Subnet::get(subnetID) << '\n';
+}
+
 #if 0
 TEST(SubnetTest, SimpleReplaceConstTest) {
   SubnetBuilder builder;

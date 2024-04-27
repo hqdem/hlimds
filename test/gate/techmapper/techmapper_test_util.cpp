@@ -33,17 +33,14 @@ using SubnetID   = eda::gate::model::SubnetID;
 SDC sdc{100000000, 10000000000};
 
 SubnetID parseGraphML(std::string fileName) {
-
   using path = std::filesystem::path;
-
-  fileName += ".bench.graphml";
-
+  const path home = std::string(getenv("UTOPIA_HOME"));
   const path dir = path("test") / "data" / "gate" / "parser"
                    / "graphml" / "OpenABC" / "graphml_openabcd";
-  const path home = std::string(getenv("UTOPIA_HOME"));
+  fileName += ".bench.graphml";
   const path file = home / dir / fileName;
-
   eda::gate::parser::graphml::GraphMlSubnetParser parser;
+
   return parser.parse(file.string());
 }
 
@@ -63,21 +60,14 @@ SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
 }
 
 void printVerilog(SubnetID subnet) {
-  eda::gate::model::ModelPrinter& verilogPrinter =
-      eda::gate::model::ModelPrinter::getPrinter(eda::gate::model::ModelPrinter::VERILOG);
+  using ModelPrinter = eda::gate::model::ModelPrinter;
+  ModelPrinter& verilogPrinter =
+    ModelPrinter::getPrinter(ModelPrinter::VERILOG);
   std::ofstream outFile("test/data/gate/techmapper/print/techmappedNet.v");
-  verilogPrinter.print(outFile,
-                       model::Subnet::get(subnet),
-                       "techmappedNet");
-  std::cout << "Verilog-file: " <<
-    "test/data/gate/techmapper/print/techmappedNet.v" << " is created." <<
-    std::endl;
+  verilogPrinter.print(outFile, model::Subnet::get(subnet), "techmappedNet");
+  std::cout << "Output Verilog file: " <<
+    "test/data/gate/techmapper/print/techmappedNet.v" << std::endl;
   outFile.close();
-}
-
-void printResults(SubnetID mappedSubnetId) {
-  std::cout << "Area=" << getArea(mappedSubnetId) << std::endl;
-  printStatistics(mappedSubnetId, techLib);
 }
 
 bool checkAllCellsMapped(SubnetID subnetID) {
@@ -119,8 +109,7 @@ SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
   std::cout << model::Subnet::get(subnetId) << std::endl;
 #endif // UTOPIA_DEBUG
 
-  LibraryManager::get().loadLibrary(techLib);
-  Techmapper techmapper(mapperType, sdc);
+  Techmapper techmapper(techLib, mapperType, sdc);
   SubnetID mappedSubnet = techmapper.techmap(subnetId);
 
 #ifdef UTOPIA_DEBUG
@@ -137,7 +126,6 @@ SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
 SubnetID simpleANDMapping(Techmapper::MapperType mapperType) {
   const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 50, 15);
   std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
-
   SubnetID mappedSubnet = mapper(mapperType, primitiveANDSub);
 
   return mappedSubnet;
@@ -146,15 +134,14 @@ SubnetID simpleANDMapping(Techmapper::MapperType mapperType) {
 SubnetID simpleORMapping(Techmapper::MapperType mapperType) {
   const auto primitiveORSub  = createPrimitiveSubnet(CellSymbol::OR, 3, 13);
   std::cout << model::Subnet::get(primitiveORSub) << std::endl;
-
   SubnetID mappedSubnet = mapper(mapperType, primitiveORSub);
 
   return mappedSubnet;
 }
 
-SubnetID graphMLMapping(Techmapper::MapperType mapperType, const std::string fileName) {
+SubnetID graphMLMapping(Techmapper::MapperType mapperType,
+                        const std::string fileName) {
   SubnetID subnetId  = parseGraphML(fileName);
-
   SubnetID mappedSubnet = mapper(mapperType, subnetId);
 
   return mappedSubnet;
@@ -162,7 +149,6 @@ SubnetID graphMLMapping(Techmapper::MapperType mapperType, const std::string fil
 
 SubnetID andNotMapping(Techmapper::MapperType mapperType) {
   using Link = model::Subnet::Link;
-
   model::SubnetBuilder builder;
 
   const auto idx0 = builder.addInput();
@@ -175,7 +161,6 @@ SubnetID andNotMapping(Techmapper::MapperType mapperType) {
   builder.addOutput(Link(idx4.idx, true));
 
   SubnetID subnetID = builder.make();
-
   SubnetID mappedSubnet = mapper(mapperType, subnetID);
 
   return mappedSubnet;
@@ -188,13 +173,12 @@ SubnetID notNotAndMapping(Techmapper::MapperType mapperType) {
 
   const auto idx0 = builder.addInput();
   const auto idx1 = builder.addInput();
-
-  const auto idx2 = builder.addCell(model::AND, Link(idx0.idx, true), Link(idx1.idx, true));
+  const auto idx2 = builder.addCell(
+    model::AND, Link(idx0.idx, true), Link(idx1.idx, true));
 
   builder.addOutput(Link(idx2.idx, true));
 
   SubnetID subnetID = builder.make();
-
   SubnetID mappedSubnet = mapper(mapperType, subnetID);
 
   return mappedSubnet;
@@ -202,7 +186,6 @@ SubnetID notNotAndMapping(Techmapper::MapperType mapperType) {
 
 SubnetID randomMapping(Techmapper::MapperType mapperType) {
   SubnetID randomSubnet = model::randomSubnet(6, 3, 50, 2, 6);
-
   SubnetID mappedSubnet = mapper(mapperType, randomSubnet);
 
   return mappedSubnet;
@@ -217,6 +200,7 @@ NetID simpleNetMapping(Techmapper::MapperType mapperType) {
     cells.push_back(cellID);
     netBuilder.addCell(cellID);
   }
+
   auto cellIDAND0 = makeCell(model::CellSymbol::AND, cells[1], cells[2]);
   netBuilder.addCell(cellIDAND0);
 
@@ -261,7 +245,6 @@ SubnetID areaRecoveySubnetMapping(Techmapper::MapperType mapperType) {
   builder.addOutput(idxV4);
 
   SubnetID subnetID = builder.make();
-
   SubnetID mappedSubnet = mapper(mapperType, subnetID);
 
   return mappedSubnet;

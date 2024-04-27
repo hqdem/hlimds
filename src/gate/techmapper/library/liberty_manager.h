@@ -25,6 +25,7 @@ namespace eda::gate::techmapper {
 class LibraryManager : public util::Singleton<LibraryManager> {
 public:
   bool loadLibrary(const std::string& filename) {
+    name = filename;
     file = fopen(filename.c_str(), "rb");
     ast = tokParser.parseLibrary(file,
                                  filename.c_str());
@@ -43,12 +44,21 @@ public:
     return library;
   }
 
+  const std::string getLibraryName() {
+    return name;
+  }
+
+  bool isInitialized() {
+    return isLoaded;
+  }
+
 private:
   FILE *file;
   Group *ast;
   Library library;
   TokenParser tokParser;
   bool isLoaded = false;
+  std::string name;
 
   LibraryManager() : Singleton() {}
   friend class Singleton<LibraryManager>;

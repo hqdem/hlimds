@@ -12,9 +12,6 @@ target_include_directories(Kitty INTERFACE kitty/include)
 add_library(Mockturtle INTERFACE)
 target_include_directories(Mockturtle SYSTEM INTERFACE mockturtle/include)
 
-add_library(parallel_hashmap INTERFACE)
-target_include_directories(parallel_hashmap INTERFACE mockturtle/lib/parallel_hashmap)
-
 add_subdirectory(easyloggingpp)
 add_subdirectory(lorina/lib)
 add_subdirectory(lorina/include)

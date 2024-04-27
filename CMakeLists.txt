@@ -16,6 +16,7 @@ if(UTOPIA_DEBUG)
   add_definitions(-DUTOPIA_DEBUG)
 endif()
 add_definitions(-DNPN4_USAGE_STATS)
+add_definitions(-DLIN64 -DABC_NAMESPACE=pabc) # Used by percy
 
 set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
 set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt

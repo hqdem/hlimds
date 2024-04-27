@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
-# The project executable
+# The project executables
 set(MAIN_TARGET umain)
+set(DBGEN_TARGET dbgen)
 
 # The project dependencies
 set(MINISAT_LIBRARY minisat-lib-static)
@@ -51,7 +52,7 @@ target_link_libraries(${MAIN_LIBRARY}
   Yosys::Yosys
 )
 
-# The project executable.
+# The project executables.
 add_executable(${MAIN_TARGET} main.cpp)
 
 target_include_directories(${MAIN_TARGET}
@@ -66,4 +67,19 @@ target_link_libraries(${MAIN_TARGET}
     CLI
     Json
     fmt
+)
+
+add_executable(${DBGEN_TARGET} dbgen.cpp)
+
+target_include_directories(${DBGEN_TARGET}
+  PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
+    percy
+)
+
+target_link_libraries(${DBGEN_TARGET}
+  PRIVATE
+    ${MAIN_LIBRARY}
+    percy
+    libabcsat
 )

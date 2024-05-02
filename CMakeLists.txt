@@ -94,6 +94,6 @@ find_package(Doxygen)
 if(DOXYGEN_FOUND)
   execute_process(COMMAND doxygen ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
 else ()
-  message("Error: can't find doxygen, please install it!")
+  message("Error: can't find doxygen, please install it.")
 endif()
 

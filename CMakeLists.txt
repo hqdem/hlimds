@@ -10,12 +10,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 
+OPTION(NPN4_USAGE_STATS "NPN4 usage statistics" OFF) # Disabled by default
 OPTION(UTOPIA_DEBUG "Extended debug printing" OFF) # Disabled by default
+
+if(NPN4_USAGE_STATS)
+  add_definitions(-DNPN4_USAGE_STATS)
+endif()
 
 if(UTOPIA_DEBUG)
   add_definitions(-DUTOPIA_DEBUG)
 endif()
-add_definitions(-DNPN4_USAGE_STATS)
+
 add_definitions(-DLIN64 -DABC_NAMESPACE=pabc) # Used by percy
 
 set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
@@ -80,13 +85,13 @@ add_subdirectory(test)
 
 OPTION(GEN_DOC "Documentation generation" OFF) # Disabled by default
 
-if (NOT GEN_DOC)
+if(NOT GEN_DOC)
   return()
 endif()
 
 find_package(Doxygen)
 
-if (DOXYGEN_FOUND)
+if(DOXYGEN_FOUND)
   execute_process(COMMAND doxygen ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
 else ()
   message("Error: can't find doxygen, please install it!")

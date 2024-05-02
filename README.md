@@ -218,20 +218,13 @@ or simply run the following script:
 If you've modified some of the project files, you can use `rebuild.sh` script
 for incremental build.
 
-#### Documentation generation
-During the project building, HTML documentation can be generated.
-Doxygen (if installed) is used for that purpose; the result is stored
-at the `build/doc` directory. To enable that, use `GEN_DOC` option:
-```
-cmake <...many args...> -DGEN_DOC=ON
-```
+Several additional options can be activated during build process. By default
+they are disabled. You may enable them to have access to auxiliary facilities.
+Here they are (see `debug-build.sh` as example):
 
-#### Debug printing
-An extended debug printing is used by some components & tests. By default this
-feature is disabled; to enable that, use `UTOPIA_DEBUG` option:
-```
-cmake <...many args...> -DUTOPIA_DEBUG=ON
-```
+* `GEN_DOC` &mdash; documentation generation (the result is stored at `build/doc`);
+* `NPN4_USAGE_STATS` &mdash; statistics for 4-in cones distribution on NPN classes;
+* `UTOPIA_DEBUG` &mdash; extended debug printing.
 
 ### Running Utopia EDA
 

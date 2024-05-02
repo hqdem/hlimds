@@ -40,7 +40,6 @@ set_local_from_env(Cudd_ROOT CUDD_DIR)
 set_local_from_env(CIRCT_DIR CIRCT_DIR)
 
 find_package(LpSolve REQUIRED)
-find_package(Z3 REQUIRED)
 find_package(CTemplate REQUIRED COMPONENTS nothreads)
 find_package(Cudd REQUIRED)
 find_package(Yosys REQUIRED)

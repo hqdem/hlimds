@@ -824,7 +824,7 @@ TEST(ReplaceTest, ReuseCellsFollowingRoot) {
   mapping[2] = 2;
   mapping[7] = 5;
   const auto effect = builder.evaluateReplace(rhsID, mapping);
-  EXPECT_TRUE(effect.size == 0 && effect.depth == -2);
+  EXPECT_TRUE(effect.size == 2 && effect.depth == -2);
   builder.replace(rhsID, mapping);
   printBidirectCellsTrav(builder);
 

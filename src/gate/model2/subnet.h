@@ -555,7 +555,7 @@ public:
   /// Returns the effect of the replacement.
   Effect evaluateReplace(
       const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      std::unordered_map<size_t, size_t> rhsToLhs,
       const std::function<float(const size_t)> *getCellWeight = nullptr) const;
 
   /// Merges the cells from each map item leaving the one stored in the key.
@@ -606,15 +606,15 @@ private:
   /// the number of cells (value of weight) added and new depth of the root.
   Effect newEntriesEval(
       const SubnetID rhsID,
-      const std::unordered_map<size_t, size_t> rhsToLhs,
-      const std::function<float(const size_t)> *getCellWeight,
-      std::unordered_set<size_t> &reusedEntries) const;
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      std::unordered_set<size_t> &reusedLhsEntries,
+      const std::function<float(const size_t)> *getCellWeight) const;
 
   /// Returns the delete-effect of the replacement:
   /// the number of cells (value of weight) deleted.
   Effect deletedEntriesEval(
-      const size_t rootEntryID,
-      const std::unordered_set<size_t> &reusedEntries) const;
+      const size_t lhsRootEntryID,
+      std::unordered_set<size_t> &reusedLhsEntries) const;
 
   /// Return the reference to the j-th link of the given cell.
   Link &getLinkRef(size_t entryID, size_t j);

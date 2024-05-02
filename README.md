@@ -337,6 +337,8 @@ or
 ```
 Test pattern accepts ```*``` and ```?``` wildcards.
 
+To run "shortest" test suites (which take less than 10 min) use `smoke-tests.sh`.
+
 #### List Available Tests
 
 ```

@@ -13,6 +13,7 @@
 
 namespace eda::gate::debugger2 {
 
+using IdxToLink = std::unordered_map<size_t, model::Subnet::Link>;
 using LecType = eda::gate::debugger2::options::LecType;
 using Link = model::Subnet::Link;
 using LinkList = model::Subnet::LinkList;
@@ -30,19 +31,19 @@ BaseChecker2::~BaseChecker2() {};
 
 void buildCells(const Subnet &net,
                 SubnetBuilder &builder,
-                CellToCell &map) {
+                IdxToLink &map) {
   for (size_t i = net.getInNum(); i < net.size(); i++) {
     auto curCell = net.getEntries()[i].cell;
     auto curSymbol = curCell.getSymbol();
     LinkList newLinks;
     for (size_t j = 0; j < curCell.arity; ++j) {
       Link curLink = net.getLink(i, j);
-      newLinks.push_back(Subnet::Link(map[curLink.idx], curLink.inv));
+      newLinks.push_back(Subnet::Link(map[curLink.idx].idx, curLink.inv));
     }
     if (curSymbol == CellSymbol::OUT) {
-      map[i] = map[net.getLink(i, 0).idx];
+      map[i] = newLinks.front();
     } else {
-      map[i] = builder.addCell(curCell.getTypeID(), newLinks).idx;
+      map[i] = builder.addCell(curCell.getTypeID(), newLinks);
     }
     i += curCell.more;
   }
@@ -133,11 +134,11 @@ void BaseChecker2::miter2(SubnetBuilder &builder,
     return;
   }
 
-  CellToCell map1, map2;
+  IdxToLink map1, map2;
 
   auto itIn = hints.sourceBinding.begin();
   for (size_t i = 0; i < net1.getInNum(); ++i) {
-    size_t cellNum = builder.addInput().idx;
+    Link cellNum = builder.addInput();
     map1[itIn->first] = cellNum;
     map2[itIn->second] = cellNum;
     itIn++;
@@ -150,8 +151,8 @@ void BaseChecker2::miter2(SubnetBuilder &builder,
   LinkList xors;
   for (size_t i = 0; i < net1.getOutNum(); i++) {
     LinkList xorLinks;
-    xorLinks.push_back(Link(map1[itOut->first]));
-    xorLinks.push_back(Link(map2[itOut->second]));
+    xorLinks.push_back(map1[itOut->first]);
+    xorLinks.push_back(map2[itOut->second]);
     xors.push_back(builder.addCell(CellSymbol::XOR, xorLinks));
     itOut++;
   }

@@ -20,9 +20,11 @@ SafePasser &SafePasser::operator++() {
   } else {
     EntryIterator::operator++();
   }
+  callOnEachCell();
   while (isNewEntry.size() > entry && isNewEntry[entry] &&
          entry != SubnetBuilder::upperBoundID) {
     EntryIterator::operator++();
+    callOnEachCell();
   }
   return *this;
 }
@@ -47,9 +49,11 @@ SafePasser &SafePasser::operator--() {
   } else {
     EntryIterator::operator--();
   }
+  callOnEachCell();
   while (isNewEntry.size() > entry && isNewEntry[entry] &&
          entry != SubnetBuilder::lowerBoundID) {
     EntryIterator::operator--();
+    callOnEachCell();
   }
   return *this;
 }
@@ -82,7 +86,7 @@ void SafePasser::replace(
   auto &_isNewEntry = this->isNewEntry;
   std::function addNewCell = [&_isNewEntry, &onNewCell](const size_t entryID) {
     if (_isNewEntry.size() <= entryID) {
-      _isNewEntry.resize(entryID + 1);
+      _isNewEntry.resize(entryID + 1, false);
     }
     _isNewEntry[entryID] = true;
 

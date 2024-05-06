@@ -13,11 +13,12 @@ namespace eda::gate::optimizer2 {
 void Rewriter::transform(SubnetBuilder &builder) const {
 
   CutExtractor cutExtractor(&builder, k);
-  for (SafePasser iter = builder.begin();
+  std::function cutRecompute = [&cutExtractor](const size_t entryID) {
+    cutExtractor.recomputeCuts(entryID);
+  };
+  for (SafePasser iter(builder.begin(), &cutRecompute);
        iter != builder.end() && !builder.getCell(*iter).isOut();
        ++iter) {
-    const auto entryID = *iter;
-    cutExtractor.recomputeCuts(entryID);
     rewriteOnNode(builder, iter, cutExtractor);
   }
 }

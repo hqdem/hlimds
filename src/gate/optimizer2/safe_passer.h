@@ -30,11 +30,29 @@ public:
    * @brief Constructs a SafePasser.
    *
    * @param iter Base EntryIterator used to create SafePasser.
+   * @param onEachEntry Callback that is executed on each entry during iteration
+   * (including skipped unsafe entries).
    */
-  SafePasser(EntryIterator iter) :
+  SafePasser(
+    EntryIterator iter,
+    const std::function<void(const size_t)> *onEachEntry = nullptr) :
       EntryIterator(iter),
-      builderToTransform(const_cast<SubnetBuilder *>(builder)) {};
+      builderToTransform(const_cast<SubnetBuilder *>(builder)),
+      onEachEntry(onEachEntry) {
 
+    if (onEachEntry) {
+      (*onEachEntry)(entry);
+    }
+  };
+
+  SafePasser &operator=(const SafePasser &other) = delete;
+  SafePasser &operator=(SafePasser &&other) = default;
+  SafePasser(SafePasser &&other) = default;
+
+protected:
+  SafePasser(const SafePasser &other) = default;
+
+public:
   SafePasser &operator++();
   SafePasser operator++(int);
   SafePasser &operator--();
@@ -56,9 +74,18 @@ public:
   void finalizePass();
 
 private:
+  inline void callOnEachCell() {
+    if (onEachEntry && entry != SubnetBuilder::upperBoundID &&
+        entry != SubnetBuilder::lowerBoundID) {
+      (*onEachEntry)(entry);
+    }
+  }
+
+private:
   SubnetBuilder *builderToTransform;
 
   std::vector<char> isNewEntry{};
+  const std::function<void(const size_t)> *onEachEntry;
 
   value_type saveNext{SubnetBuilder::invalidID};
   value_type saveRoot{SubnetBuilder::invalidID};

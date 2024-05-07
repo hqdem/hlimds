@@ -17,6 +17,7 @@ using Subnet = model::Subnet;
 using LinkList = Subnet::LinkList;
 using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
+using Effect = SubnetBuilder::Effect;
 using DinTruthTable = kitty::dynamic_truth_table;
 
 class EqualResynthesizer : public ResynthesizerBase {
@@ -108,7 +109,8 @@ void runTest(
     const SubnetID subnetID,
     const SubnetID targetSubnetID) {
 
-  Rewriter rewriter(resynthesizer, 5);
+  Rewriter rewriter(resynthesizer, 5, [](const Effect &effect) -> float {
+    return (float)effect.size; });
   const auto &subnet = Subnet::get(subnetID);
   std::cout << "Before rewriting:\n" << subnet << '\n';
 

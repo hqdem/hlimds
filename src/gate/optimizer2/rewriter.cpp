@@ -31,7 +31,7 @@ void Rewriter::rewriteOnNode(
   const size_t entryID = *iter;
   ConeBuilder coneBuilder(&builder);
   const auto &cuts = cutExtractor.getCuts(entryID);
-  int bestMetricValue = INT32_MIN;
+  float bestMetricValue = -__FLT_MAX__;
   SubnetID bestRhsID = 0;
   std::unordered_map<size_t, size_t> bestRhsToLhs;
 
@@ -51,8 +51,8 @@ void Rewriter::rewriteOnNode(
       rhsToLhs[rhs.getEntries().size() - i] =
           cone.coneEntryToOrig[coneSubnet.getEntries().size() - i];
     }
-    int curMetricValue = builder.evaluateReplace(rhsID, rhsToLhs).size;
-    if (curMetricValue > bestMetricValue) {
+    float curMetricValue = cost(builder.evaluateReplace(rhsID, rhsToLhs));
+    if (curMetricValue - bestMetricValue > metricEps) {
       bestMetricValue = curMetricValue;
       bestRhsID = rhsID;
       bestRhsToLhs = rhsToLhs;
@@ -61,7 +61,7 @@ void Rewriter::rewriteOnNode(
   std::function cutRecompute = [&cutExtractor](const size_t entryID) {
     cutExtractor.recomputeCuts(entryID);
   };
-  if (bestMetricValue > 0) {
+  if (bestMetricValue > metricEps) {
     iter.replace(bestRhsID, bestRhsToLhs, nullptr, &cutRecompute, &cutRecompute,
                  &cutRecompute);
   }

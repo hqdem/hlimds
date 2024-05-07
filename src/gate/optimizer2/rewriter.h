@@ -26,6 +26,7 @@ public:
   using SubnetID = eda::gate::model::SubnetID;
   using LinkList = Subnet::LinkList;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
+  using Effect = SubnetBuilder::Effect;
   using SafePasser = eda::gate::optimizer2::SafePasser;
   using CutExtractor = eda::gate::optimizer2::CutExtractor;
   using ConeBuilder = eda::gate::optimizer2::ConeBuilder;
@@ -36,9 +37,14 @@ public:
    *
    * @param resynthesizer Resythesizer used to synthesize new cone for each cut.
    * @param k Maximum number of elements in the cut.
+   * @param cost Function that calculates the overall metric after replacement.
+   * A greater returned value is a better result of the replacement.
    */
-  Rewriter(const ResynthesizerBase &resynthesizer, const unsigned k):
-    resynthesizer(resynthesizer), k(k) {}
+  Rewriter(
+      const ResynthesizerBase &resynthesizer,
+      const unsigned k,
+      const std::function<float(const Effect &)> &cost) :
+    resynthesizer(resynthesizer), k(k), cost(cost) {}
 
   /**
    * @brief Rewrites the subnet stored in the builder by applying the
@@ -56,6 +62,8 @@ private:
 
   const ResynthesizerBase &resynthesizer;
   const unsigned k;
+  const std::function<float(const Effect &)> &cost;
+  constexpr static float metricEps = 1e-6;
 };
 
 } // namespace eda::gate::optimizer2

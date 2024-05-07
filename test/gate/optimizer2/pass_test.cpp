@@ -48,4 +48,15 @@ TEST(Pass, Rw) {
   std::cout << model::Subnet::get(subnetID) << std::endl;
 }
 
+TEST(Pass, Rwz) {
+  model::SubnetBuilder builder;
+  initSubnetBuilder(builder);
+
+  const auto &pass = rwz();
+  pass.transform(builder);
+
+  const auto subnetID = builder.make();
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+}
+
 } // namespace eda::gate::optimizer2

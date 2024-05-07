@@ -61,7 +61,8 @@ void Rewriter::rewriteOnNode(
   std::function cutRecompute = [&cutExtractor](const size_t entryID) {
     cutExtractor.recomputeCuts(entryID);
   };
-  if (bestMetricValue > metricEps) {
+  if (bestMetricValue > metricEps ||
+      (zero_cost && std::fabs(bestMetricValue) <= metricEps)) {
     iter.replace(bestRhsID, bestRhsToLhs, nullptr, &cutRecompute, &cutRecompute,
                  &cutRecompute);
   }

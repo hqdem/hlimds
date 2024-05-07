@@ -26,4 +26,12 @@ inline const Pass &rw() {
   return rewriter;
 }
 
+inline const Pass &rwz() {
+  static constexpr auto k = 4;
+  static Resynthesizer resynthesizer(AbcNpn4Synthesizer::get());
+  static Rewriter rewriter(resynthesizer, k, [](const Effect &effect) -> float {
+    return (float)effect.size; }, true);
+  return rewriter;
+}
+
 } // namespace eda::gate::optimizer2

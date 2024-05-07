@@ -39,12 +39,14 @@ public:
    * @param k Maximum number of elements in the cut.
    * @param cost Function that calculates the overall metric after replacement.
    * A greater returned value is a better result of the replacement.
+   * @param zero_cost Enables zero-cost replacements if set.
    */
   Rewriter(
       const ResynthesizerBase &resynthesizer,
       const unsigned k,
-      const std::function<float(const Effect &)> cost) :
-    resynthesizer(resynthesizer), k(k), cost(cost) {}
+      const std::function<float(const Effect &)> cost,
+      const bool zero_cost = false) :
+    resynthesizer(resynthesizer), k(k), cost(cost), zero_cost(zero_cost) {}
 
   /**
    * @brief Rewrites the subnet stored in the builder by applying the
@@ -63,6 +65,8 @@ private:
   const ResynthesizerBase &resynthesizer;
   const unsigned k;
   const std::function<float(const Effect &)> cost;
+  const bool zero_cost;
+
   constexpr static float metricEps = 1e-6;
 };
 

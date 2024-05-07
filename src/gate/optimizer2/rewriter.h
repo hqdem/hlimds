@@ -43,7 +43,7 @@ public:
   Rewriter(
       const ResynthesizerBase &resynthesizer,
       const unsigned k,
-      const std::function<float(const Effect &)> &cost) :
+      const std::function<float(const Effect &)> cost) :
     resynthesizer(resynthesizer), k(k), cost(cost) {}
 
   /**
@@ -62,7 +62,7 @@ private:
 
   const ResynthesizerBase &resynthesizer;
   const unsigned k;
-  const std::function<float(const Effect &)> &cost;
+  const std::function<float(const Effect &)> cost;
   constexpr static float metricEps = 1e-6;
 };
 

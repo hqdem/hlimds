@@ -76,6 +76,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/npndb_test.cpp
   gate/optimizer2/pass_test.cpp
   gate/optimizer2/reconvergence_cut_test.cpp
+  gate/optimizer2/resubstitutor_test.cpp
   gate/optimizer2/resynthesizer_test.cpp
   gate/optimizer2/rewriter_test.cpp
   gate/optimizer2/synthesis/abc_npn4_test.cpp

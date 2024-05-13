@@ -10,10 +10,10 @@
 
 namespace eda::gate::optimizer2 {
 
-void mapCell(model::SubnetBuilder &coneBuilder,
-             const model::SubnetBuilder &builder,
-             size_t idx,
-             std::unordered_map<size_t, size_t> &map) {
+static void mapCell(model::SubnetBuilder &coneBuilder,
+                    const model::SubnetBuilder &builder,
+                    size_t idx,
+                    std::unordered_map<size_t, size_t> &map) {
 
   if (map.find(idx) != map.end()) {
     return;
@@ -31,10 +31,10 @@ void mapCell(model::SubnetBuilder &coneBuilder,
 }
 
 template<typename SubnetOrBuilder>
-unsigned computeCost(const SubnetOrBuilder &subnetOrBuilder,
-                     const model::Subnet::Cell &cell,
-                     size_t idx,
-                     const std::unordered_set<size_t> &visited) {
+static unsigned computeCost(const SubnetOrBuilder &subnetOrBuilder,
+                            const model::Subnet::Cell &cell,
+                            size_t idx,
+                            const std::unordered_set<size_t> &visited) {
 
   if (cell.isIn() || cell.isZero() || cell.isOne()) {
     return -1;
@@ -51,9 +51,9 @@ unsigned computeCost(const SubnetOrBuilder &subnetOrBuilder,
   return cost;
 }
 
-unsigned computeCost(const model::Subnet &subnet,
-                     size_t idx,
-                     const std::unordered_set<size_t> &visited) {
+static unsigned computeCost(const model::Subnet &subnet,
+                            size_t idx,
+                            const std::unordered_set<size_t> &visited) {
 
   const auto &entries = subnet.getEntries();
   const auto &cell = entries[idx].cell;
@@ -61,19 +61,19 @@ unsigned computeCost(const model::Subnet &subnet,
   return computeCost(subnet, cell, idx, visited);
 }
 
-unsigned computeCost(const model::SubnetBuilder &builder,
-                     size_t idx,
-                     const std::unordered_set<size_t> &visited) {
+static unsigned computeCost(const model::SubnetBuilder &builder,
+                            size_t idx,
+                            const std::unordered_set<size_t> &visited) {
 
   const auto &cell = builder.getCell(idx);
 
   return computeCost(builder, cell, idx, visited);
 }
 
-void replaceBestLeave(std::vector<size_t> &leaves,
-                      std::unordered_set<size_t> &visited,
-                      const model::Subnet::Cell &cell,
-                      size_t idx) {
+static void replaceBestLeave(std::vector<size_t> &leaves,
+                             std::unordered_set<size_t> &visited,
+                             const model::Subnet::Cell &cell,
+                             size_t idx) {
 
   bool constant = (cell.isZero() || cell.isOne());
   if (!constant && (visited.find(idx) == visited.end())) {
@@ -83,10 +83,10 @@ void replaceBestLeave(std::vector<size_t> &leaves,
 }
 
 template<typename SubnetOrBuilder>
-size_t findBestLeave(const SubnetOrBuilder &subnetOrBuilder,
-                     const std::vector<size_t> &leaves,
-                     const std::unordered_set<size_t> &visited,
-                     size_t cutSize) {
+static size_t findBestLeave(const SubnetOrBuilder &subnetOrBuilder,
+                            const std::vector<size_t> &leaves,
+                            const std::unordered_set<size_t> &visited,
+                            size_t cutSize) {
 
   const unsigned worstCost = -1;
   unsigned bestCost = worstCost;
@@ -110,9 +110,9 @@ size_t findBestLeave(const SubnetOrBuilder &subnetOrBuilder,
   return bestLeave;
 }
 
-std::vector<size_t> getReconvCut(const model::Subnet &subnet,
-                                 const std::vector<size_t> &roots,
-                                 size_t cutSize) {
+std::vector<size_t> getReconvergenceCut(const model::Subnet &subnet,
+                                        const std::vector<size_t> &roots,
+                                        size_t cutSize) {
 
   assert(roots.size() <= cutSize && "Number of roots more than the cut size");
 
@@ -138,9 +138,9 @@ std::vector<size_t> getReconvCut(const model::Subnet &subnet,
   }
 }
 
-std::vector<size_t> getReconvCut(const model::SubnetBuilder &builder,
-                                 const std::vector<size_t> &roots,
-                                 size_t cutSize) {
+std::vector<size_t> getReconvergenceCut(const model::SubnetBuilder &builder,
+                                        const std::vector<size_t> &roots,
+                                        size_t cutSize) {
 
   assert(roots.size() <= cutSize && "Number of roots more than the cut size");
 
@@ -164,10 +164,10 @@ std::vector<size_t> getReconvCut(const model::SubnetBuilder &builder,
   }
 }
 
-model::SubnetID getReconvCone(const model::SubnetBuilder &builder,
-                              const std::vector<size_t> &roots,
-                              size_t cutSize,
-                              std::unordered_map<size_t, size_t> &map) {
+model::SubnetID getReconvergenceCone(const model::SubnetBuilder &builder,
+                                     const std::vector<size_t> &roots,
+                                     size_t cutSize,
+                                     std::unordered_map<size_t, size_t> &map) {
 
   assert(roots.size() <= cutSize && "Number of roots more than the cut size");
 

@@ -203,6 +203,11 @@ private:
 
   void encodeAnd(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
       SubnetEncoderContext &context, Solver &solver) const {
+    if (cell.arity == 1) {
+      encodeBuf(subnet, cell, idx, context, solver);
+      return;
+    }
+
     assert(cell.arity > 1);
     context.setVar(idx);
 
@@ -220,6 +225,11 @@ private:
 
   void encodeOr(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
       SubnetEncoderContext &context, Solver &solver) const {
+    if (cell.arity == 1) {
+      encodeBuf(subnet, cell, idx, context, solver);
+      return;
+    }
+
     assert(cell.arity > 1);
     context.setVar(idx);  
 
@@ -237,6 +247,11 @@ private:
 
   void encodeXor(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
       SubnetEncoderContext &context, Solver &solver) const {
+    if (cell.arity == 1) {
+      encodeBuf(subnet, cell, idx, context, solver);
+      return;
+    }
+
     assert(cell.arity > 1);
     context.setVar(idx);
 
@@ -257,6 +272,11 @@ private:
 
   void encodeMaj(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
       SubnetEncoderContext &context, Solver &solver) const {
+    if (cell.arity == 1) {
+      encodeBuf(subnet, cell, idx, context, solver);
+      return;
+    }
+
     assert(cell.arity == 3);
     context.setVar(idx);
 

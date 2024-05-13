@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/optimizer2/mffc.h"
 #include "gate/optimizer2/safe_passer.h"
 #include "gate/optimizer2/subnet_iterator.h"
 
@@ -31,18 +32,33 @@ public:
   /**
    * @brief Сonstructor from subnet builder.
    * @param subnetBuilder Subnet for iteration.
+   * @param passer Passer for the subnet.
    * @param nIn The number of inputs for SubnetFragment.
    */
   AreaSubnetIterator(const SubnetBuilder &subnetBuilder,
-                     SafePasser &iter,
+                     SafePasser &passer,
                      uint16_t nIn)
-      : SubnetIteratorBase(subnetBuilder), iter(iter), nIn(nIn)
+      : SubnetIteratorBase(subnetBuilder), passer(passer), nIn(nIn)
   {}
 
-  SubnetFragment next() override;
+  SubnetFragment next() override {
+    SubnetFragment sf;
+    sf.subnetID = model::OBJ_NULL_ID;
+
+    ++passer;
+    const auto rootId = *passer;
+    if (subnetBuilder.getCell(rootId).isOut()) {
+      return sf;
+    }
+
+    auto leaves = getReconvergenceCut(subnetBuilder, rootId, nIn);
+    sf = getMffc(subnetBuilder, rootId, leaves);
+
+    return sf;
+  }
 
 private:
-  SafePasser &iter;
+  SafePasser &passer;
   uint16_t nIn;
 };
 

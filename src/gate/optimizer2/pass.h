@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model2/subnet.h"
+#include "gate/optimizer2/resubstitutor.h"
 #include "gate/optimizer2/rewriter.h"
 #include "gate/optimizer2/synthesis/abc_npn4.h"
 #include "gate/optimizer2/transformer.h"
@@ -32,6 +33,18 @@ inline const Pass &rwz() {
   static Rewriter rewriter(resynthesizer, k, [](const Effect &effect) -> float {
     return (float)effect.size; }, true);
   return rewriter;
+}
+
+inline const Pass &rs() {
+  static constexpr auto cutSize = 8;
+  static constexpr auto careSize = 16;
+  static Resubstitutor resubstitutor(cutSize, careSize);
+  return resubstitutor;
+}
+
+inline const Pass &rs(unsigned cutSize, unsigned careSize) {
+  static Resubstitutor resubstitutor(cutSize, careSize);
+  return resubstitutor;
 }
 
 } // namespace eda::gate::optimizer2

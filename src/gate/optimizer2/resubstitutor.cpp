@@ -207,10 +207,10 @@ static bool makeOneResubstitution(SubnetBuilder &builder,
   Inversions invs;
   for (; i != j; ++i) {
     for (; j != divsTT.end(); ++j) {
-      const TruthTable &divTT1 = (*i).second;
-      const TruthTable &divTT2 = (*j).second;
-      const size_t div1 = (*i).first;
-      const size_t div2 = (*j).first;
+      const TruthTable &divTT1 = i->second;
+      const TruthTable &divTT2 = j->second;
+      const size_t div1 = i->first;
+      const size_t div2 = j->first;
       if (checkOneResubstitution(target, divTT1, divTT2, care,
                                  posOne, posZero, invs)) {
         return makeOneResubstitution(builder, iter, cone,

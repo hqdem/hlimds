@@ -50,4 +50,22 @@ public:
   }
 };
 
+/// @brief Composite in-place subnet transformer.
+class SubnetInPlaceTransformerChain final : public SubnetInPlaceTransformer {
+public:
+  using Chain = std::vector<std::shared_ptr<SubnetInPlaceTransformer>>;
+
+  SubnetInPlaceTransformerChain(const Chain &chain): chain(chain) {}
+  virtual ~SubnetInPlaceTransformerChain() {}
+
+  void transform(SubnetBuilder &builder) const override {
+    for (const auto &pass : chain) {
+      pass->transform(builder);
+    }
+  }
+
+private:
+  const Chain chain;
+};
+
 } // namespace eda::gate::optimizer2

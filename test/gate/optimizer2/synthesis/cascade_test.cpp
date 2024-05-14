@@ -81,7 +81,9 @@ TruthTable checkSynthSubnet(int numVars, int bits, model::SubnetID &subnetId) {
 
 void subnetEquivalenceTest(int vars) {
   TruthTable table(vars);
-  kitty::create_random(table);
+
+  // Create random truth table with zero seed.
+  kitty::create_random(table, 0);
 
   CascadeSynthesizer resynth;
   const auto subnetId = resynth.synthesize(table);

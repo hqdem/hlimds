@@ -29,7 +29,7 @@ public:
    * @param cutSize The size of constructed cuts.
    */
   AreaOptimizer(SubnetBuilder &builder, size_t arity,
-                size_t cutSize = 8, size_t delta = 0.0)
+                size_t cutSize = 8, double delta = 0.0)
       : iter(builder.begin()) {
     iterator = new AreaSubnetIterator(builder, iter, cutSize);
     resynthesizer = new AreaResynthesizer(builder, arity);

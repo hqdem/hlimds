@@ -126,6 +126,10 @@ std::vector<size_t> getReconvergenceCut(const model::Subnet &subnet,
   while (true) {
     size_t bestLeave = findBestLeave(subnet, leaves, visited, cutSize);
     if (bestLeave == (size_t)-1) {
+      // Case when there are only constant inputs
+      if (leaves.empty()) {
+        return roots;
+      }
       return leaves;
     }
     // Replace the best leave with it inputs.
@@ -152,6 +156,10 @@ std::vector<size_t> getReconvergenceCut(const model::SubnetBuilder &builder,
   while (true) {
     size_t bestLeave = findBestLeave(builder, leaves, visited, cutSize);
     if (bestLeave == (size_t)-1) {
+      // Case when there are only constant inputs
+      if (leaves.empty()) {
+        return roots;
+      }
       return leaves;
     }
     // Replace the best leave with it inputs.

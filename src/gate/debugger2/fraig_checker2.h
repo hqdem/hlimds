@@ -1,0 +1,45 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+#pragma once
+#include "base_checker2.h"
+#include "gate/simulator2/simulator.h"
+
+#include <bitset>
+
+namespace eda::gate::debugger2 {
+
+using CounterEx = std::vector<std::bitset<64>>;
+
+/**
+ * \brief Implements FRAIG-based method of LEC.
+ *
+ * The algorithm is based on the article "Improvements to combinational
+ * equivalence checking" by A. Mishchenko, S. Chatterjee, R. Brayton (2006).
+ */
+class FraigChecker2 : public BaseChecker2, public util::Singleton<FraigChecker2> {
+friend class util::Singleton<FraigChecker2>;
+
+public:
+  /**
+   * @copydoc BaseChecker2::isSat
+   */
+  CheckerResult isSat(const SubnetID id) const override;
+
+  /// Simulator arity limit
+  static const size_t simLimit = 64;
+private:
+
+  static void netSimulation(simulator2::Simulator &simulator,
+                            const uint16_t &nIn,
+                            const CounterEx &counterEx = {});
+
+  FraigChecker2() {}
+};
+
+} // namespace eda::gate::debugger2

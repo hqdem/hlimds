@@ -14,6 +14,7 @@ namespace eda::gate::debugger2::options {
 
 enum LecType {
   BDD,
+  FRAIG,
   RND,
   SAT,
 };

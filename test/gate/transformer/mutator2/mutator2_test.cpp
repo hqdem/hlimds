@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include "gate/debugger2/bdd_checker2.h"
+#include "gate/debugger2/fraig_checker2.h"
 #include "gate/debugger2/sat_checker2.h"
 #include "gate/debugger2/rnd_checker2.h"
 #include "gate/model2/celltype.h"
@@ -29,6 +30,7 @@ namespace eda::gate::mutator {
   using CellSymbol = eda::gate::model::CellSymbol;
   using eda::gate::debugger2::getChecker;
   using eda::gate::debugger2::options::BDD;
+  using eda::gate::debugger2::options::FRAIG;
   using eda::gate::debugger2::options::RND;
   using eda::gate::debugger2::options::SAT;
   using eda::gate::model::make2AndOr;
@@ -86,6 +88,8 @@ namespace eda::gate::mutator {
                                                 functions);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
+                                       getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
@@ -103,6 +107,8 @@ namespace eda::gate::mutator {
                                                 functions);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
+                                       getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
@@ -122,6 +128,8 @@ namespace eda::gate::mutator {
     EXPECT_EQ(counter, 1);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
+                                       getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
@@ -141,6 +149,8 @@ namespace eda::gate::mutator {
     EXPECT_EQ(counter, 60);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
+                                       getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(SAT)));
   }
@@ -155,6 +165,8 @@ namespace eda::gate::mutator {
                                                 functions);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
+                                       getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(SAT)));
   }
@@ -185,6 +197,8 @@ namespace eda::gate::mutator {
                                                 2);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
+                                       getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
@@ -202,6 +216,8 @@ namespace eda::gate::mutator {
                                                 2);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
+                                       getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
@@ -238,6 +254,8 @@ namespace eda::gate::mutator {
     EXPECT_EQ(counter, 4);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(BDD)));
+    EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
+                                       getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
                                        getChecker(SAT)));
   }

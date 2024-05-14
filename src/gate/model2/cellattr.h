@@ -48,8 +48,24 @@ public:
     return width[i];
   }
 
+  uint16_t getInWidth() const {
+    uint16_t n = 0;
+    for (uint16_t i = 0; i < nInPort; ++i) {
+      n += getInWidth(i);
+    }
+    return n;
+  }
+
   uint16_t getOutWidth(uint16_t i) const {
     return width[nInPort + i];
+  }
+
+  uint16_t getOutWidth() const {
+    uint16_t n = 0;
+    for (uint16_t i = 0; i < nOutPort; ++i) {
+      n += getOutWidth(i);
+    }
+    return n;
   }
 
   /// Number of input (multi-bit) ports.

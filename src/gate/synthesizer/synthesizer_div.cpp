@@ -8,30 +8,47 @@
 
 #include "gate/synthesizer/synthesizer_div.h"
 
+#include <cassert>
+
 namespace eda::gate::synthesizer {
 
+inline void checkSignature(const eda::gate::model::CellTypeAttr &attr) {
+  assert(attr.nInPort == 2);
+  assert(attr.nOutPort == 1);
+}
+
 model::SubnetID synthDivS(const eda::gate::model::CellTypeAttr &attr) {
+  checkSignature(attr);
   // FIXME:
+  assert(false);
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthDivU(const eda::gate::model::CellTypeAttr &attr) {
+  checkSignature(attr);
   // FIXME:
+  assert(false);
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthRemS(const eda::gate::model::CellTypeAttr &attr) {
+  checkSignature(attr);
   // FIXME:
+  assert(false);
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthRemU(const eda::gate::model::CellTypeAttr &attr) {
+  checkSignature(attr);
   // FIXME:
+  assert(false);
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthModS(const eda::gate::model::CellTypeAttr &attr) {
+  checkSignature(attr);
   // FIXME:
+  assert(false);
   return model::OBJ_NULL_ID;
 }
 

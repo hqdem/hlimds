@@ -8,15 +8,26 @@
 
 #include "gate/synthesizer/synthesizer_add.h"
 
+#include <cassert>
+
 namespace eda::gate::synthesizer {
 
+inline void checkSignature(const model::CellTypeAttr &attr) {
+  assert(attr.nInPort == 2);
+  assert(attr.nOutPort == 1);
+}
+
 model::SubnetID synthAdd(const model::CellTypeAttr &attr) {
+  checkSignature(attr);
   // FIXME:
+  assert(false);
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthSub(const model::CellTypeAttr &attr) {
+  checkSignature(attr);
   // FIXME:
+  assert(false);
   return model::OBJ_NULL_ID;
 }
 

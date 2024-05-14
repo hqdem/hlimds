@@ -102,6 +102,11 @@ add_library(Gate OBJECT
   simulator/simulator.cpp
   simulator2/simulator.cpp
   synthesizer/synthesizer.cpp
+  synthesizer/synthesizer_add.cpp
+  synthesizer/synthesizer_cmp.cpp
+  synthesizer/synthesizer_div.cpp
+  synthesizer/synthesizer_mul.cpp
+  synthesizer/synthesizer_mux.cpp
   techmapper/assembly.cpp
   techmapper/comb_mapper/comb_mapper.cpp
   techmapper/comb_mapper/cut_based/area_recovery/area_recovery.cpp

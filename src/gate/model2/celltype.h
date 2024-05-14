@@ -278,11 +278,15 @@ public:
   bool isNet() const { return NetID::checkTag(implID); }
   /// Returns the net of the cell type.
   const Net &getNet() const;
+  /// Sets the net implementation.
+  void setNet(NetID netID) { implID = netID; }
 
   /// Checks whether the cell type is implemented by Subnet.
   bool isSubnet() const { return SubnetID::checkTag(implID); }
   /// Return the subnet of the cell type.
   const Subnet &getSubnet() const;
+  /// Sets the subnet implementation.
+  void setSubnet(SubnetID subnetID) { implID = subnetID; }
 
   /// Checks whether the cell type has attributes.
   bool hasAttr() const { return attrID != OBJ_NULL_ID; }
@@ -308,7 +312,7 @@ private:
   const StringID nameID;
 
   /// Implementation: NetID or SubnetID.
-  const uint64_t implID;
+  uint64_t implID;
 
   const CellTypeAttrID attrID;
   const CellSymbol symbol;

@@ -7,6 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/synthesizer/synthesizer.h"
+#include "gate/synthesizer/synthesizer_add.h"
+#include "gate/synthesizer/synthesizer_cmp.h"
+#include "gate/synthesizer/synthesizer_div.h"
+#include "gate/synthesizer/synthesizer_mul.h"
+#include "gate/synthesizer/synthesizer_mux.h"
 
 #include <cassert>
 
@@ -14,40 +19,48 @@ namespace eda::gate::synthesizer {
 
 using namespace eda::gate::model;
 
+static SubnetID synthImpl(const CellType &type) {
+  const auto &attr = type.getAttr();
+
+  switch (type.getSymbol()) {
+  case MUX2: return synthMux2(attr);
+  case EQs:  return synthEqS(attr);
+  case EQu:  return synthEqU(attr);
+  case NEQs: return synthNeqS(attr);
+  case NEQu: return synthNeqU(attr);
+  case LTs:  return synthLtS(attr);
+  case LTu:  return synthLtU(attr);
+  case LTEs: return synthLteS(attr);
+  case LTEu: return synthLteU(attr);
+  case GTs:  return synthGtS(attr);
+  case GTu:  return synthGtU(attr);
+  case GTEs: return synthGteS(attr);
+  case GTEu: return synthGteU(attr);
+  case ADD:  return synthAdd(attr);
+  case SUB:  return synthSub(attr);
+  case MULs: return synthMulS(attr);
+  case MULu: return synthMulU(attr);
+  case DIVs: return synthDivS(attr);
+  case DIVu: return synthDivU(attr);
+  case REMs: return synthRemS(attr);
+  case REMu: return synthRemU(attr);
+  case MODs: return synthModS(attr);
+  default: assert(false && "Unsupported operation");
+  }
+
+  return OBJ_NULL_ID;
+}
+
 void synthSoftBlocks(const NetID netID) {
   auto &net = Net::get(netID);
 
   auto softBlocks = net.getSoftBlocks();
-  for (const auto cellID : softBlocks) {
+  for (const auto &cellID : softBlocks) {
     auto &cell = Cell::get(cellID);
-    auto &type = cell.getType();
+    auto &type = const_cast<CellType&>(cell.getType());
 
-    switch (type.getSymbol()) {
-    case MUX2: break; // TODO:
-    case EQs:  break; // TODO:
-    case EQu:  break; // TODO:
-    case NEQs: break; // TODO:
-    case NEQu: break; // TODO:
-    case LTs:  break; // TODO:
-    case LTu:  break; // TODO:
-    case LTEs: break; // TODO:
-    case LTEu: break; // TODO:
-    case GTs:  break; // TODO:
-    case GTu:  break; // TODO:
-    case GTEs: break; // TODO:
-    case GTEu: break; // TODO:
-    case ADD:  break; // TODO:
-    case SUB:  break; // TODO:
-    case MULs: break; // TODO:
-    case MULu: break; // TODO:
-    case DIVs: break; // TODO:
-    case DIVu: break; // TODO:
-    case REMs: break; // TODO:
-    case REMu: break; // TODO:
-    case MODs: break; // TODO:
-    default: assert(false && "Unsupported operation");
-    }
-
+    const auto subnetID = synthImpl(type);
+    type.setSubnet(subnetID);
   }
 }
 

@@ -100,6 +100,7 @@ add_library(Gate OBJECT
   printer/vcd.cpp
   simulator/simulator.cpp
   simulator2/simulator.cpp
+  synthesizer/synthesizer.cpp
   techmapper/assembly.cpp
   techmapper/comb_mapper/comb_mapper.cpp
   techmapper/comb_mapper/cut_based/area_recovery/area_recovery.cpp

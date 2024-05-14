@@ -165,7 +165,7 @@ struct NetComponent final {
   }
 
   /// Merges the component w/ this one.
-  void merge(const NetComponent &r)  {
+  void merge(const NetComponent &r) {
     inputs.insert(r.inputs.begin(), r.inputs.end());
     inners.insert(inners.end(), r.inners.begin(), r.inners.end());
     outputs.insert(r.outputs.begin(), r.outputs.end());

@@ -13,6 +13,7 @@ add_library(Gate OBJECT
   debugger/symexec.cpp
   debugger2/base_checker2.cpp
   debugger2/bdd_checker2.cpp
+  debugger2/fraig_checker2.cpp
   debugger2/rnd_checker2.cpp
   debugger2/seq_checker.cpp
   model/gate.cpp

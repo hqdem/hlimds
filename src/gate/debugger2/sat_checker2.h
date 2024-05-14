@@ -31,7 +31,14 @@ public:
     encoder.encode(miter, context, solver);
     encoder.encodeEqual(miter, context, solver, miter.getOut(0), 1);
 
-    return solver.solve() ? CheckerResult::NOTEQUAL : CheckerResult::EQUAL;
+    if (solver.solve()) {
+      std::vector<bool> counterEx;
+      for (size_t i = 0; i < miter.getInNum(); i++) {
+        counterEx.push_back(solver.value(context.var(i, 0)));
+      }
+      return CheckerResult(CheckerResult::NOTEQUAL, counterEx);
+    }
+    return CheckerResult::EQUAL;
   }
 
 private:

@@ -8,6 +8,7 @@
 
 #include "base_checker2.h"
 #include "bdd_checker2.h"
+#include "fraig_checker2.h"
 #include "rnd_checker2.h"
 #include "sat_checker2.h"
 
@@ -22,6 +23,7 @@ using CellSymbol = model::CellSymbol;
 BaseChecker2 &getChecker(LecType lec) {
   switch (lec) {
     case LecType::BDD: return BddChecker2::get();
+    case LecType::FRAIG: return FraigChecker2::get();
     case LecType::RND: return RndChecker2::get();
     case LecType::SAT: return SatChecker2::get();
     default: return SatChecker2::get();
@@ -102,23 +104,19 @@ bool areMiterable(const Subnet &net1,
 }
 
 MiterHints makeHints(const Subnet &net, const CellToCell &map) {
-    MiterHints hints;
-    size_t nOut = net.getOutNum();
-    size_t nIn = net.getInNum();
-    for (size_t i = 0; i < nIn; ++i) {
-      hints.sourceBinding[i] = map.at(i);
+  MiterHints hints;
+  size_t nOut = net.getOutNum();
+  size_t nIn = net.getInNum();
+  for (size_t i = 0; i < nIn; ++i) {
+    hints.sourceBinding[i] = map.at(i);
+  }
+  for (size_t i = net.size() - 1; ; i--) {
+    hints.targetBinding[i] = map.at(i);
+    if (hints.targetBinding.size() == nOut) {
+      break;
     }
-    for (size_t i = net.size() - 1; ; i--) {
-      size_t prevMore = net.getEntries()[i - 1].cell.more;
-      if (prevMore) {
-        continue;
-      }
-      hints.targetBinding[i] = map.at(i);
-      if (hints.targetBinding.size() == nOut) {
-        break;
-      }
-    }
-    return hints;
+  }
+  return hints;
 }
 
 void BaseChecker2::miter2(SubnetBuilder &builder,

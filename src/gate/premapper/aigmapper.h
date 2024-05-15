@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/array.h"
-#include "gate/model2/celltype.h"
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/transformer.h"
 
 #include <memory>

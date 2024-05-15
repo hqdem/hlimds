@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/base_checker.h"
-#include "gate/model2/examples.h"
+#include "gate/model/examples.h"
 #include "gate/simulator/simulator.h"
 
 #include "gtest/gtest.h"

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/examples.h"
+#include "gate/model/examples.h"
 #include "gate/optimizer/npndb.h"
 
 #include "gtest/gtest.h"

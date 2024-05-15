@@ -8,7 +8,7 @@
 
 #include "verilog_model2.h"
 
-#include "gate/model2/printer/printer.h"
+#include "gate/model/printer/printer.h"
 #include "gate/translator/fir/fir_model2.h"
 
 #include <filesystem>

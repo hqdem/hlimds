@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/sat_checker.h"
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/area_optimizer.h"
 #include "gate/parser/graphml_to_subnet.h"
 

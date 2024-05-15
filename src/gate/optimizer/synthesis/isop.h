@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/synthesis/algebraic_factor.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/kitty_utils.h"

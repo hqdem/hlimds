@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/object.h"
+#include "gate/model/object.h"
 #include "gate/optimizer/cone_builder.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"

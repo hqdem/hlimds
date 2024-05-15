@@ -5,8 +5,9 @@
 // Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/model2/celltype.h"
-#include "gate/model2/subnet.h"
+
+#include "gate/model/celltype.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/arith.h"
 

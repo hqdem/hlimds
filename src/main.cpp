@@ -9,7 +9,7 @@
 #include "config.h"
 #include "gate/analyzer/simulation_estimator.h"
 #include "gate/debugger/sat_checker.h"
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/area_optimizer.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/techmapper/techmapper_wrapper.h"

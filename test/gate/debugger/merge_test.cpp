@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/seq_checker.h"
-#include "gate/model2/examples.h"
-#include "gate/model2/utils/subnet_random.h"
+#include "gate/model/examples.h"
+#include "gate/model/utils/subnet_random.h"
 
 #include "gtest/gtest.h"
 

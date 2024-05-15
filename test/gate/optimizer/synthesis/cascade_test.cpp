@@ -5,6 +5,7 @@
 // Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #include "gate/optimizer/synthesis/cascade.h"
 
 #include "gtest/gtest.h"

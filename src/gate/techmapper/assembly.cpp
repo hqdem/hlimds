@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/techmapper/assembly.h"
+
 #include <cassert>
 #include <iostream>
-
-#include "gate/techmapper/assembly.h"
 
 namespace eda::gate::techmapper {
 

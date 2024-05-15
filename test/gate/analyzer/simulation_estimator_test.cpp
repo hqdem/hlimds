@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/analyzer/simulation_estimator.h"
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 
 #include "gtest/gtest.h"
 

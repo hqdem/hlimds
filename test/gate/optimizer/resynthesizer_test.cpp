@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/subnet.h"
-#include "gate/model2/utils/subnet_random.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/subnet.h"
+#include "gate/model/utils/subnet_random.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/synthesis/akers.h"
 #include "gate/optimizer/synthesizer.h"
 

@@ -8,8 +8,8 @@
 
 #include "fir_model2.h"
 
-#include "gate/model2/celltype.h"
-#include "gate/model2/printer/printer.h"
+#include "gate/model/celltype.h"
+#include "gate/model/printer/printer.h"
 #include "util/assert.h"
 
 #include "circt/Conversion/Passes.h"

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 
 #include <queue>
 #include <unordered_set>

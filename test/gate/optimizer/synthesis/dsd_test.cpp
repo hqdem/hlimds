@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/subnet.h"
-#include "gate/model2/utils/subnet_random.h"
-#include "gate/model2/utils/subnet_random.h"
-#include "gate/model2/utils/subnet_to_bdd.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/subnet.h"
+#include "gate/model/utils/subnet_random.h"
+#include "gate/model/utils/subnet_random.h"
+#include "gate/model/utils/subnet_to_bdd.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/synthesis/dsd_to_subnet.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/simulator/simulator.h"

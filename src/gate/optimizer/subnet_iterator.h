@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/object.h"
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/reconvergence_cut.h"
 
 #include <unordered_map>

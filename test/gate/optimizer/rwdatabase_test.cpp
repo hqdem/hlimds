@@ -9,8 +9,8 @@
 #include "gtest/gtest.h"
 
 #include "gate/optimizer/rwdatabase.h"
-#include "gate/model2/examples.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/examples.h"
+#include "gate/model/utils/subnet_truth_table.h"
 
 using namespace eda::gate::model;
 using namespace eda::gate::optimizer;

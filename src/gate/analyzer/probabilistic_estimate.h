@@ -10,7 +10,7 @@
 
 #include "bitset"
 
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 
 #include "switching_activity.h"
 

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/techmapper/library/check_lib/check_lib.h"
 
 #include <unordered_map>

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/debugger/base_checker.h"
-#include "gate/model2/utils/subnet_cnf_encoder.h"
+#include "gate/model/utils/subnet_cnf_encoder.h"
 
 #include <cassert>
 

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.h"

@@ -8,9 +8,8 @@
 
 #pragma once
 
+#include "gate/model/printer/printer.h"
 #include "gate/translator/model2.h"
-
-#include "gate/model2/printer/printer.h"
 
 #include <kernel/yosys.h>
 

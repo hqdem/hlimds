@@ -7,21 +7,21 @@ add_library(Gate OBJECT
   debugger/fraig_checker.cpp
   debugger/rnd_checker.cpp
   debugger/seq_checker.cpp
-  model2/cell.cpp
-  model2/celltype.cpp
-  model2/decomposer/net_decomposer.cpp
-  model2/design.cpp
-  model2/generator/generator.cpp
-  model2/generator/layer_generator.cpp
-  model2/generator/matrix_generator.cpp
-  model2/link.cpp
-  model2/net.cpp
-  model2/printer/printer.cpp
-  model2/subnet.cpp
-  model2/utils/bdd_dnf.cpp
-  model2/utils/subnet_checking.cpp
-  model2/utils/subnet_to_bdd.cpp
-  model2/utils/subnet_truth_table.cpp
+  model/cell.cpp
+  model/celltype.cpp
+  model/decomposer/net_decomposer.cpp
+  model/design.cpp
+  model/generator/generator.cpp
+  model/generator/layer_generator.cpp
+  model/generator/matrix_generator.cpp
+  model/link.cpp
+  model/net.cpp
+  model/printer/printer.cpp
+  model/subnet.cpp
+  model/utils/bdd_dnf.cpp
+  model/utils/subnet_checking.cpp
+  model/utils/subnet_to_bdd.cpp
+  model/utils/subnet_truth_table.cpp
   optimizer/area_resynthesizer.cpp
   optimizer/cone_builder.cpp
   optimizer/cut_extractor.cpp

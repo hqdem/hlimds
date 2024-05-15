@@ -35,19 +35,19 @@ add_executable(${TEST_TARGET}
   gate/debugger/sat_checker_test.cpp
   gate/debugger/seq_sweep_test.cpp
   gate/debugger/synth_lec_test.cpp
-  gate/model2/array_test.cpp
-  gate/model2/examples.cpp
-  gate/model2/generator_test.cpp
-  gate/model2/list_test.cpp
-  gate/model2/net_decomposer_test.cpp
-  gate/model2/net_test.cpp
-  gate/model2/replace_test.cpp
-  gate/model2/seq_net.cpp
-  gate/model2/subnet_cnf_encoder_test.cpp
-  gate/model2/subnet_depth_test.cpp
-  gate/model2/subnet_test.cpp
-  gate/model2/utils/bdd_dnf_test.cpp
-  gate/model2/utils/subnet_truth_table_test.cpp
+  gate/model/array_test.cpp
+  gate/model/examples.cpp
+  gate/model/generator_test.cpp
+  gate/model/list_test.cpp
+  gate/model/net_decomposer_test.cpp
+  gate/model/net_test.cpp
+  gate/model/replace_test.cpp
+  gate/model/seq_net.cpp
+  gate/model/subnet_cnf_encoder_test.cpp
+  gate/model/subnet_depth_test.cpp
+  gate/model/subnet_test.cpp
+  gate/model/utils/bdd_dnf_test.cpp
+  gate/model/utils/subnet_truth_table_test.cpp
   gate/parser/graphml_test_utils.cpp
   gate/parser/graphml_to_subnet_test.cpp
   gate/premapper/aigmapper_test.cpp

@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/subnet.h"
-#include "gate/model2/utils/subnet_to_bdd.h"
+#include "gate/model/subnet.h"
+#include "gate/model/utils/subnet_to_bdd.h"
 #include "util/logging.h"
 
 #include "gtest/gtest.h"

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/cell.h"
+#include "gate/model/cell.h"
 #include "gate/techmapper/library/cell_db.h"
 #include "gate/techmapper/techmapper.h"
 

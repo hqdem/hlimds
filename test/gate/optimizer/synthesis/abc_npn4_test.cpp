@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/utils/subnet_checking.h"
+#include "gate/model/utils/subnet_checking.h"
 #include "gate/optimizer/npn.h"
 #include "gate/optimizer/synthesis/abc_npn4.h"
 

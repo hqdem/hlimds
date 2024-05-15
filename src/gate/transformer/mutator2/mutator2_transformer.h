@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/array.h"
+#include "gate/model/array.h"
 #include "gate/transformer/mutator2/mutator2.h"
 
 namespace eda::gate::mutator {

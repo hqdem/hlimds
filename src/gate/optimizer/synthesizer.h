@@ -8,10 +8,9 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 
 #include "cudd.h"
-#include "gate/model2/object.h"
 #include "kitty/dynamic_truth_table.hpp"
 
 #define CONST_CHECK(func, inv)\

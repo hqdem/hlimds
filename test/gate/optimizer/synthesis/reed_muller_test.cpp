@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/cell.h"
-#include "gate/model2/celltype.h"
-#include "gate/model2/utils/subnet_checking.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/cell.h"
+#include "gate/model/celltype.h"
+#include "gate/model/utils/subnet_checking.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/synthesis/reed_muller.h"
 #include "util/arith.h"
 

@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/analyzer/simulation_estimator.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/techmapper/comb_mapper/cut_based/power_map/power_map.h"
 
 namespace eda::gate::techmapper {

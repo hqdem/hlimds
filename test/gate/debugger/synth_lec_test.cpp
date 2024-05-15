@@ -9,7 +9,7 @@
 #include "gate/debugger/bdd_checker.h"
 #include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/rnd_checker.h"
-#include "gate/model2/examples.h"
+#include "gate/model/examples.h"
 
 #include "gtest/gtest.h"
 

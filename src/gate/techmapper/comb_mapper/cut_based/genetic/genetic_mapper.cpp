@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/genetic/genetic_mapper.h"
 
@@ -66,28 +66,27 @@ void GeneticMapper::initialization() {
       gen->entryIdxs.insert(entries[entryIndex].cell.link[0].idx);
       genBank[entryIndex].push_back(gen);
       continue;
-    } else {
-      auto cutsList = cutExtractor->getCuts(entryIndex);
-      for (const auto &cut: cutsList) {
-        if (cut.entryIdxs.count(entryIndex) != 1) {
+    }
+    auto cutsList = cutExtractor->getCuts(entryIndex);
+    for (const auto &cut: cutsList) {
+      if (cut.entryIdxs.count(entryIndex) != 1) {
 
-          SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-          auto truthTable = eda::gate::model::evaluate(
-              model::Subnet::get(coneSubnetID));
+        SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
+        auto truthTable = eda::gate::model::evaluate(
+            model::Subnet::get(coneSubnetID));
 
-          for (const SubnetID &currentSubnetID: cellDB->getSubnetIDsByTT(
-              truthTable.at(0))) {
-            //fill gen bank with currentSubnetID and currentAttr
-            auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
-            auto gen = std::make_shared<Gen>();
-            gen->emptyGen = false;
-            gen->subnetID = currentSubnetID;
-            gen->name = currentAttr.name;
-            gen->area = currentAttr.area;
-            gen->entryIdxs = cut.entryIdxs;
+        for (const SubnetID &currentSubnetID: cellDB->getSubnetIDsByTT(
+            truthTable.at(0))) {
+          //fill gen bank with currentSubnetID and currentAttr
+          auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
+          auto gen = std::make_shared<Gen>();
+          gen->emptyGen = false;
+          gen->subnetID = currentSubnetID;
+          gen->name = currentAttr.name;
+          gen->area = currentAttr.area;
+          gen->entryIdxs = cut.entryIdxs;
 
-            genBank[entryIndex].push_back(gen);
-          }
+          genBank[entryIndex].push_back(gen);
         }
       }
     }

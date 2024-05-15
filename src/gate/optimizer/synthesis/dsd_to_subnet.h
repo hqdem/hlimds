@@ -9,8 +9,8 @@
 #ifndef DSD_TO_GNET_H
 #define DSD_TO_GNET_H
 
-#include "gate/model2/subnet.h"
-#include "gate/model2/utils/subnet_to_bdd.h"
+#include "gate/model/subnet.h"
+#include "gate/model/utils/subnet_to_bdd.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/logging.h"

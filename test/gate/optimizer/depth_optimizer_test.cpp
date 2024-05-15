@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/sat_checker.h"
-#include "gate/model2/utils/subnet_random.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/utils/subnet_random.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/depth_optimizer.h"
 #include "gate/optimizer/depth_replacer.h"
 #include "gate/optimizer/depth_resynthesizer.h"

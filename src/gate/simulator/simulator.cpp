@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/celltype.h"
+#include "gate/model/celltype.h"
 #include "gate/simulator/simulator.h"
 #include "util/assert.h"
 

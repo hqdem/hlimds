@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "gate/model2/cell.h"
-#include "gate/model2/subnet.h"
+#include "gate/model/cell.h"
+#include "gate/model/subnet.h"
 
-#include <limits.h>
+#include <climits>
 #include <unordered_set>
 
 namespace eda::gate::techmapper {

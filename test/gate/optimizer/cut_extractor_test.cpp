@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/utils/subnet_random.h"
+#include "gate/model/utils/subnet_random.h"
 #include "gate/optimizer/cut_extractor.h"
 #include "gate/parser/graphml_to_subnet.h"
 

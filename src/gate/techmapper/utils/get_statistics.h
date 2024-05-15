@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/utils/get_tech_attrs.h"
 

@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/subnet.h"
-#include "gate/model2/utils/subnet_random.h"
+#include "gate/model/subnet.h"
+#include "gate/model/utils/subnet_random.h"
 #include "gate/simulator/simulator.h"
 
 #include "gtest/gtest.h"

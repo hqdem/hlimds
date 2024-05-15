@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "gate/model2/object.h"
 #include "gate/translator/firrtl.h"
 
 #include <string>
@@ -16,4 +15,5 @@
 namespace eda::gate::model {
 
 int translateToModel2(const FirrtlConfig &firrtlConfig);
+
 } // namespace eda::gate::model

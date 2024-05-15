@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/optimizer/synthesis/ternary_bi_clique.h"
 #include "gate/optimizer/synthesizer.h"

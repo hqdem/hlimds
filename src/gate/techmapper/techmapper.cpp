@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/celltype.h"
-#include "gate/model2/decomposer/net_decomposer.h"
+#include "gate/model/celltype.h"
+#include "gate/model/decomposer/net_decomposer.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/assembly.h"
 

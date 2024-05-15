@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/debugger/base_checker.h"
-#include "gate/model2/utils/subnet_to_bdd.h"
+#include "gate/model/utils/subnet_to_bdd.h"
 
 namespace eda::gate::debugger {
 

@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/subnet.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "util/kitty_utils.h"
 
 #include "kitty/kitty.hpp"

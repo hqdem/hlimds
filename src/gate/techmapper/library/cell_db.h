@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "gate/model2/celltype.h"
-#include "gate/model2/subnet.h"
+#include "gate/model/celltype.h"
+#include "gate/model/subnet.h"
 #include "gate/techmapper/library/subnetattr.h"
 
 #include <kitty/print.hpp>

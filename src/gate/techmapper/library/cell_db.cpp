@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/techmapper/library/cell_db.h"
 #include "gate/techmapper/library/check_lib/aig/check_lib_for_aig.h"
 #include "gate/techmapper/library/liberty_manager.h"

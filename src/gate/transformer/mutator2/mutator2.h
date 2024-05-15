@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/cut_extractor.h"
 #include "gate/transformer/mutator2/mutator2_transformer.h"
 

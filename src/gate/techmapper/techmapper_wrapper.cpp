@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/printer/printer.h"
+#include "gate/model/printer/printer.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/net.h"
+#include "gate/model/net.h"
 #include "gate/translator/firrtl.h"
 
 #include "llvm/Support/SourceMgr.h"

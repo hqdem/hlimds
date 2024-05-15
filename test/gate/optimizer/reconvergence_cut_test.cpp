@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/celltype.h"
+#include "gate/model/celltype.h"
 #include "gate/optimizer/reconvergence_cut.h"
 
 #include "gtest/gtest.h"

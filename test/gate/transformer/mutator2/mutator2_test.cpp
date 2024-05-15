@@ -9,9 +9,9 @@
 #include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/sat_checker.h"
 #include "gate/debugger/rnd_checker.h"
-#include "gate/model2/celltype.h"
-#include "gate/model2/examples.h"
-#include "gate/model2/subnet.h"
+#include "gate/model/celltype.h"
+#include "gate/model/examples.h"
+#include "gate/model/subnet.h"
 #include "gate/parser/graphml_to_subnet.h"
 #include "gate/transformer/mutator2/mutator2.h"
 

@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/utils/subnet_checking.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/utils/subnet_checking.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/synthesis/de_micheli.h"
 
 #include "gtest/gtest.h"

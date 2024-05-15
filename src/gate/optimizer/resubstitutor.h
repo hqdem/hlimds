@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/mffc.h"
 #include "gate/optimizer/reconvergence_cut.h"
 #include "gate/optimizer/safe_passer.h"

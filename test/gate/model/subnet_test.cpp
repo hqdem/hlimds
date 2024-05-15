@@ -19,6 +19,16 @@
 
 namespace eda::gate::model {
 
+using DinTruthTable = kitty::dynamic_truth_table;
+
+static bool truthTablesEqual(
+    const SubnetID subnetID,
+    const SubnetID targetSubnetID) {
+  DinTruthTable t1 = evaluateSingleOut(Subnet::get(targetSubnetID));
+  DinTruthTable t2 = evaluateSingleOut(Subnet::get(subnetID));
+  return t1 == t2;
+}
+
 static SubnetID makeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   SubnetBuilder builder;
   Subnet::LinkList links;
@@ -182,6 +192,128 @@ TEST(SubnetTest, AddPIAfterConst) {
   const auto subnetID = builder.make();
 
   std::cout << Subnet::get(subnetID) << '\n';
+}
+
+TEST(SubnetTest, DelBufs) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(3);
+  Subnet::Link link1 = builder.addCell(BUF, ~inputs[0]);
+  Subnet::Link link2 = builder.addCell(BUF, link1);
+  Subnet::Link link3 = builder.addCell(AND, inputs[1], inputs[2]);
+  Subnet::Link link4 = builder.addCell(BUF, ~link3);
+  Subnet::Link link5 = builder.addCell(AND, link2, link4);
+  Subnet::Link link6 = builder.addCell(BUF, link5);
+  builder.addOutput(link6);
+
+  auto copyBuilder(builder);
+
+  const auto noBufsSubnetID = builder.make(true);
+  const auto bufsSubnetID = copyBuilder.make();
+
+  std::cout << Subnet::get(noBufsSubnetID) << '\n';
+
+  EXPECT_TRUE(truthTablesEqual(noBufsSubnetID, bufsSubnetID));
+}
+
+TEST(SubnetTest, DelBufWithOut) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(3);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1], inputs[2]);
+  Subnet::Link link2 = builder.addCell(BUF, ~link1);
+  builder.addOutput(link2);
+
+  auto copyBuilder(builder);
+
+  const auto noBufsSubnetID = builder.make(true);
+  const auto bufsSubnetID = copyBuilder.make();
+
+  std::cout << Subnet::get(noBufsSubnetID) << '\n';
+
+  EXPECT_TRUE(truthTablesEqual(noBufsSubnetID, bufsSubnetID));
+}
+
+TEST(SubnetTest, DelConnectedBufs) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(2);
+  Subnet::Link link1 = builder.addCell(BUF, ~inputs[0]);
+  Subnet::Link link2 = builder.addCell(BUF, ~link1);
+  Subnet::Link link3 = builder.addCell(AND, ~link2, inputs[1]);
+  builder.addOutput(link3);
+
+  auto copyBuilder(builder);
+
+  const auto noBufsSubnetID = builder.make(true);
+  const auto bufsSubnetID = copyBuilder.make();
+
+  std::cout << Subnet::get(noBufsSubnetID) << '\n';
+
+  EXPECT_TRUE(truthTablesEqual(noBufsSubnetID, bufsSubnetID));
+}
+
+TEST(SubnetTest, DelBufsCheckRefcount) {
+  SubnetBuilder builder;
+
+  Subnet::Link input = builder.addInput();
+  Subnet::Link link1 = builder.addCell(BUF, input);
+  Subnet::Link link2 = builder.addCell(BUF, link1);
+  Subnet::Link link3 = builder.addCell(BUF, link2);
+  builder.addOutput(input);
+  builder.addOutput(link1);
+  builder.addOutput(link2);
+  builder.addOutput(link3);
+
+  std::cout << Subnet::get(builder.make(true)) << '\n';
+
+  EXPECT_EQ(builder.getCell(0).refcount, 4);
+}
+
+TEST(SubnetTest, DepthsAfterMake) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(3);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(BUF, link1);
+  Subnet::Link link3 = builder.addCell(BUF, link2);
+  Subnet::Link link4 = builder.addCell(BUF, inputs[2]);
+  Subnet::Link link5 = builder.addCell(AND, link3, link4);
+  builder.addOutput(link5);
+
+  std::cout << Subnet::get(builder.make(true)) << '\n';
+
+  std::vector<size_t> correctDepths{0, 0, 0, 1, 2, 3};
+  for (auto it = builder.begin(); it != builder.end(); ++it) {
+    const size_t j = *it;
+    EXPECT_EQ(correctDepths[j], builder.getDepth(j));
+  }
+}
+
+TEST(SubnetTest, WeightsAfterMake) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(3);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(BUF, link1);
+  Subnet::Link link3 = builder.addCell(BUF, link2);
+  Subnet::Link link4 = builder.addCell(BUF, inputs[2]);
+  Subnet::Link link5 = builder.addCell(AND, link3, link4);
+  builder.addOutput(link5);
+
+  std::vector<float> weights{0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5};
+  for (auto it = builder.begin(); it != builder.end(); ++it) {
+    const size_t j = *it;
+    builder.setWeight(j, weights[j]);
+  }
+
+  std::cout << Subnet::get(builder.make(true)) << '\n';
+
+  std::vector<float> correctWeights{0.1, 0.15, 0.2, 0.25, 0.45, 0.5};
+  for (auto it = builder.begin(); it != builder.end(); ++it) {
+    size_t j = *it;
+    EXPECT_EQ(correctWeights[j], builder.getWeight(j));
+  }
 }
 
 #if 0

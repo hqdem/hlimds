@@ -253,7 +253,7 @@ public:
   typedef std::bidirectional_iterator_tag iterator_category;
 
 private:
-  EntryIterator(const SubnetBuilder *builder, value_type entryID) :
+  EntryIterator(const SubnetBuilder *builder, value_type entryID):
     builder(builder), entry(entryID) {};
 
 public:
@@ -585,20 +585,29 @@ public:
     return std::make_reverse_iterator(begin());
   }
 
-  SubnetID make(std::vector<size_t> &newToOldEntries) {
+  /// @brief Constructs subnet.
+  /// @param curEntriesToAny Map keys should be entry indexes from the current
+  /// SubnetBuilder. After this method the keys will be transformed into Subnet
+  /// entry indexes.
+  /// @param delBufs If set all BUFs will be deleted.
+  SubnetID make(
+      std::vector<size_t> &curEntriesToAny,
+      const bool delBufs = false) {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    if (isDisassembled) {
-      rearrangeEntries(newToOldEntries);
+    if (isDisassembled || delBufs) {
+      rearrangeEntries(curEntriesToAny, delBufs);
     }
     assert(checkInputsOrder() && checkOutputsOrder());
 
     return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 
-  SubnetID make() {
+  /// @brief Constructs subnet.
+  /// @param delBufs If set all BUF cells will be deleted.
+  SubnetID make(const bool delBufs = false) {
     std::vector<size_t> mapping{};
-    return make(mapping);
+    return make(mapping, delBufs);
   }
 
 private:
@@ -686,7 +695,9 @@ private:
 
   /// Sorts entries in topological order accoring to the prev and next arrays.
   /// Removes the holes.
-  void rearrangeEntries(std::vector<size_t> &newToOldEntries);
+  void rearrangeEntries(
+      std::vector<size_t> &curEntriesToAny,
+      const bool delBufs);
 
   /// Clears the replacement context.
   void clearContext();

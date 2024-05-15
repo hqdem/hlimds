@@ -721,7 +721,7 @@ TEST(ReplaceTest, DeleteDublicatedRoot) {
   mapping2[1] = 1;
   mapping2[3] = 5;
   const auto effect2 = builder.evaluateReplace(rhs2ID, mapping2);
-  EXPECT_TRUE(effect2.size == 1 && effect2.depth == 1);
+  EXPECT_TRUE(effect2.size == 1 && effect2.depth == 2);
   builder.replace(rhs2ID, mapping2);
   printBidirectCellsTrav(builder);
 

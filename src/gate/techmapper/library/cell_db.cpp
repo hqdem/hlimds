@@ -11,6 +11,8 @@
 #include "gate/techmapper/library/check_lib/aig/check_lib_for_aig.h"
 #include "gate/techmapper/library/liberty_manager.h"
 
+#include <vector>
+
 namespace eda::gate::techmapper {
 
 using CellSymbol = eda::gate::model::CellSymbol;
@@ -63,7 +65,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     do {
       count++;
       SubnetBuilder subnetBuilder;
-      uint16_t linkArray[cellType.getInNum()];
+      std::vector<uint16_t> linkArray(cellType.getInNum());
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
         auto inputIdx = subnetBuilder.addInput();
         linkArray[permutationVec.at(i)] = inputIdx.idx;

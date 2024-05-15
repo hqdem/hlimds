@@ -13,13 +13,13 @@
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer/synthesis/dsd_to_subnet.h"
 #include "gate/optimizer/synthesis/isop.h"
-#include "gate/simulator2/simulator.h"
+#include "gate/simulator/simulator.h"
 
 #include "gtest/gtest.h"
 
 using namespace eda::gate::model;
 using namespace eda::gate::model::utils;
-using namespace eda::gate::simulator2;
+using namespace eda::gate::simulator;
 
 using DsdSynthesizer = eda::gate::optimizer::synthesis::DsdSynthesizer;
 using BddWithDdManager = eda::gate::optimizer::synthesis::BddWithDdManager;

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/debugger/base_checker.h"
-#include "gate/simulator2/simulator.h"
+#include "gate/simulator/simulator.h"
 #include "util/logging.h"
 
 #include <optional>
@@ -24,7 +24,7 @@ using CellToCell = eda::gate::debugger::CellToCell;
 using LecType = eda::gate::debugger::options::LecType;
 using LinkList = model::Subnet::LinkList;
 using SubnetID = eda::gate::model::SubnetID;
-using Simulator = eda::gate::simulator2::Simulator;
+using Simulator = eda::gate::simulator::Simulator;
 
 /**
  * \brief Checks the equivalence of the specified subnets using SAT-solver.

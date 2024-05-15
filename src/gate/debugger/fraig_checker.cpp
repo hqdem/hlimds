@@ -46,10 +46,10 @@ private:
   uint64_t eqClass;
 };
 
-void FraigChecker::netSimulation(simulator2::Simulator &simulator,
+void FraigChecker::netSimulation(simulator::Simulator &simulator,
                                   const uint16_t &nIn,
                                   const CounterEx &counterEx) {
-  simulator2::Simulator::DataVector values(nIn);
+  simulator::Simulator::DataVector values(nIn);
   if (counterEx.size()) {
     for (size_t k = 0; k < nIn; ++k) {
       values[k] = counterEx[k].to_ullong();
@@ -75,7 +75,7 @@ CheckerResult FraigChecker::isSat(const SubnetID id) const {
     const uint16_t nIn = miter.getInNum();
 
     // Simulation
-    simulator2::Simulator simulator(miter);
+    simulator::Simulator simulator(miter);
     if (storageCount) {
       netSimulation(simulator, miter.getInNum(), counterExStorage);
       std::fill(counterExStorage.begin(),

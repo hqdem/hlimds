@@ -7,10 +7,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/celltype.h"
-#include "gate/simulator2/simulator.h"
+#include "gate/simulator/simulator.h"
 #include "util/assert.h"
 
-namespace eda::gate::simulator2 {
+namespace eda::gate::simulator {
 
 static size_t getLinkNum(const Simulator::Subnet &subnet) {
   const auto &entries = subnet.getEntries();
@@ -76,4 +76,4 @@ Simulator::Function Simulator::getFunction(const Cell &cell, size_t idx) const {
   return getZero(0);
 }
 
-} // namespace eda::gate::simulator2
+} // namespace eda::gate::simulator

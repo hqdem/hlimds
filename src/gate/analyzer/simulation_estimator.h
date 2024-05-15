@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/analyzer/switching_activity.h"
-#include "gate/simulator2/simulator.h"
+#include "gate/simulator/simulator.h"
 #include "util/assert.h"
 
 #include <bitset>
@@ -26,11 +26,11 @@ class SimulationEstimator final : public SwitchActivityEstimator {
 public:
 
   /// @cond ALIASES
-  using Cache         = simulator2::Simulator::DataChunk;
-  using CacheList     = simulator2::Simulator::DataVector;
+  using Cache         = simulator::Simulator::DataChunk;
+  using CacheList     = simulator::Simulator::DataVector;
   using Distributions = std::vector<std::discrete_distribution<int>>;
   using InValuesList  = std::vector<CacheList>;
-  using Simulator     = simulator2::Simulator;
+  using Simulator     = simulator::Simulator;
   using Switches      = SwitchActivity::Switches;
   /// @endcond
 

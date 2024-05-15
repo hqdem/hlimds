@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/debugger/base_checker.h"
-#include "gate/simulator2/simulator.h"
+#include "gate/simulator/simulator.h"
 
 #include <bitset>
 
@@ -36,7 +36,7 @@ public:
   static const size_t simLimit = 64;
 private:
 
-  static void netSimulation(simulator2::Simulator &simulator,
+  static void netSimulation(simulator::Simulator &simulator,
                             const uint16_t &nIn,
                             const CounterEx &counterEx = {});
 

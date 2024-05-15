@@ -8,12 +8,12 @@
 
 #include "gate/model2/subnet.h"
 #include "gate/model2/utils/subnet_random.h"
-#include "gate/simulator2/simulator.h"
+#include "gate/simulator/simulator.h"
 
 #include "gtest/gtest.h"
 
 using namespace eda::gate::model;
-using namespace eda::gate::simulator2;
+using namespace eda::gate::simulator;
 
 TEST(SimulatorTest, SimpleTest) {
   const size_t nIn      = 5;

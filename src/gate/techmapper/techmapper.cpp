@@ -145,34 +145,34 @@ NetID Techmapper::sequenseTechMapping(NetID netID) {
       buildMap[currentCellID] = cellID;
       stack.pop();
       continue;
-    } else {
-      model::Cell::LinkList linkList;
-      bool add = true;
-      for (const auto &inputLink : currentCell.getLinks()) {
-        if (buildMap.find(inputLink.getCellID()) != buildMap.end()) {
-          linkList.push_back(model::LinkEnd{inputLink.getCellID()});
-        } else {
-          add = false;
-        }
-      }
-      if (add) {
-        model::CellID cellID;
-        if (currentCell.isDff() || currentCell.isDffRs() || currentCell.isLatch()) {
-          // Change cellType
-          cellID = makeCell(techmap(currentCellID), linkList);
-        } else {
-          cellID = makeCell(currentCell.getTypeID(), linkList);
-        }
-        buildMap[currentCellID] = cellID;
-        netBuilder.addCell(cellID);
-        stack.pop();
-      }
+    }
 
-      for (const auto& link : currentCell.getLinks()) {
-        stack.push(link.getCellID());
+    model::Cell::LinkList linkList;
+    bool add = true;
+    for (const auto &inputLink : currentCell.getLinks()) {
+      if (buildMap.find(inputLink.getCellID()) != buildMap.end()) {
+        linkList.push_back(model::LinkEnd{inputLink.getCellID()});
+      } else {
+        add = false;
       }
     }
-  }
+    if (add) {
+      model::CellID cellID;
+      if (currentCell.isDff() || currentCell.isDffRs() || currentCell.isLatch()) {
+        // Change cellType
+        cellID = makeCell(techmap(currentCellID), linkList);
+      } else {
+        cellID = makeCell(currentCell.getTypeID(), linkList);
+      }
+      buildMap[currentCellID] = cellID;
+      netBuilder.addCell(cellID);
+      stack.pop();
+    }
+
+    for (const auto& link : currentCell.getLinks()) {
+      stack.push(link.getCellID());
+    }
+}
 
   return netBuilder.make();
 }

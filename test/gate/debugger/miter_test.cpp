@@ -8,7 +8,7 @@
 
 #include "gate/debugger/base_checker.h"
 #include "gate/model2/examples.h"
-#include "gate/simulator2/simulator.h"
+#include "gate/simulator/simulator.h"
 
 #include "gtest/gtest.h"
 
@@ -17,7 +17,7 @@ using namespace eda::gate::model;
 namespace eda::gate::debugger {
 
 TEST(MiterTest, Random) {
-  using Simulator = eda::gate::simulator2::Simulator;
+  using Simulator = eda::gate::simulator::Simulator;
 
   const size_t nIn      = 10;
   const size_t nOut     = 10;

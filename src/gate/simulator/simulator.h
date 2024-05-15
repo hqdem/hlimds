@@ -16,7 +16,7 @@
 #include <iostream>
 #include <vector>
 
-namespace eda::gate::simulator2 {
+namespace eda::gate::simulator {
 
 /**
  * \brief Subnet simulator.
@@ -510,4 +510,4 @@ private:
   }
 };
 
-} // namespace eda::gate::simulator2
+} // namespace eda::gate::simulator

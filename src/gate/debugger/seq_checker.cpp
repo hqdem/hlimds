@@ -57,13 +57,11 @@ size_t addCellToBuilder(SubnetBuilder &builder, Cell &cell,
   if (cell.isFlipFlop()) {
     if (cell.isIn()) {
       return builder.addInput(cell.flipFlopID).idx;
-    } else {
-      assert(newLinks.size() == 1);
-      return builder.addOutput(newLinks[0], cell.flipFlopID).idx;
     }
-  } else {
-    return builder.addCell(cell.getSymbol(), newLinks).idx;
+    assert(newLinks.size() == 1);
+    return builder.addOutput(newLinks[0], cell.flipFlopID).idx;
   }
+  return builder.addCell(cell.getSymbol(), newLinks).idx;
 }
 
 const Subnet &seqSweep(const Subnet &miter) {

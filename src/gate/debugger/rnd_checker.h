@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/debugger/base_checker.h"
-#include "gate/simulator2/simulator.h"
+#include "gate/simulator/simulator.h"
 #include "util/logging.h"
 
 #include <cassert>
@@ -17,7 +17,7 @@
 
 namespace eda::gate::debugger {
 
-using Simulator = simulator2::Simulator;
+using Simulator = simulator::Simulator;
 using CheckerResult = eda::gate::debugger::CheckerResult;
 
 Simulator::DataVector getAllValues(size_t nIn, size_t count);

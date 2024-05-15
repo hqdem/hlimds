@@ -8,29 +8,22 @@
 
 #include "config.h"
 #include "gate/analyzer/simulation_estimator.h"
-#include "gate/debugger/base_checker.h"
 #include "gate/debugger2/sat_checker2.h"
-#include "gate/model/gate.h"
-#include "gate/model/gnet.h"
-#include "gate/optimizer/rwmanager.h"
+#include "gate/model2/subnet.h"
 #include "gate/optimizer2/area_optimizer.h"
 #include "gate/parser/graphml_to_subnet.h"
-#include "gate/premapper/aigmapper.h"
-#include "gate/premapper/migmapper.h"
-#include "gate/premapper/premapper.h"
-#include "gate/premapper/xagmapper.h"
-#include "gate/premapper/xmgmapper.h"
-#include "gate/printer/graphml.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/translator/firrtl.h"
 #include "gate/translator/model2.h"
 #include "gate/translator/verilog/verilog_model2.h"
 #include "options.h"
+/*
 #include "rtl/compiler/compiler.h"
 #include "rtl/library/arithmetic.h"
 #include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
 #include "rtl/parser/ril/parser.h"
+*/
 #include "util/string.h"
 
 #include "easylogging++.h"
@@ -48,6 +41,7 @@ INITIALIZE_EASYLOGGINGPP
 // Logic Synthesis
 //===-----------------------------------------------------------------------===/
 
+/*
 struct RtlContext {
   using VNet = eda::rtl::model::Net;
   using GNet = eda::gate::model::GNet;
@@ -188,26 +182,27 @@ int rtlMain(RtlContext &context) {
 
   return 0;
 }
+*/
 
-SubnetID parseGraphML(std::string fileName) {
-  uassert(std::filesystem::exists(fileName),
-                                  "File doesn't exist" << std::endl);
+eda::gate::model::SubnetID parseGraphML(const std::string &fileName) {
+  uassert(std::filesystem::exists(fileName), "File doesn't exist" << std::endl);
 
   eda::gate::parser::graphml::GraphMlSubnetParser parser;
   eda::gate::parser::graphml::GraphMlSubnetParser::ParserData data;
   return parser.parse(fileName, data);
 }
 
-int optimize(const SubnetID &oldSubnetId, GraphMlOptions &opts) {
+int optimize(const eda::gate::model::SubnetID &oldSubnetId,
+             GraphMlOptions &opts) {
   using SatChecker2 = eda::gate::debugger2::SatChecker2;
   using AreaOptimizer = eda::gate::optimizer2::AreaOptimizer;
 
-  const auto &oldSubnet = Subnet::get(oldSubnetId);
+  const auto &oldSubnet = eda::gate::model::Subnet::get(oldSubnetId);
   eda::gate::analyzer::SimulationEstimator estimator;
   size_t depthBefore = oldSubnet.getPathLength().second;
   size_t sizeBefore = oldSubnet.getEntries().size();
   size_t powerBefore = estimator.estimate(oldSubnet).getActivitySum();
-  SubnetBuilder subnetBuilder;
+  eda::gate::model::SubnetBuilder subnetBuilder;
   auto inputs = subnetBuilder.addInputs(oldSubnet.getInNum());
   auto outputs = subnetBuilder.addSubnet(oldSubnetId, inputs);
   subnetBuilder.addOutputs(outputs);
@@ -222,7 +217,7 @@ int optimize(const SubnetID &oldSubnetId, GraphMlOptions &opts) {
   }
 
   const auto &newSubnetId = subnetBuilder.make();
-  const auto &newSubnet = Subnet::get(newSubnetId);
+  const auto &newSubnet = eda::gate::model::Subnet::get(newSubnetId);
   size_t depthAfter = newSubnet.getPathLength().second;
   size_t powerAfter = estimator.estimate(newSubnet).getActivitySum();
 
@@ -270,7 +265,7 @@ int main(int argc, char **argv) {
   try {
     options.initialize("config.json", argc, argv);
 
-    if (options.rtl.files().empty() &&
+    if (/*options.rtl.files().empty() &&*/
         options.firrtl.files().empty() &&
         options.model2.files().empty() &&
         options.graphMl.files().empty() &&
@@ -285,10 +280,12 @@ int main(int argc, char **argv) {
 
   int result = 0;
 
+/*
   for (auto file : options.rtl.files()) {
     RtlContext context(file, options.rtl);
     result |= rtlMain(context);
   }
+*/
 
   if (!options.firrtl.files().empty()) {
     FirrtlConfig cfg;
@@ -316,7 +313,7 @@ int main(int argc, char **argv) {
     firrtlConfig.outputFileName = opts.outFileName;
     firrtlConfig.topModule = opts.top;
     firrtlConfig.files = opts.files();
-    result |= translateToModel2(firrtlConfig);
+    result |= eda::gate::model::translateToModel2(firrtlConfig);
   }
 
   GraphMlOptions &opts = options.graphMl;

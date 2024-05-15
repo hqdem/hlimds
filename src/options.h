@@ -9,9 +9,7 @@
 #pragma once
 
 #include "CLI/CLI.hpp"
-#include "gate/debugger/base_checker.h"
 #include "gate/optimizer2/optimizer.h"
-#include "gate/premapper/premapper.h"
 #include "gate/techmapper/techmapper.h"
 #include "nlohmann/json.hpp"
 
@@ -22,6 +20,7 @@
 
 using Json = nlohmann::json;
 
+/*
 NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::debugger::options::LecType, {
   {eda::gate::debugger::options::BDD, "bdd"},
   {eda::gate::debugger::options::RND, "rnd"},
@@ -34,6 +33,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::premapper::PreBasis, {
   {eda::gate::premapper::XAG, "xag"},
   {eda::gate::premapper::XMG, "xmg"},
 })
+*/
 
 NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::optimizer2::OptimizationCriterion, {
   {eda::gate::optimizer2::OptimizationCriterion::NoOpt, "no"},
@@ -149,7 +149,7 @@ protected:
   CLI::App *options;
 };
 
-
+/*
 struct RtlOptions final : public AppOptions {
 
   static constexpr const char *ID = "rtl";
@@ -210,6 +210,7 @@ struct RtlOptions final : public AppOptions {
   std::string preLib;
   std::string graphMl;
 };
+*/
 
 struct FirRtlOptions final : public AppOptions {
 
@@ -406,7 +407,7 @@ struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
       AppOptions(title, version),
-        rtl(*this),
+        //rtl(*this),
         firrtl(*this),
         model2(*this),
         graphMl(*this),
@@ -431,7 +432,7 @@ struct Options final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    rtl.fromJson(json[RtlOptions::ID]);
+    //rtl.fromJson(json[RtlOptions::ID]);
     firrtl.fromJson(json[FirRtlOptions::ID]);
     model2.fromJson(json[Model2Options::ID]);
     graphMl.fromJson(json[GraphMlOptions::ID]);
@@ -439,7 +440,7 @@ struct Options final : public AppOptions {
     verilogToModel2.fromJson(json[YosysToModel2Options::ID]);
   }
 
-  RtlOptions rtl;
+  //RtlOptions rtl;
   FirRtlOptions firrtl;
   Model2Options model2;
   GraphMlOptions graphMl;

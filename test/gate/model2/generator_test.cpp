@@ -11,17 +11,28 @@
 #include "gate/model2/generator/matrix_generator.h"
 #include "gate/model2/generator/layer_generator.h"
 #include "gate/model2/printer/dot.h"
-#include "gate/optimizer/optimizer_util.h"
 
 #include "gtest/gtest.h"
 
+#include <filesystem>
 #include <fstream>
 
 namespace eda::gate::model {
 
+const std::string testOutPath = "output/data/gate/optimizer/output";
 const std::string genTestFolder = "/output/test/generator/";
 const std::string matrixGenSubfolder = "/matrix/";
 const std::string layerGenSubfolder = "/layer/";
+
+static std::filesystem::path createOutPath(const std::string &folderName) {
+  std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  std::filesystem::path outputPath =
+          homePath / "build" / testOutPath / folderName;
+
+  system(std::string("mkdir -p ").append(outputPath).c_str());
+
+  return outputPath;
+}
 
 void checkEnvVarSet() {
   if (!getenv("UTOPIA_HOME")) {
@@ -150,9 +161,9 @@ void printGeneratedNet(const NetID &netID,
   ModelPrinter *dotPrinter = &ModelPrinter::getDefaultPrinter();
   std::ofstream out;
   std::string homePath = getenv("UTOPIA_HOME");
-  std::filesystem::path filePath = optimizer::createOutPath(homePath +
-                                                            genTestFolder +
-                                                            subFolder);
+  std::filesystem::path filePath = createOutPath(homePath +
+                                                 genTestFolder +
+                                                 subFolder);
   out.open(filePath.c_str() + fileName);
   dotPrinter->print(out, net);
   out.close();

@@ -6,15 +6,33 @@
 //
 //===----------------------------------------------------------------------===
 
-#include "graphml.h"
 #include "graphml_to_subnet.h"
+#include "util/logging.h"
+
+#include <tinyxml2/tinyxml2.h>
 
 #include <iostream>
 
 namespace eda::gate::parser::graphml {
 
+using tinyxml2::XMLElement;
+using tinyxml2::XMLDocument;
+
 using ParserData = GraphMlSubnetParser::ParserData;
-using SubnetID   = GraphMlSubnetParser::SubnetID;
+using SubnetID = GraphMlSubnetParser::SubnetID;
+
+XMLElement *findGraph(XMLElement *root) {
+  XMLElement *child = root->FirstChildElement();
+  while (child) {
+    const char *tagName = child->Value();
+    if (tagName && !std::strcmp(tagName, "graph")) {
+      return child;
+    }
+    child = child->NextSiblingElement();
+  }
+  LOG_ERROR << "Graph Node is not found" << std::endl;
+  return nullptr;
+}
 
 SubnetID GraphMlSubnetParser::parse(const std::string &filename) {
   ParserData data;

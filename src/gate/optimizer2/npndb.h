@@ -14,6 +14,7 @@
 
 #include "kitty/kitty.hpp"
 
+#include <map>
 #include <sstream>
 #include <vector>
 

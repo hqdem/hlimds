@@ -8,6 +8,10 @@
 
 #pragma once
 
+#include <cstdint>
+#include <string>
+#include <vector>
+
 /**
  * \brief Utility methods for arithmetic-related tasks.
  */

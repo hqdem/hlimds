@@ -9,9 +9,7 @@
 #include "gate/debugger2/sat_checker2.h"
 #include "gate/model2/printer/printer.h"
 #include "gate/model2/utils/subnet_random.h"
-#include "gate/parser/gate_verilog.h"
 #include "gate/parser/graphml_to_subnet.h"
-#include "gate/parser/parser_test.h"
 #include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
@@ -20,6 +18,7 @@
 #include "gtest/gtest.h"
 
 #include <filesystem>
+#include <fstream>
 
 namespace eda::gate::techmapper {
 

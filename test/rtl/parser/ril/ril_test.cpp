@@ -6,9 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/gnet.h"
-#include "rtl/compiler/compiler.h"
-#include "rtl/library/flibrary.h"
 #include "rtl/model/net.h"
 #include "rtl/parser/ril/builder.h"
 #include "rtl/parser/ril/parser.h"
@@ -20,9 +17,6 @@
 #include <iostream>
 #include <memory>
 
-using namespace eda::gate::model;
-using namespace eda::rtl::compiler;
-using namespace eda::rtl::library;
 using namespace eda::rtl::model;
 using namespace eda::rtl::parser::ril;
 
@@ -38,19 +32,12 @@ int rilTest(const std::string &outSubPath,
   LOG_DEBUG("------ p/v-nets ------");
   LOG_DEBUG(*model);
 
-  Compiler compiler(FLibraryDefault::get());
-  auto gnet = compiler.compile(*model);
-
-  LOG_DEBUG("------ g-net ------");
-  LOG_DEBUG(*gnet);
-
   return 0;
 }
 
-// TODO: uncomment when RIL parser will be fixed
-// TEST(RilTest, DffTest) {
-//   EXPECT_EQ(rilTest("test/data/ril/", "dff.ril"), 0);
-// }
+TEST(RilTest, DffTest) {
+   EXPECT_EQ(rilTest("test/data/ril/", "dff.ril"), 0);
+}
 
 TEST(RilTest, SingleTest) {
   EXPECT_EQ(rilTest("test/data/ril", "test.ril"), 0);

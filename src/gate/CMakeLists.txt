@@ -2,24 +2,11 @@ add_compile_options(-fno-rtti)
 add_library(Gate OBJECT
   analyzer/probabilistic_estimate.cpp
   analyzer/simulation_estimator.cpp
-  debugger/base_checker.cpp
-  debugger/bdd_checker.cpp
-  debugger/sat_checker.cpp
-  debugger/encoder.cpp
-  debugger/fraig_checker.cpp
-  debugger/k_checker.cpp
-  debugger/miter.cpp
-  debugger/rnd_checker.cpp
-  debugger/symexec.cpp
   debugger2/base_checker2.cpp
   debugger2/bdd_checker2.cpp
   debugger2/fraig_checker2.cpp
   debugger2/rnd_checker2.cpp
   debugger2/seq_checker.cpp
-  model/gate.cpp
-  model/gnet.cpp
-  model/gsymbol.cpp
-  model/utils.cpp
   model2/cell.cpp
   model2/celltype.cpp
   model2/decomposer/net_decomposer.cpp
@@ -35,34 +22,6 @@ add_library(Gate OBJECT
   model2/utils/subnet_checking.cpp
   model2/utils/subnet_to_bdd.cpp
   model2/utils/subnet_truth_table.cpp
-  optimizer/cone_visitor.cpp
-  optimizer/cuts_finder_visitor.cpp
-  optimizer/cut_walker.cpp
-  optimizer/database/abc.cpp
-  optimizer/database/abc/rwrUtil.c
-  optimizer/depth_find_visitor.cpp
-  optimizer/links_add_counter.cpp
-  optimizer/links_clean_counter.cpp
-  optimizer/net_substitute.cpp
-  optimizer/npndb.cpp
-  optimizer/optimizer.cpp
-  optimizer/optimizer_visitor.cpp
-  optimizer/resynthesis/akers.cpp
-  optimizer/resynthesis/cascade.cpp
-  optimizer/resynthesis/reed_muller.cpp
-  optimizer/rwdatabase.cpp
-  optimizer/rwmanager.cpp
-  optimizer/strategy/apply_search_optimizer.cpp
-  optimizer/strategy/associative_balancer.cpp
-  optimizer/strategy/associative_balance_visitor.cpp
-  optimizer/strategy/exhaustive_search_optimizer.cpp
-  optimizer/strategy/track_strategy.cpp
-  optimizer/substitute_visitor.cpp
-  optimizer/targets_list.cpp
-  optimizer/tracker_visitor.cpp
-  optimizer/truthtable.cpp
-  optimizer/util.cpp
-  optimizer/walker.cpp
   optimizer2/area_resynthesizer.cpp
   optimizer2/cone_builder.cpp
   optimizer2/cut_extractor.cpp
@@ -75,6 +34,7 @@ add_library(Gate OBJECT
   optimizer2/resubstitutor.cpp
   optimizer2/rewriter.cpp
   optimizer2/safe_passer.cpp
+  optimizer2/synthesis/abc/rwrUtil.c
   optimizer2/synthesis/abc_npn4.cpp
   optimizer2/synthesis/akers.cpp
   optimizer2/synthesis/algebraic_factor.cpp
@@ -86,20 +46,8 @@ add_library(Gate OBJECT
   optimizer2/synthesis/reed_muller.cpp
   optimizer2/synthesis/ternary_bi_clique.cpp
   optimizer2/synthesis/unitized_table.cpp
-  parser/gate_verilog.cpp
-  parser/graphml.cpp
   parser/graphml_to_subnet.cpp
-  premapper/aigmapper.cpp
-  premapper/migmapper.cpp
-  premapper/premapper.cpp
-  premapper/xagmapper.cpp
-  premapper/xmgmapper.cpp
   premapper2/aigmapper.cpp
-  printer/dot.cpp
-  printer/gate_verilog.cpp
-  printer/graphml.cpp
-  printer/vcd.cpp
-  simulator/simulator.cpp
   simulator2/simulator.cpp
   synthesizer/synthesizer.cpp
   synthesizer/synthesizer_add.cpp
@@ -122,10 +70,6 @@ add_library(Gate OBJECT
   techmapper/seq_mapper/sequential_mapper.cpp
   techmapper/techmapper.cpp
   techmapper/techmapper_wrapper.cpp
-  transformer/bdd.cpp
-  transformer/hmetis.cpp
-  transformer/mutator/mutator.cpp
-  transformer/mutator/mutator_visitor.cpp
   transformer/mutator2/mutator2.cpp
   transformer/mutator2/mutator2_transformer.cpp
   translator/fir/fir_model2.cpp

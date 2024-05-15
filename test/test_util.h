@@ -24,7 +24,7 @@ inline std::filesystem::path createOutDir(const std::string &folderName) {
   std::filesystem::path homePath = getHomePath();
   std::filesystem::path outputPath = homePath / "build" / folderName;
 
-  std::filesystem::create_directory(outputPath);
+  std::filesystem::create_directories(outputPath);
 
   return outputPath;
 }

@@ -20,35 +20,35 @@ inline void checkSignature(const eda::gate::model::CellTypeAttr &attr) {
 model::SubnetID synthDivS(const eda::gate::model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "DivS is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthDivU(const eda::gate::model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "DivU is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthRemS(const eda::gate::model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "RemS is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthRemU(const eda::gate::model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "RemU is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthModS(const eda::gate::model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "ModS is unsupported");
   return model::OBJ_NULL_ID;
 }
 

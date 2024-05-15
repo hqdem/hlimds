@@ -24,8 +24,7 @@ model::SubnetID synthMux2(const model::CellTypeAttr &attr) {
 
   model::SubnetBuilder builder;
   const auto inputs = builder.addInputs(attr.getInWidth());
-
-  const auto &sel = inputs[0];
+  const auto &select = inputs[0];
 
   const auto width = attr.getInWidth(1);
   model::Subnet::LinkList links(width);
@@ -35,8 +34,8 @@ model::SubnetID synthMux2(const model::CellTypeAttr &attr) {
     const auto &rhs = inputs[1 + i + width];
 
     links[i] = builder.addCell(model::OR,
-        builder.addCell(model::AND, ~sel, lhs),
-        builder.addCell(model::AND,  sel, rhs));
+        builder.addCell(model::AND, ~select, lhs),
+        builder.addCell(model::AND,  select, rhs));
   }
 
   builder.addOutputs(links);

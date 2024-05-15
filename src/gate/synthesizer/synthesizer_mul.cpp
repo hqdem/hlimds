@@ -20,14 +20,14 @@ inline void checkSignature(const model::CellTypeAttr &attr) {
 model::SubnetID synthMulS(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "MulS is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthMulU(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "MulU is unsupported");
   return model::OBJ_NULL_ID;
 }
 

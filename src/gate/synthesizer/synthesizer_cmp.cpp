@@ -17,6 +17,7 @@ inline void checkSignature(const model::CellTypeAttr &attr) {
   assert(attr.nOutPort == 1 && attr.getOutWidth(0) == 1);
 }
 
+// For each i: lhs[i] == rhs[i].
 inline model::Subnet::Link synthEq(model::SubnetBuilder &builder,
                                    model::Subnet::LinkList::const_iterator lhs,
                                    model::Subnet::LinkList::const_iterator rhs,
@@ -29,6 +30,7 @@ inline model::Subnet::Link synthEq(model::SubnetBuilder &builder,
   return builder.addCellTree(model::AND, links, 2);
 }
 
+// For each i: lhs[i] == rhs.
 inline model::Subnet::Link synthEq(model::SubnetBuilder &builder,
                                    model::Subnet::LinkList::const_iterator lhs,
                                    model::Subnet::Link rhs,
@@ -41,6 +43,7 @@ inline model::Subnet::Link synthEq(model::SubnetBuilder &builder,
   return builder.addCellTree(model::AND, links, 2);
 }
 
+// For each i: lhs[i] == 0.
 inline model::Subnet::Link synthEqZ(model::SubnetBuilder &builder,
                                     model::Subnet::LinkList::const_iterator lhs,
                                     uint16_t width) {
@@ -52,42 +55,43 @@ inline model::Subnet::Link synthEqZ(model::SubnetBuilder &builder,
   return builder.addCellTree(model::OR, links, 2);
 }
 
+// For each i: extended(lhs[i]) == extended(rhs[i]).
 inline model::Subnet::Link synthEq(model::SubnetBuilder &builder,
                                    uint16_t widthLhs,
                                    uint16_t widthRhs,
-                                   bool sign) {
+                                   bool signExtension) {
   const auto links = builder.addInputs(widthLhs + widthRhs);
   const auto width = std::min(widthLhs, widthRhs);
   const auto delta = std::max(widthLhs, widthRhs) - width;
 
   const auto valueLhs = links.begin();
   const auto valueRhs = links.begin() + widthLhs;
-  const auto equal = synthEq(builder, valueLhs, valueRhs, width);
+  const auto equalValues = synthEq(builder, valueLhs, valueRhs, width);
   
   if (delta == 0) {
-    return equal;
+    return equalValues;
   }
 
-  model::Subnet::LinkList::const_iterator signLhs;
-  model::Subnet::Link signRhs;
+  model::Subnet::LinkList::const_iterator upperBits;
+  model::Subnet::Link signValue;
 
   if (widthLhs < widthRhs) {
-    signLhs = links.begin() + 2 * widthLhs;
-    signRhs = links[widthLhs - 1];
+    upperBits = links.begin() + (2 * widthLhs);
+    signValue = links[widthLhs - 1];
   } else {
-    signLhs = links.begin() + widthRhs;
-    signRhs = links.back();
+    upperBits = links.begin() + widthRhs;
+    signValue = links.back();
   }
 
-  model::Subnet::Link extended;
+  model::Subnet::Link properlyExtended;
 
-  if (sign) {
-    extended = synthEq(builder, signLhs, signRhs, delta);
+  if (signExtension) {
+    properlyExtended = synthEq(builder, upperBits, signValue, delta);
   } else {
-    extended = synthEqZ(builder, signLhs, delta);
+    properlyExtended = synthEqZ(builder, upperBits, delta);
   }
 
-  return builder.addCell(model::AND, equal, extended);
+  return builder.addCell(model::AND, equalValues, properlyExtended);
 }
 
 model::SubnetID synthEqS(const model::CellTypeAttr &attr) {
@@ -133,56 +137,56 @@ model::SubnetID synthNeqU(const model::CellTypeAttr &attr) {
 model::SubnetID synthLtS(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "LtS is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthLtU(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "LtU is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthLteS(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "LteS is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthLteU(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "LteU is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthGtS(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "GtS is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthGtU(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "GtU is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthGteS(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "GtsS is unsupported");
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthGteU(const model::CellTypeAttr &attr) {
   checkSignature(attr);
   // FIXME:
-  assert(false);
+  assert(false && "GteU is unsupported");
   return model::OBJ_NULL_ID;
 }
 

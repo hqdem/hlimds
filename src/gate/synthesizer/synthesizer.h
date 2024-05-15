@@ -12,6 +12,7 @@
 
 namespace eda::gate::synthesizer {
 
+/// Synthesizes implementations of the soft blocks in the given net.
 void synthSoftBlocks(const eda::gate::model::NetID netID);
 
 } // namespace eda::gate::synthesizer

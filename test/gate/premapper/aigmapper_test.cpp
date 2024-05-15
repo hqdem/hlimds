@@ -10,7 +10,7 @@
 #include "gate/model2/subnet.h"
 #include "gate/model2/utils/subnet_random.h"
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/premapper2/aigmapper.h"
+#include "gate/premapper/aigmapper.h"
 
 #include "gtest/gtest.h"
 
@@ -19,7 +19,7 @@
 
 namespace eda::gate::transformer {
 
-using AigMapper  = eda::gate::premapper2::AigMapper;
+using AigMapper  = eda::gate::premapper::AigMapper;
 using Builder    = eda::gate::model::SubnetBuilder;
 using CellSymbol = eda::gate::model::CellSymbol;
 using Link       = eda::gate::model::Subnet::Link;
@@ -108,7 +108,7 @@ TEST(AigTransformer, XOR) {
 }
 
 TEST(AigTransformer, RandomSubnet) {
-  using AigMapper = eda::gate::premapper2::AigMapper;
+  using AigMapper = eda::gate::premapper::AigMapper;
   using Subnet    = eda::gate::model::Subnet;
 
   const size_t nIn      = 8u;

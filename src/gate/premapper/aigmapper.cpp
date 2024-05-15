@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <gate/premapper2/aigmapper.h>
+#include <gate/premapper/aigmapper.h>
 
-namespace eda::gate::premapper2 {
+namespace eda::gate::premapper {
 
 using Link          = AigMapper::Link;
 using LinkList      = AigMapper::LinkList;
@@ -232,4 +232,4 @@ Link AigMapper::addMaj3(LinkList &links, bool &inv,
   return mapOr(links, inv, 0, 0, builder);
 }
 
-} // namespace eda::gate::premapper2
+} // namespace eda::gate::premapper

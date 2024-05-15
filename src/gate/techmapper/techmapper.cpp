@@ -8,7 +8,7 @@
 
 #include "gate/model2/celltype.h"
 #include "gate/model2/decomposer/net_decomposer.h"
-#include "gate/premapper2/aigmapper.h"
+#include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/assembly.h"
 
 #include "gate/techmapper/comb_mapper/cut_based/area_recovery/area_recovery.h"
@@ -184,7 +184,7 @@ model::CellTypeID Techmapper::techmap(model::CellID sequenceCell,
 }
 
 SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {
-  premapper2::AigMapper aigMapper;
+  premapper::AigMapper aigMapper;
   const auto transformedSub  = aigMapper.transform(subnetID);
   return transformedSub;
 }

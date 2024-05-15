@@ -50,6 +50,7 @@ add_executable(${TEST_TARGET}
   gate/model2/utils/subnet_truth_table_test.cpp
   gate/parser/graphml_test_utils.cpp
   gate/parser/graphml_to_subnet_test.cpp
+  gate/premapper/aigmapper_test.cpp
   gate/optimizer/area_optimizer_test.cpp
   gate/optimizer/cone_builder_test.cpp
   gate/optimizer/cut_extractor_test.cpp

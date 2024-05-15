@@ -17,7 +17,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace eda::gate::premapper2 {
+namespace eda::gate::premapper {
 
 /// @brief Transforms a subnet to an AIG basis.
 class AigMapper : public optimizer::SubnetTransformer {
@@ -62,4 +62,4 @@ protected:
   Link addMaj3(LinkList &links, bool &inv, SubnetBuilder &builder) const;
 };
 
-} // namespace eda::gate::premapper2
+} // namespace eda::gate::premapper

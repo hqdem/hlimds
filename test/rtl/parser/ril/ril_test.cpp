@@ -9,7 +9,7 @@
 #include "rtl/model/net.h"
 #include "rtl/parser/ril/builder.h"
 #include "rtl/parser/ril/parser.h"
-#include "test_util.h"
+#include "util/env.h"
 #include "util/logging.h"
 
 #include "gtest/gtest.h"
@@ -23,7 +23,7 @@ using namespace eda::rtl::parser::ril;
 
 int rilTest(const std::string &outSubPath,
             const std::string &fileName) {
-  std::filesystem::path basePath = getHomePath();
+  std::filesystem::path basePath = eda::env::getHomePath();
   std::filesystem::path fullPath = basePath / outSubPath / fileName;
 
   auto model = parse(fullPath);

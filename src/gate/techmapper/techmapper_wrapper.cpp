@@ -11,6 +11,7 @@
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/techmapper/utils/get_tech_attrs.h"
+#include "util/env.h"
 
 namespace eda::gate::techmapper {
 
@@ -37,7 +38,7 @@ namespace eda::gate::techmapper {
     check.close();
 
     // TODO: it should be an option
-    const std::string techLib = std::string(getenv("UTOPIA_HOME")) +
+    const std::string techLib = eda::env::getHomePathAsString() +
                                 "/test/data/gate/techmapper" +
                                 "/sky130_fd_sc_hd__ff_100C_1v65.lib";
 

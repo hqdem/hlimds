@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/translator/firrtl.h"
-#include "test_util.h"
+#include "util/env.h"
 
 #include "gtest/gtest.h"
 
@@ -77,7 +77,7 @@ bool compareOutputWithFile(
 
 bool YosysConverterFirrtlTest(
     const std::string &inFileName, bool isPicorvOrStandard = false) {
-  const fs::path homePath = getHomePath();
+  const fs::path homePath = eda::env::getHomePath();
   fs::path inputFullPath = homePath;
   fs::path pathFirrtlCompare = homePath;
   inputFullPath /= isPicorvOrStandard ? pathFir : inPathVerilog;

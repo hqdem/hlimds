@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
+#include "util/env.h"
 
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>
@@ -452,7 +453,7 @@ void NLDM::delayEstimation(string& cell_name,
   //===-------------------------------------------------------------------===//
   //  Connecting paths
   //===-------------------------------------------------------------------===//
-  const path homePath = string(getenv("UTOPIA_HOME"));
+  const path homePath = eda::env::getHomePath();
   const path filePath = homePath / file_name;
   if (exists(filePath)) {
     //===---------------------------------------------------------------===//

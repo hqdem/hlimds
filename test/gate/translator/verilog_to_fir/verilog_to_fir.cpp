@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "test_util.h"
+#include "util/env.h"
 
 #include "gtest/gtest.h"
 
@@ -21,7 +21,7 @@
 namespace fs = std::filesystem;
 
 namespace eda::gate::translator {
-const std::string homePath = getHomePathAsString();
+const std::string homePath = eda::env::getHomePathAsString();
 const std::string binPath = homePath + "/build/src/umain";
 const std::string dataPath = homePath + "/test/data/gate/parser/verilog/";
 const std::string outputFilePath = homePath + "/output/test/verilog_fir_sys/";
@@ -104,7 +104,7 @@ bool checkPassedUndefinedOption(const std::string &filename) {
 }
 
 bool firtoolCheck(const std::string &outputFile) {
-  std::string firTool = getEnv("CIRCT_DIR");
+  std::string firTool = eda::env::getValue("CIRCT_DIR");
 
   std::string cutoff = "build/lib/cmake/circt/";
   firTool.erase(firTool.end() - cutoff.length(), firTool.end());

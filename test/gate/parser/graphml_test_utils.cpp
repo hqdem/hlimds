@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/parser/graphml_test_utils.h"
-#include "test_util.h"
+#include "util/env.h"
 
 namespace eda::gate::parser::graphml {
 
@@ -18,7 +18,7 @@ SubnetID parse(std::string fileName, ParserData data) {
 
   const path dir = path("test") / "data" / "gate" / "parser"
       / "graphml" / "OpenABC" / "graphml_openabcd";
-  const path home = getHomePath();
+  const path home = eda::env::getHomePath();
   const path file = home / dir / fileName;
 
   uassert(std::filesystem::exists(file.string()),

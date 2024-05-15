@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/translator/model2.h"
-#include "test_util.h"
+#include "util/env.h"
 
 #include "gtest/gtest.h"
 
@@ -23,7 +23,7 @@ static constexpr const char *pathFir = "test/data/gate/verilog_to_fir";
 
 bool VerilogTranslatorModel2Test(
     const std::string &inFileName, bool isIscas = true, bool isPicorv = false) {
-  fs::path inputFullPath = getHomePath();
+  fs::path inputFullPath = eda::env::getHomePath();
   inputFullPath /= isIscas ? inPathVerilog : pathFir;
   const fs::path inputFullName = inputFullPath / inFileName;
   YosysToModel2Config cfg;

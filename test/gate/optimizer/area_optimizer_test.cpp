@@ -10,7 +10,7 @@
 #include "gate/model/subnet.h"
 #include "gate/optimizer/area_optimizer.h"
 #include "gate/parser/graphml_to_subnet.h"
-#include "test_util.h"
+#include "util/env.h"
 
 #include "gtest/gtest.h"
 
@@ -88,7 +88,7 @@ void runAreaOptimization(std::string str) {
   std::string fileName = str += ".bench.graphml";
   const path dir = path("test") / "data" / "gate" / "parser"
       / "graphml" / "OpenABC" / "graphml_openabcd";
-  const path home = getHomePath();
+  const path home = eda::env::getHomePath();
   const path file = home / dir / fileName;
   // Parsing.
   GraphMlSubnetParser parser;

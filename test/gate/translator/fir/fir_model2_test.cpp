@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/translator/fir/fir_model2.h"
-#include "test_util.h"
+#include "util/env.h"
 
 #include "gtest/gtest.h"
 
@@ -21,7 +21,7 @@ static constexpr const char *inPath = "test/data/gate/translator/fir";
 static constexpr const char *outPath = "output/test/gate/translator/fir";
 
 bool firrtlTranslatorTest(const std::string &inFileName) {
-  fs::path homePath = getHomePath();
+  fs::path homePath = eda::env::getHomePath();
   fs::path inputFullPath = homePath;
   inputFullPath /= inPath;
   const fs::path inputFullName = inputFullPath / inFileName;

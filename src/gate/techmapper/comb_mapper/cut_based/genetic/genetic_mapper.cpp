@@ -9,6 +9,7 @@
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/genetic/genetic_mapper.h"
+#include "util/env.h"
 
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>
@@ -26,7 +27,7 @@ namespace eda::gate::techmapper {
 void GeneticMapper::findBest() {
   std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
 
-  const std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
+  const std::filesystem::path homePath = eda::env::getHomePath();
   const std::filesystem::path filePath = homePath / file_name;
 
   TokenParser tokParser;

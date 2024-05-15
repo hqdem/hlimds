@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
-#include "gate/optimizer2/npn.h"
+#include "gate/optimizer/npn.h"
 
 #include <percy/percy.hpp>
 
@@ -112,8 +112,8 @@ inline eda::gate::model::SubnetID synthesize(uint8_t k, uint64_t value) {
 void generateXagNpn4() {
   constexpr uint8_t k = 4;
 
-  for (size_t i = 0; i < eda::gate::optimizer2::npn4Num; ++i) {
-    const uint64_t mincode = eda::gate::optimizer2::npn4[i];
+  for (size_t i = 0; i < eda::gate::optimizer::npn4Num; ++i) {
+    const uint64_t mincode = eda::gate::optimizer::npn4[i];
 
     std::cout << toHexString(k, mincode) << std::endl;
     auto subnetID = synthesize(k, mincode);

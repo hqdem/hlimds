@@ -7,15 +7,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/optimizer2/cone_builder.h"
+#include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/cut_based_mapper.h"
 
 namespace eda::gate::techmapper {
 
 using Subnet = eda::gate::model::Subnet;
-using Cut = eda::gate::optimizer2::CutExtractor::Cut;
-using ConeBuilder = eda::gate::optimizer2::ConeBuilder;
-using Cone = eda::gate::optimizer2::ConeBuilder::Cone;
+using Cut = eda::gate::optimizer::CutExtractor::Cut;
+using ConeBuilder = eda::gate::optimizer::ConeBuilder;
+using Cone = eda::gate::optimizer::ConeBuilder::Cone;
 
 class AreaRecovery : public CutBaseMapper {
   void findBest() override;

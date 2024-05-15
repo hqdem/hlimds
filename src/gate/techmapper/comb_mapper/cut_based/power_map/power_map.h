@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/analyzer/switching_activity.h"
-#include "gate/optimizer2/cone_builder.h"
+#include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/cut_based_mapper.h"
 
 namespace eda::gate::techmapper {
@@ -18,9 +18,9 @@ class PowerMap : public CutBaseMapper {
   using Subnet = eda::gate::model::Subnet;
   using Entry = Subnet::Entry;
   using ArrayEntry = eda::gate::model::Array<Entry>;
-  using Cut = eda::gate::optimizer2::CutExtractor::Cut;
+  using Cut = eda::gate::optimizer::CutExtractor::Cut;
   using CutsList = std::vector<Cut>;
-  using ConeBuilder = eda::gate::optimizer2::ConeBuilder;
+  using ConeBuilder = eda::gate::optimizer::ConeBuilder;
   using Cone = ConeBuilder::Cone;
 
   public:
@@ -50,7 +50,7 @@ class PowerMap : public CutBaseMapper {
     std::vector<double> computedSF;
     std::vector<int64_t> computedLevel;
     std::vector<uint32_t> requiredTimes;
-    eda::gate::optimizer2::ConeBuilder *coneBuilder;
+    eda::gate::optimizer::ConeBuilder *coneBuilder;
     ArrayEntry *entries;
 };
 } // namespace eda::gate::techmapper

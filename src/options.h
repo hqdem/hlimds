@@ -9,7 +9,7 @@
 #pragma once
 
 #include "CLI/CLI.hpp"
-#include "gate/optimizer2/optimizer.h"
+#include "gate/optimizer/optimizer.h"
 #include "gate/techmapper/techmapper.h"
 #include "nlohmann/json.hpp"
 
@@ -35,11 +35,11 @@ NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::premapper::PreBasis, {
 })
 */
 
-NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::optimizer2::OptimizationCriterion, {
-  {eda::gate::optimizer2::OptimizationCriterion::NoOpt, "no"},
-  {eda::gate::optimizer2::OptimizationCriterion::Area, "area"},
-  {eda::gate::optimizer2::OptimizationCriterion::Delay, "delay"},
-  {eda::gate::optimizer2::OptimizationCriterion::Power, "power"},
+NLOHMANN_JSON_SERIALIZE_ENUM( eda::gate::optimizer::OptimizationCriterion, {
+  {eda::gate::optimizer::OptimizationCriterion::NoOpt, "no"},
+  {eda::gate::optimizer::OptimizationCriterion::Area, "area"},
+  {eda::gate::optimizer::OptimizationCriterion::Delay, "delay"},
+  {eda::gate::optimizer::OptimizationCriterion::Power, "power"},
 })
 
 class AppOptions {
@@ -323,7 +323,7 @@ struct GraphMlOptions final : public AppOptions {
 
   static constexpr const char *ID = "graphMl";
 
-  using OptimizationCriterion = eda::gate::optimizer2::OptimizationCriterion;
+  using OptimizationCriterion = eda::gate::optimizer::OptimizationCriterion;
 
   static constexpr const char *OPT_CRIT = "lopt";
   static constexpr const char *LEC = "lec";

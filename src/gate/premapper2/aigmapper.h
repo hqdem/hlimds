@@ -11,7 +11,7 @@
 #include "gate/model2/array.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/subnet.h"
-#include "gate/optimizer2/transformer.h"
+#include "gate/optimizer/transformer.h"
 
 #include <memory>
 #include <unordered_map>
@@ -20,7 +20,7 @@
 namespace eda::gate::premapper2 {
 
 /// @brief Transforms a subnet to an AIG basis.
-class AigMapper : public optimizer2::SubnetTransformer {
+class AigMapper : public optimizer::SubnetTransformer {
 public:
   using CellIdMap  = std::unordered_map<uint32_t, model::Subnet::Link>;
   using CellSymbol = eda::gate::model::CellSymbol;

@@ -6,10 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <assert.h>
-
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/optimizer2/cone_builder.h"
+#include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/genetic/genetic_mapper.h"
 
 #include <readcells/ast.h>
@@ -17,6 +15,7 @@
 #include <readcells/groups.h>
 #include <readcells/token_parser.h>
 
+#include <cassert>
 #include <filesystem>
 #include <numeric>
 #include <random>
@@ -44,7 +43,7 @@ void GeneticMapper::findBest() {
 }
 
 void GeneticMapper::initialization() {
-  optimizer2::ConeBuilder coneBuilder(&model::Subnet::get(subnetID));
+  optimizer::ConeBuilder coneBuilder(&model::Subnet::get(subnetID));
   auto entries = model::Subnet::get(subnetID).getEntries();
   genBank.resize(std::size(entries));
 
@@ -361,21 +360,21 @@ float Chromosome::calculateChromosomeMaxArrivalTime(Library &lib) {
     if (!gen->emptyGen) {
       if (gen->isIn || gen->isOut) {
         continue;
-      } else {
-        DelayEstimator d1;
-        float inputNetTransition = findMaxArrivalTime(gen->entryIdxs);
-        size_t nIn = 1;
-        float fanoutCap = d1.wlm.getFanoutCap(nIn) +
-                          d1.nldm.getCellCap();
-
-        d1.nldm.delayEstimation(gen->name,
-                                lib,
-                                inputNetTransition,
-                                fanoutCap);
-
-        gen->arrivalTime = d1.nldm.getSlew();
-        (maxArrivalTime < gen->arrivalTime) ? maxArrivalTime = gen->arrivalTime : 0;
       }
+
+      DelayEstimator d1;
+      float inputNetTransition = findMaxArrivalTime(gen->entryIdxs);
+      size_t nIn = 1;
+      float fanoutCap = d1.wlm.getFanoutCap(nIn) +
+                        d1.nldm.getCellCap();
+
+      d1.nldm.delayEstimation(gen->name,
+                              lib,
+                              inputNetTransition,
+                              fanoutCap);
+
+      gen->arrivalTime = d1.nldm.getSlew();
+      (maxArrivalTime < gen->arrivalTime) ? maxArrivalTime = gen->arrivalTime : 0;
     }
   }
   return maxArrivalTime;

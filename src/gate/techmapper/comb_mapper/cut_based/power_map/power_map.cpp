@@ -15,7 +15,7 @@ namespace eda::gate::techmapper {
 using Subnet = eda::gate::model::Subnet;
 using Entry = Subnet::Entry;
 using ArrayEntry = eda::gate::model::Array<Entry>;
-using Cut = eda::gate::optimizer2::CutExtractor::Cut;
+using Cut = eda::gate::optimizer::CutExtractor::Cut;
 
 double PowerMap::switchFlow(const EntryIndex entryIndex,
                             const Cut &cut,
@@ -246,7 +246,7 @@ void PowerMap::findBest() {
   computedSF.resize(entries->size());
   computedLevel.resize(entries->size());
   requiredTimes.resize(entries->size(), UINT32_MAX);
-  coneBuilder = new eda::gate::optimizer2::ConeBuilder(&subnet);
+  coneBuilder = new eda::gate::optimizer::ConeBuilder(&subnet);
 
   eda::gate::analyzer::SimulationEstimator simulationEstimator(64);
 

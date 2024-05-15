@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <assert.h>
-
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/optimizer2/cone_builder.h"
+#include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.h"
+
+#include <cassert>
 
 using Subnet = eda::gate::model::Subnet;
 
@@ -60,13 +60,13 @@ float SimpleAreaMapper::calculateArea(
 }
 
 void SimpleAreaMapper::saveBest( EntryIndex entryIndex,
-    const optimizer2::CutExtractor::CutsList &cutsList) {
+    const optimizer::CutExtractor::CutsList &cutsList) {
 
   SubnetID bestTechCellSubnetID;
-  optimizer2::CutExtractor::Cut bestCut;
+  optimizer::CutExtractor::Cut bestCut;
   float bestArea = MAXFLOAT;
 
-  optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
+  optimizer::ConeBuilder coneBuilder(&Subnet::get(subnetID));
 
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.count(entryIndex) != 1) {

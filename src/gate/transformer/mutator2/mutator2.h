@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/model2/subnet.h"
-#include "gate/optimizer2/cut_extractor.h"
+#include "gate/optimizer/cut_extractor.h"
 #include "gate/transformer/mutator2/mutator2_transformer.h"
 
 #include <iostream>
@@ -23,8 +23,8 @@ namespace eda::gate::mutator {
   using CellIDList = std::vector<CellID>;
   using CellSymbol = eda::gate::model::CellSymbol;
   using CellSymbolList = std::vector<CellSymbol>;
-  using Cut = eda::gate::optimizer2::CutExtractor::Cut;
-  using CutExtractor = eda::gate::optimizer2::CutExtractor;
+  using Cut = eda::gate::optimizer::CutExtractor::Cut;
+  using CutExtractor = eda::gate::optimizer::CutExtractor;
   using Link = eda::gate::model::Subnet::Link;
   using LinkList = eda::gate::model::Subnet::LinkList;
   using Subnet = eda::gate::model::Subnet;

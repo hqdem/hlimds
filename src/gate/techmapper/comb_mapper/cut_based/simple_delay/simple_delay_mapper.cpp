@@ -6,10 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <assert.h>
-
 #include "gate/model2/utils/subnet_truth_table.h"
-#include "gate/optimizer2/cone_builder.h"
+#include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.h"
 #include "gate/techmapper/library/liberty_manager.h"
@@ -17,6 +15,7 @@
 #include <readcells/groups.h>
 
 #include <algorithm>
+#include <cassert>
 #include <filesystem>
 #include <limits>
 
@@ -64,8 +63,8 @@ float SimpleDelayMapper::findMaxArrivalTime(const std::unordered_set<size_t> &en
 
 void SimpleDelayMapper::saveBest(
     EntryIndex entryIndex,
-    const optimizer2::CutExtractor::CutsList &cutsList) {
-  eda::gate::optimizer2::ConeBuilder coneBuilder(&Subnet::get(subnetID));
+    const optimizer::CutExtractor::CutsList &cutsList) {
+  eda::gate::optimizer::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   BestReplacement bestSimpleReplacement{};
   float bestArrivalTime = MAXFLOAT;
 

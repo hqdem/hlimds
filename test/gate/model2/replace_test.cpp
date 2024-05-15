@@ -7,8 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/subnet.h"
-#include "gate/optimizer2/cone_builder.h"
-#include "gate/optimizer2/safe_passer.h"
+#include "gate/optimizer/cone_builder.h"
+#include "gate/optimizer/safe_passer.h"
 
 #include "gtest/gtest.h"
 
@@ -17,9 +17,9 @@
 
 namespace eda::gate::model {
 
-using ConeBuilder = optimizer2::ConeBuilder;
-using SafePasser = optimizer2::SafePasser;
-using ReverseSafePasser = optimizer2::ReverseSafePasser;
+using ConeBuilder = optimizer::ConeBuilder;
+using SafePasser = optimizer::SafePasser;
+using ReverseSafePasser = optimizer::ReverseSafePasser;
 
 template<typename IterT>
 void printCellsTrav(SubnetBuilder &builder, IterT it, IterT contaiterEnd) {

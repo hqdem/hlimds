@@ -7,14 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model2/utils/bdd_dnf.h"
-#include "gate/optimizer2/synthesis/dsd_to_subnet.h"
+#include "gate/optimizer/synthesis/dsd_to_subnet.h"
 
 #include "gtest/gtest.h"
 
 #include <iostream>
 
 using namespace eda::gate::model::utils;
-using namespace eda::gate::optimizer2::synthesis;
+using namespace eda::gate::optimizer::synthesis;
 
 void checkDnfCorrectness(BDD &bdd, Cudd &cudd) {
   std::vector<kitty::cube> cubes = BddToDnf::getDnf(bdd);

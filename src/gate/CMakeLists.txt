@@ -22,30 +22,30 @@ add_library(Gate OBJECT
   model2/utils/subnet_checking.cpp
   model2/utils/subnet_to_bdd.cpp
   model2/utils/subnet_truth_table.cpp
-  optimizer2/area_resynthesizer.cpp
-  optimizer2/cone_builder.cpp
-  optimizer2/cut_extractor.cpp
-  optimizer2/depth_replacer.cpp
-  optimizer2/depth_subnet_iterator.cpp
-  optimizer2/mffc.cpp
-  optimizer2/npn.cpp
-  optimizer2/npndb.cpp
-  optimizer2/reconvergence_cut.cpp
-  optimizer2/resubstitutor.cpp
-  optimizer2/rewriter.cpp
-  optimizer2/safe_passer.cpp
-  optimizer2/synthesis/abc/rwrUtil.c
-  optimizer2/synthesis/abc_npn4.cpp
-  optimizer2/synthesis/akers.cpp
-  optimizer2/synthesis/algebraic_factor.cpp
-  optimizer2/synthesis/bidecomposition.cpp
-  optimizer2/synthesis/cascade.cpp
-  optimizer2/synthesis/de_micheli.cpp
-  optimizer2/synthesis/dsd_to_subnet.cpp
-  optimizer2/synthesis/isop.cpp
-  optimizer2/synthesis/reed_muller.cpp
-  optimizer2/synthesis/ternary_bi_clique.cpp
-  optimizer2/synthesis/unitized_table.cpp
+  optimizer/area_resynthesizer.cpp
+  optimizer/cone_builder.cpp
+  optimizer/cut_extractor.cpp
+  optimizer/depth_replacer.cpp
+  optimizer/depth_subnet_iterator.cpp
+  optimizer/mffc.cpp
+  optimizer/npn.cpp
+  optimizer/npndb.cpp
+  optimizer/reconvergence_cut.cpp
+  optimizer/resubstitutor.cpp
+  optimizer/rewriter.cpp
+  optimizer/safe_passer.cpp
+  optimizer/synthesis/abc/rwrUtil.c
+  optimizer/synthesis/abc_npn4.cpp
+  optimizer/synthesis/akers.cpp
+  optimizer/synthesis/algebraic_factor.cpp
+  optimizer/synthesis/bidecomposition.cpp
+  optimizer/synthesis/cascade.cpp
+  optimizer/synthesis/de_micheli.cpp
+  optimizer/synthesis/dsd_to_subnet.cpp
+  optimizer/synthesis/isop.cpp
+  optimizer/synthesis/reed_muller.cpp
+  optimizer/synthesis/ternary_bi_clique.cpp
+  optimizer/synthesis/unitized_table.cpp
   parser/graphml_to_subnet.cpp
   premapper2/aigmapper.cpp
   simulator2/simulator.cpp

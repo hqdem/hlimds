@@ -28,6 +28,6 @@ private:
 
   float calculateArea(const std::unordered_set<uint64_t> &entryIdxs, EntryIndex currnetEntry);
   void saveBest(EntryIndex entryIndex,
-                const optimizer2::CutExtractor::CutsList &cutsList);
+                const optimizer::CutExtractor::CutsList &cutsList);
 };
 } // namespace eda::gate::techmapper

@@ -11,7 +11,7 @@
 namespace eda::gate::techmapper {
 
 void CutBaseMapper::baseMap() {
-  cutExtractor = new optimizer2::CutExtractor(&model::Subnet::get(subnetID), 6);
+  cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
   findBest();
 }
 void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, const model::Subnet::Cell &cell) {

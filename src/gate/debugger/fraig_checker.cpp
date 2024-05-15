@@ -8,7 +8,7 @@
 
 #include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/sat_checker.h"
-#include "gate/optimizer2/cone_builder.h"
+#include "gate/optimizer/cone_builder.h"
 
 #include <limits>
 #include <map>
@@ -17,7 +17,7 @@
 
 namespace eda::gate::debugger {
 
-using Cone = optimizer2::ConeBuilder::Cone;
+using Cone = optimizer::ConeBuilder::Cone;
 using options::SAT;
 using UniformIntDistribution = std::uniform_int_distribution<uint64_t>;
 
@@ -106,7 +106,7 @@ CheckerResult FraigChecker::isSat(const SubnetID id) const {
       }
       const uint64_t eqClass = descr.getEqClass();
       if (eqClassToIdx.find(eqClass) != eqClassToIdx.end()) {
-        optimizer2::ConeBuilder coneBuilder(&miter);
+        optimizer::ConeBuilder coneBuilder(&miter);
         for (auto idx : eqClassToIdx[eqClass]) {
           if (idx == cell || checked.find(idx) != checked.end()) {
             continue;    

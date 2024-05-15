@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer2/synthesis/isop.h"
+#include "gate/optimizer/synthesis/isop.h"
 #include "gate/techmapper/library/cell.h"
 #include "gate/techmapper/library/liberty_manager.h"
 
@@ -32,7 +32,7 @@ using std::ifstream;
 
 namespace eda::gate::techmapper {
 
-using MinatoMorrealeAlg = eda::gate::optimizer2::synthesis::MMSynthesizer;
+using MinatoMorrealeAlg = eda::gate::optimizer::synthesis::MMSynthesizer;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using NetID = eda::gate::model::NetID;
 

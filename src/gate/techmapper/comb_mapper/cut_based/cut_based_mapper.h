@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/optimizer2/cut_extractor.h"
+#include "gate/optimizer/cut_extractor.h"
 #include "gate/techmapper/comb_mapper/comb_mapper.h"
 
 #include <map>
@@ -17,7 +17,7 @@ namespace eda::gate::techmapper {
 
 class CutBaseMapper : public BaseMapper {
 protected:
-  optimizer2::CutExtractor *cutExtractor;
+  optimizer::CutExtractor *cutExtractor;
 
   void baseMap() override;
   virtual void findBest() = 0;

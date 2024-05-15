@@ -50,25 +50,25 @@ add_executable(${TEST_TARGET}
   gate/model2/utils/subnet_truth_table_test.cpp
   gate/parser/graphml_test_utils.cpp
   gate/parser/graphml_to_subnet_test.cpp
-  gate/optimizer2/area_optimizer_test.cpp
-  gate/optimizer2/cone_builder_test.cpp
-  gate/optimizer2/cut_extractor_test.cpp
-  gate/optimizer2/npndb_test.cpp
-  gate/optimizer2/pass_test.cpp
-  gate/optimizer2/reconvergence_cut_test.cpp
-  gate/optimizer2/resubstitutor_test.cpp
-  gate/optimizer2/resynthesizer_test.cpp
-  gate/optimizer2/rewriter_test.cpp
-  gate/optimizer2/rwdatabase_test.cpp
-  gate/optimizer2/synthesis/abc_npn4_test.cpp
-  gate/optimizer2/synthesis/akers_test.cpp
-  gate/optimizer2/synthesis/algebraic_factor_test.cpp
-  gate/optimizer2/synthesis/bidecomposition_test.cpp
-  gate/optimizer2/synthesis/cascade_test.cpp
-  gate/optimizer2/synthesis/de_micheli_test.cpp
-  gate/optimizer2/synthesis/dsd_test.cpp
-  gate/optimizer2/synthesis/isop_test.cpp
-  gate/optimizer2/synthesis/reed_muller_test.cpp
+  gate/optimizer/area_optimizer_test.cpp
+  gate/optimizer/cone_builder_test.cpp
+  gate/optimizer/cut_extractor_test.cpp
+  gate/optimizer/npndb_test.cpp
+  gate/optimizer/pass_test.cpp
+  gate/optimizer/reconvergence_cut_test.cpp
+  gate/optimizer/resubstitutor_test.cpp
+  gate/optimizer/resynthesizer_test.cpp
+  gate/optimizer/rewriter_test.cpp
+  gate/optimizer/rwdatabase_test.cpp
+  gate/optimizer/synthesis/abc_npn4_test.cpp
+  gate/optimizer/synthesis/akers_test.cpp
+  gate/optimizer/synthesis/algebraic_factor_test.cpp
+  gate/optimizer/synthesis/bidecomposition_test.cpp
+  gate/optimizer/synthesis/cascade_test.cpp
+  gate/optimizer/synthesis/de_micheli_test.cpp
+  gate/optimizer/synthesis/dsd_test.cpp
+  gate/optimizer/synthesis/isop_test.cpp
+  gate/optimizer/synthesis/reed_muller_test.cpp
   gate/simulator2/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
 #  gate/techmapper/parser_lib_test.cpp

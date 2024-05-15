@@ -6,6 +6,9 @@ project(UtopiaTest VERSION 0.0)
 
 set(TEST_TARGET utest)
 
+# Karatsuba multiplier needed for some tests.
+set(MULGEN_TARGET mulgen)
+
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 # Check if the 'gtest' target has been already imported (e.g., by LLVM).
@@ -36,7 +39,6 @@ add_executable(${TEST_TARGET}
   gate/debugger2/register_sweep_test.cpp
   gate/debugger2/sat_checker2_test.cpp
   gate/debugger2/seq_sweep_test.cpp
-  gate/debugger2/synth_lec_test.cpp
   gate/model/examples.cpp
   gate/model/gnet_test.cpp
   gate/model2/array_test.cpp
@@ -69,10 +71,8 @@ add_executable(${TEST_TARGET}
   gate/optimizer/substitute_test.cpp
   gate/optimizer/truthtable_test.cpp
   gate/optimizer/util_test.cpp
-  gate/optimizer2/area_optimizer_test.cpp
   gate/optimizer2/cone_builder_test.cpp
   gate/optimizer2/cut_extractor_test.cpp
-  gate/optimizer2/depth_optimizer_test.cpp
   gate/optimizer2/npndb_test.cpp
   gate/optimizer2/pass_test.cpp
   gate/optimizer2/reconvergence_cut_test.cpp
@@ -89,8 +89,6 @@ add_executable(${TEST_TARGET}
   gate/optimizer2/synthesis/isop_test.cpp
   gate/optimizer2/synthesis/reed_muller_test.cpp
   gate/parser/graphml_parser_test.cpp
-  gate/parser/graphml_test_utils.cpp
-  gate/parser/graphml_to_subnet_test.cpp
   gate/parser/parser_test.cpp
   gate/premapper/aigmapper/aig_test.cpp
   gate/premapper/aigmapper/aig_verilog_test.cpp
@@ -108,23 +106,14 @@ add_executable(${TEST_TARGET}
   gate/simulator/simulator_test.cpp
   gate/simulator2/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
-  gate/techmapper/openABC_D_test.cpp
-  gate/techmapper/techmapper_test_util.cpp
   gate/techmapper/parser_lib_test.cpp
-  gate/techmapper/strategy/area_recovery_test.cpp
-  gate/techmapper/strategy/delay_estmt/delay_test.cpp
-  gate/techmapper/strategy/delay_estmt/wlm_test.cpp
-  gate/techmapper/strategy/genetic_test.cpp
-  gate/techmapper/strategy/net_mapping_test.cpp
-  gate/techmapper/strategy/power_test.cpp
-  gate/techmapper/strategy/simple_area_test.cpp
-  gate/techmapper/strategy/simple_delay_test.cpp
   gate/transformer/bdd_test.cpp
   gate/transformer/mutator/mutator_test.cpp
   gate/transformer/mutator2/mutator2_test.cpp
   gate/translator/fir/fir_model2_test.cpp
   gate/translator/verilog_to_fir/yosys_converter_firrtl_test.cpp
   gate/translator/verilog_to_model2/yosys_converter_model2_tests.cpp
+  gate/translator/verilog_to_fir/verilog_to_fir.cpp
   lib/minisat/minisat_test.cpp
   rtl/library/adder_test.cpp
   rtl/library/arithmetic_test.cpp

@@ -585,29 +585,27 @@ public:
     return std::make_reverse_iterator(begin());
   }
 
-  /// @brief Constructs subnet.
-  /// @param curEntriesToAny Map keys should be entry indexes from the current
-  /// SubnetBuilder. After this method the keys will be transformed into Subnet
-  /// entry indexes.
-  /// @param delBufs If set all BUFs will be deleted.
+  /// @brief Makes a subnet.
+  /// @param entryMapping To be filled w/ Subnet entry indices.
+  /// @param deleteBufs Indicates if BUFs should be deleted.
   SubnetID make(
-      std::vector<size_t> &curEntriesToAny,
-      const bool delBufs = false) {
+      std::vector<size_t> &entryMapping,
+      const bool deleteBufs = false) {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
-    if (isDisassembled || delBufs) {
-      rearrangeEntries(curEntriesToAny, delBufs);
+    if (isDisassembled || deleteBufs) {
+      rearrangeEntries(entryMapping, deleteBufs);
     }
     assert(checkInputsOrder() && checkOutputsOrder());
 
     return allocate<Subnet>(nIn, nOut, std::move(entries));
   }
 
-  /// @brief Constructs subnet.
-  /// @param delBufs If set all BUF cells will be deleted.
-  SubnetID make(const bool delBufs = false) {
+  /// @brief Makes a subnet.
+  /// @param deleteBufs If set all BUF cells will be deleted.
+  SubnetID make(const bool deleteBufs = false) {
     std::vector<size_t> mapping{};
-    return make(mapping, delBufs);
+    return make(mapping, deleteBufs);
   }
 
 private:
@@ -696,8 +694,8 @@ private:
   /// Sorts entries in topological order accoring to the prev and next arrays.
   /// Removes the holes.
   void rearrangeEntries(
-      std::vector<size_t> &curEntriesToAny,
-      const bool delBufs);
+      std::vector<size_t> &entryMapping,
+      const bool deleteBufs);
 
   /// Clears the replacement context.
   void clearContext();

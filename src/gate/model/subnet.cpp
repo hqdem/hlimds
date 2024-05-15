@@ -867,15 +867,15 @@ bool SubnetBuilder::checkOutputsOrder() const {
 }
 
 void SubnetBuilder::rearrangeEntries(
-    std::vector<size_t> &curEntriesToAny,
-    const bool delBufs) {
+    std::vector<size_t> &entryMapping,
+    const bool deleteBufs) {
   std::vector<Subnet::Entry> newEntries;
   std::vector<EntryDescriptor> newDesc;
   std::vector<size_t> saveMapping;
   newEntries.reserve(entries.size());
   newDesc.reserve(desc.size());
-  if (!curEntriesToAny.empty()) {
-    saveMapping.resize(curEntriesToAny.size(), invalidID);
+  if (!entryMapping.empty()) {
+    saveMapping.resize(entryMapping.size(), invalidID);
   }
 
   std::unordered_map<size_t, std::pair<size_t, uint32_t>> relinkMapping;
@@ -884,8 +884,8 @@ void SubnetBuilder::rearrangeEntries(
   size_t lastCellDepth = invalidID;
   size_t isLink = 0;
   for(size_t i = getSubnetBegin(); i != upperBoundID; i = getNext(i)) {
-    // Delete BUF
-    if (delBufs && !isLink && getCell(i).isBuf()) {
+    // Delete BUFs.
+    if (deleteBufs && !isLink && getCell(i).isBuf()) {
       const auto bufLink = getLinks(i)[0];
       const auto bufLinkRelinkIt = relinkMapping.find(bufLink.idx);
       const auto bufLinkRelinkIdx = bufLinkRelinkIt->second.first;
@@ -951,13 +951,13 @@ void SubnetBuilder::rearrangeEntries(
     newEntries.back().cell.refcount = 0;
 
     // Update mapping keys
-    if (!curEntriesToAny.empty()) {
+    if (!entryMapping.empty()) {
       saveMapping[relinkMapping[i].first] =
-          curEntriesToAny[relinkMapping[i].first];
+          entryMapping[relinkMapping[i].first];
       if (saveMapping[i] != invalidID) {
-        curEntriesToAny[relinkMapping[i].first] = saveMapping[i];
+        entryMapping[relinkMapping[i].first] = saveMapping[i];
       } else {
-        curEntriesToAny[relinkMapping[i].first] = curEntriesToAny[i];
+        entryMapping[relinkMapping[i].first] = entryMapping[i];
       }
     }
   }

@@ -15,9 +15,17 @@
 
 static constexpr const char *uhome = "UTOPIA_HOME";
 
+inline std::string getEnv(const char *var) {
+  uassert(getenv(var), var << " is not set.");
+  return std::string(getenv(var));
+}
+
 inline std::filesystem::path getHomePath() {
-  uassert(getenv(uhome), uhome << " is not set.");
-  return std::string(getenv(uhome));
+  return getEnv(uhome);
+}
+
+inline std::string getHomePathAsString() {
+  return getHomePath().string();
 }
 
 inline std::filesystem::path createOutDir(const std::string &folderName) {

@@ -21,7 +21,7 @@
 namespace fs = std::filesystem;
 
 namespace eda::gate::translator {
-const std::string homePath = getHomePath();
+const std::string homePath = getHomePathAsString();
 const std::string binPath = homePath + "/build/src/umain";
 const std::string dataPath = homePath + "/test/data/gate/parser/verilog/";
 const std::string outputFilePath = homePath + "/output/test/verilog_fir_sys/";
@@ -73,6 +73,7 @@ bool checkPassed(const std::string &filename) {
   std::string command = binPath + " to_firrtl " + data + " -o " + outputFile;
   const int res = system(command.c_str());
   if (res != 0) {
+    std::cerr << command << std::endl;
     std::cerr << "Error occurred: " << strerror(errno) << std::endl;
   }
   return !res && exists(outputFile);
@@ -103,7 +104,8 @@ bool checkPassedUndefinedOption(const std::string &filename) {
 }
 
 bool firtoolCheck(const std::string &outputFile) {
-  std::string firTool = std::string(getenv("CIRCT_DIR"));
+  std::string firTool = getEnv("CIRCT_DIR");
+
   std::string cutoff = "build/lib/cmake/circt/";
   firTool.erase(firTool.end() - cutoff.length(), firTool.end());
   firTool = std::string(firTool + "build/bin/firtool ");

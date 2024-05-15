@@ -8,6 +8,7 @@
 
 #include "gate/techmapper/library/cell.h"
 #include "gate/techmapper/library/liberty_manager.h"
+#include "test_util.h"
 #include "util/logging.h"
 
 #include "gtest/gtest.h"
@@ -17,8 +18,8 @@
 using namespace eda::gate::techmapper;
 using namespace eda::gate::model;
 
-std::string techLibPath =
-  std::string(getenv("UTOPIA_HOME")) + "/test/data/gate/techmapper";
+const std::filesystem::path techLibPath =
+    getHomePath() / "test/data/gate/techmapper";
 
 bool checkLibParser(std::string libertyPath) {
   LibraryManager::get().loadLibrary(libertyPath);
@@ -38,15 +39,11 @@ bool checkLibParser(std::string libertyPath) {
 }
 
 TEST(ReadLibertyTest, sky130_fd_sc_hd__ff_n40C_1v95) {
-  if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
   checkLibParser(techLibPath + "/sky130_fd_sc_hd__ff_n40C_1v95.lib");
 }
 
 TEST(ReadLibertyTest, sky130_fd_sc_hd__ff_100C_1v65) {
-  if (!getenv("UTOPIA_HOME")) {
-      FAIL() << "UTOPIA_HOME is not set.";
-    }
   checkLibParser(techLibPath + "/sky130_fd_sc_hd__ff_100C_1v65.lib");
+}
+
 } // namespace eda::gate::techmapper

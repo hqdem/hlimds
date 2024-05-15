@@ -9,6 +9,7 @@
 #include "gate/model/net.h"
 #include "gate/model/printer/dot.h"
 #include "gate/model/printer/printer.h"
+#include "test_util.h"
 
 #include "gtest/gtest.h"
 
@@ -19,19 +20,8 @@
 
 namespace eda::gate::model {
 
-const std::string testOutPath = "output/data/gate/optimizer/output";
-const std::string outFolder = "/output/test/model/";
+const std::string testOutPath = "output/data/gate/model/seq_net/";
 const std::string fileName = "net_with_latch.dot";
-
-static std::filesystem::path createOutPath(const std::string &folderName) {
-  std::filesystem::path homePath = std::string(getenv("UTOPIA_HOME"));
-  std::filesystem::path outputPath =
-          homePath / "build" / testOutPath / folderName;
-
-  system(std::string("mkdir -p ").append(outputPath).c_str());
-
-  return outputPath;
-}
 
 /**
  *  \brief Generates a sequential circuit that contains a flip-flop.
@@ -135,11 +125,7 @@ TEST(SeqNet, netWithLatch) {
   const Net &net = genSeqNet();
   ModelPrinter *dotPrinter = &ModelPrinter::getDefaultPrinter();
 
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
-  }
-
-  std::filesystem::path filePath = createOutPath(outFolder);
+  std::filesystem::path filePath = createOutDir(testOutPath);
   std::ofstream out(filePath.c_str() + fileName);
 
   if (out.is_open()) {

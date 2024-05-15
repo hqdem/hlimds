@@ -9,6 +9,7 @@
 #include "rtl/model/net.h"
 #include "rtl/parser/ril/builder.h"
 #include "rtl/parser/ril/parser.h"
+#include "test_util.h"
 #include "util/logging.h"
 
 #include "gtest/gtest.h"
@@ -20,12 +21,10 @@
 using namespace eda::rtl::model;
 using namespace eda::rtl::parser::ril;
 
-namespace fs = std::filesystem;
-
 int rilTest(const std::string &outSubPath,
             const std::string &fileName) {
-  fs::path basePath = std::getenv("UTOPIA_HOME");
-  fs::path fullPath = basePath / outSubPath / fileName;
+  std::filesystem::path basePath = getHomePath();
+  std::filesystem::path fullPath = basePath / outSubPath / fileName;
 
   auto model = parse(fullPath);
 
@@ -36,7 +35,7 @@ int rilTest(const std::string &outSubPath,
 }
 
 TEST(RilTest, DffTest) {
-   EXPECT_EQ(rilTest("test/data/ril/", "dff.ril"), 0);
+  EXPECT_EQ(rilTest("test/data/ril/", "dff.ril"), 0);
 }
 
 TEST(RilTest, SingleTest) {

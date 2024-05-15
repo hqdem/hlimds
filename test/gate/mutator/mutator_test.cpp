@@ -15,6 +15,7 @@
 #include "gate/model/subnet.h"
 #include "gate/mutator/mutator.h"
 #include "gate/parser/graphml_to_subnet.h"
+#include "test_util.h"
 
 #include "gtest/gtest.h"
 
@@ -47,7 +48,7 @@ namespace eda::gate::mutator {
   SubnetID parseForTests(std::string fileName) {
     using path = std::filesystem::path;
     fileName += ".bench.graphml";
-    const path home = std::string(getenv("UTOPIA_HOME"));
+    const path home = getHomePath();
     const path dir = path("test") / "data" / "gate" / "parser"
     / "graphml" / "OpenABC" / "graphml_openabcd";
     std::string file = (home / dir / fileName).u8string();

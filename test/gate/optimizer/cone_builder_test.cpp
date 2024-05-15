@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/cone_builder.h"
+#include "test_util.h"
 
 #include "gtest/gtest.h"
 
@@ -126,10 +127,6 @@ bool maxConeValid(const Subnet &subnet,
 void conesValid(const Subnet &subnet,
                 const ConeBuilder &coneBuilder,
                 const CutExtractor *cutExtractor = nullptr) {
-
-  if (!getenv("UTOPIA_HOME")) {
-    FAIL() << "UTOPIA_HOME is not set.";
-  }
   const auto &subnetEntries = subnet.getEntries();
   for (size_t entryIdx = 0; entryIdx < subnetEntries.size(); ++entryIdx) {
     const auto subnetCell = subnetEntries[entryIdx].cell;

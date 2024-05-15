@@ -19,13 +19,14 @@ namespace eda::gate::techmapper {
 
 using SubnetID = eda::gate::model::SubnetID;
 
-const std::string techLib = std::string(getenv("UTOPIA_HOME")) +
-  "/test/data/gate/techmapper" + "/sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
+const std::filesystem::path techLib = getHomePath() +
+  "test/data/gate/techmapper" /
+  "sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
 
 SubnetID simpleANDMapping(Techmapper::MapperType mapperType);
 SubnetID simpleORMapping(Techmapper::MapperType mapperType);
 SubnetID graphMLMapping(Techmapper::MapperType mapperType,
-                        const std::string fileName);
+                        const std::string &fileName);
 SubnetID andNotMapping(Techmapper::MapperType mapperType);
 SubnetID randomMapping(Techmapper::MapperType mapperType);
 SubnetID notNotAndMapping(Techmapper::MapperType mapperType);

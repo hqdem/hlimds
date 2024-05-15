@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "test_util.h"
+
 #include "gtest/gtest.h"
 
 #include <cerrno>
@@ -19,7 +21,7 @@
 namespace fs = std::filesystem;
 
 namespace eda::gate::translator {
-const std::string homePath = std::string(getenv("UTOPIA_HOME"));
+const std::string homePath = getHomePath();
 const std::string binPath = homePath + "/build/src/umain";
 const std::string dataPath = homePath + "/test/data/gate/parser/verilog/";
 const std::string outputFilePath = homePath + "/output/test/verilog_fir_sys/";

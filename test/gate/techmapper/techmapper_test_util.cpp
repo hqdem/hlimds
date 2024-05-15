@@ -33,7 +33,7 @@ SDC sdc{100000000, 10000000000};
 
 SubnetID parseGraphML(std::string fileName) {
   using path = std::filesystem::path;
-  const path home = std::string(getenv("UTOPIA_HOME"));
+  const path home = getHomePath();
   const path dir = path("test") / "data" / "gate" / "parser"
                    / "graphml" / "OpenABC" / "graphml_openabcd";
   fileName += ".bench.graphml";

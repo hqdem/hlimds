@@ -5,6 +5,7 @@
 // Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #include "gate/debugger/bdd_checker.h"
 #include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/sat_checker.h"
@@ -12,8 +13,8 @@
 #include "gate/model/celltype.h"
 #include "gate/model/examples.h"
 #include "gate/model/subnet.h"
+#include "gate/mutator/mutator.h"
 #include "gate/parser/graphml_to_subnet.h"
-#include "gate/transformer/mutator2/mutator2.h"
 
 #include "gtest/gtest.h"
 
@@ -77,12 +78,12 @@ namespace eda::gate::mutator {
     return chk.areEquivalent(subnetID, mutatedSubnetID, mapOldToNew).notEqual();
   }
 
-  TEST(Mutator2, andOr) {
+  TEST(Mutator, andOr) {
     SubnetID subnetID = make2AndOr(); 
     auto &net = Subnet::get(subnetID);
     CellIDList listCells = {0, 1, 2, 3, 4, 5, 6};
     CellSymbolList functions = {CellSymbol::AND};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CELL,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
                                                 net, 
                                                 listCells, 
                                                 functions);
@@ -96,12 +97,12 @@ namespace eda::gate::mutator {
                                        getChecker(SAT)));      
   }
 
-  TEST(Mutator2, andOr2) {
+  TEST(Mutator, andOr2) {
     SubnetID subnetID = make2AndOr2(); 
     auto &net = Subnet::get(subnetID);
     CellIDList listCells = {0, 1, 2, 3, 4, 5, 6};
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CELL,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
                                                 net, 
                                                 listCells, 
                                                 functions);
@@ -115,12 +116,12 @@ namespace eda::gate::mutator {
                                        getChecker(SAT)));  
   }
 
-  TEST(Mutator2, numAndOr2) {
+  TEST(Mutator, numAndOr2) {
     SubnetID subnetID = make2AndOr2(); 
     auto &net = Subnet::get(subnetID);
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CELL,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
                                                 counter,
                                                 net, 
                                                 net.size(), 
@@ -136,12 +137,12 @@ namespace eda::gate::mutator {
                                        getChecker(SAT))); 
   }
 
-  TEST(Mutator2, graphSs) {
+  TEST(Mutator, graphSs) {
     SubnetID subnetID = parseForTests("ss_pcm_orig");
     auto &net = Subnet::get(subnetID);
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CELL,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
                                                 counter,
                                                 net, 
                                                 60, 
@@ -155,11 +156,11 @@ namespace eda::gate::mutator {
                                        getChecker(SAT)));
   }
 
-  TEST(Mutator2, graphSasc) {
+  TEST(Mutator, graphSasc) {
     SubnetID subnetID = parseForTests("sasc_orig");
     auto &net = Subnet::get(subnetID);
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CELL,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
                                                 net, 
                                                 5, 
                                                 functions);
@@ -171,11 +172,11 @@ namespace eda::gate::mutator {
                                        getChecker(SAT)));
   }
   
-  TEST(Mutator2, graphI2c) {
+  TEST(Mutator, graphI2c) {
     SubnetID subnetID = parseForTests("i2c_orig");
     auto &net = Subnet::get(subnetID);
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CELL,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
                                                 net, 
                                                 15, 
                                                 functions);
@@ -185,12 +186,12 @@ namespace eda::gate::mutator {
                                        getChecker(SAT)));
   }
 
-  TEST(Mutator2, cutAndOr2) {
+  TEST(Mutator, cutAndOr2) {
     SubnetID subnetID = make2AndOr(); 
     auto &net = Subnet::get(subnetID);
     CellIDList listCells = {6};
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CUT,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CUT,
                                                 net, 
                                                 listCells, 
                                                 functions,
@@ -205,11 +206,11 @@ namespace eda::gate::mutator {
                                        getChecker(SAT)));        
   }
 
-  TEST(Mutator2, cutNumAndOr2) {
+  TEST(Mutator, cutNumAndOr2) {
     SubnetID subnetID = make2AndOr(); 
     auto &net = Subnet::get(subnetID);
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CUT,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CUT,
                                                 net, 
                                                 2, 
                                                 functions,
@@ -224,12 +225,12 @@ namespace eda::gate::mutator {
                                        getChecker(SAT))); 
   }
 
-  TEST(Mutator2, cutGraphI2c) {
+  TEST(Mutator, cutGraphI2c) {
     SubnetID subnetID = parseForTests("i2c_orig");
     auto &net = Subnet::get(subnetID);
     CellIDList list = {193, 195, 200};
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CUT,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CUT,
                                                 net, 
                                                 list, 
                                                 functions,
@@ -240,12 +241,12 @@ namespace eda::gate::mutator {
                                        getChecker(SAT)));
   }
 
-  TEST(Mutator2, cutGraphUsb) {
+  TEST(Mutator, cutGraphUsb) {
     SubnetID subnetID = parseForTests("usb_phy_orig");
     auto &net = Subnet::get(subnetID);
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND};
-    SubnetID mutatedSubnetID = Mutator2::mutate(Mutator2Mode::CUT,
+    SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CUT,
                                                 counter,
                                                 net, 
                                                 2, 

@@ -48,6 +48,7 @@ add_executable(${TEST_TARGET}
   gate/model/subnet_test.cpp
   gate/model/utils/bdd_dnf_test.cpp
   gate/model/utils/subnet_truth_table_test.cpp
+  gate/mutator/mutator_test.cpp
   gate/parser/graphml_test_utils.cpp
   gate/parser/graphml_to_subnet_test.cpp
   gate/premapper/aigmapper_test.cpp
@@ -81,7 +82,6 @@ add_executable(${TEST_TARGET}
 #  gate/techmapper/strategy/power_test.cpp
 #  gate/techmapper/strategy/simple_area_test.cpp
 #  gate/techmapper/strategy/simple_delay_test.cpp
-  gate/transformer/mutator2/mutator2_test.cpp
   gate/translator/fir/fir_model2_test.cpp
   gate/translator/verilog_to_fir/yosys_converter_firrtl_test.cpp
   gate/translator/verilog_to_model2/yosys_converter_model2_tests.cpp

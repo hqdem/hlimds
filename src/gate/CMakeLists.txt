@@ -22,6 +22,8 @@ add_library(Gate OBJECT
   model/utils/subnet_checking.cpp
   model/utils/subnet_to_bdd.cpp
   model/utils/subnet_truth_table.cpp
+  mutator/mutator.cpp
+  mutator/mutator_transformer.cpp
   optimizer/area_resynthesizer.cpp
   optimizer/cone_builder.cpp
   optimizer/cut_extractor.cpp
@@ -70,8 +72,6 @@ add_library(Gate OBJECT
   techmapper/seq_mapper/sequential_mapper.cpp
   techmapper/techmapper.cpp
   techmapper/techmapper_wrapper.cpp
-  transformer/mutator2/mutator2.cpp
-  transformer/mutator2/mutator2_transformer.cpp
   translator/fir/fir_model2.cpp
   translator/verilog/verilog_model2.cpp
   translator/firrtl.cpp

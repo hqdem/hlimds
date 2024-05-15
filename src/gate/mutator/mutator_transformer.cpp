@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/transformer/mutator2/mutator2_transformer.h"
+#include "gate/mutator/mutator_transformer.h"
 #include "util/logging.h"
 
 namespace eda::gate::mutator {
-  Mutator2Transformer::Mutator2Transformer(Subnet &inputNet,
+  MutatorTransformer::MutatorTransformer(Subnet &inputNet,
                                            SubnetBuilder &subnetBuilder,
                                            int numOfCells,
                                            CellIDList &cellIdList,
@@ -35,7 +35,7 @@ namespace eda::gate::mutator {
     }
   }
 
-  bool Mutator2Transformer::connectedWithOut(const EntryArray entries,
+  bool MutatorTransformer::connectedWithOut(const EntryArray entries,
                                              const CellID &startCell) {
     CellIDList visited;
     std::list<CellID> queue;
@@ -60,7 +60,7 @@ namespace eda::gate::mutator {
     return false;
   } 
 
-  CellIDList Mutator2Transformer::filterListCell(const EntryArray &entries) {
+  CellIDList MutatorTransformer::filterListCell(const EntryArray &entries) {
     CellIDList answerList;
     for (CellID cellID : replacedCells) {
       CellSymbol function = entries[cellID].cell.getSymbol();
@@ -78,7 +78,7 @@ namespace eda::gate::mutator {
     return answerList;
   }
 
-  void Mutator2Transformer::addMutatedCell(SubnetBuilder &subnetBuilder,
+  void MutatorTransformer::addMutatedCell(SubnetBuilder &subnetBuilder,
                                            const EntryArray &entries,
                                            const CellID &cellID,
                                            const LinkList &linkList) {
@@ -102,7 +102,7 @@ namespace eda::gate::mutator {
     }
   }
 
-  void Mutator2Transformer::findChildren(Subnet &inputNet,
+  void MutatorTransformer::findChildren(Subnet &inputNet,
                                          const EntryArray &entries) {
     for (size_t i = 0; i < entries.size(); i++) {
       LinkList linkList = inputNet.getLinks(i);

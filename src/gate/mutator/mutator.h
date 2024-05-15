@@ -9,8 +9,8 @@
 #pragma once
 
 #include "gate/model/subnet.h"
+#include "gate/mutator/mutator_transformer.h"
 #include "gate/optimizer/cut_extractor.h"
-#include "gate/transformer/mutator2/mutator2_transformer.h"
 
 #include <iostream>
 #include <list>
@@ -40,7 +40,7 @@ namespace eda::gate::mutator {
    * CELL mode indicates that mutator modifies the current 
    * number of cells or current cells
   */
-  enum Mutator2Mode {
+  enum MutatorMode {
     CELL = 0,
     CUT = 1
   };
@@ -52,13 +52,13 @@ namespace eda::gate::mutator {
    * for subsequent net mutation and creates a class object
    * that mutates the logical net
   */
-  class Mutator2 {
+  class Mutator {
   private:
     //===------------------------------------------------------------------===//
     // Constructor and destructor
     //===------------------------------------------------------------------===//
-    Mutator2() = default;
-    ~Mutator2() = default;
+    Mutator() = default;
+    ~Mutator() = default;
 
   public:
     /**
@@ -75,7 +75,7 @@ namespace eda::gate::mutator {
      * be mutated, that is if cell's symbol is not in the list, 
      * this cell will not be mutated. 
     */
-    static SubnetID mutate(Mutator2Mode mode,
+    static SubnetID mutate(MutatorMode mode,
                            Subnet &inputNet,
                            CellIDList &cellIdList,
                            CellSymbolList function = {CellSymbol::AND},
@@ -95,7 +95,7 @@ namespace eda::gate::mutator {
      * cells will be mutated, that is if cell's symbol is not in the list, 
      * this cell will not be mutated.
     */
-    static SubnetID mutate(Mutator2Mode mode,
+    static SubnetID mutate(MutatorMode mode,
                            Subnet &inputNet,
                            unsigned int num,
                            CellSymbolList function = {CellSymbol::AND},
@@ -116,7 +116,7 @@ namespace eda::gate::mutator {
      * cells will be mutated, that is if cell's symbol is not in the list, 
      * this cell will not be mutated.
     */
-    static SubnetID mutate(Mutator2Mode mode,
+    static SubnetID mutate(MutatorMode mode,
                            int &counter,
                            Subnet &inputNet,
                            unsigned int num,
@@ -138,7 +138,7 @@ namespace eda::gate::mutator {
      * cells will be mutated, that is if cell's symbol is not in the list, 
      * this cell will not be mutated.
     */
-    static SubnetID mutate(Mutator2Mode mode,
+    static SubnetID mutate(MutatorMode mode,
                            CellIDList &mutatedCells,
                            Subnet &inputNet,
                            unsigned int num,

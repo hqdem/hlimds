@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/transformer/mutator2/mutator2.h"
+#include "gate/mutator/mutator.h"
 #include "util/logging.h"
 
 namespace eda::gate::mutator {
@@ -68,15 +68,15 @@ namespace eda::gate::mutator {
   }
 
   /// Creates parameters for mutator transformer
-  bool paramForTransformer(Mutator2Mode mode,
+  bool paramForTransformer(MutatorMode mode,
                            Subnet &inputNet, 
                            unsigned int &number,
                            CellIDList &cellIdList,
                            unsigned int &cutSize) {
-    if (mode == Mutator2Mode::CUT) {
+    if (mode == MutatorMode::CUT) {
       cellIdList = makeListCell(inputNet, number, cellIdList, cutSize);
       number = cellIdList.size();
-    } else if (mode == Mutator2Mode::CELL) {
+    } else if (mode == MutatorMode::CELL) {
       for (size_t i = 0; i < inputNet.size(); i++) {
         cellIdList.push_back(i);
       }
@@ -90,22 +90,22 @@ namespace eda::gate::mutator {
   // Static functions
   //===------------------------------------------------------------------===// 
 
-  SubnetID Mutator2::mutate(Mutator2Mode mode,
+  SubnetID Mutator::mutate(MutatorMode mode,
                             Subnet &inputNet,
                             CellIDList &cellIdList,
                             CellSymbolList function,
                             unsigned int cutSize) {
     SubnetBuilder subnetBuilder;
-    if (mode == Mutator2Mode::CUT) {
+    if (mode == MutatorMode::CUT) {
       cellIdList = makeListCell(inputNet,
                                 cellIdList.size(),
                                 cellIdList,
                                 cutSize);
-    } else if (mode != Mutator2Mode::CELL) {
+    } else if (mode != MutatorMode::CELL) {
       LOG_WARN << "Unexpected flag : " << mode;
       return subnetBuilder.make();
     }
-    Mutator2Transformer transformer(inputNet,
+    MutatorTransformer transformer(inputNet,
                                     subnetBuilder,
                                     cellIdList.size(),
                                     cellIdList,
@@ -113,7 +113,7 @@ namespace eda::gate::mutator {
     return subnetBuilder.make();
   }
 
-  SubnetID Mutator2::mutate(Mutator2Mode mode,
+  SubnetID Mutator::mutate(MutatorMode mode,
                             Subnet &inputNet,
                             unsigned int num,
                             CellSymbolList function,
@@ -129,7 +129,7 @@ namespace eda::gate::mutator {
       LOG_WARN << "Unexpected flag : " << mode;
       return subnetBuilder.make();
     }
-    Mutator2Transformer transformer(inputNet,
+    MutatorTransformer transformer(inputNet,
                                     subnetBuilder,
                                     num,
                                     cellIdList,
@@ -137,7 +137,7 @@ namespace eda::gate::mutator {
     return subnetBuilder.make();
   }
 
-  SubnetID Mutator2::mutate(Mutator2Mode mode,
+  SubnetID Mutator::mutate(MutatorMode mode,
                             int &counter,
                             Subnet &inputNet,
                             unsigned int num,
@@ -154,7 +154,7 @@ namespace eda::gate::mutator {
       LOG_WARN << "Unexpected flag : " << mode;
       return subnetBuilder.make();
     }
-    Mutator2Transformer transformer(inputNet,
+    MutatorTransformer transformer(inputNet,
                                     subnetBuilder,
                                     num,
                                     cellIdList,
@@ -163,7 +163,7 @@ namespace eda::gate::mutator {
     return subnetBuilder.make();
   }
 
-  SubnetID Mutator2::mutate(Mutator2Mode mode,
+  SubnetID Mutator::mutate(MutatorMode mode,
                             CellIDList &mutatedCells,
                             Subnet &inputNet,
                             unsigned int num,
@@ -180,7 +180,7 @@ namespace eda::gate::mutator {
       LOG_WARN << "Unexpected flag : " << mode;
       return subnetBuilder.make();
     }
-    Mutator2Transformer transformer(inputNet,
+    MutatorTransformer transformer(inputNet,
                                     subnetBuilder,
                                     num,
                                     cellIdList,

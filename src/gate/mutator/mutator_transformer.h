@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/model/array.h"
-#include "gate/transformer/mutator2/mutator2.h"
+#include "gate/mutator/mutator.h"
 
 namespace eda::gate::mutator {
 
@@ -30,7 +30,7 @@ namespace eda::gate::mutator {
    * \details This class mutates cells in Nets depending on the 
    * input values
   */
-  class Mutator2Transformer {
+  class MutatorTransformer {
     CellIDList replacedCells;
     CellSymbolList replacedFunc;
     unsigned int numCells = 0;
@@ -54,12 +54,12 @@ namespace eda::gate::mutator {
      * will be mutated, that is if cell's symbol is not in the list, 
      * this cell will not be mutated.
     */
-    Mutator2Transformer(Subnet &inputNet,
+    MutatorTransformer(Subnet &inputNet,
                         SubnetBuilder &subnetBuilder,
                         int numOfCells,
                         CellIDList &cellIdList,
                         CellSymbolList &function);
-    ~Mutator2Transformer() = default;
+    ~MutatorTransformer() = default;
 
     /// Function returns number of mutated cells
     unsigned int getNumMutatedCells() {

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/base_checker2.h"
+#include "gate/debugger/base_checker.h"
 #include "gate/model2/examples.h"
 #include "gate/simulator2/simulator.h"
 
@@ -14,7 +14,7 @@
 
 using namespace eda::gate::model;
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 TEST(MiterTest, Random) {
   using Simulator = eda::gate::simulator2::Simulator;
@@ -35,7 +35,7 @@ TEST(MiterTest, Random) {
       map[i] = i;
     }
     SubnetBuilder builder;
-    BaseChecker2::miter2(builder, id, id, map);
+    BaseChecker::miter2(builder, id, id, map);
     const Subnet &miter = Subnet::get(builder.make());
     uint16_t miterInNum = miter.getInNum();
     EXPECT_TRUE(miter.getOutNum() == 1);
@@ -52,4 +52,4 @@ TEST(MiterTest, Random) {
   }
 
 }
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

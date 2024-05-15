@@ -7,26 +7,27 @@
 //===----------------------------------------------------------------------===//
 
 #pragma once
-#include "base_checker2.h"
+
+#include "gate/debugger/base_checker.h"
 #include "gate/model2/utils/subnet_to_bdd.h"
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 using CellBddMap = model::utils::CellBDDMap;
 using SubnetToBdd = model::utils::SubnetToBdd;
 
 /// Checks the equivalence of the specified nets using BDD construction.
-class BddChecker2 : public BaseChecker2, public util::Singleton<BddChecker2> {
-friend class util::Singleton<BddChecker2>;
+class BddChecker : public BaseChecker, public util::Singleton<BddChecker> {
+friend class util::Singleton<BddChecker>;
 
 public:
   /**
-   * @copydoc BaseChecker2::isSat
+   * @copydoc BaseChecker::isSat
    */
   CheckerResult isSat(const SubnetID id) const override;
 
 private:
-  BddChecker2() {}
+  BddChecker() {}
 };
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

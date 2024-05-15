@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/debugger2/base_checker2.h"
+#include "gate/debugger/base_checker.h"
 #include "gate/simulator2/simulator.h"
 #include "util/logging.h"
 
@@ -16,12 +16,12 @@
 #include <random>
 #include <unordered_map>
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 using Cell = eda::gate::model::Subnet::Cell;
 using CellSymbol = eda::gate::model::CellSymbol;
-using CellToCell = eda::gate::debugger2::CellToCell;
-using LecType = eda::gate::debugger2::options::LecType;
+using CellToCell = eda::gate::debugger::CellToCell;
+using LecType = eda::gate::debugger::options::LecType;
 using LinkList = model::Subnet::LinkList;
 using SubnetID = eda::gate::model::SubnetID;
 using Simulator = eda::gate::simulator2::Simulator;
@@ -33,7 +33,7 @@ using Simulator = eda::gate::simulator2::Simulator;
  * Sequential Synthesis" by A. Mishchenko (2008).
  */
 
-class SeqChecker : public BaseChecker2 {
+class SeqChecker : public BaseChecker {
 public:
 
   /**
@@ -85,4 +85,4 @@ void getFlipsIds(
 const Subnet &structuralRegisterSweep(const Subnet &subnet, const int nsimulate,
                                       bool setSeed, uint32_t seed);
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

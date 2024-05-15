@@ -5,10 +5,10 @@
 // Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/debugger2/bdd_checker2.h"
-#include "gate/debugger2/fraig_checker2.h"
-#include "gate/debugger2/sat_checker2.h"
-#include "gate/debugger2/rnd_checker2.h"
+#include "gate/debugger/bdd_checker.h"
+#include "gate/debugger/fraig_checker.h"
+#include "gate/debugger/sat_checker.h"
+#include "gate/debugger/rnd_checker.h"
 #include "gate/model2/celltype.h"
 #include "gate/model2/examples.h"
 #include "gate/model2/subnet.h"
@@ -28,11 +28,11 @@ namespace eda::gate::mutator {
   using CellIdMap = std::unordered_map<size_t, size_t>;
   using CellType = eda::gate::model::CellType;
   using CellSymbol = eda::gate::model::CellSymbol;
-  using eda::gate::debugger2::getChecker;
-  using eda::gate::debugger2::options::BDD;
-  using eda::gate::debugger2::options::FRAIG;
-  using eda::gate::debugger2::options::RND;
-  using eda::gate::debugger2::options::SAT;
+  using eda::gate::debugger::getChecker;
+  using eda::gate::debugger::options::BDD;
+  using eda::gate::debugger::options::FRAIG;
+  using eda::gate::debugger::options::RND;
+  using eda::gate::debugger::options::SAT;
   using eda::gate::model::make2AndOr;
   using eda::gate::model::make2AndOr2;
   using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;

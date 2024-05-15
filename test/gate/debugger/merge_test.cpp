@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "../test/gate/model2/examples.h"
-#include "gate/debugger2/seq_checker.h"
+#include "gate/debugger/seq_checker.h"
+#include "gate/model2/examples.h"
 #include "gate/model2/utils/subnet_random.h"
 
 #include "gtest/gtest.h"
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 std::vector<int> getIdx(const Subnet &subnet) {
   std::vector<int> idxs;
@@ -96,4 +96,4 @@ TEST(MergeConstantTest, custom2) {
               CellSymbol::ZERO);
 }
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

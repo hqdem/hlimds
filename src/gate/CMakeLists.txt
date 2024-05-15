@@ -2,11 +2,11 @@ add_compile_options(-fno-rtti)
 add_library(Gate OBJECT
   analyzer/probabilistic_estimate.cpp
   analyzer/simulation_estimator.cpp
-  debugger2/base_checker2.cpp
-  debugger2/bdd_checker2.cpp
-  debugger2/fraig_checker2.cpp
-  debugger2/rnd_checker2.cpp
-  debugger2/seq_checker.cpp
+  debugger/base_checker.cpp
+  debugger/bdd_checker.cpp
+  debugger/fraig_checker.cpp
+  debugger/rnd_checker.cpp
+  debugger/seq_checker.cpp
   model2/cell.cpp
   model2/celltype.cpp
   model2/decomposer/net_decomposer.cpp

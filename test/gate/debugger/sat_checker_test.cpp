@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/sat_checker2.h"
+#include "gate/debugger/sat_checker.h"
 
 #include "gtest/gtest.h"
 
 using namespace eda::gate::model;
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 using Link = model::Subnet::Link;
 using LinkList = model::Subnet::LinkList;
@@ -60,27 +60,27 @@ SubnetID genOneCellMappedSubnet(CellTypeID cellTypeID) {
 
 
 TEST(SATTest, CustomFourInSingleCellTest) {
-SubnetBuilder equalSubnetBuilder;
-LinkList links;
-for (size_t i = 0; i < 4; ++i) {
-links.emplace_back(equalSubnetBuilder.addInput());
-}
+  SubnetBuilder equalSubnetBuilder;
+  LinkList links;
+  for (size_t i = 0; i < 4; ++i) {
+    links.emplace_back(equalSubnetBuilder.addInput());
+  }
 
-auto idxANDSubnetOut0 = equalSubnetBuilder.addCell(CELL_TYPE_ID_AND, LinkList{links[0], links[1]});;
-auto idxANDSubnetOut1 = equalSubnetBuilder.addCell(CELL_TYPE_ID_AND, LinkList{links[2], links[3]});
-auto idxANDSubnetOut2 = equalSubnetBuilder.addCell(CELL_TYPE_ID_AND, LinkList{idxANDSubnetOut0, idxANDSubnetOut1});
-equalSubnetBuilder.addOutput(idxANDSubnetOut2);
+  auto idxANDSubnetOut0 = equalSubnetBuilder.addCell(CELL_TYPE_ID_AND, LinkList{links[0], links[1]});;
+  auto idxANDSubnetOut1 = equalSubnetBuilder.addCell(CELL_TYPE_ID_AND, LinkList{links[2], links[3]});
+  auto idxANDSubnetOut2 = equalSubnetBuilder.addCell(CELL_TYPE_ID_AND, LinkList{idxANDSubnetOut0, idxANDSubnetOut1});
+  equalSubnetBuilder.addOutput(idxANDSubnetOut2);
 
-std::unordered_map<size_t, size_t> map;
+  std::unordered_map<size_t, size_t> map;
 
-map[0] = 0;
-map[1] = 1;
-map[2] = 2;
-map[3] = 3;
-map[7] = 5;
+  map[0] = 0;
+  map[1] = 1;
+  map[2] = 2;
+  map[3] = 3;
+  map[7] = 5;
 
-debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
-EXPECT_TRUE(checker.areEquivalent(equalSubnetBuilder.make(),
+  debugger::SatChecker& checker = debugger::SatChecker::get();
+  EXPECT_TRUE(checker.areEquivalent(equalSubnetBuilder.make(),
     genOneCellMappedSubnet(customFourInANDCellType()), map).equal());
-}
-} // namespace eda::gate::debugger2
+  }
+} // namespace eda::gate::debugger

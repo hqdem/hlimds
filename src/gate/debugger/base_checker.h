@@ -10,20 +10,21 @@
 
 #include "gate/model2/subnet.h"
 
-namespace eda::gate::debugger2::options {
+namespace eda::gate::debugger::options {
 
 enum LecType {
   BDD,
   FRAIG,
   RND,
-  SAT,
+  SAT
 };
 
-} // namespace eda::gate::debugger2::options
+} // namespace eda::gate::debugger::options
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
+
 using CellToCell = std::unordered_map<size_t, size_t>;
-using LecType = eda::gate::debugger2::options::LecType;
+using LecType = eda::gate::debugger::options::LecType;
 using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetID = model::SubnetID;
@@ -94,7 +95,7 @@ private:
 };
 
 /// Basic class for equivalence checkers.
-class BaseChecker2 {
+class BaseChecker {
 public:
 
   /**
@@ -130,9 +131,9 @@ public:
     return isSat(builder.make());
   }
 
-  virtual ~BaseChecker2() = 0;
+  virtual ~BaseChecker() = 0;
 };
 
-BaseChecker2 &getChecker(LecType lec);
+BaseChecker &getChecker(LecType lec);
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

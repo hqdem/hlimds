@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/rnd_checker2.h"
+#include "gate/debugger/rnd_checker.h"
 
 #include <bitset>
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 Simulator::DataVector getAllValues(size_t nIn, size_t count) {
   size_t startValue = count * 64;
@@ -45,7 +45,7 @@ std::vector<bool> getCounterEx(const std::bitset<64> output,
   return counterEx;
 }
 
-CheckerResult RndChecker2::isSat(const SubnetID id) const {
+CheckerResult RndChecker::isSat(const SubnetID id) const {
   const Subnet &miter = Subnet::get(id);
   assert(miter.getOutNum() == 1);
 
@@ -92,4 +92,4 @@ CheckerResult RndChecker2::isSat(const SubnetID id) const {
   return CheckerResult::ERROR;
 }
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

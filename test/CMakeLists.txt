@@ -29,12 +29,12 @@ enable_testing()
 add_executable(${TEST_TARGET}
   gate/analyzer/prob_estimator_test.cpp
   gate/analyzer/simulation_estimator_test.cpp
-  gate/debugger2/merge_test.cpp
-  gate/debugger2/miter2_test.cpp
-  gate/debugger2/register_sweep_test.cpp
-  gate/debugger2/sat_checker2_test.cpp
-  gate/debugger2/seq_sweep_test.cpp
-  gate/debugger2/synth_lec_test.cpp
+  gate/debugger/merge_test.cpp
+  gate/debugger/miter_test.cpp
+  gate/debugger/register_sweep_test.cpp
+  gate/debugger/sat_checker_test.cpp
+  gate/debugger/seq_sweep_test.cpp
+  gate/debugger/synth_lec_test.cpp
   gate/model2/array_test.cpp
   gate/model2/examples.cpp
   gate/model2/generator_test.cpp

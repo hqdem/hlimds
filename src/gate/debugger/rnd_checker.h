@@ -7,27 +7,28 @@
 //===----------------------------------------------------------------------===//
 
 #pragma once
-#include "base_checker2.h"
+
+#include "gate/debugger/base_checker.h"
 #include "gate/simulator2/simulator.h"
 #include "util/logging.h"
 
 #include <cassert>
 #include <cmath>
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 using Simulator = simulator2::Simulator;
-using CheckerResult = eda::gate::debugger2::CheckerResult;
+using CheckerResult = eda::gate::debugger::CheckerResult;
 
 Simulator::DataVector getAllValues(size_t nIn, size_t count);
 
 /// Checks the equivalence of the specified nets using simulation.
-class RndChecker2 : public BaseChecker2, public util::Singleton<RndChecker2> {
-friend class util::Singleton<RndChecker2>;
+class RndChecker : public BaseChecker, public util::Singleton<RndChecker> {
+friend class util::Singleton<RndChecker>;
 
 public:
   /**
-   * @copydoc BaseChecker2::isSat
+   * @copydoc BaseChecker::isSat
    */
 
   CheckerResult isSat(const SubnetID id) const override;
@@ -43,7 +44,7 @@ public:
   void setExhaustive(bool exhaustive) { this->exhaustive = exhaustive; }
 
 private:
-  RndChecker2(bool exhaustive = true, unsigned tries = 0) {
+  RndChecker(bool exhaustive = true, unsigned tries = 0) {
     this->exhaustive = exhaustive;
     this->tries = tries;
   }
@@ -51,4 +52,4 @@ private:
   bool exhaustive;
 };
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

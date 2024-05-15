@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/seq_checker.h"
+#include "gate/debugger/seq_checker.h"
+#include "gate/model2/examples.h"
 #include "gate/model2/utils/subnet_random.h"
-#include "../test/gate/model2/examples.h"
 
 #include "gtest/gtest.h"
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 TEST(RegisterSweepTest, custom1) {
   Subnet &subnet = Subnet::get(eda::gate::model::makeStuckLatches());
@@ -43,4 +43,4 @@ TEST(RegisterSweepTest, custom2) {
   }
 }
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

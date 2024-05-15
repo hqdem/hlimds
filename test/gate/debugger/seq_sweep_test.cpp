@@ -6,12 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/seq_checker.h"
+#include "gate/debugger/seq_checker.h"
 #include "gate/model2/utils/subnet_random.h"
 
 #include "gtest/gtest.h"
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 std::vector<CellSymbol> getSymbols(const Subnet &subnet) {
   auto entries = subnet.getEntries();
@@ -67,4 +67,4 @@ TEST(SeqSweepTest, random) {
     EXPECT_EQ(symbols, getSymbols(sweepedSubnet));
   }
 }
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

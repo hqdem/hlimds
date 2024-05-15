@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/sat_checker2.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/model2/subnet.h"
 #include "gate/optimizer2/area_optimizer.h"
 #include "gate/parser/graphml_to_subnet.h"
@@ -19,7 +19,7 @@
 using AreaOptimizer       = eda::gate::optimizer2::AreaOptimizer;
 using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
 using LinkList            = eda::gate::model::Subnet::LinkList;
-using SatChecker2         = eda::gate::debugger2::SatChecker2;
+using SatChecker          = eda::gate::debugger::SatChecker;
 using Subnet              = GraphMlSubnetParser::Subnet;
 using SubnetBuilder       = eda::gate::model::SubnetBuilder;
 using SubnetID            = eda::gate::model::SubnetID;
@@ -44,7 +44,7 @@ size_t countBufs(const Subnet &subnet) {
 }
 
 void checkAreaOptimizationEquivalence(SubnetID lhs, SubnetID rhs) {
-  SatChecker2 &checker = SatChecker2::get();
+  SatChecker &checker = SatChecker::get();
   const auto &subnet = Subnet::get(lhs);
   const auto &opt = Subnet::get(rhs);
 

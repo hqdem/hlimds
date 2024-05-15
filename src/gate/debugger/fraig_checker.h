@@ -7,12 +7,13 @@
 //===----------------------------------------------------------------------===//
 
 #pragma once
-#include "base_checker2.h"
+
+#include "gate/debugger/base_checker.h"
 #include "gate/simulator2/simulator.h"
 
 #include <bitset>
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 using CounterEx = std::vector<std::bitset<64>>;
 
@@ -22,12 +23,12 @@ using CounterEx = std::vector<std::bitset<64>>;
  * The algorithm is based on the article "Improvements to combinational
  * equivalence checking" by A. Mishchenko, S. Chatterjee, R. Brayton (2006).
  */
-class FraigChecker2 : public BaseChecker2, public util::Singleton<FraigChecker2> {
-friend class util::Singleton<FraigChecker2>;
+class FraigChecker : public BaseChecker, public util::Singleton<FraigChecker> {
+friend class util::Singleton<FraigChecker>;
 
 public:
   /**
-   * @copydoc BaseChecker2::isSat
+   * @copydoc BaseChecker::isSat
    */
   CheckerResult isSat(const SubnetID id) const override;
 
@@ -39,7 +40,7 @@ private:
                             const uint16_t &nIn,
                             const CounterEx &counterEx = {});
 
-  FraigChecker2() {}
+  FraigChecker() {}
 };
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

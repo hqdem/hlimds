@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/seq_checker.h"
+#include "gate/debugger/seq_checker.h"
 
 #include <iostream>
 #include <set>
 #include <vector>
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 CheckerResult SeqChecker::isSat(const SubnetID id) const {
 
@@ -297,4 +297,4 @@ const Subnet &structuralRegisterSweep(const Subnet &subnet, const int nsimulate,
                std::vector<size_t>(stuckOne.begin(), stuckOne.end()));
 }
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

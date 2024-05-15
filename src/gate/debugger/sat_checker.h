@@ -8,16 +8,16 @@
 
 #pragma once
 
-#include "gate/debugger2/base_checker2.h"
+#include "gate/debugger/base_checker.h"
 #include "gate/model2/utils/subnet_cnf_encoder.h"
 
 #include <cassert>
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
-class SatChecker2 final : public BaseChecker2,
-                          public util::Singleton<SatChecker2> {
-  friend class util::Singleton<SatChecker2>;
+class SatChecker final : public BaseChecker,
+                          public util::Singleton<SatChecker> {
+  friend class util::Singleton<SatChecker>;
 
 public:
   CheckerResult isSat(const SubnetID id) const override {
@@ -42,7 +42,7 @@ public:
   }
 
 private:
-  SatChecker2() {}
+  SatChecker() {}
 };
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "gate/analyzer/simulation_estimator.h"
-#include "gate/debugger2/sat_checker2.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/model2/subnet.h"
 #include "gate/optimizer2/area_optimizer.h"
 #include "gate/parser/graphml_to_subnet.h"
@@ -18,10 +18,6 @@
 #include "gate/translator/verilog/verilog_model2.h"
 #include "options.h"
 /*
-#include "rtl/compiler/compiler.h"
-#include "rtl/library/arithmetic.h"
-#include "rtl/library/flibrary.h"
-#include "rtl/model/net.h"
 #include "rtl/parser/ril/parser.h"
 */
 #include "util/string.h"
@@ -74,24 +70,6 @@ struct RtlContext {
   bool equal;
 };
 
-void dump(const GNet &net) {
-  std::cout << net << std::endl;
-
-  for (auto source : net.sourceLinks()) {
-    const auto *gate = RtlContext::Gate::get(source.target);
-    std::cout << *gate << std::endl;
-  }
-  for (auto target : net.targetLinks()) {
-    const auto *gate = RtlContext::Gate::get(target.source);
-    std::cout << *gate << std::endl;
-  }
-
-  std::cout << std::endl;
-  std::cout << "N=" << net.nGates() << std::endl;
-  std::cout << "I=" << net.nSourceLinks() << std::endl;
-  std::cout << "O=" << net.nTargetLinks() << std::endl;
-}
-
 bool initialize(RtlContext &context) {
   LOG(INFO) << "RTL initialize";
 
@@ -115,70 +93,9 @@ bool parse(RtlContext &context) {
   return true;
 }
 
-bool compile(RtlContext &context) {
-  LOG(INFO) << "RTL compile";
-
-  RtlContext::Compiler compiler(RtlContext::Library::get());
-  context.gnet0 = compiler.compile(*context.vnet);
-
-  if (context.gnet0 == nullptr) {
-    LOG(ERROR) << "Could not compile the model";
-    return false;
-  }
-
-  context.gnet0->sortTopologically();
-
-  std::cout << "------ G-net #0 ------" << std::endl;
-  dump(*context.gnet0);
-
-  return true;
-}
-
-bool premap(RtlContext &context) {
-  LOG(INFO) << "RTL premap";
-
-  auto &premapper =
-      eda::gate::premapper::getPreMapper(context.options.preBasis);
-  context.gnet1 = premapper.map(*context.gnet0, context.gmap);
-
-  context.gnet1->sortTopologically();
-  std::cout << "------ G-net #1 ------" << std::endl;
-  dump(*context.gnet1);
-
-  return true;
-}
-
-bool check(RtlContext &context) {
-
-  LOG(INFO) << "RTL check";
-
-  auto &checker = eda::gate::debugger::getChecker(context.options.lecType);
-
-  assert(context.gnet0->nSourceLinks() == context.gnet1->nSourceLinks());
-  assert(context.gnet0->nTargetLinks() == context.gnet1->nTargetLinks());
-
-  context.equal = checker.areEqual(*context.gnet0, *context.gnet1,
-                                    context.gmap);
-  std::cout << "equivalent=" << context.equal << std::endl;
-
-  return true;
-}
-
-bool print(RtlContext &context) {
-  std::ofstream fout;
-  fout.open(context.options.graphMl);
-  eda::printer::graphml::GraphMlPrinter::print(fout, *context.gnet1);
-  fout.close();
-  return true;
-}
-
 int rtlMain(RtlContext &context) {
   if (!initialize(context)) { return -1; }
   if (!parse(context))      { return -1; }
-  if (!compile(context))    { return -1; }
-  if (!premap(context))     { return -1; }
-  if (!check(context))      { return -1; }
-  if (!print(context))      { return -1; }
 
   return 0;
 }
@@ -194,7 +111,7 @@ eda::gate::model::SubnetID parseGraphML(const std::string &fileName) {
 
 int optimize(const eda::gate::model::SubnetID &oldSubnetId,
              GraphMlOptions &opts) {
-  using SatChecker2 = eda::gate::debugger2::SatChecker2;
+  using SatChecker = eda::gate::debugger::SatChecker;
   using AreaOptimizer = eda::gate::optimizer2::AreaOptimizer;
 
   const auto &oldSubnet = eda::gate::model::Subnet::get(oldSubnetId);
@@ -222,7 +139,7 @@ int optimize(const eda::gate::model::SubnetID &oldSubnetId,
   size_t powerAfter = estimator.estimate(newSubnet).getActivitySum();
 
   if (opts.lec) {
-    SatChecker2 &checker = SatChecker2::get();
+    SatChecker &checker = SatChecker::get();
 
     std::unordered_map<size_t, size_t> map;
     for (size_t i{0}; i < oldSubnet.getInNum(); ++i) {

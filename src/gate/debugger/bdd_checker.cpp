@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/bdd_checker2.h"
+#include "gate/debugger/bdd_checker.h"
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
-CheckerResult BddChecker2::isSat(const SubnetID id) const {
+CheckerResult BddChecker::isSat(const SubnetID id) const {
   const Subnet &miter = Subnet::get(id);
   assert(miter.getOutNum() == 1);
 
@@ -30,4 +30,4 @@ CheckerResult BddChecker2::isSat(const SubnetID id) const {
   return CheckerResult::NOTEQUAL;
 }
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

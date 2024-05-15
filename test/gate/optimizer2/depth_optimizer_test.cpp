@@ -6,8 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/bdd_checker2.h"
-#include "gate/debugger2/sat_checker2.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/model2/utils/subnet_random.h"
 #include "gate/model2/utils/subnet_truth_table.h"
 #include "gate/optimizer2/depth_optimizer.h"
@@ -26,7 +25,7 @@ using namespace eda::gate::model;
 
 using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
 using ParserData          = GraphMlSubnetParser::ParserData;
-using SatChecker2         = eda::gate::debugger2::SatChecker2;
+using SatChecker          = eda::gate::debugger2::SatChecker;
 
 namespace eda::gate::optimizer2 {
 
@@ -51,7 +50,7 @@ void checkEquivalence(std::string testName) {
   const auto &newSubnet = Subnet::get(newSubnetId);
   size_t depthAfter = newSubnet.getPathLength().second;
 
-  SatChecker2 &checker = SatChecker2::get();
+  SatChecker &checker = SatChecker::get();
 
   std::unordered_map<size_t, size_t> map;
   for (size_t i{0}; i < oldSubnet.getInNum(); ++i) {

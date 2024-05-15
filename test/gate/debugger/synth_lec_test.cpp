@@ -6,16 +6,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/bdd_checker2.h"
-#include "gate/debugger2/fraig_checker2.h"
-#include "gate/debugger2/rnd_checker2.h"
+#include "gate/debugger/bdd_checker.h"
+#include "gate/debugger/fraig_checker.h"
+#include "gate/debugger/rnd_checker.h"
 #include "gate/model2/examples.h"
 
 #include "gtest/gtest.h"
 
 using namespace eda::gate::model;
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 void lecTest(const SubnetID id) {
   using options::BDD;
@@ -26,11 +26,11 @@ void lecTest(const SubnetID id) {
   for (size_t i = 0; i < subnet.getEntries().size(); ++i) {
     map[i] = i;
   }
-  static_cast<RndChecker2&>(getChecker(RND)).setExhaustive(false);
-  static_cast<RndChecker2&>(getChecker(RND)).setTries(100);
+  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(false);
+  static_cast<RndChecker&>(getChecker(RND)).setTries(100);
   EXPECT_TRUE(getChecker(RND).areEquivalent(id, id, map).isUnknown());
 
-  static_cast<RndChecker2&>(getChecker(RND)).setExhaustive(true);
+  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(true);
   EXPECT_TRUE(getChecker(RND).areEquivalent(id, id, map).equal());
   EXPECT_TRUE(getChecker(BDD).areEquivalent(id, id, map).equal());
   EXPECT_TRUE(getChecker(FRAIG).areEquivalent(id, id, map).equal());
@@ -64,9 +64,9 @@ TEST(LecTest, XorOrXor) {
 TEST(LecTest, AndOrXor) {
   lecTest(makeAndOrXor());
 }
-// TODO AND cell of arity 1 is not supported by the encoder
-//TEST(LecTest, 4AndOr) {
-//  lecTest(make4AndOr());
-//}
 
-} // namespace eda::gate::debugger2
+TEST(LecTest, 4AndOr) {
+  lecTest(make4AndOr());
+}
+
+} // namespace eda::gate::debugger

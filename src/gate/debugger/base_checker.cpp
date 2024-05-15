@@ -6,30 +6,30 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "base_checker2.h"
-#include "bdd_checker2.h"
-#include "fraig_checker2.h"
-#include "rnd_checker2.h"
-#include "sat_checker2.h"
+#include "gate/debugger/base_checker.h"
+#include "gate/debugger/bdd_checker.h"
+#include "gate/debugger/fraig_checker.h"
+#include "gate/debugger/rnd_checker.h"
+#include "gate/debugger/sat_checker.h"
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 using IdxToLink = std::unordered_map<size_t, model::Subnet::Link>;
-using LecType = eda::gate::debugger2::options::LecType;
+using LecType = eda::gate::debugger::options::LecType;
 using Link = model::Subnet::Link;
 using LinkList = model::Subnet::LinkList;
 using CellSymbol = model::CellSymbol;
 
-BaseChecker2 &getChecker(LecType lec) {
+BaseChecker &getChecker(LecType lec) {
   switch (lec) {
-    case LecType::BDD: return BddChecker2::get();
-    case LecType::FRAIG: return FraigChecker2::get();
-    case LecType::RND: return RndChecker2::get();
-    case LecType::SAT: return SatChecker2::get();
-    default: return SatChecker2::get();
+    case LecType::BDD: return BddChecker::get();
+    case LecType::FRAIG: return FraigChecker::get();
+    case LecType::RND: return RndChecker::get();
+    case LecType::SAT: return SatChecker::get();
+    default: return SatChecker::get();
   }
 }
-BaseChecker2::~BaseChecker2() {};
+BaseChecker::~BaseChecker() {};
 
 void buildCells(const Subnet &net,
                 SubnetBuilder &builder,
@@ -119,7 +119,7 @@ MiterHints makeHints(const Subnet &net, const CellToCell &map) {
   return hints;
 }
 
-void BaseChecker2::miter2(SubnetBuilder &builder,
+void BaseChecker::miter2(SubnetBuilder &builder,
                           const SubnetID lhs,
                           const SubnetID rhs,
                           const CellToCell &gmap) {
@@ -162,4 +162,4 @@ void BaseChecker2::miter2(SubnetBuilder &builder,
   }
 }
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

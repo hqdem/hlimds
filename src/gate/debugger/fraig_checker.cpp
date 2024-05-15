@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/fraig_checker2.h"
-#include "gate/debugger2/sat_checker2.h"
+#include "gate/debugger/fraig_checker.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/optimizer2/cone_builder.h"
 
 #include <limits>
@@ -15,7 +15,7 @@
 #include <random>
 #include <set>
 
-namespace eda::gate::debugger2 {
+namespace eda::gate::debugger {
 
 using Cone = optimizer2::ConeBuilder::Cone;
 using options::SAT;
@@ -46,7 +46,7 @@ private:
   uint64_t eqClass;
 };
 
-void FraigChecker2::netSimulation(simulator2::Simulator &simulator,
+void FraigChecker::netSimulation(simulator2::Simulator &simulator,
                                   const uint16_t &nIn,
                                   const CounterEx &counterEx) {
   simulator2::Simulator::DataVector values(nIn);
@@ -64,7 +64,7 @@ void FraigChecker2::netSimulation(simulator2::Simulator &simulator,
   simulator.simulate(values);
 }
 
-CheckerResult FraigChecker2::isSat(const SubnetID id) const {
+CheckerResult FraigChecker::isSat(const SubnetID id) const {
   SubnetBuilder miterBuilder(id);
   const Subnet &miter = Subnet::get(id);
   uint16_t storageCount = 0;
@@ -173,7 +173,7 @@ CheckerResult FraigChecker2::isSat(const SubnetID id) const {
     miterBuilder.mergeCells(toBeMerged);
   }
 
-  return static_cast<SatChecker2&>(getChecker(SAT)).isSat(miterBuilder.make());
+  return static_cast<SatChecker&>(getChecker(SAT)).isSat(miterBuilder.make());
 }
 
-} // namespace eda::gate::debugger2
+} // namespace eda::gate::debugger

@@ -213,7 +213,7 @@ Subnet::Link SubnetBuilder::addCellTree(
 Subnet::LinkList SubnetBuilder::addSubnet(
     SubnetID subnetID,
     const LinkList &links,
-    const std::function<float(const size_t)> *getCellWeight) {
+    const CellWeightProvider *weightProvider) {
   const auto &subnet = Subnet::get(subnetID);
   const auto &subnetEntries = subnet.getEntries();
 
@@ -248,7 +248,7 @@ Subnet::LinkList SubnetBuilder::addSubnet(
         destrashEntry(existingEntryIt->second);
       }
       const auto link = addCell(cell.getTypeID(), newLinks);
-      setWeight(link.idx, getCellWeight ? (*getCellWeight)(i) : 0.0);
+      setWeight(link.idx, weightProvider ? (*weightProvider)(i) : 0.0);
     }
   }
 
@@ -266,7 +266,7 @@ Subnet::Link SubnetBuilder::addSingleOutputSubnet(
 void SubnetBuilder::replace(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> &rhsToLhs,
-    const std::function<float(const size_t)> *getCellWeight,
+    const CellWeightProvider *weightProvider,
     const std::function<void(const size_t)> *onNewCell,
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {
@@ -315,8 +315,8 @@ void SubnetBuilder::replace(
     rhsToLhs[i] = newEntryID;
 
     // Set the weight of the new entry.
-    if (isNewEntry && getCellWeight) {
-      setWeight(newEntryID, (*getCellWeight)(i));
+    if (isNewEntry && weightProvider) {
+      setWeight(newEntryID, (*weightProvider)(i));
     }
 
     if (isNewEntry) {
@@ -356,15 +356,16 @@ void SubnetBuilder::replace(
 SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> rhsToLhs,
-    const std::function<float(const size_t)> *getCellWeight) const {
+    const CellWeightProvider *weightProvider,
+    const CellWeightModifier *weightModifier) const {
   const Subnet &rhs = Subnet::get(rhsID);
   assert(rhs.getOutNum() == 1);
   const auto &rhsEntries = rhs.getEntries();
   std::unordered_set<size_t> reusedLhsEntries;
-  const auto addEffect = newEntriesEval(rhsID, rhsToLhs, reusedLhsEntries,
-                                        getCellWeight);
-  const auto delEffect = deletedEntriesEval(rhsToLhs[rhsEntries.size() - 1],
-                                            reusedLhsEntries);
+  const auto addEffect = newEntriesEval(
+    rhsID, rhsToLhs, reusedLhsEntries, weightProvider, weightModifier);
+  const auto delEffect = deletedEntriesEval(
+    rhsToLhs[rhsEntries.size() - 1], reusedLhsEntries, weightModifier);
 
   return delEffect - addEffect;
 }
@@ -385,7 +386,8 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> &rhsToLhs,
     std::unordered_set<size_t> &reusedLhsEntries,
-    const std::function<float(const size_t)> *getCellWeight) const {
+    const CellWeightProvider *weightProvider,
+    const CellWeightModifier *weightModifier) const {
 
   int addedEntriesN = 0;
   float addedWeight = 0.0;
@@ -419,7 +421,9 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     }
     if (isNewElem) {
       ++addedEntriesN;
-      addedWeight += getCellWeight ? (*getCellWeight)(rhsEntryID) : 0.0;
+      const auto w1 = weightProvider ? (*weightProvider)(rhsEntryID) : 0.0;
+      const auto w2 = weightModifier ? (*weightModifier)(w1) : w1;
+      addedWeight += w2;
       continue;
     }
     StrashKey key(rhsCell.getTypeID(), newRhsLinks);
@@ -429,7 +433,9 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
       reusedLhsEntries.insert(it->second);
     } else {
       ++addedEntriesN;
-      addedWeight += getCellWeight ? (*getCellWeight)(rhsEntryID) : 0.0;
+      const auto w1 = weightProvider ? (*weightProvider)(rhsEntryID) : 0.0; // TODO: Remove copy-paste.
+      const auto w2 = weightModifier ? (*weightModifier)(w1) : w1;
+      addedWeight += w2;
     }
   }
   return Effect{addedEntriesN, virtualDepth[rhsEntries.size() - 2],
@@ -438,7 +444,8 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
 
 SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
     const size_t lhsRootEntryID,
-    std::unordered_set<size_t> &reusedLhsEntries) const {
+    std::unordered_set<size_t> &reusedLhsEntries,
+    const CellWeightModifier *weightModifier) const {
   if (reusedLhsEntries.find(lhsRootEntryID) != reusedLhsEntries.end()) {
     Effect effect;
     effect.depth = (int)getDepth(lhsRootEntryID);
@@ -468,7 +475,9 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
       --entryNewRefcount[linkIdx];
       if (!entryNewRefcount[linkIdx]) {
         ++deletedEntriesN;
-        deletedWeight += getWeight(linkIdx);
+        const auto w1 = getWeight(linkIdx);
+        const auto w2 = weightModifier ? (*weightModifier)(w1) : w1;
+        deletedWeight += w2;
         entryIDQueue.push(linkIdx);
       }
     }

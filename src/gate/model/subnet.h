@@ -366,6 +366,9 @@ public:
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
+  using CellWeightProvider = std::function<float(size_t)>;
+  using CellWeightModifier = std::function<float(float)>;
+
   /// Represents a replacement effect.
   struct Effect final {
     Effect operator+(const Effect &rhs) const {
@@ -394,11 +397,11 @@ public:
 
   SubnetBuilder(
       SubnetID subnetID,
-      const std::function<float(const size_t)> *getCellWeight = nullptr):
+      const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder() {
     const auto &subnet = Subnet::get(subnetID);
     const auto inputs = addInputs(subnet.getInNum());
-    const auto outputs = addSubnet(subnetID, inputs, getCellWeight);
+    const auto outputs = addSubnet(subnetID, inputs, weightProvider);
     addOutputs(outputs);
   }
 
@@ -547,7 +550,7 @@ public:
   void replace(
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs,
-      const std::function<float(const size_t /* index in subnet */)> *getCellWeight = nullptr,
+      const CellWeightProvider *weightProvider = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
@@ -556,7 +559,8 @@ public:
   Effect evaluateReplace(
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> rhsToLhs,
-      const std::function<float(const size_t)> *getCellWeight = nullptr) const;
+      const CellWeightProvider *weightProvider = nullptr,
+      const CellWeightModifier *weightModifier = nullptr) const;
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
@@ -615,13 +619,15 @@ private:
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs,
       std::unordered_set<size_t> &reusedLhsEntries,
-      const std::function<float(const size_t)> *getCellWeight) const;
+      const CellWeightProvider *weightProvider,
+      const CellWeightModifier *weightModifier) const;
 
   /// Returns the delete-effect of the replacement:
   /// the number of cells (value of weight) deleted.
   Effect deletedEntriesEval(
       const size_t lhsRootEntryID,
-      std::unordered_set<size_t> &reusedLhsEntries) const;
+      std::unordered_set<size_t> &reusedLhsEntries,
+      const CellWeightModifier *weightModifier) const;
 
   /// Return the reference to the j-th link of the given cell.
   Link &getLinkRef(size_t entryID, size_t j);

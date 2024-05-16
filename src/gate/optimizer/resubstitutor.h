@@ -15,6 +15,8 @@
 #include "gate/optimizer/subnet_iterator.h"
 #include "gate/optimizer/transformer.h"
 
+#include <string>
+
 namespace eda::gate::optimizer {
 
 /// @brief Implements a resubstitution algorithm of optimization.
@@ -24,17 +26,17 @@ public:
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
-  /// @brief Constructs a resubstitutor with default parameters.
-  Resubstitutor() : cutSize(8), careSize(16) {}
-
   /**
    * @brief Constructs a resubstitutor.
    *
    * @param cutSize Maximum number of elements in the cut.
    * @param careSize Maximum number of elements in the cut for care evaluation.
    */
-  Resubstitutor(unsigned cutSize, unsigned careSize) :
-      cutSize(cutSize), careSize(careSize) {}
+  Resubstitutor(const std::string &name, unsigned cutSize, unsigned careSize) :
+      SubnetInPlaceTransformer(name), cutSize(cutSize), careSize(careSize) {}
+
+  /// @brief Constructs a resubstitutor with default parameters.
+  Resubstitutor(const std::string &name) : Resubstitutor(name, 8, 16) {}
 
   /// @brief Tranforms the subnet by applying a resubstitution algorithm.
   void transform(SubnetBuilder &builder) const override;

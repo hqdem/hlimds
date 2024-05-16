@@ -184,8 +184,8 @@ model::CellTypeID Techmapper::techmap(model::CellID sequenceCell,
 }
 
 SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {
-  premapper::AigMapper aigMapper;
-  const auto transformedSub  = aigMapper.transform(subnetID);
+  premapper::AigMapper aigMapper("aig");
+  const auto transformedSub = aigMapper.transform(subnetID);
   return transformedSub;
 }
 } // namespace eda::gate::techmapper

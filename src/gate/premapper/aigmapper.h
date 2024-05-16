@@ -18,7 +18,7 @@
 namespace eda::gate::premapper {
 
 /// @brief Transforms a subnet to an AIG basis.
-class AigMapper : public optimizer::SubnetTransformer {
+class AigMapper final : public optimizer::SubnetTransformer {
 public:
   using CellIdMap  = std::unordered_map<uint32_t, model::Subnet::Link>;
   using CellSymbol = eda::gate::model::CellSymbol;
@@ -26,6 +26,8 @@ public:
   using Link       = eda::gate::model::Subnet::Link;
   using LinkList   = eda::gate::model::Subnet::LinkList;
   using Subnet     = eda::gate::model::Subnet;
+
+  AigMapper(const std::string &name): SubnetTransformer(name) {}
 
   std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) const override;
 

@@ -53,7 +53,7 @@ TEST(AigTransformer, MAJ) {
   const auto id = builder.make();
   const auto &oldSubnet = Subnet::get(id);
 
-  AigMapper mapper;
+  AigMapper mapper("aig");
   const auto transformed = mapper.transform(id);
 
   const auto &transformedSubnet = Subnet::get(transformed);
@@ -66,7 +66,7 @@ TEST(AigTransformer, AND) {
   const auto andSub  = createPrimitiveSubnet(CellSymbol::AND, 13, 13);
   const auto andTree = createPrimitiveSubnet(CellSymbol::AND, 13, 3);
 
-  AigMapper mapper;
+  AigMapper mapper("aig");
   const auto transformedAndSub  = mapper.transform(andSub);
   const auto transformedAndTree = mapper.transform(andTree);
 
@@ -81,7 +81,7 @@ TEST(AigTransformer, OR) {
   const auto orSub  = createPrimitiveSubnet(CellSymbol::OR, 13, 13);
   const auto orTree = createPrimitiveSubnet(CellSymbol::OR, 13, 5);
 
-  AigMapper mapper;
+  AigMapper mapper("aig");
   const auto transformedOrSub  = mapper.transform(orSub);
   const auto transformedOrTree = mapper.transform(orTree);
 
@@ -96,7 +96,7 @@ TEST(AigTransformer, XOR) {
   const auto xorSub  = createPrimitiveSubnet(CellSymbol::XOR, 13, 13);
   const auto xorTree = createPrimitiveSubnet(CellSymbol::XOR, 13, 4);
 
-  AigMapper mapper;
+  AigMapper mapper("aig");
   const auto transformedXorSub  = mapper.transform(xorSub);
   const auto transformedXorTree = mapper.transform(xorTree);
 
@@ -120,7 +120,7 @@ TEST(AigTransformer, RandomSubnet) {
   const auto id = eda::gate::model::randomSubnet(nIn, nOut, nCell,
                                                  MinArity, MaxArity);
 
-  AigMapper mapper;
+  AigMapper mapper("aig");
 
   const auto &oldSubnet = Subnet::get(id);
   const auto transformed = mapper.transform(id);

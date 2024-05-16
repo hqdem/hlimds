@@ -14,6 +14,9 @@
 #include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/transformer.h"
 
+#include <functional>
+#include <string>
+
 namespace eda::gate::optimizer {
 
 /**
@@ -35,6 +38,7 @@ public:
   /**
    * @brief Constructs a rewriter.
    *
+   * @param name Name of the rewriter.
    * @param resynthesizer Resythesizer used to synthesize new cone for each cut.
    * @param k Maximum number of elements in the cut.
    * @param cost Function that calculates the overall metric after replacement.
@@ -42,10 +46,12 @@ public:
    * @param zero_cost Enables zero-cost replacements if set.
    */
   Rewriter(
+      const std::string &name,
       const ResynthesizerBase &resynthesizer,
       const unsigned k,
       const std::function<float(const Effect &)> cost,
       const bool zero_cost = false) :
+    SubnetInPlaceTransformer(name),
     resynthesizer(resynthesizer), k(k), cost(cost), zero_cost(zero_cost) {}
 
   /**

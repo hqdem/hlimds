@@ -11,6 +11,8 @@
 #include "gate/model/subnet.h"
 
 #include <memory>
+#include <sstream>
+#include <string>
 
 namespace eda::gate::optimizer {
 
@@ -20,8 +22,10 @@ public:
   using SubnetID = eda::gate::model::SubnetID;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
-  SubnetTransformer() {}
+  SubnetTransformer(const std::string &name): name(name) {}
   virtual ~SubnetTransformer() {}
+
+  const std::string &getName() const { return name; }
 
   /// Transforms the given subnet and stores the result in the builder.
   virtual std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) const = 0;
@@ -31,12 +35,15 @@ public:
     auto builder = make(subnetID);
     return builder->make();
   }
+
+private:
+  const std::string name;
 };
 
 /// @brief Interface for in-place subnet transformers.
 class SubnetInPlaceTransformer : public SubnetTransformer {
 public:
-  SubnetInPlaceTransformer() {}
+  SubnetInPlaceTransformer(const std::string &name): SubnetTransformer(name) {}
   virtual ~SubnetInPlaceTransformer() {}
 
   /// Transforms the subnet stored in the builder (in-place).
@@ -55,8 +62,22 @@ class SubnetInPlaceTransformerChain final : public SubnetInPlaceTransformer {
 public:
   using Chain = std::vector<std::shared_ptr<SubnetInPlaceTransformer>>;
 
-  SubnetInPlaceTransformerChain(const Chain &chain): chain(chain) {}
+  SubnetInPlaceTransformerChain(const std::string &name, const Chain &chain):
+      SubnetInPlaceTransformer(name), chain(chain) {}
   virtual ~SubnetInPlaceTransformerChain() {}
+
+  const Chain &getChain() const { return chain; }
+
+  /// @brief Returns the string representation of the chain.
+  const std::string getScript() const {
+    std::stringstream ss;
+    bool delimiter = false;
+    for (const auto &pass : chain) {
+      ss << (delimiter ? "; " : "") << pass->getName();
+      delimiter = true;
+    }
+    return ss.str();
+  }
 
   void transform(SubnetBuilder &builder) const override {
     for (const auto &pass : chain) {

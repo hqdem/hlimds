@@ -47,7 +47,7 @@ void runResubstitutor(SubnetID subnetId) {
   // Builder for optimization.
   SubnetBuilder builder(subnetId);
   // Area optimization.
-  Resubstitutor resub;
+  Resubstitutor resub("rs");
   resub.transform(builder);
   auto optimizedId = builder.make();
   const Subnet &optimized = Subnet::get(optimizedId);

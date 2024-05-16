@@ -109,7 +109,7 @@ void runTest(
     const SubnetID subnetID,
     const SubnetID targetSubnetID) {
 
-  Rewriter rewriter(resynthesizer, 5, [](const Effect &effect) -> float {
+  Rewriter rewriter("rw", resynthesizer, 5, [](const Effect &effect) -> float {
     return (float)effect.size; });
   const auto &subnet = Subnet::get(subnetID);
   std::cout << "Before rewriting:\n" << subnet << '\n';

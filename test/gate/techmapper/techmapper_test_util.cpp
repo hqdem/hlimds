@@ -9,7 +9,7 @@
 #include "gate/debugger2/sat_checker2.h"
 #include "gate/model2/printer/printer.h"
 #include "gate/model2/utils/subnet_random.h"
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 #include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
@@ -38,7 +38,7 @@ SubnetID parseGraphML(std::string fileName) {
                    / "graphml" / "OpenABC" / "graphml_openabcd";
   fileName += ".bench.graphml";
   const path file = home / dir / fileName;
-  eda::gate::parser::graphml::GraphMlSubnetParser parser;
+  eda::gate::parser::graphml::GraphMlParser parser;
 
   return parser.parse(file.string());
 }

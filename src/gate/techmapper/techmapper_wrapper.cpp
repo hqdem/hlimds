@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/printer/printer.h"
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/techmapper/utils/get_tech_attrs.h"
@@ -51,8 +51,8 @@ namespace eda::gate::techmapper {
 
     std::cout << "Start to techmap " << name << std::endl;
 
-    eda::gate::parser::graphml::GraphMlSubnetParser parser;
-    SubnetID subnetID = parser.parse(name);
+    eda::gate::parser::graphml::GraphMlParser parser;
+    SubnetID subnetID = parser.parse(name).make();
     SubnetID mappedSubnetID = techmapper.techmap(subnetID);
 
     printVerilog(mappedSubnetID, config.outNetFileName);

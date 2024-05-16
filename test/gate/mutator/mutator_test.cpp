@@ -14,7 +14,7 @@
 #include "gate/model/examples.h"
 #include "gate/model/subnet.h"
 #include "gate/mutator/mutator.h"
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -37,7 +37,7 @@ namespace eda::gate::mutator {
   using eda::gate::debugger::options::SAT;
   using eda::gate::model::make2AndOr;
   using eda::gate::model::make2AndOr2;
-  using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
+  using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
   using Link = eda::gate::model::Subnet::Link;
   using LinkList = eda::gate::model::Subnet::LinkList;
   using Subnet = eda::gate::model::Subnet;
@@ -52,8 +52,8 @@ namespace eda::gate::mutator {
     const path dir = path("test") / "data" / "gate" / "parser"
     / "graphml" / "OpenABC" / "graphml_openabcd";
     std::string file = (home / dir / fileName).u8string();
-    GraphMlSubnetParser parser;
-    return parser.parse(file);
+    GraphMlParser parser;
+    return parser.parse(file).make();
   }
 
   /// Makes oldToNewMap for checkers

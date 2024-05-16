@@ -48,7 +48,7 @@ add_library(Gate OBJECT
   optimizer/synthesis/reed_muller.cpp
   optimizer/synthesis/ternary_bi_clique.cpp
   optimizer/synthesis/unitized_table.cpp
-  parser/graphml_to_subnet.cpp
+  parser/graphml_parser.cpp
   premapper/aigmapper.cpp
   simulator/simulator.cpp
   synthesizer/synthesizer.cpp

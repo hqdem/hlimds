@@ -9,7 +9,7 @@
 #include "gate/debugger/sat_checker.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/area_optimizer.h"
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -17,13 +17,13 @@
 #include <filesystem>
 #include <string>
 
-using AreaOptimizer       = eda::gate::optimizer::AreaOptimizer;
-using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
-using LinkList            = eda::gate::model::Subnet::LinkList;
-using SatChecker          = eda::gate::debugger::SatChecker;
-using Subnet              = GraphMlSubnetParser::Subnet;
-using SubnetBuilder       = eda::gate::model::SubnetBuilder;
-using SubnetID            = eda::gate::model::SubnetID;
+using AreaOptimizer = eda::gate::optimizer::AreaOptimizer;
+using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
+using LinkList      = eda::gate::model::Subnet::LinkList;
+using SatChecker    = eda::gate::debugger::SatChecker;
+using Subnet        = GraphMlParser::Subnet;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using SubnetID      = eda::gate::model::SubnetID;
 
 static constexpr size_t maxArity = 2;
 static constexpr size_t cutSize  = 5;
@@ -91,8 +91,8 @@ void runAreaOptimization(std::string str) {
   const path home = eda::env::getHomePath();
   const path file = home / dir / fileName;
   // Parsing.
-  GraphMlSubnetParser parser;
-  const SubnetID subnetId = parser.parse(file.string());
+  GraphMlParser parser;
+  const SubnetID subnetId = parser.parse(file.string()).make();
   // Optimize.
   runAreaOptimization(subnetId);
 }

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "gate/model/subnet.h"
-#include "util/assert.h"
 
 #include "tinyxml2/tinyxml2.h"
 
@@ -22,7 +21,7 @@ namespace eda::gate::parser::graphml {
 /**
  * \brief Builds Subnet from GraphML/OpenABC-D description.
  */
-class GraphMlSubnetParser {
+class GraphMlParser {
 public:
 
   struct Node;
@@ -31,12 +30,11 @@ public:
   using Link          = eda::gate::model::Subnet::Link;
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
-  using SubnetID      = eda::gate::model::SubnetID;
   using XMLDocument   = tinyxml2::XMLDocument;
   using XMLElement    = tinyxml2::XMLElement;
 
   struct Input {
-    uint32_t id;
+    Node *node;
     bool inv;
   };
 
@@ -53,7 +51,7 @@ public:
 
   struct ParserData {
     std::deque<Node> nodes;
-    std::vector<Node*> groups[3]; // 3 groups: inputs, inner nodes, outputs 
+    std::vector<Node*> groups[3]; // 3 groups: inputs, inner nodes, outputs
   };
 
   /**
@@ -80,18 +78,18 @@ public:
    *   - The description of the edges should follow after the description
    *     of all nodes.
    * @param filename Absolute path to the GraphML file.
-   * @return A SubnetID for the built Subnet.
+   * @return A SubnetBuilder for the built Subnet.
    */
-  SubnetID parse(const std::string &filename);
+  SubnetBuilder parse(const std::string &filename);
 
   /**
    * @brief Overloaded parse method that allows external access
    * to parser data after parsing is complete.
    * @param filename Absolute path to the GraphML file.
    * @param parserData Reference to ParserData to fill during parsing.
-   * @return A SubnetID for the built Subnet.
+   * @return A SubnetBuilder for the built Subnet.
    */
-  SubnetID parse(const std::string &filename, ParserData &data);
+  SubnetBuilder parse(const std::string &filename, ParserData &data);
 
 private:
 
@@ -117,7 +115,7 @@ private:
 
   void parseEdge(XMLElement *edge, ParserData &data);
 
-  SubnetID buildSubnet(ParserData &data);
+  SubnetBuilder buildSubnet(ParserData &data);
 };
 
 } // namespace eda::gate::parser::graphml

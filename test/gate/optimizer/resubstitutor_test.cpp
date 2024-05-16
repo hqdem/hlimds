@@ -9,7 +9,7 @@
 #include "gate/debugger/sat_checker.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/resubstitutor.h"
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -17,13 +17,13 @@
 #include <filesystem>
 #include <string>
 
-using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
-using LinkList            = eda::gate::model::Subnet::LinkList;
-using Resubstitutor       = eda::gate::optimizer::Resubstitutor;
-using SatChecker          = eda::gate::debugger::SatChecker;
-using Subnet              = GraphMlSubnetParser::Subnet;
-using SubnetBuilder       = eda::gate::model::SubnetBuilder;
-using SubnetID            = eda::gate::model::SubnetID;
+using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
+using LinkList      = eda::gate::model::Subnet::LinkList;
+using Resubstitutor = eda::gate::optimizer::Resubstitutor;
+using SatChecker    = eda::gate::debugger::SatChecker;
+using Subnet        = GraphMlParser::Subnet;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using SubnetID      = eda::gate::model::SubnetID;
 
 void checkResubstitutionEquivalence(SubnetID lhs, SubnetID rhs) {
   SatChecker &checker = SatChecker::get();
@@ -70,8 +70,8 @@ void runResubstitutor(std::string filename) {
   const path home = eda::env::getHomePath();
   const path file = home / dir / filename;
   // Parsing.
-  GraphMlSubnetParser parser;
-  const SubnetID subnetId = parser.parse(file.string());
+  GraphMlParser parser;
+  const SubnetID subnetId = parser.parse(file.string()).make();
   // Optimize.
   runResubstitutor(subnetId);
 }

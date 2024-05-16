@@ -9,23 +9,30 @@
 #include "gate/parser/graphml_test_utils.h"
 #include "util/env.h"
 
+using path = std::filesystem::path;
+
 namespace eda::gate::parser::graphml {
 
-SubnetID parse(std::string fileName, ParserData data) {
-  using path = std::filesystem::path;
+SubnetBuilder parse(std::string fileName, ParserData *data) {
 
-  fileName += ".bench.graphml";
+  const path dir = path(std::string(getenv("UTOPIA_HOME"))) /
+      "test" /
+      "data" /
+      "gate" /
+      "parser" /
+      "graphml" /
+      "OpenABC" /
+      "graphml_openabcd";
 
-  const path dir = path("test") / "data" / "gate" / "parser"
-      / "graphml" / "OpenABC" / "graphml_openabcd";
   const path home = eda::env::getHomePath();
   const path file = home / dir / fileName;
 
   uassert(std::filesystem::exists(file.string()),
                                   "File doesn't exist" << std::endl);
 
-  GraphMlSubnetParser parser;
-  return parser.parse(file.string(), data);
+  GraphMlParser parser;
+  return
+      data ? parser.parse(file.string()) : parser.parse(file.string(), *data);
 }
 
 } // namespace eda::gate::parser::graphml

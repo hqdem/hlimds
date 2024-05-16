@@ -11,7 +11,7 @@
 #include "gate/debugger/sat_checker.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/area_optimizer.h"
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/translator/firrtl.h"
 #include "gate/translator/model2.h"
@@ -104,9 +104,8 @@ int rtlMain(RtlContext &context) {
 eda::gate::model::SubnetID parseGraphML(const std::string &fileName) {
   uassert(std::filesystem::exists(fileName), "File doesn't exist" << std::endl);
 
-  eda::gate::parser::graphml::GraphMlSubnetParser parser;
-  eda::gate::parser::graphml::GraphMlSubnetParser::ParserData data;
-  return parser.parse(fileName, data);
+  eda::gate::parser::graphml::GraphMlParser parser;
+  return parser.parse(fileName).make();
 }
 
 int optimize(const eda::gate::model::SubnetID &oldSubnetId,

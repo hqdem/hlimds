@@ -15,7 +15,7 @@
 #include "gate/optimizer/depth_subnet_iterator.h"
 #include "gate/optimizer/pass.h"
 #include "gate/parser/graphml_test_utils.h"
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 
 #include "gtest/gtest.h"
 
@@ -23,9 +23,9 @@
 
 using namespace eda::gate::model;
 
-using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
-using ParserData          = GraphMlSubnetParser::ParserData;
-using SatChecker          = eda::gate::debugger2::SatChecker;
+using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
+using ParserData    = GraphMlParser::ParserData;
+using SatChecker    = eda::gate::debugger2::SatChecker;
 
 namespace eda::gate::optimizer {
 

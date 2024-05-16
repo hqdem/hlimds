@@ -1,4 +1,4 @@
-//===----------------------------------------------------------------------===//GraphMLToSubnetPa
+//===----------------------------------------------------------------------===
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
@@ -6,10 +6,8 @@
 //
 //===----------------------------------------------------------------------===
 
-#include "graphml_to_subnet.h"
-#include "util/logging.h"
-
-#include <tinyxml2/tinyxml2.h>
+#include "graphml_parser.h"
+#include "util/assert.h"
 
 #include <iostream>
 
@@ -18,8 +16,8 @@ namespace eda::gate::parser::graphml {
 using tinyxml2::XMLElement;
 using tinyxml2::XMLDocument;
 
-using ParserData = GraphMlSubnetParser::ParserData;
-using SubnetID = GraphMlSubnetParser::SubnetID;
+using ParserData = GraphMlParser::ParserData;
+using SubnetBuilder = GraphMlParser::SubnetBuilder;
 
 XMLElement *findGraph(XMLElement *root) {
   XMLElement *child = root->FirstChildElement();
@@ -30,17 +28,17 @@ XMLElement *findGraph(XMLElement *root) {
     }
     child = child->NextSiblingElement();
   }
-  LOG_ERROR << "Graph Node is not found" << std::endl;
+  uassert(false, "Graph Node is not found" << std::endl);
   return nullptr;
 }
 
-SubnetID GraphMlSubnetParser::parse(const std::string &filename) {
+SubnetBuilder GraphMlParser::parse(const std::string &filename) {
   ParserData data;
   return parse(filename, data);
 }
 
-SubnetID GraphMlSubnetParser::parse(const std::string &filename,
-                                    ParserData &data) {
+SubnetBuilder GraphMlParser::parse(const std::string &filename,
+                                         ParserData &data) {
   XMLDocument doc;
   doc.LoadFile(filename.c_str());
   uassert(!doc.ErrorID(), "Error loading file" << std::endl);
@@ -56,7 +54,7 @@ SubnetID GraphMlSubnetParser::parse(const std::string &filename,
   return buildSubnet(data);
 }
 
-void GraphMlSubnetParser::parseGraph(XMLElement *graph, ParserData &data) {
+void GraphMlParser::parseGraph(XMLElement *graph, ParserData &data) {
   XMLElement *element = findChild(graph);
 
   for (; checkName(element, "node"); element = next(element)) {
@@ -68,7 +66,7 @@ void GraphMlSubnetParser::parseGraph(XMLElement *graph, ParserData &data) {
   }
 }
 
-void GraphMlSubnetParser::parseNode(XMLElement *node, ParserData &data) {
+void GraphMlParser::parseNode(XMLElement *node, ParserData &data) {
   uint32_t id = std::stoi(node->Attribute("id"));
 
   XMLElement *type = next(findChild(node));
@@ -78,36 +76,36 @@ void GraphMlSubnetParser::parseNode(XMLElement *node, ParserData &data) {
   data.groups[getNum(type)].push_back(&data.nodes.back());
 }
 
-void GraphMlSubnetParser::parseEdge(XMLElement *edge, ParserData &data) {
+void GraphMlParser::parseEdge(XMLElement *edge, ParserData &data) {
   Node &sourceNode = data.nodes.at(std::stoi(edge->Attribute("target")));
   Node &targetNode = data.nodes.at(std::stoi(edge->Attribute("source")));
 
-  targetNode.inputs.push_back({sourceNode.id, 
-                                static_cast<bool>(getNum(findChild(edge)))});
+  targetNode.inputs.push_back({&sourceNode, 
+                               static_cast<bool>(getNum(findChild(edge)))});
 }
 
-SubnetID GraphMlSubnetParser::buildSubnet(ParserData &data) {
+SubnetBuilder GraphMlParser::buildSubnet(ParserData &data) {
   SubnetBuilder subnetBuilder;
 
-  auto &nodes = data.nodes;
   auto &groups = data.groups;
 
   subnetBuilder.addInputs(groups[0].size());
-
+  size_t i{groups[0].size()};
   for (Node* node : data.groups[2]) {
     LinkList links;
     for (const Input &input : node->inputs) {
-      links.emplace_back(nodes[input.id].id, input.inv);
+      links.emplace_back(input.node->id, input.inv);
     }
     node->id = subnetBuilder.addCellTree(model::AND, links, 2).idx;
+    ++i;
   }
 
   for (Node* node : groups[1]) {
     const Input &input = node->inputs[0];
-    node->id = subnetBuilder.addOutput(Link(nodes[input.id].id, input.inv)).idx;
+    node->id = subnetBuilder.addOutput(Link(input.node->id, input.inv)).idx;
   }
 
-  return subnetBuilder.make();
+  return subnetBuilder;
 }
 
 } // namespace eda::gate::parser::graphml

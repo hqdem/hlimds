@@ -6,18 +6,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 
 #include <filesystem>
 #include <string>
 
-using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
-using ParserData          = GraphMlSubnetParser::ParserData;
-using Subnet              = GraphMlSubnetParser::Subnet;
-using SubnetID            = eda::gate::model::SubnetID;
+using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
+using ParserData    = GraphMlParser::ParserData;
+using SubnetBuilder = GraphMlParser::SubnetBuilder;
+using SubnetID      = eda::gate::model::SubnetID;
 
 namespace eda::gate::parser::graphml {
 
-SubnetID parse(std::string fileName, ParserData data);
+SubnetBuilder parse(std::string fileName, ParserData *data = nullptr);
 
 } // namespace eda::gate::parser

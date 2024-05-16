@@ -8,7 +8,7 @@
 
 #include "gate/model/utils/subnet_random.h"
 #include "gate/optimizer/cut_extractor.h"
-#include "gate/parser/graphml_to_subnet.h"
+#include "gate/parser/graphml_parser.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -26,8 +26,8 @@ using Link = model::Subnet::Link;
 using Cut = optimizer::CutExtractor::Cut;
 using CutsEntries = CutExtractor::CutsEntries;
 using CutsList = CutExtractor::CutsList;
-using GraphMlSubnetParser = eda::gate::parser::graphml::GraphMlSubnetParser;
-using ParserData = GraphMlSubnetParser::ParserData;
+using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
+using ParserData = GraphMlParser::ParserData;
 
 bool cutsEqual(const Cut &cut1, const Cut &cut2) {
   const auto &cut1EntryIdxs = cut1.entryIdxs;
@@ -301,9 +301,8 @@ TEST(CutExtractorTest, LargeSubnet) {
   const path home = eda::env::getHomePath();
   const path file = home / dir / filename;
 
-  GraphMlSubnetParser parser;
-  ParserData data;
-  const auto subnetID = parser.parse(file.string(), data);
+  GraphMlParser parser;
+  const auto subnetID = parser.parse(file.string()).make();
 
   const auto &subnet = Subnet::get(subnetID);
   CutExtractor cutExtractor(&subnet, 6);

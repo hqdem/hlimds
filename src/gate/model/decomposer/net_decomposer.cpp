@@ -58,7 +58,7 @@ inline CellInfo getCellInfo(LinkEnd linkEnd) {
 
 /// Prepares the link to be an input mapping key.
 inline Link makeInputLink(const Link &link) {
-  return Link{link.source.getCellID(), link.source.getPort(), 0, 0};
+  return Link{link.source.getCellID(), link.source.getPort(), OBJ_NULL_ID, 0};
 }
 
 /// Prepares the link to be an output mapping key.
@@ -81,7 +81,7 @@ inline Subnet::Link makeLink(LinkEnd source, const CellMapping &mapping) {
     return makeLink(entry.first, source.getPort(), entry.second);
   }
 
-  const Link inputLink{source.getCellID(), source.getPort(), 0, 0};
+  const Link inputLink{source.getCellID(), source.getPort(), OBJ_NULL_ID, 0};
   const auto j = mapping.inputs.find(inputLink);
   assert(j != mapping.inputs.end());
 
@@ -399,8 +399,8 @@ void NetDecomposer::decompose(NetID netID,
 }
 
 void NetDecomposer::decompose(SubnetID subnetID,
-                                std::vector<SubnetID> &subnets,
-                                std::vector<CellMapping> &mapping) const {
+                              std::vector<SubnetID> &subnets,
+                              std::vector<CellMapping> &mapping) const {
   assert(subnetID != OBJ_NULL_ID);
   const auto &subnet = Subnet::get(subnetID);
 
@@ -410,15 +410,17 @@ void NetDecomposer::decompose(SubnetID subnetID,
   assert(mapping.empty());
   CellMapping subnetMapping;
 
+  subnetMapping.size = subnet.size();
+
   for (size_t i = 0; i < subnet.getInNum(); ++i) {
     const auto cellID = makeCell(IN);
-    const Link link{cellID, 0, 0, 0};
+    const Link link{cellID, 0, OBJ_NULL_ID, 0};
     subnetMapping.inputs.emplace(link, i);
   }
 
   for (size_t i = 0; i < subnet.getOutNum(); ++i) {
-    const auto cellID = makeCell(OUT);
-    const Link link{0, 0, cellID, 0};
+    const auto cellID = makeCell(OUT, LinkEnd());
+    const Link link{OBJ_NULL_ID, 0, cellID, 0};
     subnetMapping.outputs.emplace(link, subnet.size() - subnet.getOutNum() + i);
   }
 
@@ -529,7 +531,7 @@ static void makeCellsForInputs(NetBuilder &netBuilder,
     const auto oldSourceID = oldLink.source.getCellID();
     const auto newSourceID = makeCell(netBuilder, oldSourceID, inout);
 
-    Link newLink{newSourceID, oldLink.source.getPort(), 0, 0};
+    Link newLink{newSourceID, oldLink.source.getPort(), OBJ_NULL_ID, 0};
     inverse[newIdx] = CellDescriptor{CellDescriptor::INPUT, newLink, OBJ_NULL_ID};
   }
 }

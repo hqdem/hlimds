@@ -15,6 +15,16 @@
 
 namespace eda::gate::model {
 
+inline void check(const Design &design) {
+  EXPECT_FALSE(design.getSubnets().empty());
+  const auto netID = design.make();
+  EXPECT_TRUE(netID != OBJ_NULL_ID);
+
+#ifdef UTOPIA_DEBUG
+  std::cout << Net::get(netID) << std::endl;
+#endif // UTOPIA_DEUB
+}
+
 TEST(DesignTest, RandomSubnet) {
   const size_t nIn = 10;
   const size_t nOut = 10;
@@ -27,8 +37,7 @@ TEST(DesignTest, RandomSubnet) {
       nIn, nOut, nCell, minArity, maxArity, seed);
 
   Design design("design", subnetID);
-  EXPECT_FALSE(design.getSubnets().empty());
-  design.make();
+  check(design);
 }
 
 TEST(DesignTest, RandomNet) {
@@ -43,8 +52,7 @@ TEST(DesignTest, RandomNet) {
       nIn, nOut, nCell, minArity, maxArity, seed);
 
   Design design("design", netID);
-  EXPECT_FALSE(design.getSubnets().empty());
-  design.make();
+  check(design);
 }
 
 } // namespace eda::gate::model

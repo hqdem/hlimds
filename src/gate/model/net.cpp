@@ -50,6 +50,7 @@ void NetBuilder::addCell(CellID cellID) {
 }
 
 void NetBuilder::connect(CellID cellID, uint16_t port, LinkEnd source) {
+  assert(cellID != OBJ_NULL_ID);
   auto &cell = Cell::get(cellID);
   cell.setLink(port, source);
   incRefCount(source);

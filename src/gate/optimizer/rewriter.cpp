@@ -8,6 +8,8 @@
 
 #include "rewriter.h"
 
+#include <limits>
+
 namespace eda::gate::optimizer {
 
 void Rewriter::transform(SubnetBuilder &builder) const {
@@ -31,7 +33,7 @@ void Rewriter::rewriteOnNode(
   const size_t entryID = *iter;
   ConeBuilder coneBuilder(&builder);
   const auto &cuts = cutExtractor.getCuts(entryID);
-  float bestMetricValue = -__FLT_MAX__;
+  float bestMetricValue = std::numeric_limits<float>::lowest();
   SubnetID bestRhsID = 0;
   std::unordered_map<size_t, size_t> bestRhsToLhs;
 

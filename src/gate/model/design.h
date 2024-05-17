@@ -9,7 +9,11 @@
 #pragma once
 
 #include "gate/model/decomposer/net_decomposer.h"
+#include "gate/model/net.h"
+#include "gate/model/subnet.h"
 
+#include <cassert>
+#include <string>
 #include <vector>
 
 namespace eda::gate::model {
@@ -34,9 +38,17 @@ using ResetDomain = Domain;
 class Design final {
 public:
   /// Constructs a design from the net (imports the net).
-  explicit Design(const NetID netID) {
+  Design(const std::string &name, const NetID netID): name(name) {
     NetDecomposer::get().decompose(netID, subnets, mapping);
   }
+
+  /// Constructs a trivial design from the subnet (imports the subnet).
+  Design(const std::string &name, const SubnetID subnetID): name(name) {
+    NetDecomposer::get().decompose(subnetID, subnets, mapping);
+  }
+
+  /// Returns the name of the design.
+  const std::string &getName() const { return name; }
 
   /// Constructs a net from the design (exports the design).
   NetID make() const {
@@ -46,6 +58,12 @@ public:
   /// Returns the design subnets.
   const std::vector<SubnetID> &getSubnets() const {
     return subnets;
+  }
+
+  /// Returns the design subnet.
+  SubnetID getSubnet() const {
+    assert(subnets.size() == 1);
+    return subnets.front();
   }
 
   /// Replaces the subnet.
@@ -59,6 +77,8 @@ public:
 private:
   using CellMapping = NetDecomposer::CellMapping;
 
+  const std::string name;
+
   // Clock domains.
   // TODO
 
@@ -68,5 +88,15 @@ private:
   std::vector<SubnetID> subnets;
   std::vector<CellMapping> mapping;
 };
+
+inline SubnetID makeSubnet(NetID netID) {
+  Design design("design", netID);
+  return design.getSubnet();
+}
+
+inline NetID makeNet(SubnetID subnetID) {
+  Design design("design", subnetID);
+  return design.make();
+}
 
 } // namespace eda::gate::model

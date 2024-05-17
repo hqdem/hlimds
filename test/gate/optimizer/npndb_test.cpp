@@ -62,13 +62,13 @@ static bool npnDatabaseTest(const SubnetID &id) {
 }
 
 TEST(NPNDB2, TransformTest) {
-  EXPECT_TRUE(transformTest(make3AndOrXor()));
-  EXPECT_TRUE(transformTest(makeXorNorAndAndOr()));
-  EXPECT_TRUE(transformTest(makeXorOrXor()));
+  EXPECT_TRUE(transformTest(makeSubnet3AndOrXor()));
+  EXPECT_TRUE(transformTest(makeSubnetXorNorAndAndOr()));
+  EXPECT_TRUE(transformTest(makeSubnetXorOrXor()));
 }
 
 TEST(NPNDB2, npnDatabaseTest) {
-  EXPECT_TRUE(npnDatabaseTest(make3AndOrXor()));
-  EXPECT_TRUE(npnDatabaseTest(makeXorNorAndAndOr()));
-  EXPECT_TRUE(npnDatabaseTest(makeXorOrXor()));
+  EXPECT_TRUE(npnDatabaseTest(makeSubnet3AndOrXor()));
+  EXPECT_TRUE(npnDatabaseTest(makeSubnetXorNorAndAndOr()));
+  EXPECT_TRUE(npnDatabaseTest(makeSubnetXorOrXor()));
 }

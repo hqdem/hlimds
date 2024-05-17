@@ -23,7 +23,7 @@ namespace eda::gate::model {
 /*             ┌─┐ |_┌─┐   ┌─┐        */
 /*             └─┘───└─┘───└─┘        */
 /*             in3   or6   out7       */
-SubnetID make2AndOr() {
+SubnetID makeSubnet2AndOr() {
   SubnetBuilder subnetBuilder;
   Subnet::LinkList inputs = subnetBuilder.addInputs(4);
   Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND, 
@@ -39,6 +39,10 @@ SubnetID make2AndOr() {
   return subnetBuilder.make();
 }
 
+NetID makeNet2AndOr() {
+  return makeNet(makeSubnet2AndOr()); 
+}
+
 /* in1   in2                          */
 /* ┌─┐   ┌─┐                          */
 /* └─┘─┐ └─┘─┐─────┐                  */
@@ -48,7 +52,7 @@ SubnetID make2AndOr() {
 /*             ┌─┐ |_┌─┐   ┌─┐        */
 /*             └─┘───└─┘───└─┘        */
 /*             in3   or6   out7       */
-SubnetID make2AndOr2() {
+SubnetID makeSubnet2AndOr2() {
   SubnetBuilder subnetBuilder;
   Subnet::LinkList inputs = subnetBuilder.addInputs(4);
   Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND, 
@@ -63,6 +67,10 @@ SubnetID make2AndOr2() {
   return subnetBuilder.make();
 }
 
+NetID makeNet2AndOr2() {
+  return makeNet(makeSubnet2AndOr2());
+}
+
 /* in1 ┌─┐                        */
 /*     └─┘─┐ and                  */
 /* in2 ┌─┐ |_┌─┐                  */
@@ -73,7 +81,7 @@ SubnetID make2AndOr2() {
 /*           └─┘─┐ xor |  or  out */
 /*       in5 ┌─┐ |_┌─┐ |_┌─┐__┌─┐ */
 /*           └─┘───└─┘───└─┘  └─┘ */
-SubnetID make3AndOrXor() {
+SubnetID makeSubnet3AndOrXor() {
   SubnetBuilder sb;
   Subnet::Link links[10];
   Subnet::LinkList inputs = sb.addInputs(5);
@@ -84,6 +92,10 @@ SubnetID make3AndOrXor() {
   links[8] = sb.addCell(OR, links[6], links[7]);
   links[9] = sb.addOutput(links[8]);
   return sb.make();
+}
+
+NetID makeNet3AndOrXor() {
+  return makeNet(makeSubnet3AndOrXor());
 }
 
 /*             in1 ┌─┐                  */
@@ -98,7 +110,7 @@ SubnetID make3AndOrXor() {
 /*     └─┘─┐ and |  or   not | and  out */
 /* in6 ┌─┐ |_┌─┐ |_┌─┐___┌─┐ |_┌─┐__┌─┐ */
 /*     └─┘───└─┘───└─┘   └─┘───└─┘  └─┘ */
-SubnetID makeXorNorAndAndOr() {
+SubnetID makeSubnetXorNorAndAndOr() {
   SubnetBuilder sb;
   Subnet::Link links[13];
   Subnet::LinkList inp = sb.addInputs(6);
@@ -114,6 +126,10 @@ SubnetID makeXorNorAndAndOr() {
   return sb.make();
 }
 
+NetID makeNetXorNorAndAndOr() {
+  return makeNet(makeSubnetXorNorAndAndOr());
+}
+
 /* in1 ┌─┐                  */
 /*     └─┘───┐ xor          */
 /* in2 ┌─┐___├─┐            */
@@ -121,7 +137,7 @@ SubnetID makeXorNorAndAndOr() {
 /* in3 ┌─┐ |_┌─┐ |_┌─┐__┌─┐ */
 /*     └─┘───└─┘───└─┘  └─┘ */
 /*           xor            */
-SubnetID makeXorOrXor() {
+SubnetID makeSubnetXorOrXor() {
   SubnetBuilder sb;
   Subnet::Link links[7];
   Subnet::LinkList inp = sb.addInputs(3);
@@ -133,6 +149,10 @@ SubnetID makeXorOrXor() {
   return sb.make();
 }
 
+NetID makeNetXorOrXor() {
+  return makeNet(makeSubnetXorOrXor());
+}
+
 /* in           and  out */
 /* ┌─┐───────┬─┌─┐──┌─┐  */
 /* └─┘     ┌─┼─└─┘  └─┘  */
@@ -142,7 +162,7 @@ SubnetID makeXorOrXor() {
 /*         | │  xor  out */
 /*         | └─┌─┐──┌─┐  */
 /*         └───└─┘  └─┘  */
-SubnetID makeAndOrXor() {
+SubnetID makeSubnetAndOrXor() {
   SubnetBuilder sb;
   Subnet::Link links[8];
   Subnet::LinkList inp = sb.addInputs(2);
@@ -156,6 +176,10 @@ SubnetID makeAndOrXor() {
   return sb.make();
 }
 
+NetID makeNetAndOrXor() {
+  return makeNet(makeSubnetAndOrXor());
+}
+
 /* in           and      and  out */
 /* ┌─┐───────┬─┌─┐──┬────┌─┐──┌─┐ */
 /* └─┘     ┌─┼─└─┘  |    └─┘  └─┘ */
@@ -165,7 +189,7 @@ SubnetID makeAndOrXor() {
 /* in      | │  or  |    or   out */
 /* ┌─┐     | └─┌─┐──┴────┌─┐──┌─┐ */
 /* └─┘─────┴───└─┘       └─┘  └─┘ */
-model::SubnetID make4AndOr() {
+SubnetID makeSubnet4AndOr() {
   SubnetBuilder sb;
   Subnet::Link links[10];
   Subnet::LinkList inp = sb.addInputs(2);
@@ -181,6 +205,10 @@ model::SubnetID make4AndOr() {
   return sb.make();
 }
 
+NetID makeNet4AndOr() {
+  return makeNet(makeSubnet4AndOr());
+}
+
 /*
 in   lat  out
 ┌─┐──┌─┐──┌─┐
@@ -189,7 +217,7 @@ in   lat  out
 ┌─┐──┌─┐──┌─┐
 └─┘  └─┘  └─┘
 */
-model::SubnetID make2Latches() {
+SubnetID makeSubnet2Latches() {
   SubnetBuilder sb;
   Subnet::Link links[8];
   Subnet::LinkList inp = sb.addInputs(2);
@@ -203,6 +231,10 @@ model::SubnetID make2Latches() {
   return sb.make();
 }
 
+NetID makeNet2Latches() {
+  return makeNet(makeSubnet2Latches());
+}
+
 /* in           and                    */
 /* ┌─┐───────┬─┌─┐──┐                  */
 /* └─┘     ┌─┼─└─┘  |    or   lat  out */
@@ -211,7 +243,7 @@ model::SubnetID make2Latches() {
 /* in      | │  or  |                  */
 /* ┌─┐     | └─┌─┐──┘                  */
 /* └─┘─────┴───└─┘                     */
-model::SubnetID makeLatche() {
+SubnetID makeSubnetLatch() {
   SubnetBuilder sb;
   Subnet::Link links[8];
   Subnet::LinkList inp = sb.addInputs(2);
@@ -225,13 +257,17 @@ model::SubnetID makeLatche() {
   return sb.make();
 }
 
+NetID makeNetLatch() {
+  return makeNet(makeSubnetLatch());
+}
+
 /* in          or          lat  out */
 /* ┌─┐──┬──────┌─┐   and   ┌─┐──┌─┐ */
 /* └─┘  |      └─┘──┌─┐────└─┘  └─┘ */
 /*      | not  or  ┌└─┘──┐ lat  out */
 /*      └─┌─┐──┌─┐─┘     └─┌─┐──┌─┐ */
 /*        └─┘  └─┘         └─┘  └─┘ */
-model::SubnetID makeStuckLatches() {
+SubnetID makeSubnetStuckLatches() {
   SubnetBuilder sb;
   Subnet::Link links[10];
   links[0] = sb.addInput();
@@ -247,6 +283,10 @@ model::SubnetID makeStuckLatches() {
   return sb.make();
 }
 
+NetID makeNetStuchLatches() {
+  return makeNet(makeSubnetStuckLatches());
+}
+
 /*
 in   lat  out
 ┌─┐──┌─┐──┌─┐
@@ -258,7 +298,7 @@ in   lat  out
 ┌─┐──┌─┐──┌─┐
 └─┘  └─┘  └─┘
 */
-model::SubnetID makeStuckLatche() {
+SubnetID makeSubnetStuckLatch() {
   SubnetBuilder sb;
   Subnet::Link links[12];
   links[0] = sb.addInput();
@@ -276,19 +316,34 @@ model::SubnetID makeStuckLatche() {
   return sb.make();
 }
 
-model::SubnetID makeRandomSubnetMatrix(const size_t nIn,
-                                       const size_t nOut,
-                                       const size_t nCell,
-                                       const size_t minArity,
-                                       const size_t maxArity,
-                                       const unsigned seed) {
-  MatrixGenerator generator(nCell, nIn, nOut,
-                            {AND, OR, XOR, NAND, NOR, XNOR}, seed);
-  generator.setFaninLim(minArity, maxArity);
-  const NetID &netID = generator.generate();
-  Design design(netID);
+NetID makeNetStuckLatch() {
+  return makeNet(makeSubnetStuckLatch());
+}
 
-  return design.getSubnets().front();
+SubnetID makeSubnetRandomMatrix(const size_t nIn,
+                                const size_t nOut,
+                                const size_t nCell,
+                                const size_t minArity,
+                                const size_t maxArity,
+                                const unsigned seed) {
+  const auto netID = makeNetRandomMatrix(
+      nIn, nOut, nCell, minArity, maxArity, seed);
+
+  Design design("design", netID);
+  return design.getSubnet();
+}
+
+NetID makeNetRandomMatrix(const size_t nIn,
+                          const size_t nOut,
+                          const size_t nCell,
+                          const size_t minArity,
+                          const size_t maxArity,
+                          const unsigned seed) {
+  MatrixGenerator generator(
+      nCell, nIn, nOut, {AND, OR, XOR, NAND, NOR, XNOR}, seed);
+
+  generator.setFaninLim(minArity, maxArity);
+  return  generator.generate();
 }
 
 } // namespace eda::gate::model

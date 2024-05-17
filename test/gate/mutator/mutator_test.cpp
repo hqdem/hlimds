@@ -35,8 +35,8 @@ namespace eda::gate::mutator {
   using eda::gate::debugger::options::FRAIG;
   using eda::gate::debugger::options::RND;
   using eda::gate::debugger::options::SAT;
-  using eda::gate::model::make2AndOr;
-  using eda::gate::model::make2AndOr2;
+  using eda::gate::model::makeSubnet2AndOr;
+  using eda::gate::model::makeSubnet2AndOr2;
   using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
   using Link = eda::gate::model::Subnet::Link;
   using LinkList = eda::gate::model::Subnet::LinkList;
@@ -80,7 +80,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, andOr) {
-    SubnetID subnetID = make2AndOr(); 
+    SubnetID subnetID = makeSubnet2AndOr(); 
     auto &net = Subnet::get(subnetID);
     CellIDList listCells = {0, 1, 2, 3, 4, 5, 6};
     CellSymbolList functions = {CellSymbol::AND};
@@ -99,7 +99,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, andOr2) {
-    SubnetID subnetID = make2AndOr2(); 
+    SubnetID subnetID = makeSubnet2AndOr2(); 
     auto &net = Subnet::get(subnetID);
     CellIDList listCells = {0, 1, 2, 3, 4, 5, 6};
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
@@ -118,7 +118,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, numAndOr2) {
-    SubnetID subnetID = make2AndOr2(); 
+    SubnetID subnetID = makeSubnet2AndOr2(); 
     auto &net = Subnet::get(subnetID);
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
@@ -188,7 +188,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, cutAndOr2) {
-    SubnetID subnetID = make2AndOr(); 
+    SubnetID subnetID = makeSubnet2AndOr(); 
     auto &net = Subnet::get(subnetID);
     CellIDList listCells = {6};
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
@@ -208,7 +208,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, cutNumAndOr2) {
-    SubnetID subnetID = make2AndOr(); 
+    SubnetID subnetID = makeSubnet2AndOr(); 
     auto &net = Subnet::get(subnetID);
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
     SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CUT,

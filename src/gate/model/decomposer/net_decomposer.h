@@ -41,6 +41,11 @@ public:
                  std::vector<SubnetID> &subnets,
                  std::vector<CellMapping> &mapping) const;
 
+  /// Imitates decomposition of the net consisting of a single subnet.
+  void decompose(SubnetID subnetID,
+                 std::vector<SubnetID> &subnet,
+                 std::vector<CellMapping> &mapping) const;
+
   /// Composes the subnets into a net.
   NetID compose(const std::vector<SubnetID> &subnets,
                 const std::vector<CellMapping> &mapping) const;

@@ -23,7 +23,7 @@ static bool areEquivalent(const Subnet &lhs,
 TEST(RWDatabase2Test, BasicTest) {
   RWDatabase2 rwdb;
 
-  SubnetID id = make3AndOrXor();
+  SubnetID id = makeSubnet3AndOrXor();
   RWDatabase2::TT tt = evaluate(Subnet::get(id))[0];
 
   rwdb.push(tt, id);

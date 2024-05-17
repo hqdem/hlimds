@@ -28,7 +28,7 @@ TEST(MiterTest, Random) {
 
   for (size_t i = 0; i < nSubnet; ++i) {
     CellToCell map;
-    auto id = makeRandomSubnetMatrix(nIn, nOut, nCell, minArity, maxArity, i);
+    auto id = makeSubnetRandomMatrix(nIn, nOut, nCell, minArity, maxArity, i);
     const Subnet &subnet = Subnet::get(id);
 
     for (size_t i = 0; i < subnet.getEntries().size(); ++i) {

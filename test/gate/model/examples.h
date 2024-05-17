@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/net.h"
 #include "gate/model/subnet.h"
 
 /**
@@ -13,33 +14,51 @@
  */
 namespace eda::gate::model {
 
-model::SubnetID make2AndOr();
+SubnetID makeSubnet2AndOr();
+NetID makeNet2AndOr();
 
-model::SubnetID make2AndOr2();
+SubnetID makeSubnet2AndOr2();
+NetID makeNet2AndOr2();
 
-model::SubnetID make3AndOrXor();
+SubnetID makeSubnet3AndOrXor();
+NetID makeNet3AndOrXor();
 
-model::SubnetID makeXorNorAndAndOr();
+SubnetID makeSubnetXorNorAndAndOr();
+NetID makeNetXorNorAndAndOr();
 
-model::SubnetID makeXorOrXor();
+SubnetID makeSubnetXorOrXor();
+NetID makeNetXorOrXor();
 
-model::SubnetID makeAndOrXor();
+SubnetID makeSubnetAndOrXor();
+NetID makeNetAndOrXor();
 
-model::SubnetID make4AndOr();
+SubnetID makeSubnet4AndOr();
+NetID makeNet4AndOr();
 
-model::SubnetID make2Latches();
+SubnetID makeSubnet2Latches();
+NetID makeNet2Latches();
 
-model::SubnetID makeLatche();
+SubnetID makeSubnetLatch();
+NetID makeNetLatch();
 
-model::SubnetID makeStuckLatches();
+SubnetID makeSubnetStuckLatches();
+NetID makeNetStuckLatches();
 
-model::SubnetID makeStuckLatche();
+SubnetID makeSubnetStuckLatch();
+NetID makeNetStuckLatch();
 
-model::SubnetID makeRandomSubnetMatrix(const size_t nIn,
-                                       const size_t nOut,
-                                       const size_t nCell,
-                                       const size_t minArity,
-                                       const size_t maxArity,
-                                       const unsigned seed);
+SubnetID makeSubnetRandomMatrix(const size_t nIn,
+                                const size_t nOut,
+                                const size_t nCell,
+                                const size_t minArity,
+                                const size_t maxArity,
+                                const unsigned seed);
+
+NetID makeNetRandomMatrix(const size_t nIn,
+                          const size_t nOut,
+                          const size_t nCell, 
+                          const size_t minArity,
+                          const size_t maxArity,
+                          const unsigned seed);
 
 } // namespace eda::gate::model

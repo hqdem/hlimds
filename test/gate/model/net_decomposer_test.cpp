@@ -25,12 +25,16 @@ static std::vector<SubnetID> decomposeNet(NetID netID) {
   std::vector<NetDecomposer::CellMapping> mapping;
   NetDecomposer::get().decompose(netID, subnets, mapping);
 
+#ifdef UTOPIA_DEBUG
   for (const auto subnetID : subnets) {
     std::cout << Subnet::get(subnetID) << std::endl;
   }
+#endif // UTOPIA_DEBUG
 
+#ifdef UTOPIA_DEBUG
   const auto newNetID = NetDecomposer::get().compose(subnets, mapping);
   std::cout << Net::get(newNetID) << std::endl;
+#endif // UTOPIA_DEBUG
 
   return subnets;
 }
@@ -84,15 +88,19 @@ TEST(NetDecomposerTest, CellReductionTest) {
 
   const auto netID = netBuilder.make();
 
+#ifdef UTOPIA_DEBUG
   std::cout << Net::get(netID) << std::endl;
+#endif // UTOPIA_DEBUG
 
   std::vector<SubnetID> subnets;
   std::vector<NetDecomposer::CellMapping> mapping;
   NetDecomposer::get().decompose(netID, subnets, mapping);
 
+#ifdef UTOPIA_DEBUG
   for (const auto subnetID : subnets) {
     std::cout << Subnet::get(subnetID) << std::endl;
   }
+#endif // UTOPIA_DEBUG
 
   SubnetBuilder subnetBuilder;
 
@@ -108,8 +116,10 @@ TEST(NetDecomposerTest, CellReductionTest) {
   std::vector<SubnetID> reducedSubnet;
   reducedSubnet.push_back(subnetBuilder.make());
 
+#ifdef UTOPIA_DEBUG
   const auto newNetID = NetDecomposer::get().compose(reducedSubnet, mapping);
   std::cout << Net::get(newNetID) << std::endl;
+#endif // UTOPIA_DEBUG
 }
 
 TEST(NetDecomposerTest, SimpleNegTest) {

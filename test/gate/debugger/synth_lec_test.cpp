@@ -45,28 +45,28 @@ TEST(LecTest, MatrixGenerator) {
   const size_t nSubnet  = 40;
 
   for (size_t i = 0; i < nSubnet; ++i) {
-    lecTest(makeRandomSubnetMatrix(nIn, nOut, nCell, minArity, maxArity, i));
+    lecTest(makeSubnetRandomMatrix(nIn, nOut, nCell, minArity, maxArity, i));
   }
 }
 
 TEST(LecTest, 3AndOrXor) {
-  lecTest(make3AndOrXor());
+  lecTest(makeSubnet3AndOrXor());
 }
 
 TEST(LecTest, XorNorAndAndOr) {
-  lecTest(makeXorNorAndAndOr());
+  lecTest(makeSubnetXorNorAndAndOr());
 }
 
 TEST(LecTest, XorOrXor) {
-  lecTest(makeXorOrXor());
+  lecTest(makeSubnetXorOrXor());
 }
 
 TEST(LecTest, AndOrXor) {
-  lecTest(makeAndOrXor());
+  lecTest(makeSubnetAndOrXor());
 }
 
 TEST(LecTest, 4AndOr) {
-  lecTest(make4AndOr());
+  lecTest(makeSubnet4AndOr());
 }
 
 } // namespace eda::gate::debugger

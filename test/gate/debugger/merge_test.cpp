@@ -56,14 +56,14 @@ bool compareSubnets(const Subnet &sub1, const Subnet &sub2,
 }
 
 TEST(MergeSpeculativeTest, custom1) {
-  Subnet &subnet = Subnet::get(eda::gate::model::makeAndOrXor());
+  Subnet &subnet = Subnet::get(model::makeSubnetAndOrXor());
   std::unordered_map<size_t, std::vector<size_t>> classes = {{2, {3, 4}}};
   const Subnet &mergedSubnet = merge(subnet, classes, true);
   EXPECT_TRUE(compareSubnets(subnet, mergedSubnet, classes));
 }
 
 TEST(MergeSpeculativeTest, custom2) {
-  Subnet &subnet = Subnet::get(eda::gate::model::make4AndOr());
+  Subnet &subnet = Subnet::get(model::makeSubnet4AndOr());
   std::unordered_map<size_t, std::vector<size_t>> classes = {{2, {3}},
                                                              {6, {4, 5}}};
   const Subnet &mergedSubnet = merge(subnet, classes, true);
@@ -72,7 +72,7 @@ TEST(MergeSpeculativeTest, custom2) {
 }
 
 TEST(MergeConstantTest, custom1) {
-  Subnet &subnet = Subnet::get(eda::gate::model::make2Latches());
+  Subnet &subnet = Subnet::get(model::makeSubnet2Latches());
   std::vector<size_t> classes = {3, 5};
   const Subnet &mergedSubnet = merge(subnet, CellSymbol::ZERO, classes);
 
@@ -85,7 +85,7 @@ TEST(MergeConstantTest, custom1) {
 }
 
 TEST(MergeConstantTest, custom2) {
-  Subnet &subnet = Subnet::get(eda::gate::model::makeLatche());
+  Subnet &subnet = Subnet::get(model::makeSubnetLatch());
   std::vector<size_t> classes = {2, 6};
   const Subnet &mergedSubnet = merge(subnet, CellSymbol::ZERO, classes);
 

@@ -15,7 +15,7 @@
 namespace eda::gate::debugger {
 
 TEST(RegisterSweepTest, custom1) {
-  Subnet &subnet = Subnet::get(eda::gate::model::makeStuckLatches());
+  Subnet &subnet = Subnet::get(model::makeSubnetStuckLatches());
   const Subnet &clearedSubnet = structuralRegisterSweep(subnet, 10, false, 0);
 
   EXPECT_TRUE(clearedSubnet.size() == 3);
@@ -26,7 +26,7 @@ TEST(RegisterSweepTest, custom1) {
 }
 
 TEST(RegisterSweepTest, custom2) {
-  Subnet &subnet = Subnet::get(eda::gate::model::makeStuckLatche());
+  Subnet &subnet = Subnet::get(model::makeSubnetStuckLatch());
   const Subnet &clearedSubnet = structuralRegisterSweep(subnet, 10, false, 0);
 
   auto entries = clearedSubnet.getEntries();

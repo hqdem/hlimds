@@ -90,14 +90,12 @@ SubnetBuilder GraphMlParser::buildSubnet(ParserData &data) {
   auto &groups = data.groups;
 
   subnetBuilder.addInputs(groups[0].size());
-  size_t i{groups[0].size()};
   for (Node* node : data.groups[2]) {
     LinkList links;
     for (const Input &input : node->inputs) {
       links.emplace_back(input.node->id, input.inv);
     }
     node->id = subnetBuilder.addCellTree(model::AND, links, 2).idx;
-    ++i;
   }
 
   for (Node* node : groups[1]) {

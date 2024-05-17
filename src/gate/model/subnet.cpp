@@ -283,9 +283,9 @@ void SubnetBuilder::replace(
     const SubnetID rhsID,
     std::unordered_map<size_t, size_t> &rhsToLhs,
     const CellWeightProvider *weightProvider,
-    const std::function<void(const size_t)> *onNewCell,
-    const std::function<void(const size_t)> *onEqualDepth,
-    const std::function<void(const size_t)> *onGreaterDepth) {
+    const CellActionCallback *onNewCell,
+    const CellActionCallback *onEqualDepth,
+    const CellActionCallback *onGreaterDepth) {
 
   const Subnet &rhs = Subnet::get(rhsID);
   assert(rhs.getOutNum() == 1);

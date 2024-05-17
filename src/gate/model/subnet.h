@@ -370,6 +370,8 @@ public:
   using CellWeightProvider = std::function<float(size_t)>;
   /// Calculates the real weight used for replace estimation.
   using CellWeightModifier = std::function<float(float)>;
+  /// Performs a certain action in a certain situation. 
+  using CellActionCallback = std::function<void(size_t)>;
 
   /// Represents a replacement effect.
   struct Effect final {
@@ -540,7 +542,7 @@ public:
   /// Does not add the output cells (it should be done explicitly).
   /// Returns the output links.
   LinkList addSubnet(SubnetID subnetID, const LinkList &links,
-                     const std::function<float(const size_t)> *getCellWeight = nullptr);
+                     const CellWeightProvider *weightProvider = nullptr);
 
   /// Adds the single-output subnet and connects it via the specified links.
   /// Returns the output link.
@@ -553,9 +555,9 @@ public:
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> &rhsToLhs,
       const CellWeightProvider *weightProvider = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onEqualDepth = nullptr,
+      const CellActionCallback *onGreaterDepth = nullptr);
 
   /// Returns the effect of the replacement.
   Effect evaluateReplace(

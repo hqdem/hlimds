@@ -366,7 +366,9 @@ public:
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
+  /// Returns the weight of the cell identified by the index.
   using CellWeightProvider = std::function<float(size_t)>;
+  /// Calculates the real weight used for replace estimation.
   using CellWeightModifier = std::function<float(float)>;
 
   /// Represents a replacement effect.

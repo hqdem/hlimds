@@ -10,8 +10,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 
-OPTION(NPN4_USAGE_STATS "NPN4 usage statistics" OFF) # Disabled by default
-OPTION(UTOPIA_DEBUG "Extended debug printing" OFF) # Disabled by default
+option(NPN4_USAGE_STATS "NPN4 usage statistics" OFF) # Disabled by default
+option(UTOPIA_DEBUG "Extended debug printing" OFF) # Disabled by default
 
 if(NPN4_USAGE_STATS)
   add_definitions(-DNPN4_USAGE_STATS)
@@ -82,7 +82,7 @@ add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)
 
-OPTION(GEN_DOC "Documentation generation" OFF) # Disabled by default
+option(GEN_DOC "Documentation generation" OFF) # Disabled by default
 
 if(NOT GEN_DOC)
   return()

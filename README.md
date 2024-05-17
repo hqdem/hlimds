@@ -10,11 +10,11 @@ Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.
 
 ## Coding Style
 
-See `doc/CODE_STYLE.md` for more details about our coding convention.
+See `doc/CodeStyle.md` for more details about our coding convention.
 
 ## General Notes
 
-See `doc/NOTES.md` if you're not familiar with program building/installation on Linux.
+See `doc/Notes.md` if you're not familiar with program building/installing on Linux.
 
 ## System Requirements
 
@@ -126,7 +126,7 @@ sudo make install
 ### CIRCT Installation
 
 To configure the build process using a CIRCT binary distribution avoiding the
-need to build from the source, see `doc/circt_prebuilt.md`.
+need to build from the source, see `doc/CirctPrebuilt.md`.
 
 LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
 Please take this into account while moving through the guide.

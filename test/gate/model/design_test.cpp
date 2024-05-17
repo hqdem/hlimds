@@ -28,6 +28,7 @@ TEST(DesignTest, RandomSubnet) {
 
   Design design("design", subnetID);
   EXPECT_FALSE(design.getSubnets().empty());
+  design.make();
 }
 
 TEST(DesignTest, RandomNet) {
@@ -43,8 +44,7 @@ TEST(DesignTest, RandomNet) {
 
   Design design("design", netID);
   EXPECT_FALSE(design.getSubnets().empty());
-
-  design.makeNet
+  design.make();
 }
 
 } // namespace eda::gate::model

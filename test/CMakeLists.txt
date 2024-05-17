@@ -37,6 +37,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/synth_lec_test.cpp
   gate/model/array_test.cpp
   gate/model/examples.cpp
+  gate/model/design_test.cpp
   gate/model/generator_test.cpp
   gate/model/list_test.cpp
   gate/model/net_decomposer_test.cpp

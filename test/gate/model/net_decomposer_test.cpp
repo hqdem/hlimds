@@ -19,7 +19,9 @@
 namespace eda::gate::model {
 
 static std::vector<SubnetID> decomposeNet(NetID netID) {
+#ifdef UTOPIA_DEBUG
   std::cout << Net::get(netID) << std::endl;
+#endif // UTOPIA_DEBUG
 
   std::vector<SubnetID> subnets;
   std::vector<NetDecomposer::CellMapping> mapping;
@@ -62,7 +64,6 @@ TEST(NetDecomposerTest, SimplePosTest) {
 
   EXPECT_EQ(result.size(), 2);
 }
-
 
 TEST(NetDecomposerTest, CellReductionTest) {
   NetBuilder netBuilder;

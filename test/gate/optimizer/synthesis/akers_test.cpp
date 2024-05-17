@@ -60,7 +60,7 @@ void runAkersSynthesizerTest(size_t nVars) {
  * by Sheldon B. Akers, Jr. (1962).
  */
 
-TEST(Akers62_2, Example1) {
+TEST(Akers62, Example1) {
   // Example starts in the page 3
   TruthTable func(3);
   TruthTable care(3);
@@ -74,7 +74,7 @@ TEST(Akers62_2, Example1) {
   std::cout << Subnet::get(subnet) << std::endl;
 }
 
-TEST(Akers62_2, Example2) {
+TEST(Akers62, Example2) {
   // Example starts in the page 4
   TruthTable func(4);
   kitty::create_from_binary_string(func, "0010001100101010");
@@ -89,42 +89,42 @@ TEST(Akers62_2, Example2) {
 // Simple Tests
 //===----------------------------------------------------------------------===//
 
-TEST(AkersTest2, NOT1) {
+TEST(AkersTest, NOT1) {
   // Gate NOT(x).
   runAkersSynthesizerTest("01", 1, 2);
 }
 
-TEST(AkersTest2, One3) {
+TEST(AkersTest, One3) {
   // Gate One().
   runAkersSynthesizerTest("11111111", 3, 5);
 }
 
-TEST(AkersTest2, Zero3) {
+TEST(AkersTest, Zero3) {
   // Gate Zero().
   runAkersSynthesizerTest("00000000", 3, 5);
 }
 
-TEST(AkersTest2, OR2) {
+TEST(AkersTest, OR2) {
   // Gate OR(x, y).
   runAkersSynthesizerTest("1110", 2, 5);
 }
 
-TEST(AkersTest2, AND2) {
+TEST(AkersTest, AND2) {
   // Gate AND(x, y).
   runAkersSynthesizerTest("1000", 2, 5);
 }
 
-TEST(AkersTest2, XOR2) {
+TEST(AkersTest, XOR2) {
   // Gate XOR(x, y).
   runAkersSynthesizerTest("0110", 2, 8);
 }
 
-TEST(AkersTest2, XOR3) {
+TEST(AkersTest, XOR3) {
   // Gate XOR(x, y, z).
   runAkersSynthesizerTest("01101001", 3, 7);
 }
 
-TEST(AkersTest2, XOR4) {
+TEST(AkersTest, XOR4) {
   // Gate XOR(x, y, z, v).
   runAkersSynthesizerTest("0110100110010110", 4, 18);
 }
@@ -133,12 +133,12 @@ TEST(AkersTest2, XOR4) {
 // Majority Gate Tests
 //===----------------------------------------------------------------------===//
 
-TEST(AkersTest2, MAJ3) {
+TEST(AkersTest, MAJ3) {
   // Gate MAJ(x, y, z).
   runAkersSynthesizerTest("11101000", 3, 5);
 }
 
-TEST(AkersTest2, MAJ5) {
+TEST(AkersTest, MAJ5) {
   // Gate MAJ(x, y, z, u, v).
   runAkersSynthesizerTest("11111110111010001110100010000000", 5, 10);
 }
@@ -147,22 +147,22 @@ TEST(AkersTest2, MAJ5) {
 // Random Tests
 //===----------------------------------------------------------------------===//
 
-TEST(AkersTest2, RandomFunc5) {
+TEST(AkersTest, RandomFunc5) {
   // Random gate RAND(x, y, z, u, v).
   runAkersSynthesizerTest(5);
 }
 
-TEST(AkersTest2, RandomFunc6) {
+TEST(AkersTest, RandomFunc6) {
   // Random gate RAND(x, y, z, u, v, w).
   runAkersSynthesizerTest(6);
 }
 
-TEST(AkersTest2, RandomFunc7) {
+TEST(AkersTest, RandomFunc7) {
   // Random gate RAND(x, y, z, u, v, w, p).
   runAkersSynthesizerTest(7);
 }
 
-TEST(AkersTest2, RandomFunc8) {
+TEST(AkersTest, RandomFunc8) {
   // Random gate RAND(x, y, z, u, v, w, p, h).
   runAkersSynthesizerTest(8);
 }

@@ -9,6 +9,7 @@
 #include "gate/optimizer/synthesis/akers.h"
 
 namespace eda::gate::optimizer::synthesis {
+
 //===----------------------------------------------------------------------===//
 // Types
 //===----------------------------------------------------------------------===//
@@ -18,6 +19,44 @@ using ArgumentsSet = AkersSynthesizer::ArgumentsSet;
 using Link         = eda::gate::model::Subnet::Link;
 using Subnet       = eda::gate::model::Subnet;
 using SubnetID     = eda::gate::model::SubnetID;
+
+//===----------------------------------------------------------------------===//
+// Additional structs
+//===----------------------------------------------------------------------===//
+
+/** 
+ *  The information about the number of inner columns and
+ *  the number of calls in a row the function to eliminate "essential" ones.
+ */
+struct ElimOnesInfo {
+  /// The number of calling in a row the function to eliminate ones.
+  unsigned nCall;
+  /// The number of columns before launching the function to eliminate ones.
+  unsigned nInner;
+};
+
+/// The IDs of constants to avoid duplicates.
+struct ConstantId {
+  size_t zeroId = 0;
+  bool hasZero = false;
+
+  size_t oneId = 0;
+  bool hasOne = false;
+};
+
+/// The variables for building the subnet.
+struct BuildVars {
+  eda::gate::model::SubnetBuilder builder;
+  std::vector<size_t> idx;
+};
+
+/// The information about one MAJ-gate candidate for adding to the table.
+struct Candidate {
+  /// Numbers of columns for a MAJ gate.
+  std::set<unsigned> args;
+  /// Columns that may be removed after adding the MAJ(args).
+  std::vector<unsigned> toRemove;
+};
 
 //===----------------------------------------------------------------------===//
 // Synthesize Methods
@@ -46,10 +85,10 @@ SubnetID AkersSynthesizer::run(const TruthTable &func,
   table.initialize(func, care);
   uint32_t nVariables = func.num_vars();
   // Create variables for building the Subnet.
-  SubBuild subBuild;
+  BuildVars buildVars;
   for (uint32_t i = 0; i < nVariables; i++) {
-    size_t cellId = subBuild.builder.addInput().idx;
-    subBuild.idx.push_back(cellId);
+    size_t cellId = buildVars.builder.addInput().idx;
+    buildVars.idx.push_back(cellId);
   }
 
   ElimOnesInfo onesInfo;
@@ -59,7 +98,7 @@ SubnetID AkersSynthesizer::run(const TruthTable &func,
 
   while ((table.nColumns() != 3) && (table.nColumns() != 1)) {
     Candidate candidate = findBestGate(table, onesInfo);
-    addMajGate(table, subBuild, candidate.args, nVariables, cid);
+    addMajGate(table, buildVars, candidate.args, nVariables, cid);
 
     if (!candidate.toRemove.empty()) {
       table.eraseCol(candidate.toRemove);
@@ -72,42 +111,42 @@ SubnetID AkersSynthesizer::run(const TruthTable &func,
   bool inv = false;
   if (table.nColumns() == 3) {
     Arguments gate = {0, 1, 2};
-    addMajGate(table, subBuild, gate, nVariables, cid);
+    addMajGate(table, buildVars, gate, nVariables, cid);
   } else {
     unsigned id = table.idColumn(0);
     size_t cellId = 0;
     bool flag = false;
     switch (id) {
       case 62:
-        cellId = subBuild.builder.addCell(model::ZERO).idx;
+        cellId = buildVars.builder.addCell(model::ZERO).idx;
         flag = true;
       break;
       case 63:
-        cellId = subBuild.builder.addCell(model::ONE).idx;
+        cellId = buildVars.builder.addCell(model::ONE).idx;
         flag = true;
       break;
       default:
         if ((id < 62) && (id > 30)) {
-          cellId = subBuild.idx[id - 31];
+          cellId = buildVars.idx[id - 31];
           flag = true;
           inv = true;
         }
     }
     if (flag) {
-      subBuild.idx.push_back(cellId);
+      buildVars.idx.push_back(cellId);
     } else {
       if (id < 31) {
-        cellId = subBuild.idx[id];
-        subBuild.idx.push_back(cellId);
+        cellId = buildVars.idx[id];
+        buildVars.idx.push_back(cellId);
       }
     }
   }
-  const Link link(subBuild.idx.back(), inv);
-  subBuild.builder.addOutput(link);
-  return subBuild.builder.make();
+  const Link link(buildVars.idx.back(), inv);
+  buildVars.builder.addOutput(link);
+  return buildVars.builder.make();
 }
 
-void AkersSynthesizer::addMajGate(UnitizedTable &table, SubBuild &subBuild,
+void AkersSynthesizer::addMajGate(UnitizedTable &table, BuildVars &buildVars,
                                   const Arguments &gate, uint32_t nVariables,
                                   ConstantId &cid) const {
 
@@ -121,7 +160,7 @@ void AkersSynthesizer::addMajGate(UnitizedTable &table, SubBuild &subBuild,
     switch (id) {
       case 62:
         if (!cid.hasZero) {
-          cid.zeroId = subBuild.builder.addCell(model::ZERO).idx;
+          cid.zeroId = buildVars.builder.addCell(model::ZERO).idx;
           cid.hasZero = true;
         }
         cellId = cid.zeroId;
@@ -129,7 +168,7 @@ void AkersSynthesizer::addMajGate(UnitizedTable &table, SubBuild &subBuild,
       break;
       case 63:
         if (!cid.hasOne) {
-          cid.oneId = subBuild.builder.addCell(model::ONE).idx;
+          cid.oneId = buildVars.builder.addCell(model::ONE).idx;
           cid.hasOne = true;
         }
         cellId = cid.oneId;
@@ -138,22 +177,22 @@ void AkersSynthesizer::addMajGate(UnitizedTable &table, SubBuild &subBuild,
       default:
         switch (id < 31 ? 1 : (id < 62 ? 2 : 3)) {
           case 1:
-            links.push_back(Link(subBuild.idx[id]));
+            links.push_back(Link(buildVars.idx[id]));
           break;
           case 2:
-            links.push_back(Link(subBuild.idx[id - 31], true));
+            links.push_back(Link(buildVars.idx[id - 31], true));
           break;
           case 3:
-            links.push_back(Link(subBuild.idx[id - 64 + nVariables]));
+            links.push_back(Link(buildVars.idx[id - 64 + nVariables]));
           break;
         }
     }
   }
 
-  const size_t majId = subBuild.builder.addCell(model::MAJ, links[0],
-                                                            links[1],
-                                                            links[2]).idx;
-  subBuild.idx.push_back(majId);
+  const size_t majId = buildVars.builder.addCell(model::MAJ, links[0],
+                                                             links[1],
+                                                             links[2]).idx;
+  buildVars.idx.push_back(majId);
 
   table.addMajColumn(gate);
 }

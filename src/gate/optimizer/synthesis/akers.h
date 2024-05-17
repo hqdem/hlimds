@@ -18,39 +18,10 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-/** 
- *  The information about the number of inner columns and
- *  the number of calls in a row the function to eliminate "essential" ones.
- */
-struct ElimOnesInfo {
-  /// The number of calling in a row the function to eliminate ones.
-  unsigned nCall;
-  /// The number of columns before launching the function to eliminate ones.
-  unsigned nInner;
-};
-
-/// The IDs of constants to avoid duplicates.
-struct ConstantId {
-  size_t zeroId = 0;
-  bool hasZero = false;
-
-  size_t oneId = 0;
-  bool hasOne = false;
-};
-
-/// The variables for building the subnet.
-struct SubBuild {
-  eda::gate::model::SubnetBuilder builder;
-  std::vector<size_t> idx;
-};
-
-/// The information about one candidate.
-struct Candidate {
-  /// Numbers of columns for a MAJ gate.
-  std::set<unsigned> args;
-  /// Columns that may be removed after adding the MAJ(args).
-  std::vector<unsigned> toRemove;
-};
+struct ElimOnesInfo;
+struct ConstantId;
+struct BuildVars;
+struct Candidate;
 
 /**
  * \brief Implements an Akers method of synthesis.
@@ -109,7 +80,7 @@ private:
   SubnetID run(const TruthTable &func, const TruthTable &care) const;
 
   /// Adds a majority gate.
-  void addMajGate(UnitizedTable &table, SubBuild &subBuild,
+  void addMajGate(UnitizedTable &table, BuildVars &buildVars,
                   const Arguments &gate, uint32_t nVariables,
                   ConstantId &cid) const;
 

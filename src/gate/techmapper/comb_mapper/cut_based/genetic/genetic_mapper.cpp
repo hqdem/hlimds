@@ -362,16 +362,17 @@ float Chromosome::calculateChromosomeMaxArrivalTime(Library &lib) {
         continue;
       }
 
-      DelayEstimator d1;
+      DelayEstimator d1(lib);
+      int timingSense = d1.nldm.getSense();
       float inputNetTransition = findMaxArrivalTime(gen->entryIdxs);
       size_t nIn = 1;
       float fanoutCap = d1.wlm.getFanoutCap(nIn) +
                         d1.nldm.getCellCap();
 
       d1.nldm.delayEstimation(gen->name,
-                              lib,
                               inputNetTransition,
-                              fanoutCap);
+                              fanoutCap,
+                              timingSense);
 
       gen->arrivalTime = d1.nldm.getSlew();
       (maxArrivalTime < gen->arrivalTime) ? maxArrivalTime = gen->arrivalTime : 0;

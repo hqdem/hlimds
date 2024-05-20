@@ -73,7 +73,7 @@ void WLM::setWireLoadModel(string wlm_name) {
 
       /// Changing properties
       r = fudge * 0.08;
-      c = fudge * 0.00002;
+      c = fudge * 0.0002;
       slope = 8.3631;
     }
     else if (wire_load_name == "5k") {
@@ -90,7 +90,7 @@ void WLM::setWireLoadModel(string wlm_name) {
       length = length_3k;
       for (size_t i = 0; i < 6; ++i)
         multip[i] = mp_3k[i];
-      
+
       /// Changing properties
       r = fudge * 0.004;
       c = fudge * 0.2;
@@ -117,8 +117,10 @@ void WLM::setWireLoadModel(string wlm_name) {
       fanout_capacitance[i] = std::make_pair(i+1, fanout_length[i].second * c);
   }
 
-  else
+  else {
     std::cerr << "WLM: wrong name\n";
+    assert(false);
+  }
 }
 
 /// Getters
@@ -127,8 +129,11 @@ float WLM::getLength(size_t& fanout_count) {
     return fanout_length[fanout_count-1].second;
   else if (fanout_count > 6)
     return fanout_length[5].second + (fanout_count - 6) * slope;
+  else {
+    std::cerr << "WLM: wrong name\n";
+    assert(false);
+  }
 
-  std::cerr << "Wrong fanout_count\n";
   return 0;
 }
 
@@ -139,8 +144,11 @@ float WLM::getFanoutCap(size_t& fanout_count) {
     float length = fanout_length[5].second + (fanout_count - 6) * slope;
     return length * c;
   }
-  
-  std::cerr << "Wrong fanout_count\n";
+  else {
+    std::cerr << "WLM: wrong name\n";
+    assert(false);
+  }
+
   return 0;
 }
 
@@ -151,361 +159,307 @@ float WLM::getFanoutRes(size_t& fanout_count) {
     float length = fanout_length[5].second + (fanout_count - 6) * slope;
     return length * r;
   }
-  std::cerr << "Wrong fanout_count\n";
+  else {
+    std::cerr << "WLM: wrong name\n";
+    assert(false);
+  }
+
   return 0;
 }
 
-/// Inter-/Extra-polation
-float interpolation(float x0, float y0,
-                    float x1, float x2,
-                    float y1, float y2,
-                    float T11, float T12,
-                    float T21, float T22) {
+/// Interpolation
+float NLDM::getLutValue(const std::vector<float> &lutValues,
+                        const float inputNetTransition,
+                        const float totalOutputNetCapacitance,
+                        const float x1, const float x2,
+                        const float y1, const float y2) {
+  if (!context.interpolate) {
+    return lutValues[context.index.ind1 * context.variablesCount + context.index.ind2];
+  }
 
+  /// Properties
+  float x0 = inputNetTransition;
+  float y0 = totalOutputNetCapacitance;
   float x01 = 0, x20 = 0, y01 = 0, y20 = 0;
+  float T00 = 0, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
 
+  /// Estimation
   x01 = (x0 - x1) / (x2 - x1);
   x20 = (x2 - x0) / (x2 - x1);
   y01 = (y0 - y1) / (y2 - y1);
   y20 = (y2 - y0) / (y2 - y1);
 
-  float T00 = x20*y20*T11 + x20*y01*T12 + x01*y20*T21 + x01*y01*T22;
+  T11 = lutValues[context.index.back1 * context.variablesCount + context.index.back2];
+  T12 = lutValues[context.index.back1 * context.variablesCount + context.index.front2];
+  T21 = lutValues[context.index.front1 * context.variablesCount + context.index.back2];
+  T22 = lutValues[context.index.front1 * context.variablesCount + context.index.front2];
 
+  /// Result value
+  T00 = x20*y20*T11 + x20*y01*T12 + x01*y20*T21 + x01*y01*T22;
   return T00;
 }
 
-float NLDM::lutInterpolation(const LookupTable *lut, size_t variablesCount, 
-                       float& input_net_transition,
-                       float& total_output_net_capacitance,
-                       float& x1, float& x2, float& y1, float& y2, 
-                       size_t& back1, size_t& front1, size_t& back2, size_t& front2) {
-  float T00 = 0, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
-  vector<float> lut_values = lut->getValues();
+float NLDM::getLutValue(const LookupTable *lut,
+                        const float inputNetTransition,
+                        const float totalOutputNetCapacitance,
+                        const float x1, const float x2,
+                        const float y1, const float y2) {
+  std::vector<float> lutValues = lut->getValues();
 
-  T11 = lut_values[back1 * variablesCount + back2];
-  T12 = lut_values[back1 * variablesCount + front2];
-  T21 = lut_values[front1 * variablesCount + back2];
-  T22 = lut_values[front1 * variablesCount + front2];
-
-  T00 = interpolation(input_net_transition,
-                      total_output_net_capacitance,
-                      x1, x2, y1, y2, T11, T12, T21, T22);
-
-  return T00;
+  return getLutValue(lutValues,
+                     inputNetTransition,
+                     totalOutputNetCapacitance,
+                     x1, x2, y1, y2);
 }
 
-float NLDM::timingVisitor(const Timing &timing,
-        string dtype,
-        float& input_net_transition,
-        float& total_output_net_capacitance) {
-
-  const auto *lut = timing.getLut(dtype);
-
-  if (lut != nullptr) {
-    //===-----------------------------------------------------------------===//
-    //  Properties
-    //===-----------------------------------------------------------------===//
-    bool ivar = false;
-    int ind_1 = -1, ind_2 = -1;
-    vector<float> lut_values = {};
-    float x1, x2, y1, y2, T00, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
-    size_t tback1 = 0, tfront1 = 0;
-    size_t tback2 = 0, tfront2 = 0;
-
-    lut_values = lut->getValues();
-
-    //===-----------------------------------------------------------------===//
-    //  Assigning values from LookUp-Tables
-    //===-----------------------------------------------------------------===//
-
-    /// FOUND VALUES
-    for (const auto &it : (*lut)) {
-      if (!ivar && (std::find(it.values.begin(), it.values.end(),
-          input_net_transition) == std::end(it.values))) {
-        break;
-      }
-      else if (!ivar && (std::find(it.values.begin(), it.values.end(),
-                         input_net_transition) != std::end(it.values))) {
-        ivar = true;
-        for (size_t i = 0; i < it.values.size(); ++i) {
-          if (it.values[i] == input_net_transition) {
-            ind_1 = i;
-            break;
-          }
-        }
-      }
-      else if (ivar && (std::find(it.values.begin(), it.values.end(),
-               total_output_net_capacitance) != std::end(it.values))) {
-        for (size_t i = 0; i < it.values.size(); ++i) {
-          if (it.values[i] == total_output_net_capacitance) {
-            ind_2 = i;
-            return lut_values[ind_1 * it.values.size() + ind_2];
-          }
-        }
-      }
-    }
-
-    /// INTERPOLATION
-    if ((ind_1 == -1) && (ind_2 == -1)) {
-      tback1 = 0, tfront1 = 0;
-      tback2 = 0, tfront2 = 0;
-      x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-      for (const auto &it : (*lut)) {
-        if (!ivar) {
-          for (size_t i = 0; i < it.values.size(); ++i) {
-            if (it.values[i] < input_net_transition) {
-              tback1 = i;
-              x1 = it.values[i];
-            }
-            else if (it.values[i] > input_net_transition) {
-              tfront1 = i;
-              x2 = it.values[i];
-              break;
-            }
-          }
-          ivar = true;
-        }
-        else {
-          for (size_t i = 0; i < it.values.size(); ++i) {
-            if (it.values[i] < total_output_net_capacitance) {
-              tback2 = i;
-              y1 = it.values[i];
-            }
-            else if (it.values[i] > total_output_net_capacitance) {
-              tfront2 = i;
-              y2 = it.values[i];
-              break;
-            }
-          }
-          T11 = lut_values[tback1 * it.values.size() + tback2];
-          T12 = lut_values[tback1 * it.values.size() + tfront2];
-          T21 = lut_values[tfront1 * it.values.size() + tback2];
-          T22 = lut_values[tfront1 * it.values.size() + tfront2];
-          T00 = interpolation(input_net_transition,
-                              total_output_net_capacitance,
-                              x1, x2, y1, y2, T11, T12, T21, T22);
-          return T00;
-        }
-      }
-    }
-  }
-  return -1;
-}
-
-vector<float> NLDM::timingVisitor(const Timing &timing,
-        float& input_net_transition,
-        float& total_output_net_capacitance) {
-
+void NLDM::pinTimingEstimator(const Timing &timing,
+                              const float inputNetTransition,
+                              const float totalOutputNetCapacitance) {
   //===-----------------------------------------------------------------===//
   //  LookUp Tables
   //===-----------------------------------------------------------------===//
-  const auto *lutcf = timing.getLut("cell_fall");
-  const auto *lutcr = timing.getLut("cell_rise");
-  const auto *luttf = timing.getLut("fall_transition");
-  const auto *luttr = timing.getLut("rise_transition");
+  const LookupTable* lut[] = {timing.getLut("cell_fall"),
+                              timing.getLut("cell_rise"),
+                              timing.getLut("fall_transition"),
+                              timing.getLut("rise_transition")};
   //===-----------------------------------------------------------------===//
   //  Properties
   //===-----------------------------------------------------------------===//
-  int ind_1 = -1, ind_2 = -1;
-  vector<float> lut_values = {}, result = {};
-  size_t variablesCount = 0;
-  /// For interpolation
-  float x1 = 0, x2 = 0, y1 = 0, y2 = 0,
-        T00 = 0, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
-  size_t tback1 = 0, tfront1 = 0;
-  size_t tback2 = 0, tfront2 = 0;
+  vector<float> lutValues = {};
+  /// Values for interpolation
+  float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
 
-  if (lutcf != nullptr) {
+  //===-----------------------------------------------------------------===//
+  //  Assign values from LookUp Tables
+  //===-----------------------------------------------------------------===//
+  if (lut[0] != nullptr) {
     //===-----------------------------------------------------------------===//
     //  Properties
     //===-----------------------------------------------------------------===//
-    bool ivar = false;
-    lut_values = lutcf->getValues();
-
+    lutValues = lut[0]->getValues();
+    bool iterFlag = false;
     //===-----------------------------------------------------------------===//
-    //  Assigning values from LookUp Tables
-    //===-----------------------------------------------------------------===//
-    /// FOUND VALUES
-    for (const auto &it : (*lutcf)) {
-      if (!ivar && (std::find(it.values.begin(), it.values.end(),
-          input_net_transition) == std::end(it.values))) {
-        break;
-      }
-      else if (!ivar && (std::find(it.values.begin(), it.values.end(),
-                         input_net_transition) != std::end(it.values))) {
-        ivar = true;
-        for (size_t i = 0; i < it.values.size(); ++i) {
-          if (it.values[i] == input_net_transition) {
-            ind_1 = i;
-            break;
-          }
-        }
-      }
-      else if (ivar && (std::find(it.values.begin(), it.values.end(),
-               total_output_net_capacitance) != std::end(it.values))) {
-        for (size_t i = 0; i < it.values.size(); ++i) {
-          if (it.values[i] == total_output_net_capacitance) {
-            ind_2 = i;
-            variablesCount = it.values.size();
-            result.push_back(lut_values[ind_1 * variablesCount + ind_2]);
-          }
-        }
-      }
-    }
-
-    /// INTERPOLATION
-    if ((ind_1 == -1) && (ind_2 == -1)) {
-      for (const auto &it : (*lutcf)) {
-        if (!ivar) {
+    for (const auto &it : (*lut[0])) {
+      /// INTERPOLATION
+      if (std::find(it.values.begin(), it.values.end(),
+            inputNetTransition) == std::end(it.values)) {
+        if (!iterFlag) {
+          /// Assign net_transition value
           for (size_t i = 0; i < it.values.size(); ++i) {
-            if (it.values[i] < input_net_transition) {
-              tback1 = i;
+            if (it.values[i] < inputNetTransition) {
+              context.index.back1 = i;
               x1 = it.values[i];
             }
-            else if (it.values[i] > input_net_transition) {
-              tfront1 = i;
+            else if (it.values[i] > inputNetTransition) {
+              context.index.front1 = i;
               x2 = it.values[i];
+              context.variablesCount = it.values.size();
+              iterFlag = true;
               break;
             }
           }
-          ivar = true;
         }
         else {
+          /// Assign output capacitance value
           for (size_t i = 0; i < it.values.size(); ++i) {
-            if (it.values[i] < total_output_net_capacitance) {
-              tback2 = i;
+            if (it.values[i] < totalOutputNetCapacitance) {
+              context.index.back2 = i;
               y1 = it.values[i];
             }
-            else if (it.values[i] > total_output_net_capacitance) {
-              tfront2 = i;
+            else if (it.values[i] > totalOutputNetCapacitance) {
+              context.index.front2 = i;
               y2 = it.values[i];
               break;
             }
           }
-          T11 = lut_values[tback1 * it.values.size() + tback2];
-          T12 = lut_values[tback1 * it.values.size() + tfront2];
-          T21 = lut_values[tfront1 * it.values.size() + tback2];
-          T22 = lut_values[tfront1 * it.values.size() + tfront2];
-          T00 = interpolation(input_net_transition,
-                              total_output_net_capacitance,
-                              x1, x2, y1, y2, T11, T12, T21, T22);
-          result.push_back(T00);
+          bool tmpInterpolate = context.interpolate; // TODO
+          context.interpolate = true;
+          context.delayValues.push_back(
+                getLutValue(lutValues,
+                            inputNetTransition,
+                            totalOutputNetCapacitance,
+                            x1, x2, y1, y2));
+          context.interpolate = tmpInterpolate;
+          break;
         }
       }
-    }
 
-    if (lutcr != nullptr) {
-      lut_values = lutcr->getValues();
-      if ((ind_1 > -1) && (ind_2 > -1)) {
-        result.push_back(lut_values[ind_1 * variablesCount + ind_2]);
-      }
-      else {
-        T00 = lutInterpolation(lutcr, variablesCount,
-                              input_net_transition,
-                              total_output_net_capacitance,
-                              x1, x2, y1, y2, 
-                              tback1, tfront1, tback2, tfront2);
-        result.push_back(T00);
-      }
-
-      if (luttf != nullptr) {
-        lut_values = luttf->getValues();
-        if ((ind_1 > -1) && (ind_2 > -1)) {
-          result.push_back(lut_values[ind_1 * variablesCount + ind_2]);
+      /// Assign found values
+      else if (std::find(it.values.begin(), it.values.end(),
+                            inputNetTransition) != std::end(it.values)) {
+        if (!iterFlag) {
+          /// Assign net_transition value
+          for (size_t i = 0; i < it.values.size(); ++i) {
+            if (it.values[i] == inputNetTransition) {
+              context.index.ind1 = i;
+              iterFlag = true;
+              break;
+            }
+          }
         }
         else {
-          T00 = lutInterpolation(luttf, variablesCount,
-                                input_net_transition,
-                                total_output_net_capacitance,
-                                x1, x2, y1, y2, 
-                                tback1, tfront1, tback2, tfront2);
-          result.push_back(T00);
-        }
-        
-        if (luttr != nullptr) {
-          lut_values = luttr->getValues();
-          if ((ind_1 > -1) && (ind_2 > -1)) {
-            result.push_back(lut_values[ind_1 * variablesCount + ind_2]);
-            return result;
+          /// Assign output capacitance value
+          for (size_t i = 0; i < it.values.size(); ++i) {
+            if (it.values[i] == totalOutputNetCapacitance) {
+              context.index.ind2 = i;
+              context.variablesCount = it.values.size();
+              break;
+            }
           }
-          else {
-            T00 = lutInterpolation(luttr, variablesCount,
-                                  input_net_transition,
-                                  total_output_net_capacitance,
-                                  x1, x2, y1, y2, 
-                                  tback1, tfront1, tback2, tfront2);
-            result.push_back(T00);
-            
-            return result;
-          }
+          context.delayValues.push_back(
+            lutValues[context.index.ind1 * context.variablesCount + context.index.ind2]);
+          break;
         }
       }
     }
   }
-  return result;
+  else {
+    std::cerr << "Cell fall LUT is nullptr.\n";
+    assert(false);
+  }
+
+  context.interpolate = (context.index.ind1 == -1) && (context.index.ind2 == -1);
+
+  for (size_t i = 1; i < 4; ++i) {
+    if (lut[i] != nullptr)
+      if (lut[i]->getValues().size() != 1)
+        context.delayValues.push_back(
+          getLutValue(lut[i],
+                      inputNetTransition,
+                      totalOutputNetCapacitance,
+                      x1, x2, y1, y2));
+      else
+        context.delayValues.push_back(0);
+    else {
+      std::cerr << "LUT is nullptr.\n";
+      assert(false);
+    }
+  }
 }
 
+void NLDM::pinFTimingEstimator(const Timing &timing,
+                               const float inputNetTransition,
+                               const float totalOutputNetCapacitance) {
+  //===-----------------------------------------------------------------===//
+  //  LookUp Tables
+  //===-----------------------------------------------------------------===//
+  const LookupTable* lut[] = {timing.getLut("cell_fall"),
+                              timing.getLut("cell_rise"),
+                              timing.getLut("fall_transition"),
+                              timing.getLut("rise_transition")};
+  //===-----------------------------------------------------------------===//
+  //  Properties
+  //===-----------------------------------------------------------------===//
+  vector<float> lutValues = {}, result = {};
+  //===-----------------------------------------------------------------===//
+  for (size_t i = 0; i < 4; ++i) {
+    if (lut[i] != nullptr) {
+      lutValues = lut[i]->getValues();
+      result.push_back(
+        lutValues[context.index.ind1 * context.variablesCount + context.index.ind2]);
+    }
+    else {
+      /// Found cell has a "scalar" LUT
+      result.push_back(0);
+    }
+  }
 
-void NLDM::delayEstimation(string& cell_name,
-                           string& file_name,
-                           float& input_net_transition,
-                           float& total_output_net_capacitance) {
-  //===-------------------------------------------------------------------===//
-  //  Connecting paths
-  //===-------------------------------------------------------------------===//
-  const path homePath = eda::env::getHomePath();
-  const path filePath = homePath / file_name;
-  if (exists(filePath)) {
-    //===---------------------------------------------------------------===//
-    //  Properties
-    //===---------------------------------------------------------------===//
-    std::vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
-    capacitance = 0;
-    float checker = 0;
+  context.delayValues = result;
+}
 
-    //===---------------------------------------------------------------===//
-    //  Call parser
-    //===---------------------------------------------------------------===//
-    TokenParser tokParser;
-    FILE *file = fopen(filePath.generic_string().c_str(), "rb");
-    Group *ast = tokParser.parseLibrary(file,
-                                        filePath.generic_string().c_str());
-    Library lib;
-    AstParser parser(lib, tokParser);
-    parser.run(*ast);
-    fclose(file);
+void NLDM::pinITimingEstimator(const Timing &timing,
+                               const float inputNetTransition,
+                               const float totalOutputNetCapacitance) {
+  //===-----------------------------------------------------------------===//
+  //  LookUp Tables
+  //===-----------------------------------------------------------------===//
+  const LookupTable* lut[] = {timing.getLut("cell_fall"),
+                              timing.getLut("cell_rise"),
+                              timing.getLut("fall_transition"),
+                              timing.getLut("rise_transition")};
+  //===-----------------------------------------------------------------===//
+  //  Properties
+  //===-----------------------------------------------------------------===//
+  vector<float> lutValues = {}, result = {};
+  float x1 = 0, x2 = 0,
+        y1 = 0, y2 = 0;
+  bool iterFlag = false;
 
-    //===---------------------------------------------------------------===//
-    //  Delay and Slew estimation
-    //===---------------------------------------------------------------===//
-    const Cell *cell = lib.getCell(cell_name);
+  assert(lut[0] != nullptr);
+  for (const auto &it : (*lut[0])) {
+    if (!iterFlag) {
+      x1 = it.values[context.index.back1], x2 = it.values[context.index.front1];
+      iterFlag = true;
+    }
+    else
+      y1 = it.values[context.index.back2], y2 = it.values[context.index.front2];
+  }
+  //===-----------------------------------------------------------------===//
+  bool tmpInterpolation = context.interpolate; // TODO
+  context.interpolate = true;
+  for (size_t i = 0; i < 4; ++i) {
+    if (lut[i] != nullptr) {
+      lutValues = lut[i]->getValues();
+      result.push_back(getLutValue(lutValues,
+                                   inputNetTransition,
+                                   totalOutputNetCapacitance,
+                                   x1, x2, y1, y2));
+    }
+    else {
+      /// Found cell has a "scalar" LUT
+      result.push_back(0);
+    }
+  }
+  context.interpolate = tmpInterpolation;
+  context.delayValues = result;
+}
 
-    for (const Pin &pin : (*cell).getPins()) {
-      capacitance += pin.getFloatAttribute("capacitance", 0);
-      for (const Timing &timing : pin.getTimings()) {
-        checker = timingVisitor(timing,"cell_fall",
-          input_net_transition, total_output_net_capacitance);
-        if (checker > 0) {
-          cfall.push_back(timingVisitor(timing,"cell_fall",
-            input_net_transition, total_output_net_capacitance));
-          crise.push_back(timingVisitor(timing,"cell_rise",
-            input_net_transition, total_output_net_capacitance));
-          tfall.push_back(timingVisitor(timing,"fall_transition",
-            input_net_transition, total_output_net_capacitance));
-          trise.push_back(timingVisitor(timing,"rise_transition",
-            input_net_transition, total_output_net_capacitance));
+void NLDM::delayEstimation(const string &cellType,
+                           const float inputNetTransition,
+                           const float totalOutputNetCapacitance,
+                           int &timingSense) {
+  //===---------------------------------------------------------------===//
+  //  Properties
+  //===---------------------------------------------------------------===//
+  vector<float> cfall = {}, crise = {},
+                tfall = {}, trise = {};
+  bool readyFlag = false;
+  capacitance = 0;
+  int newTimingSense = 0;
+
+  //===---------------------------------------------------------------===//
+  //  Delay and Slew estimation
+  //===---------------------------------------------------------------===//
+  const Cell *cell = lib.getCell(cellType);
+
+  for (const Pin &pin : (*cell).getPins()) {
+    capacitance += pin.getFloatAttribute("capacitance", 0);
+    for (const Timing &timing : pin.getTimings()) {
+      if (!readyFlag) {
+        context.interpolate = true;
+        pinTimingEstimator(timing,
+            inputNetTransition, totalOutputNetCapacitance);
+        readyFlag = true;
+      }
+      else {
+        if (!context.interpolate) {
+          pinFTimingEstimator(timing,
+              inputNetTransition, totalOutputNetCapacitance);
         }
         else {
-          std::cerr << "Error occured in NLDM::timingVisitor.\n";
-          std::cerr << "Filling values with zeros.\n";
-          cfall.push_back(0);
-          crise.push_back(0);
-          tfall.push_back(0);
-          trise.push_back(0);
+          pinITimingEstimator(timing,
+              inputNetTransition, totalOutputNetCapacitance);
         }
       }
+      cfall.push_back(context.delayValues[0]);
+      crise.push_back(context.delayValues[1]);
+      tfall.push_back(context.delayValues[2]);
+      trise.push_back(context.delayValues[3]);
+      newTimingSense = timing.getIntegerAttribute("timing_sense", 0);
     }
+  }
 
+  if (timingSense == 0) {
     delay = *max_element(crise.begin(), crise.end());
     for (size_t i = 0; i < crise.size(); ++i)
       if (crise[i] == delay) {
@@ -513,57 +467,15 @@ void NLDM::delayEstimation(string& cell_name,
         break;
       }
   }
-  else
-    std::cerr << "File wasn't found\n";
-}
-
-void NLDM::delayEstimation(string& cell_name,
-                           Library& lib,
-                           float& input_net_transition,
-                           float& total_output_net_capacitance)   {
-  //===---------------------------------------------------------------===//
-  //  Properties
-  //===---------------------------------------------------------------===//
-  vector<float> cfall = {}, crise = {}, tfall = {}, trise = {};
-  float checker[] = {0, 0 , 0, 0};
-  capacitance = 0;
-
-  //===---------------------------------------------------------------===//
-  //  Delay and Slew estimation
-  //===---------------------------------------------------------------===//
-  const Cell *cell = lib.getCell(cell_name);
-  
-  for (const Pin &pin : (*cell).getPins()) {
-    capacitance += pin.getFloatAttribute("capacitance", 0);
-    for (const Timing &timing : pin.getTimings()) {
-      vector<float> temp = timingVisitor(timing,
-          input_net_transition, total_output_net_capacitance);
-      for (size_t i = 0; i < 4; ++i) {
-        checker[i] = temp[i];
+  else {
+    delay = *max_element(cfall.begin(), cfall.end());
+    for (size_t i = 0; i < cfall.size(); ++i)
+      if (cfall[i] == delay) {
+        slew = (tfall[i] + trise[i])/2;
+        break;
       }
-      if (checker[0] > 0) {
-        cfall.push_back(checker[0]);
-        crise.push_back(checker[1]);
-        tfall.push_back(checker[2]);
-        trise.push_back(checker[3]);
-      }
-      else {
-        std::cerr << "Error occured in NLDM::timingVisitor.\n";
-        std::cerr << "Filling values with zeros.\n";
-        cfall.push_back(0);
-        crise.push_back(0);
-        tfall.push_back(0);
-        trise.push_back(0);
-      }
-    }
   }
-
-  delay = *max_element(crise.begin(), crise.end());
-  for (size_t i = 0; i < crise.size(); ++i)
-    if (crise[i] == delay) {
-      slew = (tfall[i] + trise[i])/2;
-      break;
-    }
+  timingSense = newTimingSense;
 }
 
 } // namespace eda::gate::techmapper

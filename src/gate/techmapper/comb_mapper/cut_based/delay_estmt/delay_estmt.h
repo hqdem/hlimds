@@ -16,6 +16,23 @@
 namespace eda::gate::techmapper {
 
 //===---------------------------------------------------------------------===//
+// Structures, which contain data from LookUp-Tables
+//===---------------------------------------------------------------------===//
+  /// Indexes from LUT
+  struct Ind {
+    size_t back1 = 0, front1 = 0,
+          back2 = 0, front2 = 0;
+    int ind1 = -1, ind2 = -1;
+  };
+  /// Struct contains timingInfo from LUTS
+  struct DataTiming {
+    std::vector<float> delayValues = {};
+    size_t variablesCount = 7;
+    bool interpolate = true;
+    Ind index;
+  };
+
+//===---------------------------------------------------------------------===//
 // NLDM
 //===---------------------------------------------------------------------===//
 
@@ -24,14 +41,10 @@ namespace eda::gate::techmapper {
  *  Basic class for delay estimation.
  */
 class NLDM {
-  friend float interpolation(float x0, float y0,
-                             float x1, float x2,
-                             float y1, float y2,
-                             float T11, float T12,
-                             float T21, float T22);
-
 public:
-  NLDM() : delay(0.0), slew(0.0), capacitance(0.0) {};
+  NLDM(Library &library) : lib(library), delay(0.0),
+           slew(0.0), capacitance(0.0),
+           timingSense(0) {};
   virtual ~NLDM() = default;
 
   /// Getters
@@ -47,61 +60,58 @@ public:
     return slew;
   };
 
-  float lutInterpolation(const LookupTable *lut, size_t variablesCount, 
-                         float& input_net_transition,
-                         float& total_output_net_capacitance,
-                         float& x1, float& x2, 
-                         float& y1, float& y2, 
-                         size_t& back1, size_t& front1, 
-                         size_t& back2, size_t& front2);
+  int getSense() {
+    return timingSense;
+  };
 
-  /*
-   *  timingVisitor gets value of 
-   *   concrete delay type from
-   *   Timing's LookUp-Tables.
-   */
-  float timingVisitor(const Timing &timing,
-                      std::string dtype,
-                      float& input_net_transition,
-                      float& total_output_net_capacitance);
+  float getLutValue(const std::vector<float>& lut_values,
+                    const float inputNetTransition,
+                    const float totalOutputNetCapacitance,
+                    const float x1, const float x2,
+                    const float y1, const float y2);
 
-  std::vector<float> timingVisitor(const Timing &timing,
-                                   float& input_net_transition,
-                                   float& total_output_net_capacitance);
+  float getLutValue(const LookupTable *lut,
+                    const float inputNetTransition,
+                    const float totalOutputNetCapacitance,
+                    const float x1, const float x2,
+                    const float y1, const float y2);
 
-  /*
-   *  delayEstimation calls Parser to look for
-   *  the concrete cell's timing values.
-   */
-  void delayEstimation(std::string& cell_name,
-                       std::string& file_name,
-                       float& input_net_transition,
-                       float& total_output_net_capacitance);
+  void pinTimingEstimator(const Timing &timing,
+                          const float inputNetTransition,
+                          const float totalOutputNetCapacitance);
+
+  void pinFTimingEstimator(const Timing &timing,
+                           const float inputNetTransition,
+                           const float totalOutputNetCapacitance);
+
+  void pinITimingEstimator(const Timing &timing,
+                           const float inputNetTransition,
+                           const float totalOutputNetCapacitance);
 
   /*
    *  delayEstimation uses Library to look for
    *  the concrete cell's timing values.
    */
-  void delayEstimation(std::string& cell_name,
-                       Library& lib,
-                       float& input_net_transition,
-                       float& total_output_net_capacitance);
+  void delayEstimation(const std::string &cellType,
+                       const float inputNetTransition,
+                       const float totalOutputNetCapacitance,
+                       int &timingSense);
 
 /// Properties
 private:
+  /// LookUp Table
+  Library& lib;
+  /// Data from LUT
+  DataTiming context;
   /// cell delay
   float delay;
   /// transition delay
   float slew;
   /// cell capacitance
   float capacitance;
+  /// Positive(0) or Negative(1) unate
+  int timingSense;
 };
-
-float interpolation(float x0, float y0,
-                    float x1, float x2,
-                    float y1, float y2,
-                    float T11, float T12,
-                    float T21, float T22);
 
 //===---------------------------------------------------------------------===//
 // WLM
@@ -159,7 +169,8 @@ private:
 //===---------------------------------------------------------------------===//
 class DelayEstimator{
 public:
-  DelayEstimator() = default;
+  DelayEstimator(Library &library) :
+        nldm(library) {};
   virtual ~DelayEstimator() = default;
 
   NLDM nldm;

@@ -13,12 +13,14 @@
 #include "gate/optimizer/depth_resynthesizer.h"
 #include "gate/optimizer/depth_subnet_iterator.h"
 #include "gate/optimizer/optimizer.h"
+#include "gate/optimizer/safe_passer.h"
 
 namespace eda::gate::optimizer {
 
 class DepthOptimizer final : public OptimizerBase {
 public:
 
+  using SafePasser = eda::gate::optimizer::SafePasser;
   using Subnet = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
@@ -33,10 +35,11 @@ public:
    */
   DepthOptimizer(SubnetBuilder &subnetBuilder,
                  size_t cutSize,
-                 size_t maxCones = -1) {
-    iterator = new DepthSubnetIterator(subnetBuilder, cutSize, maxCones);
+                 size_t maxCones = -1)
+      : iter(subnetBuilder.begin()) {
+    iterator = new DepthSubnetIterator(subnetBuilder, iter, cutSize, maxCones);
     resynthesizer = new DepthResynthesizer();
-    replacer = new DepthReplacer(subnetBuilder);
+    replacer = new DepthReplacer(subnetBuilder, iter);
   }
 
   ~DepthOptimizer() {
@@ -44,6 +47,9 @@ public:
     delete resynthesizer;
     delete replacer;
   }
+
+private:
+  SafePasser iter;
 };
 
 } // namespace eda::gate::optimizer

@@ -18,7 +18,7 @@ void DepthReplacer::replace(SubnetFragment lhs, SubnetID rhs) {
   assert(subnet.getInNum() == initialSubnet.getInNum()
          && "Incorrect number of PIs after resynthesis");
   for (int i = 0; i < subnet.getInNum(); ++i) {
-    map.insert(std::make_pair(i, lhs.entryMap[i]));
+    map.insert(std::make_pair(i, lhs.entryMap.at(i)));
   }
 
   /*
@@ -28,13 +28,12 @@ void DepthReplacer::replace(SubnetFragment lhs, SubnetID rhs) {
    */
   size_t outIndex = subnet.getEntries().size() - 1;
   // there's no out in the cone
-  size_t rootIndex = lhs.entryMap.size() - 1;
-  size_t originaRootIndex = lhs.entryMap[rootIndex];
-  map.insert(std::make_pair(outIndex, originaRootIndex));
+  size_t rootIndex = lhs.entryMap.at(initialSubnet.size() - 2);
+  map.insert(std::make_pair(outIndex, rootIndex));
   if (subnetBuilder.evaluateReplace(rhs, map).depth > 0) {
     assert(evaluate(initialSubnet) == evaluate(subnet)
            && "Subnet equality failed!");
-    subnetBuilder.replace(rhs, map);
+    iter.replace(rhs, map);
   }
 }
 

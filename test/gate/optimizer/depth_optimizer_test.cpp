@@ -25,13 +25,13 @@ using namespace eda::gate::model;
 
 using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
 using ParserData    = GraphMlParser::ParserData;
-using SatChecker    = eda::gate::debugger2::SatChecker;
+using SatChecker    = eda::gate::debugger::SatChecker;
 
 namespace eda::gate::optimizer {
 
 SubnetID parseGraphML(std::string fileName) {
   ParserData data;
-  return eda::gate::parser::graphml::parse(fileName, data);
+  return eda::gate::parser::graphml::parse(fileName, &data).make();
 }
 
 void checkEquivalence(std::string testName) {
@@ -46,7 +46,7 @@ void checkEquivalence(std::string testName) {
   DepthOptimizer rewritter(subnetBuilder, 15);
   rewritter.optimize();
 
-  const auto &newSubnetId = subnetBuilder.make();
+  const auto &newSubnetId = subnetBuilder.make(true);
   const auto &newSubnet = Subnet::get(newSubnetId);
   size_t depthAfter = newSubnet.getPathLength().second;
 
@@ -67,23 +67,23 @@ void checkEquivalence(std::string testName) {
 }
 
 TEST(DepthOptimizerTest, sasc_orig) {
-  checkEquivalence("sasc_orig");
+  checkEquivalence("sasc_orig.bench.graphml");
 }
 
 TEST(DepthOptimizerTest, simple_spi_orig) {
-  checkEquivalence("simple_spi_orig");
+  checkEquivalence("simple_spi_orig.bench.graphml");
 }
 
 TEST(DepthOptimizerTest, usb_phy_orig) {
-  checkEquivalence("usb_phy_orig");
+  checkEquivalence("usb_phy_orig.bench.graphml");
 }
 
 TEST(DepthOptimizerTest, ss_pcm_orig) {
-  checkEquivalence("ss_pcm_orig");
+  checkEquivalence("ss_pcm_orig.bench.graphml");
 }
 
 TEST(DepthOptimizerTest, i2c_orig) {
-  checkEquivalence("i2c_orig");
+  checkEquivalence("i2c_orig.bench.graphml");
 }
 
 } // namespace eda::gate::optimizer

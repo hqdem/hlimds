@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/optimizer/replacer.h"
+#include "gate/optimizer/safe_passer.h"
 
 namespace eda::gate::optimizer {
 
@@ -18,7 +19,7 @@ namespace eda::gate::optimizer {
 class DepthReplacer final : public ReplacerBase {
 public:
 
-  /// Alias for SubnetID.
+  using SafePasser = eda::gate::optimizer::SafePasser;
   using SubnetID = ReplacerBase::SubnetID;
 
   //===--------------------------------------------------------------------===//
@@ -29,11 +30,15 @@ public:
    * @brief Depth optimizer constructor for subnet builder.
    * @param subnetBuilder Subnet for replacing.
    */
-  DepthReplacer(SubnetBuilder &subnetBuilder) : ReplacerBase(subnetBuilder) {}
+  DepthReplacer(SubnetBuilder &subnetBuilder, SafePasser &iter) :
+      ReplacerBase(subnetBuilder), iter(iter) {}
 
   virtual void replace(SubnetFragment lhs, SubnetID rhs);
 
   virtual void finalize() {}
+
+private:
+  SafePasser &iter;
 };
 
 } // namespace eda::gate::optimizer

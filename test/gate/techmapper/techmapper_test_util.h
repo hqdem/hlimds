@@ -8,18 +8,22 @@
 
 #pragma once
 
-#include "gate/model2/subnet.h"
-#include "gate/model2/cell.h"
+#include "gate/model/cell.h"
+#include "gate/model/subnet.h"
 #include "gate/techmapper/techmapper.h"
+#include "util/env.h"
 
 #include <filesystem>
 #include <cassert>
+
+using path = std::filesystem::path;
 
 namespace eda::gate::techmapper {
 
 using SubnetID = eda::gate::model::SubnetID;
 
-const std::filesystem::path techLib = getHomePath() +
+const path home = eda::env::getHomePath();
+const std::filesystem::path techLib = home /
   "test/data/gate/techmapper" /
   "sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
 

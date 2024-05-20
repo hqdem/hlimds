@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/debugger2/sat_checker2.h"
-#include "gate/model2/printer/printer.h"
-#include "gate/model2/utils/subnet_random.h"
+#include "gate/debugger/sat_checker.h"
+#include "gate/model/printer/printer.h"
+#include "gate/model/utils/subnet_random.h"
 #include "gate/parser/graphml_parser.h"
 #include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/techmapper_test_util.h"
@@ -32,15 +32,15 @@ using SubnetID   = eda::gate::model::SubnetID;
 SDC sdc{100000000, 10000000000};
 
 SubnetID parseGraphML(std::string fileName) {
-  using path = std::filesystem::path;
-  const path home = getHomePath();
+
+  const path home = eda::env::getHomePath();
   const path dir = path("test") / "data" / "gate" / "parser"
                    / "graphml" / "OpenABC" / "graphml_openabcd";
   fileName += ".bench.graphml";
   const path file = home / dir / fileName;
   eda::gate::parser::graphml::GraphMlParser parser;
 
-  return parser.parse(file.string());
+  return parser.parse(file.string()).make();
 }
 
 SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
@@ -97,7 +97,7 @@ void checkEQ(SubnetID origSubnetId, SubnetID mappedSubnetId) {
     map[mappedSubnet.getEntries().size() - i] = origSubnet.getEntries().size() - i;
   }
 
-  debugger2::SatChecker2& checker = debugger2::SatChecker2::get();
+  debugger::SatChecker& checker = debugger::SatChecker::get();
 
   EXPECT_TRUE(checker.areEquivalent(origSubnetId, mappedSubnetId, map).equal());
 }
@@ -139,7 +139,7 @@ SubnetID simpleORMapping(Techmapper::MapperType mapperType) {
 }
 
 SubnetID graphMLMapping(Techmapper::MapperType mapperType,
-                        const std::string fileName) {
+                        const std::string &fileName) {
   SubnetID subnetId  = parseGraphML(fileName);
   SubnetID mappedSubnet = mapper(mapperType, subnetId);
 

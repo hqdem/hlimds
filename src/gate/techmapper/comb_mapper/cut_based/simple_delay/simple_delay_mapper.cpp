@@ -68,10 +68,8 @@ void SimpleDelayMapper::saveBest(
   BestReplacement bestSimpleReplacement{};
   float bestArrivalTime = MAXFLOAT;
 
-  DelayEstimator d1;
-  
-  /// Switching WLM for SYRCoSE
-  d1.wlm.setWireLoadModel("5k");
+  DelayEstimator d1(LibraryManager::get().getLibrary());
+  int timingSense = d1.nldm.getSense();
 
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
@@ -90,9 +88,9 @@ void SimpleDelayMapper::saveBest(
                           d1.nldm.getCellCap();
 
         d1.nldm.delayEstimation(currentAttr.name,
-                                LibraryManager::get().getLibrary(),
                                 inputNetTransition,
-                                fanoutCap);
+                                fanoutCap,
+                                timingSense);
 
         float arrivalTime = d1.nldm.getSlew();
 

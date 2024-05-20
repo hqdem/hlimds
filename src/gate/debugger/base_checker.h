@@ -105,10 +105,10 @@ public:
    * @param rhs Second net.
    * @param gmap Gate-to-gate mapping between corresponding PI/PO of two nets.
    */
-  static void miter2(SubnetBuilder &builder,
-                     const SubnetID lhs,
-                     const SubnetID rhs,
-                     const CellToCell &gmap);
+  static void makeMiter(SubnetBuilder &builder,
+                        const SubnetID lhs,
+                        const SubnetID rhs,
+                        const CellToCell &gmap);
   /**
    * \brief Checks if the given single-output net is satisfiable.
    * @param id The net.
@@ -127,11 +127,11 @@ public:
                                       const SubnetID rhs,
                                       const CellToCell &gmap) const final {
     SubnetBuilder builder;
-    miter2(builder, lhs, rhs, gmap);
+    makeMiter(builder, lhs, rhs, gmap);
     return isSat(builder.make());
   }
 
-  virtual ~BaseChecker() = 0;
+  virtual ~BaseChecker() {}
 };
 
 BaseChecker &getChecker(LecType lec);

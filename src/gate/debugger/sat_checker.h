@@ -16,12 +16,12 @@
 namespace eda::gate::debugger {
 
 class SatChecker final : public BaseChecker,
-                          public util::Singleton<SatChecker> {
+                         public util::Singleton<SatChecker> {
   friend class util::Singleton<SatChecker>;
 
 public:
-  CheckerResult isSat(const SubnetID id) const override {
-    const Subnet &miter = Subnet::get(id);
+  CheckerResult isSat(const SubnetID subnetID) const override {
+    const Subnet &miter = Subnet::get(subnetID);
     assert(miter.getOutNum() == 1);
 
     const auto &encoder = model::SubnetEncoder::get();
@@ -33,7 +33,7 @@ public:
 
     if (solver.solve()) {
       std::vector<bool> counterEx;
-      for (size_t i = 0; i < miter.getInNum(); i++) {
+      for (size_t i = 0; i < miter.getInNum(); ++i) {
         counterEx.push_back(solver.value(context.var(i, 0)));
       }
       return CheckerResult(CheckerResult::NOTEQUAL, counterEx);

@@ -35,7 +35,7 @@ TEST(MiterTest, Random) {
       map[i] = i;
     }
     SubnetBuilder builder;
-    BaseChecker::miter2(builder, id, id, map);
+    BaseChecker::makeMiter(builder, id, id, map);
     const Subnet &miter = Subnet::get(builder.make());
     uint16_t miterInNum = miter.getInNum();
     EXPECT_TRUE(miter.getOutNum() == 1);

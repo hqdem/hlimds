@@ -103,12 +103,12 @@ public:
    * @param builder Builder, in which a miter is constructed.
    * @param lhs First net.
    * @param rhs Second net.
-   * @param gmap Gate-to-gate mapping between corresponding PI/PO of two nets.
+   * @param mapping Gate-to-gate mapping between corresponding PI/PO of two nets.
    */
   static void makeMiter(SubnetBuilder &builder,
                         const SubnetID lhs,
                         const SubnetID rhs,
-                        const CellToCell &gmap);
+                        const CellToCell &mapping);
   /**
    * \brief Checks if the given single-output net is satisfiable.
    * @param id The net.

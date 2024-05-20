@@ -31,39 +31,44 @@ BaseChecker &getChecker(LecType lec) {
 }
 
 static void buildCells(
-    const Subnet &net, SubnetBuilder &builder, IdxToLink &map) {
-  for (size_t i = net.getInNum(); i < net.size(); i++) {
-    auto curCell = net.getEntries()[i].cell;
-    auto curSymbol = curCell.getSymbol();
+    const Subnet &subnet, SubnetBuilder &builder, IdxToLink &map) {
+  const auto entries = subnet.getEntries();
+  for (size_t i = subnet.getInNum(); i < subnet.size(); i++) {
+    const auto &cell = entries[i].cell;
+
     LinkList newLinks;
-    for (size_t j = 0; j < curCell.arity; ++j) {
-      Link curLink = net.getLink(i, j);
-      newLinks.push_back(Subnet::Link(map[curLink.idx].idx, curLink.inv));
+    for (size_t j = 0; j < cell.arity; ++j) {
+      Link oldLink = subnet.getLink(i, j);
+      Link newLink{map[oldLink.idx].idx, oldLink.inv != 0};
+      newLinks.push_back(newLink);
     }
-    if (curSymbol == CellSymbol::OUT) {
+
+    if (cell.isOut()) {
       map[i] = newLinks.front();
     } else {
-      map[i] = builder.addCell(curCell.getTypeID(), newLinks);
+      map[i] = builder.addCell(cell.getTypeID(), newLinks);
     }
-    i += curCell.more;
+
+    i += cell.more;
   }
 }
 
-bool areMiterable(const Subnet &net1, const Subnet &net2) {
-  auto net1InNum = net1.getInNum();
-  auto net2InNum = net2.getInNum();
+static bool areMiterable(const Subnet &subnet1, const Subnet &subnet2) {
+  const auto nIn1 = subnet1.getInNum();
+  const auto nIn2 = subnet2.getInNum();
 
-  if (net1InNum != net2InNum) {
+  if (nIn1 != nIn2) {
     CHECK(false) << "Different numbers of inputs: "
-                 << net1InNum << " != " << net2InNum << std::endl;
+                 << nIn1 << " != " << nIn2 << std::endl;
     return false;
   }
 
-  auto net1OutNum = net1.getOutNum();
-  auto net2OutNum = net2.getOutNum();
-  if (net1OutNum != net2OutNum) {
+  const auto nOut1 = subnet1.getOutNum();
+  const auto nOut2 = subnet2.getOutNum();
+
+  if (nOut1 != nOut2) {
     CHECK(false) << "Different numbers of outputs: "
-                 << net1OutNum << " != " << net2OutNum << std::endl;
+                 << nOut1 << " != " << nOut2 << std::endl;
     return false;
   }
 
@@ -71,31 +76,31 @@ bool areMiterable(const Subnet &net1, const Subnet &net2) {
 }
 
 void BaseChecker::makeMiter(SubnetBuilder &builder,
-                            const SubnetID lhs,
-                            const SubnetID rhs,
-                            const CellToCell &gmap) {
-  const Subnet &net1 = Subnet::get(lhs);
-  const Subnet &net2 = Subnet::get(rhs);
+                            const SubnetID subnetID1,
+                            const SubnetID subnetID2,
+                            const CellToCell &mapping) {
+  const Subnet &subnet1 = Subnet::get(subnetID1);
+  const Subnet &subnet2 = Subnet::get(subnetID2);
 
-  if (not areMiterable(net1, net2)) {
+  if (!areMiterable(subnet1, subnet2)) {
     return;
   }
 
   IdxToLink map1, map2;
 
-  for (size_t i = 0; i < net1.getInNum(); ++i) {
+  for (size_t i = 0; i < subnet1.getInNum(); ++i) {
     const auto idx1 = i;
-    const auto idx2 = gmap.find(idx1)->second;
+    const auto idx2 = mapping.find(idx1)->second;
     map1[idx1] = map2[idx2] = builder.addInput();
   }
 
-  buildCells(net1, builder, map1);
-  buildCells(net2, builder, map2);
+  buildCells(subnet1, builder, map1);
+  buildCells(subnet2, builder, map2);
 
-  LinkList xors(net1.getOutNum());
-  for (size_t i = 0; i < net1.getOutNum(); ++i) {
-    const auto idx1 = net1.size() + i - net1.getOutNum();
-    const auto idx2 = gmap.find(idx1)->second;
+  LinkList xors(subnet1.getOutNum());
+  for (size_t i = 0; i < subnet1.getOutNum(); ++i) {
+    const auto idx1 = subnet1.size() + i - subnet1.getOutNum();
+    const auto idx2 = mapping.find(idx1)->second;
     xors[i] = builder.addCell(CellSymbol::XOR, map1[idx1], map2[idx2]);
   }
 

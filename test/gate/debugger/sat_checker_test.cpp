@@ -58,7 +58,6 @@ SubnetID genOneCellMappedSubnet(CellTypeID cellTypeID) {
   return mappedSubnetBuilder.make();
 }
 
-
 TEST(SATTest, CustomFourInSingleCellTest) {
   SubnetBuilder equalSubnetBuilder;
   LinkList links;
@@ -79,8 +78,67 @@ TEST(SATTest, CustomFourInSingleCellTest) {
   map[3] = 3;
   map[7] = 5;
 
-  debugger::SatChecker& checker = debugger::SatChecker::get();
+  debugger::SatChecker &checker = debugger::SatChecker::get();
   EXPECT_TRUE(checker.areEquivalent(equalSubnetBuilder.make(),
     genOneCellMappedSubnet(customFourInANDCellType()), map).equal());
   }
+
+/*
+  subnet1                   subnet2
+ 0   1  2   3   4   5       0  1   2 3   4  5
+  \ /  /   /   /   /         \  \  | |   / / 
+   6  /   /   /   /           \  \ | |  / /
+    \/   /   /   /              \ \| |/ /
+     7  /   /   /                   6
+      \/   /   /                    |
+       8  /   /                    (7)
+        \/   /
+         9  /
+          \/
+          10
+           |
+          (11)
+*/
+TEST(SATTest, CellWithMoreThan5Inputs) {
+  SubnetBuilder subnetBuilder1, subnetBuilder2;
+  LinkList links1, links2;
+
+  const size_t n = 6;
+  for (size_t i = 0; i < n; ++i) {
+    links1.emplace_back(subnetBuilder1.addInput());
+    links2.emplace_back(subnetBuilder2.addInput());
+  }
+
+  links1.emplace_back(subnetBuilder1.addCell(AND, links1[0], links1[1]));
+  links1.emplace_back(subnetBuilder1.addCell(AND, links1[2], links1[6]));
+  links1.emplace_back(subnetBuilder1.addCell(AND, links1[3], links1[7]));
+  links1.emplace_back(subnetBuilder1.addCell(AND, links1[4], links1[8]));
+  links1.emplace_back(subnetBuilder1.addCell(AND, links1[5], links1[9]));
+  subnetBuilder1.addOutput(links1[10]);
+
+  auto subnet2Idx1 = subnetBuilder2.addCell(AND, links2);
+  subnetBuilder2.addOutput(subnet2Idx1);
+
+  std::unordered_map<size_t, size_t> map;
+
+  const auto subnetID1 = subnetBuilder1.make();
+  const auto subnetID2 = subnetBuilder2.make();
+
+  const auto &subnet1 = Subnet::get(subnetID1);
+  const auto &subnet2 = Subnet::get(subnetID2); 
+
+  for (size_t i = 0; i < n; ++i) {
+    map[i] = i;
+  }
+  map[subnet1.size() - 1] = subnet2.size() - 1;
+
+#ifdef UTOPIA_DEBUG
+  std::cout << subnet1 << std::endl;
+  std::cout << subnet2 << std::endl;
+#endif // UTOPIA_DEBUG
+
+  debugger::SatChecker &checker = debugger::SatChecker::get();
+  EXPECT_TRUE(checker.areEquivalent(subnetID1, subnetID2, map).equal());
+}
+
 } // namespace eda::gate::debugger

@@ -129,6 +129,8 @@ DepthSubnetIterator::SubnetFragment
 }
 
 DepthSubnetIterator::SubnetFragment DepthSubnetIterator::next() {
+  ++start;
+
   const auto &entry = subnetBuilder.getEntry(*start);
   auto cell = entry.cell;
 
@@ -137,22 +139,10 @@ DepthSubnetIterator::SubnetFragment DepthSubnetIterator::next() {
 
   if ((maxCones == 0) || (cell.isOut())) {
     start = subnetBuilder.begin();
-    inGate = true;
     return nullId;
   }
 
-  if (inGate) {
-    while (cell.isIn()) {
-      ++start;
-      cell = subnetBuilder.getEntry(*start).cell;
-    }
-    inGate = false;
-  }
-
-  assert(!cell.isIn() && "Try to build cone from PI!");
-
   auto subsubnet = getCut(subnetBuilder, *start, cutSize);
-  ++start;
   --maxCones;
   return subsubnet;
 }

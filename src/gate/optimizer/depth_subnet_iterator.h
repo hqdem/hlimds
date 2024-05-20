@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/subnet_iterator.h"
 
 namespace eda::gate::optimizer {
@@ -17,6 +18,7 @@ namespace eda::gate::optimizer {
  */
 class DepthSubnetIterator final : public SubnetIteratorBase {
 
+  using SafePasser = eda::gate::optimizer::SafePasser;
   using LinkList = model::Subnet::LinkList;
   using EntryMap = std::unordered_map<size_t, size_t>;
   using Link = model::Subnet::Link;
@@ -33,10 +35,11 @@ public:
    * @param maxCones Max number of cone constructions.
    */
   DepthSubnetIterator(const SubnetBuilder &subnetBuilder,
+                      SafePasser &iter,
                       size_t cutSize,
                       size_t maxCones) :
     SubnetIteratorBase(subnetBuilder),
-    start(subnetBuilder.begin()),
+    start(iter),
     cutSize(cutSize),
     maxCones(maxCones) {}
 
@@ -71,8 +74,7 @@ private:
                              size_t root);
 
 
-  model::EntryIterator start;
-  bool inGate = true;
+  SafePasser &start;
   size_t cutSize;
   size_t maxCones;
 };

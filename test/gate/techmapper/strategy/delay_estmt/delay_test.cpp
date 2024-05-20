@@ -14,6 +14,7 @@
 #include <readcells/token_parser.h>
 
 #include "gtest/gtest.h"
+#include "util/env.h"
 
 #include <filesystem>
 #include <iostream>
@@ -25,7 +26,7 @@ using path = std::filesystem::path;
 TEST(DelayEstmt, firstTest) {
   std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
   
-  const path homePath = getHomePath();
+  const path homePath = eda::env::getHomePath();
   const path filePath = homePath / file_name;
 
   TokenParser tokParser;

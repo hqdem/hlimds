@@ -14,19 +14,13 @@
 
 namespace eda::gate::techmapper {
 
-struct BestReplacementArea{
-  double area;
-  std::vector<EntryIndex> incomingEntries;
-};
-
 class SimpleAreaMapper : public CutBaseMapper {
 protected:
   void findBest() override;
 
 private:
-  std::unordered_map<EntryIndex, BestReplacementArea> areaVec;
-
-  float calculateArea(const std::unordered_set<uint64_t> &entryIdxs, EntryIndex currnetEntry);
+  float dynamicCalculateArea(EntryIndex entryIndex,
+                             const std::unordered_set<uint64_t> &entryIdxs);
   void saveBest(EntryIndex entryIndex,
                 const optimizer::CutExtractor::CutsList &cutsList);
 };

@@ -19,7 +19,7 @@ using namespace eda::gate::techmapper;
 using namespace eda::gate::model;
 
 const std::filesystem::path techLibPath =
-    getHomePath() / "test/data/gate/techmapper";
+    eda::env::getHomePath() / "test/data/gate/techmapper";
 
 bool checkLibParser(std::string libertyPath) {
   LibraryManager::get().loadLibrary(libertyPath);

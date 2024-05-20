@@ -26,7 +26,10 @@ namespace eda::gate::optimizer::synthesis {
   using SubnetID = model::SubnetID;
 
   std::string generateRandom(const uint64_t size) {
-    std::mt19937 engine;
+
+    // set seed to make results reproducible
+    std::mt19937 engine(0);
+
     std::random_device device;
     engine.seed(device());
     std::string s;

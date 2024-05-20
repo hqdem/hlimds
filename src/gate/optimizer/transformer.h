@@ -16,23 +16,25 @@
 
 namespace eda::gate::optimizer {
 
-/// @brief Interface for subnet-to-subnet transformers.
-class SubnetTransformer {
-public:
-  using SubnetID = eda::gate::model::SubnetID;
-  using SubnetBuilder = eda::gate::model::SubnetBuilder;
+//===----------------------------------------------------------------------===//
+// Base templates
+//===----------------------------------------------------------------------===//
 
-  SubnetTransformer(const std::string &name): name(name) {}
-  virtual ~SubnetTransformer() {}
+/// @brief Interface for component-to-component transformers.
+template <typename ID, typename Builder>
+class Transformer {
+public:
+  Transformer(const std::string &name): name(name) {}
+  virtual ~Transformer() {}
 
   const std::string &getName() const { return name; }
 
-  /// Transforms the given subnet and stores the result in the builder.
-  virtual std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) const = 0;
+  /// Transforms the given component and stores the result in the builder.
+  virtual std::unique_ptr<Builder> make(const ID componentID) const = 0;
 
-  /// Transforms the given subnet and returns the result of the transformation.
-  SubnetID transform(const SubnetID subnetID) const {
-    auto builder = make(subnetID);
+  /// Transforms the given component and returns the result of the transformation.
+  ID transform(const ID componentID) const {
+    auto builder = make(componentID);
     return builder->make();
   }
 
@@ -40,31 +42,34 @@ private:
   const std::string name;
 };
 
-/// @brief Interface for in-place subnet transformers.
-class SubnetInPlaceTransformer : public SubnetTransformer {
+/// @brief Interface for in-place component transformers.
+template <typename ID, typename Builder>
+class InPlaceTransformer : public Transformer<ID, Builder> {
 public:
-  SubnetInPlaceTransformer(const std::string &name): SubnetTransformer(name) {}
-  virtual ~SubnetInPlaceTransformer() {}
+  InPlaceTransformer(const std::string &name):
+      Transformer<ID, Builder>(name) {}
+  virtual ~InPlaceTransformer() {}
 
-  /// Transforms the subnet stored in the builder (in-place).
-  virtual void transform(SubnetBuilder &builder) const = 0;
+  /// Transforms the component stored in the builder (in-place).
+  virtual void transform(Builder &builder) const = 0;
 
   /// Default implementation of the base method.
-  std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) const override {
-    auto builder = std::make_unique<SubnetBuilder>(subnetID);
+  std::unique_ptr<Builder> make(const ID componentID) const override {
+    auto builder = std::make_unique<Builder>(componentID);
     transform(*builder);
     return builder;
   }
 };
 
-/// @brief Composite in-place subnet transformer.
-class SubnetInPlaceTransformerChain final : public SubnetInPlaceTransformer {
+/// @brief Composite in-place component transformer.
+template <typename ID, typename Builder>
+class InPlaceTransformerChain final : public InPlaceTransformer<ID, Builder> {
 public:
-  using Chain = std::vector<std::shared_ptr<SubnetInPlaceTransformer>>;
+  using Chain = std::vector<std::shared_ptr<InPlaceTransformer<ID, Builder>>>;
 
-  SubnetInPlaceTransformerChain(const std::string &name, const Chain &chain):
-      SubnetInPlaceTransformer(name), chain(chain) {}
-  virtual ~SubnetInPlaceTransformerChain() {}
+  InPlaceTransformerChain(const std::string &name, const Chain &chain):
+      InPlaceTransformer<ID, Builder>(name), chain(chain) {}
+  virtual ~InPlaceTransformerChain() {}
 
   const Chain &getChain() const { return chain; }
 
@@ -79,7 +84,7 @@ public:
     return ss.str();
   }
 
-  void transform(SubnetBuilder &builder) const override {
+  void transform(Builder &builder) const override {
     for (const auto &pass : chain) {
       pass->transform(builder);
     }
@@ -88,5 +93,18 @@ public:
 private:
   const Chain chain;
 };
+
+//===----------------------------------------------------------------------===//
+// Subnet transformers
+//===----------------------------------------------------------------------===//
+
+using SubnetTransformer =
+    Transformer<model::SubnetID, model::SubnetBuilder>;
+
+using SubnetInPlaceTransformer =
+    InPlaceTransformer<model::SubnetID, model::SubnetBuilder>;
+
+using SubnetInPlaceTransformerChain =
+    InPlaceTransformerChain<model::SubnetID, model::SubnetBuilder>;
 
 } // namespace eda::gate::optimizer

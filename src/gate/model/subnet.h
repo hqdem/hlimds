@@ -400,14 +400,18 @@ public:
   }
 
   SubnetBuilder(
-      SubnetID subnetID,
+      const Subnet &subnet,
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder() {
-    const auto &subnet = Subnet::get(subnetID);
     const auto inputs = addInputs(subnet.getInNum());
-    const auto outputs = addSubnet(subnetID, inputs, weightProvider);
+    const auto outputs = addSubnet(subnet, inputs, weightProvider);
     addOutputs(outputs);
   }
+
+  SubnetBuilder(
+      SubnetID subnetID,
+      const CellWeightProvider *weightProvider = nullptr):
+      SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
 
   /// Returns the constant reference to the i-th entry.
   const Subnet::Entry &getEntry(size_t i) const {
@@ -541,12 +545,21 @@ public:
   /// Adds the subnet and connects it via the specified links.
   /// Does not add the output cells (it should be done explicitly).
   /// Returns the output links.
-  LinkList addSubnet(SubnetID subnetID, const LinkList &links,
+  LinkList addSubnet(const Subnet &subnet, const LinkList &links,
                      const CellWeightProvider *weightProvider = nullptr);
+
+  LinkList addSubnet(SubnetID subnetID, const LinkList &links,
+                     const CellWeightProvider *weightProvider = nullptr) {
+    return addSubnet(Subnet::get(subnetID), links, weightProvider);
+  }
 
   /// Adds the single-output subnet and connects it via the specified links.
   /// Returns the output link.
-  Link addSingleOutputSubnet(SubnetID subnetID, const LinkList &links);
+  Link addSingleOutputSubnet(const Subnet &subnet, const LinkList &links);
+
+  Link addSingleOutputSubnet(SubnetID subnetID, const LinkList &links) {
+    return addSingleOutputSubnet(Subnet::get(subnetID), links);
+  }
 
   /// Replaces the given single-output fragment w/ the given subnet (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.

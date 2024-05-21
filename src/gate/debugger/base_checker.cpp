@@ -12,6 +12,8 @@
 #include "gate/debugger/rnd_checker.h"
 #include "gate/debugger/sat_checker.h"
 
+#include <cassert>
+
 namespace eda::gate::debugger {
 
 using IdxToLink = std::unordered_map<size_t, model::Subnet::Link>;
@@ -20,18 +22,20 @@ using Link = model::Subnet::Link;
 using LinkList = model::Subnet::LinkList;
 using CellSymbol = model::CellSymbol;
 
-BaseChecker &getChecker(LecType lec) {
+BaseChecker &BaseChecker::getChecker(const LecType lec) {
   switch (lec) {
-    case LecType::BDD: return BddChecker::get();
+    case LecType::BDD:   return BddChecker::get();
     case LecType::FRAIG: return FraigChecker::get();
-    case LecType::RND: return RndChecker::get();
-    case LecType::SAT: return SatChecker::get();
-    default: return SatChecker::get();
+    case LecType::RND:   return RndChecker::get();
+    case LecType::SAT:   return SatChecker::get();
+    default: assert(false && "Unsupported LEC checker");
   }
+  return SatChecker::get();
 }
 
-static void buildCells(
-    const Subnet &subnet, SubnetBuilder &builder, IdxToLink &map) {
+static void buildCells(const model::Subnet &subnet,
+                       model::SubnetBuilder &builder,
+                       IdxToLink &map) {
   const auto entries = subnet.getEntries();
   for (size_t i = subnet.getInNum(); i < subnet.size(); i++) {
     const auto &cell = entries[i].cell;
@@ -53,42 +57,38 @@ static void buildCells(
   }
 }
 
-static bool areMiterable(const Subnet &subnet1, const Subnet &subnet2) {
-  const auto nIn1 = subnet1.getInNum();
-  const auto nIn2 = subnet2.getInNum();
+static void makeDefaultMapping(const model::Subnet &subnet1,
+                               const model::Subnet &subnet2,
+                               BaseChecker::CellToCell &mapping) {
+  const auto nIn = subnet1.getInNum();
+  const auto nOut = subnet1.getOutNum();
 
-  if (nIn1 != nIn2) {
-    CHECK(false) << "Different numbers of inputs: "
-                 << nIn1 << " != " << nIn2 << std::endl;
-    return false;
+  assert(subnet2.getInNum() == nIn);
+  assert(subnet2.getOutNum() == nOut);
+
+  for (size_t i = 0; i < nIn; ++i) {
+    mapping[i] = i;
   }
 
-  const auto nOut1 = subnet1.getOutNum();
-  const auto nOut2 = subnet2.getOutNum();
-
-  if (nOut1 != nOut2) {
-    CHECK(false) << "Different numbers of outputs: "
-                 << nOut1 << " != " << nOut2 << std::endl;
-    return false;
+  const auto size1 = subnet1.size();
+  const auto size2 = subnet2.size();
+  for (size_t i = 0; i < nOut; ++i) {
+    mapping[size1 + i - nOut] = size2 + i - nOut;
   }
-
-  return true;
 }
 
-void BaseChecker::makeMiter(SubnetBuilder &builder,
-                            const SubnetID subnetID1,
-                            const SubnetID subnetID2,
+void BaseChecker::makeMiter(model::SubnetBuilder &builder,
+                            const model::Subnet &subnet1,
+                            const model::Subnet &subnet2,
                             const CellToCell &mapping) {
-  const Subnet &subnet1 = Subnet::get(subnetID1);
-  const Subnet &subnet2 = Subnet::get(subnetID2);
+  const auto nIn = subnet1.getInNum();
+  const auto nOut = subnet1.getOutNum();
 
-  if (!areMiterable(subnet1, subnet2)) {
-    return;
-  }
+  assert(subnet2.getInNum() == nIn);
+  assert(subnet2.getOutNum() == nOut);
 
   IdxToLink map1, map2;
-
-  for (size_t i = 0; i < subnet1.getInNum(); ++i) {
+  for (size_t i = 0; i < nIn; ++i) {
     const auto idx1 = i;
     const auto idx2 = mapping.find(idx1)->second;
     map1[idx1] = map2[idx2] = builder.addInput();
@@ -98,8 +98,8 @@ void BaseChecker::makeMiter(SubnetBuilder &builder,
   buildCells(subnet2, builder, map2);
 
   LinkList xors(subnet1.getOutNum());
-  for (size_t i = 0; i < subnet1.getOutNum(); ++i) {
-    const auto idx1 = subnet1.size() + i - subnet1.getOutNum();
+  for (size_t i = 0; i < nOut; ++i) {
+    const auto idx1 = subnet1.size() + i - nOut;
     const auto idx2 = mapping.find(idx1)->second;
     xors[i] = builder.addCell(CellSymbol::XOR, map1[idx1], map2[idx2]);
   }
@@ -109,6 +109,29 @@ void BaseChecker::makeMiter(SubnetBuilder &builder,
   } else {
     builder.addOutput(builder.addCellTree(CellSymbol::OR, xors, 2));
   }
+}
+
+void BaseChecker::makeMiter(model::SubnetBuilder &builder,
+                            const model::Subnet &subnet1,
+                            const model::Subnet &subnet2) {
+  CellToCell mapping;
+  makeDefaultMapping(subnet1, subnet2, mapping);
+  makeMiter(builder, subnet1, subnet2, mapping);
+}
+
+CheckerResult BaseChecker::areEquivalent(const model::Subnet &subnet1,
+                                         const model::Subnet &subnet2,
+                                         const CellToCell &mapping) const {
+  model::SubnetBuilder builder;
+  makeMiter(builder, subnet1, subnet2, mapping);
+  return isSat(builder.make());
+}
+
+CheckerResult BaseChecker::areEquivalent(const model::Subnet &subnet1,
+                                         const model::Subnet &subnet2) const {
+  CellToCell mapping;
+  makeDefaultMapping(subnet1, subnet2, mapping);
+  return areEquivalent(subnet1, subnet2, mapping);
 }
 
 } // namespace eda::gate::debugger

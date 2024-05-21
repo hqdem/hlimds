@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/debugger/base_checker.h"
 #include "gate/debugger/bdd_checker.h"
 #include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/rnd_checker.h"
@@ -21,19 +22,21 @@ void lecTest(const SubnetID id) {
   using options::BDD;
   using options::FRAIG;
   using options::RND;
-  CellToCell map;
-  const Subnet &subnet = Subnet::get(id);
+
+  BaseChecker::CellToCell map;
+  const auto &subnet = model::Subnet::get(id);
   for (size_t i = 0; i < subnet.getEntries().size(); ++i) {
     map[i] = i;
   }
-  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(false);
-  static_cast<RndChecker&>(getChecker(RND)).setTries(100);
-  EXPECT_TRUE(getChecker(RND).areEquivalent(id, id, map).isUnknown());
 
-  static_cast<RndChecker&>(getChecker(RND)).setExhaustive(true);
-  EXPECT_TRUE(getChecker(RND).areEquivalent(id, id, map).equal());
-  EXPECT_TRUE(getChecker(BDD).areEquivalent(id, id, map).equal());
-  EXPECT_TRUE(getChecker(FRAIG).areEquivalent(id, id, map).equal());
+  static_cast<RndChecker&>(BaseChecker::getChecker(RND)).setExhaustive(false);
+  static_cast<RndChecker&>(BaseChecker::getChecker(RND)).setTries(100);
+  EXPECT_TRUE(BaseChecker::getChecker(RND).areEquivalent(id, id, map).isUnknown());
+
+  static_cast<RndChecker&>(BaseChecker::getChecker(RND)).setExhaustive(true);
+  EXPECT_TRUE(BaseChecker::getChecker(RND).areEquivalent(id, id, map).equal());
+  EXPECT_TRUE(BaseChecker::getChecker(BDD).areEquivalent(id, id, map).equal());
+  EXPECT_TRUE(BaseChecker::getChecker(FRAIG).areEquivalent(id, id, map).equal());
 }
 
 TEST(LecTest, MatrixGenerator) {

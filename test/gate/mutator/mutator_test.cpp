@@ -30,7 +30,7 @@ namespace eda::gate::mutator {
   using CellIdMap = std::unordered_map<size_t, size_t>;
   using CellType = eda::gate::model::CellType;
   using CellSymbol = eda::gate::model::CellSymbol;
-  using eda::gate::debugger::getChecker;
+  using eda::gate::debugger::BaseChecker;
   using eda::gate::debugger::options::BDD;
   using eda::gate::debugger::options::FRAIG;
   using eda::gate::debugger::options::RND;
@@ -89,13 +89,13 @@ namespace eda::gate::mutator {
                                                 listCells, 
                                                 functions);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
-                                       getChecker(FRAIG)));
+                                       BaseChecker::getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(RND)));
+                                       BaseChecker::getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT)));      
+                                       BaseChecker::getChecker(SAT)));      
   }
 
   TEST(Mutator, andOr2) {
@@ -108,13 +108,13 @@ namespace eda::gate::mutator {
                                                 listCells, 
                                                 functions);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
-                                       getChecker(FRAIG)));
+                                       BaseChecker::getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(RND)));
+                                       BaseChecker::getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT)));  
+                                       BaseChecker::getChecker(SAT)));  
   }
 
   TEST(Mutator, numAndOr2) {
@@ -123,19 +123,19 @@ namespace eda::gate::mutator {
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
     SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
-                                                counter,
-                                                net, 
-                                                net.size(), 
-                                                functions);
+                                               counter,
+                                               net, 
+                                               net.size(), 
+                                               functions);
     EXPECT_EQ(counter, 1);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
-                                       getChecker(FRAIG)));
+                                       BaseChecker::getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(RND)));
+                                       BaseChecker::getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT))); 
+                                       BaseChecker::getChecker(SAT))); 
   }
 
   TEST(Mutator, graphSs) {
@@ -144,17 +144,17 @@ namespace eda::gate::mutator {
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
     SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
-                                                counter,
-                                                net, 
-                                                60, 
-                                                functions);
+                                               counter,
+                                               net, 
+                                               60, 
+                                               functions);
     EXPECT_EQ(counter, 60);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
-                                       getChecker(FRAIG)));
+                                       BaseChecker::getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT)));
+                                       BaseChecker::getChecker(SAT)));
   }
 
   TEST(Mutator, graphSasc) {
@@ -166,11 +166,11 @@ namespace eda::gate::mutator {
                                                 5, 
                                                 functions);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
-                                       getChecker(FRAIG)));
+                                       BaseChecker::getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT)));
+                                       BaseChecker::getChecker(SAT)));
   }
   
   TEST(Mutator, graphI2c) {
@@ -182,9 +182,9 @@ namespace eda::gate::mutator {
                                                 15, 
                                                 functions);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT)));
+                                       BaseChecker::getChecker(SAT)));
   }
 
   TEST(Mutator, cutAndOr2) {
@@ -193,18 +193,18 @@ namespace eda::gate::mutator {
     CellIDList listCells = {6};
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
     SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CUT,
-                                                net, 
-                                                listCells, 
-                                                functions,
-                                                2);
+                                               net, 
+                                               listCells, 
+                                               functions,
+                                               2);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
-                                       getChecker(FRAIG)));
+                                       BaseChecker::getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(RND)));
+                                       BaseChecker::getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT)));        
+                                       BaseChecker::getChecker(SAT)));        
   }
 
   TEST(Mutator, cutNumAndOr2) {
@@ -212,18 +212,18 @@ namespace eda::gate::mutator {
     auto &net = Subnet::get(subnetID);
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
     SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CUT,
-                                                net, 
-                                                2, 
-                                                functions,
-                                                2);
+                                               net, 
+                                               2, 
+                                               functions,
+                                               2);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
-                                       getChecker(FRAIG)));
+                                       BaseChecker::getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(RND)));
+                                       BaseChecker::getChecker(RND)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT))); 
+                                       BaseChecker::getChecker(SAT))); 
   }
 
   TEST(Mutator, cutGraphI2c) {
@@ -237,9 +237,9 @@ namespace eda::gate::mutator {
                                                 functions,
                                                 3);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT)));
+                                       BaseChecker::getChecker(SAT)));
   }
 
   TEST(Mutator, cutGraphUsb) {
@@ -248,17 +248,17 @@ namespace eda::gate::mutator {
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND};
     SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CUT,
-                                                counter,
-                                                net, 
-                                                2, 
-                                                functions,
-                                                2);
+                                               counter,
+                                               net, 
+                                               2, 
+                                               functions,
+                                               2);
     EXPECT_EQ(counter, 4);
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(BDD)));
+                                       BaseChecker::getChecker(BDD)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID,
-                                       getChecker(FRAIG)));
+                                       BaseChecker::getChecker(FRAIG)));
     EXPECT_TRUE(usingCheckerForMutator(subnetID, mutatedSubnetID, 
-                                       getChecker(SAT)));
+                                       BaseChecker::getChecker(SAT)));
   }
 } // namespace eda::gate::mutator

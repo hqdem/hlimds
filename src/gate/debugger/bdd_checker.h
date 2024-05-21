@@ -17,14 +17,13 @@ using CellBddMap = model::utils::CellBDDMap;
 using SubnetToBdd = model::utils::SubnetToBdd;
 
 /// Checks the equivalence of the specified nets using BDD construction.
-class BddChecker : public BaseChecker, public util::Singleton<BddChecker> {
-friend class util::Singleton<BddChecker>;
+class BddChecker final : public BaseChecker,
+                         public util::Singleton<BddChecker> {
+  friend class util::Singleton<BddChecker>;
 
 public:
-  /**
-   * @copydoc BaseChecker::isSat
-   */
-  CheckerResult isSat(const SubnetID id) const override;
+  /// @copydoc BaseChecker::isSat
+  CheckerResult isSat(const model::Subnet &subnet) const override;
 
 private:
   BddChecker() {}

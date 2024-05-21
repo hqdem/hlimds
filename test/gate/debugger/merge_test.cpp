@@ -14,7 +14,7 @@
 
 namespace eda::gate::debugger {
 
-std::vector<int> getIdx(const Subnet &subnet) {
+std::vector<int> getIdx(const model::Subnet &subnet) {
   std::vector<int> idxs;
   size_t i = 0;
   auto entr = subnet.getEntries();
@@ -25,9 +25,9 @@ std::vector<int> getIdx(const Subnet &subnet) {
   return idxs;
 }
 
-bool compareSubnets(const Subnet &sub1, const Subnet &sub2,
+bool compareSubnets(const model::Subnet &sub1, const model::Subnet &sub2,
                     std::unordered_map<size_t, std::vector<size_t>> &classes) {
-  CellToCell maps;
+  BaseChecker::CellToCell maps;
   for (const auto &eq : classes) {
     for (const auto &id : eq.second) {
       maps[id] = eq.first;
@@ -56,44 +56,42 @@ bool compareSubnets(const Subnet &sub1, const Subnet &sub2,
 }
 
 TEST(MergeSpeculativeTest, custom1) {
-  Subnet &subnet = Subnet::get(model::makeSubnetAndOrXor());
+  const auto &subnet = model::Subnet::get(model::makeSubnetAndOrXor());
   std::unordered_map<size_t, std::vector<size_t>> classes = {{2, {3, 4}}};
-  const Subnet &mergedSubnet = merge(subnet, classes, true);
+  const auto &mergedSubnet = merge(subnet, classes, true);
   EXPECT_TRUE(compareSubnets(subnet, mergedSubnet, classes));
 }
 
 TEST(MergeSpeculativeTest, custom2) {
-  Subnet &subnet = Subnet::get(model::makeSubnet4AndOr());
+  const auto &subnet = model::Subnet::get(model::makeSubnet4AndOr());
   std::unordered_map<size_t, std::vector<size_t>> classes = {{2, {3}},
                                                              {6, {4, 5}}};
-  const Subnet &mergedSubnet = merge(subnet, classes, true);
+  const auto &mergedSubnet = merge(subnet, classes, true);
 
   EXPECT_TRUE(compareSubnets(subnet, mergedSubnet, classes));
 }
 
 TEST(MergeConstantTest, custom1) {
-  Subnet &subnet = Subnet::get(model::makeSubnet2Latches());
+  const auto &subnet = model::Subnet::get(model::makeSubnet2Latches());
   std::vector<size_t> classes = {3, 5};
-  const Subnet &mergedSubnet = merge(subnet, CellSymbol::ZERO, classes);
+  const auto &mergedSubnet = merge(subnet, model::ZERO, classes);
 
   EXPECT_TRUE(mergedSubnet.size() == 6);
   EXPECT_TRUE(mergedSubnet.getInNum() == 2);
   EXPECT_TRUE(mergedSubnet.getOutNum() == 3);
   EXPECT_TRUE(mergedSubnet.getEntries()[1].cell.isFlipFlop());
-  EXPECT_TRUE(mergedSubnet.getEntries()[2].cell.getSymbol() ==
-              CellSymbol::ZERO);
+  EXPECT_TRUE(mergedSubnet.getEntries()[2].cell.getSymbol() == model::ZERO);
 }
 
 TEST(MergeConstantTest, custom2) {
-  Subnet &subnet = Subnet::get(model::makeSubnetLatch());
+  const auto &subnet = model::Subnet::get(model::makeSubnetLatch());
   std::vector<size_t> classes = {2, 6};
-  const Subnet &mergedSubnet = merge(subnet, CellSymbol::ZERO, classes);
+  const auto &mergedSubnet = merge(subnet, model::ZERO, classes);
 
   EXPECT_TRUE(mergedSubnet.size() == 2);
   EXPECT_TRUE(mergedSubnet.getInNum() == 0);
   EXPECT_TRUE(mergedSubnet.getOutNum() == 1);
-  EXPECT_TRUE(mergedSubnet.getEntries()[0].cell.getSymbol() ==
-              CellSymbol::ZERO);
+  EXPECT_TRUE(mergedSubnet.getEntries()[0].cell.getSymbol() == model::ZERO);
 }
 
 } // namespace eda::gate::debugger

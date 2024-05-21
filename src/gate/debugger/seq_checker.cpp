@@ -14,13 +14,10 @@
 
 namespace eda::gate::debugger {
 
-CheckerResult SeqChecker::isSat(const SubnetID id) const {
+CheckerResult SeqChecker::isSat(const model::Subnet &subnet) const {
+  const auto &miter = seqSweep(subnet);
 
-  const Subnet &cmiter = Subnet::get(id);
-
-  const Subnet &miter = seqSweep(cmiter);
-
-  const Subnet &sweptMiter =
+  const auto &sweptMiter =
       structuralRegisterSweep(miter, nsimulate, setSeed, seed);
 
   if (this->getResult(sweptMiter).equal()) {
@@ -44,16 +41,17 @@ void SeqChecker::setSimulateSeed(uint32_t s) {
   setSeed = true;
 }
 
-CheckerResult SeqChecker::getResult(const Subnet &subnet) const {
+CheckerResult SeqChecker::getResult(const model::Subnet &subnet) const {
   if (subnet.size() == 2 && subnet.getInNum() == 0 && subnet.getOutNum() == 1 &&
-      subnet.getEntries()[0].cell.getSymbol() == CellSymbol::ZERO) {
+      subnet.getEntries()[0].cell.getSymbol() == model::ZERO) {
     return CheckerResult::EQUAL;
   }
   return CheckerResult::NOTEQUAL;
 }
 
-size_t addCellToBuilder(SubnetBuilder &builder, Cell &cell,
-                        LinkList &newLinks) {
+size_t addCellToBuilder(model::SubnetBuilder &builder,
+                        const model::Subnet::Cell &cell,
+                        const model::Subnet::LinkList &newLinks) {
   if (cell.isFlipFlop()) {
     if (cell.isIn()) {
       return builder.addInput(cell.flipFlopID).idx;
@@ -64,7 +62,7 @@ size_t addCellToBuilder(SubnetBuilder &builder, Cell &cell,
   return builder.addCell(cell.getSymbol(), newLinks).idx;
 }
 
-const Subnet &seqSweep(const Subnet &miter) {
+const model::Subnet &seqSweep(const model::Subnet &miter) {
   std::set<size_t> usefulCells;
   std::vector<size_t> idxs;
 
@@ -77,7 +75,7 @@ const Subnet &seqSweep(const Subnet &miter) {
   // get other cells
   size_t left = 0;
   while (left < idxs.size()) {
-    LinkList linkList = miter.getLinks(idxs[left]);
+    model::Subnet::LinkList linkList = miter.getLinks(idxs[left]);
     for (size_t i = 0; i < linkList.size(); ++i) {
       if (usefulCells.find(linkList[i].idx) == usefulCells.end()) {
         usefulCells.insert(linkList[i].idx);
@@ -89,67 +87,68 @@ const Subnet &seqSweep(const Subnet &miter) {
 
   std::sort(idxs.begin(), idxs.end());
 
-  SubnetBuilder builder;
+  model::SubnetBuilder builder;
   auto entries = miter.getEntries();
 
-  CellToCell newIdx;
+  BaseChecker::CellToCell newIdx;
   for (const auto &id : idxs) {
-    LinkList oldLinks = miter.getLinks(id);
-    LinkList newLinks;
+    model::Subnet::LinkList oldLinks = miter.getLinks(id);
+    model::Subnet::LinkList newLinks;
     for (auto &link : oldLinks) {
       newLinks.emplace_back(newIdx[link.idx], bool(link.inv));
     }
 
-    Cell &cell = entries[id].cell;
+    const auto &cell = entries[id].cell;
     newIdx[id] = addCellToBuilder(builder, cell, newLinks);
   }
 
-  return Subnet::get(builder.make());
+  return model::Subnet::get(builder.make());
 }
 
-const Subnet &merge(const Subnet &subnet,
-                    std::unordered_map<size_t, std::vector<size_t>> &classes,
-                    bool speculative) {
-  CellToCell maps;
+const model::Subnet &merge(const model::Subnet &subnet,
+                           std::unordered_map<size_t, std::vector<size_t>> &classes,
+                           bool speculative) {
+  BaseChecker::CellToCell maps;
   for (const auto &eq : classes) {
     for (const auto &id : eq.second) {
       maps[id] = eq.first;
     }
   }
 
-  SubnetBuilder builder;
+  model::SubnetBuilder builder;
 
   auto entries = subnet.getEntries();
   size_t i = 0;
-  CellToCell newIdx;
+  BaseChecker::CellToCell newIdx;
   while (i < entries.size()) {
-    LinkList oldLinks = subnet.getLinks(i);
-    LinkList newLinks;
+    model::Subnet::LinkList oldLinks = subnet.getLinks(i);
+    model::Subnet::LinkList newLinks;
     for (auto &link : oldLinks) {
       auto idx = link.idx;
       idx = (maps.find(idx) == maps.end()) ? idx : maps[idx];
       newLinks.emplace_back(newIdx[idx], bool(link.inv));
     }
 
-    Cell &cell = entries[i].cell;
+    const auto &cell = entries[i].cell;
     if (!(cell.isFlipFlop() && cell.isOut() && maps.find(i) != maps.end())) {
       newIdx[i] = addCellToBuilder(builder, cell, newLinks);
     }
     i += 1 + cell.more;
   }
-  SubnetID notSweppedId = builder.make();
+  const auto notSweppedId = builder.make();
   if (speculative) {
-    return Subnet::get(notSweppedId);
+    return model::Subnet::get(notSweppedId);
   }
-  return seqSweep(Subnet::get(notSweppedId));
+  return seqSweep(model::Subnet::get(notSweppedId));
 }
 
-const Subnet &merge(const Subnet &subnet, CellSymbol symbol,
+const model::Subnet &merge(const model::Subnet &subnet,
+                    model::CellSymbol symbol,
                     const std::vector<size_t> &ids) {
-  assert(symbol == CellSymbol::ZERO || symbol == CellSymbol::ONE);
+  assert(symbol == model::ZERO || symbol == model::ONE);
   auto entries = subnet.getEntries();
 
-  SubnetBuilder builder;
+  model::SubnetBuilder builder;
   std::unordered_map<size_t, size_t> newIdx;
   size_t id;
   for (id = 0; id < subnet.getInNum(); ++id) {
@@ -162,8 +161,8 @@ const Subnet &merge(const Subnet &subnet, CellSymbol symbol,
   size_t repl = builder.addCell(symbol).idx;
 
   while (id < entries.size()) {
-    LinkList oldLinks = subnet.getLinks(id);
-    LinkList newLinks;
+    model::Subnet::LinkList oldLinks = subnet.getLinks(id);
+    model::Subnet::LinkList newLinks;
     for (auto &link : oldLinks) {
       size_t idx = link.idx;
       if (std::find(ids.begin(), ids.end(), idx) != std::end(ids)) {
@@ -174,7 +173,7 @@ const Subnet &merge(const Subnet &subnet, CellSymbol symbol,
       newLinks.emplace_back(idx, bool(link.inv));
     }
 
-    Cell &cell = entries[id].cell;
+    const auto &cell = entries[id].cell;
     if (!(cell.isFlipFlop() && cell.isOut() &&
           std::find(ids.begin(), ids.end(), id) != std::end(ids))) {
       newIdx[id] = addCellToBuilder(builder, cell, newLinks);
@@ -182,11 +181,11 @@ const Subnet &merge(const Subnet &subnet, CellSymbol symbol,
     id += 1 + cell.more;
   }
 
-  return seqSweep(Subnet::get(builder.make()));
+  return seqSweep(model::Subnet::get(builder.make()));
 }
 
-void swapFlipsValues(const Simulator::DataVector &vals1,
-                     Simulator::DataVector &vals2,
+void swapFlipsValues(const simulator::Simulator::DataVector &vals1,
+                     simulator::Simulator::DataVector &vals2,
                      const std::vector<std::pair<size_t, size_t>> &pairs) {
   for (const auto &p : pairs) {
     vals2[p.second] = vals1[p.first];
@@ -194,7 +193,7 @@ void swapFlipsValues(const Simulator::DataVector &vals1,
 }
 
 void getFlipsIds(
-    const Subnet &subnet,
+    const model::Subnet &subnet,
     std::unordered_map<uint32_t, std::pair<size_t, size_t>> &flips) {
   auto entries = subnet.getEntries();
   for (size_t i = 0; i < subnet.getInNum(); ++i) {
@@ -204,14 +203,14 @@ void getFlipsIds(
   }
   for (size_t i = 0; i < subnet.getOutNum(); ++i) {
     if (entries[subnet.size() - subnet.getOutNum() + i].cell.isFlipFlop()) {
-      Cell &cell = entries[subnet.size() - subnet.getOutNum() + i].cell;
+      const auto &cell = entries[subnet.size() - subnet.getOutNum() + i].cell;
       flips[cell.flipFlopID].second = subnet.size() - subnet.getOutNum() + i;
     }
   }
 }
 
-const Subnet &structuralRegisterSweep(const Subnet &subnet, const int nsimulate,
-                                      bool setSeed, uint32_t seed) {
+const model::Subnet &structuralRegisterSweep(
+    const model::Subnet &subnet, const int nsimulate, bool setSeed, uint32_t seed) {
   std::unordered_map<size_t, std::vector<size_t>> classes;
   auto entr = subnet.getEntries();
 
@@ -224,7 +223,7 @@ const Subnet &structuralRegisterSweep(const Subnet &subnet, const int nsimulate,
   size_t id;
   for (size_t i = 0; i < subnet.getOutNum(); ++i) {
     id = subnet.size() - subnet.getOutNum() + i;
-    LinkList links = subnet.getLinks(id);
+    model::Subnet::LinkList links = subnet.getLinks(id);
     equal[links[0].idx].push_back(id);
   }
 
@@ -242,14 +241,14 @@ const Subnet &structuralRegisterSweep(const Subnet &subnet, const int nsimulate,
     }
   }
 
-  const Subnet &uniq = merge(subnet, classes);
+  const auto &uniq = merge(subnet, classes);
   classes.clear();
 
   flips.clear();
   getFlipsIds(uniq, flips);
 
-  Simulator simulator(uniq);
-  Simulator::DataVector values(uniq.getInNum());
+  simulator::Simulator simulator(uniq);
+  simulator::Simulator::DataVector values(uniq.getInNum());
   std::set<size_t> stuckZero, stuckOne;
   size_t tries = 1;
 
@@ -288,10 +287,10 @@ const Subnet &structuralRegisterSweep(const Subnet &subnet, const int nsimulate,
     }
   }
 
-  const Subnet &withoutZero =
-      merge(uniq, CellSymbol::ZERO,
+  const auto &withoutZero =
+      merge(uniq, model::ZERO,
             std::vector<size_t>(stuckZero.begin(), stuckZero.end()));
-  return merge(withoutZero, CellSymbol::ONE,
+  return merge(withoutZero, model::ONE,
                std::vector<size_t>(stuckOne.begin(), stuckOne.end()));
 }
 

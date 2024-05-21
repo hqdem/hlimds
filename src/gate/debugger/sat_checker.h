@@ -20,24 +20,24 @@ class SatChecker final : public BaseChecker,
   friend class util::Singleton<SatChecker>;
 
 public:
-  CheckerResult isSat(const SubnetID subnetID) const override {
-    const Subnet &miter = Subnet::get(subnetID);
-    assert(miter.getOutNum() == 1);
+  CheckerResult isSat(const model::Subnet &subnet) const override {
+    assert(subnet.getOutNum() == 1);
 
     const auto &encoder = model::SubnetEncoder::get();
-    eda::gate::solver::Solver solver;
-    model::SubnetEncoderContext context(miter, solver);
+    solver::Solver solver;
+    model::SubnetEncoderContext context(subnet, solver);
 
-    encoder.encode(miter, context, solver);
-    encoder.encodeEqual(miter, context, solver, miter.getOut(0), 1);
+    encoder.encode(subnet, context, solver);
+    encoder.encodeEqual(subnet, context, solver, subnet.getOut(0), 1);
 
     if (solver.solve()) {
       std::vector<bool> counterEx;
-      for (size_t i = 0; i < miter.getInNum(); ++i) {
+      for (size_t i = 0; i < subnet.getInNum(); ++i) {
         counterEx.push_back(solver.value(context.var(i, 0)));
       }
       return CheckerResult(CheckerResult::NOTEQUAL, counterEx);
     }
+
     return CheckerResult::EQUAL;
   }
 

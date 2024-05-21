@@ -10,6 +10,9 @@
 
 #include "gate/model/subnet.h"
 
+#include <unordered_map>
+#include <vector>
+
 namespace eda::gate::debugger::options {
 
 enum LecType {
@@ -22,12 +25,6 @@ enum LecType {
 } // namespace eda::gate::debugger::options
 
 namespace eda::gate::debugger {
-
-using CellToCell = std::unordered_map<size_t, size_t>;
-using LecType = eda::gate::debugger::options::LecType;
-using Subnet = model::Subnet;
-using SubnetBuilder = model::SubnetBuilder;
-using SubnetID = model::SubnetID;
 
 /// Equivalence checking result.
 struct CheckerResult {
@@ -49,10 +46,10 @@ struct CheckerResult {
   CheckerStatus status;
 
   /**
-   * \brief Equivalence checking result.
+   * @brief Equivalence checking result.
    * @param status Status of the occurred equivalence check.
    */
-  CheckerResult(CheckerStatus status) : status(status) {}
+  CheckerResult(CheckerStatus status): status(status) {}
 
   /**
    * @copydoc CheckerResult::CheckerResult(CheckerStatus)
@@ -91,49 +88,136 @@ struct CheckerResult {
   }
 
 private:
-  std::vector<bool> counterEx = {};
+  std::vector<bool> counterEx{};
 };
 
 /// Basic class for equivalence checkers.
 class BaseChecker {
 public:
+  using CellToCell = std::unordered_map<size_t, size_t>;
+  using LecType = eda::gate::debugger::options::LecType;
+
+  /// Returns the LEC checker.
+  static BaseChecker &getChecker(const LecType lec);
 
   /**
-   * \brief Constructs a miter for the specified nets.
-   * @param builder Builder, in which a miter is constructed.
-   * @param lhs First net.
-   * @param rhs Second net.
-   * @param mapping Gate-to-gate mapping between corresponding PI/PO of two nets.
+   * @brief Constructs the miter for the specified subnets.
+   * @param builder Builder for constructing the miter.
+   * @param subnet1 First subnet.
+   * @param subnet2 Second subnet.
+   * @param mapping Mapping between the PI/PO of the specified subnets.
    */
-  static void makeMiter(SubnetBuilder &builder,
-                        const SubnetID lhs,
-                        const SubnetID rhs,
+  static void makeMiter(model::SubnetBuilder &builder,
+                        const model::Subnet &subnet1,
+                        const model::Subnet &subnet2,
                         const CellToCell &mapping);
-  /**
-   * \brief Checks if the given single-output net is satisfiable.
-   * @param id The net.
-   * @return The result of the check.
-   */
-  virtual CheckerResult isSat(const SubnetID id) const = 0;
 
   /**
-   * \brief Checks the equivalence of the given nets.
-   * @param lhs First net.
-   * @param rhs Second net.
-   * @param gmap Gate-to-gate mapping between corresponding PI/PO of two nets.
-   * @return The result of the check.
+   * @brief Constructs the miter for the specified subnets.
+   * @param builder Builder for constructing the miter.
+   * @param subnet1 First subnet.
+   * @param subnet2 Second subnet.
+   * @param mapping Mapping between the PI/PO of the specified subnets.
    */
-  virtual CheckerResult areEquivalent(const SubnetID lhs,
-                                      const SubnetID rhs,
-                                      const CellToCell &gmap) const final {
-    SubnetBuilder builder;
-    makeMiter(builder, lhs, rhs, gmap);
-    return isSat(builder.make());
+  static void makeMiter(model::SubnetBuilder &builder,
+                        const model::SubnetID subnetID1,
+                        const model::SubnetID subnetID2,
+                        const CellToCell &mapping) {
+    const auto &subnet1 = model::Subnet::get(subnetID1);
+    const auto &subnet2 = model::Subnet::get(subnetID2);
+    makeMiter(builder, subnet1, subnet2, mapping);
+  }
+
+  /**
+   * @brief Constructs the miter for the specified subnets.
+   * @param builder Builder for constructing the miter.
+   * @param subnet1 First subnet.
+   * @param subnet2 Second subnet.
+   */
+  static void makeMiter(model::SubnetBuilder &builder,
+                        const model::Subnet &subnet1,
+                        const model::Subnet &subnet2);
+
+  /**
+   * @brief Constructs the miter for the specified subnets.
+   * @param builder Builder for constructing the miter.
+   * @param subnetID1 Identifier of the first subnet.
+   * @param subnetID2 Identifier of the second subnet.
+   */
+  static void makeMiter(model::SubnetBuilder &builder,
+                        const model::SubnetID subnetID1,
+                        const model::SubnetID subnetID2) {
+    const auto &subnet1 = model::Subnet::get(subnetID1);
+    const auto &subnet2 = model::Subnet::get(subnetID2);
+    makeMiter(builder, subnet1, subnet2);
+  }
+
+  /**
+   * @brief Checks if the given single-output subnet is satisfiable.
+   * @param subnetID Subnet to checked.
+   * @return Checking result.
+   */
+  virtual CheckerResult isSat(const model::Subnet &subnet) const = 0;
+
+  /**
+   * @brief Checks if the given single-output subnet is satisfiable.
+   * @param subnetID Identifier of the subnet.
+   * @return Checking result.
+   */
+  CheckerResult isSat(const model::SubnetID subnetID) const {
+    return isSat(model::Subnet::get(subnetID));
+  }
+
+  /**
+   * @brief Checks the equivalence of the given subnets.
+   * @param subnet1 First subnet.
+   * @param subnet2 Second subnet.
+   * @param mapping Mapping betwenn the PI/PO of the specified subnets.
+   * @return Checking result.
+   */
+  CheckerResult areEquivalent(const model::Subnet &subnet1,
+                              const model::Subnet &subnet2,
+                              const CellToCell &mapping) const;
+
+  /**
+   * @brief Checks the equivalence of the given subnets.
+   * @param subnetID1 Identifier of the first subnet.
+   * @param subnetID2 Identifier of the second subnet.
+   * @param mapping Mapping betwenn the PI/PO of the specified subnets.
+   * @return Checking result.
+   */
+  CheckerResult areEquivalent(const model::SubnetID subnetID1,
+                              const model::SubnetID subnetID2,
+                              const CellToCell &mapping) const {
+    const auto &subnet1 = model::Subnet::get(subnetID1);
+    const auto &subnet2 = model::Subnet::get(subnetID2);
+    return areEquivalent(subnet1, subnet2, mapping);
+  }
+
+  /**
+   * @brief Checks the equivalence of the given subnets.
+   * @param subnet1 First subnet.
+   * @param subnet2 Second subnet.
+   * @return Checking result.
+   */
+  CheckerResult areEquivalent(const model::Subnet &subnet1,
+                              const model::Subnet &subnet2) const;
+
+  /**
+   * @brief Checks the equivalence of the given subnets.
+   * @param subnetID1 Identifier of the first subnet.
+   * @param subnetID2 Identifier of the second subnet.
+   * @return Checking result.
+   */
+  CheckerResult areEquivalent(const model::SubnetID subnetID1,
+                              const model::SubnetID subnetID2) const {
+    const auto &subnet1 = model::Subnet::get(subnetID1);
+    const auto &subnet2 = model::Subnet::get(subnetID2);
+    return areEquivalent(subnet1, subnet2);
   }
 
   virtual ~BaseChecker() {}
 };
 
-BaseChecker &getChecker(LecType lec);
 
 } // namespace eda::gate::debugger

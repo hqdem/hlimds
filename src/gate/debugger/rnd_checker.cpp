@@ -7,12 +7,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/rnd_checker.h"
+#include "util/logging.h"
 
 #include <bitset>
+#include <cassert>
+#include <cmath>
 
 namespace eda::gate::debugger {
 
-Simulator::DataVector getAllValues(size_t nIn, size_t count) {
+simulator::Simulator::DataVector getAllValues(size_t nIn, size_t count) {
   size_t startValue = count * 64;
   std::vector<std::bitset<64>> vec(nIn);
   for (size_t i = startValue; i < startValue + 64; i++) {
@@ -23,7 +26,7 @@ Simulator::DataVector getAllValues(size_t nIn, size_t count) {
       }
     }
   }
-  Simulator::DataVector res;
+  simulator::Simulator::DataVector res;
   for (size_t k = 0; k < vec.size(); k++) {
     res.push_back(vec[k].to_ullong());
   }
@@ -31,7 +34,7 @@ Simulator::DataVector getAllValues(size_t nIn, size_t count) {
 }
 
 std::vector<bool> getCounterEx(const std::bitset<64> output,
-                               const Simulator::DataVector values) {
+                               const simulator::Simulator::DataVector &values) {
   std::vector<bool> counterEx = {};
   for (uint8_t i = 0; i < 64; i++) {
     if (output.test(i)) {
@@ -45,14 +48,13 @@ std::vector<bool> getCounterEx(const std::bitset<64> output,
   return counterEx;
 }
 
-CheckerResult RndChecker::isSat(const SubnetID id) const {
-  const Subnet &miter = Subnet::get(id);
-  assert(miter.getOutNum() == 1);
+CheckerResult RndChecker::isSat(const model::Subnet &subnet) const {
+  assert(subnet.getOutNum() == 1);
 
-  const auto inputNum = miter.getInNum();
+  const auto inputNum = subnet.getInNum();
 
-  Simulator simulator(miter);
-  Simulator::DataVector values(inputNum);
+  simulator::Simulator simulator(subnet);
+  simulator::Simulator::DataVector values(inputNum);
 
   if (!exhaustive) {
     for (uint64_t t = 0; t < tries; t++) {
@@ -60,7 +62,7 @@ CheckerResult RndChecker::isSat(const SubnetID id) const {
         values[i] = std::rand();
       }
       simulator.simulate(values);
-      const std::bitset<64> output = simulator.getValue(miter.getOut(0));
+      const std::bitset<64> output = simulator.getValue(subnet.getOut(0));
       if (output.any()) {
         return CheckerResult(CheckerResult::NOTEQUAL,
                              getCounterEx(output, values));
@@ -80,7 +82,7 @@ CheckerResult RndChecker::isSat(const SubnetID id) const {
     size_t iterations = (inputPower <= 64) ? 1ull : (inputPower >> 6);
     for (size_t i = 0; i < iterations; i++) {
       simulator.simulate(getAllValues(inputNum, i));
-      const std::bitset<64> output = simulator.getValue(miter.getOut(0));
+      const std::bitset<64> output = simulator.getValue(subnet.getOut(0));
       if (output.any()) {
         return CheckerResult(CheckerResult::NOTEQUAL,
                              getCounterEx(output, values));

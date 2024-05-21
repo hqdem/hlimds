@@ -8,26 +8,21 @@
 
 #include "gate/debugger/bdd_checker.h"
 
+#include <cassert>
+
 namespace eda::gate::debugger {
 
-CheckerResult BddChecker::isSat(const SubnetID id) const {
-  const Subnet &miter = Subnet::get(id);
-  assert(miter.getOutNum() == 1);
+CheckerResult BddChecker::isSat(const model::Subnet &subnet) const {
+  assert(subnet.getOutNum() == 1);
 
   Cudd manager(0, 0);
-  CellBddMap x;
 
-  for (int i = 0; i < miter.getInNum(); i++) {
-    x[i] = manager.bddVar(i);
-  }
+  const auto outputID = subnet.size() - 1;
+  BDD netBdd = SubnetToBdd::convert(subnet, outputID, manager);
 
-  unsigned ouputId = miter.size() - 1;
-  BDD netBdd = SubnetToBdd::convert(miter, ouputId, manager);
-
-  if (netBdd == manager.bddZero()) {
-    return CheckerResult::EQUAL;
-  }
-  return CheckerResult::NOTEQUAL;
+  return (netBdd == manager.bddZero())
+      ? CheckerResult::EQUAL
+      : CheckerResult::NOTEQUAL;
 }
 
 } // namespace eda::gate::debugger

@@ -18,14 +18,6 @@
 
 namespace eda::gate::debugger {
 
-using Cell = eda::gate::model::Subnet::Cell;
-using CellSymbol = eda::gate::model::CellSymbol;
-using CellToCell = eda::gate::debugger::CellToCell;
-using LecType = eda::gate::debugger::options::LecType;
-using LinkList = model::Subnet::LinkList;
-using SubnetID = eda::gate::model::SubnetID;
-using Simulator = eda::gate::simulator::Simulator;
-
 /**
  * \brief Checks the equivalence of the specified subnets using SAT-solver.
  *
@@ -33,13 +25,13 @@ using Simulator = eda::gate::simulator::Simulator;
  * Sequential Synthesis" by A. Mishchenko (2008).
  */
 
-class SeqChecker : public BaseChecker {
+class SeqChecker final : public BaseChecker {
 public:
 
   /**
    * @copydoc BaseChecker2::isSat
    */
-  CheckerResult isSat(const SubnetID id) const override;
+  CheckerResult isSat(const model::Subnet &subnet) const override;
 
   // Sets the number of attempts to find registers stuck at a constant
   void setSimulateTries(int tries);
@@ -49,40 +41,43 @@ public:
 
 private:
   // Returns checker result based on the elements left in subnet
-  CheckerResult getResult(const Subnet &subnet) const;
+  CheckerResult getResult(const model::Subnet &subnet) const;
 
   int nsimulate = 10;
   bool setSeed = false;
   uint32_t seed;
 };
 
-void info(const Subnet &subnet, const std::string = "");
+void info(const model::Subnet &subnet, const std::string = "");
 
 // Returns Subnet without hanging cells
-const Subnet &seqSweep(const Subnet &subnet);
+const model::Subnet &seqSweep(const model::Subnet &subnet);
 
 // Merges equivalence classes into representative class
-const Subnet &merge(const Subnet &subnet,
-                    std::unordered_map<size_t, std::vector<size_t>> &classes,
-                    bool speculative = false);
+const model::Subnet &merge(const model::Subnet &subnet,
+                           std::unordered_map<size_t, std::vector<size_t>> &classes,
+                           bool speculative = false);
 
 // Merges classes into constant(ZERO/ONE)
-const Subnet &merge(const Subnet &subnet, CellSymbol symbol,
-                    const std::vector<size_t> &ids);
+const model::Subnet &merge(const model::Subnet &subnet,
+                           model::CellSymbol symbol,
+                           const std::vector<size_t> &ids);
 
 // Swaps values defined in ids between Datavectors
-void swapFlipsValues(const Simulator::DataVector &vals1,
-                     Simulator::DataVector &vals2,
+void swapFlipsValues(const simulator::Simulator::DataVector &vals1,
+                     simulator::Simulator::DataVector &vals2,
                      const std::vector<std::pair<size_t, size_t>> &pairs);
 
 // Gets flip flop IDs from subnet
 void getFlipsIds(
-    const Subnet &subnet,
+    const model::Subnet &subnet,
     std::unordered_map<uint32_t, std::pair<size_t, size_t>> &flips);
 
 // Returns Subnet without equivalent registers and without registers stuck at a
 // constant
-const Subnet &structuralRegisterSweep(const Subnet &subnet, const int nsimulate,
-                                      bool setSeed, uint32_t seed);
+const model::Subnet &structuralRegisterSweep(const model::Subnet &subnet,
+                                             const int nsimulate,
+                                             bool setSeed,
+                                             uint32_t seed);
 
 } // namespace eda::gate::debugger

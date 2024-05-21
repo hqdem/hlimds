@@ -12,6 +12,7 @@
 #include "gate/simulator/simulator.h"
 
 #include <bitset>
+#include <vector>
 
 namespace eda::gate::debugger {
 
@@ -23,19 +24,20 @@ using CounterEx = std::vector<std::bitset<64>>;
  * The algorithm is based on the article "Improvements to combinational
  * equivalence checking" by A. Mishchenko, S. Chatterjee, R. Brayton (2006).
  */
-class FraigChecker : public BaseChecker, public util::Singleton<FraigChecker> {
-friend class util::Singleton<FraigChecker>;
+class FraigChecker final : public BaseChecker,
+                           public util::Singleton<FraigChecker> {
+  friend class util::Singleton<FraigChecker>;
 
 public:
   /**
    * @copydoc BaseChecker::isSat
    */
-  CheckerResult isSat(const SubnetID id) const override;
+  CheckerResult isSat(const model::Subnet &subnet) const override;
 
   /// Simulator arity limit
-  static const size_t simLimit = 64;
-private:
+  static constexpr size_t simLimit = 64;
 
+private:
   static void netSimulation(simulator::Simulator &simulator,
                             const uint16_t &nIn,
                             const CounterEx &counterEx = {});

@@ -227,10 +227,9 @@ Subnet::Link SubnetBuilder::addCellTree(
 }
 
 Subnet::LinkList SubnetBuilder::addSubnet(
-    SubnetID subnetID,
+    const Subnet &subnet,
     const LinkList &links,
     const CellWeightProvider *weightProvider) {
-  const auto &subnet = Subnet::get(subnetID);
   const auto &subnetEntries = subnet.getEntries();
 
   const auto offset = (entries.size() - subnet.getInNum());
@@ -272,11 +271,9 @@ Subnet::LinkList SubnetBuilder::addSubnet(
 }
 
 Subnet::Link SubnetBuilder::addSingleOutputSubnet(
-    SubnetID subnetID, const LinkList &links) {
-  const auto &subnet = Subnet::get(subnetID);
+    const Subnet &subnet, const LinkList &links) {
   assert(subnet.getOutNum() == 1);
-
-  return addSubnet(subnetID, links).front();
+  return addSubnet(subnet, links).front();
 }
 
 void SubnetBuilder::replace(

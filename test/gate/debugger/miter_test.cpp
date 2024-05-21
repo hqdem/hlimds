@@ -17,8 +17,6 @@ using namespace eda::gate::model;
 namespace eda::gate::debugger {
 
 TEST(MiterTest, Random) {
-  using Simulator = eda::gate::simulator::Simulator;
-
   const size_t nIn      = 10;
   const size_t nOut     = 10;
   const size_t nCell    = 200;
@@ -27,26 +25,22 @@ TEST(MiterTest, Random) {
   const size_t nSubnet  = 40;
 
   for (size_t i = 0; i < nSubnet; ++i) {
-    CellToCell map;
-    auto id = makeSubnetRandomMatrix(nIn, nOut, nCell, minArity, maxArity, i);
-    const Subnet &subnet = Subnet::get(id);
+    const auto subnetID = makeSubnetRandomMatrix(
+        nIn, nOut, nCell, minArity, maxArity, i);
 
-    for (size_t i = 0; i < subnet.getEntries().size(); ++i) {
-      map[i] = i;
-    }
-    SubnetBuilder builder;
-    BaseChecker::makeMiter(builder, id, id, map);
-    const Subnet &miter = Subnet::get(builder.make());
-    uint16_t miterInNum = miter.getInNum();
+    model::SubnetBuilder builder;
+    BaseChecker::makeMiter(builder, subnetID, subnetID);
+
+    const auto &miter = model::Subnet::get(builder.make());
     EXPECT_TRUE(miter.getOutNum() == 1);
-    EXPECT_TRUE(miterInNum == subnet.getInNum());
 
-    Simulator simulator(miter);
-    Simulator::DataVector values(miterInNum);
+    simulator::Simulator simulator(miter);
+    simulator::Simulator::DataVector values(miter.getInNum());
 
-    for (size_t k = 0; k < miterInNum; ++k) {
-      values[k] = std::rand();
+    for (size_t j = 0; j < miter.getInNum(); ++j) {
+      values[j] = std::rand();
     }
+
     simulator.simulate(values);
     EXPECT_FALSE(simulator.getValue(miter.getOut(0)));
   }

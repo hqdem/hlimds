@@ -47,8 +47,8 @@ private:
 };
 
 void FraigChecker::netSimulation(simulator::Simulator &simulator,
-                                  const uint16_t &nIn,
-                                  const CounterEx &counterEx) {
+                                 const uint16_t &nIn,
+                                 const CounterEx &counterEx) {
   simulator::Simulator::DataVector values(nIn);
   if (counterEx.size()) {
     for (size_t k = 0; k < nIn; ++k) {
@@ -64,14 +64,13 @@ void FraigChecker::netSimulation(simulator::Simulator &simulator,
   simulator.simulate(values);
 }
 
-CheckerResult FraigChecker::isSat(const SubnetID id) const {
-  SubnetBuilder miterBuilder(id);
-  const Subnet &miter = Subnet::get(id);
+CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
+  model::SubnetBuilder miterBuilder(subnet);
   uint16_t storageCount = 0;
-  CounterEx counterExStorage(miter.getInNum());
+  CounterEx counterExStorage(subnet.getInNum());
 
   while (true) {
-    const Subnet &miter = Subnet::get(miterBuilder.make());
+    const auto &miter = model::Subnet::get(miterBuilder.make());
     const uint16_t nIn = miter.getInNum();
 
     // Simulation
@@ -97,7 +96,7 @@ CheckerResult FraigChecker::isSat(const SubnetID id) const {
     }
 
     std::unordered_map<uint64_t, std::set<uint32_t>> eqClassToIdx;
-    SubnetBuilder::MergeMap toBeMerged;
+    model::SubnetBuilder::MergeMap toBeMerged;
     std::unordered_set<uint32_t> checked;
 
     for (auto const &[cell, descr] : idxToDescr) {
@@ -111,10 +110,10 @@ CheckerResult FraigChecker::isSat(const SubnetID id) const {
           if (idx == cell || checked.find(idx) != checked.end()) {
             continue;    
           }
-          const Cone &cone1 = coneBuilder.getMaxCone(cell);
-          const Cone &cone2 = coneBuilder.getMaxCone(idx);
-          const Subnet &coneSubnet1 = Subnet::get(cone1.subnetID);
-          const Subnet &coneSubnet2 = Subnet::get(cone2.subnetID);
+          const auto &cone1 = coneBuilder.getMaxCone(cell);
+          const auto &cone2 = coneBuilder.getMaxCone(idx);
+          const auto &coneSubnet1 = model::Subnet::get(cone1.subnetID);
+          const auto &coneSubnet2 = model::Subnet::get(cone2.subnetID);
           CellToCell map = {};
           size_t coneInNum1 = coneSubnet1.getInNum();
           size_t coneInNum2 = coneSubnet2.getInNum();
@@ -173,7 +172,7 @@ CheckerResult FraigChecker::isSat(const SubnetID id) const {
     miterBuilder.mergeCells(toBeMerged);
   }
 
-  return static_cast<SatChecker&>(getChecker(SAT)).isSat(miterBuilder.make());
+  return getChecker(SAT).isSat(miterBuilder.make());
 }
 
 } // namespace eda::gate::debugger

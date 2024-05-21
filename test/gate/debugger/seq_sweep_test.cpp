@@ -13,9 +13,9 @@
 
 namespace eda::gate::debugger {
 
-std::vector<CellSymbol> getSymbols(const Subnet &subnet) {
+std::vector<model::CellSymbol> getSymbols(const model::Subnet &subnet) {
   auto entries = subnet.getEntries();
-  std::vector<CellSymbol> cells;
+  std::vector<model::CellSymbol> cells;
   size_t i = 0;
   while (i < entries.size()) {
     cells.push_back(entries[i].cell.getSymbol());
@@ -33,7 +33,7 @@ TEST(SeqSweepTest, random) {
   const size_t nSubnet = 40;
 
   for (size_t i = 0; i < nSubnet; ++i) {
-    Subnet &subnet = Subnet::get(
+    const auto &subnet = model::Subnet::get(
         eda::gate::model::randomSubnet(nIn, nOut, nCell, minArity, maxArity));
     auto entries = subnet.getEntries();
     std::vector<size_t> ids;
@@ -57,12 +57,12 @@ TEST(SeqSweepTest, random) {
     }
 
     std::sort(ids.begin(), ids.end());
-    std::vector<CellSymbol> symbols(ids.size());
+    std::vector<model::CellSymbol> symbols(ids.size());
     for (size_t t = 0; t < ids.size(); ++t) {
       symbols[t] = entries[ids[t]].cell.getSymbol();
     }
 
-    const Subnet &sweepedSubnet = seqSweep(subnet);
+    const auto &sweepedSubnet = seqSweep(subnet);
 
     EXPECT_EQ(symbols, getSymbols(sweepedSubnet));
   }

@@ -96,10 +96,10 @@ void SimpleDelayMapper::saveBest(
 
         if (arrivalTime < bestArrivalTime) {
           bestArrivalTime = arrivalTime;
-          bestSimpleReplacement.subnetID = currentSubnetID;
-          bestSimpleReplacement.entryIDxs.clear();
+          bestSimpleReplacement.setSubnetID(currentSubnetID);
+          bestSimpleReplacement.inputs.clear();
           for (const auto &in : cut.entryIdxs) {
-            bestSimpleReplacement.entryIDxs.push_back(in);
+            bestSimpleReplacement.inputs.push_back(in);
           }
         }
         delayVec[entryIndex] = {arrivalTime};
@@ -107,7 +107,7 @@ void SimpleDelayMapper::saveBest(
     }
   }
 
-  assert(!bestSimpleReplacement.entryIDxs.empty());
+  assert(!bestSimpleReplacement.inputs.empty());
   (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;
 }
 } // namespace eda::gate::techmapper

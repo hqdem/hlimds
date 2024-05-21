@@ -335,12 +335,15 @@ void GeneticMapper::saveInBestMap() {
        entryIndex++) {
     BestReplacement replacement;
     auto bestGen = bestChromosome.gens.at(entryIndex);
-    replacement.isIN = bestGen->isIn;
-    replacement.isOUT = bestGen->isOut;
-    replacement.subnetID = bestGen->subnetID;
-    replacement.entryIDxs.clear();
+    if (bestGen->isIn) {
+      replacement.setType(BestReplacement::Type::IN);
+    } else if (bestGen->isOut) {
+      replacement.setType(BestReplacement::Type::OUT);
+    }
+    replacement.setSubnetID(bestGen->subnetID);
+    replacement.inputs.clear();
     for (const auto &in : bestGen->entryIdxs) {
-      replacement.entryIDxs.push_back(in);
+      replacement.inputs.push_back(in);
     }
     (*bestReplacementMap)[entryIndex] = replacement;
   }

@@ -182,10 +182,12 @@ const Subnetattr &CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
   return subnetToAttr.at(id);
 }
 
-std::vector<SubnetID> CellDB::getPatterns() {
-  std::vector<SubnetID> patterns;
-  for (const auto &pair: subnetToAttr) {
-    patterns.push_back(pair.first);
+std::vector<SubnetID> &CellDB::getPatterns() {
+  assert(subnetToAttr.size() != 0);
+  if (patterns.size() != 0) {
+    for (const auto &pair: subnetToAttr) {
+      patterns.push_back(pair.first);
+    }
   }
   return patterns;
 }

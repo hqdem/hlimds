@@ -128,10 +128,10 @@ void AreaRecovery::findBest() {
         representAreaFlow[entryIndex] = aF;
         representDepth[entryIndex] = maxDepth;
 
-        bestReplacement.subnetID = cellTechLib;
-        bestReplacement.entryIDxs.clear();
+        bestReplacement.setSubnetID(cellTechLib);
+        bestReplacement.inputs.clear();
         for (const size_t &in : cut.entryIdxs) {
-          bestReplacement.entryIDxs.push_back(in);
+          bestReplacement.inputs.push_back(in);
         }
       }
     }

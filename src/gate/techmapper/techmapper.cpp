@@ -54,7 +54,7 @@ void Techmapper::setLiberty() {
                                 ffCellTypeIDs,
                                 ffrsCellTypeIDs,
                                 LatchCellTypeIDs);
-  //LibraryCells::makeCellTypeIDs(cells, cellTypeIDs);
+
   this->cellDB = new CellDB(cellTypeIDs,
                             ffCellTypeIDs,
                             ffrsCellTypeIDs,
@@ -70,8 +70,6 @@ void Techmapper::setMapper(MapperType techmapSelector) {
     case MapperType::AREA_FLOW:
       mapper = new AreaRecovery();
       break;
-    case MapperType::DELAY:
-      break;
     case MapperType::POWER:
       mapper = new PowerMap();
       break;
@@ -81,8 +79,8 @@ void Techmapper::setMapper(MapperType techmapSelector) {
     case MapperType::SIMPLE_DELAY_FUNC:
       mapper = new SimpleDelayMapper();
       break;
-    /*case TechmapperType::STRUCT: // DAGON matching
-      //mapper = new DagonTechMapper(*cellDB);
+    /*case TechmapperType::STRUCT:
+      mapper = new CorasickMapper();
       break;*/
   }
 }

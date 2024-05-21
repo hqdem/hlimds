@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/cell.h"
+#include "gate/model/celltype.h"
 #include "gate/model/subnet.h"
 #include "gate/techmapper/techmapper.h"
 #include "util/env.h"
@@ -20,6 +21,7 @@ using path = std::filesystem::path;
 
 namespace eda::gate::techmapper {
 
+using CellSymbol = eda::gate::model::CellSymbol;
 using SubnetID = eda::gate::model::SubnetID;
 
 const path home = eda::env::getHomePath();
@@ -36,5 +38,6 @@ SubnetID randomMapping(Techmapper::MapperType mapperType);
 SubnetID notNotAndMapping(Techmapper::MapperType mapperType);
 NetID simpleNetMapping(Techmapper::MapperType mapperType);
 SubnetID areaRecoveySubnetMapping(Techmapper::MapperType mapperType);
+SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId);
 
 } // namespace eda::gate::techmapper

@@ -370,23 +370,22 @@ struct TechMapOptions final : public AppOptions {
 
   using MapperType = eda::gate::techmapper::Techmapper::MapperType;
   const std::map<std::string, MapperType> mapperTypeMap {
-    {"af", MapperType::AREA_FLOW},
+    {"area", MapperType::AREA_FLOW},
     {"power", MapperType::POWER},
-    {"delay", MapperType::DELAY},
     {"simple_area", MapperType::SIMPLE_AREA_FUNC},
     {"simple_delay", MapperType::SIMPLE_DELAY_FUNC},
   };
 
   TechMapOptions(AppOptions &parent):
-      AppOptions(parent, ID, "Technological mapping") {
+      AppOptions(parent, ID, "Technology mapping") {
 
     // Named options.
-    options->add_option(cli(MAPPER_TYPE), mapperType, "Type of mapper")
+    options->add_option(cli(MAPPER_TYPE), mapperType, "Techmapper type")
            ->expected(1)
            ->transform(CLI::CheckedTransformer(mapperTypeMap, CLI::ignore_case));
 
     options->add_option(cli(VERILOG_OUTPUT), outputPath,
-                "Path to verilog file where the mapped design to be stored")
+                "Output Verilog file (default=out.v)")
            ->expected(1);
     // Input file(s).
     options->allow_extras();

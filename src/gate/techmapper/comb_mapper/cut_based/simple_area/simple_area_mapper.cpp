@@ -13,6 +13,7 @@
 #include "gate/techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.h"
 
 using Subnet = eda::gate::model::Subnet;
+using Type = eda::gate::techmapper::BestReplacement::Type;
 
 namespace eda::gate::techmapper {
 
@@ -43,27 +44,27 @@ float SimpleAreaMapper::dynamicCalculateArea(EntryIndex entryIndex,
     stack.push(out);
     visited.insert(out);
     assert(bestReplacementMap->find(out) != bestReplacementMap->end());
-    if (!bestReplacementMap->at(out).isZero &&
-        !bestReplacementMap->at(out).isOne &&
-        !bestReplacementMap->at(out).isIN) {
-      area += cellDB->getSubnetAttrBySubnetID(bestReplacementMap->at(out).subnetID).area;
+    const auto type = bestReplacementMap->at(out).getType();
+    if (type != Type::ZERO && type != Type::ONE && type != Type::IN) {
+      area += cellDB->getSubnetAttrBySubnetID(
+                bestReplacementMap->at(out).getSubnetID()).area;
     }
   }
 
   while (!stack.empty()) {
-    EntryIndex currentEntryIDX = stack.top();
-    assert(bestReplacementMap->find(currentEntryIDX) != bestReplacementMap->end());
+    EntryIndex topEntryIndex = stack.top();
+    assert(bestReplacementMap->find(topEntryIndex) != bestReplacementMap->end());
 
-    for (const auto &in : bestReplacementMap->at(currentEntryIDX).entryIDxs) {
+    for (const auto &in : bestReplacementMap->at(topEntryIndex).inputs) {
       if (visited.find(in) == visited.end()) {
         stack.push(in);
         visited.insert(in);
       }
     }
-    if (!bestReplacementMap->at(currentEntryIDX).isZero &&
-        !bestReplacementMap->at(currentEntryIDX).isOne &&
-        !bestReplacementMap->at(currentEntryIDX).isIN) {
-      area += cellDB->getSubnetAttrBySubnetID(bestReplacementMap->at(currentEntryIDX).subnetID).area;
+    const auto type = bestReplacementMap->at(topEntryIndex).getType();
+    if (type != Type::ZERO && type != Type::ONE && type != Type::IN) {
+      area += cellDB->getSubnetAttrBySubnetID(
+                bestReplacementMap->at(topEntryIndex).getSubnetID()).area;
     }
     stack.pop();
   }
@@ -85,7 +86,7 @@ void SimpleAreaMapper::saveBest(EntryIndex entryIndex,
           Subnet::get(coneBuilder.getCone(cut).subnetID)).at(0);
 
       for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable)) {
-        float area = dynamicCalculateArea(entryIndex,cut.entryIdxs);
+        float area = dynamicCalculateArea(entryIndex, cut.entryIdxs);
         if (area < bestArea) {
           bestArea = area;
           bestTechCellSubnetID = currentSubnetID;
@@ -98,9 +99,10 @@ void SimpleAreaMapper::saveBest(EntryIndex entryIndex,
   assert(bestArea != MAXFLOAT);
   assert(!bestCut.entryIdxs.empty());
 
-  (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
+  (*bestReplacementMap)[entryIndex].setSubnetID(bestTechCellSubnetID);
   for (const auto &in : bestCut.entryIdxs) {
-    (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
+    (*bestReplacementMap)[entryIndex].inputs.push_back(in);
   }
 }
+
 } // namespace eda::gate::techmapper

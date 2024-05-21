@@ -45,7 +45,7 @@ public:
          const std::vector<CellTypeID> &cellTypeFFrsIDs,
          const std::vector<CellTypeID> &cellTypeLatchIDs);
 
-  std::vector<SubnetID> getPatterns();
+  std::vector<SubnetID> &getPatterns();
 
   std::vector<SubnetID> getSubnetIDsByTT(const kitty::dynamic_truth_table &tt) const;
   const Subnetattr &getSubnetAttrBySubnetID(const SubnetID id) const;
@@ -56,6 +56,8 @@ public:
 
 private:
   std::vector<SubnetID> subnets;
+  std::vector<SubnetID> patterns;
+
   std::vector<std::pair<SubnetID, Subnetattr>> DFF;
   std::vector<std::pair<SubnetID, Subnetattr>> DFFrs;
   std::vector<std::pair<SubnetID, Subnetattr>> Latch;

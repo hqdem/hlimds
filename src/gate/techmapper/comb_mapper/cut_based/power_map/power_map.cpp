@@ -88,9 +88,9 @@ BestReplacement PowerMap::findCutMinimizingDepth(const EntryIndex entryIndex) {
   computedLevel[entryIndex] = cutBestLevel; // setLevel(n, getLevel(cut))
   assert(cutBest != nullptr);
   for (const auto &in : cutBest->entryIdxs) {
-    bestRepl.entryIDxs.push_back(in);
+    bestRepl.inputs.push_back(in);
   }
-  bestRepl.subnetID = techSubnetId;
+  bestRepl.setSubnetID(techSubnetId);
   return bestRepl;
 }
 
@@ -142,7 +142,7 @@ void PowerMap::computeRequiredTimes() {
   for (int32_t entryIdx = entries->size() - 1; entryIdx >= 0; entryIdx--) {
     uint32_t timeReqNew = requiredTimes[entryIdx] - 1;
     // for each leaf in Representative Cut
-    for (const auto &leafIdx : bestReplacementMap->at(entryIdx).entryIDxs) {
+    for (const auto &leafIdx : bestReplacementMap->at(entryIdx).inputs) {
       uint32_t timeReqOld = requiredTimes[leafIdx];
       requiredTimes[leafIdx] = std::min(timeReqOld, timeReqNew);
     }
@@ -210,11 +210,11 @@ void PowerMap::globalSwitchAreaRecovery(
           // }
         }
       }
-      (*bestReplacementMap)[entryIndex].entryIDxs.clear();
+      (*bestReplacementMap)[entryIndex].inputs.clear();
       for (const auto &in : bestCut.entryIdxs) {
-        (*bestReplacementMap)[entryIndex].entryIDxs.push_back(in);
+        (*bestReplacementMap)[entryIndex].inputs.push_back(in);
       }
-      (*bestReplacementMap)[entryIndex].subnetID = bestTechCellSubnetID;
+      (*bestReplacementMap)[entryIndex].setSubnetID(bestTechCellSubnetID);
     }
     else {
       addNotAnAndToTheMap(entryIndex, cell);

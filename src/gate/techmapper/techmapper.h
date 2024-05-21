@@ -22,7 +22,6 @@ class Techmapper {
 public:
   enum class MapperType {
     AREA_FLOW,
-    DELAY,
     POWER,
     SIMPLE_AREA_FUNC,
     GENETIC,

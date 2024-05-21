@@ -12,7 +12,7 @@
 #include "gate/model/subnet.h"
 
 #include <climits>
-#include <unordered_set>
+#include <vector>
 
 namespace eda::gate::techmapper {
 
@@ -20,23 +20,37 @@ using EntryIndex = uint64_t;
 using SubnetID = eda::gate::model::SubnetID;
 
 struct BestReplacement {
-  // Flag default cells
-  bool isIN = false;
-  bool isOUT = false;
-  bool isOne = false;
-  bool isZero = false;
+  // Cell type
+  enum Type {DEFAULT, IN, OUT, ONE, ZERO};
 
-  // Best liberty cell
+  inline Type getType() { return type; }
+  inline void setType(Type type) { this->type = type; }
+
+  BestReplacement(Type type = DEFAULT) : type (type) {};
+
+private:
+  // Flags for special cells.
+  Type type = DEFAULT;
+
+  // Selected Liberty cell.
   SubnetID subnetID = 0;
-  SubnetID getLibertySubnetID() const {
+
+public:
+  // Returns SubnetID of the selected Liberty cell.
+  SubnetID getSubnetID() const {
     assert(subnetID != 0);
     return subnetID;
   }
 
-  // Entry idx for connecting the best cut in the initial subnet
-  std::vector<uint64_t> entryIDxs;
+  void setSubnetID(SubnetID subnetID) {
+    this->subnetID = subnetID;
+  }
 
-  // Entry idx in mapped Subnet
-  size_t cellIDInMappedSubnet = ULLONG_MAX;
+  // The way the selected cut used to be connected in this initial Subnet.
+  std::vector<uint64_t> inputs;
+
+  // Entry idx in mapped Subnet.
+  size_t cellID = ULLONG_MAX;
 };
+
 } // namespace eda::gate::techmapper

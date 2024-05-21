@@ -10,6 +10,8 @@
 
 namespace eda::gate::techmapper {
 
+using Type = BestReplacement::Type;
+
 void CutBaseMapper::baseMap() {
   cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
   findBest();
@@ -26,23 +28,21 @@ void CutBaseMapper::addNotAnAndToTheMap(EntryIndex entryIndex, const model::Subn
   }
 }
 void CutBaseMapper::addInputToTheMap(EntryIndex entryIndex) {
-  BestReplacement bestReplacement{true};
+  BestReplacement bestReplacement(Type::IN);
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 void CutBaseMapper::addZeroToTheMap(EntryIndex entryIndex) {
-  BestReplacement bestReplacement{};
-  bestReplacement.isZero = true;
+  BestReplacement bestReplacement(Type::ZERO);
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 void CutBaseMapper::addOneToTheMap(EntryIndex entryIndex) {
-  BestReplacement bestReplacement{};
-  bestReplacement.isOne = true;
+  BestReplacement bestReplacement(Type::ONE);
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 void CutBaseMapper::addOutToTheMap(EntryIndex entryIndex,
                                    const model::Subnet::Cell &cell) {
-  BestReplacement bestReplacement{false, true};
-  bestReplacement.entryIDxs.push_back(cell.link[0].idx);
+  BestReplacement bestReplacement(Type::OUT);
+  bestReplacement.inputs.push_back(cell.link[0].idx);
   (*bestReplacementMap)[entryIndex] = bestReplacement;
 }
 } // namespace eda::gate::techmapper

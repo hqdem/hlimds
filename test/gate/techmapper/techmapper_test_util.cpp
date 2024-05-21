@@ -123,7 +123,7 @@ SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {
 }
 
 SubnetID simpleANDMapping(Techmapper::MapperType mapperType) {
-  const auto primitiveANDSub  = createPrimitiveSubnet(CellSymbol::AND, 50, 15);
+  const auto primitiveANDSub = createPrimitiveSubnet(CellSymbol::AND, 50, 15);
   std::cout << model::Subnet::get(primitiveANDSub) << std::endl;
   SubnetID mappedSubnet = mapper(mapperType, primitiveANDSub);
 
@@ -131,7 +131,7 @@ SubnetID simpleANDMapping(Techmapper::MapperType mapperType) {
 }
 
 SubnetID simpleORMapping(Techmapper::MapperType mapperType) {
-  const auto primitiveORSub  = createPrimitiveSubnet(CellSymbol::OR, 3, 13);
+  const auto primitiveORSub = createPrimitiveSubnet(CellSymbol::OR, 3, 13);
   std::cout << model::Subnet::get(primitiveORSub) << std::endl;
   SubnetID mappedSubnet = mapper(mapperType, primitiveORSub);
 

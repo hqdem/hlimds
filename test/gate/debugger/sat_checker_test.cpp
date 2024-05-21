@@ -95,8 +95,8 @@ TEST(SatChecker, CellWithMoreThan5Inputs) {
   const auto subnetID2 = builder2.make();
 
 #ifdef UTOPIA_DEBUG
-  const auto &subnet1 = Subnet::get(subnetID1);
-  const auto &subnet2 = Subnet::get(subnetID2); 
+  const auto &subnet1 = model::Subnet::get(subnetID1);
+  const auto &subnet2 = model::Subnet::get(subnetID2); 
 
   std::cout << subnet1 << std::endl;
   std::cout << subnet2 << std::endl;

@@ -371,8 +371,11 @@ public:
   using CellWeightProvider = std::function<float(size_t)>;
   /// Calculates the real weight used for replace estimation.
   using CellWeightModifier = std::function<float(float)>;
-  /// Performs a certain action in a certain situation. 
+  /// Performs a certain action in a certain situation.
   using CellActionCallback = std::function<void(size_t)>;
+
+  /// Fanouts container wrapper;
+  using FanoutsContainer = std::vector<size_t>;
 
   /// Represents a replacement effect.
   struct Effect final {
@@ -442,6 +445,16 @@ public:
   /// Returns the weigth of the i-th cell.
   float getWeight(size_t i) const {
     return desc[i].weight;
+  }
+
+  /// Returns fanouts of the i-th cell.
+  FanoutsContainer getFanouts(size_t i) const {
+    assert(fanoutsEnabled);
+    assert(i < entries.size());
+    if (fanouts.size() <= i) {
+      return {};
+    }
+    return fanouts[i];
   }
 
   /// Sets the weigth of the i-th cell.
@@ -591,6 +604,12 @@ public:
   /// Replaces the given cells w/ one.
   void replaceWithOne(const EntrySet &entryIDs);
 
+  /// Enables fanouts receiving by entry index.
+  void enableFanouts();
+
+  /// Disables fanouts receiving by entry index.
+  void disableFanouts();
+
   EntryIterator begin() const {
     return EntryIterator(this, getSubnetBegin());
   }
@@ -656,6 +675,14 @@ private:
 
   /// Updates added entry depth bounds and adds it to the topological order.
   void addDepthBounds(size_t entryID);
+
+  /// Adds fanoutID index in the sourceID fanouts storage
+  /// (if fanouts storing is enabled).
+  void addFanout(size_t sourceID, size_t fanoutID);
+
+  /// Deletes fanoutID index from the sourceID fanouts storage
+  /// (if fanouts storing is enabled).
+  void delFanout(size_t sourceID, size_t fanoutID);
 
   /// Allocates an entry and returns its index.
   size_t allocEntry();
@@ -762,6 +789,9 @@ private:
   bool isDisassembled{false};
 
   std::vector<EntryDescriptor> desc;
+  std::vector<FanoutsContainer> fanouts{};
+  bool fanoutsEnabled{false};
+
   std::vector<std::pair<size_t, size_t>> depthBounds;
   std::vector<size_t> emptyEntryIDs;
 

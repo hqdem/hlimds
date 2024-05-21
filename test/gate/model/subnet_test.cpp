@@ -58,6 +58,15 @@ inline void testMakeTreeSubnet(CellSymbol symbol, size_t maxArity, uint16_t k) {
   }
 }
 
+inline void checkFanoutsCorrect(
+    const SubnetBuilder &builder,
+    std::vector<SubnetBuilder::FanoutsContainer> correctFanouts) {
+
+  for (const auto &entry : builder) {
+    EXPECT_EQ(builder.getFanouts(entry), correctFanouts[entry]);
+  }
+}
+
 TEST(SubnetTest, AddCellTreeTest) {
   constexpr size_t MaxArity = 10u;
   constexpr size_t K = 2u;
@@ -314,6 +323,158 @@ TEST(SubnetTest, WeightsAfterMake) {
     size_t j = *it;
     EXPECT_EQ(correctWeights[j], builder.getWeight(j));
   }
+}
+
+TEST(SubnetTest, Fanouts) {
+  SubnetBuilder builder;
+
+  builder.enableFanouts();
+  Subnet::LinkList inputs = builder.addInputs(4);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1], inputs[1]);
+  Subnet::Link link2 = builder.addCell(AND, inputs[2], inputs[3]);
+  Subnet::Link link3 = builder.addCell(AND, link1, link2);
+  builder.addOutput(link3);
+
+  checkFanoutsCorrect(builder, {{4}, {4, 4}, {5}, {5}, {6}, {6}, {7}, {}});
+}
+
+TEST(SubnetTest, FanoutsEnabling) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(4);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1], inputs[1]);
+  Subnet::Link link2 = builder.addCell(AND, inputs[2], inputs[3]);
+  Subnet::Link link3 = builder.addCell(AND, link1, link2);
+  builder.addOutput(link3);
+
+  builder.enableFanouts();
+
+  checkFanoutsCorrect(builder, {{4}, {4, 4}, {5}, {5}, {6}, {6}, {7}, {}});
+}
+
+TEST(SubnetTest, FanoutsReplace) {
+  SubnetBuilder builder;
+
+  builder.enableFanouts();
+
+  Subnet::LinkList inputs = builder.addInputs(4);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(AND, inputs[2], inputs[3]);
+  Subnet::Link link3 = builder.addCell(AND, link1, link2);
+  builder.addOutput(link1);
+  builder.addOutput(link3);
+
+  SubnetBuilder rhsBuilder;
+
+  Subnet::LinkList rhsInputs = rhsBuilder.addInputs(4);
+  Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, inputs[0], inputs[1],
+                                             inputs[2], inputs[3]);
+  Subnet::Link rhsLink2 = rhsBuilder.addCell(BUF, rhsLink1);
+  rhsBuilder.addOutput(rhsLink2);
+  const auto rhsID = rhsBuilder.make();
+
+  std::unordered_map<size_t, size_t> mapping;
+  mapping[0] = 0;
+  mapping[1] = 1;
+  mapping[2] = 2;
+  mapping[3] = 3;
+  mapping[6] = 6;
+
+  builder.replace(rhsID, mapping);
+
+  checkFanoutsCorrect(
+      builder, {{4, 9}, {4, 9}, {9}, {9}, {7}, {}, {8}, {}, {}, {6}}
+  );
+}
+
+TEST(SubnetTest, FanoutsReplaceTwice) {
+  SubnetBuilder builder;
+
+  builder.enableFanouts();
+
+  Subnet::LinkList inputs = builder.addInputs(4);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(AND, inputs[2], inputs[3]);
+  Subnet::Link link3 = builder.addCell(AND, link1, link2);
+  builder.addOutput(link1);
+  builder.addOutput(link3);
+
+  // RHS 1
+  SubnetBuilder rhsBuilder;
+
+  Subnet::LinkList rhsInputs = rhsBuilder.addInputs(4);
+  Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, inputs[0], inputs[1],
+                                             inputs[2], inputs[3]);
+  Subnet::Link rhsLink2 = rhsBuilder.addCell(BUF, rhsLink1);
+  rhsBuilder.addOutput(rhsLink2);
+  const auto rhsID = rhsBuilder.make();
+
+  std::unordered_map<size_t, size_t> mapping;
+  mapping[0] = 0;
+  mapping[1] = 1;
+  mapping[2] = 2;
+  mapping[3] = 3;
+  mapping[6] = 6;
+
+  builder.replace(rhsID, mapping);
+
+  // RHS 2
+  SubnetBuilder rhs2Builder;
+
+  Subnet::LinkList rhs2Inputs = rhs2Builder.addInputs(4);
+  Subnet::Link rhs2Link1 = rhs2Builder.addCell(AND, rhs2Inputs[0], rhs2Inputs[1]);
+  Subnet::Link rhs2Link2 = rhs2Builder.addCell(AND, rhs2Inputs[2], rhs2Inputs[3]);
+  Subnet::Link rhs2Link3 = rhs2Builder.addCell(AND, rhs2Link1, rhs2Link2);
+  rhs2Builder.addOutput(rhs2Link3);
+  const auto rhs2ID = rhs2Builder.make();
+
+  std::unordered_map<size_t, size_t> mapping2;
+  mapping2[0] = 0;
+  mapping2[1] = 1;
+  mapping2[2] = 2;
+  mapping2[3] = 3;
+  mapping2[7] = 6;
+
+  builder.replace(rhs2ID, mapping2);
+
+  checkFanoutsCorrect(builder, {{4}, {4}, {5}, {5}, {7, 6}, {6}, {8}, {}, {}});
+}
+
+TEST(SubnetTest, FanoutsLinksEntry) {
+  SubnetBuilder builder;
+
+  builder.enableFanouts();
+  Subnet::LinkList inputs = builder.addInputs(6);
+  Subnet::LinkList links{inputs[0], inputs[1], inputs[2], inputs[3], inputs[4],
+                         inputs[5]};
+  Subnet::Link link1 = builder.addCell(AND, links);
+  builder.addOutput(link1);
+
+  checkFanoutsCorrect(builder, {{6}, {6}, {6}, {6}, {6}, {6}, {8}, {}, {}});
+}
+
+TEST(SubnetTest, FanoutsMerge) {
+  SubnetBuilder builder;
+  builder.enableFanouts();
+
+  Subnet::LinkList inputs = builder.addInputs(2);
+
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(OR, ~inputs[0], ~inputs[1]);
+  Subnet::Link link3 = builder.addCell(BUF, ~link2);
+
+  builder.addOutput(link1);
+  builder.addOutput(link3);
+
+  SubnetBuilder::MergeMap mergeMap;
+  SubnetBuilder::EntrySet entrySet;
+
+  entrySet.insert(link3.idx);
+  mergeMap[link1.idx] = entrySet;
+
+  builder.mergeCells(mergeMap);
+
+  checkFanoutsCorrect(builder, {{2}, {2}, {5, 6}, {}, {}, {}, {}});
 }
 
 #if 0

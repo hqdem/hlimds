@@ -83,6 +83,23 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   return {minLength, maxLength};
 }
 
+void SubnetBuilder::enableFanouts() {
+  fanoutsEnabled = true;
+  fanouts.reserve(entries.size());
+  for (size_t i = getSubnetBegin(); i != upperBoundID && i != invalidID;
+       i = getNext(i)) {
+    const auto &links = getLinks(i);
+    for (const auto &link : links) {
+      addFanout(link.idx, i);
+    }
+  }
+}
+
+void SubnetBuilder::disableFanouts() {
+  fanoutsEnabled = false;
+  fanouts.clear();
+}
+
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
   ModelPrinter::getDefaultPrinter().print(out, subnet);
   return out;
@@ -549,6 +566,33 @@ void SubnetBuilder::addDepthBounds(size_t entryID) {
   }
 }
 
+void SubnetBuilder::addFanout(size_t sourceID, size_t fanoutID) {
+  assert(sourceID < entries.size());
+  assert(fanoutID < entries.size());
+  if (!fanoutsEnabled) {
+    return;
+  }
+  if (fanouts.size() <= sourceID) {
+    fanouts.resize(sourceID + 1);
+  }
+  fanouts[sourceID].push_back(fanoutID);
+}
+
+void SubnetBuilder::delFanout(size_t sourceID, size_t fanoutID) {
+  assert(sourceID < entries.size());
+  assert(fanoutID < entries.size());
+  if (!fanoutsEnabled) {
+    return;
+  }
+  auto &srcFanouts = fanouts[sourceID];
+  for (auto it = srcFanouts.begin(); it != srcFanouts.end(); ++it) {
+    if ((*it) == fanoutID) {
+      srcFanouts.erase(it);
+      break;
+    }
+  }
+}
+
 size_t SubnetBuilder::allocEntry() {
   if (!emptyEntryIDs.empty()) {
     const auto allocatedID = emptyEntryIDs.back();
@@ -582,6 +626,7 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
     desc[idx].depth = std::max(getDepth(idx), getDepth(link.idx) + 1);
     auto &cell = getCell(link.idx);
     assert(!cell.isOut());
+    addFanout(link.idx, idx);
     cell.incRefCount();
   }
   entries[idx] = Subnet::Entry(typeID, links);
@@ -656,7 +701,9 @@ void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
 
         // Redirect the link to the remaining cell.
         link.idx = r->second;
+        delFanout(link.idx, *i);
         source.decRefCount();
+        addFanout(r->second, *i);
         remain.incRefCount();
 
         if (!--refcount) {
@@ -787,7 +834,9 @@ void SubnetBuilder::relinkCell(size_t entryID, const LinkList &newLinks) {
 
   for (size_t j = 0; j < cell.arity; ++j) {
     auto &link = getLinkRef(entryID, j);
+    delFanout(link.idx, entryID);
     link = newLinks[j];
+    addFanout(link.idx, entryID);
   }
 }
 
@@ -807,6 +856,7 @@ void SubnetBuilder::deleteCell(size_t entryID) {
       const size_t inputID = cell.link[j].idx;
 
       auto &inputCell = getCell(inputID);
+      delFanout(inputID, currentID);
       inputCell.decRefCount();
 
       if (!inputCell.refcount && !inputCell.isIn() /* leave inputs */) {
@@ -829,16 +879,17 @@ Subnet::Link SubnetBuilder::replaceCell(
   size_t newDepth = 0;
 
   for (const auto &link : links) {
+    addFanout(link.idx, entryID);
     getCell(link.idx).incRefCount();
+
     newDepth = std::max(newDepth, getDepth(link.idx) + 1);
   }
   for (const auto &link : oldLinks) {
-    const size_t inputEntryID = link.idx;
-
-    auto &inputCell = getCell(inputEntryID);
+    auto &inputCell = getCell(link.idx);
+    delFanout(link.idx, entryID);
     inputCell.decRefCount();
     if (!inputCell.refcount && !inputCell.isIn()) {
-      deleteCell(inputEntryID);
+      deleteCell(link.idx);
     }
   }
 
@@ -992,6 +1043,7 @@ void SubnetBuilder::clearContext() {
   subnetEnd = normalOrderID;
   strash.clear();
   isDisassembled = false;
+  disableFanouts();
 }
 
 std::pair<size_t, bool> SubnetBuilder::strashEntry(

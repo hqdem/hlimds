@@ -257,10 +257,13 @@ Subnet::LinkList SubnetBuilder::addSubnet(
     if (cell.isOut()) {
       outs.push_back(newLinks[0]);
     } else {
-      const auto newEntryStrKey = StrashKey{cell.getTypeID(), newLinks};
-      const auto existingEntryIt = strash.find(newEntryStrKey);
-      if (existingEntryIt != strash.end()) {
-        destrashEntry(existingEntryIt->second);
+      // Destrash the entry if required.
+      if (StrashKey::isEnabled(cell.getTypeID(), newLinks)) {
+        const auto newEntryStrKey = StrashKey{cell.getTypeID(), newLinks};
+        const auto existingEntryIt = strash.find(newEntryStrKey);
+        if (existingEntryIt != strash.end()) {
+          destrashEntry(existingEntryIt->second);
+        }
       }
       const auto link = addCell(cell.getTypeID(), newLinks);
       setWeight(link.idx, weight(i, weightProvider));

@@ -15,6 +15,7 @@
 #include "util/hash.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <unordered_map>

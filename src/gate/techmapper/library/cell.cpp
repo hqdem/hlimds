@@ -108,6 +108,10 @@ void LibraryCells::readLibertyFile(std::vector<CellTypeID> &cellTypeIDs,
   for (const auto& cell : LibraryManager::get().getLibrary().getCells()) {
     auto name = std::string(cell.getName());
 
+    if (cell.getBooleanAttribute("is_isolation_cell", false)) {
+      continue;
+    }
+
     std::vector<std::string> inputs;
     std::vector<std::string> outputs;
 

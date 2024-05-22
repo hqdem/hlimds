@@ -62,7 +62,9 @@ private:
   std::vector<std::pair<SubnetID, Subnetattr>> DFFrs;
   std::vector<std::pair<SubnetID, Subnetattr>> Latch;
 
-  std::unordered_map<kitty::dynamic_truth_table, SubnetID, DTTHash, DTTEqual> ttSubnet;
+  std::unordered_map<kitty::dynamic_truth_table,  std::vector<SubnetID>, DTTHash, DTTEqual> ttSubnet;
   std::unordered_map<SubnetID, Subnetattr> subnetToAttr;
+
+  bool isFunctionallyComplete();
 };
 } // namespace eda::gate::techmapper

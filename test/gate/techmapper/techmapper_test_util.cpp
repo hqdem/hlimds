@@ -86,20 +86,8 @@ bool checkAllCellsMapped(SubnetID subnetID) {
 }
 
 void checkEQ(SubnetID origSubnetId, SubnetID mappedSubnetId) {
-  Subnet &origSubnet = model::Subnet::get(origSubnetId);
-  Subnet &mappedSubnet = model::Subnet::get(mappedSubnetId);
-  std::unordered_map<size_t, size_t> map;
-
-  for (int i = 0; i < origSubnet.getInNum(); i++) {
-    map[i] = i;
-  }
-  for (int i = origSubnet.getOutNum(); i < 0; i--) {
-    map[mappedSubnet.getEntries().size() - i] = origSubnet.getEntries().size() - i;
-  }
-
   debugger::SatChecker& checker = debugger::SatChecker::get();
-
-  EXPECT_TRUE(checker.areEquivalent(origSubnetId, mappedSubnetId, map).equal());
+  EXPECT_TRUE(checker.areEquivalent(origSubnetId, mappedSubnetId).equal());
 }
 
 SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId) {

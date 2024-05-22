@@ -20,7 +20,7 @@ namespace eda::gate::techmapper {
 class LibertyChecker {
 public:
   virtual std::vector<std::string> checkLiberty(
-      std::unordered_map<kitty::dynamic_truth_table, model::SubnetID, DTTHash, DTTEqual> &ttSubnet) = 0;
+      std::unordered_map<kitty::dynamic_truth_table, std::vector<model::SubnetID>, DTTHash, DTTEqual> &ttSubnet) = 0;
 
 protected:
   inline std::pair<kitty::dynamic_truth_table, std::string>

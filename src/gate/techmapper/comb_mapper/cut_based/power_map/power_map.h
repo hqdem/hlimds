@@ -13,6 +13,14 @@
 #include "gate/techmapper/comb_mapper/cut_based/cut_based_mapper.h"
 
 namespace eda::gate::techmapper {
+struct PowerMetrics{
+  double af = MAXFLOAT;
+  double sf = MAXFLOAT;
+  uint32_t cutIdx = 0;
+  uint32_t level = 0;
+  uint32_t requiredTime = UINT32_MAX;
+  uint32_t refCounter = 0;
+};
 
 class PowerMap : public CutBaseMapper {
   using Subnet = eda::gate::model::Subnet;
@@ -27,29 +35,59 @@ class PowerMap : public CutBaseMapper {
     PowerMap();
   protected:
     void findBest() override;
-    virtual ~PowerMap() = default;
+    ~PowerMap(){
+      clear();
+    }
 
   private:
+    double getArea(const Cut &cut);
     double areaFlow(const EntryIndex entryIndex,const Cut &cut);
-    double switchFlow(const EntryIndex entryIndex, const Cut &cut,
-                      const std::vector<double> &cellActivities);
 
-    int64_t getLevel(const EntryIndex entryIdx);
-    int64_t getLevel(const Cut &cut);
-    BestReplacement findCutMinimizingDepth(const EntryIndex entryIndex);
+    double getSwitching(const Cut &cut);
+    double switchFlow(const EntryIndex entryIndex, const Cut &cut);
 
-    void traditionalMapDepthOriented();
-    void globalSwitchAreaRecovery(eda::gate::analyzer::SwitchActivity &switchActivity);
+    double getCellPower(const Cut &cut, const SubnetID &techCellSubnetId);
+    double getCellArea(const Cut &cut, const SubnetID &techCellSubnetId);
+ 
+    uint32_t getLevel(const EntryIndex entryIdx);
+    uint32_t getLevel(const Cut &cut);
+    uint32_t getLevel(const std::vector<uint64_t> &entryIdxs);
+
+    void findCutMinimizingDepth(const EntryIndex entryIndex);
+
+    void depthOrientedMap();
+    void globalSwitchAreaRecovery();
+    void localSwitchAreaRecovery();
+
+    double exactAreaRef(const Cut &cut);
+    double exactAreaDeref(const Cut &cut);
+
+    double exactSwitchRef(const Cut &cut);
+    double exactSwitchDeref(const Cut &cut);
+
+    double exactArea(EntryIndex entryIndex, const Cut &cut);
+    double exactSwitch(EntryIndex entryIndex, const Cut &cut);
+
+    bool cutIsRepr(EntryIndex entryIndex,const Cut &cut);
     uint32_t findLatestPoArivalTime();
     void computeRequiredTimes();
+
     std::vector<SubnetID> getTechIdsList(const Cut cut);
+    SubnetID getBestTechCellSubnetId(const Cut &cut);
+    SubnetID getBestAreaTechCellSubnetId(const Cut &cut);
+    void saveBestReplacement(EntryIndex entryIndex, const Cut &cut,
+                             const SubnetID techSubnetId);
 
+    void ref(const EntryIndex &entryIndex);
+    void deref(const EntryIndex &entryIndex);
+
+    void init();
     void clear();
+    
+    std::vector<PowerMetrics> metrics;
 
-    std::vector<double> computedAF;
-    std::vector<double> computedSF;
-    std::vector<int64_t> computedLevel;
-    std::vector<uint32_t> requiredTimes;
+    eda::gate::analyzer::SwitchActivity switchActivity 
+      = eda::gate::analyzer::SwitchActivity({});
     eda::gate::optimizer::ConeBuilder *coneBuilder;
     ArrayEntry *entries;
 };

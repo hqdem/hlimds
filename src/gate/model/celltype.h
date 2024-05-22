@@ -63,6 +63,12 @@ enum CellSymbol : uint16_t {
 
   /// Multiplexor 2-to-1: OUT = S == 0 ? X : Y.
   MUX2,
+  /// Shift left: OUT = X << Y.
+  SHL,
+  /// Shift right (signed): OUT = X >> Y.
+  SHRs,
+  /// Shift right (unsigned): OUT = X >> Y.
+  SHRu,
   /// Equality comparison (signed): OUT = X == Y.
   EQs,
   /// Equality comparison (unsigned): OUT = X == Y.

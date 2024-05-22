@@ -621,6 +621,7 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
   size_t idx = (status.first != invalidID) ? status.first : allocEntry();
 
   desc[idx].depth = 0;
+  desc[idx].session = 0;
 
   for (const auto link : links) {
     desc[idx].depth = std::max(getDepth(idx), getDepth(link.idx) + 1);
@@ -872,6 +873,7 @@ Subnet::Link SubnetBuilder::replaceCell(
 
   destrashEntry(entryID);
 
+  const auto oldRootStrKey = StrashKey(getCell(entryID));
   const auto oldRootNext = getNext(entryID);
   const auto oldRefcount = getCell(entryID).refcount;
   const auto oldLinks = getLinks(entryID);
@@ -896,9 +898,13 @@ Subnet::Link SubnetBuilder::replaceCell(
   entries[entryID] = Subnet::Entry(typeID, links);
   auto &cell = getCell(entryID);
   cell.refcount = oldRefcount;
-  auto it = strash.find({StrashKey(typeID, links)});
+  const auto newRootStrKey = StrashKey(typeID, links);
+  auto it = strash.find({newRootStrKey});
   if (it == strash.end()) {
     strash.insert({StrashKey(getCell(entryID)), entryID});
+  }
+  if (newRootStrKey != oldRootStrKey) {
+    desc[entryID].session = 0;
   }
   if (oldDepth != newDepth) {
     deleteDepthBounds(entryID);
@@ -1044,6 +1050,8 @@ void SubnetBuilder::clearContext() {
   strash.clear();
   isDisassembled = false;
   disableFanouts();
+  sessionID = 0;
+  sessionStarted = false;
 }
 
 std::pair<size_t, bool> SubnetBuilder::strashEntry(

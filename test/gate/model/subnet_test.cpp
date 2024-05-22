@@ -60,10 +60,17 @@ inline void testMakeTreeSubnet(CellSymbol symbol, size_t maxArity, uint16_t k) {
 
 inline void checkFanoutsCorrect(
     const SubnetBuilder &builder,
-    std::vector<SubnetBuilder::FanoutsContainer> correctFanouts) {
-
+    const std::vector<SubnetBuilder::FanoutsContainer> &correctFanouts) {
   for (const auto &entry : builder) {
     EXPECT_EQ(builder.getFanouts(entry), correctFanouts[entry]);
+  }
+}
+
+inline void checkSessionsCorrect(
+    const SubnetBuilder &builder,
+    const std::vector<size_t> &correctSessions) {
+  for (const auto entry : builder) {
+    EXPECT_EQ(builder.getEntrySession(entry), correctSessions[entry]);
   }
 }
 
@@ -368,7 +375,7 @@ TEST(SubnetTest, FanoutsReplace) {
 
   Subnet::LinkList rhsInputs = rhsBuilder.addInputs(4);
   Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, inputs[0], inputs[1],
-                                             inputs[2], inputs[3]);
+      inputs[2], inputs[3]);
   Subnet::Link rhsLink2 = rhsBuilder.addCell(BUF, rhsLink1);
   rhsBuilder.addOutput(rhsLink2);
   const auto rhsID = rhsBuilder.make();
@@ -404,7 +411,7 @@ TEST(SubnetTest, FanoutsReplaceTwice) {
 
   Subnet::LinkList rhsInputs = rhsBuilder.addInputs(4);
   Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, inputs[0], inputs[1],
-                                             inputs[2], inputs[3]);
+      inputs[2], inputs[3]);
   Subnet::Link rhsLink2 = rhsBuilder.addCell(BUF, rhsLink1);
   rhsBuilder.addOutput(rhsLink2);
   const auto rhsID = rhsBuilder.make();
@@ -446,7 +453,7 @@ TEST(SubnetTest, FanoutsLinksEntry) {
   builder.enableFanouts();
   Subnet::LinkList inputs = builder.addInputs(6);
   Subnet::LinkList links{inputs[0], inputs[1], inputs[2], inputs[3], inputs[4],
-                         inputs[5]};
+      inputs[5]};
   Subnet::Link link1 = builder.addCell(AND, links);
   builder.addOutput(link1);
 
@@ -475,6 +482,131 @@ TEST(SubnetTest, FanoutsMerge) {
   builder.mergeCells(mergeMap);
 
   checkFanoutsCorrect(builder, {{2}, {2}, {5, 6}, {}, {}, {}, {}});
+}
+
+TEST(SubnetTest, SessionSimple) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(3);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(OR, inputs[1], inputs[2]);
+  Subnet::Link link3 = builder.addCell(AND, link1, link2);
+  builder.addOutput(link3);
+
+  builder.startSession();
+  EXPECT_EQ(builder.getSession(), 1);
+  for (const auto entry : builder) {
+    if (entry != 2) {
+      builder.markEntry(entry);
+    }
+  }
+
+  checkSessionsCorrect(builder, {1, 1, 0, 1, 1, 1, 1});
+}
+
+TEST(SubnetTest, SessionReplaceDiff) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(3);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(OR, inputs[1], inputs[2]);
+  Subnet::Link link3 = builder.addCell(AND, link1, link2);
+  builder.addOutput(link3);
+
+  builder.startSession();
+  EXPECT_EQ(builder.getSession(), 1);
+  builder.endSession();
+  builder.startSession();
+  EXPECT_EQ(builder.getSession(), 2);
+  for (const auto entry : builder) {
+    builder.markEntry(entry);
+  }
+
+  // RHS SubnetBuilder
+  SubnetBuilder rhsBuilder;
+
+  const Subnet::LinkList rhsInputs = rhsBuilder.addInputs(3);
+  const Subnet::Link rhsLink1 = rhsBuilder.addCell(AND, rhsInputs[0],
+      rhsInputs[1], rhsInputs[2]);
+  rhsBuilder.addOutput(rhsLink1);
+  const auto rhsID = rhsBuilder.make();
+
+  std::unordered_map<size_t, size_t> mapping;
+  mapping[0] = 0;
+  mapping[1] = 1;
+  mapping[2] = 2;
+  mapping[4] = 5;
+
+  builder.replace(rhsID, mapping);
+
+  checkSessionsCorrect(builder, {2, 2, 2, 0, 0, 0, 2});
+}
+
+TEST(SubnetTest, SessionReplaceSame) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(2);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  builder.addOutput(link1);
+
+  builder.startSession();
+  EXPECT_EQ(builder.getSession(), 1);
+  for (const auto entry : builder) {
+    builder.markEntry(entry);
+  }
+
+  // RHS SubnetBuilder
+  SubnetBuilder rhsBuilder;
+
+  const Subnet::LinkList rhsInputs = rhsBuilder.addInputs(2);
+  const Subnet::Link rhsLink1 = rhsBuilder.addCell(AND, rhsInputs[0],
+      rhsInputs[1]);
+  rhsBuilder.addOutput(rhsLink1);
+  const auto rhsID = rhsBuilder.make();
+
+  std::unordered_map<size_t, size_t> mapping;
+  mapping[0] = 0;
+  mapping[1] = 1;
+  mapping[3] = 2;
+
+  builder.replace(rhsID, mapping);
+
+  checkSessionsCorrect(builder, {1, 1, 1, 1});
+}
+
+TEST(SubnetTest, SessionFillEmptyEntry) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(2);
+  Subnet::Link link1 = builder.addCell(BUF, inputs[0]);
+  Subnet::Link link2 = builder.addCell(AND, link1, inputs[1]);
+  builder.addOutput(link2);
+
+  builder.startSession();
+  EXPECT_EQ(builder.getSession(), 1);
+  for (const auto entry : builder) {
+    builder.markEntry(entry);
+  }
+
+  // RHS SubnetBuilder
+  SubnetBuilder rhsBuilder;
+
+  const Subnet::LinkList rhsInputs = rhsBuilder.addInputs(2);
+  const Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, rhsInputs[0],
+      rhsInputs[1]);
+  rhsBuilder.addOutput(rhsLink1);
+  const auto rhsID = rhsBuilder.make();
+
+  std::unordered_map<size_t, size_t> mapping;
+  mapping[0] = 0;
+  mapping[1] = 1;
+  mapping[3] = 3;
+
+  builder.replace(rhsID, mapping);
+
+  builder.addOutput(inputs[0]);
+
+  checkSessionsCorrect(builder, {1, 1, 0, 0, 1});
 }
 
 #if 0

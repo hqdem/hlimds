@@ -323,6 +323,10 @@ struct StrashKey final {
         && !memcmp(links, other.links, sizeof(links));
   }
 
+  bool operator!=(const StrashKey &other) const {
+    return !(*this == other);
+  }
+
   uint32_t typeID;
   uint16_t arity;
   Link links[Subnet::Cell::InPlaceLinks];
@@ -416,6 +420,41 @@ public:
       SubnetID subnetID,
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
+
+  /// Starts a new session.
+  /// Precondition: the last started session is ended.
+  void startSession() {
+    assert(!sessionStarted);
+    sessionStarted = true;
+    ++sessionID;
+  }
+
+  /// Ends the current session.
+  /// Precondition: session is started.
+  void endSession() {
+    assert(sessionStarted);
+    sessionStarted = false;
+  }
+
+  /// Marks the passed entry as visited in the current session.
+  /// Precondition: session is started.
+  void markEntry(size_t i) {
+    assert(sessionStarted);
+    desc[i].session = sessionID;
+  }
+
+  /// Returns the current session id.
+  /// Precondition: session is started.
+  size_t getSession() const {
+    assert(sessionStarted);
+    return sessionID;
+  }
+
+  /// Returns the last session id in which the passed entry was marked.
+  /// If the entry was not marked during any session, returns 0.
+  size_t getEntrySession(size_t i) const {
+    return desc[i].session;
+  }
 
   /// Returns the constant reference to the i-th entry.
   const Subnet::Entry &getEntry(size_t i) const {
@@ -774,12 +813,14 @@ private:
         prev(normalOrderID),
         next(normalOrderID),
         depth(invalidID),
-        weight(0.0) {}
+        weight(0.0),
+        session(0) {}
 
     size_t prev;
     size_t next;
     size_t depth;
     float weight;
+    size_t session;
   };
 
   uint16_t nIn;
@@ -799,6 +840,9 @@ private:
   size_t subnetEnd{invalidID};
 
   StrashMap strash;
+
+  size_t sessionID{0};
+  bool sessionStarted{false};
 };
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet);

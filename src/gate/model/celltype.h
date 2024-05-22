@@ -63,12 +63,14 @@ enum CellSymbol : uint16_t {
 
   /// Multiplexor 2-to-1: OUT = S == 0 ? X : Y.
   MUX2,
+
   /// Shift left: OUT = X << Y.
   SHL,
   /// Shift right (signed): OUT = X >> Y.
   SHRs,
   /// Shift right (unsigned): OUT = X >> Y.
   SHRu,
+
   /// Equality comparison (signed): OUT = X == Y.
   EQs,
   /// Equality comparison (unsigned): OUT = X == Y.
@@ -77,6 +79,16 @@ enum CellSymbol : uint16_t {
   NEQs,
   /// Non-equality comparison (unsigned): OUT = X != Y.
   NEQu,
+
+  /// Equality comparison (signed): OUT = X === Y (non-synthesizable).
+  EQXs,
+  /// Equality comparison (unsigned): OUT = X === Y (non-synthesizable).
+  EQXu,
+  /// Non-equality comparison (signed): OUT = X !== Y (non-synthesizable).
+  NEQXs,
+  /// Non-equality comparison (unsigned): OUT = X !== Y (non-synthesizable).
+  NEQXu,
+
   /// Less-than comparison (signed): OUT = X < Y.
   LTs,
   /// Less-than comparison (unsigned): OUT = X < Y.
@@ -93,12 +105,14 @@ enum CellSymbol : uint16_t {
   GTEs,
   /// Greater-than-equal comparison (unsigned): OUT = X >= Y.
   GTEu,
+
   /// Negation (unary minus): OUT = -X.
   NEG,
   /// Addition: OUT = X + Y.
   ADD,
   /// Subtraction: OUT = X - Y.
   SUB,
+
   /// Multiplication (signed): OUT = X * Y.
   MULs,
   /// Multiplication (unsigned): OUT = X * Y.

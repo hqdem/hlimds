@@ -37,7 +37,7 @@ static constexpr uint16_t RSTLVL0 = (1u << RSTLVL_BIT);
 static constexpr uint16_t RSTVAL0 = (0u << RSTVAL_BIT); // Default
 static constexpr uint16_t RSTVAL1 = (1u << RSTVAL_BIT);
 
-inline bool isClkPosedge(uint16_t symbol) {
+inline bool getClkEdge(uint16_t symbol) {
   return (symbol & PNEDGE_BIT) == POSEDGE;
 }
 
@@ -318,11 +318,6 @@ public:
   bool isNor()   const { return symbol == NOR;   }
   bool isXnor()  const { return symbol == XNOR;  }
   bool isMaj()   const { return symbol == MAJ;   }
-  bool isLatch() const { return symbol == LATCH; }
-  bool isDff()   const { return symbol == DFF;   }
-  bool isSDff()  const { return symbol == sDFF;  }
-  bool isADff()  const { return symbol == aDFF;  }
-  bool isDffRs() const { return symbol == DFFrs; }
   bool isMux2()  const { return symbol == MUX2;  }
   bool isShl()   const { return symbol == SHL;   }
   bool isShrS()  const { return symbol == SHRs;  }
@@ -354,6 +349,16 @@ public:
   bool isRemU()  const { return symbol == REMu;  }
   bool isModS()  const { return symbol == MODs;  }
   bool isUndef() const { return symbol == UNDEF; }
+
+  bool isLatch() const { return symbol == LATCH; }
+  bool isDff()   const { return (symbol & ~FLGMASK) == DFF;  }
+  bool isSDff()  const { return (symbol & ~FLGMASK) == sDFF; }
+  bool isADff()  const { return (symbol & ~FLGMASK) == aDFF; }
+  bool isDffRs() const { return symbol == DFFrs; }
+
+  bool getClkEdge()  const { return model::getClkEdge(symbol);  }
+  bool getRstLevel() const { return model::getRstLevel(symbol); }
+  bool getRstValue() const { return model::getRstValue(symbol); }
 
   bool isGate() const { return  props.cell &&  props.soft; }
   bool isCell() const { return  props.cell && !props.soft; }

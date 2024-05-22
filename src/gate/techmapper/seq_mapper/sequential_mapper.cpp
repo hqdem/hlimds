@@ -17,17 +17,21 @@ SequentialMapper::SequentialMapper(CellDB *cellDB)
 
 model::CellTypeID SequentialMapper::mapSequenceCell(model::CellID sequenceCellID,
                                                   Techmapper::MapperType techmapSelector) {
-  auto& sequenceCell = model::Cell::get(sequenceCellID);
-  assert(sequenceCell.isDff() || sequenceCell.isDffRs() || sequenceCell.isLatch());
+  const auto &sequenceCell = model::Cell::get(sequenceCellID);
+  const auto &sequenceType = sequenceCell.getType();
+  
+  assert(sequenceType.isGate() && !sequenceType.isCombinational());
 
   model::SubnetID subnetId;
 
-  if (sequenceCell.isDff()) {
-    subnetId = mapDFF(techmapSelector);
-  } else if (sequenceCell.isDffRs()) {
-    subnetId = mapDFFrs(techmapSelector);
-  } else if (sequenceCell.isLatch()) {
-    subnetId = mapLatch(techmapSelector);
+  if (sequenceType.isDff()) {
+    subnetId = mapDFF(techmapSelector); // FIXME:
+  } else if (sequenceType.isDffRs()) {
+    subnetId = mapDFFrs(techmapSelector); // FIXME:
+  } else if (sequenceType.isLatch()) {
+    subnetId = mapLatch(techmapSelector); // FIXME:
+  } else {
+    assert(false && "Unsupported cell type");
   }
 
   auto &subnet = model::Subnet::get(subnetId);

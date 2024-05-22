@@ -135,7 +135,9 @@ NetID Techmapper::sequenseTechMapping(NetID netID) {
       continue;
     }
 
-    auto &currentCell = model::Cell::get(currentCellID);
+    const auto &currentCell = model::Cell::get(currentCellID);
+    const auto &currentType = currentCell.getType();
+
     // TODO: add zero/one
     if (currentCell.isIn()) {
       auto cellID = makeCell(model::CellSymbol::IN);
@@ -156,7 +158,7 @@ NetID Techmapper::sequenseTechMapping(NetID netID) {
     }
     if (add) {
       model::CellID cellID;
-      if (currentCell.isDff() || currentCell.isDffRs() || currentCell.isLatch()) {
+      if (currentType.isGate() && !currentType.isCombinational()) {
         // Change cellType
         cellID = makeCell(techmap(currentCellID), linkList);
       } else {

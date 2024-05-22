@@ -36,24 +36,19 @@ public:
   static constexpr uint16_t MaxFanin  = 0xffff;
   static constexpr uint16_t MaxFanout = 0xffff;
 
-  bool isIn()    const { return typeSID == CELL_TYPE_SID_IN;       }
-  bool isOut()   const { return typeSID == CELL_TYPE_SID_OUT;      }
-  bool isZero()  const { return typeSID == CELL_TYPE_SID_ZERO;     }
-  bool isOne()   const { return typeSID == CELL_TYPE_SID_ONE;      }
-  bool isBuf()   const { return typeSID == CELL_TYPE_SID_BUF;      }
-  bool isNot()   const { return typeSID == CELL_TYPE_SID_NOT;      }
-  bool isAnd()   const { return typeSID == CELL_TYPE_SID_AND;      }
-  bool isOr()    const { return typeSID == CELL_TYPE_SID_OR;       }
-  bool isXor()   const { return typeSID == CELL_TYPE_SID_XOR;      }
-  bool isNand()  const { return typeSID == CELL_TYPE_SID_NAND;     }
-  bool isNor()   const { return typeSID == CELL_TYPE_SID_NOR;      }
-  bool isXnor()  const { return typeSID == CELL_TYPE_SID_XNOR;     }
-  bool isMaj()   const { return typeSID == CELL_TYPE_SID_MAJ;      }
-  bool isLatch() const { return typeSID == CELL_TYPE_SID_LATCH;    }
-  bool isDff()   const { return typeSID == CELL_TYPE_SID_DFF_p;    }
-  bool isSDff()  const { return typeSID == CELL_TYPE_SID_sDFF_pp0; }
-  bool isADff()  const { return typeSID == CELL_TYPE_SID_aDFF_pp0; }
-  bool isDffRs() const { return typeSID == CELL_TYPE_SID_DFFrs;    }
+  bool isIn()   const { return typeSID == CELL_TYPE_SID_IN;   }
+  bool isOut()  const { return typeSID == CELL_TYPE_SID_OUT;  }
+  bool isZero() const { return typeSID == CELL_TYPE_SID_ZERO; }
+  bool isOne()  const { return typeSID == CELL_TYPE_SID_ONE;  }
+  bool isBuf()  const { return typeSID == CELL_TYPE_SID_BUF;  }
+  bool isNot()  const { return typeSID == CELL_TYPE_SID_NOT;  }
+  bool isAnd()  const { return typeSID == CELL_TYPE_SID_AND;  }
+  bool isOr()   const { return typeSID == CELL_TYPE_SID_OR;   }
+  bool isXor()  const { return typeSID == CELL_TYPE_SID_XOR;  }
+  bool isNand() const { return typeSID == CELL_TYPE_SID_NAND; }
+  bool isNor()  const { return typeSID == CELL_TYPE_SID_NOR;  }
+  bool isXnor() const { return typeSID == CELL_TYPE_SID_XNOR; }
+  bool isMaj()  const { return typeSID == CELL_TYPE_SID_MAJ;  }
 
   /// Returns the full cell type identifier.
   CellTypeID getTypeID() const { return CellTypeID::makeFID(typeSID); }

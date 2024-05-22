@@ -34,6 +34,7 @@ IF (LPSOLVE_INCLUDE_PATH)
         ${LPSOLVE_INCLUDE_DIR}
         ${LPSOLVE_INSTALL_BASE_PATH}/lib
         /usr/lib/
+        /usr/lib64/
         /usr/local/lib
         /opt/lib
         )

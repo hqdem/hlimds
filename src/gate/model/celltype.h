@@ -20,6 +20,35 @@ namespace eda::gate::model {
 // Cell Symbol
 //===----------------------------------------------------------------------===//
 
+enum CellSymbolFlags : uint8_t {
+  PNEDGE_BIT = 15,
+  RSTLVL_BIT = 14,
+  RSTVAL_BIT = 13,
+};
+
+static constexpr uint16_t FLGMASK = (1u << PNEDGE_BIT)
+                                  | (1u << RSTLVL_BIT)
+                                  | (1u << RSTVAL_BIT);
+
+static constexpr uint16_t POSEDGE = (0u << PNEDGE_BIT); // Default
+static constexpr uint16_t NEGEDGE = (1u << PNEDGE_BIT);
+static constexpr uint16_t RSTLVL1 = (0u << RSTLVL_BIT); // Default
+static constexpr uint16_t RSTLVL0 = (1u << RSTLVL_BIT);
+static constexpr uint16_t RSTVAL0 = (0u << RSTVAL_BIT); // Default
+static constexpr uint16_t RSTVAL1 = (1u << RSTVAL_BIT);
+
+inline bool isClkPosedge(uint16_t symbol) {
+  return (symbol & PNEDGE_BIT) == POSEDGE;
+}
+
+inline bool getRstLevel(uint16_t symbol) {
+  return (symbol & RSTLVL_BIT) == RSTLVL1;
+}
+
+inline bool getRstValue(uint16_t symbol) {
+  return (symbol & RSTVAL_BIT) == RSTVAL1;
+}
+
 enum CellSymbol : uint16_t {
   /// Input.
   IN,
@@ -57,6 +86,12 @@ enum CellSymbol : uint16_t {
   /// D flip-flop (Q, D, CLK):
   /// Q(t) = CLK(posedge) ? D : Q(t-1).
   DFF,
+  /// D flip-flop w/ synchronous reset (Q, D, CLK, RST):
+  /// Q(t) = CLK(posedge) ? (RST ? 0 : D) : Q(t-1).
+  sDFF,
+  /// D flip-flop w/ asynchronous reset (Q, D, CLK, RST):
+  /// Q(t) = RST(level1) ? 0 : (CLK(posedge) ? D : Q(t-1)).
+  aDFF,
   /// D flip-flop w/ (asynchronous) reset and set (Q, D, CLK, RST, SET):
   /// Q(t) = RST(level1) ? 0 : (SET(level1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
   DFFrs,
@@ -128,20 +163,60 @@ enum CellSymbol : uint16_t {
   /// Modulo (signed): OUT = X mod Y = sign(Y)*(|X| rem |Y|).
   MODs,
 
+  /// DFF[CLK(posedge)] = DFF.
+  DFF_p = (DFF | POSEDGE),
+  /// DFF[CLK(negedge)].
+  DFF_n = (DFF | NEGEDGE),
+
+  /// sDFF[CLK(posedge), RST(level=1), RST(value=0)] = sDFF.
+  sDFF_pp0 = (sDFF | POSEDGE | RSTLVL1 | RSTVAL0),
+  /// sDFF[CLK(posedge), RST(level=1), RST(value=1)].
+  sDFF_pp1 = (sDFF | POSEDGE | RSTLVL1 | RSTVAL1),
+  /// sDFF[CLK(posedge), RST(level=0), RST(value=0)].
+  sDFF_pn0 = (sDFF | POSEDGE | RSTLVL0 | RSTVAL0),
+  /// sDFF[CLK(posedge), RST(level=0), RST(value=1)].
+  sDFF_pn1 = (sDFF | POSEDGE | RSTLVL0 | RSTVAL1),
+  /// sDFF[CLK(posedge), RST(level=1), RST(value=0)].
+  sDFF_np0 = (sDFF | NEGEDGE | RSTLVL1 | RSTVAL0),
+  /// sDFF[CLK(posedge), RST(level=1), RST(value=1)].
+  sDFF_np1 = (sDFF | NEGEDGE | RSTLVL1 | RSTVAL1),
+  /// sDFF[CLK(posedge), RST(level=0), RST(value=0)].
+  sDFF_nn0 = (sDFF | NEGEDGE | RSTLVL0 | RSTVAL0),
+  /// sDFF[CLK(posedge), RST(level=0), RST(value=1)].
+  sDFF_nn1 = (sDFF | NEGEDGE | RSTLVL0 | RSTVAL1),
+
+  /// aDFF[CLK(posedge), RST(level=1), RST(value=0)] = aDFF.
+  aDFF_pp0 = (aDFF | POSEDGE | RSTLVL1 | RSTVAL0),
+  /// aDFF[CLK(posedge), RST(level=1), RST(value=1)].
+  aDFF_pp1 = (aDFF | POSEDGE | RSTLVL1 | RSTVAL1),
+  /// aDFF[CLK(posedge), RST(level=0), RST(value=0)].
+  aDFF_pn0 = (aDFF | POSEDGE | RSTLVL0 | RSTVAL0),
+  /// aDFF[CLK(posedge), RST(level=0), RST(value=1)].
+  aDFF_pn1 = (aDFF | POSEDGE | RSTLVL0 | RSTVAL1),
+  /// aDFF[CLK(posedge), RST(level=1), RST(value=0)].
+  aDFF_np0 = (aDFF | NEGEDGE | RSTLVL1 | RSTVAL0),
+  /// aDFF[CLK(posedge), RST(level=1), RST(value=1)].
+  aDFF_np1 = (aDFF | NEGEDGE | RSTLVL1 | RSTVAL1),
+  /// aDFF[CLK(posedge), RST(level=0), RST(value=0)].
+  aDFF_nn0 = (aDFF | NEGEDGE | RSTLVL0 | RSTVAL0),
+  /// aDFF[CLK(posedge), RST(level=0), RST(value=1)].
+  aDFF_nn1 = (aDFF | NEGEDGE | RSTLVL0 | RSTVAL1),
+
   /// Custom block.
-  UNDEF
+  UNDEF = (0xffff & ~FLGMASK)
 };
 
 static_assert(sizeof(CellSymbol) == 2);
+static_assert(DFF == DFF_p);
+static_assert(sDFF == sDFF_pp0);
+static_assert(aDFF == aDFF_pp0);
 
 static constexpr uint16_t LATCH_IN_D   = 0;
 static constexpr uint16_t LATCH_IN_ENA = 1;
 static constexpr uint16_t DFF_IN_D     = 0;
 static constexpr uint16_t DFF_IN_CLK   = 1;
-static constexpr uint16_t DFFrs_IN_D   = 0;
-static constexpr uint16_t DFFrs_IN_CLK = 1;
-static constexpr uint16_t DFFrs_IN_RST = 2;
-static constexpr uint16_t DFFrs_IN_SET = 3;
+static constexpr uint16_t DFF_IN_RST   = 2;
+static constexpr uint16_t DFF_IN_SET   = 3;
 
 inline CellSymbol getNegSymbol(CellSymbol symbol) {
   switch (symbol) {
@@ -245,12 +320,21 @@ public:
   bool isMaj()   const { return symbol == MAJ;   }
   bool isLatch() const { return symbol == LATCH; }
   bool isDff()   const { return symbol == DFF;   }
+  bool isSDff()  const { return symbol == sDFF;  }
+  bool isADff()  const { return symbol == aDFF;  }
   bool isDffRs() const { return symbol == DFFrs; }
   bool isMux2()  const { return symbol == MUX2;  }
+  bool isShl()   const { return symbol == SHL;   }
+  bool isShrS()  const { return symbol == SHRs;  }
+  bool isShrU()  const { return symbol == SHRu;  }
   bool isEqS()   const { return symbol == EQs;   }
   bool isEqU()   const { return symbol == EQu;   }
   bool isNeqS()  const { return symbol == NEQs;  }
   bool isNeqU()  const { return symbol == NEQu;  }
+  bool isEqxS()  const { return symbol == EQXs;  }
+  bool isEqxU()  const { return symbol == EQXu;  }
+  bool isNeqxS() const { return symbol == NEQXs; }
+  bool isNeqxU() const { return symbol == NEQXu; }
   bool isLtS()   const { return symbol == LTs;   }
   bool isLtU()   const { return symbol == LTu;   }
   bool isLteS()  const { return symbol == LTEs;  }
@@ -259,6 +343,7 @@ public:
   bool isGtU()   const { return symbol == GTu;   }
   bool isGteS()  const { return symbol == GTEs;  }
   bool isGteU()  const { return symbol == GTEu;  }
+  bool isNeg()   const { return symbol == NEG;   }
   bool isAdd()   const { return symbol == ADD;   }
   bool isSub()   const { return symbol == SUB;   }
   bool isMulS()  const { return symbol == MULs;  }
@@ -464,83 +549,124 @@ inline CellTypeID makeHardType(CellSymbol symbol,
 // Standard Cell Types
 //===----------------------------------------------------------------------===//
 
-// Full cell type identifiers.
-extern const CellTypeID CELL_TYPE_ID_IN;
-extern const CellTypeID CELL_TYPE_ID_OUT;
-extern const CellTypeID CELL_TYPE_ID_ZERO;
-extern const CellTypeID CELL_TYPE_ID_ONE;
-extern const CellTypeID CELL_TYPE_ID_BUF;
-extern const CellTypeID CELL_TYPE_ID_NOT;
-extern const CellTypeID CELL_TYPE_ID_AND;
-extern const CellTypeID CELL_TYPE_ID_OR;
-extern const CellTypeID CELL_TYPE_ID_XOR;
-extern const CellTypeID CELL_TYPE_ID_NAND;
-extern const CellTypeID CELL_TYPE_ID_NOR;
-extern const CellTypeID CELL_TYPE_ID_XNOR;
-extern const CellTypeID CELL_TYPE_ID_MAJ;
-extern const CellTypeID CELL_TYPE_ID_LATCH;
-extern const CellTypeID CELL_TYPE_ID_DFF;
-extern const CellTypeID CELL_TYPE_ID_DFFrs;
+#define CELL_TYPE_ID(symbol)  CELL_TYPE_ID_##symbol
+#define CELL_TYPE_SID(symbol) CELL_TYPE_SID_##symbol
+
+#define DECLARE_CELL_TYPE_ID(symbol) \
+  /* Full cell type identifier */ \
+  extern const CellTypeID CELL_TYPE_ID(symbol); \
+  /* Short cell type identifier */ \
+  extern const uint32_t CELL_TYPE_SID(symbol)
+
+DECLARE_CELL_TYPE_ID(IN);
+DECLARE_CELL_TYPE_ID(OUT);
+DECLARE_CELL_TYPE_ID(ZERO);
+DECLARE_CELL_TYPE_ID(ONE);
+DECLARE_CELL_TYPE_ID(BUF);
+DECLARE_CELL_TYPE_ID(NOT);
+DECLARE_CELL_TYPE_ID(AND);
+DECLARE_CELL_TYPE_ID(OR);
+DECLARE_CELL_TYPE_ID(XOR);
+DECLARE_CELL_TYPE_ID(NAND);
+DECLARE_CELL_TYPE_ID(NOR);
+DECLARE_CELL_TYPE_ID(XNOR);
+DECLARE_CELL_TYPE_ID(MAJ);
+DECLARE_CELL_TYPE_ID(LATCH);
+DECLARE_CELL_TYPE_ID(DFF_p);
+DECLARE_CELL_TYPE_ID(DFF_n);
+DECLARE_CELL_TYPE_ID(sDFF_pp0);
+DECLARE_CELL_TYPE_ID(sDFF_pp1);
+DECLARE_CELL_TYPE_ID(sDFF_pn0);
+DECLARE_CELL_TYPE_ID(sDFF_pn1);
+DECLARE_CELL_TYPE_ID(sDFF_np0);
+DECLARE_CELL_TYPE_ID(sDFF_np1);
+DECLARE_CELL_TYPE_ID(sDFF_nn0);
+DECLARE_CELL_TYPE_ID(sDFF_nn1);
+DECLARE_CELL_TYPE_ID(aDFF_pp0);
+DECLARE_CELL_TYPE_ID(aDFF_pp1);
+DECLARE_CELL_TYPE_ID(aDFF_pn0);
+DECLARE_CELL_TYPE_ID(aDFF_pn1);
+DECLARE_CELL_TYPE_ID(aDFF_np0);
+DECLARE_CELL_TYPE_ID(aDFF_np1);
+DECLARE_CELL_TYPE_ID(aDFF_nn0);
+DECLARE_CELL_TYPE_ID(aDFF_nn1);
+DECLARE_CELL_TYPE_ID(DFFrs);
 
 constexpr uint64_t getCellTypeID(CellSymbol symbol) {
   switch(symbol) {
-  case IN:    return CELL_TYPE_ID_IN;
-  case OUT:   return CELL_TYPE_ID_OUT;
-  case ZERO:  return CELL_TYPE_ID_ZERO;
-  case ONE:   return CELL_TYPE_ID_ONE;
-  case BUF:   return CELL_TYPE_ID_BUF;
-  case NOT:   return CELL_TYPE_ID_NOT;
-  case AND:   return CELL_TYPE_ID_AND;
-  case OR:    return CELL_TYPE_ID_OR;
-  case XOR:   return CELL_TYPE_ID_XOR;
-  case NAND:  return CELL_TYPE_ID_NAND;
-  case NOR:   return CELL_TYPE_ID_NOR;
-  case XNOR:  return CELL_TYPE_ID_XNOR;
-  case MAJ:   return CELL_TYPE_ID_MAJ;
-  case LATCH: return CELL_TYPE_ID_LATCH;
-  case DFF:   return CELL_TYPE_ID_DFF;
-  case DFFrs: return CELL_TYPE_ID_DFFrs;
-  default:    return OBJ_NULL_ID;
+  case IN:       return CELL_TYPE_ID_IN;
+  case OUT:      return CELL_TYPE_ID_OUT;
+  case ZERO:     return CELL_TYPE_ID_ZERO;
+  case ONE:      return CELL_TYPE_ID_ONE;
+  case BUF:      return CELL_TYPE_ID_BUF;
+  case NOT:      return CELL_TYPE_ID_NOT;
+  case AND:      return CELL_TYPE_ID_AND;
+  case OR:       return CELL_TYPE_ID_OR;
+  case XOR:      return CELL_TYPE_ID_XOR;
+  case NAND:     return CELL_TYPE_ID_NAND;
+  case NOR:      return CELL_TYPE_ID_NOR;
+  case XNOR:     return CELL_TYPE_ID_XNOR;
+  case MAJ:      return CELL_TYPE_ID_MAJ;
+  case LATCH:    return CELL_TYPE_ID_LATCH;
+  case DFF_p:    return CELL_TYPE_ID_DFF_p;
+  case DFF_n:    return CELL_TYPE_ID_DFF_n;
+  case sDFF_pp0: return CELL_TYPE_ID_sDFF_pp0;
+  case sDFF_pp1: return CELL_TYPE_ID_sDFF_pp1;
+  case sDFF_pn0: return CELL_TYPE_ID_sDFF_pn0;
+  case sDFF_pn1: return CELL_TYPE_ID_sDFF_pn1;
+  case sDFF_np0: return CELL_TYPE_ID_sDFF_np0;
+  case sDFF_np1: return CELL_TYPE_ID_sDFF_np1;
+  case sDFF_nn0: return CELL_TYPE_ID_sDFF_nn0;
+  case sDFF_nn1: return CELL_TYPE_ID_sDFF_nn1;
+  case aDFF_pp0: return CELL_TYPE_ID_aDFF_pp0;
+  case aDFF_pp1: return CELL_TYPE_ID_aDFF_pp1;
+  case aDFF_pn0: return CELL_TYPE_ID_aDFF_pn0;
+  case aDFF_pn1: return CELL_TYPE_ID_aDFF_pn1;
+  case aDFF_np0: return CELL_TYPE_ID_aDFF_np0;
+  case aDFF_np1: return CELL_TYPE_ID_aDFF_np1;
+  case aDFF_nn0: return CELL_TYPE_ID_aDFF_nn0;
+  case aDFF_nn1: return CELL_TYPE_ID_aDFF_nn1;
+  case DFFrs:    return CELL_TYPE_ID_DFFrs;
+  default:       return OBJ_NULL_ID;
   }
 }
 
-// Short cell type identifiers.
-extern const uint32_t CELL_TYPE_SID_IN;
-extern const uint32_t CELL_TYPE_SID_OUT;
-extern const uint32_t CELL_TYPE_SID_ZERO;
-extern const uint32_t CELL_TYPE_SID_ONE;
-extern const uint32_t CELL_TYPE_SID_BUF;
-extern const uint32_t CELL_TYPE_SID_NOT;
-extern const uint32_t CELL_TYPE_SID_AND;
-extern const uint32_t CELL_TYPE_SID_OR;
-extern const uint32_t CELL_TYPE_SID_XOR;
-extern const uint32_t CELL_TYPE_SID_NAND;
-extern const uint32_t CELL_TYPE_SID_NOR;
-extern const uint32_t CELL_TYPE_SID_XNOR;
-extern const uint32_t CELL_TYPE_SID_MAJ;
-extern const uint32_t CELL_TYPE_SID_LATCH;
-extern const uint32_t CELL_TYPE_SID_DFF;
-extern const uint32_t CELL_TYPE_SID_DFFrs;
-
 constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
   switch(symbol) {
-  case IN:    return CELL_TYPE_SID_IN;
-  case OUT:   return CELL_TYPE_SID_OUT;
-  case ZERO:  return CELL_TYPE_SID_ZERO;
-  case ONE:   return CELL_TYPE_SID_ONE;
-  case BUF:   return CELL_TYPE_SID_BUF;
-  case NOT:   return CELL_TYPE_SID_NOT;
-  case AND:   return CELL_TYPE_SID_AND;
-  case OR:    return CELL_TYPE_SID_OR;
-  case XOR:   return CELL_TYPE_SID_XOR;
-  case NAND:  return CELL_TYPE_SID_NAND;
-  case NOR:   return CELL_TYPE_SID_NOR;
-  case XNOR:  return CELL_TYPE_SID_XNOR;
-  case MAJ:   return CELL_TYPE_SID_MAJ;
-  case LATCH: return CELL_TYPE_SID_LATCH;
-  case DFF:   return CELL_TYPE_SID_DFF;
-  case DFFrs: return CELL_TYPE_SID_DFFrs;
-  default:    return -1u;
+  case IN:       return CELL_TYPE_SID_IN;
+  case OUT:      return CELL_TYPE_SID_OUT;
+  case ZERO:     return CELL_TYPE_SID_ZERO;
+  case ONE:      return CELL_TYPE_SID_ONE;
+  case BUF:      return CELL_TYPE_SID_BUF;
+  case NOT:      return CELL_TYPE_SID_NOT;
+  case AND:      return CELL_TYPE_SID_AND;
+  case OR:       return CELL_TYPE_SID_OR;
+  case XOR:      return CELL_TYPE_SID_XOR;
+  case NAND:     return CELL_TYPE_SID_NAND;
+  case NOR:      return CELL_TYPE_SID_NOR;
+  case XNOR:     return CELL_TYPE_SID_XNOR;
+  case MAJ:      return CELL_TYPE_SID_MAJ;
+  case LATCH:    return CELL_TYPE_SID_LATCH;
+  case DFF_p:    return CELL_TYPE_SID_DFF_p;
+  case DFF_n:    return CELL_TYPE_SID_DFF_n;
+  case sDFF_pp0: return CELL_TYPE_SID_sDFF_pp0;
+  case sDFF_pp1: return CELL_TYPE_SID_sDFF_pp1;
+  case sDFF_pn0: return CELL_TYPE_SID_sDFF_pn0;
+  case sDFF_pn1: return CELL_TYPE_SID_sDFF_pn1;
+  case sDFF_np0: return CELL_TYPE_SID_sDFF_np0;
+  case sDFF_np1: return CELL_TYPE_SID_sDFF_np1;
+  case sDFF_nn0: return CELL_TYPE_SID_sDFF_nn0;
+  case sDFF_nn1: return CELL_TYPE_SID_sDFF_nn1;
+  case aDFF_pp0: return CELL_TYPE_SID_aDFF_pp0;
+  case aDFF_pp1: return CELL_TYPE_SID_aDFF_pp1;
+  case aDFF_pn0: return CELL_TYPE_SID_aDFF_pn0;
+  case aDFF_pn1: return CELL_TYPE_SID_aDFF_pn1;
+  case aDFF_np0: return CELL_TYPE_SID_aDFF_np0;
+  case aDFF_np1: return CELL_TYPE_SID_aDFF_np1;
+  case aDFF_nn0: return CELL_TYPE_SID_aDFF_nn0;
+  case aDFF_nn1: return CELL_TYPE_SID_aDFF_nn1;
+  case DFFrs:    return CELL_TYPE_SID_DFFrs;
+  default:       return -1u;
   }
 }
 

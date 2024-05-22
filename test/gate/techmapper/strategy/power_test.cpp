@@ -26,11 +26,6 @@ TEST(TechmapPowerTest, SimpleAndNotSubnet) {
   printStatistics(mappedSubnetId);
 }
 
-// TEST(TechmapPowerTest, OKSimpleAndNotSubnet) {
-//   SubnetID mappedSubnetId = OKandNotMapping(TYPE);
-//   printStatistics(mappedSubnetId);
-// }
-
 TEST(TechmapPowerTest, NotNotAndSubnet) {
   SubnetID mappedSubnetId = notNotAndMapping(TYPE);
   printStatistics(mappedSubnetId);

@@ -21,7 +21,7 @@ public:
   // Override the checkLiberty method
   std::vector<std::string> checkLiberty(
       std::unordered_map<kitty::dynamic_truth_table,
-      model::SubnetID, DTTHash,
+      std::vector<model::SubnetID>, DTTHash,
       DTTEqual> &ttSubnet) override;
 
 private:

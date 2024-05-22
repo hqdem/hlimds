@@ -36,7 +36,7 @@ std::pair<kitty::dynamic_truth_table, std::string> AIGCheckerLiberty::invTT() {
 
 std::vector<std::string> AIGCheckerLiberty::checkLiberty(
     std::unordered_map<kitty::dynamic_truth_table,
-    model::SubnetID,
+    std::vector<model::SubnetID>,
     DTTHash,
     DTTEqual> &ttSubnet) {
   std::vector<std::pair<kitty::dynamic_truth_table, std::string>> expressions =

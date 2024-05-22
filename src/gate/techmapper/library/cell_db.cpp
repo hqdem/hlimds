@@ -64,19 +64,35 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     std::iota(permutationVec.begin(), permutationVec.end(), 0);
     do {
       count++;
+
       SubnetBuilder subnetBuilder;
+      SubnetBuilder subnetBuilderForTT;
+
       std::vector<uint16_t> linkArray(cellType.getInNum());
+      std::vector<uint16_t> linkArrayForTT(cellType.getInNum());
+
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
         auto inputIdx = subnetBuilder.addInput();
+        auto inputIdxForTT = subnetBuilderForTT.addInput();
+
         linkArray[permutationVec.at(i)] = inputIdx.idx;
+        linkArrayForTT[permutationVec.at(i)] = inputIdxForTT.idx;
       }
+
       std::vector<Link> linkList;
+      std::vector<Link> linkListForTT;
+
       for (size_t i = 0; i < cellType.getInNum(); ++i) {
         linkList.emplace_back(linkArray[i]);
+        linkListForTT.emplace_back(linkArrayForTT[i]);
       }
 
       auto cellIdx = subnetBuilder.addCell(cellTypeID, linkList);
+      auto cellIdxForTT = subnetBuilderForTT.addSubnet(cellType.getImpl(),linkListForTT); // addSingleOutputSubnet(cellType.getImpl(),linkListForTT);
+
       subnetBuilder.addOutput(cellIdx);
+      subnetBuilderForTT.addOutput(cellIdxForTT.at(0));
+
       SubnetID subnetID = subnetBuilder.make();
 
       subnets.push_back(subnetID);
@@ -89,7 +105,9 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
       Subnetattr subnetattr{cellType.getName(), cellType.getAttr().props.area, perPower};
       subnetToAttr[subnetID] = subnetattr;
-      ttSubnet[model::evaluate(cellType.getSubnet()).at(0)] = subnetID;
+
+      ttSubnet[model::evaluate(model::Subnet::get(subnetBuilderForTT.make())).at(0)].push_back(subnetID);
+
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
 
@@ -167,18 +185,17 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
     }
     assert(missing.size() == 0);
   }
+
+  assert(isFunctionallyComplete());
 }
 
 std::vector<SubnetID> CellDB::getSubnetIDsByTT(const kitty::dynamic_truth_table& tt) const {
-  std::vector<SubnetID> ids;
-  auto range = ttSubnet.equal_range(tt);
-  for (auto it = range.first; it != range.second; ++it) {
-    ids.push_back(it->second);
-  }
-  return ids;
+  auto it = ttSubnet.find(tt);
+  return (it != ttSubnet.end()) ? it->second : std::vector<SubnetID>{};
 }
 
 const Subnetattr &CellDB::getSubnetAttrBySubnetID(const SubnetID id) const {
+  assert(subnetToAttr.find(id) != subnetToAttr.end());
   return subnetToAttr.at(id);
 }
 
@@ -202,6 +219,77 @@ const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFrs() const {
 
 const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getLatch() const {
   return Latch;
+}
+
+kitty::dynamic_truth_table create_not(unsigned num_vars) {
+  kitty::dynamic_truth_table tt(num_vars);
+  kitty::create_nth_var(tt, 0);
+  return ~tt;
+}
+
+kitty::dynamic_truth_table create_and(unsigned num_vars) {
+  kitty::dynamic_truth_table tt(num_vars);
+  kitty::create_from_binary_string(tt, "0001");
+  return tt;
+}
+
+kitty::dynamic_truth_table create_or(unsigned num_vars) {
+  kitty::dynamic_truth_table tt(num_vars);
+  kitty::create_from_binary_string(tt, "0111");
+  return tt;
+}
+
+kitty::dynamic_truth_table create_nand(unsigned num_vars) {
+  return ~create_and(num_vars);
+}
+
+kitty::dynamic_truth_table create_nor(unsigned num_vars) {
+  return ~create_or(num_vars);
+}
+
+kitty::dynamic_truth_table create_xor(unsigned num_vars) {
+  kitty::dynamic_truth_table tt(num_vars);
+  kitty::create_from_binary_string(tt, "0110");
+  return tt;
+}
+
+kitty::dynamic_truth_table create_xnor(unsigned num_vars) {
+  return ~create_xor(num_vars);
+}
+
+bool CellDB::isFunctionallyComplete() {
+
+  unsigned num_vars = 2;
+
+  auto tt_not = create_not(1);
+  auto tt_and = create_and(num_vars);
+  auto tt_or = create_or(num_vars);
+  auto tt_nand = create_nand(num_vars);
+  auto tt_nor = create_nor(num_vars);
+  auto tt_xor = create_xor(num_vars);
+  auto tt_xnor = create_xnor(num_vars);
+
+  bool hasNot = ttSubnet.count(tt_not) > 0;
+  bool hasAnd = ttSubnet.count(tt_and) > 0;
+  bool hasOr = ttSubnet.count(tt_or) > 0;
+  bool hasNand = ttSubnet.count(tt_nand) > 0;
+  bool hasNor = ttSubnet.count(tt_nor) > 0;
+  bool hasXor = ttSubnet.count(tt_xor) > 0;
+  bool hasXnor = ttSubnet.count(tt_xnor) > 0;
+
+  bool hasNonTruePreserving = hasNot || hasNand || hasNor || hasXor || hasXnor;
+  bool hasNonFalsePreserving = hasAnd || hasOr || hasNand || hasNor || hasXor || hasXnor;
+  bool hasNonMonotonic = hasXor || hasNand || hasNor || hasXnor;
+  bool hasNonSelfDual = hasAnd || hasOr || hasNand || hasNor || hasNot || hasXor || hasXnor;
+
+  if (hasNonTruePreserving && hasNonFalsePreserving && hasNonMonotonic && hasNonSelfDual) {
+    return true;
+  }
+
+  if ((hasAnd && hasOr && hasNot) || hasNand || hasNor) {
+    return true;
+  }
+  return false;
 }
 
 } // namespace eda::gate::techmapper

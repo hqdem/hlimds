@@ -87,6 +87,8 @@ enum CellSymbol : uint16_t {
   GTEs,
   /// Greater-than-equal comparison (unsigned): OUT = X >= Y.
   GTEu,
+  /// Negation (unary minus): OUT = -X.
+  NEG,
   /// Addition: OUT = X + Y.
   ADD,
   /// Subtraction: OUT = X - Y.

@@ -52,6 +52,12 @@ public:
     Link(): Link(0) {}
 
     Link operator~() const { return Link(idx, out, !inv); }
+    bool operator==(const Link &other) const {
+      return other.idx == idx && other.inv == inv && other.out == out;
+    }
+    bool operator!=(const Link &other) const {
+      return !(*this == other);
+    }
 
     /// Entry index.
     uint32_t idx : 28;
@@ -270,8 +276,10 @@ public:
   pointer operator->() const;
   EntryIterator &operator++();
   EntryIterator operator++(int);
+  EntryIterator next() const;
   EntryIterator &operator--();
   EntryIterator operator--(int);
+  EntryIterator prev() const;
 
 protected:
   const SubnetBuilder *builder;
@@ -632,6 +640,14 @@ public:
       const CellWeightProvider *weightProvider = nullptr,
       const CellWeightModifier *weightModifier = nullptr) const;
 
+  /// Replaces the given cell w/ the new one. Recursively deletes the cells
+  /// from the transitive fanin cone whose reference counts have become zero
+  /// (if @param delZeroRefcount is set).
+  /// The number of links in both cells must be <= Subnet::Cell::InPlaceLinks.
+  Link replaceCell(
+      size_t entryID, CellTypeID typeID, const LinkList &links,
+      bool delZeroRefcount = true);
+
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
   using EntrySet = std::unordered_set<size_t>;
@@ -770,11 +786,6 @@ private:
   /// Deletes the given cell and the cells from the transitive fanin cone
   /// whose reference counts have become zero (recursively).
   void deleteCell(size_t entryID);
-
-  /// Replaces the given cell w/ the new one and deletes the cells from the
-  /// transitive fanin cone whose reference counts have become zero (recursively).
-  /// The number of links in both cells must be <= Subnet::Cell::InPlaceLinks.
-  Link replaceCell(size_t entryID, CellTypeID typeID, const LinkList &links);
 
   /// Checks if the inputs are located at the beginning of the array.
   bool checkInputsOrder() const;

@@ -144,6 +144,10 @@ EntryIterator EntryIterator::operator++(int) {
   return copyIter;
 }
 
+EntryIterator EntryIterator::next() const {
+  return ++EntryIterator(*this);
+}
+
 EntryIterator &EntryIterator::operator--() {
   entry = builder->getPrev(entry);
   return *this;
@@ -153,6 +157,10 @@ EntryIterator EntryIterator::operator--(int) {
   EntryIterator copyIter(*this);
   --(*this);
   return copyIter;
+}
+
+EntryIterator EntryIterator::prev() const {
+  return --EntryIterator(*this);
 }
 
 const std::pair<size_t, size_t> SubnetBuilder::getLinkIndices(
@@ -868,7 +876,8 @@ void SubnetBuilder::deleteCell(size_t entryID) {
 }
 
 Subnet::Link SubnetBuilder::replaceCell(
-    size_t entryID, CellTypeID typeID, const LinkList &links) {
+    size_t entryID, CellTypeID typeID, const LinkList &links,
+    bool delZeroRefcount) {
   assert(StrashKey::isEnabled(typeID, links));
 
   destrashEntry(entryID);
@@ -883,14 +892,13 @@ Subnet::Link SubnetBuilder::replaceCell(
   for (const auto &link : links) {
     addFanout(link.idx, entryID);
     getCell(link.idx).incRefCount();
-
     newDepth = std::max(newDepth, getDepth(link.idx) + 1);
   }
   for (const auto &link : oldLinks) {
     auto &inputCell = getCell(link.idx);
     delFanout(link.idx, entryID);
     inputCell.decRefCount();
-    if (!inputCell.refcount && !inputCell.isIn()) {
+    if (!inputCell.refcount && !inputCell.isIn() && delZeroRefcount) {
       deleteCell(link.idx);
     }
   }

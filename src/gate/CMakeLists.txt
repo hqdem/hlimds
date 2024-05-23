@@ -25,6 +25,7 @@ add_library(Gate OBJECT
   mutator/mutator.cpp
   mutator/mutator_transformer.cpp
   optimizer/area_resynthesizer.cpp
+  optimizer/associative_balancer.cpp
   optimizer/cone_builder.cpp
   optimizer/cut_extractor.cpp
   optimizer/depth_replacer.cpp

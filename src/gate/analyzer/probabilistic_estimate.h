@@ -16,7 +16,7 @@
 
 namespace eda::gate::analyzer {
 
-using Probabilities = std::vector<double>;
+using Probabilities = std::vector<float>;
 using Subnet        = eda::gate::model::Subnet;
 
 /**
@@ -26,11 +26,11 @@ class ProbabilisticEstimate : public SwitchActivityEstimator {
 
 private:
  
-  double combinations (size_t k, size_t n, std::vector<double>& prob);
+  float combinations (size_t k, size_t n, std::vector<float> &prob) const;
 
-  double majEstimate(std::vector<double> &majProb, size_t nMajP);
+  float majEstimate(std::vector<float> &majProb, size_t nMajP) const;
 
-  double xorEstimate(std::vector<double> &xorProb, size_t nXorP);
+  float xorEstimate(std::vector<float> &xorProb, size_t nXorP) const;
 
 public:
 
@@ -42,8 +42,8 @@ public:
    * 
    * @return Vector of probability 1 for each cell of Subnet.
    */
-  std::vector<double> probEstimator(const Subnet &subnet,
-      const Probabilities &probabilities = {});
+  std::vector<float> probEstimator(const Subnet &subnet,
+      const Probabilities &probabilities = {}) const;
 
   /**
    * @brief Estimates the switching activity by calculating the probability of switching  of each cell.
@@ -54,7 +54,7 @@ public:
    * @return The object of the parent class with total probability of switch from 1 to 0 and from 0 to 1.
    */
   SwitchActivity estimate(const Subnet &subnet,
-      const Probabilities &probabilities = {}) override;
+      const Probabilities &probabilities = {}) const override;
 };
 
 } // namespace eda::gate::analyzer

@@ -87,7 +87,7 @@ class PowerMap : public CutBaseMapper {
     std::vector<PowerMetrics> metrics;
 
     eda::gate::analyzer::SwitchActivity switchActivity 
-      = eda::gate::analyzer::SwitchActivity({});
+      = eda::gate::analyzer::SwitchActivity({}, {});
     eda::gate::optimizer::ConeBuilder *coneBuilder;
     ArrayEntry *entries;
 };

@@ -46,7 +46,7 @@ Simulator::Simulator(const Subnet &subnet):
     pos[i] = p;
 
     i += cell.more;
-    p += cell.getOutNum();
+    p += (cell.isOut() ? 1 : cell.getOutNum());
   }
 }
 

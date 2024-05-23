@@ -50,7 +50,7 @@ public:
       const ResynthesizerBase &resynthesizer,
       const unsigned k,
       const std::function<float(const Effect &)> cost,
-      const bool zero_cost = false) :
+      const bool zero_cost = false):
     SubnetInPlaceTransformer(name),
     resynthesizer(resynthesizer), k(k), cost(cost), zero_cost(zero_cost) {}
 

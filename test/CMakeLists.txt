@@ -54,6 +54,7 @@ add_executable(${TEST_TARGET}
   gate/parser/graphml_parser_test.cpp
   gate/premapper/aigmapper_test.cpp
   gate/optimizer/area_optimizer_test.cpp
+  gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/cone_builder_test.cpp
   gate/optimizer/cut_extractor_test.cpp
   gate/optimizer/depth_optimizer_test.cpp

@@ -8,12 +8,11 @@
 
 #pragma once
 
-#include "gate/model/subnet.h"
 #include "gate/optimizer/associative_balancer.h"
+#include "gate/optimizer/design_transformer.h"
 #include "gate/optimizer/resubstitutor.h"
 #include "gate/optimizer/rewriter.h"
 #include "gate/optimizer/synthesis/abc_npn4.h"
-#include "gate/optimizer/transformer.h"
 #include "gate/premapper/aigmapper.h"
 
 #include "fmt/format.h"
@@ -26,8 +25,6 @@
 
 namespace eda::gate::optimizer {
 
-using SubnetPass = std::shared_ptr<SubnetInPlaceTransformer>;
-using SubnetMapper = std::shared_ptr<SubnetTransformer>;
 using SubnetChain = SubnetInPlaceTransformerChain;
 using SubnetEffect = model::SubnetBuilder::Effect;
 
@@ -149,7 +146,7 @@ inline SubnetPass rsz() {
 }
 
 //===----------------------------------------------------------------------===//
-// Pre-defined scripts
+// Pre-defined Scripts
 //===----------------------------------------------------------------------===//
 
 inline SubnetPass chain(const std::string &name,
@@ -196,7 +193,7 @@ inline SubnetPass compress2() {
 }
 
 //===----------------------------------------------------------------------===//
-// Technology mappers (map)
+// Technology Mappers
 //===----------------------------------------------------------------------===//
 
 inline SubnetMapper ma() {
@@ -212,6 +209,18 @@ inline SubnetMapper md() {
 inline SubnetMapper mp() {
   // FIXME:
   return nullptr;
+}
+
+//===----------------------------------------------------------------------===//
+// Basic Design Passes
+//===----------------------------------------------------------------------===//
+
+inline DesignPass foreach(const SubnetPass &pass) {
+  return std::make_shared<EachSubnetInPlaceTransformer>(pass);
+}
+
+inline DesignPass foreach(const SubnetMapper &mapper) {
+  return std::make_shared<EachSubnetTransformer>(mapper);
 }
 
 } // namespace eda::gate::optimizer

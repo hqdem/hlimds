@@ -14,8 +14,8 @@ using Link          = AigMapper::Link;
 using LinkList      = AigMapper::LinkList;
 using SubnetBuilder = AigMapper::SubnetBuilder;
 
-std::unique_ptr<SubnetBuilder> AigMapper::make(const SubnetID subnetID) const {
-  auto builder = std::make_unique<SubnetBuilder>();
+optimizer::SubnetBuilderPtr AigMapper::make(const SubnetID subnetID) const {
+  auto builder = std::make_shared<SubnetBuilder>();
 
   CellIdMap oldToNew;
   const auto &oldSubnet = Subnet::get(subnetID);

@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "gate/model/subnet.h"
-#include "gate/optimizer/transformer.h"
+#include "gate/optimizer/subnet_transformer.h"
 
 #include <memory>
 #include <unordered_map>
@@ -31,7 +30,7 @@ public:
 
   AigMapper(const std::string &name): optimizer::SubnetTransformer(name) {}
 
-  std::unique_ptr<SubnetBuilder> make(const SubnetID subnetID) const override;
+  optimizer::SubnetBuilderPtr make(const SubnetID subnetID) const override;
 
 protected:
   Link mapCell(CellSymbol symbol, LinkList &links, bool &inv,

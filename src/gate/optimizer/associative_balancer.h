@@ -10,7 +10,7 @@
 
 #include "gate/model/object.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/transformer.h"
+#include "gate/optimizer/subnet_transformer.h"
 
 #include <map>
 

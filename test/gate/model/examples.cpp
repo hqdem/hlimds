@@ -330,7 +330,7 @@ SubnetID makeSubnetRandomMatrix(const size_t nIn,
       nIn, nOut, nCell, minArity, maxArity, seed);
 
   Design design("design", netID);
-  return design.getSubnets().front();
+  return design.getSubnetIDs().front();
 }
 
 NetID makeNetRandomMatrix(const size_t nIn,

@@ -12,7 +12,7 @@
 #include "gate/optimizer/cone_builder.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/transformer.h"
+#include "gate/optimizer/subnet_transformer.h"
 
 #include <functional>
 #include <string>

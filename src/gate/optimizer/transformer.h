@@ -8,17 +8,14 @@
 
 #pragma once
 
-#include "gate/model/subnet.h"
-
 #include <memory>
 #include <sstream>
 #include <string>
 
 namespace eda::gate::optimizer {
 
-//===----------------------------------------------------------------------===//
-// Base templates
-//===----------------------------------------------------------------------===//
+template <typename Builder>
+using BuilderPtr = std::shared_ptr<Builder>;
 
 /// @brief Interface for component-to-component transformers.
 template <typename ID, typename Builder>
@@ -30,7 +27,7 @@ public:
   const std::string &getName() const { return name; }
 
   /// Transforms the given component and stores the result in the builder.
-  virtual std::unique_ptr<Builder> make(const ID componentID) const = 0;
+  virtual BuilderPtr<Builder> make(const ID componentID) const = 0;
 
   /// Transforms the given component and returns the result of the transformation.
   ID transform(const ID componentID) const {
@@ -54,8 +51,8 @@ public:
   virtual void transform(Builder &builder) const = 0;
 
   /// Default implementation of the base method.
-  std::unique_ptr<Builder> make(const ID componentID) const override {
-    auto builder = std::make_unique<Builder>(componentID);
+  BuilderPtr<Builder> make(const ID componentID) const override {
+    auto builder = std::make_shared<Builder>(componentID);
     transform(*builder);
     return builder;
   }
@@ -93,18 +90,5 @@ public:
 private:
   const Chain chain;
 };
-
-//===----------------------------------------------------------------------===//
-// Subnet transformers
-//===----------------------------------------------------------------------===//
-
-using SubnetTransformer =
-    Transformer<model::SubnetID, model::SubnetBuilder>;
-
-using SubnetInPlaceTransformer =
-    InPlaceTransformer<model::SubnetID, model::SubnetBuilder>;
-
-using SubnetInPlaceTransformerChain =
-    InPlaceTransformerChain<model::SubnetID, model::SubnetBuilder>;
 
 } // namespace eda::gate::optimizer

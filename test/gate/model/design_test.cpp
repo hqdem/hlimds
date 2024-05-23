@@ -16,7 +16,7 @@
 namespace eda::gate::model {
 
 inline void check(const Design &design) {
-  EXPECT_FALSE(design.getSubnets().empty());
+  EXPECT_FALSE(design.getSubnetIDs().empty());
   const auto netID = design.make();
   EXPECT_TRUE(netID != OBJ_NULL_ID);
 

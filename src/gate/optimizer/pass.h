@@ -9,10 +9,12 @@
 #pragma once
 
 #include "gate/model/subnet.h"
+#include "gate/optimizer/associative_balancer.h"
 #include "gate/optimizer/resubstitutor.h"
 #include "gate/optimizer/rewriter.h"
 #include "gate/optimizer/synthesis/abc_npn4.h"
 #include "gate/optimizer/transformer.h"
+#include "gate/premapper/aigmapper.h"
 
 #include "fmt/format.h"
 
@@ -30,12 +32,24 @@ using SubnetChain = SubnetInPlaceTransformerChain;
 using SubnetEffect = model::SubnetBuilder::Effect;
 
 //===----------------------------------------------------------------------===//
+// Premappers
+//===----------------------------------------------------------------------===//
+
+inline SubnetMapper aig() {
+  return std::make_shared<premapper::AigMapper>("aig");
+}
+
+inline SubnetMapper mig() {
+  // FIXME:
+  return nullptr;
+}
+
+//===----------------------------------------------------------------------===//
 // Balance (b)
 //===----------------------------------------------------------------------===//
 
 inline SubnetPass b() {
-  // FIXME:
-  return nullptr;
+  return std::make_shared<AssociativeBalancer>("b");
 }
 
 //===----------------------------------------------------------------------===//
@@ -158,6 +172,25 @@ inline SubnetPass compress2() {
   // TODO: -l
   return chain("compress2",
     {b(), rw(), rf(), b(), rw(), rwz(), b(), rfz(), rwz(), b()});
+}
+
+//===----------------------------------------------------------------------===//
+// Technology mappers (map)
+//===----------------------------------------------------------------------===//
+
+inline SubnetMapper ma() {
+  // FIXME:
+  return nullptr;
+}
+
+inline SubnetMapper md() {
+  // FIXME:
+  return nullptr;
+}
+
+inline SubnetMapper mp() {
+  // FIXME:
+  return nullptr;
 }
 
 } // namespace eda::gate::optimizer

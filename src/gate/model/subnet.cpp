@@ -484,7 +484,7 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
   int deletedEntriesN = 0;
   float deletedWeight = 0.0;
   deletedEntriesN++;
-  deletedWeight += getWeight(lhsRootEntryID);
+  deletedWeight += weight(getWeight(lhsRootEntryID), weightModifier);
   std::unordered_map<size_t, size_t> entryNewRefcount;
   std::queue<size_t> entryIDQueue;
   size_t entryID = lhsRootEntryID;

@@ -14,13 +14,11 @@
 
 namespace eda::gate::analyzer {
 
+using OnStates = SimulationEstimator::OnStates;
 using Switches = SimulationEstimator::Switches;
 
 SwitchActivity SimulationEstimator::estimate(const Subnet &subnet,
-    const Probabilities &probabilities) {
-
-  const size_t sizeOfSimulationCache{64};
-  const size_t simulationCount = std::ceil(ticks / sizeOfSimulationCache);
+    const Probabilities &probabilities) const {
 
   InValuesList inValuesList;
   inValuesList.reserve(simulationCount);
@@ -39,20 +37,21 @@ SwitchActivity SimulationEstimator::estimate(const Subnet &subnet,
     inValuesList.push_back(std::move(cacheList));
   }
 
-  auto [switchesOn, switchesOff] = countSwitches(subnet, inValuesList);
+  auto [switchesOn, switchesOff, onStates] = simulate(subnet, inValuesList);
   
-  Probabilities result(switchesOn.size());
+  Probabilities switching(switchesOn.size());
   for (size_t id{0}; id < switchesOn.size(); ++id) {
-    result[id] = static_cast<double>(switchesOn[id] + switchesOff[id]) /
+    switching[id] = static_cast<double>(switchesOn[id] + switchesOff[id]) /
         (ticks - 1);
+    onStates[id] /= ticks; 
   }
 
-  return SwitchActivity{std::move(result),
-      std::move(switchesOn), std::move(switchesOff)};
+  return SwitchActivity{std::move(switching), std::move(onStates),
+      std::move(switchesOn), std::move(switchesOff), ticks};
 }
 
-std::pair<Switches, Switches> SimulationEstimator::countSwitches(
-    const Subnet &subnet, const InValuesList &inValuesList) {
+std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
+    const Subnet &subnet, const InValuesList &inValuesList) const {
 
   const size_t inputs = subnet.getInNum();
   const auto cells = subnet.getEntries();
@@ -63,6 +62,7 @@ std::pair<Switches, Switches> SimulationEstimator::countSwitches(
 
   Switches switchesOn(cells.size());
   Switches switchesOff(cells.size());
+  OnStates onStates(cells.size());
 
   size_t ttSize = std::ceil(std::log2(cells.size()));
   kitty::dynamic_truth_table prevBits(ttSize ? ttSize : 1);
@@ -89,6 +89,7 @@ std::pair<Switches, Switches> SimulationEstimator::countSwitches(
 
     for (size_t id{0}; id < cells.size(); ++id) {
       Cache cache = simulator.getValue(id);
+      onStates[id] += popCount(cache) * 1.f;
       uint64_t bits = getSwitchedBits(cache);
       uint64_t prevBit = ((i) && ((cache & 1ull) ^ getPrevBit(id)));
       switchesOn[id] += popCount(bits & ~cache) + (prevBit & cache);
@@ -98,11 +99,11 @@ std::pair<Switches, Switches> SimulationEstimator::countSwitches(
     }
   }
 
-  return {std::move(switchesOn), std::move(switchesOff)};
+  return {std::move(switchesOn), std::move(switchesOff), std::move(onStates)};
 }
 
 SimulationEstimator::Cache SimulationEstimator::generateInValues(
-    Distributions &distributions, size_t id) {
+    Distributions &distributions, size_t id) const {
   if (distributions.empty()) {
     return static_cast<uint64_t>(std::rand()) +
         (static_cast<uint64_t>(std::rand()) << 32);

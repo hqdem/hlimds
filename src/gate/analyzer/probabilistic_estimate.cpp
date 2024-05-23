@@ -10,22 +10,19 @@
 
 namespace eda::gate::analyzer {
 
-using CellActivities = std::vector<double>;
-using Probabilities  = std::vector<double>;
-using Subnet         = model::Subnet;
-
-double ProbabilisticEstimate::combinations(size_t k, size_t n, std::vector<double> &prob) {
+float ProbabilisticEstimate::combinations(
+    size_t k, size_t n, std::vector<float> &prob) const {
   
-  double p = 0.0;
+  float p = 0.0;
 
   for (size_t i = 0; i < (1ul << n); ++i) {
     std::bitset<32> bits(i);
 
     if (bits.count() == k) {
-      double pComb = 1.0;
+      float pComb = 1.0;
 
       for (size_t j = 0; j < n; ++j) {
-        pComb = pComb * (bits[i] ? prob[j] : (1 - prob[j]));
+        pComb = pComb * (bits[j] ? prob[j] : (1 - prob[j]));
       }
 
       p += pComb;
@@ -35,9 +32,10 @@ double ProbabilisticEstimate::combinations(size_t k, size_t n, std::vector<doubl
   return p;
 }
 
-double ProbabilisticEstimate::majEstimate(std::vector<double> &majProb, size_t nMajP) {
+float ProbabilisticEstimate::majEstimate(
+    std::vector<float> &majProb, size_t nMajP) const {
 
-  double p = 0.0;
+  float p = 0.0;
 
   for (size_t i = nMajP/2 + 1; i <= nMajP; i++) {
     p = p + combinations(i, nMajP, majProb);
@@ -46,9 +44,10 @@ double ProbabilisticEstimate::majEstimate(std::vector<double> &majProb, size_t n
   return p;
 }
 
-double ProbabilisticEstimate::xorEstimate(std::vector<double> &xorProb, size_t nXorP) {
+float ProbabilisticEstimate::xorEstimate(
+    std::vector<float> &xorProb, size_t nXorP) const {
 
-  double p = 0.0;
+  float p = 0.0;
     
   for (size_t i = 1; i <= nXorP; i = i + 2) {
     p = p + combinations(i, nXorP, xorProb);
@@ -57,19 +56,19 @@ double ProbabilisticEstimate::xorEstimate(std::vector<double> &xorProb, size_t n
   return p;
 }
 
-std::vector<double> ProbabilisticEstimate::probEstimator(const Subnet &subnet,
-      const Probabilities &probabilities) {
+std::vector<float> ProbabilisticEstimate::probEstimator(const Subnet &subnet,
+    const Probabilities &probabilities) const {
   
   uint32_t lenInputProb = probabilities.size();
   size_t lenArrEst = subnet.size();
-  std::vector<double> arrProbability;
-  std::vector<double> cellEstimate;
+  std::vector<float> arrProbability;
+  std::vector<float> cellEstimate;
   cellEstimate.resize(lenArrEst);;
   uint32_t k = 0;
   const auto cells = subnet.getEntries();
   
   for (size_t i = 0; i < lenArrEst; ++i) {
-    double p = 1.0;
+    float p = 1.0;
     const auto &cell = cells[i].cell;
     auto flag = false;
     
@@ -153,17 +152,19 @@ std::vector<double> ProbabilisticEstimate::probEstimator(const Subnet &subnet,
 }
 
 SwitchActivity ProbabilisticEstimate::estimate(const Subnet &subnet,
-      const Probabilities &probabilities) {
+    const Probabilities &probabilities) const {
 
-  CellActivities cellEstimate = probEstimator(subnet, probabilities);
-  size_t lenArrEst = subnet.size();
+  Probabilities onState = probEstimator(subnet, probabilities);
+  Probabilities switching{onState};
+  const auto &entries = subnet.getEntries();
 
-  for (size_t j = 0; j < lenArrEst; ++j) {
-    double p = cellEstimate[j];
-    cellEstimate[j] = 2 * p * (1 - p);
+  for (size_t j = 0; j < entries.size(); ++j) {
+    float p = switching[j];
+    const auto &cell = entries[j].cell;
+    switching[j] = cell.isBuf() ? 0.f : (2.f * p * (1.f - p));
   }
 
-  return SwitchActivity(std::move(cellEstimate));
+  return SwitchActivity(std::move(switching), std::move(onState));
 }
 
 } // namespace eda::gate::analyzer

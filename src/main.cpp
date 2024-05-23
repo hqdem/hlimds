@@ -117,7 +117,8 @@ int optimize(const eda::gate::model::SubnetID &oldSubnetId,
   eda::gate::analyzer::SimulationEstimator estimator;
   size_t depthBefore = oldSubnet.getPathLength().second;
   size_t sizeBefore = oldSubnet.getEntries().size();
-  size_t powerBefore = estimator.estimate(oldSubnet).getActivitySum();
+  size_t powerBefore = 
+      estimator.estimate(oldSubnet).getSwitchProbabilitiesSum();
   eda::gate::model::SubnetBuilder subnetBuilder;
   auto inputs = subnetBuilder.addInputs(oldSubnet.getInNum());
   auto outputs = subnetBuilder.addSubnet(oldSubnetId, inputs);
@@ -135,7 +136,7 @@ int optimize(const eda::gate::model::SubnetID &oldSubnetId,
   const auto &newSubnetId = subnetBuilder.make();
   const auto &newSubnet = eda::gate::model::Subnet::get(newSubnetId);
   size_t depthAfter = newSubnet.getPathLength().second;
-  size_t powerAfter = estimator.estimate(newSubnet).getActivitySum();
+  size_t powerAfter = estimator.estimate(newSubnet).getSwitchProbabilitiesSum();
 
   if (opts.lec) {
     SatChecker &checker = SatChecker::get();

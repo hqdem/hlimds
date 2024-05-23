@@ -2,6 +2,7 @@ add_compile_options(-fno-rtti)
 add_library(Gate OBJECT
   analyzer/probabilistic_estimate.cpp
   analyzer/simulation_estimator.cpp
+  analyzer/switching_activity.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
   debugger/fraig_checker.cpp

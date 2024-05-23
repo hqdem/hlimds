@@ -10,6 +10,7 @@
 
 #include "gate/model/subnet.h"
 
+#include <ostream>
 #include <utility>
 #include <vector>
 
@@ -21,66 +22,91 @@ namespace eda::gate::analyzer {
 class SwitchActivity final {
 public:
 
-  /// Сells switching probabilities.
-  using Probabilities = std::vector<double>;
+  /// Probabilities for cells activity description.
+  using Probabilities = std::vector<float>;
   /// The switches of cells.
   using Switches = std::vector<size_t>;
 
   /**
-   * @brief Constructor from cell switching probabilities and switches of cells.
-   * @param probabilities Сell switching probabilities.
-   * @param on The switches of cells from one to zero.
-   * @param off The switches of cells from zero to one.
+   * Constructor from cells switching and on state probabilities
+   * and switches of cells.
+   * @param switching Сells switching probabilities.
+   * @param onState Сells on state probabilities.
+   * @param on The switches of cells from 0 to 1.
+   * @param off The switches of cells from 1 to 0.
    */
-  SwitchActivity(Probabilities &&probabilities, Switches &&on, Switches &&off)
-      : probabilities(probabilities), switchesOn(on), switchesOff(off) { }
+  SwitchActivity(Probabilities &&switching, Probabilities &&onState,
+                 Switches &&on, Switches &&off, size_t ticks)
+      : switchProbabilities(std::move(switching)),
+        onStateProbabilities(std::move(onState)), 
+        switchesOn(std::move(on)), switchesOff(std::move(off)), ticks(ticks) { }
 
   /**
-   * @brief Constructor from cells switching probabilities.
-   * @param probabilities Сells switching probabilities.
+   * Constructor from cells switching and on state probabilities.
+   * @param switching Сells switching probabilities.
+   * @param onState Сells on state probabilities.
    */
-  explicit SwitchActivity(Probabilities &&probabilities)
-      : probabilities(probabilities), switchesOn(), switchesOff() { }
+  SwitchActivity(Probabilities &&switching, Probabilities &&onState)
+      : switchProbabilities(std::move(switching)),
+        onStateProbabilities(std::move(onState)) { }
 
   /**
-   * @brief Returns the sum of the activities of all cells.
+   * @brief Returns the sum of the switching probabilities of all cells.
    */
-  double getActivitySum() const {
+  double getSwitchProbabilitiesSum() const {
     double result{0.0};
-    for (double activity : probabilities) {
-      result += activity;
+    for (float prob : switchProbabilities) {
+      result += prob;
     }
     return result;
   }
 
   /**
-   * @brief Returns cells switching probabilities.
+   * @brief Returns cell switching probability.
    */
-  const Probabilities &getActivities() const {
-    return probabilities;
+  float getSwitchProbability(size_t id) const {
+    return switchProbabilities[id];
   }
 
   /**
-   * @brief Returns switches from 0 to 1.
+   * @brief Returns cell on state probability.
    */
-  const Switches &getSwitchesOn() const {
-    return switchesOn;
+  float getOnStateProbability(size_t id) const {
+    return onStateProbabilities[id];
+  }
+
+  /**
+   * @brief Returns cell switches from 0 to 1.
+   */
+  size_t getSwitchesOn(size_t id) const {
+    return switchesOn[id];
   }
 
   /**
    * @brief Returns switches from 1 to 0.
    */
-  const Switches &getSwitchesOff() const {
-    return switchesOff;
-  }  
+  size_t getSwitchesOff(size_t id) const {
+    return switchesOff[id];
+  }
+
+  /**
+   * @brief Returns the number of simulation ticks during estimation.
+   */
+  size_t getTicks() const {
+    return ticks;
+  }
 
 private:
-  /// Сontains the switching activity of cells (accessed via cell indices).
-  Probabilities probabilities;
-  /// Switches from one to zero.
+  /// Сontains the switching probabilities of cells (accessed via cell indices).
+  Probabilities switchProbabilities;
+  /// Сontains the on state probabilities of cells (accessed via cell indices).
+  Probabilities onStateProbabilities;
+  /// Switches from 0 to 1.
   Switches switchesOn;
-  /// Switches from zero to one.
+  /// Switches from 1 to 0.
   Switches switchesOff;
+  /// Ticks of simulations (for simulation estimator).
+  size_t ticks{0};
 };
 
 /**
@@ -102,9 +128,18 @@ public:
    * for each input is 0.5.
    */
   virtual SwitchActivity estimate(const Subnet &subnet,
-      const Probabilities &inputProbabilities = {}) = 0;
+      const Probabilities &inputProbabilities = {}) const = 0;
 
   virtual ~SwitchActivityEstimator() = default;
 };
+
+/**
+ * @brief Print information about switching activity of the subnet.
+ * @param switchActivity The switching activity of the subnet.
+ * @param subnet The subnet for estimating.
+ * @param out output stream.
+ */
+void printSwitchActivity(const SwitchActivity &switchActivity,
+                         const model::Subnet &subnet, std::ostream &out);
 
 } // namespace eda::gate::analyzer

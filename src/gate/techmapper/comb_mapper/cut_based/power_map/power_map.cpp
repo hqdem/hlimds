@@ -20,7 +20,7 @@ using Cut = eda::gate::optimizer::CutExtractor::Cut;
 
 double PowerMap::getSwitching(const Cut &cut) {
   auto entryIndex = cut.rootEntryIdx;
-  return switchActivity.getActivities()[entryIndex];
+  return switchActivity.getSwitchProbability(entryIndex);
   // return (double) switchActivity.getSwitchesOn()[entryIndex] + 
   //   switchActivity.getSwitchesOff()[entryIndex];
 }
@@ -32,7 +32,7 @@ double PowerMap::switchFlow(const EntryIndex entryIndex,
   for (const auto &leafIdx : cut.entryIdxs) {
     const auto &leaf = (*entries)[leafIdx].cell;
     if(leaf.isIn()) {
-      metrics[leafIdx].sf = switchActivity.getActivities()[leafIdx];
+      metrics[leafIdx].sf = switchActivity.getSwitchProbability(leafIdx);
     }
     sf += metrics[leafIdx].sf / leaf.refcount;
   }
@@ -201,16 +201,14 @@ uint32_t PowerMap::findLatestPoArivalTime() {
 double PowerMap::getCellPower(const Cut &cut,
                               const SubnetID &techCellSubnetId) {
 
-  const std::vector<size_t> &riseActivities =
-    switchActivity.getSwitchesOn();
-  const std::vector<size_t> &fallActivities =
-    switchActivity.getSwitchesOff();
   auto currentAttr = cellDB->getSubnetAttrBySubnetID(techCellSubnetId);
   float cellPower = 0;
   int i = 0;
   for (const auto &leaf : cut.entryIdxs) {
-    cellPower += std::abs(currentAttr.pinsPower[i].rise_power) * (float)riseActivities[leaf];
-    cellPower += std::abs(currentAttr.pinsPower[i].fall_power) * (float)fallActivities[leaf];
+    cellPower += std::abs(currentAttr.pinsPower[i].rise_power) * 
+        switchActivity.getSwitchesOn(leaf);
+    cellPower += std::abs(currentAttr.pinsPower[i].fall_power) *
+        switchActivity.getSwitchesOff(leaf);
     i++;
   }
   return cellPower;

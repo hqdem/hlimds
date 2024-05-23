@@ -282,7 +282,7 @@ enum CellSymbol : uint16_t {
   LATCHrs_nnn = (LATCHrs | ENALVL0 | RSTLVL0 | SETLVL0),
 
   /// Custom block.
-  UNDEF = (0xffff & ~FLGMASK)
+  UNDEF = 0xffff
 };
 
 static_assert(sizeof(CellSymbol) == 2);

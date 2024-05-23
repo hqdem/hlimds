@@ -24,15 +24,16 @@
 
 namespace eda::gate::optimizer {
 
-using Pass = std::shared_ptr<SubnetInPlaceTransformer>;
-using Chain = SubnetInPlaceTransformerChain;
-using Effect = model::SubnetBuilder::Effect;
+using SubnetPass = std::shared_ptr<SubnetInPlaceTransformer>;
+using SubnetMapper = std::shared_ptr<SubnetTransformer>; // TODO:
+using SubnetChain = SubnetInPlaceTransformerChain;
+using SubnetEffect = model::SubnetBuilder::Effect;
 
 //===----------------------------------------------------------------------===//
 // Balance (b)
 //===----------------------------------------------------------------------===//
 
-inline Pass b() {
+inline SubnetPass b() {
   // FIXME:
   return nullptr;
 }
@@ -41,19 +42,19 @@ inline Pass b() {
 // Rewrite (rw)
 //===----------------------------------------------------------------------===//
 
-inline Pass rw(const std::string &name, uint16_t k, bool z) {
+inline SubnetPass rw(const std::string &name, uint16_t k, bool z) {
   static Resynthesizer resynthesizer(AbcNpn4Synthesizer::get());
   return std::make_shared<Rewriter>(
-      name, resynthesizer, k, [](const Effect &effect) -> float {
+      name, resynthesizer, k, [](const SubnetEffect &effect) -> float {
         return static_cast<float>(effect.size);
       }, z);
 }
 
-inline Pass rw() {
+inline SubnetPass rw() {
   return rw("rw", 4, false);
 }
 
-inline Pass rwz() {
+inline SubnetPass rwz() {
   return rw("rwz", 4, true);
 }
 
@@ -61,12 +62,12 @@ inline Pass rwz() {
 // Refactor (rf)
 //===----------------------------------------------------------------------===//
 
-inline Pass rf() {
+inline SubnetPass rf() {
   // FIXME:
   return nullptr;
 }
 
-inline Pass rfz() {
+inline SubnetPass rfz() {
   // FIXME:
   return nullptr;
 }
@@ -79,36 +80,36 @@ inline Pass rfz() {
 // Resubstitute (rs)
 //===----------------------------------------------------------------------===//
 
-inline Pass rs(const std::string &name, uint16_t k, uint16_t n) {
+inline SubnetPass rs(const std::string &name, uint16_t k, uint16_t n) {
   return std::make_shared<Resubstitutor>(name, k, n);
 }
 
-inline Pass rs(const std::string &name, uint16_t k) {
+inline SubnetPass rs(const std::string &name, uint16_t k) {
   return rs(name, k, 16);
 }
 
-inline Pass rs(uint16_t k) {
+inline SubnetPass rs(uint16_t k) {
   return rs(fmt::format("rs -K {}", k), k);
 }
 
-inline Pass rs() {
+inline SubnetPass rs() {
   return rs("rs", 8);
 }
 
-inline Pass rsz(const std::string &name, uint16_t k, uint16_t n) {
+inline SubnetPass rsz(const std::string &name, uint16_t k, uint16_t n) {
   // FIXME:
   return nullptr;
 }
 
-inline Pass rsz(const std::string &name, uint16_t k) {
+inline SubnetPass rsz(const std::string &name, uint16_t k) {
   return rsz(name, k, 16);
 }
 
-inline Pass rsz(uint16_t k) {
+inline SubnetPass rsz(uint16_t k) {
   return rsz(fmt::format("rsz -K {}", k), k);
 }
 
-inline Pass rsz() {
+inline SubnetPass rsz() {
   return rsz("rsz", 8);
 }
 
@@ -116,43 +117,44 @@ inline Pass rsz() {
 // Pre-defined scripts
 //===----------------------------------------------------------------------===//
 
-inline Pass chain(const std::string &name, const Chain::Chain &chain) {
-  return std::make_shared<Chain>(name, chain);
+inline SubnetPass chain(const std::string &name,
+                        const SubnetChain::Chain &chain) {
+  return std::make_shared<SubnetChain>(name, chain);
 }
 
 /// resyn: b; rw; rwz; b; rwz; b
-inline Pass resyn() {
+inline SubnetPass resyn() {
   return chain("resyn",
     {b(), rw(), rwz(), b(), rwz(), b()});
 }
 
 /// resyn2: b; rw; rf; b; rw; rwz; b; rfz; rwz; b
-inline Pass resyn2() {
+inline SubnetPass resyn2() {
   return chain("resyn2",
     {b(), rw(), rf(), b(), rw(), rwz(), b(), rfz(), b()});
 }
 
 /// resyn2a: b; rw; b; rw; rwz; b; rwz; b
-inline Pass resyn2a() {
+inline SubnetPass resyn2a() {
   return chain("resyn2a",
     {b(), rw(), b(), rw(), rwz(), b(), rwz(), b()});
 }
 
 /// resyn3: b; rs; rs -K 6; b; rsz; rsz -K 6; b; rsz -K 5; b
-inline Pass resyn3() {
+inline SubnetPass resyn3() {
   return chain("resyn3",
     {b(), rs(), rs(6), b(), rsz(), rsz(6), b(), rsz(5), b()});
 }
 
 /// compress: b -l; rw -l; rwz -l; b -l; rwz -l; b -l
-inline Pass compress() {
+inline SubnetPass compress() {
   // TODO: -l
   return chain("compress",
     {b(), rw(), rwz(), b(), rwz(), b()});
 }
 
 /// compress2: b -l; rw -l; rf -l; b -l; rw -l; rwz -l; b -l; rfz -l; rwz -l; b -l
-inline Pass compress2() {
+inline SubnetPass compress2() {
   // TODO: -l
   return chain("compress2",
     {b(), rw(), rf(), b(), rw(), rwz(), b(), rfz(), rwz(), b()});

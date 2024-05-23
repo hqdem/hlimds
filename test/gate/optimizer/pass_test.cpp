@@ -37,7 +37,7 @@ static void initSubnetBuilder(model::SubnetBuilder &builder) {
   builder.addOutput(res00);
 }
 
-TEST(Pass, Rw) {
+TEST(SubnetPass, Rw) {
   model::SubnetBuilder builder;
   initSubnetBuilder(builder);
 
@@ -48,7 +48,7 @@ TEST(Pass, Rw) {
   std::cout << model::Subnet::get(subnetID) << std::endl;
 }
 
-TEST(Pass, Rwz) {
+TEST(SubnetPass, Rwz) {
   model::SubnetBuilder builder;
   initSubnetBuilder(builder);
 

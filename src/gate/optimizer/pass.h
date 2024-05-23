@@ -27,7 +27,7 @@
 namespace eda::gate::optimizer {
 
 using SubnetPass = std::shared_ptr<SubnetInPlaceTransformer>;
-using SubnetMapper = std::shared_ptr<SubnetTransformer>; // TODO:
+using SubnetMapper = std::shared_ptr<SubnetTransformer>;
 using SubnetChain = SubnetInPlaceTransformerChain;
 using SubnetEffect = model::SubnetBuilder::Effect;
 
@@ -35,10 +35,12 @@ using SubnetEffect = model::SubnetBuilder::Effect;
 // Premappers
 //===----------------------------------------------------------------------===//
 
+/// Mapping to the AIG representation.
 inline SubnetMapper aig() {
   return std::make_shared<premapper::AigMapper>("aig");
 }
 
+/// Mapping to the MIG represenation.
 inline SubnetMapper mig() {
   // FIXME:
   return nullptr;
@@ -48,6 +50,7 @@ inline SubnetMapper mig() {
 // Balance (b)
 //===----------------------------------------------------------------------===//
 
+/// Depth-aware balancing.
 inline SubnetPass b() {
   return std::make_shared<AssociativeBalancer>("b");
 }
@@ -64,10 +67,12 @@ inline SubnetPass rw(const std::string &name, uint16_t k, bool z) {
       }, z);
 }
 
+/// Basic rewriting.
 inline SubnetPass rw() {
   return rw("rw", 4, false);
 }
 
+/// Rewriting w/ enabled zero-cost replacements.
 inline SubnetPass rwz() {
   return rw("rwz", 4, true);
 }
@@ -76,19 +81,35 @@ inline SubnetPass rwz() {
 // Refactor (rf)
 //===----------------------------------------------------------------------===//
 
+/// Basic refactoring.
 inline SubnetPass rf() {
   // FIXME:
   return nullptr;
 }
 
+/// Refactoring w/ enabled zero-cost replacements.
 inline SubnetPass rfz() {
   // FIXME:
   return nullptr;
 }
 
-// TODO: rfa - area
-// TODO: rfd - delay
-// TODO: rfp - power
+/// Area-aware refactoring.
+inline SubnetPass rfa() {
+  // FIXME:
+  return nullptr;
+}
+
+/// Delay-aware refactoring.
+inline SubnetPass rfd() {
+  // FIXME:
+  return nullptr;
+}
+
+/// Power-aware refactoring.
+inline SubnetPass rfp() {
+  // FIXME:
+  return nullptr;
+}
 
 //===----------------------------------------------------------------------===//
 // Resubstitute (rs)

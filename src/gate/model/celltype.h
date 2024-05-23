@@ -248,21 +248,21 @@ enum CellSymbol : uint16_t {
   LATCH_n = (LATCH | ENALVL0),
 
   /// aLATCH[ENA(level=1), RST(level=1), RST(value=0)] = aLATCH.
-  aLATCH_pp0 = (aLATCH | POSEDGE | RSTLVL1 | RSTVAL0),
+  aLATCH_pp0 = (aLATCH | ENALVL1 | RSTLVL1 | RSTVAL0),
   /// aLATCH[ENA(level=1), RST(level=1), RST(value=1)].
-  aLATCH_pp1 = (aLATCH | POSEDGE | RSTLVL1 | RSTVAL1),
+  aLATCH_pp1 = (aLATCH | ENALVL1 | RSTLVL1 | RSTVAL1),
   /// aLATCH[ENA(level=1), RST(level=0), RST(value=0)].
-  aLATCH_pn0 = (aLATCH | POSEDGE | RSTLVL0 | RSTVAL0),
+  aLATCH_pn0 = (aLATCH | ENALVL1 | RSTLVL0 | RSTVAL0),
   /// aLATCH[ENA(level=1), RST(level=0), RST(value=1)].
-  aLATCH_pn1 = (aLATCH | POSEDGE | RSTLVL0 | RSTVAL1),
+  aLATCH_pn1 = (aLATCH | ENALVL1 | RSTLVL0 | RSTVAL1),
   /// aLATCH[ENA(level=0), RST(level=1), RST(value=0)].
-  aLATCH_np0 = (aLATCH | NEGEDGE | RSTLVL1 | RSTVAL0),
+  aLATCH_np0 = (aLATCH | ENALVL0 | RSTLVL1 | RSTVAL0),
   /// aLATCH[ENA(level=0), RST(level=1), RST(value=1)].
-  aLATCH_np1 = (aLATCH | NEGEDGE | RSTLVL1 | RSTVAL1),
+  aLATCH_np1 = (aLATCH | ENALVL0 | RSTLVL1 | RSTVAL1),
   /// aLATCH[ENA(level=0), RST(level=0), RST(value=0)].
-  aLATCH_nn0 = (aLATCH | NEGEDGE | RSTLVL0 | RSTVAL0),
+  aLATCH_nn0 = (aLATCH | ENALVL0 | RSTLVL0 | RSTVAL0),
   /// aLATCH[ENA(level=0), RST(level=0), RST(value=1)].
-  aLATCH_nn1 = (aLATCH | NEGEDGE | RSTLVL0 | RSTVAL1),
+  aLATCH_nn1 = (aLATCH | ENALVL0 | RSTLVL0 | RSTVAL1),
 
   /// LATCHrs[ENA(level=1), RST(level=1), SET(level=1)] = LATCHrs.
   LATCHrs_ppp = (LATCHrs | ENALVL1 | RSTLVL1 | SETLVL1),
@@ -291,6 +291,7 @@ static_assert(sDFF == sDFF_pp0);
 static_assert(aDFF == aDFF_pp0);
 static_assert(DFFrs == DFFrs_ppp);
 static_assert(LATCH == LATCH_p);
+static_assert(aLATCH == aLATCH_pp0);
 static_assert(LATCHrs == LATCHrs_ppp);
 
 enum CellPin : uint16_t {

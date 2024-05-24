@@ -30,17 +30,44 @@ public:
   using EntryMapMap = std::unordered_map<size_t, size_t>;
 
   /**
-   * @brief Cone struct with SubnetID and mapping from cone subnet to original.
-   * Mapping contains all cells entries from the cone except root cell. Root
-   * cell from the original subnet is referenced by PO from the cone subnet.
+   * @brief Cone struct with SubnetID, full mapping from cone subnet to original
+   * and mapping from cone PI's and PO to original entries.
+   * The full mapping contains all entries from the cone except the root.
+   * The root entry from the original subnet is referenced by PO from the cone
+   * subnet.
    */
   struct Cone {
-    Cone() = default;
-    Cone(const SubnetID subnetID, const EntryVecMap &coneEntryToOrig):
-        subnetID(subnetID), coneEntryToOrig(coneEntryToOrig) {};
+  public:
+    Cone(
+        const SubnetID subnetID,
+        const EntryVecMap &coneEntryToOrig):
+      subnetID(subnetID), coneEntryToOrig(coneEntryToOrig),
+      inOutToOrig(getInOutMapping(subnetID, coneEntryToOrig)) {};
 
-    SubnetID subnetID;
-    EntryVecMap coneEntryToOrig;
+  private:
+    inline EntryMapMap getInOutMapping(
+        const SubnetID &subnetID,
+        const EntryVecMap &coneEntryToOrig) {
+      EntryMapMap inOutToOrig;
+      const auto &subnet = Subnet::get(subnetID);
+      const auto &subnetEntries = subnet.getEntries();
+      for (size_t i = 0; i < subnet.getInNum(); ++i) {
+        inOutToOrig[i] = coneEntryToOrig[i];
+      }
+      for (size_t i = 1; i <= subnet.getOutNum(); ++i) {
+        inOutToOrig[subnetEntries.size() - i] =
+            coneEntryToOrig[subnetEntries.size() - 1];
+      }
+      return inOutToOrig;
+    }
+
+  public:
+    // Cone subnet.
+    const SubnetID subnetID;
+    // Full mapping from cone to original subnet entries.
+    const EntryVecMap coneEntryToOrig;
+    // Mapping from cone PI's and PO to original subnet entries.
+    const EntryMapMap inOutToOrig;
   };
 
   ConeBuilder() = delete;

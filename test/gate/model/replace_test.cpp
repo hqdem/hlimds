@@ -494,17 +494,7 @@ TEST(ReplaceTest, SameCone) {
 
   const auto coneSubnetID = cone.subnetID;
 
-  // Getting mapping
-  std::unordered_map<size_t, size_t> mapping;
-  const auto &coneEntries = Subnet::get(coneSubnetID).getEntries();
-  for (size_t i = 0; i < coneEntries.size(); ++i) {
-    const auto &curCell = coneEntries[i].cell;
-    if (curCell.isIn() || curCell.isOut()) {
-      mapping[i] = cone.coneEntryToOrig[i];
-    }
-    i += curCell.more;
-  }
-
+  std::unordered_map<size_t, size_t> mapping = cone.inOutToOrig;
   const auto effect = builder.evaluateReplace(coneSubnetID, mapping);
   EXPECT_TRUE(effect.size == 0 && effect.depth == 0);
   builder.replace(coneSubnetID, mapping);

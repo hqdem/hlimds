@@ -45,10 +45,7 @@ void Rewriter::rewriteOnNode(
       continue;
     }
     const Subnet &rhs = Subnet::get(rhsID);
-    std::unordered_map<size_t, size_t> rhsToLhs;
-    for (size_t i = 0; i < rhs.getInNum(); ++i) {
-      rhsToLhs[i] = cone.coneEntryToOrig[i];
-    }
+    std::unordered_map<size_t, size_t> rhsToLhs = cone.inOutToOrig;
     for (size_t i = 1; i <= rhs.getOutNum(); ++i) {
       rhsToLhs[rhs.getEntries().size() - i] =
           cone.coneEntryToOrig[coneSubnet.getEntries().size() - i];

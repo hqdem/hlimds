@@ -34,7 +34,7 @@ public:
    * @param cutSize Max cut size.
    * @param maxCones Max number of cone constructions.
    */
-  DepthSubnetIterator(const SubnetBuilder &subnetBuilder,
+  DepthSubnetIterator(SubnetBuilder &subnetBuilder,
                       SafePasser &iter,
                       size_t cutSize,
                       size_t maxCones) :

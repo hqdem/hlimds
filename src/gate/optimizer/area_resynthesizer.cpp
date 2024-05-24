@@ -26,9 +26,9 @@ SubnetID AreaResynthesizer::resynthesize(const SubnetFragment &sf) const {
     roots.push_back(sf.entryMap.at(i));
   }
 
-  std::unordered_map<size_t, size_t> map;
-  SubnetID careSubnetId = getReconvergenceCone(subnetBuilder, roots,
-                                               careCutSize, map);
+  std::unordered_map<size_t, size_t> dummy;
+  SubnetID careSubnetId = getReconvergenceWindow(subnetBuilder, roots,
+                                                 careCutSize, dummy);
 
   const auto &careSubnet = Subnet::get(careSubnetId);
   auto care = gate::model::computeCare(careSubnet);

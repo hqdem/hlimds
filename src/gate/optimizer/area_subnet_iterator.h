@@ -35,7 +35,7 @@ public:
    * @param passer Passer for the subnet.
    * @param nIn The number of inputs for SubnetFragment.
    */
-  AreaSubnetIterator(const SubnetBuilder &subnetBuilder,
+  AreaSubnetIterator(SubnetBuilder &subnetBuilder,
                      SafePasser &passer,
                      uint16_t nIn)
       : SubnetIteratorBase(subnetBuilder), passer(passer), nIn(nIn)

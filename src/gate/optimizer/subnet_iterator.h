@@ -43,7 +43,7 @@ public:
    * @brief Сonstructor.
    * @param subnetBuilder The subnet for iteration.
    */
-  SubnetIteratorBase(const SubnetBuilder &subnetBuilder)
+  SubnetIteratorBase(SubnetBuilder &subnetBuilder)
       : subnetBuilder(subnetBuilder) {}
 
   /**
@@ -57,7 +57,7 @@ public:
 protected:
 
   /// The subnet for iteration.
-  const SubnetBuilder &subnetBuilder;
+  SubnetBuilder &subnetBuilder;
 };
 
 } // namespace eda::gate::optimizer

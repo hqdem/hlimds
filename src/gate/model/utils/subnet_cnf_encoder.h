@@ -14,7 +14,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <iostream>
 #include <vector>
 
 namespace eda::gate::model {
@@ -75,9 +74,17 @@ public:
     return setVars(idx, 1);
   }
 
+  void skipNextVars(size_t idx, size_t num) {
+    if (num > 0) {
+      next[idx + num] = next[idx];
+      next[idx] = 0;
+    }
+  }
+
 private:
   size_t pos(size_t idx, uint16_t out) const {
     assert(idx < next.size());
+    assert(idx == 0 || next[idx - 1] != 0);
     return idx == 0 ? out : next[idx - 1] + out;
   }
 
@@ -152,6 +159,7 @@ public:
         }
       }
 
+      context.skipNextVars(i, cell.more);
       i += cell.more;
     }
   }
@@ -280,9 +288,9 @@ private:
     assert(cell.arity == 3);
     context.setVar(idx);
 
-    const auto lhs1 = context.lit(cell.link[0], 1);
-    const auto lhs2 = context.lit(cell.link[1], 1);
-    const auto lhs3 = context.lit(cell.link[2], 1);
+    const auto lhs1 = context.lit(subnet.getLink(idx, 0), 1);
+    const auto lhs2 = context.lit(subnet.getLink(idx, 1), 1);
+    const auto lhs3 = context.lit(subnet.getLink(idx, 2), 1);
 
     solver.encodeMaj(context.lit(idx, 0, 1), lhs1, lhs2, lhs3);
   }

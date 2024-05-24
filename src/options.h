@@ -365,24 +365,24 @@ struct GraphMlOptions final : public AppOptions {
 struct TechMapOptions final : public AppOptions {
 
   static constexpr const char *ID = "techmap";
-  static constexpr const char *MAPPER_TYPE = "type";
+  static constexpr const char *STRATEGY = "type";
   static constexpr const char *VERILOG_OUTPUT = "out";
 
-  using MapperType = eda::gate::techmapper::Techmapper::MapperType;
-  const std::map<std::string, MapperType> mapperTypeMap {
-    {"area", MapperType::AREA_FLOW},
-    {"power", MapperType::POWER},
-    {"simple_area", MapperType::SIMPLE_AREA_FUNC},
-    {"simple_delay", MapperType::SIMPLE_DELAY_FUNC},
+  using Strategy = eda::gate::techmapper::Techmapper::Strategy;
+  const std::map<std::string, Strategy> strategyMap {
+    {"area",      Strategy::AREA},
+    {"area_flow", Strategy::AREA_FLOW},
+    {"delay",     Strategy::DELAY},
+    {"power",     Strategy::POWER}
   };
 
   TechMapOptions(AppOptions &parent):
       AppOptions(parent, ID, "Technology mapping") {
 
     // Named options.
-    options->add_option(cli(MAPPER_TYPE), mapperType, "Techmapper type")
+    options->add_option(cli(STRATEGY), strategy, "Techmapper optimization strategy")
            ->expected(1)
-           ->transform(CLI::CheckedTransformer(mapperTypeMap, CLI::ignore_case));
+           ->transform(CLI::CheckedTransformer(strategyMap, CLI::ignore_case));
 
     options->add_option(cli(VERILOG_OUTPUT), outputPath,
                 "Output Verilog file (default=out.v)")
@@ -396,9 +396,10 @@ struct TechMapOptions final : public AppOptions {
   }
 
   void fromJson(Json json) override {
-    get(json, MAPPER_TYPE, mapperType);
+    get(json, STRATEGY, strategy);
   }
-  MapperType mapperType = MapperType::SIMPLE_AREA_FUNC;
+
+  Strategy strategy = Strategy::AREA;
   std::string outputPath = "out.v";
 };
 

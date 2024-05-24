@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
     eda::gate::techmapper::TechMapConfig config;
     config.files = opts.files();
     config.outNetFileName = opts.outputPath;
-    config.type = opts.mapperType;
+    config.strategy = opts.strategy;
     result |= eda::gate::techmapper::techMap(config);
   }
   

@@ -19,7 +19,7 @@ namespace eda::gate::techmapper {
   using Subnet       = eda::gate::model::Subnet;
   using SubnetID     = eda::gate::model::SubnetID;
 
-  void printVerilog(SubnetID subnet, std::string fileName) {
+  void printVerilog(const SubnetID subnet, const std::string &fileName) {
     ModelPrinter& verilogPrinter =
         ModelPrinter::getPrinter(ModelPrinter::VERILOG);
     std::ofstream outFile(fileName);
@@ -27,7 +27,7 @@ namespace eda::gate::techmapper {
     outFile.close();
   }
 
-  int techMap(TechMapConfig config) {
+  int techMap(const TechMapConfig config) {
     std::string name = config.files[0];
     std::ifstream check(name);
     if (!check) {
@@ -44,9 +44,7 @@ namespace eda::gate::techmapper {
 
     // TODO: it should be an option too
     SDC sdc{100000000, 10000000000};
-
-    const auto& mapperType = config.type;
-    Techmapper techmapper(techLib, mapperType, sdc);
+    Techmapper techmapper(config.strategy, sdc, techLib);
     auto startTime = std::chrono::high_resolution_clock::now();
 
     std::cout << "Start to techmap " << name << std::endl;

@@ -209,15 +209,15 @@ std::vector<SubnetID> &CellDB::getPatterns() {
   return patterns;
 }
 
-const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFF() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFs() const {
   return DFF;
 }
 
-const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFrs() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFrses() const {
   return DFFrs;
 }
 
-const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getLatch() const {
+const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getLatches() const {
   return Latch;
 }
 

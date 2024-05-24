@@ -12,25 +12,28 @@
 #include "gate/techmapper/library/cell_db.h"
 #include "gate/techmapper/techmapper.h"
 
-#include <memory>
-#include <utility>
 #include <vector>
 
 namespace eda::gate::techmapper {
 
 class SequentialMapper {
+  using CellID = model::CellID;
+  using CellTypeID = model::CellTypeID;
+  using Strategy = Techmapper::Strategy;
+  using SubnetID = model::SubnetID;
+
 public:
-  explicit SequentialMapper(CellDB *cellDB);
-  model::CellTypeID mapSequenceCell(model::CellID sequenceCellID, Techmapper::MapperType techmapSelector);
+  explicit SequentialMapper(CellDB *cellDB) {
+    this->cellDB = cellDB;
+  };
+  CellTypeID map(const CellID sequenceCellID,
+    const Strategy strategy = Strategy::AREA);
 
 private:
-  CellDB *cells;
-  model::SubnetID mapLatch(Techmapper::MapperType techmapSelector);
-  model::SubnetID mapDFF(Techmapper::MapperType techmapSelector);
-  model::SubnetID mapDFFrs(Techmapper::MapperType techmapSelector);
-  model::SubnetID chooseMappingStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells,
-                                        Techmapper::MapperType techmapSelector);
-  model::SubnetID areaOptimizedMapping(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells);
+  CellDB *cellDB;
+  SubnetID findSubnetID(
+    const std::vector<std::pair<SubnetID, Subnetattr>> &seqCells,
+    const Strategy strategy = Strategy::AREA);
 };
 
 } // namespace eda::gate::techmapper

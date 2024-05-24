@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-#define TYPE Techmapper::MapperType::SIMPLE_DELAY_FUNC
+#define TYPE Techmapper::Strategy::DELAY
 
 namespace eda::gate::techmapper {
 

@@ -10,12 +10,12 @@
 #include "gate/model/decomposer/net_decomposer.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/assembly.h"
-
 #include "gate/techmapper/comb_mapper/cut_based/area_recovery/area_recovery.h"
 #include "gate/techmapper/comb_mapper/cut_based/genetic/genetic_mapper.h"
 #include "gate/techmapper/comb_mapper/cut_based/power_map/power_map.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.h"
 #include "gate/techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.h"
+#include "gate/techmapper/library/cell.h"
 #include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/seq_mapper/sequential_mapper.h"
 #include "gate/techmapper/techmapper.h"
@@ -23,60 +23,61 @@
 #include <map>
 #include <unordered_map>
 
-using CellID = eda::gate::model::CellID;
-
 namespace eda::gate::techmapper {
 
-Techmapper::Techmapper(const std::string &dbPath,
-                       MapperType techmapSelector,
-                       SDC& sdc) {
-  LibraryManager::get().loadLibrary(dbPath);
-  std::cout << "Loaded Liberty: " << dbPath << std::endl;
-  this->sdc = sdc;
-  setLiberty();
-  setMapper(techmapSelector);
+using Cell = model::Cell;
+using CellID = model::CellID;
+using CellTypeID = model::CellTypeID;
+using Net = model::Net;
+using NetBuilder = model::NetBuilder;
+using NetDecomposer = model::NetDecomposer;
+using NetID = model::NetID;
+using SubnetID = model::SubnetID;
+
+Techmapper::Techmapper(const Strategy strategy,
+                       const SDC& sdc,
+                       const std::string &libPath) : sdc(sdc) {
+  if (libPath == "") {
+    assert(LibraryManager::get().isInitialized());
+  } else {
+    LibraryManager::get().loadLibrary(libPath);
+    std::cout << "Loaded Liberty file: " << libPath << std::endl;
+  }
+  createCellDB();
+  setMapper(strategy);
 }
 
-Techmapper::Techmapper(MapperType techmapSelector,
-                       SDC& sdc) {
-  assert(LibraryManager::get().isInitialized());
-  this->sdc = sdc;
-  setLiberty();
-  setMapper(techmapSelector);
+void Techmapper::createCellDB() {
+  std::vector<CellTypeID> cells;
+  std::vector<CellTypeID> ffs;
+  std::vector<CellTypeID> ffrses;
+  std::vector<CellTypeID> latches;
+
+  LibraryCells::readLibertyFile(cells,
+                                ffs,
+                                ffrses,
+                                latches);
+  cellDB = new CellDB(cells,
+                      ffs,
+                      ffrses,
+                      latches);
 }
 
-void Techmapper::setLiberty() {
-  std::vector<CellTypeID> cellTypeIDs;
-  std::vector<CellTypeID> ffCellTypeIDs;
-  std::vector<CellTypeID> ffrsCellTypeIDs;
-  std::vector<CellTypeID> LatchCellTypeIDs;
-  LibraryCells::readLibertyFile(cellTypeIDs,
-                                ffCellTypeIDs,
-                                ffrsCellTypeIDs,
-                                LatchCellTypeIDs);
-
-  this->cellDB = new CellDB(cellTypeIDs,
-                            ffCellTypeIDs,
-                            ffrsCellTypeIDs,
-                            LatchCellTypeIDs);
-
-}
-
-void Techmapper::setMapper(MapperType techmapSelector) {
-  switch(techmapSelector) {
-    case MapperType::SIMPLE_AREA_FUNC:
+void Techmapper::setMapper(const Strategy strategy) {
+  switch(strategy) {
+    case Strategy::AREA:
       mapper = new SimpleAreaMapper();
       break;
-    case MapperType::AREA_FLOW:
+    case Strategy::AREA_FLOW:
       mapper = new AreaRecovery();
       break;
-    case MapperType::POWER:
+    case Strategy::POWER:
       mapper = new PowerMap();
       break;
-    case MapperType::GENETIC:
+    case Strategy::GENETIC:
       mapper = new GeneticMapper();
       break;
-    case MapperType::SIMPLE_DELAY_FUNC:
+    case Strategy::DELAY:
       mapper = new SimpleDelayMapper();
       break;
     /*case TechmapperType::STRUCT:
@@ -85,7 +86,7 @@ void Techmapper::setMapper(MapperType techmapSelector) {
   }
 }
 
-SubnetID Techmapper::techmap(SubnetID subnetID) {
+SubnetID Techmapper::techmap(const SubnetID subnetID) {
   auto AIGSubnet = premapAIGSubnet(subnetID);
   std::unordered_map<EntryIndex, BestReplacement> *bestReplacementMap =
       new std::unordered_map<EntryIndex, BestReplacement>;
@@ -97,9 +98,9 @@ SubnetID Techmapper::techmap(SubnetID subnetID) {
   return as.assemblySubnet(bestReplacementMap, AIGSubnet);
 }
 
-NetID Techmapper::techmap(NetID netID) {
-  auto& decomposer = eda::gate::model::NetDecomposer::get();
-  std::vector<eda::gate::model::NetDecomposer::CellMapping> mapping;
+NetID Techmapper::techmap(const NetID netID) {
+  auto& decomposer = NetDecomposer::get();
+  std::vector<NetDecomposer::CellMapping> mapping;
   std::vector<SubnetID> subnets;
   decomposer.decompose(netID, subnets, mapping);
   std::vector<SubnetID> mappedSubnetsID;
@@ -107,21 +108,20 @@ NetID Techmapper::techmap(NetID netID) {
   for (auto const &subnet : subnets) {
     mappedSubnetsID.push_back(techmap(subnet));
   }
-  eda::gate::model::NetID composedNetID = decomposer.compose(mappedSubnetsID, mapping);
-
+  NetID composedNetID = decomposer.compose(mappedSubnetsID, mapping);
   return sequenseTechMapping(composedNetID);
 }
 
-NetID Techmapper::sequenseTechMapping(NetID netID) {
-  model::NetBuilder netBuilder;
+NetID Techmapper::sequenseTechMapping(const NetID netID) {
+  NetBuilder netBuilder;
 
-  model::Net &net = model::Net::get(netID);
-  model::List<model::CellID> outs = net.getOutputs();
+  Net &net = Net::get(netID);
+  model::List<CellID> outs = net.getOutputs();
 
-  std::unordered_map<model::CellID, model::CellID> buildMap;
+  std::unordered_map<CellID, CellID> buildMap;
 
-  std::stack<model::CellID> stack;
-  std::unordered_set<model::CellID> visited;
+  std::stack<CellID> stack;
+  std::unordered_set<CellID> visited;
 
   for (const auto& out : outs) {
     stack.push(out);
@@ -129,13 +129,13 @@ NetID Techmapper::sequenseTechMapping(NetID netID) {
   }
 
   while (!stack.empty()) {
-    model::CellID currentCellID = stack.top();
+    CellID currentCellID = stack.top();
     if (buildMap.find(currentCellID) != buildMap.end()) {
       stack.pop();
       continue;
     }
 
-    const auto &currentCell = model::Cell::get(currentCellID);
+    const auto &currentCell = Cell::get(currentCellID);
     const auto &currentType = currentCell.getType();
 
     // TODO: add zero/one
@@ -147,7 +147,7 @@ NetID Techmapper::sequenseTechMapping(NetID netID) {
       continue;
     }
 
-    model::Cell::LinkList linkList;
+    Cell::LinkList linkList;
     bool add = true;
     for (const auto &inputLink : currentCell.getLinks()) {
       if (buildMap.find(inputLink.getCellID()) != buildMap.end()) {
@@ -157,7 +157,7 @@ NetID Techmapper::sequenseTechMapping(NetID netID) {
       }
     }
     if (add) {
-      model::CellID cellID;
+      CellID cellID;
       if (currentType.isGate() && !currentType.isCombinational()) {
         // Change cellType
         cellID = makeCell(techmap(currentCellID), linkList);
@@ -172,15 +172,13 @@ NetID Techmapper::sequenseTechMapping(NetID netID) {
     for (const auto& link : currentCell.getLinks()) {
       stack.push(link.getCellID());
     }
-}
-
+  }
   return netBuilder.make();
 }
 
-model::CellTypeID Techmapper::techmap(model::CellID sequenceCell,
-                             MapperType techmapSelector) {
+CellTypeID Techmapper::techmap(const CellID cellID, const Strategy strategy) {
   SequentialMapper sequentialMapper(cellDB);
-  return sequentialMapper.mapSequenceCell(sequenceCell, techmapSelector);
+  return sequentialMapper.map(cellID, strategy);
 }
 
 SubnetID Techmapper::premapAIGSubnet(SubnetID subnetID) {

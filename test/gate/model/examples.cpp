@@ -329,8 +329,8 @@ SubnetID makeSubnetRandomMatrix(const size_t nIn,
   const auto netID = makeNetRandomMatrix(
       nIn, nOut, nCell, minArity, maxArity, seed);
 
-  Design design("design", netID);
-  return design.getSubnetIDs().front();
+  DesignBuilder builder(netID);
+  return builder.getSubnetID(0);
 }
 
 NetID makeNetRandomMatrix(const size_t nIn,

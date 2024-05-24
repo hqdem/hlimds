@@ -18,7 +18,6 @@
 #include <cassert>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace eda::gate::model {
@@ -40,95 +39,25 @@ struct Domain final {
 using ClockDomain = Domain;
 using ResetDomain = Domain;
 
-class Design final {
-public:
-  /// Constructs a design from the net (imports the net).
-  Design(const std::string &name, const NetID netID): name(name) {
-    NetDecomposer::get().decompose(netID, subnets, mapping);
-  }
-
-  /// Constructs a trivial design from the subnet (imports the subnet).
-  Design(const std::string &name, const SubnetID subnetID): name(name) {
-    NetDecomposer::get().decompose(subnetID, subnets, mapping);
-  }
-
-  /// Returns the name of the design.
-  const std::string &getName() const { return name; }
-
-  /// Constructs a net from the design (exports the design).
-  NetID make() const {
-    return NetDecomposer::get().compose(subnets, mapping);
-  }
-
-  /// Returns the design subnets.
-  const std::vector<SubnetID> &getSubnetIDs() const {
-    return subnets;
-  }
-
-  /// Returns the design subnet.
-  SubnetID getSubnetID() const {
-    assert(subnets.size() == 1);
-    return subnets.front();
-  }
-
-  /// Replaces the subnet.
-  void replaceSubnet(const size_t i, const SubnetID newSubnetID);
-
-  /// Replaces the flip-flop or the latch.
-  void replaceCell(const CellID oldCellID, const CellID newCellID,
-                   const std::vector<uint16_t> &newInputs,
-                   const std::vector<uint16_t> &newOutputs);
-
-private:
-  using CellMapping = NetDecomposer::CellMapping;
-
-  const std::string name;
-
-  // Clock domains.
-  // TODO
-
-  // Reset domains.
-  // TODO
-
-  std::vector<SubnetID> subnets;
-  std::vector<CellMapping> mapping;
-};
-
-using DesignID = std::shared_ptr<Design>;
-
-inline SubnetID makeSubnet(NetID netID) {
-  Design design("design", netID);
-  return design.getSubnetID();
-}
-
-inline NetID makeNet(SubnetID subnetID) {
-  Design design("design", subnetID);
-  return design.make();
-}
-
-//===----------------------------------------------------------------------===//
-// Design Builder
-//===----------------------------------------------------------------------===//
-
 class DesignBuilder final {
 public:
   using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
 
-  DesignBuilder(const std::shared_ptr<Design> &design): design(design) {
-    const auto &subnetIDs = design->getSubnetIDs();
-    for (const auto &subnetID : subnetIDs) {
-      subnets.emplace_back(subnetID);
-    }
+  /// Constructs a design builder from the net (imports the net).
+  DesignBuilder(const NetID netID) {
+    // Generate the soft block implementations.
+    synthesizer::synthSoftBlocks(netID);
+
+    std::vector<SubnetID> subnetIDs;
+    NetDecomposer::get().decompose(netID, subnetIDs, mapping);
+    setEntries(subnetIDs);
   }
 
-  DesignBuilder(const std::string &name, const NetID netID) {
-    synthesizer::synthSoftBlocks(netID);
-    design = std::make_shared<Design>(name, netID);
-
-    const auto &subnetIDs = design->getSubnetIDs(); // TODO: Copy-paste
-    for (const auto &subnetID : subnetIDs) {
-      subnets.emplace_back(subnetID);
-    }
+  /// Constructs a design builder from the subnet (imports the subnet).
+  DesignBuilder(const SubnetID subnetID) {
+    std::vector<SubnetID> subnetIDs;
+    NetDecomposer::get().decompose(subnetID, subnetIDs, mapping);
+    setEntries(subnetIDs);
   }
 
   /// Returns the number of subnets in the design.
@@ -152,6 +81,8 @@ public:
   /// Replaces the i-th subnet w/ the given one.
   void setSubnetID(const size_t i, const SubnetID subnetID) {
     assert(subnetID != OBJ_NULL_ID);
+
+    // TODO: Check nIn and nOut.
 
     auto &entry = getEntry(i);
     entry.subnetID = subnetID;
@@ -235,16 +166,19 @@ public:
     rollback(i, getEntry(i).history.size() - 1);
   }
 
-  /// Makes a design.
-  std::shared_ptr<Design> make() {
-    assert(design != nullptr);
-    for (size_t i = 0; i < subnets.size(); ++i) {
-      design->replaceSubnet(i, getSubnetID(i));
-    }
-    return design;
+  /// Replaces the flip-flop or the latch.
+  void replaceCell(const CellID oldCellID, const CellID newCellID,
+                   const std::vector<uint16_t> &newInputs,
+                   const std::vector<uint16_t> &newOutputs);
+
+  /// Constructs a net (exports the design).
+  NetID make() {
+    const auto subnetIDs = getSubnetIDs();
+    return NetDecomposer::get().compose(subnetIDs, mapping);
   }
 
 private:
+  using CellMapping = NetDecomposer::CellMapping;
   using NamedSubnet = std::pair<std::string, SubnetID>;
 
   struct SubnetEntry {
@@ -269,8 +203,39 @@ private:
     return subnets[i];
   }
 
-  std::shared_ptr<Design> design;
+  std::vector<SubnetID> getSubnetIDs() {
+    std::vector<SubnetID> subnetIDs(subnets.size());
+    for (size_t i = 0; i < subnets.size(); ++i) {
+      subnetIDs[i] = getSubnetID(i);
+    }
+    return subnetIDs;
+  }
+
+  void setEntries(const std::vector<SubnetID> &subnetIDs) {
+    for (const auto &subnetID : subnetIDs) {
+      subnets.emplace_back(subnetID);
+    }
+  }
+
+  // Clock domains.
+  // TODO
+
+  // Reset domains.
+  // TODO
+
   std::vector<SubnetEntry> subnets;
+  std::vector<CellMapping> mapping;
 };
+
+inline SubnetID makeSubnet(const NetID netID) {
+  DesignBuilder builder(netID);
+  assert(builder.getSubnetNum() == 1);
+  return builder.getSubnetID(0);
+}
+
+inline NetID makeNet(const SubnetID subnetID) {
+  DesignBuilder builder(subnetID);
+  return builder.make();
+}
 
 } // namespace eda::gate::model

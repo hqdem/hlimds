@@ -16,19 +16,6 @@ namespace eda::gate::model {
 using LinkSet = std::unordered_set<Link>;
 using LinkMap = NetDecomposer::LinkMap;
 
-void Design::replaceSubnet(const size_t i, const SubnetID newSubnetID) {
-  assert(i < subnets.size());
-
-  const auto oldSubnetID = subnets[i];
-
-  const auto &oldSubnet = Subnet::get(oldSubnetID);
-  const auto &newSubnet = Subnet::get(newSubnetID);
-  assert(oldSubnet.getInNum() == newSubnet.getInNum());
-  assert(oldSubnet.getOutNum() == newSubnet.getOutNum());
-
-  subnets[i] = newSubnetID;
-}
-
 static void replace(const CellID oldCellID, const CellID newCellID,
                     const std::vector<uint16_t> &newInputs,
                     const std::vector<uint16_t> &newOutputs,
@@ -64,9 +51,9 @@ static void replace(const CellID oldCellID, const CellID newCellID,
   linkMap.insert(insertMap.begin(), insertMap.end());
 }
 
-void Design::replaceCell(const CellID oldCellID, const CellID newCellID,
-                         const std::vector<uint16_t> &newInputs,
-                         const std::vector<uint16_t> &newOutputs) {
+void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
+                                const std::vector<uint16_t> &newInputs,
+                                const std::vector<uint16_t> &newOutputs) {
   for (size_t i = 0; i < mapping.size(); ++i) {
     replace(oldCellID, newCellID, newInputs, newOutputs, mapping[i].inputs);
     replace(oldCellID, newCellID, newInputs, newOutputs, mapping[i].outputs);

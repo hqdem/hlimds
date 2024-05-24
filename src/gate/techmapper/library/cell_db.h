@@ -50,9 +50,9 @@ public:
   std::vector<SubnetID> getSubnetIDsByTT(const kitty::dynamic_truth_table &tt) const;
   const Subnetattr &getSubnetAttrBySubnetID(const SubnetID id) const;
 
-  const std::vector<std::pair<SubnetID, Subnetattr>> &getDFF() const;
-  const std::vector<std::pair<SubnetID, Subnetattr>> &getDFFrs() const;
-  const std::vector<std::pair<SubnetID, Subnetattr>> &getLatch() const;
+  const std::vector<std::pair<SubnetID, Subnetattr>> &getDFFs() const;
+  const std::vector<std::pair<SubnetID, Subnetattr>> &getDFFrses() const;
+  const std::vector<std::pair<SubnetID, Subnetattr>> &getLatches() const;
 
 private:
   std::vector<SubnetID> subnets;

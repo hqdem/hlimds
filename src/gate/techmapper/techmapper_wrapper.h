@@ -17,10 +17,10 @@ namespace eda::gate::techmapper {
 
 struct TechMapConfig {
   std::string outNetFileName;
-  Techmapper::MapperType type;
+  Techmapper::Strategy strategy;
   std::vector<std::string> files;
 };
 
-int techMap(TechMapConfig config);
+int techMap(const TechMapConfig config);
 
 } // namespace eda::gate::techmapper

@@ -11,7 +11,7 @@
 
 #include "gtest/gtest.h"
 
-#define TYPE Techmapper::MapperType::SIMPLE_AREA_FUNC
+#define TYPE Techmapper::Strategy::AREA
 
 namespace eda::gate::techmapper {
 

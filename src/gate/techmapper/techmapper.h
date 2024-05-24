@@ -10,43 +10,45 @@
 
 #include "gate/model/net.h"
 #include "gate/techmapper/comb_mapper/comb_mapper.h"
-#include "gate/techmapper/library/cell.h"
 #include "gate/techmapper/library/cell_db.h"
-
-using NetID = eda::gate::model::NetID;
-using SubnetID = eda::gate::model::SubnetID;
 
 namespace eda::gate::techmapper {
 
 class Techmapper {
+
+  using CellID = model::CellID;
+  using CellTypeID = model::CellTypeID;
+  using NetID = model::NetID;
+  using SubnetID = model::SubnetID;
+
 public:
-  enum class MapperType {
+  enum Strategy {
+    AREA,
     AREA_FLOW,
-    POWER,
-    SIMPLE_AREA_FUNC,
+    DELAY,
     GENETIC,
-    SIMPLE_DELAY_FUNC,
+    POWER
   };
 
-  Techmapper(const std::string &dbPath, MapperType techmapSelector, SDC& sdc);
-  Techmapper(MapperType techmapSelector, SDC& sdc);
-
-  SubnetID techmap(SubnetID subnetID);
-  NetID techmap(NetID netID);
-  model::CellTypeID techmap(model::CellID sequenceCell, MapperType techmapSelector = MapperType::SIMPLE_AREA_FUNC);
+  Techmapper(const Strategy strategy, const SDC &sdc, const std::string &libPath = "");
 
   virtual ~Techmapper() {
     delete mapper;
     delete cellDB;
   }
 
+  SubnetID techmap(const SubnetID subnetID);
+  NetID techmap(const NetID netID);
+  CellTypeID techmap(const CellID sequenceCell,
+                     const Strategy strategy = Strategy::AREA);
+
 private:
-  void setLiberty();
-  void setMapper(MapperType techmapSelector);
+  void createCellDB();
+  void setMapper(const Strategy strategy);
   SDC sdc;
   CellDB *cellDB;
   BaseMapper *mapper = nullptr;
-  SubnetID premapAIGSubnet(SubnetID subnetID);
-  NetID sequenseTechMapping(NetID netID);
+  SubnetID premapAIGSubnet(const SubnetID subnetID);
+  NetID sequenseTechMapping(const NetID netID);
 };
 } // namespace eda::gate::techmapper

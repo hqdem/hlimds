@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-#define TYPE Techmapper::MapperType::AREA_FLOW
+#define TYPE Techmapper::Strategy::AREA_FLOW
 
 namespace eda::gate::techmapper {
 

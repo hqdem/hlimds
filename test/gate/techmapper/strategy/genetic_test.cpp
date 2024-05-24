@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-#define TYPE Techmapper::MapperType::GENETIC
+#define TYPE Techmapper::Strategy::GENETIC
 
 namespace eda::gate::techmapper {
 

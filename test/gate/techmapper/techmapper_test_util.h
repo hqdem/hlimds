@@ -22,22 +22,24 @@ using path = std::filesystem::path;
 namespace eda::gate::techmapper {
 
 using CellSymbol = eda::gate::model::CellSymbol;
-using SubnetID = eda::gate::model::SubnetID;
+using NetID = model::NetID;
+using SubnetID = model::SubnetID;
+using Strategy = Techmapper::Strategy;
 
 const path home = eda::env::getHomePath();
-const std::filesystem::path techLib = home /
+const path techLib = home /
   "test/data/gate/techmapper" /
   "sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
 
-SubnetID simpleANDMapping(Techmapper::MapperType mapperType);
-SubnetID simpleORMapping(Techmapper::MapperType mapperType);
-SubnetID graphMLMapping(Techmapper::MapperType mapperType,
+SubnetID simpleANDMapping(const Strategy strategy);
+SubnetID simpleORMapping(const Strategy strategy);
+SubnetID graphMLMapping(const Strategy strategy,
                         const std::string &fileName);
-SubnetID andNotMapping(Techmapper::MapperType mapperType);
-SubnetID randomMapping(Techmapper::MapperType mapperType);
-SubnetID notNotAndMapping(Techmapper::MapperType mapperType);
-NetID simpleNetMapping(Techmapper::MapperType mapperType);
-SubnetID areaRecoveySubnetMapping(Techmapper::MapperType mapperType);
-SubnetID mapper(Techmapper::MapperType mapperType, SubnetID subnetId);
+SubnetID andNotMapping(const Strategy strategy);
+SubnetID randomMapping(const Strategy strategy);
+SubnetID notNotAndMapping(const Strategy strategy);
+NetID simpleNetMapping(const Strategy strategy);
+SubnetID areaRecoveySubnetMapping(const Strategy strategy);
+SubnetID mapper(const Strategy strategy, const SubnetID subnetId);
 
 } // namespace eda::gate::techmapper

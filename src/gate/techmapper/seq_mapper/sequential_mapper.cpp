@@ -12,63 +12,50 @@
 
 namespace eda::gate::techmapper {
 
-SequentialMapper::SequentialMapper(CellDB *cellDB)
-    : cells(std::move(cellDB)) {}
+using Cell = model::Cell;
+using CellID = model::CellID;
+using CellTypeID = model::CellTypeID;
+using Strategy = Techmapper::Strategy;
 
-model::CellTypeID SequentialMapper::mapSequenceCell(model::CellID sequenceCellID,
-                                                  Techmapper::MapperType techmapSelector) {
-  const auto &sequenceCell = model::Cell::get(sequenceCellID);
-  const auto &sequenceType = sequenceCell.getType();
+CellTypeID SequentialMapper::map(const CellID cellID,
+                                 const Strategy strategy) {
+  const auto &cell = Cell::get(cellID);
+  const auto &type = cell.getType();
   
-  assert(sequenceType.isGate() && !sequenceType.isCombinational());
+  assert(type.isGate() && !type.isCombinational());
 
-  model::SubnetID subnetId;
-
-  if (sequenceType.isDff()) {
-    subnetId = mapDFF(techmapSelector); // FIXME:
-  } else if (sequenceType.isDffRs()) {
-    subnetId = mapDFFrs(techmapSelector); // FIXME:
-  } else if (sequenceType.isLatch()) {
-    subnetId = mapLatch(techmapSelector); // FIXME:
+  SubnetID subnetID;
+  if (type.isDff()) {
+    subnetID = findSubnetID(cellDB->getDFFs(), strategy); // FIXME:
+  } else if (type.isDffRs()) {
+    subnetID = findSubnetID(cellDB->getDFFrses(), strategy); // FIXME:
+  } else if (type.isLatch()) {
+    subnetID = findSubnetID(cellDB->getLatches(), strategy); // FIXME:
   } else {
     assert(false && "Unsupported cell type");
   }
 
-  auto &subnet = model::Subnet::get(subnetId);
+  auto &subnet = model::Subnet::get(subnetID);
   return subnet.getEntries()[subnet.getInNum()].cell.getTypeID();
-
-  //return model::CellType{}; // Assuming model::SubnetID{} is a valid default or error value
 }
 
-model::SubnetID SequentialMapper::mapLatch(Techmapper::MapperType techmapSelector) {
-  return chooseMappingStrategy(cells->getLatch(), techmapSelector);
-}
-
-model::SubnetID SequentialMapper::mapDFFrs(Techmapper::MapperType techmapSelector) {
-  return chooseMappingStrategy(cells->getDFFrs(), techmapSelector);
-}
-
-model::SubnetID SequentialMapper::mapDFF(Techmapper::MapperType techmapSelector) {
-  return chooseMappingStrategy(cells->getDFF(), techmapSelector);
-}
-
-model::SubnetID SequentialMapper::chooseMappingStrategy(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells,
-                                                        Techmapper::MapperType techmapSelector) {
-  switch (techmapSelector) {
-    case Techmapper::MapperType::SIMPLE_AREA_FUNC:
-      return areaOptimizedMapping(seqCells);
+SubnetID SequentialMapper::findSubnetID(
+    const std::vector<std::pair<SubnetID, Subnetattr>> &cells,
+    const Strategy strategy) {
+  std::pair<SubnetID, Subnetattr> cell;
+  switch (strategy) {
+    case Strategy::AREA:
+        // Selecting cell with the min area.
+        cell = *std::min_element(cells.begin(), cells.end(),
+                                 [](const auto &lhs, const auto &rhs) {
+                                   return lhs.second.area < rhs.second.area;});
+        
+        return cell.first;
       /* More strategies can be added here */
     default:
-      return model::SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
+      assert(false && "Unsupported strategy");
+      return SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
   }
-}
-
-model::SubnetID SequentialMapper::areaOptimizedMapping(const std::vector<std::pair<model::SubnetID, Subnetattr>>& seqCells) {
-  std::pair<model::SubnetID, Subnetattr> minAreaCell =
-      *std::min_element(seqCells.begin(), seqCells.end(),
-                        [](const auto& lhs, const auto& rhs) {
-                        return lhs.second.area < rhs.second.area;});
-  return minAreaCell.first;
 }
 
 } // namespace eda::gate::techmapper

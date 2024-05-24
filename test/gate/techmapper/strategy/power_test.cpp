@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-#define TYPE Techmapper::MapperType::POWER
+#define TYPE Techmapper::Strategy::POWER
 
 namespace eda::gate::techmapper {
 

@@ -46,8 +46,14 @@ inline void printStatistics(model::SubnetID subnetID,
         std::left << std::setw(36) << pair.first <<
         std::right << std::setw(8) << pair.second << std::endl;
   }
-  std::cout << "Estimated area: " << getArea(subnetID) <<
-    " um^2" << std::endl;
+  std::cout << "Design area: " << getArea(subnetID) <<
+    " um^2" << std::endl; // TODO export this scale from readcells
+
+  std::cout << "Leakage power: " << getLeakagePower(subnetID) <<
+      " uW" << std::endl; // TODO the same
+
+  std::cout << "Arrival time: " << getArrivalTime(subnetID) <<
+      " ns" << std::endl; // TODO the same
 
   if (time != std::chrono::nanoseconds(0)) {
     std::cout << "Techmapper processing time: " <<

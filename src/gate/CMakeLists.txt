@@ -18,6 +18,7 @@ add_library(Gate OBJECT
   model/link.cpp
   model/net.cpp
   model/printer/printer.cpp
+  model/serializer.cpp
   model/subnet.cpp
   model/utils/bdd_dnf.cpp
   model/utils/subnet_checking.cpp
@@ -34,10 +35,12 @@ add_library(Gate OBJECT
   optimizer/mffc.cpp
   optimizer/npn.cpp
   optimizer/npndb.cpp
+  optimizer/npnstatdb.cpp
   optimizer/reconvergence_cut.cpp
   optimizer/resubstitutor.cpp
   optimizer/rewriter.cpp
   optimizer/safe_passer.cpp
+  optimizer/subnet_basis.cpp
   optimizer/synthesis/abc/rwrUtil.c
   optimizer/synthesis/abc_npn4.cpp
   optimizer/synthesis/akers.cpp

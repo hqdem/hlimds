@@ -59,6 +59,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/cut_extractor_test.cpp
   gate/optimizer/depth_optimizer_test.cpp
   gate/optimizer/npndb_test.cpp
+  gate/optimizer/npndbserial_test.cpp
   gate/optimizer/pass_test.cpp
   gate/optimizer/reconvergence_cut_test.cpp
   gate/optimizer/resubstitutor_test.cpp
@@ -95,6 +96,7 @@ add_executable(${TEST_TARGET}
   rtl/parser/ril/ril_test.cpp
   test_main.cpp
   util/kitty_utils_test.cpp
+  util/serializer_test.cpp
 )
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET}

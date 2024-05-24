@@ -10,20 +10,20 @@
 
 namespace eda::gate::optimizer {
 
-using TT = NPNDatabase2::TT;
+using TT = NPNDatabase::TT;
 
-NPNDatabase2::ResultIterator NPNDatabase2::get(const TT &tt) {
+NPNDatabase::ResultIterator NPNDatabase::get(const TT &tt) {
   auto config = kitty::exact_npn_canonization(tt);
   NPNTransformation t = utils::getTransformation(config);
   return ResultIterator(storage[utils::getTT(config)], utils::inverse(t));
 }
 
-NPNDatabase2::ResultIterator NPNDatabase2::get(const Subnet &subnet) {
+NPNDatabase::ResultIterator NPNDatabase::get(const Subnet &subnet) {
   TT tt = model::evaluate(subnet)[0];
   return get(tt);
 }
 
-NPNDatabase2::NPNTransformation NPNDatabase2::push(const SubnetID &id) {
+NPNDatabase::NPNTransformation NPNDatabase::push(const SubnetID &id) {
   TT tt = model::evaluate(Subnet::get(id))[0];
   auto config = kitty::exact_npn_canonization(tt);
   NPNTransformation t = utils::getTransformation(config);
@@ -32,8 +32,29 @@ NPNDatabase2::NPNTransformation NPNDatabase2::push(const SubnetID &id) {
   return t;
 }
 
-void NPNDatabase2::erase(const TT &tt) {
+void NPNDatabase::erase(const TT &tt) {
   storage.erase(tt);
+}
+
+NPNDatabase NPNDatabase::importFrom(const std::string &filename) {
+  std::ifstream in(filename);
+  NPNDatabase result = NPNDatabaseSerializer().deserialize(in);
+  return result;
+}
+
+void NPNDatabase::exportTo(const std::string &filename) const {
+  std::ofstream out(filename);
+  NPNDatabaseSerializer().serialize(out, *this);
+}
+
+void NPNDatabaseSerializer::serialize(std::ostream &out, const NPNDatabase &obj) {
+  storageSerializer.serialize(out, obj.storage);
+}
+
+NPNDatabase NPNDatabaseSerializer::deserialize(std::istream &in) {
+  NPNDatabase result;
+  result.storage = storageSerializer.deserialize(in);
+  return result;
 }
 
 } // namespace eda::gate::optimizer

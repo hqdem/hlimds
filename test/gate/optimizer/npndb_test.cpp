@@ -32,7 +32,7 @@ static bool areEquivalent(const Subnet &lhs,
 }
 
 static bool transformTest(const SubnetID &id) {
-  using TT = NPNDatabase2::TT;
+  using TT = NPNDatabase::TT;
 
   TT tt = evaluate(Subnet::get(id))[0];
   const auto& subnet = Subnet::get(id);
@@ -45,7 +45,7 @@ static bool transformTest(const SubnetID &id) {
 }
 
 static bool npnDatabaseTest(const SubnetID &id) {
-  NPNDatabase2 npndb;
+  NPNDatabase npndb;
   const auto& subnet = Subnet::get(id);
   npndb.push(id);
   uint16_t negationMask = 5;

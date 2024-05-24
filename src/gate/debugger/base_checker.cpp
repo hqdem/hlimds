@@ -134,4 +134,20 @@ CheckerResult BaseChecker::areEquivalent(const model::Subnet &subnet1,
   return areEquivalent(subnet1, subnet2, mapping);
 }
 
+CheckerResult BaseChecker::areEquivalent(model::DesignBuilder &builder,
+                                         const std::string &point1,
+                                         const std::string &point2) const {
+  for (size_t i = 0; i < builder.getSubnetNum(); ++i) {
+    const auto subnetID1 = builder.getSubnetID(i, point1);
+    const auto subnetID2 = builder.getSubnetID(i, point2);
+    const auto result = areEquivalent(subnetID1, subnetID2);
+
+    if (!result.equal()) {
+      return result;
+    }
+  }
+
+  return CheckerResult::EQUAL; 
+}
+
 } // namespace eda::gate::debugger

@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include "gate/model/design.h"
 #include "gate/model/subnet.h"
 
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -172,7 +174,7 @@ public:
    * @brief Checks the equivalence of the given subnets.
    * @param subnet1 First subnet.
    * @param subnet2 Second subnet.
-   * @param mapping Mapping betwenn the PI/PO of the specified subnets.
+   * @param mapping Mapping between the PI/PO of the specified subnets.
    * @return Checking result.
    */
   CheckerResult areEquivalent(const model::Subnet &subnet1,
@@ -183,7 +185,7 @@ public:
    * @brief Checks the equivalence of the given subnets.
    * @param subnetID1 Identifier of the first subnet.
    * @param subnetID2 Identifier of the second subnet.
-   * @param mapping Mapping betwenn the PI/PO of the specified subnets.
+   * @param mapping Mapping between the PI/PO of the specified subnets.
    * @return Checking result.
    */
   CheckerResult areEquivalent(const model::SubnetID subnetID1,
@@ -215,6 +217,16 @@ public:
     const auto &subnet2 = model::Subnet::get(subnetID2);
     return areEquivalent(subnet1, subnet2);
   }
+
+  /**
+   * @brief Checks the equivalence of the given check points of the design.
+   * @param point1 Identifier of the first subnet.
+   * @param point2 Identifier of the second subnet.
+   * @return Checking result.
+   */
+  CheckerResult areEquivalent(model::DesignBuilder &builder,
+                              const std::string &point1,
+                              const std::string &point2) const;
 
   virtual ~BaseChecker() {}
 };

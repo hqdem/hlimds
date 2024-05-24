@@ -105,10 +105,19 @@ bool checkPassedUndefinedOption(const std::string &filename) {
 
 bool firtoolCheck(const std::string &outputFile) {
   std::string firTool = eda::env::getValue("CIRCT_DIR");
+  std::string cutoff = "/lib/cmake/circt/";
 
-  std::string cutoff = "build/lib/cmake/circt/";
-  firTool.erase(firTool.end() - cutoff.length(), firTool.end());
-  firTool = std::string(firTool + "build/bin/firtool ");
+  if (firTool.find("circt/") == std::string::npos) {
+    std::cout << "CIRCT_DIR env var is not set or set incorrectly!\n";
+    exit(1);
+  } else {
+    if (firTool.find(cutoff) !=  std::string::npos) {
+      firTool.erase(firTool.end() - cutoff.length(), firTool.end());
+      firTool = std::string(firTool + "/bin/firtool ");
+    } else {
+      firTool = std::string(firTool + "build/bin/firtool ");
+    }
+  }
 
   std::string pathToFirFile = std::string(homePath +
   "/output/test/verilog_fir_sys/" + outputFile + "_output.fir");

@@ -42,13 +42,13 @@ AreaRecovery::calcAreaFlow(Cut &cut, std::vector<double> &representAreaFlow,
 
   ConeBuilder coneBuilder(&Subnet::get(this->subnetID));
   Cone cone = coneBuilder.getCone(cut);
-  SubnetID &coneSubnetID = cone.subnetID;
+  const SubnetID &coneSubnetID = cone.subnetID;
   Subnet &coneSubnet = Subnet::get(coneSubnetID);
   eda::gate::model::Array<Subnet::Entry> coneEntries = coneSubnet.getEntries();
 
   for (uint64_t coneEntryIndex = cut.entryIdxs.size();
        coneEntryIndex < std::size(coneEntries); coneEntryIndex++) {
-    uint64_t &coneEntryIndexInOrig = cone.coneEntryToOrig[coneEntryIndex];
+    const uint64_t &coneEntryIndexInOrig = cone.coneEntryToOrig[coneEntryIndex];
     if (coneEntryIndexInOrig == 0) {
       continue;
     }

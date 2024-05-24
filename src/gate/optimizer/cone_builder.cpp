@@ -152,6 +152,7 @@ ConeBuilder::Cone ConeBuilder::getCone(const size_t rootEntryIdx,
     }
     coneEntryToOrig[coneEntryIdx] = curEntryIdx;
   }
+
   const auto resSubnetID = builder.make(coneEntryToOrig);
   return Cone(resSubnetID, coneEntryToOrig);
 }

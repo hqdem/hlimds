@@ -18,10 +18,12 @@ using LinkList = model::Subnet::LinkList;
 using Nodes    = std::vector<size_t>;
 using IdxMap   = std::unordered_map<size_t, size_t>;
 
-static void mapCell(const Builder &builder,
-                    Builder &coneBuilder,
-                    size_t cellId,
-                    IdxMap &oldToNew) {
+static uint16_t leaveNumber = 0;
+
+static void buildFromRoot(const Builder &builder,
+                          Builder &coneBuilder,
+                          size_t cellId,
+                          IdxMap &oldToNew) {
 
   const Cell &cell = builder.getCell(cellId);
   const auto links = builder.getLinks(cellId);
@@ -29,7 +31,7 @@ static void mapCell(const Builder &builder,
   LinkList inputs;
   for (const auto &link : links) {
     if (oldToNew.find(link.idx) == oldToNew.end()) {
-      mapCell(builder, coneBuilder, link.idx, oldToNew);
+      buildFromRoot(builder, coneBuilder, link.idx, oldToNew);
     }
     inputs.emplace_back(oldToNew.at(link.idx), link.inv);
   }
@@ -38,105 +40,91 @@ static void mapCell(const Builder &builder,
   oldToNew[cellId] = idx;
 }
 
-static void getMffcBoundsRecursively(const Builder &builder,
-                                     std::unordered_set<size_t> &bounds,
-                                     size_t cellId,
-                                     IdxMap &cellToRef) {
+static void getMffcBounds(Builder &builder,
+                          size_t cellId,
+                          IdxMap &cellToRef,
+                          IdxMap &newToOld,
+                          IdxMap &oldToNew) {
 
-  const auto links = builder.getLinks(cellId);
-  for (const auto &link : links) {
+  for (const auto &link : builder.getLinks(cellId)) {
+    bool mark = builder.getEntrySession(link.idx) == builder.getSession();
     const Cell &cell = builder.getCell(link.idx);
-    if (cell.isOne() || cell.isZero()) {
+    if (mark || cell.isOne() || cell.isZero()) {
       continue;
     }
+    builder.markEntry(link.idx);
 
     if (!cellToRef.at(link.idx)) {
-      cellToRef[link.idx] = Cell::MaxRefCount + 1;
-      getMffcBoundsRecursively(builder, bounds, link.idx, cellToRef);
+      getMffcBounds(builder, link.idx, cellToRef, newToOld, oldToNew);
       continue;
     }
 
-    if (cellToRef.at(link.idx) != (Cell::MaxRefCount + 1)) {
-      bounds.insert(link.idx);
-    }
+    newToOld[leaveNumber] = link.idx;
+    oldToNew[link.idx] = leaveNumber;
+    leaveNumber++;
   }
-}
-
-static void getMffcBounds(const Builder &builder,
-                          size_t root,
-                          size_t nLeaves,
-                          std::unordered_set<size_t> &bounds,
-                          IdxMap &cellToRef) {
-
-  bounds.clear();
-  bounds.reserve(nLeaves);
-
-  getMffcBoundsRecursively(builder, bounds, root, cellToRef);
 }
 
 static void dereferenceCells(const Builder &builder,
                              size_t cellId,
-                             IdxMap &cellToRef,
-                             const IdxMap &oldToNew) {
+                             IdxMap &cellToRef) {
 
-  const auto links = builder.getLinks(cellId);
-  for (const auto &link : links) {
+  for (const auto &link : builder.getLinks(cellId)) {
     const Cell &cell = builder.getCell(link.idx);
     if (cellToRef.find(link.idx) == cellToRef.end()) {
       cellToRef[link.idx] = cell.refcount;
     }
 
-    if (oldToNew.find(link.idx) != oldToNew.end()) {
+    if (builder.getEntrySession(link.idx) == builder.getSession()) {
       continue;
     }
 
     --cellToRef[link.idx];
     if (!cellToRef.at(link.idx)) {
-      dereferenceCells(builder, link.idx, cellToRef, oldToNew);
+      dereferenceCells(builder, link.idx, cellToRef);
     }
   }
 }
 
-static std::unordered_set<size_t> findMffcBounds(const Builder &builder,
-                                                 size_t root,
-                                                 size_t nLeaves,
-                                                 const IdxMap &oldToNew) {
-
+static IdxMap findMffcBounds(Builder &builder,
+                             size_t root,
+                             const Nodes &leaves,
+                             IdxMap &newToOld) {
   IdxMap cellToRef;
-  std::unordered_set<size_t> bounds;
+  IdxMap oldToNew;
+  leaveNumber = 0;
 
-  dereferenceCells(builder, root, cellToRef, oldToNew);
-  getMffcBounds(builder, root, nLeaves, bounds, cellToRef);
+  builder.startSession();
+  for (size_t i = 0; i < leaves.size(); ++i) {
+    builder.markEntry(leaves[i]);
+  }
+  dereferenceCells(builder, root, cellToRef);
+  builder.endSession();
 
-  return bounds;
+  builder.startSession();
+  oldToNew.reserve(cellToRef.size());
+  getMffcBounds(builder, root, cellToRef, newToOld, oldToNew);
+  builder.endSession();
+
+  return oldToNew;
 }
 
-Fragment getMffc(const Builder &builder, size_t root, const Nodes &leaves) {
+Fragment getMffc(Builder &builder, size_t root, const Nodes &leaves) {
   Fragment cone;
-  cone.subnetID = model::OBJ_NULL_ID;
-
   const size_t nLeaves = leaves.size();
+  cone.subnetID = model::OBJ_NULL_ID;
+  cone.entryMap.reserve(nLeaves + 1);
+
   if (nLeaves < 2) {
     cone.subnetID = getReconvergenceCone(builder, root, nLeaves, cone.entryMap);
     return cone;
   }
 
-  IdxMap oldToNew;
-  for (size_t i = 0; i < nLeaves; ++i) {
-    oldToNew[leaves[i]] = i;
-  }
-
-  std::unordered_set<size_t> coneBounds;
-  coneBounds = findMffcBounds(builder, root, nLeaves, oldToNew);
-  auto it = coneBounds.begin();
-  for (size_t i = 0; i < coneBounds.size(); ++i, ++it) {
-    oldToNew[(*it)] = i;
-    cone.entryMap[i] = *it;
-  }
+  IdxMap oldToNew = findMffcBounds(builder, root, leaves, cone.entryMap);
 
   Builder coneBuilder;
-  coneBuilder.addInputs(coneBounds.size());
-  mapCell(builder, coneBuilder, root, oldToNew);
+  coneBuilder.addInputs(oldToNew.size());
+  buildFromRoot(builder, coneBuilder, root, oldToNew);
   size_t outId = coneBuilder.addOutput(Link(oldToNew.at(root))).idx;
 
   cone.entryMap[outId] = root;

@@ -24,7 +24,7 @@ namespace eda::gate::optimizer {
  *  @return A cone with an input/output map.
  */
 SubnetIteratorBase::SubnetFragment getMffc(
-    const model::SubnetBuilder &subnetBuilder,
+    model::SubnetBuilder &subnetBuilder,
     size_t root,
     const std::vector<size_t> &leaves);
 

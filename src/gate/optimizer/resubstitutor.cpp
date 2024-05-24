@@ -482,8 +482,8 @@ void Resubstitutor::transform(SubnetBuilder &builder) const {
     }
 
     std::unordered_map<size_t, size_t> dummy;
-    const auto careSubnetID = getReconvergenceCone(builder, leaves,
-                                                   careSize, dummy);
+    const auto careSubnetID = getReconvergenceWindow(builder, leaves,
+                                                     careSize, dummy);
     const auto &careSubnet = Subnet::get(careSubnetID);
     const auto care = model::computeCare(careSubnet);
 

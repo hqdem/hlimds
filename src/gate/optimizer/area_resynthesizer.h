@@ -27,7 +27,7 @@ public:
   SubnetID resynthesize(SubnetID subnetId) const override;
 
 private:
-  const SubnetBuilder &subnetBuilder;
+  SubnetBuilder &subnetBuilder;
   size_t maxArity;
 };
 

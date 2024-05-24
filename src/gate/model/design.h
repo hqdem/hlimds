@@ -43,7 +43,7 @@ class DesignBuilder final {
 public:
   using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
 
-  /// Constructs a design builder from the net (imports the net).
+  /// Constructs a design builder from the net.
   DesignBuilder(const NetID netID) {
     // Generate the soft block implementations.
     synthesizer::synthSoftBlocks(netID);
@@ -53,7 +53,7 @@ public:
     setEntries(subnetIDs);
   }
 
-  /// Constructs a design builder from the subnet (imports the subnet).
+  /// Constructs a design builder from the subnet.
   DesignBuilder(const SubnetID subnetID) {
     std::vector<SubnetID> subnetIDs;
     NetDecomposer::get().decompose(subnetID, subnetIDs, mapping);
@@ -112,58 +112,41 @@ public:
     entry.builder = builder;
   }
 
-  /// Saves the current subnet.
-  void saveSubnet(const size_t i, const std::string &save) {
+  /// Makes a check point for the i-th subnet.
+  void save(const size_t i, const std::string &point) {
     auto &entry = getEntry(i);
-    entry.history.emplace_back(save, getSubnetID(i));
+    entry.points.emplace(point, getSubnetID(i));
   }
 
-  /// Returns the previously saved subnet.
-  SubnetID getSubnetID(const size_t i, const std::string &save) const {
+  /// Makes a global check point.
+  void save(const std::string &point) {
+    for (size_t i = 0; i < subnets.size(); ++i) {
+      save(i, point);
+    }
+  }
+
+  /// Rolls back to the given check point of the i-th subnet.
+  void rollback(const size_t i, const std::string &point) {
+    auto &entry = getEntry(i);
+    entry.subnetID = getSubnetID(i, point);
+    entry.builder = nullptr;
+  }
+
+  /// Rolls back to the global check point.
+  void rollback(const std::string &point) {
+    for (size_t i = 0; i < subnets.size(); ++i) {
+      rollback(i, point);
+    }
+  }
+
+  /// Returns the subnet from the given check point.
+  SubnetID getSubnetID(const size_t i, const std::string &point) const {
     const auto &entry = getEntry(i);
 
-    const auto it = std::find_if(entry.history.begin(), entry.history.end(),
-        [&save](const NamedSubnet &namedSubnet) {
-          return namedSubnet.first == save;
-        });
+    const auto it = entry.points.find(point);
+    assert(it != entry.points.end());
 
-    if (it != entry.history.end()) {
-      return it->second;
-    }
-
-    return OBJ_NULL_ID;
-  }
-
-  /// Erases the i-th subnet transformation history.
-  void commit(const size_t i) {
-    auto &entry = getEntry(i);
-    entry.history.clear();
-  }
-
-  /// Rolls back to the given step in history.
-  void rollback(const size_t i, const size_t step) {
-    assert(subnets.size() > step);
-    auto &entry = getEntry(i);
-    entry.subnetID = entry.history[step].second;
-    entry.builder = nullptr;
-    entry.history.resize(step);
-  }
-
-  /// Rolls back to the previously saved subnet.
-  void rollback(const size_t i, const std::string &save) {
-    auto &entry = getEntry(i);
-    for (size_t j = 0; j < entry.history.size(); ++j) {
-      if (entry.history[j].first == save) {
-        rollback(i, j);
-        return;
-      }
-    }
-    assert(false && "Subnet not found");
-  }
-
-  /// Rolls a step back.
-  void stepback(const size_t i) {
-    rollback(i, getEntry(i).history.size() - 1);
+    return it->second;
   }
 
   /// Replaces the flip-flop or the latch.
@@ -171,26 +154,30 @@ public:
                    const std::vector<uint16_t> &newInputs,
                    const std::vector<uint16_t> &newOutputs);
 
-  /// Constructs a net (exports the design).
+  /// Constructs a net.
   NetID make() {
     const auto subnetIDs = getSubnetIDs();
     return NetDecomposer::get().compose(subnetIDs, mapping);
   }
 
+  /// Constructs a net for the given check point.
+  NetID make(const std::string &point) {
+    const auto subnetIDs = getSubnetIDs(point);
+    return NetDecomposer::get().compose(subnetIDs, mapping);
+  }
+
 private:
   using CellMapping = NetDecomposer::CellMapping;
-  using NamedSubnet = std::pair<std::string, SubnetID>;
 
   struct SubnetEntry {
-    SubnetEntry(const SubnetID subnetID):
-        history{}, subnetID(subnetID), builder(nullptr) {}
+    SubnetEntry(const SubnetID subnetID): subnetID(subnetID) {}
 
-    /// Identifiers of the previous subnets.
-    std::vector<NamedSubnet> history;
+    /// Check points.
+    std::unordered_map<std::string, SubnetID> points;
     /// Current subnet identifier.
     SubnetID subnetID;
     /// Current subnet builder.
-    SubnetBuilderPtr builder;
+    SubnetBuilderPtr builder{nullptr};
   };
 
   const SubnetEntry &getEntry(const size_t i) const {
@@ -207,6 +194,14 @@ private:
     std::vector<SubnetID> subnetIDs(subnets.size());
     for (size_t i = 0; i < subnets.size(); ++i) {
       subnetIDs[i] = getSubnetID(i);
+    }
+    return subnetIDs;
+  }
+
+  std::vector<SubnetID> getSubnetIDs(const std::string &point) {
+    std::vector<SubnetID> subnetIDs(subnets.size());
+    for (size_t i = 0; i < subnets.size(); ++i) {
+      subnetIDs[i] = getSubnetID(i, point);
     }
     return subnetIDs;
   }

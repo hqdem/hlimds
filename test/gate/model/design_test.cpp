@@ -16,7 +16,7 @@
 namespace eda::gate::model {
 
 inline void check(DesignBuilder &builder) {
-  EXPECT_FALSE(builder.getSubnetNum() != 0);
+  EXPECT_FALSE(builder.getSubnetNum() == 0);
   const auto netID = builder.make();
   EXPECT_TRUE(netID != OBJ_NULL_ID);
 

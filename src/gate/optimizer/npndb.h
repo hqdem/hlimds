@@ -8,13 +8,16 @@
 
 #pragma once
 
+#include "gate/model/serializer.h"
 #include "gate/model/utils/subnet_truth_table.h"
+#include "gate/optimizer/subnet_info.h"
 #include "util/citerator.h"
 #include "util/kitty_utils.h"
+#include "util/serializer.h"
 
 #include "kitty/kitty.hpp"
 
-#include <map>
+#include <fstream>
 #include <sstream>
 #include <vector>
 
@@ -26,11 +29,18 @@ public:
   using Subnet = eda::gate::model::Subnet;
   using SubnetID = model::SubnetID;
   using SubnetIDList = std::vector<SubnetID>;
+  using SubnetInfoList = std::vector<SubnetInfo>;
 
   NPNDB2ResultIterator(const SubnetIDList &l, const NPNTransformation &t) :
                        transformation(t), list(l), ind(0) { }
   NPNDB2ResultIterator(const SubnetIDList &&l, const NPNTransformation &t) :
                        transformation(t), list(std::move(l)), ind(0) { }
+
+  NPNDB2ResultIterator(const SubnetIDList &l,
+                       const NPNTransformation &t,
+                       const SubnetInfoList &il) :
+                       transformation(t), list(l), ind(0), hasInfo(true),
+                       infoList(il) { }
 
   bool isEnd() const override {
     return ind >= list.size();
@@ -45,7 +55,9 @@ public:
   }
 
   SubnetID get() const override {
-    assert(!isEnd() && "End of the result.");
+    if (isEnd()) {
+      throw std::runtime_error("The iterator has reached end of the list");
+    }
     return eda::utils::npnTransform(Subnet::get(list[ind]), transformation);
   }
 
@@ -57,16 +69,30 @@ public:
     return !isEnd();
   }
 
+  bool hasSubnetInfo() const {
+    return hasInfo;
+  }
+
+  SubnetInfo getInfo() const {
+    if (!hasInfo) {
+      throw std::runtime_error("Iterator doesn't contain subnets info");
+    }
+    return infoList[ind];
+  }
 private:
   NPNTransformation transformation;
   SubnetIDList list;
   size_t ind;
+  bool hasInfo = false;
+  SubnetInfoList infoList;
 };
 
 /**
  * \brief Implements rewrite database which uses NPN matching to store nets.
  */
-class NPNDatabase2 {
+class NPNDatabase {
+friend class NPNDatabaseSerializer;
+
 public:
   using ResultIterator = NPNDB2ResultIterator;
   using NPNTransformation = utils::NPNTransformation;
@@ -75,26 +101,45 @@ public:
   using SubnetIDList = std::vector<SubnetID>;
   using TT = kitty::dynamic_truth_table;
 
+  virtual ~NPNDatabase() = default;
+
   /**
    * \brief Finds nets equivalent to representative function of *tt* NPN-class.
    * Returns tuple which consists of subnet references list of nets implementing
    * function of class representative, negation mask and permutation to
    * apply to representative.
    */
-  ResultIterator get(const TT &tt);
-  ResultIterator get(const Subnet &subnet);
+  virtual ResultIterator get(const TT &tt);
+  virtual ResultIterator get(const Subnet &subnet);
 
   /**
    * \brief Push *bnet*'s NPN representative function net in database.
    */
-  NPNTransformation push(const SubnetID &id);
+  virtual NPNTransformation push(const SubnetID &id);
 
-  void erase(const TT &tt);
+  virtual void erase(const TT &tt);
 
-private:
+  static NPNDatabase importFrom(const std::string &filename);
+  void exportTo(const std::string &filename) const;
+
+protected:
   // Storage only contains NPN class representatives.
   std::map<TT, SubnetIDList> storage;
 };
 
-} // namespace eda::gate::optimizer
+// Serializer for NPNStatDatabase class
+class NPNDatabaseSerializer : public util::Serializer<NPNDatabase> {
+public:
+  using TT = NPNDatabase::TT;
+  using SubnetList = std::vector<model::SubnetID>;
 
+  void serialize(std::ostream &out, const NPNDatabase &obj);
+  NPNDatabase deserialize(std::istream &in);
+private:
+  util::MapSerializer<TT,
+                      SubnetList,
+                      model::TTSerializer,
+                      model::SubnetListSerializer> storageSerializer;
+};
+
+} // namespace eda::gate::optimizer

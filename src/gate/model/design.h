@@ -40,6 +40,10 @@ using ClockDomain = Domain;
 using ResetDomain = Domain;
 
 class DesignBuilder final {
+private:
+  /// Delete buffers when making subnets.
+  static constexpr bool DeleteBuffers = true;
+
 public:
   using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
 
@@ -73,7 +77,7 @@ public:
     }
 
     assert(entry.builder != nullptr);
-    setSubnetID(i, entry.builder->make());
+    setSubnetID(i, entry.builder->make(DeleteBuffers));
 
     return entry.subnetID;
   }

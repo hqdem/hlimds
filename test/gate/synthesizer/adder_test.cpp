@@ -12,6 +12,7 @@
 
 #include "gate/simulator/simulator.h"
 #include "gate/synthesizer/synthesizer_add.h"
+#include "gate/synthesizer/synthesizer_neg.h"
 
 using CellSymbol = eda::gate::model::CellSymbol;
 using CellTypeAttr = eda::gate::model::CellTypeAttr;
@@ -155,5 +156,43 @@ TEST(Synthesizer, WiderOutputLadnerFisherTestSub) {
         std::clog << i + 1 << " " << j + 1 << std::endl;
       }
     }
+  }
+}
+
+TEST(Synthesizer, UnaryMinus) {
+  const uint8_t start = 2u;
+  const uint8_t end = 32u;
+
+  srand(1u);
+
+  for (uint8_t sizeA = start; sizeA <= end; ++sizeA) {
+
+    CellTypeAttr::PortWidths inputs = {sizeA};
+    CellTypeAttr::PortWidths outputs = {end};
+
+    const CellTypeAttr &attr =
+        CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
+
+    const auto &result = Subnet::get(eda::gate::synthesizer::synthNeg(attr));
+
+    Simulator simulator = Simulator(result);
+    Simulator::DataVector values(sizeA);
+
+    int32_t valA = std::rand() % (1 << (sizeA - 1));
+    int32_t val = valA;
+    for (uint8_t di = 0; di < sizeA; ++di, val >>= 1) {
+      values[di] = val & 1;
+    }
+
+    simulator.simulate(values);
+
+    int32_t resSimulated = 0u;
+
+    for (int16_t pos = end - 1u; pos >= 0; --pos) {
+      resSimulated <<= 1;
+      resSimulated |= simulator.getValue(result.getOut(pos));
+    }
+
+    EXPECT_EQ(-valA, resSimulated);
   }
 }

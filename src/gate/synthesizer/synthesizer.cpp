@@ -12,6 +12,7 @@
 #include "gate/synthesizer/synthesizer_div.h"
 #include "gate/synthesizer/synthesizer_mul.h"
 #include "gate/synthesizer/synthesizer_mux.h"
+#include "gate/synthesizer/synthesizer_neg.h"
 
 #include <cassert>
 
@@ -37,6 +38,7 @@ static SubnetID synthImpl(const CellType &type) {
   case GTEs: return synthGteS(attr);
   case GTEu: return synthGteU(attr);
   case ADD:  return synthAdd(attr);
+  case NEG:  return synthNeg(attr);
   case SUB:  return synthSub(attr);
   case MULs: return synthMulS(attr);
   case MULu: return synthMulU(attr);

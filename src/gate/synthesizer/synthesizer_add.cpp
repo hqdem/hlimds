@@ -8,7 +8,6 @@
 
 #include "gate/synthesizer/synthesizer_add.h"
 
-#include <bitset>
 #include <cassert>
 
 namespace eda::gate::synthesizer {
@@ -58,7 +57,8 @@ model::SubnetID synthSub(const model::CellTypeAttr &attr) {
 model::Subnet::LinkList
 convertToTwosComplementCode(model::SubnetBuilder &builder,
                             const model::Subnet::LinkList &inputsForA,
-                            const uint16_t targetSize) {
+                            const uint16_t targetSize,
+                            bool usedForSub) {
   model::Subnet::LinkList inversed(targetSize);
   const auto one = builder.addCell(model::CellSymbol::ONE);
 
@@ -72,7 +72,7 @@ convertToTwosComplementCode(model::SubnetBuilder &builder,
 
 
   // return digit been inversed and for wich was added 1
-  return synthLadnerFisherAdd(builder, inversed, {one}, targetSize);
+  return synthLadnerFisherAdd(builder, inversed, {one}, targetSize, usedForSub);
 }
 
 // well, why builder is pointer. Such construction shows obviously,

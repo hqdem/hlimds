@@ -16,11 +16,11 @@ model::SubnetID synthAdd(const model::CellTypeAttr &attr);
 
 model::SubnetID synthSub(const model::CellTypeAttr &attr);
 
-// we use this to sub digits
+// Implementation of unary minus
 model::Subnet::LinkList
 convertToTwosComplementCode(model::SubnetBuilder &builder,
-                        const model::Subnet::LinkList &inputsForA,
-                        const uint16_t targetSize);
+                            const model::Subnet::LinkList &inputsForA,
+                            const uint16_t targetSize, bool usedForSub = false);
 
 // As an explanation, here is a Verilog implementation of the 4-bit adder.
 // Other information can be found in link below.

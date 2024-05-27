@@ -58,6 +58,7 @@ add_library(Gate OBJECT
   simulator/simulator.cpp
   synthesizer/synthesizer.cpp
   synthesizer/synthesizer_add.cpp
+  synthesizer/synthesizer_neg.cpp
   synthesizer/synthesizer_cmp.cpp
   synthesizer/synthesizer_div.cpp
   synthesizer/synthesizer_mul.cpp

@@ -5,129 +5,113 @@
 // Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-
 #include "reed_muller.h"
+#include <algorithm>
+#include <cassert>
 
 namespace eda::gate::optimizer::synthesis {
+    
+  ReedMuller::ReedMuller(uint64_t (*metricFunction)(Polynomial &)) : 
+    currentMetricFunction(metricFunction) { }
 
-using Subnet = model::Subnet;
-using SubnetBuilder = model::SubnetBuilder;
-using SubnetID = model::SubnetID;
+  SubnetID ReedMuller::synthesize(const DinTruthTable& func, uint16_t maxArity) const {
+    uint64_t len = func.num_bits();
+    variables = func.num_vars();
 
-SubnetID ReedMuller::synthesize(const DinTruthTable &func,
-                                uint16_t maxArity) const {
-
-  Polynomial resultFunction = getTT(func);
-  const size_t maxSize = (maxArity < Subnet::Cell::InPlaceLinks) ? 
-               maxArity : Subnet::Cell::InPlaceLinks;
-               
-  SubnetBuilder subnetBuilder;
-  uint64_t argNum  = resultFunction[resultFunction.size() - 1];
-  std::vector<size_t> idx (argNum);
-  LinkList resultOutput;
-
-  for (size_t i = 0; i < argNum; ++i) {
-    idx[i] = subnetBuilder.addInput().idx;
-  }
-
-  if (resultFunction[0]) {
-    resultOutput.push_back(subnetBuilder.addCell(model::ONE));
-  }
-
-  for (int i = 1; i < (1 << argNum); ++i) {
-    if (!resultFunction[i]) {
-      continue;
+    for (uint64_t i = 0; i < len; ++i) {
+      polynomial.push_back(kitty::get_bit(func, i));
     }
 
-    std::vector<int> temporaryInputNodes = eda::utils::popcnt(i);
-    LinkList currentNode;
-
-    for (auto n : temporaryInputNodes) {
-      currentNode.push_back(Link(idx[n]));
+    for (uint64_t index = 0; index < variables; ++index) {
+      polarize(index);
     }
 
-    resultOutput.push_back(subnetBuilder.addCellTree(model::AND, currentNode, maxSize));
-  }
-
-  LinkList outputNodes;
-  Link out;
-
-  if (resultOutput.size() >= 2) {
-    out = subnetBuilder.addCellTree(model::XOR, resultOutput, maxSize);
-  }
-
-  else if (resultOutput.size() == 1) {
-    out = resultOutput[0];
-  }
-
-  subnetBuilder.addOutput(out);
-  return subnetBuilder.make();
-}
-
-Polynomial ReedMuller::getTT(const DinTruthTable &t) const {
-  Polynomial charFunction = charFromTruthTable(t);
-  Polynomial resultFunction = charFromFunction(charFunction);
-  return resultFunction;
-}
-
-uint64_t ReedMuller::apply(const Polynomial &func, const std::string &s) const {
-  std::string sCopy = s;
-  if (func[func.size() - 1] < sCopy.size()) {
-    assert("Too many arguments for the function");
-  }
-
-  while (func[func.size() - 1] > sCopy.size()) {
-    sCopy.push_back('0');
-  }
-  std::reverse(sCopy.begin(), sCopy.end());
-  std::vector<int> positionsOfOnes;
-  uint64_t res = 0;
-  for (size_t i = 0; i < sCopy.size(); ++i) {
-    if (sCopy[i] == '1') {
-      positionsOfOnes.push_back(i);
+    PolarizedPolynomial result;
+    if (currentMetricFunction) {
+      result = getOptimal();
+    } else {
+      result.first = polynomial;
+      result.second = Polarization(polynomial.size(), false);
     }
+    return createScheme(result.first, result.second, maxArity, variables);
   }
 
-  uint64_t size = positionsOfOnes.size();
-  uint64_t base = 1 << size;
-  for (uint64_t i = 0; i < base; ++i) {
-    std::string str = eda::utils::toBinString(i, size);
-    int pos = 0;
-    for (uint64_t j = 0; j < size; ++j) {
-      if (str[j] == '1') {
-        pos += 1 << positionsOfOnes[size - 1 - j];
+  void ReedMuller::polarize(uint64_t index) const {
+    polarityOperation(index, true);
+  }
+
+  void ReedMuller::changePolarity(uint64_t index) const {
+    polarityOperation(index, false);
+  }
+
+  void ReedMuller::polarityOperation(uint64_t index, bool rightShift) const {
+    Polynomial copy = polynomial;
+    for (uint64_t i = 0; i < polynomial.size(); ++i) {
+      if ((!(i & (1 << index)) && !rightShift) || (i & (1 << index) && rightShift)) {
+        polynomial[i] = 0;
       }
     }
-    res ^= func[pos];
-  }
-  return res;
-}
 
-Polynomial ReedMuller::charFromTruthTable(const DinTruthTable &t) const {
-  Polynomial charFunction;
-  uint64_t numBits = t.num_bits();
-  uint64_t numVar = t.num_vars();
-  charFunction.resize(numBits + 1);
+    shift(1 << index, rightShift);
 
-  for (uint64_t i = 0; i < numBits; ++i) {
-    charFunction[i] = kitty::get_bit(t, i);
-  }
+    auto tmp = copy;
+    copy = polynomial;
+    polynomial = tmp;
 
-  charFunction[charFunction.size() - 1] = numVar;
-  return charFunction;
-}
+    /* In C++ 20 this can be done easier:
+     * std::shift_left(copy.begin(), copy.end(), 1 << index);
+     */
 
-Polynomial ReedMuller::charFromFunction(Polynomial &func) const {
-  uint64_t numVar = func[func.size() - 1];
-  uint64_t numBits = 1 << numVar;
-  Polynomial resultFunction(numBits + 1);
-
-  for (uint64_t i = 0; i < numBits; ++i) {
-    resultFunction[i] = apply(func, eda::utils::toBinString(i, numVar));
+    for (uint64_t i = 0; i < copy.size(); ++i) {
+      polynomial[i] ^= copy[i];
+    }
   }
 
-  resultFunction[resultFunction.size() - 1] = numVar;
-  return resultFunction;
-}
+  uint64_t ReedMuller::getPolarized() const {
+    bool flag = true;
+    uint64_t minMetric = currentMetricFunction(polynomial);
+    uint64_t version = 0;
+    Polynomial optimum = polynomial;
+    for (uint64_t i = 0; i < polynomial.size(); ++i) {
+      uint64_t firstOnePos = 0;
+      while (!((i + 1) & (1 << firstOnePos))) {
+        ++firstOnePos;
+      }
+      changePolarity(firstOnePos);
 
+      uint64_t curMetric = currentMetricFunction(polynomial);
+      if (curMetric < minMetric) {
+        flag = false;
+        minMetric = curMetric;
+        optimum = polynomial;
+        version = i;
+      }
+    }
+    polynomial = optimum;
+    return flag ? 0 : version + 1;
+  }
+
+  PolarizedPolynomial ReedMuller::getOptimal() const {
+    uint64_t step = getPolarized();
+    std::vector<bool> polarized(variables, false);
+    for (uint64_t i = 0; (i < step) && step; ++i) {
+      uint64_t firstOnePos = 0;
+      while (!((i + 1) & (1 << firstOnePos))) {
+        ++firstOnePos;
+      }
+      polarized[firstOnePos] = !polarized[firstOnePos];
+    }
+    PolarizedPolynomial result = {polynomial, polarized};
+    return result;
+  }
+
+  void ReedMuller::shift(uint64_t pos, bool right) const {
+    uint64_t len = polynomial.size();
+    pos = right ? pos : len - pos;
+    pos %= len;
+
+    std::reverse(polynomial.begin(), polynomial.begin() + (len - pos));
+    std::reverse(polynomial.begin() + (len - pos), polynomial.end());
+    std::reverse(polynomial.begin(), polynomial.end());    
+  }
 } // namespace eda::gate::optimizer::synthesis

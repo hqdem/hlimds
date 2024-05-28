@@ -5,105 +5,151 @@
 // Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+#pragma once
 
-#include "gate/model/celltype.h"
 #include "gate/model/subnet.h"
+#include "gate/optimizer/synthesis/zhegalkin.h"
 #include "gate/optimizer/synthesizer.h"
-#include "util/arith.h"
 
 #include "kitty/kitty.hpp"
 
 #include <iostream>
+#include <numeric>
 #include <vector>
 
 namespace eda::gate::optimizer::synthesis {
 
-using DinTruthTable = kitty::dynamic_truth_table;
-using Link = model::Subnet::Link;
-using LinkList = std::vector<Link>;
-using Polynomial = std::vector<uint64_t>;
-using SubnetID = model::SubnetID;
+  using DinTruthTable = kitty::dynamic_truth_table;
+  using Polarization = std::vector<bool>;
+  using Polynomial = std::vector<uint64_t>;
+  using PolarizedPolynomial = std::pair<Polynomial, std::vector<bool>>;
+  using SubnetID = model::SubnetID;
+  using TTable = std::vector<uint64_t>;
 
-/**
- * Class ReedMuller is created from Synthesizer.
- * It creates a logical graph and returns it as a SubnetID.
- * 
- * The implementation of the algorithm is based on the following article:
- * Harking B. Efficient algorithm for canonical Reed-Muller expansions 
- * of Boolean functions // IEE Proc., 1990. Vol. 137. №5. P. 366-370.
- */
+ /**
+  * Metric functions:
+  * 1) numberOfTerms - calculates the number of terms in scheme. 
+  * 2) longestTerm - finds the length of a longest term.
+  */
+  namespace {
+    inline uint64_t termMetric(Polynomial &polynomial, bool countingLenght) {
+      uint64_t result = 0;
+      for (size_t i = 0; i < polynomial.size(); ++i) {
+        if (polynomial[i]) {
+          uint64_t popcount = 0;
+          auto index = i;
+          while (index) {
+            popcount += index & 1;
+            index >>= 1;
+          }
+          if (!countingLenght) {
+            result = std::max(result, popcount);
+          } else {
+            result += popcount;
+          }
+        }    
+      }
+      return result;
+    }
+  } // namespace
 
-class ReedMuller : public Synthesizer<DinTruthTable> {
-public:
+  inline uint64_t numberOfTerms(Polynomial &polynomial) {
+    return std::accumulate(polynomial.begin(), polynomial.end(), 0);
+  }
 
-  /**
-   * Transforms truth table for the function to subnet model 
-   * using a Reed-Muller method.
-   * 
-   * maxArity is a parameter, that defines the maximal arity of every node in subnet.
-   * By default it's set to Subnet::Cell::InPlaceLinks, 
-   * to use other value pass it as the second argument.
-   * 
-   * If the second argument passed to "synthesize" is more than Subnet::Cell::InPlaceLinks,
-   * it's forced to be equal to Subnet::Cell::InPlaceLinks.
-   * 
-   * The maxArity param must be greater than 2.
-   */
-  SubnetID synthesize(const DinTruthTable &func,
-                      uint16_t maxArity = -1) const override;
+  inline uint64_t longestTerm(Polynomial &polynomial) {
+    return termMetric(polynomial, false);
+  }
 
-  /**
-   * Creates a function, represented by a given truth table. 
-   *
-   * The result function is stored as a polynomial.
-   *
-   * Sample output: 
-   *
-   * kitty:create_from_binary_string(TT t, "10011100");
-   *
-   * getTT(t) = x_2 ^ x_3 ^ x_1 & x_3
-   *
-   * @return polynomical representation of truth table t
-   */
-  Polynomial getTT(const DinTruthTable &t) const;
+  inline uint64_t sumOfTerms(Polynomial &polynomial) {
+    return termMetric(polynomial, true);
+  }
 
-  /**
-   * Calculates the function of the variables given in the string.
-   *
-   * Before applying the function checks whether the size of a given binary
-   * string is right (is the same, as the number of variables).
-   *
-   * If s.size() < num_vars -> add leading zeroes to make the padding right, 
-   * then calculates the given function, using the string with leading zeroes. 
-   * 
-   * if s.size() > num_vars -> assert, nothing is calculated.
-   * 
-   * @return func(s)
-   */
-  uint64_t apply(const Polynomial &func, const std::string &s) const;
+ /**
+  * Class ReedMuller synthesizes scheme using ReedMuller
+  * method and makes this scheme optimal (by some metric, 
+  * metric can be defined by user).
+  * Algorithm and implementation is based on a following article:
+  * 
+  * Zakrevsky A. D., Toporov N. R. 
+  * "Polynomial realizations of partial boolean functions and systems".
+  * https://reallib.org/reader?file=1514696&pg=34.
+  */
+  class ReedMuller : public Synthesizer<DinTruthTable> {
 
-private:
+  public:
 
-  /**
-   * Generates a characteristic function from a given truth table.
-   *
-   * char_func = func(0,...,0) ^ x1 & func(0,...,1) ^ ....
-   *
-   * @return characterisitic ponynomial of a given truth table
-   */
-  Polynomial charFromTruthTable(const DinTruthTable &t) const;
+    /**
+     * Constructor that synthesizes the basic ReedMuller scheme.
+     * Basic scheme is a scheme where all the terms are zero-polarized
+     * (in other words - all the terms in scheme are not inverted)
+     */
+    ReedMuller(uint64_t (*metricFunction)(Polynomial &) = sumOfTerms);
 
-  /**
-   * Generates a characteristic function from a given function.
-   *
-   * function is a polynomial func.
-   *
-   * char_func = func(0,...,0) ^ x1 & func(0,...,1) ^ ....
-   *
-   * @return characteristic polynomial of a given polynomial
-   *
-   */
-  Polynomial charFromFunction(Polynomial &func) const;
-};
+    /**
+     * Generates a logical scheme by a truth table used in constructing
+     * ReedMuller object. If you want to get an optimal (by some metric)
+     * scheme, you need to pass this metric (as a pointer to a function)
+     * as the first argument in this method. If no metric is passed method generates
+     * a non-polarized scheme (scheme where all the inputs are positive). 
+     */
+    SubnetID synthesize(const DinTruthTable &func,
+        uint16_t maxArity = -1) const override;
+  private:
 
-} //namespace eda::gate::optimizer::synthesis
+    ReedMuller() = default;
+
+    /**
+     * Method used to perform polarization/changePolarity operations 
+     */
+    void polarityOperation(uint64_t index, bool rightShift) const;
+
+    /**
+     * Method constructs the optimal scheme and returns
+     * it with array of polarizations. 
+     * In this array element on position "i" defines whether
+     * we have to polarize input of a scheme on position "i".
+     */
+    PolarizedPolynomial getOptimal() const;
+
+    /**
+     * This method goes through all the polarization of
+     * a basic scheme and return the optimal one.
+     * Currently the most optimal scheme - is a scheme
+     * with the least number of terms.
+     */
+    uint64_t getPolarized() const;
+
+    /**
+     * Performs operation "polarize(i)" from the article. 
+     */
+    void polarize(uint64_t index) const;
+
+    /**
+     * Performs operation "change Polarity(i) from the article." 
+     */
+    void changePolarity(uint64_t index) const;
+
+    /**
+     * Method performs cyclic shift. Starting from C++ 20
+     * this method can be removed (see the source code). 
+     */
+    void shift(uint64_t pos, bool right = false) const;
+    
+    /**
+     * Number of inputs in scheme. 
+     */
+    mutable uint64_t variables;
+
+    /**
+     * ReedMuller polynomial (intermediate representation of scheme).
+     */
+    mutable Polynomial polynomial;
+
+    /**
+     * Pointer to a current metric function used for 
+     * finding the optimal scheme for a given Truth Table 
+     */
+    mutable uint64_t (*currentMetricFunction)(Polynomial &);
+  };
+} // namespace eda::gate::optimizer::synthesis

@@ -110,13 +110,15 @@ static IdxMap findMffcBounds(Builder &builder,
 }
 
 Fragment getMffc(Builder &builder, size_t root, const Nodes &leaves) {
+  assert(!leaves.empty() && "Bounds for a fanout-free cone are empty!");
   Fragment cone;
   const size_t nLeaves = leaves.size();
   cone.subnetID = model::OBJ_NULL_ID;
   cone.entryMap.reserve(nLeaves + 1);
 
   if (nLeaves < 2) {
-    cone.subnetID = getReconvergenceCone(builder, root, nLeaves, cone.entryMap);
+    cone.subnetID = getReconvergenceCone(builder, root,
+                                         Cell::MaxArity, cone.entryMap);
     return cone;
   }
 

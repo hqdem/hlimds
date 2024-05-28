@@ -75,6 +75,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/synthesis/dsd_test.cpp
   gate/optimizer/synthesis/isop_test.cpp
   gate/optimizer/synthesis/reed_muller_test.cpp
+  gate/optimizer/synthesis/zhegalkin_test.cpp
   gate/simulator/simulator_test.cpp
   gate/synthesizer/adder_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp

@@ -10,6 +10,7 @@
 #include "gate/model/celltype.h"
 #include "gate/model/utils/subnet_checking.h"
 #include "gate/model/utils/subnet_truth_table.h"
+#include "gate/optimizer/synthesis/zhegalkin.h"
 #include "gate/optimizer/synthesis/reed_muller.h"
 #include "util/arith.h"
 
@@ -25,201 +26,44 @@ namespace eda::gate::optimizer::synthesis {
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetID = model::SubnetID;
 
-  std::string generateRandom(const uint64_t size) {
+  std::string generateRandom(const uint64_t size);
+  void testSubnetToSubnet(const Subnet &s1, const Subnet &s2);
 
-    // set seed to make results reproducible
-    std::mt19937 engine(0);
-
-    std::random_device device;
-    engine.seed(device());
-    std::string s;
-    uint64_t n = 1 << size;
-    while (s.size() < n) {
-      s += (engine() % 2) + '0';
-    }
-    return s;
-  }
-
-  SubnetID generateTest(const uint64_t numVars) {
-    ReedMuller r;
-    DinTruthTable t(numVars);
-    std::string s = generateRandom(numVars);
+  void optimalEquality(uint64_t len) {
+    std::string s = generateRandom(len);
+    DinTruthTable t(len);
+    Zhegalkin r;
     kitty::create_from_binary_string(t, s);
-    return r.synthesize(t);
+    auto s1 = r.synthesize(t);
+    ReedMuller x1(sumOfTerms), x2(numberOfTerms), x3(longestTerm);
+    
+    auto s2 = x1.synthesize(t);
+    auto s3 = x2.synthesize(t);
+    auto s4 = x3.synthesize(t);
+
+    testSubnetToSubnet(Subnet::get(s1), Subnet::get(s2));
+    testSubnetToSubnet(Subnet::get(s1), Subnet::get(s3));
+    testSubnetToSubnet(Subnet::get(s1), Subnet::get(s4));
   }
 
-  SubnetID generateSubnetID(std::string s, const uint64_t numVars) {
-    ReedMuller r;
-    DinTruthTable t(numVars);
-    kitty::create_from_binary_string(t, s);
-    return r.synthesize(t);
-  }
+// check if TTs synthesized by different methods and chosen using 
+// different metrics are equal
+TEST(ReedMuller, OptimalEqualityTestOn3Vars) { optimalEquality(3); }
 
-  void testSubnetToSubnet(const Subnet &net, const Subnet &subnet) {
-    DinTruthTable t1 = evaluateSingleOut(net);
-    DinTruthTable t2 = evaluateSingleOut(subnet);
-    ASSERT_TRUE(t1 == t2);
-  }
+TEST(ReedMuller, OptimalEqualityTestOn4Vars) { optimalEquality(4); }
 
-  void testSubnetToTruthTable(const uint64_t numVars) {
-    ReedMuller r;
-    DinTruthTable t(numVars);
-    kitty::create_from_binary_string(t, generateRandom(numVars));
-    const auto &subnet = Subnet::get(r.synthesize(t));
+TEST(ReedMuller, OptimalEqualityTestOn5Vars) { optimalEquality(5); }
 
-    ASSERT_TRUE(eda::gate::model::utils::equalTruthTables(subnet, t));
-  }
+TEST(ReedMuller, OptimalEqualityTestOn6Vars) { optimalEquality(6); }
 
-  void subnetToSubnetWithDifferentArity(const uint64_t numVars) {
-    ReedMuller r;
-    DinTruthTable t(numVars);
-    kitty::create_from_binary_string(t, generateRandom(numVars));
-    SubnetID baseSubnet = r.synthesize(t);
-    DinTruthTable baseTable = evaluateSingleOut(Subnet::get(baseSubnet));
+TEST(ReedMuller, OptimalEqualityTestOn7Vars) { optimalEquality(7); }
 
-    for(uint16_t arity = 3; arity < Subnet::Cell::InPlaceLinks + 1; ++arity){
-      const auto &subnet = Subnet::get(r.synthesize(t, arity));
-      ASSERT_TRUE(eda::gate::model::utils::checkArity(subnet, arity));
-      ASSERT_TRUE(eda::gate::model::utils::equalTruthTables(subnet, baseTable));
-    }
-  }
+TEST(ReedMuller, OptimalEqualityTestOn8Vars) { optimalEquality(8); }
 
-// We generate a random binary string of length 2^6, 2^10 and 2^14 respectively and see
-// if function getTT() on this string works correctly
-TEST(ReedMuller, correctTestOnDiffSizes) {
-  ReedMuller r;
-  std::vector<uint64_t> sizes = {6, 10, 14};
-  for (uint32_t j = 0; j < sizes.size(); j++) {
+TEST(ReedMuller, OptimalEqualityTestOn9Vars) { optimalEquality(9); }
 
-    uint64_t bits = 1 << sizes[j];
-    DinTruthTable t(sizes[j]);
-    std::string s = generateRandom(sizes[j]);
-    kitty::create_from_binary_string(t, s);
-    Polynomial f = r.getTT(t);
+TEST(ReedMuller, OptimalEqualityTestOn10Vars) { optimalEquality(10); }
 
-    for (uint64_t i = 0; i < bits; ++i) {
-      ASSERT_EQ(r.apply(f, eda::utils::toBinString(i, sizes[j])),
-                  kitty::get_bit(t, i));
-    }
-  } 
-} 
+TEST(ReedMuller, OptimalEqualityTestOn11Vars) { optimalEquality(11); }
 
-// see if the "00000000" on 3 variables synthesizes a correct function
-TEST(ReedMuller, correctTestOnAllZeroes) {
-  ReedMuller r;
-  DinTruthTable t(3);
-  kitty::create_from_binary_string(t, "00000000");
-  std::vector<uint64_t> func(9, 0);
-  func[8] = 3;
-  Polynomial ans = r.getTT(t);
-  // should be an empty vector with ans[0] == 3 (num_var);
-  ASSERT_EQ(func, ans);
-}
-
-// see if the "11111111" on 3 variables synthesizes a correct function
-TEST(ReedMuller, correctTestOnAllOnes) {
-  ReedMuller r;
-  DinTruthTable t(3);
-  kitty::create_from_binary_string(t, "11111111");
-  Polynomial func(9, 0);
-  func[8] = 3;
-  func[0] = 1;
-  Polynomial ans = r.getTT(t);
-  // should be a vector with ans[1] = 3 and ans[0] = 1;
-  ASSERT_EQ(func, ans);
-}
-
-// Test "sythesize" works correctly (the polynomial is x2 ^ x1x3 ^ x2x3)
-TEST(ReedMuller, subnetToSubnetOn3Vars) {
-  SubnetID net1 = generateSubnetID("10101100", 3);
-
-  SubnetBuilder builder;
-
-  const auto input = builder.addInputs(3);
-
-  LinkList output;
-  output.push_back(input[1]);
-  output.push_back(builder.addCell(model::AND, input[1], input[2]));
-  output.push_back(builder.addCell(model::AND, input[0], input[2]));
-
-  builder.addOutput(builder.addCell(model::XOR, output));
-
-  const auto &subnet = Subnet::get(builder.make());
-  const auto &net = Subnet::get(net1);
-
-  testSubnetToSubnet(net, subnet);
-}
-
-// Tests if "sythesize" works correctly (the polynomial is x1 ^ x2 ^ x3 ^ x4 ^ x2x4 ^ x1x2x4 ^ x1x2x3x4)
-TEST(ReedMuller, subnetToSubnetOn4Vars) {
-  SubnetID net1 = generateSubnetID("1010110110010110", 4);
-
-  SubnetBuilder builder;
-
-  const auto input = builder.addInputs(4);
-  const auto split = builder.addCell(model::XOR, input);
-
-  LinkList output;
-  output.push_back(builder.addCell(model::AND, input[1], input[3]));
-  output.push_back(builder.addCell(model::AND, input[0], input[1], input[3]));
-  output.push_back(builder.addCell(model::AND, input[0], input[1], input[2], input[3]));
-  output.push_back(split);
-  
-  builder.addOutput(builder.addCell(model::XOR, output));
-
-  const auto &subnet = Subnet::get(builder.make());
-  const auto &net = Subnet::get(net1);
-
-  testSubnetToSubnet(net, subnet);
-}
-
-// Test if the "synthesize()" method works correctly (it generates Subnet that is equal to the truth table it's based on)
-TEST(ReedMuller, subnetToTTOn2Vars) { testSubnetToTruthTable(2); }
-
-TEST(ReedMuller, subnetToTTOn4Vars) { testSubnetToTruthTable(4); }
-
-TEST(ReedMuller, subnetToTTOn5Vars) { testSubnetToTruthTable(5); }
-
-TEST(ReedMuller, subnetToTTOn6Vars) { testSubnetToTruthTable(6); }
-
-TEST(ReedMuller, subnetToTTOn7Vars) { testSubnetToTruthTable(7); }
-
-TEST(ReedMuller, subnetToTTOn8Vars) { testSubnetToTruthTable(8); }
-
-TEST(ReedMuller, subnetToTTOn9Vars) { testSubnetToTruthTable(9); }
-
-TEST(ReedMuller, subnetToTTOn10Vars) { testSubnetToTruthTable(10); }
-
-// Compare the runtime of the function "synthesize()" on different numbers of variables
-TEST(ReedMuller, timeTestOn3Vars) { generateTest(3); }
-
-TEST(ReedMuller, timeTestOn4Vars) { generateTest(4); }
-
-TEST(ReedMuller, timeTestOn5Vars) { generateTest(5); }
-
-TEST(ReedMuller, timeTestOn6Vars) { generateTest(6); }
-
-TEST(ReedMuller, timeTestOn7Vars) { generateTest(7); }
-
-TEST(ReedMuller, timeTestOn8Vars) { generateTest(8); }
-
-TEST(ReedMuller, timeTestOn9Vars) { generateTest(9); }
-
-TEST(ReedMuller, timeTestOn10Vars) { generateTest(10); }
-
-//Compare subnets generated on the same DinTruthTable but with different
-//maxArity values to see if they are equal to each other
-TEST(ReedMuller, DiffArityOn4Values) { subnetToSubnetWithDifferentArity(4); }
-
-TEST(ReedMuller, DiffArityOn5Values) { subnetToSubnetWithDifferentArity(5); }
-
-TEST(ReedMuller, DiffArityOn6Values) { subnetToSubnetWithDifferentArity(6); }
-
-TEST(ReedMuller, DiffArityOn7Values) { subnetToSubnetWithDifferentArity(7); }
-
-TEST(ReedMuller, DiffArityOn8Values) { subnetToSubnetWithDifferentArity(8); }
-
-TEST(ReedMuller, DiffArityOn9Values) { subnetToSubnetWithDifferentArity(9); }
-
-TEST(ReedMuller, DiffArityOn10Values) { subnetToSubnetWithDifferentArity(10); }
-}// namespace eda::gate::optimizer::synthesis
+} // namespace eda::gate::optimizer::synthesis

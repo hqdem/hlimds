@@ -275,7 +275,7 @@ void YosysConverterModel2::makeRestCell(
   std::vector<std::uint16_t> linearLeafsSize = combineVectorsSize(leafs);
   std::vector<std::uint16_t> linearQSize = { static_cast<unsigned short>(q.size()) };
   makeSoftOperatorCell(
-      indexOperator, q, linearLeafs, linearQSize, linearLeafsSize, sign);
+      indexOperator, q, linearLeafs, linearLeafsSize, linearQSize, sign);
 }
 
 void YosysConverterModel2::makeDFF(const RTLIL::Cell *cell) {

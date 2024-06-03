@@ -16,12 +16,16 @@
 
 #include <cassert>
 
+#include <iostream>
+
 namespace eda::gate::synthesizer {
 
 using namespace eda::gate::model;
 
 static SubnetID synthImpl(const CellType &type) {
   const auto &attr = type.getAttr();
+  std::cout << "Calling synthesizer.cpp: static SubnetID synthImpl(const CellType &type); with type.getName == " <<
+      type.getName() << ".\n";
 
   switch (type.getSymbol()) {
   case MUX2: return synthMux2(attr);

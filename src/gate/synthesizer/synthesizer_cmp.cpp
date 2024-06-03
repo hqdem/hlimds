@@ -12,7 +12,7 @@
 
 namespace eda::gate::synthesizer {
 
-inline void checkSignature(const model::CellTypeAttr &attr) {
+inline static void checkSignature(const model::CellTypeAttr &attr) {
   assert(attr.nInPort == 2);
   assert(attr.nOutPort == 1 && attr.getOutWidth(0) == 1);
 }
@@ -67,7 +67,7 @@ inline model::Subnet::Link synthEq(model::SubnetBuilder &builder,
   const auto valueLhs = links.begin();
   const auto valueRhs = links.begin() + widthLhs;
   const auto equalValues = synthEq(builder, valueLhs, valueRhs, width);
-  
+
   if (delta == 0) {
     return equalValues;
   }

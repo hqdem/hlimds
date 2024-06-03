@@ -26,21 +26,21 @@ namespace eda::gate::model {
 SubnetID makeSubnet2AndOr() {
   SubnetBuilder subnetBuilder;
   Subnet::LinkList inputs = subnetBuilder.addInputs(4);
-  Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND, 
-                                          inputs[0], 
+  Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND,
+                                          inputs[0],
                                           inputs[1]);
-  Subnet::Link andCell5 = subnetBuilder.addCell(CellSymbol::AND, 
-                                          inputs[2], 
+  Subnet::Link andCell5 = subnetBuilder.addCell(CellSymbol::AND,
+                                          inputs[2],
                                           andCell4);
-  Subnet::Link orCell6 = subnetBuilder.addCell(CellSymbol::OR, 
-                                         andCell5, 
+  Subnet::Link orCell6 = subnetBuilder.addCell(CellSymbol::OR,
+                                         andCell5,
                                          inputs[3]);
   subnetBuilder.addOutput(orCell6);
   return subnetBuilder.make();
 }
 
 NetID makeNet2AndOr() {
-  return makeNet(makeSubnet2AndOr()); 
+  return makeNet(makeSubnet2AndOr());
 }
 
 /* in1   in2                          */
@@ -55,12 +55,12 @@ NetID makeNet2AndOr() {
 SubnetID makeSubnet2AndOr2() {
   SubnetBuilder subnetBuilder;
   Subnet::LinkList inputs = subnetBuilder.addInputs(4);
-  Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND, 
-                                          inputs[0], 
+  Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND,
+                                          inputs[0],
                                           inputs[1]);
   subnetBuilder.addCell(CellSymbol::AND, inputs[2], andCell4);
-  Subnet::Link orCell6 = subnetBuilder.addCell(CellSymbol::OR, 
-                                         inputs[2], 
+  Subnet::Link orCell6 = subnetBuilder.addCell(CellSymbol::OR,
+                                         inputs[2],
                                          inputs[3]);
   subnetBuilder.addOutput(orCell6);
 
@@ -341,6 +341,19 @@ NetID makeNetRandomMatrix(const size_t nIn,
                           const unsigned seed) {
   MatrixGenerator generator(
       nCell, nIn, nOut, {AND, OR, XOR, NAND, NOR, XNOR}, seed);
+
+  generator.setFaninLim(minArity, maxArity);
+  return  generator.generate();
+}
+
+NetID makeFFNetRandomMatrix(const size_t nIn,
+                            const size_t nOut,
+                            const size_t nCell,
+                            const size_t minArity,
+                            const size_t maxArity,
+                            const unsigned seed) {
+  MatrixGenerator generator(
+      nCell, nIn, nOut, {DFF_p, NOR}, seed);
 
   generator.setFaninLim(minArity, maxArity);
   return  generator.generate();

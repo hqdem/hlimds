@@ -18,13 +18,13 @@
 namespace eda::gate::optimizer::synthesis {
 
   using DinTruthTable = kitty::dynamic_truth_table;
-  using Zhegalkin = ZhegalkinSynthesizer;
   using Link = model::Subnet::Link;
   using LinkList = std::vector<Link>;
   using Polynomial = std::vector<uint64_t>;
   using Subnet = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetID = model::SubnetID;
+  using Zhegalkin = ZhegalkinSynthesizer;
 
   std::string generateRandom(const uint64_t size) {
     std::mt19937 engine(0);

@@ -95,9 +95,8 @@ namespace eda::gate::optimizer::synthesis {
      */
     SubnetID synthesize(const DinTruthTable &func,
         uint16_t maxArity = -1) const override;
-  private:
 
-    ReedMuller() = default;
+  private:
 
     /**
      * Method used to perform polarization/changePolarity operations 

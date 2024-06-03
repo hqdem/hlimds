@@ -42,7 +42,7 @@ SubnetID createScheme(Polynomial &resultFunction, Polarization &polarization,
  * of Boolean functions // IEE Proc., 1990. Vol. 137. №5. P. 366-370.
  */
 
-class Zhegalkin : public Synthesizer<DinTruthTable> {
+class ZhegalkinSynthesizer : public Synthesizer<DinTruthTable> {
 public:
 
   /**

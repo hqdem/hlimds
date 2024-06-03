@@ -10,8 +10,8 @@
 #include "gate/model/celltype.h"
 #include "gate/model/utils/subnet_checking.h"
 #include "gate/model/utils/subnet_truth_table.h"
-#include "gate/optimizer/synthesis/zhegalkin.h"
 #include "gate/optimizer/synthesis/reed_muller.h"
+#include "gate/optimizer/synthesis/zhegalkin.h"
 #include "util/arith.h"
 
 #include "gtest/gtest.h"
@@ -32,7 +32,7 @@ namespace eda::gate::optimizer::synthesis {
   void optimalEquality(uint64_t len) {
     std::string s = generateRandom(len);
     DinTruthTable t(len);
-    Zhegalkin r;
+    ZhegalkinSynthesizer r;
     kitty::create_from_binary_string(t, s);
     auto s1 = r.synthesize(t);
     ReedMuller x1(sumOfTerms), x2(numberOfTerms), x3(longestTerm);

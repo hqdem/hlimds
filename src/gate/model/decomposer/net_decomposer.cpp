@@ -10,7 +10,7 @@
 
 #include <cassert>
 #include <cstdint>
-#include <iostream>
+#include <set>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
@@ -102,9 +102,7 @@ inline Subnet::LinkList makeLinkList(const Cell &cell,
 inline bool isInputLink(const Link &link) {
   const auto info = getCellInfo(link.source);
   return info.type.isIn()
-      || info.type.isLatch()
-      || info.type.isDff()
-      || info.type.isDffRs()
+      || info.type.isSeqGate()
       || info.type.isHard()
       || info.type.isSoft(); // TODO: Option.
 }
@@ -156,6 +154,11 @@ struct NetComponent final {
   /// Outputs are links of the form <(src-cell:src-port), (dst-cell:dst-port)>,
   /// i.e. targets matter (especially flip-flops).
   LinkSet outputs;
+
+  /// Checks whether the component is empty.
+  bool empty() const {
+    return inputs.empty() && outputs.empty();
+  }
 
   /// Resets the component state.
   void clear() {
@@ -215,7 +218,7 @@ struct NetTraversalContext final {
   void push(CellID cellID) {
     const auto i = belongsTo.find(cellID);
     if (i != belongsTo.end()) {
-      componentIndex = i->second;
+      merging.insert(i->second);
       return;
     }
     const auto j = componentCells.find(cellID);
@@ -241,25 +244,44 @@ struct NetTraversalContext final {
     component.outputs.insert(link);
   }
 
+  /// Merge the current component w/ the ones it depends on.
+  void mergeComponents() {
+    assert(!merging.empty());
+    const auto index = *merging.begin();
+
+    auto &root = components[index];
+    for (auto i = ++merging.begin(); i != merging.end(); ++i) {
+      auto &next = components[*i];
+      root.merge(next);
+
+      for (const auto &cellID : next.inners) {
+        belongsTo.insert({cellID, index});
+      }
+
+      next.clear();
+    }
+
+    root.merge(component);
+  }
+
   /// Adds the previously constructed component to the list.
   void addComponent() {
-    if (componentIndex < components.size()) {
-      // Merge the current component w/ the existing one.
-      components[componentIndex].merge(component);
+    const size_t index = merging.empty() ? components.size() : *merging.begin();
+
+    if (!merging.empty()) {
+      mergeComponents();
     } else {
-      // Add the component as a new one.
       components.push_back(component);
     }
 
-    // Update the cell mapping.
-    for (const auto &componentCell : componentCells) {
-      belongsTo.insert({componentCell, componentIndex});
+    for (const auto &cellID : component.inners) {
+      belongsTo.insert({cellID, index});
     }
 
     // Reset the component state (start building a new one).
+    merging.clear();
     component.clear();
     componentCells.clear();
-    componentIndex = components.size();
   }
 
   /// Increments the link index of the top entry.
@@ -267,12 +289,12 @@ struct NetTraversalContext final {
 
   /// Maps cells to components.
   std::unordered_map<CellID, size_t> belongsTo;
-  /// Stores the constructed components.
+  /// Components to be merged w/ the current one.
+  std::set<size_t> merging;
+  /// Stores the constructed components (including empty ones).
   std::vector<NetComponent> components;
   /// Component under construction.
   NetComponent component;
-  /// Index of the currently constructed component.
-  size_t componentIndex = 0;
   /// Stores the current component's inner cells.
   CellSet componentCells;
   /// Traversal stack (DFS from outputs to inputs).
@@ -289,6 +311,7 @@ static std::vector<NetComponent> extractComponents(const Net &net) {
     if (entry.isOutput() && entry.index > 0) {
       context.addComponent();
 
+      // Stop traversal if all outputs have been passed.
       if (entry.isPassed()) {
         context.pop();
         break;
@@ -392,9 +415,11 @@ void NetDecomposer::decompose(NetID netID,
   mapping.reserve(components.size());
 
   for (const auto &component : components) {
-    CellMapping subnetMapping;
-    subnets.push_back(makeSubnet(net, component, subnetMapping));
-    mapping.push_back(subnetMapping);
+    if (!component.empty()) {
+      CellMapping subnetMapping;
+      subnets.push_back(makeSubnet(net, component, subnetMapping));
+      mapping.push_back(subnetMapping);
+    }
   }
 }
 

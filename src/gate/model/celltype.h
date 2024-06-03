@@ -464,6 +464,9 @@ public:
   bool isRegroupable()   const { return props.regroupable;   }
   bool isNegative()      const { return props.negative;      }
 
+  bool isCmbGate() const { return isGate() &&  isCombinational(); }
+  bool isSeqGate() const { return isGate() && !isCombinational(); }
+
   uint16_t getInNum()  const { return nIn;  }
   uint16_t getOutNum() const { return nOut; }
 

@@ -61,11 +61,20 @@ NetID makeNetRandomMatrix(const size_t nIn,
                           const size_t maxArity,
                           const unsigned seed);
 
-NetID makeFFNetRandomMatrix(const size_t nIn,
-                            const size_t nOut,
-                            const size_t nCell,
-                            const size_t minArity,
-                            const size_t maxArity,
-                            const unsigned seed);
+NetID makeTriggerNetRandomMatrix(const size_t nIn,
+                                 const size_t nOut,
+                                 const size_t nCell,
+                                 const size_t minArity,
+                                 const size_t maxArity,
+                                 const unsigned seed);
+
+NetID makeTriggerNetRandomLayer(const size_t nIn,
+                                const size_t nOut,
+                                const size_t nLayers,
+                                const uint16_t layerNCellsMin,
+                                const uint16_t layerNCellsMax,
+                                const size_t minArity,
+                                const size_t maxArity,
+                                const unsigned seed);
 
 } // namespace eda::gate::model

@@ -12,7 +12,7 @@
 
 namespace eda::gate::synthesizer {
 
-inline static void checkSignature(const model::CellTypeAttr &attr) {
+static inline void checkSignature(const model::CellTypeAttr &attr) {
   assert(attr.nInPort == 2);
   assert(attr.nOutPort == 1);
 }

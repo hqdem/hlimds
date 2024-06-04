@@ -119,6 +119,34 @@ enum CellSymbol : uint16_t {
   /// Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (ENA(level=1) ? D : Q(t-1))).
   LATCHrs,
 
+  /// Bitwise NOT: OUT = ~X.
+  BNOT,
+  /// Bitwise AND: OUT = X & Y.
+  BAND,
+  /// Bitwise OR: OUT = X | Y.
+  BOR,
+  /// Bitwise XOR: OUT = X + Y (mod 2).
+  BXOR,
+  /// Bitwise NAND: OUT = ~(X & Y).
+  BNAND,
+  /// Bitwise NOR: OUT = ~(X | Y).
+  BNOR,
+  /// Bitwise XNOR: OUT = ~(X + Y) (mod 2).
+  BXNOR,
+
+  /// Reduction AND: OUT = X & Y.
+  RAND,
+  /// Reduction OR: OUT = X | Y.
+  ROR,
+  /// Reduction XOR: OUT = X + Y (mod 2).
+  RXOR,
+  /// Reduction NAND: OUT = ~(X & Y).
+  RNAND,
+  /// Reduction NOR: OUT = ~(X | Y).
+  RNOR,
+  /// Reduction XNOR: OUT = ~(X + Y) (mod 2).
+  RXNOR,
+
   /// Multiplexor 2-to-1: OUT = S == 0 ? X : Y.
   MUX2,
 
@@ -405,6 +433,19 @@ public:
   bool isNor()   const { return symbol == NOR;   }
   bool isXnor()  const { return symbol == XNOR;  }
   bool isMaj()   const { return symbol == MAJ;   }
+  bool isBNot()  const { return symbol == BNOT;  }
+  bool isBAnd()  const { return symbol == BAND;  }
+  bool isBOr()   const { return symbol == BOR;   }
+  bool isBXor()  const { return symbol == BXOR;  }
+  bool isBNand() const { return symbol == BNAND; }
+  bool isBNor()  const { return symbol == BNOR;  }
+  bool isBXnor() const { return symbol == BXNOR; }
+  bool isRAnd()  const { return symbol == RAND;  }
+  bool isROr()   const { return symbol == ROR;   }
+  bool isRXor()  const { return symbol == RXOR;  }
+  bool isRNand() const { return symbol == RNAND; }
+  bool isRNor()  const { return symbol == RNOR;  }
+  bool isRXnor() const { return symbol == RXNOR; }
   bool isMux2()  const { return symbol == MUX2;  }
   bool isShl()   const { return symbol == SHL;   }
   bool isShrS()  const { return symbol == SHRs;  }

@@ -16,13 +16,13 @@ namespace eda::gate::synthesizer {
 // Still need to use function from synthesizer_add, 
 // and both functions, this and in synthesizer_add has one
 // name and are located in same namspace
-inline void checkSignatureNeg(const model::CellTypeAttr &attr) {
+static inline void checkNegSignature(const model::CellTypeAttr &attr) {
   assert(attr.nInPort == 1);
   assert(attr.nOutPort == 1);
 }
 
 model::SubnetID synthNeg(const model::CellTypeAttr &attr) {
-  checkSignatureNeg(attr);
+  checkNegSignature(attr);
 
   model::SubnetBuilder builder;
 

@@ -245,23 +245,24 @@ struct NetTraversalContext final {
   }
 
   /// Merge the current component w/ the ones it depends on.
-  void mergeComponents() {
-    assert(!merging.empty());
-    const auto index = *merging.begin();
+  NetComponent &mergeComponents(const std::set<size_t> &merging, size_t index) {
+    assert(merging.find(index) != merging.end());
 
     auto &root = components[index];
-    for (auto i = ++merging.begin(); i != merging.end(); ++i) {
-      auto &next = components[*i];
-      root.merge(next);
+    for (auto i = merging.begin(); i != merging.end(); ++i) {
+      if (*i != index) {
+        auto &next = components[*i];
+        root.merge(next);
 
-      for (const auto &cellID : next.inners) {
-        belongsTo.insert({cellID, index});
+        for (const auto &cellID : next.inners) {
+          belongsTo[cellID] = index;
+        }
+
+        next.clear();
       }
-
-      next.clear();
     }
 
-    root.merge(component);
+    return root;
   }
 
   /// Adds the previously constructed component to the list.
@@ -269,13 +270,13 @@ struct NetTraversalContext final {
     const size_t index = merging.empty() ? components.size() : *merging.begin();
 
     if (!merging.empty()) {
-      mergeComponents();
+      mergeComponents(merging, index).merge(component);
     } else {
       components.push_back(component);
     }
 
     for (const auto &cellID : component.inners) {
-      belongsTo.insert({cellID, index});
+      belongsTo[cellID] = index;
     }
 
     // Reset the component state (start building a new one).
@@ -358,7 +359,7 @@ static SubnetID makeSubnet(const Net &net,
         : subnetBuilder.addInput(info.cellID.getSID());
 
     const auto inputLink = makeInputLink(input);
-    mapping.inputs.insert({inputLink, link.idx});
+    mapping.inputs.emplace(inputLink, link.idx);
   }
 
   for (const auto &inner : component.inners) {
@@ -378,7 +379,7 @@ static SubnetID makeSubnet(const Net &net,
 
     const auto idx = olink.idx;
     const auto inv = olink.inv ^ neg;
-    mapping.inners.insert({info.cellID, {idx, inv}});
+    mapping.inners.emplace(info.cellID, std::make_pair(idx, inv));
   }
 
   for (const auto &output : component.outputs) {
@@ -389,7 +390,7 @@ static SubnetID makeSubnet(const Net &net,
         : subnetBuilder.addOutput(ilink, info.cellID.getSID());
 
     const auto outputLink = makeOutputLink(output);
-    mapping.outputs.insert({outputLink, olink.idx});
+    mapping.outputs.emplace(outputLink, olink.idx);
   }
 
   const auto subnetID = subnetBuilder.make();
@@ -520,7 +521,7 @@ static CellID makeCell(NetBuilder &netBuilder,
   const auto newCellID = makeCell(oldCell.getTypeID(), invalidLinks);
 
   netBuilder.addCell(newCellID);
-  inout.insert({oldCellID, newCellID});
+  inout.emplace(oldCellID, newCellID);
 
   return newCellID;
 }

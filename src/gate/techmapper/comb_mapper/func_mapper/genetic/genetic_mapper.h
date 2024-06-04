@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "gate/techmapper/comb_mapper/cut_based/cut_based_mapper.h"
-#include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
+#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
+#include "gate/techmapper/comb_mapper/func_mapper/func_mapper.h"
 
 #include <unordered_map>
 
 namespace eda::gate::techmapper {
 struct Gen {
-  using SubnetID = eda::gate::model::SubnetID;
+  using SubnetID = model::SubnetID;
 
   bool emptyGen = true;
   bool isIn = false;
@@ -38,14 +38,16 @@ struct Chromosome {
   // 1 / (area * arrivalTime)
   float fitness;
 
-  void calculateFitness(Library &lib);
-  float calculateChromosomeMaxArrivalTime(Library &lib);
+  void calculateFitness();
+  float calculateChromosomeMaxArrivalTime();
   float findMaxArrivalTime(std::unordered_set<size_t> inputs);
 };
 
-class GeneticMapper : public CutBaseMapper {
-protected:
-  void findBest() override;
+class GeneticMapper : public FuncMapper {
+  void map(const SubnetID subnetID,
+           const CellDB &cellDB,
+           const SDC &sdc,
+           Mapping &mapping) override;
 
 private:
   //std::vector<Chromosome> basePopulation;
@@ -64,24 +66,24 @@ private:
 
   int nGenerations = 50;
 
-  Library lib;
+  void startEvolution(const SDC &sdc);
 
-  void startEvolution();
-
-  void initialization();
+  void initialization(const SDC &sdc, const CellDB &cellDB);
 
   void reproduction();
   void mutation();
-  void selection();
+  void selection(const SDC &sdc);
 
-  void hardSelection();
+  void hardSelection(const SDC &sdc);
   Chromosome createChild(const Chromosome& parent1, const Chromosome& parent2);
   int getRandomIndex(int min, int max, std::mt19937& gen);
   void saveBestChromosome();
   void rewriteCrossover(Chromosome &child,
                         const Chromosome &parent,
                         const std::shared_ptr<Gen> &parentGen);
-  void fillChromosomeFromOutput(Chromosome& chromosome, size_t outputIndex);
-  void saveInBestMap();
+  void fillChromosomeFromOutput(Chromosome& chromosome, size_t outputIndex,
+                                const SDC &sdc);
+  void saveInBestMap(Mapping &mapping);
+  optimizer::CutExtractor *cutExtractor;
 };
 } // namespace eda::gate::techmapper

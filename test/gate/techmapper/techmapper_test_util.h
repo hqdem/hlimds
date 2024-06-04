@@ -40,6 +40,6 @@ SubnetID randomMapping(const Strategy strategy);
 SubnetID notNotAndMapping(const Strategy strategy);
 NetID simpleNetMapping(const Strategy strategy);
 SubnetID areaRecoveySubnetMapping(const Strategy strategy);
-SubnetID mapper(const Strategy strategy, const SubnetID subnetId);
+SubnetID mapper(const Strategy strategy, const SubnetID subnetID);
 
 } // namespace eda::gate::techmapper

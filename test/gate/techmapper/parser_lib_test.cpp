@@ -22,7 +22,7 @@ const std::filesystem::path techLibPath =
     eda::env::getHomePath() / "test/data/gate/techmapper";
 
 bool checkLibParser(std::string libertyPath) {
-  LibraryManager::get().loadLibrary(libertyPath);
+  LibertyManager::get().loadLibrary(libertyPath);
   std::cout << "Loaded Liberty: " << libertyPath << std::endl;
   std::vector<eda::gate::model::CellTypeID> combCells;
   std::vector<eda::gate::model::CellTypeID> cellsFF;

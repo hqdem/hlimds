@@ -24,7 +24,7 @@ inline void printStatistics(model::SubnetID subnetID,
   int nCells = 0;
 
   std::unordered_map<std::string, int> statistic;
-  for (const auto &cell : LibraryManager::get().getLibrary().getCells()) {
+  for (const auto &cell : LibertyManager::get().getLibrary().getCells()) {
     statistic[std::string(cell.getName())] = 0;
   }
   const auto &entries = model::Subnet::get(subnetID).getEntries();

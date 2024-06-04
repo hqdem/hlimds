@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/techmapper/comb_mapper/best_replacement.h"
+#include "gate/techmapper/comb_mapper/mapping.h"
 
 #include <stack>
 #include <unordered_map>
@@ -16,24 +16,30 @@
 
 namespace eda::gate::techmapper {
 class AssemblySubnet {
+  using Cell = model::Subnet::Cell;
+  using Entry = model::Subnet::Entry;
+  using LinkList = model::Subnet::LinkList;
+  using SubnetBuilder = model::SubnetBuilder;
+
 public:
-  SubnetID assemblySubnet(std::unordered_map<uint64_t, BestReplacement> *bestReplacementMap,
-                                 SubnetID subnetID);
+  void assemble(
+    const SubnetID subnetID, Mapping &mapping, SubnetBuilder &builder);
+
 private:
-  model::SubnetBuilder *subnetBuilder;
-  std::unordered_map<uint64_t, BestReplacement> *bestReplacementMap;
   std::vector<EntryIndex> outID;
   std::vector<EntryIndex> inID;
 
-  void findInOutCells(model::Array<model::Subnet::Entry> entries);
-  void addInputCells();
-  void addOutputCells();
-  model::Subnet::LinkList createLinkList(EntryIndex currentEntryIDX);
-  void processNode(EntryIndex currentEntryIDX,
-                   model::Subnet::Cell &currentCell,
-                   std::stack<EntryIndex> &stack);
-  void processLinks(EntryIndex currentEntryIDX,
-                    std::stack<EntryIndex> &stack,
-                    std::unordered_set<EntryIndex> &visited);
+  void findInOutCells(model::Array<Entry> entries);
+  void addInputCells(Mapping &mapping, SubnetBuilder &builder);
+  void addOutputCells(Mapping &mapping, SubnetBuilder &builder);
+  LinkList createLinkList(
+    const EntryIndex currentEntryIDX, Mapping &mapping);
+  void processNode(
+    const EntryIndex currentEntryIDX, Cell &currentCell,
+    std::stack<EntryIndex> &stack, Mapping &mapping,
+    SubnetBuilder &builder);
+  void processLinks(
+    const EntryIndex currentEntryIDX, std::stack<EntryIndex> &stack,
+    std::unordered_set<EntryIndex> &visited, Mapping &mapping);
 };
 } // namespace eda::gate::techmapper

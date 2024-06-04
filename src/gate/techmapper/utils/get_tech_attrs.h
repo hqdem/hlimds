@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/model/subnet.h"
-#include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
+#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
 
 #include <algorithm>
 #include <unordered_map>
@@ -41,7 +41,7 @@ inline float getArea(model::SubnetID subnetID) {
 
 inline float getLeakagePower(model::SubnetID subnetID) {
   return processEntries(subnetID, [](const auto &entry) {
-    const auto *cell = LibraryManager::get().getLibrary().getCell(
+    const auto *cell = LibertyManager::get().getLibrary().getCell(
         entry.cell.getType().getName());
     return cell ? cell->getFloatAttribute("cell_leakage_power",
                                           MAXFLOAT) : 0.0f;
@@ -49,7 +49,7 @@ inline float getLeakagePower(model::SubnetID subnetID) {
 }
 
 inline float getArrivalTime(model::SubnetID subnetID) {
-  DelayEstimator delayEstimator(LibraryManager::get().getLibrary());
+  DelayEstimator delayEstimator(LibertyManager::get().getLibrary());
   int timingSense = delayEstimator.nldm.getSense();
   std::unordered_map<uint64_t, float> arrivalMap, delayMap;
 

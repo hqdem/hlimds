@@ -13,15 +13,13 @@
 
 namespace eda::gate::techmapper {
 
-SubnetID AssemblySubnet::assemblySubnet(std::unordered_map<uint64_t, BestReplacement> *replacementMap,
-                               SubnetID subnetID) {
+void AssemblySubnet::assemble(
+       const SubnetID subnetID, Mapping &mapping, SubnetBuilder &builder) {
   model::Subnet &subnet = model::Subnet::get(subnetID);
-  bestReplacementMap = replacementMap;
-  subnetBuilder = new model::SubnetBuilder;
   auto entries = subnet.getEntries();
   findInOutCells(entries);
 
-  addInputCells();
+  addInputCells(mapping, builder);
 
   std::stack<EntryIndex> stack;
   std::unordered_set<EntryIndex> visited;
@@ -33,21 +31,18 @@ SubnetID AssemblySubnet::assemblySubnet(std::unordered_map<uint64_t, BestReplace
 
   while (!stack.empty()) {
     EntryIndex entryIndex = stack.top();
-    assert(bestReplacementMap->find(entryIndex) != bestReplacementMap->end());
-    if (bestReplacementMap->at(entryIndex).cellID != ULLONG_MAX) {
+    assert(mapping.find(entryIndex) != mapping.end());
+    if (mapping.at(entryIndex).cellID != ULLONG_MAX) {
       stack.pop();
       continue;
     }
     auto currentCell = entries[entryIndex].cell;
-    processNode(entryIndex, currentCell,stack);
-    processLinks(entryIndex, stack, visited);
+    processNode(entryIndex, currentCell, stack, mapping, builder);
+    processLinks(entryIndex, stack, visited, mapping);
   }
 
-  addOutputCells();
-  SubnetID mappedSubnetID = subnetBuilder->make();
-  delete(subnetBuilder);
-  bestReplacementMap->clear();
-  return mappedSubnetID;
+  addOutputCells(mapping, builder);
+  mapping.clear();
 }
 
 void AssemblySubnet::findInOutCells(model::Array<model::Subnet::Entry> entries) {
@@ -64,43 +59,47 @@ void AssemblySubnet::findInOutCells(model::Array<model::Subnet::Entry> entries) 
   }
 }
 
-void AssemblySubnet::addInputCells() {
+void AssemblySubnet::addInputCells(
+       Mapping &mapping, SubnetBuilder &builder) {
   for (const auto idx : inID) {
-    auto cellID = subnetBuilder->addInput();
-    (*bestReplacementMap)[idx].cellID = cellID.idx;
+    auto cellID = builder.addInput();
+    mapping[idx].cellID = cellID.idx;
   }
 }
 
-void AssemblySubnet::addOutputCells() {
+void AssemblySubnet::addOutputCells(
+       Mapping &mapping, SubnetBuilder &builder) {
   for (const auto idx : outID) {
-    assert(bestReplacementMap->find(idx) != bestReplacementMap->end());
-    auto inputs = bestReplacementMap->at(idx).inputs;
-    model::Subnet::Link link(bestReplacementMap->at(*(inputs.begin())).cellID);
-    auto cellID = subnetBuilder->addOutput(link);
-    (*bestReplacementMap)[idx].cellID = cellID.idx;
+    assert(mapping.find(idx) != mapping.end());
+    auto inputs = mapping.at(idx).inputs;
+    model::Subnet::Link link(mapping.at(*(inputs.begin())).cellID);
+    auto cellID = builder.addOutput(link);
+    mapping[idx].cellID = cellID.idx;
   }
 }
 
-model::Subnet::LinkList AssemblySubnet::createLinkList(EntryIndex entryIndex) {
+model::Subnet::LinkList AssemblySubnet::createLinkList(
+    const EntryIndex entryIndex, Mapping &mapping) {
   model::Subnet::LinkList linkList;
-  for (const auto &idx : bestReplacementMap->at(entryIndex).inputs) {
-    if (bestReplacementMap->find(idx) == bestReplacementMap->end()) {
+  for (const auto &idx : mapping.at(entryIndex).inputs) {
+    if (mapping.find(idx) == mapping.end()) {
       std::cout << "Unable to find " << idx << " for " <<
         entryIndex << "!" << std::endl;
       assert(false);
     }
-    if (bestReplacementMap->at(idx).cellID == ULLONG_MAX) {
+    if (mapping.at(idx).cellID == ULLONG_MAX) {
       return {}; // Return empty list to indicate not ready
     }
-    model::Subnet::Link link(bestReplacementMap->at(idx).cellID);
+    model::Subnet::Link link(mapping.at(idx).cellID);
     linkList.push_back(link);
   }
   return linkList;
 }
 
-void AssemblySubnet::processNode(EntryIndex entryIndex,
-                           model::Subnet::Cell &currentCell,
-                           std::stack<EntryIndex> &stack) {
+void AssemblySubnet::processNode(
+       const EntryIndex entryIndex, Cell &currentCell,
+       std::stack<EntryIndex> &stack, Mapping &mapping,
+       SubnetBuilder &builder) {
   if (currentCell.isIn() || currentCell.getSymbol() == model::CellSymbol::IN) {
     stack.pop();
     return;
@@ -108,26 +107,27 @@ void AssemblySubnet::processNode(EntryIndex entryIndex,
   if (currentCell.isZero() || currentCell.isOne()) {
     auto symbol = currentCell.isZero() ? model::CellSymbol::ZERO :
                                          model::CellSymbol::ONE;
-    auto cellID = subnetBuilder->addCell(symbol);
-    (*bestReplacementMap)[entryIndex].cellID = cellID.idx;
+    auto cellID = builder.addCell(symbol);
+    mapping[entryIndex].cellID = cellID.idx;
     stack.pop();
     return;
   }
-  model::Subnet::LinkList linkList = createLinkList(entryIndex);
+  model::Subnet::LinkList linkList = createLinkList(entryIndex, mapping);
   if (!linkList.empty()) {
     if (!currentCell.isOut() ||
          currentCell.getSymbol() != model::CellSymbol::OUT) {
-      auto cellID = subnetBuilder->addSingleOutputSubnet(
-        bestReplacementMap->at(entryIndex).getSubnetID(), linkList);
-      (*bestReplacementMap)[entryIndex].cellID = cellID.idx;
+      auto cellID = builder.addSingleOutputSubnet(
+        mapping.at(entryIndex).getSubnetID(), linkList);
+      mapping[entryIndex].cellID = cellID.idx;
     }
     stack.pop();
   }
 }
-void AssemblySubnet::processLinks(EntryIndex entryIndex,
-                            std::stack<EntryIndex> &stack,
-                            std::unordered_set<EntryIndex> &visited) {
-  for (const auto& link : bestReplacementMap->at(entryIndex).inputs) {
+
+void AssemblySubnet::processLinks(
+       const EntryIndex entryIndex, std::stack<EntryIndex> &stack,
+       std::unordered_set<EntryIndex> &visited, Mapping &mapping) {
+  for (const auto& link : mapping.at(entryIndex).inputs) {
     stack.push(link);
     /*if (visited.find(link) == visited.end()) {
       visited.insert(link);

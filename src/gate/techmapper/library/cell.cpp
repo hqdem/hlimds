@@ -100,12 +100,12 @@ void LibraryCells::readLibertyFile(std::vector<CellTypeID> &cellTypeIDs,
                                    std::vector<CellTypeID> &cellTypeLatchIDs) {
 //  Library lib;
 //  try {
-//    lib = LibraryManager::get().getLibrary();
+//    lib = LibertyManager::get().getLibrary();
 //  } catch (const std::exception &e) {
 //    std::cerr << "Error: " << e.what() << std::endl;
 //  }
 
-  for (const auto& cell : LibraryManager::get().getLibrary().getCells()) {
+  for (const auto& cell : LibertyManager::get().getLibrary().getCells()) {
     auto name = std::string(cell.getName());
 
     if (cell.getBooleanAttribute("is_isolation_cell", false)) {

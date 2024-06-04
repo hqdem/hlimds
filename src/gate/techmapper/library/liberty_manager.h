@@ -22,7 +22,7 @@
 
 namespace eda::gate::techmapper {
 
-class LibraryManager : public util::Singleton<LibraryManager> {
+class LibertyManager : public util::Singleton<LibertyManager> {
 public:
   bool loadLibrary(const std::string& filename) {
     name = filename;
@@ -60,8 +60,8 @@ private:
   bool isLoaded = false;
   std::string name;
 
-  LibraryManager() : Singleton() {}
-  friend class Singleton<LibraryManager>;
+  LibertyManager() : Singleton() {}
+  friend class Singleton<LibertyManager>;
 };
 
 } // namespace eda::gate::techmapper

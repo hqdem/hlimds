@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/techmapper/comb_mapper/cut_based/cut_based_mapper.h"
+#include "gate/techmapper/comb_mapper/func_mapper/func_mapper.h"
 
 #include <unordered_map>
 
@@ -18,15 +18,20 @@ struct BestReplacementDelay {
   float arrivalTime;
 };
 
-class SimpleDelayMapper : public CutBaseMapper {
-protected:
-  void findBest() override;
+class SimpleDelayMapper : public FuncMapper {
+  virtual ~SimpleDelayMapper() = default;
+  void map(const SubnetID subnetID,
+           const CellDB &cellDB,
+           const SDC &sdc,
+           Mapping &mapping) override;
 
 private:
   std::unordered_map<EntryIndex, BestReplacementDelay> delayVec;
 
   float findMaxArrivalTime(const std::unordered_set<size_t> &entryIdxs);
-  void saveBest(EntryIndex entryIndex,
-                const optimizer::CutExtractor::CutsList &cutsList);
+  void saveBest(const EntryIndex entryIndex,
+                const optimizer::CutExtractor::CutsList &cutsList,
+                const CellDB &cellDB, Mapping &mapping);
+  optimizer::CutExtractor *cutExtractor;
 };
 } // namespace eda::gate::techmapper

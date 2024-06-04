@@ -10,6 +10,7 @@
 #include "gate/model/printer/printer.h"
 #include "gate/model/utils/subnet_random.h"
 #include "gate/parser/graphml_parser.h"
+#include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
@@ -22,12 +23,14 @@
 
 namespace eda::gate::techmapper {
 
-using Builder    = model::SubnetBuilder;
+using AigMapper  = premapper::AigMapper;
 using CellSymbol = model::CellSymbol;
 using Link       = model::Subnet::Link;
 using LinkList   = model::Subnet::LinkList;
+using NetBuilder = model::NetBuilder;
 using Strategy   = Techmapper::Strategy;
 using Subnet     = model::Subnet;
+using SubnetBuilder    = model::SubnetBuilder;
 using SubnetID   = model::SubnetID;
 
 SDC sdc{100000000, 10000000000};
@@ -50,7 +53,7 @@ SubnetID parseGraphML(const std::string &fileName) {
 
 SubnetID createPrimitiveSubnet(const CellSymbol symbol,
                               const size_t nIn, const size_t arity) {
-  Builder builder;
+  SubnetBuilder builder;
   LinkList links;
 
   for (size_t i = 0; i < nIn; i++) {
@@ -91,19 +94,28 @@ bool checkAllCellsMapped(const SubnetID subnetID) {
   return isTotalMapped;
 }
 
-void checkEQ(const SubnetID origSubnetId, const SubnetID mappedSubnetId) {
+void checkEQ(const SubnetID origSubnetID, const SubnetID mappedSubnetID) {
   debugger::SatChecker& checker = debugger::SatChecker::get();
-  EXPECT_TRUE(checker.areEquivalent(origSubnetId, mappedSubnetId).equal());
+  EXPECT_TRUE(checker.areEquivalent(origSubnetID, mappedSubnetID).equal());
 }
 
-SubnetID mapper(const Strategy strategy, const SubnetID subnetId) {
+SubnetID mapper(const Strategy strategy, const SubnetID subnetID) {
 
 #ifdef UTOPIA_DEBUG
   std::cout << model::Subnet::get(subnetId) << std::endl;
 #endif // UTOPIA_DEBUG
 
-  Techmapper techmapper(strategy, sdc, techLib);
-  SubnetID mappedSubnet = techmapper.techmap(subnetId);
+  Techmapper techmapper;
+  techmapper.setStrategy(strategy);
+  techmapper.setSDC(sdc);
+  techmapper.setLibrary(techLib);
+
+  AigMapper aigMapper("aig");
+  const auto premappedSubnetID = aigMapper.transform(subnetID);
+
+  SubnetBuilder builder;
+  techmapper.techmap(premappedSubnetID, builder);
+  SubnetID mappedSubnet = builder.make();
 
 #ifdef UTOPIA_DEBUG
   std::cout << model::Subnet::get(mappedSubnet) << std::endl;
@@ -141,8 +153,7 @@ SubnetID graphMLMapping(const Strategy strategy,
 }
 
 SubnetID andNotMapping(const Strategy strategy) {
-  using Link = model::Subnet::Link;
-  model::SubnetBuilder builder;
+  SubnetBuilder builder;
 
   const auto idx0 = builder.addInput();
   const auto idx1 = builder.addInput();
@@ -160,9 +171,7 @@ SubnetID andNotMapping(const Strategy strategy) {
 }
 
 SubnetID notNotAndMapping(const Strategy strategy) {
-  using Link = model::Subnet::Link;
-
-  model::SubnetBuilder builder;
+  SubnetBuilder builder;
 
   const auto idx0 = builder.addInput();
   const auto idx1 = builder.addInput();
@@ -185,7 +194,7 @@ SubnetID randomMapping(const Strategy strategy) {
 }
 
 NetID simpleNetMapping(const Strategy strategy) {
-  model::NetBuilder netBuilder;
+  NetBuilder netBuilder;
   std::vector<model::CellID> cells;
 
   for (size_t i = 0; i < 5; i++) {
@@ -209,16 +218,25 @@ NetID simpleNetMapping(const Strategy strategy) {
   auto cellOUT = makeCell(model::CellSymbol::OUT, cellIDAND2);
   netBuilder.addCell(cellOUT);
 
-  Techmapper techmapper(strategy, sdc, techLib);
-  auto mappedNetID = techmapper.techmap(netBuilder.make());
+  Techmapper techmapper;
+  techmapper.setStrategy(strategy);
+  techmapper.setSDC(sdc);
+  techmapper.setLibrary(techLib);
+
+  const auto netID = netBuilder.make();
+
+  // TODO: what about premapping in this case?
+  //AigMapper aigMapper("aig");
+  //const auto premappedNetID = aigMapper.transform(netID);
+
+  //auto mappedNetID = techmapper.techmap(premappedNetID);
+  auto mappedNetID = techmapper.techmap(netID);
 
   return mappedNetID;
 }
 
 SubnetID areaRecoveySubnetMapping(const Strategy strategy) {
-  using Link = model::Subnet::Link;
-
-  model::SubnetBuilder builder;
+  SubnetBuilder builder;
 
   const auto idxI1 = builder.addInput();
   const auto idxI2 = builder.addInput();

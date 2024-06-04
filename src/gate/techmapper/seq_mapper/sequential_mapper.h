@@ -23,14 +23,14 @@ class SequentialMapper {
   using SubnetID = model::SubnetID;
 
 public:
-  explicit SequentialMapper(CellDB *cellDB) {
+  explicit SequentialMapper(const CellDB *cellDB) {
     this->cellDB = cellDB;
   };
   CellTypeID map(const CellID sequenceCellID,
     const Strategy strategy = Strategy::AREA);
 
 private:
-  CellDB *cellDB;
+  const CellDB *cellDB;
   SubnetID findSubnetID(
     const std::vector<std::pair<SubnetID, Subnetattr>> &seqCells,
     const Strategy strategy = Strategy::AREA);

@@ -8,6 +8,7 @@
 
 #include "gate/model/printer/printer.h"
 #include "gate/parser/graphml_parser.h"
+#include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/techmapper/utils/get_tech_attrs.h"
@@ -15,9 +16,10 @@
 
 namespace eda::gate::techmapper {
 
-  using ModelPrinter = eda::gate::model::ModelPrinter;
-  using Subnet       = eda::gate::model::Subnet;
-  using SubnetID     = eda::gate::model::SubnetID;
+  using ModelPrinter  = model::ModelPrinter;
+  using Subnet        = model::Subnet;
+  using SubnetBuilder = model::SubnetBuilder;
+  using SubnetID      = model::SubnetID;
 
   void printVerilog(const SubnetID subnet, const std::string &fileName) {
     ModelPrinter& verilogPrinter =
@@ -38,20 +40,31 @@ namespace eda::gate::techmapper {
     check.close();
 
     // TODO: it should be an option
-    const std::string techLib = eda::env::getHomePathAsString() +
-                                "/test/data/gate/techmapper" +
-                                "/sky130_fd_sc_hd__ff_100C_1v65.lib";
+    const std::filesystem::path techLib = eda::env::getHomePath() /
+      "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
 
     // TODO: it should be an option too
     SDC sdc{100000000, 10000000000};
-    Techmapper techmapper(config.strategy, sdc, techLib);
+
+    Techmapper techmapper;
+    techmapper.setStrategy(config.strategy);
+    techmapper.setSDC(sdc);
+    techmapper.setLibrary(techLib);
+
     auto startTime = std::chrono::high_resolution_clock::now();
 
     std::cout << "Start to techmap " << name << std::endl;
 
-    eda::gate::parser::graphml::GraphMlParser parser;
-    SubnetID subnetID = parser.parse(name).make();
-    SubnetID mappedSubnetID = techmapper.techmap(subnetID);
+    // Read input GraphML file.
+    parser::graphml::GraphMlParser parser;
+    const auto subnetID = parser.parse(name).make();
+    // Premap the input data into AIG.
+    premapper::AigMapper aigMapper("aig");
+    const auto premappedSubnetID = aigMapper.transform(subnetID);
+    // Techmapping.
+    SubnetBuilder builder;
+    techmapper.techmap(premappedSubnetID, builder);
+    const auto mappedSubnetID = builder.make();
 
     printVerilog(mappedSubnetID, config.outNetFileName);
 

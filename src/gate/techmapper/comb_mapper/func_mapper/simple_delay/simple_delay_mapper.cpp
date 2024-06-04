@@ -8,8 +8,8 @@
 
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
-#include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
-#include "gate/techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.h"
+#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
+#include "gate/techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.h"
 #include "gate/techmapper/library/liberty_manager.h"
 
 #include <readcells/groups.h>
@@ -24,7 +24,11 @@ namespace eda::gate::techmapper {
 using Subnet = eda::gate::model::Subnet;
 using SubnetID = eda::gate::model::SubnetID;
 
-void SimpleDelayMapper::findBest() {
+void SimpleDelayMapper::map(
+       const SubnetID subnetID, const CellDB &cellDB,
+       const SDC &sdc, Mapping &mapping) {
+  this->subnetID = subnetID;
+  cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
   Subnet &subnet = Subnet::get(subnetID);
 
   for (uint16_t i = 0; i < subnet.getInNum(); i++) {
@@ -37,10 +41,10 @@ void SimpleDelayMapper::findBest() {
     auto cell = entries[entryIndex].cell;
 
     if (!(cell.isAnd() || cell.isBuf())) {
-      addNotAnAndToTheMap(entryIndex, cell);
+      addNotAnAndToTheMap(entryIndex, cell, mapping);
     } else {
       // Save best tech cells subnet to bestReplMap
-      saveBest(entryIndex, cutExtractor->getCuts(entryIndex));
+      saveBest(entryIndex, cutExtractor->getCuts(entryIndex), cellDB, mapping);
     }
     entryIndex += cell.more;
   }
@@ -62,13 +66,14 @@ float SimpleDelayMapper::findMaxArrivalTime(const std::unordered_set<size_t> &en
 }
 
 void SimpleDelayMapper::saveBest(
-    EntryIndex entryIndex,
-    const optimizer::CutExtractor::CutsList &cutsList) {
+    const EntryIndex entryIndex,
+    const optimizer::CutExtractor::CutsList &cutsList,
+    const CellDB &cellDB, Mapping &mapping) {
   eda::gate::optimizer::ConeBuilder coneBuilder(&Subnet::get(subnetID));
-  BestReplacement bestSimpleReplacement{};
+  MappingItem mappingItem;
   float bestArrivalTime = MAXFLOAT;
 
-  DelayEstimator d1(LibraryManager::get().getLibrary());
+  DelayEstimator d1(LibertyManager::get().getLibrary());
   int timingSense = d1.nldm.getSense();
 
   // Iterate over all cuts to find the best replacement
@@ -80,8 +85,8 @@ void SimpleDelayMapper::saveBest(
       auto truthTable = eda::gate::model::evaluate(
           model::Subnet::get(coneSubnetID));
 
-      for (const SubnetID &currentSubnetID : cellDB->getSubnetIDsByTT(truthTable.at(0))) {
-        auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
+      for (const SubnetID &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable.at(0))) {
+        auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
 
         float inputNetTransition = findMaxArrivalTime(cut.entryIdxs);
         float fanoutCap = d1.wlm.getFanoutCap(currentAttr.fanout_count) + 
@@ -96,10 +101,10 @@ void SimpleDelayMapper::saveBest(
 
         if (arrivalTime < bestArrivalTime) {
           bestArrivalTime = arrivalTime;
-          bestSimpleReplacement.setSubnetID(currentSubnetID);
-          bestSimpleReplacement.inputs.clear();
+          mappingItem.setSubnetID(currentSubnetID);
+          mappingItem.inputs.clear();
           for (const auto &in : cut.entryIdxs) {
-            bestSimpleReplacement.inputs.push_back(in);
+            mappingItem.inputs.push_back(in);
           }
         }
         delayVec[entryIndex] = {arrivalTime};
@@ -107,7 +112,7 @@ void SimpleDelayMapper::saveBest(
     }
   }
 
-  assert(!bestSimpleReplacement.inputs.empty());
-  (*bestReplacementMap)[entryIndex] = bestSimpleReplacement;
+  assert(!mappingItem.inputs.empty());
+  mapping[entryIndex] = mappingItem;
 }
 } // namespace eda::gate::techmapper

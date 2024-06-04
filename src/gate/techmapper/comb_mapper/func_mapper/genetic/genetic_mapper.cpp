@@ -8,7 +8,8 @@
 
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
-#include "gate/techmapper/comb_mapper/cut_based/genetic/genetic_mapper.h"
+#include "gate/techmapper/comb_mapper/func_mapper/genetic/genetic_mapper.h"
+#include "gate/techmapper/library/liberty_manager.h"
 #include "util/env.h"
 
 #include <readcells/ast.h>
@@ -24,26 +25,18 @@
 
 namespace eda::gate::techmapper {
 
-void GeneticMapper::findBest() {
-  std::string file_name = "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
+void GeneticMapper::map(
+       const SubnetID subnetID, const CellDB &cellDB,
+       const SDC &sdc, Mapping &mapping) {
+  this->subnetID = subnetID;
+  cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
 
-  const std::filesystem::path homePath = eda::env::getHomePath();
-  const std::filesystem::path filePath = homePath / file_name;
-
-  TokenParser tokParser;
-  FILE *file = fopen(filePath.generic_string().c_str(), "rb");
-  Group *ast = tokParser.parseLibrary(file,
-                                      filePath.generic_string().c_str());
-  AstParser parser(lib, tokParser);
-  parser.run(*ast);
-  fclose(file);
-
-  initialization();
-  startEvolution();
-  saveInBestMap();
+  initialization(sdc, cellDB);
+  startEvolution(sdc);
+  saveInBestMap(mapping);
 }
 
-void GeneticMapper::initialization() {
+void GeneticMapper::initialization(const SDC &sdc, const CellDB &cellDB) {
   optimizer::ConeBuilder coneBuilder(&model::Subnet::get(subnetID));
   auto entries = model::Subnet::get(subnetID).getEntries();
   genBank.resize(std::size(entries));
@@ -76,10 +69,10 @@ void GeneticMapper::initialization() {
         auto truthTable = eda::gate::model::evaluate(
             model::Subnet::get(coneSubnetID));
 
-        for (const SubnetID &currentSubnetID: cellDB->getSubnetIDsByTT(
+        for (const SubnetID &currentSubnetID: cellDB.getSubnetIDsByTT(
             truthTable.at(0))) {
           //fill gen bank with currentSubnetID and currentAttr
-          auto currentAttr = cellDB->getSubnetAttrBySubnetID(currentSubnetID);
+          auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
           auto gen = std::make_shared<Gen>();
           gen->emptyGen = false;
           gen->subnetID = currentSubnetID;
@@ -109,7 +102,7 @@ void GeneticMapper::initialization() {
     newChromosome.gens.resize(genBank.size());
 
     for (const auto& index : outputGenIndexes) {
-      fillChromosomeFromOutput(newChromosome, index);
+      fillChromosomeFromOutput(newChromosome, index, sdc);
     }
 
     for (long unsigned int j = 0; j < genBank.size(); j++) {
@@ -120,13 +113,14 @@ void GeneticMapper::initialization() {
         newChromosome.gens[j] = gen;
       }
     }
-    newChromosome.calculateFitness(lib);
+    newChromosome.calculateFitness();
 
     nextGeneration.push_back(newChromosome);
   }
 }
 
-void GeneticMapper::fillChromosomeFromOutput(Chromosome& chromosome, size_t outputIndex) {
+void GeneticMapper::fillChromosomeFromOutput(
+    Chromosome& chromosome, size_t outputIndex, const SDC &sdc) {
   if (chromosome.gens[outputIndex] != nullptr) return;
 
   std::random_device rd;
@@ -136,13 +130,13 @@ void GeneticMapper::fillChromosomeFromOutput(Chromosome& chromosome, size_t outp
   std::shared_ptr<Gen> selectedGen = genBank[outputIndex][genIndex];
   if (!selectedGen->isIn) {
     for (const auto &entryIdx: selectedGen->entryIdxs) {
-      fillChromosomeFromOutput(chromosome, entryIdx);
+      fillChromosomeFromOutput(chromosome, entryIdx, sdc);
     }
   }
   chromosome.gens[outputIndex] = selectedGen;
 }
 
-void GeneticMapper::startEvolution() {
+void GeneticMapper::startEvolution(const SDC &sdc) {
   auto startTime = std::chrono::steady_clock::now();
   auto endTime = startTime + std::chrono::minutes(1);
 
@@ -153,7 +147,7 @@ void GeneticMapper::startEvolution() {
       break; // Exit the loop if the time limit is reached.
     }
 
-    selection();
+    selection(sdc);
     reproduction();
     saveBestChromosome();
     mutation();
@@ -164,8 +158,8 @@ void GeneticMapper::startEvolution() {
 }
 
 // Auxiliary function for roulette wheel selection
-void GeneticMapper::selection() {
-  hardSelection();
+void GeneticMapper::selection(const SDC &sdc) {
+  hardSelection(sdc);
   // Calculating the total fitness for the entire population
   float totalFitness = std::accumulate(
     nextGeneration.begin(),
@@ -201,11 +195,11 @@ void GeneticMapper::selection() {
   parentChromosomes = std::move(selectedParents);
 }
 
-void GeneticMapper::hardSelection() {
+void GeneticMapper::hardSelection(const SDC &sdc) {
   // Using the erase-remove idiom to remove chromosomes that do not meet the criteria
   nextGeneration.erase(std::remove_if(
     nextGeneration.begin(), nextGeneration.end(),
-    [this](const Chromosome& chromosome) {
+    [sdc](const Chromosome& chromosome) {
       return chromosome.area > sdc.area || chromosome.arrivalTime > sdc.arrivalTime;
     }),
     nextGeneration.end());
@@ -286,7 +280,7 @@ Chromosome GeneticMapper::createChild(const Chromosome &parent1, const Chromosom
     child.gens.push_back(parent2.gens[i]);
   }
 
-  child.calculateFitness(lib);
+  child.calculateFitness();
   return child;
 }
 
@@ -330,34 +324,34 @@ void GeneticMapper::mutation() {
   // TODO
 }
 
-void GeneticMapper::saveInBestMap() {
+void GeneticMapper::saveInBestMap(Mapping &mapping) {
   for (uint64_t entryIndex = 0; entryIndex < bestChromosome.gens.size();
        entryIndex++) {
-    BestReplacement replacement;
+    MappingItem mappingItem;
     auto bestGen = bestChromosome.gens.at(entryIndex);
     if (bestGen->isIn) {
-      replacement.setType(BestReplacement::Type::IN);
+      mappingItem.setType(MappingItem::Type::IN);
     } else if (bestGen->isOut) {
-      replacement.setType(BestReplacement::Type::OUT);
+      mappingItem.setType(MappingItem::Type::OUT);
     }
-    replacement.setSubnetID(bestGen->subnetID);
-    replacement.inputs.clear();
+    mappingItem.setSubnetID(bestGen->subnetID);
+    mappingItem.inputs.clear();
     for (const auto &in : bestGen->entryIdxs) {
-      replacement.inputs.push_back(in);
+      mappingItem.inputs.push_back(in);
     }
-    (*bestReplacementMap)[entryIndex] = replacement;
+    mapping[entryIndex] = mappingItem;
   }
 }
 
-void Chromosome::calculateFitness(Library &lib) {
+void Chromosome::calculateFitness() {
   for (const auto &gen: gens) {
     area += gen->area;
   }
-  arrivalTime = calculateChromosomeMaxArrivalTime(lib);
+  arrivalTime = calculateChromosomeMaxArrivalTime();
   fitness = 1 / area * arrivalTime;
 }
 
-float Chromosome::calculateChromosomeMaxArrivalTime(Library &lib) {
+float Chromosome::calculateChromosomeMaxArrivalTime() {
   float maxArrivalTime = 0;
   for (auto& gen : gens) {
     if (!gen->emptyGen) {
@@ -365,7 +359,7 @@ float Chromosome::calculateChromosomeMaxArrivalTime(Library &lib) {
         continue;
       }
 
-      DelayEstimator d1(lib);
+      DelayEstimator d1(LibertyManager::get().getLibrary());
       int timingSense = d1.nldm.getSense();
       float inputNetTransition = findMaxArrivalTime(gen->entryIdxs);
       size_t nIn = 1;

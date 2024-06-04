@@ -65,14 +65,13 @@ add_library(Gate OBJECT
   synthesizer/synthesizer_mul.cpp
   synthesizer/synthesizer_mux.cpp
   techmapper/assembly.cpp
-  techmapper/comb_mapper/comb_mapper.cpp
-  techmapper/comb_mapper/cut_based/area_recovery/area_recovery.cpp
-  techmapper/comb_mapper/cut_based/cut_based_mapper.cpp
-  techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.cpp
-  techmapper/comb_mapper/cut_based/genetic/genetic_mapper.cpp
-  techmapper/comb_mapper/cut_based/power_map/power_map.cpp
-  techmapper/comb_mapper/cut_based/simple_area/simple_area_mapper.cpp
-  techmapper/comb_mapper/cut_based/simple_delay/simple_delay_mapper.cpp
+  techmapper/comb_mapper/func_mapper/func_mapper.cpp
+  techmapper/comb_mapper/func_mapper/area_recovery/area_recovery.cpp
+  techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.cpp
+  techmapper/comb_mapper/func_mapper/genetic/genetic_mapper.cpp
+  techmapper/comb_mapper/func_mapper/power_map/power_map.cpp
+  techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.cpp
+  techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.cpp
   techmapper/library/cell.cpp
   techmapper/library/cell_db.cpp
   techmapper/library/check_lib/aig/check_lib_for_aig.cpp

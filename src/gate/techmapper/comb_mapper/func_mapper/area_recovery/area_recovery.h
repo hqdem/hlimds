@@ -8,18 +8,25 @@
 
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
-#include "gate/techmapper/comb_mapper/cut_based/cut_based_mapper.h"
+#include "gate/techmapper/comb_mapper/func_mapper/func_mapper.h"
 
 namespace eda::gate::techmapper {
 
-using Subnet = eda::gate::model::Subnet;
-using Cut = eda::gate::optimizer::CutExtractor::Cut;
-using ConeBuilder = eda::gate::optimizer::ConeBuilder;
-using Cone = eda::gate::optimizer::ConeBuilder::Cone;
+using Subnet = model::Subnet;
+using CellDB = techmapper::CellDB;
+using Cut = optimizer::CutExtractor::Cut;
+using ConeBuilder = optimizer::ConeBuilder;
+using Cone = optimizer::ConeBuilder::Cone;
 
-class AreaRecovery : public CutBaseMapper {
-  void findBest() override;
-  float getMinAreaAndCell(SubnetID &cellTechLib, Cut &cut);
+class AreaRecovery : public FuncMapper {
+  void map(const SubnetID subnetID,
+           const CellDB &cellDB,
+           const SDC &sdc,
+           Mapping &mapping) override;
+
+  float getMinAreaAndCell(SubnetID &cellTechLib, Cut &cut,
+                          const CellDB &cellDB) const;
+
   double calcAreaFlow(Cut &cut, std::vector<double> &representAreaFlow,
                       eda::gate::model::Array<Subnet::Entry> &entries,
                       float minArea);
@@ -27,6 +34,7 @@ class AreaRecovery : public CutBaseMapper {
   double calcDepth(std::vector<double> &depth,
                    eda::gate::model::Array<Subnet::Entry> &entries,
                    uint64_t entryIndex, Cut &cut);
+  optimizer::CutExtractor *cutExtractor;
 };
 
 } // namespace eda::gate::techmapper

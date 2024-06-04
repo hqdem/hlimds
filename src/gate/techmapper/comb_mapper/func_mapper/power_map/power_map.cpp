@@ -8,30 +8,30 @@
 
 #include "gate/analyzer/simulation_estimator.h"
 #include "gate/model/utils/subnet_truth_table.h"
-#include "gate/techmapper/comb_mapper/cut_based/power_map/power_map.h"
+#include "gate/techmapper/comb_mapper/func_mapper/power_map/power_map.h"
 
 namespace eda::gate::techmapper {
 
-using Subnet = eda::gate::model::Subnet;
-using SwitchActivity = eda::gate::analyzer::SwitchActivity;
+using Subnet = model::Subnet;
+using SwitchActivity = analyzer::SwitchActivity;
 using Entry = Subnet::Entry;
-using ArrayEntry = eda::gate::model::Array<Entry>;
-using Cut = eda::gate::optimizer::CutExtractor::Cut;
+using ArrayEntry = model::Array<Entry>;
+using Cut = optimizer::CutExtractor::Cut;
 
-double PowerMap::getSwitching(const Cut &cut) {
+double PowerMap::getSwitching(const Cut &cut) const {
   auto entryIndex = cut.rootEntryIdx;
   return switchActivity.getSwitchProbability(entryIndex);
   // return (double) switchActivity.getSwitchesOn()[entryIndex] + 
   //   switchActivity.getSwitchesOff()[entryIndex];
 }
 
-double PowerMap::switchFlow(const EntryIndex entryIndex,
-                            const Cut &cut) {
+double PowerMap::calcSwitchFlow(const EntryIndex entryIndex,
+                                const Cut &cut) {
   double sf = getSwitching(cut);
   
   for (const auto &leafIdx : cut.entryIdxs) {
     const auto &leaf = (*entries)[leafIdx].cell;
-    if(leaf.isIn()) {
+    if (leaf.isIn()) {
       metrics[leafIdx].sf = switchActivity.getSwitchProbability(leafIdx);
     }
     sf += metrics[leafIdx].sf / leaf.refcount;
@@ -39,17 +39,18 @@ double PowerMap::switchFlow(const EntryIndex entryIndex,
   return sf;
 }
 
-double PowerMap::getArea(const Cut &cut) {
+double PowerMap::getArea(const Cut &cut) const {
   auto entryIndex = cut.rootEntryIdx;
   const auto &currentCell = (*entries)[entryIndex].cell;
-  if(currentCell.isIn())return 0;
+  if (currentCell.isIn()) {
+    return 0;
+  }
   return 1 + double(cut.entryIdxs.size()) / 2;
 }
 
-double PowerMap::areaFlow(const EntryIndex entryIndex,
-                          const Cut &cut) {
+double PowerMap::getAreaFlow(const EntryIndex entryIndex,
+                             const Cut &cut) const {
   double af = getArea(cut);
-
   for (const auto &leafIdx : cut.entryIdxs) {
     const auto &leaf = (*entries)[leafIdx].cell;
     if (leaf.isIn())
@@ -59,11 +60,11 @@ double PowerMap::areaFlow(const EntryIndex entryIndex,
   return af;
 }
 
-uint32_t PowerMap::getLevel(const EntryIndex entryIdx) {
+uint32_t PowerMap::getLevel(const EntryIndex entryIdx) const {
   return metrics[entryIdx].level;
 }
 
-uint32_t PowerMap::getLevel(const Cut &cut) {
+uint32_t PowerMap::getLevel(const Cut &cut) const {
   uint32_t levelMax = 0;
   for (const EntryIndex &leafIdx : cut.entryIdxs) {
     levelMax = std::max(levelMax, getLevel(leafIdx));
@@ -71,7 +72,7 @@ uint32_t PowerMap::getLevel(const Cut &cut) {
   return levelMax + 1;
 }
 
-uint32_t PowerMap::getLevel(const std::vector<uint64_t> &entryIdxs) {
+uint32_t PowerMap::getLevel(const std::vector<uint64_t> &entryIdxs) const {
   uint32_t levelMax = 0;
   for (const EntryIndex &leafIdx : entryIdxs) {
     levelMax = std::max(levelMax, getLevel(leafIdx));
@@ -79,39 +80,40 @@ uint32_t PowerMap::getLevel(const std::vector<uint64_t> &entryIdxs) {
   return levelMax + 1;
 }
 
-void PowerMap::ref(const EntryIndex &entryIndex) {
-  for(const auto& leafIdx : (*bestReplacementMap)[entryIndex].inputs) {
+void PowerMap::ref(const EntryIndex &entryIndex, const Mapping &mapping) {
+  for(const auto& leafIdx : mapping.at(entryIndex).inputs) {
     metrics[leafIdx].refCounter++;
   }
 }
-void PowerMap::deref(const EntryIndex &entryIndex) {
-  for(const auto& leafIdx : (*bestReplacementMap)[entryIndex].inputs) {
+void PowerMap::deref(const EntryIndex &entryIndex, const Mapping &mapping) {
+  for(const auto& leafIdx : mapping.at(entryIndex).inputs) {
     metrics[leafIdx].refCounter--;
   }
 }
 
-void PowerMap::saveBestReplacement(EntryIndex entryIndex,
-                                  const Cut &cut,
-                                  const SubnetID techSubnetId) {
-
+void PowerMap::saveMappingItem(
+       const EntryIndex entryIndex, const Cut &cut,
+       const SubnetID techSubnetId, Mapping &mapping) {
   assert(techSubnetId != 0);
   assert(!cut.entryIdxs.empty());
-  if(!(*bestReplacementMap)[entryIndex].inputs.empty()) {
-    deref(entryIndex);
+  if(!mapping[entryIndex].inputs.empty()) {
+    deref(entryIndex, mapping);
   }
-  (*bestReplacementMap)[entryIndex].inputs.clear();
+  mapping[entryIndex].inputs.clear();
   for (const auto &in : cut.entryIdxs) {
-    (*bestReplacementMap)[entryIndex].inputs.push_back(in);
+    mapping[entryIndex].inputs.push_back(in);
   }
-  ref(entryIndex);
-  (*bestReplacementMap)[entryIndex].setSubnetID(techSubnetId);
+  ref(entryIndex, mapping);
+  mapping[entryIndex].setSubnetID(techSubnetId);
 }
 
-double PowerMap::getCellArea(const Cut &cut, const SubnetID &techCellSubnetId) {
-  return cellDB->getSubnetAttrBySubnetID(techCellSubnetId).area;
+double PowerMap::getCellArea(
+         const SubnetID &techCellSubnetId, const CellDB &cellDB) const {
+  return cellDB.getSubnetAttrBySubnetID(techCellSubnetId).area;
 }
 
-void PowerMap::findCutMinimizingDepth(const EntryIndex entryIndex) {
+void PowerMap::findCutMinimizingDepth(
+       const EntryIndex entryIndex, const CellDB &cellDB, Mapping &mapping) {
   SubnetID techSubnetId = 0;
 
   Cut bestCut = Cut();
@@ -123,7 +125,7 @@ void PowerMap::findCutMinimizingDepth(const EntryIndex entryIndex) {
           continue;
     uint32_t curLevel = getLevel(cut);
     if (bestCut.entryIdxs.empty() || cutBestLevel > curLevel) {
-      SubnetID tmpSubnetID = getBestTechCellSubnetId(cut);
+      SubnetID tmpSubnetID = getBestTechCellSubnetId(cut, cellDB);
       if (tmpSubnetID == 0)continue;
       techSubnetId = tmpSubnetID;
       cutBestLevel = curLevel;
@@ -131,21 +133,22 @@ void PowerMap::findCutMinimizingDepth(const EntryIndex entryIndex) {
     }
   }
   metrics[entryIndex].level = cutBestLevel; // setLevel(n, getLevel(cut))
-  saveBestReplacement(entryIndex,bestCut,techSubnetId);
-  assert(bestReplacementMap->at(entryIndex).getSubnetID() != 0);
+  saveMappingItem(entryIndex, bestCut, techSubnetId, mapping);
+  assert(mapping.at(entryIndex).getSubnetID() != 0);
 }
 
-void PowerMap::depthOrientedMap() {
+void PowerMap::depthOrientedMap(
+       const CellDB &cellDB, Mapping &mapping) {
   const auto &subnet =  Subnet::get(subnetID);
   for (uint64_t entryIndex = subnet.getInNum();
    entryIndex < entries->size() - subnet.getOutNum(); entryIndex++) {
     const auto &cell = (*entries)[entryIndex].cell;
-    (*bestReplacementMap)[entryIndex].inputs.clear();
+    mapping[entryIndex].inputs.clear();
     if (cell.isAnd() || cell.isBuf()) {
-      findCutMinimizingDepth(entryIndex);
+      findCutMinimizingDepth(entryIndex, cellDB, mapping);
     }
     else {
-      addNotAnAndToTheMap(entryIndex, (*entries)[entryIndex].cell);
+      addNotAnAndToTheMap(entryIndex, (*entries)[entryIndex].cell, mapping);
     }
   }
 }
@@ -154,11 +157,11 @@ bool approxEqual(const double &a, const double &b, const double &eps = 0.01) {
   return fabs(a-b) < eps;
 }
 
-void PowerMap::computeRequiredTimes() {
+void PowerMap::computeRequiredTimes(const Mapping &mapping) {
    const Subnet &subnet = Subnet::get(subnetID);
 
   // get latest Primary Output arival time
-  uint32_t timeMax = findLatestPoArivalTime();
+  uint32_t timeMax = findLatestPoArivalTime(mapping);
 
   for (auto &metric : metrics)
     metric.requiredTime = UINT32_MAX;
@@ -173,7 +176,7 @@ void PowerMap::computeRequiredTimes() {
   for (int32_t entryIdx = entries->size() - subnet.getOutNum() - 1; entryIdx >= 0; entryIdx--) {
     uint32_t timeReqNew = metrics[entryIdx].requiredTime - 1;
     // for each leaf in Representative Cut
-    for (const auto &leafIdx : bestReplacementMap->at(entryIdx).inputs) {
+    for (const auto &leafIdx : mapping.at(entryIdx).inputs) {
       uint32_t timeReqOld = metrics[leafIdx].requiredTime;
       metrics[leafIdx].requiredTime = std::min(timeReqOld, timeReqNew);
     }
@@ -185,12 +188,12 @@ void PowerMap::computeRequiredTimes() {
 //  1) *each cut-defined techCell has a unit delay
 //  2) delay for techCell is computed based on the longest internal path where an AND-gate has a unit delay 
 //  3) get delay for techCell form liberty parser    
-uint32_t PowerMap::findLatestPoArivalTime() {
+uint32_t PowerMap::findLatestPoArivalTime(const Mapping &mapping) const {
   uint32_t latestPoArivalTime = 0;
   const Subnet &subnet = Subnet::get(subnetID);
   for(int i = 0; i < subnet.getOutNum(); i++) {
     latestPoArivalTime = std::max(
-      getLevel(bestReplacementMap->at(subnet.size() - i - 1).inputs),
+      getLevel(mapping.at(subnet.size() - i - 1).inputs),
       latestPoArivalTime);
   }
       
@@ -199,9 +202,9 @@ uint32_t PowerMap::findLatestPoArivalTime() {
 };
 
 double PowerMap::getCellPower(const Cut &cut,
-                              const SubnetID &techCellSubnetId) {
-
-  auto currentAttr = cellDB->getSubnetAttrBySubnetID(techCellSubnetId);
+                              const SubnetID &techCellSubnetId,
+                              const CellDB &cellDB) const {
+  auto currentAttr = cellDB.getSubnetAttrBySubnetID(techCellSubnetId);
   float cellPower = 0;
   int i = 0;
   for (const auto &leaf : cut.entryIdxs) {
@@ -214,13 +217,13 @@ double PowerMap::getCellPower(const Cut &cut,
   return cellPower;
 };
 
-SubnetID PowerMap::getBestTechCellSubnetId(const Cut &cut) {
+SubnetID PowerMap::getBestTechCellSubnetId(const Cut &cut, const CellDB &cellDB) {
   SubnetID bestTechCellSubnetID;
-  const auto techIdsList = getTechIdsList(cut);
+  const auto techIdsList = getTechIdsList(cut, cellDB);
   if (techIdsList.size() == 0) return 0;
   double localCellPower = MAXFLOAT;
   for (const SubnetID &techCellSubnetId : techIdsList) {
-    double curLocalCellPower = getCellPower(cut,techCellSubnetId);
+    double curLocalCellPower = getCellPower(cut, techCellSubnetId, cellDB);
     if (curLocalCellPower < localCellPower) {
       localCellPower = curLocalCellPower;  
       bestTechCellSubnetID = techCellSubnetId;
@@ -230,13 +233,13 @@ SubnetID PowerMap::getBestTechCellSubnetId(const Cut &cut) {
   return bestTechCellSubnetID;
 }
 
-SubnetID PowerMap::getBestAreaTechCellSubnetId(const Cut &cut) {
+SubnetID PowerMap::getBestAreaTechCellSubnetId(const Cut &cut, const CellDB &cellDB) {
   SubnetID bestTechCellSubnetID;
-  const auto techIdsList = getTechIdsList(cut);
+  const auto techIdsList = getTechIdsList(cut, cellDB);
   if (techIdsList.size() == 0) return 0;
   double localCellArea = MAXFLOAT;
   for (const SubnetID &techCellSubnetId : techIdsList) {
-    double curLocalCellArea = getCellArea(cut,techCellSubnetId);
+    double curLocalCellArea = getCellArea(techCellSubnetId, cellDB);
     if (curLocalCellArea < localCellArea) {
       localCellArea = curLocalCellArea;  
       bestTechCellSubnetID = techCellSubnetId;
@@ -246,7 +249,7 @@ SubnetID PowerMap::getBestAreaTechCellSubnetId(const Cut &cut) {
   return bestTechCellSubnetID;
 }
 
-void PowerMap::globalSwitchAreaRecovery() {
+void PowerMap::globalSwitchAreaRecovery(const CellDB &cellDB, Mapping &mapping) {
   const auto &subnet =  Subnet::get(subnetID);
   for (uint64_t entryIndex = subnet.getInNum();
    entryIndex < entries->size() - subnet.getOutNum(); entryIndex++) {
@@ -262,14 +265,14 @@ void PowerMap::globalSwitchAreaRecovery() {
         if (cut.entryIdxs.count(entryIndex) == 1)
           continue;
         
-        double curAF = areaFlow(entryIndex, cut);
-        double curSF = switchFlow(entryIndex, cut);
+        double curAF = getAreaFlow(entryIndex, cut);
+        double curSF = calcSwitchFlow(entryIndex, cut);
 
         if ((curAF < metrics[entryIndex].af) ||
             (approxEqual(curAF, metrics[entryIndex].af) && curSF < metrics[entryIndex].sf)) {
 
           if(/*getLevel(cut) <= metrics[entryIndex].requiredTime*/ true ) {
-            SubnetID tmpSubnetId = getBestTechCellSubnetId(cut);
+            SubnetID tmpSubnetId = getBestTechCellSubnetId(cut, cellDB);
             if(tmpSubnetId == 0 )continue;
             bestTechCellSubnetID = tmpSubnetId;
             // metrics[entryIndex].level = getLevel(cut);
@@ -281,80 +284,87 @@ void PowerMap::globalSwitchAreaRecovery() {
       }
 
       if(bestCut.entryIdxs.empty()){
-        assert(!(*bestReplacementMap)[entryIndex].inputs.empty());
-        assert((*bestReplacementMap)[entryIndex].getSubnetID() != 0);
+        assert(!mapping[entryIndex].inputs.empty());
+        assert(mapping[entryIndex].getSubnetID() != 0);
         continue;
       }   
-      saveBestReplacement(entryIndex,bestCut,bestTechCellSubnetID);
+      saveMappingItem(entryIndex, bestCut, bestTechCellSubnetID, mapping);
     }
     else {
-      addNotAnAndToTheMap(entryIndex, cell);
+      addNotAnAndToTheMap(entryIndex, cell, mapping);
     }
     entryIndex += cell.more;
   }
 }
 
-double PowerMap::exactAreaRef(const Cut &cut) {
+double PowerMap::exactAreaRef(const Cut &cut, const Mapping &mapping) {
   double localArea = getArea(cut);
   for(const auto &leafIdx : cut.entryIdxs) {
     metrics[leafIdx].refCounter--;
-    if(metrics[leafIdx].refCounter == 0 && (*entries)[leafIdx].cell.isIn()) {
+    if (metrics[leafIdx].refCounter == 0 && (*entries)[leafIdx].cell.isIn()) {
 
       Cut virtCut = Cut();
       virtCut.rootEntryIdx = leafIdx;
-      for(const auto &idx : bestReplacementMap->at(leafIdx).inputs) {
+      for (const auto &idx : mapping.at(leafIdx).inputs) {
         virtCut.entryIdxs.insert(idx);
       }
-      localArea += exactAreaRef(virtCut);
+      localArea += exactAreaRef(virtCut, mapping);
     }
   }
   return localArea;
 }
 
-double PowerMap::exactAreaDeref(const Cut &cut) {
+double PowerMap::exactAreaDeref(const Cut &cut, const Mapping &mapping) {
   double localArea = getArea(cut);
-  for(const auto &leafIdx : cut.entryIdxs) {
-    if(metrics[leafIdx].refCounter == 0 && (*entries)[leafIdx].cell.isIn()) {
+  for (const auto &leafIdx : cut.entryIdxs) {
+    if (metrics[leafIdx].refCounter == 0 && (*entries)[leafIdx].cell.isIn()) {
 
       Cut virtCut = Cut();
       virtCut.rootEntryIdx = leafIdx;
-      for(const auto &idx : bestReplacementMap->at(leafIdx).inputs) {
+      for (const auto &idx : mapping.at(leafIdx).inputs) {
         virtCut.entryIdxs.insert(idx);
       }
-      localArea += exactAreaDeref(virtCut);
+      localArea += exactAreaDeref(virtCut, mapping);
     }
     metrics[leafIdx].refCounter++;
   }
   return localArea;
 }
 
-bool PowerMap::cutIsRepr(EntryIndex entryIndex,const Cut &cut) {
-  if(cut.entryIdxs.size() != bestReplacementMap->at(entryIndex).inputs.size())return 0;
-  for(const auto &leafIdx : bestReplacementMap->at(entryIndex).inputs) {
-    if(cut.entryIdxs.count(leafIdx) == 0)return 0;
+bool PowerMap::cutIsRepr(
+       EntryIndex entryIndex, const Cut &cut, const Mapping &mapping) const {
+  if (cut.entryIdxs.size() != mapping.at(entryIndex).inputs.size()) {
+    return 0;
+  }
+  for (const auto &leafIdx : mapping.at(entryIndex).inputs) {
+    if (cut.entryIdxs.count(leafIdx) == 0) {
+      return 0;
+    }
   }
   return 1;
 }
 
-double PowerMap::exactArea(EntryIndex entryIndex, const Cut &cut) {
+double PowerMap::exactArea(
+         EntryIndex entryIndex, const Cut &cut, const Mapping &mapping) {
   double localArea1 = 0;
 
-  if(cutIsRepr(entryIndex, cut)) {
-    localArea1 = exactAreaDeref(cut);
-    exactAreaRef(cut);
-  }else{
-    exactAreaRef(cut);
-    localArea1 = exactAreaDeref(cut);
+  if (cutIsRepr(entryIndex, cut, mapping)) {
+    localArea1 = exactAreaDeref(cut, mapping);
+    exactAreaRef(cut, mapping);
+  } else {
+    exactAreaRef(cut, mapping);
+    localArea1 = exactAreaDeref(cut, mapping);
   }
   return localArea1;
 }
 
-double PowerMap::exactSwitch(EntryIndex entryIndex, const Cut &cut) {
-  return MAXFLOAT;
+double PowerMap::exactSwitch(
+         EntryIndex entryIndex, const Cut &cut, const Mapping &mapping) const {
+  return MAXFLOAT; // TODO
 }
 
-
-void PowerMap::localSwitchAreaRecovery() {
+void PowerMap::localSwitchAreaRecovery(
+       const CellDB &cellDB, Mapping &mapping) {
   const auto &subnet =  Subnet::get(subnetID);
   for (uint64_t entryIndex = subnet.getInNum();
    entryIndex < entries->size() - subnet.getOutNum(); entryIndex++) {
@@ -367,21 +377,21 @@ void PowerMap::localSwitchAreaRecovery() {
       double bestArea = MAXFLOAT;
       double bestSwitch = MAXFLOAT;
 
-      Cut bestCut = Cut();
+      Cut bestCut;
       SubnetID bestTechCellSubnetID = 0;
 
       for (const Cut &cut : cutsList) {
         if (cut.entryIdxs.count(entryIndex) == 1)
           continue;
         
-        double curArea = exactArea(entryIndex, cut);
-        double curSwitch = exactSwitch(entryIndex, cut);
+        double curArea = exactArea(entryIndex, cut, mapping);
+        double curSwitch = exactSwitch(entryIndex, cut, mapping);
 
         if ((curArea < bestArea) ||
             (approxEqual(curArea, bestArea) && curSwitch < bestSwitch)) {
 
           if(getLevel(cut) <= metrics[entryIndex].requiredTime) {
-            SubnetID tmpSubnetId = getBestTechCellSubnetId(cut);
+            SubnetID tmpSubnetId = getBestTechCellSubnetId(cut, cellDB);
             if(tmpSubnetId == 0 )continue;
             bestTechCellSubnetID = tmpSubnetId;
             metrics[entryIndex].level = getLevel(cut);
@@ -392,14 +402,14 @@ void PowerMap::localSwitchAreaRecovery() {
         }
       }
       if(bestCut.entryIdxs.empty()) {
-        assert(!(*bestReplacementMap)[entryIndex].inputs.empty());
+        assert(!mapping[entryIndex].inputs.empty());
         continue;
       }
-      saveBestReplacement(entryIndex,bestCut,bestTechCellSubnetID);
-      assert((*bestReplacementMap)[entryIndex].getSubnetID() != 0);
+      saveMappingItem(entryIndex, bestCut, bestTechCellSubnetID, mapping);
+      assert(mapping[entryIndex].getSubnetID() != 0);
     }
     else {
-      addNotAnAndToTheMap(entryIndex, cell);
+      addNotAnAndToTheMap(entryIndex, cell, mapping);
     }
     entryIndex += cell.more;
   }
@@ -410,17 +420,21 @@ PowerMap::PowerMap() {
   coneBuilder = nullptr;
 }
 
-void PowerMap::findBest() {
+void PowerMap::map(
+       const SubnetID subnetID, const CellDB &cellDB,
+       const SDC &sdc, Mapping &mapping) {
+  this->subnetID = subnetID;
+  cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
 
 #ifdef UTOPIA_DEBUG
   std::cerr << "Start PowerMap::findBest" << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
 #endif // UTOPIA_DEBUG
 
-  init();
+  init(mapping);
   // depthOrientedMap();
   // computeRequiredTimes();
-  globalSwitchAreaRecovery();
+  globalSwitchAreaRecovery(cellDB, mapping);
   // computeRequiredTimes();
   // localSwitchAreaRecovery();
   clear();
@@ -432,11 +446,12 @@ void PowerMap::findBest() {
 #endif // UTOPIA_DEBUG
 }
 
-std::vector<SubnetID> PowerMap::getTechIdsList(const Cut cut) {
+std::vector<SubnetID> PowerMap::getTechIdsList(
+                        const Cut &cut, const CellDB &cellDB) {
   SubnetID coneSubnetID = coneBuilder->getCone(cut).subnetID;
   std::vector<SubnetID> cellList;
   for(const auto &truthTable : eda::gate::model::evaluate(Subnet::get(coneSubnetID))){  
-    for(const auto &id : cellDB->getSubnetIDsByTT(truthTable)){
+    for(const auto &id : cellDB.getSubnetIDsByTT(truthTable)){
       cellList.push_back(id);
     }
   }
@@ -444,7 +459,7 @@ std::vector<SubnetID> PowerMap::getTechIdsList(const Cut cut) {
   return cellList;
 }
 
-void PowerMap::init() {
+void PowerMap::init(Mapping &mapping) {
   const Subnet &subnet = Subnet::get(this->subnetID);
   entries = new ArrayEntry(subnet.getEntries());
   metrics.resize(entries->size());
@@ -454,15 +469,15 @@ void PowerMap::init() {
   eda::gate::analyzer::SimulationEstimator simulationEstimator(256);
   switchActivity = simulationEstimator.estimate(subnet);
 
-  // save inputs in bestReplacementMap
+  // save inputs in mapping
   for (uint64_t entryIndex = 0; entryIndex < subnet.getInNum(); entryIndex++) {
-    addInputToTheMap(entryIndex);
+    addInputToTheMap(entryIndex, mapping);
   }
-  // save outputs in bestReplacementMap
+  // save outputs in mapping
   for (uint64_t entryIndex = subnet.size() - subnet.getOutNum();
    entryIndex < subnet.size(); entryIndex++) {
     const auto &cell = (*entries)[entryIndex].cell;
-    addOutToTheMap(entryIndex,cell);
+    addOutToTheMap(entryIndex, cell, mapping);
     metrics[entryIndex].level = 0; 
   }
 }

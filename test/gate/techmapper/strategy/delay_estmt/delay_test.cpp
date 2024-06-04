@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/comb_mapper/cut_based/delay_estmt/delay_estmt.h"
+#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
 #include "util/env.h"
 
 #include <readcells/ast.h>

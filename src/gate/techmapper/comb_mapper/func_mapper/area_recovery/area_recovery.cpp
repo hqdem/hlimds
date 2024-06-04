@@ -6,16 +6,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/comb_mapper/cut_based/area_recovery/area_recovery.h"
+#include "gate/techmapper/comb_mapper/func_mapper/area_recovery/area_recovery.h"
 
 namespace eda::gate::techmapper {
 
-float AreaRecovery::getMinAreaAndCell(SubnetID &cellTechLib, Cut &cut) {
+float AreaRecovery::getMinAreaAndCell(
+        SubnetID &cellTechLib, Cut &cut, const CellDB &cellDB) const {
   ConeBuilder coneBuilder(&Subnet::get(this->subnetID));
   SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
   const auto truthTable =
       eda::gate::model::evaluate(Subnet::get(coneSubnetID))[0];
-  std::vector<SubnetID> cellList = cellDB->getSubnetIDsByTT(truthTable);
+  std::vector<SubnetID> cellList = cellDB.getSubnetIDsByTT(truthTable);
   if (cellList.size() == 0) {
     return 0;
   }
@@ -23,7 +24,7 @@ float AreaRecovery::getMinAreaAndCell(SubnetID &cellTechLib, Cut &cut) {
   float minCellArea = 0;
   bool initedMinArea = false;
   for (size_t cellIndex = 0; cellIndex < cellList.size(); cellIndex++) {
-    Subnetattr attr = cellDB->getSubnetAttrBySubnetID(cellList[cellIndex]);
+    Subnetattr attr = cellDB.getSubnetAttrBySubnetID(cellList[cellIndex]);
     if (attr.area < minCellArea || !initedMinArea) {
       minCellArea = attr.area;
       initedMinArea = true;
@@ -36,7 +37,7 @@ float AreaRecovery::getMinAreaAndCell(SubnetID &cellTechLib, Cut &cut) {
 
 double
 AreaRecovery::calcAreaFlow(Cut &cut, std::vector<double> &representAreaFlow,
-                             eda::gate::model::Array<Subnet::Entry> &entries,
+                             model::Array<Subnet::Entry> &entries,
                              float minArea) {
   double aF = minArea;
 
@@ -89,9 +90,13 @@ AreaRecovery::calcDepth(std::vector<double> &depth,
   return maxDepthCone;
 }
 
-void AreaRecovery::findBest() {
+void AreaRecovery::map(
+       const SubnetID subnetID, const CellDB &cellDB,
+       const SDC &sdc, Mapping &mapping) {
+  this->subnetID = subnetID;
+  cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
   Subnet &subnet = Subnet::get(this->subnetID);
-  eda::gate::model::Array<Subnet::Entry> entries = subnet.getEntries();
+  model::Array<Subnet::Entry> entries = subnet.getEntries();
 
   std::vector<double> representAreaFlow(std::size(entries), 0.0);
   std::vector<double> representDepth(std::size(entries), 0.0);
@@ -100,11 +105,11 @@ void AreaRecovery::findBest() {
   for (uint64_t entryIndex = 0; entryIndex < std::size(entries); entryIndex++) {
     Subnet::Cell &cell = entries[entryIndex].cell;
     if (cell.isIn() || cell.isOut() || cell.isOne() || cell.isZero()) {
-      addNotAnAndToTheMap(entryIndex, cell);
+      addNotAnAndToTheMap(entryIndex, cell, mapping);
       continue;
     }
 
-    BestReplacement bestReplacement{};
+    MappingItem mappingItem;
 
     std::vector<Cut> cutsList = cutExtractor->getCuts(entryIndex);
     for (Cut &cut : cutsList) {
@@ -113,7 +118,7 @@ void AreaRecovery::findBest() {
       }
 
       SubnetID cellTechLib;
-      float minCellArea = getMinAreaAndCell(cellTechLib, cut);
+      float minCellArea = getMinAreaAndCell(cellTechLib, cut, cellDB);
       if (minCellArea == 0) {
         continue;
       }
@@ -128,14 +133,14 @@ void AreaRecovery::findBest() {
         representAreaFlow[entryIndex] = aF;
         representDepth[entryIndex] = maxDepth;
 
-        bestReplacement.setSubnetID(cellTechLib);
-        bestReplacement.inputs.clear();
+        mappingItem.setSubnetID(cellTechLib);
+        mappingItem.inputs.clear();
         for (const size_t &in : cut.entryIdxs) {
-          bestReplacement.inputs.push_back(in);
+          mappingItem.inputs.push_back(in);
         }
       }
     }
-    (*bestReplacementMap)[entryIndex] = bestReplacement;
+    mapping[entryIndex] = mappingItem;
   }
 }
 

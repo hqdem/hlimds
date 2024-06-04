@@ -63,8 +63,11 @@ std::vector<std::string> names = {
 
 void testMapper(Techmapper::MapperType mapperType, std::string suff) {
   SDC sdc{100000000, 10000000000};
+  Techmapper techmapper;
 
-  Techmapper techmapper(techLib, mapperType, sdc);
+  techmapper.setStrategy(mapperType);
+  techmapper.setSDC(sdc);
+  techmapper.setLibrary(techLib);
 
   for(auto &name : names) {
     auto start = std::chrono::high_resolution_clock::now();

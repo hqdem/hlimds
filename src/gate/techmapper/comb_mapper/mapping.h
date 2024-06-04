@@ -10,8 +10,10 @@
 
 #include "gate/model/cell.h"
 #include "gate/model/subnet.h"
+#include "gate/optimizer/cut_extractor.h"
 
 #include <climits>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::gate::techmapper {
@@ -19,14 +21,14 @@ namespace eda::gate::techmapper {
 using EntryIndex = uint64_t;
 using SubnetID = eda::gate::model::SubnetID;
 
-struct BestReplacement {
+struct MappingItem {
   // Cell type
   enum Type {DEFAULT, IN, OUT, ONE, ZERO};
 
-  inline Type getType() { return type; }
+  inline Type getType() const { return type; }
   inline void setType(Type type) { this->type = type; }
 
-  BestReplacement(Type type = DEFAULT) : type (type) {};
+  MappingItem(Type type = DEFAULT) : type (type) {};
 
 private:
   // Flags for special cells.
@@ -52,5 +54,7 @@ public:
   // Entry idx in mapped Subnet.
   size_t cellID = ULLONG_MAX;
 };
+
+using Mapping = std::unordered_map<EntryIndex, MappingItem>;
 
 } // namespace eda::gate::techmapper

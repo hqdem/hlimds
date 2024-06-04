@@ -9,6 +9,7 @@
 #include "gate/model/examples.h"
 
 #include "gate/model/design.h"
+#include "gate/model/generator/layer_generator.h"
 #include "gate/model/generator/matrix_generator.h"
 #include "gate/model/utils/subnet_truth_table.h"
 
@@ -346,17 +347,35 @@ NetID makeNetRandomMatrix(const size_t nIn,
   return  generator.generate();
 }
 
-NetID makeFFNetRandomMatrix(const size_t nIn,
-                            const size_t nOut,
-                            const size_t nCell,
-                            const size_t minArity,
-                            const size_t maxArity,
-                            const unsigned seed) {
+NetID makeTriggerNetRandomMatrix(const size_t nIn,
+                                 const size_t nOut,
+                                 const size_t nCell,
+                                 const size_t minArity,
+                                 const size_t maxArity,
+                                 const unsigned seed) {
   MatrixGenerator generator(
-      nCell, nIn, nOut, {DFF_p, NOR}, seed);
+      nCell, nIn, nOut, {AND, OR, XOR, NAND, NOR, XNOR, sDFF_pp0, sDFF_pp1,
+      sDFF_pn0, sDFF_pn1, sDFF_nn0, sDFF_nn1, sDFF_pp0, sDFF_pp1}, seed);
 
   generator.setFaninLim(minArity, maxArity);
   return  generator.generate();
+}
+
+NetID makeTriggerNetRandomLayer(const size_t nIn,
+                                const size_t nOut,
+                                const size_t nLayers,
+                                const uint16_t layerNCellsMin,
+                                const uint16_t layerNCellsMax,
+                                const size_t minArity,
+                                const size_t maxArity,
+                                const unsigned seed) {
+  LayerGenerator generator(
+      nIn, nOut, {AND, OR, XOR, NAND, NOR, XNOR, sDFF_pp0, sDFF_pp1,
+      sDFF_pn0, sDFF_pn1, sDFF_nn0, sDFF_nn1, sDFF_pp0, sDFF_pp1}, nLayers,
+      layerNCellsMin, layerNCellsMax,  seed);
+
+  generator.setFaninLim(minArity, maxArity);
+  return generator.generate();
 }
 
 } // namespace eda::gate::model

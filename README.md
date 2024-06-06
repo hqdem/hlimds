@@ -53,6 +53,8 @@ sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
     libssl-dev libtool lld make ninja-build python python3-pip zlib1g zlib1g-dev
 ```
 
+If you are working on Fedora Linux OS, please, follow this [guide](doc/Fedora.md) to build Utopia EDA.
+
 ### CMake Installation
 
 ```

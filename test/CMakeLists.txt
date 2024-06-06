@@ -80,7 +80,7 @@ add_executable(${TEST_TARGET}
   gate/simulator/simulator_test.cpp
   gate/synthesizer/adder_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
-#  gate/techmapper/parser_lib_test.cpp
+  gate/techmapper/parser_lib_test.cpp
   gate/techmapper/strategy/area_recovery_test.cpp
   gate/techmapper/strategy/delay_estmt/delay_test.cpp
   gate/techmapper/strategy/delay_estmt/wlm_test.cpp

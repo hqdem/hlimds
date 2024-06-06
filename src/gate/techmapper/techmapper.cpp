@@ -14,8 +14,8 @@
 #include "gate/techmapper/comb_mapper/func_mapper/power_map/power_map.h"
 #include "gate/techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.h"
 #include "gate/techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.h"
-#include "gate/techmapper/library/cell.h"
 #include "gate/techmapper/library/liberty_manager.h"
+#include "gate/techmapper/library/sc.h"
 #include "gate/techmapper/seq_mapper/sequential_mapper.h"
 #include "gate/techmapper/techmapper.h"
 
@@ -48,23 +48,13 @@ void Techmapper::setLibrary(const std::filesystem::path &libPath) {
     std::cout << "Loaded Liberty file: " << libPath << std::endl;
   }
 
-  // TODO: this list of types should be wider
-  std::vector<CellTypeID> cells;
-  std::vector<CellTypeID> ffs;
-  std::vector<CellTypeID> ffrses;
-  std::vector<CellTypeID> latches;
-
-  // Process the loaded Library.
-  LibraryCells::readLibertyFile(cells,
-                                ffs,
-                                ffrses,
-                                latches);
+  SC standardCell;
 
   if (cellDB != nullptr) {
     delete cellDB;
   }
-
-  cellDB = new CellDB(cells, ffs, ffrses, latches);
+  cellDB = new CellDB(standardCell.getCombCellTypeID(),
+                      standardCell.getSeqCellTypeID());
 }
 
 void Techmapper::setStrategy(const Strategy strategy) {

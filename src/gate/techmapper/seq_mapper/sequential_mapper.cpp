@@ -26,13 +26,13 @@ CellTypeID SequentialMapper::map(const CellID cellID,
 
   SubnetID subnetID;
   if (type.isDff()) {
-    subnetID = findSubnetID(cellDB->getDFFs(), strategy); // FIXME:
+    //subnetID = findSubnetID(cellDB->getDFFs(), strategy); // FIXME:
   } else if (type.isDffRs()) {
-    subnetID = findSubnetID(cellDB->getDFFrses(), strategy); // FIXME:
+    //subnetID = findSubnetID(cellDB->getDFFrses(), strategy); // FIXME:
   } else if (type.isLatch()) {
-    subnetID = findSubnetID(cellDB->getLatches(), strategy); // FIXME:
+    //subnetID = findSubnetID(cellDB->getLatches(), strategy); // FIXME:
   } else {
-    assert(false && "Unsupported cell type");
+    //assert(false && "Unsupported cell type");
   }
 
   auto &subnet = model::Subnet::get(subnetID);

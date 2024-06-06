@@ -8,7 +8,6 @@
 
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/techmapper/library/cell_db.h"
-#include "gate/techmapper/library/check_lib/aig/check_lib_for_aig.h"
 #include "gate/techmapper/library/liberty_manager.h"
 
 #include <vector>
@@ -21,15 +20,13 @@ using Link = eda::gate::model::Subnet::Link;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using SubnetID = eda::gate::model::SubnetID;
 
-CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
-               const std::vector<CellTypeID> &cellTypeFFIDs,
-               const std::vector<CellTypeID> &cellTypeFFrsIDs,
-               const std::vector<CellTypeID> &cellTypeLatchIDs) {
+CellDB::CellDB(const std::vector<CellTypeID> &combCellTypeIDs,
+               const SC::StandardSeqMap &seqCellTypeIDs) {
 
   std::cout << "The number of extracted from Liberty CellTypes is " <<
-    cellTypeIDs.size() << std::endl; // TODO
+      combCellTypeIDs.size() << std::endl; // TODO
   int count = 0;
-  for (const CellTypeID &cellTypeID : cellTypeIDs) {
+  for (const CellTypeID &cellTypeID : combCellTypeIDs) {
     CellType &cellType = CellType::get(cellTypeID);
 
     bool needPower = true;
@@ -88,7 +85,7 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
       }
 
       auto cellIdx = subnetBuilder.addCell(cellTypeID, linkList);
-      auto cellIdxForTT = subnetBuilderForTT.addSubnet(cellType.getImpl(),linkListForTT); // addSingleOutputSubnet(cellType.getImpl(),linkListForTT);
+      auto cellIdxForTT = subnetBuilderForTT.addSubnet(cellType.getImpl(),linkListForTT);
 
       subnetBuilder.addOutput(cellIdx);
       subnetBuilderForTT.addOutput(cellIdxForTT.at(0));
@@ -110,82 +107,6 @@ CellDB::CellDB(const std::vector<CellTypeID> &cellTypeIDs,
 
     } while (std::next_permutation(permutationVec.begin(), permutationVec.end()));
   }
-
-  for (const CellTypeID &cellTypeID : cellTypeFFIDs) {
-    CellType &cellType = CellType::get(cellTypeID);
-
-    SubnetBuilder subnetBuilder;
-    std::vector<Link> linkList;
-
-    auto in1 = subnetBuilder.addInput();
-    auto in2 = subnetBuilder.addInput();
-    linkList.emplace_back(in2);
-    linkList.emplace_back(in1);
-    auto dff = subnetBuilder.addCell(cellTypeID, linkList);
-    subnetBuilder.addOutput(dff);
-
-    SubnetID subnetID = subnetBuilder.make();
-
-    Subnetattr subnetattr{"FF", cellType.getAttr().props.area};
-    DFF.emplace_back(subnetID, subnetattr);
-  }
-
-  for (const CellTypeID &cellTypeID : cellTypeFFrsIDs) {
-    CellType &cellType = CellType::get(cellTypeID);
-
-    SubnetBuilder subnetBuilder;
-    std::vector<Link> linkList;
-
-    auto in1 = subnetBuilder.addInput();
-    auto in2 = subnetBuilder.addInput();
-    auto in3 = subnetBuilder.addInput();
-    auto in4 = subnetBuilder.addInput();
-
-    linkList.emplace_back(in2);
-    linkList.emplace_back(in1);
-    linkList.emplace_back(in3);
-    linkList.emplace_back(in4);
-
-    auto dffrs = subnetBuilder.addCell(cellTypeID, linkList);
-    subnetBuilder.addOutput(dffrs);
-
-    SubnetID subnetID = subnetBuilder.make();
-
-    Subnetattr subnetattr{"FFrs", cellType.getAttr().props.area};
-    DFFrs.emplace_back(subnetID, subnetattr);
-  }
-
-  for (const CellTypeID &cellTypeID : cellTypeLatchIDs) {
-    CellType &cellType = CellType::get(cellTypeID);
-
-    SubnetBuilder subnetBuilder;
-    std::vector<Link> linkList;
-
-    auto in1 = subnetBuilder.addInput();
-    auto in2 = subnetBuilder.addInput();
-    linkList.emplace_back(in1);
-    linkList.emplace_back(in2);
-    auto latch = subnetBuilder.addCell(cellTypeID, linkList);
-    subnetBuilder.addOutput(latch);
-
-    SubnetID subnetID = subnetBuilder.make();
-
-    Subnetattr subnetattr{"Latch", cellType.getAttr().props.area};
-    Latch.emplace_back(subnetID, subnetattr);
-  }
-  std::cout << "The number of extracted from Liberty Subnets is " <<
-    count << std::endl; // TODO
-
-  AIGCheckerLiberty aigCheckerLiberty;
-  std::vector<std::string> missing = aigCheckerLiberty.checkLiberty(ttSubnet);
-  if (missing.size() != 0) {
-    std::cout << "Missing expressions:" << std::endl;
-    for (const auto &expr: missing) {
-      std::cout << expr << std::endl;
-    }
-    assert(missing.size() == 0);
-  }
-
   assert(isFunctionallyComplete());
 }
 
@@ -207,18 +128,6 @@ std::vector<SubnetID> &CellDB::getPatterns() {
     }
   }
   return patterns;
-}
-
-const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFs() const {
-  return DFF;
-}
-
-const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getDFFrses() const {
-  return DFFrs;
-}
-
-const std::vector<std::pair<SubnetID, Subnetattr>> &CellDB::getLatches() const {
-  return Latch;
 }
 
 kitty::dynamic_truth_table create_not(unsigned num_vars) {

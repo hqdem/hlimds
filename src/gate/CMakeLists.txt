@@ -74,7 +74,7 @@ add_library(Gate OBJECT
   techmapper/comb_mapper/func_mapper/power_map/power_map.cpp
   techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.cpp
   techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.cpp
-  techmapper/library/cell.cpp
+        techmapper/library/sc.cpp
   techmapper/library/cell_db.cpp
   techmapper/library/check_lib/aig/check_lib_for_aig.cpp
   techmapper/seq_mapper/sequential_mapper.cpp

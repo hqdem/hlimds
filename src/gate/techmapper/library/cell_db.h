@@ -10,6 +10,7 @@
 
 #include "gate/model/celltype.h"
 #include "gate/model/subnet.h"
+#include "gate/techmapper/library/sc.h"
 #include "gate/techmapper/library/subnetattr.h"
 
 #include <kitty/print.hpp>
@@ -40,27 +41,17 @@ class CellDB final {
   using SubnetID = eda::gate::model::SubnetID;
 
 public:
-  CellDB(const std::vector<CellTypeID> &cellTypeIDs,
-         const std::vector<CellTypeID> &cellTypeFFIDs,
-         const std::vector<CellTypeID> &cellTypeFFrsIDs,
-         const std::vector<CellTypeID> &cellTypeLatchIDs);
+  CellDB(const std::vector<CellTypeID> &combCellTypeIDs,
+         const SC::StandardSeqMap &seqCellTypeIDs);
 
   std::vector<SubnetID> &getPatterns();
 
   std::vector<SubnetID> getSubnetIDsByTT(const kitty::dynamic_truth_table &tt) const;
   const Subnetattr &getSubnetAttrBySubnetID(const SubnetID id) const;
 
-  const std::vector<std::pair<SubnetID, Subnetattr>> &getDFFs() const;
-  const std::vector<std::pair<SubnetID, Subnetattr>> &getDFFrses() const;
-  const std::vector<std::pair<SubnetID, Subnetattr>> &getLatches() const;
-
 private:
   std::vector<SubnetID> subnets;
   std::vector<SubnetID> patterns;
-
-  std::vector<std::pair<SubnetID, Subnetattr>> DFF;
-  std::vector<std::pair<SubnetID, Subnetattr>> DFFrs;
-  std::vector<std::pair<SubnetID, Subnetattr>> Latch;
 
   std::unordered_map<kitty::dynamic_truth_table,  std::vector<SubnetID>, DTTHash, DTTEqual> ttSubnet;
   std::unordered_map<SubnetID, Subnetattr> subnetToAttr;

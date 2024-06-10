@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "gate/library/liberty_manager.h"
 #include "gate/model/subnet.h"
-#include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/utils/get_tech_attrs.h"
 
 #include <readcells/groups.h>

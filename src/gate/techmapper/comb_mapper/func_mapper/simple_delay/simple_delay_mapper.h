@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "gate/library/library.h"
+#include "gate/library/sdc_manager.h"
 #include "gate/techmapper/comb_mapper/func_mapper/func_mapper.h"
 
 #include <unordered_map>
@@ -19,9 +21,11 @@ struct BestReplacementDelay {
 };
 
 class SimpleDelayMapper : public FuncMapper {
+  using SCLibrary = library::SCLibrary;
+  using SDC = library::SDC;
   virtual ~SimpleDelayMapper() = default;
   void map(const SubnetID subnetID,
-           const CellDB &cellDB,
+           const SCLibrary &cellDB,
            const SDC &sdc,
            Mapping &mapping) override;
 
@@ -31,7 +35,7 @@ private:
   float findMaxArrivalTime(const std::unordered_set<size_t> &entryIdxs);
   void saveBest(const EntryIndex entryIndex,
                 const optimizer::CutExtractor::CutsList &cutsList,
-                const CellDB &cellDB, Mapping &mapping);
+                const SCLibrary &cellDB, Mapping &mapping);
   optimizer::CutExtractor *cutExtractor;
 };
 } // namespace eda::gate::techmapper

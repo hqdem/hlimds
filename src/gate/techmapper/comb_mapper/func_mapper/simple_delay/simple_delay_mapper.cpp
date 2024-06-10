@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/library/liberty_manager.h"
+#include "gate/library/ppa_estimator.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
-#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
 #include "gate/techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.h"
-#include "gate/techmapper/library/liberty_manager.h"
 
 #include <readcells/groups.h>
 
@@ -21,11 +21,14 @@
 
 namespace eda::gate::techmapper {
 
-using Subnet = eda::gate::model::Subnet;
-using SubnetID = eda::gate::model::SubnetID;
+using DelayEstimator = library::DelayEstimator;
+using LibertyManager = library::LibertyManager;
+using SCLibrary = library::SCLibrary;
+using Subnet = model::Subnet;
+using SubnetID = model::SubnetID;
 
 void SimpleDelayMapper::map(
-       const SubnetID subnetID, const CellDB &cellDB,
+       const SubnetID subnetID, const SCLibrary &cellDB,
        const SDC &sdc, Mapping &mapping) {
   this->subnetID = subnetID;
   cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
@@ -68,7 +71,7 @@ float SimpleDelayMapper::findMaxArrivalTime(const std::unordered_set<size_t> &en
 void SimpleDelayMapper::saveBest(
     const EntryIndex entryIndex,
     const optimizer::CutExtractor::CutsList &cutsList,
-    const CellDB &cellDB, Mapping &mapping) {
+    const SCLibrary &cellDB, Mapping &mapping) {
   eda::gate::optimizer::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   MappingItem mappingItem;
   float bestArrivalTime = MAXFLOAT;
@@ -85,11 +88,11 @@ void SimpleDelayMapper::saveBest(
       auto truthTable = eda::gate::model::evaluate(
           model::Subnet::get(coneSubnetID));
 
-      for (const SubnetID &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable.at(0))) {
-        auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
+      for (const SubnetID &currentSubnetID : cellDB.getSubnetID(truthTable.at(0))) {
+        auto currentAttr = cellDB.getCellAttrs(currentSubnetID);
 
         float inputNetTransition = findMaxArrivalTime(cut.entryIdxs);
-        float fanoutCap = d1.wlm.getFanoutCap(currentAttr.fanout_count) + 
+        float fanoutCap = d1.wlm.getFanoutCap(currentAttr.fanoutCount) + 
                           d1.nldm.getCellCap();
 
         d1.nldm.delayEstimation(currentAttr.name,

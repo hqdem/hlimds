@@ -15,8 +15,11 @@
 namespace eda::gate::techmapper {
 
 class SimpleAreaMapper : public FuncMapper {
+  using SDC = library::SDC;
+  using SCLibrary = library::SCLibrary;
+
   void map(const SubnetID subnetID,
-           const CellDB &cellDB,
+           const SCLibrary &cellDB,
            const SDC &sdc,
            Mapping &mapping) override;
 
@@ -24,11 +27,11 @@ private:
   float dynamicCalculateArea(
           const EntryIndex entryIndex,
           const std::unordered_set<uint64_t> &entryIdxs,
-          const CellDB &cellDB, Mapping &mapping);
+          const SCLibrary &cellDB, Mapping &mapping);
   void saveBest(
          const EntryIndex entryIndex,
          const optimizer::CutExtractor::CutsList &cutsList,
-         const CellDB &cellDB, Mapping &mapping);
+         const SCLibrary &cellDB, Mapping &mapping);
   optimizer::CutExtractor *cutExtractor;
 };
 } // namespace eda::gate::techmapper

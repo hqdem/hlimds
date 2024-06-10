@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "gate/library/check_lib/check_lib.h"
 #include "gate/model/subnet.h"
-#include "gate/techmapper/library/check_lib/check_lib.h"
 
 #include <unordered_map>
 #include <vector>
 
-namespace eda::gate::techmapper {
+namespace eda::gate::library {
 
 class AIGCheckerLiberty : public LibertyChecker {
 public:
@@ -22,7 +22,7 @@ public:
   std::vector<std::string> checkLiberty(
       std::unordered_map<kitty::dynamic_truth_table,
       std::vector<model::SubnetID>, DTTHash,
-      DTTEqual> &ttSubnet) override;
+      DTTEqual> &truthTables) override;
 
 private:
   std::pair<kitty::dynamic_truth_table, std::string> andTT();
@@ -32,4 +32,4 @@ private:
   std::pair<kitty::dynamic_truth_table, std::string> invTT();
 };
 
-} // namespace eda::gate::techmapper
+} // namespace eda::gate::library

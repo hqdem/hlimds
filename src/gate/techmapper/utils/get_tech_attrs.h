@@ -8,13 +8,16 @@
 
 #pragma once
 
+#include "gate/library/ppa_estimator.h"
 #include "gate/model/subnet.h"
-#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
 
 #include <algorithm>
 #include <unordered_map>
 
 namespace eda::gate::techmapper {
+
+using DelayEstimator = library::DelayEstimator;
+using LibertyManager = library::LibertyManager;
 
 inline bool shouldSkipCell(const model::Subnet::Cell &cell) {
   return cell.isIn() || cell.isOut() || cell.isOne() || cell.isZero();

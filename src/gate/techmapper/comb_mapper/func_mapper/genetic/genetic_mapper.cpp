@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/library/liberty_manager.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/func_mapper/genetic/genetic_mapper.h"
-#include "gate/techmapper/library/liberty_manager.h"
 #include "util/env.h"
 
 #include <readcells/ast.h>
@@ -25,8 +25,11 @@
 
 namespace eda::gate::techmapper {
 
+using DelayEstimator = library::DelayEstimator;
+using LibertyManager = library::LibertyManager;
+
 void GeneticMapper::map(
-       const SubnetID subnetID, const CellDB &cellDB,
+       const SubnetID subnetID, const SCLibrary &cellDB,
        const SDC &sdc, Mapping &mapping) {
   this->subnetID = subnetID;
   cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
@@ -36,7 +39,7 @@ void GeneticMapper::map(
   saveInBestMap(mapping);
 }
 
-void GeneticMapper::initialization(const SDC &sdc, const CellDB &cellDB) {
+void GeneticMapper::initialization(const SDC &sdc, const SCLibrary &cellDB) {
   optimizer::ConeBuilder coneBuilder(&model::Subnet::get(subnetID));
   auto entries = model::Subnet::get(subnetID).getEntries();
   genBank.resize(std::size(entries));
@@ -69,10 +72,10 @@ void GeneticMapper::initialization(const SDC &sdc, const CellDB &cellDB) {
         auto truthTable = eda::gate::model::evaluate(
             model::Subnet::get(coneSubnetID));
 
-        for (const SubnetID &currentSubnetID: cellDB.getSubnetIDsByTT(
+        for (const SubnetID &currentSubnetID: cellDB.getSubnetID(
             truthTable.at(0))) {
           //fill gen bank with currentSubnetID and currentAttr
-          auto currentAttr = cellDB.getSubnetAttrBySubnetID(currentSubnetID);
+          auto currentAttr = cellDB.getCellAttrs(currentSubnetID);
           auto gen = std::make_shared<Gen>();
           gen->emptyGen = false;
           gen->subnetID = currentSubnetID;

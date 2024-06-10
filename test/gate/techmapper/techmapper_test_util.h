@@ -30,6 +30,9 @@ const path home = eda::env::getHomePath();
 const path techLib = home /
   "test/data/gate/techmapper" /
   "sky130_fd_sc_hd__ff_100C_1v65.lib"; // TODO
+const path sdcPath = home /
+  "test/data/gate/techmapper" /
+  "test.sdc"; // TODO
 
 SubnetID simpleANDMapping(const Strategy strategy);
 SubnetID simpleORMapping(const Strategy strategy);

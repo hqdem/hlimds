@@ -19,7 +19,7 @@
 namespace eda::gate::techmapper {
 
 using EntryIndex = uint64_t;
-using SubnetID = eda::gate::model::SubnetID;
+using SubnetID = model::SubnetID;
 
 struct MappingItem {
   // Cell type

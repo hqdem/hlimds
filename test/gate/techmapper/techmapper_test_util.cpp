@@ -7,11 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/sat_checker.h"
+#include "gate/library/liberty_manager.h"
 #include "gate/model/printer/printer.h"
 #include "gate/model/utils/subnet_random.h"
 #include "gate/parser/graphml_parser.h"
 #include "gate/premapper/aigmapper.h"
-#include "gate/techmapper/library/liberty_manager.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/techmapper/utils/get_tech_attrs.h"
@@ -28,12 +28,11 @@ using CellSymbol = model::CellSymbol;
 using Link       = model::Subnet::Link;
 using LinkList   = model::Subnet::LinkList;
 using NetBuilder = model::NetBuilder;
+using SDC        = library::SDC;
 using Strategy   = Techmapper::Strategy;
 using Subnet     = model::Subnet;
-using SubnetBuilder    = model::SubnetBuilder;
+using SubnetBuilder = model::SubnetBuilder;
 using SubnetID   = model::SubnetID;
-
-SDC sdc{100000000, 10000000000};
 
 SubnetID parseGraphML(const std::string &fileName) {
 
@@ -86,7 +85,7 @@ bool checkAllCellsMapped(const SubnetID subnetID) {
     if (cell.isIn() || cell.isOut() || cell.isZero() || cell.isOne()) {
       continue;
     }
-    if (cell.getSymbol() != model::CellSymbol::UNDEF) {
+    if (cell.getSymbol() != CellSymbol::UNDEF) {
       isTotalMapped = false;
     }
     entryIndex += cell.more;
@@ -107,7 +106,7 @@ SubnetID mapper(const Strategy strategy, const SubnetID subnetID) {
 
   Techmapper techmapper;
   techmapper.setStrategy(strategy);
-  techmapper.setSDC(sdc);
+  techmapper.setSDC(sdcPath);
   techmapper.setLibrary(techLib);
 
   AigMapper aigMapper("aig");
@@ -198,29 +197,29 @@ NetID simpleNetMapping(const Strategy strategy) {
   std::vector<model::CellID> cells;
 
   for (size_t i = 0; i < 5; i++) {
-    auto cellID = makeCell(model::CellSymbol::IN);
+    auto cellID = makeCell(CellSymbol::IN);
     cells.push_back(cellID);
     netBuilder.addCell(cellID);
   }
 
-  auto cellIDAND0 = makeCell(model::CellSymbol::AND, cells[1], cells[2]);
+  auto cellIDAND0 = makeCell(CellSymbol::AND, cells[1], cells[2]);
   netBuilder.addCell(cellIDAND0);
 
-  auto cellIDAND1 = makeCell(model::CellSymbol::AND, cells[3], cells[4]);
+  auto cellIDAND1 = makeCell(CellSymbol::AND, cells[3], cells[4]);
   netBuilder.addCell(cellIDAND1);
 
-  auto cellIDDFF = makeCell(model::CellSymbol::DFF, cellIDAND0, cells[0]);
+  auto cellIDDFF = makeCell(CellSymbol::DFF, cellIDAND0, cells[0]);
   netBuilder.addCell(cellIDDFF);
 
-  auto cellIDAND2 = makeCell(model::CellSymbol::AND, cellIDDFF, cellIDAND1);
+  auto cellIDAND2 = makeCell(CellSymbol::AND, cellIDDFF, cellIDAND1);
   netBuilder.addCell(cellIDAND2);
 
-  auto cellOUT = makeCell(model::CellSymbol::OUT, cellIDAND2);
+  auto cellOUT = makeCell(CellSymbol::OUT, cellIDAND2);
   netBuilder.addCell(cellOUT);
 
   Techmapper techmapper;
   techmapper.setStrategy(strategy);
-  techmapper.setSDC(sdc);
+  techmapper.setSDC(sdcPath);
   techmapper.setLibrary(techLib);
 
   const auto netID = netBuilder.make();

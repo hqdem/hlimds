@@ -18,7 +18,7 @@ using Subnet = model::Subnet;
 using Type = MappingItem::Type;
 
 void SimpleAreaMapper::map(
-       const SubnetID subnetID, const CellDB &cellDB,
+       const SubnetID subnetID, const SCLibrary &cellDB,
        const SDC &sdc, Mapping &mapping) {
   this->subnetID = subnetID;
   cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
@@ -41,7 +41,7 @@ void SimpleAreaMapper::map(
 float SimpleAreaMapper::dynamicCalculateArea(
         const EntryIndex entryIndex,
         const std::unordered_set<uint64_t> &entryIdxs,
-        const CellDB &cellDB, Mapping &mapping) {
+        const SCLibrary &cellDB, Mapping &mapping) {
   float area = 0;
   std::stack<EntryIndex> stack;
   std::unordered_set<EntryIndex> visited;
@@ -52,7 +52,7 @@ float SimpleAreaMapper::dynamicCalculateArea(
     assert(mapping.find(out) != mapping.end());
     const auto type = mapping.at(out).getType();
     if (type != Type::ZERO && type != Type::ONE && type != Type::IN) {
-      area += cellDB.getSubnetAttrBySubnetID(
+      area += cellDB.getCellAttrs(
                 mapping.at(out).getSubnetID()).area;
     }
   }
@@ -69,7 +69,7 @@ float SimpleAreaMapper::dynamicCalculateArea(
     }
     const auto type = mapping.at(topEntryIndex).getType();
     if (type != Type::ZERO && type != Type::ONE && type != Type::IN) {
-      area += cellDB.getSubnetAttrBySubnetID(
+      area += cellDB.getCellAttrs(
                 mapping.at(topEntryIndex).getSubnetID()).area;
     }
     stack.pop();
@@ -80,7 +80,7 @@ float SimpleAreaMapper::dynamicCalculateArea(
 void SimpleAreaMapper::saveBest(
        const EntryIndex entryIndex,
        const optimizer::CutExtractor::CutsList &cutsList,
-       const CellDB &cellDB, Mapping &mapping) {
+       const SCLibrary &cellDB, Mapping &mapping) {
 
   SubnetID bestTechCellSubnetID;
   optimizer::CutExtractor::Cut bestCut;
@@ -93,7 +93,7 @@ void SimpleAreaMapper::saveBest(
       auto truthTable = eda::gate::model::evaluate(
           Subnet::get(coneBuilder.getCone(cut).subnetID)).at(0);
 
-      for (const SubnetID &currentSubnetID : cellDB.getSubnetIDsByTT(truthTable)) {
+      for (const SubnetID &currentSubnetID : cellDB.getSubnetID(truthTable)) {
         float area = dynamicCalculateArea(entryIndex, cut.entryIdxs, cellDB, mapping);
         if (area < bestArea) {
           bestArea = area;

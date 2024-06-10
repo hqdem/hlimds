@@ -8,19 +8,19 @@
 
 #pragma once
 
+#include "gate/library/library.h"
 #include "gate/model/subnet.h"
-#include "gate/techmapper/library/cell_db.h"
 
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-namespace eda::gate::techmapper {
+namespace eda::gate::library {
 
 class LibertyChecker {
 public:
   virtual std::vector<std::string> checkLiberty(
-      std::unordered_map<kitty::dynamic_truth_table, std::vector<model::SubnetID>, DTTHash, DTTEqual> &ttSubnet) = 0;
+      std::unordered_map<kitty::dynamic_truth_table, std::vector<model::SubnetID>, DTTHash, DTTEqual> &truthTables) = 0;
 
 protected:
   inline std::pair<kitty::dynamic_truth_table, std::string>
@@ -31,4 +31,4 @@ protected:
   }
 };
 
-} // namespace eda::gate::techmapper
+} // namespace eda::gate::library

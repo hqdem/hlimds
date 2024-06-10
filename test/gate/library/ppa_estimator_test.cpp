@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
+#include "gate/library/ppa_estimator.h"
 #include "util/env.h"
 
 #include <readcells/ast.h>
@@ -19,7 +19,7 @@
 #include <filesystem>
 #include <iostream>
 
-namespace eda::gate::techmapper {
+namespace eda::gate::library {
 
 using path = std::filesystem::path;
 

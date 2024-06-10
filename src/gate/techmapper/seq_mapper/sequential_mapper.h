@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "gate/library/library.h"
 #include "gate/model/cell.h"
-#include "gate/techmapper/library/cell_db.h"
 #include "gate/techmapper/techmapper.h"
 
 #include <vector>
@@ -17,22 +17,24 @@
 namespace eda::gate::techmapper {
 
 class SequentialMapper {
+  using SCLibrary = library::SCLibrary;
   using CellID = model::CellID;
   using CellTypeID = model::CellTypeID;
+  using SCAttrs = library::SCAttrs;
   using Strategy = Techmapper::Strategy;
   using SubnetID = model::SubnetID;
 
 public:
-  explicit SequentialMapper(const CellDB *cellDB) {
+  explicit SequentialMapper(const SCLibrary *cellDB) {
     this->cellDB = cellDB;
   };
   CellTypeID map(const CellID sequenceCellID,
     const Strategy strategy = Strategy::AREA);
 
 private:
-  const CellDB *cellDB;
+  const SCLibrary *cellDB;
   SubnetID findSubnetID(
-    const std::vector<std::pair<SubnetID, Subnetattr>> &seqCells,
+    std::vector<std::pair<SubnetID, SCAttrs>> &seqCells,
     const Strategy strategy = Strategy::AREA);
 };
 

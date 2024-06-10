@@ -84,7 +84,6 @@ add_executable(${TEST_TARGET}
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/strategy/area_recovery_test.cpp
-  gate/techmapper/strategy/genetic_test.cpp
   gate/techmapper/strategy/net_mapping_test.cpp
   gate/techmapper/strategy/power_test.cpp
   gate/techmapper/strategy/simple_area_test.cpp

@@ -32,7 +32,6 @@ public:
     AREA,
     AREA_FLOW,
     DELAY,
-    GENETIC,
     POWER
   };
 

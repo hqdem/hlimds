@@ -72,7 +72,6 @@ add_library(Gate OBJECT
   techmapper/assembly.cpp
   techmapper/comb_mapper/func_mapper/func_mapper.cpp
   techmapper/comb_mapper/func_mapper/area_recovery/area_recovery.cpp
-  techmapper/comb_mapper/func_mapper/genetic/genetic_mapper.cpp
   techmapper/comb_mapper/func_mapper/power_map/power_map.cpp
   techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.cpp
   techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.cpp

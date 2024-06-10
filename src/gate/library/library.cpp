@@ -104,9 +104,9 @@ const SCAttrs &SCLibrary::getCellAttrs(const SubnetID id) const {
   return attributes.at(id);
 }
 
-std::vector<SubnetID> &SCLibrary::getPatterns() {
+std::vector<SubnetID> &SCLibrary::calcPatterns() {
   assert(attributes.size() != 0);
-  if (patterns.size() != 0) {
+  if (patterns.size() == 0) {
     for (const auto &pair: attributes) {
       patterns.push_back(pair.first);
     }

@@ -75,7 +75,7 @@ class SCLibrary final {
 
 public:
   SCLibrary();
-  std::vector<SubnetID> &getPatterns();
+  std::vector<SubnetID> &calcPatterns();
 
   std::vector<SubnetID> getSubnetID(const kitty::dynamic_truth_table &tt) const;
   const SCAttrs &getCellAttrs(const SubnetID id) const;

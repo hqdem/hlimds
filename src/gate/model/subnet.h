@@ -199,6 +199,9 @@ public:
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
 
+  /// Returns the i-th cell.
+  const Cell &getCell(size_t i) const;
+
   /// Returns the j-th link of the i-th cell.
   const Link &getLink(size_t i, size_t j) const;
   /// Returns the links of the i-th cell.
@@ -376,6 +379,7 @@ class SubnetBuilder final {
 
 public:
   using Cell = Subnet::Cell;
+  using Entry = Subnet::Entry;
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
 
@@ -450,6 +454,11 @@ public:
     assert(sessionStarted);
     desc[i].session = sessionID;
   }
+
+  /// Returns the number of inputs.
+  uint16_t getInNum() const { return nIn; }
+  /// Returns the number of outputs.
+  uint16_t getOutNum() const { return nOut; }
 
   /// Returns the current session id.
   /// Precondition: session is started.
@@ -633,11 +642,27 @@ public:
       const CellActionCallback *onEqualDepth = nullptr,
       const CellActionCallback *onGreaterDepth = nullptr);
 
-  /// Returns the effect of the replacement.
+  /// Replaces the given single-output fragment w/ the given SubnetBuilder (rhs).
+  /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
+  /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
+  void replace(
+      const SubnetBuilder &rhsBuilder,
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onEqualDepth = nullptr,
+      const CellActionCallback *onGreaterDepth = nullptr);
+
+  /// Returns the effect of the replacement with SubnetID rhs.
   Effect evaluateReplace(
       const SubnetID rhsID,
       std::unordered_map<size_t, size_t> rhsToLhs,
       const CellWeightProvider *weightProvider = nullptr,
+      const CellWeightModifier *weightModifier = nullptr) const;
+
+  /// Returns the effect of the replacement with SubnetBuilder rhs.
+  Effect evaluateReplace(
+      const SubnetBuilder &rhsBuilder,
+      std::unordered_map<size_t, size_t> rhsToLhs,
       const CellWeightModifier *weightModifier = nullptr) const;
 
   /// Replaces the given cell w/ the new one. Recursively deletes the cells
@@ -705,10 +730,52 @@ public:
   }
 
 private:
+  /// Template replace method.
+  template <typename RhsContainer, typename RhsIterable, typename RhsIt>
+  void replace(
+      const RhsContainer &rhsContainer,
+      const RhsIterable &rhsIterable,
+      const size_t rhsOutEntryID,
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
+      const CellWeightProvider *weightProvider = nullptr,
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onEqualDepth = nullptr,
+      const CellActionCallback *onGreaterDepth = nullptr);
+
+  /// Template replace evaluating method.
+  template <typename RhsContainer>
+  Effect evaluateReplace(
+      const RhsContainer &rhsContainer,
+      const size_t rhsOutEntryID,
+      std::unordered_map<size_t, size_t> rhsToLhs,
+      const CellWeightProvider *weightProvider = nullptr,
+      const CellWeightModifier *weightModifier = nullptr) const;
+
+  /// Template new entries evaluating method.
+  template <typename RhsContainer, typename RhsIterable, typename RhsIt>
+  Effect newEntriesEval(
+      const RhsContainer &rhsContainer,
+      const RhsIterable &rhsIterable,
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
+      std::unordered_set<size_t> &reusedLhsEntries,
+      const CellWeightProvider *weightProvider,
+      const CellWeightModifier *weightModifier) const;
+
   /// Returns the add-effect of the replacement:
   /// the number of cells (value of weight) added and new depth of the root.
   Effect newEntriesEval(
-      const SubnetID rhsID,
+      const Subnet &rhs,
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      std::unordered_set<size_t> &reusedLhsEntries,
+      const CellWeightProvider *weightProvider,
+      const CellWeightModifier *weightModifier) const;
+
+  /// Returns the add-effect of the replacement:
+  /// the number of cells (value of weight) added and new depth of the root.
+  Effect newEntriesEval(
+      const SubnetBuilder &rhsBuilder,
       std::unordered_map<size_t, size_t> &rhsToLhs,
       std::unordered_set<size_t> &reusedLhsEntries,
       const CellWeightProvider *weightProvider,

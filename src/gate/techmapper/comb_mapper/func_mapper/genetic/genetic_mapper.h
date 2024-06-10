@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
+#include "gate/library/ppa_estimator.h"
 #include "gate/techmapper/comb_mapper/func_mapper/func_mapper.h"
 
 #include <unordered_map>
@@ -44,8 +44,11 @@ struct Chromosome {
 };
 
 class GeneticMapper : public FuncMapper {
+  using SCLibrary = library::SCLibrary;
+  using SDC = library::SDC;
+
   void map(const SubnetID subnetID,
-           const CellDB &cellDB,
+           const SCLibrary &cellDB,
            const SDC &sdc,
            Mapping &mapping) override;
 
@@ -68,7 +71,7 @@ private:
 
   void startEvolution(const SDC &sdc);
 
-  void initialization(const SDC &sdc, const CellDB &cellDB);
+  void initialization(const SDC &sdc, const SCLibrary &cellDB);
 
   void reproduction();
   void mutation();

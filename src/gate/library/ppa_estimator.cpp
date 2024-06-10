@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
+#include "gate/library/ppa_estimator.h"
 #include "util/env.h"
 
 #include <readcells/ast.h>
@@ -21,17 +21,7 @@
 #include <iostream>
 #include <vector>
 
-namespace eda::gate::techmapper {
-
-using std::filesystem::exists;
-using std::filesystem::path;
-using std::getline;
-using std::ifstream;
-using std::max_element;
-using std::min_element;
-using std::stof;
-using std::string;
-using std::vector;
+namespace eda::gate::library {
 
 WLM::WLM() :
   wire_load_name("sky"),
@@ -44,14 +34,14 @@ WLM::WLM() :
   setWireLoadModel(wire_load_name);
 }
 
-WLM::WLM(string name) :
+WLM::WLM(const std::string &name) :
   r(fudge * 0.004), c(fudge * 0.2),
   slope(6.2836) {
 
   setWireLoadModel(name);
 }
 
-void WLM::setWireLoadModel(string wlm_name) {
+void WLM::setWireLoadModel(const std::string &wlm_name) {
   if ((wlm_name == "sky") || (wlm_name == "5k") ||
       (wlm_name == "3k")  || (wlm_name == "1k") ) {
 
@@ -124,11 +114,11 @@ void WLM::setWireLoadModel(string wlm_name) {
 }
 
 /// Getters
-float WLM::getLength(size_t& fanout_count) {
-  if ((fanout_count > 0) && (fanout_count < 6))
-    return fanout_length[fanout_count-1].second;
-  else if (fanout_count > 6)
-    return fanout_length[5].second + (fanout_count - 6) * slope;
+float WLM::getLength(const std::size_t &fanoutCount) const {
+  if ((fanoutCount > 0) && (fanoutCount < 6))
+    return fanout_length[fanoutCount-1].second;
+  else if (fanoutCount > 6)
+    return fanout_length[5].second + (fanoutCount - 6) * slope;
   else {
     std::cerr << "WLM: wrong name\n";
     assert(false);
@@ -137,26 +127,15 @@ float WLM::getLength(size_t& fanout_count) {
   return 0;
 }
 
-float WLM::getFanoutCap(size_t& fanout_count) {
-  if ((fanout_count > 0) && (fanout_count < 6))
-    return fanout_capacitance[fanout_count-1].second;
-  else if (fanout_count > 6) {
-    float length = fanout_length[5].second + (fanout_count - 6) * slope;
-    return length * c;
-  }
-  else {
-    std::cerr << "WLM: wrong name\n";
-    assert(false);
-  }
-
-  return 0;
+float WLM::getFanoutCap(const std::size_t &fanoutCount) const {
+  return getLength(fanoutCount) * c;
 }
 
-float WLM::getFanoutRes(size_t& fanout_count) {
-  if ((fanout_count > 0) && (fanout_count < 6))
-    return fanout_resistance[fanout_count-1].second;
-  else if (fanout_count > 6) {
-    float length = fanout_length[5].second + (fanout_count - 6) * slope;
+float WLM::getFanoutRes(const std::size_t &fanoutCount) const {
+  if ((fanoutCount > 0) && (fanoutCount < 6))
+    return fanout_resistance[fanoutCount-1].second;
+  else if (fanoutCount > 6) {
+    float length = fanout_length[5].second + (fanoutCount - 6) * slope;
     return length * r;
   }
   else {
@@ -225,7 +204,7 @@ void NLDM::pinTimingEstimator(const Timing &timing,
   //===-----------------------------------------------------------------===//
   //  Properties
   //===-----------------------------------------------------------------===//
-  vector<float> lutValues = {};
+  std::vector<float> lutValues;
   /// Values for interpolation
   float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
 
@@ -350,7 +329,7 @@ void NLDM::pinFTimingEstimator(const Timing &timing,
   //===-----------------------------------------------------------------===//
   //  Properties
   //===-----------------------------------------------------------------===//
-  vector<float> lutValues = {}, result = {};
+  std::vector<float> lutValues, result;
   //===-----------------------------------------------------------------===//
   for (size_t i = 0; i < 4; ++i) {
     if (lut[i] != nullptr) {
@@ -380,7 +359,7 @@ void NLDM::pinITimingEstimator(const Timing &timing,
   //===-----------------------------------------------------------------===//
   //  Properties
   //===-----------------------------------------------------------------===//
-  vector<float> lutValues = {}, result = {};
+  std::vector<float> lutValues, result;
   float x1 = 0, x2 = 0,
         y1 = 0, y2 = 0;
   bool iterFlag = false;
@@ -391,8 +370,9 @@ void NLDM::pinITimingEstimator(const Timing &timing,
       x1 = it.values[context.index.back1], x2 = it.values[context.index.front1];
       iterFlag = true;
     }
-    else
+    else {
       y1 = it.values[context.index.back2], y2 = it.values[context.index.front2];
+    }
   }
   //===-----------------------------------------------------------------===//
   bool tmpInterpolation = context.interpolate; // TODO
@@ -414,15 +394,14 @@ void NLDM::pinITimingEstimator(const Timing &timing,
   context.delayValues = result;
 }
 
-void NLDM::delayEstimation(const string &cellType,
+void NLDM::delayEstimation(const std::string &cellType,
                            const float inputNetTransition,
                            const float totalOutputNetCapacitance,
                            int &timingSense) {
   //===---------------------------------------------------------------===//
   //  Properties
   //===---------------------------------------------------------------===//
-  vector<float> cfall = {}, crise = {},
-                tfall = {}, trise = {};
+  std::vector<float> cfall, crise, tfall, trise;
   bool readyFlag = false;
   capacitance = 0;
   int newTimingSense = 0;
@@ -478,4 +457,4 @@ void NLDM::delayEstimation(const string &cellType,
   timingSense = newTimingSense;
 }
 
-} // namespace eda::gate::techmapper
+} // namespace eda::gate::library

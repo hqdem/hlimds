@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/library/sc.h"
-#include "gate/techmapper/library/liberty_manager.h"
+#include "gate/library/liberty_manager.h"
+#include "gate/library/library.h"
 #include "test_util.h"
 #include "util/logging.h"
 #include "util/env.h"
@@ -17,22 +17,20 @@
 #include <vector>
 
 using path = std::filesystem::path;
-using namespace eda::gate::techmapper;
-using namespace eda::gate::model;
 
 const path home = eda::env::getHomePath();
 const path techLibPath = home /
                      "test/data/gate/techmapper";
 
-namespace eda::gate::techmapper {
+namespace eda::gate::library {
 bool checkLibParser(std::string libertyPath) {
   LibertyManager::get().loadLibrary(libertyPath);
   std::cout << "Loaded Liberty: " << libertyPath << std::endl;
 
-  SC standardCells;
+  SCLibrary standardCells; // TODO
 
 #ifdef UTOPIA_DEBUG
-  for(const auto& cell : standardCells.getCombCellTypeID()) {
+  for(const auto& cell : standardCells.getCombCells()) {
     std::cout << CellType::get(cell).getName() << std::endl;
   }
 #endif // UTOPIA_DEBUG

@@ -15,7 +15,7 @@ namespace eda::gate::techmapper {
 using Subnet = model::Subnet;
 using SwitchActivity = analyzer::SwitchActivity;
 using Entry = Subnet::Entry;
-using ArrayEntry = model::Array<Entry>;
+using EntryArray = model::Array<Entry>;
 using Cut = optimizer::CutExtractor::Cut;
 
 double PowerMap::getSwitching(const Cut &cut) const {
@@ -108,12 +108,12 @@ void PowerMap::saveMappingItem(
 }
 
 double PowerMap::getCellArea(
-         const SubnetID &techCellSubnetId, const CellDB &cellDB) const {
-  return cellDB.getSubnetAttrBySubnetID(techCellSubnetId).area;
+         const SubnetID &techCellSubnetId, const SCLibrary &cellDB) const {
+  return cellDB.getCellAttrs(techCellSubnetId).area;
 }
 
 void PowerMap::findCutMinimizingDepth(
-       const EntryIndex entryIndex, const CellDB &cellDB, Mapping &mapping) {
+       const EntryIndex entryIndex, const SCLibrary &cellDB, Mapping &mapping) {
   SubnetID techSubnetId = 0;
 
   Cut bestCut = Cut();
@@ -138,7 +138,7 @@ void PowerMap::findCutMinimizingDepth(
 }
 
 void PowerMap::depthOrientedMap(
-       const CellDB &cellDB, Mapping &mapping) {
+       const SCLibrary &cellDB, Mapping &mapping) {
   const auto &subnet =  Subnet::get(subnetID);
   for (uint64_t entryIndex = subnet.getInNum();
    entryIndex < entries->size() - subnet.getOutNum(); entryIndex++) {
@@ -203,21 +203,21 @@ uint32_t PowerMap::findLatestPoArivalTime(const Mapping &mapping) const {
 
 double PowerMap::getCellPower(const Cut &cut,
                               const SubnetID &techCellSubnetId,
-                              const CellDB &cellDB) const {
-  auto currentAttr = cellDB.getSubnetAttrBySubnetID(techCellSubnetId);
+                              const SCLibrary &cellDB) const {
+  auto currentAttr = cellDB.getCellAttrs(techCellSubnetId);
   float cellPower = 0;
   int i = 0;
   for (const auto &leaf : cut.entryIdxs) {
-    cellPower += std::abs(currentAttr.pinsPower[i].rise_power) * 
+    cellPower += std::abs(currentAttr.pinPower[i].risePower) * 
         switchActivity.getSwitchesOn(leaf);
-    cellPower += std::abs(currentAttr.pinsPower[i].fall_power) *
+    cellPower += std::abs(currentAttr.pinPower[i].fallPower) *
         switchActivity.getSwitchesOff(leaf);
     i++;
   }
   return cellPower;
 };
 
-SubnetID PowerMap::getBestTechCellSubnetId(const Cut &cut, const CellDB &cellDB) {
+SubnetID PowerMap::getBestTechCellSubnetId(const Cut &cut, const SCLibrary &cellDB) {
   SubnetID bestTechCellSubnetID;
   const auto techIdsList = getTechIdsList(cut, cellDB);
   if (techIdsList.size() == 0) return 0;
@@ -233,7 +233,7 @@ SubnetID PowerMap::getBestTechCellSubnetId(const Cut &cut, const CellDB &cellDB)
   return bestTechCellSubnetID;
 }
 
-SubnetID PowerMap::getBestAreaTechCellSubnetId(const Cut &cut, const CellDB &cellDB) {
+SubnetID PowerMap::getBestAreaTechCellSubnetId(const Cut &cut, const SCLibrary &cellDB) {
   SubnetID bestTechCellSubnetID;
   const auto techIdsList = getTechIdsList(cut, cellDB);
   if (techIdsList.size() == 0) return 0;
@@ -249,7 +249,7 @@ SubnetID PowerMap::getBestAreaTechCellSubnetId(const Cut &cut, const CellDB &cel
   return bestTechCellSubnetID;
 }
 
-void PowerMap::globalSwitchAreaRecovery(const CellDB &cellDB, Mapping &mapping) {
+void PowerMap::globalSwitchAreaRecovery(const SCLibrary &cellDB, Mapping &mapping) {
   const auto &subnet =  Subnet::get(subnetID);
   for (uint64_t entryIndex = subnet.getInNum();
    entryIndex < entries->size() - subnet.getOutNum(); entryIndex++) {
@@ -364,7 +364,7 @@ double PowerMap::exactSwitch(
 }
 
 void PowerMap::localSwitchAreaRecovery(
-       const CellDB &cellDB, Mapping &mapping) {
+       const SCLibrary &cellDB, Mapping &mapping) {
   const auto &subnet =  Subnet::get(subnetID);
   for (uint64_t entryIndex = subnet.getInNum();
    entryIndex < entries->size() - subnet.getOutNum(); entryIndex++) {
@@ -421,7 +421,7 @@ PowerMap::PowerMap() {
 }
 
 void PowerMap::map(
-       const SubnetID subnetID, const CellDB &cellDB,
+       const SubnetID subnetID, const SCLibrary &cellDB,
        const SDC &sdc, Mapping &mapping) {
   this->subnetID = subnetID;
   cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);
@@ -447,11 +447,11 @@ void PowerMap::map(
 }
 
 std::vector<SubnetID> PowerMap::getTechIdsList(
-                        const Cut &cut, const CellDB &cellDB) {
+                        const Cut &cut, const SCLibrary &cellDB) {
   SubnetID coneSubnetID = coneBuilder->getCone(cut).subnetID;
   std::vector<SubnetID> cellList;
   for(const auto &truthTable : eda::gate::model::evaluate(Subnet::get(coneSubnetID))){  
-    for(const auto &id : cellDB.getSubnetIDsByTT(truthTable)){
+    for(const auto &id : cellDB.getSubnetID(truthTable)){
       cellList.push_back(id);
     }
   }
@@ -461,7 +461,7 @@ std::vector<SubnetID> PowerMap::getTechIdsList(
 
 void PowerMap::init(Mapping &mapping) {
   const Subnet &subnet = Subnet::get(this->subnetID);
-  entries = new ArrayEntry(subnet.getEntries());
+  entries = new EntryArray(subnet.getEntries());
   metrics.resize(entries->size());
   coneBuilder = new eda::gate::optimizer::ConeBuilder(&subnet);
 

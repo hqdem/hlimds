@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/library/sdc_manager.h"
 #include "gate/model/printer/printer.h"
 #include "gate/parser/graphml_parser.h"
 #include "gate/premapper/aigmapper.h"
@@ -42,13 +43,12 @@ namespace eda::gate::techmapper {
     // TODO: it should be an option
     const std::filesystem::path techLib = eda::env::getHomePath() /
       "test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
-
-    // TODO: it should be an option too
-    SDC sdc{100000000, 10000000000};
+    const std::filesystem::path sdcPath = eda::env::getHomePath() /
+      "test/data/gate/techmapper/test.sdc";
 
     Techmapper techmapper;
     techmapper.setStrategy(config.strategy);
-    techmapper.setSDC(sdc);
+    techmapper.setSDC(sdcPath);
     techmapper.setLibrary(techLib);
 
     auto startTime = std::chrono::high_resolution_clock::now();

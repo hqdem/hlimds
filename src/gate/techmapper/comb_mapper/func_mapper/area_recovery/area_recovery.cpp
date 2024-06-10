@@ -11,12 +11,12 @@
 namespace eda::gate::techmapper {
 
 float AreaRecovery::getMinAreaAndCell(
-        SubnetID &cellTechLib, Cut &cut, const CellDB &cellDB) const {
+        SubnetID &cellTechLib, Cut &cut, const SCLibrary &cellDB) const {
   ConeBuilder coneBuilder(&Subnet::get(this->subnetID));
   SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
   const auto truthTable =
       eda::gate::model::evaluate(Subnet::get(coneSubnetID))[0];
-  std::vector<SubnetID> cellList = cellDB.getSubnetIDsByTT(truthTable);
+  std::vector<SubnetID> cellList = cellDB.getSubnetID(truthTable);
   if (cellList.size() == 0) {
     return 0;
   }
@@ -24,7 +24,7 @@ float AreaRecovery::getMinAreaAndCell(
   float minCellArea = 0;
   bool initedMinArea = false;
   for (size_t cellIndex = 0; cellIndex < cellList.size(); cellIndex++) {
-    Subnetattr attr = cellDB.getSubnetAttrBySubnetID(cellList[cellIndex]);
+    const auto &attr = cellDB.getCellAttrs(cellList[cellIndex]);
     if (attr.area < minCellArea || !initedMinArea) {
       minCellArea = attr.area;
       initedMinArea = true;
@@ -91,7 +91,7 @@ AreaRecovery::calcDepth(std::vector<double> &depth,
 }
 
 void AreaRecovery::map(
-       const SubnetID subnetID, const CellDB &cellDB,
+       const SubnetID subnetID, const SCLibrary &cellDB,
        const SDC &sdc, Mapping &mapping) {
   this->subnetID = subnetID;
   cutExtractor = new optimizer::CutExtractor(&model::Subnet::get(subnetID), 6);

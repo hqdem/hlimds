@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "gate/library/library.h"
+#include "gate/library/sdc_manager.h"
 #include "gate/model/net.h"
 #include "gate/optimizer/subnet_transformer.h"
 #include "gate/techmapper/comb_mapper/comb_mapper.h"
-#include "gate/techmapper/library/cell_db.h"
-#include "gate/techmapper/library/sdc.h"
 
 #include <filesystem>
 
@@ -22,6 +22,8 @@ class Techmapper {
   using CellID = model::CellID;
   using CellTypeID = model::CellTypeID;
   using NetID = model::NetID;
+  using SCLibrary = library::SCLibrary;
+  using SDC = library::SDC;
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetID = model::SubnetID;
 
@@ -51,14 +53,14 @@ public:
   CellTypeID techmap(const CellID sequenceCell,
                      const Strategy strategy = Strategy::AREA);
 
-  void setSDC(const SDC &sdc) { this->sdc = &sdc; }
+  void setSDC(const std::filesystem::path &sdcPath);
   void setStrategy(const Strategy strategy);
   void setLibrary(const std::filesystem::path &libPath);
 
 private:
   void createCellDB();
   const SDC *sdc = nullptr;
-  const CellDB *cellDB = nullptr;
+  const SCLibrary *cellDB = nullptr;
   CombMapper *mapper = nullptr;
   NetID seqTechmap(const NetID netID);
 };

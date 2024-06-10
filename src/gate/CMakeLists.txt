@@ -26,6 +26,9 @@ add_library(Gate OBJECT
   model/utils/subnet_truth_table.cpp
   mutator/mutator.cpp
   mutator/mutator_transformer.cpp
+  library/library.cpp
+  library/ppa_estimator.cpp
+  library/check_lib/aig/check_lib_for_aig.cpp
   optimizer/area_resynthesizer.cpp
   optimizer/associative_balancer.cpp
   optimizer/cone_builder.cpp
@@ -69,14 +72,10 @@ add_library(Gate OBJECT
   techmapper/assembly.cpp
   techmapper/comb_mapper/func_mapper/func_mapper.cpp
   techmapper/comb_mapper/func_mapper/area_recovery/area_recovery.cpp
-  techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.cpp
   techmapper/comb_mapper/func_mapper/genetic/genetic_mapper.cpp
   techmapper/comb_mapper/func_mapper/power_map/power_map.cpp
   techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.cpp
   techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.cpp
-        techmapper/library/sc.cpp
-  techmapper/library/cell_db.cpp
-  techmapper/library/check_lib/aig/check_lib_for_aig.cpp
   techmapper/seq_mapper/sequential_mapper.cpp
   techmapper/techmapper.cpp
   techmapper/techmapper_wrapper.cpp

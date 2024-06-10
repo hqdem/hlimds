@@ -12,20 +12,21 @@
 
 namespace eda::gate::techmapper {
 
-using Subnet = model::Subnet;
-using CellDB = techmapper::CellDB;
-using Cut = optimizer::CutExtractor::Cut;
-using ConeBuilder = optimizer::ConeBuilder;
-using Cone = optimizer::ConeBuilder::Cone;
-
 class AreaRecovery : public FuncMapper {
+  using SDC = library::SDC;
+  using SCLibrary = library::SCLibrary;
+  using Subnet = model::Subnet;
+  using Cut = optimizer::CutExtractor::Cut;
+  using ConeBuilder = optimizer::ConeBuilder;
+  using Cone = optimizer::ConeBuilder::Cone;
+
   void map(const SubnetID subnetID,
-           const CellDB &cellDB,
+           const SCLibrary &cellDB,
            const SDC &sdc,
            Mapping &mapping) override;
 
   float getMinAreaAndCell(SubnetID &cellTechLib, Cut &cut,
-                          const CellDB &cellDB) const;
+                          const SCLibrary &cellDB) const;
 
   double calcAreaFlow(Cut &cut, std::vector<double> &representAreaFlow,
                       eda::gate::model::Array<Subnet::Entry> &entries,

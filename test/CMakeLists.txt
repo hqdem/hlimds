@@ -51,6 +51,8 @@ add_executable(${TEST_TARGET}
   gate/model/utils/bdd_dnf_test.cpp
   gate/model/utils/subnet_truth_table_test.cpp
   gate/mutator/mutator_test.cpp
+  gate/library/ppa_estimator_test.cpp
+  gate/library/wlm_test.cpp
   gate/parser/graphml_test_utils.cpp
   gate/parser/graphml_parser_test.cpp
   gate/premapper/aigmapper_test.cpp
@@ -82,8 +84,6 @@ add_executable(${TEST_TARGET}
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/strategy/area_recovery_test.cpp
-  gate/techmapper/strategy/delay_estmt/delay_test.cpp
-  gate/techmapper/strategy/delay_estmt/wlm_test.cpp
   gate/techmapper/strategy/genetic_test.cpp
   gate/techmapper/strategy/net_mapping_test.cpp
   gate/techmapper/strategy/power_test.cpp

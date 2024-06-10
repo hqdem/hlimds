@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/comb_mapper/func_mapper/delay_estmt/delay_estmt.h"
+#include "gate/library/ppa_estimator.h"
 #include "util/env.h"
 
 #include <readcells/ast.h>
@@ -19,7 +19,7 @@
 #include <filesystem>
 #include <iostream>
 
-namespace eda::gate::techmapper {
+namespace eda::gate::library {
 
 using path = std::filesystem::path;
 
@@ -39,9 +39,9 @@ TEST(DelayEstmt, wlmTest) {
   fclose(file);
 
   DelayEstimator d1(lib);
-  size_t fanout_count = 1;
-  bool f1 = (d1.wlm.getLength(fanout_count) == 23.274599075317383);
-  bool f2 = (d1.wlm.getFanoutCap(fanout_count) == 0.0046549197286367416);
+  size_t fanoutCount = 1;
+  bool f1 = (d1.wlm.getLength(fanoutCount) == 23.274599075317383);
+  bool f2 = (d1.wlm.getFanoutCap(fanoutCount) == 0.0046549197286367416);
 
   EXPECT_TRUE((f1 == 1) && (f2 == 1));
 

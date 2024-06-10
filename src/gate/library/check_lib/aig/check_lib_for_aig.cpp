@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/techmapper/library/check_lib/aig/check_lib_for_aig.h"
+#include "gate/library/check_lib/aig/check_lib_for_aig.h"
 
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-namespace eda::gate::techmapper {
+namespace eda::gate::library {
 
 std::pair<kitty::dynamic_truth_table, std::string> AIGCheckerLiberty::andTT() {
   return create_tt("1000", "A & B");
@@ -38,17 +38,17 @@ std::vector<std::string> AIGCheckerLiberty::checkLiberty(
     std::unordered_map<kitty::dynamic_truth_table,
     std::vector<model::SubnetID>,
     DTTHash,
-    DTTEqual> &ttSubnet) {
+    DTTEqual> &truthTables) {
   std::vector<std::pair<kitty::dynamic_truth_table, std::string>> expressions =
       {andTT(), invAndTT(), andInvTT(), invAndInvTT(), invTT()};
   std::vector<std::string> missing;
 
   for (const auto& [expr, name] : expressions) {
-    if (ttSubnet.find(expr) == ttSubnet.end()) {
+    if (truthTables.find(expr) == truthTables.end()) {
       missing.push_back(name);
     }
   }
   return missing;
 };
 
-} // namespace eda::gate::techmapper
+} // namespace eda::gate::library

@@ -13,24 +13,25 @@
 #include <string>
 #include <vector>
 
-namespace eda::gate::techmapper {
+namespace eda::gate::library {
 
 //===---------------------------------------------------------------------===//
 // Structures, which contain data from LookUp-Tables
 //===---------------------------------------------------------------------===//
-  /// Indexes from LUT
-  struct Ind {
-    size_t back1 = 0, front1 = 0,
-          back2 = 0, front2 = 0;
-    int ind1 = -1, ind2 = -1;
-  };
-  /// Struct contains timingInfo from LUTS
-  struct DataTiming {
-    std::vector<float> delayValues = {};
-    size_t variablesCount = 7;
-    bool interpolate = true;
-    Ind index;
-  };
+/// Indexes from LUT
+struct Ind {
+  std::size_t back1 = 0, front1 = 0,
+              back2 = 0, front2 = 0;
+  int ind1 = -1, ind2 = -1;
+};
+
+/// Struct contains timingInfo from LUTS
+struct DataTiming {
+  std::vector<float> delayValues = {};
+  std::size_t variablesCount = 7;
+  bool interpolate = true;
+  Ind index;
+};
 
 //===---------------------------------------------------------------------===//
 // NLDM
@@ -48,19 +49,19 @@ public:
   virtual ~NLDM() = default;
 
   /// Getters
-  float getCellDelay() {
+  float getCellDelay() const {
     return delay;
   };
 
-  float getCellCap() {
+  float getCellCap() const {
     return capacitance;
   };
 
-  float getSlew() {
+  float getSlew() const {
     return slew;
   };
 
-  int getSense() {
+  int getSense() const {
     return timingSense;
   };
 
@@ -127,16 +128,16 @@ class WLM {
 
 public:
   WLM();
-  WLM(std::string name);
+  WLM(const std::string &name);
   virtual ~WLM() = default;
 
   // Setter
-  void setWireLoadModel(std::string wlm_name);
+  void setWireLoadModel(const std::string &wlm_name);
 
   // Getters
-  float getLength(size_t& fanout_count);
-  float getFanoutCap(size_t& fanout_count);
-  float getFanoutRes(size_t& fanout_count);
+  float getLength(const std::size_t& fanoutCount) const;
+  float getFanoutCap(const std::size_t& fanoutCount) const;
+  float getFanoutRes(const std::size_t& fanoutCount) const;
 
   // Properties
 private:
@@ -159,22 +160,21 @@ private:
 
   // Resistance, Capacitance, extrapolation slope
   float r, c, slope;
-  std::pair<size_t, float> fanout_length[6];
-  std::pair<size_t, float> fanout_resistance[6];
-  std::pair<size_t, float> fanout_capacitance[6];
+  std::pair<std::size_t, float> fanout_length[6];
+  std::pair<std::size_t, float> fanout_resistance[6];
+  std::pair<std::size_t, float> fanout_capacitance[6];
 };
 
 //===---------------------------------------------------------------------===//
 // Delay estimator
 //===---------------------------------------------------------------------===//
-class DelayEstimator{
+class DelayEstimator {
 public:
-  DelayEstimator(Library &library) :
-        nldm(library) {};
+  DelayEstimator(Library &library) : nldm(library) {};
   virtual ~DelayEstimator() = default;
 
   NLDM nldm;
   WLM wlm;
 };
 
-} // namespace eda::gate::techmapper
+} // namespace eda::gate::library

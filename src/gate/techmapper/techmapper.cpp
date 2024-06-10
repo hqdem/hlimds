@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/library/liberty_manager.h"
 #include "gate/model/celltype.h"
 #include "gate/model/decomposer/net_decomposer.h"
 #include "gate/techmapper/assembly.h"
@@ -14,8 +15,6 @@
 #include "gate/techmapper/comb_mapper/func_mapper/power_map/power_map.h"
 #include "gate/techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.h"
 #include "gate/techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.h"
-#include "gate/techmapper/library/liberty_manager.h"
-#include "gate/techmapper/library/sc.h"
 #include "gate/techmapper/seq_mapper/sequential_mapper.h"
 #include "gate/techmapper/techmapper.h"
 
@@ -25,12 +24,13 @@
 namespace eda::gate::techmapper {
 
 using Cell = model::Cell;
-using CellID = model::CellID;
 using CellTypeID = model::CellTypeID;
+using LibertyManager = library::LibertyManager;
 using Net = model::Net;
 using NetBuilder = model::NetBuilder;
 using NetDecomposer = model::NetDecomposer;
 using NetID = model::NetID;
+using SDCManager = library::SDCManager;
 using SubnetID = model::SubnetID;
 
 optimizer::SubnetBuilderPtr Techmapper::make(const SubnetID subnetID) const {
@@ -38,6 +38,18 @@ optimizer::SubnetBuilderPtr Techmapper::make(const SubnetID subnetID) const {
   techmap(subnetID, builder);
   auto builderPtr = std::make_shared<SubnetBuilder>(builder);
   return builderPtr;
+}
+
+void Techmapper::setSDC(const std::filesystem::path &sdcPath) {
+  // TODO
+  if (sdcPath == "") {
+    std::cout << "Warning: SDC path is empty." << std::endl;
+  } else {
+    SDCManager::get().loadSDC(sdcPath);
+    std::cout << "Loaded SDC file: " << sdcPath << std::endl;
+  }
+
+  sdc = &SDCManager::get().getSDC();
 }
 
 void Techmapper::setLibrary(const std::filesystem::path &libPath) {
@@ -48,13 +60,10 @@ void Techmapper::setLibrary(const std::filesystem::path &libPath) {
     std::cout << "Loaded Liberty file: " << libPath << std::endl;
   }
 
-  SC standardCell;
-
   if (cellDB != nullptr) {
     delete cellDB;
   }
-  cellDB = new CellDB(standardCell.getCombCellTypeID(),
-                      standardCell.getSeqCellTypeID());
+  cellDB = new SCLibrary();
 }
 
 void Techmapper::setStrategy(const Strategy strategy) {

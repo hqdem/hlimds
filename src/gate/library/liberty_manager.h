@@ -20,12 +20,14 @@
 #include <memory.h>
 #include <string>
 
-namespace eda::gate::techmapper {
+namespace eda::gate::library {
 
 class LibertyManager : public util::Singleton<LibertyManager> {
+  using path = std::filesystem::path;
+
 public:
-  bool loadLibrary(const std::string& filename) {
-    name = filename;
+  bool loadLibrary(const path &filename) {
+    this->filename = filename;
     file = fopen(filename.c_str(), "rb");
     ast = tokParser.parseLibrary(file,
                                  filename.c_str());
@@ -45,7 +47,7 @@ public:
   }
 
   const std::string getLibraryName() {
-    return name;
+    return filename;
   }
 
   bool isInitialized() {
@@ -58,10 +60,10 @@ private:
   Library library;
   TokenParser tokParser;
   bool isLoaded = false;
-  std::string name;
+  path filename;
 
   LibertyManager() : Singleton() {}
   friend class Singleton<LibertyManager>;
 };
 
-} // namespace eda::gate::techmapper
+} // namespace eda::gate::library

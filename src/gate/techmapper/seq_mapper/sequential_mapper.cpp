@@ -40,21 +40,19 @@ CellTypeID SequentialMapper::map(const CellID cellID,
 }
 
 SubnetID SequentialMapper::findSubnetID(
-    const std::vector<std::pair<SubnetID, Subnetattr>> &cells,
+    std::vector<std::pair<SubnetID, SCAttrs>> &cells,
     const Strategy strategy) {
-  std::pair<SubnetID, Subnetattr> cell;
-  switch (strategy) {
-    case Strategy::AREA:
-        // Selecting cell with the min area.
-        cell = *std::min_element(cells.begin(), cells.end(),
-                                 [](const auto &lhs, const auto &rhs) {
-                                   return lhs.second.area < rhs.second.area;});
-        
-        return cell.first;
+  if (strategy == Strategy::AREA) {
+    // Selecting cell with the min area.
+    const auto cell =
+      std::min_element(cells.begin(), cells.end(),
+        [](const auto &lhs, const auto &rhs) {
+        return lhs.second.area < rhs.second.area;});
+    return cell->first;
       /* More strategies can be added here */
-    default:
-      assert(false && "Unsupported strategy");
-      return SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
+  } else {
+    assert(false && "Unsupported strategy");
+    return SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
   }
 }
 

@@ -10,6 +10,7 @@
 
 #include "gate/optimizer/criterion/criterion.h"
 
+#include <cassert>
 #include <set>
 
 namespace eda::gate::optimizer {
@@ -52,7 +53,7 @@ public:
   bool hasFeasible() const { return !feasible.empty(); }
 
   /// Returns the best solution w.r.t. to the given criterion.
-  T getBest() const { return feasible.begin()->solution; }
+  const Solution &getBest() const { return *feasible.begin(); }
 
 private:
   const Criterion &criterion;

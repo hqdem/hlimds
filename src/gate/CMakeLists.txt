@@ -76,6 +76,7 @@ add_library(Gate OBJECT
   techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.cpp
   techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.cpp
   techmapper/seq_mapper/sequential_mapper.cpp
+  techmapper/subnet_techmapper.cpp
   techmapper/techmapper.cpp
   techmapper/techmapper_wrapper.cpp
   translator/fir/fir_model2.cpp

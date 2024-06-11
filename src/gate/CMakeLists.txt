@@ -60,11 +60,11 @@ add_library(Gate OBJECT
   synthesizer/synthesizer.cpp
   synthesizer/synthesizer_add.cpp
   synthesizer/synthesizer_bit.cpp
-  synthesizer/synthesizer_neg.cpp
   synthesizer/synthesizer_cmp.cpp
   synthesizer/synthesizer_div.cpp
   synthesizer/synthesizer_mul.cpp
   synthesizer/synthesizer_mux.cpp
+  synthesizer/synthesizer_neg.cpp
   synthesizer/synthesizer_red.cpp
   techmapper/assembly.cpp
   techmapper/comb_mapper/func_mapper/func_mapper.cpp

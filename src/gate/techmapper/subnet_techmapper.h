@@ -38,7 +38,7 @@ public:
 
   using CutProvider =
       std::function<Cuts(const model::Subnet &, const size_t)>;
-  using CellTypeProvider =
+  using MatchFinder =
       std::function<std::vector<Match>(const model::Subnet &, const Cut &)>;
   using CellTypeEstimator =
       std::function<optimizer::CostVector(const model::CellTypeID)>;
@@ -48,14 +48,14 @@ public:
   SubnetTechMapper(const std::string &name,
                    const optimizer::Criterion &criterion,
                    const CutProvider cutProvider,
-                   const CellTypeProvider cellTypeProvider,
+                   const MatchFinder matchFinder,
                    const CellTypeEstimator cellTypeEstimator,
                    const CostVectorAggregator flowCostAggregator,
                    const CostVectorAggregator exactCostAggregator):
       optimizer::SubnetTransformer(name),
       criterion(criterion),
       cutProvider(cutProvider),
-      cellTypeProvider(cellTypeProvider),
+      matchFinder(matchFinder),
       cellTypeEstimator(cellTypeEstimator),
       flowCostAggregator(flowCostAggregator),
       exactCostAggregator(exactCostAggregator) {}
@@ -66,7 +66,7 @@ public:
 private:
   const optimizer::Criterion &criterion;
   const CutProvider cutProvider;
-  const CellTypeProvider cellTypeProvider;
+  const MatchFinder matchFinder;
   const CellTypeEstimator cellTypeEstimator;
   const CostVectorAggregator flowCostAggregator;
   const CostVectorAggregator exactCostAggregator;

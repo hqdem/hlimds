@@ -93,15 +93,25 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
   const auto &subnet = model::Subnet::get(subnetID);
   const auto &entries = subnet.getEntries();
 
-  // Partial solutions for subnet cells.
+  // Partial solutions for the subnet cells.
   SubnetSpace space(subnet.size());
 
   for (size_t i = 0; i < entries.size(); ++i) {
     space[i] = std::make_unique<CellSpace>(criterion);
 
-    // Ignore the input cells.
+    // Handle the input cells.
     if (i < subnet.getInNum()) {
-      continue; // TODO:
+      const Match match{model::getCellTypeID(model::IN), {}, false};
+      space[i]->add(match, optimizer::ZeroVector);
+      continue;
+    }
+
+    // Handle the output cells.
+    if (i >= subnet.size() - subnet.getOutNum()) {
+      const auto link = subnet.getLink(i, 0);
+      const Match match{model::getCellTypeID(model::OUT), {link}, false};
+      space[i]->add(match, space[link.idx]->getBest().vector);
+      continue;
     }
 
     const auto &cell = entries[i].cell;
@@ -114,10 +124,10 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
         continue; // TODO: soften checks?
       }
 
-      const auto matches = cellTypeProvider(subnet, cut); // FIXME: Rename
+      const auto matches = matchFinder(subnet, cut); // FIXME
 
       for (const auto &match : matches) {
-        const auto cellCostVector = cellTypeEstimator(match.typeID);
+        const auto cellCostVector = cellTypeEstimator(match.typeID); // FIXME: Take context into account.
         const auto costVector = exactCostAggregator({cutCostVector, cellCostVector}); // TODO: always +?
 
         if (!criterion.check(costVector)) {

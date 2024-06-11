@@ -28,6 +28,8 @@ enum Indicator {
   MIXED = -1
 };
 
+extern CostVector ZeroVector;
+
 inline CostFunction getCostFunction(const Indicator indicator) {
   return [indicator](const CostVector &vector) {
     return vector[indicator];

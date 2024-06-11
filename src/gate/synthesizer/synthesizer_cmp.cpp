@@ -45,7 +45,7 @@ generatePropagate(const model::Subnet::LinkList &inputsA,
 }
 
 // (more & signB) | (more & ~signA) | (signB & signA)
-model::Subnet::Link generateSignedComparsion(const model::Subnet::Link &more,
+model::Subnet::Link generateSignedComparison(const model::Subnet::Link &more,
                                              const model::Subnet::Link &signA,
                                              const model::Subnet::Link &signB,
                                              model::SubnetBuilder &builder) {
@@ -58,7 +58,7 @@ model::Subnet::Link generateSignedComparsion(const model::Subnet::Link &more,
 }
 
 std::pair<model::Subnet::Link, model::Subnet::LinkList>
-generateComparsion(model::Subnet::LinkList inputsA,
+generateComparison(model::Subnet::LinkList inputsA,
                    model::Subnet::LinkList inputsB,
                    model::SubnetBuilder &builder, bool useEquality = false) {
   int32_t minSize = inputsA.size(), maxSize = inputsB.size();
@@ -201,7 +201,7 @@ model::SubnetID synthNtU(const model::CellTypeAttr &attr, bool makeSwap) {
     std::swap(inputsForA, inputsForB);
   }
 
-  builder.addOutput(generateComparsion(inputsForA, inputsForB, builder).first);
+  builder.addOutput(generateComparison(inputsForA, inputsForB, builder).first);
 
   return builder.make();
 }
@@ -226,9 +226,9 @@ model::SubnetID synthNtS(const model::CellTypeAttr &attr, bool makeSwap) {
       std::swap(signA, signB);
     }
 
-    const auto more = generateComparsion(inputsForA, inputsForB, builder).first;
+    const auto more = generateComparison(inputsForA, inputsForB, builder).first;
 
-    builder.addOutput(generateSignedComparsion(more, signA, signB, builder));
+    builder.addOutput(generateSignedComparison(more, signA, signB, builder));
 
     return builder.make();
   }
@@ -248,7 +248,7 @@ model::SubnetID synthNteU(const model::CellTypeAttr &attr, bool makeSwap) {
   }
 
   auto [more, propagate] =
-      generateComparsion(inputsForA, inputsForB, builder, true);
+      generateComparison(inputsForA, inputsForB, builder, true);
 
   const auto equal =
       propagate.size() > 1
@@ -281,7 +281,7 @@ model::SubnetID synthNteS(const model::CellTypeAttr &attr, bool makeSwap) {
     }
 
     auto [more, propagate] =
-        generateComparsion(inputsForA, inputsForB, builder, true);
+        generateComparison(inputsForA, inputsForB, builder, true);
 
     // add xor for signs for adding them to other xor-s, because "xor" for signs
     // has not been created (signs where removed)
@@ -292,7 +292,7 @@ model::SubnetID synthNteS(const model::CellTypeAttr &attr, bool makeSwap) {
             ? builder.addCellTree(model::CellSymbol::AND, propagate, 2)
             : propagate.back();
 
-    more = generateSignedComparsion(more, signA, signB, builder);
+    more = generateSignedComparison(more, signA, signB, builder);
 
     builder.addOutput(builder.addCell(model::CellSymbol::OR, equal, more));
 

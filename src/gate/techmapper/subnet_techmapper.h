@@ -27,25 +27,26 @@ namespace eda::gate::techmapper {
  */
 class SubnetTechMapper final : public optimizer::SubnetTransformer {
 public:
-  using CellTypeID = model::CellTypeID;
-  using Subnet = model::Subnet;
-  using SubnetID = model::SubnetID;
-  using SubnetBuilder = model::SubnetBuilder;
-  using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
+  struct Match final {
+    model::CellTypeID typeID{model::OBJ_NULL_ID};
+    model::Subnet::LinkList links{};
+    bool inversion{false};
+  };
+
   using Cut = optimizer::CutExtractor::Cut;
   using Cuts = optimizer::CutExtractor::CutsList;
-  using CellTypeIDs = std::vector<CellTypeID>;
-  using Criterion = optimizer::Criterion;
-  using CostVector = optimizer::CostVector;
-  using CostVectors = std::vector<CostVector>;
 
-  using CutProvider = std::function<Cuts(const Subnet &, const size_t)>;
-  using CellTypeProvider = std::function<CellTypeIDs(const Subnet &, const Cut &)>;
-  using CellTypeEstimator = std::function<CostVector(const CellTypeID)>;
-  using CostVectorAggregator = std::function<CostVector(const CostVectors &)>;
+  using CutProvider =
+      std::function<Cuts(const model::Subnet &, const size_t)>;
+  using CellTypeProvider =
+      std::function<std::vector<Match>(const model::Subnet &, const Cut &)>;
+  using CellTypeEstimator =
+      std::function<optimizer::CostVector(const model::CellTypeID)>;
+  using CostVectorAggregator =
+      std::function<optimizer::CostVector(const std::vector<optimizer::CostVector> &)>;
 
   SubnetTechMapper(const std::string &name,
-                   const Criterion &criterion,
+                   const optimizer::Criterion &criterion,
                    const CutProvider cutProvider,
                    const CellTypeProvider cellTypeProvider,
                    const CellTypeEstimator cellTypeEstimator,
@@ -59,10 +60,11 @@ public:
       flowCostAggregator(flowCostAggregator),
       exactCostAggregator(exactCostAggregator) {}
 
-  SubnetBuilderPtr make(const SubnetID subnetID) const override;
+  optimizer::SubnetBuilderPtr make(
+      const model::SubnetID subnetID) const override;
 
 private:
-  const Criterion &criterion;
+  const optimizer::Criterion &criterion;
   const CutProvider cutProvider;
   const CellTypeProvider cellTypeProvider;
   const CellTypeEstimator cellTypeEstimator;

@@ -33,6 +33,10 @@ public:
     bool inversion{false};
   };
 
+  struct Context final {
+    // TODO:
+  };
+
   using Cut = optimizer::CutExtractor::Cut;
   using Cuts = optimizer::CutExtractor::CutsList;
 
@@ -40,8 +44,8 @@ public:
       std::function<Cuts(const model::Subnet &, const size_t)>;
   using MatchFinder =
       std::function<std::vector<Match>(const model::Subnet &, const Cut &)>;
-  using CellTypeEstimator =
-      std::function<optimizer::CostVector(const model::CellTypeID)>;
+  using CellEstimator =
+      std::function<optimizer::CostVector(const model::CellTypeID, const Context &)>;
   using CostVectorAggregator =
       std::function<optimizer::CostVector(const std::vector<optimizer::CostVector> &)>;
 
@@ -49,16 +53,14 @@ public:
                    const optimizer::Criterion &criterion,
                    const CutProvider cutProvider,
                    const MatchFinder matchFinder,
-                   const CellTypeEstimator cellTypeEstimator,
-                   const CostVectorAggregator flowCostAggregator,
-                   const CostVectorAggregator exactCostAggregator):
+                   const CellEstimator cellEstimator,
+                   const CostVectorAggregator flowCostAggregator):
       optimizer::SubnetTransformer(name),
       criterion(criterion),
       cutProvider(cutProvider),
       matchFinder(matchFinder),
-      cellTypeEstimator(cellTypeEstimator),
-      flowCostAggregator(flowCostAggregator),
-      exactCostAggregator(exactCostAggregator) {}
+      cellEstimator(cellEstimator),
+      flowCostAggregator(flowCostAggregator) {}
 
   optimizer::SubnetBuilderPtr make(
       const model::SubnetID subnetID) const override;
@@ -67,9 +69,8 @@ private:
   const optimizer::Criterion &criterion;
   const CutProvider cutProvider;
   const MatchFinder matchFinder;
-  const CellTypeEstimator cellTypeEstimator;
+  const CellEstimator cellEstimator;
   const CostVectorAggregator flowCostAggregator;
-  const CostVectorAggregator exactCostAggregator;
 };
 
 } // namespace eda::gate::techmapper

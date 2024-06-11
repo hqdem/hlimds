@@ -30,6 +30,17 @@ enum Indicator {
 
 extern CostVector ZeroVector;
 
+inline CostVector add(const CostVector &lhs, const CostVector &rhs) {
+  assert(lhs.size() == rhs.size());
+
+  CostVector result(lhs.size());
+  for (size_t i = 0; i < lhs.size(); ++i) {
+    result[i] = lhs[i] + rhs[i];
+  }
+
+  return result;
+}
+
 inline CostFunction getCostFunction(const Indicator indicator) {
   return [indicator](const CostVector &vector) {
     return vector[indicator];

@@ -58,31 +58,34 @@ static optimizer::SubnetBuilderPtr makeBuilder(
     }
   }
 
-  const auto builder = std::make_shared<model::SubnetBuilder>();
+  auto builder = std::make_shared<model::SubnetBuilder>();
 
   // Maps old entry indices to new links.
   std::vector<model::Subnet::Link> links(subnet.size());
 
   const auto &entries = subnet.getEntries();
   for (size_t i = 0; i < subnet.size(); ++i) {
-    const auto &cell = entries[i].cell;
+    const auto &oldCell = entries[i].cell;
 
     if (!matches[i]) {
       continue;
     }
 
-    model::Subnet::LinkList newLinks(cell.arity);
-    for (size_t j = 0; j < cell.arity; ++j) {
+    model::Subnet::LinkList newLinks(oldCell.arity);
+    for (size_t j = 0; j < oldCell.arity; ++j) {
       const auto oldLink = subnet.getLink(i, j);
       const auto newLink = links[oldLink.idx];
       newLinks[j] = oldLink.inv ? ~newLink : newLink; // FIXME: handle inversion.
     }
-
     
     const auto link = builder->addCell(matches[i]->typeID, newLinks);
     links[i] = matches[i]->inversion ? ~link : link; // FIXME: handle inversion.
 
-    // FIXME: mark flip-flop inputs and outputs.
+    if (oldCell.isIn() || oldCell.isOut()) {
+      auto &newCell = builder->getCell(link.idx);
+      newCell.flipFlop = oldCell.flipFlop;
+      newCell.flipFlopID = oldCell.flipFlopID;
+    }
   }
 
   return builder;
@@ -118,17 +121,18 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
     const auto cuts = cutProvider(subnet, i);
 
     for (const auto &cut : cuts) {
-      const auto cutCostVector = flowCostAggregator(getCostVectors(space, cut));
+      const auto cutCostVectors = getCostVectors(space, cut);
+      const auto cutAggregation = flowCostAggregator(cutCostVectors);
 
-      if (!criterion.check(cutCostVector)) {
+      if (!criterion.check(cutAggregation)) {
         continue; // TODO: soften checks?
       }
 
-      const auto matches = matchFinder(subnet, cut); // FIXME
+      const auto matches = matchFinder(subnet, cut);
 
       for (const auto &match : matches) {
-        const auto cellCostVector = cellTypeEstimator(match.typeID); // FIXME: Take context into account.
-        const auto costVector = exactCostAggregator({cutCostVector, cellCostVector}); // TODO: always +?
+        const auto cellCostVector = cellEstimator(match.typeID, Context{});
+        const auto costVector = optimizer::add(cutAggregation, cellCostVector);
 
         if (!criterion.check(costVector)) {
           continue; // TODO: soften checks?
@@ -153,9 +157,10 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
   }  
 
   Cut resultCut(model::OBJ_NULL_ID, 0, outputs);
-  const auto subnetCostVector = flowCostAggregator(getCostVectors(space, resultCut)); // TODO: exact estimation at the end.
+  const auto subnetCostVectors = getCostVectors(space, resultCut);
+  const auto subnetAggregation = flowCostAggregator(subnetCostVectors); // TODO: exact estimation at the end.
 
-  if (!criterion.check(subnetCostVector)) {
+  if (!criterion.check(subnetAggregation)) {
     return nullptr; // TODO: recovery
   }
 

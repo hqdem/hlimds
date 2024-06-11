@@ -37,30 +37,46 @@ public:
     // TODO:
   };
 
-  using Cut = optimizer::CutExtractor::Cut;
-  using Cuts = optimizer::CutExtractor::CutsList;
-
   using CutProvider =
-      std::function<Cuts(const model::Subnet &, const size_t)>;
+      std::function<optimizer::CutExtractor::CutsList(
+                        const model::Subnet &,
+                        const size_t entryID)>;
   using MatchFinder =
-      std::function<std::vector<Match>(const model::Subnet &, const Cut &)>;
+      std::function<std::vector<Match>(
+                        const model::Subnet &,
+                        const optimizer::CutExtractor::Cut &)>;
   using CellEstimator =
-      std::function<optimizer::CostVector(const model::CellTypeID, const Context &)>;
-  using CostVectorAggregator =
-      std::function<optimizer::CostVector(const std::vector<optimizer::CostVector> &)>;
+      std::function<optimizer::CostVector(
+                        const model::CellTypeID,
+                        const Context &)>;
+  using CostAggregator =
+      std::function<optimizer::CostVector(
+                        const std::vector<optimizer::CostVector> &)>;
+  using CostPropagator =
+      std::function<optimizer::CostVector(
+                        const optimizer::CostVector &,
+                        const uint32_t fanout)>;
 
   SubnetTechMapper(const std::string &name,
                    const optimizer::Criterion &criterion,
                    const CutProvider cutProvider,
                    const MatchFinder matchFinder,
                    const CellEstimator cellEstimator,
-                   const CostVectorAggregator flowCostAggregator):
+                   const CostAggregator costAggregator,
+                   const CostPropagator costPropagator):
       optimizer::SubnetTransformer(name),
       criterion(criterion),
       cutProvider(cutProvider),
       matchFinder(matchFinder),
       cellEstimator(cellEstimator),
-      flowCostAggregator(flowCostAggregator) {}
+      costAggregator(costAggregator),
+      costPropagator(costPropagator) {}
+
+  SubnetTechMapper(const std::string &name,
+                   const optimizer::Criterion &criterion,
+                   const CutProvider cutProvider,
+                   const MatchFinder matchFinder,
+                   const CellEstimator cellEstimator);
 
   optimizer::SubnetBuilderPtr make(
       const model::SubnetID subnetID) const override;
@@ -70,7 +86,8 @@ private:
   const CutProvider cutProvider;
   const MatchFinder matchFinder;
   const CellEstimator cellEstimator;
-  const CostVectorAggregator flowCostAggregator;
+  const CostAggregator costAggregator;
+  const CostPropagator costPropagator;
 };
 
 } // namespace eda::gate::techmapper

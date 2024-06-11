@@ -24,14 +24,56 @@ static inline const optimizer::CostVector &getCostVector(
 }
 
 static inline std::vector<optimizer::CostVector> getCostVectors(
-    const SubnetSpace &space, const SubnetTechMapper::Cut &cut) {
+    const SubnetSpace &space, const optimizer::CutExtractor::Cut &cut) {
   std::vector<optimizer::CostVector> vectors;
   vectors.reserve(cut.entryIdxs.size());
+
   for (const auto entryID : cut.entryIdxs) {
     vectors.push_back(getCostVector(space, entryID));
   }
+
   return vectors;
 }
+
+static optimizer::CostVector defaultCostAggregator(
+   const std::vector<optimizer::CostVector> &vectors) {
+  assert(!vectors.empty());
+  optimizer::CostVector result(vectors[0]);
+
+  for (size_t i = 1; i < vectors.size(); ++i) {
+    const auto &vector = vectors[i];
+    result[optimizer::AREA] += vector[optimizer::AREA];
+    result[optimizer::DELAY] = std::max(result[optimizer::DELAY],
+                                        vector[optimizer::DELAY]);
+    result[optimizer::POWER] += vector[optimizer::POWER];
+  }
+
+  return result;
+}
+
+static optimizer::CostVector defaultCostPropagator(
+    const optimizer::CostVector &vector, const uint32_t fanout) {
+  optimizer::CostVector result(vector.size());
+
+  result[optimizer::AREA]  = vector[optimizer::AREA] / fanout;
+  result[optimizer::DELAY] = vector[optimizer::DELAY];
+  result[optimizer::POWER] = vector[optimizer::POWER] / fanout;
+
+  return result;
+}
+
+SubnetTechMapper::SubnetTechMapper(const std::string &name,
+                                   const optimizer::Criterion &criterion,
+                                   const CutProvider cutProvider,
+                                   const MatchFinder matchFinder,
+                                   const CellEstimator cellEstimator):
+  SubnetTechMapper(name,
+                   criterion,
+                   cutProvider,
+                   matchFinder,
+                   cellEstimator,
+                   defaultCostAggregator,
+                   defaultCostPropagator) {}
 
 static optimizer::SubnetBuilderPtr makeBuilder(
     const SubnetSpace &space, const model::Subnet &subnet) {
@@ -122,10 +164,10 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
 
     for (const auto &cut : cuts) {
       const auto cutCostVectors = getCostVectors(space, cut);
-      const auto cutAggregation = flowCostAggregator(cutCostVectors);
+      const auto cutAggregation = costAggregator(cutCostVectors);
 
       if (!criterion.check(cutAggregation)) {
-        continue; // TODO: soften checks?
+        continue;
       }
 
       const auto matches = matchFinder(subnet, cut);
@@ -135,10 +177,10 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
         const auto costVector = optimizer::add(cutAggregation, cellCostVector);
 
         if (!criterion.check(costVector)) {
-          continue; // TODO: soften checks?
+          continue;
         }
 
-        space[i]->add(match, costVector);
+        space[i]->add(match, costPropagator(costVector, cell.refcount));
       }
     } // for cuts
 
@@ -156,9 +198,9 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
     outputs.insert(subnet.size() - i);
   }  
 
-  Cut resultCut(model::OBJ_NULL_ID, 0, outputs);
+  optimizer::CutExtractor::Cut resultCut(model::OBJ_NULL_ID, 0, outputs);
   const auto subnetCostVectors = getCostVectors(space, resultCut);
-  const auto subnetAggregation = flowCostAggregator(subnetCostVectors); // TODO: exact estimation at the end.
+  const auto subnetAggregation = costAggregator(subnetCostVectors);
 
   if (!criterion.check(subnetAggregation)) {
     return nullptr; // TODO: recovery

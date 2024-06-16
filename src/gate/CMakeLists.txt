@@ -8,6 +8,7 @@ add_library(Gate OBJECT
   debugger/fraig_checker.cpp
   debugger/rnd_checker.cpp
   debugger/seq_checker.cpp
+  estimator/simple_time_model.cpp
   model/cell.cpp
   model/celltype.cpp
   model/decomposer/net_decomposer.cpp
@@ -27,7 +28,6 @@ add_library(Gate OBJECT
   mutator/mutator.cpp
   mutator/mutator_transformer.cpp
   library/library.cpp
-  library/ppa_estimator.cpp
   library/check_lib/aig/check_lib_for_aig.cpp
   optimizer/area_resynthesizer.cpp
   optimizer/associative_balancer.cpp

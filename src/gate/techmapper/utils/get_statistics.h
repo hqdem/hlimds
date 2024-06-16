@@ -8,15 +8,17 @@
 
 #pragma once
 
+#include "gate/estimator/ppa_estimator.h"
 #include "gate/library/liberty_manager.h"
 #include "gate/model/subnet.h"
-#include "gate/techmapper/utils/get_tech_attrs.h"
 
 #include <readcells/groups.h>
 
 #include <filesystem>
 
 namespace eda::gate::techmapper {
+
+using LibertyManager = library::LibertyManager;
 
 inline void printStatistics(model::SubnetID subnetID,
   std::chrono::nanoseconds time = std::chrono::nanoseconds(0)) {
@@ -46,13 +48,13 @@ inline void printStatistics(model::SubnetID subnetID,
         std::left << std::setw(36) << pair.first <<
         std::right << std::setw(8) << pair.second << std::endl;
   }
-  std::cout << "Design area: " << getArea(subnetID) <<
+  std::cout << "Design area: " << estimator::getArea(subnetID) <<
     " um^2" << std::endl; // TODO export this scale from readcells
 
-  std::cout << "Leakage power: " << getLeakagePower(subnetID) <<
+  std::cout << "Leakage power: " << estimator::getLeakagePower(subnetID) <<
       " uW" << std::endl; // TODO the same
 
-  std::cout << "Arrival time: " << getArrivalTime(subnetID) <<
+  std::cout << "Arrival time: " << estimator::getArrivalTime(subnetID) <<
       " ns" << std::endl; // TODO the same
 
   if (time != std::chrono::nanoseconds(0)) {

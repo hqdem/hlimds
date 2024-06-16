@@ -8,15 +8,18 @@
 
 #pragma once
 
-#include "gate/library/ppa_estimator.h"
+#include "gate/estimator/simple_time_model.h"
+#include "gate/library/liberty_manager.h"
 #include "gate/model/subnet.h"
+#include "gate/optimizer/criterion/criterion.h"
 
 #include <algorithm>
+#include <cfloat>
 #include <unordered_map>
 
-namespace eda::gate::techmapper {
+namespace eda::gate::estimator {
 
-using DelayEstimator = library::DelayEstimator;
+using CostVector = optimizer::CostVector;
 using LibertyManager = library::LibertyManager;
 
 inline bool shouldSkipCell(const model::Subnet::Cell &cell) {
@@ -36,27 +39,41 @@ inline float processEntries(model::SubnetID subnetID, Func func) {
   return result;
 }
 
+inline float getArea(const model::CellType &cellType) {
+  return cellType.getAttr().props.area;
+}
+
 inline float getArea(model::SubnetID subnetID) {
   return processEntries(subnetID, [](const auto &entry) {
-    return entry.cell.getType().getAttr().props.area;
+    return getArea(entry.cell.getType());
   });
+}
+
+inline float getLeakagePower(const model::CellType &cellType) {
+    const auto *cell = LibertyManager::get().getLibrary().getCell(
+        cellType.getName());
+    return cell ?
+      cell->getFloatAttribute("cell_leakage_power", FLT_MAX) : 0.0f;
 }
 
 inline float getLeakagePower(model::SubnetID subnetID) {
   return processEntries(subnetID, [](const auto &entry) {
-    const auto *cell = LibertyManager::get().getLibrary().getCell(
-        entry.cell.getType().getName());
-    return cell ? cell->getFloatAttribute("cell_leakage_power",
-                                          MAXFLOAT) : 0.0f;
+    return getLeakagePower(entry.cell.getType());
   });
 }
 
+inline float getDelay(const model::CellType &cellType,
+               float inputTransTime, float outputCap) {
+  return NLDM::delayEstimation(LibertyManager::get().getLibrary(),
+     cellType.getName(), inputTransTime, outputCap);
+}
+
 inline float getArrivalTime(model::SubnetID subnetID) {
-  DelayEstimator delayEstimator(LibertyManager::get().getLibrary());
-  int timingSense = delayEstimator.nldm.getSense();
+  int timingSense = 0;
   std::unordered_map<uint64_t, float> arrivalMap, delayMap;
 
   float maxArrivalTime = 0;
+  float capacitance = 0;
   auto entries = model::Subnet::get(subnetID).getEntries();
   for (uint64_t i = 0; i < entries.size(); ++i) {
     if (!shouldSkipCell(entries[i].cell)) {
@@ -69,14 +86,14 @@ inline float getArrivalTime(model::SubnetID subnetID) {
       }
 
       size_t outNum = entries[i].cell.getOutNum();
-      float fanoutCap = delayEstimator.wlm.getFanoutCap(outNum) +
-          delayEstimator.nldm.getCellCap();
-      delayEstimator.nldm.delayEstimation(entries[i].cell.getType().getName(),
-                                          delay, fanoutCap, timingSense);
+      WLM wlm; // TODO
+      float fanoutCap = wlm.getFanoutCap(outNum) + capacitance;
+      float slew;
+      NLDM::delayEstimation(LibertyManager::get().getLibrary(), entries[i].cell.getType().getName(),
+                            delay, fanoutCap, timingSense, slew, delay, capacitance);
 
-      float arrivalTime = delayEstimator.nldm.getSlew();
-      arrivalMap[i] = arrivalTime + arrival;
-      delayMap[i] = arrivalTime;
+      arrivalMap[i] = slew + arrival;
+      delayMap[i] = slew;
 
       maxArrivalTime = std::max(maxArrivalTime, arrivalMap[i]);
     }
@@ -85,4 +102,21 @@ inline float getArrivalTime(model::SubnetID subnetID) {
   return maxArrivalTime;
 }
 
-} // namespace eda::gate::techmapper
+struct Context;
+inline CostVector getPPA(
+  const model::CellTypeID cellTypeID, const Context &context) {
+  const auto &cellType = model::CellType::get(cellTypeID);
+  const auto name = cellType.getName();
+
+  const auto area = getArea(cellType);
+  const auto delay = getDelay(cellType, 0, 0); // TODO input transition time and output capacitance should be taken from Context
+  const auto power = getLeakagePower(cellType);
+
+  optimizer::CostVector result;
+  result[optimizer::AREA] = area;
+  result[optimizer::DELAY] = delay;
+  result[optimizer::POWER] = power;
+  return result;
+}
+
+} // namespace eda::gate::estimator

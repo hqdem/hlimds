@@ -13,24 +13,28 @@
 #include <string>
 #include <vector>
 
-namespace eda::gate::library {
+namespace eda::gate::estimator {
 
 //===---------------------------------------------------------------------===//
 // Structures, which contain data from LookUp-Tables
 //===---------------------------------------------------------------------===//
 /// Indexes from LUT
-struct Ind {
+struct Index {
   std::size_t back1 = 0, front1 = 0,
               back2 = 0, front2 = 0;
   int ind1 = -1, ind2 = -1;
 };
 
 /// Struct contains timingInfo from LUTS
-struct DataTiming {
+struct DataTimingContext {
   std::vector<float> delayValues = {};
   std::size_t variablesCount = 7;
   bool interpolate = true;
-  Ind index;
+  Index index;
+  float inputTransTime;
+  float outputTotalCap;
+  DataTimingContext(float inputTransTime, float outputTotalCap) :
+    inputTransTime(inputTransTime), outputTotalCap(outputTotalCap) {}
 };
 
 //===---------------------------------------------------------------------===//
@@ -43,75 +47,48 @@ struct DataTiming {
  */
 class NLDM {
 public:
-  NLDM(Library &library) : lib(library), delay(0.0),
-           slew(0.0), capacitance(0.0),
-           timingSense(0) {};
   virtual ~NLDM() = default;
 
-  /// Getters
-  float getCellDelay() const {
-    return delay;
-  };
-
-  float getCellCap() const {
-    return capacitance;
-  };
-
-  float getSlew() const {
-    return slew;
-  };
-
-  int getSense() const {
-    return timingSense;
-  };
-
-  float getLutValue(const std::vector<float>& lut_values,
-                    const float inputNetTransition,
-                    const float totalOutputNetCapacitance,
+private:
+  static float getLutValue(const std::vector<float>& lut_values,
+                    DataTimingContext &context,
                     const float x1, const float x2,
                     const float y1, const float y2);
 
-  float getLutValue(const LookupTable *lut,
-                    const float inputNetTransition,
-                    const float totalOutputNetCapacitance,
+  static float getLutValue(const LookupTable *lut,
+                    DataTimingContext &context,
                     const float x1, const float x2,
                     const float y1, const float y2);
 
-  void pinTimingEstimator(const Timing &timing,
-                          const float inputNetTransition,
-                          const float totalOutputNetCapacitance);
+  static void pinTimingEstimator(const std::vector<const LookupTable*> &luts,
+                          DataTimingContext &context);
 
-  void pinFTimingEstimator(const Timing &timing,
-                           const float inputNetTransition,
-                           const float totalOutputNetCapacitance);
+  static void pinFTimingEstimator(const std::vector<const LookupTable*> &luts,
+                           DataTimingContext &context);
 
-  void pinITimingEstimator(const Timing &timing,
-                           const float inputNetTransition,
-                           const float totalOutputNetCapacitance);
+  static void pinITimingEstimator(const std::vector<const LookupTable*> &luts,
+                           DataTimingContext &context);
 
+public:
   /*
    *  delayEstimation uses Library to look for
    *  the concrete cell's timing values.
+   *  timingSence - Positive or Negative unate (rise or fall)
+   *  slew - ??
+   *  delay - ??
    */
-  void delayEstimation(const std::string &cellType,
-                       const float inputNetTransition,
-                       const float totalOutputNetCapacitance,
-                       int &timingSense);
+  static void delayEstimation(
+    Library &library,
+    const std::string &cellTypeName,
+    const float inputTransTime,
+    const float outputTotalCap,
+    int &timingSense, float &slew, float &delay, float &cap);
 
-/// Properties
-private:
-  /// LookUp Table
-  Library& lib;
-  /// Data from LUT
-  DataTiming context;
-  /// cell delay
-  float delay;
-  /// transition delay
-  float slew;
-  /// cell capacitance
-  float capacitance;
-  /// Positive(0) or Negative(1) unate
-  int timingSense;
+  static float delayEstimation(
+    Library &library,
+    const std::string &cellTypeName,
+    const float inputTransTime,
+    const float outputTotalCap);
 };
 
 //===---------------------------------------------------------------------===//
@@ -170,11 +147,10 @@ private:
 //===---------------------------------------------------------------------===//
 class DelayEstimator {
 public:
-  DelayEstimator(Library &library) : nldm(library) {};
   virtual ~DelayEstimator() = default;
 
   NLDM nldm;
   WLM wlm;
 };
 
-} // namespace eda::gate::library
+} // namespace eda::gate::estimator

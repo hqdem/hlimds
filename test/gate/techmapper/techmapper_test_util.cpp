@@ -14,7 +14,6 @@
 #include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
-#include "gate/techmapper/utils/get_tech_attrs.h"
 
 #include "gtest/gtest.h"
 

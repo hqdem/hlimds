@@ -12,7 +12,6 @@
 #include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"
-#include "gate/techmapper/utils/get_tech_attrs.h"
 #include "util/env.h"
 
 namespace eda::gate::techmapper {

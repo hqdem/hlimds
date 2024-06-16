@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/estimator/simple_time_model.h"
 #include "gate/library/liberty_manager.h"
-#include "gate/library/ppa_estimator.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.h"
@@ -21,7 +21,6 @@
 
 namespace eda::gate::techmapper {
 
-using DelayEstimator = library::DelayEstimator;
 using LibertyManager = library::LibertyManager;
 using SCLibrary = library::SCLibrary;
 using Subnet = model::Subnet;
@@ -76,8 +75,8 @@ void SimpleDelayMapper::saveBest(
   MappingItem mappingItem;
   float bestArrivalTime = MAXFLOAT;
 
-  DelayEstimator d1(LibertyManager::get().getLibrary());
-  int timingSense = d1.nldm.getSense();
+  estimator::WLM wlm;
+  int timingSense = 0;
 
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
@@ -87,30 +86,27 @@ void SimpleDelayMapper::saveBest(
 
       auto truthTable = eda::gate::model::evaluate(
           model::Subnet::get(coneSubnetID));
+      float capacitance = 0;
 
       for (const SubnetID &currentSubnetID : cellDB.getSubnetID(truthTable.at(0))) {
         auto currentAttr = cellDB.getCellAttrs(currentSubnetID);
 
         float inputNetTransition = findMaxArrivalTime(cut.entryIdxs);
-        float fanoutCap = d1.wlm.getFanoutCap(currentAttr.fanoutCount) + 
-                          d1.nldm.getCellCap();
+        float fanoutCap = wlm.getFanoutCap(currentAttr.fanoutCount) + capacitance;
+        float slew = 0; // TODO
+        float delay = 0; // TODO
+        estimator::NLDM::delayEstimation(LibertyManager::get().getLibrary(), currentAttr.name,
+          inputNetTransition, fanoutCap, timingSense, slew, delay, capacitance);
 
-        d1.nldm.delayEstimation(currentAttr.name,
-                                inputNetTransition,
-                                fanoutCap,
-                                timingSense);
-
-        float arrivalTime = d1.nldm.getSlew();
-
-        if (arrivalTime < bestArrivalTime) {
-          bestArrivalTime = arrivalTime;
+        if (slew < bestArrivalTime) {
+          bestArrivalTime = slew;
           mappingItem.setSubnetID(currentSubnetID);
           mappingItem.inputs.clear();
           for (const auto &in : cut.entryIdxs) {
             mappingItem.inputs.push_back(in);
           }
         }
-        delayVec[entryIndex] = {arrivalTime};
+        delayVec[entryIndex] = {slew};
       }
     }
   }

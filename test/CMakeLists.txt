@@ -35,6 +35,8 @@ add_executable(${TEST_TARGET}
   gate/debugger/sat_checker_test.cpp
   gate/debugger/seq_sweep_test.cpp
   gate/debugger/synth_lec_test.cpp
+  gate/estimator/time_model_test.cpp
+  gate/estimator/wlm_test.cpp
   gate/model/array_test.cpp
   gate/model/examples.cpp
   gate/model/design_analysis_test.cpp
@@ -51,8 +53,6 @@ add_executable(${TEST_TARGET}
   gate/model/utils/bdd_dnf_test.cpp
   gate/model/utils/subnet_truth_table_test.cpp
   gate/mutator/mutator_test.cpp
-  gate/library/ppa_estimator_test.cpp
-  gate/library/wlm_test.cpp
   gate/parser/graphml_test_utils.cpp
   gate/parser/graphml_parser_test.cpp
   gate/premapper/aigmapper_test.cpp

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/library/ppa_estimator.h"
+#include "gate/estimator/simple_time_model.h"
 #include "util/env.h"
 
 #include <readcells/ast.h>
@@ -21,7 +21,7 @@
 #include <iostream>
 #include <vector>
 
-namespace eda::gate::library {
+namespace eda::gate::estimator {
 
 WLM::WLM() :
   wire_load_name("sky"),
@@ -148,8 +148,7 @@ float WLM::getFanoutRes(const std::size_t &fanoutCount) const {
 
 /// Interpolation
 float NLDM::getLutValue(const std::vector<float> &lutValues,
-                        const float inputNetTransition,
-                        const float totalOutputNetCapacitance,
+                        DataTimingContext &context,
                         const float x1, const float x2,
                         const float y1, const float y2) {
   if (!context.interpolate) {
@@ -157,8 +156,8 @@ float NLDM::getLutValue(const std::vector<float> &lutValues,
   }
 
   /// Properties
-  float x0 = inputNetTransition;
-  float y0 = totalOutputNetCapacitance;
+  float x0 = context.inputTransTime;
+  float y0 = context.outputTotalCap;
   float x01 = 0, x20 = 0, y01 = 0, y20 = 0;
   float T00 = 0, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
 
@@ -179,28 +178,17 @@ float NLDM::getLutValue(const std::vector<float> &lutValues,
 }
 
 float NLDM::getLutValue(const LookupTable *lut,
-                        const float inputNetTransition,
-                        const float totalOutputNetCapacitance,
+                        DataTimingContext &context,
                         const float x1, const float x2,
                         const float y1, const float y2) {
   std::vector<float> lutValues = lut->getValues();
 
-  return getLutValue(lutValues,
-                     inputNetTransition,
-                     totalOutputNetCapacitance,
-                     x1, x2, y1, y2);
+  return getLutValue(lutValues, context, x1, x2, y1, y2);
 }
 
-void NLDM::pinTimingEstimator(const Timing &timing,
-                              const float inputNetTransition,
-                              const float totalOutputNetCapacitance) {
-  //===-----------------------------------------------------------------===//
-  //  LookUp Tables
-  //===-----------------------------------------------------------------===//
-  const LookupTable* lut[] = {timing.getLut("cell_fall"),
-                              timing.getLut("cell_rise"),
-                              timing.getLut("fall_transition"),
-                              timing.getLut("rise_transition")};
+void NLDM::pinTimingEstimator(const std::vector<const LookupTable*> &luts,
+                              DataTimingContext &context) {
+
   //===-----------------------------------------------------------------===//
   //  Properties
   //===-----------------------------------------------------------------===//
@@ -211,25 +199,25 @@ void NLDM::pinTimingEstimator(const Timing &timing,
   //===-----------------------------------------------------------------===//
   //  Assign values from LookUp Tables
   //===-----------------------------------------------------------------===//
-  if (lut[0] != nullptr) {
+  if (luts[0] != nullptr) {
     //===-----------------------------------------------------------------===//
     //  Properties
     //===-----------------------------------------------------------------===//
-    lutValues = lut[0]->getValues();
+    lutValues = luts[0]->getValues();
     bool iterFlag = false;
     //===-----------------------------------------------------------------===//
-    for (const auto &it : (*lut[0])) {
+    for (const auto &it : (*luts[0])) {
       /// INTERPOLATION
       if (std::find(it.values.begin(), it.values.end(),
-            inputNetTransition) == std::end(it.values)) {
+            context.inputTransTime) == std::end(it.values)) {
         if (!iterFlag) {
           /// Assign net_transition value
           for (size_t i = 0; i < it.values.size(); ++i) {
-            if (it.values[i] < inputNetTransition) {
+            if (it.values[i] < context.inputTransTime) {
               context.index.back1 = i;
               x1 = it.values[i];
             }
-            else if (it.values[i] > inputNetTransition) {
+            else if (it.values[i] > context.inputTransTime) {
               context.index.front1 = i;
               x2 = it.values[i];
               context.variablesCount = it.values.size();
@@ -241,11 +229,11 @@ void NLDM::pinTimingEstimator(const Timing &timing,
         else {
           /// Assign output capacitance value
           for (size_t i = 0; i < it.values.size(); ++i) {
-            if (it.values[i] < totalOutputNetCapacitance) {
+            if (it.values[i] < context.outputTotalCap) {
               context.index.back2 = i;
               y1 = it.values[i];
             }
-            else if (it.values[i] > totalOutputNetCapacitance) {
+            else if (it.values[i] > context.outputTotalCap) {
               context.index.front2 = i;
               y2 = it.values[i];
               break;
@@ -254,10 +242,7 @@ void NLDM::pinTimingEstimator(const Timing &timing,
           bool tmpInterpolate = context.interpolate; // TODO
           context.interpolate = true;
           context.delayValues.push_back(
-                getLutValue(lutValues,
-                            inputNetTransition,
-                            totalOutputNetCapacitance,
-                            x1, x2, y1, y2));
+                getLutValue(lutValues, context, x1, x2, y1, y2));
           context.interpolate = tmpInterpolate;
           break;
         }
@@ -265,11 +250,11 @@ void NLDM::pinTimingEstimator(const Timing &timing,
 
       /// Assign found values
       else if (std::find(it.values.begin(), it.values.end(),
-                            inputNetTransition) != std::end(it.values)) {
+                            context.inputTransTime) != std::end(it.values)) {
         if (!iterFlag) {
           /// Assign net_transition value
           for (size_t i = 0; i < it.values.size(); ++i) {
-            if (it.values[i] == inputNetTransition) {
+            if (it.values[i] == context.inputTransTime) {
               context.index.ind1 = i;
               iterFlag = true;
               break;
@@ -279,7 +264,7 @@ void NLDM::pinTimingEstimator(const Timing &timing,
         else {
           /// Assign output capacitance value
           for (size_t i = 0; i < it.values.size(); ++i) {
-            if (it.values[i] == totalOutputNetCapacitance) {
+            if (it.values[i] == context.outputTotalCap) {
               context.index.ind2 = i;
               context.variablesCount = it.values.size();
               break;
@@ -300,13 +285,10 @@ void NLDM::pinTimingEstimator(const Timing &timing,
   context.interpolate = (context.index.ind1 == -1) && (context.index.ind2 == -1);
 
   for (size_t i = 1; i < 4; ++i) {
-    if (lut[i] != nullptr)
-      if (lut[i]->getValues().size() != 1)
+    if (luts[i] != nullptr)
+      if (luts[i]->getValues().size() != 1)
         context.delayValues.push_back(
-          getLutValue(lut[i],
-                      inputNetTransition,
-                      totalOutputNetCapacitance,
-                      x1, x2, y1, y2));
+          getLutValue(luts[i], context, x1, x2, y1, y2));
       else
         context.delayValues.push_back(0);
     else {
@@ -316,24 +298,16 @@ void NLDM::pinTimingEstimator(const Timing &timing,
   }
 }
 
-void NLDM::pinFTimingEstimator(const Timing &timing,
-                               const float inputNetTransition,
-                               const float totalOutputNetCapacitance) {
-  //===-----------------------------------------------------------------===//
-  //  LookUp Tables
-  //===-----------------------------------------------------------------===//
-  const LookupTable* lut[] = {timing.getLut("cell_fall"),
-                              timing.getLut("cell_rise"),
-                              timing.getLut("fall_transition"),
-                              timing.getLut("rise_transition")};
+void NLDM::pinFTimingEstimator(const std::vector<const LookupTable*> &luts,
+                               DataTimingContext &context) {
   //===-----------------------------------------------------------------===//
   //  Properties
   //===-----------------------------------------------------------------===//
   std::vector<float> lutValues, result;
   //===-----------------------------------------------------------------===//
   for (size_t i = 0; i < 4; ++i) {
-    if (lut[i] != nullptr) {
-      lutValues = lut[i]->getValues();
+    if (luts[i] != nullptr) {
+      lutValues = luts[i]->getValues();
       result.push_back(
         lutValues[context.index.ind1 * context.variablesCount + context.index.ind2]);
     }
@@ -346,16 +320,8 @@ void NLDM::pinFTimingEstimator(const Timing &timing,
   context.delayValues = result;
 }
 
-void NLDM::pinITimingEstimator(const Timing &timing,
-                               const float inputNetTransition,
-                               const float totalOutputNetCapacitance) {
-  //===-----------------------------------------------------------------===//
-  //  LookUp Tables
-  //===-----------------------------------------------------------------===//
-  const LookupTable* lut[] = {timing.getLut("cell_fall"),
-                              timing.getLut("cell_rise"),
-                              timing.getLut("fall_transition"),
-                              timing.getLut("rise_transition")};
+void NLDM::pinITimingEstimator(const std::vector<const LookupTable*> &luts,
+                               DataTimingContext &context) {
   //===-----------------------------------------------------------------===//
   //  Properties
   //===-----------------------------------------------------------------===//
@@ -364,8 +330,8 @@ void NLDM::pinITimingEstimator(const Timing &timing,
         y1 = 0, y2 = 0;
   bool iterFlag = false;
 
-  assert(lut[0] != nullptr);
-  for (const auto &it : (*lut[0])) {
+  assert(luts[0] != nullptr);
+  for (const auto &it : (*luts[0])) {
     if (!iterFlag) {
       x1 = it.values[context.index.back1], x2 = it.values[context.index.front1];
       iterFlag = true;
@@ -378,12 +344,9 @@ void NLDM::pinITimingEstimator(const Timing &timing,
   bool tmpInterpolation = context.interpolate; // TODO
   context.interpolate = true;
   for (size_t i = 0; i < 4; ++i) {
-    if (lut[i] != nullptr) {
-      lutValues = lut[i]->getValues();
-      result.push_back(getLutValue(lutValues,
-                                   inputNetTransition,
-                                   totalOutputNetCapacitance,
-                                   x1, x2, y1, y2));
+    if (luts[i] != nullptr) {
+      lutValues = luts[i]->getValues();
+      result.push_back(getLutValue(lutValues, context, x1, x2, y1, y2));
     }
     else {
       /// Found cell has a "scalar" LUT
@@ -394,40 +357,47 @@ void NLDM::pinITimingEstimator(const Timing &timing,
   context.delayValues = result;
 }
 
-void NLDM::delayEstimation(const std::string &cellType,
-                           const float inputNetTransition,
-                           const float totalOutputNetCapacitance,
-                           int &timingSense) {
+void NLDM::delayEstimation(Library &library, const std::string &cellType,
+                           const float inputTransTime,
+                           const float outputTotalCap,
+                           int &timingSense, float &slew, float &delay, float &cap) {
   //===---------------------------------------------------------------===//
   //  Properties
   //===---------------------------------------------------------------===//
   std::vector<float> cfall, crise, tfall, trise;
   bool readyFlag = false;
-  capacitance = 0;
   int newTimingSense = 0;
+  DataTimingContext context{inputTransTime, outputTotalCap};
 
   //===---------------------------------------------------------------===//
   //  Delay and Slew estimation
   //===---------------------------------------------------------------===//
-  const Cell *cell = lib.getCell(cellType);
+  const Cell *cell = library.getCell(cellType);
 
+  cap = 0;
   for (const Pin &pin : (*cell).getPins()) {
-    capacitance += pin.getFloatAttribute("capacitance", 0);
+    cap += pin.getFloatAttribute("capacitance", 0);
     for (const Timing &timing : pin.getTimings()) {
+      //===---------------------------------------------------------------===//
+      //  LookUp Tables
+      //===---------------------------------------------------------------===//
+      std::vector<const LookupTable*> luts {
+        timing.getLut("cell_fall"),
+        timing.getLut("cell_rise"),
+        timing.getLut("fall_transition"),
+        timing.getLut("rise_transition")};
+
       if (!readyFlag) {
         context.interpolate = true;
-        pinTimingEstimator(timing,
-            inputNetTransition, totalOutputNetCapacitance);
+        pinTimingEstimator(luts, context);
         readyFlag = true;
       }
       else {
         if (!context.interpolate) {
-          pinFTimingEstimator(timing,
-              inputNetTransition, totalOutputNetCapacitance);
+          pinFTimingEstimator(luts, context);
         }
         else {
-          pinITimingEstimator(timing,
-              inputNetTransition, totalOutputNetCapacitance);
+          pinITimingEstimator(luts, context);
         }
       }
       cfall.push_back(context.delayValues[0]);
@@ -457,4 +427,14 @@ void NLDM::delayEstimation(const std::string &cellType,
   timingSense = newTimingSense;
 }
 
-} // namespace eda::gate::library
+float NLDM::delayEstimation(Library &library, const std::string &cellTypeName,
+    const float inputTransTime, const float outputTotalCap) {
+  int timingSense = 0;
+  float slew = 0;
+  float delay = 0;
+  float cap = 0;
+  delayEstimation(library, cellTypeName, inputTransTime, outputTotalCap,
+    timingSense, slew, delay, cap);
+  return slew;
+}
+} // namespace eda::gate::estimator

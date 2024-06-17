@@ -4,7 +4,8 @@ In this guide the instruction on how to build and run Utopia EDA with Docker
 is described.
 The guide was checked on Ubuntu 20.04 operating system.
 
-##### Table of Contents
+## Table of Contents
+
 - [Installation](#docker-installation)
 - [Authentication](#docker-authentication)
 - [Dockerfile](#image-building)
@@ -26,21 +27,16 @@ The guide was checked on Ubuntu 20.04 operating system.
 
 To install Docker, do following:
 
+```console
     sudo apt update
-
     sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
-
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
-
     sudo apt update
-
     apt-cache policy docker-ce
-
     sudo apt install docker-ce
-
     sudo setfacl --modify user:<user name or ID>:rw /var/run/docker.sock
+```
 
 *Run* `whoami` *or* `id` *to get your username or id.*
 
@@ -53,15 +49,19 @@ DockerHub, do authentication.
 
 If you want to pull and push images to GitLab Container Registry at gitlab.ispras.ru, login as follows:
 
+```console
     docker login gitlab.ispras.ru:4567
-*Enter GitLab login & password, if needed*
+    *Enter GitLab login & password, if needed*
+```
 
 If you want to share your images on DockerHub, then:
 
 Create account on [Docker Hub](https://hub.docker.com "Click here to go to the website")
 
+```console
     docker login
 *Enter DockerHub login & password, if needed*
+```
 
 
 ---

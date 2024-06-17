@@ -2,8 +2,7 @@ FROM isprasmvg/ubuntu:base
 
 RUN apt-get update && apt install -y autoconf bison clang clang-tidy cmake flex g++ gcc \
     iverilog liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld \
-    make ninja-build python3 python3-pip zlib1g zlib1g-dev gtkwave lcov graphviz
-RUN pip install liberty-parser
+    make ninja-build pkg-config python3 zlib1g zlib1g-dev gtkwave lcov graphviz
 
 WORKDIR /workdir
 RUN git clone https://github.com/OlafvdSpek/ctemplate.git
@@ -28,7 +27,7 @@ RUN make BUILD_TYPE=shared CUDD_INCLUDE=/workdir/cudd SM="-DDISABLE_SM"
 RUN make install
 
 WORKDIR /workdir
-RUN git clone https://github.com/YosysHQ/yosys.git
+RUN git clone --recursive https://github.com/YosysHQ/yosys.git
 ENV old_line="ENABLE_LIBYOSYS := 0"
 ENV new_line="ENABLE_LIBYOSYS := 1"
 ENV file_path="/workdir/yosys/Makefile"
@@ -40,7 +39,7 @@ RUN make install
 WORKDIR /workdir
 RUN git clone --recursive https://github.com/circt/circt.git
 WORKDIR /workdir/circt
-RUN git checkout 2d822ea
+RUN git checkout firtool-1.72.0
 RUN git submodule init
 RUN git submodule update
 ENV MLIR_DIR=/workdir/circt/llvm/build/lib/cmake/mlir/

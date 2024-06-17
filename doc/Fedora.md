@@ -98,7 +98,7 @@ Please take this into account while moving through the guide.
 cd <workdir>
 git clone https://github.com/circt/circt.git
 cd circt
-git checkout 2d822ea
+git checkout firtool-1.72.0
 git submodule init
 git submodule update
 ```

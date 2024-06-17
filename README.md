@@ -41,8 +41,8 @@ below are specific to this operating system:
 * `lld`
 * `make`
 * `ninja-build`
+* `pkg-config`
 * `python`
-* `python3-pip`
 * `zlib1g`
 * `zlib1g-dev`
 
@@ -50,7 +50,7 @@ To install them, do the following:
 ```
 sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
     flex g++ gcc graphviz gtkwave iverilog libfmt-dev liblpsolve55-dev \
-    libssl-dev libtool lld make ninja-build python python3-pip zlib1g zlib1g-dev
+    libssl-dev libtool lld make ninja-build pkg-config python zlib1g zlib1g-dev
 ```
 
 If you are working on Fedora Linux OS, please, follow this [guide](doc/Fedora.md) to build Utopia EDA.
@@ -67,6 +67,7 @@ cd cmake-3.28.1
 make
 sudo make install
 ```
+If you prefer to install CMake as package, please see this [guide](https://apt.kitware.com).
 
 ### C++ CTemplate Installation
 
@@ -139,7 +140,7 @@ Please take this into account while moving through the guide.
 cd <workdir>
 git clone https://github.com/circt/circt.git
 cd circt
-git checkout 2d822ea
+git checkout firtool-1.72.0
 git submodule init
 git submodule update
 ```

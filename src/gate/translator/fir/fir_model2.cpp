@@ -1237,8 +1237,6 @@ public:
       pm.nest<CircuitOp>().addPass(firrtl::createDedupPass());
     }
 
-    pm.nest<CircuitOp>().addPass(firrtl::createWireDFTPass());
-
     if (opt.vbToBV) {
       pm.addNestedPass<CircuitOp>(firrtl::createLowerFIRRTLTypesPass(
           firrtl::PreserveAggregate::All, firrtl::PreserveAggregate::All));

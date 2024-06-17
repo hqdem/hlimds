@@ -113,15 +113,19 @@ static optimizer::SubnetBuilderPtr makeBuilder(
       continue;
     }
 
+    const auto &type = model::CellType::get(matches[i]->typeID);
+
     model::Subnet::LinkList newLinks(oldCell.arity);
     for (size_t j = 0; j < oldCell.arity; ++j) {
       const auto oldLink = subnet.getLink(i, j);
       const auto newLink = links[oldLink.idx];
-      newLinks[j] = oldLink.inv ? ~newLink : newLink; // FIXME: handle inversion.
+      newLinks[j] = oldLink.inv ? ~newLink : newLink;
+      assert(!(type.isCell() && newLinks[j].inv)
+          && "Inversions in a techmapped net are not allowed");
     }
     
     const auto link = builder->addCell(matches[i]->typeID, newLinks);
-    links[i] = matches[i]->inversion ? ~link : link; // FIXME: handle inversion.
+    links[i] = matches[i]->inversion ? ~link : link;
 
     if (oldCell.isIn() || oldCell.isOut()) {
       auto &newCell = builder->getCell(link.idx);

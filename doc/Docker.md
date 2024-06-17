@@ -63,8 +63,7 @@ Create account on [Docker Hub](https://hub.docker.com "Click here to go to the w
 *Enter DockerHub login & password, if needed*
 ```
 
-
----
+--
 
 ## Image building
 
@@ -75,15 +74,20 @@ Tag is necessary.
 In this section instruction on how to build and update Docker image using
 Dockerfile is described. Use this to install new utilities and libraries on
 image to work with Utopia EDA.
+
 ### Building from Dockerfile
 
 To build new image from Dockerfile, use:
 
+```console
     docker build -t <image name> <path/to/dir/with/Dockerfile>
+```
 
 *Example:*
 
+```console
     docker build -t new_image:test /home/user/workdir/utopia-eda
+```
 
 Run `docker images` to check images on your machine.
 Run `docker rmi <image name/id`> to delete the image.
@@ -95,30 +99,43 @@ rebuilding the image.
 
 To install utilities/libraries or create/modify files at the image, use:
 
+```text
     RUN <command>
+```
 
 *Example:*
 
+```text
     RUN touch file.txt
     RUN apt-get update && apt install -y git
+```
+
 *Do not use "sudo" for* `RUN` *commands*.
 *Use "install" with* -y *key*.
 
 To change directory, use:
 
+```text
     WORKDIR /path/to/dir
+```
 
 *Example:*
 
+```text
     WORKDIR /workdir/CUDD
+```
 
 To copy file from your host to image, use:
 
+```text
     COPY /path/on/host /path/on/image
+```
 
 *Example:*
 
+```text
     COPY /home/user/yosys /workdir
+```
 
 ---
 
@@ -126,26 +143,30 @@ To copy file from your host to image, use:
 
 To upload your images to GitLab Container Registry or DockerHub, use:
 
+```console
     docker push <image name>
+```
 
 Command `docker push` does not work when images are named arbitrarily.
 To push image to GitLab Container Registry, name it as follows:
 
+```text
     gitlab.ispras.ru:4567/<GitLab user login>/utopia-eda/<image name>
+```
 
-*Go to your GitLab profile and check "https://gitlab.ispras.ru/my_login"
+*Go to your GitLab profile and check [login settings]("https://gitlab.ispras.ru/my_login")
 to get your GitLab user login.*
 
 To push image to GitLab Container Registry use `docker push <image name>`.
 
 *Example:*
 
+```console
     docker build -t gitlab.ispras.ru:4567/your_login/utopia-eda/your_imagename /path/to/Dockerfile
-
     docker push gitlab.ispras.ru:4567/your_login/utopia-eda/your_imagename
+```
 
-*Enter GitLab login & password, if needed*
-
+Enter GitLab login & password, if needed.
 
 Go to `GitLab Project -> Deploy -> Container Registry` to see registry's contents.
 
@@ -179,8 +200,8 @@ Here the main commands for Docker are described.
 
 After running the image you get a container.
 There are several ways to make a data exchange between host and container.
-- Volumes
 
+- Volumes
 - Shared directory
 
 #### Volumes
@@ -190,35 +211,47 @@ container. You can get data from volume after container finished.
 
 To create volume:
 
+```console
     docker volume create <volume name>
+```
 
 To connect volume with container:
 
+```console
     docker run -v <volume name>:/path/in/container -it --name <container name> <image name>
+```
 
 After that, all changes in */path/in/container* will be available in volume
 after container ceases to operate.
 
 To check information about volume, use:
 
+```console
     docker volume inspect <volume name>
+```
 
 To list all volumes, use:
 
+```console
     docker volume ls
+```
 
 To remove volume, use:
 
+```console
     docker volume rm <volume name>
+```
 
 *Example:*
 
+```console
     docker volume create vol
-
     docker volume inspect vol
+```
 
 *Output:*
 
+```text
     [
       {
          "CreatedAt": "2023-11-16T16:18:21+03:00",
@@ -230,21 +263,22 @@ To remove volume, use:
          "Scope": "local"
       }
     ]
+```
 
-
+```console
     cp /home/workdir/test_data/example.ril /var/lib/docker/volumes/vol/_data
-
     docker run -v vol:/workdir/utopia-eda/io_data -it --name container_for_running_utopia-eda image-with-utopia-eda
+```
 
 After that, use container terminal:
 
+```console
     export UTOPIA_HOME=workdir/utopia-eda
-
     ${UTOPIA_HOME}/build/src/umain rtl io_data/example.ril
-
     cp ${UTOPIA_HOME}/output ${UTOPIA_HOME}/io_data
+```
 
-Ctrl + D to exit from container terminal and stop the container.
+Press `Ctrl + D` to exit from container terminal and stop the container.
 
 Then you can check changes in volume on the host.
 
@@ -254,24 +288,28 @@ You can embed host directory in the container file system.
 
 For sharing host directory with container, use:
 
+```console
     docker run -v /path/in/host:/path/in/container -it --name <container name> <image name>
+```
 
 This command embeds */path/in/host* in */path/in/container*. All changes made
 on the host will be available in container and vice versa.
 
 *Example:*
 
+```console
     docker run -v path/on/host/to/input_data:/workdir/utopia-eda/io_data -it --name container_for_running_utopia-eda image-with-utopia-eda
+```
 
 After that, use container terminal:
 
+```console
     export UTOPIA_HOME=workdir/utopia-eda
-
     ${UTOPIA_HOME}/build/src/umain rtl io_data/example.ril
-
     cp ${UTOPIA_HOME}/output ${UTOPIA_HOME}/io_data
+```
 
-Ctrl + D to exit from container terminal and stop the container.
+Press `Ctrl + D` to exit from container terminal and stop the container.
 
 Then you can check changes in `path/on/host/to/input_data` on the host.
 
@@ -291,25 +329,27 @@ After installing Docker, you can download image from DockerHub
 using command `docker pull`. Use [Docker authentication](#docker-authentication).
 
 This example includes the following steps:
- - Download the image
- - Create volume to exchange data with container
- - Run container from the image and connect it to volume
- - Run Utopia EDA on input data that are stored at the volume
- - Exit from container and save the result in volume
- - Delete container and check that all changes are available in the volume
+
+- Download the image
+- Create volume to exchange data with container
+- Run container from the image and connect it to volume
+- Run Utopia EDA on input data that are stored at the volume
+- Exit from container and save the result in volume
+- Delete container and check that all changes are available in the volume
 
 Terminal:
 
+```console
     docker pull gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:build
-
     docker volume create vol
-
     docker volume inspect vol
+```
 
 ---
 
 Output:
 
+```text
     [
       {
          "CreatedAt": "2023-11-16T16:18:21+03:00",
@@ -321,30 +361,32 @@ Output:
          "Scope": "local"
       }
     ]
+```
 
 ---
 
+```console
     cp example.ril /var/lib/docker/volumes/vol/_data
-
     docker run -v vol:/workdir/utopia-eda/io_data -it --name runutopia gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:build
+```
 
 Container terminal:
 
+```console
     cd workdir/utopia-eda
-
     export UTOPIA_HOME=workdir/utopia-eda
-
     rm -rf ${UTOPIA_HOME}/output
-
     ./build/src/umain rtl /workdir/utopia-eda/io_data/example.ril --lec 0 > ./io_data/output_data.txt
+```
 
-Ctrl + D to exit from container terminal and stop the container.
+Press `Ctrl + D` to exit from container terminal and stop the container.
 
 Terminal:
 
+```console
     docker rm runutopia
-
     cat /var/lib/docker/volumes/vol/_data/output_data.txt
+```
 
 ---
 
@@ -355,28 +397,28 @@ For updating image, put neccesary commands at the end of Dockerfile
 before `CMD["/bin/bash"]`.
 
 In this example, we edit Dockerfile so that:
- - the files in current directory will be copied to `/workdir` on image;
- - change the current directory on image to `/workdir/lib`;
- - install valgrind.
+
+- the files in current directory will be copied to `/workdir` on image;
+- change the current directory on image to `/workdir/lib`;
+- install valgrind.
+
 After all, we build the image with name
 `gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:updated` and push it
 to project's Container Registry.
 
 Dockerfile:
 
----
+```text
     ...
     COPY . /workdir
     WORKDIR /workdir/lib
     RUN apt-get update && apt install -y valgrind
     CMD["/bin/bash"]
-
----
+```
 
 Terminal:
 
+```console
     docker build -t gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:updated /home/user/utopia-eda
-
     docker push gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:updated
-
----
+```

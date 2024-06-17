@@ -12,13 +12,70 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <valarray>
 #include <vector>
 
 namespace eda::gate::optimizer {
 
+//===----------------------------------------------------------------------===//
+// Cost Function
+//===----------------------------------------------------------------------===//
+
 using Cost = float;
-using CostVector = std::vector<Cost>;
-using CostFunction = std::function<float(const CostVector &)>;
+
+class CostVector final {
+public:
+  /// Area, delay, and power.
+  static constexpr size_t DefaultSize = 3;
+
+  /// Zero cost vector.
+  static CostVector Zero;
+
+  explicit CostVector(const size_t size):
+      vector(size) {}
+  explicit CostVector(const std::valarray<Cost> &vector):
+      vector(vector) {}
+  CostVector():
+      CostVector(DefaultSize) {}
+
+  size_t size() const {
+    return vector.size();
+  }
+
+  const Cost &operator[](const size_t i) const {
+    return vector[i];
+  }
+
+  Cost &operator[](const size_t i) {
+    return vector[i];
+  }
+
+  CostVector operator+(const CostVector &other) const {
+    return CostVector{vector + other.vector};
+  }
+
+  CostVector operator-(const CostVector &other) const {
+    return CostVector{vector - other.vector};
+  }
+
+  CostVector operator*(const Cost coefficient) const {
+    return CostVector{vector * coefficient};
+  }
+
+  CostVector operator/(const Cost coefficient) const {
+    return CostVector{vector / coefficient};
+  }
+
+  CostVector normalize(const CostVector &min, const CostVector &max) const;
+
+  CostVector truncate(const Cost min, const Cost max) const;
+
+private:
+  std::valarray<Cost> vector;
+};
+
+using CostFunction =
+    std::function<Cost(const CostVector &)>;
 
 /// @brief Index in cost vector.
 enum Indicator {
@@ -28,24 +85,15 @@ enum Indicator {
   MIXED = -1
 };
 
-extern CostVector ZeroVector;
-
-inline CostVector add(const CostVector &lhs, const CostVector &rhs) {
-  assert(lhs.size() == rhs.size());
-
-  CostVector result(lhs.size());
-  for (size_t i = 0; i < lhs.size(); ++i) {
-    result[i] = lhs[i] + rhs[i];
-  }
-
-  return result;
-}
-
 inline CostFunction getCostFunction(const Indicator indicator) {
   return [indicator](const CostVector &vector) {
     return vector[indicator];
   };
 }
+
+//===----------------------------------------------------------------------===//
+// Constraints
+//===----------------------------------------------------------------------===//
 
 /// @brief Min-max constraint for a characteristic.
 struct Constraint final {
@@ -81,6 +129,9 @@ struct Constraint final {
 
 using Constraints = std::vector<Constraint>;
 
+CostVector getMinVector(const Constraints &constraints);
+CostVector getMaxVector(const Constraints &constraints);
+
 /// @brief Objective function.
 struct Objective final {
   explicit Objective(const Indicator indicator):
@@ -93,13 +144,45 @@ struct Objective final {
   const CostFunction function;
 };
 
+//===----------------------------------------------------------------------===//
+// Penalty Function
+//===----------------------------------------------------------------------===//
+
+/// Returns the coefficient to be multiplied w/ the cost.
+using PenaltyFunction =
+    std::function<Cost(const CostVector &, const Constraints &)>;
+
+Cost zeroPenalty(const CostVector &, const Constraints &);
+Cost quadPenalty(const CostVector &, const Constraints &);
+
+//===----------------------------------------------------------------------===//
+// Criterion
+//===----------------------------------------------------------------------===//
+
 /// @brief Optimization criterion w/ constraints.
 struct Criterion final {
-  const Objective objective;
-  const Constraints constraints;
+  Criterion(const Objective &objective,
+            const Constraints &constraints,
+            const PenaltyFunction penalty):
+      objective(objective),
+      constraints(constraints),
+      penalty(penalty) {}
+
+  Criterion(const Objective &objective,
+            const Constraints &constraints):
+      Criterion(objective, constraints, quadPenalty) {}
+
+  CostVector normalize(const CostVector &vector) const {
+    return vector.normalize(getMinVector(constraints),
+                            getMaxVector(constraints));
+  }
 
   Cost cost(const CostVector &vector) const {
     return objective.function(vector);
+  }
+
+  Cost penalizedCost(const CostVector &vector) const {
+    return cost(vector) * penalty(vector, constraints);
   }
 
   bool check(const CostVector &vector) const {
@@ -110,6 +193,10 @@ struct Criterion final {
     }
     return true;
   }
+
+  const Objective objective;
+  const Constraints constraints;
+  const PenaltyFunction penalty;
 };
 
 } // namespace eda::gate::optimizer

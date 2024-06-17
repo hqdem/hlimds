@@ -26,27 +26,29 @@ public:
     const Cost cost;
     const CostVector vector;
 
-    bool operator==(const Solution &rhs) const {
-      return solution == rhs.solution;
+    bool operator==(const Solution &other) const {
+      return solution == other.solution;
     }
 
-    bool operator<(const Solution &rhs) const {
-      return cost < rhs.cost;
+    bool operator<(const Solution &other) const {
+      return cost < other.cost;
     }
 
-    bool operator>(const Solution &rhs) const {
-      return cost > rhs.cost;
+    bool operator>(const Solution &other) const {
+      return cost > other.cost;
     }
   };
 
   using Region = std::set<Solution>;
 
-  SolutionSpace(const Criterion &criterion): criterion(criterion) {}
+  SolutionSpace(const Criterion &criterion):
+      criterion(criterion) {}
 
   /// Add the solution.
   void add(const T &solution, const CostVector &vector) {
-    Region &region = criterion.check(vector) ? feasible : infeasible;
-    region.insert(Solution{solution, criterion.cost(vector), vector});
+    auto &region = criterion.check(vector) ? feasible : infeasible;
+    const auto cost = criterion.penalizedCost(vector);
+    region.insert(Solution{solution, cost, vector});
   }
 
   /// Checks whether there are feasible solutions. 

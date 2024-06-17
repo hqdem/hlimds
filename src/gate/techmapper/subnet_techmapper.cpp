@@ -151,7 +151,7 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
     // Handle the input cells.
     if (i < subnet.getInNum()) {
       const Match match{model::getCellTypeID(model::IN), {}, false};
-      space[i]->add(match, optimizer::ZeroVector);
+      space[i]->add(match, optimizer::CostVector::Zero);
       continue;
     }
 
@@ -178,7 +178,7 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
 
       for (const auto &match : matches) {
         const auto cellCostVector = cellEstimator(match.typeID, Context{});
-        const auto costVector = optimizer::add(cutAggregation, cellCostVector);
+        const auto costVector = cutAggregation + cellCostVector;
 
         if (!criterion.check(costVector)) {
           continue;

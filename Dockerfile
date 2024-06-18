@@ -27,12 +27,15 @@ RUN make BUILD_TYPE=shared CUDD_INCLUDE=/workdir/cudd SM="-DDISABLE_SM"
 RUN make install
 
 WORKDIR /workdir
-RUN git clone --recursive https://github.com/YosysHQ/yosys.git
+RUN git clone https://github.com/YosysHQ/yosys.git
+WORKDIR /workdir/yosys
+RUN git checkout yosys-0.36
+RUN git submodule init
+RUN git submodule update
 ENV old_line="ENABLE_LIBYOSYS := 0"
 ENV new_line="ENABLE_LIBYOSYS := 1"
-ENV file_path="/workdir/yosys/Makefile"
+ENV file_path="Makefile"
 RUN sed -i "s|$old_line|$new_line|" "$file_path"
-WORKDIR /workdir/yosys
 RUN make -j$(nproc)
 RUN make install
 

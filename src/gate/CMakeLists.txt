@@ -32,6 +32,7 @@ add_library(Gate OBJECT
   optimizer/area_resynthesizer.cpp
   optimizer/associative_balancer.cpp
   optimizer/cone_builder.cpp
+  optimizer/criterion/criterion.cpp
   optimizer/cut_extractor.cpp
   optimizer/depth_replacer.cpp
   optimizer/depth_subnet_iterator.cpp

@@ -21,10 +21,11 @@ namespace eda::gate::optimizer {
 // Cost Function
 //===----------------------------------------------------------------------===//
 
+/// @brief Cost datatype (must meet the NumericType requirements).
 using Cost = float;
 
-class CostVector final {
-public:
+/// @brief Stores the estimated (predicted) design characteristics.
+struct CostVector final {
   /// Area, delay, and power.
   static constexpr size_t DefaultSize = 3;
 
@@ -58,6 +59,14 @@ public:
     return CostVector{vector - other.vector};
   }
 
+  CostVector operator*(const CostVector &other) const {
+    return CostVector{vector * other.vector};
+  }
+
+  CostVector operator/(const CostVector &other) const {
+    return CostVector{vector / other.vector};
+  }
+
   CostVector operator*(const Cost coefficient) const {
     return CostVector{vector * coefficient};
   }
@@ -70,14 +79,13 @@ public:
 
   CostVector truncate(const Cost min, const Cost max) const;
 
-private:
   std::valarray<Cost> vector;
 };
 
-using CostFunction =
-    std::function<Cost(const CostVector &)>;
+/// @brief Cost function (objective).
+using CostFunction = std::function<Cost(const CostVector &)>;
 
-/// @brief Index in cost vector.
+/// @brief Indicator identifier (index in a cost vector).
 enum Indicator {
   AREA  = 0,
   DELAY = 1,
@@ -95,7 +103,7 @@ inline CostFunction getCostFunction(const Indicator indicator) {
 // Constraints
 //===----------------------------------------------------------------------===//
 
-/// @brief Min-max constraint for a characteristic.
+/// @brief Min-max constraint for an indicator.
 struct Constraint final {
   Constraint(const CostFunction function, const Cost min, const Cost max):
       function(function), min(min), max(max) {
@@ -113,11 +121,6 @@ struct Constraint final {
   Constraint(const Indicator indicator, const Cost max):
       Constraint(indicator, 0.0, max) {}
 
-  const CostFunction function;
-
-  const Cost min;
-  const Cost max;
-
   bool check(const Cost cost) const {
     return min <= cost && cost <= max;
   }
@@ -125,6 +128,11 @@ struct Constraint final {
   bool check(const CostVector &vector) const {
     return check(function(vector));
   }
+
+  const CostFunction function;
+
+  const Cost min;
+  const Cost max;
 };
 
 using Constraints = std::vector<Constraint>;
@@ -152,7 +160,10 @@ struct Objective final {
 using PenaltyFunction =
     std::function<Cost(const CostVector &, const Constraints &)>;
 
-Cost zeroPenalty(const CostVector &, const Constraints &);
+inline Cost zeroPenalty(const CostVector &, const Constraints &) {
+  return 1.0;
+}
+
 Cost quadPenalty(const CostVector &, const Constraints &);
 
 //===----------------------------------------------------------------------===//

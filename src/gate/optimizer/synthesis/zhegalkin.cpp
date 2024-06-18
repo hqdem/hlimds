@@ -85,15 +85,16 @@ SubnetID createScheme(Polynomial &resultFunction,
   return subnetBuilder.make();
 }
 
-SubnetID ZhegalkinSynthesizer::synthesize(const DinTruthTable &func,
-    uint16_t maxArity) const {
+SubnetID ZhegalkinSynthesizer::synthesize(const TruthTable &func,
+                                          const TruthTable &,
+                                          uint16_t maxArity) const {
 
   Polynomial resultFunction = getTT(func);
   Polarization polarization = Polarization(resultFunction.size(), false);
   return createScheme(resultFunction, polarization, maxArity, func.num_vars());
 }
 
-Polynomial ZhegalkinSynthesizer::getTT(const DinTruthTable &t) const {
+Polynomial ZhegalkinSynthesizer::getTT(const TruthTable &t) const {
   Polynomial charFunction = charFromTruthTable(t);
   Polynomial resultFunction = charFromFunction(charFunction);
   return resultFunction;
@@ -134,8 +135,7 @@ uint64_t ZhegalkinSynthesizer::apply(const Polynomial &func,
   return res;
 }
 
-Polynomial ZhegalkinSynthesizer::charFromTruthTable(
-    const DinTruthTable &t) const {
+Polynomial ZhegalkinSynthesizer::charFromTruthTable(const TruthTable &t) const {
     
   Polynomial charFunction;
   uint64_t numBits = t.num_bits();

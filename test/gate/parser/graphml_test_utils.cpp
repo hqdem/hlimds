@@ -29,10 +29,9 @@ SubnetBuilder parse(std::string fileName, ParserData *data) {
 
   uassert(std::filesystem::exists(file.string()),
                                   "File doesn't exist" << std::endl);
-
   GraphMlParser parser;
   return
-      data ? parser.parse(file.string()) : parser.parse(file.string(), *data);
+      data ? parser.parse(file.string(),  *data) : parser.parse(file.string());
 }
 
 } // namespace eda::gate::parser::graphml

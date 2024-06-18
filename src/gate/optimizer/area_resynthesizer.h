@@ -18,17 +18,9 @@ public:
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
-  AreaResynthesizer(SubnetBuilder &subnetBuilder, size_t arity = 2) :
-    subnetBuilder(subnetBuilder), maxArity(arity) {}
+  SubnetID resynthesize(SubnetID subnetId, const TruthTable &care,
+                        uint16_t maxArity = -1) const override;
 
-  /// Resynthesizes the given subnet with care computation.
-  /// Returns the identifier of the newly constructed subnet.
-  SubnetID resynthesize(const SubnetFragment &sf) const override;
-  SubnetID resynthesize(SubnetID subnetId) const override;
-
-private:
-  SubnetBuilder &subnetBuilder;
-  size_t maxArity;
 };
 
 } // namespace eda::gate::optimizer

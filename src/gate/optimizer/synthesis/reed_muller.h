@@ -19,7 +19,6 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-  using DinTruthTable = kitty::dynamic_truth_table;
   using Polarization = std::vector<bool>;
   using Polynomial = std::vector<uint64_t>;
   using PolarizedPolynomial = std::pair<Polynomial, std::vector<bool>>;
@@ -75,7 +74,7 @@ namespace eda::gate::optimizer::synthesis {
   * "Polynomial realizations of partial boolean functions and systems".
   * https://reallib.org/reader?file=1514696&pg=34.
   */
-  class ReedMuller : public Synthesizer<DinTruthTable> {
+  class ReedMuller : public TruthTableSynthesizer {
 
   public:
 
@@ -86,6 +85,8 @@ namespace eda::gate::optimizer::synthesis {
      */
     ReedMuller(uint64_t (*metricFunction)(Polynomial &) = sumOfTerms);
 
+    using Synthesizer::synthesize;
+
     /**
      * Generates a logical scheme by a truth table used in constructing
      * ReedMuller object. If you want to get an optimal (by some metric)
@@ -93,8 +94,8 @@ namespace eda::gate::optimizer::synthesis {
      * as the first argument in this method. If no metric is passed method generates
      * a non-polarized scheme (scheme where all the inputs are positive). 
      */
-    SubnetID synthesize(const DinTruthTable &func,
-        uint16_t maxArity = -1) const override;
+    SubnetID synthesize(const TruthTable &func, const TruthTable &,
+                        uint16_t maxArity = -1) const override;
 
   private:
 

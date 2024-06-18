@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/synthesis/bidecomposition.h"
+#include "gate/optimizer/synthesis/isop.h"
 
 #include <algorithm>
 
@@ -18,12 +19,12 @@ using Link         = BiDecSynthesizer::Link;
 using SubnetID     = BiDecSynthesizer::SubnetID;
 /// @endcond
 
-SubnetID BiDecSynthesizer::run(const KittyTT &func, uint16_t maxArity) {
+SubnetID BiDecSynthesizer::run(const TruthTable &func, const TruthTable &care,
+                               uint16_t maxArity) {
   SubnetBuilder subnetBuilder;
   LinkList inputs = subnetBuilder.addInputs(func.num_vars());
-  KittyTT care(func.num_vars());
-  kitty::create_from_binary_string(care, std::string(func.num_bits(), '1'));
-  TernaryBiClique initBiClique(func, care);
+  TernaryBiClique initBiClique(func,
+      care.num_vars() ? care : utils::generateConstTT(func.num_vars()));
   subnetBuilder.addOutput(decompose(initBiClique, subnetBuilder, maxArity));
   return subnetBuilder.make();
 }
@@ -32,8 +33,8 @@ Link BiDecSynthesizer::decompose(TernaryBiClique &initBiClique,
                                  SubnetBuilder &subnetBuilder,
                                  uint16_t maxArity) {
   if (initBiClique.getOnSet().size() == 1) {
-    return utils::synthFromSOP(initBiClique.getOnSet(),
-        initBiClique.getInputs(), subnetBuilder, maxArity);
+    return synthFromSOP(initBiClique.getOnSet(),
+                        initBiClique.getInputs(), subnetBuilder, maxArity);
   }
   
   auto starBiCliques = initBiClique.getStarCoverage();

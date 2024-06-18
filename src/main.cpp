@@ -10,7 +10,6 @@
 #include "gate/analyzer/simulation_estimator.h"
 #include "gate/debugger/sat_checker.h"
 #include "gate/model/subnet.h"
-#include "gate/optimizer/area_optimizer.h"
 #include "gate/parser/graphml_parser.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/translator/firrtl.h"
@@ -111,23 +110,21 @@ eda::gate::model::SubnetID parseGraphML(const std::string &fileName) {
 int optimize(const eda::gate::model::SubnetID &oldSubnetId,
              GraphMlOptions &opts) {
   using SatChecker = eda::gate::debugger::SatChecker;
-  using AreaOptimizer = eda::gate::optimizer::AreaOptimizer;
 
   const auto &oldSubnet = eda::gate::model::Subnet::get(oldSubnetId);
   eda::gate::analyzer::SimulationEstimator estimator;
   size_t depthBefore = oldSubnet.getPathLength().second;
   size_t sizeBefore = oldSubnet.getEntries().size();
   size_t powerBefore = 
-      estimator.estimate(oldSubnet).getSwitchProbabilitiesSum();
+      estimator.estimate(oldSubnet).getSwitchProbsSum();
   eda::gate::model::SubnetBuilder subnetBuilder;
   auto inputs = subnetBuilder.addInputs(oldSubnet.getInNum());
   auto outputs = subnetBuilder.addSubnet(oldSubnetId, inputs);
   subnetBuilder.addOutputs(outputs);
 
-  if (opts.optCrit == eda::gate::optimizer::Area) {
-    AreaOptimizer areaOptimizer(subnetBuilder, 2, 10);
-    areaOptimizer.optimize();
-  } else if (opts.optCrit == eda::gate::optimizer::Delay) {
+  if (opts.optCrit == OptimizationCriterion::Area) {
+    //TODO Area
+  } else if (opts.optCrit == OptimizationCriterion::Delay) {
     //TODO Depth
   } else {
     //TODO Switching Activity
@@ -136,7 +133,7 @@ int optimize(const eda::gate::model::SubnetID &oldSubnetId,
   const auto &newSubnetId = subnetBuilder.make();
   const auto &newSubnet = eda::gate::model::Subnet::get(newSubnetId);
   size_t depthAfter = newSubnet.getPathLength().second;
-  size_t powerAfter = estimator.estimate(newSubnet).getSwitchProbabilitiesSum();
+  size_t powerAfter = estimator.estimate(newSubnet).getSwitchProbsSum();
 
   if (opts.lec) {
     SatChecker &checker = SatChecker::get();
@@ -235,7 +232,7 @@ int main(int argc, char **argv) {
 
   GraphMlOptions &opts = options.graphMl;
   if (!options.graphMl.files().empty() &&
-      (opts.optCrit != eda::gate::optimizer::NoOpt)) {
+      (opts.optCrit != OptimizationCriterion::NoOpt)) {
     for (const auto &file : options.graphMl.files()) {
       const auto &oldSubnetId = parseGraphML(file);
       result |= optimize(oldSubnetId, options.graphMl);

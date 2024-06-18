@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/synthesis/akers.h"
+#include "util/kitty_utils.h"
 
 namespace eda::gate::optimizer::synthesis {
 
@@ -63,15 +64,12 @@ struct Candidate {
 //===----------------------------------------------------------------------===//
 
 SubnetID AkersSynthesizer::synthesize(const TruthTable &func,
+                                      const TruthTable &care,
                                       uint16_t arity) const {
   /// TODO: Wrong argument processing is needed.
   assert(arity > 2 && "Arity of MAJ gate should be >= 3!");
-  TruthTable care(func.num_vars());
-  std::string bitsCare;
-  bitsCare.assign(func.num_bits(), '1');
-  kitty::create_from_binary_string(care, bitsCare);
-
-  return run(func, care);
+  return run(func,
+      care.num_vars() ? care : utils::generateConstTT(func.num_vars()));
 }
 
 //===----------------------------------------------------------------------===//

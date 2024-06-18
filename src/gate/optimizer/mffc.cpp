@@ -12,7 +12,6 @@ namespace eda::gate::optimizer {
 
 using Builder  = model::SubnetBuilder;
 using Cell     = model::Subnet::Cell;
-using Fragment = SubnetIteratorBase::SubnetFragment;
 using Link     = model::Subnet::Link;
 using LinkList = model::Subnet::LinkList;
 using Nodes    = std::vector<size_t>;
@@ -109,30 +108,30 @@ static IdxMap findMffcBounds(Builder &builder,
   return oldToNew;
 }
 
-Fragment getMffc(Builder &builder, size_t root, const Nodes &leaves) {
+model::SubnetID getMffc(model::SubnetBuilder &builder, size_t root,
+                        const std::vector<size_t> &leaves,
+                        std::unordered_map<size_t, size_t> &map) {
   assert(!leaves.empty() && "Bounds for a fanout-free cone are empty!");
-  Fragment cone;
   const size_t nLeaves = leaves.size();
-  cone.subnetID = model::OBJ_NULL_ID;
-  cone.entryMap.reserve(nLeaves + 1);
+  auto subnetID = model::OBJ_NULL_ID;
+  map.reserve(nLeaves + 1);
 
   if (nLeaves < 2) {
-    cone.subnetID = getReconvergenceCone(builder, root,
-                                         Cell::MaxArity, cone.entryMap);
-    return cone;
+    subnetID = getReconvergenceCone(builder, root, Cell::MaxArity, map);
+    return subnetID;
   }
 
-  IdxMap oldToNew = findMffcBounds(builder, root, leaves, cone.entryMap);
+  IdxMap oldToNew = findMffcBounds(builder, root, leaves, map);
 
   Builder coneBuilder;
   coneBuilder.addInputs(oldToNew.size());
   buildFromRoot(builder, coneBuilder, root, oldToNew);
   size_t outId = coneBuilder.addOutput(Link(oldToNew.at(root))).idx;
 
-  cone.entryMap[outId] = root;
-  cone.subnetID = coneBuilder.make();
+  map[outId] = root;
+  subnetID = coneBuilder.make();
 
-  return cone;
+  return subnetID;
 }
 
 } // namespace eda::gate::optimizer

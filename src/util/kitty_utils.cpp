@@ -172,34 +172,11 @@ Cube cutCube(Cube large, Cube small) {
   return Cube{large._bits & ~small._mask, large._mask & ~small._mask};
 }
 
-Link synthFromSOP(const SOP &sop, const LinkList &inputs,
-                   SubnetBuilder &subnetBuilder, uint16_t maxArity) {
-  if (sop.size() == 1) {
-    return synthFromCube(sop[0], inputs, subnetBuilder, maxArity);
-  }
-
-  LinkList links;
-  for (auto it = sop.begin(); it < sop.end(); ++it) {
-    Link link = synthFromCube(*it, inputs, subnetBuilder, maxArity);
-    links.push_back(~link);
-  }
-
-  return ~subnetBuilder.addCellTree(CellSymbol::AND, links, maxArity);
-}
-
-Link synthFromCube(Cube cube, const LinkList &inputs,
-                   SubnetBuilder &subnetBuilder, int16_t maxArity) {
-  uint32_t mask {cube._mask};
-  LinkList links;
-  for (; mask; mask &= (mask - 1)) {
-    size_t idx = std::log2(mask - (mask & (mask - 1)));
-    bool inv = !(cube.get_bit(idx));
-    links.push_back(Link(inputs[idx].idx, inv));
-  }
-  if (links.size() == 1) {
-    return links[0];
-  }
-  return subnetBuilder.addCellTree(CellSymbol::AND, links, maxArity);
+KittyTT generateConstTT(size_t numVars, bool on) {
+  KittyTT tt(numVars);
+  kitty::create_from_binary_string(
+      tt, std::string(1ull << numVars, on ? '1' : '0'));
+  return tt;
 }
 
 } // namespace eda::utils

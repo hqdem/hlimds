@@ -47,7 +47,7 @@ struct MajNode {
  * DOI: 10.1109/DDECS52668.2021.9417058
  * Publisher: IEEE
  */
-class DMSynthesizer : public Synthesizer<kitty::dynamic_truth_table> {
+class DMSynthesizer : public TruthTableSynthesizer {
 
 public:
 
@@ -56,7 +56,6 @@ public:
   using Link       = eda::gate::model::Subnet::Link;
   using LinkList   = eda::gate::model::Subnet::LinkList;
   using SubnetID   = eda::gate::model::SubnetID;
-  using TruthTable = kitty::dynamic_truth_table;
 
   static constexpr size_t BOUND = 2000;
   static constexpr size_t OUTID = 4611686018427387903;
@@ -64,8 +63,10 @@ public:
   /// Empty constructor.
   DMSynthesizer() {}
 
-  /// Synthesize function without "don't care" bits.
-  SubnetID synthesize(const TruthTable &func,
+  using Synthesizer::synthesize;
+
+  /// Synthesize function.
+  SubnetID synthesize(const TruthTable &func, const TruthTable &care,
                       uint16_t maxArity = -1) const override;
 
 private:

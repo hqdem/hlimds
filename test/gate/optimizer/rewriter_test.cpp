@@ -22,7 +22,11 @@ using DinTruthTable = kitty::dynamic_truth_table;
 
 class EqualResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetID subnetID) const override {
+
+  using ResynthesizerBase::resynthesize;
+
+  SubnetID resynthesize(const SubnetID subnetID, const TruthTable &,
+                        uint16_t) const override {
     const Subnet &subnet = Subnet::get(subnetID);
     SubnetBuilder builder;
     const auto &inLinks = builder.addInputs(subnet.getInNum());
@@ -34,7 +38,11 @@ public:
 
 class AddBufsResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetID subnetID) const override {
+
+  using ResynthesizerBase::resynthesize;
+
+  SubnetID resynthesize(const SubnetID subnetID, const TruthTable &,
+                        uint16_t) const override {
     const Subnet &subnet = Subnet::get(subnetID);
     const auto &entries = subnet.getEntries();
     SubnetBuilder builder;
@@ -67,7 +75,11 @@ public:
 
 class DelBufsResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetID subnetID) const override {
+
+  using ResynthesizerBase::resynthesize;
+
+  SubnetID resynthesize(const SubnetID subnetID, const TruthTable &,
+                        uint16_t) const override {
     const Subnet &subnet = Subnet::get(subnetID);
     const auto &entries = subnet.getEntries();
     SubnetBuilder builder;

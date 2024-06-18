@@ -8,22 +8,25 @@
 
 #pragma once
 
-#include "bitset"
-
 #include "gate/model/subnet.h"
-
 #include "switching_activity.h"
+#include "util/singleton.h"
+
+#include <bitset>
 
 namespace eda::gate::analyzer {
 
+using Cell          = eda::gate::model::Subnet::Cell;
+using Cell          = eda::gate::model::Subnet::Cell;
+using LinkList      = eda::gate::model::Subnet::LinkList;
 using Probabilities = std::vector<float>;
 using Subnet        = eda::gate::model::Subnet;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
 /**
  * @brief Evaluates the switching activity by calculating the probability of switching  of each cell.
  */
-class ProbabilisticEstimate : public SwitchActivityEstimator {
-
+class ProbabilityEstimator : public SwitchActivityEstimator {
 private:
  
   float combinations (size_t k, size_t n, std::vector<float> &prob) const;
@@ -32,7 +35,13 @@ private:
 
   float xorEstimate(std::vector<float> &xorProb, size_t nXorP) const;
 
+  float estimateCell(Probabilities &probs, const LinkList &links,
+                     const Cell &cell, const size_t i,
+                     const Probabilities &inProbs) const;
+
 public:
+
+  ProbabilityEstimator() {};
 
   /**
    * @brief Estimates the probability that the cell of Subnet will take the value 1.
@@ -42,8 +51,19 @@ public:
    * 
    * @return Vector of probability 1 for each cell of Subnet.
    */
-  std::vector<float> probEstimator(const Subnet &subnet,
-      const Probabilities &probabilities = {}) const;
+  Probabilities estimateProbs(const Subnet &subnet,
+                              const Probabilities &probabilities = {}) const;
+
+  /**
+   * @brief Estimates the probability that the cell of Subnetbuilder will take the value 1.
+   * 
+   * @param builder       The SubnetBuilder for counting switches.
+   * @param probabilities Probability distribution of inputs. Default value for each input is 0.5.
+   * 
+   * @return Vector of probability 1 for each cell of Subnet.
+   */
+  Probabilities estimateProbs(const SubnetBuilder &builder, 
+                              const Probabilities &probabilities = {}) const;
 
   /**
    * @brief Estimates the switching activity by calculating the probability of switching  of each cell.

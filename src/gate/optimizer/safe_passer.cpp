@@ -72,17 +72,8 @@ void SafePasser::replace(
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {
 
-  assert(/* Replacing unsafe root entry */
-         isNewEntry.size() <= entry || !isNewEntry[entry]);
   const auto &rhsEntries = Subnet::get(rhsID).getEntries();
-  assert(/* Current passer entry and rhs root entry differs */
-         rhsToLhs[rhsEntries.size() - 1] == entry);
-
-  saveRoot = entry;
-  EntryIterator::operator++();
-  saveNext = entry;
-  EntryIterator::operator--();
-
+  prepareForReplace(rhsEntries.size() - 1, rhsToLhs);
   auto &_isNewEntry = this->isNewEntry;
   std::function addNewCell = [&_isNewEntry, &onNewCell](const size_t entryID) {
     if (_isNewEntry.size() <= entryID) {
@@ -97,6 +88,30 @@ void SafePasser::replace(
   };
 
   builderToTransform->replace(rhsID, rhsToLhs, getCellWeight, &addNewCell,
+                              onEqualDepth, onGreaterDepth);
+}
+
+void SafePasser::replace(
+    const SubnetBuilder &rhsBuilder,
+    std::unordered_map<size_t, size_t> &rhsToLhs,
+    const std::function<void(const size_t)> *onNewCell,
+    const std::function<void(const size_t)> *onEqualDepth,
+    const std::function<void(const size_t)> *onGreaterDepth) {
+
+  prepareForReplace(*(--rhsBuilder.end()), rhsToLhs);
+  auto &_isNewEntry = this->isNewEntry;
+  std::function addNewCell = [&_isNewEntry, &onNewCell](const size_t entryID) {
+    if (_isNewEntry.size() <= entryID) {
+      _isNewEntry.resize(entryID + 1, false);
+    }
+    _isNewEntry[entryID] = true;
+
+    // Callback passed by user
+    if (onNewCell) {
+      (*onNewCell)(entryID);
+    }
+  };
+  builderToTransform->replace(rhsBuilder, rhsToLhs, &addNewCell,
                               onEqualDepth, onGreaterDepth);
 }
 

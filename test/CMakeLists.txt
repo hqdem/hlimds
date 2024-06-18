@@ -56,15 +56,14 @@ add_executable(${TEST_TARGET}
   gate/parser/graphml_test_utils.cpp
   gate/parser/graphml_parser_test.cpp
   gate/premapper/aigmapper_test.cpp
-  gate/optimizer/area_optimizer_test.cpp
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/cone_builder_test.cpp
   gate/optimizer/cut_extractor_test.cpp
-  gate/optimizer/depth_optimizer_test.cpp
   gate/optimizer/npndb_test.cpp
   gate/optimizer/npndbserial_test.cpp
   gate/optimizer/pass_test.cpp
   gate/optimizer/reconvergence_cut_test.cpp
+  gate/optimizer/refactor_test.cpp
   gate/optimizer/resubstitutor_test.cpp
   gate/optimizer/resynthesizer_test.cpp
   gate/optimizer/rewriter_test.cpp

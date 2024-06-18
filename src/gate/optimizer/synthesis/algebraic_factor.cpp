@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/synthesis/algebraic_factor.h"
+#include "gate/optimizer/synthesis/isop.h"
 
 #include <unordered_set>
 
@@ -33,7 +34,7 @@ Link AlgebraicFactor::getFactoring(const SOP &func, const LinkList &inputs,
   SOP div = findDivisor(func);
 
   if (div.empty()) {
-    return utils::synthFromSOP(func, inputs, subnetBuilder, maxArity);
+    return synthFromSOP(func, inputs, subnetBuilder, maxArity);
   }
   SOP quo;
   SOP rem;
@@ -79,11 +80,11 @@ Link AlgebraicFactor::getLiteralFactoring(const SOP &func, const Cube lits,
   if (rem.size()) {
     Link remLink = getFactoring(rem, inputs, subnetBuilder, maxArity);
     Link tmp = subnetBuilder.addCell(model::AND, quoLink,
-        utils::synthFromCube(lit, inputs, subnetBuilder, maxArity));
+        synthFromCube(lit, inputs, subnetBuilder, maxArity));
     return ~subnetBuilder.addCell(model::AND, ~tmp, ~remLink);
   }
   return subnetBuilder.addCell(model::AND, quoLink,
-      utils::synthFromCube(lit, inputs, subnetBuilder, maxArity));
+      synthFromCube(lit, inputs, subnetBuilder, maxArity));
 }
 
 AlgebraicFactor::SOP AlgebraicFactor::findDivisor(const SOP &func) const {

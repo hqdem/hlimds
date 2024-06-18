@@ -15,58 +15,52 @@
 
 #include "kitty/kitty.hpp"
 
+#include <utility>
 #include <vector>
 
 namespace eda::gate::optimizer::synthesis {
 
+/// @cond ALIASES
+using Cube          = kitty::cube;
+using Link          = eda::gate::model::Subnet::Link;
+using LinkList      = eda::gate::model::Subnet::LinkList;
+using SOP           = std::vector<Cube>;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using SubnetID      = model::SubnetID;
+/// @endcond
+
+/// Synthesizes the subnet from SOP of the boolean function.
+Link synthFromSOP(const SOP &sop, const LinkList &inputs,
+                  SubnetBuilder &subnetBuilder, uint16_t maxArity = -1);
+
+/// Synthesizes the subnet from cube.
+Link synthFromCube(Cube cube, const LinkList &inputs,
+                   SubnetBuilder &subnetBuilder, int16_t maxArity = -1);
+
 /**
  * \brief Implements method of synthesis, by Minato-Morreale algorithm.
 */
-class MMSynthesizer final : public Synthesizer<kitty::dynamic_truth_table> {
+class MMSynthesizer final : public TruthTableSynthesizer {
 public:
 
-  /// @cond ALIASES
-  using KittyTT       = kitty::dynamic_truth_table;
-  using Link          = eda::gate::model::Subnet::Link;
-  using LinkList      = eda::gate::model::Subnet::LinkList;
-  using SubnetBuilder = eda::gate::model::SubnetBuilder;
-  using SubnetID      = model::SubnetID;
-  /// @endcond
+  using Synthesizer::synthesize;
 
   /// Synthesizes the Subnet.
-  SubnetID synthesize(const KittyTT &func,
-                      uint16_t maxArity = -1) const override {
-    CONST_CHECK(func, false)
-    SubnetBuilder subnetBuilder;
-    LinkList ins = subnetBuilder.addInputs(func.num_vars());
-    bool inv = (kitty::count_ones(func) > (func.num_bits() / 2));
-    Link output = inv ?
-        ~utils::synthFromSOP(kitty::isop(~func), ins, subnetBuilder, maxArity) :
-        utils::synthFromSOP(kitty::isop(func), ins, subnetBuilder, maxArity);
-    subnetBuilder.addOutput(output);
-    return subnetBuilder.make();
-  }
+  SubnetID synthesize(const TruthTable &func,
+                      const TruthTable &care,
+                      uint16_t maxArity = -1) const override;
 
-  /// Synthesizes the Subnet accounting care bits.
-  SubnetID synthesize(const KittyTT &func,
-                      const KittyTT &care,
-                      uint16_t maxArity = -1) const;
+  using Synthesizer::synthesizeWithFactoring;
 
-  /// Synthesizes the Subnet with algebraic factoring.
-  SubnetID synthesizeWithFactoring(const KittyTT &func,
-                                   uint16_t maxArity = -1) const override {
-    CONST_CHECK(func, false)
-    bool inv = (kitty::count_ones(func) > (func.num_bits() / 2));
-    return factor.getSubnet(
-        kitty::isop(inv ? ~func : func), func.num_vars(), maxArity, inv);
-  }
-
-  /// Synthesizes the Subnet with algebraic factoring accounting care bits.
-  SubnetID synthesizeWithFactoring(const KittyTT &func,
-                                   const KittyTT &care,
-                                   uint16_t maxArity = -1) const;
+  /// Synthesizes the Subnet.
+  SubnetID synthesizeWithFactoring(const TruthTable &func,
+                                   const TruthTable &care,
+                                   uint16_t maxArity = -1) const override;
 
 private:
+
+  std::pair<TruthTable, bool> handleCare(const TruthTable &func,
+                                         const TruthTable &care) const;
 
   /// For the synthesis of Boolean functions with algebraic factoring.
   AlgebraicFactor factor;

@@ -466,7 +466,8 @@ void PowerMap::init(Mapping &mapping) {
   coneBuilder = new eda::gate::optimizer::ConeBuilder(&subnet);
 
   // get switching activity of subnet
-  eda::gate::analyzer::SimulationEstimator simulationEstimator(256);
+  eda::gate::analyzer::SimulationEstimator simulationEstimator;
+  simulationEstimator.setTicks(256);
   switchActivity = simulationEstimator.estimate(subnet);
 
   // save inputs in mapping

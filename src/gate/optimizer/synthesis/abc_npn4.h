@@ -30,8 +30,10 @@ public:
   using TruthTable = FunctionIR;
   static constexpr auto k = 4;
 
-  SubnetID synthesize(
-      const TruthTable &tt, uint16_t maxArity = -1) const override;
+  using Synthesizer::synthesize;
+
+  SubnetID synthesize(const TruthTable &tt, const TruthTable &,
+                      uint16_t maxArity = -1) const override;
 
 #ifdef NPN4_USAGE_STATS
   void printNpn4UsageStats();

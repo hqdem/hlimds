@@ -53,7 +53,7 @@ public:
   /**
    * @brief Returns the sum of the switching probabilities of all cells.
    */
-  double getSwitchProbabilitiesSum() const {
+  double getSwitchProbsSum() const {
     double result{0.0};
     for (float prob : switchProbabilities) {
       result += prob;

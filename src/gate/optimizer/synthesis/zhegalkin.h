@@ -19,7 +19,6 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-using DinTruthTable = kitty::dynamic_truth_table;
 using Link = model::Subnet::Link;
 using LinkList = std::vector<Link>;
 using Polynomial = std::vector<uint64_t>;
@@ -42,8 +41,10 @@ SubnetID createScheme(Polynomial &resultFunction, Polarization &polarization,
  * of Boolean functions // IEE Proc., 1990. Vol. 137. №5. P. 366-370.
  */
 
-class ZhegalkinSynthesizer : public Synthesizer<DinTruthTable> {
+class ZhegalkinSynthesizer : public TruthTableSynthesizer {
 public:
+
+  using Synthesizer::synthesize;
 
   /**
    * Transforms truth table for the function to subnet model 
@@ -58,7 +59,7 @@ public:
    * 
    * The maxArity param must be greater than 2.
    */
-  SubnetID synthesize(const DinTruthTable &func,
+  SubnetID synthesize(const TruthTable &func, const TruthTable &,
                       uint16_t maxArity = -1) const override;
 
   /**
@@ -74,7 +75,7 @@ public:
    *
    * @return polynomical representation of truth table t
    */
-  Polynomial getTT(const DinTruthTable &t) const;
+  Polynomial getTT(const TruthTable &t) const;
 
   /**
    * Calculates the function of the variables given in the string.
@@ -100,7 +101,7 @@ private:
    *
    * @return characterisitic ponynomial of a given truth table
    */
-  Polynomial charFromTruthTable(const DinTruthTable &t) const;
+  Polynomial charFromTruthTable(const TruthTable &t) const;
 
   /**
    * Generates a characteristic function from a given function.

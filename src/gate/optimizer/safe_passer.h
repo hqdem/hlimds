@@ -60,7 +60,7 @@ public:
 
   /**
    * @brief SubnetBuilder::replace(...) wrapper that allows to maintain next
-   * passer iterations safe.
+   * passer iterations safe. Version with SubnetID rhs.
    */
   void replace(
       const SubnetID rhsID,
@@ -70,10 +70,36 @@ public:
       const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
 
+  /**
+   * @brief SubnetBuilder::replace(...) wrapper that allows to maintain next
+   * passer iterations safe. Version with SubnetBuilder rhs.
+   */
+  void replace(
+      const SubnetBuilder &rhsBuilder,
+      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
+      const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
+      const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
+
   /// Clears information about unsafe entries in subnet builder.
   void finalizePass();
 
 private:
+  /// Checks replacement possibility and saves old cone root next entry.
+  void prepareForReplace(
+      const size_t rhsOutEntryID,
+      std::unordered_map<size_t, size_t> &rhsToLhs) {
+    assert(/* Replacing unsafe root entry */
+           isNewEntry.size() <= entry || !isNewEntry[entry]);
+    assert(/* Current passer entry and rhs root entry differs */
+           rhsToLhs[rhsOutEntryID] == entry);
+
+    saveRoot = entry;
+    EntryIterator::operator++();
+    saveNext = entry;
+    EntryIterator::operator--();
+  }
+
   inline void callOnEachCell() {
     if (onEachEntry && entry != SubnetBuilder::upperBoundID &&
         entry != SubnetBuilder::lowerBoundID) {

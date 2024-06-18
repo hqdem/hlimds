@@ -11,6 +11,7 @@
 namespace eda::gate::optimizer::synthesis {
 
 SubnetId DsdSynthesizer::synthesize(const BddWithDdManager &pair,
+                                    const TruthTable &,
                                     uint16_t maxArity) const {
   DSDNode *dsd;
   DSDManager *dmanager;
@@ -49,10 +50,11 @@ SubnetId DsdSynthesizer::synthesize(const BddWithDdManager &pair,
 }
 
 SubnetId DsdSynthesizer::synthesize(const TruthTable &table,
+                                    const TruthTable &care,
                                     uint16_t maxArity) const {
   /* Initial subnet */
-  MMSynthesizer k;
-  const auto &subnet = Subnet::get(k.synthesize(table, maxArity));
+  MMSynthesizer mm;
+  const auto &subnet = Subnet::get(mm.synthesize(table, care, maxArity));
 
   /* Subnet to BDD convertion */
   Cudd manager(0, 0);

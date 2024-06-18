@@ -42,7 +42,6 @@ using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using SubnetId = eda::gate::model::SubnetID;
 using LinkList = Subnet::LinkList;
 using Link = Subnet::Link;
-using TruthTable = kitty::dynamic_truth_table;
 using SubnetToBdd = gate::model::utils::SubnetToBdd;
 
 /**
@@ -61,9 +60,11 @@ struct BddWithDdManager {
  * with Symbolic Simulation" by Valeria Bertacco (2003).
 */
 class DsdSynthesizer : public Synthesizer<BddWithDdManager>,
-                       public Synthesizer<TruthTable> {
+                       public TruthTableSynthesizer {
 
 public:
+
+  using TruthTable = TruthTableSynthesizer::TruthTable;
 
   //===--------------------------------------------------------------------===//
   // Constructors/Destructors
@@ -76,10 +77,13 @@ public:
   // Convenience Methods
   //===--------------------------------------------------------------------===//
 
+  using Synthesizer<BddWithDdManager>::synthesize;
+  using TruthTableSynthesizer::synthesize;
+
   /// Synthesize.
-  SubnetId synthesize(const BddWithDdManager &pair,
+  SubnetId synthesize(const BddWithDdManager &pair, const TruthTable &,
                       uint16_t maxArity = -1) const override;
-  SubnetId synthesize(const TruthTable &table,
+  SubnetId synthesize(const TruthTable &table, const TruthTable &care,
                       uint16_t maxArity = -1) const override;
 
 private:

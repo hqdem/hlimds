@@ -256,8 +256,9 @@ CNF CascadeSynthesizer::getFunction(
   return output;
 }
 
-SubnetID CascadeSynthesizer::synthesize(
-    const TruthTable &func, uint16_t maxArity) const {
+SubnetID CascadeSynthesizer::synthesize(const TruthTable &func,
+                                        const TruthTable &,
+                                        uint16_t maxArity) const {
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
   const int undefinedArity = 65535;

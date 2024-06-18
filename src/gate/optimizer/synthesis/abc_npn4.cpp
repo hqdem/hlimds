@@ -278,8 +278,9 @@ static Database database;
   static uint32_t count[1 << (1 << Database::k)]{0};
 #endif // NPN4_USAGE_STATS
 
-model::SubnetID AbcNpn4Synthesizer::synthesize(
-    const TruthTable &tt, uint16_t maxArity) const {
+model::SubnetID AbcNpn4Synthesizer::synthesize(const TruthTable &tt,
+                                               const TruthTable &,
+                                               uint16_t maxArity) const {
 
   static std::vector<SubnetID> cache[k + 1] {
       std::vector<SubnetID>(1 << (1 << 0)),

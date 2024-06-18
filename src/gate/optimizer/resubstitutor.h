@@ -12,7 +12,6 @@
 #include "gate/optimizer/mffc.h"
 #include "gate/optimizer/reconvergence_cut.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/subnet_iterator.h"
 #include "gate/optimizer/subnet_transformer.h"
 
 #include <string>

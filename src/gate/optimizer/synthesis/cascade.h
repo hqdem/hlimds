@@ -25,7 +25,7 @@ namespace eda::gate::optimizer::synthesis {
 * computational and control contact circuits" by G. N. Povarov,
 * Avtomat i Telemekh., 1957, volume 18, issue 2, 145–162
 */
-class CascadeSynthesizer : public Synthesizer<kitty::dynamic_truth_table> {
+class CascadeSynthesizer : public TruthTableSynthesizer {
 
 public:
 
@@ -37,8 +37,6 @@ public:
   using CNF = std::vector<std::vector<int>>;
   /// Subnet id
   using SubnetID = model::SubnetID;
-  /// Truth table of a function
-  using TruthTable = kitty::dynamic_truth_table;
 
   //===------------------------------------------------------------------===//
   // Constructors/Destructors
@@ -51,9 +49,11 @@ public:
   // Main Methods
   //===------------------------------------------------------------------===//
 
+  using Synthesizer::synthesize;
+
   /// Makes subnet using cascade method
-  SubnetID synthesize(
-      const TruthTable &func, uint16_t maxArity = -1) const override;
+  SubnetID synthesize(const TruthTable &func, const TruthTable &,
+                      uint16_t maxArity = -1) const override;
     
   /// Makes CNF for function using cascade method
   CNF getFunction(

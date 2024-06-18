@@ -47,6 +47,7 @@ gate::model::SubnetID npnTransform(const gate::model::Subnet &subnet,
 /// @cond ALIASES
 using CellSymbol    = eda::gate::model::CellSymbol;
 using Cube          = kitty::cube;
+using KittyTT       = kitty::dynamic_truth_table;
 using Link          = eda::gate::model::Subnet::Link;
 using LinkList      = eda::gate::model::Subnet::LinkList;
 using SOP           = std::vector<Cube>;
@@ -84,12 +85,6 @@ bool cubeContain(Cube large, Cube small);
 /// Removes all literals of a small cube from a large cube.
 Cube cutCube(Cube large, Cube small);
 
-/// Synthesizes the subnet from SOP of the boolean function.
-Link synthFromSOP(const SOP &sop, const LinkList &inputs,
-                  SubnetBuilder &subnetBuilder, uint16_t maxArity = -1);
-
-/// Synthesizes the subnet from cube.
-Link synthFromCube(Cube cube, const LinkList &inputs,
-                   SubnetBuilder &subnetBuilder, int16_t maxArity = -1);
+KittyTT generateConstTT(size_t numVars, bool on = true);
 
 } // namespace eda::utils

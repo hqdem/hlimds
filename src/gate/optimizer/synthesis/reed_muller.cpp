@@ -14,7 +14,8 @@ namespace eda::gate::optimizer::synthesis {
   ReedMuller::ReedMuller(uint64_t (*metricFunction)(Polynomial &)) : 
     currentMetricFunction(metricFunction) { }
 
-  SubnetID ReedMuller::synthesize(const DinTruthTable& func, uint16_t maxArity) const {
+  SubnetID ReedMuller::synthesize(const TruthTable& func,
+                                  const TruthTable &, uint16_t maxArity) const {
     uint64_t len = func.num_bits();
     variables = func.num_vars();
 

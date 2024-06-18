@@ -29,7 +29,7 @@ struct Candidate;
  * The algorithm based on the article "Synthesis of combinational logic using
  * three-input majority gates" by Sheldon B. Akers, Jr. (1962).
 */
-class AkersSynthesizer : public Synthesizer<kitty::dynamic_truth_table> {
+class AkersSynthesizer : public TruthTableSynthesizer {
 
 public:
 
@@ -47,7 +47,6 @@ public:
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID      = eda::gate::model::SubnetID;
-  using TruthTable    = kitty::dynamic_truth_table;
   using UnitizedTable = eda::gate::optimizer::synthesis::UnitizedTable;
 
   //===--------------------------------------------------------------------===//
@@ -61,14 +60,11 @@ public:
   // Synthesize Methods
   //===--------------------------------------------------------------------===//
 
-  /// Synthesize function without "don't care" bits.
-  SubnetID synthesize(
-      const TruthTable &func, uint16_t maxArity = -1) const override;
+  using Synthesizer::synthesize;
 
-  /// Synthesize function with "don't care" bits.
-  SubnetID synthesize(const TruthTable &func, const TruthTable &care) const {
-    return run(func, care);
-  }
+  /// Synthesize function the Subnet.
+  SubnetID synthesize(const TruthTable &func, const TruthTable &care,
+                      uint16_t maxArity = -1) const override;
 
 private:
 

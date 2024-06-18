@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/synthesis/de_micheli.h"
+#include "util/kitty_utils.h"
 
 namespace eda::gate::optimizer::synthesis {
 
@@ -22,6 +23,7 @@ using SubnetID = eda::gate::model::SubnetID;
 //===----------------------------------------------------------------------===//
 
 SubnetID DMSynthesizer::synthesize(const TruthTable &func,
+                                   const TruthTable &care,
                                    uint16_t maxArity) const {
   assert(maxArity > 2 && "Arity of MAJ gate should be > 2");
   std::vector<TruthTable> divisors;
@@ -32,13 +34,9 @@ SubnetID DMSynthesizer::synthesize(const TruthTable &func,
     return buildSubnet(tree, divisors, true);
   }
 
-  TruthTable care(divisors[0].num_vars());
-  std::string bitsCare;
-  bitsCare.assign(divisors[0].num_bits(), '1');
-  kitty::create_from_binary_string(care, bitsCare);
-
   std::vector<MajNode> topNodes;
-  createTopNodes(topNodes, tree, divisors, nOnes, care);
+  createTopNodes(topNodes, tree, divisors, nOnes,
+      care.num_vars() ? care : utils::generateConstTT(func.num_vars()));
   if (!tree.empty()) {
     return buildSubnet(tree, divisors);
   }

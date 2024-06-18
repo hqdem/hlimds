@@ -25,33 +25,35 @@ namespace eda::gate::optimizer::synthesis {
  * The algorithm based on the article "Synthesis of combinational circuits by
  * means of bi-decomposition of Boolean functions" by Yuri V. Pottosin (2022).
 */
-class BiDecSynthesizer final : public Synthesizer<kitty::dynamic_truth_table> {
+class BiDecSynthesizer final : public TruthTableSynthesizer {
 public:
 
   using Coverage      = TernaryBiClique::Coverage;
   using CoverageList  = std::vector<Coverage>;
   using CoveragePair  = std::pair<Coverage, Coverage>;
-  using KittyTT       = kitty::dynamic_truth_table;
   using Link          = model::Subnet::Link;
   using LinkList      = model::Subnet::LinkList;
   using Subnet        = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetID      = model::SubnetID;
 
+  using Synthesizer::synthesize;
+
   /// Synthesizes the Subnet.
-  SubnetID synthesize(const KittyTT &func,
+  SubnetID synthesize(const TruthTable &func, const TruthTable &care,
                       uint16_t maxArity = -1) const override {
     bool one{kitty::is_const0(~func)};
     bool zero{ kitty::is_const0(func)};
     if (one || zero) {
       return synthConstFunc(func.num_vars(), one);
     }
-    return run(func, maxArity);
+    return run(func, care, maxArity);
   }
 
 private:
 
-  static SubnetID run(const KittyTT &func, uint16_t maxArity);
+  static SubnetID run(const TruthTable &func, const TruthTable &care,
+                      uint16_t maxArity);
 
   static Link decompose(TernaryBiClique &initBiClique,
                         SubnetBuilder &subnetBuilder, uint16_t maxArity = -1);

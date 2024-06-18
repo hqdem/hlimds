@@ -34,13 +34,12 @@ add_library(Gate OBJECT
   optimizer/cone_builder.cpp
   optimizer/criterion/criterion.cpp
   optimizer/cut_extractor.cpp
-  optimizer/depth_replacer.cpp
-  optimizer/depth_subnet_iterator.cpp
   optimizer/mffc.cpp
   optimizer/npn.cpp
   optimizer/npndb.cpp
   optimizer/npnstatdb.cpp
   optimizer/reconvergence_cut.cpp
+  optimizer/refactor.cpp
   optimizer/resubstitutor.cpp
   optimizer/rewriter.cpp
   optimizer/safe_passer.cpp

@@ -10,7 +10,7 @@
 
 namespace eda::gate::optimizer {
 
-using Fragment      = SubnetIteratorBase::SubnetFragment;
+using EntryMap      = std::unordered_map<size_t, size_t>;
 using Link          = model::Subnet::Link;
 using LinkList      = model::Subnet::LinkList;
 using Subnet        = model::Subnet;
@@ -448,11 +448,11 @@ static void collectDivisors(std::unordered_set<size_t> &divisors,
 static std::unordered_set<size_t> getDivisors(const SubnetBuilder &builder,
                                               size_t rootID,
                                               const std::vector<size_t> &leaves,
-                                              const Fragment &mffc) {
+                                              const EntryMap &mffcMap) {
 
   std::unordered_set<size_t> divisors(leaves.begin(), leaves.end());
 
-  collectDivisors(divisors, builder, rootID, mffc.entryMap);
+  collectDivisors(divisors, builder, rootID, mffcMap);
 
   return divisors;
 }
@@ -490,9 +490,9 @@ void Resubstitutor::transform(SubnetBuilder &builder) const {
     if (makeConstResubstitution(iter, target, care, cone, map)) {
       continue;
     }
-
-    const auto mffc   = getMffc(builder, entryID, leaves);
-    const auto divs   = getDivisors(builder, entryID, leaves, mffc);
+    EntryMap mffcMap;
+    const auto mffcID = getMffc(builder, entryID, leaves, mffcMap);
+    const auto divs   = getDivisors(builder, entryID, leaves, mffcMap);
     const auto divsTT = getDivisorsTables(builder, divs, leaves);
 
     if (makeZeroResubstitution(builder, iter, target, care,
@@ -500,7 +500,7 @@ void Resubstitutor::transform(SubnetBuilder &builder) const {
       continue;
     }
 
-    const auto &mffCone = Subnet::get(mffc.subnetID);
+    const auto &mffCone = Subnet::get(mffcID);
     const auto gain = mffCone.size() - mffCone.getInNum() - mffCone.getOutNum();
     if (gain < 2) {
       continue;

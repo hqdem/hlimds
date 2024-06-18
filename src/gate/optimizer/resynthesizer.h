@@ -10,10 +10,6 @@
 
 #include "gate/model/subnet.h"
 #include "gate/model/utils/subnet_truth_table.h"
-#include "gate/optimizer/reconvergence_cut.h"
-#include "gate/optimizer/subnet_iterator.h"
-#include "gate/optimizer/synthesis/akers.h"
-#include "gate/optimizer/synthesis/isop.h"
 #include "gate/optimizer/synthesizer.h"
 
 #include "kitty/dynamic_truth_table.hpp"
@@ -25,15 +21,19 @@ namespace eda::gate::optimizer {
 /// Resynthesizer interface: Subnet -> Subnet.
 class ResynthesizerBase {
 public:
-  using SubnetFragment = SubnetIteratorBase::SubnetFragment;
-  using SubnetID       = eda::gate::model::SubnetID;
+  using TruthTable = kitty::dynamic_truth_table;
+  using SubnetID   = eda::gate::model::SubnetID;
+
+  /// Resynthesizes the given subnet with don't care.
+  /// Returns the identifier of the newly constructed subnet or OBJ_NULL_ID.
+  virtual SubnetID resynthesize(SubnetID subnetID, const TruthTable &care,
+                                uint16_t maxArity = -1) const = 0;
 
   /// Resynthesizes the given subnet.
   /// Returns the identifier of the newly constructed subnet or OBJ_NULL_ID.
-  virtual SubnetID resynthesize(SubnetID subnetID) const = 0;
-  virtual SubnetID resynthesize(const SubnetFragment &sf) const {
-    return resynthesize(sf.subnetID);
-  }
+  SubnetID resynthesize(SubnetID subnetID, uint16_t maxArity = -1) const {
+    return resynthesize(subnetID, TruthTable(), maxArity);
+  };
 
   virtual ~ResynthesizerBase() = default;
 };
@@ -47,10 +47,13 @@ public:
   Resynthesizer(const Synthesizer<IR> &synthesizer):
     synthesizer(synthesizer) {}
 
-  SubnetID resynthesize(SubnetID subnetID) const override {
+  using ResynthesizerBase::resynthesize;
+
+  SubnetID resynthesize(SubnetID subnetID, const TruthTable &care,
+                        uint16_t maxArity = -1) const override {
     assert(subnetID != eda::gate::model::OBJ_NULL_ID);
     const auto ir = construct<IR>(eda::gate::model::Subnet::get(subnetID));
-    return synthesizer.synthesize(ir);
+    return synthesizer.synthesize(ir, care, maxArity);
   }
 
 private:

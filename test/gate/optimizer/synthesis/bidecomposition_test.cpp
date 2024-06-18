@@ -17,7 +17,6 @@
 #include <string>
 
 using BiDecSynthesizer = eda::gate::optimizer::synthesis::BiDecSynthesizer;
-using KittyTT          = BiDecSynthesizer::KittyTT;
 using Subnet           = eda::gate::model::Subnet;
 using TernaryBiClique  = eda::gate::optimizer::synthesis::TernaryBiClique;
 
@@ -32,7 +31,7 @@ bool BiDecompositionTest(size_t numVars) {
     for (int i = 0; i < (1 << numVars); ++i) {
       funcString += std::to_string(std::rand() & 1);
     }
-    BiDecSynthesizer::KittyTT tt(numVars);
+    BiDecSynthesizer::TruthTable tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
     const auto &subnet = Subnet::get(biDecomposition.synthesize(tt));
     flag &= eda::gate::model::utils::equalTruthTables(subnet, tt);

@@ -11,9 +11,21 @@
 #include "gate/optimizer/criterion/criterion.h"
 
 #include <cassert>
+#include <cmath>
 #include <set>
 
 namespace eda::gate::optimizer {
+
+static inline std::pair<float, float> getProgressRange(float progress) {
+  constexpr float t{2.0};
+  return {std::pow(progress, t), std::pow(progress, 1/t)};
+}
+
+static inline CostVector predictCostVector(
+    const CostVector &vector, const float progress) {
+  constexpr float e{1.0e-6};
+  return progress > e ? vector / progress : CostVector::Zero;
+}
 
 template <typename T>
 class SolutionSpace final {
@@ -41,13 +53,32 @@ public:
 
   using Region = std::set<Solution>;
 
-  SolutionSpace(const Criterion &criterion):
-      criterion(criterion) {}
+  SolutionSpace(const Criterion &criterion, const float progress):
+      criterion(criterion), progress(progress) {}
+
+  bool getCost(const CostVector &vector) const {
+    return criterion.getCost(vector);
+  }
+
+  Cost getPenalty(const CostVector &vector) const {
+    const auto prediction = predictCostVector(vector, progress);
+    return criterion.getPenalty(prediction);
+  }
+
+  Cost getPenalizedCost(const CostVector &vector) const {
+    return getCost(vector) * getPenalty(vector);
+  }
+
+  bool check(const CostVector &vector) const {
+    const auto maxProgress = getProgressRange(progress).second;
+    const auto minPrediction = predictCostVector(vector, maxProgress);
+    return criterion.check(minPrediction);
+  }
 
   /// Add the solution.
   void add(const T &solution, const CostVector &vector) {
-    auto &region = criterion.check(vector) ? feasible : infeasible;
-    const auto cost = criterion.getPenalizedCost(vector);
+    auto &region = check(vector) ? feasible : infeasible;
+    const auto cost = getPenalizedCost(vector);
     region.insert(Solution{solution, cost, vector});
   }
 
@@ -59,6 +90,7 @@ public:
 
 private:
   const Criterion &criterion;
+  const float progress;
 
   Region feasible;
   Region infeasible;

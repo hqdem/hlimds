@@ -164,7 +164,7 @@ inline Cost zeroPenalty(const CostVector &, const Constraints &) {
   return 1.0;
 }
 
-Cost quadPenalty(const CostVector &, const Constraints &);
+Cost quadraticPenalty(const CostVector &vector, const Constraints &constraints);
 
 //===----------------------------------------------------------------------===//
 // Criterion
@@ -181,7 +181,7 @@ struct Criterion final {
 
   Criterion(const Objective &objective,
             const Constraints &constraints):
-      Criterion(objective, constraints, quadPenalty) {}
+      Criterion(objective, constraints, quadraticPenalty) {}
 
   CostVector normalize(const CostVector &vector) const {
     return vector.normalize(getMinVector(constraints),
@@ -209,8 +209,11 @@ struct Criterion final {
     return true;
   }
 
+  /// Objective function.
   const Objective objective;
+  /// Design constraints.
   const Constraints constraints;
+  /// Penalty function.
   const PenaltyFunction penalty;
 };
 

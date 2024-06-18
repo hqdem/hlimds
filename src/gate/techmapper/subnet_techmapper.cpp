@@ -139,14 +139,19 @@ static optimizer::SubnetBuilderPtr makeBuilder(
 
 static inline float getProgress(const model::Subnet &subnet, const size_t i) {
   const auto nIn = subnet.getInNum();
+  const auto nOut = subnet.getOutNum();
+  const auto nAll = subnet.size();
 
   // Ignore the subnet inputs.
-  if (i < nIn) {
-    return 0.0;
-  }
+  if (i < nIn) { return 0.0; }
 
-  return static_cast<float>((i + 1) - nIn) /
-         static_cast<float>(subnet.size() - nIn);
+  // Last non-output cell index.
+  const auto k = nAll - nOut - 1;
+  const auto j = (i > k) ? k : i;
+
+  // Progress reaches 100% when merging outputs.
+  return static_cast<float>(j + 1 - nIn) /
+         static_cast<float>(nAll - nIn);
 }
 
 optimizer::SubnetBuilderPtr SubnetTechMapper::make(
@@ -159,10 +164,9 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
 
   for (size_t i = 0; i < entries.size(); ++i) {
     const auto progress = getProgress(subnet, i);
-    // TODO: Use the progress ratio.
     assert(0.0 <= progress && progress <= 1.0);
 
-    space[i] = std::make_unique<CellSpace>(criterion);
+    space[i] = std::make_unique<CellSpace>(criterion, progress);
 
     // Handle the input cells.
     if (i < subnet.getInNum()) {

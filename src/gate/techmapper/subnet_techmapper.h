@@ -33,9 +33,7 @@ public:
     bool inversion{false};
   };
 
-  struct Context final {
-    // TODO:
-  };
+  struct Context final {};
 
   using CutProvider =
       std::function<optimizer::CutExtractor::CutsList(

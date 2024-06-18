@@ -8,6 +8,8 @@
 
 #include "gate/optimizer/criterion/criterion.h"
 
+#include <cmath>
+
 namespace eda::gate::optimizer {
 
 CostVector CostVector::Zero{};
@@ -46,7 +48,8 @@ CostVector getMaxVector(const Constraints &constraints) {
   return result;
 }
 
-Cost quadPenalty(const CostVector &vector, const Constraints &constraints) {
+Cost quadraticPenalty(
+    const CostVector &vector, const Constraints &constraints) {
   constexpr Cost alarm{0.9};
   constexpr Cost power{2.0};
 

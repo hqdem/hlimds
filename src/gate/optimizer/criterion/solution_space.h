@@ -47,7 +47,7 @@ public:
   /// Add the solution.
   void add(const T &solution, const CostVector &vector) {
     auto &region = criterion.check(vector) ? feasible : infeasible;
-    const auto cost = criterion.penalizedCost(vector);
+    const auto cost = criterion.getPenalizedCost(vector);
     region.insert(Solution{solution, cost, vector});
   }
 

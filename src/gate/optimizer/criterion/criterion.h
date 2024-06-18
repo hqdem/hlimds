@@ -188,12 +188,16 @@ struct Criterion final {
                             getMaxVector(constraints));
   }
 
-  Cost cost(const CostVector &vector) const {
+  Cost getCost(const CostVector &vector) const {
     return objective.function(vector);
   }
 
-  Cost penalizedCost(const CostVector &vector) const {
-    return cost(vector) * penalty(vector, constraints);
+  Cost getPenalty(const CostVector &vector) const {
+    return penalty(vector, constraints);
+  }
+
+  Cost getPenalizedCost(const CostVector &vector) const {
+    return getCost(vector) * getPenalty(vector);
   }
 
   bool check(const CostVector &vector) const {

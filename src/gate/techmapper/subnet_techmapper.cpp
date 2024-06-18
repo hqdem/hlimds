@@ -137,6 +137,18 @@ static optimizer::SubnetBuilderPtr makeBuilder(
   return builder;
 }
 
+static inline float getProgress(const model::Subnet &subnet, const size_t i) {
+  const auto nIn = subnet.getInNum();
+
+  // Ignore the subnet inputs.
+  if (i < nIn) {
+    return 0.0;
+  }
+
+  return static_cast<float>((i + 1) - nIn) /
+         static_cast<float>(subnet.size() - nIn);
+}
+
 optimizer::SubnetBuilderPtr SubnetTechMapper::make(
     const model::SubnetID subnetID) const {
   const auto &subnet = model::Subnet::get(subnetID);
@@ -146,6 +158,10 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
   SubnetSpace space(subnet.size());
 
   for (size_t i = 0; i < entries.size(); ++i) {
+    const auto progress = getProgress(subnet, i);
+    // TODO: Use the progress ratio.
+    assert(0.0 <= progress && progress <= 1.0);
+
     space[i] = std::make_unique<CellSpace>(criterion);
 
     // Handle the input cells.
@@ -189,7 +205,8 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
     } // for cuts
 
     if (!space[i]->hasFeasible()) {
-      break; // TODO: recovery
+      // TODO: Do recovery.
+      break;
     }
 
     i += cell.more;
@@ -199,7 +216,7 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
   outputs.reserve(subnet.getOutNum());
 
   for (size_t i = 0; i < subnet.getOutNum(); ++i) {
-    outputs.insert(subnet.size() - i);
+    outputs.insert(subnet.size() - 1 - i);
   }  
 
   optimizer::CutExtractor::Cut resultCut(model::OBJ_NULL_ID, 0, outputs);
@@ -207,7 +224,8 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
   const auto subnetAggregation = costAggregator(subnetCostVectors);
 
   if (!criterion.check(subnetAggregation)) {
-    return nullptr; // TODO: recovery
+    // TODO: Do recovery.
+    return nullptr;
   }
 
   return makeBuilder(space, subnet);  

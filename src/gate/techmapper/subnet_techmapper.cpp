@@ -250,8 +250,6 @@ RECOVERY:
       tension *= criterion.getTension(subnetAggregation);
       goto RECOVERY;
     }
-
-    return nullptr;
   }
 
   return makeBuilder(space, subnet);  

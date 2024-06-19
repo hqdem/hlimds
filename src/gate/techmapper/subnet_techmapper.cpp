@@ -37,14 +37,12 @@ static inline std::vector<optimizer::CostVector> getCostVectors(
 
 static optimizer::CostVector defaultCostAggregator(
    const std::vector<optimizer::CostVector> &vectors) {
-  if (vectors.empty()) {
-    return optimizer::CostVector::Zero;
-  }
+  optimizer::CostVector result = optimizer::CostVector::Zero;
 
-  optimizer::CostVector result(vectors[0]);
-
-  for (size_t i = 1; i < vectors.size(); ++i) {
+  for (size_t i = 0; i < vectors.size(); ++i) {
     const auto &vector = vectors[i];
+    assert(vector.size() >= optimizer::CostVector::DefaultSize);
+
     result[optimizer::AREA] += vector[optimizer::AREA];
     result[optimizer::DELAY] = std::max(result[optimizer::DELAY],
                                         vector[optimizer::DELAY]);
@@ -117,10 +115,11 @@ static optimizer::SubnetBuilderPtr makeBuilder(
     }
 
     const auto &type = model::CellType::get(matches[i]->typeID);
+    assert(type.getInNum() == matches[i]->links.size());
 
-    model::Subnet::LinkList newLinks(oldCell.arity);
-    for (size_t j = 0; j < oldCell.arity; ++j) {
-      const auto oldLink = subnet.getLink(i, j);
+    model::Subnet::LinkList newLinks(type.getInNum());
+    for (size_t j = 0; j < type.getInNum(); ++j) {
+      const auto oldLink = matches[i]->links[j];
       const auto newLink = links[oldLink.idx];
       newLinks[j] = oldLink.inv ? ~newLink : newLink;
       assert(!(type.isCell() && newLinks[j].inv)

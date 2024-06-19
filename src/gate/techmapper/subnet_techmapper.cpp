@@ -197,6 +197,11 @@ RECOVERY:
     const auto cuts = cutProvider(subnet, i);
 
     for (const auto &cut : cuts) {
+      // Skip trivial cuts.
+      if (cut.entryIdxs.size() == 1) {
+        continue;
+      }
+
       const auto cutCostVectors = getCostVectors(space, cut);
       const auto cutAggregation = costAggregator(cutCostVectors);
 

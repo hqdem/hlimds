@@ -25,12 +25,12 @@ struct CostVector final {
   /// Zero cost vector.
   static const CostVector Zero;
 
-  explicit CostVector(const size_t size):
-      vector(size) {}
+  explicit CostVector():
+      vector(DefaultSize) {}
   explicit CostVector(const std::valarray<Cost> &vector):
       vector(vector) {}
-  CostVector():
-      CostVector(DefaultSize) {}
+  CostVector(const Cost c1, const Cost c2, const Cost c3):
+      CostVector(std::valarray<Cost>{c1, c2, c3}) {}
   CostVector(const CostVector &vector):
       CostVector(vector.vector) {}
 
@@ -68,6 +68,31 @@ struct CostVector final {
 
   CostVector operator/(const Cost coefficient) const {
     return CostVector{vector / coefficient};
+  }
+
+  CostVector &operator=(const CostVector &other) {
+    vector = other.vector;
+    return *this;
+  }
+
+  CostVector &operator+=(const CostVector &other) {
+    vector += other.vector;
+    return *this;
+  }
+
+  CostVector &operator-=(const CostVector &other) {
+    vector -= other.vector;
+    return *this;
+  }
+
+  CostVector &operator*=(const CostVector &other) {
+    vector *= other.vector;
+    return *this;
+  }
+
+  CostVector &operator/=(const CostVector &other) {
+    vector /= other.vector;
+    return *this;
   }
 
   CostVector normalize(const CostVector &min, const CostVector &max) const;

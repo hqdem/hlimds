@@ -51,7 +51,9 @@ struct Constraint final {
 using Constraints = std::vector<Constraint>;
 
 inline CostVector getMinVector(const Constraints &constraints) {
-  CostVector result(constraints.size());
+  assert(constraints.size() == CostVector::DefaultSize);
+
+  CostVector result;
   for (size_t i = 0; i < constraints.size(); ++i) {
     result[i] = constraints[i].min;
   }
@@ -59,7 +61,9 @@ inline CostVector getMinVector(const Constraints &constraints) {
 }
 
 inline CostVector getMaxVector(const Constraints &constraints) {
-  CostVector result(constraints.size());
+  assert(constraints.size() == CostVector::DefaultSize);
+
+  CostVector result;
   for (size_t i = 0; i < constraints.size(); ++i) {
     result[i] = constraints[i].max;
   }

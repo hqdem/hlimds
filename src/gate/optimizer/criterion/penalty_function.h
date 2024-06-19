@@ -17,21 +17,24 @@
 namespace eda::gate::optimizer {
 
 /// Returns the coefficient to be multiplied to the cost.
-using PenaltyFunction =
-    std::function<Cost(const CostVector &, const Constraints &)>;
+using PenaltyFunction = std::function<Cost(const CostVector &vector,
+                                           const Constraints &constraints,
+                                           const CostVector &tension)>;
 
-inline Cost zeroPenalty(
-    const CostVector &vector, const Constraints &constraints) {
+inline Cost zeroPenalty(const CostVector &vector,
+                        const Constraints &constraints,
+                        const CostVector &tension) {
   return 1.0;
 }
 
-inline Cost quadraticPenalty(
-    const CostVector &vector, const Constraints &constraints) {
+inline Cost quadraticPenalty(const CostVector &vector,
+                             const Constraints &constraints,
+                             const CostVector &tension) {
   constexpr Cost alarm{0.9};
   constexpr Cost power{2.0};
 
   const auto min = getMinVector(constraints);
-  const auto max = getMaxVector(constraints) * alarm;
+  const auto max = (getMaxVector(constraints) / tension) * alarm;
 
   const auto normalized = vector.normalize(min, max).truncate(0.0, 100.0);
 

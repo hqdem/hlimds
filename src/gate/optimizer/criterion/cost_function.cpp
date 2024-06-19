@@ -13,7 +13,7 @@
 
 namespace eda::gate::optimizer {
 
-const CostVector CostVector::Zero{};
+const CostVector CostVector::Zero{0.0, 0.0, 0.0};
 
 CostVector CostVector::normalize(
     const CostVector &min, const CostVector &max) const {
@@ -25,7 +25,7 @@ CostVector CostVector::normalize(
 CostVector CostVector::truncate(const float min, const float max) const {
   assert(min <= max);
 
-  CostVector result(vector.size());
+  CostVector result;
   for (size_t i = 0; i < vector.size(); ++i) {
     result[i] = std::min(std::max(min, vector[i]), max);
   }

@@ -36,12 +36,21 @@ struct Criterion final {
     return objective.function(vector);
   }
 
-  Cost getPenalty(const CostVector &vector) const {
-    return penalty(vector, constraints);
+  Cost getPenalty(
+      const CostVector &vector, const CostVector &tension) const {
+    return penalty(vector, constraints, tension);
   }
 
-  Cost getPenalizedCost(const CostVector &vector) const {
-    return getCost(vector) * getPenalty(vector);
+  Cost getPenalizedCost(
+      const CostVector &vector, const CostVector &tension) const {
+    return getCost(vector) * getPenalty(vector, tension);
+  }
+
+  CostVector getTension(const CostVector &vector) const {
+    const auto min = getMinVector(constraints);
+    const auto max = getMaxVector(constraints);
+
+    return vector.normalize(min, max).truncate(0.01, 100.0);
   }
 
   bool check(const CostVector &vector) const {

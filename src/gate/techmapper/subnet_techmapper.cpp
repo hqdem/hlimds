@@ -54,7 +54,7 @@ static optimizer::CostVector defaultCostAggregator(
 
 static optimizer::CostVector defaultCostPropagator(
     const optimizer::CostVector &vector, const uint32_t fanout) {
-  optimizer::CostVector result(vector.size());
+  optimizer::CostVector result;
 
   result[optimizer::AREA]  = vector[optimizer::AREA] / fanout;
   result[optimizer::DELAY] = vector[optimizer::DELAY];
@@ -163,12 +163,20 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
 
   // Partial solutions for the subnet cells.
   SubnetSpace space(subnet.size());
+  optimizer::CostVector tension{1.0, 1.0, 1.0};
+
+  // Maximum number of tries for recovery.
+  constexpr size_t maxTries{3};
+  size_t tryCount = 0;
+
+RECOVERY:
+  tryCount++;
 
   for (size_t i = 0; i < entries.size(); ++i) {
     const auto progress = getProgress(subnet, i);
     assert(0.0 <= progress && progress <= 1.0);
 
-    space[i] = std::make_unique<CellSpace>(criterion, progress);
+    space[i] = std::make_unique<CellSpace>(criterion, tension, progress);
 
     // Handle the input cells.
     if (i < subnet.getInNum()) {
@@ -210,9 +218,12 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
       }
     } // for cuts
 
-    if (!space[i]->hasFeasible()) {
-      // TODO: Do recovery.
-      break;
+    if (progress > 0.5 && !space[i]->hasFeasible()) {
+      // Do recovery.
+      if (tryCount < maxTries) {
+        tension *= space[i]->getTension();
+        goto RECOVERY;
+      }
     }
 
     i += cell.more;
@@ -230,8 +241,11 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::make(
   const auto subnetAggregation = costAggregator(subnetCostVectors);
 
   if (!criterion.check(subnetAggregation)) {
-    // TODO: Do recovery.
-    return nullptr;
+    // Do recovery.
+    if (tryCount < maxTries) {
+      tension *= criterion.getTension(subnetAggregation);
+      goto RECOVERY;
+    }
   }
 
   return makeBuilder(space, subnet);  

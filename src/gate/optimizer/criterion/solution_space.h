@@ -53,8 +53,12 @@ public:
 
   using Region = std::set<Solution>;
 
-  SolutionSpace(const Criterion &criterion, const float progress):
-      criterion(criterion), progress(progress) {}
+  SolutionSpace(const Criterion &criterion,
+                const CostVector &tension,
+                const float progress):
+      criterion(criterion),
+      tension(tension),
+      progress(progress) {}
 
   bool getCost(const CostVector &vector) const {
     return criterion.getCost(vector);
@@ -62,11 +66,22 @@ public:
 
   Cost getPenalty(const CostVector &vector) const {
     const auto prediction = predictCostVector(vector, progress);
-    return criterion.getPenalty(prediction);
+    return criterion.getPenalty(prediction, tension);
   }
 
   Cost getPenalizedCost(const CostVector &vector) const {
     return getCost(vector) * getPenalty(vector);
+  }
+
+  CostVector getTension(const CostVector &vector) const {
+    const auto maxProgress = getProgressRange(progress).second;
+    const auto minPrediction = predictCostVector(vector, maxProgress);
+    return criterion.getTension(minPrediction);
+  }
+
+  CostVector getTension() const {
+    assert(hasSolution());
+    return getTension(getBest().vector);
   }
 
   bool check(const CostVector &vector) const {
@@ -77,23 +92,26 @@ public:
 
   /// Add the solution.
   void add(const T &solution, const CostVector &vector) {
-    auto &region = check(vector) ? feasible : infeasible;
     const auto cost = getPenalizedCost(vector);
-    region.insert(Solution{solution, cost, vector});
+    feasible |= check(vector);
+    solutions.insert(Solution{solution, cost, vector});
   }
 
+  /// Checks whether there are solutions.
+  bool hasSolution() const { return !solutions.empty(); }
   /// Checks whether there are feasible solutions. 
-  bool hasFeasible() const { return !feasible.empty(); }
+  bool hasFeasible() const { return feasible; }
 
   /// Returns the best solution w.r.t. to the given criterion.
-  const Solution &getBest() const { return *feasible.begin(); }
+  const Solution &getBest() const { return *solutions.begin(); }
 
 private:
   const Criterion &criterion;
+  const CostVector tension;
   const float progress;
 
-  Region feasible;
-  Region infeasible;
+  bool feasible{false};
+  Region solutions;
 };
 
 } // namespace eda::gate::optimizer

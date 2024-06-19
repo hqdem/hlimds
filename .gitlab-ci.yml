@@ -14,6 +14,7 @@ variables:
   MLIR_DIR: "/workdir/circt/llvm/build/lib/cmake/mlir/"
   UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
   YOSYS_DIR: "/workdir/yosys"
+  CUDD_DIR: "/usr/lib"
 
 stages:
   - build

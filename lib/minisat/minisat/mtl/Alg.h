@@ -79,6 +79,6 @@ template<class T>
 static inline void append(const vec<T>& from, vec<T>& to){ copy(from, to, true); }
 
 //=================================================================================================
-}
+} // namespace Minisat
 
 #endif

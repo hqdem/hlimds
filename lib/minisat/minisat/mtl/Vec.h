@@ -129,6 +129,6 @@ void vec<T,_Size>::clear(bool dealloc) {
         if (dealloc) free(data), data = NULL, cap = 0; } }
 
 //=================================================================================================
-}
+} // namespace Minisat
 
 #endif

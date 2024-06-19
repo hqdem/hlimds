@@ -24,12 +24,12 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include <assert.h>
 
-#include "minisat/mtl/IntTypes.h"
 #include "minisat/mtl/Alg.h"
-#include "minisat/mtl/Vec.h"
-#include "minisat/mtl/IntMap.h"
-#include "minisat/mtl/Map.h"
 #include "minisat/mtl/Alloc.h"
+#include "minisat/mtl/IntMap.h"
+#include "minisat/mtl/IntTypes.h"
+#include "minisat/mtl/Map.h"
+#include "minisat/mtl/Vec.h"
 
 namespace Minisat {
 
@@ -473,6 +473,6 @@ inline void Clause::strengthen(Lit p)
 }
 
 //=================================================================================================
-}
+} // namespace Minisat
 
 #endif

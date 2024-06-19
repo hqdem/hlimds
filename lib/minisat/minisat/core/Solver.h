@@ -21,12 +21,12 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #ifndef Minisat_Solver_h
 #define Minisat_Solver_h
 
-#include "minisat/mtl/Vec.h"
-#include "minisat/mtl/Heap.h"
+#include "minisat/core/SolverTypes.h"
 #include "minisat/mtl/Alg.h"
 #include "minisat/mtl/IntMap.h"
+#include "minisat/mtl/Heap.h"
+#include "minisat/mtl/Vec.h"
 #include "minisat/utils/Options.h"
-#include "minisat/core/SolverTypes.h"
 
 
 namespace Minisat {
@@ -404,6 +404,6 @@ inline void     Solver::toDimacs     (const char* file, Lit p, Lit q, Lit r){ ve
 
 
 //=================================================================================================
-}
+} // namespace Minisat
 
 #endif

@@ -124,6 +124,6 @@ static bool eagerMatch(B& in, const char* str) {
 
 
 //=================================================================================================
-}
+} // namespace Minisat
 
 #endif

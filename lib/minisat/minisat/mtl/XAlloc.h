@@ -40,6 +40,6 @@ static inline void* xrealloc(void *ptr, size_t size)
 }
 
 //=================================================================================================
-}
+} // namespace Minisat
 
 #endif

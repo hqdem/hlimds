@@ -1,8 +1,18 @@
 FROM isprasmvg/ubuntu:base
 
-RUN apt-get update && apt install -y autoconf bison clang clang-tidy cmake flex g++ gcc \
-    iverilog liblpsolve55-dev libtool libxerces-c3.2 libxerces-c-dev lld \
-    make ninja-build pkg-config python3 zlib1g zlib1g-dev gtkwave lcov graphviz
+RUN apt-get update && apt install -y autoconf bison clang clang-tidy cmake \
+    flex g++ gcc graphviz gtkwave iverilog lcov liblpsolve55-dev libssl-dev \
+    libtool libxerces-c3.2 libxerces-c-dev lld make ninja-build pkg-config \
+    python3 tar wget zlib1g zlib1g-dev
+
+WORKDIR /workdir
+RUN wget https://cmake.org/files/v3.28/cmake-3.28.1.tar.gz
+RUN tar xzf cmake-3.28.1.tar.gz
+RUN rm -rf cmake-3.28.1.tar.gz
+WORKDIR /workdir/cmake-3.28.1
+RUN ./bootstrap
+RUN make -j$(nproc)
+RUN make install
 
 WORKDIR /workdir
 RUN git clone https://github.com/OlafvdSpek/ctemplate.git
@@ -23,7 +33,7 @@ RUN make install
 WORKDIR /workdir
 RUN git clone https://github.com/ispras/staccato
 WORKDIR /workdir/staccato
-RUN make BUILD_TYPE=shared CUDD_INCLUDE=/workdir/cudd SM="-DDISABLE_SM"
+RUN make BUILD_TYPE=shared CUDD_INCLUDE=/workdir/cudd SM="-DDISABLE_SM" -j $(nproc)
 RUN make install
 
 WORKDIR /workdir
@@ -40,7 +50,7 @@ RUN make -j$(nproc)
 RUN make install
 
 WORKDIR /workdir
-RUN git clone --recursive https://github.com/circt/circt.git
+RUN git clone https://github.com/circt/circt.git
 WORKDIR /workdir/circt
 RUN git checkout firtool-1.72.0
 RUN git submodule init

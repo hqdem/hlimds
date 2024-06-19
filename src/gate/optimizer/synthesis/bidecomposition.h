@@ -12,6 +12,7 @@
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/optimizer/synthesis/ternary_bi_clique.h"
 #include "gate/optimizer/synthesizer.h"
+#include "util/kitty_utils.h"
 
 #include <utility>
 #include <vector>
@@ -42,11 +43,10 @@ public:
   /// Synthesizes the Subnet.
   SubnetID synthesize(const TruthTable &func, const TruthTable &care,
                       uint16_t maxArity = -1) const override {
-    bool one{kitty::is_const0(~func)};
-    bool zero{ kitty::is_const0(func)};
-    if (one || zero) {
-      return synthConstFunc(func.num_vars(), one);
+    if (bool value; utils::isConst(func, value)) {
+      return SubnetBuilder::makeConst(func.num_vars(), value);
     }
+
     return run(func, care, maxArity);
   }
 

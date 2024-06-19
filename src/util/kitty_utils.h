@@ -21,6 +21,18 @@
  */
 namespace eda::utils {
 
+inline bool isZero(const kitty::dynamic_truth_table &tt) {
+  return kitty::is_const0(tt);
+}
+
+inline bool isOne(const kitty::dynamic_truth_table &tt) {
+  return kitty::is_const0(~tt);
+}
+
+inline bool isConst(const kitty::dynamic_truth_table &tt, bool &value) {
+  return (value = isOne(tt)) || isZero(tt);
+}
+
 kitty::dynamic_truth_table toTT(uint64_t x);
 
 template<typename TT>

@@ -11,8 +11,9 @@
 #include "gate/model/celltype.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/synthesizer.h"
+#include "util/kitty_utils.h"
 
-#include "kitty/constructors.hpp"
+#include <kitty/constructors.hpp>
 #include <kitty/kitty.hpp>
 
 #include <algorithm>
@@ -187,7 +188,7 @@ private:
   }
 
   bool mayImprove(const TruthTable &divisor, const TruthTable &care) const {
-    return !kitty::is_const0(~divisor & care);
+    return !utils::isZero(~divisor & care);
   }
 };
 

@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/resubstitutor.h"
+#include "util/kitty_utils.h"
 
 namespace eda::gate::optimizer {
 
@@ -154,7 +155,7 @@ static bool checkOneResubstitution(const TruthTable &target,
   const TruthTable &div11 = invIn1 ? ~div1 : div1;
   const TruthTable &div21 = invIn2 ? ~div2 : div2;
 
-  if (kitty::is_const0((target ^ (div11 & div21)) & care)) {
+  if (utils::isZero((target ^ (div11 & div21)) & care)) {
     invs.invIn1 = invIn1;
     invs.invIn2 = invIn2;
     invs.invOut = false;
@@ -167,7 +168,7 @@ static bool checkOneResubstitution(const TruthTable &target,
   const TruthTable &div12 = invIn1 ? ~div1 : div1;
   const TruthTable &div22 = invIn2 ? ~div2 : div2;
 
-  if (kitty::is_const0((~target ^ (div12 & div22)) & care)) {
+  if (utils::isZero((~target ^ (div12 & div22)) & care)) {
     invs.invIn1 = invIn1;
     invs.invIn2 = invIn2;
     invs.invOut = true;

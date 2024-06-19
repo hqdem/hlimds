@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/synthesis/isop.h"
+#include "util/kitty_utils.h"
 
 namespace eda::gate::optimizer::synthesis {
 
@@ -50,8 +51,8 @@ model::SubnetID MMSynthesizer::synthesize(const TruthTable &func,
 
   const auto [tt, inv] = handleCare(func, care);
   
-  if (auto id{checkConstTT(tt, inv)}; id != model::OBJ_NULL_ID) {
-    return id;
+  if (bool value; utils::isConst(tt, value)) {
+    return model::SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
   }
 
   Link output{synthFromSOP(kitty::isop(tt), ins, subnetBuilder, maxArity)};                               
@@ -66,8 +67,8 @@ model::SubnetID MMSynthesizer::synthesizeWithFactoring(const TruthTable &func,
 
   const auto [tt, inv] = handleCare(func, care);
 
-  if (auto id{checkConstTT(tt, inv)}; id != model::OBJ_NULL_ID) {
-    return id;
+  if (bool value; utils::isConst(tt, value)) {
+    return model::SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
   }
 
   auto numVars = tt.num_vars();

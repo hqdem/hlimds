@@ -482,7 +482,7 @@ bool DMSynthesizer::selectLastArg(std::vector<MajNode> &topNodes,
     node.args[0] = -firstArg - 1;
     node.args[1] = -secondArg - 1;
     node.args[2] = -i - 1;
-    if (kitty::is_const0(~top)) {
+    if (utils::isZero(~top)) {
       topNodes.clear();
       topNodes.emplace_back(node);
       return true;

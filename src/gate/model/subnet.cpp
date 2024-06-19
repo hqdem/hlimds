@@ -88,23 +88,6 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   return {minLength, maxLength};
 }
 
-void SubnetBuilder::enableFanouts() {
-  fanoutsEnabled = true;
-  fanouts.reserve(entries.size());
-  for (size_t i = getSubnetBegin(); i != upperBoundID && i != invalidID;
-       i = getNext(i)) {
-    const auto &links = getLinks(i);
-    for (const auto &link : links) {
-      addFanout(link.idx, i);
-    }
-  }
-}
-
-void SubnetBuilder::disableFanouts() {
-  fanoutsEnabled = false;
-  fanouts.clear();
-}
-
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
   ModelPrinter::getDefaultPrinter().print(out, subnet);
   return out;
@@ -166,6 +149,35 @@ EntryIterator EntryIterator::operator--(int) {
 
 EntryIterator EntryIterator::prev() const {
   return --EntryIterator(*this);
+}
+
+template <CellSymbol symbol>
+static SubnetID makeConstSubnet(const size_t nIn) {
+  constexpr size_t size{8};
+  static std::vector<SubnetID> cache(size + 1, OBJ_NULL_ID);
+
+  auto &subnetID = nIn < size ? cache[nIn] : cache[size];
+
+  if (nIn < size && subnetID != OBJ_NULL_ID) {
+    return subnetID;
+  }
+
+  SubnetBuilder builder;
+  builder.addInputs(nIn);
+  builder.addOutput(builder.addCell(symbol));
+  return (subnetID = builder.make());
+}
+
+SubnetID SubnetBuilder::makeZero(const size_t nIn) {
+  return makeConstSubnet<ZERO>(nIn);
+}
+
+SubnetID SubnetBuilder::makeOne(const size_t nIn) {
+  return makeConstSubnet<ONE>(nIn);
+}
+
+SubnetID SubnetBuilder::makeConst(const size_t nIn, const bool value) {
+  return value ? makeOne(nIn) : makeZero(nIn);
 }
 
 const std::pair<size_t, size_t> SubnetBuilder::getLinkIndices(
@@ -484,14 +496,29 @@ SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
 
 void SubnetBuilder::replaceWithZero(const EntrySet &entryIDs) {
   const size_t zeroID = addCell(ZERO).idx;
-  // FIXME: Place just after inputs.
   mergeCells(MergeMap{{zeroID, entryIDs}});
 }
 
 void SubnetBuilder::replaceWithOne(const EntrySet &entryIDs) {
   const size_t oneID = addCell(ONE).idx;
-  // FIXME: Place just after inputs.
   mergeCells(MergeMap{{oneID, entryIDs}});
+}
+
+void SubnetBuilder::enableFanouts() {
+  fanoutsEnabled = true;
+  fanouts.reserve(entries.size());
+  for (size_t i = getSubnetBegin(); i != upperBoundID && i != invalidID;
+       i = getNext(i)) {
+    const auto &links = getLinks(i);
+    for (const auto &link : links) {
+      addFanout(link.idx, i);
+    }
+  }
+}
+
+void SubnetBuilder::disableFanouts() {
+  fanoutsEnabled = false;
+  fanouts.clear();
 }
 
 SubnetBuilder::Effect SubnetBuilder::newEntriesEval(

@@ -245,6 +245,8 @@ private:
 
 static_assert(sizeof(Subnet) == SubnetID::Size);
 
+std::ostream &operator <<(std::ostream &out, const Subnet &subnet);
+
 //===----------------------------------------------------------------------===//
 // Subnet Builder
 //===----------------------------------------------------------------------===//
@@ -410,6 +412,10 @@ public:
     /// Change in weight: old-weight - new-weight.
     float weight{0.};
   };
+
+  static SubnetID makeZero(const size_t nIn);
+  static SubnetID makeOne(const size_t nIn);
+  static SubnetID makeConst(const size_t nIn, const bool value);
 
   SubnetBuilder(): nIn(0), nOut(0) {
     const size_t n = 1024; // FIXME
@@ -922,7 +928,5 @@ private:
   size_t sessionID{0};
   bool sessionStarted{false};
 };
-
-std::ostream &operator <<(std::ostream &out, const Subnet &subnet);
 
 } // namespace eda::gate::model

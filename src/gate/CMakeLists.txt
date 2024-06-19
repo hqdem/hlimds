@@ -69,6 +69,7 @@ add_library(Gate OBJECT
   synthesizer/synthesizer_mux.cpp
   synthesizer/synthesizer_neg.cpp
   synthesizer/synthesizer_red.cpp
+  synthesizer/synthesizer_shift.cpp
   techmapper/assembly.cpp
   techmapper/comb_mapper/func_mapper/func_mapper.cpp
   techmapper/comb_mapper/func_mapper/area_recovery/area_recovery.cpp

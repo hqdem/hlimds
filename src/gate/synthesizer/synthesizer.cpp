@@ -15,6 +15,7 @@
 #include "gate/synthesizer/synthesizer_mux.h"
 #include "gate/synthesizer/synthesizer_neg.h"
 #include "gate/synthesizer/synthesizer_red.h"
+#include "gate/synthesizer/synthesizer_shift.h"
 
 #include <cassert>
 
@@ -62,6 +63,10 @@ static SubnetID synthImpl(const CellType &type) {
   case REMs:  return synthRemS(attr);
   case REMu:  return synthRemU(attr);
   case MODs:  return synthModS(attr);
+  case SHL:   return synthShiftL(attr);
+  case SHRu:  return synthShiftRu(attr);
+  case SHRs:  return synthShiftRs(attr);
+
   default: assert(false && "Unsupported operation");
   }
 

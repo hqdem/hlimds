@@ -1,6 +1,6 @@
 [//]: <> (SPDX-License-Identifier: Apache-2.0)
 
-# Utopia EDA Installation Guide (for Fedora Linux OS)
+# Utopia EDA installation guide for Fedora Linux OS
 
 This guide describes main steps and rules that should be done and followed for building Utopia EDA on RPM-like distro.
 
@@ -20,7 +20,7 @@ sudo dnf groupinstall "Development Tools" && sudo dnf install autoconf bison \
 
 ## Installing libraries
 
-### C++ CTemplate Installation
+### C++ CTemplate installation
 
 ```console
 cd <workdir>
@@ -36,7 +36,7 @@ If you would like to install CTemplate to a non-standard location, please
 specify `--prefix` option of `configure` script to installation directory
 you want and set `CT_DIR` environment variable to it too.
 
-### CUDD Installation
+### CUDD installation
 
 ```console
 cd <workdir>
@@ -65,7 +65,7 @@ And set correct folder name as `CUDD_DIR`:
 export CUDD_DIR=<correct_dir>
 ```
 
-### STACCATO Installation
+### STACCATO installation
 
 The `<path_to_cudd_dir>` refers to the path to the CUDD sources directory.
 
@@ -85,7 +85,7 @@ sudo make install
 3. Build and install `Yosys` as described in the `<yosys-dir>/README.md`,
     except packages installation, as they were installed earlier  
 
-### MLIR/CIRCT Installation
+### MLIR/CIRCT installation
 
 To configure the build process using a CIRCT binary distribution avoiding the
 need to build from the source, see `doc/CirctPrebuilt.md`.
@@ -104,7 +104,7 @@ git submodule init
 git submodule update
 ```
 
-#### LLVM/MLIR Installation
+#### LLVM/MLIR installation
 
 Set `MLIR_DIR` environment variable to the directory with MLIR CMake files:
 
@@ -132,7 +132,7 @@ cmake -G Ninja ../llvm \
 ninja
 ```
 
-#### CIRCT Installation
+#### CIRCT installation
 
 Set `CIRCT_DIR` environment variable to the directory with CIRCT CMake files:
 
@@ -158,9 +158,9 @@ cmake -G Ninja .. \
 ninja
 ```
 
-## Working in Command Line
+## Working in command line
 
-### Clone Project Repository and Set Environment Variable
+### Clone project repository and set environment variable
 
 ```console
 cd <workdir>
@@ -172,7 +172,7 @@ export Yosys_ROOT=<workdir>/yosys
 
 Please keep `UTOPIA_HOME` and `Yosys_ROOT` variables and the values in your system permanently.
 
-### Before Building
+### Before building
 
 After doing all this steps, reboot your pc:
 
@@ -180,7 +180,7 @@ After doing all this steps, reboot your pc:
 reboot
 ```
 
-### Project Building
+### Project building
 
 ```console
 cd utopia-eda

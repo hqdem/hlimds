@@ -1,6 +1,6 @@
 [//]: <> (SPDX-License-Identifier: Apache-2.0)
 
-# Utopia EDA Coding Style
+# Utopia EDA coding style
 
 We use [LLVM Coding Conventions](https://llvm.org/docs/CodingStandards.html)
 with some project-specific modifications.

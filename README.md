@@ -4,19 +4,19 @@
 
 Utopia is an EDA for logic synthesis of digital hardware designs.
 
-## Licensing and Distribution
+## Licensing and distribution
 
 Utopia is distributed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
-## Coding Style
+## Coding style
 
 See `doc/CodeStyle.md` for more details about our coding convention.
 
-## General Notes
+## General notes
 
 See `doc/Notes.md` if you're not familiar with program building/installing on Linux.
 
-## System Requirements
+## System requirements
 
 The recommended operating system for Utopia is Ubuntu 20.04. The package names
 below are specific to this operating system:
@@ -57,7 +57,7 @@ sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
 
 If you are working on Fedora Linux OS, please follow this [guide](doc/Fedora.md).
 
-### CMake Installation
+### CMake installation
 
 ```console
 cd <workdir>
@@ -72,7 +72,7 @@ sudo make install
 
 If you prefer to install CMake as package, please follow this [guide](https://apt.kitware.com).
 
-### C++ CTemplate Installation
+### C++ CTemplate installation
 
 ```console
 cd <workdir>
@@ -88,7 +88,7 @@ If you would like to install CTemplate to a non-standard location, please
 specify `--prefix` option of `configure` script to installation directory
 you want and set `CT_DIR` environment variable to it too.
 
-### CUDD Installation
+### CUDD installation
 
 ```console
 cd <workdir>
@@ -105,7 +105,7 @@ If you want to install `CUDD` not in default directory by using
 will require environment variable `CUDD_DIR` that contains the path
 to the `CUDD` actual installation directory.
 
-### STACCATO Installation
+### STACCATO installation
 
 The `<path_to_cudd_dir>` refers to the path to the CUDD sources directory.
 
@@ -128,7 +128,7 @@ sudo make install
     * add `-DYosys_ROOT=<yosys-dir>` to the `cmake` invocation
     * e.g. `cmake -S <utopia-source-dir> -B <utopia-build-dir> -DYosys_ROOT=<yosys-dir> -G Ninja`
 
-### MLIR/CIRCT Installation
+### MLIR/CIRCT installation
 
 To configure the build process using a CIRCT binary distribution avoiding the
 need to build from the source, see `doc/CirctPrebuilt.md`.
@@ -147,7 +147,7 @@ git submodule init
 git submodule update
 ```
 
-#### LLVM/MLIR Installation
+#### LLVM/MLIR installation
 
 Set `MLIR_DIR` environment variable to the directory with MLIR CMake files:
 
@@ -174,7 +174,7 @@ cmake -G Ninja ../llvm \
 ninja
 ```
 
-#### CIRCT Installation
+#### CIRCT installation
 
 Set `CIRCT_DIR` environment variable to the directory with CIRCT CMake files:
 
@@ -200,9 +200,9 @@ cmake -G Ninja .. \
 ninja
 ```
 
-## Working in Command Line
+## Working in command line
 
-### Clone Project Repository and Set Environment Variable
+### Clone project repository and set environment variables
 
 ```console
 cd <workdir>
@@ -214,7 +214,7 @@ export Yosys_ROOT=<workdir>/yosys
 
 Please keep `UTOPIA_HOME` and `Yosys_ROOT` variables and the values in your system permanently.
 
-### Project Building
+### Project building
 
 ```console
 cd utopia-eda
@@ -252,7 +252,7 @@ To list the Utopia EDA options, do the following:
 ./build/src/umain --help-all
 ```
 
-### Running Verilog-to-FIRRTL Translator
+### Running Verilog-to-FIRRTL translator
 
 ```console
 ./build/src/umain to_firrtl <file(s)>
@@ -285,7 +285,7 @@ To translate input description into inner representation (so called model2), you
 
 When selecting these option, debug information will be generated in standart error output file.
 
-### Running Verilog-to-Model2 Translator
+### Running Verilog-to-Model2 translator
 
 The translator is used to translate input description into inner representation (so called model2).
 
@@ -309,7 +309,7 @@ When selecting this option, you must specify the name of the top module
 
 When selecting these option, debug information will be generated in standard error output file.
 
-#### Running Translator to Model2
+#### Running translator to Model2
 
 An example of translator usage is as follows:
 
@@ -334,9 +334,9 @@ debug print. (`--verbose`).
 
 *NOTE: For FIRRTL files n == 1
 
-### Tests Running
+### Tests running
 
-#### All Tests Running
+#### All tests running
 
 ```console
 rm -rf $UTOPIA_HOME/output
@@ -349,7 +349,7 @@ or
 ./run-tests.sh
 ```
 
-#### Specific Tests Running
+#### Specific tests running
 
 ```console
 ./build/test/utest --gtest_filter=<test-pattern>
@@ -365,7 +365,7 @@ Test pattern accepts ```*``` and ```?``` wildcards.
 
 To run "shortest" test suites (which take less than 10 min) use `smoke-tests.sh`.
 
-#### List Available Tests
+#### List available tests
 
 ```console
 ./build/test/utest --gtest_list_tests

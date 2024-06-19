@@ -4,7 +4,7 @@ In this guide the instruction on how to build and run Utopia EDA with Docker
 is described.
 The guide was checked on Ubuntu 20.04 operating system.
 
-## Table of Contents
+## Table of contents
 
 - [Installation](#docker-installation)
 - [Authentication](#docker-authentication)
@@ -23,7 +23,7 @@ The guide was checked on Ubuntu 20.04 operating system.
 
 ---
 
-## Docker Installation
+## Docker installation
 
 To install Docker, do following:
 
@@ -75,7 +75,7 @@ In this section instruction on how to build and update Docker image using
 Dockerfile is described. Use this to install new utilities and libraries on
 image to work with Utopia EDA.
 
-### Building from Dockerfile
+### Building from `Dockerfile`
 
 To build new image from Dockerfile, use:
 
@@ -92,7 +92,7 @@ To build new image from Dockerfile, use:
 Run `docker images` to check images on your machine.
 Run `docker rmi <image name/id`> to delete the image.
 
-### Modifying Docker image
+### Modifying image
 
 The Docker image can be updated by modifying the Dockerfile and then
 rebuilding the image.

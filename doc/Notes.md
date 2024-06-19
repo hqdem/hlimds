@@ -38,7 +38,7 @@ because of significant reduction of the compilation time.
 
 ## Working in Visual Studio Code
 
-### Installing VS Studio Code w/ C/C++ and CMake Extensions
+### Installing VS Studio Code w/ C/C++ and CMake extensions
 
 * Download the VS Studio package
   * Go to [VS Code page](https://code.visualstudio.com/docs/?dv=linux64_deb)
@@ -57,7 +57,7 @@ because of significant reduction of the compilation time.
   * Click on the `No Kit Selected` text in the status bar
     * Select the kit to use (for example, `GCC 9.3.0 x86_64-linux-gnu`)
 
-### Opening/Building Project
+### Opening/building project
 
 * Clone project repository (see above)
 * Click on the `File` and `Open Folder...` menu items

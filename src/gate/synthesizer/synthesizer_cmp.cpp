@@ -182,14 +182,15 @@ void fillBySignum(model::SubnetBuilder::LinkList &inputsA,
                   const model::Subnet::Link signB) {
   auto &inputs = inputsA.size() > inputsB.size() ? inputsB : inputsA;
   const auto &sign = inputsA.size() > inputsB.size() ? signB : signA;
-  const auto delta = abs(inputsA.size() - inputsB.size());
+  // we can conver to 32-bit int, because max possible size of input is uin16_t
+  const auto delta = abs((int32_t)inputsA.size() - (int32_t)inputsB.size());
 
   for (uint16_t i = 0; i < delta; ++i) {
     inputs.push_back(sign);
   }
 }
 
-// default generator for comparsion for greater/less than unsigned
+// default generator for comparison for greater/less than unsigned
 model::SubnetID synthNtU(const model::CellTypeAttr &attr, bool makeSwap) {
 
   model::SubnetBuilder builder;
@@ -206,7 +207,7 @@ model::SubnetID synthNtU(const model::CellTypeAttr &attr, bool makeSwap) {
   return builder.make();
 }
 
-// default generator for comparsion for greater/less than signed
+// default generator for comparison for greater/less than signed
 model::SubnetID synthNtS(const model::CellTypeAttr &attr, bool makeSwap) {
   bool useSign = attr.getInWidth(0) != 1 || attr.getInWidth(1) != 1;
 
@@ -235,7 +236,7 @@ model::SubnetID synthNtS(const model::CellTypeAttr &attr, bool makeSwap) {
   return synthNtU(attr, !makeSwap);
 }
 
-// default generator for comparsion for greater/less than or equal unsigned
+// default generator for comparison for greater/less than or equal unsigned
 model::SubnetID synthNteU(const model::CellTypeAttr &attr, bool makeSwap) {
 
   model::SubnetBuilder builder;
@@ -260,7 +261,7 @@ model::SubnetID synthNteU(const model::CellTypeAttr &attr, bool makeSwap) {
   return builder.make();
 }
 
-// default generator for comparsion for greater/less than or equal signed
+// default generator for comparison for greater/less than or equal signed
 model::SubnetID synthNteS(const model::CellTypeAttr &attr, bool makeSwap) {
   bool useSign = attr.getInWidth(0) != 1 || attr.getInWidth(1) != 1;
 

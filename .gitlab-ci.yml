@@ -3,7 +3,7 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:staccato
+image: gitlab.ispras.ru:4567/mvg/utopia-eda:staccato
 
 variables:
   BUILD: "build"

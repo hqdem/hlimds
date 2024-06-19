@@ -2,7 +2,8 @@
 
 # Run project's test suites excluding longest ones
 
-export GTEST_FILTER="-VerilogTranslatorFirrtl*:\
+export GTEST_FILTER="-VerilogFirSys*:\
+VerilogTranslatorFirrtl*:\
 VerilogTranslatorModel2*:\
 Mutator*:\
 ReedMuller*:\

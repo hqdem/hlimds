@@ -31,6 +31,8 @@ struct CostVector final {
       vector(vector) {}
   CostVector():
       CostVector(DefaultSize) {}
+  CostVector(const CostVector &vector):
+      CostVector(vector.vector) {}
 
   size_t size() const {
     return vector.size();

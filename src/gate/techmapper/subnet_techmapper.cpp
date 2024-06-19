@@ -37,7 +37,10 @@ static inline std::vector<optimizer::CostVector> getCostVectors(
 
 static optimizer::CostVector defaultCostAggregator(
    const std::vector<optimizer::CostVector> &vectors) {
-  assert(!vectors.empty());
+  if (vectors.empty()) {
+    return optimizer::CostVector::Zero;
+  }
+
   optimizer::CostVector result(vectors[0]);
 
   for (size_t i = 1; i < vectors.size(); ++i) {

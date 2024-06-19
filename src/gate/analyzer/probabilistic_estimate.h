@@ -17,7 +17,6 @@
 namespace eda::gate::analyzer {
 
 using Cell          = eda::gate::model::Subnet::Cell;
-using Cell          = eda::gate::model::Subnet::Cell;
 using LinkList      = eda::gate::model::Subnet::LinkList;
 using Probabilities = std::vector<float>;
 using Subnet        = eda::gate::model::Subnet;

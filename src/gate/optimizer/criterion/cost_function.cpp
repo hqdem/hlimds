@@ -8,11 +8,12 @@
 
 #include "gate/optimizer/criterion/criterion.h"
 
+#include <cassert>
 #include <cmath>
 
 namespace eda::gate::optimizer {
 
-CostVector CostVector::Zero{};
+const CostVector CostVector::Zero{};
 
 CostVector CostVector::normalize(
     const CostVector &min, const CostVector &max) const {
@@ -30,35 +31,6 @@ CostVector CostVector::truncate(const float min, const float max) const {
   }
 
   return result;
-}
-
-CostVector getMinVector(const Constraints &constraints) {
-  CostVector result(constraints.size());
-  for (size_t i = 0; i < constraints.size(); ++i) {
-    result[i] = constraints[i].min;
-  }
-  return result;
-}
-
-CostVector getMaxVector(const Constraints &constraints) {
-  CostVector result(constraints.size());
-  for (size_t i = 0; i < constraints.size(); ++i) {
-    result[i] = constraints[i].max;
-  }
-  return result;
-}
-
-Cost quadraticPenalty(
-    const CostVector &vector, const Constraints &constraints) {
-  constexpr Cost alarm{0.9};
-  constexpr Cost power{2.0};
-
-  const auto min = getMinVector(constraints);
-  const auto max = getMaxVector(constraints) * alarm;
-
-  const auto normalized = vector.normalize(min, max).truncate(0.0, 100.0);
-
-  return 1.0 + std::pow(normalized.vector, power).sum();
 }
 
 } // namespace eda::gate::optimizer

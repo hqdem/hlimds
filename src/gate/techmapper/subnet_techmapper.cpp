@@ -110,31 +110,34 @@ static optimizer::SubnetBuilderPtr makeBuilder(
   for (size_t i = 0; i < subnet.size(); ++i) {
     const auto &oldCell = entries[i].cell;
 
-    if (!matches[i]) {
-      continue;
-    }
+    if (oldCell.isIn()) {
+      // Add all inputs even if some of them are not used (matches[i] is null).
+      links[i] = builder->addInput();
+    } else if (matches[i]) {
+      const auto &type = model::CellType::get(matches[i]->typeID);
+      assert(type.getInNum() == matches[i]->links.size());
 
-    const auto &type = model::CellType::get(matches[i]->typeID);
-    assert(type.getInNum() == matches[i]->links.size());
-
-    model::Subnet::LinkList newLinks(type.getInNum());
-    for (size_t j = 0; j < type.getInNum(); ++j) {
-      const auto oldLink = matches[i]->links[j];
-      const auto newLink = links[oldLink.idx];
-      newLinks[j] = oldLink.inv ? ~newLink : newLink;
-      assert(!(type.isCell() && newLinks[j].inv)
-          && "Inversions in a techmapped net are not allowed");
+      model::Subnet::LinkList newLinks(type.getInNum());
+      for (size_t j = 0; j < type.getInNum(); ++j) {
+        const auto oldLink = matches[i]->links[j];
+        const auto newLink = links[oldLink.idx];
+        newLinks[j] = oldLink.inv ? ~newLink : newLink;
+        assert(!(type.isCell() && newLinks[j].inv)
+            && "Inversions in a techmapped net are not allowed");
+      }
+      
+      const auto link = builder->addCell(matches[i]->typeID, newLinks);
+      links[i] = matches[i]->inversion ? ~link : link;
     }
-    
-    const auto link = builder->addCell(matches[i]->typeID, newLinks);
-    links[i] = matches[i]->inversion ? ~link : link;
 
     if (oldCell.isIn() || oldCell.isOut()) {
-      auto &newCell = builder->getCell(link.idx);
+      auto &newCell = builder->getCell(links[i].idx);
       newCell.flipFlop = oldCell.flipFlop;
       newCell.flipFlopID = oldCell.flipFlopID;
     }
-  }
+
+    i += oldCell.more;
+  } // for cell
 
   return builder;
 }

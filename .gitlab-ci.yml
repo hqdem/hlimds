@@ -9,7 +9,6 @@ variables:
   BUILD: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"
   CIRCT_DIR: "/workdir/circt/build/lib/cmake/circt/"
-  CUDD_DIR: "/usr/local/lib"
   GIT_DEPTH: "1"
   GIT_SUBMODULE_STRATEGY: recursive
   MLIR_DIR: "/workdir/circt/llvm/build/lib/cmake/mlir/"
@@ -29,6 +28,7 @@ build_project:
   script:
     - rm -rf ${BUILD_PATH}
     - cd ${UTOPIA_HOME}
+    - find /usr -type f -name "libcudd*" # for debug purpose only, will be removed soon
     - cmake -S ${UTOPIA_HOME} -B ${BUILD} -DYosys_ROOT=${YOSYS_DIR} -G Ninja
     - cmake --build ${BUILD}
 

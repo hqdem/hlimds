@@ -39,7 +39,7 @@ add_library(Gate OBJECT
   optimizer/npndb.cpp
   optimizer/npnstatdb.cpp
   optimizer/reconvergence_cut.cpp
-  optimizer/refactor.cpp
+  optimizer/refactorer.cpp
   optimizer/resubstitutor.cpp
   optimizer/rewriter.cpp
   optimizer/safe_passer.cpp

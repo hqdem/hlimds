@@ -7,13 +7,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "reconvergence_cut.h"
-#include "refactor.h"
+#include "refactorer.h"
 
 #include "gate/analyzer/probabilistic_estimate.h"
 
 namespace eda::gate::optimizer {
 
-void Refactor::transform(SubnetBuilder &builder) const {
+void Refactorer::transform(SubnetBuilder &builder) const {
   if (weightCalculator) {
     (*weightCalculator)(builder, {});
   }
@@ -23,7 +23,7 @@ void Refactor::transform(SubnetBuilder &builder) const {
   }
 }
 
-void Refactor::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const {
+void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const {
   const size_t entryID{*iter};
   EntryMap oldConeMap;
   SubnetID oldConeID

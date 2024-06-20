@@ -21,7 +21,7 @@ namespace eda::gate::optimizer {
 /** 
  * @brief Inplements optimization based on refactoring.
  */
-class Refactor final : public SubnetInPlaceTransformer {
+class Refactorer final : public SubnetInPlaceTransformer {
 public:
 
   /// @cond ALIASES
@@ -47,14 +47,14 @@ public:
   using CellWeightModifier = SubnetBuilder::CellWeightModifier;
 
   /**
-   * @brief Constructs a refactor.
+   * @brief Constructs a refactorer.
    */
-  Refactor(const std::string &name, const ResynthesizerBase &resynthesizer,
-           const ConeConstructor *coneConstructor,
-           const uint16_t cutSize, const uint16_t careCutSize,
-           const ReplacePredicate *replacePredicate,
-           const WeightCalculator *weightCalculator = nullptr,
-           const CellWeightModifier *weightModifier = nullptr) :
+  Refactorer(const std::string &name, const ResynthesizerBase &resynthesizer,
+             const ConeConstructor *coneConstructor,
+             const uint16_t cutSize, const uint16_t careCutSize,
+             const ReplacePredicate *replacePredicate,
+             const WeightCalculator *weightCalculator = nullptr,
+             const CellWeightModifier *weightModifier = nullptr) :
       SubnetInPlaceTransformer(name),
       resynthesizer(resynthesizer),
       coneConstructor(coneConstructor),

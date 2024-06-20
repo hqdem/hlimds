@@ -15,7 +15,7 @@
 #include "gate/optimizer/design_transformer.h"
 #include "gate/optimizer/mffc.h"
 #include "gate/optimizer/reconvergence_cut.h"
-#include "gate/optimizer/refactor.h"
+#include "gate/optimizer/refactorer.h"
 #include "gate/optimizer/resubstitutor.h"
 #include "gate/optimizer/rewriter.h"
 #include "gate/optimizer/synthesis/abc_npn4.h"
@@ -86,24 +86,24 @@ inline SubnetPass rwz() {
 //===----------------------------------------------------------------------===//
 
 inline SubnetPass rfarea(const std::string &name,
-                         Refactor::ReplacePredicate *replacePredicate) {
+                         Refactorer::ReplacePredicate *replacePredicate) {
   static AreaResynthesizer resynthesizer;
-  static Refactor::ConeConstructor coneConstructor = 
+  static Refactorer::ConeConstructor coneConstructor = 
       [](SubnetBuilder &builder, size_t root, uint16_t cutSize,
-        Refactor::EntryMap &map) {
+        Refactorer::EntryMap &map) {
         auto leaves = getReconvergenceCut(builder, root, cutSize);
         return getMffc(builder, root, leaves, map);
       };
-  return std::make_shared<Refactor>(name,
-                                    resynthesizer,
-                                    &coneConstructor,
-                                    8, 16,
-                                    replacePredicate);
+  return std::make_shared<Refactorer>(name,
+                                      resynthesizer,
+                                      &coneConstructor,
+                                      8, 16,
+                                      replacePredicate);
 }
 
 /// Basic refactoring.
 inline SubnetPass rf() {
-  static Refactor::ReplacePredicate replacePredicate =
+  static Refactorer::ReplacePredicate replacePredicate =
       [](const SubnetEffect &effect) {
         return effect.size > 0;
       };
@@ -112,7 +112,7 @@ inline SubnetPass rf() {
 
 /// Refactoring w/ enabled zero-cost replacements.
 inline SubnetPass rfz() {
-  static Refactor::ReplacePredicate replacePredicate =
+  static Refactorer::ReplacePredicate replacePredicate =
     [](const SubnetEffect &effect) {
       return effect.size >= 0;
     };
@@ -128,12 +128,12 @@ inline SubnetPass rfa() {
 inline SubnetPass rfd() {
   static synthesis::MMSynthesizer mm;
   static Resynthesizer resynthesizer(mm);
-  static Refactor::ConeConstructor coneConstructor{getReconvergenceCone};
-  static Refactor::ReplacePredicate replacePredicate =
+  static Refactorer::ConeConstructor coneConstructor{getReconvergenceCone};
+  static Refactorer::ReplacePredicate replacePredicate =
     [](const SubnetEffect &effect) {
       return effect.depth > 0;
     };
-  return std::make_shared<Refactor>("rfd",
+  return std::make_shared<Refactorer>("rfd",
                                     resynthesizer,
                                     &coneConstructor,
                                     16, 0,
@@ -144,13 +144,13 @@ inline SubnetPass rfd() {
 inline SubnetPass rfp() {
   static synthesis::MMSynthesizer mm;
   static Resynthesizer resynthesizer(mm);
-  static Refactor::ConeConstructor coneConstructor{getReconvergenceCone};
+  static Refactorer::ConeConstructor coneConstructor{getReconvergenceCone};
   static const float stage{0.1f};
-  static Refactor::ReplacePredicate replacePredicate =
+  static Refactorer::ReplacePredicate replacePredicate =
     [](const SubnetEffect &effect) {
       return effect.weight > stage;
     };
-  static Refactor::WeightCalculator weightCalculator = 
+  static Refactorer::WeightCalculator weightCalculator = 
       [](SubnetBuilder & builder, const std::vector<float> &inputWeights) {
         static ProbEstimator estimator;
         const auto weights = estimator.estimateProbs(builder, inputWeights);
@@ -158,11 +158,11 @@ inline SubnetPass rfp() {
           builder.setWeight(*it, weights[*it]);
         }
       };
-  static Refactor::CellWeightModifier weightModifier =
+  static Refactorer::CellWeightModifier weightModifier =
       [](float p) {
         return 2 * p * (1.f - p);
       };
-  return std::make_shared<Refactor>("rfp",
+  return std::make_shared<Refactorer>("rfp",
                                     resynthesizer,
                                     &coneConstructor,
                                     10, 0,

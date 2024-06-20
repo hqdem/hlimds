@@ -12,7 +12,7 @@
 
 #include <cassert>
 #include <cmath>
-#include <set>
+#include <type_traits>
 
 namespace eda::gate::optimizer {
 
@@ -29,14 +29,15 @@ static inline CostVector predictCostVector(
 
 template <typename T>
 class SolutionSpace final {
+  static_assert(std::is_copy_assignable_v<T>, "T must be copy-assignable");
+
 public:
   struct Solution final {
+    Solution():
+      cost(std::numeric_limits<Cost>::max()) {}
     Solution(const T &solution, const Cost cost, const CostVector &vector):
       solution(solution), cost(cost), vector(vector) {}
-
-    const T solution;
-    const Cost cost;
-    const CostVector vector;
+    Solution(const Solution &other) = default;
 
     bool operator==(const Solution &other) const {
       return solution == other.solution;
@@ -49,9 +50,13 @@ public:
     bool operator>(const Solution &other) const {
       return cost > other.cost;
     }
-  };
 
-  using Region = std::set<Solution>;
+    Solution &operator=(const Solution &other) = default;
+
+    T solution;
+    Cost cost;
+    CostVector vector;
+  };
 
   SolutionSpace(const Criterion &criterion,
                 const CostVector &tension,
@@ -93,25 +98,33 @@ public:
   /// Add the solution.
   void add(const T &solution, const CostVector &vector) {
     const auto cost = getPenalizedCost(vector);
-    feasible |= check(vector);
-    solutions.insert(Solution{solution, cost, vector});
+    const auto isFeasible = check(vector);  
+
+    if (feasibleCount == 0 || (isFeasible && cost < best.cost)) {
+      best = Solution(solution, cost, vector);
+    }
+
+    solutionCount++;
+    feasibleCount += isFeasible;
   }
 
   /// Checks whether there are solutions.
-  bool hasSolution() const { return !solutions.empty(); }
+  bool hasSolution() const { return solutionCount > 0; }
   /// Checks whether there are feasible solutions. 
-  bool hasFeasible() const { return feasible; }
+  bool hasFeasible() const { return feasibleCount > 0; }
 
   /// Returns the best solution w.r.t. to the given criterion.
-  const Solution &getBest() const { return *solutions.begin(); }
+  const Solution &getBest() const { return best; }
 
 private:
   const Criterion &criterion;
   const CostVector tension;
   const float progress;
 
-  bool feasible{false};
-  Region solutions;
+  size_t solutionCount{0};
+  size_t feasibleCount{0};
+
+  Solution best;
 };
 
 } // namespace eda::gate::optimizer

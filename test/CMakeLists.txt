@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-# Set policy to operate with timestamps of extracted files
-cmake_policy(SET CMP0135 NEW)
+cmake_minimum_required(VERSION 3.0)
 
 project(UtopiaTest VERSION 0.0)
 
@@ -17,8 +16,7 @@ if(NOT TARGET gtest)
   include(FetchContent)
   FetchContent_Declare(
     googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG v1.14.0
+    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
   )
 
   # For Windows: Prevent overriding the parent project's compiler/linker settings.

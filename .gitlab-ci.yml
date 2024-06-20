@@ -3,7 +3,7 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-image: gitlab.ispras.ru:4567/mvg/utopia-eda:staccato
+image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:staccato
 
 variables:
   BUILD: "build"
@@ -13,7 +13,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   MLIR_DIR: "/workdir/circt/llvm/build/lib/cmake/mlir/"
   UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
-  Yosys_ROOT: "/workdir/yosys"
+  YOSYS_DIR: "/workdir/yosys"
 
 stages:
   - build
@@ -28,7 +28,7 @@ build_project:
   script:
     - rm -rf ${BUILD_PATH}
     - cd ${UTOPIA_HOME}
-    - cmake -S ${UTOPIA_HOME} -B ${BUILD} -G Ninja
+    - cmake -S ${UTOPIA_HOME} -B ${BUILD} -DYosys_ROOT=${YOSYS_DIR} -G Ninja
     - cmake --build ${BUILD}
 
   artifacts:

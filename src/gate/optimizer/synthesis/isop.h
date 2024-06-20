@@ -27,6 +27,7 @@ using LinkList      = eda::gate::model::Subnet::LinkList;
 using SOP           = std::vector<Cube>;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using SubnetID      = model::SubnetID;
+using TruthTable    = TruthTableSynthesizer::TruthTable;
 /// @endcond
 
 /// Synthesizes the subnet from SOP of the boolean function.
@@ -38,32 +39,27 @@ Link synthFromCube(Cube cube, const LinkList &inputs,
                    SubnetBuilder &subnetBuilder, int16_t maxArity = -1);
 
 /**
- * \brief Implements method of synthesis, by Minato-Morreale algorithm.
-*/
+ * \brief Implements the Minato-Morreale algorithm.
+ */
 class MMSynthesizer final : public TruthTableSynthesizer {
 public:
+  using TruthTableSynthesizer::synthesize;
 
-  using Synthesizer::synthesize;
-
-  /// Synthesizes the Subnet.
   SubnetID synthesize(const TruthTable &func,
                       const TruthTable &care,
                       uint16_t maxArity = -1) const override;
+};
 
-  using Synthesizer::synthesizeWithFactoring;
+/**
+ * \brief Implements the Minato-Morreale algorithm w/ factoring.
+ */
+class MMFactorSynthesizer final : public TruthTableSynthesizer {
+public:
+  using TruthTableSynthesizer::synthesize;
 
-  /// Synthesizes the Subnet.
-  SubnetID synthesizeWithFactoring(const TruthTable &func,
-                                   const TruthTable &care,
-                                   uint16_t maxArity = -1) const override;
-
-private:
-
-  std::pair<TruthTable, bool> handleCare(const TruthTable &func,
-                                         const TruthTable &care) const;
-
-  /// For the synthesis of Boolean functions with algebraic factoring.
-  AlgebraicFactor factor;
+  SubnetID synthesize(const TruthTable &func,
+                      const TruthTable &care,
+                      uint16_t maxArity = -1) const override;
 };
 
 } // namespace eda::gate::optimizer::synthesis

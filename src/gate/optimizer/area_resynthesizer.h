@@ -15,12 +15,10 @@ namespace eda::gate::optimizer {
 /// Implements a resynthesizer for the area optimization.
 class AreaResynthesizer : public ResynthesizerBase {
 public:
-  using Subnet        = eda::gate::model::Subnet;
-  using SubnetBuilder = eda::gate::model::SubnetBuilder;
-
-  SubnetID resynthesize(SubnetID subnetId, const TruthTable &care,
-                        uint16_t maxArity = -1) const override;
-
+  model::SubnetID resynthesize(
+      model::SubnetID subnetID,
+      const TruthTable &care,
+      const uint16_t maxArity = -1) const override;
 };
 
 } // namespace eda::gate::optimizer

@@ -24,30 +24,29 @@ template<typename IR>
 class Synthesizer {
 public:
   using FunctionIR = IR;
-  using SubnetID = eda::gate::model::SubnetID;
   using TruthTable = kitty::dynamic_truth_table;
   
   Synthesizer() = default;
   virtual ~Synthesizer() = default;
 
-  virtual SubnetID synthesize(const IR &ir,
-                              const TruthTable &care,
-                              const uint16_t maxArity = -1) const = 0;
+  /**
+   * @brief Synthesizes a subnet for the given IR and care specification.
+   * @return The identifier of the newly constructed subnet or OBJ_NULL_ID.
+   */
+  virtual model::SubnetID synthesize(
+      const IR &ir,
+      const TruthTable &care,
+      const uint16_t maxArity = -1) const = 0;
 
-  SubnetID synthesize(const IR &ir, const uint16_t maxArity = -1) const {
-    return synthesize(ir, TruthTable(), maxArity);
+  /**
+   * @brief Synthesizes a subnet for the given IR.
+   * @return The identifier of the newly constructed subnet or OBJ_NULL_ID.
+   */
+  model::SubnetID synthesize(
+      const IR &ir,
+      const uint16_t maxArity = -1) const {
+    return synthesize(ir, TruthTable{}, maxArity);
   }  
-
-  virtual SubnetID synthesizeWithFactoring(const IR &ir,
-                                           const TruthTable &care,
-                                           const uint16_t maxArity = -1) const {
-    assert(false && "The method is not overridden");
-    return model::OBJ_NULL_ID;
-  }
-
-  SubnetID synthesizeWithFactoring(const IR &ir, const uint16_t maxArity = -1) const {
-    return synthesizeWithFactoring(ir, TruthTable{}, maxArity);
-  }
 };
 
 /// Truth-table-based synthesizer.

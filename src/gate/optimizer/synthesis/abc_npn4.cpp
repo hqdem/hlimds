@@ -280,14 +280,14 @@ static Database database;
 
 model::SubnetID AbcNpn4Synthesizer::synthesize(const TruthTable &tt,
                                                const TruthTable &,
-                                               uint16_t maxArity) const {
+                                               const uint16_t maxArity) const {
 
-  static std::vector<SubnetID> cache[k + 1] {
-      std::vector<SubnetID>(1 << (1 << 0)),
-      std::vector<SubnetID>(1 << (1 << 1)),
-      std::vector<SubnetID>(1 << (1 << 2)),
-      std::vector<SubnetID>(1 << (1 << 3)),
-      std::vector<SubnetID>(1 << (1 << 4)),
+  static std::vector<model::SubnetID> cache[k + 1] {
+      std::vector<model::SubnetID>(1 << (1 << 0)),
+      std::vector<model::SubnetID>(1 << (1 << 1)),
+      std::vector<model::SubnetID>(1 << (1 << 2)),
+      std::vector<model::SubnetID>(1 << (1 << 3)),
+      std::vector<model::SubnetID>(1 << (1 << 4)),
   };
 
 #ifdef NPN4_USAGE_STATS

@@ -25,27 +25,32 @@ namespace eda::gate::optimizer {
 class ResynthesizerBase {
 public:
   using TruthTable = kitty::dynamic_truth_table;
-  using SubnetID = eda::gate::model::SubnetID;
 
   ResynthesizerBase() = default;
   virtual ~ResynthesizerBase() = default;
 
-  /// Resynthesizes the given subnet taking into account cares/don't-cares.
-  /// Returns the identifier of the newly constructed subnet or OBJ_NULL_ID.
-  virtual SubnetID resynthesize(const SubnetID subnetID,
-                                const TruthTable &care,
-                                const uint16_t maxArity = -1) const = 0;
+  /**
+   * @brief Resynthesizes the subnet w/ the care specification.
+   * @return The identifier of the newly constructed subnet or OBJ_NULL_ID.
+   */
+  virtual model::SubnetID resynthesize(
+      const model::SubnetID subnetID,
+      const TruthTable &care,
+      const uint16_t maxArity = -1) const = 0;
 
-  /// Resynthesizes the given subnet.
-  /// Returns the identifier of the newly constructed subnet or OBJ_NULL_ID.
-  SubnetID resynthesize(const SubnetID subnetID,
-                        const uint16_t maxArity = -1) const {
+  /**
+   * @brief Resynthesizes the subnet.
+   * @return The identifier of the newly constructed subnet or OBJ_NULL_ID.
+   */
+  model::SubnetID resynthesize(
+      const model::SubnetID subnetID,
+      const uint16_t maxArity = -1) const {
     return resynthesize(subnetID, TruthTable{}, maxArity);
   }
 };
 
 /**
- * @brief Constructs the intermediate representation of the given subnet.
+ * @brief Constructs the subnet IR.
  */
 template<typename IR>
 IR construct(const model::Subnet &subnet);
@@ -61,9 +66,10 @@ public:
 
   using ResynthesizerBase::resynthesize;
 
-  SubnetID resynthesize(const SubnetID subnetID,
-                        const TruthTable &care,
-                        const uint16_t maxArity = -1) const override {
+  model::SubnetID resynthesize(
+      const model::SubnetID subnetID,
+      const TruthTable &care,
+      const uint16_t maxArity = -1) const override {
     assert(subnetID != model::OBJ_NULL_ID);
     const auto ir = construct<IR>(model::Subnet::get(subnetID));
     return synthesizer.synthesize(ir, care, maxArity);

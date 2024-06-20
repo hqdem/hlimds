@@ -14,37 +14,36 @@
 
 namespace eda::gate::optimizer {
 
-using SubnetID = eda::gate::model::SubnetID;
-
-SubnetID AreaResynthesizer::resynthesize(SubnetID subnetId,
-                                         const TruthTable &care,
-                                         uint16_t maxArity) const {
+model::SubnetID AreaResynthesizer::resynthesize(
+    const model::SubnetID subnetID,
+    const TruthTable &care,
+    const uint16_t maxArity) const {
 
   // Heuristic constants for optimizers calling.
   const size_t akersMaxInputNum = 8;
   const size_t akersArityNum    = 3;
 
-  const auto &subnet = Subnet::get(subnetId);
+  const auto &subnet = model::Subnet::get(subnetID);
   auto truthTable = gate::model::evaluateSingleOut(subnet);
   const auto numVars = truthTable.num_vars();
 
-  SubnetID resynthesizedId = model::OBJ_NULL_ID;
+  model::SubnetID resynthesizedID = model::OBJ_NULL_ID;
   if ((numVars < akersMaxInputNum) && (maxArity == akersArityNum)) {
     synthesis::AkersSynthesizer akers;
-    resynthesizedId = akers.synthesize(truthTable, care);
+    resynthesizedID = akers.synthesize(truthTable, care);
   } else {
-    synthesis::MMSynthesizer isop;
-    resynthesizedId = isop.synthesizeWithFactoring(truthTable, care, maxArity);
+    synthesis::MMFactorSynthesizer isop;
+    resynthesizedID = isop.synthesize(truthTable, care, maxArity);
   }
 
-  auto &resynthesized = Subnet::get(resynthesizedId);
-  auto resynthesizedTT = gate::model::evaluateSingleOut(resynthesized);
+  auto &resynthesized = model::Subnet::get(resynthesizedID);
+  auto resynthesizedTT = model::evaluateSingleOut(resynthesized);
   if (care.num_vars() > 0) {
     resynthesizedTT &= care;
     truthTable &= care;
   }
   assert(resynthesizedTT == truthTable && "Resynthesized TT != Input TT\n");
-  return resynthesizedId;
+  return resynthesizedID;
 }
 
 } // namespace eda::gate::optimizer

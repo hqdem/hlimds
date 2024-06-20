@@ -43,6 +43,21 @@ Link synthFromCube(Cube cube, const LinkList &inputs,
   return subnetBuilder.addCellTree(model::AND, links, maxArity);
 }
 
+static std::pair<TruthTable, bool> handleCare(
+    const TruthTable &func, const TruthTable &care) {
+  if (care.num_vars() == 0) {
+    bool inv{kitty::count_ones(func) > (func.num_bits() / 2)};
+    return {inv ? ~func : func, inv};
+  }
+  auto funcWithCare{func & care};
+  auto inverseFuncWithCare{(~func) & care};
+
+  bool inv{kitty::count_ones(funcWithCare) > 
+      kitty::count_ones(inverseFuncWithCare)};
+    
+  return {inv ? inverseFuncWithCare : funcWithCare, inv};
+}
+
 model::SubnetID MMSynthesizer::synthesize(const TruthTable &func,
                                           const TruthTable &care,
                                           uint16_t maxArity) const {                              
@@ -60,34 +75,17 @@ model::SubnetID MMSynthesizer::synthesize(const TruthTable &func,
   return subnetBuilder.make();
 }
 
-model::SubnetID MMSynthesizer::synthesizeWithFactoring(const TruthTable &func,
-                                                       const TruthTable &care,
-                                                       uint16_t maxArity)
-                                                       const {
-
+model::SubnetID MMFactorSynthesizer::synthesize(const TruthTable &func,
+                                                const TruthTable &care,
+                                                uint16_t maxArity) const {
   const auto [tt, inv] = handleCare(func, care);
 
   if (bool value; utils::isConst(tt, value)) {
     return model::SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
   }
 
-  auto numVars = tt.num_vars();
-  return factor.getSubnet(kitty::isop(tt), numVars, maxArity, inv);
-}
-
-std::pair<TruthTable, bool> MMSynthesizer::handleCare(
-    const TruthTable &func, const TruthTable &care) const {
-  if (care.num_vars() == 0) {
-    bool inv{kitty::count_ones(func) > (func.num_bits() / 2)};
-    return {inv ? ~func : func, inv};
-  }
-  auto funcWithCare{func & care};
-  auto inverseFuncWithCare{(~func) & care};
-
-  bool inv{kitty::count_ones(funcWithCare) > 
-      kitty::count_ones(inverseFuncWithCare)};
-    
-  return {inv ? inverseFuncWithCare : funcWithCare, inv};
+  AlgebraicFactor factor;
+  return factor.getSubnet(kitty::isop(tt), tt.num_vars(), maxArity, inv);
 }
 
 } // namespace eda::gate::optimizer::synthesis

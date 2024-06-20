@@ -42,7 +42,7 @@ RUN make install
 WORKDIR /workdir
 RUN git clone https://github.com/ispras/staccato
 WORKDIR /workdir/staccato
-RUN make BUILD_TYPE=shared CUDD_INCLUDE=/workdir/cudd SM="-DDISABLE_SM" -j $(nproc)
+RUN make BUILD_TYPE=shared CUDD_INCLUDE=/workdir/cudd SM="-DDISABLE_SM" -j$(nproc)
 RUN make install
 
 # Install Yosys tool & library

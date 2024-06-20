@@ -1,9 +1,12 @@
 FROM isprasmvg/ubuntu:base
 
-RUN apt-get update && apt install -y autoconf bison clang clang-tidy cmake \
-    flex g++ gcc graphviz gtkwave iverilog lcov liblpsolve55-dev libssl-dev \
-    libtool libxerces-c3.2 libxerces-c-dev lld make ninja-build pkg-config \
-    python3 tar wget zlib1g zlib1g-dev
+# Install required packages
+
+RUN apt-get update && apt install -y autoconf bison clang clang-tidy flex g++ \
+    gcc graphviz gtkwave iverilog lcov liblpsolve55-dev libssl-dev libtool lld \
+    make ninja-build pkg-config python3 tar wget zlib1g zlib1g-dev
+
+# Install CMake of proper version
 
 WORKDIR /workdir
 RUN wget https://cmake.org/files/v3.28/cmake-3.28.1.tar.gz
@@ -14,6 +17,8 @@ RUN ./bootstrap
 RUN make -j$(nproc)
 RUN make install
 
+# Install C++ CTemplate library
+
 WORKDIR /workdir
 RUN git clone https://github.com/OlafvdSpek/ctemplate.git
 WORKDIR /workdir/ctemplate
@@ -21,6 +26,8 @@ RUN ./autogen.sh
 RUN ./configure --prefix=/usr
 RUN make -j$(nproc)
 RUN make install
+
+# Install CUDD library
 
 WORKDIR /workdir
 RUN git clone https://github.com/ivmai/cudd
@@ -30,11 +37,15 @@ RUN ./configure --enable-obj --enable-shared
 RUN make -j$(nproc)
 RUN make install
 
+# Install STACCATO library
+
 WORKDIR /workdir
 RUN git clone https://github.com/ispras/staccato
 WORKDIR /workdir/staccato
 RUN make BUILD_TYPE=shared CUDD_INCLUDE=/workdir/cudd SM="-DDISABLE_SM" -j $(nproc)
 RUN make install
+
+# Install Yosys tool & library
 
 WORKDIR /workdir
 RUN git clone https://github.com/YosysHQ/yosys.git
@@ -48,6 +59,8 @@ ENV file_path="Makefile"
 RUN sed -i "s|$old_line|$new_line|" "$file_path"
 RUN make -j$(nproc)
 RUN make install
+
+# Install LLVM/MLIR & CIRCT
 
 WORKDIR /workdir
 RUN git clone https://github.com/circt/circt.git
@@ -85,6 +98,8 @@ RUN cmake -G Ninja .. \
     -DVERILATOR_DISABLE=ON \
     -DIVERILOG_DISABLE=ON
 RUN ninja
+
+# Set up the interpreter
 
 WORKDIR /workdir
 CMD ["/bin/bash"]

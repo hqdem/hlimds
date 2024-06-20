@@ -44,7 +44,7 @@ inline SubnetMapper aig() {
   return std::make_shared<premapper::AigMapper>("aig");
 }
 
-/// Mapping to the MIG represenation.
+/// Mapping to the MIG representation.
 inline SubnetMapper mig() {
   // FIXME:
   return nullptr;

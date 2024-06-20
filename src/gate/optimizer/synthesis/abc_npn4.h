@@ -12,7 +12,6 @@
 #include "gate/optimizer/synthesizer.h"
 #include "util/singleton.h"
 
-#include <cstdint>
 #include <unordered_map>
 #include <vector>
 

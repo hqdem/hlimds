@@ -10,45 +10,47 @@
 
 #include "gate/model/subnet.h"
 
-#include "cudd.h"
-#include "kitty/dynamic_truth_table.hpp"
-#include "kitty/operations.hpp"
-#include "kitty/operators.hpp"
+#include <kitty/dynamic_truth_table.hpp>
+
+#include <cassert>
+#include <cstdint>
 
 namespace eda::gate::optimizer {
 
 /**
- * \brief Common interface for synthesizers.
+ * @brief Common interface for synthesizers.
  */
 template<typename IR>
 class Synthesizer {
 public:
   using FunctionIR = IR;
-  using SubnetID   = eda::gate::model::SubnetID;
+  using SubnetID = eda::gate::model::SubnetID;
   using TruthTable = kitty::dynamic_truth_table;
   
-  Synthesizer() {}
-  virtual ~Synthesizer() {}
+  Synthesizer() = default;
+  virtual ~Synthesizer() = default;
 
-  virtual SubnetID synthesize(const IR &ir, const TruthTable &care,
-                              uint16_t maxArity = -1) const = 0;
+  virtual SubnetID synthesize(const IR &ir,
+                              const TruthTable &care,
+                              const uint16_t maxArity = -1) const = 0;
 
-  SubnetID synthesize(const IR &ir, uint16_t maxArity = -1) const {
+  SubnetID synthesize(const IR &ir, const uint16_t maxArity = -1) const {
     return synthesize(ir, TruthTable(), maxArity);
   }  
 
-  virtual SubnetID synthesizeWithFactoring(const IR &ir, const TruthTable &care,
-                                           uint16_t maxArity = -1) const {
+  virtual SubnetID synthesizeWithFactoring(const IR &ir,
+                                           const TruthTable &care,
+                                           const uint16_t maxArity = -1) const {
     assert(false && "The method is not overridden");
     return model::OBJ_NULL_ID;
   }
 
-  SubnetID synthesizeWithFactoring(const IR &ir, uint16_t maxArity = -1) const {
-    return synthesizeWithFactoring(ir, TruthTable(), maxArity);
+  SubnetID synthesizeWithFactoring(const IR &ir, const uint16_t maxArity = -1) const {
+    return synthesizeWithFactoring(ir, TruthTable{}, maxArity);
   }
 };
 
-/// Truth-table based synthesizer.
+/// Truth-table-based synthesizer.
 using TruthTableSynthesizer = Synthesizer<kitty::dynamic_truth_table>;
 
 } // namespace eda::gate::optimizer

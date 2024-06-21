@@ -87,7 +87,6 @@ add_executable(${TEST_TARGET}
   gate/synthesizer/adder_test.cpp
   gate/synthesizer/cmp_test.cpp
   gate/synthesizer/shift_test.cpp
-  #TODO: rm gate/techmapper/openabcd_test.cpp from here & from repo
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/strategy/area_recovery_test.cpp
   gate/techmapper/strategy/net_mapping_test.cpp

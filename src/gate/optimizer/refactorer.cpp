@@ -32,6 +32,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
   const size_t coneIns{Subnet::get(oldConeID).getInNum()};
 
   ResynthesizerBase::TruthTable care;
+  (void)careCutSize; // FIXME:
   /* FIXME: Uncomment.
   if (careCutSize > cutSize) {
     std::vector<size_t> roots;

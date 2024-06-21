@@ -29,7 +29,6 @@ add_library(Gate OBJECT
   mutator/mutator_transformer.cpp
   library/library.cpp
   library/check_lib/aig/check_lib_for_aig.cpp
-  optimizer/area_resynthesizer.cpp
   optimizer/associative_balancer.cpp
   optimizer/cone_builder.cpp
   optimizer/criterion/cost_function.cpp

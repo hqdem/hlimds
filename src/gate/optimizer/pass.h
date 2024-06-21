@@ -10,7 +10,6 @@
 
 #include "fmt/format.h"
 #include "gate/analyzer/probabilistic_estimate.h"
-#include "gate/optimizer/area_resynthesizer.h"
 #include "gate/optimizer/associative_balancer.h"
 #include "gate/optimizer/design_transformer.h"
 #include "gate/optimizer/mffc.h"
@@ -87,7 +86,8 @@ inline SubnetPass rwz() {
 
 inline SubnetPass rfarea(const std::string &name,
                          Refactorer::ReplacePredicate *replacePredicate) {
-  static AreaResynthesizer resynthesizer;
+  static synthesis::MMFactorSynthesizer mmFactor;
+  static Resynthesizer resynthesizer(mmFactor);
   static Refactorer::ConeConstructor coneConstructor = 
       [](SubnetBuilder &builder, size_t root, uint16_t cutSize,
         Refactorer::EntryMap &map) {
@@ -134,10 +134,10 @@ inline SubnetPass rfd() {
       return effect.depth > 0;
     };
   return std::make_shared<Refactorer>("rfd",
-                                    resynthesizer,
-                                    &coneConstructor,
-                                    16, 0,
-                                    &replacePredicate);
+                                      resynthesizer,
+                                      &coneConstructor,
+                                      16, 0,
+                                      &replacePredicate);
 }
 
 /// Power-aware refactoring.
@@ -163,12 +163,12 @@ inline SubnetPass rfp() {
         return 2 * p * (1.f - p);
       };
   return std::make_shared<Refactorer>("rfp",
-                                    resynthesizer,
-                                    &coneConstructor,
-                                    10, 0,
-                                    &replacePredicate,
-                                    &weightCalculator,
-                                    &weightModifier);
+                                      resynthesizer,
+                                      &coneConstructor,
+                                      10, 0,
+                                      &replacePredicate,
+                                      &weightCalculator,
+                                      &weightModifier);
 }
 
 //===----------------------------------------------------------------------===//

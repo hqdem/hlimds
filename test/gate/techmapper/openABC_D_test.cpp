@@ -17,11 +17,12 @@
 
 namespace eda::gate::techmapper {
 
-using Subnet       = eda::gate::model::Subnet;
-using SubnetID     = eda::gate::model::SubnetID;
-using ModelPrinter = eda::gate::model::ModelPrinter;
+using Subnet        = model::Subnet;
+using SubnetBuilder = model::SubnetBuilder;
+using SubnetID      = model::SubnetID;
+using ModelPrinter  = model::ModelPrinter;
 
-void printVerilog(SubnetID subnet, std::string fileName) {
+void printVerilog(const SubnetID subnet, std::string &fileName) {
   ModelPrinter& verilogPrinter =
     ModelPrinter::getPrinter(ModelPrinter::VERILOG);
   std::ofstream outFile("test/data/gate/techmapper/print/" + fileName);
@@ -33,7 +34,7 @@ void printVerilog(SubnetID subnet, std::string fileName) {
   outFile.close();
 }
 
-SubnetID parseGraphML(std::string fileName);
+SubnetID parseGraphML(const std::string &fileName);
 bool checkAllCellsMapped(SubnetID subnetID);
 
 std::vector<std::string> names = {
@@ -61,12 +62,12 @@ std::vector<std::string> names = {
   "vga_lcd_orig"      // 140k
 };
 
-void testMapper(Techmapper::MapperType mapperType, std::string suff) {
-  SDC sdc{100000000, 10000000000};
+void testMapper(const Techmapper::Strategy mapperType,
+                std::string &suff) {
   Techmapper techmapper;
 
   techmapper.setStrategy(mapperType);
-  techmapper.setSDC(sdc);
+  techmapper.setSDC(sdcPath);
   techmapper.setLibrary(techLib);
 
   for(auto &name : names) {
@@ -75,37 +76,40 @@ void testMapper(Techmapper::MapperType mapperType, std::string suff) {
     std::cout << std::endl << "Start to techmap " <<
       name + ".bench.graphml" << std::endl;
 
-    SubnetID subnetId = parseGraphML(name);
-    SubnetID mappedSubnetId = techmapper.techmap(subnetId);
-    EXPECT_TRUE(checkAllCellsMapped(mappedSubnetId));
+    const auto subnetId = parseGraphML(name);
+    SubnetBuilder builder;
+    techmapper.techmap(subnetId, builder);
+    const auto mappedSubnetID = builder.make();
+    EXPECT_TRUE(checkAllCellsMapped(mappedSubnetID));
 
-    printVerilog(mappedSubnetId, name + "_" + suff);
+    std::string fileName(name + "_" + suff);
+    printVerilog(mappedSubnetID, fileName);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto time = end - start;
 
-    printStatistics(mappedSubnetId, time);
+    printStatistics(mappedSubnetID, time);
   }
 }
 
-TEST(TechmapTest, DISABLED_graphML_Power_group) {
+TEST(TechmapTest, graphML_Power_group) {
   std::string suff = "power.v";
-  testMapper(Techmapper::MapperType::POWER, suff);
+  testMapper(Techmapper::Strategy::POWER, suff);
 }
 
-TEST(TechmapTest, DISABLED_graphML_SimpleArea_group) {
+TEST(TechmapTest, graphML_SimpleArea_group) {
   std::string suff = "simple_area.v";
-  testMapper(Techmapper::MapperType::SIMPLE_AREA_FUNC, suff);
+  testMapper(Techmapper::Strategy::AREA, suff);
 }
 
-TEST(TechmapTest, DISABLED_graphML_Delay_group) {
+TEST(TechmapTest, graphML_Delay_group) {
   std::string suff = "delay.v";
-  testMapper(Techmapper::MapperType::SIMPLE_DELAY_FUNC, suff);
+  testMapper(Techmapper::Strategy::DELAY, suff);
 }
 
-TEST(TechmapTest, DISABLED_graphML_AF_group) {
+TEST(TechmapTest, graphML_AF_group) {
   std::string suff = "af.v";
-  testMapper(Techmapper::MapperType::AREA_FLOW, suff);
+  testMapper(Techmapper::Strategy::AREA_FLOW, suff);
 }
 
 } // namespace eda::gate::techmapper

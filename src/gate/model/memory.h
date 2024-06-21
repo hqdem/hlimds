@@ -19,73 +19,32 @@
 
 namespace eda::gate::model {
 
-typedef uint64_t ObjectPage;
 typedef char *SystemPage;
 
+constexpr uint64_t SMALL_PAGE_SIZE = 1*1024*1024;
 constexpr uint64_t LARGE_PAGE_SIZE = 64*1024*1024;
-constexpr uint64_t LARGE_PAGE_MASK = LARGE_PAGE_SIZE - 1;
 
 class PageManager final : public util::Singleton<PageManager> {
   friend class util::Singleton<PageManager>;
 
 public:
-  /// Returns the object page.
-  static constexpr uint64_t getPage(uint64_t objectID) {
-    return objectID & ~LARGE_PAGE_MASK;
-  }
-
-  /// Returns the object offset.
-  static constexpr uint64_t getOffset(uint64_t objectID) {
-    return objectID & LARGE_PAGE_MASK;
-  }
-
-  /// Returns the object identifier.
-  static constexpr uint64_t getObjectID(uint64_t page, uint64_t offset) {
-    return page + offset;
-  }
-
   /// Returns the object pointer.
-  static constexpr void *getObjectPtr(SystemPage page, uint64_t offset) {
+  static constexpr void *getObjPtr(
+      const SystemPage page, const uint64_t offset) {
     return page + offset;
   }
 
-  // TODO: Dummy address translator.
-  SystemPage translate(ObjectPage objectPage) const {
-    auto i = pageTable.find(objectPage);
-    assert(i != pageTable.end());
+  SystemPage allocate(const uint64_t pageSize) {
+    void *page = aligned_alloc(pageSize, pageSize);
+    assert(page);
 
-    return i->second;
-  }
-
-  // TODO: Dummy page manager.
-  std::pair<ObjectPage, SystemPage> allocate() {
-    const SystemPage systemPage = allocatePage();
-    const std::pair<ObjectPage, SystemPage> translation{objectPage, systemPage};
-
-    const auto info = pageTable.insert(translation);
-    assert(info.second);
-
-    objectPage += LARGE_PAGE_SIZE;
-    return translation;
+    // Advice Linux kernel to use huge pages.
+    madvise(page, pageSize, MADV_HUGEPAGE);
+    return static_cast<SystemPage>(page);
   }
 
 private:
   PageManager() {}
-
-  SystemPage allocatePage() {
-    void *page = aligned_alloc(LARGE_PAGE_SIZE, LARGE_PAGE_SIZE);
-    assert(page);
-
-    // Advice Linux kernel to use huge pages.
-    madvise(page, LARGE_PAGE_SIZE, MADV_HUGEPAGE);
-    return static_cast<SystemPage>(page);
-  }
-
-  /// Current object page.
-  ObjectPage objectPage = 0;
-
-  // TODO: Dummy page table.
-  std::unordered_map<ObjectPage, SystemPage> pageTable;
 };
 
 } // namespace eda::gate::model

@@ -32,6 +32,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
   const size_t coneIns{Subnet::get(oldConeID).getInNum()};
 
   ResynthesizerBase::TruthTable care;
+  /* FIXME: Uncomment.
   if (careCutSize > cutSize) {
     std::vector<size_t> roots;
     roots.reserve(coneIns);
@@ -44,15 +45,25 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
     const auto &careSubnet = Subnet::get(careSubnetId);
     care = gate::model::computeCare(careSubnet);
   }
+  */
 
-  SubnetID newConeID = resynthesizer.resynthesize(oldConeID, care, 2);
+  //--- FIXME:
+  CutExtractor::Cut cut;
+  cut.rootEntryIdx = oldConeMap.at(Subnet::get(oldConeID).size() - 1);
+  for (size_t i = 0; i < coneIns; ++i) {
+    cut.entryIdxs.insert(oldConeMap.at(i));
+  }
+  //---
+
+  std::unordered_map<size_t, size_t> mapping; // FIXME:
+  SubnetID newConeID = resynthesizer.resynthesize(builder, cut, mapping, care, 2); // FIXME: oldConeID, care, 2);
   EntryMap newConeMap;
 
   for (size_t i = 0; i < coneIns; ++i) {
-    newConeMap[i] = oldConeMap[i];
+    newConeMap[i] = mapping[i]; // FIXME: oldConeMap[i];
   }
-  newConeMap[Subnet::get(newConeID).size() - 1] = 
-      oldConeMap.at(Subnet::get(oldConeID).size() - 1);
+  newConeMap[Subnet::get(newConeID).size() - 1] = cut.rootEntryIdx;
+      // FIXME: oldConeMap.at(Subnet::get(oldConeID).size() - 1);
 
   SubnetBuilder newConeBuilder(newConeID);
 
@@ -60,7 +71,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
     std::vector<float> weights;
     weights.reserve(coneIns);
     for (size_t i = 0; i < coneIns; ++i) {
-      weights.push_back(builder.getWeight(oldConeMap.at(i)));
+      weights.push_back(builder.getWeight(mapping.at(i)/* FIXME: oldConeMap.at(i)*/));
     }
     (*weightCalculator)(newConeBuilder, weights);
   }

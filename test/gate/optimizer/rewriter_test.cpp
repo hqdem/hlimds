@@ -20,19 +20,36 @@ using SubnetBuilder = model::SubnetBuilder;
 using Effect = SubnetBuilder::Effect;
 using DinTruthTable = kitty::dynamic_truth_table;
 
+static inline Subnet &getSubnet(const SubnetBuilder &builder,
+                                const CutExtractor::Cut &cut,
+                                std::unordered_map<size_t, size_t> &mapping) { // FIXME:
+  const ConeBuilder coneBuilder(&builder);
+  const auto cone = coneBuilder.getCone(cut);
+
+  // FIXME: Remove.
+  for (const auto &[r, l]: cone.inOutToOrig) {
+    mapping.emplace(r, l);
+  }
+
+  return Subnet::get(cone.subnetID);
+}
+
 class EqualResynthesizer : public ResynthesizerBase {
 public:
 
   using ResynthesizerBase::resynthesize;
 
-  SubnetID resynthesize(const SubnetID subnetID, const TruthTable &,
+  SubnetID resynthesize(const SubnetBuilder &builder,
+                        const CutExtractor::Cut &cut,
+                        std::unordered_map<size_t, size_t> &mapping, // FIXME:
+                        const TruthTable &,
                         uint16_t) const override {
-    const Subnet &subnet = Subnet::get(subnetID);
-    SubnetBuilder builder;
-    const auto &inLinks = builder.addInputs(subnet.getInNum());
-    const auto &outLinks = builder.addSubnet(subnetID, inLinks);
-    builder.addOutputs(outLinks);
-    return builder.make();
+    const Subnet &oldSubnet = getSubnet(builder, cut, mapping);
+    SubnetBuilder newSubnetBuilder;
+    const auto &inLinks = newSubnetBuilder.addInputs(oldSubnet.getInNum());
+    const auto &outLinks = newSubnetBuilder.addSubnet(oldSubnet, inLinks);
+    newSubnetBuilder.addOutputs(outLinks);
+    return newSubnetBuilder.make();
   }
 };
 
@@ -41,35 +58,39 @@ public:
 
   using ResynthesizerBase::resynthesize;
 
-  SubnetID resynthesize(const SubnetID subnetID, const TruthTable &,
+  SubnetID resynthesize(const SubnetBuilder &builder,
+                        const CutExtractor::Cut &cut,
+                        std::unordered_map<size_t, size_t> &mapping, // FIXME:
+                        const TruthTable &,
                         uint16_t) const override {
-    const Subnet &subnet = Subnet::get(subnetID);
-    const auto &entries = subnet.getEntries();
-    SubnetBuilder builder;
+    const Subnet &oldSubnet = getSubnet(builder, cut, mapping);
+    const auto &entries = oldSubnet.getEntries();
+    SubnetBuilder newSubnetBuilder;
     LinkList newSubnetLinks;
-    std::unordered_map<size_t, size_t> mapping;
+    std::unordered_map<size_t, size_t> linkMapping;
     for (size_t i = 0; i < entries.size(); ++i) {
       const auto &cell = entries[i].cell;
       LinkList cellLinks;
-      for (const auto &link : subnet.getLinks(i)) {
+      for (const auto &link : oldSubnet.getLinks(i)) {
         size_t linkID;
-        if (mapping.find(link.idx) != mapping.end()) {
-          linkID = mapping[link.idx];
+        if (linkMapping.find(link.idx) != linkMapping.end()) {
+          linkID = linkMapping[link.idx];
         } else {
           linkID = link.idx;
         }
         if (cell.isAnd()) {
-          newSubnetLinks.push_back(builder.addCell(model::BUF,
-                                                   ~newSubnetLinks[linkID]));
+          newSubnetLinks.push_back(
+              newSubnetBuilder.addCell(model::BUF, ~newSubnetLinks[linkID]));
           linkID = newSubnetLinks.size() - 1;
         }
         cellLinks.push_back(newSubnetLinks[linkID]);
       }
-      newSubnetLinks.push_back(builder.addCell(cell.getTypeID(), cellLinks));
-      mapping[i] = newSubnetLinks.size() - 1;
+      newSubnetLinks.push_back(
+          newSubnetBuilder.addCell(cell.getTypeID(), cellLinks));
+      linkMapping[i] = newSubnetLinks.size() - 1;
       i += cell.more;
     }
-    return builder.make();
+    return newSubnetBuilder.make();
   }
 };
 
@@ -78,35 +99,39 @@ public:
 
   using ResynthesizerBase::resynthesize;
 
-  SubnetID resynthesize(const SubnetID subnetID, const TruthTable &,
+  SubnetID resynthesize(const SubnetBuilder &builder,
+                        const CutExtractor::Cut &cut,
+                        std::unordered_map<size_t, size_t> &mapping,
+                        const TruthTable &,
                         uint16_t) const override {
-    const Subnet &subnet = Subnet::get(subnetID);
-    const auto &entries = subnet.getEntries();
-    SubnetBuilder builder;
+    const Subnet &oldSubnet = getSubnet(builder, cut, mapping);
+    const auto &entries = oldSubnet.getEntries();
+    SubnetBuilder newSubnetBuilder;
     LinkList newSubnetLinks;
-    std::unordered_map<size_t, size_t> mapping;
+    std::unordered_map<size_t, size_t> linkMapping;
     for (size_t i = 0; i < entries.size(); ++i) {
       const auto &cell = entries[i].cell;
       LinkList cellLinks;
-      for (const auto &link : subnet.getLinks(i)) {
+      for (const auto &link : oldSubnet.getLinks(i)) {
         size_t linkID;
-        if (mapping.find(link.idx) != mapping.end()) {
-          linkID = mapping[link.idx];
+        if (linkMapping.find(link.idx) != linkMapping.end()) {
+          linkID = linkMapping[link.idx];
         } else {
           linkID = link.idx;
         }
         cellLinks.push_back(newSubnetLinks[linkID]);
       }
       if (cell.isBuf()) {
-        mapping[i] = cellLinks[0].idx;
+        linkMapping[i] = cellLinks[0].idx;
         i += cell.more;
         continue;
       }
-      newSubnetLinks.push_back(builder.addCell(cell.getTypeID(), cellLinks));
-      mapping[i] = newSubnetLinks.size() - 1;
+      newSubnetLinks.push_back(
+          newSubnetBuilder.addCell(cell.getTypeID(), cellLinks));
+      linkMapping[i] = newSubnetLinks.size() - 1;
       i += cell.more;
     }
-    return builder.make();
+    return newSubnetBuilder.make();
   }
 };
 

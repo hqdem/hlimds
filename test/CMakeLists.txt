@@ -38,15 +38,16 @@ add_executable(${TEST_TARGET}
   gate/estimator/time_model_test.cpp
   gate/estimator/wlm_test.cpp
   gate/model/array_test.cpp
-  gate/model/examples.cpp
   gate/model/design_analysis_test.cpp
   gate/model/design_test.cpp
+  gate/model/examples.cpp
   gate/model/generator_test.cpp
   gate/model/list_test.cpp
   gate/model/net_decomposer_test.cpp
   gate/model/net_test.cpp
   gate/model/replace_test.cpp
   gate/model/seq_net.cpp
+  gate/model/serializer_test.cpp
   gate/model/subnet_cnf_encoder_test.cpp
   gate/model/subnet_depth_test.cpp
   gate/model/subnet_test.cpp
@@ -78,11 +79,15 @@ add_executable(${TEST_TARGET}
   gate/optimizer/synthesis/isop_test.cpp
   gate/optimizer/synthesis/reed_muller_test.cpp
   gate/optimizer/synthesis/zhegalkin_test.cpp
+  gate/parser/graphml_parser_test.cpp
+  gate/parser/graphml_test_utils.cpp
+  gate/premapper/aigmapper_test.cpp
   gate/simulator/simulator_test.cpp
-  gate/synthesizer/adder_test.cpp
-  gate/synthesizer/shift_test.cpp
-  gate/synthesizer/cmp_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
+  gate/synthesizer/adder_test.cpp
+  gate/synthesizer/cmp_test.cpp
+  gate/synthesizer/shift_test.cpp
+  #TODO: rm gate/techmapper/openabcd_test.cpp from here & from repo
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/strategy/area_recovery_test.cpp
   gate/techmapper/strategy/net_mapping_test.cpp
@@ -91,9 +96,9 @@ add_executable(${TEST_TARGET}
   gate/techmapper/strategy/simple_delay_test.cpp
   gate/techmapper/techmapper_test_util.cpp
   gate/translator/fir/fir_model2_test.cpp
+  gate/translator/verilog_to_fir/verilog_to_fir.cpp
   gate/translator/verilog_to_fir/yosys_converter_firrtl_test.cpp
   gate/translator/verilog_to_model2/yosys_converter_model2_tests.cpp
-  gate/translator/verilog_to_fir/verilog_to_fir.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   test_main.cpp

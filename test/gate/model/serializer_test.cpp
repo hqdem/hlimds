@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model2/serializer.h"
-#include "gate/model2/examples.h"
-#include "gate/model2/utils/subnet_truth_table.h"
+#include "gate/model/serializer.h"
+#include "gate/model/examples.h"
+#include "gate/model/utils/subnet_truth_table.h"
 #include "util/serializer.h"
 
 #include "gtest/gtest.h"
@@ -33,11 +33,11 @@ static void basicTestSubnet(const SubnetID &id) {
 
 std::vector<SubnetID> makeTestSubnets() {
   return {
-    make3AndOrXor(),
-    make4AndOr(),
-    makeAndOrXor(),
-    makeXorNorAndAndOr(),
-    makeXorOrXor()
+    makeSubnet3AndOrXor(),
+    makeSubnet4AndOr(),
+    makeSubnetAndOrXor(),
+    makeSubnetXorNorAndAndOr(),
+    makeSubnetXorOrXor()
   };
 }
 

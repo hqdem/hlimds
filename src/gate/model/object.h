@@ -9,7 +9,6 @@
 #pragma once
 
 #include "gate/model/memory.h"
-#include "util/singleton.h"
 
 #include <cassert>
 #include <cstddef>
@@ -37,7 +36,7 @@ public:
 
   /// Object size in bytes.
   static constexpr size_t Size = S;
-  static_assert(S <= PAGE_SIZE);
+  static_assert(S <= LARGE_PAGE_SIZE);
 
   /// Number of alignment zeros: log2(size).
   static constexpr size_t Log2 = Z;
@@ -139,95 +138,6 @@ using ListBlockID    = ObjectID<TAG_LIST_BLOCK, 64, 32, 6>;
 using ListID = ListBlockID;
 
 //===----------------------------------------------------------------------===//
-// Object Identifier
-//===----------------------------------------------------------------------===//
-
-template<typename T>
-class Storage : public util::Singleton<Storage<T>> {
-public:
-  /// TODO: Dummy (to be implemented).
-  template<typename... Args>
-  typename T::ID allocateExt(size_t size, Args&&... args) {
-    static constexpr auto SIZE = T::ID::Size;
-    assert(size >= SIZE && size <= PAGE_SIZE);
-
-    // Align the address (offset is enough).
-    offset = ((offset - 1) & ~(SIZE - 1)) + SIZE;
-
-    // If there is no place in the current page, allocate a new one.
-    if (systemPage == nullptr || (offset + size) > PAGE_SIZE) {
-      const auto translation = PageManager::get().allocate();
-
-      objectPage = translation.first;
-      systemPage = translation.second;
-
-      offset = 0;
-    }
-
-    auto *location = PageManager::getObjectPtr(systemPage, offset);
-    new(location) T(args...);
-
-    auto untaggedID = PageManager::getObjectID(objectPage, offset);
-    offset += size;
-
-    return T::ID::makeTaggedFID(untaggedID);
-  }
-
-  template<typename... Args>
-  typename T::ID allocate(Args&&... args) {
-    return allocateExt(T::ID::Size, args...);
-  }
-
-  /// TODO: Dummy (to be implemented).
-  T *access(typename T::ID objectFID) {
-    if (objectFID == OBJ_NULL_ID) {
-      return nullptr;
-    }
-
-    const typename T::ID untaggedFID = T::ID::makeUntaggedFID(objectFID);
-
-    const auto objectPage = PageManager::getPage(untaggedFID);
-    const auto offset = PageManager::getOffset(untaggedFID);
-
-    const SystemPage systemPage = PageManager::get().translate(objectPage);
-    return reinterpret_cast<T*>(PageManager::getObjectPtr(systemPage, offset));
-  }
-
-  /// TODO: Dummy (to be implemented).
-  void release(typename T::ID objectID) {
-    // Do nothing.
-  }
-
-private:
-  /// Current object page.
-  ObjectPage objectPage = -1;
-  /// Current system page.
-  SystemPage systemPage = nullptr;
-  /// Current offset.
-  size_t offset = 0;
-};
-
-template<typename T, typename... Args>
-typename T::ID allocateExt(size_t size, Args&&... args) {
-  return Storage<T>::get().allocateExt(size, args...);
-}
-
-template<typename T, typename... Args>
-typename T::ID allocate(Args&&... args) {
-  return Storage<T>::get().allocate(args...);
-}
-
-template<typename T>
-T *access(typename T::ID objectID) {
-  return Storage<T>::get().access(objectID);
-}
-
-template<typename T>
-void release(typename T::ID objectID) {
-  Storage<T>::get().release(objectID);
-}
-
-//===----------------------------------------------------------------------===//
 // Object Template
 //===----------------------------------------------------------------------===//
 
@@ -235,7 +145,8 @@ template <typename T, typename TID>
 struct Object {
   using ID = TID;
 
-  static T &get(TID objectID) { return *access<T>(objectID); }
+  // Defined in storage.h.
+  static T &get(TID objectID);
 
   static constexpr TID makeFID(uint64_t objectSID) {
     return TID::makeFID(objectSID);
@@ -254,4 +165,3 @@ struct std::hash<eda::gate::model::ObjectID<T, S, V, Z>> {
     return static_cast<uint64_t>(o);
   }
 };
-

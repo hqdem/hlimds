@@ -10,7 +10,7 @@
 #include "gate/optimizer/synthesis/akers.h"
 #include "gate/optimizer/synthesis/isop.h"
 
-#include "kitty/kitty.hpp"
+#include <kitty/kitty.hpp>
 
 namespace eda::gate::optimizer {
 
@@ -36,6 +36,7 @@ model::SubnetID AreaResynthesizer::resynthesize(
     resynthesizedID = isop.synthesize(truthTable, care, maxArity);
   }
 
+#ifdef UTOPIA_DEBUG
   auto &resynthesized = model::Subnet::get(resynthesizedID);
   auto resynthesizedTT = model::evaluateSingleOut(resynthesized);
   if (care.num_vars() > 0) {
@@ -43,6 +44,8 @@ model::SubnetID AreaResynthesizer::resynthesize(
     truthTable &= care;
   }
   assert(resynthesizedTT == truthTable && "Resynthesized TT != Input TT\n");
+#endif // UTOPIA_DEBUG
+
   return resynthesizedID;
 }
 

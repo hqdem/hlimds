@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/object.h"
+#include "gate/model/storage.h"
 
 #include <cassert>
 #include <cstddef>

@@ -10,6 +10,7 @@
 
 #include "gate/model/cellattr.h"
 #include "gate/model/object.h"
+#include "gate/model/storage.h"
 #include "gate/model/string.h"
 
 #include <cstdint>

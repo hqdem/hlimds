@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/object.h"
+#include "gate/model/storage.h"
 
 #include <functional>
 
@@ -55,7 +56,7 @@ public:
   bool isValid() const { return value & 1; }
 
 private:
-  /// Packed value: [ cell SID:40 | port:16 | valid:1]
+  /// Packed value: [cell SID:40 | port:16 | valid:1].
   uint64_t value;
 };
 

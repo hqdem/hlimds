@@ -12,6 +12,7 @@
 #include "gate/model/cell.h"
 #include "gate/model/celltype.h"
 #include "gate/model/object.h"
+#include "gate/model/storage.h"
 #include "util/hash.h"
 
 #include <algorithm>

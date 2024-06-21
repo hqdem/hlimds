@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/object.h"
+#include "gate/model/storage.h"
 
 #include <algorithm>
 #include <cassert>
@@ -45,7 +46,7 @@ public:
 
   /// Allocates a block w/ the specified capacity.
   static inline ListBlockID allocate(uint32_t capacity, bool begin, bool end) {
-    const auto sizeInBytes = std::min(getSizeInBytes(capacity), PAGE_SIZE);
+    const auto sizeInBytes = std::min(getSizeInBytes(capacity), LARGE_PAGE_SIZE);
     const auto sizeInItems = getSizeInItems(sizeInBytes);
     return allocateExt<ListBlock<T>>(sizeInBytes, sizeInItems, begin, end);
   }

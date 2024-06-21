@@ -9,8 +9,9 @@
 #pragma once
 
 #include "gate/model/subnet.h"
-#include "kitty/kitty.hpp"
 #include "util/serializer.h"
+
+#include <kitty/kitty.hpp>
 
 #include <iostream>
 #include <sstream>

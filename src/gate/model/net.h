@@ -10,6 +10,8 @@
 
 #include "gate/model/cell.h"
 #include "gate/model/list.h"
+#include "gate/model/object.h"
+#include "gate/model/storage.h"
 
 namespace eda::gate::model {
 

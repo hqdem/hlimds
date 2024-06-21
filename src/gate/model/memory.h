@@ -22,8 +22,8 @@ namespace eda::gate::model {
 typedef uint64_t ObjectPage;
 typedef char *SystemPage;
 
-static constexpr uint64_t PAGE_SIZE = 64*1024*1024;
-static constexpr uint64_t PAGE_MASK = PAGE_SIZE - 1;
+constexpr uint64_t LARGE_PAGE_SIZE = 64*1024*1024;
+constexpr uint64_t LARGE_PAGE_MASK = LARGE_PAGE_SIZE - 1;
 
 class PageManager final : public util::Singleton<PageManager> {
   friend class util::Singleton<PageManager>;
@@ -31,12 +31,12 @@ class PageManager final : public util::Singleton<PageManager> {
 public:
   /// Returns the object page.
   static constexpr uint64_t getPage(uint64_t objectID) {
-    return objectID & ~PAGE_MASK;
+    return objectID & ~LARGE_PAGE_MASK;
   }
 
   /// Returns the object offset.
   static constexpr uint64_t getOffset(uint64_t objectID) {
-    return objectID & PAGE_MASK;
+    return objectID & LARGE_PAGE_MASK;
   }
 
   /// Returns the object identifier.
@@ -65,7 +65,7 @@ public:
     const auto info = pageTable.insert(translation);
     assert(info.second);
 
-    objectPage += PAGE_SIZE;
+    objectPage += LARGE_PAGE_SIZE;
     return translation;
   }
 
@@ -73,11 +73,11 @@ private:
   PageManager() {}
 
   SystemPage allocatePage() {
-    void *page = aligned_alloc(PAGE_SIZE, PAGE_SIZE);
+    void *page = aligned_alloc(LARGE_PAGE_SIZE, LARGE_PAGE_SIZE);
     assert(page);
 
     // Advice Linux kernel to use huge pages.
-    madvise(page, PAGE_SIZE, MADV_HUGEPAGE);
+    madvise(page, LARGE_PAGE_SIZE, MADV_HUGEPAGE);
     return static_cast<SystemPage>(page);
   }
 

@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "reconvergence_cut.h"
-#include "refactorer.h"
-
 #include "gate/analyzer/probabilistic_estimate.h"
+#include "gate/model/utils/subnet_truth_table.h"
+#include "gate/optimizer/reconvergence_cut.h"
+#include "gate/optimizer/refactorer.h"
 
 namespace eda::gate::optimizer {
 
@@ -31,40 +31,31 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
 
   const size_t coneIns{Subnet::get(oldConeID).getInNum()};
 
-  ResynthesizerBase::TruthTable care;
-  (void)careCutSize; // FIXME:
-  /* FIXME: Uncomment.
-  if (careCutSize > cutSize) {
-    std::vector<size_t> roots;
-    roots.reserve(coneIns);
-    for (size_t i = 0; i < coneIns; ++i) {
-      roots.push_back(oldConeMap.at(i));
-    }
-    std::unordered_map<size_t, size_t> dummy;
-    SubnetID careSubnetId
-        = getReconvergenceWindow(builder, roots, careCutSize, dummy);
-    const auto &careSubnet = Subnet::get(careSubnetId);
-    care = gate::model::computeCare(careSubnet);
+  //--- FIXME: Window should be constructed by window constructor.
+  std::vector<size_t> inputs(coneIns);
+  for (size_t i = 0; i < inputs.size(); ++i) {
+    inputs[i] = oldConeMap.at(i);
   }
-  */
 
-  //--- FIXME:
-  CutExtractor::Cut cut;
-  cut.rootEntryIdx = oldConeMap.at(Subnet::get(oldConeID).size() - 1);
-  for (size_t i = 0; i < coneIns; ++i) {
-    cut.entryIdxs.insert(oldConeMap.at(i));
-  }
+  std::vector<size_t> outputs(1);
+  outputs[0] = oldConeMap.at(Subnet::get(oldConeID).size() - 1);
+
+  SubnetWindow window(builder, inputs, outputs);
   //---
 
-  std::unordered_map<size_t, size_t> mapping; // FIXME:
-  SubnetID newConeID = resynthesizer.resynthesize(builder, cut, mapping, care, 2); // FIXME: oldConeID, care, 2);
-  EntryMap newConeMap;
-
-  for (size_t i = 0; i < coneIns; ++i) {
-    newConeMap[i] = mapping[i]; // FIXME: oldConeMap[i];
+  if (careCutSize > cutSize) {
+    const auto &roots = window.getInputs();
+    std::unordered_map<size_t, size_t> dummy;
+    const SubnetID careSubnetId
+        = getReconvergenceWindow(builder, roots, careCutSize, dummy);
+    const auto &careSubnet = Subnet::get(careSubnetId);
+    window.setCare(model::computeCare(careSubnet));
   }
-  newConeMap[Subnet::get(newConeID).size() - 1] = cut.rootEntryIdx;
-      // FIXME: oldConeMap.at(Subnet::get(oldConeID).size() - 1);
+
+  SubnetID newConeID = resynthesizer.resynthesize(window, 2);
+
+  // FIXME: Deprecated.
+  auto newConeMap = window.getInOutMapping(Subnet::get(newConeID));
 
   SubnetBuilder newConeBuilder(newConeID);
 
@@ -72,7 +63,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
     std::vector<float> weights;
     weights.reserve(coneIns);
     for (size_t i = 0; i < coneIns; ++i) {
-      weights.push_back(builder.getWeight(mapping.at(i)/* FIXME: oldConeMap.at(i)*/));
+      weights.push_back(builder.getWeight(window.getIn(i)));
     }
     (*weightCalculator)(newConeBuilder, weights);
   }
@@ -82,7 +73,6 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
   if ((*replacePredicate)(effect)) {
     iter.replace(newConeBuilder, newConeMap);
   }
-
 }
 
 } // namespace eda::gate::optimizer

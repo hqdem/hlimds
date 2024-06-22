@@ -2,10 +2,11 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/rewriter.h"
 
 #include "gtest/gtest.h"
@@ -18,33 +19,13 @@ using LinkList = Subnet::LinkList;
 using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
 using Effect = SubnetBuilder::Effect;
-using DinTruthTable = kitty::dynamic_truth_table;
-
-static inline Subnet &getSubnet(const SubnetBuilder &builder,
-                                const CutExtractor::Cut &cut,
-                                std::unordered_map<size_t, size_t> &mapping) { // FIXME:
-  const ConeBuilder coneBuilder(&builder);
-  const auto cone = coneBuilder.getCone(cut);
-
-  // FIXME: Remove.
-  for (const auto &[r, l]: cone.inOutToOrig) {
-    mapping.emplace(r, l);
-  }
-
-  return Subnet::get(cone.subnetID);
-}
+using TruthTable = kitty::dynamic_truth_table;
 
 class EqualResynthesizer : public ResynthesizerBase {
 public:
-
-  using ResynthesizerBase::resynthesize;
-
-  SubnetID resynthesize(const SubnetBuilder &builder,
-                        const CutExtractor::Cut &cut,
-                        std::unordered_map<size_t, size_t> &mapping, // FIXME:
-                        const TruthTable &,
+  SubnetID resynthesize(const SubnetWindow &window,
                         uint16_t) const override {
-    const Subnet &oldSubnet = getSubnet(builder, cut, mapping);
+    const Subnet &oldSubnet = window.getSubnet();
     SubnetBuilder newSubnetBuilder;
     const auto &inLinks = newSubnetBuilder.addInputs(oldSubnet.getInNum());
     const auto &outLinks = newSubnetBuilder.addSubnet(oldSubnet, inLinks);
@@ -55,15 +36,9 @@ public:
 
 class AddBufsResynthesizer : public ResynthesizerBase {
 public:
-
-  using ResynthesizerBase::resynthesize;
-
-  SubnetID resynthesize(const SubnetBuilder &builder,
-                        const CutExtractor::Cut &cut,
-                        std::unordered_map<size_t, size_t> &mapping, // FIXME:
-                        const TruthTable &,
+  SubnetID resynthesize(const SubnetWindow &window,
                         uint16_t) const override {
-    const Subnet &oldSubnet = getSubnet(builder, cut, mapping);
+    const Subnet &oldSubnet = window.getSubnet();
     const auto &entries = oldSubnet.getEntries();
     SubnetBuilder newSubnetBuilder;
     LinkList newSubnetLinks;
@@ -96,15 +71,9 @@ public:
 
 class DelBufsResynthesizer : public ResynthesizerBase {
 public:
-
-  using ResynthesizerBase::resynthesize;
-
-  SubnetID resynthesize(const SubnetBuilder &builder,
-                        const CutExtractor::Cut &cut,
-                        std::unordered_map<size_t, size_t> &mapping,
-                        const TruthTable &,
+  SubnetID resynthesize(const SubnetWindow &window,
                         uint16_t) const override {
-    const Subnet &oldSubnet = getSubnet(builder, cut, mapping);
+    const Subnet &oldSubnet = window.getSubnet();
     const auto &entries = oldSubnet.getEntries();
     SubnetBuilder newSubnetBuilder;
     LinkList newSubnetLinks;
@@ -136,8 +105,8 @@ public:
 };
 
 bool truthTablesEqual(const SubnetID subnetID, const SubnetID targetSubnetID) {
-  DinTruthTable t1 = evaluateSingleOut(Subnet::get(targetSubnetID));
-  DinTruthTable t2 = evaluateSingleOut(Subnet::get(subnetID));
+  TruthTable t1 = model::evaluateSingleOut(Subnet::get(targetSubnetID));
+  TruthTable t2 = model::evaluateSingleOut(Subnet::get(subnetID));
   return t1 == t2;
 }
 

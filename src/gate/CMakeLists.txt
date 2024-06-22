@@ -43,6 +43,7 @@ add_library(Gate OBJECT
   optimizer/rewriter.cpp
   optimizer/safe_passer.cpp
   optimizer/subnet_basis.cpp
+  optimizer/subnet_window.cpp
   optimizer/synthesis/abc/rwrUtil.c
   optimizer/synthesis/abc_npn4.cpp
   optimizer/synthesis/akers.cpp

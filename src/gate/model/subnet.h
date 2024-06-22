@@ -200,6 +200,11 @@ public:
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
 
+  /// Returns the i-th input index.
+  size_t getInIdx(const size_t i) const { return i; }
+  /// Returns the i-th output index.
+  size_t getOutIdx(const size_t i) const { return nEntry - nOut + i; }
+
   /// Returns the i-th cell.
   const Cell &getCell(size_t i) const;
 

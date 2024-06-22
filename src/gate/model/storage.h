@@ -137,7 +137,7 @@ public:
    * @brief Releases the object.
    */
   void release(typename T::ID objID) {
-    // Do nothing.
+    // TODO: Deallocate memory if required.
   }
 
 private:

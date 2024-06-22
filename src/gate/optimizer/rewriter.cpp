@@ -31,29 +31,19 @@ void Rewriter::rewriteOnNode(
     CutExtractor &cutExtractor) const {
 
   const size_t entryID = *iter;
-  // FIXME: ConeBuilder coneBuilder(&builder);
   const auto &cuts = cutExtractor.getCuts(entryID);
   float bestMetricValue = std::numeric_limits<float>::lowest();
   SubnetID bestRhsID = 0;
   std::unordered_map<size_t, size_t> bestRhsToLhs;
 
   for (const auto &cut : cuts) {
-    //FIXME: const auto &cone = coneBuilder.getCone(cut);
-    //FIXME: const auto &coneSubnet = Subnet::get(cone.subnetID);
-    std::unordered_map<size_t, size_t> rhsToLhs; // FIXME:
-    const SubnetID rhsID = resynthesizer.resynthesize(builder, cut, rhsToLhs); // FIXME: cone.subnetID);
+    const SubnetWindow window(builder, cut);
+    const SubnetID rhsID = resynthesizer.resynthesize(window);
     if (rhsID == model::OBJ_NULL_ID) {
       continue;
     }
     const Subnet &rhs = Subnet::get(rhsID);
-    rhsToLhs[rhs.size() - 1] = cut.rootEntryIdx; // FIXME:
-    //FIXME: std::unordered_map<size_t, size_t> rhsToLhs = cone.inOutToOrig;
-    /*FIXME:
-    for (size_t i = 1; i <= rhs.getOutNum(); ++i) {
-      rhsToLhs[rhs.getEntries().size() - i] =
-          cone.coneEntryToOrig[coneSubnet.getEntries().size() - i];
-    }
-    */
+    const auto rhsToLhs = window.getInOutMapping(rhs); // FIXME: Deprecated.
     float curMetricValue = cost(builder.evaluateReplace(rhsID, rhsToLhs));
     if (curMetricValue - bestMetricValue > metricEps) {
       bestMetricValue = curMetricValue;

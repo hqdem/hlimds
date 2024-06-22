@@ -12,6 +12,9 @@
 
 #include <functional>
 #include <stack>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace eda::gate::optimizer {
 
@@ -26,8 +29,8 @@ public:
   using SubnetBuilder = model::SubnetBuilder;
   using Cut = optimizer::CutExtractor::Cut;
 
-  using EntryVecMap = std::vector<size_t>;
-  using EntryMapMap = std::unordered_map<size_t, size_t>;
+  using EntryVec = std::vector<size_t>;
+  using EntryMap = std::unordered_map<size_t, size_t>;
 
   /**
    * @brief Cone struct with SubnetID, full mapping from cone subnet to original
@@ -40,15 +43,15 @@ public:
   public:
     Cone(
         const SubnetID subnetID,
-        const EntryVecMap &coneEntryToOrig):
+        const EntryVec &coneEntryToOrig):
       subnetID(subnetID), coneEntryToOrig(coneEntryToOrig),
       inOutToOrig(getInOutMapping(subnetID, coneEntryToOrig)) {};
 
   private:
-    inline EntryMapMap getInOutMapping(
+    inline EntryMap getInOutMapping(
         const SubnetID &subnetID,
-        const EntryVecMap &coneEntryToOrig) {
-      EntryMapMap inOutToOrig;
+        const EntryVec &coneEntryToOrig) {
+      EntryMap inOutToOrig;
       const auto &subnet = Subnet::get(subnetID);
       const auto &subnetEntries = subnet.getEntries();
       for (size_t i = 0; i < subnet.getInNum(); ++i) {
@@ -65,9 +68,9 @@ public:
     // Cone subnet.
     const SubnetID subnetID;
     // Full mapping from cone to original subnet entries.
-    const EntryVecMap coneEntryToOrig;
+    const EntryVec coneEntryToOrig;
     // Mapping from cone PI's and PO to original subnet entries.
-    const EntryMapMap inOutToOrig;
+    const EntryMap inOutToOrig;
   };
 
   ConeBuilder() = delete;
@@ -83,8 +86,11 @@ public:
 
   ConeBuilder(const SubnetBuilder *builder);
 
+  template <typename EntryIdxs>
+  Cone getCone(const size_t rootEntryIdx, const EntryIdxs &cut) const;
+
   Cone getCone(const Cut &cut) const;
-  Cone getMaxCone(const size_t entryIdx) const;
+  Cone getMaxCone(const size_t rootEntryIdx) const;
 
 private:
   /**
@@ -92,24 +98,26 @@ private:
    */
   Cone getCone(const size_t rootEntryIdx,
                SubnetBuilder &builder,
-               EntryMapMap &origEntryToCone,
-               EntryVecMap &coneEntryToOrig) const;
+               EntryMap &origEntryToCone,
+               EntryVec &coneEntryToOrig) const;
 
   /**
-   * @brief Adds primary inputs to cone limited by cut.
+   * @brief Adds primary inputs to cone limited by unordered or ordered cut.
    */
-  void addInsFromCut(const Cut &cut,
+  template <typename EntryIdxs>
+  void addInsFromCut(const size_t rootEntryIdx,
+                     const EntryIdxs &cut,
                      SubnetBuilder &builder,
-                     EntryMapMap &origEntryToCone,
-                     EntryVecMap &coneEntryToOrig) const;
+                     EntryMap &origEntryToCone,
+                     EntryVec &coneEntryToOrig) const;
 
   /**
    * @brief Adds primary inputs to maximum cone.
    */
   void addInsForMaxCone(const size_t rootEntryIdx,
                         SubnetBuilder &builder,
-                        EntryMapMap &origEntryToCone,
-                        EntryVecMap &coneEntryToOrig) const;
+                        EntryMap &origEntryToCone,
+                        EntryVec &coneEntryToOrig) const;
 
   /**
    * @brief Adds primary input to cone.
@@ -117,8 +125,8 @@ private:
   void addInput(const size_t origEntryIdx,
                 const size_t rootEntryIdx,
                 SubnetBuilder &builder,
-                EntryMapMap &origEntryToCone,
-                EntryVecMap &coneEntryToOrig) const;
+                EntryMap &origEntryToCone,
+                EntryVec &coneEntryToOrig) const;
 
   const Entry getEntry(const size_t entryID) const;
 
@@ -128,5 +136,31 @@ private:
   const Subnet *subnet;
   const SubnetBuilder *builder;
 };
+
+template <typename EntryIdxs>
+ConeBuilder::Cone ConeBuilder::getCone(const size_t rootEntryIdx,
+                                       const EntryIdxs &cut) const {
+  SubnetBuilder builder;
+  EntryMap origEntryToCone;
+  EntryVec coneEntryToOrig;
+
+  addInsFromCut<EntryIdxs>(
+      rootEntryIdx, cut, builder, origEntryToCone, coneEntryToOrig);
+
+  return getCone(rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
+}
+
+template <typename EntryIdxs>
+void ConeBuilder::addInsFromCut(const size_t rootEntryIdx,
+                                const EntryIdxs &cut,
+                                SubnetBuilder &builder,
+                                EntryMap &origEntryToCone,
+                                EntryVec &coneEntryToOrig) const {
+
+  for (const auto &inEntryIdx : cut) {
+    addInput(inEntryIdx, rootEntryIdx, builder, origEntryToCone,
+             coneEntryToOrig);
+  }
+}
 
 } // namespace eda::gate::optimizer

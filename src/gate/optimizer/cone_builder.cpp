@@ -19,8 +19,8 @@ ConeBuilder::ConeBuilder(const SubnetBuilder *builder):
 void ConeBuilder::addInput(const size_t origEntryIdx,
                            const size_t rootEntryIdx,
                            SubnetBuilder &builder,
-                           EntryMapMap &origEntryToCone,
-                           EntryVecMap &coneEntryToOrig) const {
+                           EntryMap &origEntryToCone,
+                           EntryVec &coneEntryToOrig) const {
 
   size_t coneEntryIdx = builder.addInput().idx;
   if (origEntryIdx == rootEntryIdx) {
@@ -50,21 +50,10 @@ const ConeBuilder::LinkList ConeBuilder::getLinks(const size_t entryID) const {
   return subnet ? subnet->getLinks(entryID) : builder->getLinks(entryID);
 }
 
-void ConeBuilder::addInsFromCut(const Cut &cut,
-                                SubnetBuilder &builder,
-                                EntryMapMap &origEntryToCone,
-                                EntryVecMap &coneEntryToOrig) const {
-
-  for (const auto &inEntryIdx : cut.entryIdxs) {
-    addInput(inEntryIdx, cut.rootEntryIdx, builder, origEntryToCone,
-             coneEntryToOrig);
-  }
-}
-
 void ConeBuilder::addInsForMaxCone(const size_t rootEntryIdx,
                                    SubnetBuilder &builder,
-                                   EntryMapMap &origEntryToCone,
-                                   EntryVecMap &coneEntryToOrig) const {
+                                   EntryMap &origEntryToCone,
+                                   EntryVec &coneEntryToOrig) const {
 
   std::unordered_map<size_t, char> used;
   std::vector<size_t> subnetEntriesStack;
@@ -91,18 +80,13 @@ void ConeBuilder::addInsForMaxCone(const size_t rootEntryIdx,
 }
 
 ConeBuilder::Cone ConeBuilder::getCone(const Cut &cut) const {
-  SubnetBuilder builder;
-  EntryMapMap origEntryToCone;
-  EntryVecMap coneEntryToOrig;
-
-  addInsFromCut(cut, builder, origEntryToCone, coneEntryToOrig);
-  return getCone(cut.rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
+  return getCone(cut.rootEntryIdx, cut.entryIdxs);
 }
 
 ConeBuilder::Cone ConeBuilder::getMaxCone(const size_t rootEntryIdx) const {
   SubnetBuilder builder;
-  EntryMapMap origEntryToCone;
-  EntryVecMap coneEntryToOrig;
+  EntryMap origEntryToCone;
+  EntryVec coneEntryToOrig;
 
   addInsForMaxCone(rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
   return getCone(rootEntryIdx, builder, origEntryToCone, coneEntryToOrig);
@@ -110,8 +94,8 @@ ConeBuilder::Cone ConeBuilder::getMaxCone(const size_t rootEntryIdx) const {
 
 ConeBuilder::Cone ConeBuilder::getCone(const size_t rootEntryIdx,
                                        SubnetBuilder &builder,
-                                       EntryMapMap &origEntryToCone,
-                                       EntryVecMap &coneEntryToOrig) const {
+                                       EntryMap &origEntryToCone,
+                                       EntryVec &coneEntryToOrig) const {
 
   std::stack<size_t> subnetEntriesStack;
   subnetEntriesStack.push(rootEntryIdx);

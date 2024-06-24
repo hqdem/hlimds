@@ -13,8 +13,6 @@ add_library(Mockturtle INTERFACE)
 target_include_directories(Mockturtle SYSTEM INTERFACE mockturtle/include)
 
 add_subdirectory(easyloggingpp)
-add_subdirectory(lorina/lib)
-add_subdirectory(lorina/include)
 add_subdirectory(minisat)
 add_subdirectory(mockturtle)
 add_subdirectory(sqlite3)

@@ -37,6 +37,9 @@ public:
   /// Simulator arity limit
   static constexpr size_t simLimit = 64;
 
+  /// Cell comparisons limit
+  static constexpr size_t compareLimit = 500;
+
 private:
   static void netSimulation(simulator::Simulator &simulator,
                             const uint16_t &nIn,

@@ -23,18 +23,16 @@ below are specific to this operating system:
 
 * `autoconf`
 * `bison`
-* `build-essential`
 * `clang`
 * `clang-tidy`
-* `cmake`
 * `doxygen`
 * `flex`
 * `g++`
 * `gcc`
+* `git`
 * `graphviz`
 * `gtkwave`
 * `iverilog`
-* `libfmt-dev`
 * `liblpsolve55-dev`
 * `libssl-dev`
 * `libtool`
@@ -42,7 +40,7 @@ below are specific to this operating system:
 * `make`
 * `ninja-build`
 * `pkg-config`
-* `python`
+* `python3`
 * `zlib1g`
 * `zlib1g-dev`
 
@@ -50,9 +48,8 @@ To install them, do the following:
 
 ```console
 sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
-                 flex g++ gcc graphviz gtkwave iverilog libfmt-dev liblpsolve55-dev \
-                 libssl-dev libtool lld make ninja-build pkg-config python \
-                 zlib1g zlib1g-dev
+     flex g++ gcc git graphviz gtkwave iverilog libfmt-dev liblpsolve55-dev \
+     libssl-dev libtool lld make ninja-build pkg-config python3 zlib1g zlib1g-dev
 ```
 
 If you are working on Fedora Linux OS, please follow this [guide](doc/Fedora.md).
@@ -60,6 +57,7 @@ If you are working on Fedora Linux OS, please follow this [guide](doc/Fedora.md)
 ### CMake installation
 
 ```console
+sudo apt install tar wget
 cd <workdir>
 wget https://cmake.org/files/v3.28/cmake-3.28.1.tar.gz
 tar xzf cmake-3.28.1.tar.gz

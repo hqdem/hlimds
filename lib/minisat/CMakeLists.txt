@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 cmake_policy(SET CMP0048 NEW)
 
 project(minisat)

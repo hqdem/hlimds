@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.28)
 
 project(Utopia VERSION 0.0)
 
@@ -95,4 +95,3 @@ if(DOXYGEN_FOUND)
 else ()
   message("Error: can't find doxygen, please install it.")
 endif()
-

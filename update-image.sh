@@ -13,13 +13,13 @@ if [ -z "$UTOPIA_HOME" ]; then
     exit 1
 fi
 
-echo "Please enter the tag(name) of the new image:"
+echo "Please enter the tag (name) of the new image:"
 echo "Image tag should be one word and contain only Lat. alphabet characters([a-zA-Z])"
 echo "Press \"Enter\" to use default image tag"
 read name
 
 if [ -z "$name" ]; then
-    name="staccato"
+    name="latest"
     echo "Default image tag used: $name"
 fi
 

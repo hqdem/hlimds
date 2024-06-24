@@ -3,11 +3,11 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:staccato
+image: gitlab.ispras.ru:4567/mvg/utopia-eda:latest
 
 variables:
-  BUILD: "build"
-  BUILD_PATH: "${UTOPIA_HOME}/${BUILD}"
+  BUILD_DIR: "build"
+  BUILD_PATH: "${UTOPIA_HOME}/${BUILD_DIR}"
   CIRCT_DIR: "/workdir/circt/build/lib/cmake/circt/"
   GIT_DEPTH: "1"
   GIT_SUBMODULE_STRATEGY: recursive
@@ -28,8 +28,8 @@ build_project:
   script:
     - rm -rf ${BUILD_PATH}
     - cd ${UTOPIA_HOME}
-    - cmake -S ${UTOPIA_HOME} -B ${BUILD} -G Ninja
-    - cmake --build ${BUILD}
+    - cmake -S ${UTOPIA_HOME} -B ${BUILD_DIR} -G Ninja
+    - cmake --build ${BUILD_DIR}
 
   artifacts:
     expire_in: 10 min

@@ -24,7 +24,7 @@ static void buildFromRoot(const Builder &builder,
                           size_t cellId,
                           IdxMap &oldToNew) {
 
-  const Cell &cell = builder.getCell(cellId);
+  const auto &cell = builder.getCell(cellId);
   const auto links = builder.getLinks(cellId);
 
   LinkList inputs;
@@ -46,12 +46,11 @@ static void getMffcBounds(Builder &builder,
                           IdxMap &oldToNew) {
 
   for (const auto &link : builder.getLinks(cellId)) {
-    bool mark = builder.getEntrySession(link.idx) == builder.getSession();
-    const Cell &cell = builder.getCell(link.idx);
-    if (mark || cell.isOne() || cell.isZero()) {
+    const auto &cell = builder.getCell(link.idx);
+    if (builder.isMarked(link.idx) || cell.isOne() || cell.isZero()) {
       continue;
     }
-    builder.markEntry(link.idx);
+    builder.mark(link.idx);
 
     if (!cellToRef.at(link.idx)) {
       getMffcBounds(builder, link.idx, cellToRef, newToOld, oldToNew);
@@ -69,12 +68,12 @@ static void dereferenceCells(const Builder &builder,
                              IdxMap &cellToRef) {
 
   for (const auto &link : builder.getLinks(cellId)) {
-    const Cell &cell = builder.getCell(link.idx);
+    const auto &cell = builder.getCell(link.idx);
     if (cellToRef.find(link.idx) == cellToRef.end()) {
       cellToRef[link.idx] = cell.refcount;
     }
 
-    if (builder.getEntrySession(link.idx) == builder.getSession()) {
+    if (builder.isMarked(link.idx)) {
       continue;
     }
 
@@ -95,7 +94,7 @@ static IdxMap findMffcBounds(Builder &builder,
 
   builder.startSession();
   for (size_t i = 0; i < leaves.size(); ++i) {
-    builder.markEntry(leaves[i]);
+    builder.mark(leaves[i]);
   }
   dereferenceCells(builder, root, cellToRef);
   builder.endSession();

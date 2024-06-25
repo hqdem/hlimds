@@ -70,7 +70,7 @@ inline void checkSessionsCorrect(
     const SubnetBuilder &builder,
     const std::vector<size_t> &correctSessions) {
   for (const auto entry : builder) {
-    EXPECT_EQ(builder.getEntrySession(entry), correctSessions[entry]);
+    EXPECT_EQ(builder.getSessionID(entry), correctSessions[entry]);
   }
 }
 
@@ -494,10 +494,10 @@ TEST(SubnetTest, SessionSimple) {
   builder.addOutput(link3);
 
   builder.startSession();
-  EXPECT_EQ(builder.getSession(), 1);
+  EXPECT_EQ(builder.getSessionID(), 1);
   for (const auto entry : builder) {
     if (entry != 2) {
-      builder.markEntry(entry);
+      builder.mark(entry);
     }
   }
 
@@ -514,12 +514,12 @@ TEST(SubnetTest, SessionReplaceDiff) {
   builder.addOutput(link3);
 
   builder.startSession();
-  EXPECT_EQ(builder.getSession(), 1);
+  EXPECT_EQ(builder.getSessionID(), 1);
   builder.endSession();
   builder.startSession();
-  EXPECT_EQ(builder.getSession(), 2);
+  EXPECT_EQ(builder.getSessionID(), 2);
   for (const auto entry : builder) {
-    builder.markEntry(entry);
+    builder.mark(entry);
   }
 
   // RHS SubnetBuilder
@@ -550,9 +550,9 @@ TEST(SubnetTest, SessionReplaceSame) {
   builder.addOutput(link1);
 
   builder.startSession();
-  EXPECT_EQ(builder.getSession(), 1);
+  EXPECT_EQ(builder.getSessionID(), 1);
   for (const auto entry : builder) {
-    builder.markEntry(entry);
+    builder.mark(entry);
   }
 
   // RHS SubnetBuilder
@@ -583,9 +583,9 @@ TEST(SubnetTest, SessionFillEmptyEntry) {
   builder.addOutput(link2);
 
   builder.startSession();
-  EXPECT_EQ(builder.getSession(), 1);
+  EXPECT_EQ(builder.getSessionID(), 1);
   for (const auto entry : builder) {
-    builder.markEntry(entry);
+    builder.mark(entry);
   }
 
   // RHS SubnetBuilder

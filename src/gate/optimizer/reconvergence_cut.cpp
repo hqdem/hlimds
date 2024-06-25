@@ -41,13 +41,12 @@ static unsigned computeCost(SubnetBuilder &builder, size_t idx) {
     return -1;
   }
 
-  const auto sessionID = builder.getSession();
   unsigned cost = 0;
 
   for (const auto &link : builder.getLinks(idx)) {
     const auto &cell = builder.getCell(link.idx);
     bool constant = cell.isZero() || cell.isOne();
-    if (!constant && (sessionID != builder.getEntrySession(link.idx))) {
+    if (!constant && !builder.isMarked(link.idx)) {
       cost++;
     }
   }
@@ -90,7 +89,6 @@ std::vector<size_t> getReconvergenceCut(SubnetBuilder &builder,
   leaves.reserve(cutSize + 1);
 
   builder.startSession();
-  const auto sessionID = builder.getSession();
   // Construct a cut.
   while (true) {
     size_t bestLeave = findBestLeave(builder, leaves, cutSize);
@@ -106,8 +104,8 @@ std::vector<size_t> getReconvergenceCut(SubnetBuilder &builder,
     for (const auto &link : builder.getLinks(leaves[bestLeave])) {
       const auto &cell = builder.getCell(link.idx);
       bool constant = (cell.isZero() || cell.isOne());
-      if (!constant && (sessionID != builder.getEntrySession(link.idx))) {
-        builder.markEntry(link.idx);
+      if (!constant && !builder.isMarked(link.idx)) {
+        builder.mark(link.idx);
         leaves.push_back(link.idx);
       }
     }

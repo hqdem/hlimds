@@ -1192,7 +1192,7 @@ void SubnetBuilder::clearContext() {
   isDisassembled = false;
   disableFanouts();
   sessionID = 0;
-  sessionStarted = false;
+  isSessionStarted = false;
 }
 
 std::pair<size_t, bool> SubnetBuilder::strashEntry(

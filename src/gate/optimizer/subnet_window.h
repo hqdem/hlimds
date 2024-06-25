@@ -14,10 +14,15 @@
 #include <kitty/kitty.hpp>
 
 #include <cstddef>
+#include <functional>
 #include <unordered_set>
 #include <vector>
 
 namespace eda::gate::optimizer {
+
+//===----------------------------------------------------------------------===//
+// Subnet Window
+//===----------------------------------------------------------------------===//
 
 /**
  * @brief Functionally closed subnet fragment.
@@ -61,6 +66,8 @@ public:
 
   TruthTable evaluateTruthTable() const;
 
+  const model::SubnetBuilder &getBuilder() const { return builder; }
+
   // FIXME: Deprecated.
   const model::Subnet &getSubnet() const;
 
@@ -83,6 +90,28 @@ private:
 
   /// Parent subnet builder.
   const model::SubnetBuilder &builder;
+};
+
+//===----------------------------------------------------------------------===//
+// Subnet Window Walker
+//===----------------------------------------------------------------------===//
+
+/**
+ * @brief DFS subnet window walker.
+ */
+class SubnetWindowWalker final {
+public:
+  using Visitor = std::function<
+    void(model::SubnetBuilder &builder, const size_t entryID)>;
+
+  SubnetWindowWalker(const SubnetWindow &window):
+    window(window) {}
+
+  /// Visits the cells of the subnet window in topological order.
+  void run(const Visitor visitor) const;
+
+private:
+  const SubnetWindow &window;
 };
 
 } // namespace eda::gate::optimizer

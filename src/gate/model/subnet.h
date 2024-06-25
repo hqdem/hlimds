@@ -445,45 +445,10 @@ public:
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
 
-  /// Starts a new session.
-  /// Precondition: the last started session is ended.
-  void startSession() {
-    assert(!sessionStarted);
-    sessionStarted = true;
-    ++sessionID;
-  }
-
-  /// Ends the current session.
-  /// Precondition: session is started.
-  void endSession() {
-    assert(sessionStarted);
-    sessionStarted = false;
-  }
-
-  /// Marks the passed entry as visited in the current session.
-  /// Precondition: session is started.
-  void markEntry(size_t i) {
-    assert(sessionStarted);
-    desc[i].session = sessionID;
-  }
-
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
-
-  /// Returns the current session id.
-  /// Precondition: session is started.
-  size_t getSession() const {
-    assert(sessionStarted);
-    return sessionID;
-  }
-
-  /// Returns the last session id in which the passed entry was marked.
-  /// If the entry was not marked during any session, returns 0.
-  size_t getEntrySession(size_t i) const {
-    return desc[i].session;
-  }
 
   /// Returns the constant reference to the i-th entry.
   const Subnet::Entry &getEntry(size_t i) const {
@@ -523,7 +488,7 @@ public:
   /// Returns the data associated w/ the i-th cell.
   template <typename T>
   const T *getData(size_t i) const {
-    return static_cast<T>(desc[i].data);
+    return static_cast<T*>(desc[i].data);
   }
 
   /// Sets the data associated w/ the i-th cell.
@@ -652,6 +617,44 @@ public:
 
   Link addSingleOutputSubnet(SubnetID subnetID, const LinkList &links) {
     return addSingleOutputSubnet(Subnet::get(subnetID), links);
+  }
+
+  /// Starts a new session.
+  /// Precondition: the last started session is ended.
+  void startSession() {
+    assert(!isSessionStarted);
+    isSessionStarted = true;
+    ++sessionID;
+  }
+
+  /// Ends the current session.
+  /// Precondition: session is started.
+  void endSession() {
+    assert(isSessionStarted);
+    isSessionStarted = false;
+  }
+
+  /// Marks the given entry (in the current session).
+  /// Precondition: session is started.
+  void mark(size_t i) {
+    assert(isSessionStarted);
+    desc[i].session = sessionID;
+  }
+
+  /// Checks whether the given entry is marked (in the current session).
+  bool isMarked(size_t i) const {
+    return desc[i].session == sessionID;
+  }
+
+  /// Returns the current or the latest session ID.
+  size_t getSessionID() const {
+    return sessionID;
+  }
+
+  /// Returns the latest session ID in which the given entry was marked.
+  /// If the entry has not beent marked during, returns 0.
+  size_t getSessionID(size_t i) const {
+    return desc[i].session;
   }
 
   /// Replaces the given single-output fragment w/ the given subnet (rhs).
@@ -945,7 +948,7 @@ private:
   StrashMap strash;
 
   size_t sessionID{0};
-  bool sessionStarted{false};
+  bool isSessionStarted{false};
 };
 
 } // namespace eda::gate::model

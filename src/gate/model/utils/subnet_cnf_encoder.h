@@ -97,14 +97,24 @@ private:
 // Subnet Encoder
 //===----------------------------------------------------------------------===//
 
+struct Property {
+  using LitVec = std::vector<Minisat::Lit>;
+  using Variable = eda::gate::solver::Variable;
+
+  std::vector<LitVec> formula;
+  Variable p;
+  mutable bool addedToFormula{false};
+};
+
 class SubnetEncoder final : public util::Singleton<SubnetEncoder> {
   friend class util::Singleton<SubnetEncoder>;
 
 public:
+  using Solver   = eda::gate::solver::Solver;
   using Variable = eda::gate::solver::Variable;
   using Literal  = eda::gate::solver::Literal;
   using Clause   = eda::gate::solver::Clause;
-  using Solver   = eda::gate::solver::Solver;
+  using LitVec   = std::vector<Literal>;
 
   void encode(const Subnet &subnet, Solver &solver) const {
     SubnetEncoderContext context(subnet, solver);
@@ -164,14 +174,40 @@ public:
     }
   }
 
-  void encodeEqual(const Subnet &subnet, SubnetEncoderContext &context,
-      Solver &solver, Subnet::Link lhs, bool rhs) const {
-    solver.addClause(context.lit(lhs, rhs));
+  Property encodeEqual(
+      SubnetEncoderContext &context,
+      Subnet::Link lhs,
+      bool rhs)  const {
+    Property prop;
+    prop.p = context.newVar();
+    Literal lit1 = context.lit(lhs, rhs);
+    Literal lit2 = solver::makeLit(prop.p, 1);
+    LitVec clauseToAdd1{lit1, ~lit2};
+    LitVec clauseToAdd2{~lit1, lit2};
+    prop.formula.push_back(clauseToAdd1);
+    prop.formula.push_back(clauseToAdd2);
+
+    return prop;
   }
 
-  void encodeEqual(const Subnet &subnet, SubnetEncoderContext &context,
-      Solver &solver, Subnet::Link lhs, Subnet::Link rhs) const {
-    solver.encodeBuf(context.lit(lhs, 1), context.lit(rhs, 1));
+  Property encodeEqual(
+      SubnetEncoderContext &context,
+      Subnet::Link lhs,
+      Subnet::Link rhs) const {
+    Property prop;
+    prop.p = context.newVar();
+    Literal lit1 = context.lit(lhs, 1);
+    Literal lit2 = context.lit(rhs, 1);
+    Literal lit3 = solver::makeLit(prop.p, 1);
+    LitVec clauseToAdd1{lit1, lit2, lit3};
+    LitVec clauseToAdd2{lit1, ~lit2, ~lit3};
+    LitVec clauseToAdd3{~lit1, lit2, ~lit3};
+    LitVec clauseToAdd4{~lit1, ~lit2, lit3};
+    prop.formula.insert(prop.formula.end(),
+      {clauseToAdd1, clauseToAdd2, clauseToAdd3, clauseToAdd4}
+    );
+
+    return prop;
   }
 
 private:
@@ -239,7 +275,7 @@ private:
     }
 
     assert(cell.arity > 1);
-    context.setVar(idx);  
+    context.setVar(idx);
 
     Clause clause;
     clause.push(context.lit(idx, 0, 0));

@@ -104,8 +104,92 @@ Solver::Solver() :
 {}
 
 
+Solver::Solver(const Solver& other) : Solver() {
+    *this = other;
+}
+
+
 Solver::~Solver()
 {
+}
+
+
+Solver& Solver::operator=(const Solver& other) {
+    other.model.copyTo(model);
+    const auto &conflictVec = other.conflict.toVec();
+    for (size_t i = 0; i < conflictVec.size(); ++i) {
+        conflict.insert(conflictVec[i]);
+    }
+    verbosity = other.verbosity;
+    var_decay = other.var_decay;
+    clause_decay = other.clause_decay;
+    random_var_freq = other.random_var_freq;
+    random_seed = other.random_seed;
+    luby_restart = other.luby_restart;
+    ccmin_mode = other.ccmin_mode;
+    phase_saving = other.phase_saving;
+    rnd_pol = other.rnd_pol;
+    rnd_init_act = other.rnd_init_act;
+    garbage_frac = other.garbage_frac;
+    min_learnts_lim = other.min_learnts_lim;
+    restart_first = other.restart_first;
+    restart_inc = other.restart_inc;
+    learntsize_factor = other.learntsize_factor;
+    learntsize_inc = other.learntsize_inc;
+    learntsize_adjust_start_confl = other.learntsize_adjust_start_confl;
+    learntsize_adjust_inc = other.learntsize_adjust_inc;
+    solves = other.solves;
+    starts = other.starts;
+    decisions = other.decisions;
+    rnd_decisions = other.rnd_decisions;
+    propagations = other.propagations;
+    conflicts = other.conflicts;
+    dec_vars = other.dec_vars;
+    num_clauses = other.num_clauses;
+    num_learnts = other.num_learnts;
+    clauses_literals = other.clauses_literals;
+    learnts_literals = other.learnts_literals;
+    max_literals = other.max_literals;
+    tot_literals = other.tot_literals;
+    other.clauses.copyTo(clauses);
+    other.learnts.copyTo(learnts);
+    other.trail.copyTo(trail);
+    other.trail_lim.copyTo(trail_lim);
+    other.assumptions.copyTo(assumptions);
+    other.activity.copyTo(activity);
+    other.assigns.copyTo(assigns);
+    other.polarity.copyTo(polarity);
+    other.user_pol.copyTo(user_pol);
+    other.decision.copyTo(decision);
+    other.vardata.copyTo(vardata);
+
+    other.ca.copyTo(ca);
+
+    other.watches.copyTo(watches);
+    other.order_heap.copyTo(order_heap);
+    ok = other.ok;
+    cla_inc = other.cla_inc;
+    var_inc = other.var_inc;
+    qhead = other.qhead;
+    simpDB_assigns = other.simpDB_assigns;
+    simpDB_props = other.simpDB_props;
+    progress_estimate = other.progress_estimate;
+    remove_satisfied = other.remove_satisfied;
+    next_var = other.next_var;
+    other.released_vars.copyTo(released_vars);
+    other.free_vars.copyTo(free_vars);
+    other.seen.copyTo(seen);
+    other.analyze_stack.copyTo(analyze_stack);
+    other.analyze_toclear.copyTo(analyze_toclear);
+    other.add_tmp.copyTo(add_tmp);
+    max_learnts = other.max_learnts;
+    learntsize_adjust_confl = other.learntsize_adjust_confl;
+    learntsize_adjust_cnt = other.learntsize_adjust_cnt;
+    conflict_budget = other.conflict_budget;
+    propagation_budget = other.propagation_budget;
+    asynch_interrupt = other.asynch_interrupt;
+
+    return *this;
 }
 
 

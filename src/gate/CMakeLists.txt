@@ -8,6 +8,7 @@ add_library(Gate OBJECT
   debugger/fraig_checker.cpp
   debugger/rnd_checker.cpp
   debugger/seq_checker.cpp
+  debugger/verifier.cpp
   estimator/simple_time_model.cpp
   model/cell.cpp
   model/celltype.cpp

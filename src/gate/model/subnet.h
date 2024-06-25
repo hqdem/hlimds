@@ -515,6 +515,22 @@ public:
     return desc[i].weight;
   }
 
+  /// Sets the weigth of the i-th cell.
+  void setWeight(size_t i, float weight) {
+    desc[i].weight = weight;
+  }
+
+  /// Returns the data associated w/ the i-th cell.
+  template <typename T>
+  const T *getData(size_t i) const {
+    return static_cast<T>(desc[i].data);
+  }
+
+  /// Sets the data associated w/ the i-th cell.
+  void setData(size_t i, void *data) {
+    desc[i].data = data;
+  }
+
   /// Returns fanouts of the i-th cell.
   FanoutsContainer getFanouts(size_t i) const {
     assert(fanoutsEnabled);
@@ -523,11 +539,6 @@ public:
       return {};
     }
     return fanouts[i];
-  }
-
-  /// Sets the weigth of the i-th cell.
-  void setWeight(size_t i, float weight) {
-    desc[i].weight = weight;
   }
 
   /// Returns the entry/link indices of the j-th link of the i-th entry.
@@ -904,12 +915,14 @@ private:
         next(normalOrderID),
         depth(invalidID),
         weight(0.0),
+        data(nullptr),
         session(0) {}
 
     size_t prev;
     size_t next;
     size_t depth;
     float weight;
+    void *data;
     size_t session;
   };
 

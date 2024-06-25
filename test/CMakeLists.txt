@@ -37,6 +37,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/sat_checker_test.cpp
   gate/debugger/seq_sweep_test.cpp
   gate/debugger/synth_lec_test.cpp
+  gate/debugger/verifier_test.cpp
   gate/estimator/time_model_test.cpp
   gate/estimator/wlm_test.cpp
   gate/model/array_test.cpp
@@ -50,7 +51,6 @@ add_executable(${TEST_TARGET}
   gate/model/replace_test.cpp
   gate/model/seq_net.cpp
   gate/model/serializer_test.cpp
-  gate/model/subnet_cnf_encoder_test.cpp
   gate/model/subnet_depth_test.cpp
   gate/model/subnet_test.cpp
   gate/model/utils/bdd_dnf_test.cpp

@@ -1,0 +1,77 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
+
+#pragma once
+
+#include "gate/model/utils/subnet_cnf_encoder.h"
+
+#include <vector>
+
+namespace eda::gate::debugger {
+
+
+/**
+ * @brief Allows to check different properties of provided subnet.
+ */
+class Verifier final {
+  using Subnet = model::Subnet;
+  using SubnetEncoder = model::SubnetEncoder;
+  using SubnetEncoderContext = model::SubnetEncoderContext;
+  using Property = model::Property;
+  using Solver = gate::solver::Solver;
+  using Literal = Minisat::Lit;
+  using LitVec = std::vector<Literal>;
+  using Variable = Minisat::Var;
+
+public:
+  /**
+   * @brief Constructs a verifier.
+   *
+   * @param subnet Subnet to check properties on.
+   * @param solver SAT-solver.
+   */
+  Verifier(const Subnet &subnet, Solver &solver);
+
+  /// Returns the property with var key.
+  Property getProperty(const Variable var) const;
+
+  /// Encodes and returns lhs link and rhs equivalence property.
+  Variable makeEqualty(Subnet::Link lhs, bool rhs);
+
+  /// Encodes and returns lhs and rhs links equivalence property.
+  Variable makeEqualty(Subnet::Link lhs, Subnet::Link rhs);
+
+  /**
+   * @brief Checks if the provided property is always true (or false).
+   *
+   * @param prop Property to check.
+   * @param invProp Invertes the property if set.
+   */
+  bool checkAlways(const Property &prop, const bool invProp = false);
+
+  /**
+   * @brief Checks if the provided property is eventually true (or false).
+   *
+   * @param prop Property to check.
+   * @param invProp Invertes the property if set.
+   */
+  bool checkEventually(const Property &prop, const bool invProp = false);
+
+private:
+  /// Adds the provided property clauses into the solver with an encoded subnet.
+  void addClauses(const Property &prop, bool inv);
+
+private:
+  const SubnetEncoder &encoder;
+  Solver &solver;
+  Solver *saveSolver{nullptr};
+  SubnetEncoderContext context;
+  std::unordered_map<Variable, Property> prop;
+};
+
+} // namespace eda::gate::debugger

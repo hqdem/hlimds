@@ -45,7 +45,6 @@ private:
     Size cap;
 
     // Don't allow copying (error prone):
-    vec<T>&  operator=(vec<T>& other);
              vec      (vec<T>& other);
 
     static inline Size max(Size x, Size y){ return (x > y) ? x : y; }
@@ -56,6 +55,14 @@ public:
     explicit vec(Size size)      : data(NULL), sz(0), cap(0)    { growTo(size); }
     vec(Size size, const T& pad) : data(NULL), sz(0), cap(0)    { growTo(size, pad); }
    ~vec()                                                       { clear(true); }
+   // Use the copy assignment carefully (error prone):
+    vec<T>&  operator=(const vec<T>& other) {
+        clear();
+        growTo(other.sz);
+        for (Size i = 0; i < other.sz; i++)
+            data[i] = other.data[i];
+        return *this;
+    }
 
     // Pointer to first element:
     operator T*       (void)           { return data; }

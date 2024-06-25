@@ -28,7 +28,7 @@ public:
     model::SubnetEncoderContext context(subnet, solver);
 
     encoder.encode(subnet, context, solver);
-    encoder.encodeEqual(subnet, context, solver, subnet.getOut(0), 1);
+    solver.addClause(context.lit(subnet.getOut(0), 1));
 
     if (solver.solve()) {
       std::vector<bool> counterEx;

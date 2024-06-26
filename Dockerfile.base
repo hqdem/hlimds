@@ -104,8 +104,3 @@ RUN cmake -G Ninja .. \
     -DVERILATOR_DISABLE=ON \
     -DIVERILOG_DISABLE=ON
 RUN ninja
-
-# Set up the interpreter
-
-WORKDIR /workdir
-CMD ["/bin/bash"]

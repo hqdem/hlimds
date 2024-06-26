@@ -7,6 +7,7 @@
 domain="gitlab.ispras.ru"
 port="4567"
 container_registry="mvg/utopia-eda"
+basename="base"
 
 if [ -z "$UTOPIA_HOME" ]; then
     echo "UTOPIA_HOME env var is not set!"
@@ -33,23 +34,32 @@ if echo "$name" | grep -q '[^a-zA-Z]'; then
     exit 1
 fi
 
-if [ -f "${UTOPIA_HOME}/Dockerfile" ]; then
-    echo "Authentication in Container Registry..."
-    docker login $domain:$port
-    if [ $? -ne 0 ]; then
-        echo "Authentication errors occurred!"
-        exit 1
-    fi
-    echo "Building image with Dockerfile from Utopia EDA..."
-    docker build -t $domain:$port/$container_registry:$name $UTOPIA_HOME
-    if [ $? -ne 0 ]; then
-        echo "Updating errors occurred!"
-        exit 1
-    fi
-    docker push $domain:$port/$container_registry:$name
-    if [ $? -ne 0 ]; then
-        echo "Updloading errors occurred!"
-        exit 1
-    fi
-    echo "Image updated and uploaded successfully!"
+echo "Authentication in Container Registry..."
+docker login $domain:$port
+if [ $? -ne 0 ]; then
+    echo "Authentication errors occurred!"
+    exit 1
 fi
+echo "Building base image for Utopia EDA..."
+docker build -f ${PWD}/Dockerfile.base -t $domain:$port/$container_registry:$basename ${UTOPIA_HOME}
+if [ $? -ne 0 ]; then
+    echo "Updating errors occurred!"
+    exit 1
+fi
+docker push $domain:$port/$container_registry:$basename
+if [ $? -ne 0 ]; then
+    echo "Uploading errors occurred!"
+    exit 1
+fi
+echo "Building developers' image for Utopia EDA..."
+docker build -f ${PWD}/Dockerfile.dev -t $domain:$port/$container_registry:$name ${UTOPIA_HOME}
+if [ $? -ne 0 ]; then
+    echo "Updating errors occurred!"
+    exit 1
+fi
+docker push $domain:$port/$container_registry:$name
+if [ $? -ne 0 ]; then
+    echo "Uploading errors occurred!"
+    exit 1
+fi
+echo "Images are successfully updated and uploaded."

@@ -1,0 +1,6 @@
+FROM gitlab.ispras.ru:4567/mvg/utopia-eda:base
+
+# Set up the interpreter
+
+WORKDIR /workdir
+CMD ["/bin/bash"]

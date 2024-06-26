@@ -97,15 +97,6 @@ private:
 // Subnet Encoder
 //===----------------------------------------------------------------------===//
 
-struct Property {
-  using LitVec = std::vector<Minisat::Lit>;
-  using Variable = eda::gate::solver::Variable;
-
-  std::vector<LitVec> formula;
-  Variable p;
-  mutable bool addedToFormula{false};
-};
-
 class SubnetEncoder final : public util::Singleton<SubnetEncoder> {
   friend class util::Singleton<SubnetEncoder>;
 
@@ -174,40 +165,35 @@ public:
     }
   }
 
-  Property encodeEqual(
+  Variable encodeEqual(
       SubnetEncoderContext &context,
+      Solver &solver,
       Subnet::Link lhs,
       bool rhs)  const {
-    Property prop;
-    prop.p = context.newVar();
+    auto p = context.newVar();
     Literal lit1 = context.lit(lhs, rhs);
-    Literal lit2 = solver::makeLit(prop.p, 1);
-    LitVec clauseToAdd1{lit1, ~lit2};
-    LitVec clauseToAdd2{~lit1, lit2};
-    prop.formula.push_back(clauseToAdd1);
-    prop.formula.push_back(clauseToAdd2);
+    Literal lit2 = solver::makeLit(p, 1);
+    solver.addClause(lit1, ~lit2);
+    solver.addClause(~lit1, lit2);
 
-    return prop;
+    return p;
   }
 
-  Property encodeEqual(
+  Variable encodeEqual(
       SubnetEncoderContext &context,
+      Solver &solver,
       Subnet::Link lhs,
       Subnet::Link rhs) const {
-    Property prop;
-    prop.p = context.newVar();
+    auto p = context.newVar();
     Literal lit1 = context.lit(lhs, 1);
     Literal lit2 = context.lit(rhs, 1);
-    Literal lit3 = solver::makeLit(prop.p, 1);
-    LitVec clauseToAdd1{lit1, lit2, lit3};
-    LitVec clauseToAdd2{lit1, ~lit2, ~lit3};
-    LitVec clauseToAdd3{~lit1, lit2, ~lit3};
-    LitVec clauseToAdd4{~lit1, ~lit2, lit3};
-    prop.formula.insert(prop.formula.end(),
-      {clauseToAdd1, clauseToAdd2, clauseToAdd3, clauseToAdd4}
-    );
+    Literal lit3 = solver::makeLit(p, 1);
+    solver.addClause(lit1, lit2, lit3);
+    solver.addClause(lit1, ~lit2, ~lit3);
+    solver.addClause(~lit1, lit2, ~lit3);
+    solver.addClause(~lit1, ~lit2, lit3);
 
-    return prop;
+    return p;
   }
 
 private:

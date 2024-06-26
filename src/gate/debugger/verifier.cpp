@@ -17,53 +17,35 @@ Verifier::Verifier(const Subnet &subnet, Solver &solver):
   encoder.encode(subnet, context, solver);
 };
 
-Verifier::Property Verifier::getProperty(const Variable var) const {
-	return prop.find(var)->second;
-}
-
 Verifier::Variable Verifier::makeEqualty(Subnet::Link lhs, bool rhs) {
-	const Property newProp = encoder.encodeEqual(context, lhs, rhs);
-	prop[newProp.p] = newProp;
-	return newProp.p;
+	const auto prop = encoder.encodeEqual(context, solver, lhs, rhs);
+	return prop;
 }
 
 Verifier::Variable Verifier::makeEqualty(Subnet::Link lhs, Subnet::Link rhs) {
-	const Property newProp = encoder.encodeEqual(context, lhs, rhs);
-	prop[newProp.p] = newProp;
-	return newProp.p;
+	const auto prop = encoder.encodeEqual(context, solver, lhs, rhs);
+	return prop;
 }
 
-bool Verifier::checkAlways(const Property &prop, const bool invProp) {
-	addClauses(prop, !invProp);
+bool Verifier::checkAlways(const Variable &prop, const bool invProp) {
+	addProperty(prop, !invProp);
 	const bool result = !solver.solve();
 	solver = *saveSolver;
 	delete saveSolver;
 	return result;
 }
 
-bool Verifier::checkEventually(const Property &prop, const bool invProp) {
-	addClauses(prop, invProp);
+bool Verifier::checkEventually(const Variable &prop, const bool invProp) {
+	addProperty(prop, invProp);
 	const bool result = solver.solve();
 	solver = *saveSolver;
 	delete saveSolver;
 	return result;
 }
 
-void Verifier::addClauses(const Property &prop, bool inv) {
-	if (!prop.addedToFormula) {
-		const auto &propFormula = prop.formula;
-		for (size_t i = 0; i < propFormula.size(); ++i) {
-			const auto &curClause = propFormula[i];
-			Minisat::vec<Literal> clauseToAdd;
-			for (const auto &lit : curClause) {
-				clauseToAdd.push(lit);
-			}
-			solver.addClause(clauseToAdd);
-		}
-		prop.addedToFormula = true;
-	}
+void Verifier::addProperty(const Variable &prop, bool inv) {
 	saveSolver = new Solver(solver);
-	solver.addClause(solver::makeLit(prop.p, !inv));
+	solver.addClause(solver::makeLit(prop, !inv));
 }
 
 } // namespace eda::gate::debugger

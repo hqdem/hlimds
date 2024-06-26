@@ -9,6 +9,7 @@
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/cone_builder.h"
 #include "gate/optimizer/subnet_window.h"
+#include "util/truth_table.h"
 
 #include <cassert>
 #include <utility>
@@ -57,119 +58,38 @@ SubnetWindow::SubnetWindow(const model::SubnetBuilder &builder,
   }
 }
 
-using TT = SubnetWindow::TruthTable;
-using SB = model::SubnetBuilder;
-using Link = model::Subnet::Link;
-using Cell = model::Subnet::Cell;
-
-static inline const TT &getTT(const SB &builder, const size_t i) {
-  assert(builder.isMarked(i));
-  return *builder.getData<TT>(i);
-}
-
-static inline TT getTT(const SB &builder, const Link &link) {
-  const auto &tt = getTT(builder, link.idx);
-  return link.inv ? ~tt : tt;
-}
-
-static inline TT getTT(const SB &builder, const size_t i, const size_t j) {
-  return getTT(builder, builder.getLink(i, j));
-}
-
-static inline TT getInTT(const size_t nIn, const size_t i) {
-  auto tt = kitty::create<TT>(nIn);
-  kitty::create_nth_var(tt, i);
-  return tt;
-}
-
-static inline TT getZeroTT(const size_t nIn) {
-  auto tt = kitty::create<TT>(nIn);
-  kitty::clear(tt);
-  return tt;
-}
-
-static inline TT getOneTT(const size_t nIn) {
-  return ~getZeroTT(nIn);
-}
-
-static inline TT getBufTT(const SB &builder, const Cell &cell) {
-  return getTT(builder, cell.link[0]);
-}
-
-static inline TT getAndTT(const SB &builder, const Cell &cell, const size_t i) {
-  auto tt = getTT(builder, cell.link[0]);
-  for (size_t j = 1; j < cell.arity; ++j) {
-    tt &= getTT(builder, i, j);
-  }
-  return tt;
-}
-
-static inline TT getOrTT(const SB &builder, const Cell &cell, const size_t i) {
-  auto tt = getTT(builder, cell.link[0]);
-  for (size_t j = 1; j < cell.arity; ++j) {
-    tt |= getTT(builder, i, j);
-  }
-  return tt;
-}
-
-static inline TT getXorTT(const SB &builder, const Cell &cell, const size_t i) {
-  auto tt = getTT(builder, cell.link[0]);
-  for (size_t j = 1; j < cell.arity; ++j) {
-    tt ^= getTT(builder, i, j);
-  }
-  return tt;
-}
-
-static inline TT getMajTT(const SB &builder, const Cell &cell, const size_t i) {
-  auto tt = getTT(builder, cell.link[0]);
-  kitty::clear(tt);
-
-  std::vector<TT> args(cell.arity);
-  for (size_t j = 0; j < cell.arity; ++j) {
-    args[j] = getTT(builder, i, j);
-  }
-
-  const auto threshold = cell.arity >> 1;
-  for (size_t k = 0; k < tt.num_bits(); ++k) {
-    auto count = 0;
-    for (size_t j = 0; j < cell.arity; ++j) {
-      if (get_bit(args[j], k)) count++;
-    }
-    if (count > threshold) {
-      set_bit(tt, k);
-    }
-  }
-
-  return tt;
-}
-
 SubnetWindow::TruthTable SubnetWindow::evaluateTruthTable() const {
-  std::vector<TruthTable> tables;
-  tables.reserve(1024); // FIXME:
+  const SubnetWindowWalker walker(*this);
+  const size_t arity = getInNum();
 
   size_t nIn = 0;
 
-  const SubnetWindowWalker walker(*this);
-  walker.run([&tables, &nIn, this](model::SubnetBuilder &builder, const size_t entryID) {
-    const auto &cell = builder.getCell(entryID);
-    TruthTable tt;
+  // Optimized calculator for windows w/ a small number of inputs.
+  if (inputs.size() <= 6) {
+    walker.run([&nIn, arity](model::SubnetBuilder &builder, size_t i) {
+      const auto in = nIn < arity;
+      const auto tt = utils::getTruthTable<utils::TT6>(
+          builder, arity, i, in, nIn++);
+      utils::setTruthTable<utils::TT6>(builder, i, tt);
+    });
 
-    if (nIn < getInNum())   { tt = getInTT  (getInNum(), nIn++);        }
-    else if (cell.isZero()) { tt = getZeroTT(getInNum());               }
-    else if (cell.isOne())  { tt = getOneTT (getInNum());               }
-    else if (cell.isOut())  { tt = getBufTT (builder, cell);            }
-    else if (cell.isBuf())  { tt = getBufTT (builder, cell);            }
-    else if (cell.isAnd())  { tt = getAndTT (builder, cell, entryID);   }
-    else if (cell.isOr())   { tt = getOrTT  (builder, cell, entryID);   }
-    else if (cell.isXor())  { tt = getXorTT (builder, cell, entryID);   }
-    else if (cell.isMaj())  { tt = getMajTT (builder, cell, entryID);   }
-    else                    { assert(false && "Unsupported operation"); }
+    const auto tt = utils::getTruthTable<utils::TT6>(builder, outputs[0]);
+    return utils::convertTruthTable<utils::TT6>(tt, arity);
+  }
 
+  std::vector<TruthTable> tables;
+  tables.reserve(1024); // FIXME: if resize.
+
+  walker.run([&tables, &nIn, arity](model::SubnetBuilder &builder, size_t i) {
+    const auto in = nIn < arity;
+    const auto tt = utils::getTruthTable<TruthTable>(
+        builder, arity, i, in, nIn++);
     tables.push_back(tt);
-    builder.setData(entryID, &tables[tables.size() - 1]); // FIXME: if resize?
+    utils::setTruthTable<TruthTable>(builder, i, tables[tables.size() - 1]);
   });
 
-  return getTT(builder, outputs[0]);
+  const auto tt = utils::getTruthTable<TruthTable>(builder, outputs[0]);
+  return utils::convertTruthTable<TruthTable>(tt, arity);
 }
 
 // FIXME: Deprecated.

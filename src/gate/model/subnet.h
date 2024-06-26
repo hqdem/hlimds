@@ -485,15 +485,29 @@ public:
     desc[i].weight = weight;
   }
 
-  /// Returns the data associated w/ the i-th cell.
+  /// Returns the pointer to the data associated w/ the i-th cell.
   template <typename T>
-  const T *getData(size_t i) const {
+  const T *getDataPtr(size_t i) const {
     return static_cast<T*>(desc[i].data);
   }
 
-  /// Sets the data associated w/ the i-th cell.
-  void setData(size_t i, void *data) {
-    desc[i].data = data;
+  /// Sets the pointer to the data associated w/ the i-th cell.
+  void setDataPtr(size_t i, const void *data) {
+    desc[i].data = const_cast<void*>(data);
+  }
+
+  /// Returns the pointer to the data associated w/ the i-th cell.
+  template <typename T>
+  const T &getDataVal(size_t i) const {
+    static_assert(sizeof(T) <= sizeof(void*));
+    return reinterpret_cast<const T&>(desc[i].data);
+  }
+
+  /// Sets the pointer to the data associated w/ the i-th cell.
+  template <typename T>
+  void setDataVal(size_t i, const T &data) {
+    static_assert(sizeof(T) <= sizeof(void*));
+    desc[i].data = reinterpret_cast<void*>(data);
   }
 
   /// Returns fanouts of the i-th cell.

@@ -22,7 +22,6 @@ class Verifier final {
   using Subnet = model::Subnet;
   using SubnetEncoder = model::SubnetEncoder;
   using SubnetEncoderContext = model::SubnetEncoderContext;
-  using Property = model::Property;
   using Solver = gate::solver::Solver;
   using Literal = Minisat::Lit;
   using LitVec = std::vector<Literal>;
@@ -37,9 +36,6 @@ public:
    */
   Verifier(const Subnet &subnet, Solver &solver);
 
-  /// Returns the property with var key.
-  Property getProperty(const Variable var) const;
-
   /// Encodes and returns lhs link and rhs equivalence property.
   Variable makeEqualty(Subnet::Link lhs, bool rhs);
 
@@ -52,7 +48,7 @@ public:
    * @param prop Property to check.
    * @param invProp Invertes the property if set.
    */
-  bool checkAlways(const Property &prop, const bool invProp = false);
+  bool checkAlways(const Variable &prop, const bool invProp = false);
 
   /**
    * @brief Checks if the provided property is eventually true (or false).
@@ -60,18 +56,17 @@ public:
    * @param prop Property to check.
    * @param invProp Invertes the property if set.
    */
-  bool checkEventually(const Property &prop, const bool invProp = false);
+  bool checkEventually(const Variable &prop, const bool invProp = false);
 
 private:
-  /// Adds the provided property clauses into the solver with an encoded subnet.
-  void addClauses(const Property &prop, bool inv);
+  /// Adds the provided property into the solver.
+  void addProperty(const Variable &prop, bool inv);
 
 private:
   const SubnetEncoder &encoder;
   Solver &solver;
   Solver *saveSolver{nullptr};
   SubnetEncoderContext context;
-  std::unordered_map<Variable, Property> prop;
 };
 
 } // namespace eda::gate::debugger

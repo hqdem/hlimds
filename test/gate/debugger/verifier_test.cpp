@@ -117,8 +117,8 @@ inline bool check(SubnetID subnetID, bool linkVal, bool inv, bool always) {
 
   auto propID = verifier.makeEqualty(subnet.getOut(0), linkVal);
   return always ?
-    verifier.checkAlways(verifier.getProperty(propID), inv) :
-    verifier.checkEventually(verifier.getProperty(propID), inv);
+    verifier.checkAlways(propID, inv) :
+    verifier.checkEventually(propID, inv);
 }
 
 inline bool checkEventually(SubnetID subnetID, bool linkVal, bool inv) {
@@ -230,12 +230,12 @@ TEST(VerifierTest, SeveralPropsTest) {
   auto prop5 = verifier.makeEqualty(subnet.getOut(2), 0);
   auto prop6 = verifier.makeEqualty(subnet.getOut(2), 1);
 
-  EXPECT_FALSE(verifier.checkAlways(verifier.getProperty(prop1)));
-  EXPECT_TRUE(verifier.checkAlways(verifier.getProperty(prop2)));
-  EXPECT_TRUE(verifier.checkAlways(verifier.getProperty(prop3)));
-  EXPECT_FALSE(verifier.checkAlways(verifier.getProperty(prop4)));
-  EXPECT_FALSE(verifier.checkAlways(verifier.getProperty(prop5)));
-  EXPECT_FALSE(verifier.checkAlways(verifier.getProperty(prop6)));
+  EXPECT_FALSE(verifier.checkAlways(prop1));
+  EXPECT_TRUE(verifier.checkAlways(prop2));
+  EXPECT_TRUE(verifier.checkAlways(prop3));
+  EXPECT_FALSE(verifier.checkAlways(prop4));
+  EXPECT_FALSE(verifier.checkAlways(prop5));
+  EXPECT_FALSE(verifier.checkAlways(prop6));
 }
 
 TEST(VerifierTest, InnerLinkCheck) {
@@ -262,7 +262,7 @@ TEST(VerifierTest, InnerLinkCheck) {
 
   auto prop1 = verifier.makeEqualty(lhs, rhs);
 
-  EXPECT_TRUE(verifier.checkEventually(verifier.getProperty(prop1)));
+  EXPECT_TRUE(verifier.checkEventually(prop1));
 }
 
 } // namespace eda::gate::model

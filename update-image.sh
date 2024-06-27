@@ -29,7 +29,7 @@ if [ $(echo "$name" | wc -w) -ne 1 ]; then
     exit 1
 fi
 
-if echo "$name" | grep -q '[^a-zA-Z]'; then
+if [ echo "$name" | grep -q '[^a-zA-Z]' ]; then
     echo "Image tag should be a word and contain only Lat. alphabet characters([a-zA-Z])!"
     exit 1
 fi

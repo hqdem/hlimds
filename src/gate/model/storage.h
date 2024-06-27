@@ -152,27 +152,34 @@ private:
   ObjDescTable<T> desc;
 };
 
-template<typename T, typename... Args>
-typename T::ID allocateExt(size_t size, Args&&... args) {
+template <typename T, typename... Args>
+typename T::ID allocateObjectExt(size_t size, Args&&... args) {
   return Storage<T>::get().allocateExt(size, args...);
 }
 
-template<typename T, typename... Args>
-typename T::ID allocate(Args&&... args) {
+template <typename T, typename... Args>
+typename T::ID allocateObject(Args&&... args) {
   return Storage<T>::get().allocate(args...);
 }
 
-template<typename T>
-T *access(typename T::ID objID) {
+template <typename T>
+T *accessObject(typename T::ID objID) {
   return Storage<T>::get().access(objID);
 }
 
-template<typename T>
-void release(typename T::ID objID) {
+template <typename T>
+void releaseObject(typename T::ID objID) {
   Storage<T>::get().release(objID);
 }
 
 template <typename T, typename TID>
-T &Object<T, TID>::get(TID objID) { return *access<T>(objID); }
+T &Object<T, TID>::get(TID objID) {
+  return *accessObject<T>(objID);
+}
+
+template <typename T, typename TID>
+void Object<T, TID>::release(TID objID) {
+  releaseObject<T>(objID);
+}
 
 } // namespace eda::gate::model

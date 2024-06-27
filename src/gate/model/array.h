@@ -86,7 +86,7 @@ class Array final {
 public:
   /// Constructs a wrapper around the given list structure.
   explicit Array(ArrayID arrayID):
-      arrayID(arrayID), block(access<ArrayBlock<T>>(arrayID)) {
+      arrayID(arrayID), block(accessObject<ArrayBlock<T>>(arrayID)) {
     // Only single-block arrays are supported.
     assert(block != nullptr && block->begin && block->end);
   }

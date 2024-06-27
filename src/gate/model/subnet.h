@@ -782,7 +782,7 @@ public:
     }
     assert(checkInputsOrder() && checkOutputsOrder());
 
-    return allocate<Subnet>(nIn, nOut, std::move(entries));
+    return allocateObject<Subnet>(nIn, nOut, std::move(entries));
   }
 
   /// @brief Makes a subnet.
@@ -986,6 +986,100 @@ private:
 
   size_t sessionID{0};
   bool isSessionStarted{false};
+};
+
+//===----------------------------------------------------------------------===//
+// Subnet Object
+//===----------------------------------------------------------------------===//
+
+class SubnetObject final {
+public:
+  SubnetObject() {}
+  SubnetObject(const SubnetID subnetID): subnetID(subnetID) {}
+
+  SubnetObject(const SubnetObject &other) = delete;
+  SubnetObject &operator=(const SubnetObject &other) = delete;
+
+  SubnetObject(SubnetObject &&other) {
+    subnetID = other.subnetID;
+    subnetBuilder = other.subnetBuilder;
+    other.subnetBuilder = nullptr;
+  }
+
+  SubnetObject &operator =(SubnetObject &&other) {
+    subnetID = other.subnetID;
+    subnetBuilder = other.subnetBuilder;
+    other.subnetBuilder = nullptr;
+    return *this;
+  }
+
+  bool isNull() const {
+    return subnetID == OBJ_NULL_ID && !subnetBuilder;
+  } 
+
+  bool hasObject() const {
+    return subnetID != OBJ_NULL_ID;
+  }
+
+  bool hasBuilder() const {
+    return subnetBuilder != nullptr;
+  }
+
+  SubnetID id() const {
+    return subnetID;
+  }
+
+  const Subnet &object() const {
+    assert(subnetID != OBJ_NULL_ID);
+    return Subnet::get(subnetID);
+  }
+
+  const SubnetBuilder &builder() const {
+    assert(subnetBuilder);
+    return *subnetBuilder;
+  }
+
+  SubnetBuilder &builder(bool rebuild = false) {
+    assert(subnetID == OBJ_NULL_ID || rebuild);
+
+    if (!subnetBuilder) {
+      subnetBuilder = new SubnetBuilder();
+    }
+
+    subnetID = OBJ_NULL_ID;
+    return *subnetBuilder;
+  }
+
+  SubnetID make() {
+    if (subnetID != OBJ_NULL_ID) {
+      return subnetID;
+    }
+
+    assert(subnetBuilder);
+    subnetID = subnetBuilder->make();
+
+    return subnetID;
+  }
+
+  void release() {
+    if (subnetID != OBJ_NULL_ID) {
+      Subnet::release(subnetID);
+    }
+    if (subnetBuilder) {
+      delete subnetBuilder;
+      subnetBuilder = nullptr;
+    }
+  }
+
+  ~SubnetObject() {
+    if (subnetBuilder) {
+      delete subnetBuilder;
+    }
+  }
+
+private:
+  SubnetBuilder *subnetBuilder{nullptr};
+  SubnetID subnetID{OBJ_NULL_ID};
 };
 
 } // namespace eda::gate::model

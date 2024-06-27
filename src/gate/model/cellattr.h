@@ -109,12 +109,12 @@ static_assert(sizeof(CellTypeAttr) == CellTypeAttrID::Size);
 //===----------------------------------------------------------------------===//
 
 inline CellTypeAttrID makeCellTypeAttr() {
-  return allocate<CellTypeAttr>();
+  return allocateObject<CellTypeAttr>();
 }
 
 inline CellTypeAttrID makeCellTypeAttr(const CellTypeAttr::PortWidths &widthIn,
                                        const CellTypeAttr::PortWidths &widthOut) {
-  return allocate<CellTypeAttr>(widthIn, widthOut);
+  return allocateObject<CellTypeAttr>(widthIn, widthOut);
 }
 
 inline CellTypeAttrID makeCellTypeAttr(uint16_t widthLhs,

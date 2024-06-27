@@ -589,7 +589,8 @@ inline CellTypeID makeCellType(CellSymbol symbol,
                                CellProperties props,
                                uint16_t nIn,
                                uint16_t nOut) {
-  return allocate<CellType>(symbol, name, implID, attrID, props, nIn, nOut);
+  return allocateObject<CellType>(
+      symbol, name, implID, attrID, props, nIn, nOut);
 }
 
 inline CellTypeID makeCellType(CellSymbol symbol,

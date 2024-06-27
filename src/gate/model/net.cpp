@@ -75,7 +75,7 @@ NetID NetBuilder::make() {
   uint16_t nSoftBlocks = softBlocks.size();
   assert(nSoftBlocks == softBlocks.size());
 
-  return allocate<Net>(
+  return allocateObject<Net>(
     inputs.getID(),
     outputs.getID(),
     combCells.getID(),

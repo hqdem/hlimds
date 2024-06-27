@@ -147,6 +147,7 @@ struct Object {
 
   // Defined in storage.h.
   static T &get(TID objectID);
+  static void release(TID objectID);
 
   static constexpr TID makeFID(uint64_t objectSID) {
     return TID::makeFID(objectSID);

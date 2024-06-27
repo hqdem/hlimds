@@ -48,14 +48,14 @@ public:
   static inline ListBlockID allocate(uint32_t capacity, bool begin, bool end) {
     const auto sizeInBytes = std::min(getSizeInBytes(capacity), LARGE_PAGE_SIZE);
     const auto sizeInItems = getSizeInItems(sizeInBytes);
-    return allocateExt<ListBlock<T>>(sizeInBytes, sizeInItems, begin, end);
+    return allocateObjectExt<ListBlock<T>>(sizeInBytes, sizeInItems, begin, end);
   }
 
   /// Allocates a block and fills it w/ the given items.
   static inline ListBlockID allocate(
       const std::vector<T> &items, bool begin, bool end) {
     const auto blockID = allocate(items.size(), begin, end);
-    auto *block = access<ListBlock<T>>(blockID);
+    auto *block = accessObject<ListBlock<T>>(blockID);
     assert(block->capacity == items.size());
     for (size_t i = 0; i < items.size(); ++i) {
       block->items[i] = items[i];
@@ -88,12 +88,12 @@ public:
 
   /// Returns the pointer to the previous block.
   ListBlock<T> *prevBlock() const {
-    return access<ListBlock<T>>(ListBlockID::makeFID(prevSID));
+    return accessObject<ListBlock<T>>(ListBlockID::makeFID(prevSID));
   }
 
   /// Returns the pointer to the next block.
   ListBlock<T> *nextBlock() const {
-    return access<ListBlock<T>>(ListBlockID::makeFID(nextSID));
+    return accessObject<ListBlock<T>>(ListBlockID::makeFID(nextSID));
   }
 
   /// Number of items in the entire list (for the first block only).
@@ -191,7 +191,7 @@ private:
   ListIterator(ListBlockID blockID):
       blockID(blockID),
       index(0),
-      block(access<ListBlock<T>>(blockID)) {
+      block(accessObject<ListBlock<T>>(blockID)) {
     while (block != nullptr && block->size == 0) {
       moveNextBlock();
     }
@@ -208,7 +208,7 @@ private:
       block = nullptr;
     } else {
       blockID = ListBlockID::makeFID(block->nextSID);
-      block = access<ListBlock<T>>(blockID);
+      block = accessObject<ListBlock<T>>(blockID);
     }
   }
 
@@ -237,7 +237,7 @@ class List final {
 public:
   /// Constructs a wrapper around the given list structure.
   explicit List(ListID listID):
-      listID(listID), head(access<ListBlock<T>>(listID)) {
+      listID(listID), head(accessObject<ListBlock<T>>(listID)) {
     assert(head != nullptr && head->begin);
   }
 
@@ -274,7 +274,7 @@ public:
       auto nextFID = ListBlock<T>::allocate(tail->capacity, 0, 1);
       auto nextSID = nextFID.getSID();
 
-      auto *next = access<ListBlock<T>>(nextFID);
+      auto *next = accessObject<ListBlock<T>>(nextFID);
       assert(next->end);
 
       next->nextSID = tail->nextSID;
@@ -311,7 +311,7 @@ public:
 
       prev->end = pos.block->end;
 
-      release<ListBlock<T>>(pos.blockID);
+      releaseObject<ListBlock<T>>(pos.blockID);
       return ListIterator<T>(ListBlockID::makeFID(pos.block->nextSID));
     }
 

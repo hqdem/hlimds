@@ -38,7 +38,7 @@ static_assert(sizeof(String) == StringID::Size);
 //===----------------------------------------------------------------------===//
 
 inline StringID makeString(const std::string &value) {
-  return allocate<String>(value);
+  return allocateObject<String>(value);
 }
 
 } // namespace eda::gate::model

@@ -380,12 +380,7 @@ TEST(SubnetTest, FanoutsReplace) {
   rhsBuilder.addOutput(rhsLink2);
   const auto rhsID = rhsBuilder.make();
 
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[2] = 2;
-  mapping[3] = 3;
-  mapping[6] = 6;
+  SubnetBuilder::InOutMapping mapping({0, 1, 2, 3}, {6});
 
   builder.replace(rhsID, mapping);
 
@@ -416,12 +411,7 @@ TEST(SubnetTest, FanoutsReplaceTwice) {
   rhsBuilder.addOutput(rhsLink2);
   const auto rhsID = rhsBuilder.make();
 
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[2] = 2;
-  mapping[3] = 3;
-  mapping[6] = 6;
+  SubnetBuilder::InOutMapping mapping({0, 1, 2, 3}, {6});
 
   builder.replace(rhsID, mapping);
 
@@ -435,12 +425,7 @@ TEST(SubnetTest, FanoutsReplaceTwice) {
   rhs2Builder.addOutput(rhs2Link3);
   const auto rhs2ID = rhs2Builder.make();
 
-  std::unordered_map<size_t, size_t> mapping2;
-  mapping2[0] = 0;
-  mapping2[1] = 1;
-  mapping2[2] = 2;
-  mapping2[3] = 3;
-  mapping2[7] = 6;
+  SubnetBuilder::InOutMapping mapping2{{0, 1, 2, 3}, {6}};
 
   builder.replace(rhs2ID, mapping2);
 
@@ -531,11 +516,7 @@ TEST(SubnetTest, SessionReplaceDiff) {
   rhsBuilder.addOutput(rhsLink1);
   const auto rhsID = rhsBuilder.make();
 
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[2] = 2;
-  mapping[4] = 5;
+  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
 
   builder.replace(rhsID, mapping);
 
@@ -564,10 +545,7 @@ TEST(SubnetTest, SessionReplaceSame) {
   rhsBuilder.addOutput(rhsLink1);
   const auto rhsID = rhsBuilder.make();
 
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[3] = 2;
+  SubnetBuilder::InOutMapping mapping({0, 1}, {2});
 
   builder.replace(rhsID, mapping);
 
@@ -597,10 +575,7 @@ TEST(SubnetTest, SessionFillEmptyEntry) {
   rhsBuilder.addOutput(rhsLink1);
   const auto rhsID = rhsBuilder.make();
 
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[3] = 3;
+  SubnetBuilder::InOutMapping mapping({0, 1}, {3});
 
   builder.replace(rhsID, mapping);
 
@@ -609,7 +584,6 @@ TEST(SubnetTest, SessionFillEmptyEntry) {
   checkSessionsCorrect(builder, {1, 1, 0, 0, 1});
 }
 
-#if 0
 TEST(SubnetTest, SimpleReplaceConstTest) {
   SubnetBuilder builder;
 
@@ -623,9 +597,10 @@ TEST(SubnetTest, SimpleReplaceConstTest) {
 
   builder.replaceWithZero(SubnetBuilder::EntrySet{link3.idx});
 
+#ifdef UTOPIA_DEBUG
   const auto &result = Subnet::get(builder.make());
   std::cout << result << std::endl;
+#endif // UTOPIA_DEBUG
 }
-#endif
 
 } // namespace eda::gate::model

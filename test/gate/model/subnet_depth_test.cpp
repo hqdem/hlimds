@@ -135,11 +135,7 @@ TEST(SubnetDepthTest, ReuseCellsFollowingRoot) {
   rhsBuilder.addOutput(rhsBufLink0);
 
   const auto rhsID = rhsBuilder.make();
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[2] = 2;
-  mapping[7] = 5;
+  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
 
   builder.replace(rhsID, mapping);
 
@@ -167,11 +163,7 @@ TEST(SubnetDepthTest, ReduceRootDepth) {
   rhsBuilder.addOutput(rhsOrLink0);
 
   const auto rhsID = rhsBuilder.make();
-  std::unordered_map<size_t, size_t> mapping;
-  mapping[0] = 0;
-  mapping[1] = 1;
-  mapping[2] = 2;
-  mapping[4] = 5;
+  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
 
   builder.replace(rhsID, mapping);
 

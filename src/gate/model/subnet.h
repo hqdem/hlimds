@@ -401,6 +401,24 @@ public:
   /// Fanouts container wrapper;
   using FanoutsContainer = std::vector<size_t>;
 
+  /// Represents an input/output mapping for replacement.
+  struct InOutMapping final {
+    InOutMapping() = default;
+
+    InOutMapping(const std::vector<size_t> &inputs,
+                 const std::vector<size_t> &outputs):
+        inputs(inputs), outputs(outputs) {}
+
+    size_t getInNum() const { return inputs.size(); }
+    size_t getOutNum() const { return outputs.size(); }
+
+    size_t getIn(const size_t i) const { return inputs[i]; }
+    size_t getOut(const size_t i) const { return outputs[i]; }
+
+    std::vector<size_t> inputs;
+    std::vector<size_t> outputs;
+  };
+
   /// Represents a replacement effect.
   struct Effect final {
     Effect operator+(const Effect &rhs) const {
@@ -676,7 +694,7 @@ public:
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(
       const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
@@ -687,7 +705,7 @@ public:
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(
       const SubnetBuilder &rhsBuilder,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
       const CellActionCallback *onGreaterDepth = nullptr);
@@ -695,14 +713,14 @@ public:
   /// Returns the effect of the replacement with SubnetID rhs.
   Effect evaluateReplace(
       const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       const CellWeightProvider *weightProvider = nullptr,
       const CellWeightModifier *weightModifier = nullptr) const;
 
   /// Returns the effect of the replacement with SubnetBuilder rhs.
   Effect evaluateReplace(
       const SubnetBuilder &rhsBuilder,
-      std::unordered_map<size_t, size_t> rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       const CellWeightModifier *weightModifier = nullptr) const;
 
   /// Replaces the given cell w/ the new one. Recursively deletes the cells
@@ -776,7 +794,7 @@ private:
       const RhsContainer &rhsContainer,
       const RhsIterable &rhsIterable,
       const size_t rhsOutEntryID,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
@@ -788,7 +806,7 @@ private:
   Effect evaluateReplace(
       const RhsContainer &rhsContainer,
       const size_t rhsOutEntryID,
-      std::unordered_map<size_t, size_t> rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       const CellWeightProvider *weightProvider = nullptr,
       const CellWeightModifier *weightModifier = nullptr) const;
 
@@ -797,7 +815,7 @@ private:
   Effect newEntriesEval(
       const RhsContainer &rhsContainer,
       const RhsIterable &rhsIterable,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
       std::unordered_set<size_t> &reusedLhsEntries,
       const CellWeightProvider *weightProvider,
@@ -807,7 +825,7 @@ private:
   /// the number of cells (value of weight) added and new depth of the root.
   Effect newEntriesEval(
       const Subnet &rhs,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       std::unordered_set<size_t> &reusedLhsEntries,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;
@@ -816,7 +834,7 @@ private:
   /// the number of cells (value of weight) added and new depth of the root.
   Effect newEntriesEval(
       const SubnetBuilder &rhsBuilder,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const InOutMapping &rhsToLhsMapping,
       std::unordered_set<size_t> &reusedLhsEntries,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;

@@ -34,7 +34,7 @@ void Rewriter::rewriteOnNode(
   const auto &cuts = cutExtractor.getCuts(entryID);
   float bestMetricValue = std::numeric_limits<float>::lowest();
   SubnetID bestRhsID = 0;
-  std::unordered_map<size_t, size_t> bestRhsToLhs;
+  SubnetBuilder::InOutMapping bestRhsToLhs; // FIXME: Avoid copying.
 
   for (const auto &cut : cuts) {
     const SubnetWindow window(builder, cut);
@@ -42,8 +42,8 @@ void Rewriter::rewriteOnNode(
     if (rhsID == model::OBJ_NULL_ID) {
       continue;
     }
-    const Subnet &rhs = Subnet::get(rhsID);
-    const auto rhsToLhs = window.getInOutMapping(rhs); // FIXME: Deprecated.
+    //const Subnet &rhs = Subnet::get(rhsID); // FIXME: Remove.
+    const auto rhsToLhs = window.getInOutMapping();
     float curMetricValue = cost(builder.evaluateReplace(rhsID, rhsToLhs));
     if (curMetricValue - bestMetricValue > metricEps) {
       bestMetricValue = curMetricValue;

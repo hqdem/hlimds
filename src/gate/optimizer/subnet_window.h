@@ -21,7 +21,7 @@
 namespace eda::gate::optimizer {
 
 //===----------------------------------------------------------------------===//
-// Subnet Window
+// Subnet window
 //===----------------------------------------------------------------------===//
 
 /**
@@ -30,6 +30,7 @@ namespace eda::gate::optimizer {
 class SubnetWindow final {
 public:
   using TruthTable = kitty::dynamic_truth_table;
+  using InOutMapping = model::SubnetBuilder::InOutMapping;
 
   SubnetWindow(const model::SubnetBuilder &builder,
                const CutExtractor::Cut &cut,
@@ -40,26 +41,26 @@ public:
       SubnetWindow(builder, cut, TruthTable{}) {}
 
   SubnetWindow(const model::SubnetBuilder &builder,
-               const std::vector<size_t> &inputs,
-               const std::vector<size_t> &outputs,
+               const InOutMapping &iomapping,
                const TruthTable &care);
 
   SubnetWindow(const model::SubnetBuilder &builder,
-               const std::vector<size_t> &inputs,
-               const std::vector<size_t> &outputs):
-      SubnetWindow(builder, inputs, outputs, TruthTable{}) {}
+               const InOutMapping &iomapping):
+      SubnetWindow(builder, iomapping, TruthTable{}) {}
 
-  size_t getInNum() const { return inputs.size(); }
-  size_t getOutNum() const { return outputs.size(); }
+  const InOutMapping &getInOutMapping() const { return iomapping; }
 
-  size_t getIn(const size_t i) const { return inputs[i]; }
-  size_t getOut(const size_t i) const { return outputs[i]; }
+  size_t getInNum() const { return iomapping.getInNum(); }
+  size_t getOutNum() const { return iomapping.getOutNum(); }
+
+  size_t getIn(const size_t i) const { return iomapping.getIn(i); }
+  size_t getOut(const size_t i) const { return iomapping.getOut(i); }
 
   bool hasIn(const size_t i) const { return in.find(i) != in.end(); }
   bool hasOut(const size_t i) const { return out.find(i) != out.end(); }
 
-  const std::vector<size_t> &getInputs() const { return inputs; }
-  const std::vector<size_t> &getOutputs() const { return outputs; }
+  const std::vector<size_t> &getInputs() const { return iomapping.inputs; }
+  const std::vector<size_t> &getOutputs() const { return iomapping.outputs; }
 
   const TruthTable &getCare() const { return care; }
   void setCare(const TruthTable &care) { this->care = care; }
@@ -71,14 +72,9 @@ public:
   // FIXME: Deprecated.
   const model::Subnet &getSubnet() const;
 
-  // FIXME: Deprecated.
-  std::unordered_map<size_t, size_t> getInOutMapping(const model::Subnet &subnet) const;
-
 private:
-  /// Ordered inputs.
-  std::vector<size_t> inputs;
-  /// Ordered outputs.
-  std::vector<size_t> outputs;
+  // Input/output iomapping.
+  model::SubnetBuilder::InOutMapping iomapping;
 
   /// Common care specification for all outputs.
   TruthTable care;
@@ -93,7 +89,7 @@ private:
 };
 
 //===----------------------------------------------------------------------===//
-// Subnet Window Walker
+// Subnet window walker
 //===----------------------------------------------------------------------===//
 
 /**

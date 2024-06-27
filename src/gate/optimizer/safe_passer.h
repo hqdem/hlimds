@@ -64,7 +64,7 @@ public:
    */
   void replace(
       const SubnetID rhsID,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const SubnetBuilder::InOutMapping &rhsToLhsMapping,
       const std::function<float(const size_t /* index in subnet */)> *getCellWeight = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
@@ -76,7 +76,7 @@ public:
    */
   void replace(
       const SubnetBuilder &rhsBuilder,
-      std::unordered_map<size_t, size_t> &rhsToLhs,
+      const SubnetBuilder::InOutMapping &rhsToLhsMapping,
       const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
@@ -88,11 +88,11 @@ private:
   /// Checks replacement possibility and saves old cone root next entry.
   void prepareForReplace(
       const size_t rhsOutEntryID,
-      std::unordered_map<size_t, size_t> &rhsToLhs) {
+      const SubnetBuilder::InOutMapping &rhsToLhsMapping) {
     assert(/* Replacing unsafe root entry */
            isNewEntry.size() <= entry || !isNewEntry[entry]);
     assert(/* Current passer entry and rhs root entry differs */
-           rhsToLhs[rhsOutEntryID] == entry);
+           rhsToLhsMapping.getOut(0) == entry);
 
     saveRoot = entry;
     EntryIterator::operator++();

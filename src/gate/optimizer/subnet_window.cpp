@@ -17,7 +17,7 @@
 namespace eda::gate::optimizer {
 
 //===----------------------------------------------------------------------===//
-// Subnet Window
+// Subnet window
 //===----------------------------------------------------------------------===//
 
 SubnetWindow::SubnetWindow(const model::SubnetBuilder &builder,
@@ -30,30 +30,28 @@ SubnetWindow::SubnetWindow(const model::SubnetBuilder &builder,
   assert(!cut.entryIdxs.empty());
 
   // TODO: Avoid copying.
-  inputs.reserve(cut.entryIdxs.size());
+  iomapping.inputs.reserve(cut.entryIdxs.size());
   for (const auto entryID : cut.entryIdxs) {
-    inputs.push_back(entryID);
+    iomapping.inputs.push_back(entryID);
   }
 
-  outputs.push_back(cut.rootEntryIdx);
+  iomapping.outputs.push_back(cut.rootEntryIdx);
 }
 
 SubnetWindow::SubnetWindow(const model::SubnetBuilder &builder,
-                           const std::vector<size_t> &inputs,
-                           const std::vector<size_t> &outputs,
+                           const InOutMapping &iomapping,
                            const TruthTable &care):
-    inputs(inputs),
-    outputs(outputs),
+    iomapping(iomapping),
     care(care),
     builder(builder) {
-  assert(!inputs.empty());
-  assert(!outputs.empty());
+  assert(!iomapping.inputs.empty());
+  assert(!iomapping.outputs.empty());
 
   // TODO: Avoid copying.
-  for (const auto inputID : inputs) {
+  for (const auto inputID : iomapping.inputs) {
     in.insert(inputID);
   }
-  for (const auto outputID : outputs) {
+  for (const auto outputID : iomapping.outputs) {
     out.insert(outputID);
   }
 }
@@ -65,7 +63,7 @@ SubnetWindow::TruthTable SubnetWindow::evaluateTruthTable() const {
   size_t nIn = 0;
 
   // Optimized calculator for windows w/ a small number of inputs.
-  if (inputs.size() <= 6) {
+  if (arity <= 6) {
     walker.run([&nIn, arity](model::SubnetBuilder &builder, size_t i) {
       const auto in = nIn < arity;
       const auto tt = utils::getTruthTable<utils::TT6>(
@@ -73,7 +71,7 @@ SubnetWindow::TruthTable SubnetWindow::evaluateTruthTable() const {
       utils::setTruthTable<utils::TT6>(builder, i, tt);
     });
 
-    const auto tt = utils::getTruthTable<utils::TT6>(builder, outputs[0]);
+    const auto tt = utils::getTruthTable<utils::TT6>(builder, iomapping.getOut(0));
     return utils::convertTruthTable<utils::TT6>(tt, arity);
   }
 
@@ -85,10 +83,10 @@ SubnetWindow::TruthTable SubnetWindow::evaluateTruthTable() const {
     const auto tt = utils::getTruthTable<TruthTable>(
         builder, arity, i, in, nIn++);
     tables.push_back(tt);
-    utils::setTruthTable<TruthTable>(builder, i, tables[tables.size() - 1]);
+    utils::setTruthTable<TruthTable>(builder, i, tables.back());
   });
 
-  const auto tt = utils::getTruthTable<TruthTable>(builder, outputs[0]);
+  const auto tt = utils::getTruthTable<TruthTable>(builder, iomapping.getOut(0));
   return utils::convertTruthTable<TruthTable>(tt, arity);
 }
 
@@ -96,32 +94,16 @@ SubnetWindow::TruthTable SubnetWindow::evaluateTruthTable() const {
 const model::Subnet &SubnetWindow::getSubnet() const {
   // TODO: Support multi-output windows.
   // TODO: Store the result of construction.
-  assert(outputs.size() == 1);
+  assert(iomapping.getOutNum() == 1);
 
   const ConeBuilder coneBuilder(&builder);
-  const auto cone = coneBuilder.getCone(outputs[0], inputs);
+  const auto cone = coneBuilder.getCone(iomapping.getOut(0), iomapping.inputs);
 
   return model::Subnet::get(cone.subnetID);
 }
 
-// FIXME: Deprecated.
-std::unordered_map<size_t, size_t> SubnetWindow::getInOutMapping(
-    const model::Subnet &subnet) const {
-  assert(subnet.getInNum() == inputs.size());
-  assert(subnet.getOutNum() == outputs.size());
-
-  std::unordered_map<size_t, size_t> mapping;
-  for (size_t i = 0; i < inputs.size(); ++i) {
-    mapping[subnet.getInIdx(i)] = inputs[i];
-  }
-  for (size_t i = 0; i < outputs.size(); ++i) {
-    mapping[subnet.getOutIdx(i)] = outputs[i];
-  }
-  return mapping;
-}
-
 //===----------------------------------------------------------------------===//
-// Subnet Window Walker
+// Subnet window walker
 //===----------------------------------------------------------------------===//
 
 void SubnetWindowWalker::run(const Visitor visitor) const {

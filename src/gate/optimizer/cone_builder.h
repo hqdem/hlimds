@@ -27,6 +27,7 @@ public:
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
   using SubnetBuilder = model::SubnetBuilder;
+  using InOutMapping = SubnetBuilder::InOutMapping;
   using Cut = optimizer::CutExtractor::Cut;
 
   using EntryVec = std::vector<size_t>;
@@ -45,32 +46,31 @@ public:
         const SubnetID subnetID,
         const EntryVec &coneEntryToOrig):
       subnetID(subnetID), coneEntryToOrig(coneEntryToOrig),
-      inOutToOrig(getInOutMapping(subnetID, coneEntryToOrig)) {};
+      iomapping(getInOutMapping(subnetID, coneEntryToOrig)) {};
 
   private:
-    inline EntryMap getInOutMapping(
-        const SubnetID &subnetID,
-        const EntryVec &coneEntryToOrig) {
-      EntryMap inOutToOrig;
+    inline InOutMapping getInOutMapping(const SubnetID subnetID,
+                                        const EntryVec &coneEntryToOrig) {
       const auto &subnet = Subnet::get(subnetID);
-      const auto &subnetEntries = subnet.getEntries();
+      EntryVec inputs(subnet.getInNum()), outputs(subnet.getOutNum());
       for (size_t i = 0; i < subnet.getInNum(); ++i) {
-        inOutToOrig[i] = coneEntryToOrig[i];
+        const auto inputID = subnet.getInIdx(i);
+        inputs[i] = coneEntryToOrig[inputID];
       }
-      for (size_t i = 1; i <= subnet.getOutNum(); ++i) {
-        inOutToOrig[subnetEntries.size() - i] =
-            coneEntryToOrig[subnetEntries.size() - 1];
+      for (size_t i = 0; i < subnet.getOutNum(); ++i) {
+        const auto outputID = subnet.getOutIdx(i);
+        outputs[i] = coneEntryToOrig[outputID];
       }
-      return inOutToOrig;
+      return InOutMapping{inputs, outputs};
     }
 
   public:
     // Cone subnet.
     const SubnetID subnetID;
-    // Full mapping from cone to original subnet entries.
+    // Full mapping from the cone entries to the original subnet entries.
     const EntryVec coneEntryToOrig;
-    // Mapping from cone PI's and PO to original subnet entries.
-    const EntryMap inOutToOrig;
+    // Mapping from the cone's PI and PO to the original subnet entries.
+    const InOutMapping iomapping;
   };
 
   ConeBuilder() = delete;

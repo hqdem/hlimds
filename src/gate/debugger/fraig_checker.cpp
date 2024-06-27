@@ -99,7 +99,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
           bool inputsFlag = false;
           for (size_t i = 0; i < coneSubnet1.getInNum(); ++i) {
             map[i] = i;
-             if (cone1.inOutToOrig.at(i) != cone2.inOutToOrig.at(i)) {
+             if (cone1.iomapping.getIn(i) != cone2.iomapping.getIn(i)) {
                inputsFlag = true;
                break;
              }

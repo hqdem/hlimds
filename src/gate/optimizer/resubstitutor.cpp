@@ -72,7 +72,7 @@ static bool makeZeroResubstitution(const SubnetBuilder &builder,
 
   const auto rhsID = rhs.make();
 
-  iter.replace(rhsID, map);
+  iter.replace(rhsID, /* map */SubnetBuilder::InOutMapping{}); // FIXME:
   return true;
 }
 
@@ -239,7 +239,7 @@ static bool makeConstResubstitution(SafePasser &iter,
     map.erase(outOld);
   }
 
-  iter.replace(rhsID, map);
+  iter.replace(rhsID, /* map */ SubnetBuilder::InOutMapping{}); // FIXME:
   return true;
 }
 

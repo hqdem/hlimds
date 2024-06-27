@@ -66,14 +66,14 @@ SafePasser SafePasser::operator--(int) {
 
 void SafePasser::replace(
     const SubnetID rhsID,
-    std::unordered_map<size_t, size_t> &rhsToLhs,
+    const SubnetBuilder::InOutMapping &rhsToLhsMapping,
     const std::function<float(const size_t)> *getCellWeight,
     const std::function<void(const size_t)> *onNewCell,
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {
 
   const auto &rhsEntries = Subnet::get(rhsID).getEntries();
-  prepareForReplace(rhsEntries.size() - 1, rhsToLhs);
+  prepareForReplace(rhsEntries.size() - 1, rhsToLhsMapping);
   auto &_isNewEntry = this->isNewEntry;
   std::function addNewCell = [&_isNewEntry, &onNewCell](const size_t entryID) {
     if (_isNewEntry.size() <= entryID) {
@@ -87,18 +87,18 @@ void SafePasser::replace(
     }
   };
 
-  builderToTransform->replace(rhsID, rhsToLhs, getCellWeight, &addNewCell,
-                              onEqualDepth, onGreaterDepth);
+  builderToTransform->replace(rhsID, rhsToLhsMapping, getCellWeight,
+                              &addNewCell, onEqualDepth, onGreaterDepth);
 }
 
 void SafePasser::replace(
     const SubnetBuilder &rhsBuilder,
-    std::unordered_map<size_t, size_t> &rhsToLhs,
+    const SubnetBuilder::InOutMapping &rhsToLhsMapping,
     const std::function<void(const size_t)> *onNewCell,
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {
 
-  prepareForReplace(*(--rhsBuilder.end()), rhsToLhs);
+  prepareForReplace(*(--rhsBuilder.end()), rhsToLhsMapping);
   auto &_isNewEntry = this->isNewEntry;
   std::function addNewCell = [&_isNewEntry, &onNewCell](const size_t entryID) {
     if (_isNewEntry.size() <= entryID) {
@@ -111,8 +111,8 @@ void SafePasser::replace(
       (*onNewCell)(entryID);
     }
   };
-  builderToTransform->replace(rhsBuilder, rhsToLhs, &addNewCell,
-                              onEqualDepth, onGreaterDepth);
+  builderToTransform->replace(rhsBuilder, rhsToLhsMapping,
+                              &addNewCell, onEqualDepth, onGreaterDepth);
 }
 
 void SafePasser::finalizePass() {

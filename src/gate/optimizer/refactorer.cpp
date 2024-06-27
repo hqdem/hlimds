@@ -40,7 +40,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
   std::vector<size_t> outputs(1);
   outputs[0] = oldConeMap.at(Subnet::get(oldConeID).size() - 1);
 
-  SubnetWindow window(builder, inputs, outputs);
+  SubnetWindow window(builder, SubnetBuilder::InOutMapping{inputs, outputs});
   //---
 
   if (careCutSize > cutSize) {
@@ -55,7 +55,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
   SubnetID newConeID = resynthesizer.resynthesize(window, 2);
 
   // FIXME: Deprecated.
-  auto newConeMap = window.getInOutMapping(Subnet::get(newConeID));
+  auto newConeMap = window.getInOutMapping();
 
   SubnetBuilder newConeBuilder(newConeID);
 

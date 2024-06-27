@@ -73,7 +73,7 @@ public:
   const model::Subnet &getSubnet() const;
 
 private:
-  // Input/output iomapping.
+  // Input/output mapping.
   model::SubnetBuilder::InOutMapping iomapping;
 
   /// Common care specification for all outputs.

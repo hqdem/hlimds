@@ -699,7 +699,7 @@ public:
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(
       const SubnetID rhsID,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
@@ -710,7 +710,7 @@ public:
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(
       const SubnetBuilder &rhsBuilder,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
       const CellActionCallback *onGreaterDepth = nullptr);
@@ -718,14 +718,14 @@ public:
   /// Returns the effect of the replacement with SubnetID rhs.
   Effect evaluateReplace(
       const SubnetID rhsID,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       const CellWeightProvider *weightProvider = nullptr,
       const CellWeightModifier *weightModifier = nullptr) const;
 
   /// Returns the effect of the replacement with SubnetBuilder rhs.
   Effect evaluateReplace(
       const SubnetBuilder &rhsBuilder,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       const CellWeightModifier *weightModifier = nullptr) const;
 
   /// Replaces the given cell w/ the new one. Recursively deletes the cells
@@ -799,7 +799,7 @@ private:
       const RhsContainer &rhsContainer,
       const RhsIterable &rhsIterable,
       const size_t rhsOutEntryID,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
@@ -811,7 +811,7 @@ private:
   Effect evaluateReplace(
       const RhsContainer &rhsContainer,
       const size_t rhsOutEntryID,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       const CellWeightProvider *weightProvider = nullptr,
       const CellWeightModifier *weightModifier = nullptr) const;
 
@@ -820,7 +820,7 @@ private:
   Effect newEntriesEval(
       const RhsContainer &rhsContainer,
       const RhsIterable &rhsIterable,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
       std::unordered_set<size_t> &reusedLhsEntries,
       const CellWeightProvider *weightProvider,
@@ -830,7 +830,7 @@ private:
   /// the number of cells (value of weight) added and new depth of the root.
   Effect newEntriesEval(
       const Subnet &rhs,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       std::unordered_set<size_t> &reusedLhsEntries,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;
@@ -839,7 +839,7 @@ private:
   /// the number of cells (value of weight) added and new depth of the root.
   Effect newEntriesEval(
       const SubnetBuilder &rhsBuilder,
-      const InOutMapping &rhsToLhsMapping,
+      const InOutMapping &iomapping,
       std::unordered_set<size_t> &reusedLhsEntries,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;

@@ -360,14 +360,14 @@ void SubnetBuilder::replace(
 template <typename RhsContainer>
 void fillMapping(const RhsContainer &rhs,
                  const SubnetBuilder::InOutMapping &rhsToLhsMapping,
-                 std::unordered_map<size_t, size_t> &rhsToLhs) {
+                 std::vector<size_t> &rhsToLhs) {
   assert(false && "Specialization is required");
 }
 
 template <>
 void fillMapping<Subnet>(const Subnet &rhs,
                  const SubnetBuilder::InOutMapping &rhsToLhsMapping,
-                 std::unordered_map<size_t, size_t> &rhsToLhs) {
+                 std::vector<size_t> &rhsToLhs) {
   assert(rhs.getInNum() == rhsToLhsMapping.getInNum());
   assert(rhs.getOutNum() == rhsToLhsMapping.getOutNum());
 
@@ -382,7 +382,7 @@ void fillMapping<Subnet>(const Subnet &rhs,
 template <>
 void fillMapping<SubnetBuilder>(const SubnetBuilder &rhs,
                  const SubnetBuilder::InOutMapping &rhsToLhsMapping,
-                 std::unordered_map<size_t, size_t> &rhsToLhs) {
+                 std::vector<size_t> &rhsToLhs) {
   assert(rhs.getInNum() == rhsToLhsMapping.getInNum());
   assert(rhs.getOutNum() == rhsToLhsMapping.getOutNum());
 
@@ -414,17 +414,17 @@ void SubnetBuilder::replace(
 
   assert(rhsContainer.getOutNum() == 1);
 
-  std::unordered_map<size_t, size_t> rhsToLhs; // FIXME:
+  std::vector<size_t> rhsToLhs(rhsContainer.getMaxIdx() + 1);
   fillMapping(rhsContainer, rhsToLhsMapping, rhsToLhs);
 
   auto rootStrashIt = strash.end();
-  const auto lhsRootEntryID = rhsToLhs[rhsOutEntryID]; // FIXME: mapping.getOut(0)
+  const auto lhsRootEntryID = rhsToLhs[rhsOutEntryID];
 
   const auto oldLhsRootDepth = getDepth(lhsRootEntryID);
   const auto &rhsOutLink = rhsContainer.getLink(rhsOutEntryID, 0);
 
   // Delete the root entry from the strash map.
-  if (rhsToLhs[0] != lhsRootEntryID) { // FIXME: mapping.getIn(0)
+  if (rhsToLhs[0] != lhsRootEntryID) {
     destrashEntry(lhsRootEntryID);
   }
 
@@ -605,16 +605,17 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     const RhsContainer &rhsContainer,
     const RhsIterable &rhsIterable,
     const InOutMapping &rhsToLhsMapping,
-    const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
+    const std::function<size_t(RhsIt iter, size_t i)> &getEntryID, // FIXME: Add iterator to Subnet
     std::unordered_set<size_t> &reusedLhsEntries,
     const CellWeightProvider *weightProvider,
     const CellWeightModifier *weightModifier) const {
 
   int addedEntriesN = 0;
   float addedWeight = 0.0;
-  std::unordered_map<size_t, int> virtualDepth;
 
-  std::unordered_map<size_t, size_t> rhsToLhs; // FIXME:
+  std::vector<int> virtualDepth(rhsContainer.getMaxIdx() + 1);
+
+  std::vector<size_t> rhsToLhs(rhsContainer.getMaxIdx() + 1, -1u);
   fillMapping(rhsContainer, rhsToLhsMapping, rhsToLhs);
 
   size_t rhsRootEntryID = invalidID;
@@ -627,9 +628,9 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     rhsRootEntryID = rhsEntryID;
     const Subnet::Cell &rhsCell = rhsContainer.getCell(rhsEntryID);
     if (rhsCell.isIn()) {
-      const size_t lhsEntryID = rhsToLhs.find(rhsEntryID)->second;
+      const auto lhsEntryID = rhsToLhs[rhsEntryID];
       reusedLhsEntries.insert(lhsEntryID);
-      virtualDepth[rhsEntryID] = (int)getDepth(lhsEntryID);
+      virtualDepth[rhsEntryID] = static_cast<int>(getDepth(lhsEntryID));
       continue;
     }
 
@@ -640,10 +641,10 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
       const int rhsLinkDepth = virtualDepth[rhsLinkIdx];
       virtualDepth[rhsEntryID] = std::max(virtualDepth[rhsEntryID],
                                           rhsLinkDepth + 1);
-      if (rhsToLhs.find(rhsLinkIdx) == rhsToLhs.end()) {
+      if (rhsToLhs[rhsLinkIdx] == -1u) {
         isNewElem = true;
       } else {
-        newRhsLinks.push_back(Link(rhsToLhs.find(rhsLinkIdx)->second,
+        newRhsLinks.push_back(Link(rhsToLhs[rhsLinkIdx],
                                    rhsLink.out, rhsLink.inv));
       }
     }
@@ -704,7 +705,7 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
     }
   }
 
-  const int oldRootDepth = (int)getDepth(lhsRootEntryID);
+  const int oldRootDepth = static_cast<int>(getDepth(lhsRootEntryID));
   return Effect{deletedEntriesN, oldRootDepth, deletedWeight};
 }
 
@@ -812,7 +813,7 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
     return status.first;
   }
 
-  size_t idx = (status.first != invalidID) ? status.first : allocEntry();
+  const size_t idx = (status.first != invalidID) ? status.first : allocEntry();
 
   desc[idx].depth = 0;
   desc[idx].session = 0;

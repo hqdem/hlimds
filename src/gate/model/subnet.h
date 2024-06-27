@@ -204,6 +204,8 @@ public:
   size_t getInIdx(const size_t i) const { return i; }
   /// Returns the i-th output index.
   size_t getOutIdx(const size_t i) const { return nEntry - nOut + i; }
+  /// Returns the maximum entry index.
+  size_t getMaxIdx() const { return nEntry - 1; }
 
   /// Returns the i-th cell.
   const Cell &getCell(size_t i) const;
@@ -467,6 +469,9 @@ public:
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
+
+  /// Returns the maximum entry index.
+  size_t getMaxIdx() const { return entries.size() - 1; }
 
   /// Returns the constant reference to the i-th entry.
   const Subnet::Entry &getEntry(size_t i) const {

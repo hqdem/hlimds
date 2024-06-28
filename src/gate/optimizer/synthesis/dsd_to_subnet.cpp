@@ -10,9 +10,9 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-SubnetId DsdSynthesizer::synthesize(const BddWithDdManager &pair,
-                                    const TruthTable &,
-                                    uint16_t maxArity) const {
+SubnetObject DsdSynthesizer::synthesize(const BddWithDdManager &pair,
+                                        const TruthTable &,
+                                        uint16_t maxArity) const {
   DSDNode *dsd;
   DSDManager *dmanager;
 
@@ -44,17 +44,18 @@ SubnetId DsdSynthesizer::synthesize(const BddWithDdManager &pair,
                                                   subnetBuilder,
                                                   inputsList,
                                                   maxArity));
-  SubnetId ret = subnetBuilder.make();
+  SubnetID ret = subnetBuilder.make();
   DSD_Quit(dmanager);
-  return ret;
+
+  return SubnetObject{ret}; // FIXME: make is not required.
 }
 
-SubnetId DsdSynthesizer::synthesize(const TruthTable &table,
-                                    const TruthTable &care,
-                                    uint16_t maxArity) const {
+SubnetObject DsdSynthesizer::synthesize(const TruthTable &table,
+                                        const TruthTable &care,
+                                        uint16_t maxArity) const {
   /* Initial subnet */
   MMSynthesizer mm;
-  const auto &subnet = Subnet::get(mm.synthesize(table, care, maxArity));
+  const auto &subnet = mm.synthesize(table, care, maxArity).object(); // FIXME: make is not required.
 
   /* Subnet to BDD convertion */
   Cudd manager(0, 0);
@@ -86,9 +87,10 @@ SubnetId DsdSynthesizer::synthesize(const TruthTable &table,
                                                   subnetBuilder,
                                                   inputsList,
                                                   maxArity));
-  SubnetId ret = subnetBuilder.make();
+  SubnetID ret = subnetBuilder.make();
   DSD_Quit(dmanager);
-  return ret;
+
+  return SubnetObject{ret}; // FIXME: make is not required.
 }
 
 Link DsdSynthesizer::buildNet(DSDNode *dsd,

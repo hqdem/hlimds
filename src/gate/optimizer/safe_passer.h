@@ -21,8 +21,9 @@ using EntryIterator = eda::gate::model::EntryIterator;
 class SafePasser : public EntryIterator {
 
   using Subnet = eda::gate::model::Subnet;
-  using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID = eda::gate::model::SubnetID;
+  using SubnetBuilder = eda::gate::model::SubnetBuilder;
+  using SubnetObject = eda::gate::model::SubnetObject;
 
 public:
   SafePasser() = delete;
@@ -57,6 +58,17 @@ public:
   SafePasser operator++(int);
   SafePasser &operator--();
   SafePasser operator--(int);
+
+  /**
+   * @brief SubnetBuilder::replace(...) wrapper that allows to maintain next
+   * passer iterations safe.
+   */
+  void replace(
+      const SubnetObject &rhs,
+      const SubnetBuilder::InOutMapping &rhsToLhsMapping,
+      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr, // FIXME: Use type aliases defined in SubnetBuilder.
+      const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
+      const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
 
   /**
    * @brief SubnetBuilder::replace(...) wrapper that allows to maintain next

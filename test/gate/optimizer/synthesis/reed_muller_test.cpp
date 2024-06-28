@@ -18,33 +18,33 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-  using DinTruthTable = kitty::dynamic_truth_table;
-  using Link = model::Subnet::Link;
-  using LinkList = std::vector<Link>;
-  using Polynomial = std::vector<uint64_t>;
-  using Subnet = model::Subnet;
-  using SubnetBuilder = model::SubnetBuilder;
-  using SubnetID = model::SubnetID;
+using DinTruthTable = kitty::dynamic_truth_table;
+using Link = model::Subnet::Link;
+using LinkList = std::vector<Link>;
+using Polynomial = std::vector<uint64_t>;
+using Subnet = model::Subnet;
+using SubnetBuilder = model::SubnetBuilder;
+using SubnetID = model::SubnetID;
 
-  std::string generateRandom(const uint64_t size);
-  void testSubnetToSubnet(const Subnet &s1, const Subnet &s2);
+std::string generateRandom(const uint64_t size);
+void testSubnetToSubnet(const Subnet &s1, const Subnet &s2);
 
-  void optimalEquality(uint64_t len) {
-    std::string s = generateRandom(len);
-    DinTruthTable t(len);
-    ZhegalkinSynthesizer r;
-    kitty::create_from_binary_string(t, s);
-    auto s1 = r.synthesize(t);
-    ReedMuller x1(sumOfTerms), x2(numberOfTerms), x3(longestTerm);
-    
-    auto s2 = x1.synthesize(t);
-    auto s3 = x2.synthesize(t);
-    auto s4 = x3.synthesize(t);
+void optimalEquality(uint64_t len) {
+  std::string s = generateRandom(len);
+  DinTruthTable t(len);
+  ZhegalkinSynthesizer r;
+  kitty::create_from_binary_string(t, s);
+  auto &s1 = r.synthesize(t).object();
+  ReedMuller x1(sumOfTerms), x2(numberOfTerms), x3(longestTerm);
+  
+  auto &s2 = x1.synthesize(t).object();
+  auto &s3 = x2.synthesize(t).object();
+  auto &s4 = x3.synthesize(t).object();
 
-    testSubnetToSubnet(Subnet::get(s1), Subnet::get(s2));
-    testSubnetToSubnet(Subnet::get(s1), Subnet::get(s3));
-    testSubnetToSubnet(Subnet::get(s1), Subnet::get(s4));
-  }
+  testSubnetToSubnet(s1, s2);
+  testSubnetToSubnet(s1, s3);
+  testSubnetToSubnet(s1, s4);
+}
 
 // check if TTs synthesized by different methods and chosen using 
 // different metrics are equal

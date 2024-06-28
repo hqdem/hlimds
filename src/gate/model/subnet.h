@@ -260,6 +260,7 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet);
 //===----------------------------------------------------------------------===//
 
 class SubnetBuilder;
+class SubnetObject;
 
 /// SubnetBuilder entries bidirectional iterator.
 class EntryIterator {
@@ -698,6 +699,16 @@ public:
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
   /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
   void replace(
+      const SubnetObject &rhs,
+      const InOutMapping &iomapping,
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onEqualDepth = nullptr,
+      const CellActionCallback *onGreaterDepth = nullptr);
+
+  /// Replaces the given single-output fragment w/ the given subnet (rhs).
+  /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
+  /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
+  void replace(
       const SubnetID rhsID,
       const InOutMapping &iomapping,
       const CellWeightProvider *weightProvider = nullptr,
@@ -714,6 +725,12 @@ public:
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
       const CellActionCallback *onGreaterDepth = nullptr);
+
+  /// Returns the effect of the replacement with rhs.
+  Effect evaluateReplace(
+      const SubnetObject &rhs,
+      const InOutMapping &iomapping,
+      const CellWeightModifier *weightModifier = nullptr) const;
 
   /// Returns the effect of the replacement with SubnetID rhs.
   Effect evaluateReplace(
@@ -1039,14 +1056,13 @@ public:
     return *subnetBuilder;
   }
 
-  SubnetBuilder &builder(bool rebuild = false) {
-    assert(subnetID == OBJ_NULL_ID || rebuild);
-
+  SubnetBuilder &builder() {
     if (!subnetBuilder) {
-      subnetBuilder = new SubnetBuilder();
+      subnetBuilder = (subnetID != OBJ_NULL_ID)
+          ? new SubnetBuilder(subnetID)
+          : new SubnetBuilder();
     }
 
-    subnetID = OBJ_NULL_ID;
     return *subnetBuilder;
   }
 

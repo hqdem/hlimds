@@ -16,17 +16,17 @@ namespace eda::gate::optimizer::synthesis {
 /// @cond ALIASES
 using CoveragePair = BiDecSynthesizer::CoveragePair;
 using Link         = BiDecSynthesizer::Link;
-using SubnetID     = BiDecSynthesizer::SubnetID;
+using SubnetObject = BiDecSynthesizer::SubnetObject;
 /// @endcond
 
-SubnetID BiDecSynthesizer::run(const TruthTable &func, const TruthTable &care,
-                               uint16_t maxArity) {
+SubnetObject BiDecSynthesizer::run(const TruthTable &func, const TruthTable &care,
+                                   uint16_t maxArity) {
   SubnetBuilder subnetBuilder;
   LinkList inputs = subnetBuilder.addInputs(func.num_vars());
   TernaryBiClique initBiClique(func,
       care.num_vars() ? care : utils::generateConstTT(func.num_vars()));
   subnetBuilder.addOutput(decompose(initBiClique, subnetBuilder, maxArity));
-  return subnetBuilder.make();
+  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
 }
 
 Link BiDecSynthesizer::decompose(TernaryBiClique &initBiClique,

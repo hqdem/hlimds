@@ -26,9 +26,9 @@ namespace eda::gate::optimizer {
 class Rewriter final : public SubnetInPlaceTransformer {
 public:
   using Subnet = eda::gate::model::Subnet;
-  using SubnetID = eda::gate::model::SubnetID;
-  using LinkList = Subnet::LinkList;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
+  using SubnetObject = eda::gate::model::SubnetObject;
+  using LinkList = Subnet::LinkList;
   using Effect = SubnetBuilder::Effect;
   using SafePasser = eda::gate::optimizer::SafePasser;
   using CutExtractor = eda::gate::optimizer::CutExtractor;

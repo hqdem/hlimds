@@ -18,26 +18,27 @@ using Subnet = model::Subnet;
 using LinkList = Subnet::LinkList;
 using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
+using SubnetObject = model::SubnetObject;
 using Effect = SubnetBuilder::Effect;
-using TruthTable = kitty::dynamic_truth_table;
+using TruthTable = utils::TruthTable;
 
 class EqualResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetWindow &window,
-                        uint16_t) const override {
+  SubnetObject resynthesize(const SubnetWindow &window,
+                            uint16_t) const override {
     const Subnet &oldSubnet = window.getSubnet();
     SubnetBuilder newSubnetBuilder;
     const auto &inLinks = newSubnetBuilder.addInputs(oldSubnet.getInNum());
     const auto &outLinks = newSubnetBuilder.addSubnet(oldSubnet, inLinks);
     newSubnetBuilder.addOutputs(outLinks);
-    return newSubnetBuilder.make();
+    return SubnetObject{newSubnetBuilder.make()};
   }
 };
 
 class AddBufsResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetWindow &window,
-                        uint16_t) const override {
+  SubnetObject resynthesize(const SubnetWindow &window,
+                            uint16_t) const override {
     const Subnet &oldSubnet = window.getSubnet();
     const auto &entries = oldSubnet.getEntries();
     SubnetBuilder newSubnetBuilder;
@@ -65,14 +66,14 @@ public:
       linkMapping[i] = newSubnetLinks.size() - 1;
       i += cell.more;
     }
-    return newSubnetBuilder.make();
+    return SubnetObject{newSubnetBuilder.make()};
   }
 };
 
 class DelBufsResynthesizer : public ResynthesizerBase {
 public:
-  SubnetID resynthesize(const SubnetWindow &window,
-                        uint16_t) const override {
+  SubnetObject resynthesize(const SubnetWindow &window,
+                            uint16_t) const override {
     const Subnet &oldSubnet = window.getSubnet();
     const auto &entries = oldSubnet.getEntries();
     SubnetBuilder newSubnetBuilder;
@@ -100,7 +101,7 @@ public:
       linkMapping[i] = newSubnetLinks.size() - 1;
       i += cell.more;
     }
-    return newSubnetBuilder.make();
+    return SubnetObject{newSubnetBuilder.make()};
   }
 };
 

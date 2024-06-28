@@ -14,17 +14,17 @@
 namespace eda::gate::optimizer::synthesis {
 
 /// @cond ALIASES
-using Link     = AlgebraicFactor::Link;
-using SubnetID = AlgebraicFactor::SubnetID;
+using Link         = AlgebraicFactor::Link;
+using SubnetObject = AlgebraicFactor::SubnetObject;
 /// @endcond
 
-SubnetID AlgebraicFactor::getSubnet(const SOP &func, size_t funcSize,
-                                    uint16_t maxArity, bool inv) const {
+SubnetObject AlgebraicFactor::getSubnet(const SOP &func, size_t funcSize,
+                                        uint16_t maxArity, bool inv) const {
   SubnetBuilder subnetBuilder;
   LinkList inputs = subnetBuilder.addInputs(funcSize);
   Link output = getFactoring(func, inputs, subnetBuilder, maxArity);
   subnetBuilder.addOutput(inv ? ~output : output);
-  return subnetBuilder.make();
+  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
 }
 
 Link AlgebraicFactor::getFactoring(const SOP &func, const LinkList &inputs,

@@ -52,12 +52,8 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
     window.setCare(model::computeCare(careSubnet));
   }
 
-  SubnetID newConeID = resynthesizer.resynthesize(window, 2);
-
-  // FIXME: Deprecated.
-  auto newConeMap = window.getInOutMapping();
-
-  SubnetBuilder newConeBuilder(newConeID);
+  auto newCone = resynthesizer.resynthesize(window, 2);
+  SubnetBuilder &newConeBuilder = newCone.builder();
 
   if (weightCalculator) {
     std::vector<float> weights;
@@ -68,10 +64,12 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
     (*weightCalculator)(newConeBuilder, weights);
   }
 
+  auto newConeMap = window.getInOutMapping();
+
   auto effect
-      = builder.evaluateReplace(newConeBuilder, newConeMap, weightModifier);
+      = builder.evaluateReplace(newCone, newConeMap, weightModifier);
   if ((*replacePredicate)(effect)) {
-    iter.replace(newConeBuilder, newConeMap);
+    iter.replace(newCone, newConeMap);
   }
 }
 

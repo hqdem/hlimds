@@ -9,8 +9,7 @@
 #pragma once
 
 #include "gate/model/subnet.h"
-
-#include <kitty/dynamic_truth_table.hpp>
+#include "util/truth_table.h"
 
 #include <cassert>
 #include <cstdint>
@@ -24,7 +23,6 @@ template<typename IR>
 class Synthesizer {
 public:
   using FunctionIR = IR;
-  using TruthTable = kitty::dynamic_truth_table;
   
   Synthesizer() = default;
   virtual ~Synthesizer() = default;
@@ -33,23 +31,23 @@ public:
    * @brief Synthesizes a subnet for the given IR and care specification.
    * @return The identifier of the newly constructed subnet or OBJ_NULL_ID.
    */
-  virtual model::SubnetID synthesize(
+  virtual model::SubnetObject synthesize(
       const IR &ir,
-      const TruthTable &care,
+      const utils::TruthTable &care,
       const uint16_t maxArity = -1) const = 0;
 
   /**
    * @brief Synthesizes a subnet for the given IR.
    * @return The identifier of the newly constructed subnet or OBJ_NULL_ID.
    */
-  model::SubnetID synthesize(
+  model::SubnetObject synthesize(
       const IR &ir,
       const uint16_t maxArity = -1) const {
-    return synthesize(ir, TruthTable{}, maxArity);
+    return synthesize(ir, utils::TruthTable{}, maxArity);
   }  
 };
 
 /// Truth-table-based synthesizer.
-using TruthTableSynthesizer = Synthesizer<kitty::dynamic_truth_table>;
+using TruthTableSynthesizer = Synthesizer<utils::TruthTable>;
 
 } // namespace eda::gate::optimizer

@@ -22,8 +22,8 @@
 #include <unordered_set>
 #include <vector>
 
-extern unsigned short s_RwrPracticalClasses[];
-extern unsigned short s_RwtAigSubgraphs[];
+// Part of ABC implementation.
+#include "abc/rwrUtil.c"
 
 namespace eda::gate::optimizer {
 
@@ -32,8 +32,6 @@ namespace eda::gate::optimizer {
 //===----------------------------------------------------------------------===//
 
 struct Database final {
-  using TruthTable = AbcNpn4Synthesizer::TruthTable;
-
   using I = size_t;
   using N = uint32_t;
   using P = std::vector<uint8_t>;
@@ -87,16 +85,16 @@ struct Database final {
     Node():
         table(k), symbol(model::ZERO) {}
 
-    Node(const TruthTable &table, model::CellSymbol symbol):
+    Node(const utils::TruthTable &table, model::CellSymbol symbol):
         table(table), symbol(symbol) {}
 
-    Node(const TruthTable &table,
+    Node(const utils::TruthTable &table,
          model::CellSymbol symbol,
          model::Subnet::Link link0,
          model::Subnet::Link link1):
         table(table), symbol(symbol), link{link0, link1} {}
 
-    const TruthTable table;
+    const utils::TruthTable table;
     const model::CellSymbol symbol;
     const model::Subnet::Link link[2];
   };
@@ -114,7 +112,7 @@ struct Database final {
   Database();
 
   /// Returns the subnetID for the given table.
-  model::SubnetID find(const TruthTable &tt) const;
+  model::SubnetID find(const utils::TruthTable &tt) const;
 
   /// Stores precomputed AIGs for practical NPN classes.
   std::vector<Node> aig;
@@ -126,10 +124,10 @@ Database::Database() {
   static constexpr auto npn4Num = 222;
 
   aig.emplace_back();
-  aig.emplace_back(kitty::nth_var<TruthTable>(k, 0), model::IN);
-  aig.emplace_back(kitty::nth_var<TruthTable>(k, 1), model::IN);
-  aig.emplace_back(kitty::nth_var<TruthTable>(k, 2), model::IN);
-  aig.emplace_back(kitty::nth_var<TruthTable>(k, 3), model::IN);
+  aig.emplace_back(kitty::nth_var<utils::TruthTable>(k, 0), model::IN);
+  aig.emplace_back(kitty::nth_var<utils::TruthTable>(k, 1), model::IN);
+  aig.emplace_back(kitty::nth_var<utils::TruthTable>(k, 2), model::IN);
+  aig.emplace_back(kitty::nth_var<utils::TruthTable>(k, 3), model::IN);
 
   // Reconstruct the ABC forest.
   for (size_t i = 0;; ++i) {
@@ -187,8 +185,9 @@ Database::Database() {
   }
 }
 
-model::SubnetID Database::find(const TruthTable &tt) const {
-  const TruthTable ttk = tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
+model::SubnetID Database::find(const utils::TruthTable &tt) const {
+  const utils::TruthTable ttk =
+      tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
 
   const auto npnCanon = kitty::exact_npn_canonization(ttk);
   const auto npnTable = static_cast<uint16_t>(*std::get<0>(npnCanon).begin());
@@ -278,9 +277,10 @@ static Database database;
   static uint32_t count[1 << (1 << Database::k)]{0};
 #endif // NPN4_USAGE_STATS
 
-model::SubnetID AbcNpn4Synthesizer::synthesize(const TruthTable &tt,
-                                               const TruthTable &,
-                                               const uint16_t maxArity) const {
+model::SubnetObject AbcNpn4Synthesizer::synthesize(
+    const utils::TruthTable &tt,
+    const utils::TruthTable &,
+    const uint16_t maxArity) const {
 
   static std::vector<model::SubnetID> cache[k + 1] {
       std::vector<model::SubnetID>(1 << (1 << 0)),
@@ -291,7 +291,8 @@ model::SubnetID AbcNpn4Synthesizer::synthesize(const TruthTable &tt,
   };
 
 #ifdef NPN4_USAGE_STATS
-  const TruthTable ttk = tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
+  const utils::TruthTable
+      ttk = tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
 
   const auto npnCanon = kitty::exact_npn_canonization(ttk);
   const auto npnTable = static_cast<uint16_t>(*std::get<0>(npnCanon).begin());
@@ -302,15 +303,15 @@ model::SubnetID AbcNpn4Synthesizer::synthesize(const TruthTable &tt,
   const auto n = tt.num_vars();
 
   if (n > k) {
-    return model::OBJ_NULL_ID;
+    return model::SubnetObject{};
   }
 
   const auto index = static_cast<uint16_t>(*tt.begin());
-  if (cache[n][index] != model::OBJ_NULL_ID) {
-    return cache[n][index];
+  if (cache[n][index] == model::OBJ_NULL_ID) {
+    cache[n][index] = database.find(tt);
   }
 
-  return (cache[n][index] = database.find(tt));
+  return model::SubnetObject{cache[n][index]};
 }
 
 #ifdef NPN4_USAGE_STATS

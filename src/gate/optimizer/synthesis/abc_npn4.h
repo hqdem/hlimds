@@ -26,14 +26,13 @@ class AbcNpn4Synthesizer final : public TruthTableSynthesizer,
   friend class util::Singleton<AbcNpn4Synthesizer>;
 
 public:
-  using TruthTable = FunctionIR;
   static constexpr auto k = 4;
 
   using Synthesizer::synthesize;
 
-  model::SubnetID synthesize(
-      const TruthTable &tt,
-      const TruthTable &,
+  model::SubnetObject synthesize(
+      const utils::TruthTable &tt,
+      const utils::TruthTable &,
       const uint16_t maxArity = -1) const override;
 
 #ifdef NPN4_USAGE_STATS

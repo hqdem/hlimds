@@ -33,22 +33,21 @@ void Rewriter::rewriteOnNode(
   const size_t entryID = *iter;
   const auto &cuts = cutExtractor.getCuts(entryID);
   float bestMetricValue = std::numeric_limits<float>::lowest();
-  SubnetID bestRhsID = 0;
-  SubnetBuilder::InOutMapping bestRhsToLhs; // FIXME: Avoid copying.
+  SubnetObject bestRhs{};
+  SubnetBuilder::InOutMapping bestMap;
 
   for (const auto &cut : cuts) {
     const SubnetWindow window(builder, cut);
-    const SubnetID rhsID = resynthesizer.resynthesize(window);
-    if (rhsID == model::OBJ_NULL_ID) {
+    SubnetObject rhs = resynthesizer.resynthesize(window);
+    if (rhs.isNull()) {
       continue;
     }
-    //const Subnet &rhs = Subnet::get(rhsID); // FIXME: Remove.
     const auto rhsToLhs = window.getInOutMapping();
-    float curMetricValue = cost(builder.evaluateReplace(rhsID, rhsToLhs));
+    float curMetricValue = cost(builder.evaluateReplace(rhs, rhsToLhs));
     if (curMetricValue - bestMetricValue > metricEps) {
       bestMetricValue = curMetricValue;
-      bestRhsID = rhsID;
-      bestRhsToLhs = rhsToLhs;
+      bestRhs = std::move(rhs);
+      bestMap = rhsToLhs;
     }
   }
   std::function cutRecompute = [&cutExtractor](const size_t entryID) {
@@ -56,8 +55,7 @@ void Rewriter::rewriteOnNode(
   };
   if (bestMetricValue > metricEps ||
       (zero_cost && std::fabs(bestMetricValue) <= metricEps)) {
-    iter.replace(bestRhsID, bestRhsToLhs, nullptr, &cutRecompute, &cutRecompute,
-                 &cutRecompute);
+    iter.replace(bestRhs, bestMap, &cutRecompute, &cutRecompute, &cutRecompute);
   }
 }
 

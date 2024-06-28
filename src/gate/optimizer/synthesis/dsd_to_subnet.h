@@ -38,8 +38,9 @@ namespace eda::gate::optimizer::synthesis {
 
 using CellSymbol = eda::gate::model::CellSymbol;
 using Subnet = eda::gate::model::Subnet;
+using SubnetID = eda::gate::model::SubnetID;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
-using SubnetId = eda::gate::model::SubnetID;
+using SubnetObject = eda::gate::model::SubnetObject;
 using LinkList = Subnet::LinkList;
 using Link = Subnet::Link;
 using SubnetToBdd = gate::model::utils::SubnetToBdd;
@@ -64,7 +65,7 @@ class DsdSynthesizer : public Synthesizer<BddWithDdManager>,
 
 public:
 
-  using TruthTable = TruthTableSynthesizer::TruthTable;
+  using TruthTable = utils::TruthTable;
 
   //===--------------------------------------------------------------------===//
   // Constructors/Destructors
@@ -81,10 +82,10 @@ public:
   using TruthTableSynthesizer::synthesize;
 
   /// Synthesize.
-  SubnetId synthesize(const BddWithDdManager &pair, const TruthTable &,
-                      uint16_t maxArity = -1) const override;
-  SubnetId synthesize(const TruthTable &table, const TruthTable &care,
-                      uint16_t maxArity = -1) const override;
+  SubnetObject synthesize(const BddWithDdManager &pair, const TruthTable &,
+                          uint16_t maxArity = -1) const override;
+  SubnetObject synthesize(const TruthTable &table, const TruthTable &care,
+                          uint16_t maxArity = -1) const override;
 
 private:
 

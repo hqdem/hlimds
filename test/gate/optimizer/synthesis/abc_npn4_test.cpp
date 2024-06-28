@@ -20,13 +20,13 @@
 using Synthesizer = eda::gate::optimizer::AbcNpn4Synthesizer;
 
 inline void testHexString(uint16_t k, const std::string &hex) {
-  Synthesizer::TruthTable func(k);
+  eda::utils::TruthTable func(k);
   kitty::create_from_hex_string(func, hex);
 
-  const auto subnetID = Synthesizer::get().synthesize(func);
+  const auto result = Synthesizer::get().synthesize(func);
 
-  if (subnetID != eda::gate::model::OBJ_NULL_ID) {
-    const auto &subnet = eda::gate::model::Subnet::get(subnetID);
+  if (!result.isNull()) {
+    const auto &subnet = result.object();
 
 #ifdef UTOPIA_DEBUG
     std::cout << subnet << std::endl;
@@ -225,7 +225,7 @@ TEST(AbcNpn4Test, AllNpn4Test) {
 
     const auto hex = stream.str();
 
-    Synthesizer::TruthTable func(k);
+    eda::utils::TruthTable func(k);
     kitty::create_from_hex_string(func, hex);
 
     const auto npnCanon = kitty::exact_npn_canonization(func);
@@ -236,7 +236,7 @@ TEST(AbcNpn4Test, AllNpn4Test) {
     }
     covered[npnTable] = true;
 
-    const auto subnetID = Synthesizer::get().synthesize(func);
+    const auto subnetID = Synthesizer::get().synthesize(func).id();
 
 #ifdef UTOPIA_DEBUG
     std::cout << std::setfill('0') << std::setw(w)

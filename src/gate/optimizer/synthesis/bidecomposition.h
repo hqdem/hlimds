@@ -36,15 +36,16 @@ public:
   using LinkList      = model::Subnet::LinkList;
   using Subnet        = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
-  using SubnetID      = model::SubnetID;
+  using SubnetObject  = model::SubnetObject;
 
   using Synthesizer::synthesize;
 
-  /// Synthesizes the Subnet.
-  SubnetID synthesize(const TruthTable &func, const TruthTable &care,
-                      uint16_t maxArity = -1) const override {
+  /// Synthesizes a subnet.
+  SubnetObject synthesize(const TruthTable &func, const TruthTable &care,
+                          uint16_t maxArity = -1) const override {
     if (bool value; utils::isConst(func, value)) {
-      return SubnetBuilder::makeConst(func.num_vars(), value);
+      const auto subnetID = SubnetBuilder::makeConst(func.num_vars(), value);
+      return SubnetObject{subnetID};
     }
 
     return run(func, care, maxArity);
@@ -52,8 +53,8 @@ public:
 
 private:
 
-  static SubnetID run(const TruthTable &func, const TruthTable &care,
-                      uint16_t maxArity);
+  static SubnetObject run(const TruthTable &func, const TruthTable &care,
+                          uint16_t maxArity);
 
   static Link decompose(TernaryBiClique &initBiClique,
                         SubnetBuilder &subnetBuilder, uint16_t maxArity = -1);

@@ -27,8 +27,8 @@ void checkDnfCorrectness(BDD &bdd, Cudd &cudd) {
   auto first = dsd.synthesize(tt);
   auto second = dsd.synthesize({bdd.getNode(), cudd.getManager()});
 
-  const auto &s1 = Subnet::get(first);
-  const auto &s2 = Subnet::get(second);
+  const auto &s1 = first.object();
+  const auto &s2 = second.object();
   EXPECT_TRUE(evaluate(s1) == evaluate(s2));
 }
 

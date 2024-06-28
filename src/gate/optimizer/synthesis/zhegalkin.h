@@ -2,17 +2,16 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
+
 #pragma once
 
 #include "gate/model/celltype.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/arith.h"
-
-#include "kitty/kitty.hpp"
 
 #include <iostream>
 #include <vector>
@@ -22,19 +21,22 @@ namespace eda::gate::optimizer::synthesis {
 using Link = model::Subnet::Link;
 using LinkList = std::vector<Link>;
 using Polynomial = std::vector<uint64_t>;
-using SubnetID = model::SubnetID;
+using SubnetObject = model::SubnetObject;
 using Polarization = std::vector<bool>;
+using TruthTable = utils::TruthTable;
 
 /**
- * Function that creates SubnetID by a given Polynomial and its
+ * Function that creates SubnetObject by a given Polynomial and its
  * Polarization with an arity equal to "maxArity".
  */
-SubnetID createScheme(Polynomial &resultFunction, Polarization &polarization, 
-                      uint64_t maxArity, uint64_t argNum);
+SubnetObject createScheme(Polynomial &resultFunction,
+                          Polarization &polarization, 
+                          uint64_t maxArity,
+                          uint64_t argNum);
 
 /**
  * Class Zhegalkin is created from Synthesizer.
- * It creates a logical graph and returns it as a SubnetID.
+ * It creates a logical graph and returns it as a SubnetObject.
  * 
  * The implementation of the algorithm is based on the following article:
  * Harking B. Efficient algorithm for canonical Reed-Muller expansions 
@@ -59,8 +61,8 @@ public:
    * 
    * The maxArity param must be greater than 2.
    */
-  SubnetID synthesize(const TruthTable &func, const TruthTable &,
-                      uint16_t maxArity = -1) const override;
+  SubnetObject synthesize(const TruthTable &func, const TruthTable &,
+                          uint16_t maxArity = -1) const override;
 
   /**
    * Creates a function, represented by a given truth table. 

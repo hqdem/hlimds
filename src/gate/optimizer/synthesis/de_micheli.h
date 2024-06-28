@@ -52,23 +52,22 @@ class DMSynthesizer : public TruthTableSynthesizer {
 
 public:
 
-  using Builder    = eda::gate::model::SubnetBuilder;
-  using CellSymbol = eda::gate::model::CellSymbol;
-  using Link       = eda::gate::model::Subnet::Link;
-  using LinkList   = eda::gate::model::Subnet::LinkList;
-  using SubnetID   = eda::gate::model::SubnetID;
+  using Builder      = eda::gate::model::SubnetBuilder;
+  using CellSymbol   = eda::gate::model::CellSymbol;
+  using Link         = eda::gate::model::Subnet::Link;
+  using LinkList     = eda::gate::model::Subnet::LinkList;
+  using SubnetObject = eda::gate::model::SubnetObject;
+  using TruthTable   = utils::TruthTable;
 
   static constexpr size_t BOUND = 2000;
   static constexpr size_t OUTID = 4611686018427387903;
 
-  /// Empty constructor.
   DMSynthesizer() {}
 
   using Synthesizer::synthesize;
 
-  /// Synthesize function.
-  SubnetID synthesize(const TruthTable &func, const TruthTable &care,
-                      uint16_t maxArity = -1) const override;
+  SubnetObject synthesize(const TruthTable &func, const TruthTable &care,
+                          uint16_t maxArity = -1) const override;
 
 private:
 
@@ -145,9 +144,9 @@ private:
                      size_t secondArg,
                      const TruthTable &care) const;
 
-  SubnetID buildSubnet(const std::vector<MajNode> &tree,
-                       const std::vector<TruthTable> &divisors,
-                       bool simplest = false) const;
+  SubnetObject buildSubnet(const std::vector<MajNode> &tree,
+                           const std::vector<TruthTable> &divisors,
+                           bool simplest = false) const;
 
   Link createLink(int64_t arg,
                   uint32_t nVars,

@@ -11,8 +11,7 @@
 #include "gate/model/subnet.h"
 #include "gate/optimizer/subnet_window.h"
 #include "gate/optimizer/synthesizer.h"
-
-#include <kitty/kitty.hpp>
+#include "util/truth_table.h"
 
 #include <cassert>
 #include <cstdint>
@@ -31,8 +30,8 @@ public:
    * @brief Resynthesizes the subnet window.
    * @return The identifier of the newly constructed subnet or OBJ_NULL_ID.
    */
-  virtual model::SubnetID resynthesize(const SubnetWindow &window,
-                                       const uint16_t maxArity = -1) const = 0;
+  virtual model::SubnetObject resynthesize(
+      const SubnetWindow &window, const uint16_t maxArity = -1) const = 0;
 };
 
 /**
@@ -50,8 +49,8 @@ public:
   Resynthesizer(const Synthesizer<IR> &synthesizer):
       synthesizer(synthesizer) {}
 
-  model::SubnetID resynthesize(const SubnetWindow &window,
-                               const uint16_t maxArity = -1) const override {
+  model::SubnetObject resynthesize(
+      const SubnetWindow &window, const uint16_t maxArity = -1) const override {
     const auto ir = construct<IR>(window);
     return synthesizer.synthesize(ir, window.getCare(), maxArity);
   }
@@ -61,7 +60,7 @@ private:
 };
 
 template<>
-inline kitty::dynamic_truth_table construct<kitty::dynamic_truth_table>(
+inline utils::TruthTable construct<utils::TruthTable>(
     const SubnetWindow &window) {
   return window.evaluateTruthTable();
 }

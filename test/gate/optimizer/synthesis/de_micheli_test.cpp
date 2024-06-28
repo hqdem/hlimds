@@ -20,7 +20,7 @@ using TruthTable    = kitty::dynamic_truth_table;
 
 void runDeMicheliTest(const TruthTable &func, size_t bound = -1) {
   DMSynthesizer alg;
-  const auto &subnetId = alg.synthesize(func);
+  const auto &subnetId = alg.synthesize(func).id();
 
   bool invalid = subnetId == eda::gate::model::OBJ_NULL_ID;
   if (invalid) {

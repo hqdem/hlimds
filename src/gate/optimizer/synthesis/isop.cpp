@@ -11,8 +11,6 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-using TruthTable = MMSynthesizer::TruthTable;
-
 Link synthFromSOP(const SOP &sop, const LinkList &inputs,
                   SubnetBuilder &subnetBuilder, uint16_t maxArity) {
   if (sop.size() == 1) {
@@ -58,9 +56,9 @@ static std::pair<TruthTable, bool> handleCare(
   return {inv ? inverseFuncWithCare : funcWithCare, inv};
 }
 
-model::SubnetID MMSynthesizer::synthesize(const TruthTable &func,
-                                          const TruthTable &care,
-                                          uint16_t maxArity) const {                              
+model::SubnetObject MMSynthesizer::synthesize(const TruthTable &func,
+                                              const TruthTable &care,
+                                              uint16_t maxArity) const {
   SubnetBuilder subnetBuilder;
   LinkList ins = subnetBuilder.addInputs(func.num_vars());
 
@@ -72,16 +70,19 @@ model::SubnetID MMSynthesizer::synthesize(const TruthTable &func,
 
   Link output{synthFromSOP(kitty::isop(tt), ins, subnetBuilder, maxArity)};                               
   subnetBuilder.addOutput(inv ? ~output : output);
-  return subnetBuilder.make();
+
+  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
 }
 
-model::SubnetID MMFactorSynthesizer::synthesize(const TruthTable &func,
-                                                const TruthTable &care,
-                                                uint16_t maxArity) const {
+model::SubnetObject MMFactorSynthesizer::synthesize(const TruthTable &func,
+                                                    const TruthTable &care,
+                                                    uint16_t maxArity) const {
   const auto [tt, inv] = handleCare(func, care);
 
   if (bool value; utils::isConst(tt, value)) {
-    return model::SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
+    const auto subnetID =
+        model::SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
+    return SubnetObject{subnetID};
   }
 
   AlgebraicFactor factor;

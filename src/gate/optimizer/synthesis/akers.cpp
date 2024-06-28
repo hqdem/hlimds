@@ -9,6 +9,8 @@
 #include "gate/optimizer/synthesis/akers.h"
 #include "util/kitty_utils.h"
 
+#include <kitty/constructors.hpp>
+
 namespace eda::gate::optimizer::synthesis {
 
 //===----------------------------------------------------------------------===//
@@ -20,6 +22,7 @@ using ArgumentsSet = AkersSynthesizer::ArgumentsSet;
 using Link         = eda::gate::model::Subnet::Link;
 using Subnet       = eda::gate::model::Subnet;
 using SubnetID     = eda::gate::model::SubnetID;
+using SubnetObject = eda::gate::model::SubnetObject;
 
 //===----------------------------------------------------------------------===//
 // Additional structs
@@ -63,9 +66,9 @@ struct Candidate {
 // Synthesize Methods
 //===----------------------------------------------------------------------===//
 
-SubnetID AkersSynthesizer::synthesize(const TruthTable &func,
-                                      const TruthTable &care,
-                                      uint16_t arity) const {
+SubnetObject AkersSynthesizer::synthesize(const TruthTable &func,
+                                          const TruthTable &care,
+                                          uint16_t arity) const {
   /// TODO: Wrong argument processing is needed.
   assert(arity > 2 && "Arity of MAJ gate should be >= 3!");
   return run(func,
@@ -76,8 +79,8 @@ SubnetID AkersSynthesizer::synthesize(const TruthTable &func,
 // Internal Methods
 //===----------------------------------------------------------------------===//
 
-SubnetID AkersSynthesizer::run(const TruthTable &func,
-                               const TruthTable &care) const {
+SubnetObject AkersSynthesizer::run(const TruthTable &func,
+                                   const TruthTable &care) const {
   // Initialize the unitized table.
   UnitizedTable table;
   table.initialize(func, care);
@@ -141,7 +144,8 @@ SubnetID AkersSynthesizer::run(const TruthTable &func,
   }
   const Link link(buildVars.idx.back(), inv);
   buildVars.builder.addOutput(link);
-  return buildVars.builder.make();
+
+  return SubnetObject{buildVars.builder.make()}; // FIXME: make is not required.
 }
 
 void AkersSynthesizer::addMajGate(UnitizedTable &table, BuildVars &buildVars,

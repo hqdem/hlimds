@@ -7,8 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/synthesis/cascade.h"
-
-#include "kitty/kitty.hpp"
+#include "util/truth_table.h"
 
 #include <cstring>
 #include <memory>
@@ -16,25 +15,11 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-//===----------------------------------------------------------------------===//
-// Types
-//===----------------------------------------------------------------------===//
-
 using CNF = CascadeSynthesizer::CNF;
 using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
-using SubnetID = model::SubnetID;
-using TruthTable = kitty::dynamic_truth_table;
-
-//===----------------------------------------------------------------------===//
-// Constructors/Destructors
-//===----------------------------------------------------------------------===//
-
-CascadeSynthesizer::CascadeSynthesizer() {}
-
-//===----------------------------------------------------------------------===//
-// Internal Methods
-//===----------------------------------------------------------------------===//
+using SubnetObject = model::SubnetObject;
+using TruthTable = utils::TruthTable;
 
 void CascadeSynthesizer::initialize(
     CNF &output, int times, int num1, int num2, int num3) const {
@@ -203,10 +188,6 @@ CNF CascadeSynthesizer::normalForm(const TruthTable &table) const {
   return form;
 }
 
-//===--------------------------------------------------------------------===//
-// Main Methods
-//===--------------------------------------------------------------------===//
-
 CNF CascadeSynthesizer::getFunction(
     const TruthTable &table, CNF &form, std::vector<int> &values) const {
 
@@ -256,9 +237,9 @@ CNF CascadeSynthesizer::getFunction(
   return output;
 }
 
-SubnetID CascadeSynthesizer::synthesize(const TruthTable &func,
-                                        const TruthTable &,
-                                        uint16_t maxArity) const {
+SubnetObject CascadeSynthesizer::synthesize(const TruthTable &func,
+                                            const TruthTable &,
+                                            uint16_t maxArity) const {
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
   const int undefinedArity = 65535;
@@ -377,7 +358,7 @@ SubnetID CascadeSynthesizer::synthesize(const TruthTable &func,
   
   idx[InNum - 1] = subnetBuilder.addOutput(Link(idx[InNum - 2])).idx;
         
-  return subnetBuilder.make();
+  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
 }
 
 } // namespace eda::gate::optimizer::synthesis

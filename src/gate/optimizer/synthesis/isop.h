@@ -26,8 +26,8 @@ using Link          = eda::gate::model::Subnet::Link;
 using LinkList      = eda::gate::model::Subnet::LinkList;
 using SOP           = std::vector<Cube>;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
-using SubnetID      = model::SubnetID;
-using TruthTable    = TruthTableSynthesizer::TruthTable;
+using SubnetObject  = model::SubnetObject;
+using TruthTable    = utils::TruthTable;
 /// @endcond
 
 /// Synthesizes the subnet from SOP of the boolean function.
@@ -45,9 +45,9 @@ class MMSynthesizer final : public TruthTableSynthesizer {
 public:
   using TruthTableSynthesizer::synthesize;
 
-  SubnetID synthesize(const TruthTable &func,
-                      const TruthTable &care,
-                      uint16_t maxArity = -1) const override;
+  SubnetObject synthesize(const TruthTable &func,
+                          const TruthTable &care,
+                          uint16_t maxArity = -1) const override;
 };
 
 /**
@@ -57,9 +57,9 @@ class MMFactorSynthesizer final : public TruthTableSynthesizer {
 public:
   using TruthTableSynthesizer::synthesize;
 
-  SubnetID synthesize(const TruthTable &func,
-                      const TruthTable &care,
-                      uint16_t maxArity = -1) const override;
+  SubnetObject synthesize(const TruthTable &func,
+                          const TruthTable &care,
+                          uint16_t maxArity = -1) const override;
 };
 
 } // namespace eda::gate::optimizer::synthesis

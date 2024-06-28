@@ -34,8 +34,7 @@ bool algebraicFactorTest(size_t numVars) {
     if (kitty::is_const0(~tt) || kitty::is_const0(tt)) {
       continue;
     }
-    const auto &subnet = Subnet::get(
-        factor.getSubnet(kitty::isop(tt), numVars, 2));
+    const auto &subnet = factor.getSubnet(kitty::isop(tt), numVars, 2).object();
     flag &= eda::gate::model::utils::equalTruthTables(subnet, tt);
   }
 

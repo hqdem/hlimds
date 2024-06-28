@@ -65,6 +65,38 @@ SafePasser SafePasser::operator--(int) {
 }
 
 void SafePasser::replace(
+    const SubnetObject &rhs,
+    const SubnetBuilder::InOutMapping &rhsToLhsMapping,
+    const std::function<void(const size_t)> *onNewCell,
+    const std::function<void(const size_t)> *onEqualDepth,
+    const std::function<void(const size_t)> *onGreaterDepth) {
+
+  if (rhs.hasBuilder()) {
+    const auto &rhsBuilder = rhs.builder();
+    prepareForReplace(*(--rhsBuilder.end()), rhsToLhsMapping);
+  } else {
+    const auto &rhsSubnet = rhs.object();
+    prepareForReplace(rhsSubnet.getMaxIdx(), rhsToLhsMapping);
+  }
+
+  auto &_isNewEntry = this->isNewEntry;
+  std::function addNewCell = [&_isNewEntry, &onNewCell](const size_t entryID) {
+    if (_isNewEntry.size() <= entryID) {
+      _isNewEntry.resize(entryID + 1, false);
+    }
+    _isNewEntry[entryID] = true;
+
+    // Callback passed by user
+    if (onNewCell) {
+      (*onNewCell)(entryID);
+    }
+  };
+
+  builderToTransform->replace(rhs, rhsToLhsMapping,
+                              &addNewCell, onEqualDepth, onGreaterDepth);
+}
+
+void SafePasser::replace(
     const SubnetID rhsID,
     const SubnetBuilder::InOutMapping &rhsToLhsMapping,
     const std::function<float(const size_t)> *getCellWeight,

@@ -43,14 +43,14 @@ namespace eda::gate::optimizer::synthesis {
     DinTruthTable t(numVars);
     std::string s = generateRandom(numVars);
     kitty::create_from_binary_string(t, s);
-    return r.synthesize(t);
+    return r.synthesize(t).id();
   }
 
   SubnetID generateSubnetID(std::string s, const uint64_t numVars) {
     Zhegalkin r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, s);
-    return r.synthesize(t);
+    return r.synthesize(t).id();
   }
 
   void testSubnetToSubnet(const Subnet &net, const Subnet &subnet) {
@@ -63,7 +63,7 @@ namespace eda::gate::optimizer::synthesis {
     Zhegalkin r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, generateRandom(numVars));
-    const auto &subnet = Subnet::get(r.synthesize(t));
+    const auto &subnet = r.synthesize(t).object();
 
     ASSERT_TRUE(eda::gate::model::utils::equalTruthTables(subnet, t));
   }
@@ -72,11 +72,11 @@ namespace eda::gate::optimizer::synthesis {
     Zhegalkin r;
     DinTruthTable t(numVars);
     kitty::create_from_binary_string(t, generateRandom(numVars));
-    SubnetID baseSubnet = r.synthesize(t);
-    DinTruthTable baseTable = evaluateSingleOut(Subnet::get(baseSubnet));
+    const Subnet &baseSubnet = r.synthesize(t).object();
+    DinTruthTable baseTable = evaluateSingleOut(baseSubnet);
 
     for (uint16_t arity = 3; arity < Subnet::Cell::InPlaceLinks + 1; ++arity) {
-      const auto &subnet = Subnet::get(r.synthesize(t, arity));
+      const auto &subnet = r.synthesize(t, arity).object();
       ASSERT_TRUE(eda::gate::model::utils::checkArity(subnet, arity));
       ASSERT_TRUE(eda::gate::model::utils::equalTruthTables(subnet, baseTable));
     }

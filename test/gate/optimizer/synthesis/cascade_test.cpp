@@ -87,7 +87,7 @@ void subnetEquivalenceTest(int vars) {
   kitty::create_random(table, 0);
 
   CascadeSynthesizer resynth;
-  const auto subnetId = resynth.synthesize(table);
+  const auto subnetId = resynth.synthesize(table).id();
   auto subnetIdNew = subnetId;
   
   TruthTable tableSubnet = checkSynthSubnet(vars, 1<<vars, subnetIdNew); 
@@ -133,7 +133,7 @@ TEST(Cascade, SubnetTest) {
   kitty::create_from_binary_string(table, "1000");
 
   CascadeSynthesizer resynth;
-  const auto subnetId = resynth.synthesize(table);
+  const auto subnetId = resynth.synthesize(table).id();
   const auto &subnet = Subnet::get(subnetId);
 
   EXPECT_TRUE(subnet.size() == 4);
@@ -146,7 +146,7 @@ TEST(Cascade, MaxArityTest) {
   kitty::create_from_binary_string(table, "10000110");
 
   CascadeSynthesizer resynth;
-  const auto subnetId = resynth.synthesize(table, maxArity);
+  const auto subnetId = resynth.synthesize(table, maxArity).id();
   const auto &subnet = Subnet::get(subnetId);
    
   auto subnetIdNew = subnetId;

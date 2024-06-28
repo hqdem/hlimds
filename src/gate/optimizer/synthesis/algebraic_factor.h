@@ -30,7 +30,7 @@ public:
   using LinkList      = eda::gate::model::Subnet::LinkList;
   using SOP           = std::vector<Cube>;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
-  using SubnetID      = eda::gate::model::SubnetID;
+  using SubnetObject  = eda::gate::model::SubnetObject;
   /// @endcond
 
   /**
@@ -41,8 +41,8 @@ public:
    * @param inv Inverse function.
    * @return ID of the synthesized subnet.
    */ 
-  SubnetID getSubnet(const SOP &func, size_t funcSize, uint16_t maxArity,
-                     bool inv = false) const;
+  SubnetObject getSubnet(const SOP &func, size_t funcSize, uint16_t maxArity,
+                         bool inv = false) const;
 
 private:
 

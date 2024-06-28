@@ -50,7 +50,7 @@ const Subnet& handle(const Subnet &subnet) {
   /* Resynthesis */
   DsdSynthesizer test;
   BddWithDdManager pair{netBDD.getNode(), manager.getManager()};
-  const auto &result = Subnet::get(test.synthesize(pair));
+  const auto &result = test.synthesize(pair).object();
   LOG_DEBUG(result);
 
   return result;
@@ -900,10 +900,10 @@ TEST(DsdTest, fourZERO) {
   kitty::dynamic_truth_table tt(2);
   kitty::create_from_binary_string(tt, "0000");
   eda::gate::optimizer::synthesis::MMSynthesizer minato;
-  const auto &subnet = Subnet::get(minato.synthesize(tt));
+  const auto &subnet = minato.synthesize(tt).object();
 
   DsdSynthesizer dsd;
-  const auto &subnet2 = Subnet::get(dsd.synthesize(tt));
+  const auto &subnet2 = dsd.synthesize(tt).object();
   LOG_DEBUG(subnet2);
 
 //  /* Simulation */

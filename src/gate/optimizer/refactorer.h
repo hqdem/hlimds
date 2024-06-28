@@ -27,9 +27,10 @@ public:
   /// @cond ALIASES
   using Effect        = eda::gate::model::SubnetBuilder::Effect;
   using EntryMap      = std::unordered_map<size_t, size_t>;
+  using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID      = eda::gate::model::SubnetID;
-  using Subnet        = eda::gate::model::Subnet;
+  using SubnetObject  = eda::gate::model::SubnetObject;
   /// @endcond
 
   /// Constructs cone for Cell in SubnetBuilder.

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,10 +12,12 @@ namespace eda::gate::optimizer::synthesis {
 
 using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
-using SubnetID = model::SubnetID;
+using SubnetObject = model::SubnetObject;
 
-SubnetID createScheme(Polynomial &resultFunction, 
-    Polarization &polarization, uint64_t maxArity, uint64_t argNum) {
+SubnetObject createScheme(Polynomial &resultFunction,
+                          Polarization &polarization,
+                          uint64_t maxArity,
+                          uint64_t argNum) {
 
   SubnetBuilder subnetBuilder;
   Link one;
@@ -32,7 +34,7 @@ SubnetID createScheme(Polynomial &resultFunction,
     if (emptyScheme) {
       subnetBuilder.addInputs(2);
       subnetBuilder.addOutput(subnetBuilder.addCell(model::ZERO));
-      return subnetBuilder.make();
+      return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
     }
   }
 
@@ -82,12 +84,12 @@ SubnetID createScheme(Polynomial &resultFunction,
   }
 
   subnetBuilder.addOutput(out);
-  return subnetBuilder.make();
+  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
 }
 
-SubnetID ZhegalkinSynthesizer::synthesize(const TruthTable &func,
-                                          const TruthTable &,
-                                          uint16_t maxArity) const {
+SubnetObject ZhegalkinSynthesizer::synthesize(const TruthTable &func,
+                                              const TruthTable &,
+                                              uint16_t maxArity) const {
 
   Polynomial resultFunction = getTT(func);
   Polarization polarization = Polarization(resultFunction.size(), false);

@@ -323,6 +323,22 @@ Subnet::Link SubnetBuilder::addSingleOutputSubnet(
 }
 
 void SubnetBuilder::replace(
+    const SubnetObject &rhs,
+    const InOutMapping &iomapping,
+    const CellActionCallback *onNewCell,
+    const CellActionCallback *onEqualDepth,
+    const CellActionCallback *onGreaterDepth) {
+  // Builder is of higher priority (it contains the cell weights).
+  if (rhs.hasBuilder()) {
+    replace(rhs.builder(), iomapping,
+        onNewCell, onEqualDepth, onGreaterDepth);
+  } else {
+    replace(rhs.id(), iomapping, nullptr /* weight provider */,
+        onNewCell, onEqualDepth, onGreaterDepth);
+  }
+}
+
+void SubnetBuilder::replace(
     const SubnetID rhsID,
     const InOutMapping &iomapping,
     const CellWeightProvider *weightProvider,
@@ -499,6 +515,19 @@ void SubnetBuilder::replace(
     if (onNewCell) {
       (*onNewCell)(lhsRootEntryID);
     }
+  }
+}
+
+SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
+    const SubnetObject &rhs,
+    const InOutMapping &iomapping,
+    const CellWeightModifier *weightModifier) const {
+  // Builder is of higher priority (it contains the cell weights).
+  if (rhs.hasBuilder()) {
+    return evaluateReplace(rhs.builder(), iomapping, weightModifier);
+  } else {
+    assert(!weightModifier && "Weight modifier is used w/o weight provider");
+    return evaluateReplace(rhs.id(), iomapping, nullptr, nullptr);
   }
 }
 

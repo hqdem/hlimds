@@ -11,10 +11,11 @@
 #include "gate/optimizer/synthesis/unitized_table.h"
 #include "gate/optimizer/synthesizer.h"
 
-#include "kitty/constructors.hpp"
-
 #include <map>
-#include <memory>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace eda::gate::optimizer::synthesis {
 
@@ -24,19 +25,13 @@ struct BuildVars;
 struct Candidate;
 
 /**
- * \brief Implements an Akers method of synthesis.
+ * \brief Implements the Akers method.
  * 
- * The algorithm based on the article "Synthesis of combinational logic using
- * three-input majority gates" by Sheldon B. Akers, Jr. (1962).
-*/
+ * The implementation is based on the article "Synthesis of combinational logic
+ * using three-input majority gates" by Sheldon B. Akers, Jr. (1962).
+ */
 class AkersSynthesizer : public TruthTableSynthesizer {
-
 public:
-
-  //===--------------------------------------------------------------------===//
-  // Types
-  //===--------------------------------------------------------------------===//
-
   using Arguments     = std::set<unsigned>;
   using ArgumentsSet  = std::set<Arguments>;
   using CanditateList = std::map<std::set<unsigned>, std::vector<unsigned>>;
@@ -47,33 +42,22 @@ public:
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID      = eda::gate::model::SubnetID;
+  using SubnetObject  = eda::gate::model::SubnetObject;
+  using TruthTable    = utils::TruthTable;
   using UnitizedTable = eda::gate::optimizer::synthesis::UnitizedTable;
-
-  //===--------------------------------------------------------------------===//
-  // Constructors/Destructors
-  //===--------------------------------------------------------------------===//
 
   /// Empty constructor.
   AkersSynthesizer() {}
 
-  //===--------------------------------------------------------------------===//
-  // Synthesize Methods
-  //===--------------------------------------------------------------------===//
-
   using Synthesizer::synthesize;
 
-  /// Synthesize function the Subnet.
-  SubnetID synthesize(const TruthTable &func, const TruthTable &care,
-                      uint16_t maxArity = -1) const override;
+  /// Synthesizes a subnet.
+  SubnetObject synthesize(const TruthTable &func, const TruthTable &care,
+                          uint16_t maxArity = -1) const override;
 
 private:
-
-  //===--------------------------------------------------------------------===//
-  // Internal Methods
-  //===--------------------------------------------------------------------===//
-
-  /// Launch the Akers algorithm.
-  SubnetID run(const TruthTable &func, const TruthTable &care) const;
+  /// Launches the Akers algorithm.
+  SubnetObject run(const TruthTable &func, const TruthTable &care) const;
 
   /// Adds a majority gate.
   void addMajGate(UnitizedTable &table, BuildVars &buildVars,

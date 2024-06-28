@@ -15,16 +15,16 @@ namespace eda::gate::optimizer::synthesis {
 // Types
 //===----------------------------------------------------------------------===//
 
-using Link     = eda::gate::model::Subnet::Link;
-using SubnetID = eda::gate::model::SubnetID;
+using Link         = eda::gate::model::Subnet::Link;
+using SubnetObject = eda::gate::model::SubnetObject;
 
 //===----------------------------------------------------------------------===//
 // Synthesis
 //===----------------------------------------------------------------------===//
 
-SubnetID DMSynthesizer::synthesize(const TruthTable &func,
-                                   const TruthTable &care,
-                                   uint16_t maxArity) const {
+SubnetObject DMSynthesizer::synthesize(const TruthTable &func,
+                                       const TruthTable &care,
+                                       uint16_t maxArity) const {
   assert(maxArity > 2 && "Arity of MAJ gate should be > 2");
   std::vector<TruthTable> divisors;
   std::vector<uint64_t> nOnes;
@@ -43,8 +43,9 @@ SubnetID DMSynthesizer::synthesize(const TruthTable &func,
 
   run(topNodes, tree, divisors);
   if (tree.empty()) {
-    return eda::gate::model::OBJ_NULL_ID;
+    return SubnetObject{};
   }
+
   return buildSubnet(tree, divisors);
 }
 
@@ -499,9 +500,9 @@ bool DMSynthesizer::selectLastArg(std::vector<MajNode> &topNodes,
 // Build a subnet
 //===----------------------------------------------------------------------===//
 
-SubnetID DMSynthesizer::buildSubnet(const std::vector<MajNode> &tree,
-                                    const std::vector<TruthTable> &divisors,
-                                    bool simplest) const {
+SubnetObject DMSynthesizer::buildSubnet(const std::vector<MajNode> &tree,
+                                        const std::vector<TruthTable> &divisors,
+                                        bool simplest) const {
 
   const uint32_t nVars = divisors[0].num_vars();
   const size_t treeSize = tree.size();
@@ -543,7 +544,7 @@ SubnetID DMSynthesizer::buildSubnet(const std::vector<MajNode> &tree,
     builder.addOutput(Link(idx.back()));
   }
 
-  return builder.make();
+  return SubnetObject{builder.make()}; // FIXME: make is not required.
 }
 
 Link DMSynthesizer::createLink(int64_t arg,

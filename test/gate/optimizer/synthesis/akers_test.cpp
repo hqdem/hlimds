@@ -28,8 +28,7 @@ using TruthTable       = kitty::dynamic_truth_table;
 void runAkersSynthesizerTest(const TruthTable &func, size_t maxSize = -1) {
   AkersSynthesizer akers;
 
-  const auto id = akers.synthesize(func);
-  const auto &s = Subnet::get(id);
+  const auto &s = akers.synthesize(func).object();
   bool areEqual = eda::gate::model::utils::equalTruthTables(s, func);
 
   EXPECT_TRUE(areEqual && (s.size() <= maxSize));
@@ -69,9 +68,9 @@ TEST(Akers62, Example1) {
   kitty::create_from_binary_string(care, "01101111");
 
   AkersSynthesizer alg;
-  const auto &subnet = alg.synthesize(func, care);
+  const auto &subnet = alg.synthesize(func, care).object();
 
-  std::cout << Subnet::get(subnet) << std::endl;
+  std::cout << subnet << std::endl;
 }
 
 TEST(Akers62, Example2) {
@@ -80,9 +79,9 @@ TEST(Akers62, Example2) {
   kitty::create_from_binary_string(func, "0010001100101010");
 
   AkersSynthesizer alg;
-  const auto &subnet = alg.synthesize(func);
+  const auto &subnet = alg.synthesize(func).object();
 
-  std::cout << Subnet::get(subnet) << std::endl;
+  std::cout << subnet << std::endl;
 }
 
 //===----------------------------------------------------------------------===//

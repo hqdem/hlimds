@@ -253,9 +253,9 @@ void SCLibrary::addCombCell(
   kitty::create_from_formula(truthTable, func, inputs);
 
   MinatoMorrealeAlg minatoMorrealeAlg;
-  const auto subnetID = minatoMorrealeAlg.synthesize(truthTable);
+  auto subnetObject = minatoMorrealeAlg.synthesize(truthTable);
   const auto cellID = model::makeCellType(
-      model::CellSymbol::UNDEF, name, subnetID,
+      model::CellSymbol::UNDEF, name, subnetObject.make(),
       cellTypeAttrID, props,
       static_cast<uint16_t>(inputs.size()),
       static_cast<uint16_t>(1)

@@ -66,17 +66,34 @@ void setDataPath(const std::string &filename, std::string &data,
   outputFile = outputFilePath + filename + "_output.fir";
 }
 
-bool checkPassed(const std::string &filename) {
+int toFirrtl(const std::string &in,
+              const std::string data,
+              const std::string &out) {
+
   createOutputDir();
-  std::string data, outputFile;
-  setDataPath(filename, data, outputFile);
-  std::string command = binPath + " to_firrtl " + data + " -o " + outputFile;
+  std::string command = binPath + " to_firrtl " + data + " -o " + out;
   const int res = system(command.c_str());
   if (res != 0) {
     std::cerr << command << std::endl;
     std::cerr << "Error occurred: " << strerror(errno) << std::endl;
   }
+  return res;
+}
+
+bool checkPassed(const std::string &filename) {
+  std::string data, outputFile;
+  setDataPath(filename, data, outputFile);
+  const int res = toFirrtl(filename, data, outputFile);
+  
   return !res && exists(outputFile);
+}
+
+bool checkFailed(const std::string &filename) {
+  std::string data, outputFile;
+  setDataPath(filename, data, outputFile);
+  const int res = toFirrtl(filename, data, outputFile);
+  
+  return res;
 }
 
 bool checkPassedVerbose(const std::string &filename) {
@@ -108,7 +125,7 @@ bool firtoolCheck(const std::string &outputFile) {
   std::string cutoff = "/lib/cmake/circt/";
 
   if (firTool.find("circt/") == std::string::npos) {
-    std::cout << "CIRCT_DIR env var is not set or set incorrectly!\n";
+    std::cout << "CIRCT_DIR env var isn't or incorreclty set!" << std::endl;
     exit(1);
   } else {
     if (firTool.find(cutoff) !=  std::string::npos) {
@@ -149,12 +166,8 @@ TEST(VerilogFirSys, C17) {
   EXPECT_TRUE(checkPassed("c17") && firtoolCheck("c17"));
 }
 
-/*
-// Yosys error
-// File c_17_modified has incorrect syntax
-*/
 TEST(VerilogFirSys, C17_modified) {
-  EXPECT_FALSE(checkPassed("c17_modified") && firtoolCheck("c17_modified"));
+  EXPECT_TRUE(checkFailed("c17_modified"));
 }
 
 TEST(VerilogFirSys, C432) {

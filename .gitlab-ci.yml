@@ -3,7 +3,7 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-image: gitlab.ispras.ru:4567/mvg/utopia-eda:latest
+image: gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:env
 
 variables:
   BUILD_DIR: "build"
@@ -19,6 +19,7 @@ stages:
   - build
   - test
   - coverage
+  - valgrind
 
 build_project:
   stage: build
@@ -32,7 +33,7 @@ build_project:
     - cmake --build ${BUILD_DIR}
 
   artifacts:
-    expire_in: 10 min
+    expire_in: 90 min
     paths:
       - ${BUILD_PATH}
 
@@ -73,3 +74,21 @@ get_coverage_info:
     expire_in: 1 day
     paths:
       - ${UTOPIA_HOME}/clean_coverage
+
+valgrind_test_demo:
+  stage: valgrind
+  tags:
+    - docker
+
+  script:
+    - valgrind ${BUILD_PATH}/test/utest --gtest_filter=MiterTest*
+  when: manual
+
+  dependencies:
+    - build_project
+
+  artifacts:
+    expire_in: 10 min
+    paths:
+      - ${BUILD_PATH}
+

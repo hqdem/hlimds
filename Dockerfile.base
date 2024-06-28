@@ -104,3 +104,25 @@ RUN cmake -G Ninja .. \
     -DVERILATOR_DISABLE=ON \
     -DIVERILOG_DISABLE=ON
 RUN ninja
+
+# Install Valgrind
+
+WORKDIR /workdir/
+RUN git clone https://sourceware.org/git/valgrind.git
+WORKDIR /workdir/valgrind/
+RUN git checkout VALGRIND_3_23_0
+ENV old_line1="   if (req_alignB > 16 \* 1024 \* 1024) {"
+ENV new_line1="   if (req_alignB > 1024 * 1024 * 1024) {"
+ENV old_line2="                  a, req_alignB, req_pszB, req_alignB, 16 \* 1024 \* 1024 );"
+ENV new_line2="                  a, req_alignB, req_pszB, req_alignB, 1024 * 1024 * 1024 );"
+ENV path="/workdir/valgrind/coregrind/m_mallocfree.c"
+RUN sed -i "s|$old_line1|$new_line1|" "$path"
+RUN sed -i "s|$old_line2|$new_line2|" "$path"
+RUN ./autogen.sh
+RUN ./configure
+RUN make
+RUN make install
+
+# Set up debug info
+
+RUN echo export DEBUGINFOD_URLS="https://debuginfod.archlinux.org" >> ~/.bashrc

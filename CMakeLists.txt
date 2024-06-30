@@ -44,6 +44,7 @@ find_package(CTemplate REQUIRED COMPONENTS nothreads)
 find_package(Cudd REQUIRED)
 find_package(Yosys REQUIRED)
 find_package(STACCATO REQUIRED)
+find_package(Tcl REQUIRED COMPONENTS Tcl)
 
 find_package(MLIR CONFIG)
 find_package(LLVM CONFIG)

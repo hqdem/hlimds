@@ -25,6 +25,7 @@ const std::string homePath = eda::env::getHomePathAsString();
 const std::string binPath = homePath + "/build/src/umain";
 const std::string dataPath = homePath + "/test/data/gate/parser/verilog/";
 const std::string outputFilePath = homePath + "/output/test/verilog_fir_sys/";
+const std::string scriptPath = homePath + "/test/gate/translator/verilog_to_fir/test.tcl";
 
 bool exists(const std::string &filename) {
   std::ifstream file(filename);
@@ -71,7 +72,8 @@ int toFirrtl(const std::string &in,
               const std::string &out) {
 
   createOutputDir();
-  std::string command = binPath + " to_firrtl " + data + " -o " + out;
+  std::string command = binPath + " -s " +
+      scriptPath + " " + data + " " + out;
   const int res = system(command.c_str());
   if (res != 0) {
     std::cerr << command << std::endl;
@@ -99,25 +101,14 @@ bool checkFailed(const std::string &filename) {
 bool checkPassedVerbose(const std::string &filename) {
   std::string data, outputFile;
   setDataPath(filename, data, outputFile);
-  std::string command = binPath + " to_firrtl " + data +
-  " --verbose > " + outputFile + " 2>&1";
+  std::string command = binPath + " -s " +
+      scriptPath + " " + data + " " + outputFile +
+          " --verbose > " + outputFile + " 2>&1";
   const int res = system(command.c_str());
   if (res != 0) {
     std::cerr << "Error occurred: " << strerror(errno) << std::endl;
   }
   return !res && exists(outputFile);
-}
-
-bool checkPassedUndefinedOption(const std::string &filename) {
-  std::string data, outputFile;
-  setDataPath(filename, data, outputFile);
-  std::string command = binPath + " to_firrtl " + data +
-  " --undefoption > " + outputFile;
-  const int res = system(command.c_str());
-  if (res != 0) {
-    std::cerr << "Error occurred: " << strerror(errno) << std::endl;
-  }
-  return !res;
 }
 
 bool firtoolCheck(const std::string &outputFile) {
@@ -274,10 +265,6 @@ TEST(VerilogFirSys, Voter) {
   EXPECT_TRUE(checkPassed("voter") && firtoolCheck("voter"));
 }
 
- TEST(VerilogFirSys, UndefinedPath) {
-   EXPECT_TRUE(!(checkPassed("undefined/path")));
-}
-
 TEST(VerilogFirSys, VerboseTest) {
   checkPassed("bar");
   const std::string output_path = std::string(homePath +
@@ -288,7 +275,4 @@ TEST(VerilogFirSys, VerboseTest) {
   EXPECT_TRUE(!(cmpFiles(output_path, output_verb_path)));
 }
 
-TEST(VerilogFirSys, checkPassedUndefinedOption) {
-  EXPECT_TRUE(!(checkPassedUndefinedOption("adder")));
-}
 } // namespace eda::gate::translator

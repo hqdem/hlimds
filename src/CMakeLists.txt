@@ -52,8 +52,11 @@ target_link_libraries(${MAIN_LIBRARY}
   Yosys::Yosys
 )
 
-# The project executables.
-add_executable(${MAIN_TARGET} main.cpp)
+# The project executable.
+add_executable(${MAIN_TARGET}
+  main.cpp
+  tcl_appinit.cpp
+)
 
 target_include_directories(${MAIN_TARGET}
   PRIVATE
@@ -67,6 +70,7 @@ target_link_libraries(${MAIN_TARGET}
     CLI
     Json
     fmt
+    Tcl::Tcl
 )
 
 add_executable(${DBGEN_TARGET} dbgen.cpp)

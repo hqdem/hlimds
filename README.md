@@ -239,99 +239,27 @@ Here they are (see `debug-build.sh` as example):
 
 ### Running Utopia EDA
 
-```console
-rm -rf $UTOPIA_HOME/output
-./build/src/umain rtl <file(s)> <options>
-```
-
-To list the Utopia EDA options, do the following:
+Running umain without arguments takes you to the TCL shell. Available commands
+are listed in the `doc/help.md`, or can be printed using the `help` 
+command in the shell.
 
 ```console
-./build/src/umain --help-all
+./build/src/umain
+
+help
 ```
 
-### Running Verilog-to-FIRRTL translator
+To pass a tcl script with arguments, do the following:
 
 ```console
-./build/src/umain to_firrtl <file(s)>
+./build/src/umain -s <script_path> <arg1> <agr2> ... 
 ```
 
-When selecting this option, you must specify the path to the Verilog file(s) (`file(s)`).
-The results of the translation will be in the standard output file.
-(Top module of the descriptions will be determined automatically).
+Example:
 
 ```console
-./build/src/umain to_firrtl <file(s)> --top <module-name>
+./build/src/umain -s scripts/synth_graphml.tcl test/data/gate/parser/graphml/OpenABC/graphml_openabcd/sasc_orig.bench.graphml test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib
 ```
-
-When selecting this option, you must specify the name of the top module
-(`module-name`) in the Verilog file(s) and the path to the file(s) itself (`file(s)`).
-The results of the translation will be as the first example.
-
-```console
-./build/src/umain to_firrtl <file(s)> --output <namefile>
-```
-
-When selecting this option, you must specify the name of file (`namefile`), where will be result of
-the translation. The file will be placed in same directory with the application.
-
-```console
-./build/src/umain to_firrtl <file(s)> --verbose
-```
-
-To translate input description into inner representation (so called model2), you must specify:
-
-When selecting these option, debug information will be generated in standart error output file.
-
-### Running Verilog-to-Model2 translator
-
-The translator is used to translate input description into inner representation (so called model2).
-
-```console
-./build/src/umain verilog_to_model2 <file(s)>
-```
-
-When selecting this option, you must specify the path to the Verilog file(s) (`file(s)`).
-(Top module of the descriptions will be determined automatically).
-
-```console
-./build/src/umain verilog_to_model2 <file(s)> --top <module-name>
-```
-
-When selecting this option, you must specify the name of the top module
-(`module-name`) in the Verilog file(s) and the path to the file(s) itself (`file(s)`).
-
-```console
-./build/src/umain verilog_to_model2 <file(s)> --verbose
-```
-
-When selecting these option, debug information will be generated in standard error output file.
-
-#### Running translator to Model2
-
-An example of translator usage is as follows:
-
-```console
-./build/src/umain to_model2 <in-file-1> <in-file-2> ... <in-file-n> \
-    --net <out-file> --top <name> --fir <fir-file> --verbose
-```
-
-To translate input description into inner representation (so called model2), you
-must specify:
-
-1. (Necessary) the input description (`<in-file-1> <in-file-2> ... <in-file-n>`,
-FIRRTL and Verilog are supported)*;
-2. (Optional) for Verilog output model2 representation -- the path to output
-file (`--net <out-file>`);
-3. (Optional) for Verilog input descriptions -- top module name
-(`--top <name>`);
-4. (Optional) for Verilog input descriptions -- FIRRTL intermediate file
-(`--fir <fir-file>`);
-5. (Optional) for Verilog input descriptions you can also specify additional
-debug print. (`--verbose`).
-
-*NOTE: For FIRRTL files n == 1
-
 ### Tests running
 
 #### All tests running

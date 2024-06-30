@@ -6,247 +6,71 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "CLI/App.hpp"
 #include "config.h"
-#include "gate/analyzer/simulation_estimator.h"
-#include "gate/debugger/sat_checker.h"
-#include "gate/model/subnet.h"
-#include "gate/parser/graphml_parser.h"
-#include "gate/techmapper/techmapper_wrapper.h"
-#include "gate/translator/firrtl.h"
-#include "gate/translator/model2.h"
-#include "gate/translator/verilog/verilog_model2.h"
-#include "options.h"
-/*
-#include "rtl/parser/ril/parser.h"
-*/
-#include "util/string.h"
 
 #include "easylogging++.h"
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <sstream>
-#include <string>
+#include <tcl.h>
 
 INITIALIZE_EASYLOGGINGPP
 
-//===-----------------------------------------------------------------------===/
-// Logic Synthesis
-//===-----------------------------------------------------------------------===/
-
-/*
-struct RtlContext {
-  using VNet = eda::rtl::model::Net;
-  using GNet = eda::gate::model::GNet;
-  using Gate = eda::gate::model::Gate;
-  using Link = Gate::Link;
-
-  using AigMapper = eda::gate::premapper::AigMapper;
-  using Checker = eda::gate::debugger::BaseChecker;
-  using Compiler = eda::rtl::compiler::Compiler;
-  using Library = eda::rtl::library::ArithmeticLibrary;
-  using MigMapper = eda::gate::premapper::MigMapper;
-  using PreBasis = eda::gate::premapper::PreBasis;
-  using PreMapper = eda::gate::premapper::PreMapper;
-  using RwManager = eda::gate::optimizer::RewriteManager;
-  using XagMapper = eda::gate::premapper::XagMapper;
-  using XmgMapper = eda::gate::premapper::XmgMapper;
-
-  RtlContext(const std::string &file, const RtlOptions &options):
-    file(file), options(options) {}
-
-  const std::string file;
-  const RtlOptions &options;
-
-  std::shared_ptr<VNet> vnet;
-  std::shared_ptr<GNet> gnet0;
-  std::shared_ptr<GNet> gnet1;
-
-  PreMapper::GateIdMap gmap;
-
-  bool equal;
-};
-
-bool initialize(RtlContext &context) {
-  LOG(INFO) << "RTL initialize";
-
-  RtlContext::RwManager::get().initialize(context.options.preLib);
-  return true;
-}
-
-bool parse(RtlContext &context) {
-  LOG(INFO) << "RTL parse: " << context.file;
-
-  context.vnet = eda::rtl::parser::ril::parse(context.file);
-
-  if (context.vnet == nullptr) {
-    LOG(ERROR) << "Could not parse the file";
-    return false;
-  }
-
-  std::cout << "------ P/V-nets ------" << std::endl;
-  std::cout << *context.vnet << std::endl;
-
-  return true;
-}
-
-int rtlMain(RtlContext &context) {
-  if (!initialize(context)) { return -1; }
-  if (!parse(context))      { return -1; }
-
-  return 0;
-}
-*/
-
-eda::gate::model::SubnetID parseGraphML(const std::string &fileName) {
-  uassert(std::filesystem::exists(fileName), "File doesn't exist" << std::endl);
-
-  eda::gate::parser::graphml::GraphMlParser parser;
-  return parser.parse(fileName).make();
-}
-
-int optimize(const eda::gate::model::SubnetID &oldSubnetId,
-             GraphMlOptions &opts) {
-  using SatChecker = eda::gate::debugger::SatChecker;
-
-  const auto &oldSubnet = eda::gate::model::Subnet::get(oldSubnetId);
-  eda::gate::analyzer::SimulationEstimator estimator;
-  size_t depthBefore = oldSubnet.getPathLength().second;
-  size_t sizeBefore = oldSubnet.getEntries().size();
-  size_t powerBefore = 
-      estimator.estimate(oldSubnet).getSwitchProbsSum();
-  eda::gate::model::SubnetBuilder subnetBuilder;
-  auto inputs = subnetBuilder.addInputs(oldSubnet.getInNum());
-  auto outputs = subnetBuilder.addSubnet(oldSubnetId, inputs);
-  subnetBuilder.addOutputs(outputs);
-
-  if (opts.optCrit == OptimizationCriterion::Area) {
-    //TODO Area
-  } else if (opts.optCrit == OptimizationCriterion::Delay) {
-    //TODO Depth
-  } else {
-    //TODO Switching Activity
-  }
-
-  const auto &newSubnetId = subnetBuilder.make();
-  const auto &newSubnet = eda::gate::model::Subnet::get(newSubnetId);
-  size_t depthAfter = newSubnet.getPathLength().second;
-  size_t powerAfter = estimator.estimate(newSubnet).getSwitchProbsSum();
-
-  if (opts.lec) {
-    SatChecker &checker = SatChecker::get();
-
-    std::unordered_map<size_t, size_t> map;
-    for (size_t i{0}; i < oldSubnet.getInNum(); ++i) {
-      map[i] = i;
-    }
-
-    for (int c = oldSubnet.getOutNum(); c > 0; --c) {
-      map[oldSubnet.size() - c] = newSubnet.size() - c;
-    }
-    bool flag = checker.areEquivalent(oldSubnetId, newSubnetId, map).equal();
-    std::cout << "Equivalence: " << flag << std::endl;
-
-    if (!flag) {
-      return -1;
-    }
-  }
-
-  std::cout << "Size before: " << sizeBefore << std::endl;
-  std::cout << "Size after: " << newSubnet.getEntries().size() << std::endl;
-  std::cout << "Depth before: " << depthBefore << std::endl;
-  std::cout << "Depth after: " << depthAfter << std::endl;
-  std::cout << "Power before: " << powerBefore << std::endl;
-  std::cout << "Power after: " << powerAfter << std::endl;
-  return 0;
-}
+extern Tcl_AppInitProc Utopia_TclInit;
 
 int main(int argc, char **argv) {
-  START_EASYLOGGINGPP(argc, argv);
+    START_EASYLOGGINGPP(argc, argv);
 
-  std::stringstream title;
-  std::stringstream version;
+    std::stringstream title;
+    std::stringstream version;
 
-  version << VERSION_MAJOR << "." << VERSION_MINOR;
+    version << VERSION_MAJOR << "." << VERSION_MINOR;
 
-  title << "Utopia EDA " << version.str() << " | ";
-  title << "Copyright (c) " << YEAR_STARTED << "-" << YEAR_CURRENT << " ISPRAS";
+    title << "Utopia EDA " << version.str() << " | ";
+    title << "Copyright (c) " << YEAR_STARTED << "-" << YEAR_CURRENT << " ISPRAS";
 
-  Options options(title.str(), version.str());
+    CLI::App app{"Utopia EDA"};
 
-  try {
-    options.initialize("config.json", argc, argv);
+    std::string path = "";
+    app.add_option("-s, --script", path, "Path to Tcl script file");
+    app.allow_extras();
 
-    if (/*options.rtl.files().empty() &&*/
-        options.firrtl.files().empty() &&
-        options.model2.files().empty() &&
-        options.graphMl.files().empty() &&
-        options.techMapOptions.files().empty() &&
-        options.verilogToModel2.files().empty()) {
-      throw CLI::CallForAllHelp();
+    CLI11_PARSE(app, argc, argv);
+
+    Tcl_FindExecutable(argv[0]);
+    Tcl_Interp *interp = Tcl_CreateInterp();
+
+    if (!path.empty()) {
+      std::vector<std::string> script_args = app.remaining();
+      const char *fileName = path.c_str();
+
+      Tcl_Obj *tcl_argv0 = Tcl_NewStringObj(fileName, -1);
+      Tcl_SetVar2Ex(interp, "argv0", nullptr, tcl_argv0, TCL_GLOBAL_ONLY);
+
+      Tcl_Obj *tcl_argv_list = Tcl_NewListObj(0, nullptr);
+      for (const auto &arg : script_args) {
+        Tcl_ListObjAppendElement(
+            interp,
+            tcl_argv_list,
+            Tcl_NewStringObj(arg.c_str(), -1));
+      }
+
+      Tcl_Obj *tcl_argc =
+          Tcl_NewLongObj(static_cast<long>(script_args.size()));
+      Tcl_SetVar2Ex(interp, "argc", nullptr, tcl_argc, TCL_GLOBAL_ONLY);
+      Tcl_SetVar2Ex(interp, "argv", nullptr, tcl_argv_list, TCL_GLOBAL_ONLY);
+
+      if ((Utopia_TclInit(interp) == TCL_ERROR) ||
+          (Tcl_EvalFile(interp, fileName) == TCL_ERROR)) {
+        std::cout << Tcl_GetStringResult(interp) << '\n';
+        return 1;
+      }
+    } else {
+      std::cout << title.str() << '\n';
+      std::cout << version.str() << '\n';
+      Tcl_Main(argc, argv, Utopia_TclInit);
     }
-  }
-   catch(const CLI::ParseError &e) {
-    return options.exit(e);
-  }
 
-  int result = 0;
-
-/*
-  for (auto file : options.rtl.files()) {
-    RtlContext context(file, options.rtl);
-    result |= rtlMain(context);
-  }
-*/
-
-  if (!options.firrtl.files().empty()) {
-    FirrtlConfig cfg;
-    FirRtlOptions &opts = options.firrtl;
-    cfg.debugMode = opts.debugMode;
-    cfg.outputFileName = opts.outputNamefile;
-    cfg.topModule = opts.top;
-    cfg.files = opts.files();
-    result |= translateToFirrtl(cfg);
-  }
-
-  if (!options.verilogToModel2.files().empty()) {
-    YosysToModel2Config cfg;
-    YosysToModel2Options &opts = options.verilogToModel2;
-    cfg.debugMode = opts.debugMode;
-    cfg.topModule = opts.top;
-    cfg.files = opts.files();
-    result |= translateVerilogToModel2(cfg);
-  }
-
-  if (!options.model2.files().empty()) {
-    Model2Options &opts = options.model2;
-    FirrtlConfig firrtlConfig;
-    firrtlConfig.debugMode = opts.verbose;
-    firrtlConfig.outputFileName = opts.outFileName;
-    firrtlConfig.topModule = opts.top;
-    firrtlConfig.files = opts.files();
-    result |= eda::gate::model::translateToModel2(firrtlConfig);
-  }
-
-  GraphMlOptions &opts = options.graphMl;
-  if (!options.graphMl.files().empty() &&
-      (opts.optCrit != OptimizationCriterion::NoOpt)) {
-    for (const auto &file : options.graphMl.files()) {
-      const auto &oldSubnetId = parseGraphML(file);
-      result |= optimize(oldSubnetId, options.graphMl);
-    }
-  }
-
-  if(!options.techMapOptions.files().empty()){
-    TechMapOptions &opts = options.techMapOptions;
-    eda::gate::techmapper::TechMapConfig config;
-    config.files = opts.files();
-    config.outNetFileName = opts.outputPath;
-    config.strategy = opts.strategy;
-    result |= eda::gate::techmapper::techMap(config);
-  }
-  
-  return result;
+    Tcl_DeleteInterp(interp);
+    Tcl_Finalize();
+    return 0;
 }

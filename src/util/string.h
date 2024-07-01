@@ -9,6 +9,7 @@
 #pragma once
 
 #include <algorithm>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -57,5 +58,23 @@ std::string format(const std::string &format, Args... args) {
 }
 
 std::string unique_name(const std::string &prefix);
+
+template<typename Predicate>
+inline std::string getSubString(const std::string &source, size_t lhs,
+                                size_t rhs, Predicate predicate) {
+  std::string buf;
+  std::copy_if(source.begin() + lhs, source.begin() + rhs,
+               std::back_inserter(buf), predicate);
+  return buf;
+}
+
+template<typename Predicate>
+inline std::string getSubString(const std::string &source,
+                                const std::string &lhs, const std::string &rhs,
+                                Predicate predicate) {
+  auto begin = source.find(lhs);
+  auto end = source.find(rhs);
+  return getSubString(source, begin, end, predicate);
+}
 
 } // namespace eda::utils

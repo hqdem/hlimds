@@ -1,6 +1,6 @@
 # Utopia EDA
 
-Utopia is an EDA for logic synthesis of digital hardware designs.
+Utopia is an EDA (Electronic Design Autiomation) framework for logic synthesis of digital hardware designs.
 
 ## Licensing and distribution
 
@@ -54,6 +54,8 @@ If you are working on Fedora Linux OS, please follow this [guide](doc/Fedora.md)
 
 ### CMake installation
 
+To build the appropriate version of CMake from sources, do the following:
+
 ```console
 sudo apt install tar wget
 cd <workdir>
@@ -70,6 +72,8 @@ If you prefer to install CMake as package, please follow this [guide](https://ap
 
 ### C++ CTemplate installation
 
+To build C++ CTemplate library from sources, do the following:
+
 ```console
 cd <workdir>
 git clone https://github.com/OlafvdSpek/ctemplate.git
@@ -85,6 +89,8 @@ specify `--prefix` option of `configure` script to installation directory
 you want and set `CT_DIR` environment variable to it too.
 
 ### CUDD installation
+
+To build CUDD library from sources, do the following:
 
 ```console
 cd <workdir>
@@ -103,13 +109,14 @@ to the `CUDD` actual installation directory.
 
 ### STACCATO installation
 
-The `<path_to_cudd_dir>` refers to the path to the CUDD sources directory.
+To build STACCATO library from sources, do the following
+(here `<cudd-path>` refers to the path to the CUDD sources directory):
 
 ```console
 cd <workdir>
 git clone https://github.com/ispras/staccato
 cd staccato
-make BUILD_TYPE=shared CUDD_INCLUDE=<path_to_cudd_dir> SM="-DDISABLE_SM"
+make BUILD_TYPE=shared CUDD_INCLUDE=<cudd-path> SM="-DDISABLE_SM"
 sudo make install
 ```
 

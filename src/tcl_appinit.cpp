@@ -672,7 +672,7 @@ static int help(
     return TCL_ERROR;
   }
 
-  std::string helpFilePath = std::string(utopiaHome) + "/doc/help.md";
+  std::string helpFilePath = std::string(utopiaHome) + "/doc/CLI.md";
   std::ifstream helpFile(helpFilePath);
 
   if (!helpFile.is_open()) {

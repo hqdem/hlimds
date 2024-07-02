@@ -1,5 +1,3 @@
-[//]: <> (SPDX-License-Identifier: Apache-2.0)
-
 # Utopia EDA installation guide for Fedora Linux OS
 
 This guide describes main steps and rules that should be done and followed for building Utopia EDA on RPM-like distro.

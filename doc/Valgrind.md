@@ -1,4 +1,4 @@
-# Valgrind README
+# Getting started with Valgrind
 
 In this guide the instruction on how to run Utopia EDA with Valgrind
 and check memory leaks is described.

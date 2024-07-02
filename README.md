@@ -1,5 +1,3 @@
-[//]: <> (SPDX-License-Identifier: Apache-2.0)
-
 # Utopia EDA
 
 Utopia is an EDA for logic synthesis of digital hardware designs.

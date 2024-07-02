@@ -1,4 +1,4 @@
-# Docker README
+# Getting started with Docker
 
 In this guide the instruction on how to build and run Utopia EDA with Docker
 is described.

@@ -65,7 +65,6 @@ private:
 private:
   const SubnetEncoder &encoder;
   Solver &solver;
-  Solver *saveSolver{nullptr};
   SubnetEncoderContext context;
 };
 

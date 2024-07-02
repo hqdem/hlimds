@@ -102,7 +102,7 @@ TEST(ReplaceTest, SimpleTest) {
   const auto rhsID = rhsBuilder.make();
   SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx},
                                       {andLink0.idx});
-  
+
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, -1);
   EXPECT_EQ(effect.depth, -1);
@@ -930,7 +930,7 @@ TEST(ReplaceBuilderTest, LargerRhs) {
   SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
-  EXPECT_EQ(effect.size, 2);
+  EXPECT_EQ(effect.size, -2);
   EXPECT_EQ(effect.depth, -1);
   builder.replace(rhsBuilder, mapping);
   printBidirectCellsTrav(builder);

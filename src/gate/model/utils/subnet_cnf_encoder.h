@@ -22,6 +22,12 @@ namespace eda::gate::model {
 // Subnet Encoder Context
 //===----------------------------------------------------------------------===//
 
+struct Property {
+  using LitVec = std::vector<Minisat::Lit>;
+
+  std::vector<LitVec> formula;
+};
+
 class SubnetEncoderContext final {
 public:
   using Variable = eda::gate::solver::Variable;
@@ -35,6 +41,23 @@ public:
   SubnetEncoderContext(const Subnet &subnet, Solver &solver):
       solver(solver), next(subnet.size()) {
     vars.reserve(estimateVarNum(subnet));
+  }
+
+  Property &createNewProp(const Variable &p) {
+    varToProp[p] = Property();
+    return varToProp[p];
+  }
+
+  const Property &getProp(const Variable &p) const {
+    return varToProp.find(p)->second;
+  }
+
+  void createBackup() {
+    backupSolver = solver;
+  }
+
+  void backup() {
+    solver = backupSolver;
   }
 
   Variable var(size_t idx, uint16_t out) const {
@@ -89,8 +112,10 @@ private:
   }
 
   Solver &solver;
+  Solver backupSolver;
   std::vector<size_t> next;
   std::vector<Variable> vars;
+  std::unordered_map<Variable, Property> varToProp;
 };
 
 //===----------------------------------------------------------------------===//
@@ -167,31 +192,36 @@ public:
 
   Variable encodeEqual(
       SubnetEncoderContext &context,
-      Solver &solver,
       Subnet::Link lhs,
       bool rhs)  const {
     auto p = context.newVar();
+    Property &prop = context.createNewProp(p);
     Literal lit1 = context.lit(lhs, rhs);
     Literal lit2 = solver::makeLit(p, 1);
-    solver.addClause(lit1, ~lit2);
-    solver.addClause(~lit1, lit2);
+    LitVec clauseToAdd1{lit1, ~lit2};
+    LitVec clauseToAdd2{~lit1, lit2};
+    prop.formula.push_back(clauseToAdd1);
+    prop.formula.push_back(clauseToAdd2);
 
     return p;
   }
 
   Variable encodeEqual(
       SubnetEncoderContext &context,
-      Solver &solver,
       Subnet::Link lhs,
       Subnet::Link rhs) const {
     auto p = context.newVar();
+    Property &prop = context.createNewProp(p);
     Literal lit1 = context.lit(lhs, 1);
     Literal lit2 = context.lit(rhs, 1);
     Literal lit3 = solver::makeLit(p, 1);
-    solver.addClause(lit1, lit2, lit3);
-    solver.addClause(lit1, ~lit2, ~lit3);
-    solver.addClause(~lit1, lit2, ~lit3);
-    solver.addClause(~lit1, ~lit2, lit3);
+    LitVec clauseToAdd1{lit1, lit2, lit3};
+    LitVec clauseToAdd2{lit1, ~lit2, ~lit3};
+    LitVec clauseToAdd3{~lit1, lit2, ~lit3};
+    LitVec clauseToAdd4{~lit1, ~lit2, lit3};
+    prop.formula.insert(prop.formula.end(),
+      {clauseToAdd1, clauseToAdd2, clauseToAdd3, clauseToAdd4}
+    );
 
     return p;
   }

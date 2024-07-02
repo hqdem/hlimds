@@ -18,33 +18,40 @@ Verifier::Verifier(const Subnet &subnet, Solver &solver):
 };
 
 Verifier::Variable Verifier::makeEqualty(Subnet::Link lhs, bool rhs) {
-	const auto prop = encoder.encodeEqual(context, solver, lhs, rhs);
-	return prop;
+	return encoder.encodeEqual(context, lhs, rhs);
 }
 
 Verifier::Variable Verifier::makeEqualty(Subnet::Link lhs, Subnet::Link rhs) {
-	const auto prop = encoder.encodeEqual(context, solver, lhs, rhs);
-	return prop;
+	return encoder.encodeEqual(context, lhs, rhs);
 }
 
 bool Verifier::checkAlways(const Variable &prop, const bool invProp) {
+	context.createBackup();
 	addProperty(prop, !invProp);
 	const bool result = !solver.solve();
-	solver = *saveSolver;
-	delete saveSolver;
+	context.backup();
 	return result;
 }
 
 bool Verifier::checkEventually(const Variable &prop, const bool invProp) {
+	context.createBackup();
 	addProperty(prop, invProp);
 	const bool result = solver.solve();
-	solver = *saveSolver;
-	delete saveSolver;
+	context.backup();
 	return result;
 }
 
 void Verifier::addProperty(const Variable &prop, bool inv) {
-	saveSolver = new Solver(solver);
+	const auto &propFormula = context.getProp(prop).formula;
+	for (size_t i = 0; i < propFormula.size(); ++i) {
+		const auto &curClause = propFormula[i];
+		Minisat::vec<Literal> clauseToAdd;
+		for (const auto &lit : curClause) {
+			clauseToAdd.push(lit);
+		}
+		solver.addClause(clauseToAdd);
+	}
+
 	solver.addClause(solver::makeLit(prop, !inv));
 }
 

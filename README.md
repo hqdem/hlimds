@@ -239,9 +239,9 @@ Here they are (see `debug-build.sh` as example):
 
 ### Running Utopia EDA
 
-Running umain without arguments takes you to the TCL shell. Available commands
-are listed in the `doc/help.md`, or can be printed using the `help` 
-command in the shell.
+Running `umain` without arguments takes you to the TCL shell. Available commands
+are listed in the `doc/CLI.md`, or can be printed using the `help`
+command in the shell:
 
 ```console
 ./build/src/umain
@@ -249,7 +249,7 @@ command in the shell.
 help
 ```
 
-To pass a tcl script with arguments, do the following:
+To pass a TCL script with arguments, do the following:
 
 ```console
 ./build/src/umain -s <script_path> <arg1> <agr2> ... 
@@ -260,6 +260,7 @@ Example:
 ```console
 ./build/src/umain -s scripts/synth_graphml.tcl test/data/gate/parser/graphml/OpenABC/graphml_openabcd/sasc_orig.bench.graphml test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib
 ```
+
 ### Tests running
 
 #### All tests running

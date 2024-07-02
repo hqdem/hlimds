@@ -40,7 +40,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const 
   std::vector<size_t> outputs(1);
   outputs[0] = oldConeMap.at(Subnet::get(oldConeID).size() - 1);
 
-  SubnetWindow window(builder, SubnetBuilder::InOutMapping{inputs, outputs});
+  SubnetView window(builder, InOutMapping{inputs, outputs});
   //---
 
   if (careCutSize > cutSize) {

@@ -380,7 +380,7 @@ TEST(SubnetTest, FanoutsReplace) {
   rhsBuilder.addOutput(rhsLink2);
   const auto rhsID = rhsBuilder.make();
 
-  SubnetBuilder::InOutMapping mapping({0, 1, 2, 3}, {6});
+  InOutMapping mapping({0, 1, 2, 3}, {6});
 
   builder.replace(rhsID, mapping);
 
@@ -411,7 +411,7 @@ TEST(SubnetTest, FanoutsReplaceTwice) {
   rhsBuilder.addOutput(rhsLink2);
   const auto rhsID = rhsBuilder.make();
 
-  SubnetBuilder::InOutMapping mapping({0, 1, 2, 3}, {6});
+  InOutMapping mapping({0, 1, 2, 3}, {6});
 
   builder.replace(rhsID, mapping);
 
@@ -425,7 +425,7 @@ TEST(SubnetTest, FanoutsReplaceTwice) {
   rhs2Builder.addOutput(rhs2Link3);
   const auto rhs2ID = rhs2Builder.make();
 
-  SubnetBuilder::InOutMapping mapping2{{0, 1, 2, 3}, {6}};
+  InOutMapping mapping2{{0, 1, 2, 3}, {6}};
 
   builder.replace(rhs2ID, mapping2);
 
@@ -516,7 +516,7 @@ TEST(SubnetTest, SessionReplaceDiff) {
   rhsBuilder.addOutput(rhsLink1);
   const auto rhsID = rhsBuilder.make();
 
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
+  InOutMapping mapping({0, 1, 2}, {5});
 
   builder.replace(rhsID, mapping);
 
@@ -545,7 +545,7 @@ TEST(SubnetTest, SessionReplaceSame) {
   rhsBuilder.addOutput(rhsLink1);
   const auto rhsID = rhsBuilder.make();
 
-  SubnetBuilder::InOutMapping mapping({0, 1}, {2});
+  InOutMapping mapping({0, 1}, {2});
 
   builder.replace(rhsID, mapping);
 
@@ -575,7 +575,7 @@ TEST(SubnetTest, SessionFillEmptyEntry) {
   rhsBuilder.addOutput(rhsLink1);
   const auto rhsID = rhsBuilder.make();
 
-  SubnetBuilder::InOutMapping mapping({0, 1}, {3});
+  InOutMapping mapping({0, 1}, {3});
 
   builder.replace(rhsID, mapping);
 

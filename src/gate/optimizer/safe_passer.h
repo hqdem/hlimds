@@ -20,6 +20,7 @@ using EntryIterator = eda::gate::model::EntryIterator;
  */
 class SafePasser : public EntryIterator {
 
+  using InOutMapping = eda::gate::model::InOutMapping;
   using Subnet = eda::gate::model::Subnet;
   using SubnetID = eda::gate::model::SubnetID;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
@@ -65,7 +66,7 @@ public:
    */
   void replace(
       const SubnetObject &rhs,
-      const SubnetBuilder::InOutMapping &rhsToLhsMapping,
+      const InOutMapping &rhsToLhsMapping,
       const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr, // FIXME: Use type aliases defined in SubnetBuilder.
       const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
@@ -76,7 +77,7 @@ public:
    */
   void replace(
       const SubnetID rhsID,
-      const SubnetBuilder::InOutMapping &rhsToLhsMapping,
+      const InOutMapping &rhsToLhsMapping,
       const std::function<float(const size_t /* index in subnet */)> *getCellWeight = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
@@ -88,7 +89,7 @@ public:
    */
   void replace(
       const SubnetBuilder &rhsBuilder,
-      const SubnetBuilder::InOutMapping &rhsToLhsMapping,
+      const InOutMapping &rhsToLhsMapping,
       const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
       const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
@@ -100,7 +101,7 @@ private:
   /// Checks replacement possibility and saves old cone root next entry.
   void prepareForReplace(
       const size_t rhsOutEntryID,
-      const SubnetBuilder::InOutMapping &rhsToLhsMapping) {
+      const InOutMapping &rhsToLhsMapping) {
     assert(/* Replacing unsafe root entry */
            isNewEntry.size() <= entry || !isNewEntry[entry]);
     assert(/* Current passer entry and rhs root entry differs */

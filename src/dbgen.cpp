@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -25,20 +25,23 @@ inline std::string toHexString(uint8_t k, uint64_t value) {
   return ss.str();
 }
 
-inline eda::gate::model::SubnetID makeSubnet(uint8_t k, const percy::chain &chain) {
+inline eda::gate::model::SubnetObject makeSubnet(
+    uint8_t k, const percy::chain &chain) {
   const size_t nIn = chain.get_nr_inputs();
   const size_t nStep = chain.get_nr_steps();
   const size_t nOut = chain.get_nr_outputs();
 
   assert(k >= nIn);
 
-  eda::gate::model::SubnetBuilder builder;
+  eda::gate::model::SubnetObject subnetObject;
+  auto &subnetBuilder = subnetObject.builder();
+
   std::vector<eda::gate::model::Subnet::Link> links(nIn + nStep);
 
   size_t j = 0;
 
   for (size_t i = 0; i < k; ++i) {
-    const auto link = builder.addInput();
+    const auto link = subnetBuilder.addInput();
     if (i < nIn) {
       links[j++] = link;
     }
@@ -58,23 +61,23 @@ inline eda::gate::model::SubnetID makeSubnet(uint8_t k, const percy::chain &chai
 
     switch (table) {
     case 0x2:
-      links[j++] = builder.addCell(
+      links[j++] = subnetBuilder.addCell(
           eda::gate::model::AND, links[args[0]], ~links[args[1]]);
       break;
     case 0x4:
-      links[j++] = builder.addCell(
+      links[j++] = subnetBuilder.addCell(
           eda::gate::model::AND, ~links[args[0]], links[args[1]]);
       break;
     case 0x6:
-      links[j++] = builder.addCell(
+      links[j++] = subnetBuilder.addCell(
           eda::gate::model::XOR, links[args[0]], links[args[1]]);
       break;
     case 0x8:
-      links[j++] = builder.addCell(
+      links[j++] = subnetBuilder.addCell(
           eda::gate::model::AND, links[args[0]], links[args[1]]);
       break;
     case 0xe:
-      links[j++] = ~builder.addCell(
+      links[j++] = ~subnetBuilder.addCell(
           eda::gate::model::AND, ~links[args[0]], ~links[args[1]]);
       break;
     default:
@@ -87,14 +90,17 @@ inline eda::gate::model::SubnetID makeSubnet(uint8_t k, const percy::chain &chai
     const auto inv = lit & 1;
     const auto var = lit >> 1;
     
-    const auto link = (var == 0) ? builder.addCell(eda::gate::model::ZERO) : links[var - 1];
-    builder.addOutput(inv ? ~link : link);
+    const auto link = (var == 0)
+        ? subnetBuilder.addCell(eda::gate::model::ZERO)
+        : links[var - 1];
+
+    subnetBuilder.addOutput(inv ? ~link : link);
   }
 
-  return builder.make();
+  return subnetObject;
 }
 
-inline eda::gate::model::SubnetID synthesize(uint8_t k, uint64_t value) {
+inline eda::gate::model::SubnetObject synthesize(uint8_t k, uint64_t value) {
   kitty::dynamic_truth_table func(k);
   kitty::create_from_hex_string(func, toHexString(k, value));
 
@@ -116,9 +122,9 @@ void generateXagNpn4() {
     const uint64_t mincode = eda::gate::optimizer::npn4[i];
 
     std::cout << toHexString(k, mincode) << std::endl;
-    auto subnetID = synthesize(k, mincode);
+    auto subnetObject = synthesize(k, mincode);
 
-    std::cout << eda::gate::model::Subnet::get(subnetID) << std::endl;
+    std::cout << subnetObject.object() << std::endl;
   }
 }
 

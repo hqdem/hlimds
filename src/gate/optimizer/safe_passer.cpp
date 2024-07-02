@@ -66,7 +66,7 @@ SafePasser SafePasser::operator--(int) {
 
 void SafePasser::replace(
     const SubnetObject &rhs,
-    const SubnetBuilder::InOutMapping &rhsToLhsMapping,
+    const InOutMapping &rhsToLhsMapping,
     const std::function<void(const size_t)> *onNewCell,
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {
@@ -98,7 +98,7 @@ void SafePasser::replace(
 
 void SafePasser::replace(
     const SubnetID rhsID,
-    const SubnetBuilder::InOutMapping &rhsToLhsMapping,
+    const InOutMapping &rhsToLhsMapping,
     const std::function<float(const size_t)> *getCellWeight,
     const std::function<void(const size_t)> *onNewCell,
     const std::function<void(const size_t)> *onEqualDepth,
@@ -125,7 +125,7 @@ void SafePasser::replace(
 
 void SafePasser::replace(
     const SubnetBuilder &rhsBuilder,
-    const SubnetBuilder::InOutMapping &rhsToLhsMapping,
+    const InOutMapping &rhsToLhsMapping,
     const std::function<void(const size_t)> *onNewCell,
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {

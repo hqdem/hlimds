@@ -32,16 +32,14 @@ SubnetObject createScheme(Polynomial &resultFunction,
     }
 
     if (emptyScheme) {
-      subnetBuilder.addInputs(2);
-      subnetBuilder.addOutput(subnetBuilder.addCell(model::ZERO));
-      return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
+      return SubnetObject{SubnetBuilder::makeZero(argNum)};
     }
   }
 
   const size_t maxSize = (maxArity < Subnet::Cell::InPlaceLinks) ? 
       maxArity : Subnet::Cell::InPlaceLinks;
 
-  std::vector<size_t> idx (argNum);
+  std::vector<size_t> idx(argNum);
   LinkList resultOutput;
 
   for (size_t i = 0; i < argNum; ++i) {

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/subnetview.h"
 #include "gate/techmapper/comb_mapper/func_mapper/func_mapper.h"
 
 #include <unordered_map>

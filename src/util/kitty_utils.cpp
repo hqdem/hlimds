@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -22,11 +22,13 @@ gate::model::SubnetID npnTransform(const gate::model::Subnet &subnet,
                                    const NPNTransformation &t) {
   using Cell = gate::model::Subnet::Cell;
   using Subnet = gate::model::Subnet;
-  using SubnetBuilder = gate::model::SubnetBuilder;
+  using SubnetObject = gate::model::SubnetObject;
 
   uint16_t negationMask = t.negationMask;
   NPNTransformation::InputPermutation permutation = t.permutation;
-  SubnetBuilder builder;
+
+  SubnetObject object;
+  auto &builder = object.builder();
 
   const auto &entries = subnet.getEntries();
 
@@ -62,7 +64,7 @@ gate::model::SubnetID npnTransform(const gate::model::Subnet &subnet,
     builder.addCell(cell.getTypeID(), links);
   }
 
-  return builder.make();
+  return object.make();
 }
 
 SOP findAnyLevel0Kernel(const SOP &sop) {

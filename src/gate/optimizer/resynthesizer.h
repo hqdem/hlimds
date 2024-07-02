@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "gate/model/subnet.h"
-#include "gate/optimizer/subnet_window.h"
+#include "gate/model/subnetview.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/truth_table.h"
 
@@ -27,18 +26,19 @@ public:
   virtual ~ResynthesizerBase() = default;
 
   /**
-   * @brief Resynthesizes the subnet window.
+   * @brief Resynthesizes the subnet view.
    * @return The identifier of the newly constructed subnet or OBJ_NULL_ID.
    */
   virtual model::SubnetObject resynthesize(
-      const SubnetWindow &window, const uint16_t maxArity = -1) const = 0;
+      const model::SubnetView &window,
+      const uint16_t maxArity = -1) const = 0;
 };
 
 /**
  * @brief Constructs the subnet IR.
  */
 template<typename IR>
-IR construct(const SubnetWindow &window);
+IR construct(const model::SubnetView &window);
 
 /**
  * @brief Subnet-to-subnet resynthesizer based on the IR representation.
@@ -50,7 +50,8 @@ public:
       synthesizer(synthesizer) {}
 
   model::SubnetObject resynthesize(
-      const SubnetWindow &window, const uint16_t maxArity = -1) const override {
+      const model::SubnetView &window,
+      const uint16_t maxArity = -1) const override {
     const auto ir = construct<IR>(window);
     return synthesizer.synthesize(ir, window.getCare(), maxArity);
   }
@@ -61,7 +62,7 @@ private:
 
 template<>
 inline utils::TruthTable construct<utils::TruthTable>(
-    const SubnetWindow &window) {
+    const model::SubnetView &window) {
   return window.evaluateTruthTable();
 }
 

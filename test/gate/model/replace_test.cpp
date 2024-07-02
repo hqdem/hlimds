@@ -6,8 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/subnet.h"
-#include "gate/optimizer/cone_builder.h"
+#include "gate/model/subnetview.h"
 #include "gate/optimizer/safe_passer.h"
 
 #include "gtest/gtest.h"
@@ -17,7 +16,6 @@
 
 namespace eda::gate::model {
 
-using ConeBuilder = optimizer::ConeBuilder;
 using SafePasser = optimizer::SafePasser;
 using ReverseSafePasser = optimizer::ReverseSafePasser;
 
@@ -100,7 +98,7 @@ TEST(ReplaceTest, SimpleTest) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx},
+  InOutMapping mapping({inputs[0].idx, inputs[1].idx},
                                       {andLink0.idx});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
@@ -133,7 +131,7 @@ TEST(ReplaceTest, SmallerRhs) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
+  InOutMapping mapping({0, 1, 2}, {5});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 2);
@@ -170,7 +168,7 @@ TEST(ReplaceTest, LargerRhs) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
+  InOutMapping mapping({0, 1, 2}, {5});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, -2);
@@ -206,7 +204,7 @@ TEST(ReplaceTest, NoInner) {
   rhsBuilder.addOutput(rhsXorLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({3, 4}, {5});
+  InOutMapping mapping({3, 4}, {5});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -238,7 +236,7 @@ TEST(ReplaceTest, ReplaceTwice) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping1({0, 1, 2}, {5});
+  InOutMapping mapping1({0, 1, 2}, {5});
 
   const auto effect1 = builder.evaluateReplace(rhsID, mapping1);
   EXPECT_EQ(effect1.size, -1);
@@ -253,7 +251,7 @@ TEST(ReplaceTest, ReplaceTwice) {
   rhs2Builder.addOutput(rhs2BufLink1);
 
   const auto rhs2ID = rhs2Builder.make();
-  SubnetBuilder::InOutMapping mapping2({0}, {7});
+  InOutMapping mapping2({0}, {7});
 
   const auto effect2 = builder.evaluateReplace(rhs2ID, mapping2);
   EXPECT_EQ(effect2.size, -1);
@@ -287,7 +285,7 @@ TEST(ReplaceTest, OneCell) {
   rhsBuilder.addOutput(rhsInputs[0]);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({3}, {3});
+  InOutMapping mapping({3}, {3});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -323,7 +321,7 @@ TEST(ReplaceTest, ExternalRefs) {
   rhsBuilder.addOutput(rhsOrLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({inputs[1].idx, inputs[2].idx, inputs[3].idx},
+  InOutMapping mapping({inputs[1].idx, inputs[2].idx, inputs[3].idx},
                                       {orLink1.idx});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
@@ -366,7 +364,7 @@ TEST(ReplaceTest, LessRootInputs) {
   rhsBuilder.addOutput(rhsXorLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx, inputs[2].idx},
+  InOutMapping mapping({inputs[0].idx, inputs[1].idx, inputs[2].idx},
                                       {xorLink0.idx});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
@@ -401,7 +399,7 @@ TEST(ReplaceTest, InvLink) {
   rhsBuilder.addOutput(rhsXorLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx},
+  InOutMapping mapping({inputs[0].idx, inputs[1].idx},
                                       {xorLink0.idx});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
@@ -438,7 +436,7 @@ TEST(ReplaceTest, AddCellAfterReplace) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx},
+  InOutMapping mapping({inputs[0].idx, inputs[1].idx},
                                       {andLink0.idx});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
@@ -469,15 +467,13 @@ TEST(ReplaceTest, SameCone) {
   SubnetBuilder builder;
   addCellsToBuilder1(builder);
 
-  ConeBuilder coneBuilder(&builder);
-  auto cone = coneBuilder.getMaxCone(5);
+  SubnetView cone(builder, 5);
+  const auto coneSubnetID = cone.getSubnet().id();
 
-  const auto coneSubnetID = cone.subnetID;
-
-  const auto effect = builder.evaluateReplace(coneSubnetID, cone.iomapping);
+  const auto effect = builder.evaluateReplace(coneSubnetID, cone.getInOutMapping());
   EXPECT_EQ(effect.size, 0);
   EXPECT_EQ(effect.depth, 0);
-  builder.replace(coneSubnetID, cone.iomapping);
+  builder.replace(coneSubnetID, cone.getInOutMapping());
   printBidirectCellsTrav(builder);
   const SubnetID resultID = builder.make();
   const Subnet &result = Subnet::get(resultID);
@@ -501,7 +497,7 @@ TEST(ReplaceTest, DeleteCell) {
   rhsBuilder.addOutput(inLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0}, {1});
+  InOutMapping mapping({0}, {1});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 1);
@@ -534,7 +530,7 @@ TEST(ReplaceTest, DeleteSeveralCells) {
   rhsBuilder.addOutput(inLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0}, {3});
+  InOutMapping mapping({0}, {3});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 3);
@@ -565,7 +561,7 @@ TEST(ReplaceTest, DeleteCellWithInvOut) {
   rhsBuilder.addOutput(~inLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0}, {1});
+  InOutMapping mapping({0}, {1});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 1);
@@ -595,7 +591,7 @@ TEST(ReplaceTest, InvertFanouts) {
   rhsBuilder.addOutput(~andLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0, 1}, {3});
+  InOutMapping mapping({0, 1}, {3});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -634,7 +630,7 @@ TEST(ReplaceTest, DublicateRoot) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0, 1}, {4});
+  InOutMapping mapping({0, 1}, {4});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 2);
@@ -668,7 +664,7 @@ TEST(ReplaceTest, DeleteDublicatedRoot) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping1({0, 1}, {4});
+  InOutMapping mapping1({0, 1}, {4});
 
   const auto effect1 = builder.evaluateReplace(rhsID, mapping1);
   EXPECT_EQ(effect1.size, 2);
@@ -683,7 +679,7 @@ TEST(ReplaceTest, DeleteDublicatedRoot) {
   rhs2Builder.addOutput(rhs2XorLink0);
 
   const auto rhs2ID = rhs2Builder.make();
-  SubnetBuilder::InOutMapping mapping2({0, 1}, {5});
+  InOutMapping mapping2({0, 1}, {5});
 
   const auto effect2 = builder.evaluateReplace(rhs2ID, mapping2);
   EXPECT_EQ(effect2.size, 1);
@@ -717,7 +713,7 @@ TEST(ReplaceTest, ReuseReplacedCell) {
   rhsBuilder.addOutput(rhsAndLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping1({1, 2}, {4});
+  InOutMapping mapping1({1, 2}, {4});
 
   const auto effect1 = builder.evaluateReplace(rhsID, mapping1);
   EXPECT_EQ(effect1.size, 0);
@@ -735,7 +731,7 @@ TEST(ReplaceTest, ReuseReplacedCell) {
 
   const auto rhs2ID = rhs2Builder.make();
   std::cout << Subnet::get(rhs2ID) << std::endl;
-  SubnetBuilder::InOutMapping mapping2({0, 1, 2}, {5});
+  InOutMapping mapping2({0, 1, 2}, {5});
 
   const auto effect2 = builder.evaluateReplace(rhs2ID, mapping2);
   EXPECT_EQ(effect2.size, 1);
@@ -782,7 +778,7 @@ TEST(ReplaceTest, ReuseCellsFollowingRoot) {
   rhsBuilder.addOutput(rhsBufLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
+  InOutMapping mapping({0, 1, 2}, {5});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 2);
@@ -833,7 +829,7 @@ TEST(ReplaceTest, EvaluationTest) {
   rhsBuilder.addOutput(rhsBufLink0);
 
   const auto rhsID = rhsBuilder.make();
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {6});
+  InOutMapping mapping({0, 1, 2}, {6});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -859,7 +855,7 @@ TEST(ReplaceBuilderTest, SimpleTest) {
                                               rhsInputs[1]);
   rhsBuilder.addOutput(rhsAndLink0);
 
-  SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx},
+  InOutMapping mapping({inputs[0].idx, inputs[1].idx},
                                       {andLink0.idx});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
@@ -891,7 +887,7 @@ TEST(ReplaceBuilderTest, SmallerRhs) {
                                               rhsInputs[1], rhsInputs[2]);
   rhsBuilder.addOutput(rhsAndLink0);
 
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
+  InOutMapping mapping({0, 1, 2}, {5});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 2);
@@ -927,7 +923,7 @@ TEST(ReplaceBuilderTest, LargerRhs) {
                                               rhsBufLink1, rhsBufLink2);
   rhsBuilder.addOutput(rhsAndLink0);
 
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
+  InOutMapping mapping({0, 1, 2}, {5});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, -2);
@@ -962,7 +958,7 @@ TEST(ReplaceBuilderTest, NoInner) {
                                               rhsInputs[1]);
   rhsBuilder.addOutput(rhsXorLink0);
 
-  SubnetBuilder::InOutMapping mapping({3, 4}, {5});
+  InOutMapping mapping({3, 4}, {5});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -993,7 +989,7 @@ TEST(ReplaceBuilderTest, ReplaceTwice) {
                                               rhsBufLink1, rhsBufLink2);
   rhsBuilder.addOutput(rhsAndLink0);
 
-  SubnetBuilder::InOutMapping mapping1({0, 1, 2}, {5});
+  InOutMapping mapping1({0, 1, 2}, {5});
 
   const auto effect1 = builder.evaluateReplace(rhsBuilder, mapping1);
   EXPECT_EQ(effect1.size, -1);
@@ -1007,7 +1003,7 @@ TEST(ReplaceBuilderTest, ReplaceTwice) {
   const auto rhs2BufLink1 = rhs2Builder.addCell(model::BUF, rhs2BufLink0);
   rhs2Builder.addOutput(rhs2BufLink1);
 
-  SubnetBuilder::InOutMapping mapping2({0}, {7});
+  InOutMapping mapping2({0}, {7});
 
   const auto effect2 = builder.evaluateReplace(rhs2Builder, mapping2);
   EXPECT_EQ(effect2.size, -1);
@@ -1040,7 +1036,7 @@ TEST(ReplaceBuilderTest, OneCell) {
   const auto rhsInputs = rhsBuilder.addInputs(1);
   rhsBuilder.addOutput(rhsInputs[0]);
 
-  SubnetBuilder::InOutMapping mapping({3}, {3});
+  InOutMapping mapping({3}, {3});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -1075,7 +1071,7 @@ TEST(ReplaceBuilderTest, ExternalRefs) {
                                              rhsInputs[1], rhsInputs[2]);
   rhsBuilder.addOutput(rhsOrLink0);
 
-  SubnetBuilder::InOutMapping mapping({inputs[1].idx, inputs[2].idx, inputs[3].idx},
+  InOutMapping mapping({inputs[1].idx, inputs[2].idx, inputs[3].idx},
                                       {orLink1.idx});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
@@ -1117,7 +1113,7 @@ TEST(ReplaceBuilderTest, LessRootInputs) {
                                               rhsInputs[1], rhsInputs[2]);
   rhsBuilder.addOutput(rhsXorLink0);
 
-  SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx, inputs[2].idx},
+  InOutMapping mapping({inputs[0].idx, inputs[1].idx, inputs[2].idx},
                                       {xorLink0.idx});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
@@ -1151,7 +1147,7 @@ TEST(ReplaceBuilderTest, InvLink) {
                                               rhsInputs[1]);
   rhsBuilder.addOutput(rhsXorLink0);
 
-  SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx},
+  InOutMapping mapping({inputs[0].idx, inputs[1].idx},
                                       {xorLink0.idx});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
@@ -1187,7 +1183,7 @@ TEST(ReplaceBuilderTest, AddCellAfterReplace) {
                                               rhsBufLink1);
   rhsBuilder.addOutput(rhsAndLink0);
 
-  SubnetBuilder::InOutMapping mapping({inputs[0].idx, inputs[1].idx},
+  InOutMapping mapping({inputs[0].idx, inputs[1].idx},
                                       {andLink0.idx});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
@@ -1221,7 +1217,7 @@ TEST(ReplaceBuilderTest, SameCone) {
   SubnetBuilder rhsBuilder;
   addCellsToBuilder1(rhsBuilder);
 
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
+  InOutMapping mapping({0, 1, 2}, {5});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -1249,7 +1245,7 @@ TEST(ReplaceBuilderTest, DeleteCell) {
   const auto &inLink0 = rhsBuilder.addInput();
   rhsBuilder.addOutput(inLink0);
 
-  SubnetBuilder::InOutMapping mapping({0}, {1});
+  InOutMapping mapping({0}, {1});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 1);
@@ -1281,7 +1277,7 @@ TEST(ReplaceBuilderTest, DeleteSeveralCells) {
   const auto &inLink0 = rhsBuilder.addInput();
   rhsBuilder.addOutput(inLink0);
 
-  SubnetBuilder::InOutMapping mapping({0}, {3});
+  InOutMapping mapping({0}, {3});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 3);
@@ -1311,7 +1307,7 @@ TEST(ReplaceBuilderTest, DeleteCellWithInvOut) {
   const auto &inLink0 = rhsBuilder.addInput();
   rhsBuilder.addOutput(~inLink0);
 
-  SubnetBuilder::InOutMapping mapping({0}, {1});
+  InOutMapping mapping({0}, {1});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 1);
@@ -1340,7 +1336,7 @@ TEST(ReplaceBuilderTest, InvertFanouts) {
   const auto &andLink0 = rhsBuilder.addCell(model::AND, inLinks[0], inLinks[1]);
   rhsBuilder.addOutput(~andLink0);
 
-  SubnetBuilder::InOutMapping mapping({0, 1}, {3});
+  InOutMapping mapping({0, 1}, {3});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -1378,7 +1374,7 @@ TEST(ReplaceBuilderTest, DublicateRoot) {
                                                rhsInLinks[1]);
   rhsBuilder.addOutput(rhsAndLink0);
 
-  SubnetBuilder::InOutMapping mapping({0, 1}, {4});
+  InOutMapping mapping({0, 1}, {4});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 2);
@@ -1411,7 +1407,7 @@ TEST(ReplaceBuilderTest, DeleteDublicatedRoot) {
                                                rhsInLinks[1]);
   rhsBuilder.addOutput(rhsAndLink0);
 
-  SubnetBuilder::InOutMapping mapping1({0, 1}, {4});
+  InOutMapping mapping1({0, 1}, {4});
 
   const auto effect1 = builder.evaluateReplace(rhsBuilder, mapping1);
   EXPECT_EQ(effect1.size, 2);
@@ -1425,7 +1421,7 @@ TEST(ReplaceBuilderTest, DeleteDublicatedRoot) {
                                                  rhs2InLinks[1]);
   rhs2Builder.addOutput(rhs2XorLink0);
 
-  SubnetBuilder::InOutMapping mapping2({0, 1}, {5});
+  InOutMapping mapping2({0, 1}, {5});
 
   const auto effect2 = builder.evaluateReplace(rhs2Builder, mapping2);
   EXPECT_EQ(effect2.size, 1);
@@ -1458,7 +1454,7 @@ TEST(ReplaceBuilderTest, ReuseReplacedCell) {
                                                rhsInputLinks[1]);
   rhsBuilder.addOutput(rhsAndLink0);
 
-  SubnetBuilder::InOutMapping mapping1({1, 2}, {4});
+  InOutMapping mapping1({1, 2}, {4});
 
   const auto effect1 = builder.evaluateReplace(rhsBuilder, mapping1);
   EXPECT_EQ(effect1.size, 0);
@@ -1474,7 +1470,7 @@ TEST(ReplaceBuilderTest, ReuseReplacedCell) {
                                                  rhs2AndLink0);
   rhs2Builder.addOutput(rhs2AndLink1);
 
-  SubnetBuilder::InOutMapping mapping2({0, 1, 2}, {5});
+  InOutMapping mapping2({0, 1, 2}, {5});
 
   const auto effect2 = builder.evaluateReplace(rhs2Builder, mapping2);
   EXPECT_EQ(effect2.size, 1);
@@ -1520,7 +1516,7 @@ TEST(ReplaceBuilderTest, ReuseCellsFollowingRoot) {
   const auto &rhsBufLink0 = rhsBuilder.addCell(model::BUF, rhsOrLink2);
   rhsBuilder.addOutput(rhsBufLink0);
 
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {5});
+  InOutMapping mapping({0, 1, 2}, {5});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 2);
@@ -1570,7 +1566,7 @@ TEST(ReplaceBuilderTest, EvaluationTest) {
   const auto &rhsBufLink0 = rhsBuilder.addCell(model::BUF, rhsOrLink0);
   rhsBuilder.addOutput(rhsBufLink0);
 
-  SubnetBuilder::InOutMapping mapping({0, 1, 2}, {6});
+  InOutMapping mapping({0, 1, 2}, {6});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 0);

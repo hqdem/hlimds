@@ -13,7 +13,6 @@
 #include "gate/optimizer/synthesizer.h"
 #include "util/arith.h"
 
-#include <iostream>
 #include <vector>
 
 namespace eda::gate::optimizer::synthesis {

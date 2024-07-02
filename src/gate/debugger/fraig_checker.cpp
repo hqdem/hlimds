@@ -8,7 +8,6 @@
 
 #include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/sat_checker.h"
-#include "gate/optimizer/cone_builder.h"
 
 #include <limits>
 #include <map>
@@ -17,7 +16,6 @@
 
 namespace eda::gate::debugger {
 
-using Cone = optimizer::ConeBuilder::Cone;
 using options::SAT;
 using UniformIntDistribution = std::uniform_int_distribution<uint64_t>;
 
@@ -46,7 +44,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
 
   while (true) {
     size_t compareCount = 0;
-    const auto &miter = model::Subnet::get(miterBuilder.make());
+    const auto &miter = model::Subnet::get(miterBuilder.make()); // FIXME: do not create a miter, use a miterBuilder.
     const uint16_t nIn = miter.getInNum();
 
     // Simulation
@@ -74,12 +72,14 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
     model::SubnetBuilder::MergeMap toBeMerged;
     std::unordered_set<uint32_t> checked;
 
+// FIXME:
+#if 0
     for (auto const &[cell, eqClass] : idxToValue) {
       if (compareCount > compareLimit) {
         break;
       }
       if (eqClassToIdx.find(eqClass) != eqClassToIdx.end()) {
-        optimizer::ConeBuilder coneBuilder(&miter);
+        // FIXME: optimizer::ConeBuilder coneBuilder(&miter);
         for (auto idx : eqClassToIdx[eqClass]) {
           compareCount += 1;
           if (idx == cell || checked.find(idx) != checked.end()) {
@@ -89,6 +89,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
           const auto &cone2 = coneBuilder.getMaxCone(idx);
           const auto &coneSubnet1 = model::Subnet::get(cone1.subnetID);
           const auto &coneSubnet2 = model::Subnet::get(cone2.subnetID);
+
           CellToCell map = {};
           size_t coneInNum1 = coneSubnet1.getInNum();
           size_t coneInNum2 = coneSubnet2.getInNum();
@@ -142,7 +143,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
         eqClassToIdx[eqClass].insert(cell);
       }
     }
-
+#endif
     if (toBeMerged.empty()) {
       break;
     }

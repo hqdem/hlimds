@@ -11,7 +11,7 @@
 #include "gate/model/subnet.h"
 #include "util/npn_transformation.h"
 
-#include "kitty/kitty.hpp"
+#include <kitty/kitty.hpp>
 
 #include <cmath>
 #include <vector>
@@ -46,6 +46,7 @@ template<typename TT> TT getTT(const std::tuple<TT, uint32_t,
   return std::get<0>(t);
 }
 
+// FIXME: Return SubnetObject.
 gate::model::SubnetID npnTransform(const gate::model::Subnet &subnet,
                                    const NPNTransformation &t);
 

@@ -12,6 +12,7 @@
 namespace eda::gate::optimizer {
 
 using EntryMap      = std::unordered_map<size_t, size_t>;
+using InOutMapping  = model::InOutMapping;
 using Link          = model::Subnet::Link;
 using LinkList      = model::Subnet::LinkList;
 using Subnet        = model::Subnet;
@@ -72,7 +73,7 @@ static bool makeZeroResubstitution(const SubnetBuilder &builder,
 
   const auto rhsID = rhs.make();
 
-  iter.replace(rhsID, /* map */SubnetBuilder::InOutMapping{}); // FIXME:
+  iter.replace(rhsID, /* map */InOutMapping{}); // FIXME:
   return true;
 }
 
@@ -239,7 +240,7 @@ static bool makeConstResubstitution(SafePasser &iter,
     map.erase(outOld);
   }
 
-  iter.replace(rhsID, /* map */ SubnetBuilder::InOutMapping{}); // FIXME:
+  iter.replace(rhsID, /* map */InOutMapping{}); // FIXME:
   return true;
 }
 

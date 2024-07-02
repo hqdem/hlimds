@@ -29,7 +29,7 @@ static size_t getLinkNum(const Simulator::Subnet &subnet) {
 
 Simulator::Simulator(const Subnet &subnet):
     state(getLinkNum(subnet)),
-    pos(subnet.getEntries().size()),
+    pos(subnet.size()),
     subnet(subnet) {
   const auto &entries = subnet.getEntries();
   program.reserve(subnet.size());

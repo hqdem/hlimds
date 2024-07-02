@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/analyzer/switching_activity.h"
-#include "gate/optimizer/cone_builder.h"
+#include "gate/model/subnetview.h"
 #include "gate/techmapper/comb_mapper/func_mapper/func_mapper.h"
 
 namespace eda::gate::techmapper {
@@ -24,12 +24,11 @@ struct PowerMetrics{
 
 class PowerMap : public FuncMapper {
   using Subnet = model::Subnet;
+  using SubnetView = model::SubnetView;
   using Entry = Subnet::Entry;
   using EntryArray = model::Array<Entry>;
   using Cut = optimizer::CutExtractor::Cut;
   using CutsList = std::vector<Cut>;
-  using ConeBuilder = optimizer::ConeBuilder;
-  using Cone = ConeBuilder::Cone;
   using SCLibrary = library::SCLibrary;
   using SDC = library::SDC;
 
@@ -96,7 +95,6 @@ private:
 
   analyzer::SwitchActivity switchActivity
     = analyzer::SwitchActivity({}, {}); // TODO
-  optimizer::ConeBuilder *coneBuilder; // TODO
   EntryArray *entries; // TODO
   optimizer::CutExtractor *cutExtractor; // TODO
 };

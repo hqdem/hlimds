@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "gate/model/object.h"
-#include "gate/optimizer/cone_builder.h"
+#include "gate/model/subnetview.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/subnet_transformer.h"
@@ -25,15 +24,13 @@ namespace eda::gate::optimizer {
  */
 class Rewriter final : public SubnetInPlaceTransformer {
 public:
-  using Subnet = eda::gate::model::Subnet;
-  using SubnetBuilder = eda::gate::model::SubnetBuilder;
-  using SubnetObject = eda::gate::model::SubnetObject;
+  using InOutMapping = model::InOutMapping;
+  using Subnet = model::Subnet;
+  using SubnetBuilder = model::SubnetBuilder;
+  using SubnetObject = model::SubnetObject;
+  using SubnetView = model::SubnetView;
   using LinkList = Subnet::LinkList;
   using Effect = SubnetBuilder::Effect;
-  using SafePasser = eda::gate::optimizer::SafePasser;
-  using CutExtractor = eda::gate::optimizer::CutExtractor;
-  using ConeBuilder = eda::gate::optimizer::ConeBuilder;
-  using ResynthesizerBase = eda::gate::optimizer::ResynthesizerBase;
 
   /**
    * @brief Constructs a rewriter.

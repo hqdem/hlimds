@@ -493,7 +493,7 @@ struct CellDescriptor final {
 /// Maps subnet cell indices to cell descriptors.
 using InverseCellMapping = std::vector<CellDescriptor>;
 /// Maps old cells (inputs/outputs/flip-flops/blocks) to new ones.
-using InOutMapping = std::unordered_map<CellID, CellID>;
+using InOutCellMapping = std::unordered_map<CellID, CellID>;
 
 /// Makes a link-end corresponding to the given subnet link.
 static inline LinkEnd makeLinkEnd(NetBuilder &netBuilder,
@@ -531,7 +531,7 @@ static Cell::LinkList makeLinkList(NetBuilder &netBuilder,
 /// Makes a new boundary cell for the given old one.
 static CellID makeCell(NetBuilder &netBuilder,
                        const CellID oldCellID,
-                       InOutMapping &inout) {
+                       InOutCellMapping &inout) {
   const auto i = inout.find(oldCellID);
 
   // Already created.
@@ -569,7 +569,7 @@ static void makeCellsForInputs(NetBuilder &netBuilder,
                                const Subnet &subnet,
                                const CellMapping &mapping,
                                InverseCellMapping &inverse,
-                               InOutMapping &inout) {
+                               InOutCellMapping &inout) {
   assert(subnet.getInNum() == mapping.inputs.size());
 
   for (const auto &[oldLink, oldIdx] : mapping.inputs) {
@@ -609,7 +609,7 @@ static void makeCellsForOutputs(NetBuilder &netBuilder,
                                 const Subnet &subnet,
                                 const CellMapping &mapping,
                                 InverseCellMapping &inverse,
-                                InOutMapping &inout) {
+                                InOutCellMapping &inout) {
   assert(subnet.getOutNum() == mapping.outputs.size());
 
   for (const auto &[oldLink, oldIdx] : mapping.outputs) {
@@ -639,7 +639,7 @@ static void makeCellsForOutputs(NetBuilder &netBuilder,
 static void addSubnet(NetBuilder &netBuilder,
                       const SubnetID subnetID,
                       const CellMapping &mapping,
-                      InOutMapping &inout) {
+                      InOutCellMapping &inout) {
   const auto &subnet = Subnet::get(subnetID);
   InverseCellMapping inverse(subnet.size());
 
@@ -652,7 +652,7 @@ NetID NetDecomposer::compose(const std::vector<SubnetID> &subnets,
                              const std::vector<CellMapping> &mapping) const {
   assert(subnets.size() == mapping.size());
 
-  InOutMapping inout;
+  InOutCellMapping inout;
   inout.reserve(1024); // FIXME:
 
   NetBuilder netBuilder;

@@ -6,8 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/utils/subnet_truth_table.h"
-#include "gate/optimizer/cone_builder.h"
+#include "gate/model/subnetview.h"
 #include "gate/techmapper/comb_mapper/func_mapper/func_mapper.h"
 
 namespace eda::gate::techmapper {
@@ -16,9 +15,9 @@ class AreaRecovery : public FuncMapper {
   using SDC = library::SDC;
   using SCLibrary = library::SCLibrary;
   using Subnet = model::Subnet;
+  using SubnetBuilder = model::SubnetBuilder;
+  using SubnetView = model::SubnetView;
   using Cut = optimizer::CutExtractor::Cut;
-  using ConeBuilder = optimizer::ConeBuilder;
-  using Cone = optimizer::ConeBuilder::Cone;
 
   void map(const SubnetID subnetID,
            const SCLibrary &cellDB,

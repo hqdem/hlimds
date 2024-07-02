@@ -19,27 +19,34 @@ using LinkList = Subnet::LinkList;
 using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetObject = model::SubnetObject;
+using SubnetView = model::SubnetView;
 using Effect = SubnetBuilder::Effect;
 using TruthTable = utils::TruthTable;
 
+static SubnetID getSubnetID(const SubnetView &window) {
+  auto &subnetWindow = const_cast<SubnetView&>(window);
+  return subnetWindow.getSubnet().make();
+}
+
+static const Subnet &getSubnet(const SubnetView &window) {
+  auto &subnetWindow = const_cast<SubnetView&>(window);
+  subnetWindow.getSubnet().make();
+  return subnetWindow.getSubnet().object();
+}
+
 class EqualResynthesizer : public ResynthesizerBase {
 public:
-  SubnetObject resynthesize(const SubnetWindow &window,
+  SubnetObject resynthesize(const SubnetView &window,
                             uint16_t) const override {
-    const Subnet &oldSubnet = window.getSubnet();
-    SubnetBuilder newSubnetBuilder;
-    const auto &inLinks = newSubnetBuilder.addInputs(oldSubnet.getInNum());
-    const auto &outLinks = newSubnetBuilder.addSubnet(oldSubnet, inLinks);
-    newSubnetBuilder.addOutputs(outLinks);
-    return SubnetObject{newSubnetBuilder.make()};
+    return SubnetObject{getSubnetID(window)};
   }
 };
 
 class AddBufsResynthesizer : public ResynthesizerBase {
 public:
-  SubnetObject resynthesize(const SubnetWindow &window,
+  SubnetObject resynthesize(const SubnetView &window,
                             uint16_t) const override {
-    const Subnet &oldSubnet = window.getSubnet();
+    const Subnet &oldSubnet = getSubnet(window);
     const auto &entries = oldSubnet.getEntries();
     SubnetBuilder newSubnetBuilder;
     LinkList newSubnetLinks;
@@ -72,9 +79,9 @@ public:
 
 class DelBufsResynthesizer : public ResynthesizerBase {
 public:
-  SubnetObject resynthesize(const SubnetWindow &window,
+  SubnetObject resynthesize(const SubnetView &window,
                             uint16_t) const override {
-    const Subnet &oldSubnet = window.getSubnet();
+    const Subnet &oldSubnet = getSubnet(window);
     const auto &entries = oldSubnet.getEntries();
     SubnetBuilder newSubnetBuilder;
     LinkList newSubnetLinks;

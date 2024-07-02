@@ -8,8 +8,7 @@
 
 #include "gate/estimator/simple_time_model.h"
 #include "gate/library/liberty_manager.h"
-#include "gate/model/utils/subnet_truth_table.h"
-#include "gate/optimizer/cone_builder.h"
+#include "gate/model/subnetview.h"
 #include "gate/techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.h"
 
 #include <readcells/groups.h>
@@ -24,7 +23,9 @@ namespace eda::gate::techmapper {
 using LibertyManager = library::LibertyManager;
 using SCLibrary = library::SCLibrary;
 using Subnet = model::Subnet;
+using SubnetBuilder = model::SubnetBuilder;
 using SubnetID = model::SubnetID;
+using SubnetView = model::SubnetView;
 
 void SimpleDelayMapper::map(
        const SubnetID subnetID, const SCLibrary &cellDB,
@@ -71,24 +72,23 @@ void SimpleDelayMapper::saveBest(
     const EntryIndex entryIndex,
     const optimizer::CutExtractor::CutsList &cutsList,
     const SCLibrary &cellDB, Mapping &mapping) {
-  eda::gate::optimizer::ConeBuilder coneBuilder(&Subnet::get(subnetID));
   MappingItem mappingItem;
-  float bestArrivalTime = MAXFLOAT;
+  float bestArrivalTime = MAXFLOAT; // FIXME: see limits.
 
   estimator::WLM wlm;
   int timingSense = 0;
 
+  SubnetBuilder builder(subnetID); // FIXME:
+
   // Iterate over all cuts to find the best replacement
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.count(entryIndex) != 1) {
+      SubnetView window(builder, cut);
 
-      SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-
-      auto truthTable = eda::gate::model::evaluate(
-          model::Subnet::get(coneSubnetID));
+      auto truthTable = window.evaluateTruthTable();
       float capacitance = 0;
 
-      for (const SubnetID &currentSubnetID : cellDB.getSubnetID(truthTable.at(0))) {
+      for (const SubnetID &currentSubnetID : cellDB.getSubnetID(truthTable)) {
         auto currentAttr = cellDB.getCellAttrs(currentSubnetID);
 
         float inputNetTransition = findMaxArrivalTime(cut.entryIdxs);

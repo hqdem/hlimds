@@ -23,7 +23,8 @@ namespace eda::gate::simulator {
  */
 class Simulator final {
 public:
-  using Subnet = eda::gate::model::Subnet;
+  using Subnet = model::Subnet;
+  using SubnetBuilder = model::SubnetBuilder;
   using Cell = Subnet::Cell;
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
@@ -151,7 +152,6 @@ private:
   /// Holds the indices in the simulation state vector.
   std::vector<size_t> pos;
 
-  /// Subnet being simulated.
   const Subnet &subnet;
 
   //------------------------------------------------------------------------//
@@ -476,8 +476,7 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opCell = [this](size_t idx, const LinkList &links) {
-    const auto &entries = subnet.getEntries();
-    const auto &cell = entries[idx].cell;
+    const auto &cell = subnet.getCell(idx);
     const auto &type = cell.getType();
     const auto &subnet = type.getSubnet();
 
@@ -495,10 +494,9 @@ private:
   };
 
   Function getCell(size_t idx, uint16_t nIn, uint16_t nOut) const {
-    const auto &entries = subnet.getEntries();
-    assert(idx < entries.size());
+    assert(idx < subnet.size());
 
-    const auto &cell = entries[idx].cell;
+    const auto &cell = subnet.getCell(idx);
     const auto &type = cell.getType();
     assert(type.isSubnet());
 

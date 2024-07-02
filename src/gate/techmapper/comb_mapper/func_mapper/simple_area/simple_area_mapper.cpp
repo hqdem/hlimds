@@ -6,15 +6,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <assert.h>
-
-#include "gate/model/utils/subnet_truth_table.h"
-#include "gate/optimizer/cone_builder.h"
 #include "gate/techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.h"
+
+#include <cassert>
 
 namespace eda::gate::techmapper {
 
 using Subnet = model::Subnet;
+using SubnetBuilder = model::SubnetBuilder;
+using SubnetView = model::SubnetView;
 using Type = MappingItem::Type;
 
 void SimpleAreaMapper::map(
@@ -86,12 +86,12 @@ void SimpleAreaMapper::saveBest(
   optimizer::CutExtractor::Cut bestCut;
   float bestArea = MAXFLOAT;
 
-  optimizer::ConeBuilder coneBuilder(&Subnet::get(subnetID));
+  SubnetBuilder builder(subnetID); // FIXME:
 
   for (const auto &cut : cutsList) {
     if (cut.entryIdxs.count(entryIndex) != 1) {
-      auto truthTable = eda::gate::model::evaluate(
-          Subnet::get(coneBuilder.getCone(cut).subnetID)).at(0);
+      SubnetView window(builder, cut);
+      const auto truthTable = window.evaluateTruthTable();
 
       for (const SubnetID &currentSubnetID : cellDB.getSubnetID(truthTable)) {
         float area = dynamicCalculateArea(entryIndex, cut.entryIdxs, cellDB, mapping);

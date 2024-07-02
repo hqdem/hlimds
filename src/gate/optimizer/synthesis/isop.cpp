@@ -2,33 +2,39 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/synthesis/isop.h"
 #include "util/kitty_utils.h"
 
+#include <cmath>
+
 namespace eda::gate::optimizer::synthesis {
 
-Link synthFromSOP(const SOP &sop, const LinkList &inputs,
-                  SubnetBuilder &subnetBuilder, uint16_t maxArity) {
+Link synthFromSOP(const SOP &sop,
+                  const LinkList &inputs,
+                  SubnetBuilder &subnetBuilder,
+                  uint16_t maxArity) {
   if (sop.size() == 1) {
     return synthFromCube(sop[0], inputs, subnetBuilder, maxArity);
   }
 
   LinkList links;
-  for (auto it = sop.begin(); it < sop.end(); ++it) {
-    Link link = synthFromCube(*it, inputs, subnetBuilder, maxArity);
+  for (auto it = sop.begin(); it != sop.end(); ++it) {
+    const Link link = synthFromCube(*it, inputs, subnetBuilder, maxArity);
     links.push_back(~link);
   }
 
   return ~subnetBuilder.addCellTree(model::AND, links, maxArity);
 }
 
-Link synthFromCube(Cube cube, const LinkList &inputs,
-                   SubnetBuilder &subnetBuilder, int16_t maxArity) {
-  uint32_t mask {cube._mask};
+Link synthFromCube(Cube cube,
+                   const LinkList &inputs,
+                   SubnetBuilder &subnetBuilder,
+                   int16_t maxArity) {
+  uint32_t mask{cube._mask};
   LinkList links;
   for (; mask; mask &= (mask - 1)) {
     size_t idx = std::log2(mask - (mask & (mask - 1)));
@@ -56,16 +62,16 @@ static std::pair<TruthTable, bool> handleCare(
   return {inv ? inverseFuncWithCare : funcWithCare, inv};
 }
 
-model::SubnetObject MMSynthesizer::synthesize(const TruthTable &func,
-                                              const TruthTable &care,
-                                              uint16_t maxArity) const {
+SubnetObject MMSynthesizer::synthesize(const TruthTable &func,
+                                       const TruthTable &care,
+                                       uint16_t maxArity) const {
   SubnetBuilder subnetBuilder;
   LinkList ins = subnetBuilder.addInputs(func.num_vars());
 
   const auto [tt, inv] = handleCare(func, care);
   
   if (bool value; utils::isConst(tt, value)) {
-    return model::SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
+    return SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
   }
 
   Link output{synthFromSOP(kitty::isop(tt), ins, subnetBuilder, maxArity)};                               
@@ -74,14 +80,14 @@ model::SubnetObject MMSynthesizer::synthesize(const TruthTable &func,
   return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
 }
 
-model::SubnetObject MMFactorSynthesizer::synthesize(const TruthTable &func,
-                                                    const TruthTable &care,
-                                                    uint16_t maxArity) const {
+SubnetObject MMFactorSynthesizer::synthesize(const TruthTable &func,
+                                             const TruthTable &care,
+                                             uint16_t maxArity) const {
   const auto [tt, inv] = handleCare(func, care);
 
   if (bool value; utils::isConst(tt, value)) {
     const auto subnetID =
-        model::SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
+        SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
     return SubnetObject{subnetID};
   }
 

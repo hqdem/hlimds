@@ -13,7 +13,7 @@
 #include "gate/optimizer/synthesizer.h"
 #include "util/kitty_utils.h"
 
-#include "kitty/kitty.hpp"
+#include <kitty/kitty.hpp>
 
 #include <utility>
 #include <vector>
@@ -22,24 +22,32 @@ namespace eda::gate::optimizer::synthesis {
 
 /// @cond ALIASES
 using Cube          = kitty::cube;
-using Link          = eda::gate::model::Subnet::Link;
-using LinkList      = eda::gate::model::Subnet::LinkList;
+using Link          = model::Subnet::Link;
+using LinkList      = model::Subnet::LinkList;
 using SOP           = std::vector<Cube>;
-using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using SubnetBuilder = model::SubnetBuilder;
 using SubnetObject  = model::SubnetObject;
 using TruthTable    = utils::TruthTable;
 /// @endcond
 
-/// Synthesizes the subnet from SOP of the boolean function.
-Link synthFromSOP(const SOP &sop, const LinkList &inputs,
-                  SubnetBuilder &subnetBuilder, uint16_t maxArity = -1);
-
-/// Synthesizes the subnet from cube.
-Link synthFromCube(Cube cube, const LinkList &inputs,
-                   SubnetBuilder &subnetBuilder, int16_t maxArity = -1);
+/**
+ * @brief Synthesizes a subnet from the SOP.
+ */
+Link synthFromSOP(const SOP &sop,
+                  const LinkList &inputs,
+                  SubnetBuilder &subnetBuilder,
+                  uint16_t maxArity = -1);
 
 /**
- * \brief Implements the Minato-Morreale algorithm.
+ * @brief Synthesizes a subnet from the cube.
+ */
+Link synthFromCube(Cube cube,
+                   const LinkList &inputs,
+                   SubnetBuilder &subnetBuilder,
+                   int16_t maxArity = -1);
+
+/**
+ * @brief Implements the Minato-Morreale algorithm.
  */
 class MMSynthesizer final : public TruthTableSynthesizer {
 public:
@@ -51,7 +59,7 @@ public:
 };
 
 /**
- * \brief Implements the Minato-Morreale algorithm w/ factoring.
+ * @brief Implements the Minato-Morreale algorithm w/ factoring.
  */
 class MMFactorSynthesizer final : public TruthTableSynthesizer {
 public:

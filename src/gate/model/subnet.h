@@ -11,6 +11,7 @@
 #include "gate/model/array.h"
 #include "gate/model/cell.h"
 #include "gate/model/celltype.h"
+#include "gate/model/iomapping.h"
 #include "gate/model/object.h"
 #include "gate/model/storage.h"
 #include "util/hash.h"
@@ -387,6 +388,7 @@ namespace eda::gate::model {
 
 class SubnetBuilder final {
   friend EntryIterator;
+  friend SubnetObject;
 
 public:
   using Cell = Subnet::Cell;
@@ -403,24 +405,6 @@ public:
 
   /// Fanouts container wrapper;
   using FanoutsContainer = std::vector<size_t>;
-
-  /// Represents an input/output mapping for replacement.
-  struct InOutMapping final {
-    InOutMapping() = default;
-
-    InOutMapping(const std::vector<size_t> &inputs,
-                 const std::vector<size_t> &outputs):
-        inputs(inputs), outputs(outputs) {}
-
-    size_t getInNum() const { return inputs.size(); }
-    size_t getOutNum() const { return outputs.size(); }
-
-    size_t getIn(const size_t i) const { return inputs[i]; }
-    size_t getOut(const size_t i) const { return outputs[i]; }
-
-    std::vector<size_t> inputs;
-    std::vector<size_t> outputs;
-  };
 
   /// Represents a replacement effect.
   struct Effect final {
@@ -444,7 +428,9 @@ public:
   static SubnetID makeOne(const size_t nIn);
   static SubnetID makeConst(const size_t nIn, const bool value);
 
-  SubnetBuilder(): nIn(0), nOut(0) {
+//FIXME: make private
+//private:
+  SubnetBuilder() {
     const size_t n = 1024; // FIXME
     entries.reserve(n);
     desc.reserve(n);
@@ -465,6 +451,10 @@ public:
       SubnetID subnetID,
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
+
+public:
+  /// Returns the number of cells.
+  size_t size() const { return nCell; }
 
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
@@ -983,8 +973,9 @@ private:
     size_t session;
   };
 
-  uint16_t nIn;
-  uint16_t nOut;
+  size_t nCell{0};
+  uint16_t nIn{0};
+  uint16_t nOut{0};
 
   std::vector<Subnet::Entry> entries;
   bool isDisassembled{false};

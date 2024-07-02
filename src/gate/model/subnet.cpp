@@ -375,15 +375,15 @@ void SubnetBuilder::replace(
 //-- FIXME: Implement entryID iterators for Subnet.
 template <typename RhsContainer>
 void fillMapping(const RhsContainer &rhs,
-                 const SubnetBuilder::InOutMapping &iomapping,
+                 const InOutMapping &iomapping,
                  std::vector<size_t> &rhsToLhs) {
   assert(false && "Specialization is required");
 }
 
 template <>
 void fillMapping<Subnet>(const Subnet &rhs,
-                 const SubnetBuilder::InOutMapping &iomapping,
-                 std::vector<size_t> &rhsToLhs) {
+                         const InOutMapping &iomapping,
+                         std::vector<size_t> &rhsToLhs) {
   assert(rhs.getInNum() == iomapping.getInNum());
   assert(rhs.getOutNum() == iomapping.getOutNum());
 
@@ -397,8 +397,8 @@ void fillMapping<Subnet>(const Subnet &rhs,
 
 template <>
 void fillMapping<SubnetBuilder>(const SubnetBuilder &rhs,
-                 const SubnetBuilder::InOutMapping &iomapping,
-                 std::vector<size_t> &rhsToLhs) {
+                                const InOutMapping &iomapping,
+                                std::vector<size_t> &rhsToLhs) {
   assert(rhs.getInNum() == iomapping.getInNum());
   assert(rhs.getOutNum() == iomapping.getOutNum());
 
@@ -818,6 +818,8 @@ void SubnetBuilder::delFanout(size_t sourceID, size_t fanoutID) {
 }
 
 size_t SubnetBuilder::allocEntry() {
+  nCell++;
+
   if (!emptyEntryIDs.empty()) {
     const auto allocatedID = emptyEntryIDs.back();
     emptyEntryIDs.pop_back();
@@ -826,6 +828,7 @@ size_t SubnetBuilder::allocEntry() {
 
   entries.resize(entries.size() + 1);
   desc.resize(entries.size());
+
   return entries.size() - 1;
 }
 
@@ -886,10 +889,13 @@ void SubnetBuilder::deallocEntry(size_t entryID) {
   assert(!cell.refcount);
 
   destrashEntry(entryID);
-  // Updating depth bounds
+
+  // Updating depth bounds.
   deleteDepthBounds(entryID);
   desc[entryID].depth = invalidID;
   emptyEntryIDs.push_back(entryID);
+
+  nCell--;
 }
 
 void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {

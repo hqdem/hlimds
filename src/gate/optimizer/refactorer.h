@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model/subnet.h"
+#include "gate/model/subnetview.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/subnet_transformer.h"
@@ -27,10 +27,12 @@ public:
   /// @cond ALIASES
   using Effect        = eda::gate::model::SubnetBuilder::Effect;
   using EntryMap      = std::unordered_map<size_t, size_t>;
+  using InOutMapping  = eda::gate::model::InOutMapping;
   using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID      = eda::gate::model::SubnetID;
   using SubnetObject  = eda::gate::model::SubnetObject;
+  using SubnetView    = eda::gate::model::SubnetView;
   /// @endcond
 
   /// Constructs cone for Cell in SubnetBuilder.

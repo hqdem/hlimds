@@ -66,7 +66,7 @@ public:
    * @param subnet Subnet to find cuts.
    * @param k Maximum cut size.
    */
-  CutExtractor(const Subnet *subnet, const unsigned int k);
+  CutExtractor(const Subnet *subnet, const unsigned k);
 
   CutExtractor(SubnetBuilder *builder, const unsigned k);
 

@@ -12,12 +12,11 @@ namespace eda::gate::techmapper {
 
 float AreaRecovery::getMinAreaAndCell(
         SubnetID &cellTechLib, Cut &cut, const SCLibrary &cellDB) const {
-  ConeBuilder coneBuilder(&Subnet::get(this->subnetID));
-  SubnetID coneSubnetID = coneBuilder.getCone(cut).subnetID;
-  const auto truthTable =
-      eda::gate::model::evaluate(Subnet::get(coneSubnetID))[0];
+  SubnetBuilder builder(subnetID); // FIXME:
+  SubnetView window(builder, cut);
+  const auto truthTable = window.evaluateTruthTable();
   std::vector<SubnetID> cellList = cellDB.getSubnetID(truthTable);
-  if (cellList.size() == 0) {
+  if (cellList.empty()) {
     return 0;
   }
 
@@ -37,12 +36,16 @@ float AreaRecovery::getMinAreaAndCell(
 
 double
 AreaRecovery::calcAreaFlow(Cut &cut, std::vector<double> &representAreaFlow,
-                             model::Array<Subnet::Entry> &entries,
-                             float minArea) {
+                           model::Array<Subnet::Entry> &entries,
+                          float minArea) {
   double aF = minArea;
 
-  ConeBuilder coneBuilder(&Subnet::get(this->subnetID));
-  Cone cone = coneBuilder.getCone(cut);
+  SubnetBuilder builder(subnetID); // FIXME:
+  SubnetView window(builder, cut);
+
+  // FIXME: Traverse the window and calculates the area flow.
+
+  /*
   const SubnetID &coneSubnetID = cone.subnetID;
   Subnet &coneSubnet = Subnet::get(coneSubnetID);
   eda::gate::model::Array<Subnet::Entry> coneEntries = coneSubnet.getEntries();
@@ -61,6 +64,7 @@ AreaRecovery::calcAreaFlow(Cut &cut, std::vector<double> &representAreaFlow,
       }
     }
   }
+  */
   return aF;
 }
 

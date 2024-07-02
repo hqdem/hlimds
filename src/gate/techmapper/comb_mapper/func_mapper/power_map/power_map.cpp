@@ -7,12 +7,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/analyzer/simulation_estimator.h"
-#include "gate/model/utils/subnet_truth_table.h"
 #include "gate/techmapper/comb_mapper/func_mapper/power_map/power_map.h"
 
 namespace eda::gate::techmapper {
 
 using Subnet = model::Subnet;
+using SubnetBuilder = model::SubnetBuilder;
 using SwitchActivity = analyzer::SwitchActivity;
 using Entry = Subnet::Entry;
 using EntryArray = model::Array<Entry>;
@@ -417,7 +417,6 @@ void PowerMap::localSwitchAreaRecovery(
 
 PowerMap::PowerMap() {
   entries = nullptr;
-  coneBuilder = nullptr;
 }
 
 void PowerMap::map(
@@ -448,12 +447,13 @@ void PowerMap::map(
 
 std::vector<SubnetID> PowerMap::getTechIdsList(
                         const Cut &cut, const SCLibrary &cellDB) {
-  SubnetID coneSubnetID = coneBuilder->getCone(cut).subnetID;
+  SubnetBuilder builder(subnetID); // FIXME:   
+  SubnetView window(builder, cut);
+  const auto truthTable = window.evaluateTruthTable();
+
   std::vector<SubnetID> cellList;
-  for(const auto &truthTable : eda::gate::model::evaluate(Subnet::get(coneSubnetID))){  
-    for(const auto &id : cellDB.getSubnetID(truthTable)){
-      cellList.push_back(id);
-    }
+  for(const auto &id : cellDB.getSubnetID(truthTable)){
+    cellList.push_back(id);
   }
   // assert(cellList.size() != 0);
   return cellList;
@@ -463,7 +463,6 @@ void PowerMap::init(Mapping &mapping) {
   const Subnet &subnet = Subnet::get(this->subnetID);
   entries = new EntryArray(subnet.getEntries());
   metrics.resize(entries->size());
-  coneBuilder = new eda::gate::optimizer::ConeBuilder(&subnet);
 
   // get switching activity of subnet
   eda::gate::analyzer::SimulationEstimator simulationEstimator;
@@ -486,8 +485,6 @@ void PowerMap::init(Mapping &mapping) {
 void PowerMap::clear() {
   metrics.clear();
   delete entries;
-  delete coneBuilder;
-  coneBuilder = nullptr;
   entries = nullptr;
 }
 } //namespace eda::gate::techmapper

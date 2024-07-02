@@ -8,26 +8,25 @@
 
 #pragma once
 
-#include "gate/model/subnet.h"
+#include "gate/model/subnetview.h"
 
 #include <cassert>
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <vector>
 
 namespace eda::gate::simulator {
 
 /**
- * \brief Subnet simulator.
+ * @brief Subnet simulator.
  */
 class Simulator final {
 public:
-  using Subnet = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
-  using Cell = Subnet::Cell;
-  using Link = Subnet::Link;
-  using LinkList = Subnet::LinkList;
+  using SubnetView = model::SubnetView;
+  using Cell = model::Subnet::Cell;
+  using Link = model::Subnet::Link;
+  using LinkList = model::Subnet::LinkList;
 
   using DataChunk = uint64_t;
   using DataVector = std::vector<DataChunk>;
@@ -35,7 +34,7 @@ public:
   /// Data chunk size in bits.
   static constexpr size_t DataChunkBits = (sizeof(DataChunk) << 3);
 
-  Simulator(const Subnet &subnet);
+  Simulator(const SubnetBuilder &builder);
 
   /// Evaluates the output and inner values from the input ones.
   template <typename T = DataVector>
@@ -50,7 +49,7 @@ public:
     assert(values.size() == nIn);
 
     for (size_t i = 0; i < nIn; ++i) {
-      setValue(i, values[i]);
+      setInput(i, values[i]);
     }
   }
 
@@ -60,7 +59,7 @@ public:
     assert(nIn <= (sizeof(values) << 3));
 
     for (size_t i = 0; i < nIn; ++i) {
-      setValue(i, (values >> i) & 1);
+      setInput(i, (values >> i) & 1);
     }
   }
 
@@ -70,8 +69,22 @@ public:
     assert(values.size() == nIn);
 
     for (size_t i = 0; i < nIn; ++i) {
-      setValue(i, values[i]);
+      setInput(i, values[i]);
     }
+  }
+
+  /// Sets the input value.
+  template <typename T = DataChunk>
+  void setInput(size_t i, T value) {
+    const auto entryID = subnet.getIn(i);
+    setValue(entryID, value);
+  }
+
+  /// Gets the output value.
+  template <typename T = DataChunk>
+  T getOutput(size_t i) const {
+    const auto entryID = subnet.getOut(i);
+    return getValue(entryID);
   }
 
   /// Gets the output link value.
@@ -82,20 +95,20 @@ public:
 
   /// Gets the cell value.
   template <typename T = DataChunk>
-  T getValue(size_t idx) const {
-    return getValue(Link(idx));
+  T getValue(size_t entryID) const {
+    return getValue(Link(entryID));
   }
 
   /// Sets the cell value.
   template <typename T = DataChunk>
-  void setValue(size_t idx, T value) {
-    access(idx) = static_cast<DataChunk>(value);
+  void setValue(size_t entryID, T value) {
+    access(entryID) = static_cast<DataChunk>(value);
   }
 
   /// Executes the compiled program.
   void simulate() {
     for (const auto &command : program) {
-      command.op(command.idx, command.links);
+      command.op(command.entryID, command.links);
     }
   }
 
@@ -108,12 +121,12 @@ private:
     return state[index(link)];
   }
 
-  DataChunk &access(size_t idx) {
-    return state[index(idx)];
+  DataChunk &access(size_t entryID) {
+    return state[index(entryID)];
   }
 
-  const DataChunk &access(size_t idx) const {
-    return state[index(idx)];
+  const DataChunk &access(size_t entryID) const {
+    return state[index(entryID)];
   }
 
   DataChunk value(Link link) const {
@@ -121,10 +134,11 @@ private:
   }
 
   size_t index(Link link) const {
-    return pos[link.idx] + link.out;
+    return index(link.idx) + link.out;
   }
 
-  size_t index(size_t idx) const {
+  size_t index(size_t entryID) const {
+    const auto idx = subnet.getParent().getDataVal<size_t>(entryID);
     return pos[idx];
   }
 
@@ -133,16 +147,16 @@ private:
 
   /// Single command.
   struct Command final {
-    Command(Function op, size_t idx, const LinkList &links):
-        op(op), idx(idx), links(links) {}
+    Command(Function op, size_t entryID, const LinkList &links):
+        op(op), entryID(entryID), links(links) {}
 
     const Function op;
-    const size_t idx;
+    const size_t entryID;
     const LinkList links;
   };
 
   /// Returns the cell function.
-  Function getFunction(const Cell &cell, size_t idx) const;
+  Function getFunction(const Cell &cell, size_t entryID) const;
 
   /// Compiled program for the given subnet.
   std::vector<Command> program;
@@ -152,14 +166,14 @@ private:
   /// Holds the indices in the simulation state vector.
   std::vector<size_t> pos;
 
-  const Subnet &subnet;
+  const SubnetView subnet;
 
   //------------------------------------------------------------------------//
   // ZERO
   //------------------------------------------------------------------------//
 
-  const Function opZero = [this](size_t idx, const LinkList &links) {
-    access(idx) = 0ull;
+  const Function opZero = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = 0ull;
   };
 
   Function getZero(uint16_t arity) const {
@@ -171,8 +185,8 @@ private:
   // ONE
   //------------------------------------------------------------------------//
 
-  const Function opOne = [this](size_t idx, const LinkList &links) {
-    access(idx) = -1ull;
+  const Function opOne = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = -1ull;
   };
 
   Function getOne(uint16_t arity) const {
@@ -184,8 +198,8 @@ private:
   // BUF
   //------------------------------------------------------------------------//
 
-  const Function opBuf = [this](size_t idx, const LinkList &links) {
-    access(idx) = value(links[0]);
+  const Function opBuf = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = value(links[0]);
   };
 
   Function getBuf(uint16_t arity) const {
@@ -197,8 +211,8 @@ private:
   // NOT
   //------------------------------------------------------------------------//
 
-  const Function opNot = [this](size_t idx, const LinkList &links) {
-    access(idx) = ~value(links[0]);
+  const Function opNot = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = ~value(links[0]);
   };
 
   Function getNot(uint16_t arity) const {
@@ -210,15 +224,15 @@ private:
   // AND
   //------------------------------------------------------------------------//
 
-  const Function opAnd2 = [this](size_t idx, const LinkList &links) {
-    access(idx) = (value(links[0]) & value(links[1]));
+  const Function opAnd2 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = (value(links[0]) & value(links[1]));
   };
 
-  const Function opAnd3 = [this](size_t idx, const LinkList &links) {
-    access(idx) = (value(links[0]) & value(links[1]) & value(links[2]));
+  const Function opAnd3 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = (value(links[0]) & value(links[1]) & value(links[2]));
   };
 
-  const Function opAndN = [this](size_t idx, const LinkList &links) {
+  const Function opAndN = [this](size_t entryID, const LinkList &links) {
     DataChunk result = -1ull;
 
     for (size_t i = 0; i + 1 < links.size(); i += 2) {
@@ -228,7 +242,7 @@ private:
       result &= value(links.back());
     }
 
-    access(idx) = result;
+    access(entryID) = result;
   };
 
   Function getAnd(uint16_t arity) const {
@@ -246,15 +260,15 @@ private:
   // OR
   //------------------------------------------------------------------------//
 
-  const Function opOr2 = [this](size_t idx, const LinkList &links) {
-    access(idx) = (value(links[0]) | value(links[1]));
+  const Function opOr2 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = (value(links[0]) | value(links[1]));
   };
 
-  const Function opOr3 = [this](size_t idx, const LinkList &links) {
-    access(idx) = (value(links[0]) | value(links[1]) | value(links[2]));
+  const Function opOr3 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = (value(links[0]) | value(links[1]) | value(links[2]));
   };
 
-  const Function opOrN = [this](size_t idx, const LinkList &links) {
+  const Function opOrN = [this](size_t entryID, const LinkList &links) {
     DataChunk result = 0ull;
 
     for (size_t i = 0; i + 1 < links.size(); i += 2) {
@@ -264,7 +278,7 @@ private:
       result |= value(links.back());
     }
 
-    access(idx) = result;
+    access(entryID) = result;
   };
 
   Function getOr(uint16_t arity) const {
@@ -282,15 +296,15 @@ private:
   // XOR
   //------------------------------------------------------------------------//
 
-  const Function opXor2 = [this](size_t idx, const LinkList &links) {
-    access(idx) = (value(links[0]) ^ value(links[1]));
+  const Function opXor2 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = (value(links[0]) ^ value(links[1]));
   };
 
-  const Function opXor3 = [this](size_t idx, const LinkList &links) {
-    access(idx) = (value(links[0]) ^ value(links[1]) ^ value(links[2]));
+  const Function opXor3 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = (value(links[0]) ^ value(links[1]) ^ value(links[2]));
   };
 
-  const Function opXorN = [this](size_t idx, const LinkList &links) {
+  const Function opXorN = [this](size_t entryID, const LinkList &links) {
     DataChunk result = 0ull;
 
     for (size_t i = 0; i + 1 < links.size(); i += 2) {
@@ -300,7 +314,7 @@ private:
       result ^= value(links.back());
     }
 
-    access(idx) = result;
+    access(entryID) = result;
   };
 
   Function getXor(uint16_t arity) const {
@@ -318,15 +332,15 @@ private:
   // NAND
   //------------------------------------------------------------------------//
 
-  const Function opNand2 = [this](size_t idx, const LinkList &links) {
-    access(idx) = ~(value(links[0]) & value(links[1]));
+  const Function opNand2 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = ~(value(links[0]) & value(links[1]));
   };
 
-  const Function opNand3 = [this](size_t idx, const LinkList &links) {
-    access(idx) = ~(value(links[0]) & value(links[1]) & value(links[2]));
+  const Function opNand3 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = ~(value(links[0]) & value(links[1]) & value(links[2]));
   };
 
-  const Function opNandN = [this](size_t idx, const LinkList &links) {
+  const Function opNandN = [this](size_t entryID, const LinkList &links) {
     DataChunk result = -1ull;
 
     for (size_t i = 0; i + 1 < links.size(); i += 2) {
@@ -336,7 +350,7 @@ private:
       result &= value(links.back());
     }
 
-    access(idx) = ~result;
+    access(entryID) = ~result;
   };
 
   Function getNand(uint16_t arity) const {
@@ -354,15 +368,15 @@ private:
   // NOR
   //------------------------------------------------------------------------//
 
-  const Function opNor2 = [this](size_t idx, const LinkList &links) {
-    access(idx) = ~(value(links[0]) | value(links[1]));
+  const Function opNor2 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = ~(value(links[0]) | value(links[1]));
   };
 
-  const Function opNor3 = [this](size_t idx, const LinkList &links) {
-    access(idx) = ~(value(links[0]) | value(links[1]) | value(links[2]));
+  const Function opNor3 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = ~(value(links[0]) | value(links[1]) | value(links[2]));
   };
 
-  const Function opNorN = [this](size_t idx, const LinkList &links) {
+  const Function opNorN = [this](size_t entryID, const LinkList &links) {
     DataChunk result = 0ull;
 
     for (size_t i = 0; i + 1 < links.size(); i += 2) {
@@ -372,7 +386,7 @@ private:
       result |= value(links.back());
     }
 
-    access(idx) = ~result;
+    access(entryID) = ~result;
   };
 
   Function getNor(uint16_t arity) const {
@@ -390,15 +404,15 @@ private:
   // XNOR
   //------------------------------------------------------------------------//
 
-  const Function opXnor2 = [this](size_t idx, const LinkList &links) {
-    access(idx) = ~(value(links[0]) ^ value(links[1]));
+  const Function opXnor2 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = ~(value(links[0]) ^ value(links[1]));
   };
 
-  const Function opXnor3 = [this](size_t idx, const LinkList &links) {
-    access(idx) = ~(value(links[0]) ^ value(links[1]) ^ value(links[2]));
+  const Function opXnor3 = [this](size_t entryID, const LinkList &links) {
+    access(entryID) = ~(value(links[0]) ^ value(links[1]) ^ value(links[2]));
   };
 
-  const Function opXnorN = [this](size_t idx, const LinkList &links) {
+  const Function opXnorN = [this](size_t entryID, const LinkList &links) {
     DataChunk result = 0ull;
 
     for (size_t i = 0; i + 1 < links.size(); i += 2) {
@@ -408,7 +422,7 @@ private:
       result ^= value(links.back());
     }
 
-    access(idx) = ~result;
+    access(entryID) = ~result;
   };
 
   Function getXnor(uint16_t arity) const {
@@ -426,15 +440,15 @@ private:
   // MAJ
   //------------------------------------------------------------------------//
 
-  const Function opMaj3 = [this](size_t idx, const LinkList &links) {
+  const Function opMaj3 = [this](size_t entryID, const LinkList &links) {
     const auto x = value(links[0]);
     const auto y = value(links[1]);
     const auto z = value(links[2]);
 
-    access(idx) = ((x & y) | (x & z) | (y & z));
+    access(entryID) = ((x & y) | (x & z) | (y & z));
   };
 
-  const Function opMajN = [this](size_t idx, const LinkList &links) {
+  const Function opMajN = [this](size_t entryID, const LinkList &links) {
     const size_t n = links.size();
     const size_t k = (n >> 1);
 
@@ -458,7 +472,7 @@ private:
       result |= (weight > k) << bit;
     }
 
-    access(idx) = result;
+    access(entryID) = result;
   };
 
   Function getMaj(uint16_t arity) const {
@@ -475,12 +489,13 @@ private:
   // CELL
   //------------------------------------------------------------------------//
 
-  const Function opCell = [this](size_t idx, const LinkList &links) {
-    const auto &cell = subnet.getCell(idx);
+  const Function opCell = [this](size_t entryID, const LinkList &links) {
+    const auto &cell = subnet.getParent().getCell(entryID);
     const auto &type = cell.getType();
     const auto &subnet = type.getSubnet();
 
-    Simulator simulator(subnet);
+    SubnetBuilder builder(subnet);
+    Simulator simulator(builder);
 
     for (size_t i = 0; i < subnet.getInNum(); ++i) {
       simulator.setValue(i, value(links[i]));
@@ -489,14 +504,12 @@ private:
     simulator.simulate();
 
     for (size_t i = 0; i < subnet.getOutNum(); ++i) {
-      access(Link(idx, i)) = simulator.value(subnet.getOut(i));
+      access(Link(entryID, i)) = simulator.value(subnet.getOut(i));
     }
   };
 
-  Function getCell(size_t idx, uint16_t nIn, uint16_t nOut) const {
-    assert(idx < subnet.size());
-
-    const auto &cell = subnet.getCell(idx);
+  Function getCell(size_t entryID, uint16_t nIn, uint16_t nOut) const {
+    const auto &cell = subnet.getParent().getCell(entryID);
     const auto &type = cell.getType();
     assert(type.isSubnet());
 

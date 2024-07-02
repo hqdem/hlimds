@@ -468,7 +468,7 @@ TEST(ReplaceTest, SameCone) {
   addCellsToBuilder1(builder);
 
   SubnetView cone(builder, 5);
-  const auto coneSubnetID = cone.getSubnet().id();
+  const auto coneSubnetID = cone.getSubnet().make();
 
   const auto effect = builder.evaluateReplace(coneSubnetID, cone.getInOutMapping());
   EXPECT_EQ(effect.size, 0);

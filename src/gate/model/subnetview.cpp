@@ -24,13 +24,15 @@ SubnetView::SubnetView(const SubnetBuilder &parent):
 
   size_t i = 0;
   for (auto it = parent.begin(); it != parent.end(); ++it, ++i) {
-    if (!parent.getCell(*it).isIn()) break;
+    const auto &cell = parent.getCell(*it);
+    if (!cell.isIn() && !cell.isZero() && !cell.isOne()) break;
     iomapping.inputs[i] = *it;
   }
 
   size_t j = parent.getOutNum() - 1;
   for (auto it = --parent.end(); it != parent.begin(); --it, --j) {
-    if (!parent.getCell(*it).isOut()) break;
+    const auto &cell = parent.getCell(*it);
+    if (!cell.isOut()) break;
     iomapping.outputs[j] = *it;
   }
 }
@@ -48,12 +50,12 @@ SubnetView::SubnetView(const SubnetBuilder &parent, const size_t rootID):
                     const bool isOut,
                     const size_t i) -> bool {
     const auto &cell = parent.getCell(i);
-    if (cell.isIn()) {
+    if (cell.isIn() || cell.isZero() || cell.isOne()) {
       iomapping.inputs.push_back(i);
       return true;
     }
-    // Stop traversal.
-    return false;
+    // Stop traversal when root is visited.
+    return i != iomapping.getOut(0);
   });
 }
 
@@ -100,7 +102,7 @@ SubnetView::TruthTable SubnetView::evaluateTruthTable() const {
   }
 
   std::vector<TruthTable> tables;
-  tables.reserve(parent.size());
+  tables.reserve(parent.getCellNum());
 
   walker.run([&tables, &nIn, arity](SubnetBuilder &parent,
                                     const bool isIn,
@@ -136,6 +138,7 @@ SubnetObject &SubnetView::getSubnet() {
     if (isIn) {
       newLink = subnetBuilder.addInput();
     } else {
+      assert(oldCell.getInNum() > 0);
       Subnet::LinkList newLinks(oldCell.getInNum());
       for (size_t j = 0; j < oldCell.getInNum(); ++j) {
         const auto &oldLink = parent.getLink(i, j);

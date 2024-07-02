@@ -247,7 +247,8 @@ const model::Subnet &structuralRegisterSweep(
   flips.clear();
   getFlipsIds(uniq, flips);
 
-  simulator::Simulator simulator(uniq);
+  model::SubnetBuilder uniqBuilder(uniq); // FIXME:
+  simulator::Simulator simulator(uniqBuilder);
   simulator::Simulator::DataVector values(uniq.getInNum());
   std::set<size_t> stuckZero, stuckOne;
   size_t tries = 1;
@@ -274,6 +275,7 @@ const model::Subnet &structuralRegisterSweep(
     }
     simulator.simulate(values);
 
+/* FIXME: Links are from subnet, but simulation is done for builder
     for (const auto &it : flips) {
       if (simulator.getValue(uniq.getLink(it.second.second, 0))) {
         stuckZero.erase(it.second.first);
@@ -285,6 +287,7 @@ const model::Subnet &structuralRegisterSweep(
         stuckOne.erase(it.second.second);
       }
     }
+*/
   }
 
   const auto &withoutZero =

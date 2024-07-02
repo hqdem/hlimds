@@ -12,23 +12,22 @@
 
 #include "gtest/gtest.h"
 
-using namespace eda::gate::model;
-using namespace eda::gate::simulator;
+namespace eda::gate::simulator {
 
 TEST(SimulatorTest, SimpleTest) {
-  const size_t nIn      = 5;
-  const size_t nOut     = 1;
-  const size_t nCell    = 20;
-  const size_t minArity = 2;
-  const size_t maxArity = 3;
-  const size_t nSubnet  = 1;
-  const size_t nTest    = 1;
+  constexpr size_t nIn      = 5;
+  constexpr size_t nOut     = 1;
+  constexpr size_t nCell    = 20;
+  constexpr size_t minArity = 2;
+  constexpr size_t maxArity = 3;
+  constexpr size_t nSubnet  = 1;
+  constexpr size_t nTest    = 1;
 
   for (size_t i = 0; i < nSubnet; ++i) {
-    const auto subnetID = randomSubnet(nIn, nOut, nCell, minArity, maxArity);
-    const auto &subnet = Subnet::get(subnetID);
+    const auto id = model::randomSubnet(nIn, nOut, nCell, minArity, maxArity);
+    model::SubnetBuilder builder(id);
 
-    Simulator simulator(subnet);
+    Simulator simulator(builder);
     Simulator::DataVector values(nIn);
 
     for (size_t j = 0; j < nTest; ++j) {
@@ -42,3 +41,4 @@ TEST(SimulatorTest, SimpleTest) {
   }
 }
 
+} // namespace eda::gate::simulator

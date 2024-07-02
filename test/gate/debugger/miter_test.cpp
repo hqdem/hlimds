@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2023 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -28,10 +28,9 @@ TEST(MiterTest, Random) {
     const auto subnetID = makeSubnetRandomMatrix(
         nIn, nOut, nCell, minArity, maxArity, i);
 
-    model::SubnetBuilder builder;
-    BaseChecker::makeMiter(builder, subnetID, subnetID);
+    model::SubnetBuilder miter;
+    BaseChecker::makeMiter(miter, subnetID, subnetID);
 
-    const auto &miter = model::Subnet::get(builder.make());
     EXPECT_TRUE(miter.getOutNum() == 1);
 
     simulator::Simulator simulator(miter);
@@ -42,8 +41,8 @@ TEST(MiterTest, Random) {
     }
 
     simulator.simulate(values);
-    EXPECT_FALSE(simulator.getValue(miter.getOut(0)));
+    EXPECT_FALSE(simulator.getOutput(0));
   }
-
 }
+
 } // namespace eda::gate::debugger

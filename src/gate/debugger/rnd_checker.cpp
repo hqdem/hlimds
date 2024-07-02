@@ -53,7 +53,8 @@ CheckerResult RndChecker::isSat(const model::Subnet &subnet) const {
 
   const auto inputNum = subnet.getInNum();
 
-  simulator::Simulator simulator(subnet);
+  model::SubnetBuilder builder(subnet); // FIXME:
+  simulator::Simulator simulator(builder);
   simulator::Simulator::DataVector values(inputNum);
 
   if (!exhaustive) {
@@ -62,7 +63,7 @@ CheckerResult RndChecker::isSat(const model::Subnet &subnet) const {
         values[i] = std::rand();
       }
       simulator.simulate(values);
-      const std::bitset<64> output = simulator.getValue(subnet.getOut(0));
+      const std::bitset<64> output = simulator.getOutput(0);
       if (output.any()) {
         return CheckerResult(CheckerResult::NOTEQUAL,
                              getCounterEx(output, values));
@@ -82,7 +83,7 @@ CheckerResult RndChecker::isSat(const model::Subnet &subnet) const {
     size_t iterations = (inputPower <= 64) ? 1ull : (inputPower >> 6);
     for (size_t i = 0; i < iterations; i++) {
       simulator.simulate(getAllValues(inputNum, i));
-      const std::bitset<64> output = simulator.getValue(subnet.getOut(0));
+      const std::bitset<64> output = simulator.getOutput(0);
       if (output.any()) {
         return CheckerResult(CheckerResult::NOTEQUAL,
                              getCounterEx(output, values));

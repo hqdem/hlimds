@@ -2,23 +2,25 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include <algorithm>
-
-#include "gtest/gtest.h"
 
 #include "gate/simulator/simulator.h"
 #include "gate/synthesizer/synthesizer_add.h"
 #include "gate/synthesizer/synthesizer_neg.h"
+
+#include "gtest/gtest.h"
+
+#include <algorithm>
 
 using CellSymbol = eda::gate::model::CellSymbol;
 using CellTypeAttr = eda::gate::model::CellTypeAttr;
 using CellTypeAttrID = eda::gate::model::CellTypeAttrID;
 using Simulator = eda::gate::simulator::Simulator;
 using Subnet = eda::gate::model::Subnet;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
 std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
                                           uint16_t outSize, bool makeSub,
@@ -29,11 +31,10 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
   const CellTypeAttr &attr =
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-  const auto &result =
-      Subnet::get(makeSub ? eda::gate::synthesizer::synthSub(attr)
-                          : eda::gate::synthesizer::synthAdd(attr));
+  SubnetBuilder result(makeSub ? eda::gate::synthesizer::synthSub(attr)
+                               : eda::gate::synthesizer::synthAdd(attr)); // FIXME:
 
-  Simulator simulator = Simulator(result);
+  Simulator simulator(result);
   Simulator::DataVector values(sizeA + sizeB);
 
   // when we generate digit as signed one, we need to save
@@ -60,9 +61,9 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
   }
 
   int32_t resSimulated = 0u;
-  for (int16_t pos = outSize - 1; pos >= 0; --pos) {
+  for (int16_t pos = outSize - 1; pos >= 0; --pos) { // FIXME: pos always >= 0.
     resSimulated <<= 1;
-    resSimulated |= simulator.getValue(result.getOut(pos));
+    resSimulated |= simulator.getOutput(pos);
   }
 
   if (makeSub && res < 0) {
@@ -173,9 +174,9 @@ TEST(Synthesizer, UnaryMinus) {
     const CellTypeAttr &attr =
         CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-    const auto &result = Subnet::get(eda::gate::synthesizer::synthNeg(attr));
+    SubnetBuilder result(eda::gate::synthesizer::synthNeg(attr)); // FIXME:
 
-    Simulator simulator = Simulator(result);
+    Simulator simulator(result);
     Simulator::DataVector values(sizeA);
 
     int32_t valA = std::rand() % (1 << (sizeA - 1));
@@ -188,9 +189,9 @@ TEST(Synthesizer, UnaryMinus) {
 
     int32_t resSimulated = 0u;
 
-    for (int16_t pos = end - 1u; pos >= 0; --pos) {
+    for (int16_t pos = end - 1u; pos >= 0; --pos) { // FIXME: pos always >= 0
       resSimulated <<= 1;
-      resSimulated |= simulator.getValue(result.getOut(pos));
+      resSimulated |= simulator.getOutput(pos);
     }
 
     EXPECT_EQ(-valA, resSimulated);

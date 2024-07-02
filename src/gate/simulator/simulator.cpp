@@ -12,45 +12,42 @@
 
 namespace eda::gate::simulator {
 
-static size_t getLinkNum(const Simulator::Subnet &subnet) {
-  const auto &entries = subnet.getEntries();
-
-  size_t n = 0;
-  for (size_t i = 0; i < entries.size(); ++i) {
-    const auto &cell = entries[i].cell;
-    const auto items = (cell.isOut() ? 1u : cell.getOutNum());
-
-    n += items;
-    i += cell.more;
+static size_t getStateSize(const Simulator::SubnetBuilder &builder) {
+  size_t nBits = 0;
+  for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
+    const auto &cell = builder.getCell(*it);
+    nBits += (cell.isOut() ? 1u : cell.getOutNum());
   }
-
-  return n;
+  return nBits;
 }
 
-Simulator::Simulator(const Subnet &subnet):
-    state(getLinkNum(subnet)),
-    pos(subnet.size()),
-    subnet(subnet) {
-  const auto &entries = subnet.getEntries();
-  program.reserve(subnet.size());
+Simulator::Simulator(const SubnetBuilder &builder):
+    state(getStateSize(builder)),
+    pos(builder.getCellNum()),
+    subnet(SubnetView(builder)) {
+  program.reserve(builder.getCellNum());
 
-  size_t p = 0;
-  for (size_t i = 0; i < entries.size(); ++i) {
-    const auto &cell = entries[i].cell;
+  size_t i = 0, p = 0;
+  for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
+    const auto &cell = builder.getCell(*it);
 
     if (!cell.isIn()) {
-      const auto op = getFunction(cell, i);
-      program.emplace_back(op, i, subnet.getLinks(i));
+      const auto op = getFunction(cell, *it);
+      program.emplace_back(op, *it, builder.getLinks(*it));
     }
+
+    // Save the mapping between entries and indices.
+    const_cast<SubnetBuilder&>(builder).setDataVal<size_t>(*it, i);
 
     pos[i] = p;
 
-    i += cell.more;
+    i += 1;
     p += (cell.isOut() ? 1 : cell.getOutNum());
   }
 }
 
-Simulator::Function Simulator::getFunction(const Cell &cell, size_t idx) const {
+Simulator::Function Simulator::getFunction(
+    const Cell &cell, size_t entryID) const {
   using CellSymbol = eda::gate::model::CellSymbol;
 
   const auto func = cell.getSymbol();
@@ -70,7 +67,7 @@ Simulator::Function Simulator::getFunction(const Cell &cell, size_t idx) const {
   case CellSymbol::NOR  : return getNor(nIn);
   case CellSymbol::XNOR : return getXnor(nIn);
   case CellSymbol::MAJ  : return getMaj(nIn);
-  default               : return getCell(idx, nIn, nOut);
+  default               : return getCell(entryID, nIn, nOut);
   }
 
   return getZero(0);

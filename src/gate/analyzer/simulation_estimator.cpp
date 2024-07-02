@@ -50,15 +50,17 @@ SwitchActivity SimulationEstimator::estimate(const Subnet &subnet,
       std::move(switchesOn), std::move(switchesOff), ticks};
 }
 
+// FIXME: change Subnet to SubnetBuilder.
 std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
     const Subnet &subnet, const InValuesList &inValuesList) const {
 
-  const size_t inputs = subnet.getInNum();
-  const auto cells = subnet.getEntries();
+  model::SubnetBuilder builder(subnet); // FIXME:
+  Simulator simulator(builder);
+
+  const size_t inputs = subnet.getInNum(); // FIXME:
+  const auto cells = subnet.getEntries(); // FIXME:
 
   uassert(cells.size() - inputs, "Subnet has only inputs");
-
-  Simulator simulator(subnet);
 
   Switches switchesOn(cells.size());
   Switches switchesOff(cells.size());
@@ -87,7 +89,9 @@ std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
 
     simulator.simulate(values);
 
-    for (size_t id{0}; id < cells.size(); ++id) {
+    for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
+    //FIXME: for (size_t id{0}; id < cells.size(); ++id) {
+      const auto id = *it;
       Cache cache = simulator.getValue(id);
       onStates[id] += popCount(cache) * 1.f;
       uint64_t bits = getSwitchedBits(cache);
@@ -95,7 +99,7 @@ std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
       switchesOn[id] += popCount(bits & ~cache) + (prevBit & cache);
       switchesOff[id] += popCount(bits & cache) + (prevBit & ~cache);
       (cache & (1ull << 63)) ? setPrevBit(id) : reSetPrevBit(id);
-      id += cells[id].cell.more;
+    //FIXME:  id += cells[id].cell.more;
     }
   }
 

@@ -2,17 +2,17 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include <algorithm>
-#include <functional>
+#include "gate/simulator/simulator.h"
+#include "gate/synthesizer/synthesizer_cmp.h"
 
 #include "gtest/gtest.h"
 
-#include "gate/simulator/simulator.h"
-#include "gate/synthesizer/synthesizer_cmp.h"
+#include <algorithm>
+#include <functional>
 
 using CellSymbol = eda::gate::model::CellSymbol;
 using CellTypeAttr = eda::gate::model::CellTypeAttr;
@@ -20,6 +20,7 @@ using CellTypeAttrID = eda::gate::model::CellTypeAttrID;
 using Simulator = eda::gate::simulator::Simulator;
 using SubnetID = eda::gate::model::SubnetID;
 using Subnet = eda::gate::model::Subnet;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
 bool simulateComparator(
     uint16_t sizeA, uint16_t sizeB,
@@ -33,9 +34,8 @@ bool simulateComparator(
   const CellTypeAttr &attr =
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-  const auto &result = Subnet::get(toSimulate(attr));
-
-  Simulator simulator = Simulator(result);
+  SubnetBuilder result(toSimulate(attr)); // FIXME:
+  Simulator simulator(result);
   Simulator::DataVector values(sizeA + sizeB);
 
   int32_t valA = std::rand() % (1 << sizeA);
@@ -62,12 +62,12 @@ bool simulateComparator(
   }
 
   bool targetResult = operation(valA, valB);
-  targetResult = targetResult == (simulator.getValue(result.getOut(0)) & 1);
+  targetResult = targetResult == (simulator.getOutput(0) & 1);
 
   if (!targetResult) {
     std::clog << operation(valA, valB) << " " << valA << " " << valB << " "
-              << (simulator.getValue(result.getOut(0)) & 1) << std::endl;
-    std::clog << result;
+              << (simulator.getOutput(0) & 1) << std::endl;
+    std::clog << Subnet::get(result.make());
   }
 
   return targetResult;

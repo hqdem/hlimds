@@ -44,13 +44,12 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
 
   while (true) {
     size_t compareCount = 0;
-    const auto &miter = model::Subnet::get(miterBuilder.make()); // FIXME: do not create a miter, use a miterBuilder.
-    const uint16_t nIn = miter.getInNum();
+    const uint16_t nIn = miterBuilder.getInNum();
 
     // Simulation
-    simulator::Simulator simulator(miter);
+    simulator::Simulator simulator(miterBuilder);
     if (storageCount) {
-      netSimulation(simulator, miter.getInNum(), counterExStorage);
+      netSimulation(simulator, nIn, counterExStorage);
       std::fill(counterExStorage.begin(),
                 counterExStorage.end(),
                 std::bitset<64>());
@@ -61,49 +60,50 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
     
     // Initial classes
     std::map<uint32_t, uint64_t> idxToValue;
-    const uint16_t nOut = miter.getOutNum();
-    const auto entries = miter.getEntries();
-    for (size_t i = nIn; i < (entries.size() - nOut); i++) {
-      idxToValue.emplace(i, simulator.getValue(i));
-      i += entries[i].cell.more;
+
+    for (auto it = miterBuilder.begin(); it != miterBuilder.end(); it.nextCell()) {
+      idxToValue.emplace(*it, simulator.getValue(*it));
     }
 
     std::unordered_map<uint64_t, std::set<uint32_t>> eqClassToIdx;
     model::SubnetBuilder::MergeMap toBeMerged;
     std::unordered_set<uint32_t> checked;
 
-// FIXME:
-#if 0
     for (auto const &[cell, eqClass] : idxToValue) {
       if (compareCount > compareLimit) {
         break;
       }
       if (eqClassToIdx.find(eqClass) != eqClassToIdx.end()) {
-        // FIXME: optimizer::ConeBuilder coneBuilder(&miter);
         for (auto idx : eqClassToIdx[eqClass]) {
           compareCount += 1;
           if (idx == cell || checked.find(idx) != checked.end()) {
             continue;    
           }
-          const auto &cone1 = coneBuilder.getMaxCone(cell);
-          const auto &cone2 = coneBuilder.getMaxCone(idx);
-          const auto &coneSubnet1 = model::Subnet::get(cone1.subnetID);
-          const auto &coneSubnet2 = model::Subnet::get(cone2.subnetID);
+
+          model::SubnetView cone1(miterBuilder, cell);
+          const auto coneSubnetID1 = cone1.getSubnet().make(); // FIXME: Do not create a subnet.
+          const auto &coneSubnet1 = cone1.getSubnet().object();
+          const auto coneInNum1 = coneSubnet1.getInNum();
+          assert(coneInNum1 == cone1.getInNum());
+
+          model::SubnetView cone2(miterBuilder, idx);
+          const auto coneSubnetID2 = cone2.getSubnet().make(); // FIXME: Do not create a subnet.
+          const auto &coneSubnet2 = cone2.getSubnet().object();
+          const auto coneInNum2 = coneSubnet2.getInNum();
+          assert(coneInNum2 == cone2.getInNum());
 
           CellToCell map = {};
-          size_t coneInNum1 = coneSubnet1.getInNum();
-          size_t coneInNum2 = coneSubnet2.getInNum();
           if (coneInNum1 != coneInNum2) {
             eqClassToIdx[eqClass].insert(cell);
             continue;
           }
           bool inputsFlag = false;
-          for (size_t i = 0; i < coneSubnet1.getInNum(); ++i) {
-            map[i] = i;
-             if (cone1.iomapping.getIn(i) != cone2.iomapping.getIn(i)) {
-               inputsFlag = true;
-               break;
-             }
+          for (size_t i = 0; i < coneInNum1; ++i) {
+            map[i] = i; // FIXME: Order of inputs may by different.
+            if (cone1.getIn(i) != cone2.getIn(i)) {
+              inputsFlag = true;
+              break;
+            }
           }
           if (inputsFlag) {
             eqClassToIdx[eqClass].insert(cell);
@@ -111,8 +111,8 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
           }
           map[coneSubnet1.getEntries().size() - 1] =
           coneSubnet2.getEntries().size() - 1;
-          CheckerResult res = getChecker(SAT).areEquivalent(cone1.subnetID,
-                                                            cone2.subnetID,
+          CheckerResult res = getChecker(SAT).areEquivalent(coneSubnetID1, // FIXME: Use a builder.
+                                                            coneSubnetID2, // FIXME: Use a builder.
                                                             map);
           if (res.equal()) {
             toBeMerged[idx].insert(cell);
@@ -129,9 +129,9 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
             std::mt19937 generator(std::random_device{}());
             uint16_t index = distribution(generator);
             counterEx[index].flip();
-            std::vector<bool> proof(miter.getInNum(), false);
+            std::vector<bool> proof(nIn, false);
             for (uint16_t i = 0; i < counterExSize; i++) {
-              proof[cone1.coneEntryToOrig.at(i)] = counterEx[i];
+              proof[cone1.getIn(i) /*FIXME*/] = counterEx[i];
             }
             for (size_t i = 0; i < proof.size(); i++) {
               counterExStorage[i].set(storageCount, proof[i]);
@@ -142,15 +142,21 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
       } else {
         eqClassToIdx[eqClass].insert(cell);
       }
-    }
-#endif
+    } // for idx-to-val
+
     if (toBeMerged.empty()) {
       break;
     }
+#if 0
+    // FIXME: Uncomment.
     miterBuilder.mergeCells(toBeMerged);
+#else
+    // FIXME: Remove. 
+    break;
+#endif
   }
 
-  return getChecker(SAT).isSat(miterBuilder.make());
+  return getChecker(SAT).isSat(miterBuilder.make()); // FIXME: Do not create a subnet.
 }
 
 } // namespace eda::gate::debugger

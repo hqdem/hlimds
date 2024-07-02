@@ -152,6 +152,13 @@ EntryIterator EntryIterator::prev() const {
   return --EntryIterator(*this);
 }
 
+void EntryIterator::nextCell() {
+  const auto &cell = builder->getCell(entry);
+  for (size_t i = 0; i <= cell.more; ++i) {
+    entry = builder->getNext(entry);
+  }
+}
+
 template <CellSymbol symbol>
 static SubnetID makeConstSubnet(const size_t nIn) {
   constexpr size_t size{8};
@@ -525,10 +532,9 @@ SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
   // Builder is of higher priority (it contains the cell weights).
   if (rhs.hasBuilder()) {
     return evaluateReplace(rhs.builder(), iomapping, weightModifier);
-  } else {
-    assert(!weightModifier && "Weight modifier is used w/o weight provider");
-    return evaluateReplace(rhs.id(), iomapping, nullptr, nullptr);
   }
+  assert(!weightModifier && "Weight modifier is used w/o weight provider");
+  return evaluateReplace(rhs.id(), iomapping, nullptr, nullptr);
 }
 
 SubnetBuilder::Effect SubnetBuilder::evaluateReplace(

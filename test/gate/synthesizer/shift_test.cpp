@@ -2,23 +2,24 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include <algorithm>
-#include <iostream>
+#include "gate/simulator/simulator.h"
+#include "gate/synthesizer/synthesizer_shift.h"
 
 #include "gtest/gtest.h"
 
-#include "gate/simulator/simulator.h"
-#include "gate/synthesizer/synthesizer_shift.h"
+#include <algorithm>
+#include <iostream>
 
 using CellSymbol = eda::gate::model::CellSymbol;
 using CellTypeAttr = eda::gate::model::CellTypeAttr;
 using CellTypeAttrID = eda::gate::model::CellTypeAttrID;
 using Simulator = eda::gate::simulator::Simulator;
 using Subnet = eda::gate::model::Subnet;
+using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
 std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
                                           uint8_t outSize, bool shiftL = true,
@@ -29,12 +30,12 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   const CellTypeAttr &attr =
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-  const auto &result = Subnet::get(
+  SubnetBuilder result(
       shiftL ? eda::gate::synthesizer::synthShiftL(attr)
              : (useSign ? eda::gate::synthesizer::synthShiftRs(attr)
-                        : eda::gate::synthesizer::synthShiftRu(attr)));
+                        : eda::gate::synthesizer::synthShiftRu(attr))); // FIXME:
 
-  Simulator simulator = Simulator(result);
+  Simulator simulator(result);
   Simulator::DataVector values(inputSize + shiftSize);
 
   uint16_t valA = std::rand() % (1 << inputSize);
@@ -61,15 +62,15 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   }
 
   int32_t resSimulated = 0u;
-  for (int16_t pos = outSize - 1; pos >= 0; --pos) {
+  for (int16_t pos = outSize - 1; pos >= 0; --pos) { // FIXME: pos always >= 0
     resSimulated <<= 1;
-    resSimulated |= simulator.getValue(result.getOut(pos));
+    resSimulated |= simulator.getOutput(pos);
   }
 
   if (res != resSimulated) {
     std::clog << inputSize + 0 << " " << res << " " << valA << " " << valB
               << " " << resSimulated << std::endl;
-    std::clog << result;
+    std::clog << Subnet::get(result.make());
   }
 
   return {res, resSimulated};

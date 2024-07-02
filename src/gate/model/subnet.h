@@ -296,6 +296,9 @@ public:
   EntryIterator operator--(int);
   EntryIterator prev() const;
 
+  /// Skips the link entries if required.
+  void nextCell();
+
 protected:
   const SubnetBuilder *builder;
   value_type entry;
@@ -438,7 +441,7 @@ public:
     strash.reserve(n);
   }
 
-  SubnetBuilder(
+  explicit SubnetBuilder(
       const Subnet &subnet,
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder() {
@@ -447,14 +450,14 @@ public:
     addOutputs(outputs);
   }
 
-  SubnetBuilder(
+  explicit SubnetBuilder(
       SubnetID subnetID,
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
 
 public:
   /// Returns the number of cells.
-  size_t size() const { return nCell; }
+  size_t getCellNum() const { return nCell; }
 
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }

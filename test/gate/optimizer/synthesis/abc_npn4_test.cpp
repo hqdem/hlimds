@@ -236,16 +236,16 @@ TEST(AbcNpn4Test, AllNpn4Test) {
     }
     covered[npnTable] = true;
 
-    const auto subnetID = Synthesizer::get().synthesize(func).id();
+    const auto subnetObject = Synthesizer::get().synthesize(func);
 
 #ifdef UTOPIA_DEBUG
     std::cout << std::setfill('0') << std::setw(w)
               << std::hex << npnTable << std::endl;
 #endif // UTOPIA_DEBUG
 
-    if (subnetID != eda::gate::model::OBJ_NULL_ID) {
+    if (!subnetObject.isNull()) {
 #ifdef UTOPIA_DEBUG
-      const auto &subnet = eda::gate::model::Subnet::get(subnetID);
+      const auto &subnet = subnetObject.makeObject();
       std::cout << std::dec << subnet << std::endl;
 #endif // UTOPIA_DEBUG
       count++;

@@ -1037,6 +1037,7 @@ public:
   }
 
   SubnetID id() const {
+    assert(subnetID != OBJ_NULL_ID);
     return subnetID;
   }
 
@@ -1069,6 +1070,10 @@ public:
     subnetID = subnetBuilder->make();
 
     return subnetID;
+  }
+
+  const Subnet &makeObject() {
+    return Subnet::get(make());
   }
 
   void release() {

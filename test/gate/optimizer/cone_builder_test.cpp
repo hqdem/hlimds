@@ -28,7 +28,7 @@ static bool coneOutputCorrect(const Subnet &coneSubnet) {
 static bool inputsAtTheBeginning(const Subnet &coneSubnet) {
   bool foundNotInput = false;
   const auto &entries = coneSubnet.getEntries();
-  for (std::size_t entryIdx = 0; entryIdx < entries.size(); ++entryIdx) {
+  for (size_t entryIdx = 0; entryIdx < entries.size(); ++entryIdx) {
     const auto &curCell = entries[entryIdx].cell;
     if ((curCell.isIn() || curCell.isOne() || curCell.isZero()) &&
         foundNotInput) {
@@ -65,7 +65,7 @@ static bool coneValid(const SubnetBuilder &builder,
   if (isMaxCone && origCell.isIn() != coneCell.isIn()) {
     return false;
   }
-  std::size_t inputN = 0;
+  size_t inputN = 0;
   for (const auto coneLink : coneLinks) {
     const auto origLink = origLinks[inputN];
 
@@ -90,8 +90,8 @@ static bool cutConeValid(const SubnetBuilder &builder,
   const auto &cuts = cutExtractor.getCuts(origEntryIdx);
   for (const auto &cut : cuts) {
     SubnetView cone(builder, cut);
-    const auto &coneSubnet = cone.getSubnet().object();
-    const auto coneEntryIdx = coneSubnet.size() - 1;
+    const auto &coneSubnet = cone.getSubnet().makeObject();
+    const auto coneEntryIdx = coneSubnet.getMaxIdx();
 
     if (!coneOutputCorrect(coneSubnet) ||
         coneSubnet.getInNum() != cut.entryIdxs.size() ||
@@ -106,8 +106,8 @@ static bool cutConeValid(const SubnetBuilder &builder,
 static bool maxConeValid(const SubnetBuilder &builder,
                          const size_t origEntryIdx) {
   SubnetView cone(builder, origEntryIdx);
-  const auto &coneSubnet = cone.getSubnet().object();
-  const auto coneEntryIdx = coneSubnet.size() - 1;
+  const auto &coneSubnet = cone.getSubnet().makeObject();
+  const auto coneEntryIdx = coneSubnet.getMaxIdx();
   return coneOutputCorrect(coneSubnet) &&
          inputsAtTheBeginning(coneSubnet) &&
          coneValid(builder, coneSubnet, origEntryIdx, coneEntryIdx, true);
@@ -115,7 +115,7 @@ static bool maxConeValid(const SubnetBuilder &builder,
 
 static void conesValid(const SubnetBuilder &builder,
                        const CutExtractor *cutExtractor = nullptr) {
-  for (auto it = builder.begin(); it != builder.end(); ++it) {
+  for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
     if (builder.getCell(*it).isOut()) {
       continue;
     }
@@ -132,7 +132,7 @@ TEST(ConeBuilderTest, SimpleTest) {
   const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
   builder.addOutput(andLink0);
 
-  CutExtractor cutExtractor(&builder, 5);
+  CutExtractor cutExtractor(&builder, 5, true);
   conesValid(builder, &cutExtractor);
 }
 
@@ -141,7 +141,7 @@ TEST(ConeBuilderTest, OneElementCut) {
 
   builder.addOutput(builder.addInput());
 
-  CutExtractor cutExtractor(&builder, 2);
+  CutExtractor cutExtractor(&builder, 2, true);
   conesValid(builder, &cutExtractor);
 }
 
@@ -153,7 +153,7 @@ TEST(ConeBuilderTest, CutLimit) {
   const auto andLink1 = builder.addCell(model::AND, andLink0, inputs[2]);
   builder.addOutput(andLink1);
 
-  CutExtractor cutExtractor(&builder, 2);
+  CutExtractor cutExtractor(&builder, 2, true);
   conesValid(builder, &cutExtractor);
 }
 
@@ -168,7 +168,7 @@ TEST(ConeBuilderTest, OverlapLinks3UsagesCut) {
                                         andLink1);
   builder.addOutput(andLink2);
 
-  CutExtractor cutExtractor(&builder, 3);
+  CutExtractor cutExtractor(&builder, 3, true);
   conesValid(builder, &cutExtractor);
 }
 
@@ -231,7 +231,7 @@ TEST(ConeBuilderTest, OutputPort) {
                                         ~andLink1);
   builder.addOutput(andLink2);
 
-  CutExtractor cutExtractor(&builder, 10);
+  CutExtractor cutExtractor(&builder, 10, true);
   conesValid(builder, &cutExtractor);
 }
 
@@ -246,7 +246,7 @@ TEST(ConeBuilderTest, InvertorFlag) {
                                         andLink1);
   builder.addOutput(andLink2);
 
-  CutExtractor cutExtractor(&builder, 10);
+  CutExtractor cutExtractor(&builder, 10, true);
   conesValid(builder, &cutExtractor);
 }
 

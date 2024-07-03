@@ -13,7 +13,7 @@
 namespace eda::gate::optimizer {
 
 void Rewriter::transform(SubnetBuilder &builder) const {
-  CutExtractor cutExtractor(&builder, k);
+  CutExtractor cutExtractor(&builder, k, false);
   std::function cutRecompute = [&cutExtractor](const size_t entryID) {
     cutExtractor.recomputeCuts(entryID);
   };

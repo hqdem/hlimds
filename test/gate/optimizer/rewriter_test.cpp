@@ -30,8 +30,7 @@ static SubnetID getSubnetID(const SubnetView &window) {
 
 static const Subnet &getSubnet(const SubnetView &window) {
   auto &subnetWindow = const_cast<SubnetView&>(window);
-  subnetWindow.getSubnet().make();
-  return subnetWindow.getSubnet().object();
+  return subnetWindow.getSubnet().makeObject();
 }
 
 class EqualResynthesizer : public ResynthesizerBase {

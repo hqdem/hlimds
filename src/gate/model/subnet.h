@@ -492,6 +492,16 @@ public:
     return desc[i].depth;
   }
 
+  /// Returns the first cell in the topological order with the passed depth.
+  size_t getFirstWithDepth(size_t d) const {
+    return depthBounds[d].first;
+  }
+
+  /// Returns the last cell in the topological order with the passed depth.
+  size_t getLastWithDepth(size_t d) const {
+    return depthBounds[d].second;
+  }
+
   /// Returns the weigth of the i-th cell.
   float getWeight(size_t i) const {
     return desc[i].weight;
@@ -1026,7 +1036,7 @@ public:
 
   bool isNull() const {
     return subnetID == OBJ_NULL_ID && !subnetBuilder;
-  } 
+  }
 
   bool hasObject() const {
     return subnetID != OBJ_NULL_ID;

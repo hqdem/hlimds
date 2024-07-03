@@ -26,6 +26,12 @@ class SafePasser : public EntryIterator {
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetObject = eda::gate::model::SubnetObject;
 
+  enum Direction {
+    FORWARD,
+    BACKWARD,
+    UNDEF
+  };
+
 public:
   SafePasser() = delete;
   /**
@@ -37,15 +43,7 @@ public:
    */
   SafePasser(
     EntryIterator iter,
-    const std::function<void(const size_t)> *onEachEntry = nullptr) :
-      EntryIterator(iter),
-      builderToTransform(const_cast<SubnetBuilder *>(builder)),
-      onEachEntry(onEachEntry) {
-
-    if (onEachEntry) {
-      (*onEachEntry)(entry);
-    }
-  };
+    const std::function<void(const size_t)> *onEachEntry = nullptr);
 
   SafePasser &operator=(const SafePasser &other) = delete;
   SafePasser &operator=(SafePasser &&other) = default;
@@ -55,6 +53,8 @@ protected:
   SafePasser(const SafePasser &other) = default;
 
 public:
+  void changeItParent(const Direction dir);
+  void changeIt(const Direction dir);
   SafePasser &operator++();
   SafePasser operator++(int);
   SafePasser &operator--();
@@ -107,10 +107,26 @@ private:
     assert(/* Current passer entry and rhs root entry differs */
            rhsToLhsMapping.getOut(0) == entry);
 
-    saveRoot = entry;
     EntryIterator::operator++();
     saveNext = entry;
     EntryIterator::operator--();
+  }
+
+  /// Recomputes saveNext according to the passer direction and new root depth.
+  void recomputeNext(const size_t oldRootDepth, const bool rootLastDepth) {
+    if (direction == FORWARD) {
+      const size_t curRootDepth = builder->getDepth(entry);
+      if (oldRootDepth < curRootDepth && rootLastDepth) {
+        saveNext = builder->getFirstWithDepth(oldRootDepth + 1);
+      } else if (oldRootDepth > curRootDepth) {
+        saveNext = builder->getFirstWithDepth(curRootDepth);
+      }
+    } else if (direction == BACKWARD) {
+      const size_t curRootDepth = builder->getDepth(entry);
+      if (oldRootDepth > curRootDepth && rootLastDepth) {
+        saveNext = builder->getLastWithDepth(oldRootDepth);
+      }
+    }
   }
 
   inline void callOnEachCell() {
@@ -120,14 +136,22 @@ private:
     }
   }
 
+  void checkDirection(Direction dir) {
+    assert(dir != UNDEF);
+    assert(dir == this->direction || this->direction == UNDEF);
+    this->direction = dir;
+  }
+
 private:
   SubnetBuilder *builderToTransform;
 
+  Direction direction{UNDEF};
+
   std::vector<char> isNewEntry{};
+  std::vector<char> isPassedEntry{};
   const std::function<void(const size_t)> *onEachEntry;
 
   value_type saveNext{SubnetBuilder::invalidID};
-  value_type saveRoot{SubnetBuilder::invalidID};
 };
 
 /**

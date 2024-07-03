@@ -12,20 +12,59 @@ namespace eda::gate::optimizer {
 
 /// SafePasser class
 
-SafePasser &SafePasser::operator++() {
+SafePasser::SafePasser(
+  EntryIterator iter,
+  const std::function<void(const size_t)> *onEachEntry) :
+    EntryIterator(iter),
+    builderToTransform(const_cast<SubnetBuilder *>(builder)),
+    onEachEntry(onEachEntry) {
+
+  if (onEachEntry) {
+    (*onEachEntry)(entry);
+  }
+  if (entry != SubnetBuilder::lowerBoundID &&
+      entry != SubnetBuilder::upperBoundID &&
+      entry != SubnetBuilder::invalidID &&
+      isPassedEntry.size() <= entry) {
+    isPassedEntry.resize(entry + 1);
+    isPassedEntry[entry] = true;
+  }
+};
+
+void SafePasser::changeItParent(const Direction dir) {
+  dir == FORWARD ? EntryIterator::operator++() : EntryIterator::operator--();
+}
+
+void SafePasser::changeIt(const Direction dir) {
+  checkDirection(dir);
   if (saveNext != SubnetBuilder::invalidID) {
     entry = saveNext;
     saveNext = SubnetBuilder::invalidID;
-    saveRoot = SubnetBuilder::invalidID;
   } else {
-    EntryIterator::operator++();
+    changeItParent(dir);
   }
   callOnEachCell();
-  while (isNewEntry.size() > entry && isNewEntry[entry] &&
-         entry != SubnetBuilder::upperBoundID) {
-    EntryIterator::operator++();
+  while (((isNewEntry.size() > entry && isNewEntry[entry]) ||
+          (isPassedEntry.size() > entry && isPassedEntry[entry]))) {
+    if ((entry == SubnetBuilder::upperBoundID && dir == FORWARD) ||
+        (entry == SubnetBuilder::lowerBoundID && dir == BACKWARD)) {
+      break;
+    }
+    changeItParent(dir);
     callOnEachCell();
   }
+  if ((entry == SubnetBuilder::upperBoundID && dir == FORWARD) ||
+      (entry == SubnetBuilder::lowerBoundID && dir == BACKWARD)) {
+    return;
+  }
+  if (isPassedEntry.size() <= entry) {
+    isPassedEntry.resize(entry + 1);
+  }
+  isPassedEntry[entry] = true;
+}
+
+SafePasser &SafePasser::operator++() {
+  changeIt(FORWARD);
   return *this;
 }
 
@@ -36,25 +75,7 @@ SafePasser SafePasser::operator++(int) {
 }
 
 SafePasser &SafePasser::operator--() {
-  if (saveNext != SubnetBuilder::invalidID) {
-    entry = saveNext;
-    EntryIterator::operator--();
-    saveNext = SubnetBuilder::invalidID;
-    if (saveRoot != SubnetBuilder::invalidID) {
-      if (entry == saveRoot) {
-        EntryIterator::operator--();
-      }
-      saveRoot = SubnetBuilder::invalidID;
-    }
-  } else {
-    EntryIterator::operator--();
-  }
-  callOnEachCell();
-  while (isNewEntry.size() > entry && isNewEntry[entry] &&
-         entry != SubnetBuilder::lowerBoundID) {
-    EntryIterator::operator--();
-    callOnEachCell();
-  }
+  changeIt(BACKWARD);
   return *this;
 }
 
@@ -71,6 +92,8 @@ void SafePasser::replace(
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {
 
+  const size_t oldRootDepth = builder->getDepth(entry);
+  const bool rootLastDepth = builder->getLastWithDepth(oldRootDepth) == entry;
   if (rhs.hasBuilder()) {
     const auto &rhsBuilder = rhs.builder();
     prepareForReplace(*(--rhsBuilder.end()), rhsToLhsMapping);
@@ -94,6 +117,7 @@ void SafePasser::replace(
 
   builderToTransform->replace(rhs, rhsToLhsMapping,
                               &addNewCell, onEqualDepth, onGreaterDepth);
+  recomputeNext(oldRootDepth, rootLastDepth);
 }
 
 void SafePasser::replace(
@@ -104,6 +128,8 @@ void SafePasser::replace(
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {
 
+  const size_t oldRootDepth = builder->getDepth(entry);
+  const bool rootLastDepth = builder->getLastWithDepth(oldRootDepth) == entry;
   const auto &rhsEntries = Subnet::get(rhsID).getEntries();
   prepareForReplace(rhsEntries.size() - 1, rhsToLhsMapping);
   auto &_isNewEntry = this->isNewEntry;
@@ -121,6 +147,7 @@ void SafePasser::replace(
 
   builderToTransform->replace(rhsID, rhsToLhsMapping, getCellWeight,
                               &addNewCell, onEqualDepth, onGreaterDepth);
+  recomputeNext(oldRootDepth, rootLastDepth);
 }
 
 void SafePasser::replace(
@@ -130,6 +157,8 @@ void SafePasser::replace(
     const std::function<void(const size_t)> *onEqualDepth,
     const std::function<void(const size_t)> *onGreaterDepth) {
 
+  const size_t oldRootDepth = builder->getDepth(entry);
+  const bool rootLastDepth = builder->getLastWithDepth(oldRootDepth) == entry;
   prepareForReplace(*(--rhsBuilder.end()), rhsToLhsMapping);
   auto &_isNewEntry = this->isNewEntry;
   std::function addNewCell = [&_isNewEntry, &onNewCell](const size_t entryID) {
@@ -145,12 +174,13 @@ void SafePasser::replace(
   };
   builderToTransform->replace(rhsBuilder, rhsToLhsMapping,
                               &addNewCell, onEqualDepth, onGreaterDepth);
+  recomputeNext(oldRootDepth, rootLastDepth);
 }
 
 void SafePasser::finalizePass() {
   isNewEntry.clear();
-  saveRoot = SubnetBuilder::invalidID;
   saveNext = SubnetBuilder::invalidID;
+  direction = UNDEF;
 }
 
 /// ReverseSafePasser

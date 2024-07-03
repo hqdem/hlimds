@@ -20,14 +20,13 @@ using TruthTable    = kitty::dynamic_truth_table;
 
 void runDeMicheliTest(const TruthTable &func, size_t bound = -1) {
   DMSynthesizer alg;
-  const auto &subnetId = alg.synthesize(func).id();
+  auto subnetObject = alg.synthesize(func);
 
-  bool invalid = subnetId == eda::gate::model::OBJ_NULL_ID;
-  if (invalid) {
+  if (subnetObject.isNull()) {
     return;
   }
 
-  const auto &subnet = Subnet::get(subnetId);
+  const auto &subnet = subnetObject.makeObject();
 
   bool areEqual = eda::gate::model::utils::equalTruthTables(subnet, func);
   size_t subnetSize = subnet.size();

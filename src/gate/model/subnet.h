@@ -431,8 +431,7 @@ public:
   static SubnetID makeOne(const size_t nIn);
   static SubnetID makeConst(const size_t nIn, const bool value);
 
-//FIXME: make private
-//private:
+//FIXME: Make constructors private.
   SubnetBuilder() {
     const size_t n = 1024; // FIXME
     entries.reserve(n);
@@ -455,7 +454,6 @@ public:
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
 
-public:
   /// Returns the number of cells.
   size_t getCellNum() const { return nCell; }
 

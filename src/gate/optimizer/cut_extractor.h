@@ -20,7 +20,7 @@ namespace eda::gate::optimizer {
  * @brief Extracts cuts for each cell of the passed subnet.
  * Dominated cuts and cuts with size > k are not added to the result.
  */
-class CutExtractor {
+class CutExtractor final {
 public:
   struct Cut;
 
@@ -56,12 +56,6 @@ public:
   CutExtractor() = delete;
   CutExtractor(const CutExtractor &other) = default;
   CutExtractor &operator=(const CutExtractor &other) = default;
-
-  ~CutExtractor() {
-    if (saveSubnetEntries) {
-      delete saveSubnetEntries;
-    }
-  }
 
   /**
    * @brief Constructs a cut extractor for the given subnet.
@@ -130,8 +124,6 @@ private:
 
 private:
   const Subnet *subnet;
-  const model::Array<Entry> *saveSubnetEntries; //TODO: fixme
-
   const SubnetBuilder *builder;
 
   uint16_t k;

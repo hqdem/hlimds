@@ -19,14 +19,15 @@ uint16_t countSetBits(uint64_t x) {
 
 CutExtractor::CutExtractor(const Subnet *subnet, const uint16_t k):
     subnet(subnet),
-    saveSubnetEntries(new model::Array<Entry>(subnet->getEntries())),
     builder(nullptr),
     k(k) {
   // Cuts for subnets are computed in advance.
-  entriesCuts.resize(saveSubnetEntries->size());
-  for (size_t i = 0; i < saveSubnetEntries->size(); ++i) {
+  const auto &entries = subnet->getEntries();
+  entriesCuts.resize(entries.size());
+  for (size_t i = 0; i < entries.size(); ++i) {
+    const auto &cell = entries[i].cell;
     findCuts(i);
-    i += (*saveSubnetEntries)[i].cell.more;
+    i += cell.more;
   }
 }
 
@@ -34,7 +35,6 @@ CutExtractor::CutExtractor(const SubnetBuilder *builder,
                            const uint16_t k,
                            const bool extractNow):
     subnet(nullptr),
-    saveSubnetEntries(nullptr),
     builder(builder),
     k(k) {
   // Cuts might be (re)computed on demand.
@@ -68,21 +68,8 @@ CutExtractor::CutsEntries CutExtractor::getCutsEntries(
 }
 
 CutExtractor::LinkList CutExtractor::getLinks(const size_t entryID) const {
-  if (subnet) {
-    //TODO: fixme
-    const auto &cell = (*saveSubnetEntries)[entryID].cell;
-    LinkList links(cell.arity);
-    size_t j = 0;
-    for (; j < cell.arity && j < Subnet::Cell::InPlaceLinks; ++j) {
-      links[j] = cell.link[j];
-    }
-    for (; j < cell.arity; ++j) {
-      const auto k = subnet->getLinkIndices(entryID, j);
-      links[j] = (*saveSubnetEntries)[k.first].link[k.second];
-    }
-    return links;
-  }
-  return builder->getLinks(entryID);
+  return subnet ? subnet->getLinks(entryID)
+                : builder->getLinks(entryID);
 }
 
 void CutExtractor::findCuts(const size_t entryIdx) {

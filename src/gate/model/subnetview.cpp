@@ -19,21 +19,24 @@ namespace eda::gate::model {
 
 SubnetView::SubnetView(const SubnetBuilder &parent):
     parent(parent) {
-  iomapping.inputs.resize(parent.getInNum());
-  iomapping.outputs.resize(parent.getOutNum());
+  const auto nIn = parent.getInNum();
+  iomapping.inputs.resize(nIn);
+
+  const auto nOut = parent.getOutNum();
+  iomapping.outputs.resize(nOut);
 
   size_t i = 0;
-  for (auto it = parent.begin(); it != parent.end(); ++it, ++i) {
+  for (auto it = parent.begin(); i < nIn; ++it, ++i) {
     const auto &cell = parent.getCell(*it);
-    if (!cell.isIn() && !cell.isZero() && !cell.isOne()) break;
+    assert(cell.isIn());
     iomapping.inputs[i] = *it;
   }
 
-  size_t j = parent.getOutNum() - 1;
-  for (auto it = --parent.end(); it != parent.begin(); --it, --j) {
+  size_t j = 0;
+  for (auto it = --parent.end(); j < nOut; --it, ++j) {
     const auto &cell = parent.getCell(*it);
-    if (!cell.isOut()) break;
-    iomapping.outputs[j] = *it;
+    assert(cell.isOut());
+    iomapping.outputs[nOut - j - 1] = *it;
   }
 }
 

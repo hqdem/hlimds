@@ -19,8 +19,12 @@ using SubnetView = model::SubnetView;
 using Link = model::Subnet::Link;
 using Cut = CutExtractor::Cut;
 
+static size_t getConeRootIdx(const Subnet &coneSubnet) {
+  return coneSubnet.getLink(coneSubnet.getMaxIdx(), 0).idx;
+}
+
 static bool coneOutputCorrect(const Subnet &coneSubnet) {
-  const auto coneSubnetEntries = coneSubnet.getEntries();
+  const auto &coneSubnetEntries = coneSubnet.getEntries();
   return coneSubnet.getOutNum() == 1 &&
          coneSubnetEntries[coneSubnetEntries.size() - 1].cell.isOut();
 }
@@ -52,19 +56,24 @@ static bool coneValid(const SubnetBuilder &builder,
   const auto &coneCell = coneEntries[coneEntryIdx].cell;
   const auto &origCell = builder.getCell(origEntryIdx);
 
-  const auto coneSymbol = origCell.getSymbol();
+  const auto coneSymbol = coneCell.getSymbol();
   const auto origSymbol = origCell.getSymbol();
 
   const auto coneLinks = coneSubnet.getLinks(coneEntryIdx);
   const auto origLinks = builder.getLinks(origEntryIdx);
 
-  if (!coneCell.isIn() &&
-    (origSymbol != coneSymbol || origLinks.size() != coneLinks.size())) {
+  if (!coneCell.isIn() && origSymbol != coneSymbol) {
     return false;
   }
+
+  if (!coneCell.isIn() && origLinks.size() != coneLinks.size()) {
+    return false;
+  }
+
   if (isMaxCone && origCell.isIn() != coneCell.isIn()) {
     return false;
   }
+
   size_t inputN = 0;
   for (const auto coneLink : coneLinks) {
     const auto origLink = origLinks[inputN];
@@ -81,6 +90,7 @@ static bool coneValid(const SubnetBuilder &builder,
     }
     inputN++;
   }
+
   return true;
 }
 
@@ -91,7 +101,7 @@ static bool cutConeValid(const SubnetBuilder &builder,
   for (const auto &cut : cuts) {
     SubnetView cone(builder, cut);
     const auto &coneSubnet = cone.getSubnet().makeObject();
-    const auto coneEntryIdx = coneSubnet.getMaxIdx();
+    const auto coneEntryIdx = getConeRootIdx(coneSubnet);
 
     if (!coneOutputCorrect(coneSubnet) ||
         coneSubnet.getInNum() != cut.entryIdxs.size() ||
@@ -107,7 +117,8 @@ static bool maxConeValid(const SubnetBuilder &builder,
                          const size_t origEntryIdx) {
   SubnetView cone(builder, origEntryIdx);
   const auto &coneSubnet = cone.getSubnet().makeObject();
-  const auto coneEntryIdx = coneSubnet.getMaxIdx();
+  const auto coneEntryIdx = getConeRootIdx(coneSubnet);
+
   return coneOutputCorrect(coneSubnet) &&
          inputsAtTheBeginning(coneSubnet) &&
          coneValid(builder, coneSubnet, origEntryIdx, coneEntryIdx, true);

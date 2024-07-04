@@ -9,6 +9,7 @@
 #include "gate/model/subnet.h"
 #include "gate/model/printer/printer.h"
 
+#include <cstring>
 #include <iostream>
 #include <queue>
 
@@ -50,6 +51,7 @@ const Subnet::Link *Subnet::getLinks(
     size_t i, Link *links, uint16_t &nLinks) const {
   const auto &cell = getCell(i);
   nLinks = cell.arity;
+  // Return the pointer to the inner array.
   return cell.link;
 }
 
@@ -200,7 +202,7 @@ const Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
   LinkList links(cell.arity);
 
   size_t j = 0;
-  for (; j < cell.arity && j < Subnet::Cell::InPlaceLinks; ++j) {
+  for (; j < cell.arity && j < Cell::InPlaceLinks; ++j) {
     links[j] = cell.link[j];
   }
 
@@ -224,12 +226,30 @@ const Subnet::Link *SubnetBuilder::getLinks(
   const auto &cell = getCell(i);
   nLinks = cell.arity;
 
-  if (cell.arity <= Subnet::Cell::InPlaceLinks) {
+  if (cell.arity <= Cell::InPlaceLinks) {
+    // Return the pointer to the inner array.
     return cell.link;
   }
 
-  // TODO: Fill the links buffer provided by a user.
-  assert(false);
+  // Fill the links buffer provided by a user.
+  auto *buffer = links;
+  auto nItems = cell.arity;
+
+  std::memcpy(buffer, cell.link, Cell::InPlaceLinks * sizeof(Link));
+  buffer += Cell::InPlaceLinks;
+  nItems -= Cell::InPlaceLinks;
+
+  size_t n = getNext(i);
+  for(; nItems >= Cell::InEntryLinks; n = getNext(n)) {
+    std::memcpy(buffer, entries[n].link, Cell::InEntryLinks * sizeof(Link));
+    buffer += Cell::InEntryLinks;
+    nItems -= Cell::InEntryLinks;
+  }
+
+  if (nItems) {
+    std::memcpy(buffer, entries[n].link, nItems * sizeof(Link));
+  }
+
   return links;
 }
 
@@ -250,7 +270,7 @@ Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
 
 Subnet::Link SubnetBuilder::addCellTree(
     CellSymbol symbol, const LinkList &links, uint16_t k) {
-  const uint16_t maxCellArity = Subnet::Cell::MaxArity;
+  const uint16_t maxCellArity = Cell::MaxArity;
   const uint16_t maxTreeArity = (k > maxCellArity) ? maxCellArity : k;
 
   if (links.size() <= maxTreeArity) {
@@ -458,8 +478,8 @@ void SubnetBuilder::replace(
        !rhsContainer.getCell(getEntryID(rhsIt, i)).isOut();
        ++rhsIt, ++i) {
     const size_t rhsEntryID = getEntryID(rhsIt, i);
-    const Subnet::Cell &rhsCell = rhsContainer.getCell(rhsEntryID);
-    assert(rhsCell.arity <= Subnet::Cell::InPlaceLinks);
+    const auto &rhsCell = rhsContainer.getCell(rhsEntryID);
+    assert(rhsCell.arity <= Cell::InPlaceLinks);
     if (rhsCell.isIn()) {
       continue;
     }
@@ -663,7 +683,7 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
 
     const size_t rhsEntryID = getEntryID(rhsIt, i);
     rhsRootEntryID = rhsEntryID;
-    const Subnet::Cell &rhsCell = rhsContainer.getCell(rhsEntryID);
+    const auto &rhsCell = rhsContainer.getCell(rhsEntryID);
     if (rhsCell.isIn()) {
       const auto lhsEntryID = rhsToLhs[rhsEntryID];
       reusedLhsEntries.insert(lhsEntryID);
@@ -868,17 +888,18 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
   entries[idx] = Entry(typeID, links);
 
   addDepthBounds(idx);
-  const size_t curDepth = getDepth(idx);
 
-  constexpr auto InPlaceLinks = Subnet::Cell::InPlaceLinks;
-  constexpr auto InEntryLinks = Subnet::Cell::InEntryLinks;
-  if (InPlaceLinks >= links.size()) {
+  const size_t curDepth = getDepth(idx);
+  const size_t nLinks = links.size();
+
+  if (Cell::InPlaceLinks >= nLinks) {
     return idx;
   }
+
   const size_t saveNextEntryID = getNext(idx);
   size_t prevEntryID = idx;
 
-  for (size_t i = InPlaceLinks; i < links.size(); i += InEntryLinks) {
+  for (size_t i = Cell::InPlaceLinks; i < nLinks; i += Cell::InEntryLinks) {
     if (depthBounds[curDepth].second == entries.size() - 1) {
       depthBounds[curDepth].second = entries.size();
     }
@@ -1088,7 +1109,7 @@ void SubnetBuilder::deleteCell(size_t entryID) {
     queue.pop();
 
     auto &cell = getCell(currentID);
-    assert(cell.arity <= Subnet::Cell::InPlaceLinks);
+    assert(cell.arity <= Cell::InPlaceLinks);
     deallocEntry(currentID);
 
     for (size_t j = 0; j < cell.arity; ++j) {

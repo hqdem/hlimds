@@ -139,7 +139,7 @@ public:
     }
 
     void incRefCount() {
-      assert(refcount < Subnet::Cell::MaxRefCount);
+      assert(refcount < Cell::MaxRefCount);
       refcount++;
     }
 
@@ -315,13 +315,13 @@ struct StrashKey final {
   static bool isEnabled(CellTypeID cellTypeID, const LinkList &cellLinks) {
     return (cellTypeID != CELL_TYPE_ID_IN)
         && (cellTypeID != CELL_TYPE_ID_OUT)
-        && (cellLinks.size() <= Subnet::Cell::InPlaceLinks);
+        && (cellLinks.size() <= Cell::InPlaceLinks);
   }
 
   static bool isEnabled(const Cell &cell) {
     return !cell.isIn()
         && !cell.isOut()
-        && cell.arity <= Subnet::Cell::InPlaceLinks;
+        && cell.arity <= Cell::InPlaceLinks;
   }
 
   StrashKey(): StrashKey(0, LinkList{}) {}
@@ -357,7 +357,7 @@ struct StrashKey final {
 
   uint32_t typeID;
   uint16_t arity;
-  Link links[Subnet::Cell::InPlaceLinks];
+  Link links[Cell::InPlaceLinks];
 };
 
 } // namespace eda::gate::model
@@ -468,22 +468,22 @@ public:
   size_t getMaxIdx() const { return entries.size() - 1; }
 
   /// Returns the constant reference to the i-th entry.
-  const Subnet::Entry &getEntry(size_t i) const {
+  const Entry &getEntry(size_t i) const {
     return entries[i];
   }
 
   /// Returns the non-constant reference to the i-th entry.
-  Subnet::Entry &getEntry(size_t i) {
+  Entry &getEntry(size_t i) {
     return entries[i];
   }
 
   /// Returns the constant reference to the i-th cell.
-  const Subnet::Cell &getCell(size_t i) const {
+  const Cell &getCell(size_t i) const {
     return entries[i].cell;
   }
 
   /// Returns the non-constant reference to the i-th cell.
-  Subnet::Cell &getCell(size_t i) {
+  Cell &getCell(size_t i) {
     return entries[i].cell;
   }
 
@@ -717,7 +717,7 @@ public:
 
   /// Replaces the given single-output fragment w/ the given subnet (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
-  /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
+  /// Precondition: cell arities <= Cell::InPlaceLinks.
   void replace(
       const SubnetObject &rhs,
       const InOutMapping &iomapping,
@@ -727,7 +727,7 @@ public:
 
   /// Replaces the given single-output fragment w/ the given subnet (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
-  /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
+  /// Precondition: cell arities <= Cell::InPlaceLinks.
   void replace(
       const SubnetID rhsID,
       const InOutMapping &iomapping,
@@ -738,7 +738,7 @@ public:
 
   /// Replaces the given single-output fragment w/ the given SubnetBuilder (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
-  /// Precondition: cell arities <= Subnet::Cell::InPlaceLinks.
+  /// Precondition: cell arities <= Cell::InPlaceLinks.
   void replace(
       const SubnetBuilder &rhsBuilder,
       const InOutMapping &iomapping,
@@ -768,7 +768,7 @@ public:
   /// Replaces the given cell w/ the new one. Recursively deletes the cells
   /// from the transitive fanin cone whose reference counts have become zero
   /// (if @param delZeroRefcount is set).
-  /// The number of links in both cells must be <= Subnet::Cell::InPlaceLinks.
+  /// The number of links in both cells must be <= Cell::InPlaceLinks.
   Link replaceCell(
       size_t entryID, CellTypeID typeID, const LinkList &links,
       bool delZeroRefcount = true);
@@ -1007,7 +1007,7 @@ private:
   uint16_t nIn{0};
   uint16_t nOut{0};
 
-  std::vector<Subnet::Entry> entries;
+  std::vector<Entry> entries;
   bool isDisassembled{false};
 
   std::vector<EntryDescriptor> desc;

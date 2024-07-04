@@ -371,7 +371,7 @@ static int writeSubnet(
   CLI::App app;
 
   size_t number = 0;
-  auto entered = app.add_option("--index", number, "Subnet sequence number");
+  auto *entered = app.add_option("--index", number, "Subnet sequence number");
   app.allow_extras();
 
   try {
@@ -570,7 +570,7 @@ static int pass(
   app.add_subcommand("mig", "Mapping to the MIG represenation");
   app.add_subcommand("b", "Depth-aware balancing");
 
-  auto passRw = app.add_subcommand("rw", "Rewriting");
+  auto *passRw = app.add_subcommand("rw", "Rewriting");
   passRw->add_option("--name", rwName);
   passRw->add_option("-k", rwK);
   passRw->add_flag("-z", rwZ);
@@ -582,12 +582,12 @@ static int pass(
   app.add_subcommand("rfd", "Refactor criterion delay");
   app.add_subcommand("rfp", "Refactor criterion power");
 
-  auto passRs = app.add_subcommand("rs", "Resubstitute");
+  auto *passRs = app.add_subcommand("rs", "Resubstitute");
   passRs->add_option("--name", rsName);
   passRs->add_option("-k", rsK);
   passRs->add_option("-n", rsN);
 
-  auto passRsz = app.add_subcommand(
+  auto *passRsz = app.add_subcommand(
       "rsz",
       "Resubstitute w/ zero-cost replacements");
   passRsz->add_option("--name", rszName);

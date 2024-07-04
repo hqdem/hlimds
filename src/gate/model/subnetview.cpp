@@ -81,7 +81,10 @@ SubnetView::SubnetView(const SubnetBuilder &parent,
   assert(!iomapping.outputs.empty());
 }
 
-SubnetView::TruthTable SubnetView::evaluateTruthTable() const {
+std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
+    const std::vector<size_t> &entryIDs) const {
+  std::vector<TruthTable> result(entryIDs.size());
+
   const SubnetViewWalker walker(*this);
   const size_t arity = getInNum();
 
@@ -96,31 +99,35 @@ SubnetView::TruthTable SubnetView::evaluateTruthTable() const {
       const auto tt = utils::getTruthTable<utils::TT6>(
           parent, arity, i, isIn, nIn++);
       utils::setTruthTable<utils::TT6>(parent, i, tt);
-      return true;
+      return true; // Continue traversal.
     });
 
-    const auto tt = utils::getTruthTable<utils::TT6>(
-        parent, iomapping.getOut(0));
-    return utils::convertTruthTable<utils::TT6>(tt, arity);
+    for (size_t i = 0; i < entryIDs.size(); ++i) {
+      const auto tt = utils::getTruthTable<utils::TT6>(parent, entryIDs[i]);
+      result[i] = utils::convertTruthTable<utils::TT6>(tt, arity);
+    }
+  } else {
+    std::vector<TruthTable> tables;
+    tables.reserve(parent.getCellNum());
+
+    walker.run([&tables, &nIn, arity](SubnetBuilder &parent,
+                                      const bool isIn,
+                                      const bool isOut,
+                                      const size_t i) -> bool {
+      const auto tt = utils::getTruthTable<TruthTable>(
+          parent, arity, i, isIn, nIn++);
+      tables.push_back(tt);
+      utils::setTruthTable<TruthTable>(parent, i, tables.back());
+      return true; // Continue traversal.
+    });
+
+    for (size_t i = 0; i < entryIDs.size(); ++i) {
+      const auto tt = utils::getTruthTable<utils::TTn>(parent, entryIDs[i]);
+      result[i] = utils::convertTruthTable<utils::TTn>(tt, arity);
+    }
   }
 
-  std::vector<TruthTable> tables;
-  tables.reserve(parent.getCellNum());
-
-  walker.run([&tables, &nIn, arity](SubnetBuilder &parent,
-                                    const bool isIn,
-                                    const bool isOut,
-                                    const size_t i) -> bool {
-    const auto tt = utils::getTruthTable<TruthTable>(
-        parent, arity, i, isIn, nIn++);
-    tables.push_back(tt);
-    utils::setTruthTable<TruthTable>(parent, i, tables.back());
-    return true;
-  });
-
-  const auto tt = utils::getTruthTable<TruthTable>(
-      parent, iomapping.getOut(0));
-  return utils::convertTruthTable<TruthTable>(tt, arity);
+  return result;
 }
 
 SubnetObject &SubnetView::getSubnet() {

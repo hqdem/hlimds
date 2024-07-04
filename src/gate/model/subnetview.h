@@ -87,15 +87,27 @@ public:
     this->care = care;
   }
 
-  SubnetObject &getSubnet();
+  /// Evaluates the truth table for the single output.
+  TruthTable evaluateTruthTable() const {
+    return evaluateTruthTables({getOut(0)})[0];
+  }
 
-  TruthTable evaluateTruthTable() const;
+  /// Evaluates the truth tables for the outputs.
+  std::vector<TruthTable> evaluateTruthTables() const {
+    return evaluateTruthTables(getOutputs());
+  }
+
+  SubnetObject &getSubnet();
 
   const SubnetBuilder &getParent() const {
     return parent;
   }
 
 private:
+  /// Evaluates the truth tables for the given cells.
+  std::vector<TruthTable> evaluateTruthTables(
+    const std::vector<size_t> &entryIDs) const;
+
   // Input/output mapping.
   InOutMapping iomapping;
 

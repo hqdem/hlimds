@@ -8,6 +8,9 @@
 
 #include "gate/optimizer/cut_extractor.h"
 
+// FIXME:
+#include <iostream>
+
 namespace eda::gate::optimizer {
 
 uint16_t countSetBits(uint64_t x) {
@@ -24,6 +27,7 @@ CutExtractor::CutExtractor(const Subnet *subnet, const uint16_t k):
   // Cuts for subnets are computed in advance.
   const auto &entries = subnet->getEntries();
   entriesCuts.resize(entries.size());
+
   for (size_t i = 0; i < entries.size(); ++i) {
     findCuts(i);
     i += entries[i].cell.more;
@@ -36,6 +40,8 @@ CutExtractor::CutExtractor(const SubnetBuilder *builder,
     subnet(nullptr),
     builder(builder),
     k(k) {
+  entriesCuts.reserve(static_cast<size_t>(1.25 * (builder->getMaxIdx() + 1)));
+
   // Cuts might be (re)computed on demand.
   if (extractNow) {
     entriesCuts.resize(builder->getMaxIdx() + 1);
@@ -52,11 +58,6 @@ void CutExtractor::recomputeCuts(const size_t entryIdx) {
   findCuts(entryIdx);
 }
 
-const CutExtractor::CutsList CutExtractor::getCuts(
-    const size_t entryIdx) const {
-  return entriesCuts[entryIdx];
-}
-
 CutExtractor::CutsEntries CutExtractor::getCutsEntries(
     const size_t entryIdx) const {
   CutsEntries cutsEntries;
@@ -66,51 +67,49 @@ CutExtractor::CutsEntries CutExtractor::getCutsEntries(
   return cutsEntries;
 }
 
-CutExtractor::LinkList CutExtractor::getLinks(const size_t entryID) const {
-  if (subnet) {
-    return subnet->getLinks(entryID);
-  }
-  return builder->getLinks(entryID);
-}
-
 void CutExtractor::findCuts(const size_t entryIdx) {
-  auto entryLinks = getLinks(entryIdx);
+  uint16_t nLinks;
+  const auto *links = getLinks(entryIdx, nullptr, nLinks);
+
   RawCutsList cuts;
-  cuts.push_back({ getOneElemCut(entryIdx), true });
-  if (!entryLinks.size()) {
+  cuts.push_back({getOneElemCut(entryIdx), true});
+
+  if (nLinks == 0) {
     addViableCuts(cuts, entryIdx);
     return;
   }
+
   uint64_t cutsCombinationsN = 1;
-  std::vector<size_t> suffCutsCombinationsN(entryLinks.size());
-  for (long long i = entryLinks.size() - 1; i >= 0; --i) {
-    cutsCombinationsN *= entriesCuts[entryLinks[i].idx].size();
+  std::vector<size_t> suffCutsCombinationsN(nLinks);
+  for (int i = nLinks - 1; i >= 0; --i) {
+    cutsCombinationsN *= entriesCuts[links[i].idx].size();
     suffCutsCombinationsN[i] = cutsCombinationsN;
   }
   for (size_t i = 0; i < cutsCombinationsN; ++i) {
-    addCut(entryIdx, i, cuts, suffCutsCombinationsN);
+    addCut(entryIdx, links, nLinks, i, cuts, suffCutsCombinationsN);
   }
   addViableCuts(cuts, entryIdx);
 }
 
 void CutExtractor::addCut(
     const size_t entryIdx,
+    const Link links[],
+    const uint16_t nLinks,
     uint64_t cutsCombinationIdx,
     RawCutsList &addedCuts,
     const std::vector<size_t> &suffCutsCombN) const {
   Cut newCut;
   newCut.rootEntryIdx = entryIdx;
-  const auto &entryLinks = getLinks(entryIdx);
 
   if (countSetBits(getNewCutSign(cutsCombinationIdx,
-                                 entryLinks, suffCutsCombN)) > k) {
+                                 links, nLinks, suffCutsCombN)) > k) {
     return;
   }
 
-  for (size_t j = 0; j < entryLinks.size(); ++j) {
-    size_t inEntryIdx = entryLinks[j].idx;
+  for (size_t j = 0; j < nLinks; ++j) {
+    size_t inEntryIdx = links[j].idx;
     size_t inEntryCutIdx = cutsCombinationIdx;
-    if (j + 1 != entryLinks.size()) {
+    if (j + 1 != nLinks) {
       inEntryCutIdx = cutsCombinationIdx / suffCutsCombN[j + 1];
       cutsCombinationIdx %= suffCutsCombN[j + 1];
     }
@@ -145,13 +144,13 @@ bool CutExtractor::cutNotDominated(const Cut &cut, RawCutsList &cuts) const {
 }
 
 void CutExtractor::addViableCuts(
-    const RawCutsList &cuts,
-    const size_t entryIdx) {
-
+    const RawCutsList &cuts, const size_t entryIdx) {
   entriesCuts[entryIdx].clear();
+
   for (const auto &cut : cuts) {
     if (cut.second) {
-      entriesCuts[entryIdx].push_back(cut.first);
+      auto &cutEntry = entriesCuts[entryIdx];
+      cutEntry.push_back(cut.first);
     }
   }
 }
@@ -173,15 +172,16 @@ bool CutExtractor::cutDominates(const Cut &cut1, const Cut &cut2) const {
 
 uint64_t CutExtractor::getNewCutSign(
     uint64_t cutsCombinationIdx,
-    const LinkList &entryLinks,
+    const Link links[],
+    const uint16_t nLinks,
     const std::vector<size_t> &suffCutsCombN) const {
 
   uint64_t newCutSignature = 0;
 
-  for (size_t j = 0; j < entryLinks.size(); ++j) {
-    size_t inEntryIdx = entryLinks[j].idx;
+  for (size_t j = 0; j < nLinks; ++j) {
+    size_t inEntryIdx = links[j].idx;
     size_t inEntryCutIdx = cutsCombinationIdx;
-    if (j + 1 != entryLinks.size()) {
+    if (j + 1 != nLinks) {
       inEntryCutIdx = cutsCombinationIdx / suffCutsCombN[j + 1];
       cutsCombinationIdx %= suffCutsCombN[j + 1];
     }

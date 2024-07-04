@@ -11,6 +11,8 @@
 #include "gate/model/subnet.h"
 
 #include <cstddef>
+#include <cstdint>
+#include <iostream> // FIXME
 #include <unordered_set>
 #include <vector>
 
@@ -25,15 +27,14 @@ public:
   struct Cut;
 
   using Subnet = model::Subnet;
-  using LinkList = Subnet::LinkList;
+  using Link = Subnet::Link;
   using SubnetBuilder = model::SubnetBuilder;
   using CutsEntries = std::vector<std::unordered_set<size_t>>;
   using CutsList = std::vector<Cut>;
   using RawCutsList = std::vector<std::pair<Cut, char>>;
-  using Entry = model::Subnet::Entry;
 
   /// Cut class with its signature and indices.
-  struct Cut {
+  struct Cut final {
     Cut() = default;
     Cut(const size_t rootEntryIdx,
         const uint64_t sign,
@@ -77,7 +78,9 @@ public:
                const bool extractNow);
 
   /// Gets cuts (entries indexes and signatures) for cell with entryIdx index.
-  const CutsList getCuts(const size_t entryIdx) const;
+  const CutsList getCuts(const size_t entryIdx) const {
+    return entriesCuts[entryIdx];
+  }
 
   /// Gets cuts (entries indexes) for cell with entryIdx index.
   CutsEntries getCutsEntries(const size_t entryIdx) const;
@@ -87,7 +90,11 @@ public:
   void recomputeCuts(const size_t entryIdx);
 
 private:
-  LinkList getLinks(const size_t entryID) const;
+  const Link *getLinks(
+      const size_t entryID, Link *links, uint16_t &nLinks) const {
+    return subnet ? subnet->getLinks(entryID, links, nLinks)
+                  : builder->getLinks(entryID, links, nLinks);
+  }
 
   /// Finds all cuts for cell with entryIdx index.
   void findCuts(const size_t entryIdx);
@@ -95,6 +102,8 @@ private:
   /// Adds new cut into addedCuts if it is not dominated and its size < k.
   void addCut(
       const size_t entryIdx,
+      const Link links[],
+      const uint16_t nLinks,
       uint64_t cutsCombinationIdx,
       RawCutsList &addedCuts,
       const std::vector<size_t> &suffCutsCombinationsN) const;
@@ -119,7 +128,8 @@ private:
   /// Computes signature of the combination of the passed entry links.
   uint64_t getNewCutSign(
       uint64_t cutsCombinationIdx,
-      const LinkList &entryLinks,
+      const Link links[],
+      const uint16_t nLinks,
       const std::vector<size_t> &suffCutsCombN) const;
 
 private:

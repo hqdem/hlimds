@@ -32,15 +32,15 @@ void Rewriter::rewriteOnNode(
   const auto &cuts = cutExtractor.getCuts(entryID);
   float bestMetricValue = std::numeric_limits<float>::lowest();
   SubnetObject bestRhs{};
-  InOutMapping bestMap;
+  InOutMapping bestMap{};
 
   for (const auto &cut : cuts) {
-    SubnetView window(builder, cut);
-    SubnetObject rhs = resynthesizer.resynthesize(window);
+    SubnetView cone(builder, cut);
+    SubnetObject rhs = resynthesizer.resynthesize(cone);
     if (rhs.isNull()) {
       continue;
     }
-    const auto rhsToLhs = window.getInOutMapping();
+    const auto rhsToLhs = cone.getInOutMapping();
     float curMetricValue = cost(builder.evaluateReplace(rhs, rhsToLhs));
     if (curMetricValue - bestMetricValue > metricEps) {
       bestMetricValue = curMetricValue;
@@ -52,7 +52,7 @@ void Rewriter::rewriteOnNode(
     cutExtractor.recomputeCuts(entryID);
   };
   if (bestMetricValue > metricEps ||
-      (zero_cost && std::fabs(bestMetricValue) <= metricEps)) {
+      (zeroCost && std::fabs(bestMetricValue) <= metricEps)) {
     iter.replace(bestRhs, bestMap, &cutRecompute, &cutRecompute, &cutRecompute);
   }
 }

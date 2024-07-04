@@ -36,14 +36,12 @@ class Subnet final : public Object<Subnet, SubnetID> {
 
 public:
   /// Returns the entry/link indices of the j-th link of the i-th entry.
-  static std::pair<size_t, size_t> getLinkIndices(size_t i, size_t j) {
+  static const std::pair<size_t, size_t> getLinkIndices(size_t i, size_t j) {
     if (j < Cell::InPlaceLinks) {
       return {i, j};
     }
-
     const auto k = j - Cell::InPlaceLinks;
-    const auto n = Cell::InEntryLinks;
-    return {i + 1 + (k / n), k % n};
+    return {i + 1 + (k / Cell::InEntryLinks), k % Cell::InEntryLinks};
   }
 
   /// Link source.
@@ -214,7 +212,9 @@ public:
   /// Returns the j-th link of the i-th cell.
   const Link &getLink(size_t i, size_t j) const;
   /// Returns the links of the i-th cell.
-  LinkList getLinks(size_t i) const;
+  const LinkList getLinks(size_t i) const; // FIXME: Deprecated.
+  /// Returns an array filled by the links.
+  const Link *getLinks(size_t i, Link *links, uint16_t &nLinks) const;
 
   /// Returns the i-th input link.
   Link getIn(size_t i) const {
@@ -548,11 +548,28 @@ public:
   }
 
   /// Returns the entry/link indices of the j-th link of the i-th entry.
-  const std::pair<size_t, size_t> getLinkIndices(size_t i, size_t j) const;
+  const std::pair<size_t, size_t> getLinkIndices(size_t i, size_t j) const {
+    if (j < Cell::InPlaceLinks) {
+      return {i, j};
+    }
+
+    auto k = j - Cell::InPlaceLinks;
+    auto n = getNext(i);
+
+    while (k > Cell::InEntryLinks) {
+      k -= Cell::InEntryLinks;
+      n = getNext(n);
+    }
+
+    return {n, k};
+  }
+
   /// Returns the j-th link of the i-th cell.
   const Link &getLink(size_t i, size_t j) const;
   /// Returns the links of the i-th cell.
-  LinkList getLinks(size_t i) const;
+  const LinkList getLinks(size_t i) const; // FIXME: Deprecated.
+  /// Returns an array filled by the links.
+  const Link *getLinks(size_t i, Link *links, uint16_t &nLinks) const;
 
   /// Adds an input.
   Link addInput() {

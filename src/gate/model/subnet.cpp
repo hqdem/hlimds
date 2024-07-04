@@ -19,7 +19,7 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 
 const Subnet::Link &Subnet::getLink(size_t i, size_t j) const {
-  const auto &cell = entries[i].cell;
+  const auto &cell = getCell(i);
 
   if (j < Cell::InPlaceLinks) {
     return cell.link[j];
@@ -29,9 +29,8 @@ const Subnet::Link &Subnet::getLink(size_t i, size_t j) const {
   return entries[k.first].link[k.second];
 }
 
-Subnet::LinkList Subnet::getLinks(size_t i) const {
-  const auto &cell = entries[i].cell;
-
+const Subnet::LinkList Subnet::getLinks(size_t i) const {
+  const auto &cell = getCell(i);
   LinkList links(cell.arity);
 
   size_t j = 0;
@@ -47,12 +46,19 @@ Subnet::LinkList Subnet::getLinks(size_t i) const {
   return links;
 }
 
+const Subnet::Link *Subnet::getLinks(
+    size_t i, Link *links, uint16_t &nLinks) const {
+  const auto &cell = getCell(i);
+  nLinks = cell.arity;
+  return cell.link;
+}
+
 std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   uint32_t minLength = nEntry, maxLength = 0;
   std::vector<uint32_t> min(nEntry), max(nEntry);
 
   for (size_t i = 0; i < nEntry; ++i) {
-    const auto &cell = entries[i].cell;
+    const auto &cell = getCell(i);
 
     if (cell.isIn()) {
       min[i] = max[i] = 0;
@@ -180,33 +186,16 @@ SubnetID SubnetBuilder::makeConst(const size_t nIn, const bool value) {
   return value ? makeOne(nIn) : makeZero(nIn);
 }
 
-const std::pair<size_t, size_t> SubnetBuilder::getLinkIndices(
-    size_t i, size_t j) const {
-  if (j < Cell::InPlaceLinks) {
-    return {i, j};
-  }
-
-  auto k = j - Cell::InPlaceLinks;
-  const auto n = Cell::InEntryLinks;
-  size_t linkEntry = getNext(i);
-  while(k > n) {
-    k -= n;
-    linkEntry = getNext(linkEntry);
-  }
-  return {linkEntry, k};
-}
-
 const Subnet::Link &SubnetBuilder::getLink(size_t i, size_t j) const {
   const auto &cell = getCell(i);
   if (j < Cell::InPlaceLinks) {
     return cell.link[j];
   }
-
   const auto k = getLinkIndices(i, j);
   return entries[k.first].link[k.second];
 }
 
-Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
+const Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
   const auto &cell = getCell(i);
   LinkList links(cell.arity);
 
@@ -215,11 +204,32 @@ Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
     links[j] = cell.link[j];
   }
 
+  size_t k = 0;
+  size_t n = getNext(i);
+
   for (; j < cell.arity; ++j) {
-    const auto k = getLinkIndices(i, j); // FIXME: This is slow.
-    links[j] = entries[k.first].link[k.second];
+    links[j] = entries[n].link[k]; 
+
+    if (k == Cell::InEntryLinks) {
+      k = 0;
+      n = getNext(n);
+    }
   }
 
+  return links;
+}
+
+const Subnet::Link *SubnetBuilder::getLinks(
+    size_t i, Link *links, uint16_t &nLinks) const {
+  const auto &cell = getCell(i);
+  nLinks = cell.arity;
+
+  if (cell.arity <= Subnet::Cell::InPlaceLinks) {
+    return cell.link;
+  }
+
+  // TODO: Fill the links buffer provided by a user.
+  assert(false);
   return links;
 }
 

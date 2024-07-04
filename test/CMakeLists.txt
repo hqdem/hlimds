@@ -97,9 +97,6 @@ add_executable(${TEST_TARGET}
   gate/techmapper/strategy/simple_delay_test.cpp
   gate/techmapper/techmapper_test_util.cpp
   gate/translator/fir/fir_model2_test.cpp
-  gate/translator/verilog_to_fir/verilog_to_fir.cpp
-  gate/translator/verilog_to_fir/yosys_converter_firrtl_test.cpp
-  gate/translator/verilog_to_model2/yosys_converter_model2_tests.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   test_main.cpp

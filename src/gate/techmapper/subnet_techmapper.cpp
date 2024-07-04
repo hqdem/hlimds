@@ -201,7 +201,8 @@ RECOVERY:
 
     for (const auto &cut : cuts) {
       // Skip trivial cuts.
-      if (cut.entryIdxs.size() == 1) {
+      if (cut.entryIdxs.size() == 1 && 
+          cut.entryIdxs.find(i) != cut.entryIdxs.end()) {
         continue;
       }
 

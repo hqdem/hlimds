@@ -25,9 +25,8 @@ CutExtractor::CutExtractor(const Subnet *subnet, const uint16_t k):
   const auto &entries = subnet->getEntries();
   entriesCuts.resize(entries.size());
   for (size_t i = 0; i < entries.size(); ++i) {
-    const auto &cell = entries[i].cell;
     findCuts(i);
-    i += cell.more;
+    i += entries[i].cell.more;
   }
 }
 
@@ -68,12 +67,14 @@ CutExtractor::CutsEntries CutExtractor::getCutsEntries(
 }
 
 CutExtractor::LinkList CutExtractor::getLinks(const size_t entryID) const {
-  return subnet ? subnet->getLinks(entryID)
-                : builder->getLinks(entryID);
+  if (subnet) {
+    return subnet->getLinks(entryID);
+  }
+  return builder->getLinks(entryID);
 }
 
 void CutExtractor::findCuts(const size_t entryIdx) {
-  const auto &entryLinks = getLinks(entryIdx);
+  auto entryLinks = getLinks(entryIdx);
   RawCutsList cuts;
   cuts.push_back({ getOneElemCut(entryIdx), true });
   if (!entryLinks.size()) {

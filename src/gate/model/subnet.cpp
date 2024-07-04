@@ -18,13 +18,7 @@ namespace eda::gate::model {
 // Subnet
 //===----------------------------------------------------------------------===//
 
-const Subnet::Cell &Subnet::getCell(size_t i) const {
-  const auto &entries = getEntries();
-  return entries[i].cell;
-}
-
 const Subnet::Link &Subnet::getLink(size_t i, size_t j) const {
-  const auto &entries = getEntries();
   const auto &cell = entries[i].cell;
 
   if (j < Cell::InPlaceLinks) {
@@ -36,7 +30,6 @@ const Subnet::Link &Subnet::getLink(size_t i, size_t j) const {
 }
 
 Subnet::LinkList Subnet::getLinks(size_t i) const {
-  const auto &entries = getEntries();
   const auto &cell = entries[i].cell;
 
   LinkList links(cell.arity);
@@ -58,7 +51,6 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   uint32_t minLength = nEntry, maxLength = 0;
   std::vector<uint32_t> min(nEntry), max(nEntry);
 
-  const auto &entries = getEntries();
   for (size_t i = 0; i < nEntry; ++i) {
     const auto &cell = entries[i].cell;
 
@@ -224,7 +216,7 @@ Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
   }
 
   for (; j < cell.arity; ++j) {
-    const auto k = getLinkIndices(i, j);
+    const auto k = getLinkIndices(i, j); // FIXME: This is slow.
     links[j] = entries[k.first].link[k.second];
   }
 

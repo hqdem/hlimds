@@ -194,7 +194,7 @@ public:
   Subnet(const Subnet &r) = delete;
 
   /// Returns the overall number of entries including inputs and outputs.
-  uint32_t size() const { return nEntry; }
+  size_t size() const { return nEntry; }
 
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
@@ -209,7 +209,7 @@ public:
   size_t getMaxIdx() const { return nEntry - 1; }
 
   /// Returns the i-th cell.
-  const Cell &getCell(size_t i) const;
+  const Cell &getCell(size_t i) const { return entries[i].cell; }
 
   /// Returns the j-th link of the i-th cell.
   const Link &getLink(size_t i, size_t j) const;
@@ -225,12 +225,11 @@ public:
   /// Returns the i-th output link.
   Link getOut(size_t i) const {
     assert(i < nOut);
-    const auto &entries = getEntries();
-    return entries[entries.size() - nOut + i].cell.link[0];
+    return entries[nEntry - nOut + i].cell.link[0];
   }
 
   /// Returns the array of entries.
-  Array<Entry> getEntries() const { return Array<Entry>(entries); }
+  const Array<Entry> &getEntries() const { return entries; }
 
   /// Returns the minimum and maximum path lengths.
   std::pair<uint32_t, uint32_t> getPathLength() const;
@@ -248,8 +247,11 @@ private:
   /// Total number of entries.
   const uint32_t nEntry;
 
+  /// For alignment purposes.
+  const uint64_t __reserved{0};
+
   /// Topologically sorted array of entries.
-  const ArrayID entries;
+  const Array<Entry> entries;
 };
 
 static_assert(sizeof(Subnet) == SubnetID::Size);

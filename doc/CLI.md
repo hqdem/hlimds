@@ -116,3 +116,12 @@ Available commands and their descriptions:
 
 14. exit
    Description: Closes the interactive shell mode.
+
+15. dbstat [--db <dbpath>] [--otype <type>] [--out <outfile>] [--ttsize <ttsize>] <out-1> <out-2> ...
+   Description: output information about the scheme (More info in `doc/DbStat.md`).
+   Parameters:
+       --db: path to database (default: none).
+       --otype: type of output (default: BOTH).
+       --out: path to output DOT file (default: none).
+       --ttsize: number of inputs of truth table (default: none).
+       <out-1> <out-2> ... <out-n> outputs of truth table.

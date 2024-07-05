@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/printer/printer.h"
 #include "gate/model/serializer.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/subnet_info.h"
@@ -94,6 +95,8 @@ class NPNDatabase {
 friend class NPNDatabaseSerializer;
 
 public:
+  using Printer = eda::gate::model::ModelPrinter;
+  using Format = eda::gate::model::ModelPrinter::Format;
   using ResultIterator = NPNDB2ResultIterator;
   using NPNTransformation = utils::NPNTransformation;
   using Subnet = model::Subnet;
@@ -111,6 +114,38 @@ public:
    */
   virtual ResultIterator get(const TT &tt);
   virtual ResultIterator get(const Subnet &subnet);
+
+  /**
+   * \brief Finds nets equivalent to representative function of *tt* NPN-class, 
+   * creates a DOT representation for the net, and prints the representation in buffer.
+   * \param out the buffer into which the result is being output.
+   * \param tt Truth table.
+   * \param name Header of DOT representation.
+   * \param quiet Flag for quiet version. Used only in child class
+   */
+  virtual void printDot(std::ostream &out, const TT &tt,
+                        const std::string &name, const bool quiet = false);
+                        
+  /**
+   * \brief Finds nets equivalent to representative function of *tt* NPN-class, 
+   * creates a DOT representation for the net, and save the representation in file.
+   * \param tt Truth table.
+   * \param fileName File into which the result is being saved.
+   * \param name Header of DOT representation.
+   * \param quiet Flag for quiet version. Used only in child class
+   */
+  virtual void printDotFile(const TT &tt, const std::string &fileName,
+                            const std::string &name, const bool quiet = false);
+
+  /**
+   * \brief Finds nets equivalent to representative function of *tt* (or *subnet*) NPN-class, 
+   * and prints in buffer the information about Subnet (INs, OUTSs, ENTRYs).
+   * \param out the buffer into which the result is being output.
+   * \param tt Truth table.
+   * \param quiet Flag for quiet version. Used only in child class
+   */
+  virtual void printInfo(std::ostream &out, const TT &tt, const bool quiet = false);
+  static void printInfoSub(std::ostream &out, const Subnet &subnet);
 
   /**
    * \brief Push *bnet*'s NPN representative function net in database.

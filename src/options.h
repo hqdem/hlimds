@@ -9,6 +9,7 @@
 #pragma once
 
 #include "CLI/CLI.hpp"
+#include "gate/optimizer/get_dbstat.h"
 #include "gate/techmapper/techmapper.h"
 #include "nlohmann/json.hpp"
 
@@ -407,6 +408,62 @@ struct TechMapOptions final : public AppOptions {
   std::string outputPath = "out.v";
 };
 
+struct DBStatsOptions final : public AppOptions {
+
+  /// The command to run the dbstat printer.
+  static constexpr const char *ID = "dbstat";
+  /// The option to specify name of the original db.
+  static constexpr const char *DB_PATH = "--db";
+  /// The option to specify the output.
+  /// DOT  - returns only .dot file,
+  /// INFO - returns only information about subnet
+  /// BOTH - returns both
+  static constexpr const char *OUTPUT_TYPE = "--otype";
+  /// The option to specify the output. 
+  /// If the file name is not specified, it will output the contents to the console
+  static constexpr const char *OUTPUT_NAMEFILE = "--out";
+  /// The option to control number of input bits.
+  static constexpr const char *TRUTH_TABLE_SIZE = "--ttsize";
+
+  DBStatsOptions(AppOptions &parent):
+      AppOptions(parent, ID, "Printer of the Subnet by truth table") {
+
+    options->add_option(DB_PATH, dbPath,
+                "Path to database")
+            ->expected(1)
+            ->required(true);
+    options->add_option(OUTPUT_TYPE, outputType,
+                "Output type (0-.dot file, 1-information, 2-both)")
+            ->expected(1);
+    options->add_option(OUTPUT_NAMEFILE, outputNamefile,
+                "Name of output DOT file")
+            ->expected(1);
+    options->add_option(TRUTH_TABLE_SIZE, ttSize,
+                "Number of input bits (also need to write list of outputs)")
+            ->expected(1)
+            ->required(true);
+
+    /// Input output value(s).
+    options->allow_extras();
+  }
+
+  std::vector<std::string> files() const {
+    return options->remaining();
+  }
+
+  void fromJson(Json json) override {
+    get(json, DB_PATH, dbPath);
+    get(json, OUTPUT_TYPE, outputType);
+    get(json, OUTPUT_NAMEFILE, outputNamefile);
+    get(json, TRUTH_TABLE_SIZE, ttSize);
+  }
+
+  std::string dbPath;
+  int ttSize;
+  eda::gate::optimizer::OutType outputType;
+  std::string outputNamefile;
+};
+
 struct Options final : public AppOptions {
   Options(const std::string &title,
           const std::string &version):
@@ -416,7 +473,8 @@ struct Options final : public AppOptions {
         model2(*this),
         graphMl(*this),
         techMapOptions(*this),
-        verilogToModel2(*this) {
+        verilogToModel2(*this),
+        dbStatsOptions(*this) {
     // Top-level options.
     options->set_help_all_flag("-H,--help-all",
                                "Print the extended help message and exit");
@@ -442,6 +500,7 @@ struct Options final : public AppOptions {
     graphMl.fromJson(json[GraphMlOptions::ID]);
     techMapOptions.fromJson(json[TechMapOptions::ID]);
     verilogToModel2.fromJson(json[YosysToModel2Options::ID]);
+    dbStatsOptions.fromJson(json[DBStatsOptions::ID]);
   }
 
   //RtlOptions rtl;
@@ -450,4 +509,5 @@ struct Options final : public AppOptions {
   GraphMlOptions graphMl;
   TechMapOptions techMapOptions;
   YosysToModel2Options verilogToModel2;
+  DBStatsOptions dbStatsOptions;
 };

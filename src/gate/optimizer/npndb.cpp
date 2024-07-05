@@ -23,6 +23,35 @@ NPNDatabase::ResultIterator NPNDatabase::get(const Subnet &subnet) {
   return get(tt);
 }
 
+void NPNDatabase::printDot(std::ostream &out, const TT &tt,
+                           const std::string &name, const bool quiet) {
+  NPNDatabase::ResultIterator iterator = get(tt);
+  Printer::getPrinter(Format::DOT)
+      .print(out, Subnet::get(iterator.get()), name);
+}
+
+void NPNDatabase::printDotFile(const TT &tt, const std::string &fileName, 
+                           const std::string &name, const bool quiet) {
+  std::ofstream out;
+  out.open(fileName);
+  if (out.is_open()) {
+    printDot(out, tt, name, quiet);
+  }
+  out.close();
+}
+
+void NPNDatabase::printInfo(std::ostream &out, const TT &tt, const bool quiet) {
+  NPNDatabase::ResultIterator iterator = get(tt);
+  Subnet &subnet1 = Subnet::get(iterator.get());
+  printInfoSub(out, subnet1);
+}
+
+void NPNDatabase::printInfoSub(std::ostream &out, const Subnet &subnet) {
+  out << "nIn: " << subnet.getInNum() << "\n";
+  out << "nOut: " << subnet.getOutNum() << "\n";
+  out << "nEntry: " << subnet.size() << "\n";
+}
+
 NPNDatabase::NPNTransformation NPNDatabase::push(const SubnetID &id) {
   TT tt = model::evaluate(Subnet::get(id))[0];
   auto config = kitty::exact_npn_canonization(tt);

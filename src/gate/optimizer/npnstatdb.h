@@ -42,6 +42,17 @@ public:
   ResultIterator getQuietly(const TT &tt);
   ResultIterator getQuietly(const Subnet &subnet);
 
+  virtual void printDot(std::ostream &out, const TT &tt,
+                        const std::string &name, const bool quiet = false) override;
+  virtual void printInfo(std::ostream &out, const TT &tt, 
+                        const bool quiet = false) override;
+
+  virtual void printDotQuietly(std::ostream &out, const TT &tt,
+                        const std::string &name);
+  virtual void printDotFileQuietly(const TT &tt, const std::string &fileName,
+                           const std::string &name);
+  virtual void printInfoQuietly(std::ostream &out, const TT &tt);
+
   const std::map<TT, uint64_t> &getAccessCounter();
 
   // Loading to and from file

@@ -8,6 +8,7 @@
 #include "gate/model/design.h"
 #include "gate/model/net.h"
 #include "gate/model/printer/printer.h"
+#include "gate/optimizer/get_dbstat.h"
 #include "gate/optimizer/pass.h"
 #include "gate/parser/graphml_parser.h"
 #include "gate/techmapper/techmapper.h"
@@ -736,6 +737,61 @@ static int verilogToFir(
   return TCL_OK;
 }
 
+static int dbStat(ClientData, Tcl_Interp *interp, int argc,
+                  const char *argv[]) {
+
+  CLI::App app;
+
+  std::string dbPath;
+  int ttSize;
+  std::string outputType = "BOTH";
+  std::string outputNamefile;
+
+  app.add_option("--db", dbPath)->expected(1)->required(true);
+  app.add_option("--otype", outputType)->expected(1);
+  app.add_option("--out", outputNamefile)->expected(1);
+  app.add_option("--ttsize", ttSize)->expected(1)->required(true);
+
+  /// Input output value(s).
+  app.allow_extras();
+
+  try {
+    app.parse(argc, argv);
+  } catch (CLI::ParseError &e) {
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+    return TCL_ERROR;
+  }
+
+  if (app.remaining().empty()) {
+    Tcl_SetObjResult(interp, Tcl_NewStringObj("No files specified", -1));
+    return TCL_ERROR;
+  }
+
+  eda::gate::optimizer::NPNDBConfig config;
+  config.dbPath = dbPath;
+
+  if (outputType == "DOT") {
+    config.outType = eda::gate::optimizer::OutType::DOT;
+  } else if (outputType == "INFO") {
+    config.outType = eda::gate::optimizer::OutType::INFO;
+  } else if (outputType == "BOTH") {
+    config.outType = eda::gate::optimizer::OutType::BOTH;
+  } else {
+    std::cerr << "Wrong type of output: " << outputType
+              << ", correct are (DOT / INFO / BOTH)" << std::endl;
+    return TCL_ERROR;
+  }
+
+  config.outName = outputNamefile;
+  config.ttSize = ttSize;
+  config.binLines = app.remaining();
+
+  if (eda::gate::optimizer::getDbStat(std::cerr, config)) {
+    return TCL_ERROR;
+  }
+  return TCL_OK;
+}
+
 int Utopia_TclInit(Tcl_Interp *interp) {
   if ((Tcl_Init)(interp) == TCL_ERROR) {
     return TCL_ERROR;
@@ -745,6 +801,7 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_DeleteCommand(interp, "unknown");
 
   Tcl_CreateCommand(interp, "clear", clear, nullptr, nullptr);
+  Tcl_CreateCommand(interp, "dbstat", dbStat, nullptr, nullptr);
   Tcl_CreateCommand(interp, "help", help, nullptr, nullptr);
   Tcl_CreateCommand(interp, "lec", lec, nullptr, nullptr);
   Tcl_CreateCommand(interp, "pass", pass, nullptr, nullptr);

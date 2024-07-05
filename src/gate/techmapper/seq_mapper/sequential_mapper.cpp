@@ -29,7 +29,7 @@ CellTypeID SequentialMapper::map(const CellID cellID,
     //subnetID = findSubnetID(cellDB->getDFFs(), strategy); // FIXME:
   } else if (type.isDffRs()) {
     //subnetID = findSubnetID(cellDB->getDFFrses(), strategy); // FIXME:
-  } else if (type.isLatch()) {
+  } else if (type.isDLatch()) {
     //subnetID = findSubnetID(cellDB->getLatches(), strategy); // FIXME:
   } else {
     //assert(false && "Unsupported cell type");
@@ -50,10 +50,10 @@ SubnetID SequentialMapper::findSubnetID(
         return lhs.second.area < rhs.second.area;});
     return cell->first;
       /* More strategies can be added here */
-  } else {
-    assert(false && "Unsupported strategy");
-    return SubnetID{}; // Assuming model::SubnetID{} is a valid default or error value
   }
+
+  assert(false && "Unsupported strategy");
+  return model::OBJ_NULL_ID;
 }
 
 } // namespace eda::gate::techmapper

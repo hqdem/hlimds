@@ -674,7 +674,7 @@ YosysConverterModel2::CellSymbol YosysConverterModel2::getCellSymbolOperator(
     case O_Nand: symbol = UModel::NAND; break;
     case O_Dff: symbol = UModel::DFF; break;
     case O_Dffrs: symbol = UModel::DFFrs; break;
-    case O_Dlatch: symbol = UModel::LATCH; break;
+    case O_Dlatch: symbol = UModel::DLATCH; break;
     case O_Pos: symbol = UModel::BUF; break;
     case O_Mux: symbol = UModel::MUX2; break;
     case O_Mod: symbol = UModel::REMs; break;

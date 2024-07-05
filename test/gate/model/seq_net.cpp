@@ -24,11 +24,10 @@ const std::string testOutPath = "output/data/gate/model/seq_net/";
 const std::string fileName = "net_with_latch.dot";
 
 /**
- *  \brief Generates a sequential circuit that contains a flip-flop.
+ *  \brief Generates a sequential circuit.
  *
- *  The circuit consist of AND, OR, NOT, XOR, LATCH cells. The circuit does not
- *  contain cycles.
- *
+ *  The circuit consists of AND, OR, NOT, XOR, and DLATCH cells and
+ *  does not contain cycles.
  */
 const Net &genSeqNet() {
   NetBuilder netBuilder;
@@ -109,7 +108,7 @@ const Net &genSeqNet() {
   cells[44] = makeCell(NOT, cells[42]);
   netBuilder.addCell(cells[44]);
 
-  cells[45] = makeCell(LATCH, cells[43], cells[44]);
+  cells[45] = makeCell(DLATCH, cells[43], cells[44]);
   netBuilder.addCell(cells[45]);
 
   cells[46] = makeCell(OUT, cells[44]);

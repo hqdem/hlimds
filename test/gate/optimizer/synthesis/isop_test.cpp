@@ -18,11 +18,8 @@
 using MMSynthesizer = eda::gate::optimizer::synthesis::MMSynthesizer;
 using Subnet        = eda::gate::model::Subnet;
 
-bool ISOPTest(size_t numVars) {
-
-  MMSynthesizer minatoMorrealeAlg;
-
-  bool flag = true;
+void ISOPTest(size_t numVars) {
+  MMSynthesizer mm;
   static const size_t funcCount = 100;
   for (size_t i { 0 }; i < funcCount; ++i) {
     std::string funcString;
@@ -31,49 +28,49 @@ bool ISOPTest(size_t numVars) {
     }
     eda::utils::TruthTable tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
-    const auto &subnet = minatoMorrealeAlg.synthesize(tt, 3).object();
-    flag &= eda::gate::model::utils::equalTruthTables(subnet, tt);
+    const auto &subnet = mm.synthesize(tt, 2).object();
+    EXPECT_EQ(tt, eda::gate::model::evaluate(subnet)[0]);
+    const auto &subnetArity = mm.synthesize(tt).object();
+    EXPECT_EQ(tt, eda::gate::model::evaluate(subnetArity)[0]);
   }
-
-  return flag;
 }
 
 TEST(ISOPTest, RandomFunc1Vars) {
-  EXPECT_TRUE(ISOPTest(1));
+  ISOPTest(1);
 }
 
 TEST(ISOPTest, RandomFunc2Vars) {
-  EXPECT_TRUE(ISOPTest(2));
+  ISOPTest(2);
 }
 
 TEST(ISOPTest, RandomFunc3Vars) {
-  EXPECT_TRUE(ISOPTest(3));
+  ISOPTest(3);
 }
 
 TEST(ISOPTest, RandomFunc4Vars) {
-  EXPECT_TRUE(ISOPTest(4));
+  ISOPTest(4);
 }
 
 TEST(ISOPTest, RandomFunc5Vars) {
-  EXPECT_TRUE(ISOPTest(5));
+  ISOPTest(5);
 }
 
 TEST(ISOPTest, RandomFunc6Vars) {
-  EXPECT_TRUE(ISOPTest(6));
+  ISOPTest(6);
 }
 
 TEST(ISOPTest, RandomFunc7Vars) {
-  EXPECT_TRUE(ISOPTest(7));
+  ISOPTest(7);
 }
 
 TEST(ISOPTest, RandomFunc8Vars) {
-  EXPECT_TRUE(ISOPTest(8));
+  ISOPTest(8);
 }
 
 TEST(ISOPTest, RandomFunc9Vars) {
-  EXPECT_TRUE(ISOPTest(9));
+  ISOPTest(9);
 }
 
 TEST(ISOPTest, RandomFunc10Vars) {
-  EXPECT_TRUE(ISOPTest(10));
+  ISOPTest(10);
 }

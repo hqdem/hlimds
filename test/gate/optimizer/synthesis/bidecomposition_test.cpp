@@ -20,11 +20,8 @@ using BiDecSynthesizer = eda::gate::optimizer::synthesis::BiDecSynthesizer;
 using Subnet           = eda::gate::model::Subnet;
 using TernaryBiClique  = eda::gate::optimizer::synthesis::TernaryBiClique;
 
-bool BiDecompositionTest(size_t numVars) {
-
+void BiDecompositionTest(size_t numVars) {
   BiDecSynthesizer biDecomposition;
-
-  bool flag{true};
   const size_t funcCount = 10;
   for (size_t i{0}; i < funcCount; ++i) {
     std::string funcString;
@@ -34,48 +31,48 @@ bool BiDecompositionTest(size_t numVars) {
     eda::utils::TruthTable tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
     const auto &subnet = biDecomposition.synthesize(tt).object();
-    flag &= eda::gate::model::utils::equalTruthTables(subnet, tt);
+    EXPECT_EQ(tt, eda::gate::model::evaluate(subnet)[0]);
+    const auto &subnetArity = biDecomposition.synthesize(tt, 2).object();
+    EXPECT_EQ(tt, eda::gate::model::evaluate(subnetArity)[0]);
   }
-
-  return flag;
 }
 
 TEST(BiDecompositionTest, RandomFunc1Vars) {
-  EXPECT_TRUE(BiDecompositionTest(1));
+  BiDecompositionTest(1);
 }
 
 TEST(BiDecompositionTest, RandomFunc2Vars) {
-  EXPECT_TRUE(BiDecompositionTest(2));
+  BiDecompositionTest(2);
 }
 
 TEST(BiDecompositionTest, RandomFunc3Vars) {
-  EXPECT_TRUE(BiDecompositionTest(3));
+  BiDecompositionTest(3);
 }
 
 TEST(BiDecompositionTest, RandomFunc4Vars) {
-  EXPECT_TRUE(BiDecompositionTest(4));
+  BiDecompositionTest(4);
 }
 
 TEST(BiDecompositionTest, RandomFunc5Vars) {
-  EXPECT_TRUE(BiDecompositionTest(5));
+  BiDecompositionTest(5);
 }
 
 TEST(BiDecompositionTest, RandomFunc6Vars) {
-  EXPECT_TRUE(BiDecompositionTest(6));
+  BiDecompositionTest(6);
 }
 
 TEST(BiDecompositionTest, RandomFunc7Vars) {
-  EXPECT_TRUE(BiDecompositionTest(7));
+  BiDecompositionTest(7);
 }
 
 TEST(BiDecompositionTest, RandomFunc8Vars) {
-  EXPECT_TRUE(BiDecompositionTest(8));
+  BiDecompositionTest(8);
 }
 
 TEST(BiDecompositionTest, RandomFunc9Vars) {
-  EXPECT_TRUE(BiDecompositionTest(9));
+  BiDecompositionTest(9);
 }
 
 TEST(BiDecompositionTest, RandomFunc10Vars) {
-  EXPECT_TRUE(BiDecompositionTest(10));
+  BiDecompositionTest(10);
 }

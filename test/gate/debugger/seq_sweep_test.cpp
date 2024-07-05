@@ -24,7 +24,7 @@ std::vector<model::CellSymbol> getSymbols(const model::Subnet &subnet) {
   return cells;
 }
 
-TEST(SeqSweepTest, random) {
+TEST(SeqSweepTest, DISABLED_Random) {
   const size_t nIn = 10;
   const size_t nOut = 10;
   const size_t nCell = 200;

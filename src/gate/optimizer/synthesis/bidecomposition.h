@@ -44,10 +44,11 @@ public:
   SubnetObject synthesize(const TruthTable &func, const TruthTable &care,
                           uint16_t maxArity = -1) const override {
     if (bool value; utils::isConst(func, value)) {
-      const auto subnetID = SubnetBuilder::makeConst(func.num_vars(), value);
-      return SubnetObject{subnetID};
+      return SubnetObject{SubnetBuilder::makeConst(func.num_vars(), value)};
     }
-
+    if (bool value; care.num_vars() && utils::isConst((func & care), value)) {
+      return SubnetObject{SubnetBuilder::makeConst(func.num_vars(), value)};
+    }
     return run(func, care, maxArity);
   }
 

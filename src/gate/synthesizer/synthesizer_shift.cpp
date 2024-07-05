@@ -58,10 +58,10 @@ model::SubnetID synthShiftL(const model::CellTypeAttr &attr) {
 
     // when we have moved through all "and" operations
     // move start position of number used in mux
-    if (out >= andOperations.size()) {
+    if (out >= (int16_t)andOperations.size()) {
       ++iterInput;
     }
-    // same with cuurent input pos
+    // same with current input pos
     if (out >= (int16_t)inputs.size()) {
       ++iterAnd;
     }
@@ -80,7 +80,7 @@ model::SubnetID synthShiftL(const model::CellTypeAttr &attr) {
 
     // save from one-element or
     if (used > 1) {
-      outputs[out] = builder.addCell(model::CellSymbol::OR, orOperations);
+      outputs[out] = builder.addCellTree(model::CellSymbol::OR, orOperations, 2);
     } else {
       outputs[out] = orOperations[0];
     }
@@ -198,7 +198,7 @@ model::Subnet::LinkList synthDefaultShiftR(model::SubnetBuilder &builder,
       // ~(mux 1 or mux2 ...)
       const auto &invMux =
           (andOperationsForSigned.size() > 1)
-              ? builder.addCell(model::CellSymbol::OR, andOperationsForSigned)
+              ? builder.addCellTree(model::CellSymbol::OR, andOperationsForSigned, 2)
               : andOperationsForSigned.back();
 
       orOperations.push_back(
@@ -207,7 +207,7 @@ model::Subnet::LinkList synthDefaultShiftR(model::SubnetBuilder &builder,
 
     // save from one-element or
     if (orOperations.size() > 1) {
-      outputs[out] = builder.addCell(model::CellSymbol::OR, orOperations);
+      outputs[out] = builder.addCellTree(model::CellSymbol::OR, orOperations, 2);
     } else {
       outputs[out] = orOperations[0];
     }

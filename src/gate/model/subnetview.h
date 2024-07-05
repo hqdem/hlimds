@@ -20,11 +20,11 @@
 namespace eda::gate::model {
 
 //===----------------------------------------------------------------------===//
-// Subnet view
+// Subnet View
 //===----------------------------------------------------------------------===//
 
 /**
- * @brief Functionally closed subnet fragment.
+ * @brief Functionally closed subnet fragment (window).
  */
 class SubnetView final {
 public:
@@ -122,7 +122,7 @@ private:
 };
 
 //===----------------------------------------------------------------------===//
-// Subnet view walker
+// Subnet View Walker
 //===----------------------------------------------------------------------===//
 
 /**

@@ -33,7 +33,7 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   SubnetBuilder result(
       shiftL ? eda::gate::synthesizer::synthShiftL(attr)
              : (useSign ? eda::gate::synthesizer::synthShiftRs(attr)
-                        : eda::gate::synthesizer::synthShiftRu(attr))); // FIXME:
+                        : eda::gate::synthesizer::synthShiftRu(attr)));
 
   Simulator simulator(result);
   Simulator::DataVector values(inputSize + shiftSize);
@@ -62,7 +62,7 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   }
 
   int32_t resSimulated = 0u;
-  for (int16_t pos = outSize - 1; pos >= 0; --pos) { // FIXME: pos always >= 0
+  for (int pos = outSize - 1; pos >= 0; --pos) {
     resSimulated <<= 1;
     resSimulated |= simulator.getOutput(pos);
   }

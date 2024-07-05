@@ -34,7 +34,7 @@ bool simulateComparator(
   const CellTypeAttr &attr =
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-  SubnetBuilder result(toSimulate(attr)); // FIXME:
+  SubnetBuilder result(toSimulate(attr));
   Simulator simulator(result);
   Simulator::DataVector values(sizeA + sizeB);
 

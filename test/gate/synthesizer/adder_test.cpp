@@ -32,7 +32,7 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
   SubnetBuilder result(makeSub ? eda::gate::synthesizer::synthSub(attr)
-                               : eda::gate::synthesizer::synthAdd(attr)); // FIXME:
+                               : eda::gate::synthesizer::synthAdd(attr));
 
   Simulator simulator(result);
   Simulator::DataVector values(sizeA + sizeB);
@@ -61,7 +61,7 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
   }
 
   int32_t resSimulated = 0u;
-  for (int16_t pos = outSize - 1; pos >= 0; --pos) { // FIXME: pos always >= 0.
+  for (int pos = outSize - 1; pos >= 0; --pos) {
     resSimulated <<= 1;
     resSimulated |= simulator.getOutput(pos);
   }

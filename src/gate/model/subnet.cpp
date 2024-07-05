@@ -210,7 +210,7 @@ const Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
   size_t n = getNext(i);
 
   for (; j < cell.arity; ++j) {
-    links[j] = entries[n].link[k]; 
+    links[j] = entries[n].link[k++]; 
 
     if (k == Cell::InEntryLinks) {
       k = 0;

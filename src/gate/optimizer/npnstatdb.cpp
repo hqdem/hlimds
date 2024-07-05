@@ -92,4 +92,31 @@ NPNStatDatabase NPNStatDatabaseSerializer::deserialize(std::istream &in) {
   return result;
 }
 
+void NPNStatDatabase::printDot(std::ostream &out, const TT &tt,
+                        const std::string &name, const bool quiet) {
+  NPNStatDatabase::ResultIterator iterator = get(tt, quiet);
+  Printer::getPrinter(Format::DOT)
+      .print(out, Subnet::get(iterator.get()), name);
+}
+
+void NPNStatDatabase::printInfo(std::ostream &out, const TT &tt, const bool quiet) {
+  NPNStatDatabase::ResultIterator iterator = get(tt, quiet);
+  Subnet &subnet1 = Subnet::get(iterator.get());
+  printInfoSub(out, subnet1);
+}
+
+void NPNStatDatabase::printDotQuietly(std::ostream &out, const TT &tt,
+                        const std::string &name) {
+  printDot(out, tt, name, true);
+}
+
+void NPNStatDatabase::printDotFileQuietly(const TT &tt, const std::string &fileName,
+                           const std::string &name) {
+  printDotFile(tt, fileName, name, true);
+}
+
+void NPNStatDatabase::printInfoQuietly(std::ostream &out, const TT &tt) {
+  printInfo(out, tt, true);
+}
+
 } // namespace eda::gate::optimizer

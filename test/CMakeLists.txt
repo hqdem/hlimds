@@ -62,8 +62,10 @@ add_executable(${TEST_TARGET}
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/cone_builder_test.cpp
   gate/optimizer/cut_extractor_test.cpp
+  gate/optimizer/getdbstat_test.cpp
   gate/optimizer/npndb_test.cpp
   gate/optimizer/npndbserial_test.cpp
+  gate/optimizer/npndbstat_test.cpp
   gate/optimizer/pass_test.cpp
   gate/optimizer/reconvergence_cut_test.cpp
   gate/optimizer/refactor_test.cpp

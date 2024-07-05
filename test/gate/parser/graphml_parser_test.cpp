@@ -18,10 +18,11 @@ using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
 using ParserData    = GraphMlParser::ParserData;
 using SubnetBuilder = GraphMlParser::SubnetBuilder;
 
-bool checkBuilder(const SubnetBuilder &builder, const ParserData &data) {
+bool checkBuilder(const std::shared_ptr<SubnetBuilder> &builder,
+                  const ParserData &data) {
   bool res{true};
   for (const auto &node : data.nodes) {
-    auto links = builder.getLinks(node.id);
+    auto links = builder->getLinks(node.id);
     res &= (node.inputs.size() == links.size());
     size_t invIns{0};
     for (size_t i{0}; i < links.size(); ++i) {
@@ -36,7 +37,7 @@ bool checkBuilder(const SubnetBuilder &builder, const ParserData &data) {
 
 void parseGraphML(std::string fileName) {
   ParserData data;
-  SubnetBuilder builder = eda::gate::parser::graphml::parse(fileName, &data);
+  auto builder = eda::gate::parser::graphml::parse(fileName, &data);
   EXPECT_TRUE(checkBuilder(builder, data));
 }
 

@@ -63,22 +63,22 @@ TEST(SwitchActivityTest, SubnetTest) {
 
 TEST(SwitchActivityTest, SubnetBuilderTest) {
 
-  SubnetBuilder builder = 
+  auto builder = 
       eda::gate::parser::graphml::parse("des3_area_orig.bench.graphml");
 
   const auto &pass = eda::gate::optimizer::rw();
   pass->transform(builder);
 
   ProbEstimator estimator;
-  auto builderRes = estimator.estimateProbs(builder);
+  auto builderRes = estimator.estimateProbs(*builder);
   
   std::vector<size_t> map;
-  map.resize(*(--builder.end()) + 1);
-  for (auto it{builder.begin()}; it != builder.end(); ++it) {
+  map.resize(*(--builder->end()) + 1);
+  for (auto it{builder->begin()}; it != builder->end(); ++it) {
     map[*it] = *it;
   }
 
-  SubnetID subnetID = builder.make(map);
+  const auto subnetID = builder->make(map);
   const auto &subnet = Subnet::get(subnetID);
   auto subnetRes = estimator.estimateProbs(subnet);
 

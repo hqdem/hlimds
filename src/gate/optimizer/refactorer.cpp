@@ -13,13 +13,16 @@
 
 namespace eda::gate::optimizer {
 
-void Refactorer::transform(SubnetBuilder &builder) const {
+void Refactorer::transform(const SubnetBuilderPtr &builder) const {
+  SubnetBuilder *builderPtr = builder.get();
+
   if (weightCalculator) {
-    (*weightCalculator)(builder, {});
+    (*weightCalculator)(*builderPtr, {});
   }
-  for (SafePasser iter(builder.begin()); 
-       iter != builder.end() && !builder.getCell(*iter).isOut();++iter) {
-    nodeProcessing(builder, iter);
+  for (SafePasser iter(builderPtr->begin()); 
+       iter != builderPtr->end() && !builderPtr->getCell(*iter).isOut();
+       ++iter) {
+    nodeProcessing(*builderPtr, iter);
   }
 }
 

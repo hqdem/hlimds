@@ -27,7 +27,7 @@ public:
   AssociativeBalancer(const std::string &name):
     SubnetInPlaceTransformer(name) {};
 
-  void transform(SubnetBuilder &builder) const override;
+  void transform(const SubnetBuilderPtr &builder) const override;
 
 private:
   void updateDepth(const size_t entryID) const;

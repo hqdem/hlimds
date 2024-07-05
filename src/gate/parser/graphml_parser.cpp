@@ -32,13 +32,14 @@ XMLElement *findGraph(XMLElement *root) {
   return nullptr;
 }
 
-SubnetBuilder GraphMlParser::parse(const std::string &filename) {
+std::shared_ptr<SubnetBuilder> GraphMlParser::parse(
+    const std::string &filename) {
   ParserData data;
   return parse(filename, data);
 }
 
-SubnetBuilder GraphMlParser::parse(const std::string &filename,
-                                         ParserData &data) {
+std::shared_ptr<SubnetBuilder> GraphMlParser::parse(
+    const std::string &filename, ParserData &data) {
   XMLDocument doc;
   doc.LoadFile(filename.c_str());
   uassert(!doc.ErrorID(), "Error loading file" << std::endl);
@@ -84,23 +85,22 @@ void GraphMlParser::parseEdge(XMLElement *edge, ParserData &data) {
                                static_cast<bool>(getNum(findChild(edge)))});
 }
 
-SubnetBuilder GraphMlParser::buildSubnet(ParserData &data) {
-  SubnetBuilder subnetBuilder;
-
+std::shared_ptr<SubnetBuilder> GraphMlParser::buildSubnet(ParserData &data) {
+  auto subnetBuilder = std::make_shared<SubnetBuilder>();
   auto &groups = data.groups;
 
-  subnetBuilder.addInputs(groups[0].size());
+  subnetBuilder->addInputs(groups[0].size());
   for (Node* node : data.groups[2]) {
     LinkList links;
     for (const Input &input : node->inputs) {
       links.emplace_back(input.node->id, input.inv);
     }
-    node->id = subnetBuilder.addCellTree(model::AND, links, 2).idx;
+    node->id = subnetBuilder->addCellTree(model::AND, links, 2).idx;
   }
 
   for (Node* node : groups[1]) {
     const Input &input = node->inputs[0];
-    node->id = subnetBuilder.addOutput(Link(input.node->id, input.inv)).idx;
+    node->id = subnetBuilder->addOutput(Link(input.node->id, input.inv)).idx;
   }
 
   return subnetBuilder;

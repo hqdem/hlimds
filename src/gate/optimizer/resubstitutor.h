@@ -38,7 +38,7 @@ public:
   Resubstitutor(const std::string &name) : Resubstitutor(name, 8, 16) {}
 
   /// @brief Tranforms the subnet by applying a resubstitution algorithm.
-  void transform(SubnetBuilder &builder) const override;
+  void transform(const SubnetBuilderPtr &builder) const override;
 
 private:
   const unsigned cutSize;

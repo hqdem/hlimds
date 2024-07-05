@@ -33,9 +33,9 @@ public:
   EachSubnetInPlaceTransformer(const SubnetPass &pass):
       DesignInPlaceTransformer(pass->getName()), pass(pass) {}
 
-  void transform(model::DesignBuilder &builder) const override {
-    for (size_t i = 0; i < builder.getSubnetNum(); ++i) {
-      pass->transform(builder.getSubnetBuilder(i));
+  void transform(const DesignBuilderPtr &builder) const override {
+    for (size_t i = 0; i < builder->getSubnetNum(); ++i) {
+      pass->transform(builder->getSubnetBuilder(i));
     }
   }
 
@@ -48,9 +48,9 @@ public:
   EachSubnetTransformer(const SubnetMapper &mapper):
       DesignInPlaceTransformer(mapper->getName()), mapper(mapper) {}
 
-  void transform(model::DesignBuilder &builder) const override {
-    for (size_t i = 0; i < builder.getSubnetNum(); ++i) {
-      builder.setSubnetBuilder(i, mapper->make(builder.getSubnetID(i)));
+  void transform(const DesignBuilderPtr &builder) const override {
+    for (size_t i = 0; i < builder->getSubnetNum(); ++i) {
+      builder->setSubnetBuilder(i, mapper->make(builder->getSubnetID(i)));
     }
   }
 

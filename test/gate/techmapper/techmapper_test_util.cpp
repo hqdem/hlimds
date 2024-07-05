@@ -46,7 +46,7 @@ SubnetID parseGraphML(const std::string &fileName) {
   }
   parser::graphml::GraphMlParser parser;
 
-  return parser.parse(file.string()).make();
+  return parser.parse(file.string())->make();
 }
 
 SubnetID createPrimitiveSubnet(const CellSymbol symbol,

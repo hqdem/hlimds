@@ -459,20 +459,22 @@ static std::unordered_set<size_t> getDivisors(const SubnetBuilder &builder,
   return divisors;
 }
 
-void Resubstitutor::transform(SubnetBuilder &builder) const {
-  for (SafePasser iter = builder.begin();
-      iter != builder.end() && !builder.getCell(*iter).isOut();
+void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
+  SubnetBuilder *builderPtr = builder.get();
+
+  for (SafePasser iter = builderPtr->begin();
+      iter != builderPtr->end() && !builderPtr->getCell(*iter).isOut();
       ++iter) {
     
     const auto entryID = *iter;
 
-    const auto &cell = builder.getCell(entryID);
+    const auto &cell = builderPtr->getCell(entryID);
     if (cell.isIn() || cell.isOne() || cell.isZero()) {
       continue;
     }
 
     std::unordered_map<size_t, size_t> map;
-    const auto coneID = getReconvergenceCone(builder, entryID, cutSize, map);
+    const auto coneID = getReconvergenceCone(*builderPtr, entryID, cutSize, map);
     const auto &cone = Subnet::get(coneID);
   
     const auto target = model::evaluateSingleOut(cone);
@@ -484,7 +486,7 @@ void Resubstitutor::transform(SubnetBuilder &builder) const {
     }
 
     std::unordered_map<size_t, size_t> dummy;
-    const auto careSubnetID = getReconvergenceWindow(builder, leaves,
+    const auto careSubnetID = getReconvergenceWindow(*builderPtr, leaves,
                                                      careSize, dummy);
     const auto &careSubnet = Subnet::get(careSubnetID);
     const auto care = model::computeCare(careSubnet);
@@ -493,11 +495,11 @@ void Resubstitutor::transform(SubnetBuilder &builder) const {
       continue;
     }
     EntryMap mffcMap;
-    const auto mffcID = getMffc(builder, entryID, leaves, mffcMap);
-    const auto divs   = getDivisors(builder, entryID, leaves, mffcMap);
-    const auto divsTT = getDivisorsTables(builder, divs, leaves);
+    const auto mffcID = getMffc(*builderPtr, entryID, leaves, mffcMap);
+    const auto divs   = getDivisors(*builderPtr, entryID, leaves, mffcMap);
+    const auto divsTT = getDivisorsTables(*builderPtr, divs, leaves);
 
-    if (makeZeroResubstitution(builder, iter, target, care,
+    if (makeZeroResubstitution(*builderPtr, iter, target, care,
                                cone, divsTT, map)) {
       continue;
     }
@@ -508,7 +510,7 @@ void Resubstitutor::transform(SubnetBuilder &builder) const {
       continue;
     }
 
-    makeOneResubstitution(builder, iter, target, care, cone, divsTT, map);
+    makeOneResubstitution(*builderPtr, iter, target, care, cone, divsTT, map);
   }
 }
 

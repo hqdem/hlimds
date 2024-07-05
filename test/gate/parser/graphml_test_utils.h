@@ -18,6 +18,7 @@ using SubnetID      = eda::gate::model::SubnetID;
 
 namespace eda::gate::parser::graphml {
 
-SubnetBuilder parse(std::string fileName, ParserData *data = nullptr);
+std::shared_ptr<SubnetBuilder> parse(const std::string &fileName,
+                                     ParserData *data = nullptr);
 
 } // namespace eda::gate::parser

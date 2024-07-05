@@ -27,13 +27,14 @@
 #define SUBCOMMAND(cli, cmd) do {\
   processSubcommand((cli), #cmd, [&]() {\
     measureAndRun(#cmd, [&](){\
-        foreach(pass::cmd())->transform(*designBuilder); });\
+        foreach(pass::cmd())->transform(designBuilder); });\
   });\
 } while(0)
 
 using namespace eda::gate::model;
+using namespace eda::gate::optimizer;
 
-static std::unique_ptr<DesignBuilder> designBuilder = nullptr;
+static DesignBuilderPtr designBuilder = nullptr;
 static std::string prev_step = "none";
 static bool measureTime = false;
 
@@ -292,19 +293,18 @@ static int tmap(
   const size_t numSubnets = designBuilder->getSubnetNum();
   for (size_t subnetId = 0; subnetId < numSubnets; ++subnetId) {
 
-    auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
+    const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
 
     eda::gate::premapper::AigMapper aigMapper("aig");
-    const auto premappedSubnetID = aigMapper.transform(subnetBuilder.make());
+    const auto premappedSubnetID = aigMapper.transform(subnetBuilder->make());
 
     SubnetBuilder subnetBuilderTechmap;
     techmapper.techmap(premappedSubnetID, subnetBuilderTechmap);
     const auto mappedSubnetID = subnetBuilderTechmap.make();
-    SubnetBuilder builder(mappedSubnetID);
 
     designBuilder->setSubnetBuilder(
         subnetId,
-        std::make_shared<SubnetBuilder>(builder));
+        std::make_shared<SubnetBuilder>(mappedSubnetID));
   }
 
   designBuilder->save("techmap");
@@ -350,11 +350,11 @@ static int readLiberty(
 }
 
 void printSubnet(
-    std::unique_ptr<DesignBuilder> &designBuilder,
+    const DesignBuilderPtr &designBuilder,
     size_t subnetId) {
 
-  auto subnetBuilder = (*designBuilder).getSubnetBuilder(subnetId);
-  const auto& subnet = Subnet::get(subnetBuilder.make(true));
+  const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
+  const auto &subnet = Subnet::get(subnetBuilder->make(true));
   std::cout << subnet << '\n';
 }
 
@@ -440,7 +440,7 @@ static int readGraphMl(
   if (!fileName.empty()) {
     GraphMlParser::ParserData data;
     GraphMlParser parser;
-    const auto &subnet = parser.parse(fileName, data).make(true);
+    const auto &subnet = parser.parse(fileName, data)->make(true);
     designBuilder = std::make_unique<DesignBuilder>(subnet);
     designBuilder->save("original");
     return TCL_OK;
@@ -494,11 +494,10 @@ static int stats(
                 "Physical properties are not available without a techmap",
                 -1));
         return TCL_ERROR;
-      } else {
-        std::cout << "Area: " << estimator::getArea(id) << '\n';
-        std::cout << "Delay: " << estimator::getArrivalTime(id) << '\n';
-        std::cout << "Power: " << estimator::getLeakagePower(id) << '\n';
       }
+      std::cout << "Area: " << estimator::getArea(id) << '\n';
+      std::cout << "Delay: " << estimator::getArrivalTime(id) << '\n';
+      std::cout << "Power: " << estimator::getLeakagePower(id) << '\n';
     }
   }
 
@@ -618,7 +617,7 @@ static int pass(
   SUBCOMMAND(app, b);
 
   PARAM_SUBCOMMAND(app, rw, [&]() {
-    foreach(pass::rw(rwName, rwK, rwZ))->transform(*designBuilder);
+    foreach(pass::rw(rwName, rwK, rwZ))->transform(designBuilder);
   });
 
   SUBCOMMAND(app, rwz);
@@ -629,11 +628,11 @@ static int pass(
   SUBCOMMAND(app, rfp);
 
   PARAM_SUBCOMMAND(app, rs, [&]() {
-    foreach(pass::rs(rsName, rsK, rsN))->transform(*designBuilder);
+    foreach(pass::rs(rsName, rsK, rsN))->transform(designBuilder);
   });
 
   PARAM_SUBCOMMAND(app, rsz, [&]() {
-    foreach(pass::rsz(rszName, rszK, rszN))->transform(*designBuilder);
+    foreach(pass::rsz(rszName, rszK, rszN))->transform(designBuilder);
   });
 
   SUBCOMMAND(app, resyn);

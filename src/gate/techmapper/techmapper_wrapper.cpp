@@ -56,7 +56,7 @@ namespace eda::gate::techmapper {
 
     // Read input GraphML file.
     parser::graphml::GraphMlParser parser;
-    const auto subnetID = parser.parse(name).make();
+    const auto subnetID = parser.parse(name)->make();
     // Premap the input data into AIG.
     premapper::AigMapper aigMapper("aig");
     const auto premappedSubnetID = aigMapper.transform(subnetID);

@@ -53,7 +53,7 @@ namespace eda::gate::mutator {
     / "graphml" / "OpenABC" / "graphml_openabcd";
     std::string file = (home / dir / fileName).u8string();
     GraphMlParser parser;
-    return parser.parse(file).make();
+    return parser.parse(file)->make();
   }
 
   /// Makes oldToNewMap for checkers

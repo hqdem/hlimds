@@ -63,8 +63,8 @@ void printBalancingInfo(SubnetBuilder &builder,
 
   std::cout << "Net depth before balancing: " << depthBeforeBalance << std::endl;
 
-  const SubnetID subnetBeforeID = builder.make();
-  SubnetBuilder copyBuilder(subnetBeforeID);
+  const auto subnetBeforeID = builder.make();
+  auto copyBuilder = std::make_shared<SubnetBuilder>(subnetBeforeID);
 
   AssociativeBalancer balancer("TestBalancer");
 
@@ -76,12 +76,12 @@ void printBalancingInfo(SubnetBuilder &builder,
   const std::chrono::duration<double> balancingTime{endBalancingTime -
                                                     startBalancingTime};
 
-  const SubnetID subnetAfterID = copyBuilder.make();
+  const SubnetID subnetAfterID = copyBuilder->make();
 #ifdef CHECK_EQUIVALENCE
   checkBalancingEquivalence(subnetBeforeID, subnetAfterID);
 #endif
 
-  const size_t depthAfterBalance = getSubnetDepth(copyBuilder);
+  const size_t depthAfterBalance = getSubnetDepth(*copyBuilder);
   std::cout << "Net depth after balancing: " << depthAfterBalance << std::endl;
   std::cout << "Balancing time: " << balancingTime.count() << " s" << std::endl;
 

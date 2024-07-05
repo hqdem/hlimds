@@ -456,6 +456,8 @@ public:
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
 
+  SubnetBuilder &operator =(const SubnetBuilder &r) = delete;
+
   /// Returns the number of cells.
   size_t getCellNum() const { return nCell; }
 

@@ -58,7 +58,7 @@ public:
    *
    * @param builder SubnetBuilder with the subnet to rewrite.
    */
-  void transform(SubnetBuilder &builder) const override;
+  void transform(const SubnetBuilderPtr &builder) const override;
 
 private:
   void rewriteOnNode(

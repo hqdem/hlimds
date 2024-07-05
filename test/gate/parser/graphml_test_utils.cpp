@@ -13,7 +13,8 @@ using path = std::filesystem::path;
 
 namespace eda::gate::parser::graphml {
 
-SubnetBuilder parse(std::string fileName, ParserData *data) {
+std::shared_ptr<SubnetBuilder> parse(const std::string &fileName,
+                                     ParserData *data) {
 
   const path dir = path(std::string(getenv("UTOPIA_HOME"))) /
       "test" /

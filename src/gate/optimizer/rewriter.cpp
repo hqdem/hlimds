@@ -12,15 +12,16 @@
 
 namespace eda::gate::optimizer {
 
-void Rewriter::transform(SubnetBuilder &builder) const {
-  CutExtractor cutExtractor(&builder, k, false);
+void Rewriter::transform(const SubnetBuilderPtr &builder) const {
+  SubnetBuilder *builderPtr = builder.get();
+  CutExtractor cutExtractor(builderPtr, k, false);
   std::function cutRecompute = [&cutExtractor](const size_t entryID) {
     cutExtractor.recomputeCuts(entryID);
   };
-  for (SafePasser iter(builder.begin(), &cutRecompute);
-       iter != builder.end() && !builder.getCell(*iter).isOut();
+  for (SafePasser iter(builderPtr->begin(), &cutRecompute);
+       iter != builderPtr->end() && !builderPtr->getCell(*iter).isOut();
        ++iter) {
-    rewriteOnNode(builder, iter, cutExtractor);
+    rewriteOnNode(*builderPtr, iter, cutExtractor);
   }
 }
 

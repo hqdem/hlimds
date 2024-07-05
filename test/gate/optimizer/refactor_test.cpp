@@ -30,15 +30,15 @@ void checkEquivalence(SubnetID source, SubnetID optimized) {
 }
 
 const Subnet & optimize(SubnetID source, SubnetPass &&pass) {
-  SubnetBuilder builder{source};
+  auto builder = std::make_shared<SubnetBuilder>(source);
   pass->transform(builder);
-  SubnetID optimized{builder.make(true)};
+  SubnetID optimized{builder->make(true)};
   checkEquivalence(source, optimized);
   return Subnet::get(optimized);
 }
 
 void testRF(const std::string &design) {
-  SubnetID sourceID = parser::graphml::parse(design).make();
+  SubnetID sourceID = parser::graphml::parse(design)->make();
   const auto &source = Subnet::get(sourceID);
   
   const auto &optimizedA = optimize(sourceID, rf());

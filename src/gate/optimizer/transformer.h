@@ -17,7 +17,9 @@ namespace eda::gate::optimizer {
 template <typename Builder>
 using BuilderPtr = std::shared_ptr<Builder>;
 
-/// @brief Interface for component-to-component transformers.
+/**
+ * @brief Interface for component-to-component transformers.
+ */
 template <typename ID, typename Builder>
 class Transformer {
 public:
@@ -26,20 +28,26 @@ public:
 
   const std::string &getName() const { return name; }
 
-  /// Transforms the given component and stores the result in the builder.
+  /// Processes the given component and contructs a new one. 
+  virtual BuilderPtr<Builder> map(const BuilderPtr<Builder> &builder) const {
+    return builder;
+  }
+
+  /// @deprecated
   virtual BuilderPtr<Builder> make(const ID componentID) const = 0;
 
-  /// Transforms the given component and returns the result of the transformation.
+  /// @deprecated
   ID transform(const ID componentID) const {
-    auto builder = make(componentID);
-    return builder->make();
+    return map(make(componentID))->make();
   }
 
 private:
   const std::string name;
 };
 
-/// @brief Interface for in-place component transformers.
+/**
+ * @brief Interface for in-place component transformers.
+ */
 template <typename ID, typename Builder>
 class InPlaceTransformer : public Transformer<ID, Builder> {
 public:
@@ -48,17 +56,19 @@ public:
   virtual ~InPlaceTransformer() {}
 
   /// Transforms the component stored in the builder (in-place).
-  virtual void transform(Builder &builder) const = 0;
+  virtual void transform(const BuilderPtr<Builder> &builder) const = 0;
 
   /// Default implementation of the base method.
   BuilderPtr<Builder> make(const ID componentID) const override {
     auto builder = std::make_shared<Builder>(componentID);
-    transform(*builder);
+    transform(builder);
     return builder;
   }
 };
 
-/// @brief Composite in-place component transformer.
+/**
+ * @brief Composite in-place component transformer.
+ */
 template <typename ID, typename Builder>
 class InPlaceTransformerChain final : public InPlaceTransformer<ID, Builder> {
 public:
@@ -81,7 +91,7 @@ public:
     return ss.str();
   }
 
-  void transform(Builder &builder) const override {
+  void transform(const BuilderPtr<Builder> &builder) const override {
     for (const auto &pass : chain) {
       pass->transform(builder);
     }

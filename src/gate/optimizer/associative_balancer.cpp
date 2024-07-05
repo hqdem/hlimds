@@ -17,10 +17,12 @@ template<typename Iter>
 struct is_reverse_iterator<std::reverse_iterator<Iter>>
        : std::integral_constant<bool, !is_reverse_iterator<Iter>::value> {};
 
-void AssociativeBalancer::transform(SubnetBuilder &builder) const {
-  for (auto it = builder.begin(); it != builder.end();) {
+void AssociativeBalancer::transform(const SubnetBuilderPtr &builder) const {
+  SubnetBuilder *builderPtr = builder.get();
+
+  for (auto it = builderPtr->begin(); it != builderPtr->end();) {
     auto saveNext = it.next();
-    balanceOnEntry(builder, *it);
+    balanceOnEntry(*builderPtr, *it);
     it = saveNext;
   }
 }

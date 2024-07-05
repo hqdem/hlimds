@@ -14,6 +14,7 @@
 
 #include <cstring>
 #include <deque>
+#include <memory>
 #include <vector>
 
 namespace eda::gate::parser::graphml {
@@ -39,7 +40,6 @@ public:
   };
 
   struct Node {
-    
     Node(uint32_t id,  uint32_t type,  uint32_t invIns) :
       id(id), type(type), invIns(invIns) {}
 
@@ -80,7 +80,7 @@ public:
    * @param filename Absolute path to the GraphML file.
    * @return A SubnetBuilder for the built Subnet.
    */
-  SubnetBuilder parse(const std::string &filename);
+  std::shared_ptr<SubnetBuilder> parse(const std::string &filename);
 
   /**
    * @brief Overloaded parse method that allows external access
@@ -89,7 +89,8 @@ public:
    * @param parserData Reference to ParserData to fill during parsing.
    * @return A SubnetBuilder for the built Subnet.
    */
-  SubnetBuilder parse(const std::string &filename, ParserData &data);
+  std::shared_ptr<SubnetBuilder> parse(const std::string &filename,
+                                       ParserData &data);
 
 private:
 
@@ -115,7 +116,7 @@ private:
 
   void parseEdge(XMLElement *edge, ParserData &data);
 
-  SubnetBuilder buildSubnet(ParserData &data);
+  std::shared_ptr<SubnetBuilder> buildSubnet(ParserData &data);
 };
 
 } // namespace eda::gate::parser::graphml

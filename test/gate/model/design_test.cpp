@@ -20,23 +20,23 @@ namespace eda::gate::model {
 using namespace eda::gate::debugger;
 using namespace eda::gate::optimizer;
 
-static void test(DesignBuilder &builder) {
-  EXPECT_TRUE(builder.getSubnetNum() != 0);
+static void test(const DesignBuilderPtr &builder) {
+  EXPECT_TRUE(builder->getSubnetNum() != 0);
 
   foreach(aig())->transform(builder);
-  builder.save("premapped");
+  builder->save("premapped");
 
   foreach(resyn())->transform(builder);
-  builder.save("optimized");
+  builder->save("optimized");
 
   const auto &checker = SatChecker::get();
-  const auto result = checker.areEquivalent(builder, "premapped", "optimized");
+  const auto result = checker.areEquivalent(*builder, "premapped", "optimized");
   EXPECT_TRUE(result.equal());
 
-  const auto premappedNetID = builder.make("premapped");
+  const auto premappedNetID = builder->make("premapped");
   EXPECT_TRUE(premappedNetID != OBJ_NULL_ID);
 
-  const auto optimizedNetID = builder.make("optimized");
+  const auto optimizedNetID = builder->make("optimized");
   EXPECT_TRUE(optimizedNetID != OBJ_NULL_ID);
 
 #ifdef UTOPIA_DEBUG
@@ -56,7 +56,7 @@ TEST(DesignTest, RandomSubnet) {
   const auto subnetID = makeSubnetRandomMatrix(
       nIn, nOut, nCell, minArity, maxArity, seed);
 
-  DesignBuilder builder(subnetID);
+  auto builder = std::make_shared<DesignBuilder>(subnetID);
   test(builder);
 }
 
@@ -71,7 +71,7 @@ TEST(DesignTest, RandomNet) {
   const auto netID = makeNetRandomMatrix(
       nIn, nOut, nCell, minArity, maxArity, seed);
 
-  DesignBuilder builder(netID);
+  auto builder = std::make_shared<DesignBuilder>(netID);
   test(builder);
 }
 

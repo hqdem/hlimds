@@ -45,11 +45,11 @@ void checkResubstitutionEquivalence(SubnetID lhs, SubnetID rhs) {
 void runResubstitutor(SubnetID subnetId) {
   const auto &subnet = Subnet::get(subnetId);
   // Builder for optimization.
-  SubnetBuilder builder(subnetId);
+  auto builder = std::make_shared<SubnetBuilder>(subnetId);
   // Area optimization.
   Resubstitutor resub("rs");
   resub.transform(builder);
-  auto optimizedId = builder.make(true);
+  auto optimizedId = builder->make(true);
   const Subnet &optimized = Subnet::get(optimizedId);
 
   std::cout << "Before: " << subnet.size() << std::endl;
@@ -76,7 +76,7 @@ void runResubstitutor(std::string filename) {
 
   // Parsing.
   GraphMlParser parser;
-  const SubnetID subnetId = parser.parse(file.string()).make();
+  const SubnetID subnetId = parser.parse(file.string())->make();
   // Optimize.
   runResubstitutor(subnetId);
 }

@@ -302,7 +302,7 @@ TEST(CutExtractorTest, LargeSubnet) {
   const path file = home / dir / filename;
 
   GraphMlParser parser;
-  const auto subnetID = parser.parse(file.string()).make();
+  const auto subnetID = parser.parse(file.string())->make();
 
   const auto &subnet = Subnet::get(subnetID);
   CutExtractor cutExtractor(&subnet, 6);

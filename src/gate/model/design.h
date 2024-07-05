@@ -94,17 +94,17 @@ public:
   }
 
   /// Makes (if required) an i-th builder and invalidates the subnet.
-  SubnetBuilder &getSubnetBuilder(const size_t i) {
+  const SubnetBuilderPtr &getSubnetBuilder(const size_t i) {
     auto &entry = getEntry(i);
     if (entry.builder != nullptr) {
-       return *entry.builder;
+       return entry.builder;
     }
  
     assert(entry.subnetID != OBJ_NULL_ID);
     entry.builder = std::make_unique<SubnetBuilder>(entry.subnetID);
     entry.subnetID = OBJ_NULL_ID;
 
-    return *entry.builder;
+    return entry.builder;
   }
 
   /// Replaces the i-th subnet builder w/ the given one.

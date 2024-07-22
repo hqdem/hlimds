@@ -41,6 +41,12 @@ public:
         const std::unordered_set<size_t> &entryIdxs):
       rootEntryIdx(rootEntryIdx), signature(sign), entryIdxs(entryIdxs) {}
 
+    /// Checks whether the cut is trivial.
+    bool isTrivial() const {
+      return entryIdxs.size() == 1 &&
+             entryIdxs.find(rootEntryIdx) != entryIdxs.end();
+    }
+
     /// Unites other cut to current.
     void uniteCut(const Cut &other) {
       for (const auto &otherEntryIdx : other.entryIdxs) {

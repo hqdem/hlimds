@@ -200,9 +200,10 @@ RECOVERY:
     const auto cuts = cutProvider(subnet, i);
 
     for (const auto &cut : cuts) {
+      assert(cut.rootEntryIdx == i);
+
       // Skip trivial cuts.
-      if (cut.entryIdxs.size() == 1 && 
-          cut.entryIdxs.find(i) != cut.entryIdxs.end()) {
+      if (cut.isTrivial()) {
         continue;
       }
 

@@ -8,13 +8,13 @@
 
 #include "gate/debugger/bdd_checker.h"
 #include "gate/debugger/fraig_checker.h"
-#include "gate/debugger/sat_checker.h"
 #include "gate/debugger/rnd_checker.h"
+#include "gate/debugger/sat_checker.h"
 #include "gate/model/celltype.h"
 #include "gate/model/examples.h"
 #include "gate/model/subnet.h"
 #include "gate/mutator/mutator.h"
-#include "gate/parser/graphml_parser.h"
+#include "gate/translator/graphml_test_utils.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -37,24 +37,11 @@ namespace eda::gate::mutator {
   using eda::gate::debugger::options::SAT;
   using eda::gate::model::makeSubnet2AndOr;
   using eda::gate::model::makeSubnet2AndOr2;
-  using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
   using Link = eda::gate::model::Subnet::Link;
   using LinkList = eda::gate::model::Subnet::LinkList;
   using Subnet = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID = eda::gate::model::SubnetID;
-
-  // Builds Subnet object from Verilog description
-  SubnetID parseForTests(std::string fileName) {
-    using path = std::filesystem::path;
-    fileName += ".bench.graphml";
-    const path home = eda::env::getHomePath();
-    const path dir = path("test") / "data" / "gate" / "parser"
-    / "graphml" / "OpenABC" / "graphml_openabcd";
-    std::string file = (home / dir / fileName).u8string();
-    GraphMlParser parser;
-    return parser.parse(file)->make();
-  }
 
   /// Makes oldToNewMap for checkers
   CellIdMap makeMap(SubnetID &subnetID) {
@@ -139,7 +126,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, graphSs) {
-    SubnetID subnetID = parseForTests("ss_pcm_orig");
+    SubnetID subnetID = translator::translateGmlOpenabc("ss_pcm_orig")->make();
     auto &net = Subnet::get(subnetID);
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
@@ -158,7 +145,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, graphSasc) {
-    SubnetID subnetID = parseForTests("sasc_orig");
+    SubnetID subnetID = translator::translateGmlOpenabc("sasc_orig")->make();
     auto &net = Subnet::get(subnetID);
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
     SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
@@ -174,7 +161,7 @@ namespace eda::gate::mutator {
   }
   
   TEST(Mutator, graphI2c) {
-    SubnetID subnetID = parseForTests("i2c_orig");
+    SubnetID subnetID = translator::translateGmlOpenabc("i2c_orig")->make();
     auto &net = Subnet::get(subnetID);
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
     SubnetID mutatedSubnetID = Mutator::mutate(MutatorMode::CELL,
@@ -227,7 +214,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, cutGraphI2c) {
-    SubnetID subnetID = parseForTests("i2c_orig");
+    SubnetID subnetID = translator::translateGmlOpenabc("i2c_orig")->make();
     auto &net = Subnet::get(subnetID);
     CellIDList list = {193, 195, 200};
     CellSymbolList functions = {CellSymbol::AND, CellSymbol::OR};
@@ -243,7 +230,7 @@ namespace eda::gate::mutator {
   }
 
   TEST(Mutator, cutGraphUsb) {
-    SubnetID subnetID = parseForTests("usb_phy_orig");
+    SubnetID subnetID = translator::translateGmlOpenabc("usb_phy_orig")->make();
     auto &net = Subnet::get(subnetID);
     int counter = 0;
     CellSymbolList functions = {CellSymbol::AND};

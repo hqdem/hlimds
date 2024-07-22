@@ -8,18 +8,17 @@
 
 #include "gate/analyzer/probabilistic_estimate.h"
 #include "gate/debugger/sat_checker.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/pass.h"
-#include "gate/optimizer/subnet_transformer.h"
-#include "gate/parser/graphml_test_utils.h"
+#include "gate/translator/graphml_test_utils.h"
 
 #include "gtest/gtest.h"
 
 namespace eda::gate::optimizer {
 
 using Estimator     = eda::gate::analyzer::ProbabilityEstimator;
-using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
 using SatChecker    = eda::gate::debugger::SatChecker;
-using Subnet        = GraphMlParser::Subnet;
+using Subnet        = eda::gate::model::Subnet;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using SubnetID      = eda::gate::model::SubnetID;
 using SubnetPass    = eda::gate::optimizer::SubnetPass;
@@ -38,7 +37,7 @@ SubnetID optimize(SubnetID source, SubnetPass &&pass) {
 }
 
 void testRF(const std::string &design) {
-  SubnetID sourceID = parser::graphml::parse(design)->make();
+  auto sourceID = eda::gate::translator::translateGmlOpenabc(design)->make();
   const auto &source = Subnet::get(sourceID);
   
   const auto &optimizedA = Subnet::get(optimize(sourceID, rf()));
@@ -60,15 +59,15 @@ void testRF(const std::string &design) {
 }
 
 TEST(RefactorTest, sasc) {
-  testRF("sasc_orig.bench.graphml");
+  testRF("sasc_orig");
 }
 
 TEST(RefactorTest, ssPcm) {
-  testRF("ss_pcm_orig.bench.graphml");
+  testRF("ss_pcm_orig");
 }
 
 TEST(RefactorTest, usbPhy) {
-  testRF("usb_phy_orig.bench.graphml");
+  testRF("usb_phy_orig");
 }
 
 } // namespace eda::gate::optimizer

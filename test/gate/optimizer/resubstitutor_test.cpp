@@ -9,7 +9,7 @@
 #include "gate/debugger/sat_checker.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/resubstitutor.h"
-#include "gate/parser/graphml_parser.h"
+#include "gate/translator/graphml_test_utils.h"
 #include "util/assert.h"
 #include "util/env.h"
 
@@ -18,10 +18,9 @@
 #include <filesystem>
 #include <string>
 
-using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
 using Resubstitutor = eda::gate::optimizer::Resubstitutor;
 using SatChecker    = eda::gate::debugger::SatChecker;
-using Subnet        = GraphMlParser::Subnet;
+using Subnet        = eda::gate::model::Subnet;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using SubnetID      = eda::gate::model::SubnetID;
 
@@ -61,24 +60,11 @@ void runResubstitutor(SubnetID subnetId) {
   checkResubstitutionEquivalence(subnetId, optimizedId);
 }
 
-void runResubstitutor(std::string filename) {
-  using path = std::filesystem::path;
-  // File opening.
-  filename += ".bench.graphml";
-  const path dir = path("test") / "data" / "gate" / "parser"
-      / "graphml" / "OpenABC" / "graphml_openabcd";
-  const path home = eda::env::getHomePath();
-  const path file = home / dir / filename;
-
-  uassert(std::filesystem::exists(file.string()),
-                                 "File " << file <<
-                                 " doesn't exist" << std::endl);
-
+void runResubstitutor(std::string file) {
   // Parsing.
-  GraphMlParser parser;
-  const SubnetID subnetId = parser.parse(file.string())->make();
+  const auto builder = eda::gate::translator::translateGmlOpenabc(file);
   // Optimize.
-  runResubstitutor(subnetId);
+  runResubstitutor(builder->make());
 }
 
 TEST(ResubstitutorTest, Bc0) {

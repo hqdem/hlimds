@@ -6,15 +6,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/parser/graphml_test_utils.h"
+#include "gate/translator/graphml_test_utils.h"
 #include "util/env.h"
 
 using path = std::filesystem::path;
 
-namespace eda::gate::parser::graphml {
+namespace eda::gate::translator {
 
-std::shared_ptr<SubnetBuilder> parse(const std::string &fileName,
-                                     ParserData *data) {
+std::shared_ptr<Builder> translateGmlOpenabc(const std::string &fileName,
+                                             ParserData *data) {
 
   const path dir = path(std::string(getenv("UTOPIA_HOME"))) /
       "test" /
@@ -26,13 +26,14 @@ std::shared_ptr<SubnetBuilder> parse(const std::string &fileName,
       "graphml_openabcd";
 
   const path home = eda::env::getHomePath();
-  const path file = home / dir / fileName;
+  const path file = home / dir / (fileName + ".bench.graphml");
 
   uassert(std::filesystem::exists(file.string()),
                                   "File doesn't exist" << std::endl);
-  GraphMlParser parser;
-  return
-      data ? parser.parse(file.string(),  *data) : parser.parse(file.string());
+  GmlTranslator translator;
+  return data ?
+      translator.translate(file.string(), *data) :
+      translator.translate(file.string());
 }
 
-} // namespace eda::gate::parser::graphml
+} // namespace eda::gate::translator

@@ -56,8 +56,6 @@ add_executable(${TEST_TARGET}
   gate/model/utils/bdd_dnf_test.cpp
   gate/model/utils/subnet_truth_table_test.cpp
   gate/mutator/mutator_test.cpp
-  gate/parser/graphml_test_utils.cpp
-  gate/parser/graphml_parser_test.cpp
   gate/premapper/aigmapper_test.cpp
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/cone_builder_test.cpp
@@ -83,8 +81,6 @@ add_executable(${TEST_TARGET}
   gate/optimizer/synthesis/isop_test.cpp
   gate/optimizer/synthesis/reed_muller_test.cpp
   gate/optimizer/synthesis/zhegalkin_test.cpp
-  gate/parser/graphml_parser_test.cpp
-  gate/parser/graphml_test_utils.cpp
   gate/premapper/aigmapper_test.cpp
   gate/simulator/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
@@ -99,6 +95,8 @@ add_executable(${TEST_TARGET}
   gate/techmapper/strategy/simple_delay_test.cpp
   gate/techmapper/techmapper_test_util.cpp
   gate/translator/fir/fir_model2_test.cpp
+  gate/translator/graphml_test_utils.cpp
+  gate/translator/graphml_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   test_main.cpp

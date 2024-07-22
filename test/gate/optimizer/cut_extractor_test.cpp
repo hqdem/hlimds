@@ -8,7 +8,7 @@
 
 #include "gate/model/utils/subnet_random.h"
 #include "gate/optimizer/cut_extractor.h"
-#include "gate/parser/graphml_parser.h"
+#include "gate/translator/graphml_test_utils.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -26,8 +26,6 @@ using Link = model::Subnet::Link;
 using Cut = optimizer::CutExtractor::Cut;
 using CutsEntries = CutExtractor::CutsEntries;
 using CutsList = CutExtractor::CutsList;
-using GraphMlParser = eda::gate::parser::graphml::GraphMlParser;
-using ParserData = GraphMlParser::ParserData;
 
 bool cutsEqual(const Cut &cut1, const Cut &cut2) {
   const auto &cut1EntryIdxs = cut1.entryIdxs;
@@ -292,17 +290,9 @@ TEST(CutExtractorTest, GetEntriesIdxs) {
 }
 
 TEST(CutExtractorTest, LargeSubnet) {
-  using path = std::filesystem::path;
+  std::string file = "ac97_ctrl_orig";
 
-  std::string filename = "ac97_ctrl_orig.bench.graphml";
-
-  const path dir = path("test") / "data" / "gate" / "parser" / "graphml" /
-      "OpenABC" / "graphml_openabcd";
-  const path home = eda::env::getHomePath();
-  const path file = home / dir / filename;
-
-  GraphMlParser parser;
-  const auto subnetID = parser.parse(file.string())->make();
+  const auto subnetID = translator::translateGmlOpenabc(file)->make();
 
   const auto &subnet = Subnet::get(subnetID);
   CutExtractor cutExtractor(&subnet, 6);

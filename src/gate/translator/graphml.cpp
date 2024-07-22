@@ -6,18 +6,18 @@
 //
 //===----------------------------------------------------------------------===
 
-#include "graphml_parser.h"
+#include "graphml.h"
 #include "util/assert.h"
 
 #include <iostream>
 
-namespace eda::gate::parser::graphml {
+namespace eda::gate::translator {
 
 using tinyxml2::XMLElement;
 using tinyxml2::XMLDocument;
 
-using ParserData = GraphMlParser::ParserData;
-using SubnetBuilder = GraphMlParser::SubnetBuilder;
+using Builder    = GmlTranslator::Builder;
+using ParserData = GmlTranslator::ParserData;
 
 XMLElement *findGraph(XMLElement *root) {
   XMLElement *child = root->FirstChildElement();
@@ -32,16 +32,15 @@ XMLElement *findGraph(XMLElement *root) {
   return nullptr;
 }
 
-std::shared_ptr<SubnetBuilder> GraphMlParser::parse(
-    const std::string &filename) {
+std::shared_ptr<Builder> GmlTranslator::translate(const std::string &file) {
   ParserData data;
-  return parse(filename, data);
+  return translate(file, data);
 }
 
-std::shared_ptr<SubnetBuilder> GraphMlParser::parse(
-    const std::string &filename, ParserData &data) {
+std::shared_ptr<Builder> GmlTranslator::translate(const std::string &file,
+                                                  ParserData &data) {
   XMLDocument doc;
-  doc.LoadFile(filename.c_str());
+  doc.LoadFile(file.c_str());
   uassert(!doc.ErrorID(), "Error loading file" << std::endl);
 
   XMLElement *root = doc.RootElement();
@@ -55,7 +54,7 @@ std::shared_ptr<SubnetBuilder> GraphMlParser::parse(
   return buildSubnet(data);
 }
 
-void GraphMlParser::parseGraph(XMLElement *graph, ParserData &data) {
+void GmlTranslator::parseGraph(XMLElement *graph, ParserData &data) {
   XMLElement *element = findChild(graph);
 
   for (; checkName(element, "node"); element = next(element)) {
@@ -67,7 +66,7 @@ void GraphMlParser::parseGraph(XMLElement *graph, ParserData &data) {
   }
 }
 
-void GraphMlParser::parseNode(XMLElement *node, ParserData &data) {
+void GmlTranslator::parseNode(XMLElement *node, ParserData &data) {
   uint32_t id = std::stoi(node->Attribute("id"));
 
   XMLElement *type = next(findChild(node));
@@ -77,33 +76,32 @@ void GraphMlParser::parseNode(XMLElement *node, ParserData &data) {
   data.groups[getNum(type)].push_back(&data.nodes.back());
 }
 
-void GraphMlParser::parseEdge(XMLElement *edge, ParserData &data) {
+void GmlTranslator::parseEdge(XMLElement *edge, ParserData &data) {
   Node &sourceNode = data.nodes.at(std::stoi(edge->Attribute("target")));
   Node &targetNode = data.nodes.at(std::stoi(edge->Attribute("source")));
 
-  targetNode.inputs.push_back({&sourceNode, 
-                               static_cast<bool>(getNum(findChild(edge)))});
+  targetNode.inputs.push_back({&sourceNode, (bool)getNum(findChild(edge))});
 }
 
-std::shared_ptr<SubnetBuilder> GraphMlParser::buildSubnet(ParserData &data) {
-  auto subnetBuilder = std::make_shared<SubnetBuilder>();
+std::shared_ptr<Builder> GmlTranslator::buildSubnet(ParserData &data) {
+  auto builder = std::make_shared<Builder>();
   auto &groups = data.groups;
 
-  subnetBuilder->addInputs(groups[0].size());
+  builder->addInputs(groups[0].size());
   for (Node* node : data.groups[2]) {
     LinkList links;
     for (const Input &input : node->inputs) {
       links.emplace_back(input.node->id, input.inv);
     }
-    node->id = subnetBuilder->addCellTree(model::AND, links, 2).idx;
+    node->id = builder->addCellTree(model::AND, links, 2).idx;
   }
 
   for (Node* node : groups[1]) {
     const Input &input = node->inputs[0];
-    node->id = subnetBuilder->addOutput(Link(input.node->id, input.inv)).idx;
+    node->id = builder->addOutput(Link(input.node->id, input.inv)).idx;
   }
 
-  return subnetBuilder;
+  return builder;
 }
 
-} // namespace eda::gate::parser::graphml
+} // namespace eda::gate::translator

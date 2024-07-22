@@ -10,7 +10,6 @@
 #include "gate/analyzer/simulation_estimator.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/pass.h"
-#include "gate/parser/graphml_test_utils.h"
 
 #include "gtest/gtest.h"
 

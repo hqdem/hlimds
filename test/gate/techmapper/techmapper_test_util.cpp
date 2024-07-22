@@ -10,10 +10,10 @@
 #include "gate/library/liberty_manager.h"
 #include "gate/model/printer/printer.h"
 #include "gate/model/utils/subnet_random.h"
-#include "gate/parser/graphml_parser.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
+#include "gate/translator/graphml_test_utils.h"
 
 #include "gtest/gtest.h"
 
@@ -34,19 +34,7 @@ using SubnetBuilder = model::SubnetBuilder;
 using SubnetID   = model::SubnetID;
 
 SubnetID parseGraphML(const std::string &fileName) {
-
-  const path home = eda::env::getHomePath();
-  const path dir = "test/data/gate/parser/graphml/OpenABC/graphml_openabcd";
-  path name = path(fileName);
-  name += ".bench.graphml";
-  const path file = home / dir / name;
-  if (!std::filesystem::exists(file)) {
-    std::cout << "File " << file << " is missing!" << std::endl;
-    assert(false);
-  }
-  parser::graphml::GraphMlParser parser;
-
-  return parser.parse(file.string())->make();
+  return translator::translateGmlOpenabc(fileName)->make();
 }
 
 SubnetID createPrimitiveSubnet(const CellSymbol symbol,

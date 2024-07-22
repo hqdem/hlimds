@@ -210,7 +210,7 @@ const Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
   size_t n = getNext(i);
 
   for (; j < cell.arity; ++j) {
-    links[j] = entries[n].link[k++]; 
+    links[j] = entries[n].link[k++];
 
     if (k == Cell::InEntryLinks) {
       k = 0;
@@ -356,14 +356,15 @@ void SubnetBuilder::replace(
     const InOutMapping &iomapping,
     const CellActionCallback *onNewCell,
     const CellActionCallback *onEqualDepth,
-    const CellActionCallback *onGreaterDepth) {
+    const CellActionCallback *onGreaterDepth,
+    const CellActionCallback *onRecomputedDetph) {
   // Builder is of higher priority (it contains the cell weights).
   if (rhs.hasBuilder()) {
     replace(rhs.builder(), iomapping,
-        onNewCell, onEqualDepth, onGreaterDepth);
+        onNewCell, onEqualDepth, onGreaterDepth, onRecomputedDetph);
   } else {
     replace(rhs.id(), iomapping, nullptr /* weight provider */,
-        onNewCell, onEqualDepth, onGreaterDepth);
+        onNewCell, onEqualDepth, onGreaterDepth, onRecomputedDetph);
   }
 }
 
@@ -373,14 +374,15 @@ void SubnetBuilder::replace(
     const CellWeightProvider *weightProvider,
     const CellActionCallback *onNewCell,
     const CellActionCallback *onEqualDepth,
-    const CellActionCallback *onGreaterDepth) {
+    const CellActionCallback *onGreaterDepth,
+    const CellActionCallback *onRecomputedDepth) {
 
   const auto &rhs = Subnet::get(rhsID);
   const auto &rhsEntries = rhs.getEntries();
   replace<Subnet, Array<Entry>, ArrayIterator<Entry>>(
     rhs, rhsEntries, rhsEntries.size() - 1, iomapping,
     [&](ArrayIterator<Entry> iter, size_t i) {return i;},
-    weightProvider, onNewCell, onEqualDepth, onGreaterDepth
+    weightProvider, onNewCell, onEqualDepth, onGreaterDepth, onRecomputedDepth
   );
 }
 
@@ -389,7 +391,8 @@ void SubnetBuilder::replace(
     const InOutMapping &iomapping,
     const CellActionCallback *onNewCell,
     const CellActionCallback *onEqualDepth,
-    const CellActionCallback *onGreaterDepth) {
+    const CellActionCallback *onGreaterDepth,
+    const CellActionCallback *onRecomputedDepth) {
 
   const CellWeightProvider weightProvider = [&](size_t i) -> float {
     return rhsBuilder.getWeight(i);
@@ -397,7 +400,7 @@ void SubnetBuilder::replace(
   replace<SubnetBuilder, SubnetBuilder, EntryIterator>(
     rhsBuilder, rhsBuilder, *(--rhsBuilder.end()), iomapping,
     [&](EntryIterator iter, size_t i) {return *iter;},
-    &weightProvider, onNewCell, onEqualDepth, onGreaterDepth
+    &weightProvider, onNewCell, onEqualDepth, onGreaterDepth, onRecomputedDepth
   );
 }
 
@@ -455,7 +458,8 @@ void SubnetBuilder::replace(
     const CellWeightProvider *weightProvider,
     const CellActionCallback *onNewCell,
     const CellActionCallback *onEqualDepth,
-    const CellActionCallback *onGreaterDepth) {
+    const CellActionCallback *onGreaterDepth,
+    const CellActionCallback *onRecomputedDepth) {
 
   assert(rhsContainer.getOutNum() == 1);
 
@@ -497,8 +501,8 @@ void SubnetBuilder::replace(
     if (rhsOutLink.idx == rhsEntryID && !rhsOutLink.inv &&
         (rootStrashIt = strash.find(curEntryStrKey)) == strash.end()) {
       newEntryID = replaceCell(lhsRootEntryID, rhsCell.getTypeID(),
-                               curCellLinks).idx;
-      isNewEntry = true;
+                               curCellLinks, true, onNewCell,
+                               onRecomputedDepth).idx;
     } else {
       newEntryID = addCell(rhsCell.getTypeID(), curCellLinks).idx;
       if (prevEntriesN + 1 == entries.size() ||
@@ -539,11 +543,8 @@ void SubnetBuilder::replace(
       bufLinks = {Link(rhsToLhs[rhsOutLink.idx], rhsOutLink.out,
                   rhsOutLink.inv)};
     }
-    replaceCell(lhsRootEntryID, bufTID, bufLinks);
-
-    if (onNewCell) {
-      (*onNewCell)(lhsRootEntryID);
-    }
+    replaceCell(lhsRootEntryID, bufTID, bufLinks, true, onNewCell,
+                onRecomputedDepth);
   }
 }
 
@@ -1047,8 +1048,10 @@ void SubnetBuilder::placeBefore(size_t entryID, size_t pivotEntryID) {
   setOrder(entryID, pivotEntryID);
 }
 
-void SubnetBuilder::recomputeFanoutDepths(size_t rootEntryID,
-                                          size_t oldRootNextEntryID) {
+void SubnetBuilder::recomputeFanoutDepths(
+    size_t rootEntryID,
+    size_t oldRootNextEntryID,
+    const CellActionCallback *onRecomputedDepth) {
   const auto &rootCell = getCell(rootEntryID);
   if (!rootCell.refcount) {
     return;
@@ -1083,6 +1086,9 @@ void SubnetBuilder::recomputeFanoutDepths(size_t rootEntryID,
     // Changing topological order
     deleteDepthBounds(curEntryID);
     desc[curEntryID].depth = newDepth;
+    if (onRecomputedDepth) {
+      (*onRecomputedDepth)(curEntryID);
+    }
     addDepthBounds(curEntryID);
     curEntryID = nextEntryID;
   }
@@ -1128,7 +1134,9 @@ void SubnetBuilder::deleteCell(size_t entryID) {
 
 Subnet::Link SubnetBuilder::replaceCell(
     size_t entryID, CellTypeID typeID, const LinkList &links,
-    bool delZeroRefcount) {
+    bool delZeroRefcount,
+    const CellActionCallback *onNewCell,
+    const CellActionCallback *onRecomputedDepth) {
   assert(StrashKey::isEnabled(typeID, links));
 
   destrashEntry(entryID);
@@ -1168,8 +1176,13 @@ Subnet::Link SubnetBuilder::replaceCell(
   if (oldDepth != newDepth) {
     deleteDepthBounds(entryID);
     desc[entryID].depth = newDepth;
+    if (onNewCell) {
+      (*onNewCell)(entryID);
+    }
     addDepthBounds(entryID);
-    recomputeFanoutDepths(entryID, oldRootNext);
+    recomputeFanoutDepths(entryID, oldRootNext, onRecomputedDepth);
+  } else if (onNewCell) {
+    (*onNewCell)(entryID);
   }
 
   return Link(entryID);

@@ -25,6 +25,10 @@ class SafePasser : public EntryIterator {
   using SubnetID = eda::gate::model::SubnetID;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetObject = eda::gate::model::SubnetObject;
+  using CellActionCallback = SubnetBuilder::CellActionCallback;
+  using CellCallbackCondition =
+      std::function<void(const size_t, const size_t, const size_t)>;
+  using CellWeightProvider = SubnetBuilder::CellWeightProvider;
 
   enum Direction {
     FORWARD,
@@ -67,9 +71,10 @@ public:
   void replace(
       const SubnetObject &rhs,
       const InOutMapping &rhsToLhsMapping,
-      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr, // FIXME: Use type aliases defined in SubnetBuilder.
-      const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onEqualDepth = nullptr,
+      const CellActionCallback *onGreaterDepth = nullptr,
+      const CellCallbackCondition *onRecomputedDepth = nullptr);
 
   /**
    * @brief SubnetBuilder::replace(...) wrapper that allows to maintain next
@@ -78,10 +83,11 @@ public:
   void replace(
       const SubnetID rhsID,
       const InOutMapping &rhsToLhsMapping,
-      const std::function<float(const size_t /* index in subnet */)> *getCellWeight = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
+      const CellWeightProvider *getCellWeight = nullptr,
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onEqualDepth = nullptr,
+      const CellActionCallback *onGreaterDepth = nullptr,
+      const CellCallbackCondition *onRecomputedDepth = nullptr);
 
   /**
    * @brief SubnetBuilder::replace(...) wrapper that allows to maintain next
@@ -90,9 +96,10 @@ public:
   void replace(
       const SubnetBuilder &rhsBuilder,
       const InOutMapping &rhsToLhsMapping,
-      const std::function<void(const size_t /* index in builder */)> *onNewCell = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onEqualDepth = nullptr,
-      const std::function<void(const size_t /* index in builder */)> *onGreaterDepth = nullptr);
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onEqualDepth = nullptr,
+      const CellActionCallback *onGreaterDepth = nullptr,
+      const CellCallbackCondition *onRecomputedDepth = nullptr);
 
   /// Clears information about unsafe entries in subnet builder.
   void finalizePass();
@@ -118,8 +125,6 @@ private:
       const size_t curRootDepth = builder->getDepth(entry);
       if (oldRootDepth < curRootDepth && rootLastDepth) {
         saveNext = builder->getFirstWithDepth(oldRootDepth + 1);
-      } else if (oldRootDepth > curRootDepth) {
-        saveNext = builder->getFirstWithDepth(curRootDepth);
       }
     } else if (direction == BACKWARD) {
       const size_t curRootDepth = builder->getDepth(entry);

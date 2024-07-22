@@ -32,6 +32,9 @@ public:
   using SubnetView = model::SubnetView;
   using LinkList = Subnet::LinkList;
   using Effect = SubnetBuilder::Effect;
+  using CellActionCallback = SubnetBuilder::CellActionCallback;
+  using CellCallbackCondition =
+      std::function<void(const size_t, const size_t, const size_t)>;
 
   /**
    * @brief Constructs a rewriter.
@@ -64,7 +67,9 @@ private:
   void rewriteOnNode(
       SubnetBuilder &builder,
       SafePasser &iter,
-      CutExtractor &cutExtractor) const;
+      CutExtractor &cutExtractor,
+      const CellActionCallback *cutRecompute,
+      const CellCallbackCondition *cutRecomputeDepthCond) const;
 
   const ResynthesizerBase &resynthesizer;
   const uint16_t k;

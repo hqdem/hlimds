@@ -18,17 +18,27 @@ void Rewriter::transform(const SubnetBuilderPtr &builder) const {
   std::function cutRecompute = [&cutExtractor](const size_t entryID) {
     cutExtractor.recomputeCuts(entryID);
   };
+  std::function cutRecomputeDepthCond = [&cutExtractor](const size_t entryID,
+      const size_t oldRootDepth, const size_t curEntryDepth) {
+
+    if (curEntryDepth <= oldRootDepth) {
+      cutExtractor.recomputeCuts(entryID);
+    }
+  };
   for (SafePasser iter(builderPtr->begin(), &cutRecompute);
-       iter != builderPtr->end() && !builderPtr->getCell(*iter).isOut();
+       !builderPtr->getCell(*iter).isOut();
        ++iter) {
-    rewriteOnNode(*builderPtr, iter, cutExtractor);
+    rewriteOnNode(*builderPtr, iter, cutExtractor, &cutRecompute,
+        &cutRecomputeDepthCond);
   }
 }
 
 void Rewriter::rewriteOnNode(
     SubnetBuilder &builder,
     SafePasser &iter,
-    CutExtractor &cutExtractor) const {
+    CutExtractor &cutExtractor,
+    const CellActionCallback *cutRecompute,
+    const CellCallbackCondition *cutRecomputeDepthCond) const {
   const size_t entryID = *iter;
   const auto &cuts = cutExtractor.getCuts(entryID);
   float bestMetricValue = std::numeric_limits<float>::lowest();
@@ -49,12 +59,10 @@ void Rewriter::rewriteOnNode(
       bestMap = rhsToLhs;
     }
   }
-  std::function cutRecompute = [&cutExtractor](const size_t entryID) {
-    cutExtractor.recomputeCuts(entryID);
-  };
   if (bestMetricValue > metricEps ||
       (zeroCost && std::fabs(bestMetricValue) <= metricEps)) {
-    iter.replace(bestRhs, bestMap, &cutRecompute, &cutRecompute, &cutRecompute);
+    iter.replace(bestRhs, bestMap, cutRecompute, cutRecompute, cutRecompute,
+                 cutRecomputeDepthCond);
   }
 }
 

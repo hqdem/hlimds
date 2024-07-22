@@ -50,7 +50,7 @@ sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
      libssl-dev libtool lld make ninja-build pkg-config python3 zlib1g zlib1g-dev
 ```
 
-If you are working on Fedora Linux OS, please follow this [guide](doc/Fedora.md).
+If you are working on Fedora Linux OS, see `doc/Fedora.md`.
 
 ### CMake installation
 

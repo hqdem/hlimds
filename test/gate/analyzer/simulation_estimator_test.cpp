@@ -24,17 +24,15 @@ using Switches      = eda::gate::analyzer::SimulationEstimator::Switches;
 
 TEST(SwitchActivityTest, ToggleRateTest) {
   // Generating Subnet.
-  SubnetBuilder subnetBuilder;
-  const auto in = subnetBuilder.addInputs(6);
+  SubnetBuilder builder;
+  const auto in = builder.addInputs(6);
   LinkList links(5);
-  links[0] = subnetBuilder.addCell(CellSymbol::OR,  in[0], in[1]);
-  links[1] = subnetBuilder.addCell(CellSymbol::AND, links[0], in[2]);
-  links[2] = subnetBuilder.addCell(CellSymbol::XOR, links[1], in[3]);
-  links[3] = subnetBuilder.addCell(CellSymbol::AND, in[4], in[5]);
-  links[4] = subnetBuilder.addCell(CellSymbol::XOR, links[2], links[3]);
-  subnetBuilder.addOutput(links[4]);
-
-  const auto &subnet = Subnet::get(subnetBuilder.make());
+  links[0] = builder.addCell(CellSymbol::OR,  in[0], in[1]);
+  links[1] = builder.addCell(CellSymbol::AND, links[0], in[2]);
+  links[2] = builder.addCell(CellSymbol::XOR, links[1], in[3]);
+  links[3] = builder.addCell(CellSymbol::AND, in[4], in[5]);
+  links[4] = builder.addCell(CellSymbol::XOR, links[2], links[3]);
+  builder.addOutput(links[4]);
 
   SimEstimator simEstimator;
   InValuesList data;
@@ -53,14 +51,14 @@ TEST(SwitchActivityTest, ToggleRateTest) {
                   0x0527016b14902d78, 0xa2a880118b0821a1});
 
   const auto [switchesOn, switchesOff, onStates]
-      = simEstimator.simulate(subnet, data);
+      = simEstimator.simulate(builder, data);
 
   Switches
-      preCalculatedSwitchesOn{45, 47, 45, 53, 49, 50, 38, 30, 41, 42, 44, 44};
+      preCalculatedSwitchesOn{45, 47, 45, 53, 49, 50, 38, 41, 42, 30, 44, 44};
   Switches
-      preCalculatedSwitchesOff{46, 48, 46, 53, 49, 50, 39, 30, 42, 43, 45, 45};
+      preCalculatedSwitchesOff{46, 48, 46, 53, 49, 50, 39, 42, 43, 30, 45, 45};
   OnStates
-      preCalculatedOnStates{93, 89, 95, 94, 96, 72, 137, 32, 74, 102, 98, 98};
+      preCalculatedOnStates{93, 89, 95, 94, 96, 72, 137, 74, 102, 32, 98, 98};
 
   EXPECT_EQ(switchesOn, preCalculatedSwitchesOn);
   EXPECT_EQ(switchesOff, preCalculatedSwitchesOff);

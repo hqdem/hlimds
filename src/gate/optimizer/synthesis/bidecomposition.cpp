@@ -21,12 +21,13 @@ using SubnetObject = BiDecSynthesizer::SubnetObject;
 
 SubnetObject BiDecSynthesizer::run(const TruthTable &func, const TruthTable &care,
                                    uint16_t maxArity) {
-  SubnetBuilder subnetBuilder;
+  SubnetObject object;
+  SubnetBuilder &subnetBuilder{object.builder()};
   LinkList inputs = subnetBuilder.addInputs(func.num_vars());
   TernaryBiClique initBiClique(func,
       care.num_vars() ? care : utils::generateConstTT(func.num_vars()));
   subnetBuilder.addOutput(decompose(initBiClique, subnetBuilder, maxArity));
-  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
+  return object;
 }
 
 Link BiDecSynthesizer::decompose(TernaryBiClique &initBiClique,

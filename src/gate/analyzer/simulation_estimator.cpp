@@ -17,7 +17,27 @@ namespace eda::gate::analyzer {
 using OnStates = SimulationEstimator::OnStates;
 using Switches = SimulationEstimator::Switches;
 
-SwitchActivity SimulationEstimator::estimate(const Subnet &subnet,
+struct PrevBits {
+
+  PrevBits(size_t n) : _bits(n > 63 ? std::ceil(n * 1. / 64.) : 1) { }
+
+  uint64_t get(size_t id) const {
+    return kitty::get_bit(*this, id);
+  };
+
+  void set(size_t id) {
+    kitty::set_bit(*this, id);
+  };
+
+  void clear(size_t id) {
+    kitty::clear_bit(*this, id);
+  };
+
+  /// @brief Prefix "_" is needed for using methods from kitty.
+  std::vector<uint64_t> _bits;
+};
+
+SwitchActivity SimulationEstimator::estimate(const SubnetBuilder &builder,
     const Probabilities &probabilities) const {
 
   InValuesList inValuesList;
@@ -31,13 +51,13 @@ SwitchActivity SimulationEstimator::estimate(const Subnet &subnet,
 
   for (size_t i{0}; i < simulationCount; ++i) {
     CacheList cacheList;
-    for (size_t id{0}; id < subnet.getInNum(); ++id) {
+    for (size_t id{0}; id < builder.getInNum(); ++id) {
       cacheList.push_back(generateInValues(distributions, id));
     }
     inValuesList.push_back(std::move(cacheList));
   }
 
-  auto [switchesOn, switchesOff, onStates] = simulate(subnet, inValuesList);
+  auto [switchesOn, switchesOff, onStates] = simulate(builder, inValuesList);
   
   Probabilities switching(switchesOn.size());
   for (size_t id{0}; id < switchesOn.size(); ++id) {
@@ -50,36 +70,19 @@ SwitchActivity SimulationEstimator::estimate(const Subnet &subnet,
       std::move(switchesOn), std::move(switchesOff), ticks};
 }
 
-// FIXME: change Subnet to SubnetBuilder.
 std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
-    const Subnet &subnet, const InValuesList &inValuesList) const {
+    const SubnetBuilder &builder, const InValuesList &inValuesList) const {
 
-  model::SubnetBuilder builder(subnet); // FIXME:
   Simulator simulator(builder);
 
-  const size_t inputs = subnet.getInNum(); // FIXME:
-  const auto cells = subnet.getEntries(); // FIXME:
+  const size_t inputs = builder.getInNum();
+  const auto size = builder.getMaxIdx() + 1;
 
-  uassert(cells.size() - inputs, "Subnet has only inputs");
+  Switches switchesOn(size);
+  Switches switchesOff(size);
+  OnStates onStates(size);
 
-  Switches switchesOn(cells.size());
-  Switches switchesOff(cells.size());
-  OnStates onStates(cells.size());
-
-  size_t ttSize = std::ceil(std::log2(cells.size()));
-  kitty::dynamic_truth_table prevBits(ttSize ? ttSize : 1);
-
-  auto getPrevBit = [&prevBits](size_t id) {
-    return kitty::get_bit(prevBits, id);
-  };
-
-  auto setPrevBit = [&prevBits](size_t id) {
-    return kitty::set_bit(prevBits, id);
-  };
-
-  auto reSetPrevBit = [&prevBits](size_t id) {
-    return kitty::clear_bit(prevBits, id);
-  };
+  PrevBits prev(size);
 
   for (size_t i{0}; i < inValuesList.size(); ++i) {
     const CacheList &values = inValuesList[i];
@@ -90,19 +93,16 @@ std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
     simulator.simulate(values);
 
     for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
-    //FIXME: for (size_t id{0}; id < cells.size(); ++id) {
       const auto id = *it;
       Cache cache = simulator.getValue(id);
       onStates[id] += popCount(cache) * 1.f;
       uint64_t bits = getSwitchedBits(cache);
-      uint64_t prevBit = ((i) && ((cache & 1ull) ^ getPrevBit(id)));
+      uint64_t prevBit = ((i) && ((cache & 1ull) ^ prev.get(id)));
       switchesOn[id] += popCount(bits & ~cache) + (prevBit & cache);
       switchesOff[id] += popCount(bits & cache) + (prevBit & ~cache);
-      (cache & (1ull << 63)) ? setPrevBit(id) : reSetPrevBit(id);
-    //FIXME:  id += cells[id].cell.more;
+      (cache & (1ull << 63)) ? prev.set(id) : prev.clear(id);
     }
   }
-
   return {std::move(switchesOn), std::move(switchesOff), std::move(onStates)};
 }
 

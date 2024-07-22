@@ -507,7 +507,9 @@ SubnetObject DMSynthesizer::buildSubnet(const std::vector<MajNode> &tree,
   const uint32_t nVars = divisors[0].num_vars();
   const size_t treeSize = tree.size();
   std::vector<size_t> idx;
-  Builder builder;
+  SubnetObject object;
+  Builder &builder{object.builder()};
+
   idx.reserve(nVars + tree.size());
 
   std::pair<size_t, bool> zero = {0, 0};
@@ -544,7 +546,7 @@ SubnetObject DMSynthesizer::buildSubnet(const std::vector<MajNode> &tree,
     builder.addOutput(Link(idx.back()));
   }
 
-  return SubnetObject{builder.make()}; // FIXME: make is not required.
+  return object;
 }
 
 Link DMSynthesizer::createLink(int64_t arg,

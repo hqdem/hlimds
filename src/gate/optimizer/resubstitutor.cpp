@@ -11,33 +11,154 @@
 
 namespace eda::gate::optimizer {
 
-using EntryMap      = std::unordered_map<size_t, size_t>;
-using InOutMapping  = model::InOutMapping;
-using Link          = model::Subnet::Link;
-using LinkList      = model::Subnet::LinkList;
-using Subnet        = model::Subnet;
-using SubnetBuilder = model::SubnetBuilder;
-using Symbol        = model::CellSymbol;
-using TruthTable    = kitty::dynamic_truth_table;
-using TruthTables   = std::unordered_map<size_t, TruthTable>;
+static constexpr size_t maxBranchesNum = 8;
+static constexpr size_t maxDivisorsNum = 150;
+static_assert(maxBranchesNum <= 32);
 
-struct Inversions {
-  bool invIn1;
-  bool invIn2;
-  bool invOut;
+using Cell             = eda::gate::model::Subnet::Cell;
+using IdxMap           = std::unordered_map<size_t, size_t>;
+using InOutMapping     = eda::gate::model::InOutMapping;
+using Link             = eda::gate::model::Subnet::Link;
+using LinkList         = eda::gate::model::Subnet::LinkList;
+using SubnetBuilder    = eda::gate::model::SubnetBuilder;
+using SubnetView       = eda::gate::model::SubnetView;
+using SubnetViewWalker = eda::gate::model::SubnetViewWalker;
+using Symbol           = eda::gate::model::CellSymbol;
+using TruthTable       = eda::utils::TruthTable;
+using TruthTables      = std::vector<TruthTable>;
+
+struct Divisor {
+  Divisor() = delete;
+  Divisor(uint64_t divisor) = delete;
+  Divisor(size_t idx, bool inv): idx(idx), inv(inv) {}
+
+  uint64_t idx : 63;
+  uint64_t inv : 1;
+};
+static_assert(sizeof(Divisor) == 8);
+
+/// @brief Divisors storage.
+class Divisors {
+public:
+  Divisors() = default;
+
+  size_t size() const {
+    return negUnate.size() +  posUnate.size() + binate.size();
+  }
+
+  void reserve(size_t nDivisors) {
+    negUnate.reserve(nDivisors);
+    posUnate.reserve(nDivisors);
+    binate.reserve(nDivisors);
+
+    pairNeg.reserve(nDivisors);
+    pairPos.reserve(nDivisors);
+  }
+
+  void addPositive(Divisor div) { posUnate.push_back(div); }
+  void addNegative(Divisor div) { negUnate.push_back(div); }
+  void addBinate  (Divisor div) { binate.push_back(div);   }
+
+private:
+  std::vector<Divisor> negUnate;
+  std::vector<Divisor> posUnate;
+  std::vector<Divisor> binate;
+
+  std::vector<std::pair<Divisor, Divisor>> pairNeg;
+  std::vector<std::pair<Divisor, Divisor>> pairPos;
+};
+
+/// @brief Class is used when cut > 6 only (Non optimized case).
+class CellTables {
+public:
+  CellTables() = default;
+
+  const TruthTable &back() const { return tables.back(); }
+  
+  size_t size() const { return tables.size(); }
+
+  void push(const TruthTable  &table) { tables.push_back(table); }
+  void push(      TruthTable &&table) { tables.push_back(table); }
+
+  void setPivotID(size_t idx) { pivotID = idx; }
+
+  void reserve(size_t nCells) {
+    tables.reserve(nCells);
+  }
+
+  void pushBranch(const TruthTable &table) {
+    if (firstBranchID == (size_t)-1) {
+      firstBranchID = tables.size();
+    }
+    nBranches++;
+    tables.push_back(table);
+  }
+  void pushBranch(TruthTable &&table) {
+    if (firstBranchID == (size_t)-1) {
+      firstBranchID = tables.size();
+    }
+    nBranches++;
+    tables.push_back(table);
+  }
+
+  void pushOuter(const TruthTable &table) {
+    if (firstOuterID == (size_t)-1) {
+      firstOuterID = tables.size();
+    }
+    nOuters++;
+    tables.push_back(table);
+  }
+  void pushOuter(TruthTable &&table) {
+    if (firstOuterID == (size_t)-1) {
+      firstOuterID = tables.size();
+    }
+    nOuters++;
+    tables.push_back(table);
+  }
+
+  void setBranchTT(size_t pos, const TruthTable &table) {
+    assert(pos < nBranches);
+    tables[firstBranchID + pos] = table;
+  }
+  void setBranchTT(size_t pos, TruthTable &&table) {
+    assert(pos < nBranches);
+    tables[firstBranchID + pos] = table;
+  }
+
+  void setOuterTT(size_t pos, const TruthTable &table) {
+    assert(pos < nOuters);
+    tables[firstOuterID + pos] = table;
+  }
+  void setOuterTT(size_t pos, TruthTable &&table) {
+    assert(pos < nOuters);
+    tables[firstOuterID + pos] = table;
+  }
+
+  void invertPivotTT() {
+    assert(pivotID < tables.size());
+    tables[pivotID] = ~tables[pivotID];
+  }
+
+private:
+  TruthTables tables;
+  size_t firstBranchID = -1;
+  size_t firstOuterID = -1;
+  size_t nBranches = 0;
+  size_t nOuters = 0;
+  size_t pivotID = -1;
 };
 
 static void buildFromDivisor(const SubnetBuilder &builder,
                              SubnetBuilder &rhs,
-                             size_t divisor,
-                             std::unordered_map<size_t, size_t> &oldToNew) {
+                             size_t idx,
+                             IdxMap &oldToNew) {
 
-  if (oldToNew.find(divisor) != oldToNew.end()) {
+  if (oldToNew.find(idx) != oldToNew.end()) {
     return;
   }
 
-  auto links = builder.getLinks(divisor);
-  auto symbol = builder.getCell(divisor).getSymbol();
+  auto links = builder.getLinks(idx);
+  auto symbol = builder.getCell(idx).getSymbol();
   for (size_t i = 0; i < links.size(); ++i) {
     if (oldToNew.find(links[i].idx) == oldToNew.end()) {
       buildFromDivisor(builder, rhs, links[i].idx, oldToNew);
@@ -45,62 +166,815 @@ static void buildFromDivisor(const SubnetBuilder &builder,
     size_t idNew = oldToNew.at(links[i].idx);
     links[i].idx = idNew;
   }
-  oldToNew[divisor] = rhs.addCell(symbol, links).idx;
+  oldToNew[idx] = rhs.addCell(symbol, links).idx;
+}
+
+static void markMffcRecursively(SubnetBuilder &builder, size_t idx) {
+  if (builder.isMarked(idx)) {
+    return;
+  }
+
+  builder.mark(idx);
+
+  for (const auto &link : builder.getLinks(idx)) {
+    markMffcRecursively(builder, link.idx);
+  }
+}
+
+static size_t markMffc(SubnetBuilder &builder,
+                       const SubnetView &view,
+                       const IdxMap &mffc) {
+
+  builder.startSession();
+
+  for (size_t i = 0; i < mffc.size() - 1; ++i) {
+    builder.mark(mffc.at(i));
+  }
+  markMffcRecursively(builder, view.getOut(0));
+
+  const size_t res = builder.getSessionID();
+  builder.endSession();
+
+  return res;
+}
+
+static std::pair<bool, Divisor> classifyDivisor(Divisor div,
+                                                Divisors &divs,
+                                                const TruthTable &table,
+                                                const TruthTable &onset,
+                                                const TruthTable &offset) {
+
+  bool positive = false;
+  bool negative = false;
+
+  if (kitty::is_const0(table & offset)) {
+    divs.addPositive(div);
+    positive = true;
+  }
+  if (kitty::is_const0(~table & onset)) {
+    divs.addNegative(div);
+    negative = true;
+  }
+  if (positive && negative) {
+    return std::make_pair(true, div);
+  }
+  if (!positive && !negative) {
+    divs.addBinate(div);
+  }
+
+  return std::make_pair(false, div);
+}
+
+static std::pair<bool, Divisor> classifyDivisor(size_t idx,
+                                                Divisors &divs,
+                                                const TruthTable &table,
+                                                const TruthTable &onset,
+                                                const TruthTable &offset) {
+
+  Divisor div1(idx, false);
+  Divisor div2(idx, true);
+
+  auto res = classifyDivisor(div1, divs, table, onset, offset);
+  if (res.first) {
+    return res;
+  }
+  res = classifyDivisor(div2, divs, ~table, onset, offset);
+
+  return res;
+}
+
+static std::pair<bool, Divisor> getSideDivisors(SubnetBuilder &builder,
+                                                const SubnetView &view,
+                                                Divisors &divs,
+                                                const TruthTable &onset,
+                                                const TruthTable &offset,
+                                                CellTables &cellTables,
+                                                size_t mffcID,
+                                                size_t idx) {
+
+  if (builder.isMarked(idx) || (builder.getSessionID(idx) == mffcID)) {
+    return std::make_pair(false, Divisor(0, 0));
+  }
+  const size_t maxDepth = builder.getDepth(view.getOut(0));
+  if ((builder.getDepth(idx) > maxDepth) || (divs.size() >= maxDivisorsNum)) {
+    return std::make_pair(false, Divisor(0, 0));
+  }
+
+  for (const auto &link : builder.getLinks(idx)) {
+    if (!builder.isMarked(link.idx)) {
+      return std::make_pair(false, Divisor(0, 0));
+    }
+  }
+
+  if (builder.getSessionID(idx) != (builder.getSessionID() - 1)) {
+    const size_t arity = view.getInNum();
+    TruthTable divTT;
+    builder.mark(idx);
+    if (arity > 6) {
+      divTT = utils::getTruthTable<utils::TTn>(builder, arity, idx, false, 0);
+      cellTables.push(divTT);
+      utils::setTruthTable<utils::TTn>(builder, idx, cellTables.back());
+    } else {
+      auto tt = utils::getTruthTable<utils::TT6>(builder, arity, idx, false, 0);
+      utils::setTruthTable<utils::TT6>(builder, idx, tt);
+      divTT = utils::convertTruthTable<utils::TT6>(tt, arity);
+    }
+
+    const auto res = classifyDivisor(idx, divs, divTT, onset, offset);
+    if (res.first) {
+      return res;
+    }
+  }
+  builder.mark(idx);
+
+  for (const auto &fanout : builder.getFanouts(idx)) {
+    const auto res = getSideDivisors(
+        builder, view, divs, onset, offset, cellTables, mffcID, fanout);
+
+    if (res.first) {
+      return res;
+    }
+  }
+
+  return std::make_pair(false, Divisor(0, 0));
+}
+
+static std::pair<bool, Divisor> getSideDivisors(SubnetBuilder &builder,
+                                                const SubnetView &view,
+                                                Divisors &divs,
+                                                const TruthTable &onset,
+                                                const TruthTable &offset,
+                                                CellTables &cellTables,
+                                                size_t mffcID) {
+
+  builder.startSession();
+
+  for (const auto &in : view.getInputs()) {
+    builder.mark(in);
+  }
+
+  for (const auto &in : view.getInputs()) {
+    for (const auto &fanout : builder.getFanouts(in)) {
+      const auto res = getSideDivisors(
+          builder, view, divs, onset, offset, cellTables, mffcID, fanout);
+
+      if (res.first) {
+        builder.endSession();
+        return res;
+      }
+    }
+  }
+
+  builder.endSession();
+  return std::make_pair(false, Divisor(0, 0));
+}
+
+static std::pair<bool, Divisor> addInnerDivisor(const SubnetBuilder &builder,
+                                                Divisors &divs,
+                                                size_t idx,
+                                                size_t arity,
+                                                const TruthTable &onset,
+                                                const TruthTable &offset) {
+
+  TruthTable divisorTT;
+
+  if (arity > 6) {
+    divisorTT = utils::getTruthTable<utils::TTn>(builder, idx);
+  } else {
+    const auto tt = utils::getTruthTable<utils::TT6>(builder, idx);
+    divisorTT = utils::convertTruthTable<utils::TT6>(tt, arity);
+  }
+
+  const auto res = classifyDivisor(idx, divs, divisorTT, onset, offset);
+
+  return res;
+}
+
+static std::pair<bool, Divisor> getInnerDivisors(SubnetBuilder &builder,
+                                                 Divisors &divs,
+                                                 size_t idx,
+                                                 size_t arity,
+                                                 const TruthTable &onset,
+                                                 const TruthTable &offset) {
+
+  if (builder.isMarked(idx)) {
+    return std::make_pair(false, Divisor(0, 0));
+  }
+
+  builder.mark(idx);
+
+  auto res = addInnerDivisor(builder, divs, idx, arity, onset, offset);
+  if (res.first) {
+    return res;
+  }
+
+  for (const auto &link : builder.getLinks(idx)) {
+    res = getInnerDivisors(builder, divs, link.idx, arity, onset, offset);
+    if (res.first) {
+      return res;
+    }
+  }
+
+  return std::make_pair(false, Divisor(0, 0));
+}
+
+static std::pair<bool, Divisor> getInnerDivisors(SubnetBuilder &builder,
+                                                 const SubnetView &view,
+                                                 Divisors &divs,
+                                                 const TruthTable &onset,
+                                                 const TruthTable &offset,
+                                                 const IdxMap &mffcMap) {
+
+  builder.startSession();
+
+  const auto &inputs = view.getInputs();
+  const auto arity = inputs.size();
+
+  // Add the cut.
+  for (size_t i = 0; i < arity; ++i) {
+    builder.mark(inputs[i]);
+    const auto res = addInnerDivisor(
+        builder, divs, inputs[i], arity, onset, offset);
+
+    if (res.first) {
+      builder.endSession();
+      return res;
+    }
+  }
+  // Get divisors from the inputs of the mffc to cut.
+  for (size_t i = 0; i < mffcMap.size() - 1; ++i) {
+    const auto res = getInnerDivisors(
+        builder, divs, mffcMap.at(i), arity, onset, offset);
+    
+    if (res.first) {
+      builder.endSession();
+      return res;
+    }
+  }
+
+  builder.endSession();
+  return std::make_pair(false, Divisor(0, 0));
+}
+
+static std::pair<bool, Divisor> getDivisors(SubnetBuilder &builder,
+                                            const SubnetView &view,
+                                            Divisors &divs,
+                                            const TruthTable &onset,
+                                            const TruthTable &offset,
+                                            CellTables &cellTables,
+                                            const IdxMap &mffc) {
+
+  const size_t mffcID = markMffc(builder, view, mffc);
+  auto res = getInnerDivisors(builder, view, divs, onset, offset, mffc);
+  if (res.first) {
+    return res;
+  }
+
+  res = getSideDivisors(builder, view, divs, onset, offset, cellTables, mffcID);
+
+  return res;
+}
+
+static void makeConstResubstitution(SafePasser &iter,
+                                    const SubnetView &view,
+                                    bool constant) {
+
+  SubnetBuilder rhs;
+  rhs.addInputs(view.getInNum());
+
+  const Symbol symbol = constant ? Symbol::ONE : Symbol::ZERO;
+
+  Link link = rhs.addCell(symbol);
+  rhs.addOutput(link);
+
+  iter.replace(rhs, view.getInOutMapping());
+}
+
+static bool makeConstResubstitution(SafePasser &iter,
+                                    const SubnetView &view,
+                                    const TruthTable &onset,
+                                    const TruthTable &offset) {
+
+  bool zero = kitty::is_const0(onset);
+  bool one = kitty::is_const0(offset);
+
+  if (zero) {
+    makeConstResubstitution(iter, view, false);
+    return true;
+  }
+  if (one) {
+    makeConstResubstitution(iter, view, true);
+    return true;
+  }
+  return false;
 }
 
 static bool makeZeroResubstitution(const SubnetBuilder &builder,
                                    SafePasser &iter,
-                                   const Subnet &cone,
-                                   size_t divisor,
-                                   std::unordered_map<size_t, size_t> &map,
-                                   bool inv) {
+                                   const SubnetView &view,
+                                   Divisor div) {
 
   SubnetBuilder rhs;
 
-  std::unordered_map<size_t, size_t> oldToNew;
-  for (size_t i = 0; i < map.size() - 1; ++i) {
-    oldToNew[map.at(i)] = rhs.addInput().idx;
+  InOutMapping iomapping;
+  iomapping.inputs = view.getInputs();
+  iomapping.outputs = view.getOutputs();
+
+  IdxMap oldToNew;
+  for (size_t i = 0; i < iomapping.getInNum(); ++i) {
+    oldToNew[iomapping.getIn(i)] = rhs.addInput().idx;
   }
 
-  buildFromDivisor(builder, rhs, divisor, oldToNew);
+  buildFromDivisor(builder, rhs, div.idx, oldToNew);
 
-  const size_t outNew = rhs.addOutput(Link(oldToNew.at(divisor), inv)).idx;
-  const size_t outOld = cone.size() - 1;
-  if (outOld != outNew) {
-    map[outNew] = map.at(outOld);
-    map.erase(outOld);
-  }
+  Link link(oldToNew.at(div.idx), div.inv);
+  rhs.addOutput(link);
 
-  const auto rhsID = rhs.make();
+  iter.replace(rhs, iomapping);
 
-  iter.replace(rhsID, /* map */InOutMapping{}); // FIXME:
   return true;
 }
 
-static bool checkZeroResubstitution(const TruthTable &target,
-                                    const TruthTable &div,
-                                    const TruthTable &care,
-                                    bool &inv) {
+static bool makeZeroResubstitution(SubnetBuilder &builder,
+                                   SafePasser &iter,
+                                   const SubnetView &view,
+                                   Divisors &divs,
+                                   const TruthTable &onset,
+                                   const TruthTable &offset,
+                                   CellTables &cellTables,
+                                   const IdxMap &mffcMap) {
 
-  const size_t nBits = target.num_bits();
-  const size_t nBitsDiv = div.num_bits();
-  assert(nBits == nBitsDiv && "Unequal number of target and divisor bits!");
+  const auto res = getDivisors(
+      builder, view, divs, onset, offset, cellTables, mffcMap);
 
-  size_t j = 1;
-  for (size_t i = 0; i < nBits; ++i) {
-    if (!kitty::get_bit(care, i)) {
-      continue;
-    }
-    inv = kitty::get_bit(target, i) != kitty::get_bit(div, i);
-    j = ++i;
-    break;
+  if (res.first) {
+    return makeZeroResubstitution(builder, iter, view, res.second);
   }
 
-  for (; j < nBits; ++j) {
-    if (!kitty::get_bit(care, j)) {
-      continue;
+  return false;
+}
+
+static void simulateCone(SubnetBuilder &builder,
+                         const SubnetView &view,
+                         CellTables &cellTables) {
+
+  const size_t arity = view.getInNum();
+  if (arity <= 6) {
+    view.evaluateTruthTable();
+  } else {
+    const SubnetViewWalker walker(view);
+    size_t nIn = 0;
+
+    walker.run([&cellTables, &nIn, arity](SubnetBuilder &builder,
+                                          const bool isIn,
+                                          const bool isOut,
+                                          const size_t i) -> bool {
+      const auto tt = utils::getTruthTable<TruthTable>(
+          builder, arity, i, isIn, nIn++);
+      cellTables.push(std::move(tt));
+      utils::setTruthTable<TruthTable>(builder, i, cellTables.back());
+      return true; // Continue traversal.
+    });
+  }
+}
+
+static void invertPivotTT(SubnetBuilder &builder,
+                          size_t pivot,
+                          CellTables &cellTables,
+                          size_t arity) {
+
+  if (arity > 6) {
+    cellTables.invertPivotTT();
+  } else {
+    const auto inverted = ~utils::getTruthTable<utils::TT6>(builder, pivot);
+    utils::setTruthTable<utils::TT6>(builder, pivot, inverted);
+  }
+}
+
+static TruthTables evaluateRoots(SubnetBuilder &builder,
+                                 const SubnetView &view,
+                                 size_t arity,
+                                 CellTables &cellTables) {
+
+  TruthTables result(view.getOutNum());
+
+  const SubnetViewWalker walker(view);
+
+  if (arity <= 6) {
+    walker.run([arity](SubnetBuilder &builder,
+                       const bool isIn,
+                       const bool isOut,
+                       const size_t i) -> bool {
+                                
+      if (isIn) {
+        return true; // Continue traversal.
+      }
+      const auto tt = utils::getTruthTable<utils::TT6>(
+          builder, arity, i, isIn, 0);
+      utils::setTruthTable<utils::TT6>(builder, i, tt);
+      return true; // Continue traversal.
+    });
+
+    for (size_t i = 0; i < view.getOutNum(); ++i) {
+      const auto tt = utils::getTruthTable<utils::TT6>(builder, view.getOut(i));
+      result[i] = utils::convertTruthTable<utils::TT6>(tt, arity);
     }
-    if ((kitty::get_bit(target, j) != kitty::get_bit(div, j)) != inv) {
+  } else {
+    size_t nOuter = 0;
+    walker.run([&nOuter, &cellTables, arity](SubnetBuilder &builder,
+                                             const bool isIn,
+                                             const bool isOut,
+                                             const size_t i) -> bool {
+
+      if (isIn) {
+        return true; // Continue traversal.
+      }
+      auto tt = utils::getTruthTable<utils::TTn>(builder, arity, i, isIn, 0);
+      cellTables.setOuterTT(nOuter++, std::move(tt));
+      return true; // Continue traversal.
+    });
+
+    for (size_t i = 0; i < view.getOutNum(); ++i) {
+      result[i] = utils::getTruthTable<utils::TTn>(builder, view.getOut(i));
+    }
+  }
+
+  return result;
+}
+
+static TruthTable computeCare(SubnetBuilder &builder,
+                              uint64_t status,
+                              const SubnetView &careView,
+                              size_t pivot,
+                              size_t arity,
+                              const std::vector<size_t> &branches,
+                              CellTables &cellTables) {
+
+  auto care = utils::getZeroTruthTable<utils::TTn>(arity);
+
+  // Init branches.
+  for (size_t i = 0; i < branches.size(); ++i) {
+    if (arity <= 6) {
+      const auto constant = ((status >> i) & 1ull) ?
+          utils::getOneTruthTable<utils::TT6>(arity):
+          utils::getZeroTruthTable<utils::TT6>(arity);
+
+      utils::setTruthTable<utils::TT6>(builder, branches[i], constant);
+    } else {
+      auto constant = ((status >> i) & 1ull) ?
+          utils::getOneTruthTable<utils::TTn>(arity):
+          utils::getZeroTruthTable<utils::TTn>(arity);
+
+      cellTables.setBranchTT(i, std::move(constant));
+    }
+  }
+
+  // Evaluate roots with standart pivot.
+  const auto standart = evaluateRoots(builder, careView, arity, cellTables);
+
+  // Evaluate roots with inverted pivot.
+  invertPivotTT(builder, pivot, cellTables, arity);
+  const auto inverted = evaluateRoots(builder, careView, arity, cellTables);
+  invertPivotTT(builder, pivot, cellTables, arity);
+
+  // Compare roots tables
+  for (size_t i = 0; i < careView.getOutNum(); ++i) {
+    care |= standart[i] ^ inverted[i];
+  }
+
+  return care;
+}
+
+static void markInnerRecursively(SubnetBuilder &builder, size_t idx) {
+  if (builder.isMarked(idx)) {
+    return;
+  }
+
+  builder.mark(idx);
+
+  for (const auto &link : builder.getLinks(idx)) {
+    markInnerRecursively(builder, link.idx);
+  }
+}
+
+static size_t markInner(SubnetBuilder &builder, const SubnetView &view) {
+  builder.startSession();
+
+  for (const auto &input : view.getInputs()) {
+    builder.mark(input);
+  }
+  for (const auto &pivot : view.getOutputs()) {
+    markInnerRecursively(builder, pivot);
+  }
+
+  const size_t ret = builder.getSessionID();
+  builder.endSession();
+  return ret;
+}
+
+static size_t countSetBits(uint64_t n) {
+  if (!n) {
+    return 0;
+  }
+  return 1 + countSetBits(n & (n - 1));
+}
+
+static void prepareStatus(uint64_t &status, uint64_t iteration) {
+  status &= 0xFFFFFFFF00000000;
+  status |= iteration;
+}
+
+static void addInnerToInputs(SubnetBuilder &builder,
+                             InOutMapping &iomapping,
+                             size_t idx,
+                             size_t innerID) {
+
+  if (builder.isMarked(idx)) {
+    return;
+  }
+
+  if (builder.getSessionID(idx) == innerID) {
+    builder.mark(idx);
+    iomapping.inputs.push_back(idx);
+    return;
+  }
+
+  builder.mark(idx);
+
+  for (const auto &link : builder.getLinks(idx)) {
+    addInnerToInputs(builder, iomapping, link.idx, innerID);
+  }
+}
+
+static SubnetView getCareView(SubnetBuilder &builder,
+                              size_t pivot,
+                              const std::vector<size_t> &roots,
+                              const std::vector<size_t> &branches,
+                              size_t k,
+                              CellTables &cellTables,
+                              size_t innerID) {
+
+  builder.startSession();
+
+  InOutMapping iomapping;
+  if (k > 6) {
+    for (size_t i = 0; i < branches.size(); ++i) {
+      auto zero = utils::getZeroTruthTable<utils::TTn>(k);
+      builder.mark(branches[i]);
+      iomapping.inputs.push_back(branches[i]);
+      cellTables.pushBranch(std::move(zero));
+      utils::setTruthTable<utils::TTn>(builder, branches[i], cellTables.back());
+    }
+  } else {
+    for (size_t i = 0; i < branches.size(); ++i) {
+      const auto zero = utils::getZeroTruthTable<utils::TT6>(k);
+      builder.mark(branches[i]);
+      iomapping.inputs.push_back(branches[i]);
+      utils::setTruthTable<utils::TT6>(builder, branches[i], zero);
+    }
+  }
+
+  for (const auto &r : roots) {
+    addInnerToInputs(builder, iomapping, r, innerID);
+  }
+
+  builder.endSession();
+
+  iomapping.outputs = roots;
+  SubnetView careView(builder, iomapping);
+  return careView;
+}
+
+static void reserveOuters(const SubnetView &view,
+                          CellTables &cellTables,
+                          size_t arity) {
+
+  const SubnetViewWalker walker(view);
+
+  walker.run([&cellTables, arity](SubnetBuilder &parent,
+                                  const bool isIn,
+                                  const bool isOut,
+                                  const size_t i) -> bool {
+
+    if (isIn) {
+      return true; // Continue traversal.
+    }
+    const auto zero = utils::getZeroTruthTable<utils::TTn>(arity);
+    cellTables.pushOuter(std::move(zero));
+    utils::setTruthTable<utils::TTn>(parent, i, cellTables.back());
+    return true; // Continue traversal.
+  });
+}
+
+static TruthTable computeCare(SubnetBuilder &builder,
+                              const SubnetView &view,
+                              const std::vector<size_t> &roots,
+                              const std::vector<size_t> &branches,
+                              uint64_t status,
+                              CellTables &cellTables) {
+
+  const size_t k = view.getInNum();
+  const size_t pivot = view.getOut(0);
+
+  // Mark inner nodes (from pivot to cut).
+  const size_t innerID = markInner(builder, view);
+
+  const auto careView = getCareView(builder, pivot, roots, branches,
+                                    k, cellTables, innerID);
+
+  if (k > 6) {
+    reserveOuters(careView, cellTables, k);
+  }
+
+  auto care = utils::getZeroTruthTable<utils::TTn>(k);
+
+  const size_t nSetBits = countSetBits(status >> 32);
+  const size_t rounds = 1ull << nSetBits;
+  for (uint64_t i = 0; i < rounds; ++i) {
+    prepareStatus(status, i);
+    care |= computeCare(builder, status, careView,
+                        pivot, k, branches, cellTables);
+    if (kitty::is_const0(~care)) {
+      break;
+    }
+  }
+  return care;
+}
+
+static bool collectBranchesRecursively(SubnetBuilder &builder,
+                                       size_t idx,
+                                       uint64_t &status,
+                                       std::vector<size_t> &branches) {
+
+  if (builder.isMarked(idx)) {
+    return false;
+  }
+
+  while (builder.getCell(idx).isBuf()) {
+    builder.mark(idx);
+    const auto &link = builder.getLink(idx, 0);
+    idx = link.idx;
+    if (builder.isMarked(idx)) {
+      return false;
+    }
+  }
+
+  const auto &cell = builder.getCell(idx);
+  if (cell.isZero() || cell.isOne()) {
+    builder.mark(idx);
+    return false;
+  }
+
+  if (builder.getSessionID(idx) < builder.getSessionID() - 2) {
+    builder.mark(idx);
+    size_t branchID = branches.size();
+    if (branchID == maxBranchesNum) {
+      return true;
+    }
+    branches.push_back(idx);
+    status |= 1ull << (32 + branchID);
+    return false;
+  }
+  builder.mark(idx);
+
+  for (const auto &link : builder.getLinks(idx)) {
+    if (collectBranchesRecursively(builder, link.idx, status, branches)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static uint64_t collectBranches(SubnetBuilder &builder,
+                                const SubnetView &view,
+                                const std::vector<size_t> &roots,
+                                std::vector<size_t> &branches) {
+
+  uint64_t status = 0;
+  bool overflow = false;
+
+  builder.startSession();
+
+  for (const auto &pivot : view.getOutputs()) {
+    builder.mark(pivot);
+  }
+  for (const auto &input : view.getInputs()) {
+    builder.mark(input);
+  }
+  for (const auto &r : roots) {
+    overflow |= collectBranchesRecursively(builder, r, status, branches);
+    if (overflow) {
+      builder.endSession();
+      return -1;
+    }
+  }
+
+  builder.endSession();
+
+  return status;
+}
+
+static void collectRootsRecursively(SubnetBuilder &builder,
+                                    size_t idx,
+                                    std::vector<size_t> &roots) {
+
+  if (builder.isMarked(idx)) {
+    return;
+  }
+
+  builder.mark(idx);
+
+  bool allMarked = true;
+  for (const auto &fanout : builder.getFanouts(idx)) {
+    if (builder.getSessionID(fanout) < (builder.getSessionID() - 1)) {
+      allMarked = false;
+      break;
+    }
+  }
+
+  if (!allMarked || builder.getCell(idx).isOut()) {
+    roots.push_back(idx);
+    return;
+  }
+
+  for (const auto &fanout : builder.getFanouts(idx)) {
+    collectRootsRecursively(builder, fanout, roots);
+  }
+}
+
+static std::vector<size_t> collectRoots(SubnetBuilder &builder, size_t pivot) {
+  std::vector<size_t> roots;
+  builder.startSession();
+  collectRootsRecursively(builder, pivot, roots);
+  builder.endSession();
+  return roots;
+}
+
+static void markEntryTFORecursively(SubnetBuilder &builder,
+                                    size_t idx,
+                                    unsigned maxDepth) {
+
+  if (builder.isMarked(idx)) {
+    return;
+  }
+
+  builder.mark(idx);
+  if (builder.getDepth(idx) >= maxDepth) {
+    return;
+  }
+
+  for (const auto &fanout : builder.getFanouts(idx)) {
+    markEntryTFORecursively(builder, fanout, maxDepth);
+  }
+}
+
+static void markCutTFO(SubnetBuilder &builder,
+                       const SubnetView &view,
+                       unsigned maxLevels) {
+
+  assert(!view.getOutputs().empty());
+  builder.startSession();
+  const size_t pivot = view.getOut(0);
+  const size_t maxDepth = builder.getDepth(pivot) + maxLevels;
+
+  // Mark nodes bypassing pivot (try to find reconvergence).
+  builder.mark(pivot);
+
+  for (const auto &input : view.getInputs()) {
+    markEntryTFORecursively(builder, input, maxDepth);
+  }
+
+  builder.endSession();
+}
+
+static void getTarget(const SubnetBuilder *builderPtr,
+                      const TruthTable &care,
+                      size_t pivot,
+                      size_t arity,
+                      TruthTable &onset,
+                      TruthTable &offset) {
+
+  if (arity > 6) {
+    onset = utils::getTruthTable<utils::TTn>(*builderPtr, pivot) & care;
+    offset = ~utils::getTruthTable<utils::TTn>(*builderPtr, pivot) & care;
+    return;
+  }
+  const auto tt = utils::getTruthTable<utils::TT6>(*builderPtr, pivot);
+
+  onset = utils::convertTruthTable<utils::TT6>(tt, arity) & care;
+  offset = ~utils::convertTruthTable<utils::TT6>(tt, arity) & care;
+}
+
+static bool isAcceptable(const SubnetBuilder *builderPtr, size_t pivot) {
+  const auto &cell = builderPtr->getCell(pivot);
+  if (cell.isIn() || cell.isOne() || cell.isZero()) {
+    return false;
+  }
+
+  if (builderPtr->getFanouts(pivot).size() == 1) {
+    const auto fanout = builderPtr->getFanouts(pivot)[0];
+    if (builderPtr->getCell(fanout).isBuf()) {
       return false;
     }
   }
@@ -108,409 +982,72 @@ static bool checkZeroResubstitution(const TruthTable &target,
   return true;
 }
 
-static bool makeZeroResubstitution(const SubnetBuilder &builder,
-                                   SafePasser &iter,
-                                   const TruthTable &target,
-                                   const TruthTable &care,
-                                   const Subnet &cone,
-                                   const TruthTables &divsTT,
-                                   std::unordered_map<size_t, size_t> &map) {
-
-  bool inv = false;
-  for (const auto &divisor : divsTT) {
-    if (checkZeroResubstitution(target, divisor.second, care, inv)) {
-      return makeZeroResubstitution(builder, iter, cone,
-                                    divisor.first, map, inv);
-    }
-  }
-  return false;
-}
-
-static bool makeOneResubstitution(SubnetBuilder &builder,
-                                  SafePasser &iter,
-                                  const Subnet &cone,
-                                  size_t div1,
-                                  size_t div2,
-                                  std::unordered_map<size_t, size_t> &map,
-                                  Inversions invs) {
-
-  Link link1(div1, invs.invIn1);
-  Link link2(div2, invs.invIn2);
-  
-  const auto idx = builder.addCell(Symbol::AND, link1, link2).idx;
-
-  return makeZeroResubstitution(builder, iter, cone, idx, map, invs.invOut);
-}
-
-static bool checkOneResubstitution(const TruthTable &target,
-                                   const TruthTable &div1,
-                                   const TruthTable &div2,
-                                   const TruthTable &care,
-                                   size_t posOne,
-                                   size_t posZero,
-                                   Inversions &invs) {
-
-  bool invIn1 = !kitty::get_bit(div1, posOne);
-  bool invIn2 = !kitty::get_bit(div2, posOne);
-
-  const TruthTable &div11 = invIn1 ? ~div1 : div1;
-  const TruthTable &div21 = invIn2 ? ~div2 : div2;
-
-  if (utils::isZero((target ^ (div11 & div21)) & care)) {
-    invs.invIn1 = invIn1;
-    invs.invIn2 = invIn2;
-    invs.invOut = false;
-    return true;
-  }
-
-  invIn1 = !kitty::get_bit(div1, posZero);
-  invIn2 = !kitty::get_bit(div2, posZero);
-
-  const TruthTable &div12 = invIn1 ? ~div1 : div1;
-  const TruthTable &div22 = invIn2 ? ~div2 : div2;
-
-  if (utils::isZero((~target ^ (div12 & div22)) & care)) {
-    invs.invIn1 = invIn1;
-    invs.invIn2 = invIn2;
-    invs.invOut = true;
-    return true;
-  }
-
-  return false;
-}
-
-static bool makeOneResubstitution(SubnetBuilder &builder,
-                                  SafePasser &iter,
-                                  const TruthTable &target,
-                                  const TruthTable &care,
-                                  const Subnet &cone,
-                                  const TruthTables &divsTT,
-                                  std::unordered_map<size_t, size_t> &map) {
-
-  const size_t nBits = target.num_bits();
-
-  size_t posOne = 0;
-  for (size_t i = 0; i < nBits; ++i) {
-    if (kitty::get_bit(care, i) && kitty::get_bit(target, i)) {
-      posOne = i;
-      break;
-    }
-  }
-  size_t posZero = 0;
-  for (size_t i = 0; i < nBits; ++i) {
-    if (kitty::get_bit(care, i) && !kitty::get_bit(target, i)) {
-      posZero = i;
-      break;
-    }
-  }
-
-  auto i = divsTT.begin();
-  auto j = ++divsTT.begin();
-  Inversions invs;
-  for (; i != j; ++i) {
-    for (; j != divsTT.end(); ++j) {
-      const TruthTable &divTT1 = i->second;
-      const TruthTable &divTT2 = j->second;
-      const size_t div1 = i->first;
-      const size_t div2 = j->first;
-      if (checkOneResubstitution(target, divTT1, divTT2, care,
-                                 posOne, posZero, invs)) {
-        return makeOneResubstitution(builder, iter, cone,
-                                     div1, div2, map, invs);
-      }
-    }
-  }
-  return false;
-}
-
-static bool makeConstResubstitution(SafePasser &iter,
-                                    Symbol symbol,
-                                    const Subnet &cone,
-                                    std::unordered_map<size_t, size_t> &map) {
-
-  SubnetBuilder rhs;
-  rhs.addInputs(cone.getInNum());
-  Link link = rhs.addCell(symbol);
-  const size_t outNew = rhs.addOutput(link).idx;
-  const auto rhsID = rhs.make();
-
-  const size_t outOld = cone.size() - 1;
-  if (outOld != outNew) {
-    map[outNew] = map.at(outOld);
-    map.erase(outOld);
-  }
-
-  iter.replace(rhsID, /* map */InOutMapping{}); // FIXME:
-  return true;
-}
-
-static bool checkConstResubstitution(const TruthTable &target,
-                                     const TruthTable &care,
-                                     bool &constant) {
-
-  const size_t nBits = target.num_bits();
-  assert(nBits == care.num_bits() && "Unequal number of care and target bits!");
-
-  size_t j = 1;
-  for (size_t i = 0; i < nBits; ++i) {
-    if (!kitty::get_bit(care, i)) {
-      continue;
-    }
-    constant = kitty::get_bit(target, i);
-    j = ++i;
-    break;
-  }
-
-  for (; j < nBits; ++j) {
-    if (!kitty::get_bit(care, j)) {
-      continue;
-    }
-    if (kitty::get_bit(target, j) != constant) {
-        return false;
-    }
-  }
-  return true;
-}
-
-static bool makeConstResubstitution(SafePasser &iter,
-                                    const TruthTable &target,
-                                    const TruthTable &care,
-                                    const Subnet &cone,
-                                    std::unordered_map<size_t, size_t> &map) {
-
-  bool constant = true;
-  if (checkConstResubstitution(target, care, constant)) {
-    const Symbol symbol = constant ? Symbol::ONE : Symbol::ZERO;
-    return makeConstResubstitution(iter, symbol, cone, map);
-  }
-  return false;
-}
-
-inline TruthTable getDivisorTable(const TruthTables &tables, Link link) {
-  const auto &table = tables.at(link.idx);
-  return link.inv ? ~table : table;
-}
-
-static TruthTable getZero(size_t inNum) {
-  auto table = kitty::create<kitty::dynamic_truth_table>(inNum);
-  kitty::clear(table);
-  return table;
-}
-
-static TruthTable getAnd(const TruthTables &tables, const LinkList &links) {
-  auto table = getDivisorTable(tables, links[0]);
-  for (size_t i = 1; i < links.size(); ++i) {
-    table &= getDivisorTable(tables, links[i]);
-  }
-  return table;
-}
-
-static TruthTable getOr(const TruthTables &tables, const LinkList &links) {
-  auto table = getDivisorTable(tables, links[0]);
-  for (size_t i = 1; i < links.size(); ++i) {
-    table |= getDivisorTable(tables, links[i]);
-  }
-  return table;
-}
-
-static TruthTable getXor(const TruthTables &tables, const LinkList &links) {
-  auto table = getDivisorTable(tables, links[0]);
-  for (size_t i = 1; i < links.size(); ++i) {
-    table ^= getDivisorTable(tables, links[i]);
-  }
-  return table;
-}
-
-static TruthTable getMaj(const TruthTables &tables, const LinkList &links) {
-  auto table = getZero(tables.at(links[0].idx).num_vars());
-
-  const auto nBits = tables.at(links[0].idx).num_bits();
-  const auto arity = links.size();
-
-  std::vector<TruthTable> args(arity);
-  for (size_t i = 0; i < arity; ++i) {
-    args[i] = getDivisorTable(tables, links[i]);
-  }
-
-  const auto half = arity >> 1;
-  for (size_t i = 0; i < nBits; ++i) {
-    size_t count = 0;
-    for (size_t j = 0; j < arity; ++j) {
-      if (kitty::get_bit(args[j], i)) count++;
-    }
-    if (count > half) {
-      kitty::set_bit(table, i);
-    }
-  }
-
-  return table;
-}
-
-static void fillTruthTables(TruthTables &tables,
-                            size_t divisor,
-                            const SubnetBuilder &builder,
-                            size_t nLeaves) {
-
-  if (tables.find(divisor) != tables.end()) {
-    return;
-  }
-
-  const auto &cell = builder.getCell(divisor);
-  if (cell.isZero()) {
-    tables[divisor] = getZero(nLeaves);
-    return;
-  }
-  if (cell.isOne()) {
-    tables[divisor] = ~getZero(nLeaves);
-    return;
-  }
-
-  const auto links = builder.getLinks(divisor);
-  for (const auto &link : links) {
-    fillTruthTables(tables, link.idx, builder, nLeaves);
-  }
-
-  if (cell.isBuf()) {
-    tables[divisor] = getDivisorTable(tables, links[0]);
-    return;
-  }
-  if (cell.isAnd()) {
-    tables[divisor] = getAnd(tables, links);
-    return;
-  }
-  if (cell.isOr()) {
-    tables[divisor] = getOr(tables, links);
-    return;
-  }
-  if (cell.isXor()) {
-    tables[divisor] = getXor(tables, links);
-    return;
-  }
-  if (cell.isMaj()) {
-    tables[divisor] = getMaj(tables, links);
-    return;
-  }
-  assert(false && "Unsupported cell symbol!");
-}
-
-static TruthTables getDivisorsTables(const SubnetBuilder &builder,
-                                     const std::unordered_set<size_t> &divs,
-                                     const std::vector<size_t> &leaves) {
-
-  const size_t nLeaves = leaves.size();
-  const size_t nDivs = divs.size();
-
-  TruthTables tables;
-  tables.reserve(nDivs);
-
-  for (size_t i = 0; i < nLeaves; ++i) {
-    auto table = kitty::create<TruthTable>(nLeaves);
-    kitty::create_nth_var(table, i);
-    tables[leaves[i]] = std::move(table);
-  }
-
-  for (const auto &div : divs) {
-    fillTruthTables(tables, div, builder, nLeaves);
-  }
-
-  return tables;
-}
-
-static void collectDivisorsRecursively(std::unordered_set<size_t> &divisors,
-                                       const SubnetBuilder &builder,
-                                       size_t idx) {
-
-  const auto &cell = builder.getCell(idx);
-  if (cell.isOne() || cell.isZero() || (divisors.find(idx) != divisors.end())) {
-    return;
-  }
-
-  divisors.insert(idx);
-
-  const auto links = builder.getLinks(idx);
-  for (const auto link : links) {
-    collectDivisorsRecursively(divisors, builder, link.idx);
-  }
-}
-
-static void collectDivisors(std::unordered_set<size_t> &divisors,
-                            const SubnetBuilder &builder,
-                            size_t rootID,
-                            const std::unordered_map<size_t, size_t> &map) {
-
-  for (auto it = map.begin(); it != map.end(); ++it) {
-    size_t id = (*it).second;
-    if (id == rootID) {
-      continue;
-    }
-    collectDivisorsRecursively(divisors, builder, id);
-  }
-}
-
-static std::unordered_set<size_t> getDivisors(const SubnetBuilder &builder,
-                                              size_t rootID,
-                                              const std::vector<size_t> &leaves,
-                                              const EntryMap &mffcMap) {
-
-  std::unordered_set<size_t> divisors(leaves.begin(), leaves.end());
-
-  collectDivisors(divisors, builder, rootID, mffcMap);
-
-  return divisors;
-}
-
 void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
   SubnetBuilder *builderPtr = builder.get();
+  builderPtr->enableFanouts();
 
   for (SafePasser iter = builderPtr->begin();
       iter != builderPtr->end() && !builderPtr->getCell(*iter).isOut();
       ++iter) {
-    
-    const auto entryID = *iter;
 
-    const auto &cell = builderPtr->getCell(entryID);
-    if (cell.isIn() || cell.isOne() || cell.isZero()) {
+    const auto pivot = *iter;
+
+    if (!isAcceptable(builderPtr, pivot)) {
       continue;
     }
 
-    std::unordered_map<size_t, size_t> map;
-    const auto coneID = getReconvergenceCone(*builderPtr, entryID, cutSize, map);
-    const auto &cone = Subnet::get(coneID);
+    const auto view = getReconvergenceCut(*builderPtr, pivot, cutSize);
+
+    // Mark TFO of reconvergence cut bypassing pivot.
+    markCutTFO(*builderPtr, view, maxLevels);
   
-    const auto target = model::evaluateSingleOut(cone);
-
-    std::vector<size_t> leaves;
-    leaves.reserve(cutSize);
-    for (size_t i = 0; i < map.size() - 1; ++i) {
-      leaves.push_back(map.at(i));
-    }
-
-    std::unordered_map<size_t, size_t> dummy;
-    const auto careSubnetID = getReconvergenceWindow(*builderPtr, leaves,
-                                                     careSize, dummy);
-    const auto &careSubnet = Subnet::get(careSubnetID);
-    const auto care = model::computeCare(careSubnet);
-
-    if (makeConstResubstitution(iter, target, care, cone, map)) {
-      continue;
-    }
-    EntryMap mffcMap;
-    const auto mffcID = getMffc(*builderPtr, entryID, leaves, mffcMap);
-    const auto divs   = getDivisors(*builderPtr, entryID, leaves, mffcMap);
-    const auto divsTT = getDivisorsTables(*builderPtr, divs, leaves);
-
-    if (makeZeroResubstitution(*builderPtr, iter, target, care,
-                               cone, divsTT, map)) {
+    const std::vector<size_t> roots = collectRoots(*builderPtr, pivot);
+    if ((roots.size() == 1) && (roots[0] == pivot)) {
       continue;
     }
 
-    const auto &mffCone = Subnet::get(mffcID);
-    const auto gain = mffCone.size() - mffCone.getInNum() - mffCone.getOutNum();
-    if (gain < 2) {
+    // Collect branches (new inputs for "don't care" evaluation).
+    std::vector<size_t> branches;
+    uint64_t status = collectBranches(*builderPtr, view, roots, branches);
+    if (status == (uint64_t)-1) {
       continue;
     }
 
-    makeOneResubstitution(*builderPtr, iter, target, care, cone, divsTT, map);
+    CellTables cellTables;
+    const size_t arity = view.getInNum();
+    if (arity > 6) {
+      cellTables.reserve(builderPtr->getCellNum());
+    }
+
+    simulateCone(*builderPtr, view, cellTables);
+    cellTables.setPivotID(cellTables.size() - 1);
+
+    const auto care = computeCare(*builderPtr, view, roots,
+                                  branches, status, cellTables);
+
+    TruthTable onset;
+    TruthTable offset;
+    getTarget(builderPtr, care, pivot, arity, onset, offset);
+
+    if (makeConstResubstitution(iter, view, onset, offset)) {
+      continue;
+    }
+
+    IdxMap mffcMap;
+    const auto mffc = getMffc(*builderPtr, pivot, view.getInputs(), mffcMap);
+
+    Divisors divs;
+    divs.reserve(maxDivisorsNum);
+
+    if (makeZeroResubstitution(
+        *builderPtr, iter, view, divs, onset, offset, cellTables, mffcMap)) {
+      continue;
+    }
+
+    const size_t potentialGain = Subnet::get(mffc).size() - mffcMap.size();
+    if (potentialGain == 1) {
+      continue;
+    }
   }
 }
 

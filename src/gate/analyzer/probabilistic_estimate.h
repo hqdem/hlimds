@@ -34,24 +34,12 @@ private:
 
   float xorEstimate(std::vector<float> &xorProb, size_t nXorP) const;
 
-  float estimateCell(Probabilities &probs, const LinkList &links,
-                     const Cell &cell, const size_t i,
-                     const Probabilities &inProbs) const;
+  void estimateCell(const SubnetBuilder &builder, Probabilities &probs,
+                    const size_t i, const Probabilities &inProbs) const;
 
 public:
 
   ProbabilityEstimator() {};
-
-  /**
-   * @brief Estimates the probability that the cell of Subnet will take the value 1.
-   * 
-   * @param subnet        The subnet for counting switches.
-   * @param probabilities Probability distribution of inputs. Default value for each input is 0.5.
-   * 
-   * @return Vector of probability 1 for each cell of Subnet.
-   */
-  Probabilities estimateProbs(const Subnet &subnet,
-                              const Probabilities &probabilities = {}) const;
 
   /**
    * @brief Estimates the probability that the cell of Subnetbuilder will take the value 1.
@@ -63,7 +51,6 @@ public:
    */
   Probabilities estimateProbs(const SubnetBuilder &builder, 
                               const Probabilities &probabilities = {}) const;
-
   /**
    * @brief Estimates the switching activity by calculating the probability of switching  of each cell.
    * 
@@ -72,7 +59,7 @@ public:
    * 
    * @return The object of the parent class with total probability of switch from 1 to 0 and from 0 to 1.
    */
-  SwitchActivity estimate(const Subnet &subnet,
+  SwitchActivity estimate(const SubnetBuilder &subnet,
       const Probabilities &probabilities = {}) const override;
 };
 

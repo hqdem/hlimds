@@ -11,6 +11,8 @@
 
 #include <unordered_set>
 
+#include <iostream>
+
 namespace eda::gate::optimizer::synthesis {
 
 /// @cond ALIASES
@@ -20,11 +22,13 @@ using SubnetObject = AlgebraicFactor::SubnetObject;
 
 SubnetObject AlgebraicFactor::getSubnet(const SOP &func, size_t funcSize,
                                         uint16_t maxArity, bool inv) const {
-  SubnetBuilder subnetBuilder;
+  SubnetObject object;
+  SubnetBuilder &subnetBuilder{object.builder()};
+
   LinkList inputs = subnetBuilder.addInputs(funcSize);
   Link output = getFactoring(func, inputs, subnetBuilder, maxArity);
   subnetBuilder.addOutput(inv ? ~output : output);
-  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
+  return object;
 }
 
 Link AlgebraicFactor::getFactoring(const SOP &func, const LinkList &inputs,

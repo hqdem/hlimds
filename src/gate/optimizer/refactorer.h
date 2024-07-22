@@ -35,16 +35,16 @@ public:
   using SubnetView    = eda::gate::model::SubnetView;
   /// @endcond
 
-  /// Constructs cone for Cell in SubnetBuilder.
-  using ConeConstructor = std::function<SubnetID(SubnetBuilder &, size_t,
-                                                 uint16_t, EntryMap &)>;
+  /// Constructs cut for Cell in SubnetBuilder.
+  using WindowConstructor =
+      std::function<SubnetView(SubnetBuilder &, size_t, uint16_t)>;
 
   /// The Predecate for replacing.
   using ReplacePredicate = std::function<bool(const Effect &)>;
 
   /// Calculates weigts of SubnetBuilder Cells with input weights. 
-  using WeightCalculator = std::function<void(SubnetBuilder &,
-                                              const std::vector<float> &)>;
+  using WeightCalculator = 
+      std::function<void(SubnetBuilder &, const std::vector<float> &)>;
 
   /// Modifier for replace evaluation.
   using CellWeightModifier = SubnetBuilder::CellWeightModifier;
@@ -53,21 +53,21 @@ public:
    * @brief Constructs a refactorer.
    */
   Refactorer(const std::string &name, const ResynthesizerBase &resynthesizer,
-             const ConeConstructor *coneConstructor,
+             const WindowConstructor *windowConstructor,
              const uint16_t cutSize, const uint16_t careCutSize,
              const ReplacePredicate *replacePredicate,
              const WeightCalculator *weightCalculator = nullptr,
              const CellWeightModifier *weightModifier = nullptr) :
       SubnetInPlaceTransformer(name),
       resynthesizer(resynthesizer),
-      coneConstructor(coneConstructor),
+      windowConstructor(windowConstructor),
       cutSize(cutSize), careCutSize(careCutSize),
       replacePredicate(replacePredicate),
       weightCalculator(weightCalculator),
       weightModifier(weightModifier) { }
 
   /*
-   * @brief  
+   * @brief Optimizes the SubnetBuilder.
    */
   void transform(const SubnetBuilderPtr &builder) const override;
 
@@ -76,7 +76,7 @@ private:
   void nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const; 
 
   const ResynthesizerBase &resynthesizer;
-  const ConeConstructor *coneConstructor;
+  const WindowConstructor *windowConstructor;
   const uint16_t cutSize;
   const uint16_t careCutSize;
   const ReplacePredicate *replacePredicate;

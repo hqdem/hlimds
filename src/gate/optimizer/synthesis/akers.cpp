@@ -50,7 +50,7 @@ struct ConstantId {
 
 /// The variables for building the subnet.
 struct BuildVars {
-  eda::gate::model::SubnetBuilder builder;
+  eda::gate::model::SubnetBuilder &builder;
   std::vector<size_t> idx;
 };
 
@@ -86,7 +86,8 @@ SubnetObject AkersSynthesizer::run(const TruthTable &func,
   table.initialize(func, care);
   uint32_t nVariables = func.num_vars();
   // Create variables for building the Subnet.
-  BuildVars buildVars;
+  SubnetObject object;
+  BuildVars buildVars{object.builder(), {}};
   for (uint32_t i = 0; i < nVariables; i++) {
     size_t cellId = buildVars.builder.addInput().idx;
     buildVars.idx.push_back(cellId);
@@ -145,7 +146,7 @@ SubnetObject AkersSynthesizer::run(const TruthTable &func,
   const Link link(buildVars.idx.back(), inv);
   buildVars.builder.addOutput(link);
 
-  return SubnetObject{buildVars.builder.make()}; // FIXME: make is not required.
+  return object;
 }
 
 void AkersSynthesizer::addMajGate(UnitizedTable &table, BuildVars &buildVars,

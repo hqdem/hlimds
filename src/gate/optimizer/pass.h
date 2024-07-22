@@ -88,15 +88,13 @@ inline SubnetPass rfarea(const std::string &name,
                          Refactorer::ReplacePredicate *replacePredicate) {
   static synthesis::MMFactorSynthesizer mmFactor;
   static Resynthesizer resynthesizer(mmFactor);
-  static Refactorer::ConeConstructor coneConstructor = 
-      [](SubnetBuilder &builder, size_t root, uint16_t cutSize,
-        Refactorer::EntryMap &map) {
-        auto leaves = getReconvergenceCut(builder, root, cutSize);
-        return getMffc(builder, root, leaves, map);
-      };
+  static Refactorer::WindowConstructor windowConstructor =
+  [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
+    return getReconvergenceCut(builder, root, cutSize);
+  };
   return std::make_shared<Refactorer>(name,
                                       resynthesizer,
-                                      &coneConstructor,
+                                      &windowConstructor,
                                       8, 16,
                                       replacePredicate);
 }
@@ -128,14 +126,17 @@ inline SubnetPass rfa() {
 inline SubnetPass rfd() {
   static synthesis::MMSynthesizer mm;
   static Resynthesizer resynthesizer(mm);
-  static Refactorer::ConeConstructor coneConstructor{getReconvergenceCone};
+  static Refactorer::WindowConstructor windowConstructor =
+  [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
+    return getReconvergenceCut(builder, root, cutSize);
+  };
   static Refactorer::ReplacePredicate replacePredicate =
     [](const SubnetEffect &effect) {
       return effect.depth > 0;
     };
   return std::make_shared<Refactorer>("rfd",
                                       resynthesizer,
-                                      &coneConstructor,
+                                      &windowConstructor,
                                       16, 0,
                                       &replacePredicate);
 }
@@ -144,7 +145,10 @@ inline SubnetPass rfd() {
 inline SubnetPass rfp() {
   static synthesis::MMSynthesizer mm;
   static Resynthesizer resynthesizer(mm);
-  static Refactorer::ConeConstructor coneConstructor{getReconvergenceCone};
+  static Refactorer::WindowConstructor windowConstructor =
+  [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
+    return getReconvergenceCut(builder, root, cutSize);
+  };
   static const float stage{0.1f};
   static Refactorer::ReplacePredicate replacePredicate =
     [](const SubnetEffect &effect) {
@@ -164,7 +168,7 @@ inline SubnetPass rfp() {
       };
   return std::make_shared<Refactorer>("rfp",
                                       resynthesizer,
-                                      &coneConstructor,
+                                      &windowConstructor,
                                       10, 0,
                                       &replacePredicate,
                                       &weightCalculator,

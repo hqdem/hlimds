@@ -11,6 +11,8 @@
 #include "gate/optimizer/reconvergence_cut.h"
 #include "gate/optimizer/refactorer.h"
 
+#include "util/truth_table.h"
+
 namespace eda::gate::optimizer {
 
 void Refactorer::transform(const SubnetBuilderPtr &builder) const {
@@ -26,33 +28,17 @@ void Refactorer::transform(const SubnetBuilderPtr &builder) const {
   }
 }
 
-void Refactorer::nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const {
+void Refactorer::nodeProcessing(SubnetBuilder &builder,
+                                SafePasser &iter) const {
   const size_t entryID{*iter};
-  EntryMap oldConeMap;
-  SubnetID oldConeID
-      = (*coneConstructor)(builder, entryID, cutSize, oldConeMap);
 
-  const size_t coneIns{Subnet::get(oldConeID).getInNum()};
-
-  //--- FIXME: Window should be constructed by window constructor.
-  std::vector<size_t> inputs(coneIns);
-  for (size_t i = 0; i < inputs.size(); ++i) {
-    inputs[i] = oldConeMap.at(i);
-  }
-
-  std::vector<size_t> outputs(1);
-  outputs[0] = oldConeMap.at(Subnet::get(oldConeID).size() - 1);
-
-  SubnetView window(builder, InOutMapping{inputs, outputs});
-  //---
+  SubnetView window = (*windowConstructor)(builder, entryID, cutSize);
+  const size_t coneIns{window.getInNum()};
 
   if (careCutSize > cutSize) {
     const auto &roots = window.getInputs();
-    std::unordered_map<size_t, size_t> dummy;
-    const SubnetID careSubnetId
-        = getReconvergenceWindow(builder, roots, careCutSize, dummy);
-    const auto &careSubnet = Subnet::get(careSubnetId);
-    window.setCare(model::computeCare(careSubnet));
+    auto careWindow = getReconvergenceCut(builder, roots, careCutSize);
+    window.setCare(utils::computeCare(careWindow.evaluateTruthTables()));
   }
 
   auto newCone = resynthesizer.resynthesize(window, 2);

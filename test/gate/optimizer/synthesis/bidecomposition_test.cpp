@@ -30,9 +30,9 @@ void BiDecompositionTest(size_t numVars) {
     }
     eda::utils::TruthTable tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
-    const auto &subnet = biDecomposition.synthesize(tt).object();
+    const auto &subnet = biDecomposition.synthesize(tt).makeObject();
     EXPECT_EQ(tt, eda::gate::model::evaluate(subnet)[0]);
-    const auto &subnetArity = biDecomposition.synthesize(tt, 2).object();
+    const auto &subnetArity = biDecomposition.synthesize(tt, 2).makeObject();
     EXPECT_EQ(tt, eda::gate::model::evaluate(subnetArity)[0]);
   }
 }

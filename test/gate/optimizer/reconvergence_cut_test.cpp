@@ -37,7 +37,7 @@ TEST(ReconvergenceCutTest, CorrectnessTest) {
 
   std::unordered_map<size_t, size_t> mapping;
 
-  const auto cut    = getReconvergenceCut(builder, 5, 4);
+  const auto cut   = getReconvergenceCut(builder, 5, 4).getInputs();
   const auto coneID = getReconvergenceCone(builder, 5, 2, mapping);
   const auto &cone  = Subnet::get(coneID);
 
@@ -94,7 +94,7 @@ TEST(ReconvergenceCutTest, SimpleTest) {
 
   std::unordered_map<size_t, size_t> mapping;
 
-  const auto cut    = getReconvergenceCut(builder, rootId, cutSize);
+  const auto cut   = getReconvergenceCut(builder, rootId, cutSize).getInputs();
   const auto coneID = getReconvergenceCone(builder, rootId, cutSize, mapping);
   const auto &cone  = Subnet::get(coneID);
 

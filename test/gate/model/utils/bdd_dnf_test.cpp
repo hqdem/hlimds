@@ -27,8 +27,8 @@ void checkDnfCorrectness(BDD &bdd, Cudd &cudd) {
   auto first = dsd.synthesize(tt);
   auto second = dsd.synthesize({bdd.getNode(), cudd.getManager()});
 
-  const auto &s1 = first.object();
-  const auto &s2 = second.object();
+  const auto &s1 = first.makeObject();
+  const auto &s2 = second.makeObject();
   EXPECT_TRUE(evaluate(s1) == evaluate(s2));
 }
 

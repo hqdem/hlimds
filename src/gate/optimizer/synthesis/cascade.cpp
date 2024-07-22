@@ -244,7 +244,8 @@ SubnetObject CascadeSynthesizer::synthesize(const TruthTable &func,
   using LinkList = Subnet::LinkList;
   const int undefinedArity = 65535;
   
-  SubnetBuilder subnetBuilder;
+  SubnetObject object;
+  SubnetBuilder &subnetBuilder{object.builder()};
 
   std::vector<int> values;
   CNF form = CascadeSynthesizer::normalForm(func);
@@ -358,7 +359,7 @@ SubnetObject CascadeSynthesizer::synthesize(const TruthTable &func,
   
   idx[InNum - 1] = subnetBuilder.addOutput(Link(idx[InNum - 2])).idx;
         
-  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
+  return object;
 }
 
 } // namespace eda::gate::optimizer::synthesis

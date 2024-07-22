@@ -74,7 +74,7 @@ public:
    * for each input is 0.5.
    * @return The switching activity of the subnet.
    */
-  SwitchActivity estimate(const Subnet &subnet,
+  SwitchActivity estimate(const SubnetBuilder &builder,
       const Probabilities &probabilities = {}) const override;
 
   /**
@@ -84,7 +84,8 @@ public:
    * @return Switches from 1 to 0 and from 0 to 1 for the subnet and count
    * of on state for cells.
    */
-  std::tuple<Switches, Switches, OnStates> simulate(const Subnet &subnet,
+  std::tuple<Switches, Switches, OnStates> simulate(
+      const SubnetBuilder &builder,
       const InValuesList &inValuesList) const;
 
 private:

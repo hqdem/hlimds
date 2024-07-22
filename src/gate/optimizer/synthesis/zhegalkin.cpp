@@ -19,7 +19,8 @@ SubnetObject createScheme(Polynomial &resultFunction,
                           uint64_t maxArity,
                           uint64_t argNum) {
 
-  SubnetBuilder subnetBuilder;
+  SubnetObject object;
+  SubnetBuilder &subnetBuilder{object.builder()};
   Link one;
 
   if (argNum == 2) {
@@ -82,7 +83,7 @@ SubnetObject createScheme(Polynomial &resultFunction,
   }
 
   subnetBuilder.addOutput(out);
-  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
+  return object;
 }
 
 SubnetObject ZhegalkinSynthesizer::synthesize(const TruthTable &func,

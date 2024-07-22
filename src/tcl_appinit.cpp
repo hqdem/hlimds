@@ -485,8 +485,10 @@ static int stats(
           subnet.getEntries().size() << '\n';
       std::cout << "Delay: " <<
           subnet.getPathLength().second << '\n';
+      /// FIXME: Use SubnetBuilder instead of Subnet
+      SubnetBuilder builder(subnet);
       std::cout << "Power: " <<
-          estimator.estimate(subnet).getSwitchProbsSum() << '\n';
+          estimator.estimate(builder).getSwitchProbsSum() << '\n';
     } else {
       if (prev_step != "techmap") {
         Tcl_SetObjResult(interp,

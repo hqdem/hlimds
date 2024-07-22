@@ -57,7 +57,6 @@ add_library(Gate OBJECT
   optimizer/synthesis/ternary_bi_clique.cpp
   optimizer/synthesis/unitized_table.cpp
   optimizer/synthesis/zhegalkin.cpp
-  parser/graphml_parser.cpp
   premapper/aigmapper.cpp
   simulator/simulator.cpp
   synthesizer/synthesizer.cpp
@@ -81,10 +80,11 @@ add_library(Gate OBJECT
   techmapper/techmapper.cpp
   techmapper/techmapper_wrapper.cpp
   translator/fir/fir_model2.cpp
-  translator/verilog/verilog_model2.cpp
   translator/firrtl.cpp
-  translator/yosys_converter_firrtl.cpp
+  translator/graphml.cpp
   translator/model2.cpp
+  translator/verilog/verilog_model2.cpp
+  translator/yosys_converter_firrtl.cpp
   translator/yosys_converter_model2.cpp)
 add_library(Utopia::Gate ALIAS Gate)
 

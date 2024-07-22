@@ -17,22 +17,22 @@
 #include <memory>
 #include <vector>
 
-namespace eda::gate::parser::graphml {
+namespace eda::gate::translator {
 
 /**
  * \brief Builds Subnet from GraphML/OpenABC-D description.
  */
-class GraphMlParser {
+class GmlTranslator {
 public:
+ 
+  using Builder     = eda::gate::model::SubnetBuilder;
+  using LinkList    = eda::gate::model::Subnet::LinkList;
+  using Link        = eda::gate::model::Subnet::Link;
+  using Subnet      = eda::gate::model::Subnet;
+  using XMLDocument = tinyxml2::XMLDocument;
+  using XMLElement  = tinyxml2::XMLElement;
 
   struct Node;
- 
-  using LinkList      = eda::gate::model::Subnet::LinkList;
-  using Link          = eda::gate::model::Subnet::Link;
-  using Subnet        = eda::gate::model::Subnet;
-  using SubnetBuilder = eda::gate::model::SubnetBuilder;
-  using XMLDocument   = tinyxml2::XMLDocument;
-  using XMLElement    = tinyxml2::XMLElement;
 
   struct Input {
     Node *node;
@@ -80,7 +80,7 @@ public:
    * @param filename Absolute path to the GraphML file.
    * @return A SubnetBuilder for the built Subnet.
    */
-  std::shared_ptr<SubnetBuilder> parse(const std::string &filename);
+  std::shared_ptr<Builder> translate(const std::string &filename);
 
   /**
    * @brief Overloaded parse method that allows external access
@@ -89,8 +89,8 @@ public:
    * @param parserData Reference to ParserData to fill during parsing.
    * @return A SubnetBuilder for the built Subnet.
    */
-  std::shared_ptr<SubnetBuilder> parse(const std::string &filename,
-                                       ParserData &data);
+  std::shared_ptr<Builder> translate(const std::string &filename,
+                                     ParserData &data);
 
 private:
 
@@ -116,7 +116,7 @@ private:
 
   void parseEdge(XMLElement *edge, ParserData &data);
 
-  std::shared_ptr<SubnetBuilder> buildSubnet(ParserData &data);
+  std::shared_ptr<Builder> buildSubnet(ParserData &data);
 };
 
-} // namespace eda::gate::parser::graphml
+} // namespace eda::gate::translator

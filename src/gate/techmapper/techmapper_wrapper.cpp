@@ -8,10 +8,10 @@
 
 #include "gate/library/sdc_manager.h"
 #include "gate/model/printer/printer.h"
-#include "gate/parser/graphml_parser.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"
+#include "gate/translator/graphml.h"
 #include "util/env.h"
 
 namespace eda::gate::techmapper {
@@ -55,8 +55,8 @@ namespace eda::gate::techmapper {
     std::cout << "Start to techmap " << name << std::endl;
 
     // Read input GraphML file.
-    parser::graphml::GraphMlParser parser;
-    const auto subnetID = parser.parse(name)->make();
+    translator::GmlTranslator translator;
+    const auto subnetID = translator.translate(name)->make();
     // Premap the input data into AIG.
     premapper::AigMapper aigMapper("aig");
     const auto premappedSubnetID = aigMapper.transform(subnetID);

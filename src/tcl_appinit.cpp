@@ -10,9 +10,9 @@
 #include "gate/model/printer/printer.h"
 #include "gate/optimizer/get_dbstat.h"
 #include "gate/optimizer/pass.h"
-#include "gate/parser/graphml_parser.h"
 #include "gate/techmapper/techmapper.h"
 #include "gate/translator/firrtl.h"
+#include "gate/translator/graphml.h"
 #include "gate/translator/yosys_converter_firrtl.h"
 #include "gate/translator/yosys_converter_model2.h"
 #include "util/env.h"
@@ -404,7 +404,7 @@ static int readGraphMl(
     int argc,
     const char *argv[]) {
 
-  using eda::gate::parser::graphml::GraphMlParser;
+  using eda::gate::translator::GmlTranslator;
 
   if (designBuilder != nullptr) {
     Tcl_SetObjResult(
@@ -438,9 +438,8 @@ static int readGraphMl(
   }
 
   if (!fileName.empty()) {
-    GraphMlParser::ParserData data;
-    GraphMlParser parser;
-    const auto &subnet = parser.parse(fileName, data)->make(true);
+    GmlTranslator translator;
+    const auto &subnet = translator.translate(fileName)->make(true);
     designBuilder = std::make_unique<DesignBuilder>(subnet);
     designBuilder->save("original");
     return TCL_OK;

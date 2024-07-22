@@ -214,10 +214,16 @@ Link AigMapper::mapMaj(LinkList &links, bool &inv, size_t n0, size_t n1,
   if (n1 > linksSize / 2) {
     return mapVal(true, builder);
   }
-  /// TODO: Add a functionality for MAJ cells any arity.
-  assert(linksSize == 3 && "Unsupported number of links in MAJ cell");
 
-  return addMaj3(links, inv, builder);
+  if (linksSize == 3) {
+    return addMaj3(links, inv, builder);
+  }
+  if (linksSize == 5) {
+    return addMaj5(links, inv, builder);
+  }
+
+  assert(false && "Unsupported number of links in MAJ cell");
+  return Link(0);
 }
 
 Link AigMapper::addMaj3(LinkList &links, bool &inv,
@@ -230,6 +236,31 @@ Link AigMapper::addMaj3(LinkList &links, bool &inv,
   links[2] = builder.addCell(CellSymbol::AND, links[2], link    );
 
   return mapOr(links, inv, 0, 0, builder);
+}
+
+Link AigMapper::addMaj5(LinkList &links, bool &inv,
+                        SubnetBuilder &builder) const {
+
+  assert(links.size() == 5 && "Invalid number of links for MAJ5 element");
+  // <xyztu> = <<xyz>t<<xyu>uz>>
+  LinkList tmp(links.begin(), links.begin() + 3);
+  const Link xyzLink = addMaj3(tmp, inv, builder);
+
+  tmp[0] = links[0];
+  tmp[1] = links[1];
+  tmp[2] = links[4];
+  const Link xyuLink = addMaj3(tmp, inv, builder);
+  // <<xyu>uz>
+  tmp[0] = links[2];
+  tmp[1] = ~xyuLink;
+  tmp[2] = links[4];
+  const Link muzLink = addMaj3(tmp, inv, builder);
+
+  tmp[0] = ~xyzLink;
+  tmp[1] = links[3];
+  tmp[2] = ~muzLink;
+  inv = !inv;
+  return addMaj3(tmp, inv, builder);
 }
 
 } // namespace eda::gate::premapper

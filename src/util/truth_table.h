@@ -449,4 +449,18 @@ inline TT getTruthTable(
   return getZeroTruthTable<TT>(arity);
 }
 
+inline TruthTable computeCare(const std::vector<TruthTable> &tables) {
+  const size_t nSets = (1ull << tables[0].num_vars());
+
+  TruthTable care(tables.size());
+  for (size_t i = 0; i < nSets; i++) {
+    uint64_t careIndex = 0;
+    for (size_t j = 0; j < tables.size(); ++j) {
+      careIndex |= kitty::get_bit(tables[j], i) << j;
+    }
+    kitty::set_bit(care, careIndex);
+  }
+  return care;
+}
+
 } // namespace eda::utils

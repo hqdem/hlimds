@@ -467,7 +467,10 @@ void PowerMap::init(Mapping &mapping) {
   // get switching activity of subnet
   eda::gate::analyzer::SimulationEstimator simulationEstimator;
   simulationEstimator.setTicks(256);
-  switchActivity = simulationEstimator.estimate(subnet);
+
+  /// FIXME: Use SubnetBuilder instead of Subnet
+  SubnetBuilder builder(subnetID);
+  switchActivity = simulationEstimator.estimate(builder);
 
   // save inputs in mapping
   for (uint64_t entryIndex = 0; entryIndex < subnet.getInNum(); entryIndex++) {

@@ -34,12 +34,12 @@ void optimalEquality(uint64_t len) {
   DinTruthTable t(len);
   ZhegalkinSynthesizer r;
   kitty::create_from_binary_string(t, s);
-  auto &s1 = r.synthesize(t).object();
+  auto &s1 = r.synthesize(t).makeObject();
   ReedMuller x1(sumOfTerms), x2(numberOfTerms), x3(longestTerm);
   
-  auto &s2 = x1.synthesize(t).object();
-  auto &s3 = x2.synthesize(t).object();
-  auto &s4 = x3.synthesize(t).object();
+  auto &s2 = x1.synthesize(t).makeObject();
+  auto &s3 = x2.synthesize(t).makeObject();
+  auto &s4 = x3.synthesize(t).makeObject();
 
   testSubnetToSubnet(s1, s2);
   testSubnetToSubnet(s1, s3);

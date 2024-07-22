@@ -81,10 +81,10 @@ void runResubstitutor(std::string filename) {
   runResubstitutor(subnetId);
 }
 
-TEST(ResubstitutorTest, DISABLED_Bc0) {
+TEST(ResubstitutorTest, Bc0) {
   runResubstitutor("bc0_orig");
 }
 
-TEST(ResubstitutorTest, DISABLED_C5315) {
+TEST(ResubstitutorTest, C5315) {
   runResubstitutor("c5315_orig");
 }

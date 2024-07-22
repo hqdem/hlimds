@@ -79,9 +79,9 @@ static size_t findBestLeave(SubnetBuilder &builder,
   return bestLeave;
 }
 
-std::vector<size_t> getReconvergenceCut(SubnetBuilder &builder,
-                                        const std::vector<size_t> &roots,
-                                        uint16_t cutSize) {
+model::SubnetView getReconvergenceCut(SubnetBuilder &builder,
+                                      const std::vector<size_t> &roots,
+                                      uint16_t cutSize) {
 
   assert(roots.size() <= cutSize && "Number of roots more than the cut size");
 
@@ -96,9 +96,9 @@ std::vector<size_t> getReconvergenceCut(SubnetBuilder &builder,
       builder.endSession();
       // Case when there are only constant inputs.
       if (leaves.empty()) {
-        return roots;
+        return model::SubnetView{builder, {roots, roots}};
       }
-      return leaves;
+      return model::SubnetView{builder, {leaves, roots}};
     }
     // Replace the best leave with it inputs.
     for (const auto &link : builder.getLinks(leaves[bestLeave])) {
@@ -112,7 +112,7 @@ std::vector<size_t> getReconvergenceCut(SubnetBuilder &builder,
     leaves.erase(leaves.begin() + bestLeave);
   }
   builder.endSession();
-  return leaves;
+  return model::SubnetView{builder, {leaves, roots}};
 }
 
 model::SubnetID getReconvergenceWindow(SubnetBuilder &builder,
@@ -122,7 +122,8 @@ model::SubnetID getReconvergenceWindow(SubnetBuilder &builder,
 
   assert(roots.size() <= cutSize && "Number of roots more than the cut size");
 
-  std::vector<size_t> leaves = getReconvergenceCut(builder, roots, cutSize);
+  const std::vector<size_t> leaves =
+      getReconvergenceCut(builder, roots, cutSize).getInputs();
 
   map.clear();
   SubnetBuilder coneBuilder;

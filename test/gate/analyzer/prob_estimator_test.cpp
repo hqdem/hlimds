@@ -28,63 +28,33 @@ using SwitchAct     = eda::gate::analyzer::SwitchActivity;
 TEST(SwitchActivityTest, SubnetTest) {
 
   // Generating Subnet.
-  SubnetBuilder subnetBuilder;
-  const auto in = subnetBuilder.addInputs(6);
+  SubnetBuilder builder;
+  const auto in = builder.addInputs(6);
   LinkList links(5);
-  links[0] = subnetBuilder.addCell(CellSymbol::OR,  in[0], in[1]);
-  links[1] = subnetBuilder.addCell(CellSymbol::AND, links[0], in[2]);
-  links[2] = subnetBuilder.addCell(CellSymbol::XOR, links[1], in[3]);
-  links[3] = subnetBuilder.addCell(CellSymbol::AND, in[4], in[5]);
-  links[4] = subnetBuilder.addCell(CellSymbol::XOR, links[2], links[3]);
-  subnetBuilder.addOutput(links[4]);
+  links[0] = builder.addCell(CellSymbol::OR,  in[0], in[1]);
+  links[1] = builder.addCell(CellSymbol::AND, links[0], in[2]);
+  links[2] = builder.addCell(CellSymbol::XOR, links[1], in[3]);
+  links[3] = builder.addCell(CellSymbol::AND, in[4], in[5]);
+  links[4] = builder.addCell(CellSymbol::XOR, links[2], links[3]);
+  builder.addOutput(links[4]);
 
-  const auto &subnet = Subnet::get(subnetBuilder.make());
-  
   ProbEstimator probEstimat;
-  SwitchAct switchActProb = probEstimat.estimate(subnet);
+  SwitchAct switchActProb = probEstimat.estimate(builder);
   double allActivProb = switchActProb.getSwitchProbsSum();
 
   SimEstimator simEstimator;
-  SwitchAct switchActSim = simEstimator.estimate(subnet);
+  SwitchAct switchActSim = simEstimator.estimate(builder);
   double allActivSim = switchActSim.getSwitchProbsSum();
 
   EXPECT_NEAR(allActivProb, allActivSim, 0.5);
 
   Probabilities probs{0.2f, 0.3f, 0.1f, 0.4f, 0.6f, 0.7f};
 
-  switchActProb = probEstimat.estimate(subnet, probs);
+  switchActProb = probEstimat.estimate(builder, probs);
   allActivProb = switchActProb.getSwitchProbsSum();
 
-  switchActSim = simEstimator.estimate(subnet, probs);
+  switchActSim = simEstimator.estimate(builder, probs);
   allActivSim = switchActSim.getSwitchProbsSum();
 
   EXPECT_NEAR(allActivProb, allActivSim, 0.5);
-}
-
-TEST(SwitchActivityTest, SubnetBuilderTest) {
-
-  auto builder = 
-      eda::gate::parser::graphml::parse("des3_area_orig.bench.graphml");
-
-  const auto &pass = eda::gate::optimizer::rw();
-  pass->transform(builder);
-
-  ProbEstimator estimator;
-  auto builderRes = estimator.estimateProbs(*builder);
-  
-  std::vector<size_t> map;
-  map.resize(*(--builder->end()) + 1);
-  for (auto it{builder->begin()}; it != builder->end(); ++it) {
-    map[*it] = *it;
-  }
-
-  const auto subnetID = builder->make(map);
-  const auto &subnet = Subnet::get(subnetID);
-  auto subnetRes = estimator.estimateProbs(subnet);
-
-  const double exp = 1e-6;
-
-  for (size_t i{0}; i < subnetRes.size(); ++i) {
-    EXPECT_NEAR(subnetRes[i], builderRes[map[i]], exp);
-  }
 }

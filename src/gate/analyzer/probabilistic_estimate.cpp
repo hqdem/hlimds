@@ -58,15 +58,19 @@ float ProbabilityEstimator::xorEstimate(
   return p;
 }
 
-float ProbabilityEstimator::estimateCell(Probabilities &probs,
-                                         const LinkList &links,
-                                         const Cell &cell,
-                                         const size_t i,
-                                         const Probabilities &inProbs) const {
+void ProbabilityEstimator::estimateCell(const SubnetBuilder &builder,
+                                        Probabilities &probs,
+                                        const size_t i,
+                                        const Probabilities &inProbs) const {
+  const auto &cell = builder.getCell(i);
+  const LinkList &links = builder.getLinks(i);
+
   float p{1.0};
 
   if (cell.isIn()) {
-    return inProbs.empty() ? 0.5f : inProbs[i];
+    p = inProbs.empty() ? 0.5f : inProbs[i];
+    probs[i] = p;
+    return;
   }
 
   if (cell.isAnd()) {
@@ -75,7 +79,8 @@ float ProbabilityEstimator::estimateCell(Probabilities &probs,
       auto cellEst = probs[link.idx];
       p = p * (link.inv ? (1 - cellEst) : cellEst);
     }
-    return p;
+    probs[i] = p;
+    return;
   }
 
   if (cell.isOr()) {
@@ -85,21 +90,20 @@ float ProbabilityEstimator::estimateCell(Probabilities &probs,
       p = p * (link.inv ? cellEst : (1 - cellEst));
     }
     p = 1 - p;
-    return p;
+    probs[i] = p;
+    return;
   }
 
-  if (cell.isOne()) {
-    return 1.0;
-  }
-
-  if (cell.isZero()) {
-    return 0.0;
+  if (cell.isOne() || cell.isZero()) {
+    probs[i] = cell.isOne() ? 1.0f : 0.0;
+    return;
   }
 
   if (cell.isBuf()) {
     const auto link = links[0];
     p = link.inv ? (1 - probs[link.idx]) : probs[link.idx];
-    return p;
+    probs[i] = p;
+    return;
   }
 
   if (cell.isMaj() or cell.isXor()) {
@@ -116,56 +120,41 @@ float ProbabilityEstimator::estimateCell(Probabilities &probs,
 
     p = cell.isMaj() ? majEstimate(arrProbability, nArrProb)
         : xorEstimate(arrProbability, nArrProb);
-    return p;
+    probs[i] = p;
+    return;
   }
 
   if (cell.isOut()) {
     const auto link = links[0];
     p = link.inv ? (1 - probs[link.idx]) : probs[link.idx];
-    return p;
+    probs[i] = p;
+    return;
   }
 
-  return 0.0;
-}
-
-Probabilities ProbabilityEstimator::estimateProbs(const Subnet &subnet,
-    const Probabilities &probabilities) const {
-
-  Probabilities probs(subnet.size());
-
-  const auto &cells = subnet.getEntries();
-  for (size_t i = 0; i < subnet.size(); ++i) {
-    probs[i] = estimateCell(probs, subnet.getLinks(i), cells[i].cell,
-                            i, probabilities);
-  }
-
-  return probs;
+  probs[i] = 0.0;
 }
 
 Probabilities ProbabilityEstimator::estimateProbs(const SubnetBuilder &builder, 
     const Probabilities &probabilities) const {
   
-  Probabilities probs(*(--builder.end()) + 1);
+  Probabilities probs(builder.getMaxIdx() + 1);
 
   for (auto it = builder.begin(); it != builder.end(); ++it) {
-    probs[*it] = estimateCell(probs, builder.getLinks(*it), builder.getCell(*it),
-                              *it, probabilities);
+    estimateCell(builder, probs, *it, probabilities);
   }
 
   return probs;
 }
 
-SwitchActivity ProbabilityEstimator::estimate(const Subnet &subnet,
+SwitchActivity ProbabilityEstimator::estimate(const SubnetBuilder &builder,
     const Probabilities &probabilities) const {
 
-  Probabilities onState = estimateProbs(subnet, probabilities);
+  Probabilities onState = estimateProbs(builder, probabilities);
   Probabilities switching{onState};
-  const auto &entries = subnet.getEntries();
 
-  for (size_t j = 0; j < entries.size(); ++j) {
-    float p = switching[j];
-    const auto &cell = entries[j].cell;
-    switching[j] = cell.isBuf() ? 0.f : (2.f * p * (1.f - p));
+  for (auto it = builder.begin(); it != builder.end(); ++it) {
+    float p = switching[*it];
+    switching[*it] = (2.f * p * (1.f - p));
   }
 
   return SwitchActivity(std::move(switching), std::move(onState));

@@ -29,30 +29,33 @@ void checkEquivalence(SubnetID source, SubnetID optimized) {
   EXPECT_TRUE(checker.areEquivalent(source, optimized).equal()); 
 }
 
-const Subnet & optimize(SubnetID source, SubnetPass &&pass) {
+SubnetID optimize(SubnetID source, SubnetPass &&pass) {
   auto builder = std::make_shared<SubnetBuilder>(source);
   pass->transform(builder);
   SubnetID optimized{builder->make(true)};
   checkEquivalence(source, optimized);
-  return Subnet::get(optimized);
+  return optimized;
 }
 
 void testRF(const std::string &design) {
   SubnetID sourceID = parser::graphml::parse(design)->make();
   const auto &source = Subnet::get(sourceID);
   
-  const auto &optimizedA = optimize(sourceID, rf());
+  const auto &optimizedA = Subnet::get(optimize(sourceID, rf()));
   EXPECT_TRUE(optimizedA.size() <= source.size());
   
-  const auto &optimizedD = optimize(sourceID, rfd());
+  const auto &optimizedD = Subnet::get(optimize(sourceID, rfd()));
   double sourceDepth = source.getPathLength().second;
   double optimizedDepth = optimizedD.getPathLength().second;
   EXPECT_TRUE(optimizedDepth <= sourceDepth);
 
-  const auto &optimizedP = optimize(sourceID, rfp());
+  const auto optimizedP = optimize(sourceID, rfp());
   Estimator estimator;
-  double sourcePower = estimator.estimate(source).getSwitchProbsSum();
-  double optimizedPower = estimator.estimate(optimizedP).getSwitchProbsSum();
+  SubnetBuilder sourceBuilder(sourceID);
+  SubnetBuilder optimizedPBuilder(optimizedP);
+  double sourcePower = estimator.estimate(sourceBuilder).getSwitchProbsSum();
+  double optimizedPower = 
+      estimator.estimate(optimizedPBuilder).getSwitchProbsSum();
   EXPECT_TRUE(optimizedPower <= sourcePower);
 }
 

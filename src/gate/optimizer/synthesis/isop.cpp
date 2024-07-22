@@ -65,8 +65,9 @@ static std::pair<TruthTable, bool> handleCare(
 SubnetObject MMSynthesizer::synthesize(const TruthTable &func,
                                        const TruthTable &care,
                                        uint16_t maxArity) const {
-  SubnetBuilder subnetBuilder;
-  LinkList ins = subnetBuilder.addInputs(func.num_vars());
+  SubnetObject object;
+  SubnetBuilder &subnetBuilder{object.builder()};
+  LinkList ins{subnetBuilder.addInputs(func.num_vars())};
 
   const auto [tt, inv] = handleCare(func, care);
   
@@ -76,8 +77,7 @@ SubnetObject MMSynthesizer::synthesize(const TruthTable &func,
 
   Link output{synthFromSOP(kitty::isop(tt), ins, subnetBuilder, maxArity)};                               
   subnetBuilder.addOutput(inv ? ~output : output);
-
-  return SubnetObject{subnetBuilder.make()}; // FIXME: make is not required.
+  return object;
 }
 
 SubnetObject MMFactorSynthesizer::synthesize(const TruthTable &func,

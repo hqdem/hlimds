@@ -8,11 +8,13 @@
 
 #pragma once
 
+#include "gate/model/subnetview.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/mffc.h"
 #include "gate/optimizer/reconvergence_cut.h"
 #include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/subnet_transformer.h"
+#include "util/truth_table.h"
 
 #include <string>
 
@@ -31,18 +33,18 @@ public:
    * @param cutSize Maximum number of elements in the cut.
    * @param careSize Maximum number of elements in the cut for care evaluation.
    */
-  Resubstitutor(const std::string &name, unsigned cutSize, unsigned careSize) :
-      SubnetInPlaceTransformer(name), cutSize(cutSize), careSize(careSize) {}
+  Resubstitutor(const std::string &name, unsigned cutSize, unsigned maxLevels) :
+      SubnetInPlaceTransformer(name), cutSize(cutSize), maxLevels(maxLevels) {}
 
   /// @brief Constructs a resubstitutor with default parameters.
-  Resubstitutor(const std::string &name) : Resubstitutor(name, 8, 16) {}
+  Resubstitutor(const std::string &name) : Resubstitutor(name, 8, 3) {}
 
   /// @brief Tranforms the subnet by applying a resubstitution algorithm.
   void transform(const SubnetBuilderPtr &builder) const override;
 
 private:
   const unsigned cutSize;
-  const unsigned careSize;
+  const unsigned maxLevels;
 };
 
 } // namespace eda::gate::optimizer

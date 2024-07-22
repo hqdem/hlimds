@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/subnet.h"
+#include "gate/model/subnetview.h"
 
 #include <unordered_map>
 #include <vector>
@@ -16,13 +17,13 @@
 namespace eda::gate::optimizer {
 
 /// Returns a reconvergence-driven cut based on the given subnet builder.
-std::vector<size_t> getReconvergenceCut(
+model::SubnetView getReconvergenceCut(
     model::SubnetBuilder &builder,
     const std::vector<size_t> &roots,
     uint16_t cutSize);
 
 /// Returns a reconvergence-driven cut based on the given subnet builder.
-inline std::vector<size_t> getReconvergenceCut(
+inline model::SubnetView getReconvergenceCut(
     model::SubnetBuilder &builder,
     size_t root,
     uint16_t cutSize) {

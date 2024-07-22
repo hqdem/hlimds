@@ -30,7 +30,8 @@ SubnetObject DsdSynthesizer::synthesize(const BddWithDdManager &pair,
   Recursive_Decomposition_Print(dsd);
 #endif // UTOPIA_DEBUG
 
-  SubnetBuilder subnetBuilder;
+  SubnetObject object;
+  SubnetBuilder &subnetBuilder{object.builder()};
   LinkList inputsList;
   /* Create PIs */
   int numVars = Cudd_ReadSize(pair.manager);
@@ -44,10 +45,10 @@ SubnetObject DsdSynthesizer::synthesize(const BddWithDdManager &pair,
                                                   subnetBuilder,
                                                   inputsList,
                                                   maxArity));
-  SubnetID ret = subnetBuilder.make();
+
   DSD_Quit(dmanager);
 
-  return SubnetObject{ret}; // FIXME: make is not required.
+  return object;
 }
 
 SubnetObject DsdSynthesizer::synthesize(const TruthTable &table,
@@ -55,7 +56,7 @@ SubnetObject DsdSynthesizer::synthesize(const TruthTable &table,
                                         uint16_t maxArity) const {
   /* Initial subnet */
   MMSynthesizer mm;
-  const auto &subnet = mm.synthesize(table, care, maxArity).object(); // FIXME: make is not required.
+  const auto &subnet = mm.synthesize(table, care, maxArity).makeObject();
 
   /* Subnet to BDD convertion */
   Cudd manager(0, 0);
@@ -73,7 +74,8 @@ SubnetObject DsdSynthesizer::synthesize(const TruthTable &table,
   /* Always reference after creation */
   DSD_Ref(dmanager, dsd);
 
-  SubnetBuilder subnetBuilder;
+  SubnetObject object;
+  SubnetBuilder &subnetBuilder{object.builder()};
   LinkList inputsList;
   /* Create PIs */
   int numVars = Cudd_ReadSize(manager.getManager());
@@ -87,10 +89,10 @@ SubnetObject DsdSynthesizer::synthesize(const TruthTable &table,
                                                   subnetBuilder,
                                                   inputsList,
                                                   maxArity));
-  SubnetID ret = subnetBuilder.make();
+
   DSD_Quit(dmanager);
 
-  return SubnetObject{ret}; // FIXME: make is not required.
+  return object;
 }
 
 Link DsdSynthesizer::buildNet(DSDNode *dsd,

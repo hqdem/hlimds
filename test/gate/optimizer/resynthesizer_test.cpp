@@ -41,7 +41,7 @@ TEST(ResynthesizerTest, SimpleTest) {
   
     synthesis::AkersSynthesizer synthesizer;
 
-    const auto newID = synthesizer.synthesize(oldTable).id();
+    const auto newID = synthesizer.synthesize(oldTable).make();
     const auto newTable = getTruthTable(newID);
 
     EXPECT_TRUE(newTable == oldTable);

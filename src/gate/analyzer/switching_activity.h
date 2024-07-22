@@ -117,7 +117,7 @@ public:
 
   /// @cond ALIASES
   using Probabilities = SwitchActivity::Probabilities;
-  using Subnet        = model::Subnet;
+  using SubnetBuilder  = model::SubnetBuilder;
   /// @endcond
 
   /**
@@ -127,7 +127,7 @@ public:
    * the subnet. If it is not passed, the probability of getting 1
    * for each input is 0.5.
    */
-  virtual SwitchActivity estimate(const Subnet &subnet,
+  virtual SwitchActivity estimate(const SubnetBuilder &builder,
       const Probabilities &inputProbabilities = {}) const = 0;
 
   virtual ~SwitchActivityEstimator() = default;
@@ -140,6 +140,7 @@ public:
  * @param out output stream.
  */
 void printSwitchActivity(const SwitchActivity &switchActivity,
-                         const model::Subnet &subnet, std::ostream &out);
+                         const model::SubnetBuilder &builder,
+                         std::ostream &out);
 
 } // namespace eda::gate::analyzer

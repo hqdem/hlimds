@@ -21,7 +21,8 @@ void printDelimitedString(std::vector<std::string> &data, std::ostream &out) {
 namespace eda::gate::analyzer {
 
 void printSwitchActivity(const SwitchActivity &switchActivity,
-                         const model::Subnet &subnet, std::ostream &out) {
+                         const model::SubnetBuilder &builder,
+                         std::ostream &out) {
   out << "Simulation ticks: " << switchActivity.getTicks() << std::endl;
   std::vector<std::string> data{
     "ID",
@@ -34,22 +35,20 @@ void printSwitchActivity(const SwitchActivity &switchActivity,
   };
   printDelimitedString(data, out);
   bool printSwitches{switchActivity.getTicks() > 0};
-  const auto &entries = subnet.getEntries();
-  for (size_t i{0}; i < entries.size(); ++i) {
-    const auto &cell = entries[i].cell;
+  for (auto it = builder.begin(); it != builder.end(); ++it) {
+    const auto &cell = builder.getCell(*it);
     data = {
-      std::to_string(i),
+      std::to_string(*it),
       cell.getType().getName(),
       std::to_string(cell.arity),
-      std::to_string(switchActivity.getSwitchProbability(i)),
-      std::to_string(switchActivity.getOnStateProbability(i)),
+      std::to_string(switchActivity.getSwitchProbability(*it)),
+      std::to_string(switchActivity.getOnStateProbability(*it)),
     };
     if (printSwitches) {
-      data.push_back(std::to_string(switchActivity.getSwitchesOn(i)));
-      data.push_back(std::to_string(switchActivity.getSwitchesOff(i)));
+      data.push_back(std::to_string(switchActivity.getSwitchesOn(*it)));
+      data.push_back(std::to_string(switchActivity.getSwitchesOff(*it)));
     }
     printDelimitedString(data, out);
-    i += cell.more;
   }
 }
 

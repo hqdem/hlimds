@@ -88,9 +88,10 @@ SafePasser SafePasser::operator--(int) {
 void SafePasser::replace(
     const SubnetObject &rhs,
     const InOutMapping &rhsToLhsMapping,
-    const std::function<void(const size_t)> *onNewCell,
-    const std::function<void(const size_t)> *onEqualDepth,
-    const std::function<void(const size_t)> *onGreaterDepth) {
+    const CellActionCallback *onNewCell,
+    const CellActionCallback *onEqualDepth,
+    const CellActionCallback *onGreaterDepth,
+    const CellCallbackCondition *onRecomputedDepth) {
 
   const size_t oldRootDepth = builder->getDepth(entry);
   const bool rootLastDepth = builder->getLastWithDepth(oldRootDepth) == entry;
@@ -115,18 +116,28 @@ void SafePasser::replace(
     }
   };
 
+  const auto &_builder = builder;
+  std::function onRecompDepthWrap =
+      [&onRecomputedDepth, oldRootDepth, &_builder](const size_t entryID) {
+    if (onRecomputedDepth) {
+      (*onRecomputedDepth)(entryID, oldRootDepth, _builder->getDepth(entryID));
+    }
+  };
+
   builderToTransform->replace(rhs, rhsToLhsMapping,
-                              &addNewCell, onEqualDepth, onGreaterDepth);
+                              &addNewCell, onEqualDepth,
+                              onGreaterDepth, &onRecompDepthWrap);
   recomputeNext(oldRootDepth, rootLastDepth);
 }
 
 void SafePasser::replace(
     const SubnetID rhsID,
     const InOutMapping &rhsToLhsMapping,
-    const std::function<float(const size_t)> *getCellWeight,
-    const std::function<void(const size_t)> *onNewCell,
-    const std::function<void(const size_t)> *onEqualDepth,
-    const std::function<void(const size_t)> *onGreaterDepth) {
+    const CellWeightProvider *getCellWeight,
+    const CellActionCallback *onNewCell,
+    const CellActionCallback *onEqualDepth,
+    const CellActionCallback *onGreaterDepth,
+    const CellCallbackCondition *onRecomputedDepth) {
 
   const size_t oldRootDepth = builder->getDepth(entry);
   const bool rootLastDepth = builder->getLastWithDepth(oldRootDepth) == entry;
@@ -145,17 +156,27 @@ void SafePasser::replace(
     }
   };
 
+  const auto &_builder = builder;
+  std::function onRecompDepthWrap =
+      [&onRecomputedDepth, oldRootDepth, &_builder](const size_t entryID) {
+    if (onRecomputedDepth) {
+      (*onRecomputedDepth)(entryID, oldRootDepth, _builder->getDepth(entryID));
+    }
+  };
+
   builderToTransform->replace(rhsID, rhsToLhsMapping, getCellWeight,
-                              &addNewCell, onEqualDepth, onGreaterDepth);
+                              &addNewCell, onEqualDepth, onGreaterDepth,
+                              &onRecompDepthWrap);
   recomputeNext(oldRootDepth, rootLastDepth);
 }
 
 void SafePasser::replace(
     const SubnetBuilder &rhsBuilder,
     const InOutMapping &rhsToLhsMapping,
-    const std::function<void(const size_t)> *onNewCell,
-    const std::function<void(const size_t)> *onEqualDepth,
-    const std::function<void(const size_t)> *onGreaterDepth) {
+    const CellActionCallback *onNewCell,
+    const CellActionCallback *onEqualDepth,
+    const CellActionCallback *onGreaterDepth,
+    const CellCallbackCondition *onRecomputedDepth) {
 
   const size_t oldRootDepth = builder->getDepth(entry);
   const bool rootLastDepth = builder->getLastWithDepth(oldRootDepth) == entry;
@@ -172,8 +193,18 @@ void SafePasser::replace(
       (*onNewCell)(entryID);
     }
   };
+
+  const auto &_builder = builder;
+  std::function onRecompDepthWrap =
+      [&onRecomputedDepth, oldRootDepth, &_builder] (const size_t entryID) {
+    if (onRecomputedDepth) {
+      (*onRecomputedDepth)(entryID, oldRootDepth, _builder->getDepth(entryID));
+    }
+  };
+
   builderToTransform->replace(rhsBuilder, rhsToLhsMapping,
-                              &addNewCell, onEqualDepth, onGreaterDepth);
+                              &addNewCell, onEqualDepth, onGreaterDepth,
+                              &onRecompDepthWrap);
   recomputeNext(oldRootDepth, rootLastDepth);
 }
 

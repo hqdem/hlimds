@@ -8,9 +8,6 @@
 
 #include "gate/optimizer/cut_extractor.h"
 
-// FIXME:
-#include <iostream>
-
 namespace eda::gate::optimizer {
 
 uint16_t countSetBits(uint64_t x) {
@@ -55,6 +52,7 @@ void CutExtractor::recomputeCuts(const size_t entryIdx) {
   if (entriesCuts.size() <= entryIdx) {
     entriesCuts.resize(entryIdx + 1);
   }
+  entriesCuts[entryIdx].clear();
   findCuts(entryIdx);
 }
 

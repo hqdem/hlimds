@@ -725,7 +725,8 @@ public:
       const InOutMapping &iomapping,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
-      const CellActionCallback *onGreaterDepth = nullptr);
+      const CellActionCallback *onGreaterDepth = nullptr,
+      const CellActionCallback *onRecomputedDepth = nullptr);
 
   /// Replaces the given single-output fragment w/ the given subnet (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
@@ -736,7 +737,8 @@ public:
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
-      const CellActionCallback *onGreaterDepth = nullptr);
+      const CellActionCallback *onGreaterDepth = nullptr,
+      const CellActionCallback *onRecomputedDepth = nullptr);
 
   /// Replaces the given single-output fragment w/ the given SubnetBuilder (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
@@ -746,7 +748,8 @@ public:
       const InOutMapping &iomapping,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
-      const CellActionCallback *onGreaterDepth = nullptr);
+      const CellActionCallback *onGreaterDepth = nullptr,
+      const CellActionCallback *onRecomputedDepth = nullptr);
 
   /// Returns the effect of the replacement with rhs.
   Effect evaluateReplace(
@@ -773,7 +776,9 @@ public:
   /// The number of links in both cells must be <= Cell::InPlaceLinks.
   Link replaceCell(
       size_t entryID, CellTypeID typeID, const LinkList &links,
-      bool delZeroRefcount = true);
+      bool delZeroRefcount = true,
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onRecomputedDepth = nullptr);
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
@@ -843,7 +848,8 @@ private:
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
-      const CellActionCallback *onGreaterDepth = nullptr);
+      const CellActionCallback *onGreaterDepth = nullptr,
+      const CellActionCallback *onRecomputedDepth = nullptr);
 
   /// Template replace evaluating method.
   template <typename RhsContainer>
@@ -945,8 +951,10 @@ private:
 
   /// Recursively recomputes the root fanouts depths and updates positions in
   /// the topological order.
-  void recomputeFanoutDepths(size_t rootEntryID,
-                             size_t oldRootNextEntryID);
+  void recomputeFanoutDepths(
+      size_t rootEntryID,
+      size_t oldRootNextEntryID,
+      const CellActionCallback *onRecomputedDepth = nullptr);
 
   /// Assigns the new links to the given cell.
   /// The number of new links must be the same as the number of old links.

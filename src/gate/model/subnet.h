@@ -188,8 +188,8 @@ public:
   };
   static_assert(sizeof(Entry) == 32);
 
-  Subnet &operator =(const Subnet &r) = delete;
-  Subnet(const Subnet &r) = delete;
+  Subnet &operator =(const Subnet &) = delete;
+  Subnet(const Subnet &) = delete;
 
   /// Returns the overall number of entries including inputs and outputs.
   size_t size() const { return nEntry; }
@@ -456,7 +456,7 @@ public:
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
 
-  SubnetBuilder &operator =(const SubnetBuilder &r) = delete;
+  SubnetBuilder &operator =(const SubnetBuilder &) = delete;
 
   /// Returns the number of cells.
   size_t getCellNum() const { return nCell; }
@@ -1045,8 +1045,8 @@ public:
   SubnetObject() {}
   SubnetObject(const SubnetID subnetID): subnetID(subnetID) {}
 
-  SubnetObject(const SubnetObject &other) = delete;
-  SubnetObject &operator=(const SubnetObject &other) = delete;
+  SubnetObject(const SubnetObject &) = delete;
+  SubnetObject &operator=(const SubnetObject &) = delete;
 
   SubnetObject(SubnetObject &&other) {
     subnetID = other.subnetID;

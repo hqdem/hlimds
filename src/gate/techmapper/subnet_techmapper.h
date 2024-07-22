@@ -37,11 +37,11 @@ public:
 
   using CutProvider =
       std::function<optimizer::CutExtractor::CutsList(
-                        const model::Subnet &,
+                        const model::SubnetBuilder &,
                         const size_t entryID)>;
   using MatchFinder =
       std::function<std::vector<Match>(
-                        const model::Subnet &,
+                        const model::SubnetBuilder &,
                         const optimizer::CutExtractor::Cut &)>;
   using CellEstimator =
       std::function<optimizer::CostVector(
@@ -76,8 +76,8 @@ public:
                    const MatchFinder matchFinder,
                    const CellEstimator cellEstimator);
 
-  optimizer::SubnetBuilderPtr make(
-      const model::SubnetID subnetID) const override;
+  optimizer::SubnetBuilderPtr map(
+      const optimizer::SubnetBuilderPtr &builder) const override;
 
 private:
   const optimizer::Criterion &criterion;

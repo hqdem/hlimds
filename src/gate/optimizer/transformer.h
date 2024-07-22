@@ -34,7 +34,9 @@ public:
   }
 
   /// @deprecated
-  virtual BuilderPtr<Builder> make(const ID componentID) const = 0;
+  virtual BuilderPtr<Builder> make(const ID componentID) const {
+    return std::make_shared<Builder>(componentID);
+  }
 
   /// @deprecated
   ID transform(const ID componentID) const {

@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     version << VERSION_MAJOR << "." << VERSION_MINOR;
 
     title << "Utopia EDA " << version.str() << " | ";
-    title << "Copyright (c) " << YEAR_STARTED << "-" << YEAR_CURRENT << " ISP RAS";
+    title << "Copyright (C) " << YEAR_STARTED << "-" << YEAR_CURRENT << " ISP RAS";
 
     CLI::App app{"Utopia EDA"};
 

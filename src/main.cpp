@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     version << VERSION_MAJOR << "." << VERSION_MINOR;
 
     title << "Utopia EDA " << version.str() << " | ";
-    title << "Copyright (c) " << YEAR_STARTED << "-" << YEAR_CURRENT << " ISPRAS";
+    title << "Copyright (c) " << YEAR_STARTED << "-" << YEAR_CURRENT << " ISP RAS";
 
     CLI::App app{"Utopia EDA"};
 
@@ -61,12 +61,11 @@ int main(int argc, char **argv) {
 
       if ((Utopia_TclInit(interp) == TCL_ERROR) ||
           (Tcl_EvalFile(interp, fileName) == TCL_ERROR)) {
-        std::cout << Tcl_GetStringResult(interp) << '\n';
+        std::cout << Tcl_GetStringResult(interp) << std::endl;
         return 1;
       }
     } else {
-      std::cout << title.str() << '\n';
-      std::cout << version.str() << '\n';
+      std::cout << title.str() << std::endl;
       Tcl_Main(argc, argv, Utopia_TclInit);
     }
 

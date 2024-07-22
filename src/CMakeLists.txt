@@ -55,7 +55,7 @@ target_link_libraries(${MAIN_LIBRARY}
 # The project executable.
 add_executable(${MAIN_TARGET}
   main.cpp
-  tcl_appinit.cpp
+  shell.cpp
 )
 
 target_include_directories(${MAIN_TARGET}

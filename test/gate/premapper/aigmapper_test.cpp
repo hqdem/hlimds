@@ -38,7 +38,7 @@ SubnetID createPrimitiveSubnet(CellSymbol symbol, size_t nIn, size_t arity) {
 }
 
 TEST(AigTransformer, MAJ) {
-  const size_t nIn = 3;
+  const size_t nIn = 5;
   Builder builder;
   LinkList links;
 
@@ -115,7 +115,7 @@ TEST(AigTransformer, RandomSubnet) {
   const size_t nOut     = 1u;
   const size_t nCell    = 20u;
   const size_t MinArity = 1u;
-  const size_t MaxArity = 3u;
+  const size_t MaxArity = 6u;
 
   const auto id = eda::gate::model::randomSubnet(nIn, nOut, nCell,
                                                  MinArity, MaxArity);

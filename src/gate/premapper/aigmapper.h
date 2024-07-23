@@ -12,7 +12,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace eda::gate::premapper {
 
@@ -61,6 +60,7 @@ protected:
               SubnetBuilder &builder) const;
 
   Link addMaj3(LinkList &links, bool &inv, SubnetBuilder &builder) const;
+  Link addMaj5(LinkList &links, bool &inv, SubnetBuilder &builder) const;
 };
 
 } // namespace eda::gate::premapper

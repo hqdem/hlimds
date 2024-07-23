@@ -115,14 +115,14 @@ struct ClearCommand final : public UtopiaCommand {
   }
 };
 
-static ClearCommand clear;
+static ClearCommand clearCmd;
 
 static int CmdClear(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return clear.run(interp, argc, argv);
+  return clearCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -184,14 +184,29 @@ struct DbStatCommand final : public UtopiaCommand {
   std::string outputNamefile;
 };
 
-static DbStatCommand dbstat;
+static DbStatCommand dbstatCmd;
 
 static int CmdDbStat(
     ClientData,
     Tcl_Interp *interp, int argc,
     const char *argv[]) {
-  return dbstat.run(interp, argc, argv);
+  return dbstatCmd.run(interp, argc, argv);
 }
+
+//===----------------------------------------------------------------------===//
+// Exit
+//===----------------------------------------------------------------------===//
+
+struct ExitCommand final : public UtopiaCommand {
+  ExitCommand():
+      UtopiaCommand("exit", "Closes the interactive shell") {}
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    return TCL_OK;
+  }
+};
+
+static ExitCommand exitCmd;
 
 //===----------------------------------------------------------------------===//
 // Help
@@ -230,14 +245,14 @@ struct HelpCommand final : public UtopiaCommand {
   }
 };
 
-static HelpCommand help;
+static HelpCommand helpCmd;
 
 static int CmdHelp(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return help.run(interp, argc, argv);
+  return helpCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -319,14 +334,14 @@ struct LecCommand final : public UtopiaCommand {
   LecType method = LecType::SAT;
 };
 
-static LecCommand lec;
+static LecCommand lecCmd;
 
 static int CmdLec(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return lec.run(interp, argc, argv);
+  return lecCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -481,14 +496,14 @@ struct PassCommand final : public UtopiaCommand {
   uint16_t rszN = 16;
 };
 
-static PassCommand pass;
+static PassCommand passCmd;
 
 static int CmdPass(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return pass.run(interp, argc, argv);
+  return passCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -543,13 +558,13 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
   }
 };
 
-static ReadGraphMlCommand readGraphMl;
+static ReadGraphMlCommand readGraphMlCmd;
 
 static int CmdReadGraphMl(
     ClientData,Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return readGraphMl.run(interp, argc, argv);
+  return readGraphMlCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -589,14 +604,14 @@ struct ReadLibertyCommand final : public UtopiaCommand {
   }
 };
 
-static ReadLibertyCommand readLiberty;
+static ReadLibertyCommand readLibertyCmd;
 
 static int CmdReadLiberty(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return readLiberty.run(interp, argc, argv);
+  return readLibertyCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -663,14 +678,14 @@ struct ReadVerilogCommand final : public UtopiaCommand {
   bool debugMode = false;
 };
 
-static ReadVerilogCommand readVerilog;
+static ReadVerilogCommand readVerilogCmd;
 
 static int CmdReadVerilog(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return readVerilog.run(interp, argc, argv);
+  return readVerilogCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -733,14 +748,14 @@ struct StatCommand final : public UtopiaCommand {
   bool logic = false;
 };
 
-static StatCommand stat;
+static StatCommand statCmd;
 
 static int CmdStat(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return stat.run(interp, argc, argv);
+  return statCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -815,14 +830,14 @@ struct TechMapCommand final : public UtopiaCommand {
   Techmapper::Strategy mapperType = Techmapper::Strategy::AREA;
 };
 
-static TechMapCommand techMap;
+static TechMapCommand techMapCmd;
 
 static int CmdTechMap(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return techMap.run(interp, argc, argv);
+  return techMapCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -874,14 +889,14 @@ struct VerilogToFirCommand final : public UtopiaCommand {
   bool debugMode = false;
 };
 
-static VerilogToFirCommand verilogToFir;
+static VerilogToFirCommand verilogToFirCmd;
 
 static int CmdVerilogToFir(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return verilogToFir.run(interp, argc, argv);
+  return verilogToFirCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -907,14 +922,14 @@ struct VersionCommand final : public UtopiaCommand {
   } 
 };
 
-static VersionCommand version;
+static VersionCommand versionCmd;
 
 static int CmdVersion(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return version.run(interp, argc, argv);
+  return versionCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -983,14 +998,14 @@ struct WriteDesignCommand final : public UtopiaCommand {
   ModelPrinter::Format format = ModelPrinter::VERILOG;
 };
 
-static WriteDesignCommand writeDesign;
+static WriteDesignCommand writeDesignCmd;
 
 static int CmdWriteDesign(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return writeDesign.run(interp, argc, argv);
+  return writeDesignCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1047,14 +1062,14 @@ struct WriteSubnetCommand final : public UtopiaCommand {
   CLI::Option *entered = nullptr;
 };
 
-static WriteSubnetCommand writeSubnet;
+static WriteSubnetCommand writeSubnetCmd;
 
 static int CmdWriteSubnet(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return writeSubnet.run(interp, argc, argv);
+  return writeSubnetCmd.run(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1104,20 +1119,21 @@ int Utopia_TclInit(Tcl_Interp *interp) {
     return TCL_ERROR;
   }
 
-  commandRegistry.addCommand(&clear);
-  commandRegistry.addCommand(&dbstat);
-  commandRegistry.addCommand(&help);
-  commandRegistry.addCommand(&lec);
-  commandRegistry.addCommand(&pass);
-  commandRegistry.addCommand(&readGraphMl);
-  commandRegistry.addCommand(&readLiberty);
-  commandRegistry.addCommand(&readVerilog);
-  commandRegistry.addCommand(&stat);
-  commandRegistry.addCommand(&techMap);
-  commandRegistry.addCommand(&verilogToFir);
-  commandRegistry.addCommand(&version);
-  commandRegistry.addCommand(&writeDesign);
-  commandRegistry.addCommand(&writeSubnet);
+  commandRegistry.addCommand(&clearCmd);
+  commandRegistry.addCommand(&dbstatCmd);
+  commandRegistry.addCommand(&exitCmd);
+  commandRegistry.addCommand(&helpCmd);
+  commandRegistry.addCommand(&lecCmd);
+  commandRegistry.addCommand(&passCmd);
+  commandRegistry.addCommand(&readGraphMlCmd);
+  commandRegistry.addCommand(&readLibertyCmd);
+  commandRegistry.addCommand(&readVerilogCmd);
+  commandRegistry.addCommand(&statCmd);
+  commandRegistry.addCommand(&techMapCmd);
+  commandRegistry.addCommand(&verilogToFirCmd);
+  commandRegistry.addCommand(&versionCmd);
+  commandRegistry.addCommand(&writeDesignCmd);
+  commandRegistry.addCommand(&writeSubnetCmd);
 
   printNewline();
   printTitle(interp);
@@ -1128,20 +1144,20 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_DeleteCommand(interp, "exec");
   Tcl_DeleteCommand(interp, "unknown");
 
-  Tcl_CreateCommand(interp, clear.name,        CmdClear,        NULL, NULL);
-  Tcl_CreateCommand(interp, dbstat.name,       CmdDbStat,       NULL, NULL);
-  Tcl_CreateCommand(interp, help.name,         CmdHelp,         NULL, NULL);
-  Tcl_CreateCommand(interp, lec.name,          CmdLec,          NULL, NULL);
-  Tcl_CreateCommand(interp, pass.name,         CmdPass,         NULL, NULL);
-  Tcl_CreateCommand(interp, readGraphMl.name,  CmdReadGraphMl,  NULL, NULL);
-  Tcl_CreateCommand(interp, readLiberty.name,  CmdReadLiberty,  NULL, NULL);
-  Tcl_CreateCommand(interp, readVerilog.name,  CmdReadVerilog,  NULL, NULL);
-  Tcl_CreateCommand(interp, stat.name,         CmdStat,         NULL, NULL);
-  Tcl_CreateCommand(interp, techMap.name,      CmdTechMap,      NULL, NULL);
-  Tcl_CreateCommand(interp, verilogToFir.name, CmdVerilogToFir, NULL, NULL);
-  Tcl_CreateCommand(interp, version.name,      CmdVersion,      NULL, NULL);
-  Tcl_CreateCommand(interp, writeDesign.name,  CmdWriteDesign,  NULL, NULL);
-  Tcl_CreateCommand(interp, writeSubnet.name,  CmdWriteSubnet,  NULL, NULL);
+  Tcl_CreateCommand(interp, clearCmd.name,        CmdClear,        NULL, NULL);
+  Tcl_CreateCommand(interp, dbstatCmd.name,       CmdDbStat,       NULL, NULL);
+  Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,         NULL, NULL);
+  Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,          NULL, NULL);
+  Tcl_CreateCommand(interp, passCmd.name,         CmdPass,         NULL, NULL);
+  Tcl_CreateCommand(interp, readGraphMlCmd.name,  CmdReadGraphMl,  NULL, NULL);
+  Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,  NULL, NULL);
+  Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,  NULL, NULL);
+  Tcl_CreateCommand(interp, statCmd.name,         CmdStat,         NULL, NULL);
+  Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,      NULL, NULL);
+  Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir, NULL, NULL);
+  Tcl_CreateCommand(interp, versionCmd.name,      CmdVersion,      NULL, NULL);
+  Tcl_CreateCommand(interp, writeDesignCmd.name,  CmdWriteDesign,  NULL, NULL);
+  Tcl_CreateCommand(interp, writeSubnetCmd.name,  CmdWriteSubnet,  NULL, NULL);
 
   return TCL_OK;
 }

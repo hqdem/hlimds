@@ -20,14 +20,6 @@ extern Tcl_AppInitProc Utopia_TclInit;
 int main(int argc, char **argv) {
     START_EASYLOGGINGPP(argc, argv);
 
-    std::stringstream title;
-    std::stringstream version;
-
-    version << VERSION_MAJOR << "." << VERSION_MINOR;
-
-    title << "Utopia EDA " << version.str() << " | ";
-    title << "Copyright (C) " << YEAR_STARTED << "-" << YEAR_CURRENT << " ISP RAS";
-
     CLI::App app{"Utopia EDA"};
 
     std::string path = "";
@@ -65,7 +57,6 @@ int main(int argc, char **argv) {
         return 1;
       }
     } else {
-      std::cout << title.str() << std::endl;
       Tcl_Main(argc, argv, Utopia_TclInit);
     }
 

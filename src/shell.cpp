@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "config.h"
 #include "gate/analyzer/probabilistic_estimate.h"
 #include "gate/debugger/bdd_checker.h"
 #include "gate/debugger/fraig_checker.h"
@@ -26,8 +27,10 @@
 #include "util/env.h"
 
 #include <CLI/CLI.hpp>
+#include <fmt/format.h>
 #include <tcl.h>
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -36,6 +39,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#define UTOPIA_OUT std::cout
 
 using namespace eda::gate::model;
 using namespace eda::gate::debugger;
@@ -47,12 +52,12 @@ using namespace eda::gate::translator;
 
 struct UtopiaCommand {
   UtopiaCommand(const char *name, const char *desc):
-    name(name), desc(desc) {}
+    name(name), desc(desc), app(desc, name) {}
 
   virtual int run(Tcl_Interp *interp, int argc, const char *argv[]) = 0;
 
   void printHelp(std::ostream &out) const {
-    out << app.help();
+    out << app.help() << std::flush;
   }
 
   const char *name;
@@ -61,16 +66,48 @@ struct UtopiaCommand {
   CLI::App app;
 };
 
+class UtopiaCommandRegistry final {
+public:
+  void addCommand(UtopiaCommand *command) {
+    assert(command);
+    commands.emplace(std::string(command->name), command);
+  }
+
+  UtopiaCommand *getCommand(const std::string &name) {
+    auto i = commands.find(name);
+    return i != commands.end() ? i->second : nullptr;
+  }
+
+  void printHelp(std::ostream &out) const {
+    for (const auto &[name, command] : commands) {
+      out << std::string(2, ' ')
+          << std::setw(20)
+          << std::left
+          << name
+          << command->desc
+          << std::endl;
+    }
+
+    out << std::endl;
+    out << "Type 'help <command>' for more information on a command.";
+    out << std::endl << std::flush;
+  }
+
+private:
+  std::map<std::string, UtopiaCommand*> commands;
+};
+
+static UtopiaCommandRegistry commandRegistry;
 static DesignBuilderPtr designBuilder = nullptr;
 static std::string previousStep = "none";
-static bool measureTime = true;
 
 //===----------------------------------------------------------------------===//
 // Clear
 //===----------------------------------------------------------------------===//
 
 struct ClearCommand final : public UtopiaCommand {
-  ClearCommand(): UtopiaCommand("clear", "TODO") {}
+  ClearCommand():
+      UtopiaCommand("clear", "Erases the design from memory") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     designBuilder = nullptr;
@@ -93,7 +130,8 @@ static int CmdClear(
 //===----------------------------------------------------------------------===//
 
 struct DbStatCommand final : public UtopiaCommand {
-  DbStatCommand(): UtopiaCommand("dbstat", "TODO") {
+  DbStatCommand():
+      UtopiaCommand("dbstat", "Prints information about a subnet database") {
     app.add_option("--db", dbPath)->expected(1)->required(true);
     app.add_option("--otype", outputType)->expected(1);
     app.add_option("--out", outputNamefile)->expected(1);
@@ -110,7 +148,7 @@ struct DbStatCommand final : public UtopiaCommand {
     }
 
     if (app.remaining().empty()) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("No files specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
       return TCL_ERROR;
     }
 
@@ -124,8 +162,8 @@ struct DbStatCommand final : public UtopiaCommand {
     } else if (outputType == "BOTH") {
       config.outType = OutType::BOTH;
     } else {
-      std::cerr << "Wrong type of output: " << outputType
-                << ", correct are (DOT / INFO / BOTH)" << std::endl;
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+        fmt::format("unknown output type '{}'", outputType).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -133,7 +171,7 @@ struct DbStatCommand final : public UtopiaCommand {
     config.ttSize = ttSize;
     config.binLines = app.remaining();
 
-    if (getDbStat(std::cerr, config)) {
+    if (getDbStat(UTOPIA_OUT, config)) {
       return TCL_ERROR;
     }
 
@@ -159,32 +197,9 @@ static int CmdDbStat(
 // Help
 //===----------------------------------------------------------------------===//
 
-static int printFile(Tcl_Interp *interp, const std::string &fileName) {
-  const char *utopiaHome = std::getenv("UTOPIA_HOME");
-  if (!utopiaHome) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("UTOPIA_HOME is not set", -1));
-    return TCL_ERROR;
-  }
-
-  std::string filePath = std::string(utopiaHome) + "/" + fileName;
-  std::ifstream file(filePath);
-
-  if (!file.is_open()) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unable to open file", -1));
-    return TCL_ERROR;
-  }
-
-  std::string line;
-  while (getline(file, line)) {
-    std::cout << line << std::endl;
-  }
-
-  file.close();
-  return TCL_OK;
-}
-
 struct HelpCommand final : public UtopiaCommand {
-  HelpCommand(): UtopiaCommand("help", "TODO") {
+  HelpCommand():
+      UtopiaCommand("help", "Prints help information") {
     app.allow_extras();
   }
 
@@ -197,10 +212,20 @@ struct HelpCommand final : public UtopiaCommand {
     }
 
     if (app.remaining().empty()) {
-      return printFile(interp, "doc/help/Help.txt");
+      commandRegistry.printHelp(UTOPIA_OUT);
+      return TCL_OK;
     }
 
-    // TODO:
+    auto name = app.remaining().at(0);
+    auto *command = commandRegistry.getCommand(name);
+
+    if (command) {
+      command->printHelp(UTOPIA_OUT);
+      return TCL_OK;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+        fmt::format("unknown command '{}'", name).c_str(), -1));
     return TCL_ERROR;
   }
 };
@@ -230,7 +255,8 @@ static bool containsFalse(const std::vector<bool> &eq) {
 }
 
 struct LecCommand final : public UtopiaCommand {
-  LecCommand(): UtopiaCommand("lec", "TODO") {
+  LecCommand():
+      UtopiaCommand("lec", "Checks logical equivalence") {
     const std::map<std::string, LecType> lecMethodMap {
       { "bdd", LecType::BDD   },
       { "fra", LecType::FRAIG },
@@ -246,14 +272,14 @@ struct LecCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     if (!designBuilder) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has not been loaded", -1));
       return TCL_ERROR;
     }
 
     if (previousStep == "none") {
-      Tcl_SetObjResult(
-          interp,
-          Tcl_NewStringObj("There is nothing to compare with", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "no checkpoint to compare with", -1));
       return TCL_ERROR;
     }
 
@@ -280,7 +306,7 @@ struct LecCommand final : public UtopiaCommand {
         eq.push_back(checkEquivalence<FraigChecker>());
         break;
       default:
-        Tcl_SetObjResult(interp, Tcl_NewStringObj("Non-existent checker", -1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("unknown checker", -1));
         return TCL_ERROR;
     }
 
@@ -333,19 +359,16 @@ static void processSubcommand(
 
 template<typename Func>
 static void measureAndRun(const std::string &name, Func func) {
-  if (measureTime) {
-    auto start = std::chrono::high_resolution_clock::now();
-    func();
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
-    std::cout << name << " took " << elapsed.count() << " seconds\n";
-  } else {
-    func();
-  }
+  auto start = std::chrono::high_resolution_clock::now();
+  func();
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = end - start;
+  UTOPIA_OUT << name << " took " << elapsed.count() << " seconds\n";
 }
 
 struct PassCommand final : public UtopiaCommand {
-  PassCommand() : UtopiaCommand("pass", "TODO") {
+  PassCommand() :
+      UtopiaCommand("pass", "Applies an optimization pass to the design") {
     app.add_subcommand("aig", "Mapping to the AIG representation");
     app.add_subcommand("mig", "Mapping to the MIG represenation");
     app.add_subcommand("b", "Depth-aware balancing");
@@ -391,7 +414,8 @@ struct PassCommand final : public UtopiaCommand {
     namespace pass = eda::gate::optimizer;
 
     if (!designBuilder) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has not been loaded", -1));
       return TCL_ERROR;
     }
 
@@ -472,15 +496,15 @@ static int CmdPass(
 //===----------------------------------------------------------------------===//
 
 struct ReadGraphMlCommand final : public UtopiaCommand {
-  ReadGraphMlCommand() : UtopiaCommand("read_graphml", "TODO") {
+  ReadGraphMlCommand():
+      UtopiaCommand("read_graphml", "Reads a GraphML file") {
     app.allow_extras();
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     if (designBuilder) {
-      Tcl_SetObjResult(
-          interp,
-          Tcl_NewStringObj("The design has already been uploaded", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has already been loaded", -1));
       return TCL_ERROR;
     }
 
@@ -495,12 +519,13 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
     if (!app.remaining().empty()) {
       fileName = app.remaining().at(0);
     } else {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("No file specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
       return TCL_ERROR;
     }
 
     if (!std::filesystem::exists(fileName)){
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+        fmt::format("file '{}' doesn't exist", fileName).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -513,7 +538,7 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
       return TCL_OK;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
     return TCL_ERROR;
   }
 };
@@ -532,7 +557,8 @@ static int CmdReadGraphMl(
 //===----------------------------------------------------------------------===//
 
 struct ReadLibertyCommand final : public UtopiaCommand {
-  ReadLibertyCommand() : UtopiaCommand("read_liberty", "TODO") {
+  ReadLibertyCommand():
+      UtopiaCommand("read_liberty", "Reads a Liberty file") {
     app.allow_extras();
   }
 
@@ -548,12 +574,13 @@ struct ReadLibertyCommand final : public UtopiaCommand {
     if (!app.remaining().empty()) {
       path = app.remaining().at(0);
     } else {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("No path to liberty", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
       return TCL_ERROR;
     }
 
     if (!std::filesystem::exists(path)){
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          fmt::format("File '{}' doesn't exist", path).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -577,7 +604,8 @@ static int CmdReadLiberty(
 //===----------------------------------------------------------------------===//
 
 struct ReadVerilogCommand final : public UtopiaCommand {
-  ReadVerilogCommand() : UtopiaCommand("read_verilog", "TODO") {
+  ReadVerilogCommand():
+      UtopiaCommand("read_verilog", "Reads a Verilog file") {
     app.add_option("--frontend", frontend);
     app.add_option("--top", topModule);
     app.add_flag("--debug", debugMode);
@@ -586,8 +614,8 @@ struct ReadVerilogCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     if (!designBuilder) {
-      Tcl_SetObjResult(interp,
-          Tcl_NewStringObj("The design has already been uploaded", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has already been loaded", -1));
       return TCL_ERROR;
     }
 
@@ -598,13 +626,17 @@ struct ReadVerilogCommand final : public UtopiaCommand {
       return TCL_ERROR;
     }
 
-    if (app.remaining().empty()) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("No file specified", -1));
+    std::string path = "";
+    if (!app.remaining().empty()) {
+      path = app.remaining().at(0);
+    } else {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no file specified", -1));
       return TCL_ERROR;
     }
 
-    if (!std::filesystem::exists(app.remaining().at(0))) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
+    if (!std::filesystem::exists(path)){
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          fmt::format("file '{}' doesn't exist", path).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -621,7 +653,8 @@ struct ReadVerilogCommand final : public UtopiaCommand {
       return TCL_OK;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unsupported frontend", -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+      fmt::format("Unsupported frontend '{}'", frontend).c_str(), -1));
     return TCL_ERROR;
   }
  
@@ -645,7 +678,8 @@ static int CmdReadVerilog(
 //===----------------------------------------------------------------------===//
 
 struct StatCommand final : public UtopiaCommand {
-  StatCommand(): UtopiaCommand("stat", "TODO") {
+  StatCommand():
+      UtopiaCommand("stat", "Prints the design characteristics") {
     app.add_flag("-l, --logical", logic, "Logic level characteristics");
     app.allow_extras();
   }
@@ -654,7 +688,8 @@ struct StatCommand final : public UtopiaCommand {
     namespace estimator = eda::gate::estimator;
 
     if (!designBuilder) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has not been loaded", -1));
       return TCL_ERROR;
     }
 
@@ -670,25 +705,25 @@ struct StatCommand final : public UtopiaCommand {
       const auto &subnet = Subnet::get(id);
       if (logic) {
         eda::gate::analyzer::ProbabilityEstimator estimator;
-        std::cout << "Area: " <<
+
+        UTOPIA_OUT << "Area: " <<
             subnet.getEntries().size() << '\n';
-        std::cout << "Delay: " <<
+        UTOPIA_OUT << "Delay: " <<
             subnet.getPathLength().second << '\n';
         /// FIXME: Use SubnetBuilder instead of Subnet
         SubnetBuilder builder(subnet);
-        std::cout << "Power: " <<
+        UTOPIA_OUT << "Power: " <<
             estimator.estimate(builder).getSwitchProbsSum() << '\n';
       } else {
         if (previousStep != "techmap") {
-          Tcl_SetObjResult(interp,
-              Tcl_NewStringObj(
-                  "Physical properties are not available without a techmap",
-                  -1));
+          Tcl_SetObjResult(interp, Tcl_NewStringObj(
+              "design has not been mapped", -1));
           return TCL_ERROR;
         }
-        std::cout << "Area: " << estimator::getArea(id) << '\n';
-        std::cout << "Delay: " << estimator::getArrivalTime(id) << '\n';
-        std::cout << "Power: " << estimator::getLeakagePower(id) << '\n';
+
+        UTOPIA_OUT << "Area: " << estimator::getArea(id) << '\n';
+        UTOPIA_OUT << "Delay: " << estimator::getArrivalTime(id) << '\n';
+        UTOPIA_OUT << "Power: " << estimator::getLeakagePower(id) << '\n';
       }
     }
 
@@ -713,7 +748,7 @@ static int CmdStat(
 //===----------------------------------------------------------------------===//
 
 struct TechMapCommand final : public UtopiaCommand {
-  TechMapCommand(): UtopiaCommand("techmap", "TODO") {
+  TechMapCommand(): UtopiaCommand("techmap", "Performs technology mapping") {
     const std::map<std::string, Techmapper::Strategy> mapperTypeMap {
       { "af",    Techmapper::Strategy::AREA_FLOW },
       { "area",  Techmapper::Strategy::AREA      },
@@ -729,12 +764,14 @@ struct TechMapCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     if (!designBuilder) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has not been loaded", -1));
       return TCL_ERROR;
     }
 
     if (LibertyManager::get().getLibraryName().empty()) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("No path to liberty", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "library has not been loaded", -1));
       return TCL_ERROR;
     }
 
@@ -793,7 +830,8 @@ static int CmdTechMap(
 //===----------------------------------------------------------------------===//
 
 struct VerilogToFirCommand final : public UtopiaCommand {
-  VerilogToFirCommand(): UtopiaCommand("verilog_to_fir", "TODO") {
+  VerilogToFirCommand():
+      UtopiaCommand("verilog_to_fir", "Translates Verilog to FIRRTL") {
     app.add_flag("--debug", debugMode);
     app.add_option("--top", topModule);
     app.add_option("-o, --out", outputFile);
@@ -809,14 +847,14 @@ struct VerilogToFirCommand final : public UtopiaCommand {
     }
 
     if (app.remaining().empty()) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("No files specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
       return TCL_ERROR;
     }
 
     for (const auto &file: app.remaining()) {
-      if (!std::filesystem::exists(app.remaining().at(0))) {
-        std::cout << file;
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(" doesn't exist", -1));
+      if (!std::filesystem::exists(file)) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(
+            fmt::format("file '{}' doesn't exist", file).c_str(), -1));
         return TCL_ERROR;
       }
     }
@@ -847,6 +885,39 @@ static int CmdVerilogToFir(
 }
 
 //===----------------------------------------------------------------------===//
+// Version
+//===----------------------------------------------------------------------===//
+
+struct VersionCommand final : public UtopiaCommand {
+  VersionCommand():
+      UtopiaCommand("version", "Prints Utopia EDA version") {}
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    UTOPIA_OUT << "Utopia EDA "
+               << VERSION_MAJOR
+               << "."
+               << VERSION_MINOR
+               << " | "
+               << "Copyright (C) "
+               << YEAR_STARTED << "-" << YEAR_CURRENT
+               << " ISP RAS"
+               << std::endl;
+
+    return TCL_OK;
+  } 
+};
+
+static VersionCommand version;
+
+static int CmdVersion(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return version.run(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
 // Write Design
 //===----------------------------------------------------------------------===//
 
@@ -861,12 +932,13 @@ static void printModel(
     printer.print(outFile, net, "printedNet");
     outFile.close();
   } else {
-    printer.print(std::cout, net);
+    printer.print(UTOPIA_OUT, net);
   }
 }
 
 struct WriteDesignCommand final : public UtopiaCommand {
-  WriteDesignCommand(): UtopiaCommand("write_design", "TODO") {
+  WriteDesignCommand():
+      UtopiaCommand("write_design", "Writes the design to a file") {
     const std::map<std::string, ModelPrinter::Format> formatMap {
       { "verilog", ModelPrinter::VERILOG },
       { "simple",  ModelPrinter::SIMPLE  },
@@ -882,7 +954,8 @@ struct WriteDesignCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     if (!designBuilder) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has not been loaded", -1));
       return TCL_ERROR;
     }
 
@@ -901,7 +974,8 @@ struct WriteDesignCommand final : public UtopiaCommand {
       return TCL_OK;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Non-existent format", -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+        fmt::format("unknown format '{}'", format).c_str(), -1));
     return TCL_ERROR;
   }
 
@@ -929,18 +1003,20 @@ static void printSubnet(
 
   const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
   const auto &subnet = Subnet::get(subnetBuilder->make(true));
-  std::cout << subnet << '\n';
+  UTOPIA_OUT << subnet << std::endl;
 }
 
 struct WriteSubnetCommand final : public UtopiaCommand {
-  WriteSubnetCommand(): UtopiaCommand("write_subnet", "TODO") {
+  WriteSubnetCommand():
+      UtopiaCommand("write_subnet", "Writes a subnet to a file") {
     entered = app.add_option("--index", number, "Subnet number");
     app.allow_extras();
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     if (!designBuilder) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has not been loaded", -1));
       return TCL_ERROR;
     }
 
@@ -959,9 +1035,8 @@ struct WriteSubnetCommand final : public UtopiaCommand {
     } else if (number < numSubnets) {
       printSubnet(designBuilder, number);
     } else {
-      Tcl_SetObjResult(
-          interp,
-          Tcl_NewStringObj("There is no such subnet", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          fmt::format("subnet {} doesn't exist", number).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -987,7 +1062,33 @@ static int CmdWriteSubnet(
 //===----------------------------------------------------------------------===//
 
 static inline void printNewline() {
-  std::cout << std::endl;
+  UTOPIA_OUT << std::endl;
+}
+
+static int printFile(Tcl_Interp *interp, const std::string &fileName) {
+  const char *utopiaHome = std::getenv("UTOPIA_HOME");
+  if (!utopiaHome) {
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+        "UTOPIA_HOME has not been set", -1));
+    return TCL_ERROR;
+  }
+
+  std::string filePath = std::string(utopiaHome) + "/" + fileName;
+  std::ifstream file(filePath);
+
+  if (!file.is_open()) {
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+      fmt::format("unable to open file '{}'", filePath).c_str(), -1));
+    return TCL_ERROR;
+  }
+
+  std::string line;
+  while (getline(file, line)) {
+    UTOPIA_OUT << line << std::endl;
+  }
+
+  file.close();
+  return TCL_OK;
 }
 
 static inline int printTitle(Tcl_Interp *interp) {
@@ -1003,6 +1104,21 @@ int Utopia_TclInit(Tcl_Interp *interp) {
     return TCL_ERROR;
   }
 
+  commandRegistry.addCommand(&clear);
+  commandRegistry.addCommand(&dbstat);
+  commandRegistry.addCommand(&help);
+  commandRegistry.addCommand(&lec);
+  commandRegistry.addCommand(&pass);
+  commandRegistry.addCommand(&readGraphMl);
+  commandRegistry.addCommand(&readLiberty);
+  commandRegistry.addCommand(&readVerilog);
+  commandRegistry.addCommand(&stat);
+  commandRegistry.addCommand(&techMap);
+  commandRegistry.addCommand(&verilogToFir);
+  commandRegistry.addCommand(&version);
+  commandRegistry.addCommand(&writeDesign);
+  commandRegistry.addCommand(&writeSubnet);
+
   printNewline();
   printTitle(interp);
   printNewline();
@@ -1012,19 +1128,20 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_DeleteCommand(interp, "exec");
   Tcl_DeleteCommand(interp, "unknown");
 
-  Tcl_CreateCommand(interp, clear.name,         CmdClear,        NULL, NULL);
-  Tcl_CreateCommand(interp, dbstat.name,        CmdDbStat,       NULL, NULL);
-  Tcl_CreateCommand(interp, help.name,          CmdHelp,         NULL, NULL);
-  Tcl_CreateCommand(interp, lec.name,           CmdLec,          NULL, NULL);
-  Tcl_CreateCommand(interp, pass.name,          CmdPass,         NULL, NULL);
-  Tcl_CreateCommand(interp, readGraphMl.name,   CmdReadGraphMl,  NULL, NULL);
-  Tcl_CreateCommand(interp, readLiberty.name,   CmdReadLiberty,  NULL, NULL);
-  Tcl_CreateCommand(interp, readVerilog.name,   CmdReadVerilog,  NULL, NULL);
-  Tcl_CreateCommand(interp, stat.name,          CmdStat,         NULL, NULL);
-  Tcl_CreateCommand(interp, techMap.name,       CmdTechMap,      NULL, NULL);
-  Tcl_CreateCommand(interp, verilogToFir.name,  CmdVerilogToFir, NULL, NULL);
-  Tcl_CreateCommand(interp, writeDesign.name,   CmdWriteDesign,  NULL, NULL);
-  Tcl_CreateCommand(interp, writeSubnet.name,   CmdWriteSubnet,  NULL, NULL);
+  Tcl_CreateCommand(interp, clear.name,        CmdClear,        NULL, NULL);
+  Tcl_CreateCommand(interp, dbstat.name,       CmdDbStat,       NULL, NULL);
+  Tcl_CreateCommand(interp, help.name,         CmdHelp,         NULL, NULL);
+  Tcl_CreateCommand(interp, lec.name,          CmdLec,          NULL, NULL);
+  Tcl_CreateCommand(interp, pass.name,         CmdPass,         NULL, NULL);
+  Tcl_CreateCommand(interp, readGraphMl.name,  CmdReadGraphMl,  NULL, NULL);
+  Tcl_CreateCommand(interp, readLiberty.name,  CmdReadLiberty,  NULL, NULL);
+  Tcl_CreateCommand(interp, readVerilog.name,  CmdReadVerilog,  NULL, NULL);
+  Tcl_CreateCommand(interp, stat.name,         CmdStat,         NULL, NULL);
+  Tcl_CreateCommand(interp, techMap.name,      CmdTechMap,      NULL, NULL);
+  Tcl_CreateCommand(interp, verilogToFir.name, CmdVerilogToFir, NULL, NULL);
+  Tcl_CreateCommand(interp, version.name,      CmdVersion,      NULL, NULL);
+  Tcl_CreateCommand(interp, writeDesign.name,  CmdWriteDesign,  NULL, NULL);
+  Tcl_CreateCommand(interp, writeSubnet.name,  CmdWriteSubnet,  NULL, NULL);
 
   return TCL_OK;
 }

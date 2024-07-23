@@ -390,43 +390,47 @@ static void measureAndRun(const std::string &name, Func func) {
 struct PassCommand final : public UtopiaCommand {
   PassCommand() :
       UtopiaCommand("pass", "Applies an optimization pass to the design") {
-    app.add_subcommand("aig", "Mapping to the AIG representation");
-    app.add_subcommand("mig", "Mapping to the MIG represenation");
+    app.add_subcommand("aig", "Mapping to AIG");
+    app.add_subcommand("mig", "Mapping to MIG");
+
     app.add_subcommand("b", "Depth-aware balancing");
 
-    auto *passRw = app.add_subcommand("rw", "Rewriting");
+    auto *passRw =
+        app.add_subcommand("rw", "Rewriting");
     passRw->add_option("--name", rwName);
     passRw->add_option("-k", rwK);
     passRw->add_flag("-z", rwZ);
 
-    app.add_subcommand("rwz", "Rewrite zero-cost replacements");
-    app.add_subcommand("rf", "Refactor");
-    app.add_subcommand("rfz", "Refactor zero-cost replacements");
-    app.add_subcommand("rfa", "Refactor criterion area");
-    app.add_subcommand("rfd", "Refactor criterion delay");
-    app.add_subcommand("rfp", "Refactor criterion power");
+    app.add_subcommand("rwz", "Rewriting w/ zero-cost replacements");
 
-    auto *passRs = app.add_subcommand("rs", "Resubstitute");
+    app.add_subcommand("rf",  "Refactoring");
+    app.add_subcommand("rfz", "Refactoring w/ zero-cost replacements");
+    app.add_subcommand("rfa", "Area-aware refactoring");
+    app.add_subcommand("rfd", "Depth-aware refactoring");
+    app.add_subcommand("rfp", "Power-aware refactoring");
+
+    auto *passRs =
+        app.add_subcommand("rs", "Resubstitution");
     passRs->add_option("--name", rsName);
     passRs->add_option("-k", rsK);
     passRs->add_option("-n", rsN);
 
-    auto *passRsz = app.add_subcommand(
-        "rsz",
-        "Resubstitute w/ zero-cost replacements");
+    auto *passRsz =
+        app.add_subcommand("rsz", "Resubstitution w/ zero-cost replacements");
     passRsz->add_option("--name", rszName);
     passRsz->add_option("-k", rszK);
     passRsz->add_option("-n", rszN);
 
-    app.add_subcommand("ma", "Technology Mapper criterion area");
-    app.add_subcommand("md", "Technology Mapper criterion delay");
-    app.add_subcommand("mp", "Technology Mapper criterion power");
-    app.add_subcommand("resyn", "Pre-defined script resyn");
-    app.add_subcommand("resyn2", "Pre-defined script resyn2");
-    app.add_subcommand("resyn2a", "Pre-defined script resyn2a");
-    app.add_subcommand("resyn3", "Pre-defined script resyn3");
-    app.add_subcommand("compress", "Pre-defined script compress");
-    app.add_subcommand("compress2", "Pre-defined script compress2");
+    app.add_subcommand("ma", "Area-aware technology mapping");
+    app.add_subcommand("md", "Delay-aware technology mapping");
+    app.add_subcommand("mp", "Power-aware technology mapping");
+
+    app.add_subcommand("resyn",     "Predefined script resyn");
+    app.add_subcommand("resyn2",    "Predefined script resyn2");
+    app.add_subcommand("resyn2a",   "Predefined script resyn2a");
+    app.add_subcommand("resyn3",    "Predefined script resyn3");
+    app.add_subcommand("compress",  "Predefined script compress");
+    app.add_subcommand("compress2", "Predefined script compress2");
 
     app.allow_extras();
   }
@@ -651,7 +655,7 @@ struct ReadVerilogCommand final : public UtopiaCommand {
     if (!app.remaining().empty()) {
       path = app.remaining().at(0);
     } else {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("no file specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
       return TCL_ERROR;
     }
 
@@ -701,7 +705,7 @@ static int CmdReadVerilog(
 struct StatCommand final : public UtopiaCommand {
   StatCommand():
       UtopiaCommand("stat", "Prints the design characteristics") {
-    app.add_flag("-l, --logical", logic, "Logic level characteristics");
+    app.add_flag("-l, --logical", logic, "Logic-level characteristics");
     app.allow_extras();
   }
 
@@ -721,32 +725,38 @@ struct StatCommand final : public UtopiaCommand {
       return TCL_ERROR;
     }
 
+    if (!logic && previousStep != "techmap") {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has not been mapped", -1));
+      return TCL_ERROR;
+    }
+
+    float area  = 0.0;
+    float delay = 0.0;
+    float power = 0.0;
+
     for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
-      const auto &id = designBuilder->getSubnetID(0);
-      const auto &subnet = Subnet::get(id);
+      const auto &subnetID = designBuilder->getSubnetID(i);
+      const auto &subnet = Subnet::get(subnetID);
+
       if (logic) {
+        /// FIXME: Use SubnetBuilder instead of Subnet.
+        SubnetBuilder builder(subnet);
         eda::gate::analyzer::ProbabilityEstimator estimator;
 
-        UTOPIA_OUT << "Area: " <<
-            subnet.getEntries().size() << '\n';
-        UTOPIA_OUT << "Delay: " <<
-            subnet.getPathLength().second << '\n';
-        /// FIXME: Use SubnetBuilder instead of Subnet
-        SubnetBuilder builder(subnet);
-        UTOPIA_OUT << "Power: " <<
-            estimator.estimate(builder).getSwitchProbsSum() << '\n';
+        area  += subnet.getEntries().size();
+        delay += subnet.getPathLength().second;
+        power += estimator.estimate(builder).getSwitchProbsSum();
       } else {
-        if (previousStep != "techmap") {
-          Tcl_SetObjResult(interp, Tcl_NewStringObj(
-              "design has not been mapped", -1));
-          return TCL_ERROR;
-        }
-
-        UTOPIA_OUT << "Area: " << estimator::getArea(id) << '\n';
-        UTOPIA_OUT << "Delay: " << estimator::getArrivalTime(id) << '\n';
-        UTOPIA_OUT << "Power: " << estimator::getLeakagePower(id) << '\n';
+        area  += estimator::getArea(subnetID);
+        delay += estimator::getArrivalTime(subnetID);
+        power += estimator::getLeakagePower(subnetID);
       }
-    }
+    } // for subnet
+
+    UTOPIA_OUT << "Area:  " << area  << std::endl;
+    UTOPIA_OUT << "Delay: " << delay << std::endl;
+    UTOPIA_OUT << "Power: " << power << std::endl;
 
     return TCL_OK;
   }

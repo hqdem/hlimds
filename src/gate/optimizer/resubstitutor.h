@@ -31,7 +31,7 @@ public:
    * @brief Constructs a resubstitutor.
    *
    * @param cutSize Maximum number of elements in the cut.
-   * @param careSize Maximum number of elements in the cut for care evaluation.
+   * @param maxLevels Maximum levels from a pivot to roots for care evaluation.
    */
   Resubstitutor(const std::string &name, unsigned cutSize, unsigned maxLevels) :
       SubnetInPlaceTransformer(name), cutSize(cutSize), maxLevels(maxLevels) {}

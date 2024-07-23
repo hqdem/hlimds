@@ -184,7 +184,7 @@ inline SubnetPass rs(const std::string &name, uint16_t k, uint16_t n) {
 }
 
 inline SubnetPass rs(const std::string &name, uint16_t k) {
-  return rs(name, k, 16);
+  return rs(name, k, 3);
 }
 
 inline SubnetPass rs(uint16_t k) {
@@ -201,7 +201,7 @@ inline SubnetPass rsz(const std::string &name, uint16_t k, uint16_t n) {
 }
 
 inline SubnetPass rsz(const std::string &name, uint16_t k) {
-  return rsz(name, k, 16);
+  return rsz(name, k, 3);
 }
 
 inline SubnetPass rsz(uint16_t k) {

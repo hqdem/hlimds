@@ -67,8 +67,8 @@ void runResubstitutor(std::string file) {
   runResubstitutor(builder->make());
 }
 
-TEST(ResubstitutorTest, Bc0) {
-  runResubstitutor("bc0_orig");
+TEST(ResubstitutorTest, C7552) {
+  runResubstitutor("c7552_orig");
 }
 
 TEST(ResubstitutorTest, C5315) {

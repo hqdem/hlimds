@@ -52,7 +52,13 @@ using namespace eda::gate::translator;
 
 struct UtopiaCommand {
   UtopiaCommand(const char *name, const char *desc):
-    name(name), desc(desc), app(desc, name) {}
+    name(name), desc(desc), app(desc, name) {
+    // CLI::App always adds the help option, but it is not required.
+    auto *helpOption = app.get_help_ptr();
+    if (helpOption) {
+      app.remove_option(helpOption);
+    }
+  }
 
   virtual int run(Tcl_Interp *interp, int argc, const char *argv[]) = 0;
 
@@ -909,14 +915,12 @@ struct VersionCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_OUT << "Utopia EDA "
+               << "version "
                << VERSION_MAJOR
                << "."
                << VERSION_MINOR
-               << " | "
-               << "Copyright (C) "
-               << YEAR_STARTED << "-" << YEAR_CURRENT
-               << " ISP RAS"
-               << std::endl;
+               << std::endl
+               << std::flush;
 
     return TCL_OK;
   } 

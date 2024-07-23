@@ -1,6 +1,6 @@
  /----------------------------------------------------------------------------\
  |                                                                            |
+ | Copyright (C) 2021-2024 ISP RAS (https://gitlab.ispras.ru/mvg/utopia-eda)  |
  | SPDX-License-Identifier: Apache-2.0                                        |
- | Copyright (C) 2021-2024 ISP RAS (http://www.ispras.ru)                     |
  |                                                                            |
  \----------------------------------------------------------------------------/

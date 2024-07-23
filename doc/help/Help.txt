@@ -1,0 +1,17 @@
+
+    clear                 erases the current design from memory
+    exit                  closes the interactive shell
+    dbstat                prints information about a subnet database
+    help                  prints help information
+    lec                   checks logical equivalence
+    pass                  applies an optimization pass to the current design
+    read_graphml          reads a GraphML file
+    read_liberty          reads a Liberty file (for technology mapping)
+    read_verilog          reads a Verilog file
+    stat                  prints parameters of the current design
+    techmap               performs technology mapping
+    verilog_to_fir        translates Verilog to FIRRTL
+    write_design          writes the current design to a file
+    write_subnet          writes a subnet to a file
+
+Type 'help <command>' for more information on a command.

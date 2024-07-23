@@ -28,23 +28,136 @@
 #include <CLI/CLI.hpp>
 #include <tcl.h>
 
-#define PARAM_SUBCOMMAND(app, cmd, func) do {\
-  processSubcommand(app, #cmd, [&](){ measureAndRun(#cmd, func); });\
-} while (false)
-
-#define SUBCOMMAND(cli, cmd) do {\
-  processSubcommand((cli), #cmd, [&]() {\
-    measureAndRun(#cmd, [&](){\
-        foreach(pass::cmd())->transform(designBuilder); });\
-  });\
-} while (false)
+#include <cstddef>
+#include <cstdint>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 using namespace eda::gate::model;
+using namespace eda::gate::debugger;
+using namespace eda::gate::debugger::options;
+using namespace eda::gate::library;
 using namespace eda::gate::optimizer;
+using namespace eda::gate::techmapper;
+using namespace eda::gate::translator;
+
+struct UtopiaCommand {
+  UtopiaCommand(const char *name, const char *desc):
+    name(name), desc(desc) {}
+
+  virtual int run(Tcl_Interp *interp, int argc, const char *argv[]) = 0;
+
+  void printHelp(std::ostream &out) const {
+    out << app.help();
+  }
+
+  const char *name;
+  const char *desc;
+
+  CLI::App app;
+};
 
 static DesignBuilderPtr designBuilder = nullptr;
 static std::string previousStep = "none";
-static bool measureTime = false;
+static bool measureTime = true;
+
+//===----------------------------------------------------------------------===//
+// Clear
+//===----------------------------------------------------------------------===//
+
+struct ClearCommand final : public UtopiaCommand {
+  ClearCommand(): UtopiaCommand("clear", "TODO") {}
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    designBuilder = nullptr;
+    return TCL_OK;
+  }
+};
+
+static ClearCommand clear;
+
+static int CmdClear(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return clear.run(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
+// Database Statistics
+//===----------------------------------------------------------------------===//
+
+struct DbStatCommand final : public UtopiaCommand {
+  DbStatCommand(): UtopiaCommand("dbstat", "TODO") {
+    app.add_option("--db", dbPath)->expected(1)->required(true);
+    app.add_option("--otype", outputType)->expected(1);
+    app.add_option("--out", outputNamefile)->expected(1);
+    app.add_option("--ttsize", ttSize)->expected(1)->required(true);
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    if (app.remaining().empty()) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("No files specified", -1));
+      return TCL_ERROR;
+    }
+
+    NPNDBConfig config;
+    config.dbPath = dbPath;
+
+    if (outputType == "DOT") {
+      config.outType = OutType::DOT;
+    } else if (outputType == "INFO") {
+      config.outType = OutType::INFO;
+    } else if (outputType == "BOTH") {
+      config.outType = OutType::BOTH;
+    } else {
+      std::cerr << "Wrong type of output: " << outputType
+                << ", correct are (DOT / INFO / BOTH)" << std::endl;
+      return TCL_ERROR;
+    }
+
+    config.outName = outputNamefile;
+    config.ttSize = ttSize;
+    config.binLines = app.remaining();
+
+    if (getDbStat(std::cerr, config)) {
+      return TCL_ERROR;
+    }
+
+    return TCL_OK;
+  }
+
+  std::string dbPath;
+  int ttSize;
+  std::string outputType = "BOTH";
+  std::string outputNamefile;
+};
+
+static DbStatCommand dbstat;
+
+static int CmdDbStat(
+    ClientData,
+    Tcl_Interp *interp, int argc,
+    const char *argv[]) {
+  return dbstat.run(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
+// Help
+//===----------------------------------------------------------------------===//
 
 static int printFile(Tcl_Interp *interp, const std::string &fileName) {
   const char *utopiaHome = std::getenv("UTOPIA_HOME");
@@ -70,498 +183,156 @@ static int printFile(Tcl_Interp *interp, const std::string &fileName) {
   return TCL_OK;
 }
 
-static int printTitle(Tcl_Interp *interp) {
-  return printFile(interp, "doc/Title.md");
-}
+struct HelpCommand final : public UtopiaCommand {
+  HelpCommand(): UtopiaCommand("help", "TODO") {
+    app.allow_extras();
+  }
 
-static int readVerilog(
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    if (app.remaining().empty()) {
+      return printFile(interp, "doc/help/Help.txt");
+    }
+
+    // TODO:
+    return TCL_ERROR;
+  }
+};
+
+static HelpCommand help;
+
+static int CmdHelp(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-
-  if (designBuilder != nullptr) {
-    Tcl_SetObjResult(
-        interp,
-        Tcl_NewStringObj("The design has already been uploaded", -1));
-    return TCL_ERROR;
-  }
-
-  CLI::App app;
-
-  std::string frontend = "yosys";
-  std::string topModule;
-  bool debugMode = false;
-
-  app.add_option("--frontend", frontend);
-  app.add_option("--top", topModule);
-  app.add_flag("--debug", debugMode);
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  if (app.remaining().empty()) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("No file specified", -1));
-    return TCL_ERROR;
-  }
-
-  if (!std::filesystem::exists(app.remaining().at(0))) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
-    return TCL_ERROR;
-  }
-
-  if (frontend == "yosys") {
-    YosysToModel2Config cfg;
-    cfg.debugMode = debugMode;
-    cfg.topModule = topModule;
-    cfg.files = app.remaining();
-
-    YosysConverterModel2 cvt(cfg);
-    designBuilder = std::make_unique<DesignBuilder>(cvt.getNetID());
-
-    designBuilder->save("original");
-    return TCL_OK;
-  }
-
-  Tcl_SetObjResult(interp, Tcl_NewStringObj("Unsupported frontend", -1));
-  return TCL_ERROR;
+  return help.run(interp, argc, argv);
 }
 
-void printModel(
-    const std::string &fileName,
-    ModelPrinter::Format format,
-    const Net &net) {
-
-  ModelPrinter &printer = ModelPrinter::getPrinter(format);
-
-  if (!fileName.empty()) {
-    std::ofstream outFile(fileName);
-    printer.print(outFile, net, "printedNet");
-    outFile.close();
-  } else {
-    printer.print(std::cout, net);
-  }
-}
-
-static int writeDesign(
-    ClientData,
-    Tcl_Interp *interp,
-    int argc,
-    const char *argv[]) {
-
-  if (designBuilder == nullptr) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
-    return TCL_ERROR;
-  }
-
-  CLI::App app;
-
-  std::string fileName = "design.v";
-  ModelPrinter::Format format = ModelPrinter::VERILOG;
-
-  const std::map<std::string, ModelPrinter::Format> formatMap {
-    {"verilog", ModelPrinter::VERILOG},
-    {"simple", ModelPrinter::SIMPLE},
-    {"dot", ModelPrinter::DOT},
-  };
-
-  app.add_option("--format", format, "Output format")
-      ->expected(1)
-      ->transform(CLI::CheckedTransformer(formatMap, CLI::ignore_case));
-  app.add_option("--path", fileName);
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  if (format == ModelPrinter::VERILOG ||
-      format == ModelPrinter::SIMPLE ||
-      format == ModelPrinter::DOT) {
-    const auto &net = Net::get(designBuilder->make());
-    printModel(fileName, format, net);
-    return TCL_OK;
-  }
-
-  Tcl_SetObjResult(interp, Tcl_NewStringObj("Non-existent format", -1));
-  return TCL_ERROR;
-}
+//===----------------------------------------------------------------------===//
+// LEC
+//===----------------------------------------------------------------------===//
 
 template <typename CheckerType>
-bool checkEquivalence() {
-  CheckerType &checker = CheckerType::get();
+static bool checkEquivalence() {
+  auto &checker = CheckerType::get();
   return checker.areEquivalent(*designBuilder, previousStep, "original").equal();
 }
 
-bool containsFalse(const std::vector<bool> &eq) {
+static bool containsFalse(const std::vector<bool> &eq) {
   return std::find(eq.begin(), eq.end(), false) != eq.end();
 }
 
-static int lec(ClientData, Tcl_Interp *interp, int argc, const char *argv[]) {
+struct LecCommand final : public UtopiaCommand {
+  LecCommand(): UtopiaCommand("lec", "TODO") {
+    const std::map<std::string, LecType> lecMethodMap {
+      { "bdd", LecType::BDD   },
+      { "fra", LecType::FRAIG },
+      { "rnd", LecType::RND   },
+      { "sat", LecType::SAT   }
+    };
 
-  using eda::gate::debugger::BddChecker;
-  using eda::gate::debugger::FraigChecker;
-  using eda::gate::debugger::options::LecType;
-  using eda::gate::debugger::RndChecker;
-  using eda::gate::debugger::SatChecker;
-
-  if (designBuilder == nullptr) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
-    return TCL_ERROR;
+    app.add_option("--method", method, "Method for checking equivalence")
+        ->expected(1)
+        ->transform(CLI::CheckedTransformer(lecMethodMap, CLI::ignore_case));
+    app.allow_extras();
   }
 
-  if (previousStep == "none") {
-    Tcl_SetObjResult(
-        interp,
-        Tcl_NewStringObj("There is nothing to compare with", -1));
-    return TCL_ERROR;
-  }
-
-  CLI::App app;
-
-  LecType method = LecType::SAT;
-
-  const std::map<std::string, LecType> lecMethodMap {
-    {"bdd", LecType::BDD},
-    {"fra", LecType::FRAIG},
-    {"rnd", LecType::RND},
-    {"sat", LecType::SAT},
-  };
-
-  app.add_option("--method", method, "Method for checking equivalence")
-      ->expected(1)
-      ->transform(CLI::CheckedTransformer(lecMethodMap, CLI::ignore_case));
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  std::vector<bool> eq;
-
-  switch (method) {
-    case LecType::SAT:
-      eq.push_back(checkEquivalence<SatChecker>());
-      break;
-    case LecType::BDD:
-      eq.push_back(checkEquivalence<BddChecker>());
-      break;
-    case LecType::RND:
-      eq.push_back(checkEquivalence<RndChecker>());
-      break;
-    case LecType::FRAIG:
-      eq.push_back(checkEquivalence<FraigChecker>());
-      break;
-    default:
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("Non-existent checker", -1));
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    if (!designBuilder) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
       return TCL_ERROR;
-  }
-
-  const char *result = containsFalse(eq) ? "false" : "true";
-  Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
-
-  return TCL_OK;
-}
-
-static int techMap(
-    ClientData,
-    Tcl_Interp *interp,
-    int argc,
-    const char *argv[]) {
-
-  using eda::gate::library::LibertyManager;
-  using eda::gate::techmapper::Techmapper;
-
-  if (designBuilder == nullptr) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
-    return TCL_ERROR;
-  }
-
-  if (LibertyManager::get().getLibraryName().empty()) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("No path to liberty", -1));
-    return TCL_ERROR;
-  }
-
-  CLI::App app;
-
-  const std::map<std::string, Techmapper::Strategy> mapperTypeMap {
-    {"af", Techmapper::Strategy::AREA_FLOW},
-    {"area", Techmapper::Strategy::AREA},
-    {"delay", Techmapper::Strategy::DELAY},
-    {"power", Techmapper::Strategy::POWER},
-  };
-
-  auto mapperType = Techmapper::Strategy::AREA;
-
-  app.add_option("--type", mapperType, "Type of mapper")
-      ->expected(1)
-      ->transform(CLI::CheckedTransformer(mapperTypeMap, CLI::ignore_case));
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  const auto &techLib = LibertyManager::get().getLibraryName();
-
-  const std::filesystem::path sdcPath = eda::env::getHomePath();
-
-  Techmapper techmapper;
-  techmapper.setStrategy(mapperType);
-  techmapper.setSDC(sdcPath);
-  techmapper.setLibrary(techLib);
-
-  const size_t numSubnets = designBuilder->getSubnetNum();
-  for (size_t subnetId = 0; subnetId < numSubnets; ++subnetId) {
-    const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
-
-    eda::gate::premapper::AigMapper aigMapper("aig");
-    const auto premappedSubnetID = aigMapper.transform(subnetBuilder->make());
-
-    SubnetBuilder subnetBuilderTechmap;
-    techmapper.techmap(premappedSubnetID, subnetBuilderTechmap);
-    const auto mappedSubnetID = subnetBuilderTechmap.make();
-
-    designBuilder->setSubnetBuilder(
-        subnetId,
-        std::make_shared<SubnetBuilder>(mappedSubnetID));
-  }
-
-  designBuilder->save("techmap");
-  previousStep = "techmap";
-
-  return TCL_OK;
-}
-
-static int readLiberty(
-    ClientData,
-    Tcl_Interp *interp,
-    int argc,
-    const char *argv[]) {
-
-  using eda::gate::library::LibertyManager;
-
-  CLI::App app;
-
-  std::string path = "";
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  if (!app.remaining().empty()) {
-    path = app.remaining().at(0);
-  } else {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("No path to liberty", -1));
-    return TCL_ERROR;
-  }
-
-  if (!std::filesystem::exists(path)){
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
-    return TCL_ERROR;
-  }
-
-  LibertyManager::get().loadLibrary(path);
-  return TCL_OK;
-}
-
-void printSubnet(
-    const DesignBuilderPtr &designBuilder,
-    size_t subnetId) {
-
-  const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
-  const auto &subnet = Subnet::get(subnetBuilder->make(true));
-  std::cout << subnet << '\n';
-}
-
-static int writeSubnet(
-    ClientData,
-    Tcl_Interp *interp,
-    int argc,
-    const char *argv[]) {
-
-  if (designBuilder == nullptr) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
-    return TCL_ERROR;
-  }
-
-  CLI::App app;
-
-  size_t number = 0;
-  auto *entered = app.add_option("--index", number, "Subnet sequence number");
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  const size_t numSubnets = designBuilder->getSubnetNum();
-  if (entered->count() == 0) {
-    for (size_t subnetId = 0; subnetId < numSubnets; ++subnetId) {
-      printSubnet(designBuilder, subnetId);
     }
-  } else if (number < numSubnets) {
-    printSubnet(designBuilder, number);
-  } else {
-    Tcl_SetObjResult(
-        interp,
-        Tcl_NewStringObj("There is no such subnet nubmer", -1));
-    return TCL_ERROR;
-  }
 
-  return TCL_OK;
-}
+    if (previousStep == "none") {
+      Tcl_SetObjResult(
+          interp,
+          Tcl_NewStringObj("There is nothing to compare with", -1));
+      return TCL_ERROR;
+    }
 
-static int readGraphMl(
-    ClientData,Tcl_Interp *interp,
-    int argc,
-    const char *argv[]) {
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
 
-  using eda::gate::translator::GmlTranslator;
+    std::vector<bool> eq;
 
-  if (designBuilder != nullptr) {
-    Tcl_SetObjResult(
-        interp,
-        Tcl_NewStringObj("The design has already been uploaded", -1));
-    return TCL_ERROR;
-  }
+    switch (method) {
+      case LecType::SAT:
+        eq.push_back(checkEquivalence<SatChecker>());
+        break;
+      case LecType::BDD:
+        eq.push_back(checkEquivalence<BddChecker>());
+        break;
+      case LecType::RND:
+        eq.push_back(checkEquivalence<RndChecker>());
+        break;
+      case LecType::FRAIG:
+        eq.push_back(checkEquivalence<FraigChecker>());
+        break;
+      default:
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("Non-existent checker", -1));
+        return TCL_ERROR;
+    }
 
-  CLI::App app;
+    const char *result = containsFalse(eq) ? "false" : "true";
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
 
-  std::string fileName = "";
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  if (!app.remaining().empty()) {
-    fileName = app.remaining().at(0);
-  } else {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("No file specified", -1));
-    return TCL_ERROR;
-  }
-
-  if (!std::filesystem::exists(fileName)){
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
-    return TCL_ERROR;
-  }
-
-  if (!fileName.empty()) {
-    GmlTranslator::ParserData data;
-    GmlTranslator parser;
-    const auto &subnet = parser.translate(fileName, data)->make(true);
-    designBuilder = std::make_unique<DesignBuilder>(subnet);
-    designBuilder->save("original");
     return TCL_OK;
   }
 
-  Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
-  return TCL_ERROR;
-}
+  LecType method = LecType::SAT;
+};
 
-static int stats(
+static LecCommand lec;
+
+static int CmdLec(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-
-  namespace estimator = eda::gate::estimator;
-
-  if (designBuilder == nullptr) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
-    return TCL_ERROR;
-  }
-
-  CLI::App app;
-
-  bool logic = false;
-  app.add_flag("-l, --logical", logic, "Logic level characteristics");
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
-    const auto &id = designBuilder->getSubnetID(0);
-    const auto &subnet = Subnet::get(id);
-    if (logic) {
-      eda::gate::analyzer::ProbabilityEstimator estimator;
-      std::cout << "Area: " <<
-          subnet.getEntries().size() << '\n';
-      std::cout << "Delay: " <<
-          subnet.getPathLength().second << '\n';
-      /// FIXME: Use SubnetBuilder instead of Subnet
-      SubnetBuilder builder(subnet);
-      std::cout << "Power: " <<
-          estimator.estimate(builder).getSwitchProbsSum() << '\n';
-    } else {
-      if (previousStep != "techmap") {
-        Tcl_SetObjResult(interp,
-            Tcl_NewStringObj(
-                "Physical properties are not available without a techmap",
-                -1));
-        return TCL_ERROR;
-      }
-      std::cout << "Area: " << estimator::getArea(id) << '\n';
-      std::cout << "Delay: " << estimator::getArrivalTime(id) << '\n';
-      std::cout << "Power: " << estimator::getLeakagePower(id) << '\n';
-    }
-  }
-
-  return TCL_OK;
+  return lec.run(interp, argc, argv);
 }
 
-static int clear(
-    ClientData,
-    Tcl_Interp *interp,
-    int argc,
-    const char *argv[]) {
-  designBuilder = nullptr;
-  return TCL_OK;
-}
+//===----------------------------------------------------------------------===//
+// Pass
+//===----------------------------------------------------------------------===//
+
+#define PARAM_SUBCOMMAND(app, cmd, func) do {\
+  processSubcommand(app, #cmd, [&]() {\
+    measureAndRun(#cmd, func);\
+  });\
+} while (false)
+
+#define SUBCOMMAND(cli, cmd) do {\
+  processSubcommand((cli), #cmd, [&]() {\
+    measureAndRun(#cmd, [&]() {\
+      foreach(pass::cmd())->transform(designBuilder);\
+    });\
+  });\
+} while (false)
 
 template<typename T>
-void processSubcommand(
+static void processSubcommand(
     CLI::App &app,
     const std::string &subcommandName,
     T handler) {
-
   if (app.got_subcommand(subcommandName)) {
     handler();
   }
 }
 
 template<typename Func>
-void measureAndRun(const std::string &name, Func func) {
+static void measureAndRun(const std::string &name, Func func) {
   if (measureTime) {
     auto start = std::chrono::high_resolution_clock::now();
     func();
@@ -573,238 +344,658 @@ void measureAndRun(const std::string &name, Func func) {
   }
 }
 
-static int pass(
-    ClientData,
-    Tcl_Interp *interp,
-    int argc,
-    const char *argv[]) {
+struct PassCommand final : public UtopiaCommand {
+  PassCommand() : UtopiaCommand("pass", "TODO") {
+    app.add_subcommand("aig", "Mapping to the AIG representation");
+    app.add_subcommand("mig", "Mapping to the MIG represenation");
+    app.add_subcommand("b", "Depth-aware balancing");
 
-  namespace pass = eda::gate::optimizer;
+    auto *passRw = app.add_subcommand("rw", "Rewriting");
+    passRw->add_option("--name", rwName);
+    passRw->add_option("-k", rwK);
+    passRw->add_flag("-z", rwZ);
 
-  if (designBuilder == nullptr) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
-    return TCL_ERROR;
+    app.add_subcommand("rwz", "Rewrite zero-cost replacements");
+    app.add_subcommand("rf", "Refactor");
+    app.add_subcommand("rfz", "Refactor zero-cost replacements");
+    app.add_subcommand("rfa", "Refactor criterion area");
+    app.add_subcommand("rfd", "Refactor criterion delay");
+    app.add_subcommand("rfp", "Refactor criterion power");
+
+    auto *passRs = app.add_subcommand("rs", "Resubstitute");
+    passRs->add_option("--name", rsName);
+    passRs->add_option("-k", rsK);
+    passRs->add_option("-n", rsN);
+
+    auto *passRsz = app.add_subcommand(
+        "rsz",
+        "Resubstitute w/ zero-cost replacements");
+    passRsz->add_option("--name", rszName);
+    passRsz->add_option("-k", rszK);
+    passRsz->add_option("-n", rszN);
+
+    app.add_subcommand("ma", "Technology Mapper criterion area");
+    app.add_subcommand("md", "Technology Mapper criterion delay");
+    app.add_subcommand("mp", "Technology Mapper criterion power");
+    app.add_subcommand("resyn", "Pre-defined script resyn");
+    app.add_subcommand("resyn2", "Pre-defined script resyn2");
+    app.add_subcommand("resyn2a", "Pre-defined script resyn2a");
+    app.add_subcommand("resyn3", "Pre-defined script resyn3");
+    app.add_subcommand("compress", "Pre-defined script compress");
+    app.add_subcommand("compress2", "Pre-defined script compress2");
+
+    app.allow_extras();
   }
 
-  CLI::App app;
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    namespace pass = eda::gate::optimizer;
 
-  // Standart parametres for specific passes
-  // Rewriter
-  std::string rwName  = "rw";
-  uint16_t rwK        = 4;
-  bool rwZ            = false;
-  // Resubstiture
-  std::string rsName  = "rs";
-  uint16_t rsK        = 8;
-  uint16_t rsN        = 16;
-  // Resubstiture w/ zero-cost replacements
+    if (!designBuilder) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      return TCL_ERROR;
+    }
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    SUBCOMMAND(app, aig);
+    SUBCOMMAND(app, mig);
+    SUBCOMMAND(app, b);
+
+    PARAM_SUBCOMMAND(app, rw, [&]() {
+      foreach(pass::rw(rwName, rwK, rwZ))->transform(designBuilder);
+    });
+
+    SUBCOMMAND(app, rwz);
+    SUBCOMMAND(app, rf);
+    SUBCOMMAND(app, rfz);
+    SUBCOMMAND(app, rfa);
+    SUBCOMMAND(app, rfd);
+    SUBCOMMAND(app, rfp);
+
+    PARAM_SUBCOMMAND(app, rs, [&]() {
+      foreach(pass::rs(rsName, rsK, rsN))->transform(designBuilder);
+    });
+
+    PARAM_SUBCOMMAND(app, rsz, [&]() {
+      foreach(pass::rsz(rszName, rszK, rszN))->transform(designBuilder);
+    });
+
+    SUBCOMMAND(app, resyn);
+    SUBCOMMAND(app, resyn2);
+    SUBCOMMAND(app, resyn2a);
+    SUBCOMMAND(app, resyn3);
+    SUBCOMMAND(app, compress);
+    SUBCOMMAND(app, compress2);
+    SUBCOMMAND(app, ma);
+    SUBCOMMAND(app, md);
+    SUBCOMMAND(app, mp);
+
+    designBuilder->save("pass");
+    previousStep = "pass";
+
+    return TCL_OK;
+  }
+
+  // Rewriter.
+  std::string rwName = "rw";
+  uint16_t rwK = 4;
+  bool rwZ = false;
+
+  // Resubstitor.
+  std::string rsName = "rs";
+  uint16_t rsK = 8;
+  uint16_t rsN = 16;
+
+  // Resubstitutor w/ zero-cost replacements.
   std::string rszName = "rsz";
-  uint16_t rszK       = 8;
-  uint16_t rszN       = 16;
+  uint16_t rszK = 8;
+  uint16_t rszN = 16;
+};
 
-  app.add_subcommand("aig", "Mapping to the AIG representation");
-  app.add_subcommand("mig", "Mapping to the MIG represenation");
-  app.add_subcommand("b", "Depth-aware balancing");
+static PassCommand pass;
 
-  auto *passRw = app.add_subcommand("rw", "Rewriting");
-  passRw->add_option("--name", rwName);
-  passRw->add_option("-k", rwK);
-  passRw->add_flag("-z", rwZ);
+static int CmdPass(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return pass.run(interp, argc, argv);
+}
 
-  app.add_subcommand("rwz", "Rewrite zero-cost replacements");
-  app.add_subcommand("rf", "Refactor");
-  app.add_subcommand("rfz", "Refactor zero-cost replacements");
-  app.add_subcommand("rfa", "Refactor criterion area");
-  app.add_subcommand("rfd", "Refactor criterion delay");
-  app.add_subcommand("rfp", "Refactor criterion power");
+//===----------------------------------------------------------------------===//
+// Read GraphML
+//===----------------------------------------------------------------------===//
 
-  auto *passRs = app.add_subcommand("rs", "Resubstitute");
-  passRs->add_option("--name", rsName);
-  passRs->add_option("-k", rsK);
-  passRs->add_option("-n", rsN);
-
-  auto *passRsz = app.add_subcommand(
-      "rsz",
-      "Resubstitute w/ zero-cost replacements");
-  passRsz->add_option("--name", rszName);
-  passRsz->add_option("-k", rszK);
-  passRsz->add_option("-n", rszN);
-
-  app.add_subcommand("ma", "Technology Mapper criterion area");
-  app.add_subcommand("md", "Technology Mapper criterion delay");
-  app.add_subcommand("mp", "Technology Mapper criterion power");
-  app.add_subcommand("resyn", "Pre-defined script resyn");
-  app.add_subcommand("resyn2", "Pre-defined script resyn2");
-  app.add_subcommand("resyn2a", "Pre-defined script resyn2a");
-  app.add_subcommand("resyn3", "Pre-defined script resyn3");
-  app.add_subcommand("compress", "Pre-defined script compress");
-  app.add_subcommand("compress2", "Pre-defined script compress2");
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
+struct ReadGraphMlCommand final : public UtopiaCommand {
+  ReadGraphMlCommand() : UtopiaCommand("read_graphml", "TODO") {
+    app.allow_extras();
   }
 
-  SUBCOMMAND(app, aig);
-  SUBCOMMAND(app, mig);
-  SUBCOMMAND(app, b);
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    if (designBuilder) {
+      Tcl_SetObjResult(
+          interp,
+          Tcl_NewStringObj("The design has already been uploaded", -1));
+      return TCL_ERROR;
+    }
 
-  PARAM_SUBCOMMAND(app, rw, [&]() {
-    foreach(pass::rw(rwName, rwK, rwZ))->transform(designBuilder);
-  });
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
 
-  SUBCOMMAND(app, rwz);
-  SUBCOMMAND(app, rf);
-  SUBCOMMAND(app, rfz);
-  SUBCOMMAND(app, rfa);
-  SUBCOMMAND(app, rfd);
-  SUBCOMMAND(app, rfp);
+    std::string fileName = "";
+    if (!app.remaining().empty()) {
+      fileName = app.remaining().at(0);
+    } else {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("No file specified", -1));
+      return TCL_ERROR;
+    }
 
-  PARAM_SUBCOMMAND(app, rs, [&]() {
-    foreach(pass::rs(rsName, rsK, rsN))->transform(designBuilder);
-  });
+    if (!std::filesystem::exists(fileName)){
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
+      return TCL_ERROR;
+    }
 
-  PARAM_SUBCOMMAND(app, rsz, [&]() {
-    foreach(pass::rsz(rszName, rszK, rszN))->transform(designBuilder);
-  });
+    if (!fileName.empty()) {
+      GmlTranslator::ParserData data;
+      GmlTranslator parser;
+      const auto &subnet = parser.translate(fileName, data)->make(true);
+      designBuilder = std::make_unique<DesignBuilder>(subnet);
+      designBuilder->save("original");
+      return TCL_OK;
+    }
 
-  SUBCOMMAND(app, resyn);
-  SUBCOMMAND(app, resyn2);
-  SUBCOMMAND(app, resyn2a);
-  SUBCOMMAND(app, resyn3);
-  SUBCOMMAND(app, compress);
-  SUBCOMMAND(app, compress2);
-  SUBCOMMAND(app, ma);
-  SUBCOMMAND(app, md);
-  SUBCOMMAND(app, mp);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
+    return TCL_ERROR;
+  }
+};
 
-  designBuilder->save("pass");
-  previousStep = "pass";
+static ReadGraphMlCommand readGraphMl;
 
-  return TCL_OK;
+static int CmdReadGraphMl(
+    ClientData,Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return readGraphMl.run(interp, argc, argv);
 }
 
-static int showTime(
+//===----------------------------------------------------------------------===//
+// Read Liberty
+//===----------------------------------------------------------------------===//
+
+struct ReadLibertyCommand final : public UtopiaCommand {
+  ReadLibertyCommand() : UtopiaCommand("read_liberty", "TODO") {
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    std::string path = "";
+    if (!app.remaining().empty()) {
+      path = app.remaining().at(0);
+    } else {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("No path to liberty", -1));
+      return TCL_ERROR;
+    }
+
+    if (!std::filesystem::exists(path)){
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
+      return TCL_ERROR;
+    }
+
+    LibertyManager::get().loadLibrary(path);
+    return TCL_OK;
+  }
+};
+
+static ReadLibertyCommand readLiberty;
+
+static int CmdReadLiberty(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  measureTime = !measureTime;
-  return TCL_OK;
+  return readLiberty.run(interp, argc, argv);
 }
 
-static int help(
+//===----------------------------------------------------------------------===//
+// Read Verilog
+//===----------------------------------------------------------------------===//
+
+struct ReadVerilogCommand final : public UtopiaCommand {
+  ReadVerilogCommand() : UtopiaCommand("read_verilog", "TODO") {
+    app.add_option("--frontend", frontend);
+    app.add_option("--top", topModule);
+    app.add_flag("--debug", debugMode);
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    if (!designBuilder) {
+      Tcl_SetObjResult(interp,
+          Tcl_NewStringObj("The design has already been uploaded", -1));
+      return TCL_ERROR;
+    }
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    if (app.remaining().empty()) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("No file specified", -1));
+      return TCL_ERROR;
+    }
+
+    if (!std::filesystem::exists(app.remaining().at(0))) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("File doesn't exist", -1));
+      return TCL_ERROR;
+    }
+
+    if (frontend == "yosys") {
+      YosysToModel2Config cfg;
+      cfg.debugMode = debugMode;
+      cfg.topModule = topModule;
+      cfg.files = app.remaining();
+
+      YosysConverterModel2 cvt(cfg);
+      designBuilder = std::make_unique<DesignBuilder>(cvt.getNetID());
+
+      designBuilder->save("original");
+      return TCL_OK;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unsupported frontend", -1));
+    return TCL_ERROR;
+  }
+ 
+  std::string frontend = "yosys";
+  std::string topModule;
+  bool debugMode = false;
+};
+
+static ReadVerilogCommand readVerilog;
+
+static int CmdReadVerilog(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return printFile(interp, "doc/CLI.md");
+  return readVerilog.run(interp, argc, argv);
 }
 
-static int verilogToFir(
+//===----------------------------------------------------------------------===//
+// Statistics
+//===----------------------------------------------------------------------===//
+
+struct StatCommand final : public UtopiaCommand {
+  StatCommand(): UtopiaCommand("stat", "TODO") {
+    app.add_flag("-l, --logical", logic, "Logic level characteristics");
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    namespace estimator = eda::gate::estimator;
+
+    if (!designBuilder) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      return TCL_ERROR;
+    }
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
+      const auto &id = designBuilder->getSubnetID(0);
+      const auto &subnet = Subnet::get(id);
+      if (logic) {
+        eda::gate::analyzer::ProbabilityEstimator estimator;
+        std::cout << "Area: " <<
+            subnet.getEntries().size() << '\n';
+        std::cout << "Delay: " <<
+            subnet.getPathLength().second << '\n';
+        /// FIXME: Use SubnetBuilder instead of Subnet
+        SubnetBuilder builder(subnet);
+        std::cout << "Power: " <<
+            estimator.estimate(builder).getSwitchProbsSum() << '\n';
+      } else {
+        if (previousStep != "techmap") {
+          Tcl_SetObjResult(interp,
+              Tcl_NewStringObj(
+                  "Physical properties are not available without a techmap",
+                  -1));
+          return TCL_ERROR;
+        }
+        std::cout << "Area: " << estimator::getArea(id) << '\n';
+        std::cout << "Delay: " << estimator::getArrivalTime(id) << '\n';
+        std::cout << "Power: " << estimator::getLeakagePower(id) << '\n';
+      }
+    }
+
+    return TCL_OK;
+  }
+
+  bool logic = false;
+};
+
+static StatCommand stat;
+
+static int CmdStat(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
+  return stat.run(interp, argc, argv);
+}
 
-  CLI::App app;
+//===----------------------------------------------------------------------===//
+// Technology Mapping
+//===----------------------------------------------------------------------===//
+
+struct TechMapCommand final : public UtopiaCommand {
+  TechMapCommand(): UtopiaCommand("techmap", "TODO") {
+    const std::map<std::string, Techmapper::Strategy> mapperTypeMap {
+      { "af",    Techmapper::Strategy::AREA_FLOW },
+      { "area",  Techmapper::Strategy::AREA      },
+      { "delay", Techmapper::Strategy::DELAY     },
+      { "power", Techmapper::Strategy::POWER     },
+    };
+
+    app.add_option("--type", mapperType, "Type of mapper")
+        ->expected(1)
+        ->transform(CLI::CheckedTransformer(mapperTypeMap, CLI::ignore_case));
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    if (!designBuilder) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      return TCL_ERROR;
+    }
+
+    if (LibertyManager::get().getLibraryName().empty()) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("No path to liberty", -1));
+      return TCL_ERROR;
+    }
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    const auto &techLib = LibertyManager::get().getLibraryName();
+    const std::filesystem::path sdcPath = eda::env::getHomePath();
+
+    Techmapper techmapper;
+    techmapper.setStrategy(mapperType);
+    techmapper.setSDC(sdcPath);
+    techmapper.setLibrary(techLib);
+
+    const size_t numSubnets = designBuilder->getSubnetNum();
+    for (size_t subnetId = 0; subnetId < numSubnets; ++subnetId) {
+      const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
+
+      eda::gate::premapper::AigMapper aigMapper("aig");
+      const auto premappedSubnetID = aigMapper.transform(subnetBuilder->make());
+
+      SubnetBuilder subnetBuilderTechmap;
+      techmapper.techmap(premappedSubnetID, subnetBuilderTechmap);
+      const auto mappedSubnetID = subnetBuilderTechmap.make();
+
+      designBuilder->setSubnetBuilder(
+          subnetId,
+          std::make_shared<SubnetBuilder>(mappedSubnetID));
+    }
+
+    designBuilder->save("techmap");
+    previousStep = "techmap";
+
+    return TCL_OK;
+  }
+
+  Techmapper::Strategy mapperType = Techmapper::Strategy::AREA;
+};
+
+static TechMapCommand techMap;
+
+static int CmdTechMap(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return techMap.run(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
+// Verilog To FIRRTL
+//===----------------------------------------------------------------------===//
+
+struct VerilogToFirCommand final : public UtopiaCommand {
+  VerilogToFirCommand(): UtopiaCommand("verilog_to_fir", "TODO") {
+    app.add_flag("--debug", debugMode);
+    app.add_option("--top", topModule);
+    app.add_option("-o, --out", outputFile);
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    if (app.remaining().empty()) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("No files specified", -1));
+      return TCL_ERROR;
+    }
+
+    for (const auto &file: app.remaining()) {
+      if (!std::filesystem::exists(app.remaining().at(0))) {
+        std::cout << file;
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(" doesn't exist", -1));
+        return TCL_ERROR;
+      }
+    }
+
+    FirrtlConfig cfg;
+    cfg.debugMode = debugMode;
+    cfg.outputFileName = outputFile;
+    cfg.topModule = topModule;
+    cfg.files = app.remaining();
+    YosysConverterFirrtl converter(cfg);
+
+    return TCL_OK;
+  } 
 
   std::string outputFile = "out.fir";
   std::string topModule;
   bool debugMode = false;
+};
 
-  app.add_flag("--debug", debugMode);
-  app.add_option("--top", topModule);
-  app.add_option("-o, --out", outputFile);
-  app.allow_extras();
+static VerilogToFirCommand verilogToFir;
 
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  if (app.remaining().empty()) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("No files specified", -1));
-    return TCL_ERROR;
-  }
-
-  for (const auto &file: app.remaining()) {
-    if (!std::filesystem::exists(app.remaining().at(0))) {
-      std::cout << file;
-      Tcl_SetObjResult(interp, Tcl_NewStringObj(" doesn't exist", -1));
-      return TCL_ERROR;
-    }
-  }
-
-  FirrtlConfig cfg;
-  cfg.debugMode = debugMode;
-  cfg.outputFileName = outputFile;
-  cfg.topModule = topModule;
-  cfg.files = app.remaining();
-  YosysConverterFirrtl converter(cfg);
-
-  return TCL_OK;
+static int CmdVerilogToFir(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return verilogToFir.run(interp, argc, argv);
 }
 
-static int dbStat(ClientData, Tcl_Interp *interp, int argc,
-                  const char *argv[]) {
+//===----------------------------------------------------------------------===//
+// Write Design
+//===----------------------------------------------------------------------===//
 
-  CLI::App app;
+static void printModel(
+    const std::string &fileName,
+    ModelPrinter::Format format,
+    const Net &net) {
+  auto &printer = ModelPrinter::getPrinter(format);
 
-  std::string dbPath;
-  int ttSize;
-  std::string outputType = "BOTH";
-  std::string outputNamefile;
-
-  app.add_option("--db", dbPath)->expected(1)->required(true);
-  app.add_option("--otype", outputType)->expected(1);
-  app.add_option("--out", outputNamefile)->expected(1);
-  app.add_option("--ttsize", ttSize)->expected(1)->required(true);
-
-  /// Input output value(s).
-  app.allow_extras();
-
-  try {
-    app.parse(argc, argv);
-  } catch (CLI::ParseError &e) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
-    return TCL_ERROR;
-  }
-
-  if (app.remaining().empty()) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("No files specified", -1));
-    return TCL_ERROR;
-  }
-
-  eda::gate::optimizer::NPNDBConfig config;
-  config.dbPath = dbPath;
-
-  if (outputType == "DOT") {
-    config.outType = eda::gate::optimizer::OutType::DOT;
-  } else if (outputType == "INFO") {
-    config.outType = eda::gate::optimizer::OutType::INFO;
-  } else if (outputType == "BOTH") {
-    config.outType = eda::gate::optimizer::OutType::BOTH;
+  if (!fileName.empty()) {
+    std::ofstream outFile(fileName);
+    printer.print(outFile, net, "printedNet");
+    outFile.close();
   } else {
-    std::cerr << "Wrong type of output: " << outputType
-              << ", correct are (DOT / INFO / BOTH)" << std::endl;
+    printer.print(std::cout, net);
+  }
+}
+
+struct WriteDesignCommand final : public UtopiaCommand {
+  WriteDesignCommand(): UtopiaCommand("write_design", "TODO") {
+    const std::map<std::string, ModelPrinter::Format> formatMap {
+      { "verilog", ModelPrinter::VERILOG },
+      { "simple",  ModelPrinter::SIMPLE  },
+      { "dot",     ModelPrinter::DOT     },
+    };
+
+    app.add_option("--format", format, "Output format")
+        ->expected(1)
+        ->transform(CLI::CheckedTransformer(formatMap, CLI::ignore_case));
+    app.add_option("--path", fileName);
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    if (!designBuilder) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      return TCL_ERROR;
+    }
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    if (format == ModelPrinter::VERILOG ||
+        format == ModelPrinter::SIMPLE ||
+        format == ModelPrinter::DOT) {
+      const auto &net = Net::get(designBuilder->make());
+      printModel(fileName, format, net);
+      return TCL_OK;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj("Non-existent format", -1));
     return TCL_ERROR;
   }
 
-  config.outName = outputNamefile;
-  config.ttSize = ttSize;
-  config.binLines = app.remaining();
+  std::string fileName = "design.v";
+  ModelPrinter::Format format = ModelPrinter::VERILOG;
+};
 
-  if (eda::gate::optimizer::getDbStat(std::cerr, config)) {
-    return TCL_ERROR;
+static WriteDesignCommand writeDesign;
+
+static int CmdWriteDesign(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return writeDesign.run(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
+// Write Subnet
+//===----------------------------------------------------------------------===//
+
+static void printSubnet(
+    const DesignBuilderPtr &designBuilder,
+    size_t subnetId) {
+
+  const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
+  const auto &subnet = Subnet::get(subnetBuilder->make(true));
+  std::cout << subnet << '\n';
+}
+
+struct WriteSubnetCommand final : public UtopiaCommand {
+  WriteSubnetCommand(): UtopiaCommand("write_subnet", "TODO") {
+    entered = app.add_option("--index", number, "Subnet number");
+    app.allow_extras();
   }
 
-  return TCL_OK;
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    if (!designBuilder) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("Design is not loaded", -1));
+      return TCL_ERROR;
+    }
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
+      return TCL_ERROR;
+    }
+
+    const size_t numSubnets = designBuilder->getSubnetNum();
+    if (entered->count() == 0) {
+      for (size_t subnetId = 0; subnetId < numSubnets; ++subnetId) {
+        printSubnet(designBuilder, subnetId);
+      }
+    } else if (number < numSubnets) {
+      printSubnet(designBuilder, number);
+    } else {
+      Tcl_SetObjResult(
+          interp,
+          Tcl_NewStringObj("There is no such subnet", -1));
+      return TCL_ERROR;
+    }
+
+    return TCL_OK;
+  }
+
+  size_t number = 0;
+  CLI::Option *entered = nullptr;
+};
+
+static WriteSubnetCommand writeSubnet;
+
+static int CmdWriteSubnet(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return writeSubnet.run(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
+// Utopia Shell
+//===----------------------------------------------------------------------===//
+
+static inline void printNewline() {
+  std::cout << std::endl;
+}
+
+static inline int printTitle(Tcl_Interp *interp) {
+  return printFile(interp, "doc/help/Title.txt");
+}
+
+static inline int printCopyright(Tcl_Interp *interp) {
+  return printFile(interp, "doc/help/Copyright.txt");
 }
 
 int Utopia_TclInit(Tcl_Interp *interp) {
@@ -812,25 +1003,28 @@ int Utopia_TclInit(Tcl_Interp *interp) {
     return TCL_ERROR;
   }
 
+  printNewline();
   printTitle(interp);
+  printNewline();
+  printCopyright(interp);
+  printNewline();
 
   Tcl_DeleteCommand(interp, "exec");
   Tcl_DeleteCommand(interp, "unknown");
 
-  Tcl_CreateCommand(interp, "clear",          clear,        nullptr, nullptr);
-  Tcl_CreateCommand(interp, "dbstat",         dbStat,       nullptr, nullptr);
-  Tcl_CreateCommand(interp, "help",           help,         nullptr, nullptr);
-  Tcl_CreateCommand(interp, "lec",            lec,          nullptr, nullptr);
-  Tcl_CreateCommand(interp, "pass",           pass,         nullptr, nullptr);
-  Tcl_CreateCommand(interp, "read_graphml",   readGraphMl,  nullptr, nullptr);
-  Tcl_CreateCommand(interp, "read_liberty",   readLiberty,  nullptr, nullptr);
-  Tcl_CreateCommand(interp, "read_verilog",   readVerilog,  nullptr, nullptr);
-  Tcl_CreateCommand(interp, "show_time",      showTime,     nullptr, nullptr);
-  Tcl_CreateCommand(interp, "stats",          stats,        nullptr, nullptr);
-  Tcl_CreateCommand(interp, "techmap",        techMap,      nullptr, nullptr);
-  Tcl_CreateCommand(interp, "verilog_to_fir", verilogToFir, nullptr, nullptr);
-  Tcl_CreateCommand(interp, "write_design",   writeDesign,  nullptr, nullptr);
-  Tcl_CreateCommand(interp, "write_subnet",   writeSubnet,  nullptr, nullptr);
+  Tcl_CreateCommand(interp, clear.name,         CmdClear,        NULL, NULL);
+  Tcl_CreateCommand(interp, dbstat.name,        CmdDbStat,       NULL, NULL);
+  Tcl_CreateCommand(interp, help.name,          CmdHelp,         NULL, NULL);
+  Tcl_CreateCommand(interp, lec.name,           CmdLec,          NULL, NULL);
+  Tcl_CreateCommand(interp, pass.name,          CmdPass,         NULL, NULL);
+  Tcl_CreateCommand(interp, readGraphMl.name,   CmdReadGraphMl,  NULL, NULL);
+  Tcl_CreateCommand(interp, readLiberty.name,   CmdReadLiberty,  NULL, NULL);
+  Tcl_CreateCommand(interp, readVerilog.name,   CmdReadVerilog,  NULL, NULL);
+  Tcl_CreateCommand(interp, stat.name,          CmdStat,         NULL, NULL);
+  Tcl_CreateCommand(interp, techMap.name,       CmdTechMap,      NULL, NULL);
+  Tcl_CreateCommand(interp, verilogToFir.name,  CmdVerilogToFir, NULL, NULL);
+  Tcl_CreateCommand(interp, writeDesign.name,   CmdWriteDesign,  NULL, NULL);
+  Tcl_CreateCommand(interp, writeSubnet.name,   CmdWriteSubnet,  NULL, NULL);
 
   return TCL_OK;
 }

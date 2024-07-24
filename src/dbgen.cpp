@@ -124,7 +124,7 @@ void generateXagNpn4() {
     std::cout << toHexString(k, mincode) << std::endl;
     auto subnetObject = synthesize(k, mincode);
 
-    std::cout << subnetObject.object() << std::endl;
+    std::cout << subnetObject.makeObject() << std::endl;
   }
 }
 

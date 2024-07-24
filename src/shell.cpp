@@ -354,84 +354,89 @@ static int CmdLec(
 // Pass
 //===----------------------------------------------------------------------===//
 
-#define PARAM_SUBCOMMAND(app, cmd, func) do {\
-  processSubcommand(app, #cmd, [&]() {\
-    measureAndRun(func);\
-  });\
-} while (false)
+#define ADD_CUSTOM_CMD(app, name, desc, callback)\
+  app.add_subcommand(name, desc)->parse_complete_callback([&]() {\
+    measureAndRun(name, callback);\
+  })
 
-#define SUBCOMMAND(cli, cmd) do {\
-  processSubcommand((cli), #cmd, [&]() {\
-    measureAndRun([&]() {\
-      foreach(pass::cmd())->transform(designBuilder);\
-    });\
-  });\
-} while (false)
-
-template<typename T>
-static void processSubcommand(
-    CLI::App &app,
-    const std::string &subcommandName,
-    T handler) {
-  if (app.got_subcommand(subcommandName)) {
-    handler();
-  }
-}
+#define ADD_CMD(app, cmd, name, desc)\
+  ADD_CUSTOM_CMD(app, name, desc, [&]() {\
+    foreach(cmd())->transform(designBuilder);\
+  })
 
 template<typename Func>
-static void measureAndRun(Func func) {
+static void measureAndRun(const std::string &name, Func func) {
   auto start = std::chrono::high_resolution_clock::now();
   func();
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
-  UTOPIA_OUT << "took " << elapsed.count() << " seconds\n";
+  UTOPIA_OUT << std::setw(10) << std::left
+             << name
+             << std::setw(10) << std::left
+             << elapsed.count() << " seconds" << std::endl;
 }
 
 struct PassCommand final : public UtopiaCommand {
   PassCommand() :
       UtopiaCommand("pass", "Applies an optimization pass to the design") {
-    app.add_subcommand("aig", "Mapping to AIG");
-    app.add_subcommand("mig", "Mapping to MIG");
+    namespace pass = eda::gate::optimizer;
 
-    app.add_subcommand("b", "Depth-aware balancing");
+    // Premapping.
+    ADD_CMD(app, pass::aig, "aig", "Mapping to AIG");
+    ADD_CMD(app, pass::mig, "mig", "Mapping to MIG");
 
-    auto *passRw =
-        app.add_subcommand("rw", "Rewriting");
+    // Balancing.
+    ADD_CMD(app, pass::b, "b", "Depth-aware balancing");
+
+    // Rewriting.
+    auto *passRw = ADD_CUSTOM_CMD(app,
+        "rw", "Rewriting", [&]() {
+      foreach(pass::rw(rwName, rwK, rwZ))->transform(designBuilder);
+    });
     passRw->add_option("--name", rwName);
     passRw->add_option("-k", rwK);
     passRw->add_flag("-z", rwZ);
 
-    app.add_subcommand("rwz", "Rewriting w/ zero-cost replacements");
+    ADD_CMD(app, pass::rwz, "rwz", "Rewriting w/ zero-cost replacements");
 
-    app.add_subcommand("rf",  "Refactoring");
-    app.add_subcommand("rfz", "Refactoring w/ zero-cost replacements");
-    app.add_subcommand("rfa", "Area-aware refactoring");
-    app.add_subcommand("rfd", "Depth-aware refactoring");
-    app.add_subcommand("rfp", "Power-aware refactoring");
+    // Refactoring.
+    ADD_CMD(app, pass::rf,  "rf",  "Refactoring");
+    ADD_CMD(app, pass::rfz, "rfz", "Refactoring w/ zero-cost replacements");
+    ADD_CMD(app, pass::rfa, "rfa", "Area-aware refactoring");
+    ADD_CMD(app, pass::rfd, "rfd", "Depth-aware refactoring");
+    ADD_CMD(app, pass::rfp, "rfp", "Power-aware refactoring");
 
-    auto *passRs =
-        app.add_subcommand("rs", "Resubstitution");
+    // Resubstitution.
+    auto *passRs = ADD_CUSTOM_CMD(app,
+        "rs", "Resubstitution", [&]() {
+      foreach(pass::rs(rsName, rsK, rsN))->transform(designBuilder);
+    });
     passRs->add_option("--name", rsName);
     passRs->add_option("-k", rsK);
     passRs->add_option("-n", rsN);
 
-    auto *passRsz =
-        app.add_subcommand("rsz", "Resubstitution w/ zero-cost replacements");
+    auto *passRsz = ADD_CUSTOM_CMD(app,
+        "rsz", "Resubstitution w/ zero-cost replacements", [&]() {
+      foreach(pass::rsz(rszName, rszK, rszN))->transform(designBuilder);
+    });
     passRsz->add_option("--name", rszName);
     passRsz->add_option("-k", rszK);
     passRsz->add_option("-n", rszN);
 
-    app.add_subcommand("ma", "Area-aware technology mapping");
-    app.add_subcommand("md", "Delay-aware technology mapping");
-    app.add_subcommand("mp", "Power-aware technology mapping");
+    // Technology mapping.
+    ADD_CMD(app, pass::ma, "ma", "Area-aware technology mapping");
+    ADD_CMD(app, pass::md, "md", "Delay-aware technology mapping");
+    ADD_CMD(app, pass::mp, "mp", "Power-aware technology mapping");
 
-    app.add_subcommand("resyn",     "Predefined script resyn");
-    app.add_subcommand("resyn2",    "Predefined script resyn2");
-    app.add_subcommand("resyn2a",   "Predefined script resyn2a");
-    app.add_subcommand("resyn3",    "Predefined script resyn3");
-    app.add_subcommand("compress",  "Predefined script compress");
-    app.add_subcommand("compress2", "Predefined script compress2");
+    // Predefined scripts.
+    ADD_CMD(app, pass::resyn,     "resyn",     "Predefined script resyn");
+    ADD_CMD(app, pass::resyn2,    "resyn2",    "Predefined script resyn2");
+    ADD_CMD(app, pass::resyn2a,   "resyn2a",   "Predefined script resyn2a");
+    ADD_CMD(app, pass::resyn3,    "resyn3",    "Predefined script resyn3");
+    ADD_CMD(app, pass::compress,  "compress",  "Predefined script compress");
+    ADD_CMD(app, pass::compress2, "compress2", "Predefined script compress2");
 
+    app.require_subcommand();
     app.allow_extras();
   }
 
@@ -450,39 +455,6 @@ struct PassCommand final : public UtopiaCommand {
       Tcl_SetObjResult(interp, Tcl_NewStringObj(e.what(), -1));
       return TCL_ERROR;
     }
-
-    SUBCOMMAND(app, aig);
-    SUBCOMMAND(app, mig);
-    SUBCOMMAND(app, b);
-
-    PARAM_SUBCOMMAND(app, rw, [&]() {
-      foreach(pass::rw(rwName, rwK, rwZ))->transform(designBuilder);
-    });
-
-    SUBCOMMAND(app, rwz);
-    SUBCOMMAND(app, rf);
-    SUBCOMMAND(app, rfz);
-    SUBCOMMAND(app, rfa);
-    SUBCOMMAND(app, rfd);
-    SUBCOMMAND(app, rfp);
-
-    PARAM_SUBCOMMAND(app, rs, [&]() {
-      foreach(pass::rs(rsName, rsK, rsN))->transform(designBuilder);
-    });
-
-    PARAM_SUBCOMMAND(app, rsz, [&]() {
-      foreach(pass::rsz(rszName, rszK, rszN))->transform(designBuilder);
-    });
-
-    SUBCOMMAND(app, resyn);
-    SUBCOMMAND(app, resyn2);
-    SUBCOMMAND(app, resyn2a);
-    SUBCOMMAND(app, resyn3);
-    SUBCOMMAND(app, compress);
-    SUBCOMMAND(app, compress2);
-    SUBCOMMAND(app, ma);
-    SUBCOMMAND(app, md);
-    SUBCOMMAND(app, mp);
 
     designBuilder->save("pass");
     previousStep = "pass";

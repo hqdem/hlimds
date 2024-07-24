@@ -180,7 +180,7 @@ inline SubnetPass rfp() {
 //===----------------------------------------------------------------------===//
 
 inline SubnetPass rs(const std::string &name, uint16_t k, uint16_t n) {
-  return std::make_shared<Resubstitutor>(name, k, n);
+  return std::make_shared<Resubstitutor>(name, k, n, false);
 }
 
 inline SubnetPass rs(const std::string &name, uint16_t k) {
@@ -196,8 +196,7 @@ inline SubnetPass rs() {
 }
 
 inline SubnetPass rsz(const std::string &name, uint16_t k, uint16_t n) {
-  // FIXME:
-  return nullptr;
+  return std::make_shared<Resubstitutor>(name, k, n, true);
 }
 
 inline SubnetPass rsz(const std::string &name, uint16_t k) {

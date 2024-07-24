@@ -32,12 +32,19 @@ public:
    *
    * @param cutSize Maximum number of elements in the cut.
    * @param maxLevels Maximum levels from a pivot to roots for care evaluation.
+   * @param zero Enables zero replacements.
    */
-  Resubstitutor(const std::string &name, unsigned cutSize, unsigned maxLevels) :
-      SubnetInPlaceTransformer(name), cutSize(cutSize), maxLevels(maxLevels) {}
+  Resubstitutor(const std::string &name,
+                unsigned cutSize,
+                unsigned maxLevels,
+                bool zero) :
+      SubnetInPlaceTransformer(name),
+      cutSize(cutSize),
+      maxLevels(maxLevels),
+      zero(zero) {}
 
   /// @brief Constructs a resubstitutor with default parameters.
-  Resubstitutor(const std::string &name) : Resubstitutor(name, 8, 3) {}
+  Resubstitutor(const std::string &name) : Resubstitutor(name, 8, 3, false) {}
 
   /// @brief Tranforms the subnet by applying a resubstitution algorithm.
   void transform(const SubnetBuilderPtr &builder) const override;
@@ -45,6 +52,7 @@ public:
 private:
   const unsigned cutSize;
   const unsigned maxLevels;
+  const bool zero;
 };
 
 } // namespace eda::gate::optimizer

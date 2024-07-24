@@ -2,4 +2,4 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-rlwrap $UTOPIA_HOME/build/src/umain
+rlwrap -c $UTOPIA_HOME/build/src/umain

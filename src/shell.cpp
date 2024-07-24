@@ -605,7 +605,7 @@ struct ReadLibertyCommand final : public UtopiaCommand {
 
     if (!std::filesystem::exists(path)){
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
-          fmt::format("File '{}' does not exist", path).c_str(), -1));
+          fmt::format("file '{}' does not exist", path).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -950,13 +950,14 @@ static int CmdVersion(
 
 static void printModel(
     const std::string &fileName,
+    const std::string &designName,
     ModelPrinter::Format format,
     const Net &net) {
   auto &printer = ModelPrinter::getPrinter(format);
 
   if (!fileName.empty()) {
     std::ofstream outFile(fileName);
-    printer.print(outFile, net, "printedNet");
+    printer.print(outFile, net, designName);
     outFile.close();
   } else {
     printer.print(UTOPIA_OUT, net);
@@ -997,7 +998,7 @@ struct WriteDesignCommand final : public UtopiaCommand {
         format == ModelPrinter::SIMPLE ||
         format == ModelPrinter::DOT) {
       const auto &net = Net::get(designBuilder->make());
-      printModel(fileName, format, net);
+      printModel(fileName, designName, format, net);
       return TCL_OK;
     }
 
@@ -1007,6 +1008,7 @@ struct WriteDesignCommand final : public UtopiaCommand {
   }
 
   std::string fileName = "design.v";
+  std::string designName = "design";
   ModelPrinter::Format format = ModelPrinter::VERILOG;
 };
 
@@ -1153,8 +1155,10 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   printCopyright(interp);
   printNewline();
 
+#if 0
   Tcl_DeleteCommand(interp, "exec");
   Tcl_DeleteCommand(interp, "unknown");
+#endif
 
   Tcl_CreateCommand(interp, clearCmd.name,        CmdClear,        NULL, NULL);
   Tcl_CreateCommand(interp, dbstatCmd.name,       CmdDbStat,       NULL, NULL);

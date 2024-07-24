@@ -16,7 +16,7 @@ Available commands and their descriptions:
 3. verilog_to_fir [--out <outputFileName>] [--top <topModule>] [--debug]
    Description: Translate verilog to firrtl file.
    Parameters:
-       --out <outputFileName>: Specifies the name to outupt file (default: out.fir).
+       --out <outputFileName>: Specifies the name to outupt file (default: none).
        --top <topModule>: Specifies the top module (default: none).
        --debug: Enables debug mode (default: false).
 

@@ -45,10 +45,8 @@ Available commands and their descriptions:
    Parameters:
        <fileName>: Path to the GraphML file.
 
-9. stats [--logical]
-   Description: Display the physical parameters of the circuit.
-   Parameters:
-       --logical: Displays logic level characteristics (default: false).
+9. stats
+   Description: Displays the parameters of the circuit.
 
 10. clear
    Description: Clears the current design from memory.

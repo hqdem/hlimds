@@ -154,7 +154,7 @@ struct DbStatCommand final : public UtopiaCommand {
     }
 
     if (app.remaining().empty()) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no input files", -1));
       return TCL_ERROR;
     }
 
@@ -544,13 +544,13 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
     if (!app.remaining().empty()) {
       fileName = app.remaining().at(0);
     } else {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no input files", -1));
       return TCL_ERROR;
     }
 
     if (!std::filesystem::exists(fileName)){
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
-        fmt::format("file '{}' doesn't exist", fileName).c_str(), -1));
+        fmt::format("file '{}' does not exist", fileName).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -563,7 +563,7 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
       return TCL_OK;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj("no input files", -1));
     return TCL_ERROR;
   }
 };
@@ -599,13 +599,13 @@ struct ReadLibertyCommand final : public UtopiaCommand {
     if (!app.remaining().empty()) {
       path = app.remaining().at(0);
     } else {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no input files", -1));
       return TCL_ERROR;
     }
 
     if (!std::filesystem::exists(path)){
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
-          fmt::format("File '{}' doesn't exist", path).c_str(), -1));
+          fmt::format("File '{}' does not exist", path).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -638,7 +638,7 @@ struct ReadVerilogCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    if (!designBuilder) {
+    if (designBuilder) {
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
           "design has already been loaded", -1));
       return TCL_ERROR;
@@ -655,13 +655,13 @@ struct ReadVerilogCommand final : public UtopiaCommand {
     if (!app.remaining().empty()) {
       path = app.remaining().at(0);
     } else {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no input files", -1));
       return TCL_ERROR;
     }
 
     if (!std::filesystem::exists(path)){
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
-          fmt::format("file '{}' doesn't exist", path).c_str(), -1));
+          fmt::format("file '{}' does not exist", path).c_str(), -1));
       return TCL_ERROR;
     }
 
@@ -705,7 +705,6 @@ static int CmdReadVerilog(
 struct StatCommand final : public UtopiaCommand {
   StatCommand():
       UtopiaCommand("stat", "Prints the design characteristics") {
-    app.add_flag("-l, --logical", logic, "Logic-level characteristics");
     app.allow_extras();
   }
 
@@ -725,38 +724,37 @@ struct StatCommand final : public UtopiaCommand {
       return TCL_ERROR;
     }
 
-    if (!logic && previousStep != "techmap") {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj(
-          "design has not been mapped", -1));
-      return TCL_ERROR;
-    }
-
-    float area  = 0.0;
-    float delay = 0.0;
-    float power = 0.0;
+    size_t size{0}, depth{0};
+    double area{0}, delay{0}, power{0}, activ{0};
 
     for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
       const auto &subnetID = designBuilder->getSubnetID(i);
       const auto &subnet = Subnet::get(subnetID);
 
-      if (logic) {
-        /// FIXME: Use SubnetBuilder instead of Subnet.
-        SubnetBuilder builder(subnet);
-        eda::gate::analyzer::ProbabilityEstimator estimator;
+      /// FIXME: Use SubnetBuilder instead of Subnet.
+      SubnetBuilder builder(subnet);
+      eda::gate::analyzer::ProbabilityEstimator estimator;
 
-        area  += subnet.getEntries().size();
-        delay += subnet.getPathLength().second;
-        power += estimator.estimate(builder).getSwitchProbsSum();
-      } else {
+      size  += subnet.getEntries().size();
+      depth += subnet.getPathLength().second;
+      activ += estimator.estimate(builder).getSwitchProbsSum();
+
+      if (previousStep == "techmap") {
         area  += estimator::getArea(subnetID);
         delay += estimator::getArrivalTime(subnetID);
         power += estimator::getLeakagePower(subnetID);
       }
     } // for subnet
 
-    UTOPIA_OUT << "Area:  " << area  << std::endl;
-    UTOPIA_OUT << "Delay: " << delay << std::endl;
-    UTOPIA_OUT << "Power: " << power << std::endl;
+    UTOPIA_OUT << "Cells: " << size  << std::endl;
+    UTOPIA_OUT << "Depth: " << depth << std::endl;
+    UTOPIA_OUT << "Activ: " << activ << std::endl;
+
+    if (previousStep == "techmap") {
+      UTOPIA_OUT << "Area:  " << area  << std::endl;
+      UTOPIA_OUT << "Delay: " << delay << std::endl;
+      UTOPIA_OUT << "Power: " << power << std::endl;
+    }
 
     return TCL_OK;
   }
@@ -878,14 +876,14 @@ struct VerilogToFirCommand final : public UtopiaCommand {
     }
 
     if (app.remaining().empty()) {
-      Tcl_SetObjResult(interp, Tcl_NewStringObj("no files specified", -1));
+      Tcl_SetObjResult(interp, Tcl_NewStringObj("no input files", -1));
       return TCL_ERROR;
     }
 
     for (const auto &file: app.remaining()) {
       if (!std::filesystem::exists(file)) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
-            fmt::format("file '{}' doesn't exist", file).c_str(), -1));
+            fmt::format("file '{}' does not exist", file).c_str(), -1));
         return TCL_ERROR;
       }
     }
@@ -1065,7 +1063,7 @@ struct WriteSubnetCommand final : public UtopiaCommand {
       printSubnet(designBuilder, number);
     } else {
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
-          fmt::format("subnet {} doesn't exist", number).c_str(), -1));
+          fmt::format("subnet {} does not exist", number).c_str(), -1));
       return TCL_ERROR;
     }
 

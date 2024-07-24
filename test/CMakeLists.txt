@@ -87,12 +87,9 @@ add_executable(${TEST_TARGET}
   gate/synthesizer/adder_test.cpp
   gate/synthesizer/cmp_test.cpp
   gate/synthesizer/shift_test.cpp
+  gate/techmapper/library_characteristics_test.cpp
   gate/techmapper/parser_lib_test.cpp
-  gate/techmapper/strategy/area_recovery_test.cpp
-  gate/techmapper/strategy/net_mapping_test.cpp
-  gate/techmapper/strategy/power_test.cpp
-  gate/techmapper/strategy/simple_area_test.cpp
-  gate/techmapper/strategy/simple_delay_test.cpp
+  gate/techmapper/subnet_techmapper_test.cpp
   gate/techmapper/techmapper_test_util.cpp
   gate/translator/fir/fir_model2_test.cpp
   gate/translator/graphml_test_utils.cpp

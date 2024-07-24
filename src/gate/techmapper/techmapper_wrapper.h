@@ -8,19 +8,13 @@
 
 #pragma once
 
-#include <string>
-
-#include "gate/techmapper/techmapper.h"
-#include "options.h"
+#include "gate/techmapper/subnet_techmapper.h"
 
 namespace eda::gate::techmapper {
 
-struct TechMapConfig {
-  std::string outNetFileName;
-  Techmapper::Strategy strategy;
-  std::vector<std::string> files;
-};
-
-int techMap(const TechMapConfig config);
+std::shared_ptr<model::SubnetBuilder> techMap(
+  const optimizer::Objective objective,
+  const std::shared_ptr<model::SubnetBuilder> &builder
+);
 
 } // namespace eda::gate::techmapper

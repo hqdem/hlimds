@@ -9,9 +9,10 @@
 #pragma once
 
 #include "gate/estimator/simple_time_model.h"
-#include "gate/library/liberty_manager.h"
+#include "gate/library/library_parser.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/criterion/criterion.h"
+#include "gate/techmapper/subnet_techmapper.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -20,7 +21,7 @@
 namespace eda::gate::estimator {
 
 using CostVector = optimizer::CostVector;
-using LibertyManager = library::LibertyManager;
+using LibraryParser = library::LibraryParser;
 
 inline bool shouldSkipCell(const model::Subnet::Cell &cell) {
   return cell.isIn() || cell.isOut() || cell.isOne() || cell.isZero();
@@ -50,7 +51,7 @@ inline float getArea(model::SubnetID subnetID) {
 }
 
 inline float getLeakagePower(const model::CellType &cellType) {
-    const auto *cell = LibertyManager::get().getLibrary().getCell(
+    const auto *cell = LibraryParser::get().getLibrary().getCell(
         cellType.getName());
     return cell ?
       cell->getFloatAttribute("cell_leakage_power", FLT_MAX) : 0.0f;
@@ -64,7 +65,7 @@ inline float getLeakagePower(model::SubnetID subnetID) {
 
 inline float getDelay(const model::CellType &cellType,
                float inputTransTime, float outputCap) {
-  return NLDM::delayEstimation(LibertyManager::get().getLibrary(),
+  return NLDM::delayEstimation(LibraryParser::get().getLibrary(),
      cellType.getName(), inputTransTime, outputCap);
 }
 
@@ -89,7 +90,7 @@ inline float getArrivalTime(model::SubnetID subnetID) {
       WLM wlm; // TODO
       float fanoutCap = wlm.getFanoutCap(outNum) + capacitance;
       float slew;
-      NLDM::delayEstimation(LibertyManager::get().getLibrary(), entries[i].cell.getType().getName(),
+      NLDM::delayEstimation(LibraryParser::get().getLibrary(), entries[i].cell.getType().getName(),
                             delay, fanoutCap, timingSense, slew, delay, capacitance);
 
       arrivalMap[i] = slew + arrival;
@@ -102,9 +103,8 @@ inline float getArrivalTime(model::SubnetID subnetID) {
   return maxArrivalTime;
 }
 
-struct Context;
 inline CostVector getPPA(
-  const model::CellTypeID cellTypeID, const Context &context) {
+  const model::CellTypeID cellTypeID, const techmapper::SubnetTechMapper::Context &context) {
   const auto &cellType = model::CellType::get(cellTypeID);
   const auto name = cellType.getName();
 

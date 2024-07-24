@@ -703,7 +703,7 @@ struct StatCommand final : public UtopiaCommand {
     }
 
     size_t size{0}, depth{0};
-    double area{0}, delay{0}, power{0}, activ{0};
+    float  area{0}, delay{0}, power{0}, activ{0};
 
     for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
       const auto &subnetID = designBuilder->getSubnetID(i);
@@ -714,13 +714,13 @@ struct StatCommand final : public UtopiaCommand {
       eda::gate::analyzer::ProbabilityEstimator estimator;
 
       size  += subnet.getEntries().size();
-      depth += subnet.getPathLength().second;
       activ += estimator.estimate(builder).getSwitchProbsSum();
+      depth = std::max<size_t>(subnet.getPathLength().second, depth);
 
       if (previousStep == "techmap") {
         area  += estimator::getArea(subnetID);
-        delay += estimator::getArrivalTime(subnetID);
         power += estimator::getLeakagePower(subnetID);
+        delay = std::max<float>(estimator::getArrivalTime(subnetID), delay);
       }
     } // for subnet
 

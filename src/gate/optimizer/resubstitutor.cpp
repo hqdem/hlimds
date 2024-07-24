@@ -838,6 +838,10 @@ static bool makeResubstitution(const SubnetBuilder &builder,
   Link link(oldToNew.at(div.idx), div.inv);
   rhs.addOutput(link);
 
+  if (builder.evaluateReplace(rhs, iomapping).size < 0) {
+    return false;
+  }
+
   iter.replace(rhs, iomapping);
 
   return true;
@@ -1492,7 +1496,7 @@ void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
     markCutTFO(*builderPtr, view, maxLevels);
   
     const std::vector<size_t> roots = collectRoots(*builderPtr, pivot);
-    if ((roots.size() == 1) && (roots[0] == pivot)) {
+    if (((roots.size() == 1) && (roots[0] == pivot)) || roots.empty()) {
       continue;
     }
 
@@ -1531,21 +1535,24 @@ void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
     }
 
     const size_t maxGain = Subnet::get(mffc).size() - mffcMap.size();
-    if (maxGain == 1 || makeOneResubstitution(*builderPtr, iter, view, divs,
-                                              onset, offset)) {
+    bool flag = (maxGain == 1) && !zero;
+    if (flag || makeOneResubstitution(*builderPtr, iter, view,
+                                      divs, onset, offset)) {
       continue;
     }
 
     DivisorsTT divsTT;
     divsTT.reserve(maxDivisorsPairs);
 
-    if (maxGain == 2 || makeTwoResubstitution(*builderPtr, iter, view, divs,
-                                              divsTT, onset, offset)) {
+    flag = ((maxGain == 2) && !zero) || (maxGain == 1);
+    if (flag || makeTwoResubstitution(*builderPtr, iter, view, divs,
+                                      divsTT, onset, offset)) {
       continue;
     }
 
-    if (maxGain == 3 || makeThreeResubstitution(*builderPtr, iter, view, divs,
-                                                divsTT, onset, offset)) {
+    flag = ((maxGain == 3) && !zero) || (maxGain == 2);
+    if (flag || makeThreeResubstitution(*builderPtr, iter, view, divs,
+                                        divsTT, onset, offset)) {
       continue;
     }
   }

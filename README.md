@@ -39,6 +39,7 @@ below are specific to this operating system:
 * `ninja-build`
 * `pkg-config`
 * `python3`
+* `rlwrap`
 * `zlib1g`
 * `zlib1g-dev`
 
@@ -47,7 +48,8 @@ To install them, do the following:
 ```console
 sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
      flex g++ gcc git graphviz gtkwave iverilog libfmt-dev liblpsolve55-dev \
-     libssl-dev libtool lld make ninja-build pkg-config python3 zlib1g zlib1g-dev
+     libssl-dev libtool lld make ninja-build pkg-config python3 rlwrap zlib1g \
+     zlib1g-dev
 ```
 
 If you are working on Fedora Linux OS, see `doc/Fedora.md`.

@@ -643,8 +643,14 @@ struct ReadVerilogCommand final : public UtopiaCommand {
       cfg.topModule = topModule;
       cfg.files = app.remaining();
 
-      YosysConverterModel2 cvt(cfg);
-      designBuilder = std::make_unique<DesignBuilder>(cvt.getNetID());
+      YosysConverterModel2 cvt(cfg);      
+      const auto &netId = cvt.getNetID();
+      if (netId == OBJ_NULL_ID) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("OBJ_NULL_ID received", -1));
+        return TCL_ERROR;
+      }
+      designBuilder = std::make_unique<DesignBuilder>(netId);
+
 
       designBuilder->save("original");
       return TCL_OK;
@@ -870,7 +876,7 @@ struct VerilogToFirCommand final : public UtopiaCommand {
     return TCL_OK;
   } 
 
-  std::string outputFile = "out.fir";
+  std::string outputFile = "";
   std::string topModule;
   bool debugMode = false;
 };
@@ -945,7 +951,7 @@ struct WriteDesignCommand final : public UtopiaCommand {
       { "dot",     ModelPrinter::DOT     },
     };
 
-    app.add_option("--format", format, "Output format")
+    app.add_option("-f, --format", format, "Output format")
         ->expected(1)
         ->transform(CLI::CheckedTransformer(formatMap, CLI::ignore_case));
     app.add_option("--path", fileName);
@@ -1010,7 +1016,7 @@ static void printSubnet(
 struct WriteSubnetCommand final : public UtopiaCommand {
   WriteSubnetCommand():
       UtopiaCommand("write_subnet", "Writes a subnet to a file") {
-    entered = app.add_option("--index", number, "Subnet number");
+    entered = app.add_option("-i, --index", number, "Subnet number");
     app.allow_extras();
   }
 
@@ -1062,44 +1068,6 @@ static int CmdWriteSubnet(
 // Utopia Shell
 //===----------------------------------------------------------------------===//
 
-static inline void printNewline() {
-  UTOPIA_OUT << std::endl;
-}
-
-static int printFile(Tcl_Interp *interp, const std::string &fileName) {
-  const char *utopiaHome = std::getenv("UTOPIA_HOME");
-  if (!utopiaHome) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-        "UTOPIA_HOME has not been set", -1));
-    return TCL_ERROR;
-  }
-
-  std::string filePath = std::string(utopiaHome) + "/" + fileName;
-  std::ifstream file(filePath);
-
-  if (!file.is_open()) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-      fmt::format("unable to open file '{}'", filePath).c_str(), -1));
-    return TCL_ERROR;
-  }
-
-  std::string line;
-  while (getline(file, line)) {
-    UTOPIA_OUT << line << std::endl;
-  }
-
-  file.close();
-  return TCL_OK;
-}
-
-static inline int printTitle(Tcl_Interp *interp) {
-  return printFile(interp, "doc/help/Title.txt");
-}
-
-static inline int printCopyright(Tcl_Interp *interp) {
-  return printFile(interp, "doc/help/Copyright.txt");
-}
-
 int Utopia_TclInit(Tcl_Interp *interp) {
   if ((Tcl_Init)(interp) == TCL_ERROR) {
     return TCL_ERROR;
@@ -1120,12 +1088,6 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   commandRegistry.addCommand(&versionCmd);
   commandRegistry.addCommand(&writeDesignCmd);
   commandRegistry.addCommand(&writeSubnetCmd);
-
-  printNewline();
-  printTitle(interp);
-  printNewline();
-  printCopyright(interp);
-  printNewline();
 
 #if 0
   Tcl_DeleteCommand(interp, "exec");

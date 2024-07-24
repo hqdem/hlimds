@@ -256,10 +256,27 @@ command in the shell:
 help
 ```
 
+**P.S. It is recommended to use rlwrap to display the interactive mode correctly:** 
+```console
+rlwrap ./build/src/umain
+```
+
 To pass a TCL script with arguments, do the following:
 
 ```console
-./build/src/umain -s <script_path> <arg1> <agr2> ... 
+./build/src/umain -s <script-path> <arg1> <agr2> ... 
+```
+
+To execute TCL script obtained from terminal, do the following:
+
+```console
+./build/src/umain -e "command1;command2;..." 
+```
+
+Use the ``-i`` flag to switch to interactive mode after script execution: 
+
+```console
+./build/src/umain -ie "command1;command2;..." 
 ```
 
 Example:

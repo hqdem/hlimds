@@ -40,6 +40,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/verifier_test.cpp
   gate/estimator/time_model_test.cpp
   gate/estimator/wlm_test.cpp
+  gate/interface/interface_test.cpp
   gate/model/array_test.cpp
   gate/model/design_analysis_test.cpp
   gate/model/design_test.cpp
@@ -56,7 +57,6 @@ add_executable(${TEST_TARGET}
   gate/model/utils/bdd_dnf_test.cpp
   gate/model/utils/subnet_truth_table_test.cpp
   gate/mutator/mutator_test.cpp
-  gate/premapper/aigmapper_test.cpp
   gate/optimizer/associative_balancer_test.cpp
   gate/optimizer/cone_builder_test.cpp
   gate/optimizer/cut_extractor_test.cpp

@@ -501,7 +501,7 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     if (designBuilder) {
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
-          "design has already been loaded", -1));
+          "design has been already loaded", -1));
       return TCL_ERROR;
     }
 
@@ -612,7 +612,7 @@ struct ReadVerilogCommand final : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     if (designBuilder) {
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
-          "design has already been loaded", -1));
+          "design has been already loaded", -1));
       return TCL_ERROR;
     }
 
@@ -761,7 +761,7 @@ struct TechMapCommand final : public UtopiaCommand {
       { "power", Indicator::POWER },
     };
 
-    app.add_option("--type", indicator, "Target in ADP")
+    app.add_option("--type", indicator, "Optimization criterion")
         ->expected(1)
         ->transform(CLI::CheckedTransformer(indicatorMap, CLI::ignore_case));
     app.allow_extras();
@@ -780,6 +780,12 @@ struct TechMapCommand final : public UtopiaCommand {
       return TCL_ERROR;
     }
 
+    if (previousStep == "techmap") {
+      Tcl_SetObjResult(interp, Tcl_NewStringObj(
+          "design has been already tech-mapped", -1));
+      return TCL_ERROR;
+    }
+
     try {
       app.parse(argc, argv);
     } catch (CLI::ParseError &e) {
@@ -787,16 +793,12 @@ struct TechMapCommand final : public UtopiaCommand {
       return TCL_ERROR;
     }
 
-    const size_t numSubnets = designBuilder->getSubnetNum();
-    for (size_t subnetId = 0; subnetId < numSubnets; ++subnetId) {
+    const size_t nSubnet = designBuilder->getSubnetNum();
+    for (size_t subnetID = 0; subnetID < nSubnet; ++subnetID) {
+      const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetID);
+      const auto techmapBuilder = techMap(Objective(indicator), subnetBuilder);
 
-      const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
-
-      const auto subnetBuilderTechmap =
-        techMap(Objective(indicator), subnetBuilder);
-
-      designBuilder->setSubnetBuilder(
-          subnetId, subnetBuilderTechmap);
+      designBuilder->setSubnetBuilder(subnetID, techmapBuilder);
     }
 
     designBuilder->save("techmap");
@@ -992,9 +994,8 @@ static int CmdWriteDesign(
 
 static void printSubnet(
     const DesignBuilderPtr &designBuilder,
-    size_t subnetId) {
-
-  const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
+    size_t subnetID) {
+  const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetID);
   const auto &subnet = Subnet::get(subnetBuilder->make(true));
   UTOPIA_OUT << subnet << std::endl;
 }
@@ -1022,8 +1023,8 @@ struct WriteSubnetCommand final : public UtopiaCommand {
 
     const size_t numSubnets = designBuilder->getSubnetNum();
     if (entered->count() == 0) {
-      for (size_t subnetId = 0; subnetId < numSubnets; ++subnetId) {
-        printSubnet(designBuilder, subnetId);
+      for (size_t subnetID = 0; subnetID < numSubnets; ++subnetID) {
+        printSubnet(designBuilder, subnetID);
       }
     } else if (number < numSubnets) {
       printSubnet(designBuilder, number);

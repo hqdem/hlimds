@@ -356,13 +356,13 @@ static int CmdLec(
 
 #define PARAM_SUBCOMMAND(app, cmd, func) do {\
   processSubcommand(app, #cmd, [&]() {\
-    measureAndRun(#cmd, func);\
+    measureAndRun(func);\
   });\
 } while (false)
 
 #define SUBCOMMAND(cli, cmd) do {\
   processSubcommand((cli), #cmd, [&]() {\
-    measureAndRun(#cmd, [&]() {\
+    measureAndRun([&]() {\
       foreach(pass::cmd())->transform(designBuilder);\
     });\
   });\
@@ -379,12 +379,12 @@ static void processSubcommand(
 }
 
 template<typename Func>
-static void measureAndRun(const std::string &name, Func func) {
+static void measureAndRun(Func func) {
   auto start = std::chrono::high_resolution_clock::now();
   func();
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
-  UTOPIA_OUT << name << " took " << elapsed.count() << " seconds\n";
+  UTOPIA_OUT << "took " << elapsed.count() << " seconds\n";
 }
 
 struct PassCommand final : public UtopiaCommand {

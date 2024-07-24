@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/estimator/ppa_estimator.h"
-#include "gate/library/liberty_manager.h"
+#include "gate/library/library_parser.h"
 #include "gate/model/subnet.h"
 
 #include <readcells/groups.h>
@@ -18,7 +18,7 @@
 
 namespace eda::gate::techmapper {
 
-using LibertyManager = library::LibertyManager;
+using LibraryParser = library::LibraryParser;
 
 inline void printStatistics(model::SubnetID subnetID,
   std::chrono::nanoseconds time = std::chrono::nanoseconds(0)) {
@@ -26,7 +26,7 @@ inline void printStatistics(model::SubnetID subnetID,
   int nCells = 0;
 
   std::unordered_map<std::string, int> statistic;
-  for (const auto &cell : LibertyManager::get().getLibrary().getCells()) {
+  for (const auto &cell : LibraryParser::get().getLibrary().getCells()) {
     statistic[std::string(cell.getName())] = 0;
   }
   const auto &entries = model::Subnet::get(subnetID).getEntries();

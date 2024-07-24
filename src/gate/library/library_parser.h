@@ -10,6 +10,8 @@
 
 #include "util/singleton.h"
 
+#include <kitty/print.hpp>
+
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>
 #include <readcells/groups.h>
@@ -18,41 +20,18 @@
 #include <cstdio>
 #include <filesystem>
 #include <memory.h>
+#include <regex>
 #include <string>
 
 namespace eda::gate::library {
 
-class LibertyManager : public util::Singleton<LibertyManager> {
+class LibraryParser : public util::Singleton<LibraryParser> {
   using path = std::filesystem::path;
 
 public:
-  bool loadLibrary(const path &filename) {
-    this->filename = filename;
-    file = fopen(filename.c_str(), "rb");
-    ast = tokParser.parseLibrary(file,
-                                 filename.c_str());
-
-    AstParser parser(library, tokParser);
-    parser.run(*ast);
-    fclose(file);
-    isLoaded = true;
-    return true;
-  }
-
-  Library &getLibrary() {
-    if (!isLoaded) {
-      throw std::runtime_error("Library not loaded.");
-    }
-    return library;
-  }
-
-  const std::string getLibraryName() {
-    return filename;
-  }
-
-  bool isInitialized() {
-    return isLoaded;
-  }
+  void loadLibrary(const path &filename);
+  bool isInit();
+  Library &getLibrary();
 
 private:
   FILE *file;
@@ -62,8 +41,8 @@ private:
   bool isLoaded = false;
   path filename;
 
-  LibertyManager() : Singleton() {}
-  friend class Singleton<LibertyManager>;
+  LibraryParser() : Singleton() {}
+  friend class Singleton<LibraryParser>;
 };
 
 } // namespace eda::gate::library

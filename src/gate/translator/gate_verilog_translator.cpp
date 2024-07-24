@@ -12,8 +12,6 @@
 #include "gate/translator/fir_to_model2/fir_to_model2.h"
 #include "gate/translator/firrtl.h"
 
-#include "options.h"
-
 #include <filesystem>
 #include <fstream>
 #include <iostream>

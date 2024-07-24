@@ -30,7 +30,8 @@ add_library(Gate OBJECT
   mutator/mutator.cpp
   mutator/mutator_transformer.cpp
   library/library.cpp
-  library/check_lib/aig/check_lib_for_aig.cpp
+  library/library_parser.cpp
+  library/library_characteristics.cpp
   optimizer/associative_balancer.cpp
   optimizer/criterion/cost_function.cpp
   optimizer/cut_extractor.cpp
@@ -69,15 +70,8 @@ add_library(Gate OBJECT
   synthesizer/synthesizer_neg.cpp
   synthesizer/synthesizer_red.cpp
   synthesizer/synthesizer_shift.cpp
-  techmapper/assembly.cpp
-  techmapper/comb_mapper/func_mapper/func_mapper.cpp
-  techmapper/comb_mapper/func_mapper/area_recovery/area_recovery.cpp
-  techmapper/comb_mapper/func_mapper/power_map/power_map.cpp
-  techmapper/comb_mapper/func_mapper/simple_area/simple_area_mapper.cpp
-  techmapper/comb_mapper/func_mapper/simple_delay/simple_delay_mapper.cpp
-  techmapper/seq_mapper/sequential_mapper.cpp
+  techmapper/matcher/func_matcher.cpp
   techmapper/subnet_techmapper.cpp
-  techmapper/techmapper.cpp
   techmapper/techmapper_wrapper.cpp
   translator/fir/fir_model2.cpp
   translator/firrtl.cpp

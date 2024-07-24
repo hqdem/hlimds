@@ -13,13 +13,13 @@
 #include "gate/debugger/rnd_checker.h"
 #include "gate/debugger/sat_checker.h"
 #include "gate/estimator/ppa_estimator.h"
-#include "gate/library/liberty_manager.h"
+#include "gate/library/library_parser.h"
 #include "gate/model/design.h"
 #include "gate/model/net.h"
 #include "gate/model/printer/printer.h"
 #include "gate/optimizer/get_dbstat.h"
 #include "gate/optimizer/pass.h"
-#include "gate/techmapper/techmapper.h"
+#include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/translator/firrtl.h"
 #include "gate/translator/graphml.h"
 #include "gate/translator/yosys_converter_firrtl.h"
@@ -581,7 +581,7 @@ struct ReadLibertyCommand final : public UtopiaCommand {
       return TCL_ERROR;
     }
 
-    LibertyManager::get().loadLibrary(path);
+    LibraryParser::get().loadLibrary(path);
     return TCL_OK;
   }
 };
@@ -753,19 +753,17 @@ static int CmdStat(
 //===----------------------------------------------------------------------===//
 // Technology Mapping
 //===----------------------------------------------------------------------===//
-
 struct TechMapCommand final : public UtopiaCommand {
   TechMapCommand(): UtopiaCommand("techmap", "Performs technology mapping") {
-    const std::map<std::string, Techmapper::Strategy> mapperTypeMap {
-      { "af",    Techmapper::Strategy::AREA_FLOW },
-      { "area",  Techmapper::Strategy::AREA      },
-      { "delay", Techmapper::Strategy::DELAY     },
-      { "power", Techmapper::Strategy::POWER     },
+    const std::map<std::string, Indicator> indicatorMap {
+      { "area",  Indicator::AREA  },
+      { "delay", Indicator::DELAY },
+      { "power", Indicator::POWER },
     };
 
-    app.add_option("--type", mapperType, "Type of mapper")
+    app.add_option("--type", indicator, "Target in ADP")
         ->expected(1)
-        ->transform(CLI::CheckedTransformer(mapperTypeMap, CLI::ignore_case));
+        ->transform(CLI::CheckedTransformer(indicatorMap, CLI::ignore_case));
     app.allow_extras();
   }
 
@@ -776,7 +774,7 @@ struct TechMapCommand final : public UtopiaCommand {
       return TCL_ERROR;
     }
 
-    if (LibertyManager::get().getLibraryName().empty()) {
+    if (!LibraryParser::get().isInit()) {
       Tcl_SetObjResult(interp, Tcl_NewStringObj(
           "library has not been loaded", -1));
       return TCL_ERROR;
@@ -789,28 +787,16 @@ struct TechMapCommand final : public UtopiaCommand {
       return TCL_ERROR;
     }
 
-    const auto &techLib = LibertyManager::get().getLibraryName();
-    const std::filesystem::path sdcPath = eda::env::getHomePath();
-
-    Techmapper techmapper;
-    techmapper.setStrategy(mapperType);
-    techmapper.setSDC(sdcPath);
-    techmapper.setLibrary(techLib);
-
     const size_t numSubnets = designBuilder->getSubnetNum();
     for (size_t subnetId = 0; subnetId < numSubnets; ++subnetId) {
+
       const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetId);
 
-      eda::gate::premapper::AigMapper aigMapper("aig");
-      const auto premappedSubnetID = aigMapper.transform(subnetBuilder->make());
-
-      SubnetBuilder subnetBuilderTechmap;
-      techmapper.techmap(premappedSubnetID, subnetBuilderTechmap);
-      const auto mappedSubnetID = subnetBuilderTechmap.make();
+      const auto subnetBuilderTechmap =
+        techMap(Objective(indicator), subnetBuilder);
 
       designBuilder->setSubnetBuilder(
-          subnetId,
-          std::make_shared<SubnetBuilder>(mappedSubnetID));
+          subnetId, subnetBuilderTechmap);
     }
 
     designBuilder->save("techmap");
@@ -819,7 +805,7 @@ struct TechMapCommand final : public UtopiaCommand {
     return TCL_OK;
   }
 
-  Techmapper::Strategy mapperType = Techmapper::Strategy::AREA;
+  Indicator indicator = Indicator::AREA;
 };
 
 static TechMapCommand techMapCmd;

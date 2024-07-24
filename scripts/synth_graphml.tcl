@@ -6,14 +6,13 @@ if {[llength $argv] >= 2} {
     puts "<path_to_grahml_file> <path_to_liberty_library>"
 }
 read_graphml $arg1
-show_time
-stats -l
+stat
 pass rw
-stats -l
+stat
 pass rfd
-stats -l
+stat
 pass rw
-stats -l
+stat
 read_liberty $arg2
 techmap --type delay
-stats
+stat

@@ -22,7 +22,7 @@ using ModelPrinter  = model::ModelPrinter;
 using Subnet        = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetID      = model::SubnetID;
-using CutExtractor = optimizer::CutExtractor;
+using CutExtractor  = optimizer::CutExtractor;
 
 //TODO
 CutExtractor *cutExtractor = nullptr;
@@ -63,8 +63,6 @@ std::shared_ptr<SubnetBuilder> techMap(
   funcMatcher = Matcher<FuncMatcher, std::size_t>::create(
     library::SCLibrary::get().getCombCells());
 
-  auto startTime = std::chrono::high_resolution_clock::now();
-
   // Techmapping.
   SubnetTechMapper *techmapper =
       new SubnetTechMapper("SubnetTechMapper", criterion, cutProvider,
@@ -84,11 +82,7 @@ std::shared_ptr<SubnetBuilder> techMap(
   if (builderTechmap != nullptr) {
     const auto mappedSubnetID = builderTechmap->make();
     //printVerilog(mappedSubnetID, config.outNetFileName);
-
-    auto finishTime = std::chrono::high_resolution_clock::now();
-    auto processingTime = finishTime - startTime;
-
-    printStatistics(mappedSubnetID, processingTime);
+    printStatistics(mappedSubnetID);
   }
   return builderTechmap;
 }

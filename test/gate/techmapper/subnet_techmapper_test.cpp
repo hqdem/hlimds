@@ -82,11 +82,8 @@ const SubnetID commonPart(
     new SubnetTechMapper(name, criterion, cutProvider,
                          matchFinder, estimator::getPPA);
 
-  auto startTime = std::chrono::high_resolution_clock::now();
   auto builder = techmapper->map(builderPtr);
-
   finishMatching();
-  auto finishTime = std::chrono::high_resolution_clock::now();
 
   EXPECT_TRUE(builder != nullptr);
   delete techmapper;
@@ -95,8 +92,7 @@ const SubnetID commonPart(
     const auto mappedSubnetID = builder->make();
     EXPECT_TRUE(checkAllCellsMapped(mappedSubnetID));
 
-    auto processingTime = finishTime - startTime;
-    printStatistics(mappedSubnetID, processingTime);
+    printStatistics(mappedSubnetID);
     printVerilog(mappedSubnetID);
     std::cout << "Mapped Subnet: " << Subnet::get(mappedSubnetID);
     return mappedSubnetID;

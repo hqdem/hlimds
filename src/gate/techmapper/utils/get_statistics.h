@@ -20,10 +20,9 @@ namespace eda::gate::techmapper {
 
 using LibraryParser = library::LibraryParser;
 
-inline void printStatistics(model::SubnetID subnetID,
-  std::chrono::nanoseconds time = std::chrono::nanoseconds(0)) {
-  int nWires = 0;
-  int nCells = 0;
+inline void printStatistics(model::SubnetID subnetID) {
+  size_t nWires = 0;
+  size_t nCells = 0;
 
   std::unordered_map<std::string, int> statistic;
   for (const auto &cell : LibraryParser::get().getLibrary().getCells()) {
@@ -42,7 +41,7 @@ inline void printStatistics(model::SubnetID subnetID,
   std::cout << "Printing statistics:" << std::endl;
   std::cout << "   Number of wires: " << std::setw(10) << nWires << std::endl;
   std::cout << "   Number of cells: " << std::setw(10) << nCells << std::endl;
-  for (const auto& pair : statistic) {
+  for (const auto &pair : statistic) {
     if (pair.second != 0)
       std::cout << "     " <<
         std::left << std::setw(36) << pair.first <<
@@ -56,11 +55,6 @@ inline void printStatistics(model::SubnetID subnetID,
 
   std::cout << "Arrival time: " << estimator::getArrivalTime(subnetID) <<
       " ns" << std::endl; // TODO the same
-
-  if (time != std::chrono::nanoseconds(0)) {
-    std::cout << "Techmapper processing time: " <<
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-        time).count() << " ms" << std::endl;
-  }
 }
+
 } // namespace eda::gate::techmapper

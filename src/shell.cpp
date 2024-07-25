@@ -43,6 +43,15 @@
 
 #define UTOPIA_OUT std::cout
 
+#define UTOPIA_ERROR_IF(interp, cond, message)\
+  if (cond) return makeError(interp, message)
+
+#define UTOPIA_ERROR_IF_NO_DESIGN(interp)\
+  UTOPIA_ERROR_IF(interp, !designBuilder, "design has not been loaded")
+
+#define UTOPIA_ERROR_IF_DESIGN(interp)\
+  UTOPIA_ERROR_IF(interp, designBuilder, "design has been already loaded")
+
 using namespace eda::gate::model;
 using namespace eda::gate::debugger;
 using namespace eda::gate::debugger::options;
@@ -224,6 +233,7 @@ struct DeleteCommand final : public UtopiaCommand {
       UtopiaCommand("delete", "Erases the design from memory") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
     designBuilder = nullptr;
     return TCL_OK;
   }
@@ -331,9 +341,7 @@ struct LecCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    if (!designBuilder) {
-      return makeError(interp, "design has not been loaded");
-    }
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
     if (previousStep == "none") {
       return makeError(interp, "no checkpoint to compare with");
@@ -468,9 +476,7 @@ struct LogOptCommand final : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     namespace pass = eda::gate::optimizer;
 
-    if (!designBuilder) {
-      return makeError(interp, "design has not been loaded");
-    }
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
     try {
       app.parse(argc, argv);
@@ -521,9 +527,7 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    if (designBuilder) {
-      return makeError(interp, "design has been already loaded");
-    }
+    UTOPIA_ERROR_IF_DESIGN(interp);
 
     try {
       app.parse(argc, argv);
@@ -622,9 +626,7 @@ struct ReadVerilogCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    if (designBuilder) {
-      return makeError(interp, "design has been already loaded");
-    }
+    UTOPIA_ERROR_IF_DESIGN(interp);
 
     try {
       app.parse(argc, argv);
@@ -680,6 +682,46 @@ static int CmdReadVerilog(
 }
 
 //===----------------------------------------------------------------------===//
+// Command: Set Design Name
+//===----------------------------------------------------------------------===//
+
+struct SetNameCommand final : public UtopiaCommand {
+  SetNameCommand():
+      UtopiaCommand("set_name", "Sets the design name") {
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      return makeError(interp, e.what());
+    }
+
+    if (app.remaining().empty()) {
+      return makeError(interp, "no name specified");
+    }
+
+    const auto name = app.remaining().at(0);
+    designBuilder->setName(name);
+
+    return TCL_OK;
+  }
+};
+
+static SetNameCommand setNameCmd;
+
+static int CmdSetName(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return setNameCmd.run/* simple */(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
 // Command: Design Statistics
 //===----------------------------------------------------------------------===//
 
@@ -702,9 +744,7 @@ struct StatCommand final : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     namespace estimator = eda::gate::estimator;
 
-    if (!designBuilder) {
-      return makeError(interp, "design has not been loaded");
-    }
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
     try {
       app.parse(argc, argv);
@@ -736,6 +776,7 @@ struct StatCommand final : public UtopiaCommand {
       }
     } // for subnet
 
+    printNameValue("Name", designBuilder->getName());
     printNameValue("PI", nIn);
     printNameValue("PO", nOut);
     printNameValue("Cells", nCell, " (incl. PI/PO)");
@@ -783,9 +824,7 @@ struct TechMapCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    if (!designBuilder) {
-      return makeError(interp, "design has not been loaded");
-    }
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
     if (!LibraryParser::get().isInit()) {
       return makeError(interp, "library has not been loaded");
@@ -951,9 +990,7 @@ struct WriteDesignCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    if (!designBuilder) {
-      return makeError(interp, "design has not been loaded");
-    }
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
     try {
       app.parse(argc, argv);
@@ -965,7 +1002,7 @@ struct WriteDesignCommand final : public UtopiaCommand {
         format == ModelPrinter::SIMPLE ||
         format == ModelPrinter::DOT) {
       const auto &net = Net::get(designBuilder->make());
-      printModel(fileName, designName, format, net);
+      printModel(fileName, designBuilder->getName(), format, net);
       return TCL_OK;
     }
 
@@ -973,7 +1010,6 @@ struct WriteDesignCommand final : public UtopiaCommand {
   }
 
   std::string fileName = "design.v";
-  std::string designName = "design";
   ModelPrinter::Format format = ModelPrinter::VERILOG;
 };
 
@@ -1007,9 +1043,7 @@ struct WriteSubnetCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    if (!designBuilder) {
-      return makeError(interp, "design has not been loaded");
-    }
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
     try {
       app.parse(argc, argv);
@@ -1063,6 +1097,7 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   commandRegistry.addCommand(&readGraphMlCmd);
   commandRegistry.addCommand(&readLibertyCmd);
   commandRegistry.addCommand(&readVerilogCmd);
+  commandRegistry.addCommand(&setNameCmd);
   commandRegistry.addCommand(&statCmd);
   commandRegistry.addCommand(&techMapCmd);
   commandRegistry.addCommand(&verilogToFirCmd);
@@ -1083,6 +1118,7 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_CreateCommand(interp, readGraphMlCmd.name,  CmdReadGraphMl,  NULL, NULL);
   Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,  NULL, NULL);
   Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,  NULL, NULL);
+  Tcl_CreateCommand(interp, setNameCmd.name,      CmdSetName,      NULL, NULL);
   Tcl_CreateCommand(interp, statCmd.name,         CmdStat,         NULL, NULL);
   Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,      NULL, NULL);
   Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir, NULL, NULL);

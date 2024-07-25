@@ -43,12 +43,14 @@ class DesignBuilder final {
 private:
   /// Delete buffers when making subnets.
   static constexpr bool DeleteBuffers = true;
+  /// Default design name.
+  static constexpr auto DefaultName = "design";
 
 public:
   using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
 
-  /// Constructs a design builder from the net.
-  DesignBuilder(const NetID netID) {
+  /// Constructs a design builder w/ the given name from the net.
+  DesignBuilder(const std::string &name, const NetID netID): name(name) {
     // Generate the soft block implementations.
     synthesizer::synthSoftBlocks(netID);
 
@@ -57,11 +59,29 @@ public:
     setEntries(subnetIDs);
   }
 
-  /// Constructs a design builder from the subnet.
-  DesignBuilder(const SubnetID subnetID) {
+  /// Constructs a design builder from the net.
+  DesignBuilder(const NetID netID):
+      DesignBuilder(DefaultName, netID) {}
+
+  /// Constructs a design builder w/ the given name from the subnet.
+  DesignBuilder(const std::string &name, const SubnetID subnetID): name(name) {
     std::vector<SubnetID> subnetIDs;
     NetDecomposer::get().decompose(subnetID, subnetIDs, mapping);
     setEntries(subnetIDs);
+  }
+
+  /// Constructs a design builder from the subnet.
+  DesignBuilder(const SubnetID subnetID):
+      DesignBuilder(DefaultName, subnetID) {}
+
+  /// Return the design name.
+  const std::string getName() const {
+    return name;
+  }
+
+  /// Sets the design name.
+  void setName(const std::string &name) {
+    this->name = name;
   }
 
   /// Returns the number of subnets in the design.
@@ -221,6 +241,9 @@ private:
 
   // Reset domains.
   // TODO
+
+  // Design name.
+  std::string name;
 
   std::vector<SubnetEntry> subnets;
   std::vector<CellMapping> mapping;

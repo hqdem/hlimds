@@ -6,13 +6,13 @@ if {[llength $argv] >= 2} {
     puts "<path_to_verilog_file> <path_to_liberty_library>"
 }
 read_verilog $arg1
-stat
+stat_design
 logopt rw
-stat
+stat_design
 logopt rfa
-stat
+stat_design
 logopt rw
-stat
+stat_design
 read_liberty $arg2
 techmap --type area
-stat
+stat_design

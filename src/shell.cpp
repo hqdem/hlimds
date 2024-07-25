@@ -164,67 +164,6 @@ static DesignBuilderPtr designBuilder = nullptr;
 static std::string previousStep = "none";
 
 //===----------------------------------------------------------------------===//
-// Command: Database Statistics
-//===----------------------------------------------------------------------===//
-
-struct DbStatCommand final : public UtopiaCommand {
-  DbStatCommand():
-      UtopiaCommand("dbstat", "Prints information about a subnet database") {
-    app.add_option("--db", dbPath)->expected(1)->required(true);
-    app.add_option("--otype", outputType)->expected(1);
-    app.add_option("--out", outputNamefile)->expected(1);
-    app.add_option("--ttsize", ttSize)->expected(1)->required(true);
-    app.allow_extras();
-  }
-
-  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
-
-    if (app.remaining().empty()) {
-      return makeError(interp, "no input files");
-    }
-
-    NPNDBConfig config;
-    config.dbPath = dbPath;
-
-    if (outputType == "DOT") {
-      config.outType = OutType::DOT;
-    } else if (outputType == "INFO") {
-      config.outType = OutType::INFO;
-    } else if (outputType == "BOTH") {
-      config.outType = OutType::BOTH;
-    } else {
-      return makeError(interp,
-          fmt::format("unknown output type '{}'", outputType));
-    }
-
-    config.outName = outputNamefile;
-    config.ttSize = ttSize;
-    config.binLines = app.remaining();
-
-    return getDbStat(UTOPIA_OUT, config) ? TCL_ERROR : TCL_OK;
-  }
-
-  std::string dbPath;
-  int ttSize;
-  std::string outputType = "BOTH";
-  std::string outputNamefile;
-};
-
-static DbStatCommand dbstatCmd;
-
-static int CmdDbStat(
-    ClientData,
-    Tcl_Interp *interp, int argc,
-    const char *argv[]) {
-  return dbstatCmd.runEx(interp, argc, argv);
-}
-
-//===----------------------------------------------------------------------===//
 // Command: Delete
 //===----------------------------------------------------------------------===//
 
@@ -722,7 +661,69 @@ static int CmdSetName(
 }
 
 //===----------------------------------------------------------------------===//
-// Command: Design Statistics
+// Command: Statistics for Database
+//===----------------------------------------------------------------------===//
+
+struct StatDbCommand final : public UtopiaCommand {
+  StatDbCommand():
+      UtopiaCommand("stat_db", "Prints information about a subnet database") {
+    app.add_option("--db", dbPath)->expected(1)->required(true);
+    app.add_option("--otype", outputType)->expected(1);
+    app.add_option("--out", outputNamefile)->expected(1);
+    app.add_option("--ttsize", ttSize)->expected(1)->required(true);
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      return makeError(interp, e.what());
+    }
+
+    if (app.remaining().empty()) {
+      return makeError(interp, "no input files");
+    }
+
+    NPNDBConfig config;
+    config.dbPath = dbPath;
+
+    if (outputType == "DOT") {
+      config.outType = OutType::DOT;
+    } else if (outputType == "INFO") {
+      config.outType = OutType::INFO;
+    } else if (outputType == "BOTH") {
+      config.outType = OutType::BOTH;
+    } else {
+      return makeError(interp,
+          fmt::format("unknown output type '{}'", outputType));
+    }
+
+    config.outName = outputNamefile;
+    config.ttSize = ttSize;
+    config.binLines = app.remaining();
+
+    return getDbStat(UTOPIA_OUT, config) ? TCL_ERROR : TCL_OK;
+  }
+
+  std::string dbPath;
+  int ttSize;
+  std::string outputType = "BOTH";
+  std::string outputNamefile;
+};
+
+static StatDbCommand statDbCmd;
+
+static int CmdStatDb(
+    ClientData,
+    Tcl_Interp *interp, int argc,
+    const char *argv[]) {
+  return statDbCmd.runEx(interp, argc, argv);
+}
+
+
+//===----------------------------------------------------------------------===//
+// Command: Statistics for Design
 //===----------------------------------------------------------------------===//
 
 template <typename T>
@@ -735,9 +736,9 @@ static inline void printNameValue(const std::string &name,
              << std::endl;
 }
 
-struct StatCommand final : public UtopiaCommand {
-  StatCommand():
-      UtopiaCommand("stat", "Prints the design characteristics") {
+struct StatDesignCommand final : public UtopiaCommand {
+  StatDesignCommand():
+      UtopiaCommand("stat_design", "Prints the design characteristics") {
     app.allow_extras();
   }
 
@@ -792,18 +793,16 @@ struct StatCommand final : public UtopiaCommand {
     UTOPIA_OUT << std::flush;
     return TCL_OK;
   }
-
-  bool logic = false;
 };
 
-static StatCommand statCmd;
+static StatDesignCommand statDesignCmd;
 
-static int CmdStat(
+static int CmdStatDesign(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return statCmd.runEx(interp, argc, argv);
+  return statDesignCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1088,7 +1087,6 @@ int Utopia_TclInit(Tcl_Interp *interp) {
     return TCL_ERROR;
   }
 
-  commandRegistry.addCommand(&dbstatCmd);
   commandRegistry.addCommand(&deleteCmd);
   commandRegistry.addCommand(&exitCmd);
   commandRegistry.addCommand(&helpCmd);
@@ -1098,7 +1096,8 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   commandRegistry.addCommand(&readLibertyCmd);
   commandRegistry.addCommand(&readVerilogCmd);
   commandRegistry.addCommand(&setNameCmd);
-  commandRegistry.addCommand(&statCmd);
+  commandRegistry.addCommand(&statDbCmd);
+  commandRegistry.addCommand(&statDesignCmd);
   commandRegistry.addCommand(&techMapCmd);
   commandRegistry.addCommand(&verilogToFirCmd);
   commandRegistry.addCommand(&versionCmd);
@@ -1110,7 +1109,6 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_DeleteCommand(interp, "unknown");
 #endif
 
-  Tcl_CreateCommand(interp, dbstatCmd.name,       CmdDbStat,       NULL, NULL);
   Tcl_CreateCommand(interp, deleteCmd.name,       CmdDelete,       NULL, NULL);
   Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,         NULL, NULL);
   Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,          NULL, NULL);
@@ -1119,7 +1117,8 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,  NULL, NULL);
   Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,  NULL, NULL);
   Tcl_CreateCommand(interp, setNameCmd.name,      CmdSetName,      NULL, NULL);
-  Tcl_CreateCommand(interp, statCmd.name,         CmdStat,         NULL, NULL);
+  Tcl_CreateCommand(interp, statDbCmd.name,       CmdStatDb,       NULL, NULL);
+  Tcl_CreateCommand(interp, statDesignCmd.name,   CmdStatDesign,   NULL, NULL);
   Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,      NULL, NULL);
   Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir, NULL, NULL);
   Tcl_CreateCommand(interp, versionCmd.name,      CmdVersion,      NULL, NULL);

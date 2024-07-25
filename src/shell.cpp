@@ -155,30 +155,6 @@ static DesignBuilderPtr designBuilder = nullptr;
 static std::string previousStep = "none";
 
 //===----------------------------------------------------------------------===//
-// Command: Clear
-//===----------------------------------------------------------------------===//
-
-struct ClearCommand final : public UtopiaCommand {
-  ClearCommand():
-      UtopiaCommand("clear", "Erases the design from memory") {}
-
-  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    designBuilder = nullptr;
-    return TCL_OK;
-  }
-};
-
-static ClearCommand clearCmd;
-
-static int CmdClear(
-    ClientData,
-    Tcl_Interp *interp,
-    int argc,
-    const char *argv[]) {
-  return clearCmd.runEx(interp, argc, argv);
-}
-
-//===----------------------------------------------------------------------===//
 // Command: Database Statistics
 //===----------------------------------------------------------------------===//
 
@@ -237,6 +213,30 @@ static int CmdDbStat(
     Tcl_Interp *interp, int argc,
     const char *argv[]) {
   return dbstatCmd.runEx(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
+// Command: Delete
+//===----------------------------------------------------------------------===//
+
+struct DeleteCommand final : public UtopiaCommand {
+  DeleteCommand():
+      UtopiaCommand("delete", "Erases the design from memory") {}
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    designBuilder = nullptr;
+    return TCL_OK;
+  }
+};
+
+static DeleteCommand deleteCmd;
+
+static int CmdDelete(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return deleteCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1039,8 +1039,8 @@ int Utopia_TclInit(Tcl_Interp *interp) {
     return TCL_ERROR;
   }
 
-  commandRegistry.addCommand(&clearCmd);
   commandRegistry.addCommand(&dbstatCmd);
+  commandRegistry.addCommand(&deleteCmd);
   commandRegistry.addCommand(&exitCmd);
   commandRegistry.addCommand(&helpCmd);
   commandRegistry.addCommand(&lecCmd);
@@ -1060,8 +1060,8 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_DeleteCommand(interp, "unknown");
 #endif
 
-  Tcl_CreateCommand(interp, clearCmd.name,        CmdClear,        NULL, NULL);
   Tcl_CreateCommand(interp, dbstatCmd.name,       CmdDbStat,       NULL, NULL);
+  Tcl_CreateCommand(interp, deleteCmd.name,       CmdDelete,       NULL, NULL);
   Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,         NULL, NULL);
   Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,          NULL, NULL);
   Tcl_CreateCommand(interp, logOptCmd.name,       CmdLogOpt,       NULL, NULL);

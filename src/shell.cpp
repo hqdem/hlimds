@@ -31,6 +31,7 @@
 #include <tcl.h>
 
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -50,10 +51,24 @@ using namespace eda::gate::optimizer;
 using namespace eda::gate::techmapper;
 using namespace eda::gate::translator;
 
+template <typename Clock>
+static inline void printTime(const std::string &name,
+                             const std::chrono::time_point<Clock> &start,
+                             const std::chrono::time_point<Clock> &end,
+                             const std::string &prefix = "") {
+  std::chrono::duration<double> elapsed = end - start;
+  UTOPIA_OUT << prefix << name << ": "
+             << std::fixed << elapsed.count() << "s"
+             << std::endl << std::flush;
+}
+
+/**
+ * @brief Utopia EDA shell command interface.
+ */
 struct UtopiaCommand {
   UtopiaCommand(const char *name, const char *desc):
     name(name), desc(desc), app(desc, name) {
-    // CLI::App always adds the help option, but it is not required.
+    // CLI::App adds the help option, but it is not required.
     auto *helpOption = app.get_help_ptr();
     if (helpOption) {
       app.remove_option(helpOption);
@@ -61,6 +76,17 @@ struct UtopiaCommand {
   }
 
   virtual int run(Tcl_Interp *interp, int argc, const char *argv[]) = 0;
+
+  virtual int runEx(Tcl_Interp *interp, int argc, const char *argv[]) {
+    using clock = std::chrono::high_resolution_clock;
+
+    auto start = clock::now();
+    int status = run(interp, argc, argv);
+    auto end = clock::now();
+
+    printTime<clock>(fmt::format("{}({})", name, status), start, end, "> ");
+    return status;
+  }
 
   void printHelp(std::ostream &out) const {
     out << app.help() << std::flush;
@@ -128,7 +154,7 @@ static int CmdClear(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return clearCmd.run(interp, argc, argv);
+  return clearCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -196,7 +222,7 @@ static int CmdDbStat(
     ClientData,
     Tcl_Interp *interp, int argc,
     const char *argv[]) {
-  return dbstatCmd.run(interp, argc, argv);
+  return dbstatCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -258,7 +284,7 @@ static int CmdHelp(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return helpCmd.run(interp, argc, argv);
+  return helpCmd.run/* simple */(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -347,7 +373,7 @@ static int CmdLec(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return lecCmd.run(interp, argc, argv);
+  return lecCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -366,14 +392,13 @@ static int CmdLec(
 
 template<typename Func>
 static void measureAndRun(const std::string &name, Func func) {
-  auto start = std::chrono::high_resolution_clock::now();
+  using clock = std::chrono::high_resolution_clock;
+
+  auto start = clock::now();
   func();
-  auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> elapsed = end - start;
-  UTOPIA_OUT << std::setw(10) << std::left
-             << name
-             << std::setw(10) << std::left
-             << elapsed.count() << " seconds" << std::endl;
+  auto end = clock::now();
+
+  printTime<clock>(name, start, end, "  - ");
 }
 
 struct PassCommand final : public UtopiaCommand {
@@ -485,7 +510,7 @@ static int CmdPass(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return passCmd.run(interp, argc, argv);
+  return passCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -546,7 +571,7 @@ static int CmdReadGraphMl(
     ClientData,Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return readGraphMlCmd.run(interp, argc, argv);
+  return readGraphMlCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -593,7 +618,7 @@ static int CmdReadLiberty(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return readLibertyCmd.run(interp, argc, argv);
+  return readLibertyCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -673,7 +698,7 @@ static int CmdReadVerilog(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return readVerilogCmd.run(interp, argc, argv);
+  return readVerilogCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -747,7 +772,7 @@ static int CmdStat(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return statCmd.run(interp, argc, argv);
+  return statCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -817,7 +842,7 @@ static int CmdTechMap(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return techMapCmd.run(interp, argc, argv);
+  return techMapCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -876,7 +901,7 @@ static int CmdVerilogToFir(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return verilogToFirCmd.run(interp, argc, argv);
+  return verilogToFirCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -907,7 +932,7 @@ static int CmdVersion(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return versionCmd.run(interp, argc, argv);
+  return versionCmd.run/* simple */(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -985,7 +1010,7 @@ static int CmdWriteDesign(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return writeDesignCmd.run(interp, argc, argv);
+  return writeDesignCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1048,7 +1073,7 @@ static int CmdWriteSubnet(
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return writeSubnetCmd.run(interp, argc, argv);
+  return writeSubnetCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//

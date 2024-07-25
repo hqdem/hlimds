@@ -688,7 +688,7 @@ static inline void printNameValue(const std::string &name,
                                   const T &value,
                                   const std::string &suffix = "") {
   UTOPIA_OUT << std::setw(8) << std::left << name
-             << value
+             << std::fixed << value
              << suffix
              << std::endl;
 }
@@ -738,9 +738,9 @@ struct StatCommand final : public UtopiaCommand {
 
     printNameValue("PI", nIn);
     printNameValue("PO", nOut);
-    printNameValue("Cells", nCell, " (including PI/PO)");
+    printNameValue("Cells", nCell, " (incl. PI/PO)");
     printNameValue("Depth", depth);
-    printNameValue("SA", activ, "(switching activity)");
+    printNameValue("SwAct", activ);
 
     if (previousStep == "techmap") {
       printNameValue("Area", area, " um^2");

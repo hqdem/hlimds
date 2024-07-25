@@ -259,25 +259,6 @@ inline SubnetPass compress2() {
 }
 
 //===----------------------------------------------------------------------===//
-// Technology Mappers
-//===----------------------------------------------------------------------===//
-
-inline SubnetMapper ma() {
-  // FIXME:
-  return nullptr;
-}
-
-inline SubnetMapper md() {
-  // FIXME:
-  return nullptr;
-}
-
-inline SubnetMapper mp() {
-  // FIXME:
-  return nullptr;
-}
-
-//===----------------------------------------------------------------------===//
 // Basic Design Passes
 //===----------------------------------------------------------------------===//
 

@@ -7,11 +7,11 @@ if {[llength $argv] >= 2} {
 }
 read_verilog $arg1
 stat
-pass rw
+logopt rw
 stat
-pass rfa
+logopt rfa
 stat
-pass rw
+logopt rw
 stat
 read_liberty $arg2
 techmap --type area

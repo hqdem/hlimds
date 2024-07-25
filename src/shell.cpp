@@ -382,7 +382,7 @@ static int CmdLec(
 }
 
 //===----------------------------------------------------------------------===//
-// Command: Pass
+// Command: Logical Optimization
 //===----------------------------------------------------------------------===//
 
 #define ADD_CUSTOM_CMD(app, name, desc, callback)\
@@ -406,9 +406,9 @@ static void measureAndRun(const std::string &name, Func func) {
   printTime<clock>(name, start, end, "  - ");
 }
 
-struct PassCommand final : public UtopiaCommand {
-  PassCommand() :
-      UtopiaCommand("pass", "Applies an optimization pass to the design") {
+struct LogOptCommand final : public UtopiaCommand {
+  LogOptCommand() :
+      UtopiaCommand("logopt", "Applies an optimization pass to the design") {
     namespace pass = eda::gate::optimizer;
 
     // Premapping.
@@ -452,11 +452,6 @@ struct PassCommand final : public UtopiaCommand {
     passRsz->add_option("--name", rszName);
     passRsz->add_option("-k", rszK);
     passRsz->add_option("-n", rszN);
-
-    // Technology mapping.
-    ADD_CMD(app, pass::ma, "ma", "Area-aware technology mapping");
-    ADD_CMD(app, pass::md, "md", "Delay-aware technology mapping");
-    ADD_CMD(app, pass::mp, "mp", "Power-aware technology mapping");
 
     // Predefined scripts.
     ADD_CMD(app, pass::resyn,     "resyn",     "Predefined script resyn");
@@ -505,14 +500,14 @@ struct PassCommand final : public UtopiaCommand {
   uint16_t rszN = 16;
 };
 
-static PassCommand passCmd;
+static LogOptCommand logOptCmd;
 
-static int CmdPass(
+static int CmdLogOpt(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return passCmd.runEx(interp, argc, argv);
+  return logOptCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1049,7 +1044,7 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   commandRegistry.addCommand(&exitCmd);
   commandRegistry.addCommand(&helpCmd);
   commandRegistry.addCommand(&lecCmd);
-  commandRegistry.addCommand(&passCmd);
+  commandRegistry.addCommand(&logOptCmd);
   commandRegistry.addCommand(&readGraphMlCmd);
   commandRegistry.addCommand(&readLibertyCmd);
   commandRegistry.addCommand(&readVerilogCmd);
@@ -1069,7 +1064,7 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_CreateCommand(interp, dbstatCmd.name,       CmdDbStat,       NULL, NULL);
   Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,         NULL, NULL);
   Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,          NULL, NULL);
-  Tcl_CreateCommand(interp, passCmd.name,         CmdPass,         NULL, NULL);
+  Tcl_CreateCommand(interp, logOptCmd.name,       CmdLogOpt,       NULL, NULL);
   Tcl_CreateCommand(interp, readGraphMlCmd.name,  CmdReadGraphMl,  NULL, NULL);
   Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,  NULL, NULL);
   Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,  NULL, NULL);

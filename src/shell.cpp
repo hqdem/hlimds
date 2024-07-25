@@ -164,12 +164,12 @@ static DesignBuilderPtr designBuilder = nullptr;
 static std::string previousStep = "none";
 
 //===----------------------------------------------------------------------===//
-// Command: Delete
+// Command: Delete Design
 //===----------------------------------------------------------------------===//
 
-struct DeleteCommand final : public UtopiaCommand {
-  DeleteCommand():
-      UtopiaCommand("delete", "Erases the design from memory") {}
+struct DeleteDesignCommand final : public UtopiaCommand {
+  DeleteDesignCommand():
+      UtopiaCommand("delete_design", "Erases the design from memory") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
@@ -178,14 +178,54 @@ struct DeleteCommand final : public UtopiaCommand {
   }
 };
 
-static DeleteCommand deleteCmd;
+static DeleteDesignCommand deleteDesignCmd;
 
-static int CmdDelete(
+static int CmdDeleteDesign(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return deleteCmd.runEx(interp, argc, argv);
+  return deleteDesignCmd.runEx(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
+// Command: Goto Point
+//===----------------------------------------------------------------------===//
+
+struct GotoPointCommand final : public UtopiaCommand {
+  GotoPointCommand():
+      UtopiaCommand("goto_point", "Rolls back to a checkpoint") {
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      return makeError(interp, e.what());
+    }
+
+    if (app.remaining().empty()) {
+      return makeError(interp, "no point specified");
+    }
+
+    const auto point = app.remaining().at(0);
+    designBuilder->rollback(point);
+
+    return TCL_OK;
+  }
+};
+
+static GotoPointCommand gotoPointCmd;
+
+static int CmdGotoPoint(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return gotoPointCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -283,7 +323,7 @@ struct LecCommand final : public UtopiaCommand {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
     if (previousStep == "none") {
-      return makeError(interp, "no checkpoint to compare with");
+      return makeError(interp, "no point to compare with");
     }
 
     try {
@@ -326,6 +366,37 @@ static int CmdLec(
     int argc,
     const char *argv[]) {
   return lecCmd.runEx(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
+// Command: List Points
+//===----------------------------------------------------------------------===//
+
+struct ListPointsCommand final : public UtopiaCommand {
+  ListPointsCommand():
+      UtopiaCommand("list_points", "Lists the design checkpoints") {}
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
+
+    const auto points = designBuilder->getPoints();
+    for (const auto &point : points) {
+      UTOPIA_OUT << "  - " << point << std::endl;
+    }
+    UTOPIA_OUT << std::flush;
+
+    return TCL_OK;
+  }
+};
+
+static ListPointsCommand listPointsCmd;
+
+static int CmdListPoints(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return listPointsCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -621,6 +692,46 @@ static int CmdReadVerilog(
 }
 
 //===----------------------------------------------------------------------===//
+// Command: Save Point
+//===----------------------------------------------------------------------===//
+
+struct SavePointCommand final : public UtopiaCommand {
+  SavePointCommand():
+      UtopiaCommand("save_point", "Saves the design checkpoint") {
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    UTOPIA_ERROR_IF_NO_DESIGN(interp);
+
+    try {
+      app.parse(argc, argv);
+    } catch (CLI::ParseError &e) {
+      return makeError(interp, e.what());
+    }
+
+    if (app.remaining().empty()) {
+      return makeError(interp, "no point specified");
+    }
+
+    const auto point = app.remaining().at(0);
+    designBuilder->save(point);
+
+    return TCL_OK;
+  }
+};
+
+static SavePointCommand savePointCmd;
+
+static int CmdSavePoint(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return savePointCmd.runEx(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
 // Command: Set Design Name
 //===----------------------------------------------------------------------===//
 
@@ -778,8 +889,8 @@ struct StatDesignCommand final : public UtopiaCommand {
     } // for subnet
 
     printNameValue("Name", designBuilder->getName());
-    printNameValue("PI", nIn);
-    printNameValue("PO", nOut);
+    printNameValue("PIs", nIn);
+    printNameValue("POs", nOut);
     printNameValue("Subnets", designBuilder->getSubnetNum());
     printNameValue("Cells", nCell, " (incl. PI/PO)");
     printNameValue("Depth", depth);
@@ -1088,19 +1199,24 @@ int Utopia_TclInit(Tcl_Interp *interp) {
     return TCL_ERROR;
   }
 
-  commandRegistry.addCommand(&deleteCmd);
+  commandRegistry.addCommand(&deleteDesignCmd);
+  commandRegistry.addCommand(&gotoPointCmd);
   commandRegistry.addCommand(&exitCmd);
   commandRegistry.addCommand(&helpCmd);
   commandRegistry.addCommand(&lecCmd);
+  commandRegistry.addCommand(&listPointsCmd);
   commandRegistry.addCommand(&logOptCmd);
   commandRegistry.addCommand(&readGraphMlCmd);
   commandRegistry.addCommand(&readLibertyCmd);
   commandRegistry.addCommand(&readVerilogCmd);
+  commandRegistry.addCommand(&savePointCmd);
   commandRegistry.addCommand(&setNameCmd);
   commandRegistry.addCommand(&statDbCmd);
   commandRegistry.addCommand(&statDesignCmd);
   commandRegistry.addCommand(&techMapCmd);
+#if 0
   commandRegistry.addCommand(&verilogToFirCmd);
+#endif
   commandRegistry.addCommand(&versionCmd);
   commandRegistry.addCommand(&writeDesignCmd);
   commandRegistry.addCommand(&writeSubnetCmd);
@@ -1110,18 +1226,23 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_DeleteCommand(interp, "unknown");
 #endif
 
-  Tcl_CreateCommand(interp, deleteCmd.name,       CmdDelete,       NULL, NULL);
+  Tcl_CreateCommand(interp, deleteDesignCmd.name, CmdDeleteDesign, NULL, NULL);
+  Tcl_CreateCommand(interp, gotoPointCmd.name,    CmdGotoPoint,    NULL, NULL);
   Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,         NULL, NULL);
   Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,          NULL, NULL);
+  Tcl_CreateCommand(interp, listPointsCmd.name,   CmdListPoints,   NULL, NULL);
   Tcl_CreateCommand(interp, logOptCmd.name,       CmdLogOpt,       NULL, NULL);
   Tcl_CreateCommand(interp, readGraphMlCmd.name,  CmdReadGraphMl,  NULL, NULL);
   Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,  NULL, NULL);
   Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,  NULL, NULL);
+  Tcl_CreateCommand(interp, savePointCmd.name,    CmdSavePoint,    NULL, NULL);
   Tcl_CreateCommand(interp, setNameCmd.name,      CmdSetName,      NULL, NULL);
   Tcl_CreateCommand(interp, statDbCmd.name,       CmdStatDb,       NULL, NULL);
   Tcl_CreateCommand(interp, statDesignCmd.name,   CmdStatDesign,   NULL, NULL);
   Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,      NULL, NULL);
+#if 0
   Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir, NULL, NULL);
+#endif
   Tcl_CreateCommand(interp, versionCmd.name,      CmdVersion,      NULL, NULL);
   Tcl_CreateCommand(interp, writeDesignCmd.name,  CmdWriteDesign,  NULL, NULL);
   Tcl_CreateCommand(interp, writeSubnetCmd.name,  CmdWriteSubnet,  NULL, NULL);

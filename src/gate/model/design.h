@@ -136,6 +136,11 @@ public:
     entry.builder = builder;
   }
 
+  /// Returns the global check points.
+  std::vector<std::string> getPoints() const {
+    return points;
+  }
+
   /// Makes a check point for the i-th subnet.
   void save(const size_t i, const std::string &point) {
     auto &entry = getEntry(i);
@@ -146,6 +151,10 @@ public:
   void save(const std::string &point) {
     for (size_t i = 0; i < subnets.size(); ++i) {
       save(i, point);
+    }
+
+    if (std::find(points.begin(), points.end(), point) == points.end()) {
+      points.push_back(point);
     }
   }
 
@@ -245,6 +254,7 @@ private:
   // Design name.
   std::string name;
 
+  std::vector<std::string> points;
   std::vector<SubnetEntry> subnets;
   std::vector<CellMapping> mapping;
 };

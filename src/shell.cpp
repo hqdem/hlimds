@@ -780,6 +780,7 @@ struct StatDesignCommand final : public UtopiaCommand {
     printNameValue("Name", designBuilder->getName());
     printNameValue("PI", nIn);
     printNameValue("PO", nOut);
+    printNameValue("Subnets", designBuilder->getSubnetNum());
     printNameValue("Cells", nCell, " (incl. PI/PO)");
     printNameValue("Depth", depth);
     printNameValue("SwAct", activ);

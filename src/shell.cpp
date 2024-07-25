@@ -683,6 +683,16 @@ static int CmdReadVerilog(
 // Command: Design Statistics
 //===----------------------------------------------------------------------===//
 
+template <typename T>
+static inline void printNameValue(const std::string &name,
+                                  const T &value,
+                                  const std::string &suffix = "") {
+  UTOPIA_OUT << std::setw(8) << std::left << name
+             << value
+             << suffix
+             << std::endl;
+}
+
 struct StatCommand final : public UtopiaCommand {
   StatCommand():
       UtopiaCommand("stat", "Prints the design characteristics") {
@@ -702,8 +712,8 @@ struct StatCommand final : public UtopiaCommand {
       return makeError(interp, e.what());
     }
 
-    size_t size{0}, depth{0};
-    float  area{0}, delay{0}, power{0}, activ{0};
+    size_t nIn{0}, nOut{0}, nCell{0}, depth{0};
+    float area{0}, delay{0}, power{0}, activ{0};
 
     for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
       const auto &subnetID = designBuilder->getSubnetID(i);
@@ -713,27 +723,32 @@ struct StatCommand final : public UtopiaCommand {
       SubnetBuilder builder(subnet);
       eda::gate::analyzer::ProbabilityEstimator estimator;
 
-      size  += subnet.getEntries().size();
+      nIn += subnet.getInNum();
+      nOut += subnet.getOutNum();
+      nCell += subnet.size();
       activ += estimator.estimate(builder).getSwitchProbsSum();
       depth = std::max<size_t>(subnet.getPathLength().second, depth);
 
       if (previousStep == "techmap") {
-        area  += estimator::getArea(subnetID);
+        area += estimator::getArea(subnetID);
         power += estimator::getLeakagePower(subnetID);
         delay = std::max<float>(estimator::getArrivalTime(subnetID), delay);
       }
     } // for subnet
 
-    UTOPIA_OUT << "Cells: " << size  << std::endl;
-    UTOPIA_OUT << "Depth: " << depth << std::endl;
-    UTOPIA_OUT << "Activ: " << activ << std::endl;
+    printNameValue("PI", nIn);
+    printNameValue("PO", nOut);
+    printNameValue("Cells", nCell, " (including PI/PO)");
+    printNameValue("Depth", depth);
+    printNameValue("SA", activ, "(switching activity)");
 
     if (previousStep == "techmap") {
-      UTOPIA_OUT << "Area:  " << area  << std::endl;
-      UTOPIA_OUT << "Delay: " << delay << std::endl;
-      UTOPIA_OUT << "Power: " << power << std::endl;
+      printNameValue("Area", area, " um^2");
+      printNameValue("Delay", delay, " ns");
+      printNameValue("Power", power, " uW");
     }
 
+    UTOPIA_OUT << std::flush;
     return TCL_OK;
   }
 

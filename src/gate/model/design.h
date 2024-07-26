@@ -129,8 +129,6 @@ public:
 
   /// Replaces the i-th subnet builder w/ the given one.
   void setSubnetBuilder(const size_t i, const SubnetBuilderPtr &builder) {
-    assert(builder != nullptr);
-
     auto &entry = getEntry(i);
     entry.subnetID = OBJ_NULL_ID;
     entry.builder = builder;

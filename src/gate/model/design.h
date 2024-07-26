@@ -141,6 +141,11 @@ public:
     return points;
   }
 
+  /// Checks if there is a global check point w/ the given name.
+  bool hasPoint(const std::string &point) const {
+    return std::find(points.begin(), points.end(), point) != points.end();
+  }
+
   /// Makes a check point for the i-th subnet.
   void save(const size_t i, const std::string &point) {
     auto &entry = getEntry(i);
@@ -153,7 +158,7 @@ public:
       save(i, point);
     }
 
-    if (std::find(points.begin(), points.end(), point) == points.end()) {
+    if (!hasPoint(point)) {
       points.push_back(point);
     }
   }
@@ -186,6 +191,20 @@ public:
   void replaceCell(const CellID oldCellID, const CellID newCellID,
                    const std::vector<uint16_t> &newInputs,
                    const std::vector<uint16_t> &newOutputs);
+
+  /// Checks if the design is tech-mapped.
+  bool isTechMapped() {
+    // It is assumed that either all subnets are tech-mapped
+    // or all subnets are not tech-mapped.
+    if (subnets.empty()) {
+      return false;
+    }
+
+    const auto subnetID = getSubnetID(0);
+    const auto &subnet = Subnet::get(subnetID);
+
+    return subnet.isTechMapped();
+  }
 
   /// Constructs a net.
   NetID make() {

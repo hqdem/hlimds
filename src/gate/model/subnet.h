@@ -234,6 +234,20 @@ public:
   /// Returns the minimum and maximum path lengths.
   std::pair<uint32_t, uint32_t> getPathLength() const;
 
+  /// Check if the subnet is tech-mapped.
+  bool isTechMapped() const {
+    if (nEntry <= (nIn + nOut)) {
+      return false;
+    }
+
+    const auto entryID = nIn;
+    const auto &cell = getCell(entryID);
+
+    // It is assumed that either all cells are logical or
+    // all cells are technological (one check is enough).
+    return !cell.getType().isGate();
+  } 
+
 private:
   /// Constructs a subnet.
   Subnet(uint16_t nIn, uint16_t nOut, const std::vector<Entry> &entries):
@@ -572,6 +586,29 @@ public:
   const LinkList getLinks(size_t i) const; // FIXME: Deprecated.
   /// Returns an array filled by the links.
   const Link *getLinks(size_t i, Link *links, uint16_t &nLinks) const;
+
+  /// Checks if the subnet is tech-mapped.
+  bool isTechMapped() const {
+    if (nCell <= (nIn + nOut)) {
+      return false;
+    }
+
+    // Find the first non-input cell.
+    for (auto it = begin(); it != end(); ++it) {
+      const auto entryID = *it;
+      const auto &cell = getCell(entryID);
+
+      if (cell.isIn()) {
+        continue;
+      }
+
+      // It is assumed that either all cells are logical or
+      // all cells are technological (one check is enough).
+      return !cell.getType().isGate();
+    }
+
+    return false;
+  }
 
   /// Adds an input.
   Link addInput() {

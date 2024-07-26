@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "gate/analyzer/probabilistic_estimate.h"
+#include "gate/debugger/base_checker.h"
 #include "gate/debugger/bdd_checker.h"
 #include "gate/debugger/fraig_checker.h"
 #include "gate/debugger/rnd_checker.h"
@@ -42,6 +43,13 @@
 #include <vector>
 
 #define UTOPIA_OUT std::cout
+
+#define UTOPIA_PARSE_ARGS(interp, app, argc, argv)\
+  try {\
+    app.parse(argc, argv);\
+  } catch (CLI::ParseError &e) {\
+    return makeError(interp, e.what());\
+  }
 
 #define UTOPIA_ERROR_IF(interp, cond, message)\
   if (cond) return makeError(interp, message)
@@ -161,7 +169,6 @@ private:
 
 static UtopiaCommandRegistry commandRegistry;
 static DesignBuilderPtr designBuilder = nullptr;
-static std::string previousStep = "none";
 
 //===----------------------------------------------------------------------===//
 // Command: Delete Design
@@ -200,12 +207,7 @@ struct GotoPointCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
-
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     if (app.remaining().empty()) {
       return makeError(interp, "no point specified");
@@ -256,11 +258,7 @@ struct HelpCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     if (app.remaining().empty()) {
       commandRegistry.printHelp(UTOPIA_OUT);
@@ -293,16 +291,6 @@ static int CmdHelp(
 // Command: LEC
 //===----------------------------------------------------------------------===//
 
-template <typename CheckerType>
-static bool checkEquivalence() {
-  auto &checker = CheckerType::get();
-  return checker.areEquivalent(*designBuilder, previousStep, "original").equal();
-}
-
-static bool containsFalse(const std::vector<bool> &eq) {
-  return std::find(eq.begin(), eq.end(), false) != eq.end();
-}
-
 struct LecCommand final : public UtopiaCommand {
   LecCommand():
       UtopiaCommand("lec", "Checks logical equivalence") {
@@ -321,37 +309,30 @@ struct LecCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    if (previousStep == "none") {
-      return makeError(interp, "no point to compare with");
+    if (app.remaining().size() < 2) {
+      return makeError(interp, "no points specified");
     }
 
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
+    const auto point1 = app.remaining().at(0);
+    const auto point2 = app.remaining().at(1);
+
+    if (point1 == point2) {
+      return makeError(interp, "equal points specified");
+    }
+    if (!designBuilder->hasPoint(point1)) {
+      return makeError(interp, fmt::format("unknown point '{}'", point1));
+    }
+    if (!designBuilder->hasPoint(point2)) {
+      return makeError(interp, fmt::format("unknown point '{}'", point2));
     }
 
-    std::vector<bool> eq;
+    const auto &checker = BaseChecker::getChecker(method);
+    const bool verdict = checker.areEquivalent(
+        *designBuilder, point1, point2).equal();
 
-    switch (method) {
-      case LecType::SAT:
-        eq.push_back(checkEquivalence<SatChecker>());
-        break;
-      case LecType::BDD:
-        eq.push_back(checkEquivalence<BddChecker>());
-        break;
-      case LecType::RND:
-        eq.push_back(checkEquivalence<RndChecker>());
-        break;
-      case LecType::FRAIG:
-        eq.push_back(checkEquivalence<FraigChecker>());
-        break;
-      default:
-        return makeError(interp, "unknown checker");
-    }
-
-    const char *result = containsFalse(eq) ? "false" : "true";
+    const char *result = verdict ? "equivalent" : "not equivalent";
     return makeResult(interp, result);
   }
 
@@ -484,19 +465,10 @@ struct LogOptCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    namespace pass = eda::gate::optimizer;
-
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
-
-    designBuilder->save("pass");
-    previousStep = "pass";
-
+    // Passes are executed as callbacks when parsing the arguments.
     return TCL_OK;
   }
 
@@ -538,12 +510,7 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_DESIGN(interp);
-
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     std::string fileName = "";
     if (!app.remaining().empty()) {
@@ -562,7 +529,6 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
       GmlTranslator parser;
       const auto &subnet = parser.translate(fileName, data)->make(true);
       designBuilder = std::make_unique<DesignBuilder>(subnet);
-      designBuilder->save("original");
       return TCL_OK;
     }
 
@@ -590,11 +556,7 @@ struct ReadLibertyCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     std::string path = "";
     if (!app.remaining().empty()) {
@@ -637,12 +599,7 @@ struct ReadVerilogCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_DESIGN(interp);
-
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     std::string path = "";
     if (!app.remaining().empty()) {
@@ -703,12 +660,7 @@ struct SavePointCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
-
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     if (app.remaining().empty()) {
       return makeError(interp, "no point specified");
@@ -743,12 +695,7 @@ struct SetNameCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
-
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     if (app.remaining().empty()) {
       return makeError(interp, "no name specified");
@@ -786,11 +733,7 @@ struct StatDbCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     if (app.remaining().empty()) {
       return makeError(interp, "no input files");
@@ -857,12 +800,9 @@ struct StatDesignCommand final : public UtopiaCommand {
     namespace estimator = eda::gate::estimator;
 
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    const bool isTechMapped = designBuilder->isTechMapped();
 
     size_t nIn{0}, nOut{0}, nCell{0}, depth{0};
     float area{0}, delay{0}, power{0}, activ{0};
@@ -881,7 +821,7 @@ struct StatDesignCommand final : public UtopiaCommand {
       activ += estimator.estimate(builder).getSwitchProbsSum();
       depth = std::max<size_t>(subnet.getPathLength().second, depth);
 
-      if (previousStep == "techmap") {
+      if (isTechMapped) {
         area += estimator::getArea(subnetID);
         power += estimator::getLeakagePower(subnetID);
         delay = std::max<float>(estimator::getArrivalTime(subnetID), delay);
@@ -896,7 +836,7 @@ struct StatDesignCommand final : public UtopiaCommand {
     printNameValue("Depth", depth);
     printNameValue("SwAct", activ);
 
-    if (previousStep == "techmap") {
+    if (isTechMapped) {
       printNameValue("Area", area, " um^2");
       printNameValue("Delay", delay, " ns");
       printNameValue("Power", power, " uW");
@@ -941,26 +881,17 @@ struct TechMapCommand final : public UtopiaCommand {
       return makeError(interp, "library has not been loaded");
     }
 
-    if (previousStep == "techmap") {
+    if (designBuilder->isTechMapped()) {
       return makeError(interp, "design has been already tech-mapped");
     }
 
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    const size_t nSubnet = designBuilder->getSubnetNum();
-    for (size_t subnetID = 0; subnetID < nSubnet; ++subnetID) {
-      const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetID);
+    for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
+      const auto &subnetBuilder = designBuilder->getSubnetBuilder(i);
       const auto techmapBuilder = techMap(Objective(indicator), subnetBuilder);
-
-      designBuilder->setSubnetBuilder(subnetID, techmapBuilder);
+      designBuilder->setSubnetBuilder(i, techmapBuilder);
     }
-
-    designBuilder->save("techmap");
-    previousStep = "techmap";
 
     return TCL_OK;
   }
@@ -992,11 +923,7 @@ struct VerilogToFirCommand final : public UtopiaCommand {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     if (app.remaining().empty()) {
       return makeError(interp, "no input files");
@@ -1102,12 +1029,7 @@ struct WriteDesignCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
-
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     if (format == ModelPrinter::VERILOG ||
         format == ModelPrinter::SIMPLE ||
@@ -1155,19 +1077,13 @@ struct WriteSubnetCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    try {
-      app.parse(argc, argv);
-    } catch (CLI::ParseError &e) {
-      return makeError(interp, e.what());
-    }
-
-    const size_t numSubnets = designBuilder->getSubnetNum();
     if (entered->count() == 0) {
-      for (size_t subnetID = 0; subnetID < numSubnets; ++subnetID) {
-        printSubnet(designBuilder, subnetID);
+      for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
+        printSubnet(designBuilder, i);
       }
-    } else if (number < numSubnets) {
+    } else if (number < designBuilder->getSubnetNum()) {
       printSubnet(designBuilder, number);
     } else {
       return makeError(interp, fmt::format("subnet {} does not exist", number));

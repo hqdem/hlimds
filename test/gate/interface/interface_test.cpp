@@ -151,7 +151,7 @@ TEST(TclInterfaceTest, lecSat) {
          << "save_point p1;"
          << "logopt rw;"
          << "save_point p2;"
-         << "lec -m sat p1 p2";
+         << "lec --method sat p1 p2";
   test(script.str(), true);
 }
 

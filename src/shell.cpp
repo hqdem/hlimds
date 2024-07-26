@@ -45,6 +45,8 @@
 
 #define UTOPIA_OUT std::cout
 
+#undef UTOPIA_ENABLE_VERILOG_TO_FIR
+
 #define UTOPIA_PARSE_ARGS(interp, app, argc, argv)\
   try {\
     app.parse(argc, argv);\
@@ -368,6 +370,12 @@ struct ListPointsCommand final : public UtopiaCommand {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
     const auto points = designBuilder->getPoints();
+
+    if (points.empty()) {
+      UTOPIA_OUT << "  <empty>" << std::endl << std::flush;
+      return TCL_OK;
+    }
+
     for (const auto &point : points) {
       UTOPIA_OUT << "  - " << point << std::endl;
     }
@@ -511,7 +519,7 @@ static int CmdLogOpt(
 
 struct ReadGraphMlCommand final : public UtopiaCommand {
   ReadGraphMlCommand():
-      UtopiaCommand("read_graphml", "Reads a GraphML file") {
+      UtopiaCommand("read_graphml", "Reads a design from a GraphML file") {
     app.allow_extras();
   }
 
@@ -552,7 +560,7 @@ static int CmdReadGraphMl(
 
 struct ReadLibertyCommand final : public UtopiaCommand {
   ReadLibertyCommand():
-      UtopiaCommand("read_liberty", "Reads a Liberty file") {
+      UtopiaCommand("read_liberty", "Reads a library from a Liberty file") {
     app.allow_extras();
   }
 
@@ -589,7 +597,7 @@ static int CmdReadLiberty(
 
 struct ReadVerilogCommand final : public UtopiaCommand {
   ReadVerilogCommand():
-      UtopiaCommand("read_verilog", "Reads a Verilog file") {
+      UtopiaCommand("read_verilog", "Reads a design from a Verilog file") {
     app.add_option("--frontend", frontend);
     app.add_option("--top", topModule);
     app.add_flag("--debug", debugMode);
@@ -716,64 +724,6 @@ static int CmdSetName(
 }
 
 //===----------------------------------------------------------------------===//
-// Command: Statistics for Database
-//===----------------------------------------------------------------------===//
-
-struct StatDbCommand final : public UtopiaCommand {
-  StatDbCommand():
-      UtopiaCommand("stat_db", "Prints information about a subnet database") {
-    app.add_option("--db", dbPath)->expected(1)->required(true);
-    app.add_option("--otype", outputType)->expected(1);
-    app.add_option("--out", outputNamefile)->expected(1);
-    app.add_option("--ttsize", ttSize)->expected(1)->required(true);
-    app.allow_extras();
-  }
-
-  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-
-    if (app.remaining().empty()) {
-      return makeError(interp, "no input files");
-    }
-
-    NPNDBConfig config;
-    config.dbPath = dbPath;
-
-    if (outputType == "DOT") {
-      config.outType = OutType::DOT;
-    } else if (outputType == "INFO") {
-      config.outType = OutType::INFO;
-    } else if (outputType == "BOTH") {
-      config.outType = OutType::BOTH;
-    } else {
-      return makeError(interp,
-          fmt::format("unknown output type '{}'", outputType));
-    }
-
-    config.outName = outputNamefile;
-    config.ttSize = ttSize;
-    config.binLines = app.remaining();
-
-    return getDbStat(UTOPIA_OUT, config) ? TCL_ERROR : TCL_OK;
-  }
-
-  std::string dbPath;
-  int ttSize;
-  std::string outputType = "BOTH";
-  std::string outputNamefile;
-};
-
-static StatDbCommand statDbCmd;
-
-static int CmdStatDb(
-    ClientData,
-    Tcl_Interp *interp, int argc,
-    const char *argv[]) {
-  return statDbCmd.runEx(interp, argc, argv);
-}
-
-
-//===----------------------------------------------------------------------===//
 // Command: Statistics for Design
 //===----------------------------------------------------------------------===//
 
@@ -855,6 +805,63 @@ static int CmdStatDesign(
 }
 
 //===----------------------------------------------------------------------===//
+// Command: Statistics for Logical Optimization Database
+//===----------------------------------------------------------------------===//
+
+struct StatLogDbCommand final : public UtopiaCommand {
+  StatLogDbCommand():
+      UtopiaCommand("stat_logdb", "Prints information about a logopt database") {
+    app.add_option("--db", dbPath)->expected(1)->required(true);
+    app.add_option("--otype", outputType)->expected(1);
+    app.add_option("--out", outputNamefile)->expected(1);
+    app.add_option("--ttsize", ttSize)->expected(1)->required(true);
+    app.allow_extras();
+  }
+
+  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
+    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+
+    if (app.remaining().empty()) {
+      return makeError(interp, "no input files");
+    }
+
+    NPNDBConfig config;
+    config.dbPath = dbPath;
+
+    if (outputType == "DOT") {
+      config.outType = OutType::DOT;
+    } else if (outputType == "INFO") {
+      config.outType = OutType::INFO;
+    } else if (outputType == "BOTH") {
+      config.outType = OutType::BOTH;
+    } else {
+      return makeError(interp,
+          fmt::format("unknown output type '{}'", outputType));
+    }
+
+    config.outName = outputNamefile;
+    config.ttSize = ttSize;
+    config.binLines = app.remaining();
+
+    return getDbStat(UTOPIA_OUT, config) ? TCL_ERROR : TCL_OK;
+  }
+
+  std::string dbPath;
+  int ttSize;
+  std::string outputType = "BOTH";
+  std::string outputNamefile;
+};
+
+static StatLogDbCommand statLogDbCmd;
+
+static int CmdStatLogDb(
+    ClientData,
+    Tcl_Interp *interp, int argc,
+    const char *argv[]) {
+  return statLogDbCmd.runEx(interp, argc, argv);
+}
+
+//===----------------------------------------------------------------------===//
 // Command: Technology Mapping
 //===----------------------------------------------------------------------===//
 struct TechMapCommand final : public UtopiaCommand {
@@ -915,6 +922,7 @@ static int CmdTechMap(
 // Command: Verilog To FIRRTL
 //===----------------------------------------------------------------------===//
 
+#ifdef UTOPIA_ENABLE_VERILOG_TO_FIR
 struct VerilogToFirCommand final : public UtopiaCommand {
   VerilogToFirCommand():
       UtopiaCommand("verilog_to_fir", "Translates Verilog to FIRRTL") {
@@ -959,6 +967,7 @@ static int CmdVerilogToFir(
     const char *argv[]) {
   return verilogToFirCmd.runEx(interp, argc, argv);
 }
+#endif // UTOPIA_ENABLE_VERILOG_TO_FIR
 
 //===----------------------------------------------------------------------===//
 // Command: Version
@@ -1127,12 +1136,12 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   commandRegistry.addCommand(&readVerilogCmd);
   commandRegistry.addCommand(&savePointCmd);
   commandRegistry.addCommand(&setNameCmd);
-  commandRegistry.addCommand(&statDbCmd);
   commandRegistry.addCommand(&statDesignCmd);
+  commandRegistry.addCommand(&statLogDbCmd);
   commandRegistry.addCommand(&techMapCmd);
-#if 0
+#ifdef UTOPIA_ENABLE_VERILOG_TO_FIR
   commandRegistry.addCommand(&verilogToFirCmd);
-#endif
+#endif // UTOPIA_ENABLE_VERILOG_TO_FIR
   commandRegistry.addCommand(&versionCmd);
   commandRegistry.addCommand(&writeDebugCmd);
   commandRegistry.addCommand(&writeDotCmd);
@@ -1154,12 +1163,12 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,   NULL, NULL);
   Tcl_CreateCommand(interp, savePointCmd.name,    CmdSavePoint,     NULL, NULL);
   Tcl_CreateCommand(interp, setNameCmd.name,      CmdSetName,       NULL, NULL);
-  Tcl_CreateCommand(interp, statDbCmd.name,       CmdStatDb,        NULL, NULL);
   Tcl_CreateCommand(interp, statDesignCmd.name,   CmdStatDesign,    NULL, NULL);
+  Tcl_CreateCommand(interp, statLogDbCmd.name,    CmdStatLogDb,     NULL, NULL);
   Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,       NULL, NULL);
-#if 0
+#ifdef UTOPIA_ENABLE_VERILOG_TO_FIR
   Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir,  NULL, NULL);
-#endif
+#endif // UTOPIA_ENABLE_VERILOG_TO_FIR
   Tcl_CreateCommand(interp, versionCmd.name,       CmdVersion,      NULL, NULL);
   Tcl_CreateCommand(interp, writeDebugCmd.name,    CmdWriteDebug,   NULL, NULL);
   Tcl_CreateCommand(interp, writeDotCmd.name,      CmdWriteDot,     NULL, NULL);

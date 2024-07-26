@@ -35,6 +35,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -55,10 +56,16 @@
   if (cond) return makeError(interp, message)
 
 #define UTOPIA_ERROR_IF_NO_DESIGN(interp)\
-  UTOPIA_ERROR_IF(interp, !designBuilder, "design has not been loaded")
+  UTOPIA_ERROR_IF(interp, !designBuilder,\
+      "design has not been loaded")
 
 #define UTOPIA_ERROR_IF_DESIGN(interp)\
-  UTOPIA_ERROR_IF(interp, designBuilder, "design has been already loaded")
+  UTOPIA_ERROR_IF(interp, designBuilder,\
+      "design has been already loaded")
+
+#define UTOPIA_ERROR_IF_NO_FILE(interp, fileName)\
+  UTOPIA_ERROR_IF(interp, !std::filesystem::exists(fileName),\
+      fmt::format("file '{}' does not exist", fileName))
 
 using namespace eda::gate::model;
 using namespace eda::gate::debugger;
@@ -519,20 +526,14 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
       return makeError(interp, "no input files");
     }
 
-    if (!std::filesystem::exists(fileName)){
-      return makeError(interp,
-          fmt::format("file '{}' does not exist", fileName));
-    }
+    UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
 
-    if (!fileName.empty()) {
-      GmlTranslator::ParserData data;
-      GmlTranslator parser;
-      const auto &subnet = parser.translate(fileName, data)->make(true);
-      designBuilder = std::make_unique<DesignBuilder>(subnet);
-      return TCL_OK;
-    }
+    GmlTranslator::ParserData data;
+    GmlTranslator parser;
+    const auto &subnet = parser.translate(fileName, data)->make(true);
+    designBuilder = std::make_unique<DesignBuilder>(subnet);
 
-    return makeError(interp, "no input files");
+    return TCL_OK;
   }
 };
 
@@ -558,18 +559,16 @@ struct ReadLibertyCommand final : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    std::string path = "";
+    std::string fileName = "";
     if (!app.remaining().empty()) {
-      path = app.remaining().at(0);
+      fileName = app.remaining().at(0);
     } else {
       return makeError(interp, "no input files");
     }
 
-    if (!std::filesystem::exists(path)){
-      return makeError(interp, fmt::format("file '{}' does not exist", path));
-    }
+    UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
 
-    LibraryParser::get().loadLibrary(path);
+    LibraryParser::get().loadLibrary(fileName);
     return TCL_OK;
   }
 };
@@ -601,16 +600,14 @@ struct ReadVerilogCommand final : public UtopiaCommand {
     UTOPIA_ERROR_IF_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    std::string path = "";
+    std::string fileName = "";
     if (!app.remaining().empty()) {
-      path = app.remaining().at(0);
+      fileName = app.remaining().at(0);
     } else {
       return makeError(interp, "no input files");
     }
 
-    if (!std::filesystem::exists(path)){
-      return makeError(interp, fmt::format("file '{}' does not exist", path));
-    }
+    UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
 
     if (frontend == "yosys") {
       YosysToModel2Config cfg;
@@ -817,7 +814,7 @@ struct StatDesignCommand final : public UtopiaCommand {
 
       nIn += subnet.getInNum();
       nOut += subnet.getOutNum();
-      nCell += subnet.size();
+      nCell += subnet.getCellNum();
       activ += estimator.estimate(builder).getSwitchProbsSum();
       depth = std::max<size_t>(subnet.getPathLength().second, depth);
 
@@ -934,10 +931,8 @@ struct VerilogToFirCommand final : public UtopiaCommand {
       return makeError(interp, "no input files");
     }
 
-    for (const auto &file: app.remaining()) {
-      if (!std::filesystem::exists(file)) {
-        return makeError(interp, fmt::format("file '{}' does not exist", file));
-      }
+    for (const auto &fileName: app.remaining()) {
+      UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
     }
 
     FirrtlConfig cfg;
@@ -950,9 +945,9 @@ struct VerilogToFirCommand final : public UtopiaCommand {
     return TCL_OK;
   } 
 
-  std::string outputFile = "";
+  std::string outputFile;
   std::string topModule;
-  bool debugMode = false;
+  bool debugMode{false};
 };
 
 static VerilogToFirCommand verilogToFirCmd;
@@ -997,38 +992,35 @@ static int CmdVersion(
 }
 
 //===----------------------------------------------------------------------===//
-// Command: Write Design
+// Command: Write Dot/Simple/Verilog
 //===----------------------------------------------------------------------===//
 
-static void printModel(
-    const std::string &fileName,
-    const std::string &designName,
-    ModelPrinter::Format format,
-    const Net &net) {
-  auto &printer = ModelPrinter::getPrinter(format);
+static inline void printDesign(std::ostream &out,
+                               DesignBuilder &designBuilder,
+                               ModelPrinter &printer) {
+  const auto &net = Net::get(designBuilder.make());
 
-  if (!fileName.empty()) {
-    std::ofstream outFile(fileName);
-    printer.print(outFile, net, designName);
-    outFile.close();
-  } else {
-    printer.print(UTOPIA_OUT, net);
-  }
+  const auto designName = designBuilder.getName();
+  printer.print(out, net, designName);
 }
 
-struct WriteDesignCommand final : public UtopiaCommand {
-  WriteDesignCommand():
-      UtopiaCommand("write_design", "Writes the design to a file") {
-    const std::map<std::string, ModelPrinter::Format> formatMap {
-      { "verilog", ModelPrinter::VERILOG },
-      { "simple",  ModelPrinter::SIMPLE  },
-      { "dot",     ModelPrinter::DOT     },
-    };
+static inline void printSubnet(std::ostream &out,
+                               DesignBuilder &designBuilder,
+                               size_t i,
+                               ModelPrinter &printer) {
+  const auto subnetID = designBuilder.getSubnetID(i);
+  const auto &subnet = Subnet::get(subnetID);
 
-    app.add_option("-f, --format", format, "Output format")
-        ->expected(1)
-        ->transform(CLI::CheckedTransformer(formatMap, CLI::ignore_case));
-    app.add_option("--path", fileName);
+  const auto subnetName = fmt::format("{}_{}", designBuilder.getName(), i);
+  printer.print(out, subnet, subnetName);
+}
+
+struct WriteDesignCommand : public UtopiaCommand {
+  using Format = ModelPrinter::Format;
+
+  WriteDesignCommand(const char *name, const char *desc, const Format format):
+      UtopiaCommand(name, desc), printer(ModelPrinter::getPrinter(format)) {
+    subnetOption = app.add_option("--subnet", subnetIndex, "Subnet index");
     app.allow_extras();
   }
 
@@ -1036,79 +1028,82 @@ struct WriteDesignCommand final : public UtopiaCommand {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    if (format == ModelPrinter::VERILOG ||
-        format == ModelPrinter::SIMPLE ||
-        format == ModelPrinter::DOT) {
-      const auto &net = Net::get(designBuilder->make());
-      printModel(fileName, designBuilder->getName(), format, net);
+    std::string fileName = "";
+    if (!app.remaining().empty()) {
+      fileName = app.remaining().at(0);
+    } else {
+      return makeError(interp, "no input files");
+    }
+
+    std::ofstream out(fileName);
+
+    if (subnetOption->count() == 0) {
+      printDesign(out, *designBuilder, printer);
+      return TCL_OK;
+    }
+    if (subnetIndex < designBuilder->getSubnetNum()) {
+      printSubnet(out, *designBuilder, subnetIndex, printer);
       return TCL_OK;
     }
 
-    return makeError(interp, fmt::format("unknown format '{}'", format));
+    return makeError(interp,
+        fmt::format("subnet {} does not exist", subnetIndex));
   }
 
-  std::string fileName = "design.v";
-  ModelPrinter::Format format = ModelPrinter::VERILOG;
+  ModelPrinter &printer;
+  CLI::Option *subnetOption;
+  size_t subnetIndex;
 };
 
-static WriteDesignCommand writeDesignCmd;
+struct WriteDebugCommand final : public WriteDesignCommand {
+   WriteDebugCommand():
+       WriteDesignCommand("write_debug",
+                          "Writes the design to a debug file",
+                          Format::SIMPLE) {}
+};
 
-static int CmdWriteDesign(
+static WriteDebugCommand writeDebugCmd;
+
+static int CmdWriteDebug(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return writeDesignCmd.runEx(interp, argc, argv);
+  return writeDebugCmd.runEx(interp, argc, argv);
 }
 
-//===----------------------------------------------------------------------===//
-// Command: Write Subnet
-//===----------------------------------------------------------------------===//
-
-static void printSubnet(
-    const DesignBuilderPtr &designBuilder,
-    size_t subnetID) {
-  const auto &subnetBuilder = designBuilder->getSubnetBuilder(subnetID);
-  const auto &subnet = Subnet::get(subnetBuilder->make(true));
-  UTOPIA_OUT << subnet << std::endl;
-}
-
-struct WriteSubnetCommand final : public UtopiaCommand {
-  WriteSubnetCommand():
-      UtopiaCommand("write_subnet", "Writes a subnet to a file") {
-    entered = app.add_option("-i, --index", number, "Subnet number");
-    app.allow_extras();
-  }
-
-  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    UTOPIA_ERROR_IF_NO_DESIGN(interp);
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-
-    if (entered->count() == 0) {
-      for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
-        printSubnet(designBuilder, i);
-      }
-    } else if (number < designBuilder->getSubnetNum()) {
-      printSubnet(designBuilder, number);
-    } else {
-      return makeError(interp, fmt::format("subnet {} does not exist", number));
-    }
-
-    return TCL_OK;
-  }
-
-  size_t number = 0;
-  CLI::Option *entered = nullptr;
+struct WriteDotCommand final : public WriteDesignCommand {
+  WriteDotCommand():
+      WriteDesignCommand("write_dot",
+                         "Writes the design to a DOT file",
+                         Format::DOT) {}
 };
 
-static WriteSubnetCommand writeSubnetCmd;
+static WriteDotCommand writeDotCmd;
 
-static int CmdWriteSubnet(
+static int CmdWriteDot(
     ClientData,
     Tcl_Interp *interp,
     int argc,
     const char *argv[]) {
-  return writeSubnetCmd.runEx(interp, argc, argv);
+  return writeDotCmd.runEx(interp, argc, argv);
+}
+
+struct WriteVerilogCommand final : public WriteDesignCommand {
+   WriteVerilogCommand():
+       WriteDesignCommand("write_verilog",
+                          "Writes the design to a Verilog file",
+                          Format::VERILOG) {}
+};
+
+static WriteVerilogCommand writeVerilogCmd;
+
+static int CmdWriteVerilog(
+    ClientData,
+    Tcl_Interp *interp,
+    int argc,
+    const char *argv[]) {
+  return writeVerilogCmd.runEx(interp, argc, argv);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1139,34 +1134,36 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   commandRegistry.addCommand(&verilogToFirCmd);
 #endif
   commandRegistry.addCommand(&versionCmd);
-  commandRegistry.addCommand(&writeDesignCmd);
-  commandRegistry.addCommand(&writeSubnetCmd);
+  commandRegistry.addCommand(&writeDebugCmd);
+  commandRegistry.addCommand(&writeDotCmd);
+  commandRegistry.addCommand(&writeVerilogCmd);
 
 #if 0
   Tcl_DeleteCommand(interp, "exec");
   Tcl_DeleteCommand(interp, "unknown");
 #endif
 
-  Tcl_CreateCommand(interp, deleteDesignCmd.name, CmdDeleteDesign, NULL, NULL);
-  Tcl_CreateCommand(interp, gotoPointCmd.name,    CmdGotoPoint,    NULL, NULL);
-  Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,         NULL, NULL);
-  Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,          NULL, NULL);
-  Tcl_CreateCommand(interp, listPointsCmd.name,   CmdListPoints,   NULL, NULL);
-  Tcl_CreateCommand(interp, logOptCmd.name,       CmdLogOpt,       NULL, NULL);
-  Tcl_CreateCommand(interp, readGraphMlCmd.name,  CmdReadGraphMl,  NULL, NULL);
-  Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,  NULL, NULL);
-  Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,  NULL, NULL);
-  Tcl_CreateCommand(interp, savePointCmd.name,    CmdSavePoint,    NULL, NULL);
-  Tcl_CreateCommand(interp, setNameCmd.name,      CmdSetName,      NULL, NULL);
-  Tcl_CreateCommand(interp, statDbCmd.name,       CmdStatDb,       NULL, NULL);
-  Tcl_CreateCommand(interp, statDesignCmd.name,   CmdStatDesign,   NULL, NULL);
-  Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,      NULL, NULL);
+  Tcl_CreateCommand(interp, deleteDesignCmd.name, CmdDeleteDesign,  NULL, NULL);
+  Tcl_CreateCommand(interp, gotoPointCmd.name,    CmdGotoPoint,     NULL, NULL);
+  Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,          NULL, NULL);
+  Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,           NULL, NULL);
+  Tcl_CreateCommand(interp, listPointsCmd.name,   CmdListPoints,    NULL, NULL);
+  Tcl_CreateCommand(interp, logOptCmd.name,       CmdLogOpt,        NULL, NULL);
+  Tcl_CreateCommand(interp, readGraphMlCmd.name,  CmdReadGraphMl,   NULL, NULL);
+  Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,   NULL, NULL);
+  Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,   NULL, NULL);
+  Tcl_CreateCommand(interp, savePointCmd.name,    CmdSavePoint,     NULL, NULL);
+  Tcl_CreateCommand(interp, setNameCmd.name,      CmdSetName,       NULL, NULL);
+  Tcl_CreateCommand(interp, statDbCmd.name,       CmdStatDb,        NULL, NULL);
+  Tcl_CreateCommand(interp, statDesignCmd.name,   CmdStatDesign,    NULL, NULL);
+  Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,       NULL, NULL);
 #if 0
-  Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir, NULL, NULL);
+  Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir,  NULL, NULL);
 #endif
-  Tcl_CreateCommand(interp, versionCmd.name,      CmdVersion,      NULL, NULL);
-  Tcl_CreateCommand(interp, writeDesignCmd.name,  CmdWriteDesign,  NULL, NULL);
-  Tcl_CreateCommand(interp, writeSubnetCmd.name,  CmdWriteSubnet,  NULL, NULL);
+  Tcl_CreateCommand(interp, versionCmd.name,       CmdVersion,      NULL, NULL);
+  Tcl_CreateCommand(interp, writeDebugCmd.name,    CmdWriteDebug,   NULL, NULL);
+  Tcl_CreateCommand(interp, writeDotCmd.name,      CmdWriteDot,     NULL, NULL);
+  Tcl_CreateCommand(interp, writeVerilogCmd.name,  CmdWriteVerilog, NULL, NULL);
 
   return TCL_OK;
 }

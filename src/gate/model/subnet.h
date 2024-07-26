@@ -198,6 +198,8 @@ public:
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
+  /// Returns the number of cells.
+  uint32_t getCellNum() const { return nCell; }
 
   /// Returns the i-th input index.
   size_t getInIdx(const size_t i) const { return i; }
@@ -250,19 +252,24 @@ public:
 
 private:
   /// Constructs a subnet.
-  Subnet(uint16_t nIn, uint16_t nOut, const std::vector<Entry> &entries):
-      nIn(nIn), nOut(nOut), nEntry(entries.size()),
+  Subnet(uint16_t nIn,
+         uint16_t nOut,
+         uint32_t nCell,
+         const std::vector<Entry> &entries):
+      nIn(nIn), nOut(nOut), nCell(nCell), nEntry(entries.size()),
       entries(ArrayBlock<Entry>::allocate(entries, true, true)) {}
 
   /// Number of inputs.
   const uint16_t nIn;
   /// Number of outputs.
   const uint16_t nOut;
+  /// Number of cells.
+  const uint32_t nCell;
   /// Total number of entries.
   const uint32_t nEntry;
 
   /// For alignment purposes.
-  const uint64_t __reserved{0};
+  const uint32_t __reserved{0};
 
   /// Topologically sorted array of entries.
   const Array<Entry> entries;
@@ -863,7 +870,7 @@ public:
     }
     assert(checkInputsOrder() && checkOutputsOrder());
 
-    return allocateObject<Subnet>(nIn, nOut, std::move(entries));
+    return allocateObject<Subnet>(nIn, nOut, nCell, std::move(entries));
   }
 
   /// @brief Makes a subnet.

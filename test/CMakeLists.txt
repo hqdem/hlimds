@@ -106,7 +106,7 @@ target_link_libraries(${TEST_TARGET}
   PRIVATE
     gtest_main
     ${MAIN_LIBRARY}
-    ${ELPP_LIBRARY}
+    easyloggingpp
 )
 
 include(GoogleTest)

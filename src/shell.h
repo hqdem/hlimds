@@ -80,6 +80,25 @@ inline int makeError(Tcl_Interp *interp, const std::string &error) {
   return TCL_ERROR;
 } 
 
+inline void printNewline() {
+  UTOPIA_OUT << std::endl;
+}
+
+inline int printFile(Tcl_Interp *interp, const std::string &filePath) {
+  std::ifstream file(filePath);
+  if (!file.is_open()) {
+    return makeError(interp, fmt::format("unable to open file '{}'", filePath));
+  }
+
+  std::string line;
+  while (getline(file, line)) {
+    UTOPIA_OUT << line << std::endl;
+  }
+
+  file.close();
+  return TCL_OK;
+}
+
 //===----------------------------------------------------------------------===//
 // Base Classes
 //===----------------------------------------------------------------------===//
@@ -167,6 +186,11 @@ private:
 
 extern eda::gate::optimizer::DesignBuilderPtr designBuilder;
 
-extern int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell);
+int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell);
 
-extern int Utopia_TclInit(Tcl_Interp *interp);
+int Utopia_TclInit(Tcl_Interp *interp);
+
+int Utopia_Main(Tcl_AppInitProc init, int argc, char **argv);
+
+int Utopia_Main(int argc, char **argv);
+

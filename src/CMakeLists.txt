@@ -57,8 +57,9 @@ target_link_libraries(Shell
     Yosys::Yosys
   PRIVATE
     CLI
-    Json
+    easyloggingpp
     fmt
+    Json
     Tcl::Tcl
 )
 
@@ -75,11 +76,6 @@ target_link_libraries(${MAIN_LIBRARY}
     Utopia::Shell
     Utopia::Util
     Yosys::Yosys
-  PRIVATE
-    CLI
-    Json
-    fmt
-    Tcl::Tcl
 )
 
 # The project executable.
@@ -95,10 +91,7 @@ target_include_directories(${MAIN_TARGET}
 target_link_libraries(${MAIN_TARGET}
   PRIVATE
     ${MAIN_LIBRARY}
-    ${ELPP_LIBRARY}
     CLI
-    Json
-    fmt
     Tcl::Tcl
 )
 

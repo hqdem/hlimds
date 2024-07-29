@@ -10,9 +10,6 @@
 [submodule "lib/tinyxml2"]
 	path = lib/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
-[submodule "test/data/gate/parser/graphml/OpenABC"]
-	path = test/data/gate/parser/graphml/OpenABC
-	url = https://github.com/ispras/OpenABC
 [submodule "lib/readcells"]
 	path = lib/readcells
 	url = ../../mvg/readcells.git

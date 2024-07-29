@@ -16,14 +16,11 @@ namespace eda::gate::translator {
 std::shared_ptr<Builder> translateGmlOpenabc(const std::string &fileName,
                                              ParserData *data) {
 
-  const path dir = path(std::string(getenv("UTOPIA_HOME"))) /
+  const path dir = eda::env::getHomePath() /
       "test" /
       "data" /
-      "gate" /
-      "parser" /
-      "graphml" /
-      "OpenABC" /
-      "graphml_openabcd";
+      "openabcd-subset" /
+      "graphml";
 
   const path home = eda::env::getHomePath();
   const path file = home / dir / (fileName + ".bench.graphml");

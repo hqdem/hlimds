@@ -21,8 +21,8 @@ const static std::string gatePath = homePath +
     "/test/data/gate";
 const static std::string dataPath = gatePath +
     "/interface";
-const static std::string graphMl = gatePath +
-    "/parser/graphml/OpenABC/graphml_openabcd/sasc_orig.bench.graphml";
+const static std::string graphMl = homePath +
+    "/test/data/openabcd-subset/graphml/sasc_orig.bench.graphml";
 const static std::string output = homePath +
     "/output/test/interface/";
 const static std::string liberty = gatePath +

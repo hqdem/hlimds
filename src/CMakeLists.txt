@@ -35,9 +35,32 @@ set(CMAKE_CXX_CLANG_TIDY
 # The compilation options.
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
+# The sublibraries. 
 add_subdirectory(util)
 add_subdirectory(gate)
 add_subdirectory(rtl)
+
+add_library(Shell OBJECT shell.cpp)
+add_library(Utopia::Shell ALIAS Shell)
+
+target_include_directories(Shell
+  PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR} # config.h
+)
+
+target_link_libraries(Shell
+  PUBLIC
+    Utopia::Gate
+    Utopia::RILParser
+    Utopia::RTL
+    Utopia::Util
+    Yosys::Yosys
+  PRIVATE
+    CLI
+    Json
+    fmt
+    Tcl::Tcl
+)
 
 # The project library.
 add_library(${MAIN_LIBRARY})
@@ -45,22 +68,28 @@ add_library(Utopia::Lib ALIAS ${MAIN_LIBRARY})
 
 # The libraries to link with.
 target_link_libraries(${MAIN_LIBRARY}
-  Utopia::Util
-  Utopia::Gate
-  Utopia::RTL
-  Utopia::RILParser
-  Yosys::Yosys
+  PUBLIC
+    Utopia::Gate
+    Utopia::RILParser
+    Utopia::RTL
+    Utopia::Shell
+    Utopia::Util
+    Yosys::Yosys
+  PRIVATE
+    CLI
+    Json
+    fmt
+    Tcl::Tcl
 )
 
 # The project executable.
 add_executable(${MAIN_TARGET}
   main.cpp
-  shell.cpp
 )
 
 target_include_directories(${MAIN_TARGET}
   PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR} # config.h
 )
 
 target_link_libraries(${MAIN_TARGET}

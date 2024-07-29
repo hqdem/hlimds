@@ -84,46 +84,44 @@ add_library(Utopia::Gate ALIAS Gate)
 
 target_include_directories(Gate
   PUBLIC
-  ${PROJECT_SOURCE_DIR}/src
-  ${PROJECT_SOURCE_DIR}/lib
-  ${STACCATO_INCLUDE_DIRS}
-  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd
-  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/cudd
-  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/st
-  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/mtr
-  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/epd
-  ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/util
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/lib
+    ${STACCATO_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd
+    ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/cudd
+    ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/st
+    ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/mtr
+    ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/epd
+    ${CMAKE_SOURCE_DIR}/lib/bill/lib/cudd/util
 )
 
 target_link_libraries(Gate
   PUBLIC
-  ${STACCATO_LIBRARIES}
-  MLIRIR
-  MLIRSupport
-  CIRCTFIRRTL
-  CIRCTExportChiselInterface
-  CIRCTFIRRTLTransforms
-  CIRCTImportFIRFile
-  CIRCTTransforms
-  MLIRParser
-  MLIRRewrite
-  MLIRTransformUtils
-  MLIRTransforms
-  minisat-lib-static
-  Cudd::Cudd
-  lorina
-  readcells
-  sqlite3
-  CTemplate::nothreads
-  Kitty
-  Mockturtle
-  parallel_hashmap
-  Json
-
+    ${STACCATO_LIBRARIES}
+    MLIRIR
+    MLIRSupport
+    CIRCTFIRRTL
+    CIRCTExportChiselInterface
+    CIRCTFIRRTLTransforms
+    CIRCTImportFIRFile
+    CIRCTTransforms
+    MLIRParser
+    MLIRRewrite
+    MLIRTransformUtils
+    MLIRTransforms
+    minisat-lib-static
+    Cudd::Cudd
+    lorina
+    readcells
+    sqlite3
+    CTemplate::nothreads
+    Kitty
+    Mockturtle
+    parallel_hashmap
+    Json
   PRIVATE
-
-  Utopia::Util
-  CLI
-  Yosys::Yosys
-  tinyxml2
+    Utopia::Util
+    CLI
+    Yosys::Yosys
+    tinyxml2
 )

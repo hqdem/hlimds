@@ -29,6 +29,7 @@
 #include <vector>
 
 #define UTOPIA_OUT std::cout
+#define UTOPIA_ERR std::cerr
 
 #undef UTOPIA_ENABLE_VERILOG_TO_FIR
 
@@ -150,7 +151,9 @@ class UtopiaShell : public eda::util::Singleton<UtopiaShell> {
   friend class eda::util::Singleton<UtopiaShell>;
 
 public:
-  virtual ~UtopiaShell() {}
+  virtual std::string getName() const { return "Utopia EDA"; }
+
+  virtual void printTitle(Tcl_Interp *interp);
 
   void addCommand(UtopiaCommand *command) {
     assert(command);
@@ -178,19 +181,22 @@ public:
     out << std::endl << std::flush;
   }
 
-private:
+  virtual ~UtopiaShell() {}
+
+protected:
   UtopiaShell();
 
   std::map<std::string, UtopiaCommand*> commands;
 };
 
+/// @brief Design being synthesized.
 extern eda::gate::optimizer::DesignBuilderPtr designBuilder;
 
 int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell);
 
 int Utopia_TclInit(Tcl_Interp *interp);
 
-int Utopia_Main(Tcl_AppInitProc init, int argc, char **argv);
+int Utopia_Main(
+    Tcl_AppInitProc init, UtopiaShell &shell, int argc, char **argv);
 
 int Utopia_Main(int argc, char **argv);
-

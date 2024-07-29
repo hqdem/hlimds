@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "verilog_model2.h"
+#include "verilog_fir.h"
 
 #include "gate/model/printer/printer.h"
 #include "gate/translator/fir/fir_model2.h"
@@ -15,14 +15,17 @@
 #include <fstream>
 #include <iostream>
 
+using CellType = eda::gate::model::CellType;
 using Format = eda::gate::model::ModelPrinter::Format;
+using ModelPrinter = eda::gate::model::ModelPrinter;
 
 namespace fs = std::filesystem;
 
-namespace eda::gate::model {
+namespace eda::gate::translator {
 
-int translateToModel2(const FirrtlConfig &firrtlConfig) {
+int translateVerilogFIR(const FirrtlConfig &firrtlConfig) {
   fs::path inputFilePath = firrtlConfig.files.back();
+  fs::path outputFilePath = firrtlConfig.outputFileName;
   const std::string extension = inputFilePath.extension();
   if (extension != ".sv" && extension != ".v" && extension != ".fir") {
     std::cerr << "Unsupported file type: " << extension << std::endl;
@@ -39,6 +42,10 @@ int translateToModel2(const FirrtlConfig &firrtlConfig) {
       }
     }
     if (!firrtlConfig.outputFileName.empty()) {
+      const fs::path outputFullPath = outputFilePath.parent_path();
+      if (!outputFullPath.empty()) {
+        fs::create_directories(outputFullPath);
+      }
       if (!translateToFirrtl(firrtlConfig)) {
         inputFilePath = firrtlConfig.outputFileName;
       } else {
@@ -67,13 +74,8 @@ int translateToModel2(const FirrtlConfig &firrtlConfig) {
     if (firrtlConfig.outputFileName.empty()) {
       std::cerr << "The output file name is missing!" << std::endl;
     }
-    fs::path outputFullName = firrtlConfig.outputFileName;
-    outputFullName.replace_extension(".v");
-    const fs::path outputFullPath = outputFullName.parent_path();
-    if (!outputFullPath.empty()) {
-      fs::create_directories(outputFullPath);
-    }
-    std::ofstream outputStream(outputFullName);
+    outputFilePath.replace_extension(".v");
+    std::ofstream outputStream(outputFilePath);
     for (const auto &cellTypeID : resultNetlist) {
       ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
           CellType::get(cellTypeID).getNet());
@@ -84,4 +86,4 @@ int translateToModel2(const FirrtlConfig &firrtlConfig) {
   return 0;
 }
 
-} // namespace eda::gate::model
+} // namespace eda::gate::translator

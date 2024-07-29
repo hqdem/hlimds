@@ -33,6 +33,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -85,11 +86,12 @@ template <typename Clock>
 static inline void printTime(const std::string &name,
                              const std::chrono::time_point<Clock> &start,
                              const std::chrono::time_point<Clock> &end,
-                             const std::string &prefix = "") {
+                             const std::string &prefix = "",
+                             const std::string &suffix = "") {
   std::chrono::duration<double> elapsed = end - start;
   UTOPIA_OUT << prefix << name << ": "
              << std::fixed << elapsed.count() << "s"
-             << std::endl << std::flush;
+             << suffix << std::endl << std::flush;
 }
 
 static inline int makeResult(Tcl_Interp *interp, const std::string &result) {
@@ -409,15 +411,35 @@ static int CmdListPoints(
     foreach(cmd())->transform(designBuilder);\
   })
 
+static inline size_t getCellNum(const DesignBuilder &design) {
+  size_t nCell{0};
+  for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
+    const auto &subnet = Subnet::get(designBuilder->getSubnetID(i));
+    nCell += subnet.getCellNum();
+  }
+  return nCell;
+}
+
 template<typename Func>
 static void measureAndRun(const std::string &name, Func func) {
   using clock = std::chrono::high_resolution_clock;
 
-  auto start = clock::now();
+  const auto oldCellNum = getCellNum(*designBuilder);
+  const auto start = clock::now();
   func();
-  auto end = clock::now();
+  const auto end = clock::now();
+  const auto newCellNum = getCellNum(*designBuilder);
 
-  printTime<clock>(name, start, end, "  - ");
+  const auto delta = static_cast<int>(newCellNum) -
+                     static_cast<int>(oldCellNum);
+
+  const auto *sign = delta > 0 ? "+" : "";
+
+  const auto percent = std::abs(100.f * delta / oldCellNum);
+
+  printTime<clock>(name, start, end,
+      /* prefix */ "  - ",
+      /* suffix */ fmt::format(" -> {}{} [{:.2f}%]", sign, delta, percent));
 }
 
 struct LogOptCommand final : public UtopiaCommand {

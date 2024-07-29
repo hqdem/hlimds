@@ -36,7 +36,6 @@ using namespace eda::gate::optimizer;
 using namespace eda::gate::techmapper;
 using namespace eda::gate::translator;
 
-UtopiaCommandRegistry commandRegistry;
 DesignBuilderPtr designBuilder = nullptr;
 
 //===----------------------------------------------------------------------===//
@@ -130,12 +129,12 @@ struct HelpCommand final : public UtopiaCommand {
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
     if (app.remaining().empty()) {
-      commandRegistry.printHelp(UTOPIA_OUT);
+      shell->printHelp(UTOPIA_OUT);
       return TCL_OK;
     }
 
     auto name = app.remaining().at(0);
-    auto *command = commandRegistry.getCommand(name);
+    auto *command = shell->getCommand(name);
 
     if (command) {
       command->printHelp(UTOPIA_OUT);
@@ -999,33 +998,35 @@ static int CmdWriteVerilog(
 // Utopia Shell
 //===----------------------------------------------------------------------===//
 
-int Utopia_TclInit(Tcl_Interp *interp) {
+UtopiaShell::UtopiaShell() {
+  addCommand(&deleteDesignCmd);
+  addCommand(&gotoPointCmd);
+  addCommand(&exitCmd);
+  addCommand(&helpCmd);
+  addCommand(&lecCmd);
+  addCommand(&listPointsCmd);
+  addCommand(&logOptCmd);
+  addCommand(&readGraphMlCmd);
+  addCommand(&readLibertyCmd);
+  addCommand(&readVerilogCmd);
+  addCommand(&savePointCmd);
+  addCommand(&setNameCmd);
+  addCommand(&statDesignCmd);
+  addCommand(&statLogDbCmd);
+  addCommand(&techMapCmd);
+#ifdef UTOPIA_ENABLE_VERILOG_TO_FIR
+  addCommand(&verilogToFirCmd);
+#endif // UTOPIA_ENABLE_VERILOG_TO_FIR
+  addCommand(&versionCmd);
+  addCommand(&writeDebugCmd);
+  addCommand(&writeDotCmd);
+  addCommand(&writeVerilogCmd);
+}
+
+int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell) {
   if ((Tcl_Init)(interp) == TCL_ERROR) {
     return TCL_ERROR;
   }
-
-  commandRegistry.addCommand(&deleteDesignCmd);
-  commandRegistry.addCommand(&gotoPointCmd);
-  commandRegistry.addCommand(&exitCmd);
-  commandRegistry.addCommand(&helpCmd);
-  commandRegistry.addCommand(&lecCmd);
-  commandRegistry.addCommand(&listPointsCmd);
-  commandRegistry.addCommand(&logOptCmd);
-  commandRegistry.addCommand(&readGraphMlCmd);
-  commandRegistry.addCommand(&readLibertyCmd);
-  commandRegistry.addCommand(&readVerilogCmd);
-  commandRegistry.addCommand(&savePointCmd);
-  commandRegistry.addCommand(&setNameCmd);
-  commandRegistry.addCommand(&statDesignCmd);
-  commandRegistry.addCommand(&statLogDbCmd);
-  commandRegistry.addCommand(&techMapCmd);
-#ifdef UTOPIA_ENABLE_VERILOG_TO_FIR
-  commandRegistry.addCommand(&verilogToFirCmd);
-#endif // UTOPIA_ENABLE_VERILOG_TO_FIR
-  commandRegistry.addCommand(&versionCmd);
-  commandRegistry.addCommand(&writeDebugCmd);
-  commandRegistry.addCommand(&writeDotCmd);
-  commandRegistry.addCommand(&writeVerilogCmd);
 
 #if 0
   Tcl_DeleteCommand(interp, "exec");
@@ -1055,4 +1056,8 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   Tcl_CreateCommand(interp, writeVerilogCmd.name,  CmdWriteVerilog, NULL, NULL);
 
   return TCL_OK;
+}
+
+int Utopia_TclInit(Tcl_Interp *interp) {
+  return Utopia_TclInit(interp, UtopiaShell::get());
 }

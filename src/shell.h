@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "gate/optimizer/design_transformer.h"
+#include "util/singleton.h"
+
 #include <CLI/CLI.hpp>
 #include <fmt/format.h>
 #include <tcl.h>
@@ -81,12 +84,14 @@ inline int makeError(Tcl_Interp *interp, const std::string &error) {
 // Base Classes
 //===----------------------------------------------------------------------===//
 
+class UtopiaShell;
+
 /**
  * @brief Utopia EDA shell command interface.
  */
 struct UtopiaCommand {
   UtopiaCommand(const char *name, const char *desc):
-    name(name), desc(desc), app(desc, name) {
+      name(name), desc(desc), app(desc, name) {
     // CLI::App adds the help option, but it is not required.
     auto *helpOption = app.get_help_ptr();
     if (helpOption) {
@@ -99,9 +104,9 @@ struct UtopiaCommand {
   virtual int runEx(Tcl_Interp *interp, int argc, const char *argv[]) {
     using clock = std::chrono::high_resolution_clock;
 
-    auto start = clock::now();
-    int status = run(interp, argc, argv);
-    auto end = clock::now();
+    const auto start = clock::now();
+    const auto status = run(interp, argc, argv);
+    const auto end = clock::now();
 
     printTime<clock>(fmt::format("{}({})", name, status), start, end, "> ");
     return status;
@@ -114,17 +119,24 @@ struct UtopiaCommand {
   const char *name;
   const char *desc;
 
+  UtopiaShell *shell;
+
   CLI::App app;
 };
 
 /**
- * @brief Utopia EDA shell command registry.
+ * @brief Utopia EDA shell.
  */
-class UtopiaCommandRegistry final {
+class UtopiaShell : public eda::util::Singleton<UtopiaShell> {
+  friend class eda::util::Singleton<UtopiaShell>;
+
 public:
+  virtual ~UtopiaShell() {}
+
   void addCommand(UtopiaCommand *command) {
     assert(command);
     commands.emplace(std::string(command->name), command);
+    command->shell = this;
   }
 
   UtopiaCommand *getCommand(const std::string &name) {
@@ -148,10 +160,13 @@ public:
   }
 
 private:
+  UtopiaShell();
+
   std::map<std::string, UtopiaCommand*> commands;
 };
 
-extern UtopiaCommandRegistry commandRegistry;
 extern eda::gate::optimizer::DesignBuilderPtr designBuilder;
+
+extern int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell);
 
 extern int Utopia_TclInit(Tcl_Interp *interp);

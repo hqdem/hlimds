@@ -34,7 +34,7 @@ using OwningOpRef = mlir::OwningOpRef<Type>;
 using Pass = mlir::Pass;
 using PassManager = mlir::PassManager;
 
-namespace eda::gate::model {
+namespace eda::gate::translator {
 
 /**
  * @brief A key for identifying a cell in net needed for creating the links.
@@ -55,9 +55,9 @@ struct CellKey {
   uint bitNumber;
 };
 
-} // namespace eda::gate::model
+} // namespace eda::gate::translator
 
-using CellKey = eda::gate::model::CellKey;
+using CellKey = eda::gate::translator::CellKey;
 
 namespace std {
 
@@ -73,7 +73,7 @@ struct hash<CellKey> {
 
 } // namespace std
 
-namespace eda::gate::model {
+namespace eda::gate::translator {
 
 /**
  * @brief A wrapper around a MLIR top operation (ModuleOp).
@@ -125,7 +125,7 @@ bool printNetlist(const std::string &inputFilePath,
 bool printNetlist(const std::vector<CellTypeID> netlist,
                   const std::string &outFileName);
 
-} // namespace eda::gate::model
+} // namespace eda::gate::translator
 
 std::unique_ptr<Pass> createCHIRRTLToLowFIRRTLPass();
 std::unique_ptr<Pass> createLowFIRRTLToModel2Pass(

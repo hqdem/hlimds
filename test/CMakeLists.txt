@@ -90,7 +90,8 @@ add_executable(${TEST_TARGET}
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/subnet_techmapper_test.cpp
   gate/techmapper/techmapper_test_util.cpp
-  gate/translator/fir/fir_model2_test.cpp
+  gate/translator/fir/fir_test.cpp
+  gate/translator/verilog/verilog_fir_test.cpp
   gate/translator/graphml_test_utils.cpp
   gate/translator/graphml_test.cpp
   lib/minisat/minisat_test.cpp

@@ -77,7 +77,7 @@ add_library(Gate OBJECT
   translator/firrtl.cpp
   translator/graphml.cpp
   translator/model2.cpp
-  translator/verilog/verilog_model2.cpp
+  translator/verilog/verilog_fir.cpp
   translator/yosys_converter_firrtl.cpp
   translator/yosys_converter_model2.cpp)
 add_library(Utopia::Gate ALIAS Gate)

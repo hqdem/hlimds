@@ -12,8 +12,8 @@
 
 #include <string>
 
-namespace eda::gate::model {
+namespace eda::gate::translator {
 
-int translateToModel2(const FirrtlConfig &firrtlConfig);
+int translateVerilogFIR(const FirrtlConfig &firrtlConfig);
 
-} // namespace eda::gate::model
+} // namespace eda::gate::translator

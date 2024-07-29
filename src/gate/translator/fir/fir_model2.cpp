@@ -59,6 +59,7 @@ using CatPrimOp = circt::firrtl::CatPrimOp;
 using CellID = eda::gate::model::CellID;
 using CellProperties = eda::gate::model::CellProperties;
 using CellSymbol = eda::gate::model::CellSymbol;
+using CellType = eda::gate::model::CellType;
 using CircuitOp = circt::firrtl::CircuitOp;
 using ClockType = circt::firrtl::ClockType;
 using CompanionMode = circt::firrtl::CompanionMode;
@@ -95,6 +96,7 @@ using LTPrimOp = circt::firrtl::LTPrimOp;
 using LinkEnd = eda::gate::model::LinkEnd;
 using LogicalResult = mlir::LogicalResult;
 using MLIRContext = mlir::MLIRContext;
+using ModelPrinter = eda::gate::model::ModelPrinter;
 using ModuleOp = mlir::ModuleOp;
 using MulPrimOp = circt::firrtl::MulPrimOp;
 using MuxPrimOp = circt::firrtl::MuxPrimOp;
@@ -154,7 +156,7 @@ namespace model = eda::gate::model;
 namespace om = circt::om;
 namespace sv = circt::sv;
 
-namespace eda::gate::model {
+namespace eda::gate::translator {
 
 std::vector<CellTypeID> getModel2(const std::string &inputFilePath) {
   const fs::path inPath = inputFilePath;
@@ -329,7 +331,7 @@ bool CellKey::operator==(const CellKey &cellKey) const {
           bitNumber == cellKey.bitNumber);
 }
 
-} // namespace eda::gate::model
+} // namespace eda::gate::translator
 
 namespace {
 bool isInstance(const std::string &operationName) {

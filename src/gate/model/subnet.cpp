@@ -1243,6 +1243,7 @@ void SubnetBuilder::rearrangeEntries(
       } else {
         relinkMapping[i] = {bufLink.idx, bufLink.inv};
       }
+      nCell--;
       continue;
     }
     relinkMapping[i] = {newEntries.size(), 0};

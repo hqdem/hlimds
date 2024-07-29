@@ -44,6 +44,8 @@ add_library(Shell OBJECT shell.cpp)
 add_library(Utopia::Shell ALIAS Shell)
 
 target_include_directories(Shell
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/src
   PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR} # config.h
 )

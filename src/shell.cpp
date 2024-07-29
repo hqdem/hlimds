@@ -1003,6 +1003,17 @@ static int CmdWriteVerilog(
 //===----------------------------------------------------------------------===//
 // Utopia Shell
 //===----------------------------------------------------------------------===//
+static int printUtopiaFile(Tcl_Interp *interp, const std::string &fileName) {
+  const char *utopiaHome = std::getenv("UTOPIA_HOME");
+  if (!utopiaHome) {
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+        "UTOPIA_HOME has not been set", -1));
+    return TCL_ERROR;
+  }
+
+  std::string filePath = std::string(utopiaHome) + "/" + fileName;
+  return printFile(interp, filePath);
+}
 
 UtopiaShell::UtopiaShell() {
   addCommand(&deleteDesignCmd);
@@ -1029,6 +1040,14 @@ UtopiaShell::UtopiaShell() {
   addCommand(&writeVerilogCmd);
 }
 
+void UtopiaShell::printTitle(Tcl_Interp *interp) {
+  printNewline();
+  printUtopiaFile(interp, "doc/help/Title.txt");
+  printNewline();
+  printUtopiaFile(interp, "doc/help/Copyright.txt");
+  printNewline();
+}
+
 int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell) {
   if ((Tcl_Init)(interp) == TCL_ERROR) {
     return TCL_ERROR;
@@ -1039,27 +1058,27 @@ int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell) {
   Tcl_DeleteCommand(interp, "unknown");
 #endif
 
-  Tcl_CreateCommand(interp, deleteDesignCmd.name, CmdDeleteDesign,  NULL, NULL);
-  Tcl_CreateCommand(interp, gotoPointCmd.name,    CmdGotoPoint,     NULL, NULL);
-  Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,          NULL, NULL);
-  Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,           NULL, NULL);
-  Tcl_CreateCommand(interp, listPointsCmd.name,   CmdListPoints,    NULL, NULL);
-  Tcl_CreateCommand(interp, logOptCmd.name,       CmdLogOpt,        NULL, NULL);
-  Tcl_CreateCommand(interp, readGraphMlCmd.name,  CmdReadGraphMl,   NULL, NULL);
-  Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,   NULL, NULL);
-  Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,   NULL, NULL);
-  Tcl_CreateCommand(interp, savePointCmd.name,    CmdSavePoint,     NULL, NULL);
-  Tcl_CreateCommand(interp, setNameCmd.name,      CmdSetName,       NULL, NULL);
-  Tcl_CreateCommand(interp, statDesignCmd.name,   CmdStatDesign,    NULL, NULL);
-  Tcl_CreateCommand(interp, statLogDbCmd.name,    CmdStatLogDb,     NULL, NULL);
-  Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,       NULL, NULL);
+  Tcl_CreateCommand(interp, deleteDesignCmd.name, CmdDeleteDesign, NULL, NULL);
+  Tcl_CreateCommand(interp, gotoPointCmd.name,    CmdGotoPoint,    NULL, NULL);
+  Tcl_CreateCommand(interp, helpCmd.name,         CmdHelp,         NULL, NULL);
+  Tcl_CreateCommand(interp, lecCmd.name,          CmdLec,          NULL, NULL);
+  Tcl_CreateCommand(interp, listPointsCmd.name,   CmdListPoints,   NULL, NULL);
+  Tcl_CreateCommand(interp, logOptCmd.name,       CmdLogOpt,       NULL, NULL);
+  Tcl_CreateCommand(interp, readGraphMlCmd.name,  CmdReadGraphMl,  NULL, NULL);
+  Tcl_CreateCommand(interp, readLibertyCmd.name,  CmdReadLiberty,  NULL, NULL);
+  Tcl_CreateCommand(interp, readVerilogCmd.name,  CmdReadVerilog,  NULL, NULL);
+  Tcl_CreateCommand(interp, savePointCmd.name,    CmdSavePoint,    NULL, NULL);
+  Tcl_CreateCommand(interp, setNameCmd.name,      CmdSetName,      NULL, NULL);
+  Tcl_CreateCommand(interp, statDesignCmd.name,   CmdStatDesign,   NULL, NULL);
+  Tcl_CreateCommand(interp, statLogDbCmd.name,    CmdStatLogDb,    NULL, NULL);
+  Tcl_CreateCommand(interp, techMapCmd.name,      CmdTechMap,      NULL, NULL);
 #ifdef UTOPIA_ENABLE_VERILOG_TO_FIR
-  Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir,  NULL, NULL);
+  Tcl_CreateCommand(interp, verilogToFirCmd.name, CmdVerilogToFir, NULL, NULL);
 #endif // UTOPIA_ENABLE_VERILOG_TO_FIR
-  Tcl_CreateCommand(interp, versionCmd.name,       CmdVersion,      NULL, NULL);
-  Tcl_CreateCommand(interp, writeDebugCmd.name,    CmdWriteDebug,   NULL, NULL);
-  Tcl_CreateCommand(interp, writeDotCmd.name,      CmdWriteDot,     NULL, NULL);
-  Tcl_CreateCommand(interp, writeVerilogCmd.name,  CmdWriteVerilog, NULL, NULL);
+  Tcl_CreateCommand(interp, versionCmd.name,      CmdVersion,      NULL, NULL);
+  Tcl_CreateCommand(interp, writeDebugCmd.name,   CmdWriteDebug,   NULL, NULL);
+  Tcl_CreateCommand(interp, writeDotCmd.name,     CmdWriteDot,     NULL, NULL);
+  Tcl_CreateCommand(interp, writeVerilogCmd.name, CmdWriteVerilog, NULL, NULL);
 
   return TCL_OK;
 }
@@ -1068,38 +1087,11 @@ int Utopia_TclInit(Tcl_Interp *interp) {
   return Utopia_TclInit(interp, UtopiaShell::get());
 }
 
-static int printUtopiaFile(Tcl_Interp *interp, const std::string &fileName) {
-  const char *utopiaHome = std::getenv("UTOPIA_HOME");
-  if (!utopiaHome) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-        "UTOPIA_HOME has not been set", -1));
-    return TCL_ERROR;
-  }
-
-  std::string filePath = std::string(utopiaHome) + "/" + fileName;
-  return printFile(interp, filePath);
-}
-
-static inline int printTitle(Tcl_Interp *interp) {
-  return printUtopiaFile(interp, "doc/help/Title.txt");
-}
-
-static inline int printCopyright(Tcl_Interp *interp) {
-  return printUtopiaFile(interp, "doc/help/Copyright.txt");
-}
-
-static inline void printTitleCopyright(Tcl_Interp *interp) {
-  printNewline();
-  printTitle(interp);
-  printNewline();
-  printCopyright(interp);
-  printNewline();
-}
-
-int Utopia_Main(Tcl_AppInitProc init, int argc, char **argv) {
+int Utopia_Main(
+    Tcl_AppInitProc init, UtopiaShell &shell, int argc, char **argv) {
   START_EASYLOGGINGPP(argc, argv);
 
-  CLI::App app{"Utopia EDA"};
+  CLI::App app{shell.getName()};
 
   std::string path = "";
   std::string script = "";
@@ -1124,10 +1116,11 @@ int Utopia_Main(Tcl_AppInitProc init, int argc, char **argv) {
   Tcl_FindExecutable(argv[0]);
   Tcl_Interp *interp = Tcl_CreateInterp();
   if (init(interp) == TCL_ERROR) {
-    std::cerr << "Failed to init Tcl interpreter\n";
+    UTOPIA_ERR << "Failed to initialize a Tcl interpreter" << std::endl;
     return 1;
   }
-  printTitleCopyright(interp);
+
+  shell.printTitle(interp);
 
   int rc = 0;
   if (fileMode->count()) {
@@ -1151,13 +1144,13 @@ int Utopia_Main(Tcl_AppInitProc init, int argc, char **argv) {
     Tcl_SetVar2Ex(interp, "argv", nullptr, tclArgvList, TCL_GLOBAL_ONLY);
 
     if (Tcl_EvalFile(interp, fileName) == TCL_ERROR) {
-      std::cerr << Tcl_GetStringResult(interp) << '\n';
+      UTOPIA_ERR << Tcl_GetStringResult(interp) << std::endl;
       rc = 1;
     }
     exitAfterEval = true;
   } else if (evalMode->count()) {
     if (Tcl_Eval(interp, script.c_str()) == TCL_ERROR) {
-      std::cerr << Tcl_GetStringResult(interp) << '\n';
+      UTOPIA_ERR << Tcl_GetStringResult(interp) << std::endl;
       rc = 1;
     }
     exitAfterEval = true;
@@ -1172,5 +1165,5 @@ int Utopia_Main(Tcl_AppInitProc init, int argc, char **argv) {
 }
 
 int Utopia_Main(int argc, char **argv) {
-  return Utopia_Main(Utopia_TclInit, argc, argv);
+  return Utopia_Main(Utopia_TclInit, UtopiaShell::get(), argc, argv);
 }

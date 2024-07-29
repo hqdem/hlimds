@@ -40,7 +40,6 @@ add_executable(${TEST_TARGET}
   gate/debugger/verifier_test.cpp
   gate/estimator/time_model_test.cpp
   gate/estimator/wlm_test.cpp
-  gate/interface/interface_test.cpp
   gate/model/array_test.cpp
   gate/model/design_analysis_test.cpp
   gate/model/design_test.cpp
@@ -97,6 +96,7 @@ add_executable(${TEST_TARGET}
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   test_main.cpp
+  test_shell.cpp
   util/kitty_utils_test.cpp
   util/serializer_test.cpp
 )

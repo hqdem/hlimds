@@ -28,6 +28,14 @@
 #include "shell.h"
 #include "util/env.h"
 
+using namespace eda::gate::model;
+using namespace eda::gate::debugger;
+using namespace eda::gate::debugger::options;
+using namespace eda::gate::library;
+using namespace eda::gate::optimizer;
+using namespace eda::gate::techmapper;
+using namespace eda::gate::translator;
+
 UtopiaCommandRegistry commandRegistry;
 DesignBuilderPtr designBuilder = nullptr;
 

@@ -51,14 +51,6 @@
   UTOPIA_ERROR_IF(interp, !std::filesystem::exists(fileName),\
       fmt::format("file '{}' does not exist", fileName))
 
-using namespace eda::gate::model;
-using namespace eda::gate::debugger;
-using namespace eda::gate::debugger::options;
-using namespace eda::gate::library;
-using namespace eda::gate::optimizer;
-using namespace eda::gate::techmapper;
-using namespace eda::gate::translator;
-
 //===----------------------------------------------------------------------===//
 // Utility Functions
 //===----------------------------------------------------------------------===//
@@ -160,6 +152,6 @@ private:
 };
 
 extern UtopiaCommandRegistry commandRegistry;
-extern DesignBuilderPtr designBuilder;
+extern eda::gate::optimizer::DesignBuilderPtr designBuilder;
 
 extern int Utopia_TclInit(Tcl_Interp *interp);

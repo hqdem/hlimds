@@ -1041,10 +1041,7 @@ UtopiaShell::UtopiaShell() {
 }
 
 void UtopiaShell::printTitle(Tcl_Interp *interp) {
-  printNewline();
-  printUtopiaFile(interp, "doc/help/Title.txt");
-  printNewline();
-  printUtopiaFile(interp, "doc/help/Copyright.txt");
+  printUtopiaFile(interp, "config/title.txt");
   printNewline();
 }
 

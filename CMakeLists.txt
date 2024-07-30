@@ -23,8 +23,7 @@ endif()
 
 add_definitions(-DLIN64 -DABC_NAMESPACE=pabc) # Used by percy
 
-set(MAIN_LIBRARY ueda)          # Used by {src,test}/CMakeLists.txt
-set(ELPP_LIBRARY easyloggingpp) # Used by {lib,src}/CMakeLists.txt
+set(MAIN_LIBRARY ueda) # Used by {src,test}/CMakeLists.txt
 
 # Check if UTOPIA_HOME env var is set
 if(DEFINED ENV{UTOPIA_HOME})

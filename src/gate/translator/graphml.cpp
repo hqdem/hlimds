@@ -32,13 +32,14 @@ XMLElement *findGraph(XMLElement *root) {
   return nullptr;
 }
 
-std::shared_ptr<Builder> GmlTranslator::translate(const std::string &file) {
+std::shared_ptr<Builder> GmlTranslator::translate(
+    const std::string &file) const {
   ParserData data;
   return translate(file, data);
 }
 
 std::shared_ptr<Builder> GmlTranslator::translate(const std::string &file,
-                                                  ParserData &data) {
+                                                  ParserData &data) const {
   XMLDocument doc;
   doc.LoadFile(file.c_str());
   uassert(!doc.ErrorID(), "Error loading file" << std::endl);
@@ -54,7 +55,7 @@ std::shared_ptr<Builder> GmlTranslator::translate(const std::string &file,
   return buildSubnet(data);
 }
 
-void GmlTranslator::parseGraph(XMLElement *graph, ParserData &data) {
+void GmlTranslator::parseGraph(XMLElement *graph, ParserData &data) const {
   XMLElement *element = findChild(graph);
 
   for (; checkName(element, "node"); element = next(element)) {
@@ -66,42 +67,47 @@ void GmlTranslator::parseGraph(XMLElement *graph, ParserData &data) {
   }
 }
 
-void GmlTranslator::parseNode(XMLElement *node, ParserData &data) {
+void GmlTranslator::parseNode(XMLElement *node, ParserData &data) const {
   uint32_t id = std::stoi(node->Attribute("id"));
 
   XMLElement *type = next(findChild(node));
   XMLElement *invIns = next(type);
 
-  data.nodes.emplace_back(id, getNum(type), getNum(invIns));
-  data.groups[getNum(type)].push_back(&data.nodes.back());
+  auto it = data.nodes.emplace(id, Node(getNum(type), getNum(invIns))).first;
+  data.groups[getGroup(type)].push_back(&(it->second));
 }
 
-void GmlTranslator::parseEdge(XMLElement *edge, ParserData &data) {
+void GmlTranslator::parseEdge(XMLElement *edge, ParserData &data) const {
   Node &sourceNode = data.nodes.at(std::stoi(edge->Attribute("target")));
   Node &targetNode = data.nodes.at(std::stoi(edge->Attribute("source")));
 
   targetNode.inputs.push_back({&sourceNode, (bool)getNum(findChild(edge))});
 }
 
-std::shared_ptr<Builder> GmlTranslator::buildSubnet(ParserData &data) {
+std::shared_ptr<Builder> GmlTranslator::buildSubnet(ParserData &data) const {
   auto builder = std::make_shared<Builder>();
   auto &groups = data.groups;
 
-  builder->addInputs(groups[0].size());
-  for (Node* node : data.groups[2]) {
-    LinkList links;
-    for (const Input &input : node->inputs) {
-      links.emplace_back(input.node->id, input.inv);
-    }
-    node->id = builder->addCellTree(model::AND, links, 2).idx;
-  }
-
-  for (Node* node : groups[1]) {
-    const Input &input = node->inputs[0];
-    node->id = builder->addOutput(Link(input.node->id, input.inv)).idx;
-  }
+  buildGroup(groups[0], builder.get());
+  buildGroup(groups[2], builder.get());
+  buildGroup(groups[1], builder.get());
 
   return builder;
+}
+
+void GmlTranslator::buildGroup(std::vector<Node*> &group,
+                               Builder *builder) const {
+  for (Node* node : group) {
+    LinkList links;
+    for (const Input &input : node->inputs) {
+      uassert(input.node->link, "Input cells is not creared" << std::endl);
+      const auto link = input.node->link.value();
+      links.emplace_back(input.inv ? ~link : link);
+    }
+    const auto [symbol, inv] = typeMap.at(node->type);
+    auto link = builder->addCell(symbol, links);
+    node->link = inv ? ~link : link;
+  }
 }
 
 } // namespace eda::gate::translator

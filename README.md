@@ -129,9 +129,6 @@ sudo make install
 3. Edit `<yosys-dir>/Makefile`
     * set `ENABLE_LIBYOSYS` to 1
 4. Build and install `Yosys` as described in the `<yosys-dir>/README.md`
-5. Configure `Utopia` to find `Yosys`
-    * add `-DYosys_ROOT=<yosys-dir>` to the `cmake` invocation
-    * e.g. `cmake -S <utopia-source-dir> -B <utopia-build-dir> -DYosys_ROOT=<yosys-dir> -G Ninja`
 
 ### MLIR/CIRCT installation
 

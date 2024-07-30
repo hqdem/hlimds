@@ -28,10 +28,6 @@
 #include "shell.h"
 #include "util/env.h"
 
-#include <easylogging++.h>
-
-#include <iostream>
-
 using namespace eda::gate::model;
 using namespace eda::gate::debugger;
 using namespace eda::gate::debugger::options;
@@ -39,8 +35,6 @@ using namespace eda::gate::library;
 using namespace eda::gate::optimizer;
 using namespace eda::gate::techmapper;
 using namespace eda::gate::translator;
-
-INITIALIZE_EASYLOGGINGPP
 
 DesignBuilderPtr designBuilder = nullptr;
 
@@ -1074,8 +1068,6 @@ int Utopia_TclInit(Tcl_Interp *interp) {
 
 int Utopia_Main(
     Tcl_AppInitProc init, UtopiaShell &shell, int argc, char **argv) {
-  START_EASYLOGGINGPP(argc, argv);
-
   CLI::App app{shell.getName()};
 
   std::string path = "";

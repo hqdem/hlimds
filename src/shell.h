@@ -51,6 +51,10 @@
   UTOPIA_ERROR_IF(interp, designBuilder,\
       "design has been already loaded")
 
+#define UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app)\
+  UTOPIA_ERROR_IF(interp, app.remaining().empty(),\
+      "no input files")
+
 #define UTOPIA_ERROR_IF_NO_FILE(interp, fileName)\
   UTOPIA_ERROR_IF(interp, !std::filesystem::exists(fileName),\
       fmt::format("file '{}' does not exist", fileName))

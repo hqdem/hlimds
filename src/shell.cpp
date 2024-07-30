@@ -411,14 +411,9 @@ struct ReadGraphMlCommand final : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
 
-    std::string fileName = "";
-    if (!app.remaining().empty()) {
-      fileName = app.remaining().at(0);
-    } else {
-      return makeError(interp, "no input files");
-    }
-
+    const std::string fileName = app.remaining().at(0);
     UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
 
     GmlTranslator::ParserData data;
@@ -451,14 +446,9 @@ struct ReadLibertyCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
 
-    std::string fileName = "";
-    if (!app.remaining().empty()) {
-      fileName = app.remaining().at(0);
-    } else {
-      return makeError(interp, "no input files");
-    }
-
+    const std::string fileName = app.remaining().at(0);
     UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
 
     LibraryParser::get().loadLibrary(fileName);
@@ -492,14 +482,9 @@ struct ReadVerilogCommand final : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
 
-    std::string fileName = "";
-    if (!app.remaining().empty()) {
-      fileName = app.remaining().at(0);
-    } else {
-      return makeError(interp, "no input files");
-    }
-
+    const std::string fileName = app.remaining().at(0);
     UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
 
     if (frontend == "yosys") {
@@ -515,8 +500,6 @@ struct ReadVerilogCommand final : public UtopiaCommand {
       }
 
       designBuilder = std::make_unique<DesignBuilder>(netId);
-      designBuilder->save("original");
-
       return TCL_OK;
     }
 
@@ -705,10 +688,7 @@ struct StatLogDbCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-
-    if (app.remaining().empty()) {
-      return makeError(interp, "no input files");
-    }
+    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
 
     NPNDBConfig config;
     config.dbPath = dbPath;
@@ -819,10 +799,7 @@ struct VerilogToFirCommand final : public UtopiaCommand {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-
-    if (app.remaining().empty()) {
-      return makeError(interp, "no input files");
-    }
+    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
 
     for (const auto &fileName: app.remaining()) {
       UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
@@ -909,6 +886,14 @@ static inline void printSubnet(std::ostream &out,
   printer.print(out, subnet, subnetName);
 }
 
+static inline bool createDirectories(const std::string &dir) {
+  if (std::filesystem::exists(dir)) {
+    return true;
+  }
+  std::error_code error;
+  return std::filesystem::create_directories(dir, error);
+}
+
 struct WriteDesignCommand : public UtopiaCommand {
   using Format = ModelPrinter::Format;
 
@@ -921,13 +906,17 @@ struct WriteDesignCommand : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
 
-    std::string fileName = "";
-    if (!app.remaining().empty()) {
-      fileName = app.remaining().at(0);
-    } else {
-      return makeError(interp, "no input files");
-    }
+    const std::string fileName = app.remaining().at(0);
+    std::filesystem::path filePath = fileName;
+
+    UTOPIA_ERROR_IF(interp, !filePath.has_filename(),
+        "path does not contain a file name");
+
+    const std::string dir = filePath.remove_filename();
+    UTOPIA_ERROR_IF(interp, !createDirectories(dir),
+        fmt::format("cannot create directory '{}'", dir));
 
     std::ofstream out(fileName);
 
@@ -1006,9 +995,7 @@ static int CmdWriteVerilog(
 static int printUtopiaFile(Tcl_Interp *interp, const std::string &fileName) {
   const char *utopiaHome = std::getenv("UTOPIA_HOME");
   if (!utopiaHome) {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-        "UTOPIA_HOME has not been set", -1));
-    return TCL_ERROR;
+    return makeError(interp, "UTOPIA_HOME has not been set");
   }
 
   std::string filePath = std::string(utopiaHome) + "/" + fileName;

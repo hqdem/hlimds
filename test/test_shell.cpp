@@ -24,7 +24,7 @@ const static std::string dataPath = gatePath +
 const static std::string graphMl = homePath +
     "/test/data/openabcd-subset/graphml/sasc_orig.bench.graphml";
 const static std::string output = homePath +
-    "/output/test/interface/";
+    "/output/test/shell/";
 const static std::string liberty = gatePath +
     "/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib";
 
@@ -46,31 +46,6 @@ static void test(std::string script, bool expect) {
   } else {
     EXPECT_FALSE(check(command.str()));
   }
-}
-
-TEST(UtopiaShell, WriteDesignNotLoaded) {
-  test("write_verilog", false);
-}
-
-TEST(UtopiaShell, WriteDesign) {
-  std::stringstream script;
-  script << "read_graphml " << graphMl << ";"
-         << "write_verilog";
-  test(script.str(), false);
-}
-
-TEST(UtopiaShell, WriteSubnetIncorrectNumber) {
-  std::stringstream script;
-  script << "read_graphml " << graphMl << ";"
-         << "write_verilog --subnet 2 design.v";
-  test(script.str(), false);
-}
-
-TEST(UtopiaShell, WriteSubnet) {
-  std::stringstream script;
-  script << "read_graphml " << graphMl << ";"
-         << "write_verilog --subnet 0 design.v";
-  test(script.str(), true);
 }
 
 TEST(UtopiaShell, ReadGraphMlAlreadyLoaded) {
@@ -189,59 +164,66 @@ TEST(UtopiaShell, FirNotExists) {
 }
 #endif
 
-TEST(UtopiaShell, WriteDebugNoDesign) {
-  test("write_debug", false);
-}
-
-TEST(UtopiaShell, WriteDebugNoFile) {
+static void testWriteNoDesign(const std::string &format) {
   std::stringstream script;
-  script << "read_graphml " << graphMl << ";"
-         << "write_debug";
+  script << "write_" << format;
   test(script.str(), false);
 }
 
-TEST(UtopiaShell, WriteDebug) {
+static void testWriteNoFile(const std::string &format) {
   std::stringstream script;
   script << "read_graphml " << graphMl << ";"
-         << "write_debug design.out";
-  test(script.str(), true);
-}
-
-TEST(UtopiaShell, WriteDotNoDesign) {
-  test("write_dot", false);
-}
-
-TEST(UtopiaShell, WriteDotNoFile) {
-  std::stringstream script;
-  script << "read_graphml " << graphMl << ";"
-         << "write_dot";
+         << "write_" << format;
   test(script.str(), false);
 }
 
-TEST(UtopiaShell, WriteDot) {
+static void testWriteDesign(const std::string &format,
+                            const std::string &file) {
   std::stringstream script;
   script << "read_graphml " << graphMl << ";"
-         << "write_dot design.dot";
+         << "write_" << format << " "
+         << output << file;
   test(script.str(), true);
 }
 
-TEST(UtopiaShell, WriteVerilogNoDesign) {
-  test("write_verilog", false);
-}
-
-TEST(UtopiaShell, WriteVerilogNoFile) {
+static void testWriteNoSubnet(const std::string &format,
+                              const std::string &file) {
   std::stringstream script;
   script << "read_graphml " << graphMl << ";"
-         << "write_verilog";
+         << "write_" << format << " --subnet 2 "
+         << output << file;
   test(script.str(), false);
 }
 
-TEST(UtopiaShell, WriteVerilog) {
+static void testWriteSubnet(const std::string &format,
+                            const std::string &file) {
   std::stringstream script;
   script << "read_graphml " << graphMl << ";"
-         << "write_verilog design.v";
+         << "write_" << format << " --subnet 0 "
+         << output << file;
   test(script.str(), true);
 }
+
+#define TEST_WRITE_FORMAT(format, file)\
+TEST(UtopiaShell, WriteNoDesign_##format) {\
+  testWriteNoDesign(#format);\
+}\
+TEST(UtopiaShell, WriteNoFile_##format) {\
+  testWriteNoFile(#format);\
+}\
+TEST(UtopiaShell, WriteDesign_##format) {\
+  testWriteDesign(#format, file);\
+}\
+TEST(UtopiaShell, WriteNoSubnet_##format) {\
+  testWriteNoSubnet(#format, file);\
+}\
+TEST(UtopiaShell, WriteSubnet_##format) {\
+  testWriteSubnet(#format, file);\
+}
+
+TEST_WRITE_FORMAT(debug, "design.out")
+TEST_WRITE_FORMAT(dot, "design.dot")
+TEST_WRITE_FORMAT(verilog, "design.v")
 
 TEST(UtopiaShell, LogOptNoDesign) {
   test("logopt", false);

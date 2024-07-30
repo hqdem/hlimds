@@ -904,6 +904,14 @@ private:
       const CellWeightProvider *weightProvider = nullptr,
       const CellWeightModifier *weightModifier = nullptr) const;
 
+  /// Increments virtual refcount of reused rhsEntryID links.
+  template <typename RhsContainer>
+  void incOldLinksRefcnt(
+      const RhsContainer &rhsContainer,
+      const size_t rhsEntryID,
+      const std::vector<size_t> &rhsToLhs,
+      std::unordered_map<size_t, size_t> &entryNewRefcount) const;
+
   /// Template new entries evaluating method.
   template <typename RhsContainer, typename RhsIterable, typename RhsIt>
   Effect newEntriesEval(
@@ -912,6 +920,7 @@ private:
       const InOutMapping &iomapping,
       const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
       std::unordered_set<size_t> &reusedLhsEntries,
+      std::unordered_map<size_t, size_t> &entryNewRefcount,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;
 
@@ -921,6 +930,7 @@ private:
       const Subnet &rhs,
       const InOutMapping &iomapping,
       std::unordered_set<size_t> &reusedLhsEntries,
+      std::unordered_map<size_t, size_t> &entryNewRefcount,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;
 
@@ -930,6 +940,7 @@ private:
       const SubnetBuilder &rhsBuilder,
       const InOutMapping &iomapping,
       std::unordered_set<size_t> &reusedLhsEntries,
+      std::unordered_map<size_t, size_t> &entryNewRefcount,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;
 
@@ -938,6 +949,7 @@ private:
   Effect deletedEntriesEval(
       const size_t lhsRootEntryID,
       std::unordered_set<size_t> &reusedLhsEntries,
+      std::unordered_map<size_t, size_t> &entryNewRefcount,
       const CellWeightModifier *weightModifier) const;
 
   /// Return the reference to the j-th link of the given cell.

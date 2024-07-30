@@ -842,6 +842,55 @@ TEST(ReplaceTest, OneEntryTraversal) {
   printBidirectCellsTrav(builder);
 }
 
+TEST(ReplaceTest, DanglingPIs) {
+  SubnetBuilder builder;
+  const auto &inLinks = builder.addInputs(4);
+  const auto &andLink0 = builder.addCell(model::AND, inLinks[0], inLinks[1]);
+  const auto &andLink1 = builder.addCell(model::AND, inLinks[2], inLinks[3]);
+  const auto &andLink2 = builder.addCell(model::AND, andLink0, andLink1);
+  const auto &andLink3 = builder.addCell(model::AND, inLinks[0], andLink2);
+  const auto &andLink4 = builder.addCell(model::AND, andLink3, andLink1);
+  builder.addOutput(andLink4);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(2);
+  const auto &rhsBufLink0 = rhsBuilder.addCell(model::BUF, rhsInLinks[1]);
+  rhsBuilder.addOutput(rhsBufLink0);
+
+  const auto rhsID = rhsBuilder.make();
+  InOutMapping mapping({7, 5}, {8});
+
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_EQ(effect.size, 3);
+  EXPECT_EQ(effect.depth, 2);
+}
+
+TEST(ReplaceTest, ReusedAndNewLink) {
+  SubnetBuilder builder;
+  const auto &inLinks = builder.addInputs(3);
+  const auto &andLink0 = builder.addCell(model::AND, inLinks[1], inLinks[2]);
+  const auto &bufLink0 = builder.addCell(model::BUF, inLinks[0]);
+  const auto &andLink1 = builder.addCell(model::AND, bufLink0, andLink0);
+  builder.addOutput(andLink1);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(3);
+  const auto &rhsAndLink0 = rhsBuilder.addCell(model::AND, rhsInLinks[0],
+      rhsInLinks[1]);
+  const auto &rhsAndLink1 = rhsBuilder.addCell(model::AND, rhsInLinks[1],
+      rhsInLinks[2]);
+  const auto &rhsAndLink2 = rhsBuilder.addCell(model::AND, rhsAndLink0,
+      rhsAndLink1);
+  rhsBuilder.addOutput(rhsAndLink2);
+
+  const auto rhsID = rhsBuilder.make();
+  InOutMapping mapping({0, 1, 2}, {5});
+
+  const auto effect = builder.evaluateReplace(rhsID, mapping);
+  EXPECT_EQ(effect.size, 0);
+  EXPECT_EQ(effect.depth, 0);
+}
+
 TEST(ReplaceBuilderTest, SimpleTest) {
   SubnetBuilder builder;
   const auto inputs = builder.addInputs(2);

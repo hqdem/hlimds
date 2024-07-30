@@ -738,7 +738,7 @@ struct TechMapCommand final : public UtopiaCommand {
       { "power", Indicator::POWER },
     };
 
-    app.add_option("--type", indicator, "Optimization criterion")
+    app.add_option("--objective", indicator, "Optimization criterion")
         ->expected(1)
         ->transform(CLI::CheckedTransformer(indicatorMap, CLI::ignore_case));
     app.allow_extras();

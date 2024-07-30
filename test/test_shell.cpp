@@ -347,7 +347,7 @@ static void testTechMap(const std::string &criterion) {
   std::stringstream script;
   script << "read_graphml " << graphMl << ";"
          << "read_liberty " << liberty << ";"
-         << "techmap -t " << criterion;
+         << "techmap --objective " << criterion;
   test(script.str(), true);
 }
 

@@ -643,13 +643,14 @@ struct StatDesignCommand final : public UtopiaCommand {
       }
     } // for subnet
 
-    printNameValue("Name", designBuilder->getName());
+    printNameValue("Design", fmt::format("'{}'", designBuilder->getName()));
     printNameValue("PIs", nIn);
     printNameValue("POs", nOut);
     printNameValue("Subnets", designBuilder->getSubnetNum());
     printNameValue("Cells", nCell, " (incl. PI/PO)");
+    printNameValue("", nCell - nIn - nOut);
     printNameValue("Depth", depth);
-    printNameValue("SwAct", activ);
+    printNameValue("SwActiv", activ);
 
     if (isTechMapped) {
       printNameValue("Area", area, " um^2");

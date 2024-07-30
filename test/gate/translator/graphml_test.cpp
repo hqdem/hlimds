@@ -19,28 +19,25 @@ namespace eda::gate::translator::graphml {
 using GmlTranslator = eda::gate::translator::GmlTranslator;
 using ParserData    = GmlTranslator::ParserData;
 using SubnetBuilder = GmlTranslator::Builder;
-
-bool checkBuilder(const std::shared_ptr<SubnetBuilder> &builder,
+using Subnet = eda::gate::model::Subnet; 
+void checkBuilder(const std::shared_ptr<SubnetBuilder> &builder,
                   const ParserData &data) {
-  bool res{true};
-  for (const auto &node : data.nodes) {
-    auto links = builder->getLinks(node.id);
-    res &= (node.inputs.size() == links.size());
+  for (const auto &[id, node] : data.nodes) {
+    auto links = builder->getLinks(node.link.value().idx);
+    EXPECT_EQ(node.inputs.size(), links.size());
     size_t invIns{0};
     for (size_t i{0}; i < links.size(); ++i) {
       invIns += links[i].inv;
-      res &= (links[i].idx == node.inputs[i].node->id);
+      EXPECT_EQ(links[i].idx, node.inputs[i].node->link.value().idx);
     }
-    res &= (node.invIns == invIns);
+    EXPECT_EQ(node.invIns, invIns);
   }
-  res = true;
-  return res;
 }
 
 void translate(std::string fileName) {
   ParserData data;
   auto builder = eda::gate::translator::translateGmlOpenabc(fileName, &data);
-  EXPECT_TRUE(checkBuilder(builder, data));
+  checkBuilder(builder, data);
 }
 
 TEST(GmlTranslator, ac97Ctrl) {
@@ -82,4 +79,5 @@ TEST(GmlTranslator, usbPhy) {
 TEST(GmlTranslator, wbConmax) {
   translate("wb_conmax_orig");
 }
+
 } // namespace eda::gate::translator::graphml

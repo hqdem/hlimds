@@ -13,8 +13,9 @@
 #include "tinyxml2/tinyxml2.h"
 
 #include <cstring>
-#include <deque>
 #include <memory>
+#include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::gate::translator {
@@ -40,18 +41,17 @@ public:
   };
 
   struct Node {
-    Node(uint32_t id,  uint32_t type,  uint32_t invIns) :
-      id(id), type(type), invIns(invIns) {}
+    Node(size_t type, size_t invIns) : type(type), invIns(invIns) {}
 
-    uint32_t id;
-    uint32_t type;
-    uint32_t invIns;
+    size_t type;
+    size_t invIns;
+    std::optional<Link> link;
     std::vector<Input> inputs;
   };
 
   struct ParserData {
-    std::deque<Node> nodes;
-    std::vector<Node*> groups[3]; // 3 groups: inputs, inner nodes, outputs
+    std::unordered_map<size_t, Node> nodes;
+    std::vector<Node*> groups[3]; // 3 groups: inputs, outputs, inner nodes
   };
 
   /**
@@ -80,7 +80,7 @@ public:
    * @param filename Absolute path to the GraphML file.
    * @return A SubnetBuilder for the built Subnet.
    */
-  std::shared_ptr<Builder> translate(const std::string &filename);
+  std::shared_ptr<Builder> translate(const std::string &filename) const;
 
   /**
    * @brief Overloaded parse method that allows external access
@@ -90,33 +90,56 @@ public:
    * @return A SubnetBuilder for the built Subnet.
    */
   std::shared_ptr<Builder> translate(const std::string &filename,
-                                     ParserData &data);
+                                     ParserData &data) const;
 
 private:
 
-  XMLElement* next(XMLElement* element) {
+  XMLElement* next(XMLElement* element) const {
     return element->NextSiblingElement();
   }
 
-  XMLElement* findChild(XMLElement* element) {
+  XMLElement* findChild(XMLElement* element) const {
     return element->FirstChildElement();
   }
 
-  bool checkName(XMLElement* element, const char* value) {
+  bool checkName(XMLElement* element, const char* value) const {
     return !std::strcmp(element->Value(), value);
   }
 
-  uint32_t getNum(XMLElement* element) {
+  size_t getNum(XMLElement* element) const {
     return std::stoi(element->GetText());
   }
 
-  void parseGraph(XMLElement *graph, ParserData &data);
+  size_t getGroup(XMLElement* element) const {
+    size_t type = getNum(element);
+    return type > 1 ? 2 : type;
+  }
 
-  void parseNode(XMLElement *node, ParserData &data);
+  void parseGraph(XMLElement *graph, ParserData &data) const;
 
-  void parseEdge(XMLElement *edge, ParserData &data);
+  void parseNode(XMLElement *node, ParserData &data) const;
 
-  std::shared_ptr<Builder> buildSubnet(ParserData &data);
+  void parseEdge(XMLElement *edge, ParserData &data) const;
+
+  std::shared_ptr<Builder> buildSubnet(ParserData &data) const;
+
+  void buildGroup(std::vector<Node*> &group, Builder *builder) const;
+
+  const std::unordered_map<size_t, std::pair<model::CellSymbol, bool>> typeMap {
+    {0, {model::IN, false}},
+    {1, {model::OUT, false}},
+    {2, {model::AND, false}},
+    {10, {model::AND, true}},
+    {11, {model::BUF, false}},
+    {12, {model::BUF, true}},
+    {13, {model::OR, false}},
+    {14, {model::OR, true}},
+    {15, {model::XOR, false}},
+    {16, {model::XOR, true}},
+    {1000, {model::ZERO, false}},
+    {1001, {model::ONE, false}}
+  };
+
 };
 
 } // namespace eda::gate::translator

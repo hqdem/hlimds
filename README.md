@@ -122,7 +122,7 @@ make BUILD_TYPE=shared CUDD_INCLUDE=<cudd-path> SM="-DDISABLE_SM"
 sudo make install
 ```
 
-### Configuring with `Yosys`
+### Yosys installation
 
 1. Get `Yosys` version 0.36 source code from [repo](https://github.com/YosysHQ/yosys/tree/yosys-0.36) into `<yosys-dir>`.
 2. Make sure your system meets the requirements listed in `<yosys-dir>/README.md`

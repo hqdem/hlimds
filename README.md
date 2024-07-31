@@ -125,6 +125,13 @@ sudo make install
 ### Yosys installation
 
 1. Get `Yosys` version 0.36 source code from [repo](https://github.com/YosysHQ/yosys/tree/yosys-0.36) into `<yosys-dir>`.
+
+   ```console
+   git clone https://github.com/YosysHQ/yosys.git <yosys-dir>
+   cd <yosys-dir>
+   git checkout yosys-0.36
+   ```
+
 2. Make sure your system meets the requirements listed in `<yosys-dir>/README.md`
 3. Edit `<yosys-dir>/Makefile`
     * set `ENABLE_LIBYOSYS` to 1

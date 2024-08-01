@@ -18,10 +18,10 @@ namespace eda::gate::optimizer {
 static constexpr size_t maxBranches = 8;
 static constexpr size_t maxDivisors = 150;
 static constexpr size_t maxDivisorsPairs = 500;
-static_assert(maxBranches <= 32);
+static_assert(maxBranches <= 16);
 
 //----------------------------------------------------------------------------//
-// Aliases
+// Data types
 //----------------------------------------------------------------------------//
 
 using Cell             = eda::gate::model::Subnet::Cell;
@@ -36,9 +36,19 @@ using Symbol           = eda::gate::model::CellSymbol;
 using TruthTable       = eda::utils::TruthTable;
 using TruthTables      = std::vector<TruthTable>;
 
+// Shortcuts
+using TTn      = TruthTable;
+using TT6      = utils::TT6;
+
 //----------------------------------------------------------------------------//
 // Data structures
 //----------------------------------------------------------------------------//
+
+enum DivisorType {
+  Positive,
+  Negative,
+  Binate
+};
 
 struct Divisor {
   Divisor() = delete;
@@ -83,11 +93,13 @@ public:
     negativeTTs.push_back(table);
   }
 
-  const TruthTable &getPositiveTT(size_t i) const {
-    return positiveTTs[i];
-  }
-  const TruthTable &getNegativeTT(size_t i) const {
-    return negativeTTs[i];
+  const TruthTable &getTruthTable(DivisorType pair, size_t i) const {
+    switch (pair) {
+      case DivisorType::Positive: return positiveTTs[i];
+      case DivisorType::Negative: return negativeTTs[i];
+
+      default: assert(false && "Unsupported divisor type!");
+    }
   }
 
 private:
@@ -124,19 +136,52 @@ public:
   void addPositive(DivisorsPair divPair) { pairPos.push_back(divPair); }
   void addNegative(DivisorsPair divPair) { pairNeg.push_back(divPair); }
 
-  size_t getPositiveNum() const { return posUnate.size(); }
-  size_t getNegativeNum() const { return negUnate.size(); }
-  size_t getBinateNum()   const { return binate.size();   }
+  size_t sizeUnate(DivisorType unate) const {
+    switch (unate) {
+      case DivisorType::Positive: return posUnate.size();
+      case DivisorType::Negative: return negUnate.size();
+      case DivisorType::Binate  : return   binate.size();
 
-  size_t getPositivePairNum() const { return pairPos.size(); }
-  size_t getNegativePairNum() const { return pairNeg.size(); }
+      default: assert(false && "Unsupported divisor type!");
+    }
+  }
+  size_t sizePair(DivisorType pair) const {
+    switch (pair) {
+      case DivisorType::Positive: return pairPos.size();
+      case DivisorType::Negative: return pairNeg.size();
 
-  Divisor getPositive(size_t i) const { return posUnate[i]; }
-  Divisor getNegative(size_t i) const { return negUnate[i]; }
-  Divisor getBinate  (size_t i) const { return binate[i];   }
+      default: assert(false && "Unsupported divisor type!");
+    }
+  }
 
-  DivisorsPair getPositivePair(size_t i) const { return pairPos[i]; }
-  DivisorsPair getNegativePair(size_t i) const { return pairNeg[i]; }
+  Divisor getDivisor(DivisorType unate, size_t i) const {
+    switch (unate) {
+      case DivisorType::Positive: return posUnate[i];
+      case DivisorType::Negative: return negUnate[i];
+      case DivisorType::Binate  : return   binate[i];
+
+      default: assert(false && "Unsupported divisor type!");
+    }
+  }
+
+  DivisorsPair getDivisorsPair(DivisorType pair, size_t i) const {
+    switch (pair) {
+      case DivisorType::Positive: return pairPos[i];
+      case DivisorType::Negative: return pairNeg[i];
+
+      default: assert(false && "Unsupported divisor type!");
+    }
+  }
+
+  void erase(DivisorType unate, size_t i) {
+    switch (unate) {
+      case DivisorType::Positive: posUnate.erase(posUnate.begin() + i); break;
+      case DivisorType::Negative: negUnate.erase(negUnate.begin() + i); break;
+      case DivisorType::Binate  :   binate.erase(  binate.begin() + i); break;
+
+      default: assert(false && "Unsupported divisor type!");
+    }
+  }
 
 private:
   std::vector<Divisor> negUnate;
@@ -240,6 +285,14 @@ private:
 // Convenient methods
 //----------------------------------------------------------------------------//
 
+static bool isConst0And(const TT6 &tt1, const TTn &tt2) {
+  return (*tt2.begin() & tt1) == 0;
+}
+
+static bool isConst0And(const TTn &tt1, const TTn &tt2) {
+  return kitty::is_const0(tt1 & tt2);
+}
+
 static void buildFromDivisor(const SubnetBuilder &builder,
                              SubnetBuilder &rhs,
                              size_t idx,
@@ -261,33 +314,36 @@ static void buildFromDivisor(const SubnetBuilder &builder,
   oldToNew[idx] = rhs.addCell(symbol, links).idx;
 }
 
-static TruthTable getTruthTable(const SubnetBuilder &builder,
-                                size_t idx,
-                                bool inv,
-                                size_t arity) {
+static Link addCell(SubnetBuilder &builder,
+                    Link link1,
+                    Link link2,
+                    DivisorType unate) {
 
-  TruthTable res;
-  if (arity > 6) {
-    res = inv ? ~utils::getTruthTable<utils::TTn>(builder, idx):
-                 utils::getTruthTable<utils::TTn>(builder, idx);
-  } else {
-    auto tt = inv ? ~utils::getTruthTable<utils::TT6>(builder, idx):
-                     utils::getTruthTable<utils::TT6>(builder, idx);
-    res = utils::convertTruthTable<utils::TT6>(tt, arity);
+   switch (unate) {
+    case DivisorType::Positive:
+      return builder.addCell(Symbol::OR, link1, link2);
+    case DivisorType::Negative:
+      return builder.addCell(Symbol::AND, link1, link2);
+    
+    default: assert(false && "Unsupported divisor type!");
   }
-
-  return res;
 }
 
-static Link addCell(SubnetBuilder &builder,
-                    Divisor div1,
-                    Divisor div2,
-                    Symbol symbol) {
+static void removeDeepDivisors(const SubnetBuilder &builder,
+                               DivisorType unate,
+                               Divisors &divs,
+                               size_t pivot,
+                               uint16_t delta) {
 
-  const Link link1(div1.idx, div1.inv);
-  const Link link2(div2.idx, div2.inv);
-  const Link res = builder.addCell(symbol, link1, link2);
-  return res;
+  const size_t maxDepth = builder.getDepth(pivot) - delta;
+  size_t i = divs.sizeUnate(unate);
+  while (i) {
+    --i;
+    const size_t divID = divs.getDivisor(unate, i).idx;
+    if (builder.getDepth(divID) > maxDepth) {
+      divs.erase(unate, i);
+    }
+  }
 }
 
 //----------------------------------------------------------------------------//
@@ -324,23 +380,163 @@ static size_t markMffc(SubnetBuilder &builder,
 }
 
 //----------------------------------------------------------------------------//
+// Resubstitution making
+//----------------------------------------------------------------------------//
+
+static SubnetBuilder initResubstitution(const SubnetView &view,
+                                        InOutMapping &iomapping,
+                                        IdxMap &oldToNew) {
+
+  SubnetBuilder rhs;
+
+  iomapping.inputs = view.getInputs();
+  iomapping.outputs = view.getOutputs();
+
+  for (size_t i = 0; i < iomapping.getInNum(); ++i) {
+    oldToNew[iomapping.getIn(i)] = rhs.addInput().idx;
+  }
+
+  return rhs;
+}
+
+static bool makeResubstitution(const SubnetBuilder &builder,
+                               SafePasser &iter,
+                               const SubnetBuilder &rhs,
+                               const InOutMapping &iomapping) {
+
+  if (builder.evaluateReplace(rhs, iomapping).size < 0) {
+    return false;
+  }
+  iter.replace(rhs, iomapping);
+  return true;
+}
+
+static bool makeZeroResubstitution(const SubnetBuilder &builder,
+                                   SafePasser &iter,
+                                   const SubnetView &view,
+                                   Divisor div) {
+
+  InOutMapping iomapping;
+  IdxMap oldToNew;
+  SubnetBuilder rhs = initResubstitution(view, iomapping, oldToNew);
+
+  buildFromDivisor(builder, rhs, div.idx, oldToNew);
+
+  Link link(oldToNew.at(div.idx), div.inv);
+  rhs.addOutput(link);
+
+  return makeResubstitution(builder, iter, rhs, iomapping);
+}
+
+static bool makeOneResubstitution(const SubnetBuilder &builder,
+                                  SafePasser &iter,
+                                  const SubnetView &view,
+                                  Divisor div1,
+                                  Divisor div2,
+                                  DivisorType unate) {
+
+  InOutMapping iomapping;
+  IdxMap oldToNew;
+  SubnetBuilder rhs = initResubstitution(view, iomapping, oldToNew);
+
+  buildFromDivisor(builder, rhs, div1.idx, oldToNew);
+  buildFromDivisor(builder, rhs, div2.idx, oldToNew);
+
+  Link link1(oldToNew.at(div1.idx), div1.inv);
+  Link link2(oldToNew.at(div2.idx), div2.inv);
+
+  const Link link = addCell(rhs, link1, link2, unate);
+
+  rhs.addOutput(link);
+
+  return makeResubstitution(builder, iter, rhs, iomapping);
+}
+
+static bool makeTwoResubstitution(const SubnetBuilder &builder,
+                                  SafePasser &iter,
+                                  const SubnetView &view,
+                                  DivisorsPair divPair,
+                                  Divisor div2,
+                                  DivisorType unate) {
+
+  InOutMapping iomapping;
+  IdxMap oldToNew;
+  SubnetBuilder rhs = initResubstitution(view, iomapping, oldToNew);
+
+  const Divisor divF = divPair.first;
+  const Divisor divS = divPair.second;
+
+  buildFromDivisor(builder, rhs, divF.idx, oldToNew);
+  buildFromDivisor(builder, rhs, divS.idx, oldToNew);
+  buildFromDivisor(builder, rhs, div2.idx, oldToNew);
+
+  Link linkF(oldToNew.at(divF.idx), divF.inv);
+  Link linkS(oldToNew.at(divS.idx), divS.inv);
+  Link link2(oldToNew.at(div2.idx), div2.inv);
+  Link link1 = rhs.addCell(Symbol::AND, linkF, linkS);
+
+  link1.inv ^= divPair.inv;
+  const Link link = addCell(rhs, link1, link2, unate);
+  rhs.addOutput(link);
+  return makeResubstitution(builder, iter, rhs, iomapping);
+}
+
+static bool makeThreeResubstitution(const SubnetBuilder &builder,
+                                    SafePasser &iter,
+                                    const SubnetView &view,
+                                    DivisorsPair pair1,
+                                    DivisorsPair pair2,
+                                    DivisorType unate) {
+
+  InOutMapping iomapping;
+  IdxMap oldToNew;
+  SubnetBuilder rhs = initResubstitution(view, iomapping, oldToNew);
+
+  const Divisor divF1 = pair1.first;
+  const Divisor divS1 = pair1.second;
+  const Divisor divF2 = pair2.first;
+  const Divisor divS2 = pair2.second;
+
+  buildFromDivisor(builder, rhs, divF1.idx, oldToNew);
+  buildFromDivisor(builder, rhs, divS1.idx, oldToNew);
+  buildFromDivisor(builder, rhs, divF2.idx, oldToNew);
+  buildFromDivisor(builder, rhs, divS2.idx, oldToNew);
+
+  Link linkF1(oldToNew.at(divF1.idx), divF1.inv);
+  Link linkS1(oldToNew.at(divS1.idx), divS1.inv);
+  Link linkF2(oldToNew.at(divF2.idx), divF2.inv);
+  Link linkS2(oldToNew.at(divS2.idx), divS2.inv);
+
+  Link link1 = rhs.addCell(Symbol::AND, linkF1, linkS1);
+  Link link2 = rhs.addCell(Symbol::AND, linkF2, linkS2);
+
+  link1.inv ^= pair1.inv;
+  link2.inv ^= pair2.inv;
+
+  const Link link = addCell(rhs, link1, link2, unate);
+  rhs.addOutput(link);
+  return makeResubstitution(builder, iter, rhs, iomapping);
+}
+
+//----------------------------------------------------------------------------//
 // Divisors classifications
 //----------------------------------------------------------------------------//
 
+template <typename TT>
 static std::pair<bool, Divisor> classifyDivisor(Divisor div,
                                                 Divisors &divs,
-                                                const TruthTable &table,
+                                                const TT &table,
                                                 const TruthTable &onset,
                                                 const TruthTable &offset) {
 
   bool positive = false;
   bool negative = false;
 
-  if (kitty::is_const0(table & offset)) {
+  if (isConst0And(table, offset)) {
     divs.addPositive(div);
     positive = true;
   }
-  if (kitty::is_const0(~table & onset)) {
+  if (isConst0And(~table, onset)) {
     divs.addNegative(div);
     negative = true;
   }
@@ -354,9 +550,10 @@ static std::pair<bool, Divisor> classifyDivisor(Divisor div,
   return std::make_pair(false, div);
 }
 
+template <typename TT>
 static std::pair<bool, Divisor> classifyDivisor(size_t idx,
                                                 Divisors &divs,
-                                                const TruthTable &table,
+                                                const TT &table,
                                                 const TruthTable &onset,
                                                 const TruthTable &offset) {
 
@@ -372,6 +569,54 @@ static std::pair<bool, Divisor> classifyDivisor(size_t idx,
   return res;
 }
 
+template <typename TT>
+static void classifyBinatePair(const TT &table,
+                               const DivisorsPair &divPair,
+                               Divisors &divs,
+                               DivisorsTT &divsTT,
+                               const TruthTable &onset,
+                               const TruthTable &offset) {
+
+  const size_t arity = onset.num_vars();
+
+  if (isConst0And(table, offset)) {
+    divs.addPositive(divPair);
+    divsTT.addPositiveTT(utils::convertTruthTable<TT>(table, arity));
+  } else if (isConst0And(~table, offset)) {
+    divs.addPositive(~divPair);
+    divsTT.addPositiveTT(utils::convertTruthTable<TT>(~table, arity));
+  } else if (isConst0And(~table, onset)) {
+    divs.addNegative(divPair);
+    divsTT.addNegativeTT(utils::convertTruthTable<TT>(table, arity));
+  } else if (isConst0And(table, onset)) {
+    divs.addNegative(~divPair);
+    divsTT.addNegativeTT(utils::convertTruthTable<TT>(~table, arity));
+  }
+}
+
+template <typename TT>
+static void classifyBinatePair(const TT &tt1,
+                               const TT &tt2,
+                               const DivisorsPair &divPair,
+                               Divisors &divs,
+                               DivisorsTT &divsTT,
+                               const TruthTable &onset,
+                               const TruthTable &offset) {
+
+  const Divisor div1(divPair.first);
+  const Divisor div2(divPair.second);
+
+  if (!div1.inv && !div2.inv) {
+    classifyBinatePair(tt1 & tt2, divPair, divs, divsTT, onset, offset);
+  } else if (!div1.inv && div2.inv) {
+    classifyBinatePair(tt1 & ~tt2, divPair, divs, divsTT, onset, offset);
+  } else if (div1.inv && !div2.inv) {
+    classifyBinatePair(~tt1 & tt2, divPair, divs, divsTT, onset, offset);
+  } else if (div1.inv && div2.inv) {
+    classifyBinatePair(~tt1 & ~tt2, divPair, divs, divsTT, onset, offset);
+  }
+}
+
 static void classifyBinatePairs(SubnetBuilder &builder,
                                 const SubnetView &view,
                                 Divisors &divs,
@@ -379,11 +624,12 @@ static void classifyBinatePairs(SubnetBuilder &builder,
                                 const TruthTable &onset,
                                 const TruthTable &offset) {
 
+  builder.startSession();
   const size_t arity = view.getInNum();
-  for (size_t i = 0; i < divs.getBinateNum(); ++i) {
-    for (size_t j = i + 1; j < divs.getBinateNum(); ++j) {
-      const Divisor div1(divs.getBinate(i));
-      const Divisor div2(divs.getBinate(j));
+  for (size_t i = 0; i < divs.sizeUnate(Binate); ++i) {
+    for (size_t j = i + 1; j < divs.sizeUnate(Binate); ++j) {
+      const Divisor div1(divs.getDivisor(Binate, i));
+      const Divisor div2(divs.getDivisor(Binate, j));
 
       if (div1.idx == div2.idx) {
         continue;
@@ -392,35 +638,27 @@ static void classifyBinatePairs(SubnetBuilder &builder,
       builder.mark(div1.idx);
       builder.mark(div2.idx);
 
-      const auto tt1 = getTruthTable(builder, div1.idx, div1.inv, arity);
-      const auto tt2 = getTruthTable(builder, div2.idx, div2.inv, arity);
-
-      const auto tt = tt1 & tt2;
-
       const DivisorsPair divPair(div1, div2, false);
 
-      if (kitty::is_const0(tt & offset)) {
-        divs.addPositive(divPair);
-        divsTT.addPositiveTT(std::move(tt));
-      }
-      else if (kitty::is_const0(~tt & offset)) {
-        divs.addPositive(~divPair);
-        divsTT.addPositiveTT(~tt);
-      }
-      else if (kitty::is_const0(~tt & onset)) {
-        divs.addNegative(divPair);
-        divsTT.addNegativeTT(std::move(tt));
-      }
-      else if (kitty::is_const0(tt & onset)) {
-        divs.addNegative(~divPair);
-        divsTT.addNegativeTT(~tt);
+      if (arity > 6) {
+        const TTn &tt1 = utils::getTruthTable<TTn>(builder, div1.idx);
+        const TTn &tt2 = utils::getTruthTable<TTn>(builder, div2.idx);
+
+        classifyBinatePair(tt1, tt2, divPair, divs, divsTT, onset, offset);
+      } else {
+        const TT6 &tt1 = utils::getTruthTable<TT6>(builder, div1.idx);
+        const TT6 &tt2 = utils::getTruthTable<TT6>(builder, div2.idx);
+
+        classifyBinatePair(tt1, tt2, divPair, divs, divsTT, onset, offset);
       }
 
       if (divs.nPairs() > maxDivisorsPairs) {
+        builder.endSession();
         return;
       }
     }
   }
+  builder.endSession();
 }
 
 //----------------------------------------------------------------------------//
@@ -452,19 +690,20 @@ static std::pair<bool, Divisor> getSideDivisors(SubnetBuilder &builder,
 
   if (builder.getSessionID(idx) != (builder.getSessionID() - 1)) {
     const size_t arity = view.getInNum();
-    TruthTable divTT;
+    auto res = std::make_pair(false, Divisor(0, 0));
     builder.mark(idx);
+
     if (arity > 6) {
-      divTT = utils::getTruthTable<utils::TTn>(builder, arity, idx, false, 0);
-      cellTables.push(divTT);
-      utils::setTruthTable<utils::TTn>(builder, idx, cellTables.back());
+      const TTn &tt = utils::getTruthTable<TTn>(builder, arity, idx, false, 0);
+      cellTables.push(tt);
+      utils::setTruthTable<TTn>(builder, idx, cellTables.back());
+      res = classifyDivisor(idx, divs, tt, onset, offset);
     } else {
-      auto tt = utils::getTruthTable<utils::TT6>(builder, arity, idx, false, 0);
-      utils::setTruthTable<utils::TT6>(builder, idx, tt);
-      divTT = utils::convertTruthTable<utils::TT6>(tt, arity);
+      const TT6 tt = utils::getTruthTable<TT6>(builder, arity, idx, false, 0);
+      utils::setTruthTable<TT6>(builder, idx, tt);
+      res = classifyDivisor(idx, divs, tt, onset, offset);
     }
 
-    const auto res = classifyDivisor(idx, divs, divTT, onset, offset);
     if (res.first) {
       return res;
     }
@@ -483,13 +722,14 @@ static std::pair<bool, Divisor> getSideDivisors(SubnetBuilder &builder,
   return std::make_pair(false, Divisor(0, 0));
 }
 
-static std::pair<bool, Divisor> getSideDivisors(SubnetBuilder &builder,
-                                                const SubnetView &view,
-                                                Divisors &divs,
-                                                const TruthTable &onset,
-                                                const TruthTable &offset,
-                                                CellTables &cellTables,
-                                                size_t mffcID) {
+static bool getSideDivisors(SubnetBuilder &builder,
+                            SafePasser &iter,
+                            const SubnetView &view,
+                            Divisors &divs,
+                            const TruthTable &onset,
+                            const TruthTable &offset,
+                            CellTables &cellTables,
+                            size_t mffcID) {
 
   builder.startSession();
 
@@ -504,13 +744,13 @@ static std::pair<bool, Divisor> getSideDivisors(SubnetBuilder &builder,
 
       if (res.first) {
         builder.endSession();
-        return res;
+        return makeZeroResubstitution(builder, iter, view, res.second);
       }
     }
   }
 
   builder.endSession();
-  return std::make_pair(false, Divisor(0, 0));
+  return false;
 }
 
 //----------------------------------------------------------------------------//
@@ -524,18 +764,12 @@ static std::pair<bool, Divisor> addInnerDivisor(const SubnetBuilder &builder,
                                                 const TruthTable &onset,
                                                 const TruthTable &offset) {
 
-  TruthTable divisorTT;
-
   if (arity > 6) {
-    divisorTT = utils::getTruthTable<utils::TTn>(builder, idx);
-  } else {
-    const auto tt = utils::getTruthTable<utils::TT6>(builder, idx);
-    divisorTT = utils::convertTruthTable<utils::TT6>(tt, arity);
+    const TTn &tt = utils::getTruthTable<TTn>(builder, idx);
+    return classifyDivisor(idx, divs, tt, onset, offset);
   }
-
-  const auto res = classifyDivisor(idx, divs, divisorTT, onset, offset);
-
-  return res;
+  const TT6 &tt = utils::getTruthTable<TT6>(builder, idx);
+  return classifyDivisor(idx, divs, tt, onset, offset);
 }
 
 static std::pair<bool, Divisor> getInnerDivisors(SubnetBuilder &builder,
@@ -566,12 +800,13 @@ static std::pair<bool, Divisor> getInnerDivisors(SubnetBuilder &builder,
   return std::make_pair(false, Divisor(0, 0));
 }
 
-static std::pair<bool, Divisor> getInnerDivisors(SubnetBuilder &builder,
-                                                 const SubnetView &view,
-                                                 Divisors &divs,
-                                                 const TruthTable &onset,
-                                                 const TruthTable &offset,
-                                                 const IdxMap &mffcMap) {
+static bool getInnerDivisors(SubnetBuilder &builder,
+                             SafePasser &iter,
+                             const SubnetView &view,
+                             Divisors &divs,
+                             const TruthTable &onset,
+                             const TruthTable &offset,
+                             const IdxMap &mffcMap) {
 
   builder.startSession();
 
@@ -586,7 +821,7 @@ static std::pair<bool, Divisor> getInnerDivisors(SubnetBuilder &builder,
 
     if (res.first) {
       builder.endSession();
-      return res;
+      return makeZeroResubstitution(builder, iter, view, res.second);
     }
   }
   // Get divisors from the inputs of the mffc to cut.
@@ -596,256 +831,184 @@ static std::pair<bool, Divisor> getInnerDivisors(SubnetBuilder &builder,
     
     if (res.first) {
       builder.endSession();
-      return res;
+      return makeZeroResubstitution(builder, iter, view, res.second);
     }
   }
 
   builder.endSession();
-  return std::make_pair(false, Divisor(0, 0));
+  return false;
 }
 
 //----------------------------------------------------------------------------//
 // Divisors collecting (inner + side)
 //----------------------------------------------------------------------------//
 
-static std::pair<bool, Divisor> getDivisors(SubnetBuilder &builder,
-                                            const SubnetView &view,
-                                            Divisors &divs,
-                                            const TruthTable &onset,
-                                            const TruthTable &offset,
-                                            CellTables &cellTables,
-                                            const IdxMap &mffc) {
+static bool getDivisors(SubnetBuilder &builder,
+                        SafePasser &iter,
+                        const SubnetView &view,
+                        Divisors &divs,
+                        const TruthTable &onset,
+                        const TruthTable &offset,
+                        CellTables &tables,
+                        const IdxMap &mffc) {
 
-  const size_t mffcID = markMffc(builder, view, mffc);
-  auto res = getInnerDivisors(builder, view, divs, onset, offset, mffc);
-  if (res.first) {
-    return res;
+  const size_t id = markMffc(builder, view, mffc);
+  if (getInnerDivisors(builder, iter, view, divs, onset, offset, mffc)) {
+    return true;
   }
-
-  res = getSideDivisors(builder, view, divs, onset, offset, cellTables, mffcID);
-
-  return res;
+  return getSideDivisors(builder, iter, view, divs, onset, offset, tables, id);
 }
 
 //----------------------------------------------------------------------------//
 // Resubstitution checking
 //----------------------------------------------------------------------------//
 
-static std::pair<bool, Divisor> checkNegativeUnate(SubnetBuilder &builder,
-                                                   const Divisors &divs,
-                                                   const TruthTable &offset,
-                                                   size_t arity) {
+template <typename TT>
+static bool checkUnates(const TT &tt1,
+                        const TT &tt2,
+                        const TruthTable &target,
+                        DivisorType unate) {
 
-  for (size_t i = 0; i < divs.getNegativeNum(); ++i) {
-    for (size_t j = i + 1; j < divs.getNegativeNum(); ++j) {
-      const Divisor div1 = divs.getNegative(i);
-      const Divisor div2 = divs.getNegative(j);
+  switch (unate) {
+    case DivisorType::Positive: return isConst0And(~(tt1 | tt2), target);
+    case DivisorType::Negative: return isConst0And(tt1 & tt2, target);
+
+    default: assert(false && "Unsupported divisor type!");
+  }
+}
+
+inline bool checkUnates(const TTn &tt1,
+                        const TT6 &tt2,
+                        const TTn &target,
+                        DivisorType unate) {
+
+  return checkUnates(*tt1.begin(), tt2, target, unate);
+}
+
+template <typename TT1, typename TT2>
+static bool checkUnates(const TT1 &tt1,
+                        const TT2 &tt2,
+                        bool inv1,
+                        bool inv2,
+                        const TruthTable &target,
+                        DivisorType unate) {
+
+  if (!inv1 && !inv2) {
+    return checkUnates(tt1, tt2, target, unate);
+  } 
+  if (!inv1 && inv2) {
+    return checkUnates(tt1, ~tt2, target, unate);
+  }
+  if (inv1 && !inv2) {
+    return checkUnates(~tt1, tt2, target, unate);
+  }
+  return checkUnates(~tt1, ~tt2, target, unate);
+}
+
+static bool checkUnates(SubnetBuilder &builder,
+                        SafePasser &iter,
+                        const SubnetView &view,
+                        const Divisors &divs,
+                        const TruthTable &target,
+                        DivisorType unate,
+                        size_t arity) {
+
+  builder.startSession();
+  for (size_t i = 0; i < divs.sizeUnate(unate); ++i) {
+    for (size_t j = i + 1; j < divs.sizeUnate(unate); ++j) {
+      const Divisor div1 = divs.getDivisor(unate, i);
+      const Divisor div2 = divs.getDivisor(unate, j);
 
       builder.mark(div1.idx);
       builder.mark(div2.idx);
 
-      const TruthTable tt1 = getTruthTable(builder, div1.idx, div1.inv, arity);
-      const TruthTable tt2 = getTruthTable(builder, div2.idx, div2.inv, arity);
+      bool success = false;
 
-      if (kitty::is_const0((tt1 & tt2) & offset)) {
-        const size_t divID = addCell(builder, div1, div2, Symbol::AND).idx;
-        return std::make_pair(true, Divisor(divID, false));
+      if (arity <= 6) {
+        const TT6 &tt1 = utils::getTruthTable<TT6>(builder, div1.idx);
+        const TT6 &tt2 = utils::getTruthTable<TT6>(builder, div2.idx);
+        success = checkUnates(tt1, tt2, div1.inv, div2.inv, target, unate);
+      } else {
+        const TTn &tt1 = utils::getTruthTable<TTn>(builder, div1.idx);
+        const TTn &tt2 = utils::getTruthTable<TTn>(builder, div2.idx);
+        success = checkUnates(tt1, tt2, div1.inv, div2.inv, target, unate);
+      }
+
+      if (success) {
+        builder.endSession();
+        return makeOneResubstitution(builder, iter, view, div1, div2, unate);
       }
     }
   }
-  return std::make_pair(false, Divisor(0, 0));
+  builder.endSession();
+  return false;
 }
 
-static std::pair<bool, Divisor> checkPositiveUnate(SubnetBuilder &builder,
-                                                   const Divisors &divs,
-                                                   const TruthTable &onset,
-                                                   size_t arity) {
+static bool checkUnatePair(SubnetBuilder &builder,
+                           SafePasser &iter,
+                           const SubnetView &view,
+                           const Divisors &divs,
+                           const DivisorsTT &divsTT,
+                           const TruthTable &target,
+                           DivisorType unate,
+                           size_t arity) {
 
-  for (size_t i = 0; i < divs.getPositiveNum(); ++i) {
-    for (size_t j = i + 1; j < divs.getPositiveNum(); ++j) {
-      const Divisor div1 = divs.getPositive(i);
-      const Divisor div2 = divs.getPositive(j);
-
-      builder.mark(div1.idx);
-      builder.mark(div2.idx);
-
-      const TruthTable tt1 = getTruthTable(builder, div1.idx, div1.inv, arity);
-      const TruthTable tt2 = getTruthTable(builder, div2.idx, div2.inv, arity);
-
-      if (kitty::is_const0(~(tt1 | tt2) & onset)) {
-        const size_t divID = addCell(builder, div1, div2, Symbol::OR).idx;
-        return std::make_pair(true, Divisor(divID, false));
-      }
-    }
-  }
-  return std::make_pair(false, Divisor(0, 0));
-}
-
-static std::pair<bool, Divisor> checkNegativeUnatePair(SubnetBuilder &builder,
-                                                       const Divisors &divs,
-                                                       const DivisorsTT &divsTT,
-                                                       const TruthTable &offset,
-                                                       size_t arity) {
-
-  for (size_t i = 0; i < divs.getNegativePairNum(); ++i) {
-    for (size_t j = 0; j < divs.getNegativeNum(); ++j) {
-      const DivisorsPair divPair = divs.getNegativePair(i);
-      const Divisor div2 = divs.getNegative(j);
-      const Divisor divF = divPair.first;
-      const Divisor divS = divPair.second;
+  builder.startSession();
+  for (size_t i = 0; i < divs.sizePair(unate); ++i) {
+    for (size_t j = 0; j < divs.sizeUnate(unate); ++j) {
+      const Divisor div2 = divs.getDivisor(unate, j);
 
       builder.mark(div2.idx);
 
-      const TruthTable &tt1 = divsTT.getNegativeTT(i);
-      const TruthTable  tt2 = getTruthTable(builder, div2.idx, div2.inv, arity);
+      bool success = false;
 
-      if (kitty::is_const0((tt1 & tt2) & offset)) {
-        Link link = addCell(builder, divF, divS, Symbol::AND);
-        const Divisor div1(link.idx, link.inv ^ divPair.inv);
+      const TruthTable &tt1 = divsTT.getTruthTable(unate, i);
+      if (arity <= 6) {
+        const TT6 &tt2 = utils::getTruthTable<TT6>(builder, div2.idx);
+        success = checkUnates(tt1, tt2, false, div2.inv, target, unate);
+      } else {
+        const TTn &tt2 = utils::getTruthTable<TTn>(builder, div2.idx);
+        success = checkUnates(tt1, tt2, false, div2.inv, target, unate);
+      }
 
-        const size_t divID = addCell(builder, div1, div2, Symbol::AND).idx;
-
-        return std::make_pair(true, Divisor(divID, false));
+      if (success) {
+        builder.endSession();
+        const DivisorsPair divPair = divs.getDivisorsPair(unate, i);
+        return makeTwoResubstitution(builder, iter, view, divPair, div2, unate);
       }
     }
   }
-  return std::make_pair(false, Divisor(0, 0));
+  builder.endSession();
+  return false;
 }
 
-static std::pair<bool, Divisor> checkPositiveUnatePair(SubnetBuilder &builder,
-                                                       const Divisors &divs,
-                                                       const DivisorsTT &divsTT,
-                                                       const TruthTable &onset,
-                                                       size_t arity) {
+static bool checkPairs(SubnetBuilder &builder,
+                       SafePasser &iter,
+                       const SubnetView &view,
+                       const Divisors &divs,
+                       const DivisorsTT &divsTT,
+                       const TruthTable &target,
+                       DivisorType pair,
+                       size_t arity) {
 
-  for (size_t i = 0; i < divs.getPositivePairNum(); ++i) {
-    for (size_t j = 0; j < divs.getPositiveNum(); ++j) {
-      const DivisorsPair divPair = divs.getPositivePair(i);
-      const Divisor div2 = divs.getPositive(j);
-      const Divisor divF = divPair.first;
-      const Divisor divS = divPair.second;
+  for (size_t i = 0; i < divs.sizePair(pair); ++i) {
+    for (size_t j = i + 1; j < divs.sizePair(pair); ++j) {
+      const TruthTable &tt1 = divsTT.getTruthTable(pair, i);
+      const TruthTable &tt2 = divsTT.getTruthTable(pair, j);
 
-      builder.mark(div2.idx);
-
-      const TruthTable &tt1 = divsTT.getPositiveTT(i);
-      const TruthTable  tt2 = getTruthTable(builder, div2.idx, div2.inv, arity);
-
-      if (kitty::is_const0(~(tt1 | tt2) & onset)) {
-        Link link = addCell(builder, divF, divS, Symbol::AND);
-        const Divisor div1(link.idx, link.inv ^ divPair.inv);
-
-        const size_t divID = addCell(builder, div1, div2, Symbol::OR).idx;
-
-        return std::make_pair(true, Divisor(divID, false));
+      if (checkUnates(tt1, tt2, false, false, target, pair)) {
+        const DivisorsPair pair1 = divs.getDivisorsPair(pair, i);
+        const DivisorsPair pair2 = divs.getDivisorsPair(pair, j);
+        return makeThreeResubstitution(builder, iter, view, pair1, pair2, pair);
       }
     }
   }
-  return std::make_pair(false, Divisor(0, 0));
-}
-
-static std::pair<bool, Divisor> checkNegativePairs(SubnetBuilder &builder,
-                                                   const Divisors &divs,
-                                                   const DivisorsTT &divsTT,
-                                                   const TruthTable &offset,
-                                                   size_t arity) {
-
-  for (size_t i = 0; i < divs.getNegativePairNum(); ++i) {
-    for (size_t j = i + 1; j < divs.getNegativePairNum(); ++j) {
-      const DivisorsPair divPair1 = divs.getNegativePair(i);
-      const DivisorsPair divPair2 = divs.getNegativePair(j);
-
-      const Divisor div1F = divPair1.first;
-      const Divisor div1S = divPair1.second;
-      const Divisor div2F = divPair2.first;
-      const Divisor div2S = divPair2.second;
-
-      const TruthTable &tt1 = divsTT.getNegativeTT(i);
-      const TruthTable &tt2 = divsTT.getNegativeTT(j);
-
-      if (kitty::is_const0((tt1 & tt2) & offset)) {
-        Link link1 = addCell(builder, div1F, div1S, Symbol::AND);
-        Link link2 = addCell(builder, div2F, div2S, Symbol::AND);
-
-        const Divisor div1(link1.idx, link1.inv ^ divPair1.inv);
-        const Divisor div2(link2.idx, link2.inv ^ divPair2.inv);
-
-        const size_t divID = addCell(builder, div1, div2, Symbol::AND).idx;
-
-        return std::make_pair(true, Divisor(divID, false));
-      }
-    }
-  }
-  return std::make_pair(false, Divisor(0, 0));
-}
-
-static std::pair<bool, Divisor> checkPositivePairs(SubnetBuilder &builder,
-                                                   const Divisors &divs,
-                                                   const DivisorsTT &divsTT,
-                                                   const TruthTable &onset,
-                                                   size_t arity) {
-
-  for (size_t i = 0; i < divs.getPositivePairNum(); ++i) {
-    for (size_t j = i + 1; j < divs.getPositivePairNum(); ++j) {
-      const DivisorsPair divPair1 = divs.getPositivePair(i);
-      const DivisorsPair divPair2 = divs.getPositivePair(j);
-
-      const Divisor div1F = divPair1.first;
-      const Divisor div1S = divPair1.second;
-      const Divisor div2F = divPair2.first;
-      const Divisor div2S = divPair2.second;
-
-      const TruthTable &tt1 = divsTT.getPositiveTT(i);
-      const TruthTable &tt2 = divsTT.getPositiveTT(j);
-
-      if (kitty::is_const0(~(tt1 | tt2) & onset)) {
-        Link link1 = addCell(builder, div1F, div1S, Symbol::AND);
-        Link link2 = addCell(builder, div2F, div2S, Symbol::AND);
-
-        const Divisor div1(link1.idx, link1.inv ^ divPair1.inv);
-        const Divisor div2(link2.idx, link2.inv ^ divPair2.inv);
-
-        const size_t divID = addCell(builder, div1, div2, Symbol::OR).idx;
-
-        return std::make_pair(true, Divisor(divID, false));
-      }
-    }
-  }
-  return std::make_pair(false, Divisor(0, 0));
+  return false;
 }
 
 //----------------------------------------------------------------------------//
 // Resubstitutions (const, zero, one, two, three)
 //----------------------------------------------------------------------------//
-
-static bool makeResubstitution(const SubnetBuilder &builder,
-                               SafePasser &iter,
-                               const SubnetView &view,
-                               Divisor div) {
-
-  SubnetBuilder rhs;
-
-  InOutMapping iomapping;
-  iomapping.inputs = view.getInputs();
-  iomapping.outputs = view.getOutputs();
-
-  IdxMap oldToNew;
-  for (size_t i = 0; i < iomapping.getInNum(); ++i) {
-    oldToNew[iomapping.getIn(i)] = rhs.addInput().idx;
-  }
-
-  buildFromDivisor(builder, rhs, div.idx, oldToNew);
-
-  Link link(oldToNew.at(div.idx), div.inv);
-  rhs.addOutput(link);
-
-  if (builder.evaluateReplace(rhs, iomapping).size < 0) {
-    return false;
-  }
-
-  iter.replace(rhs, iomapping);
-
-  return true;
-}
 
 static void makeConstResubstitution(SafePasser &iter,
                                     const SubnetView &view,
@@ -881,49 +1044,36 @@ static bool makeConstResubstitution(SafePasser &iter,
   return false;
 }
 
-static bool makeZeroResubstitution(SubnetBuilder &builder,
+inline bool makeZeroResubstitution(SubnetBuilder &builder,
                                    SafePasser &iter,
                                    const SubnetView &view,
                                    Divisors &divs,
                                    const TruthTable &onset,
                                    const TruthTable &offset,
-                                   CellTables &cellTables,
+                                   CellTables &tables,
                                    const IdxMap &mffcMap) {
 
-  const auto res = getDivisors(
-      builder, view, divs, onset, offset, cellTables, mffcMap);
-
-  if (res.first) {
-    return makeResubstitution(builder, iter, view, res.second);
-  }
-
-  return false;
+  return getDivisors(builder, iter, view, divs, onset, offset, tables, mffcMap);
 }
 
 static bool makeOneResubstitution(SubnetBuilder &builder,
                                   SafePasser &iter,
                                   const SubnetView &view,
-                                  const Divisors &divs,
+                                  Divisors &divs,
                                   const TruthTable &onset,
-                                  const TruthTable &offset) {
+                                  const TruthTable &offset,
+                                  bool saveDepth) {
 
-  builder.startSession();
   const size_t arity = view.getInNum();
 
-  auto res = checkNegativeUnate(builder, divs, offset, arity);
-  if (res.first) {
-    builder.endSession();
-    return makeResubstitution(builder, iter, view, res.second);
+  if (saveDepth) {
+    removeDeepDivisors(builder, Negative, divs, view.getOut(0), 1);
+    removeDeepDivisors(builder, Positive, divs, view.getOut(0), 1);
   }
-
-  res = checkPositiveUnate(builder, divs, onset, arity);
-  if (res.first) {
-    builder.endSession();
-    return makeResubstitution(builder, iter, view, res.second);
+  if (checkUnates(builder, iter, view, divs, offset, Negative, arity)) {
+    return true;
   }
-
-  builder.endSession();
-  return false;
+  return checkUnates(builder, iter, view, divs, onset, Positive, arity);
 }
 
 static bool makeTwoResubstitution(SubnetBuilder &builder,
@@ -932,27 +1082,23 @@ static bool makeTwoResubstitution(SubnetBuilder &builder,
                                   Divisors &divs,
                                   DivisorsTT &divsTT,
                                   const TruthTable &onset,
-                                  const TruthTable &offset) {
+                                  const TruthTable &offset,
+                                  bool saveDepth) {
 
-  builder.startSession();
   const size_t arity = view.getInNum();
+
+  if (saveDepth) {
+    removeDeepDivisors(builder, Binate, divs, view.getOut(0), 2);
+  }
 
   classifyBinatePairs(builder, view, divs, divsTT, onset, offset);
 
-  auto res = checkNegativeUnatePair(builder, divs, divsTT, offset, arity);
-  if (res.first) {
-    builder.endSession();
-    return makeResubstitution(builder, iter, view, res.second);
+  if (checkUnatePair(builder, iter, view, divs,
+                     divsTT, offset, Negative, arity)) {
+    return true;
   }
-
-  res = checkPositiveUnatePair(builder, divs, divsTT, onset, arity);
-  if (res.first) {
-    builder.endSession();
-    return makeResubstitution(builder, iter, view, res.second);
-  }
-
-  builder.endSession();
-  return false;
+  return checkUnatePair(builder, iter, view, divs,
+                        divsTT, onset, Positive, arity);
 }
 
 static bool makeThreeResubstitution(SubnetBuilder &builder,
@@ -964,18 +1110,10 @@ static bool makeThreeResubstitution(SubnetBuilder &builder,
                                     const TruthTable &offset) {
 
   const size_t arity = view.getInNum();
-
-  auto res = checkNegativePairs(builder, divs, divsTT, offset, arity);
-  if (res.first) {
-    return makeResubstitution(builder, iter, view, res.second);
+  if (checkPairs(builder, iter, view, divs, divsTT, offset, Negative, arity)) {
+    return true;
   }
-
-  res = checkPositivePairs(builder, divs, divsTT, onset, arity);
-  if (res.first) {
-    return makeResubstitution(builder, iter, view, res.second);
-  }
-
-  return false;
+  return checkPairs(builder, iter, view, divs, divsTT, onset, Positive, arity);
 }
 
 //----------------------------------------------------------------------------//
@@ -997,10 +1135,9 @@ static void simulateCone(SubnetBuilder &builder,
                                           const bool isIn,
                                           const bool isOut,
                                           const size_t i) -> bool {
-      const auto tt = utils::getTruthTable<TruthTable>(
-          builder, arity, i, isIn, nIn++);
+      const auto tt = utils::getTruthTable<TTn>(builder, arity, i, isIn, nIn++);
       cellTables.push(std::move(tt));
-      utils::setTruthTable<TruthTable>(builder, i, cellTables.back());
+      utils::setTruthTable<TTn>(builder, i, cellTables.back());
       return true; // Continue traversal.
     });
   }
@@ -1014,8 +1151,8 @@ static void invertPivotTT(SubnetBuilder &builder,
   if (arity > 6) {
     cellTables.invertPivotTT();
   } else {
-    const auto inverted = ~utils::getTruthTable<utils::TT6>(builder, pivot);
-    utils::setTruthTable<utils::TT6>(builder, pivot, inverted);
+    const auto inverted = ~utils::getTruthTable<TT6>(builder, pivot);
+    utils::setTruthTable<TT6>(builder, pivot, inverted);
   }
 }
 
@@ -1037,15 +1174,14 @@ static TruthTables evaluateRoots(SubnetBuilder &builder,
       if (isIn) {
         return true; // Continue traversal.
       }
-      const auto tt = utils::getTruthTable<utils::TT6>(
-          builder, arity, i, isIn, 0);
-      utils::setTruthTable<utils::TT6>(builder, i, tt);
+      const auto tt = utils::getTruthTable<TT6>(builder, arity, i, isIn, 0);
+      utils::setTruthTable<TT6>(builder, i, tt);
       return true; // Continue traversal.
     });
 
     for (size_t i = 0; i < view.getOutNum(); ++i) {
-      const auto tt = utils::getTruthTable<utils::TT6>(builder, view.getOut(i));
-      result[i] = utils::convertTruthTable<utils::TT6>(tt, arity);
+      const auto tt = utils::getTruthTable<TT6>(builder, view.getOut(i));
+      result[i] = utils::convertTruthTable<TT6>(tt, arity);
     }
   } else {
     size_t nOuter = 0;
@@ -1057,13 +1193,13 @@ static TruthTables evaluateRoots(SubnetBuilder &builder,
       if (isIn) {
         return true; // Continue traversal.
       }
-      auto tt = utils::getTruthTable<utils::TTn>(builder, arity, i, isIn, 0);
+      auto tt = utils::getTruthTable<TTn>(builder, arity, i, isIn, 0);
       cellTables.setOuterTT(nOuter++, std::move(tt));
       return true; // Continue traversal.
     });
 
     for (size_t i = 0; i < view.getOutNum(); ++i) {
-      result[i] = utils::getTruthTable<utils::TTn>(builder, view.getOut(i));
+      result[i] = utils::getTruthTable<TTn>(builder, view.getOut(i));
     }
   }
 
@@ -1082,20 +1218,20 @@ static TruthTable computeCare(SubnetBuilder &builder,
                               const std::vector<size_t> &branches,
                               CellTables &cellTables) {
 
-  auto care = utils::getZeroTruthTable<utils::TTn>(arity);
+  auto care = utils::getZeroTruthTable<TTn>(arity);
 
   // Init branches.
   for (size_t i = 0; i < branches.size(); ++i) {
     if (arity <= 6) {
       const auto constant = ((status >> i) & 1ull) ?
-          utils::getOneTruthTable<utils::TT6>(arity):
-          utils::getZeroTruthTable<utils::TT6>(arity);
+          utils::getOneTruthTable<TT6>(arity):
+          utils::getZeroTruthTable<TT6>(arity);
 
-      utils::setTruthTable<utils::TT6>(builder, branches[i], constant);
+      utils::setTruthTable<TT6>(builder, branches[i], constant);
     } else {
       auto constant = ((status >> i) & 1ull) ?
-          utils::getOneTruthTable<utils::TTn>(arity):
-          utils::getZeroTruthTable<utils::TTn>(arity);
+          utils::getOneTruthTable<TTn>(arity):
+          utils::getZeroTruthTable<TTn>(arity);
 
       cellTables.setBranchTT(i, std::move(constant));
     }
@@ -1191,18 +1327,18 @@ static SubnetView getCareView(SubnetBuilder &builder,
   InOutMapping iomapping;
   if (k > 6) {
     for (size_t i = 0; i < branches.size(); ++i) {
-      auto zero = utils::getZeroTruthTable<utils::TTn>(k);
+      auto zero = utils::getZeroTruthTable<TTn>(k);
       builder.mark(branches[i]);
       iomapping.inputs.push_back(branches[i]);
       cellTables.pushBranch(std::move(zero));
-      utils::setTruthTable<utils::TTn>(builder, branches[i], cellTables.back());
+      utils::setTruthTable<TTn>(builder, branches[i], cellTables.back());
     }
   } else {
     for (size_t i = 0; i < branches.size(); ++i) {
-      const auto zero = utils::getZeroTruthTable<utils::TT6>(k);
+      const auto zero = utils::getZeroTruthTable<TT6>(k);
       builder.mark(branches[i]);
       iomapping.inputs.push_back(branches[i]);
-      utils::setTruthTable<utils::TT6>(builder, branches[i], zero);
+      utils::setTruthTable<TT6>(builder, branches[i], zero);
     }
   }
 
@@ -1231,9 +1367,9 @@ static void reserveOuters(const SubnetView &view,
     if (isIn) {
       return true; // Continue traversal.
     }
-    const auto zero = utils::getZeroTruthTable<utils::TTn>(arity);
+    const auto zero = utils::getZeroTruthTable<TTn>(arity);
     cellTables.pushOuter(std::move(zero));
-    utils::setTruthTable<utils::TTn>(parent, i, cellTables.back());
+    utils::setTruthTable<TTn>(parent, i, cellTables.back());
     return true; // Continue traversal.
   });
 }
@@ -1243,7 +1379,7 @@ static TruthTable computeCare(SubnetBuilder &builder,
                               const std::vector<size_t> &roots,
                               const std::vector<size_t> &branches,
                               uint64_t status,
-                              CellTables &cellTables) {
+                              CellTables &tables) {
 
   const size_t k = view.getInNum();
   const size_t pivot = view.getOut(0);
@@ -1252,20 +1388,19 @@ static TruthTable computeCare(SubnetBuilder &builder,
   const size_t innerID = markInner(builder, view);
 
   const auto careView = getCareView(builder, pivot, roots, branches,
-                                    k, cellTables, innerID);
+                                    k, tables, innerID);
 
   if (k > 6) {
-    reserveOuters(careView, cellTables, k);
+    reserveOuters(careView, tables, k);
   }
 
-  auto care = utils::getZeroTruthTable<utils::TTn>(k);
+  auto care = utils::getZeroTruthTable<TTn>(k);
 
   const size_t nSetBits = countSetBits(status >> 32);
   const size_t rounds = 1ull << nSetBits;
   for (uint64_t i = 0; i < rounds; ++i) {
     prepareStatus(status, i);
-    care |= computeCare(builder, status, careView,
-                        pivot, k, branches, cellTables);
+    care |= computeCare(builder, status, careView, pivot, k, branches, tables);
     if (kitty::is_const0(~care)) {
       break;
     }
@@ -1444,14 +1579,14 @@ static void getTarget(const SubnetBuilder *builderPtr,
                       TruthTable &offset) {
 
   if (arity > 6) {
-    onset = utils::getTruthTable<utils::TTn>(*builderPtr, pivot) & care;
-    offset = ~utils::getTruthTable<utils::TTn>(*builderPtr, pivot) & care;
+    onset = utils::getTruthTable<TTn>(*builderPtr, pivot) & care;
+    offset = ~utils::getTruthTable<TTn>(*builderPtr, pivot) & care;
     return;
   }
-  const auto tt = utils::getTruthTable<utils::TT6>(*builderPtr, pivot);
+  const auto tt = utils::getTruthTable<TT6>(*builderPtr, pivot);
 
-  onset = utils::convertTruthTable<utils::TT6>(tt, arity) & care;
-  offset = ~utils::convertTruthTable<utils::TT6>(tt, arity) & care;
+  onset = utils::convertTruthTable<TT6>(tt, arity) & care;
+  offset = ~utils::convertTruthTable<TT6>(tt, arity) & care;
 }
 
 static bool isAcceptable(const SubnetBuilder *builderPtr, size_t pivot) {
@@ -1535,23 +1670,23 @@ void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
     }
 
     const size_t maxGain = Subnet::get(mffc).size() - mffcMap.size();
-    bool flag = (maxGain == 1) && !zero;
-    if (flag || makeOneResubstitution(*builderPtr, iter, view,
-                                      divs, onset, offset)) {
+    bool skip = (maxGain == 1) && !zero;
+    if (skip || makeOneResubstitution(*builderPtr, iter, view,
+                                      divs, onset, offset, saveDepth)) {
       continue;
     }
 
     DivisorsTT divsTT;
     divsTT.reserve(maxDivisorsPairs);
 
-    flag = ((maxGain == 2) && !zero) || (maxGain == 1);
-    if (flag || makeTwoResubstitution(*builderPtr, iter, view, divs,
-                                      divsTT, onset, offset)) {
+    skip = ((maxGain == 2) && !zero) || (maxGain == 1);
+    if (skip || makeTwoResubstitution(*builderPtr, iter, view, divs,
+                                      divsTT, onset, offset, saveDepth)) {
       continue;
     }
 
-    flag = ((maxGain == 3) && !zero) || (maxGain == 2);
-    if (flag || makeThreeResubstitution(*builderPtr, iter, view, divs,
+    skip = ((maxGain == 3) && !zero) || (maxGain == 2);
+    if (skip || makeThreeResubstitution(*builderPtr, iter, view, divs,
                                         divsTT, onset, offset)) {
       continue;
     }

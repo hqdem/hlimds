@@ -273,6 +273,8 @@ static inline size_t getCellNum(const DesignBuilder &design) {
   for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
     const auto &subnet = Subnet::get(designBuilder->getSubnetID(i));
     nCell += subnet.getCellNum();
+    nCell -= subnet.getInNum();
+    nCell -= subnet.getOutNum();
   }
   return nCell;
 }
@@ -292,7 +294,8 @@ static void measureAndRun(const std::string &name, Func func) {
 
   const auto *sign = delta > 0 ? "+" : "";
 
-  const auto percent = std::abs(100.f * delta / oldCellNum);
+  const auto percent = oldCellNum != 0 ?
+      std::abs(100.f * delta / oldCellNum) : 0.f;
 
   printTime<clock>(name, start, end,
       /* prefix */ "  - ",

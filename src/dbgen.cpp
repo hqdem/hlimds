@@ -100,9 +100,10 @@ inline eda::gate::model::SubnetObject makeSubnet(
   return subnetObject;
 }
 
-inline eda::gate::model::SubnetObject synthesize(uint8_t k, uint64_t value) {
+inline eda::gate::model::SubnetObject synthesize(uint8_t k,
+                                                 const std::string &tt) {
   kitty::dynamic_truth_table func(k);
-  kitty::create_from_hex_string(func, toHexString(k, value));
+  kitty::create_from_hex_string(func, tt);
 
   percy::spec spec;
   spec.set_nr_out(1);
@@ -113,6 +114,10 @@ inline eda::gate::model::SubnetObject synthesize(uint8_t k, uint64_t value) {
   assert(result == percy::success);
 
   return makeSubnet(k, chain);
+}
+
+inline eda::gate::model::SubnetObject synthesize(uint8_t k, uint64_t value) {
+  return synthesize(k, toHexString(k, value));
 }
 
 void generateXagNpn4() {

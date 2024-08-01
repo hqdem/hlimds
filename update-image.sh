@@ -15,7 +15,7 @@ if [ -z "$UTOPIA_HOME" ]; then
 fi
 
 echo "Please enter the tag (name) of the new image:"
-echo "Image tag should be one word and contain only Lat. alphabet characters([a-zA-Z])"
+echo "Image tag should have no spaces"
 echo "Press \"Enter\" to use default image tag"
 read name
 
@@ -24,13 +24,8 @@ if [ -z "$name" ]; then
     echo "Default image tag used: $name"
 fi
 
-if [ $(echo "$name" | wc -w) -ne 1 ]; then
+if echo "$name" | grep -q ' '; then
     echo "Image tag should be one word!"
-    exit 1
-fi
-
-if [ echo "$name" | grep -q '[^a-zA-Z]' ]; then
-    echo "Image tag should be a word and contain only Lat. alphabet characters([a-zA-Z])!"
     exit 1
 fi
 
@@ -43,7 +38,7 @@ fi
 echo "Building base image for Utopia EDA..."
 docker build -f ${PWD}/Dockerfile.base -t $domain:$port/$container_registry:$basename ${UTOPIA_HOME}
 if [ $? -ne 0 ]; then
-    echo "Updating errors occurred!"
+    echo "Building errors occurred!"
     exit 1
 fi
 docker push $domain:$port/$container_registry:$basename
@@ -54,7 +49,7 @@ fi
 echo "Building developers' image for Utopia EDA..."
 docker build -f ${PWD}/Dockerfile.dev -t $domain:$port/$container_registry:$name ${UTOPIA_HOME}
 if [ $? -ne 0 ]; then
-    echo "Updating errors occurred!"
+    echo "Building errors occurred!"
     exit 1
 fi
 docker push $domain:$port/$container_registry:$name
@@ -63,3 +58,15 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 echo "Images are successfully updated and uploaded."
+echo "Do you want to save image? (Y/n)"
+read answ
+if [ $(echo "$answ" | grep '^[nнNН]') ]; then
+  docker rmi $domain:$port/$container_registry:$basename
+  if [ $? -ne 0 ]; then
+    echo "Deleting errors occurred!"
+    exit 1
+  fi
+  echo "Image successfully deleted"
+  exit 0
+fi
+echo "Image successfully saved"

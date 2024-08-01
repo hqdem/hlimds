@@ -46,13 +46,13 @@ void runResubstitutor(SubnetID subnetId) {
   // Builder for optimization.
   auto builder = std::make_shared<SubnetBuilder>(subnetId);
   // Area optimization.
-  Resubstitutor resub("rs");
+  Resubstitutor resub("rs", 8, 3, false, false);
   resub.transform(builder);
   auto optimizedId = builder->make(true);
   const Subnet &optimized = Subnet::get(optimizedId);
 
-  std::cout << "Before: " << subnet.size() << std::endl;
-  std::cout << "After: " << optimized.size() << std::endl;
+  std::cout << "Size before: " << subnet.size() << std::endl;
+  std::cout << "Size after: " << optimized.size() << std::endl;
 
   EXPECT_TRUE(optimized.size() <= subnet.size());
 

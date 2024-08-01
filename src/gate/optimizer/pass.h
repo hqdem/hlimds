@@ -12,14 +12,18 @@
 #include "gate/analyzer/probabilistic_estimate.h"
 #include "gate/optimizer/associative_balancer.h"
 #include "gate/optimizer/design_transformer.h"
+#include "gate/optimizer/lazy_refactorer.h"
 #include "gate/optimizer/mffc.h"
 #include "gate/optimizer/reconvergence_cut.h"
 #include "gate/optimizer/refactorer.h"
 #include "gate/optimizer/resubstitutor.h"
 #include "gate/optimizer/rewriter.h"
 #include "gate/optimizer/synthesis/abc_npn4.h"
+#include "gate/optimizer/synthesis/associative_reordering.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/aigmapper.h"
+#include "gate/model/subnetview.h"
+#include "gate/optimizer/lazy_refactorer.h"
 
 #include <cstdint>
 #include <functional>
@@ -173,6 +177,36 @@ inline SubnetPass rfp() {
                                       &replacePredicate,
                                       &weightCalculator,
                                       &weightModifier);
+}
+
+inline SubnetPass lrfp() {
+
+  using Resynthesizer = Resynthesizer<SubnetBuilder>;
+
+  static synthesis::AssociativeReordering ar;
+  static Resynthesizer resynthesizer(ar);
+
+  static LazyRefactorer::WeightCalculator weightCalculator = 
+      [](SubnetBuilder & builder, 
+         const std::vector<float> &inputWeights) {
+        static ProbEstimator estimator;
+        const auto weights = estimator.estimateProbs(builder, inputWeights);
+        
+        for (auto it{builder.begin()}; it != builder.end(); ++it) {
+          builder.setWeight(*it, weights[*it]);
+        }
+      };
+  static LazyRefactorer::CellWeightModifier weightModifier = 
+      [](float p) { return 2 * p * (1.f - p); };
+
+  static LazyRefactorer::ConeConstructor coneConstructor = 
+      LazyRefactorer::twoLvlBldr;
+
+  return std::make_shared<LazyRefactorer>("lrfp", 
+                                          resynthesizer, 
+                                          &coneConstructor,
+                                          &weightCalculator, 
+                                          &weightModifier);
 }
 
 //===----------------------------------------------------------------------===//

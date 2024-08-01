@@ -35,6 +35,8 @@ add_library(Gate OBJECT
   optimizer/associative_balancer.cpp
   optimizer/criterion/cost_function.cpp
   optimizer/cut_extractor.cpp
+  optimizer/conflict_graph.cpp
+  optimizer/lazy_refactorer.cpp
   optimizer/mffc.cpp
   optimizer/npn.cpp
   optimizer/npndb.cpp
@@ -49,6 +51,7 @@ add_library(Gate OBJECT
   optimizer/synthesis/abc_npn4.cpp
   optimizer/synthesis/akers.cpp
   optimizer/synthesis/algebraic_factor.cpp
+  optimizer/synthesis/associative_reordering.cpp
   optimizer/synthesis/bidecomposition.cpp
   optimizer/synthesis/cascade.cpp
   optimizer/synthesis/de_micheli.cpp

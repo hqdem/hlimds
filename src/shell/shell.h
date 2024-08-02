@@ -132,7 +132,7 @@ struct UtopiaCommand {
     const auto status = run(interp, argc, argv);
     const auto end = clock::now();
 
-    printTime<clock>(fmt::format("{}(returned={})", name, status),
+    printTime<clock>(fmt::format("{} [returned={}]", name, status),
         start, end, "> ");
     return status;
   }

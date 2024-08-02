@@ -25,10 +25,10 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
 
     UTOPIA_ERROR_IF_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
+    UTOPIA_ERROR_IF_NO_FILES(interp, app);
 
     const std::string fileName = app.remaining().at(0);
-    UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
+    UTOPIA_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
     if (frontend == "yosys") {
       YosysToModel2Config cfg;

@@ -25,7 +25,7 @@ struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
     using OutType = eda::gate::optimizer::OutType;
 
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
+    UTOPIA_ERROR_IF_NO_FILES(interp, app);
 
     eda::gate::optimizer::NPNDBConfig config;
     config.dbPath = dbPath;

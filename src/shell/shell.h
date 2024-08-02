@@ -51,11 +51,11 @@
   UTOPIA_ERROR_IF(interp, designBuilder,\
       "design has been already loaded")
 
-#define UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app)\
+#define UTOPIA_ERROR_IF_NO_FILES(interp, app)\
   UTOPIA_ERROR_IF(interp, app.remaining().empty(),\
-      "no input files")
+      "no file(s) specified")
 
-#define UTOPIA_ERROR_IF_NO_FILE(interp, fileName)\
+#define UTOPIA_ERROR_IF_FILE_NOT_EXIST(interp, fileName)\
   UTOPIA_ERROR_IF(interp, !std::filesystem::exists(fileName),\
       fmt::format("file '{}' does not exist", fileName))
 
@@ -132,7 +132,7 @@ struct UtopiaCommand {
     const auto status = run(interp, argc, argv);
     const auto end = clock::now();
 
-    printTime<clock>(fmt::format("{} [returned={}]", name, status),
+    printTime<clock>(fmt::format("{} [returned {}]", name, status),
         start, end, "> ");
     return status;
   }

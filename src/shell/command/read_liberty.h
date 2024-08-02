@@ -19,10 +19,10 @@ struct ReadLibertyCommand final : public UtopiaCommandBase<ReadLibertyCommand> {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-    UTOPIA_ERROR_IF_NO_INPUT_FILES(interp, app);
+    UTOPIA_ERROR_IF_NO_FILES(interp, app);
 
     const std::string fileName = app.remaining().at(0);
-    UTOPIA_ERROR_IF_NO_FILE(interp, fileName);
+    UTOPIA_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
     eda::gate::library::LibraryParser::get().loadLibrary(fileName);
     return TCL_OK;

@@ -22,8 +22,6 @@
 #include "gate/optimizer/synthesis/associative_reordering.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/aigmapper.h"
-#include "gate/model/subnetview.h"
-#include "gate/optimizer/lazy_refactorer.h"
 
 #include <cstdint>
 #include <functional>

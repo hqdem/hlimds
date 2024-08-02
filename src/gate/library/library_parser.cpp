@@ -17,8 +17,7 @@ void LibraryParser::loadLibrary(const path &filename) {
 
   this->filename = filename;
   file = fopen(filename.c_str(), "rb");
-  ast = tokParser.parseLibrary(file,
-                               filename.c_str());
+  ast = tokParser.parseLibrary(file, filename.c_str());
 
   AstParser parser(library, tokParser);
   parser.run(*ast);
@@ -35,4 +34,5 @@ bool LibraryParser::isInit() {
 Library &LibraryParser::getLibrary() {
   return library;
 }
+
 } // namespace eda::gate::library

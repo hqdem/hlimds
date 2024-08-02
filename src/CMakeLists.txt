@@ -40,7 +40,9 @@ add_subdirectory(util)
 add_subdirectory(gate)
 add_subdirectory(rtl)
 
-add_library(Shell OBJECT shell.cpp)
+add_library(Shell OBJECT
+  shell/shell.cpp
+)
 add_library(Utopia::Shell ALIAS Shell)
 
 target_include_directories(Shell

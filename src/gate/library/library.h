@@ -8,6 +8,7 @@
 
 #pragma once
 
+// FIXME: fix includes!
 #include "gate/model/celltype.h"
 #include "gate/model/subnet.h"
 #include "util/singleton.h"

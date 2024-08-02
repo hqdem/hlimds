@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <easylogging++.h>
 

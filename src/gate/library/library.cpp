@@ -11,6 +11,7 @@
 #include "gate/optimizer/synthesis/isop.h"
 
 namespace eda::gate::library {
+
 using CellTypeID = model::CellTypeID;
 using MinatoMorrealeAlg = optimizer::synthesis::MMSynthesizer;
 

@@ -132,9 +132,13 @@ struct UtopiaCommand {
     const auto status = run(interp, argc, argv);
     const auto end = clock::now();
 
-    printTime<clock>(fmt::format("{}({})", name, status), start, end, "> ");
+    printTime<clock>(fmt::format("{}(returned={})", name, status),
+        start, end, "> ");
     return status;
   }
+
+  /// Returns a command processor pointer to be used in Tcl_CreateCommand.
+  virtual Tcl_CmdProc *getCmd() = 0;
 
   void printHelp(std::ostream &out) const {
     out << app.help() << std::flush;
@@ -146,6 +150,26 @@ struct UtopiaCommand {
   UtopiaShell *shell;
 
   CLI::App app;
+};
+
+/*
+ * @brief Utopia EDA shell command base class.
+ */
+template <typename Command, typename BaseCommand = UtopiaCommand>
+struct UtopiaCommandBase : public BaseCommand,
+                           public eda::util::Singleton<Command> {
+  UtopiaCommandBase(const char *name, const char *desc):
+      BaseCommand(name, desc) {}
+
+  Tcl_CmdProc *getCmd() override {
+    return [](ClientData,
+              Tcl_Interp *interp,
+              int argc,
+              const char *argv[]) -> int {
+      auto &cmd = Command::get();
+      return cmd.runEx(interp, argc, argv);
+    };
+  }
 };
 
 /**
@@ -183,6 +207,17 @@ public:
     out << std::endl;
     out << "Type 'help <command>' for more information on a command.";
     out << std::endl << std::flush;
+  }
+
+  void registerCommands(Tcl_Interp *interp) const {
+    for (const auto &[name, command] : commands) {
+      auto *proc = command->getCmd();
+
+      if (proc) {
+        // Otherwise use the default processor (e.g. exit).
+        Tcl_CreateCommand(interp, name.c_str(), proc, nullptr, nullptr);
+      }
+    }
   }
 
   virtual ~UtopiaShell() {}

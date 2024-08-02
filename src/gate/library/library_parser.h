@@ -10,6 +10,7 @@
 
 #include "util/singleton.h"
 
+// FIXME: fix includes!!!
 #include <kitty/print.hpp>
 
 #include <readcells/ast.h>
@@ -17,7 +18,6 @@
 #include <readcells/groups.h>
 #include <readcells/token_parser.h>
 
-#include <cstdio>
 #include <filesystem>
 #include <memory.h>
 #include <regex>
@@ -26,6 +26,8 @@
 namespace eda::gate::library {
 
 class LibraryParser : public util::Singleton<LibraryParser> {
+  friend class Singleton<LibraryParser>;
+
   using path = std::filesystem::path;
 
 public:
@@ -42,7 +44,6 @@ private:
   path filename;
 
   LibraryParser() : Singleton() {}
-  friend class Singleton<LibraryParser>;
 };
 
 } // namespace eda::gate::library

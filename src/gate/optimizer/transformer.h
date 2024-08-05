@@ -11,6 +11,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace eda::gate::optimizer {
 

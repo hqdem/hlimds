@@ -3,6 +3,7 @@ add_library(Gate OBJECT
   analyzer/probabilistic_estimate.cpp
   analyzer/simulation_estimator.cpp
   analyzer/switching_activity.cpp
+  criterion/cost_function.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
   debugger/fraig_checker.cpp
@@ -33,7 +34,6 @@ add_library(Gate OBJECT
   library/library_parser.cpp
   library/library_characteristics.cpp
   optimizer/associative_balancer.cpp
-  optimizer/criterion/cost_function.cpp
   optimizer/cut_extractor.cpp
   optimizer/conflict_graph.cpp
   optimizer/lazy_refactorer.cpp

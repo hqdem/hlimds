@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "gate/criterion/criterion.h"
+#include "gate/criterion/solution_space.h"
 #include "gate/model/subnet.h"
-#include "gate/optimizer/criterion/criterion.h"
-#include "gate/optimizer/criterion/solution_space.h"
 #include "gate/optimizer/cut_extractor.h"
 #include "gate/optimizer/subnet_transformer.h"
 

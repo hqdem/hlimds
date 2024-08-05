@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/optimizer/criterion/cost_function.h"
+#include "gate/criterion/cost_function.h"
 
 #include <cassert>
 #include <cstddef>

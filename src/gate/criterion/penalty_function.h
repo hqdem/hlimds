@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "gate/optimizer/criterion/constraints.h"
-#include "gate/optimizer/criterion/cost_function.h"
+#include "gate/criterion/constraints.h"
+#include "gate/criterion/cost_function.h"
 
 #include <cmath>
 #include <functional>

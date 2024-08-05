@@ -27,10 +27,9 @@ WLM::WLM() :
   wire_load_name("sky"),
   r(fudge * 0.08), c(fudge * 0.0002),
   slope(8.3631) {
-  /* Capacitance is 0.02ff/micron for avg metal         */
-  /* Resistance is 80 m-ohm/square, in kohm units     */
-  /* (remember that our capacitance unit is 1.0pf)     */
-
+  // Capacitance is 0.02ff/micron for avg metal
+  // Resistance is 80 m-ohm/square, in kohm units
+  // (remember that our capacitance unit is 1.0pf)
   setWireLoadModel(wire_load_name);
 }
 
@@ -117,12 +116,11 @@ void WLM::setWireLoadModel(const std::string &wlm_name) {
 float WLM::getLength(const std::size_t &fanoutCount) const {
   if ((fanoutCount > 0) && (fanoutCount < 6))
     return fanout_length[fanoutCount-1].second;
-  else if (fanoutCount > 6)
+  if (fanoutCount > 6)
     return fanout_length[5].second + (fanoutCount - 6) * slope;
-  else {
-    std::cerr << "WLM: wrong name\n";
-    assert(false);
-  }
+
+  std::cerr << "WLM: wrong name\n";
+  assert(false);
 
   return 0;
 }
@@ -134,14 +132,13 @@ float WLM::getFanoutCap(const std::size_t &fanoutCount) const {
 float WLM::getFanoutRes(const std::size_t &fanoutCount) const {
   if ((fanoutCount > 0) && (fanoutCount < 6))
     return fanout_resistance[fanoutCount-1].second;
-  else if (fanoutCount > 6) {
+  if (fanoutCount > 6) {
     float length = fanout_length[5].second + (fanoutCount - 6) * slope;
     return length * r;
   }
-  else {
-    std::cerr << "WLM: wrong name\n";
-    assert(false);
-  }
+
+  std::cerr << "WLM: wrong name\n";
+  assert(false);
 
   return 0;
 }
@@ -437,4 +434,5 @@ float NLDM::delayEstimation(Library &library, const std::string &cellTypeName,
     timingSense, slew, delay, cap);
   return slew;
 }
+
 } // namespace eda::gate::estimator

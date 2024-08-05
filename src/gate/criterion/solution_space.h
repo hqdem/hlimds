@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/optimizer/criterion/criterion.h"
+#include "gate/criterion/criterion.h"
 
 #include <cassert>
 #include <cmath>

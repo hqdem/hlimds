@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "gate/criterion/criterion.h"
 #include "gate/estimator/simple_time_model.h"
 #include "gate/library/library_parser.h"
 #include "gate/model/subnet.h"
-#include "gate/optimizer/criterion/criterion.h"
 #include "gate/techmapper/subnet_techmapper.h"
 
 #include <algorithm>

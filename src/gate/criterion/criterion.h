@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "gate/optimizer/criterion/constraints.h"
-#include "gate/optimizer/criterion/cost_function.h"
-#include "gate/optimizer/criterion/penalty_function.h"
+#include "gate/criterion/constraints.h"
+#include "gate/criterion/cost_function.h"
+#include "gate/criterion/penalty_function.h"
 
 namespace eda::gate::optimizer {
 

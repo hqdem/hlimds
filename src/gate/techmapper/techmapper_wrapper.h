@@ -13,7 +13,7 @@
 namespace eda::gate::techmapper {
 
 std::shared_ptr<model::SubnetBuilder> techMap(
-  const optimizer::Objective objective,
+  const criterion::Objective objective,
   const std::shared_ptr<model::SubnetBuilder> &builder
 );
 

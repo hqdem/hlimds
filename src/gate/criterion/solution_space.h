@@ -14,7 +14,7 @@
 #include <cmath>
 #include <type_traits>
 
-namespace eda::gate::optimizer {
+namespace eda::gate::criterion {
 
 static inline std::pair<float, float> getProgressRange(float progress) {
   constexpr float t{2.0};
@@ -127,4 +127,4 @@ private:
   Solution best;
 };
 
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::criterion

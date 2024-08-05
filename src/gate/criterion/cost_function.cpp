@@ -11,7 +11,7 @@
 #include <cassert>
 #include <cmath>
 
-namespace eda::gate::optimizer {
+namespace eda::gate::criterion {
 
 const CostVector CostVector::Zero{0.0, 0.0, 0.0};
 
@@ -33,4 +33,4 @@ CostVector CostVector::truncate(const float min, const float max) const {
   return result;
 }
 
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::criterion

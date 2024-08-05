@@ -61,12 +61,13 @@ const SubnetID commonPart(
     const float maxArea,
     const float maxDelay,
     const float maxPower) {
-  optimizer::Objective objective(optimizer::AREA);
-  optimizer::Constraints constraints = {
-    optimizer::Constraint(optimizer::AREA, maxArea),
-    optimizer::Constraint(optimizer::DELAY, maxDelay),
-    optimizer::Constraint(optimizer::POWER, maxPower)};
-  optimizer::Criterion criterion{objective, constraints};
+  criterion::Objective objective(criterion::AREA);
+  criterion::Constraints constraints = {
+    criterion::Constraint(criterion::AREA, maxArea),
+    criterion::Constraint(criterion::DELAY, maxDelay),
+    criterion::Constraint(criterion::POWER, maxPower)
+  };
+  criterion::Criterion criterion{objective, constraints};
 
   // funcMatcher is created once the library is loaded.
   if (funcMatcher == nullptr) {
@@ -113,7 +114,7 @@ TEST(SubnetTechMapperTest, SimpleSubnet) {
 
   builderPtr->addOutput(idx4);
 
-  SubnetID subnetID = builderPtr->make();
+  const auto subnetID = builderPtr->make();
   const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
 
   checkEQ(subnetID, mappedSubnetID);
@@ -129,7 +130,7 @@ TEST(SubnetTechMapperTest, SimpleANDSubnet) {
 
   builderPtr->addOutput(idx2);
 
-  SubnetID subnetID = builderPtr->make();
+  const auto subnetID = builderPtr->make();
   const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
 
   checkEQ(subnetID, mappedSubnetID);
@@ -149,7 +150,7 @@ TEST(SubnetTechMapperTest, FourInANDSubnet) {
 
   builderPtr->addOutput(idx6);
 
-  SubnetID subnetID = builderPtr->make();
+  const auto subnetID = builderPtr->make();
   const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
 
   checkEQ(subnetID, mappedSubnetID);

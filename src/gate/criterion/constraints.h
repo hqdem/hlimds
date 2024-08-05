@@ -14,7 +14,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace eda::gate::optimizer {
+namespace eda::gate::criterion {
 
 /// @brief Min-max constraint for an indicator.
 struct Constraint final {
@@ -70,4 +70,4 @@ inline CostVector getMaxVector(const Constraints &constraints) {
   return result;
 }
 
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::criterion

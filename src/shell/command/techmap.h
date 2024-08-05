@@ -12,8 +12,8 @@
 #include "shell/shell.h"
 
 struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
-  using Indicator = eda::gate::optimizer::Indicator;
-  using Objective = eda::gate::optimizer::Objective;
+  using Indicator = eda::gate::criterion::Indicator;
+  using Objective = eda::gate::criterion::Objective;
 
   TechMapCommand(): UtopiaCommandBase<TechMapCommand>(
       "techmap", "Performs technology mapping") {

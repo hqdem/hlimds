@@ -12,7 +12,7 @@
 #include <functional>
 #include <valarray>
 
-namespace eda::gate::optimizer {
+namespace eda::gate::criterion {
 
 /// @brief Cost datatype (must meet the NumericType requirements).
 using Cost = float;
@@ -131,4 +131,4 @@ struct Objective final {
   const CostFunction function;
 };
 
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::criterion

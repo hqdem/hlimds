@@ -12,7 +12,7 @@
 #include "gate/criterion/cost_function.h"
 #include "gate/criterion/penalty_function.h"
 
-namespace eda::gate::optimizer {
+namespace eda::gate::criterion {
 
 /// @brief Optimization criterion w/ constraints.
 struct Criterion final {
@@ -70,4 +70,4 @@ struct Criterion final {
   const PenaltyFunction penalty;
 };
 
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::criterion

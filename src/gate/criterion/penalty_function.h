@@ -14,7 +14,7 @@
 #include <cmath>
 #include <functional>
 
-namespace eda::gate::optimizer {
+namespace eda::gate::criterion {
 
 /// Returns the coefficient to be multiplied to the cost.
 using PenaltyFunction = std::function<Cost(const CostVector &vector,
@@ -41,4 +41,4 @@ inline Cost quadraticPenalty(const CostVector &vector,
   return 1.0 + std::pow(normalized.vector, power).sum();
 }
 
-} // namespace eda::gate::optimizer
+} // namespace eda::gate::criterion

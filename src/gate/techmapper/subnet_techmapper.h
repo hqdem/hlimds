@@ -44,19 +44,19 @@ public:
                         const model::SubnetBuilder &,
                         const optimizer::CutExtractor::Cut &)>;
   using CellEstimator =
-      std::function<optimizer::CostVector(
+      std::function<criterion::CostVector(
                         const model::CellTypeID,
                         const Context &)>;
   using CostAggregator =
-      std::function<optimizer::CostVector(
-                        const std::vector<optimizer::CostVector> &)>;
+      std::function<criterion::CostVector(
+                        const std::vector<criterion::CostVector> &)>;
   using CostPropagator =
-      std::function<optimizer::CostVector(
-                        const optimizer::CostVector &,
+      std::function<criterion::CostVector(
+                        const criterion::CostVector &,
                         const uint32_t fanout)>;
 
   SubnetTechMapper(const std::string &name,
-                   const optimizer::Criterion &criterion,
+                   const criterion::Criterion &criterion,
                    const CutProvider cutProvider,
                    const MatchFinder matchFinder,
                    const CellEstimator cellEstimator,
@@ -71,7 +71,7 @@ public:
       costPropagator(costPropagator) {}
 
   SubnetTechMapper(const std::string &name,
-                   const optimizer::Criterion &criterion,
+                   const criterion::Criterion &criterion,
                    const CutProvider cutProvider,
                    const MatchFinder matchFinder,
                    const CellEstimator cellEstimator);
@@ -80,7 +80,7 @@ public:
       const optimizer::SubnetBuilderPtr &builder) const override;
 
 private:
-  const optimizer::Criterion &criterion;
+  const criterion::Criterion &criterion;
   const CutProvider cutProvider;
   const MatchFinder matchFinder;
   const CellEstimator cellEstimator;

@@ -20,7 +20,6 @@
 
 namespace eda::gate::estimator {
 
-using CostVector = optimizer::CostVector;
 using LibraryParser = library::LibraryParser;
 
 inline bool shouldSkipCell(const model::Subnet::Cell &cell) {
@@ -103,7 +102,7 @@ inline float getArrivalTime(model::SubnetID subnetID) {
   return maxArrivalTime;
 }
 
-inline CostVector getPPA(
+inline criterion::CostVector getPPA(
   const model::CellTypeID cellTypeID, const techmapper::SubnetTechMapper::Context &context) {
   const auto &cellType = model::CellType::get(cellTypeID);
   const auto name = cellType.getName();
@@ -112,10 +111,10 @@ inline CostVector getPPA(
   const auto delay = getDelay(cellType, 0, 0); // TODO input transition time and output capacitance should be taken from Context
   const auto power = getLeakagePower(cellType);
 
-  optimizer::CostVector result;
-  result[optimizer::AREA] = area;
-  result[optimizer::DELAY] = delay;
-  result[optimizer::POWER] = power;
+  criterion::CostVector result;
+  result[criterion::AREA] = area;
+  result[criterion::DELAY] = delay;
+  result[criterion::POWER] = power;
   return result;
 }
 

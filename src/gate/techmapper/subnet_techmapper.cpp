@@ -15,17 +15,17 @@
 
 namespace eda::gate::techmapper {
 
-using CellSpace = optimizer::SolutionSpace<SubnetTechMapper::Match>;
+using CellSpace = criterion::SolutionSpace<SubnetTechMapper::Match>;
 using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
 
-static inline const optimizer::CostVector &getCostVector(
+static inline const criterion::CostVector &getCostVector(
     const SubnetSpace &space, const size_t entryID) {
   return space[entryID]->getBest().vector;
 }
 
-static inline std::vector<optimizer::CostVector> getCostVectors(
+static inline std::vector<criterion::CostVector> getCostVectors(
     const SubnetSpace &space, const optimizer::CutExtractor::Cut &cut) {
-  std::vector<optimizer::CostVector> vectors;
+  std::vector<criterion::CostVector> vectors;
   vectors.reserve(cut.entryIdxs.size());
 
   for (const auto entryID : cut.entryIdxs) {
@@ -35,36 +35,36 @@ static inline std::vector<optimizer::CostVector> getCostVectors(
   return vectors;
 }
 
-static optimizer::CostVector defaultCostAggregator(
-   const std::vector<optimizer::CostVector> &vectors) {
-  optimizer::CostVector result = optimizer::CostVector::Zero;
+static criterion::CostVector defaultCostAggregator(
+   const std::vector<criterion::CostVector> &vectors) {
+  criterion::CostVector result = criterion::CostVector::Zero;
 
   for (size_t i = 0; i < vectors.size(); ++i) {
     const auto &vector = vectors[i];
-    assert(vector.size() >= optimizer::CostVector::DefaultSize);
+    assert(vector.size() >= criterion::CostVector::DefaultSize);
 
-    result[optimizer::AREA] += vector[optimizer::AREA];
-    result[optimizer::DELAY] = std::max(result[optimizer::DELAY],
-                                        vector[optimizer::DELAY]);
-    result[optimizer::POWER] += vector[optimizer::POWER];
+    result[criterion::AREA] += vector[criterion::AREA];
+    result[criterion::DELAY] = std::max(result[criterion::DELAY],
+                                        vector[criterion::DELAY]);
+    result[criterion::POWER] += vector[criterion::POWER];
   }
 
   return result;
 }
 
-static optimizer::CostVector defaultCostPropagator(
-    const optimizer::CostVector &vector, const uint32_t fanout) {
-  optimizer::CostVector result;
+static criterion::CostVector defaultCostPropagator(
+    const criterion::CostVector &vector, const uint32_t fanout) {
+  criterion::CostVector result;
 
-  result[optimizer::AREA]  = vector[optimizer::AREA] / fanout;
-  result[optimizer::DELAY] = vector[optimizer::DELAY];
-  result[optimizer::POWER] = vector[optimizer::POWER] / fanout;
+  result[criterion::AREA]  = vector[criterion::AREA] / fanout;
+  result[criterion::DELAY] = vector[criterion::DELAY];
+  result[criterion::POWER] = vector[criterion::POWER] / fanout;
 
   return result;
 }
 
 SubnetTechMapper::SubnetTechMapper(const std::string &name,
-                                   const optimizer::Criterion &criterion,
+                                   const criterion::Criterion &criterion,
                                    const CutProvider cutProvider,
                                    const MatchFinder matchFinder,
                                    const CellEstimator cellEstimator):
@@ -170,7 +170,7 @@ optimizer::SubnetBuilderPtr SubnetTechMapper::map(
     const optimizer::SubnetBuilderPtr &builder) const {
   // Partial solutions for the subnet cells.
   SubnetSpace space(builder->getMaxIdx() + 1);
-  optimizer::CostVector tension{1.0, 1.0, 1.0};
+  criterion::CostVector tension{1.0, 1.0, 1.0};
 
   // Subnet outputs to be filled in the loop below.
   std::unordered_set<size_t> outputs;
@@ -196,7 +196,7 @@ RECOVERY:
     // Handle the input cells.
     if (cell.isIn()) {
       const Match match{model::getCellTypeID(model::IN), {}, false};
-      space[entryID]->add(match, optimizer::CostVector::Zero);
+      space[entryID]->add(match, criterion::CostVector::Zero);
       continue;
     }
 

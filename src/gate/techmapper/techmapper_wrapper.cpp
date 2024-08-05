@@ -41,29 +41,21 @@ static std::vector<SubnetTechMapper::Match> matchFinder(
   return funcMatcher->match(builder, cut);
 }
 
-/*void printVerilog(const SubnetID subnet, const std::string &fileName) {
-  ModelPrinter& verilogPrinter =
-      ModelPrinter::getPrinter(ModelPrinter::VERILOG);
-  std::ofstream outFile(fileName);
-  verilogPrinter.print(outFile, Subnet::get(subnet), "techmappedNet");
-  outFile.close();
-}*/
-
 std::shared_ptr<SubnetBuilder> techMap(
-    const optimizer::Objective objective,
+    const criterion::Objective objective,
     const std::shared_ptr<SubnetBuilder> &builder) {
   // Set constraints
-  optimizer::Constraints constraints = {
-      optimizer::Constraint(optimizer::AREA, 10000),
-      optimizer::Constraint(optimizer::DELAY, 10000),
-      optimizer::Constraint(optimizer::POWER, 10000)};
-  optimizer::Criterion criterion{objective, constraints};
+  criterion::Constraints constraints = {
+      criterion::Constraint(criterion::AREA, 10000),   // FIXME:
+      criterion::Constraint(criterion::DELAY, 10000),  // FIXME:
+      criterion::Constraint(criterion::POWER, 10000)}; // FIXME:
+  criterion::Criterion criterion{objective, constraints};
 
   // Set matcher type
   funcMatcher = Matcher<FuncMatcher, std::size_t>::create(
     library::SCLibrary::get().getCombCells());
 
-  // Techmapping.
+  // Techmapping
   SubnetTechMapper *techmapper =
       new SubnetTechMapper("SubnetTechMapper", criterion, cutProvider,
                            matchFinder, estimator::getPPA);
@@ -81,9 +73,9 @@ std::shared_ptr<SubnetBuilder> techMap(
 
   if (builderTechmap != nullptr) {
     const auto mappedSubnetID = builderTechmap->make();
-    //printVerilog(mappedSubnetID, config.outNetFileName);
     printStatistics(mappedSubnetID);
   }
+
   return builderTechmap;
 }
 } // namespace eda::gate::techmapper

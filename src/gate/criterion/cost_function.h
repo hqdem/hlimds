@@ -27,10 +27,13 @@ struct CostVector final {
 
   explicit CostVector():
       vector(DefaultSize) {}
+
   explicit CostVector(const std::valarray<Cost> &vector):
       vector(vector) {}
+
   CostVector(const Cost c1, const Cost c2, const Cost c3):
       CostVector(std::valarray<Cost>{c1, c2, c3}) {}
+
   CostVector(const CostVector &vector):
       CostVector(vector.vector) {}
 

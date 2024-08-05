@@ -234,15 +234,15 @@ float LibraryCharacteristics::getValue(const LookupTable* lut,
 
       if (value == param) {
         searParamIndices.at(paramsIndices.size() - 1) = i;
-      break;
+        break;
       }
-      else if (value < param) {
-        paramsID.lowerID = i;
-      }
-      else if (value > param) {
+
+      if (value > param) {
         paramsID.upperID = i;
-      break;
+        break;
       }
+
+      paramsID.lowerID = i;
     }
     paramsIndices.push_back(paramsID);
     axisIterator++;
@@ -258,9 +258,9 @@ float LibraryCharacteristics::getValue(const LookupTable* lut,
   
   if (needInter) {
     return getLutInterValue(lut, paramsIndices, searchParams);
-  } else {
-    return getLutValue(lut, searParamIndices);
   }
+
+  return getLutValue(lut, searParamIndices);
 }
 
 LibraryCharacteristics::Delay LibraryCharacteristics::getDelay(

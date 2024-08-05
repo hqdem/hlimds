@@ -448,13 +448,11 @@ model::SubnetObject AssociativeReordering::synthesize(
   }
  
   if (std::fabs(max) <= epsilon) {
-
     return model::SubnetObject{model::OBJ_NULL_ID};
-  } else {
-
-    SubnetView copyView(builder);
-    copyView.getSubnet().builder().replace(*rhs, goodRhsToLhs);
-    return model::SubnetObject(copyView.getSubnet().builder().make());
   }
+
+  SubnetView copyView(builder);
+  copyView.getSubnet().builder().replace(*rhs, goodRhsToLhs);
+  return model::SubnetObject(copyView.getSubnet().builder().make());
 }
 } // namespace eda::gate::optimizer::synthesis

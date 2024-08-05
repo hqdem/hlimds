@@ -12,7 +12,7 @@
 #include "shell/shell.h"
 
 struct ReadGraphMlCommand final : public UtopiaCommandBase<ReadGraphMlCommand> {
-  ReadGraphMlCommand(): UtopiaCommandBase<ReadGraphMlCommand>(
+  ReadGraphMlCommand(): UtopiaCommandBase(
       "read_graphml", "Reads a design from a GraphML file") {
     app.allow_extras();
   }

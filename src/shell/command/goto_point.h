@@ -12,7 +12,7 @@
 
 struct GotoPointCommand final :
     public UtopiaCommandBase<GotoPointCommand> {
-  GotoPointCommand(): UtopiaCommandBase<GotoPointCommand>(
+  GotoPointCommand(): UtopiaCommandBase(
       "goto_point", "Rolls back to a checkpoint") {
     app.allow_extras();
   }

@@ -11,7 +11,7 @@
 #include "shell/shell.h"
 
 struct SavePointCommand final : public UtopiaCommandBase<SavePointCommand> {
-  SavePointCommand(): UtopiaCommandBase<SavePointCommand>(
+  SavePointCommand(): UtopiaCommandBase(
       "save_point", "Saves the design checkpoint") {
     app.allow_extras();
   }

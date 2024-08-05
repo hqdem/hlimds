@@ -12,7 +12,7 @@
 #include "shell/shell.h"
 
 struct ReadLibertyCommand final : public UtopiaCommandBase<ReadLibertyCommand> {
-  ReadLibertyCommand(): UtopiaCommandBase<ReadLibertyCommand>(
+  ReadLibertyCommand(): UtopiaCommandBase(
       "read_liberty", "Reads a library from a Liberty file") {
     app.allow_extras();
   }

@@ -58,7 +58,7 @@ static void measureAndRun(const std::string &name, Func func) {
 }
 
 struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {
-  LogOptCommand() : UtopiaCommandBase<LogOptCommand>(
+  LogOptCommand() : UtopiaCommandBase(
       "logopt", "Applies an optimization pass to the design") {
     namespace pass = eda::gate::optimizer;
 

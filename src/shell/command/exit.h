@@ -11,7 +11,7 @@
 #include "shell/shell.h"
 
 struct ExitCommand final : public UtopiaCommandBase<ExitCommand> {
-  ExitCommand(): UtopiaCommandBase<ExitCommand>(
+  ExitCommand(): UtopiaCommandBase(
       "exit", "Closes the interactive shell") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {

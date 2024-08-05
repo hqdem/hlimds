@@ -11,7 +11,7 @@
 #include "shell/shell.h"
 
 struct ListPointsCommand final : public UtopiaCommandBase<ListPointsCommand> {
-  ListPointsCommand(): UtopiaCommandBase<ListPointsCommand>(
+  ListPointsCommand(): UtopiaCommandBase(
       "list_points", "Lists the design checkpoints") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {

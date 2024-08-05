@@ -15,7 +15,7 @@ struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
   using Indicator = eda::gate::criterion::Indicator;
   using Objective = eda::gate::criterion::Objective;
 
-  TechMapCommand(): UtopiaCommandBase<TechMapCommand>(
+  TechMapCommand(): UtopiaCommandBase(
       "techmap", "Performs technology mapping") {
     const std::map<std::string, Indicator> indicatorMap {
       { "area",  Indicator::AREA  },

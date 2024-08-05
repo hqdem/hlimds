@@ -102,8 +102,7 @@ struct WriteDesignCommand : public UtopiaCommand {
 
 struct WriteDebugCommand final :
     public UtopiaCommandBase<WriteDebugCommand, WriteDesignCommand> {
-  WriteDebugCommand():
-      UtopiaCommandBase<WriteDebugCommand, WriteDesignCommand>(
+  WriteDebugCommand(): UtopiaCommandBase(
           "write_debug", "Writes the design to a debug file") {
     setFormat(Format::SIMPLE);
   }
@@ -111,8 +110,7 @@ struct WriteDebugCommand final :
 
 struct WriteDotCommand final :
     public UtopiaCommandBase<WriteDotCommand, WriteDesignCommand> {
-  WriteDotCommand():
-      UtopiaCommandBase<WriteDotCommand, WriteDesignCommand>(
+  WriteDotCommand(): UtopiaCommandBase(
           "write_dot", "Writes the design to a DOT file") {
     setFormat(Format::DOT);
   }
@@ -120,8 +118,7 @@ struct WriteDotCommand final :
 
 struct WriteVerilogCommand final :
     public UtopiaCommandBase<WriteVerilogCommand, WriteDesignCommand> {
-  WriteVerilogCommand():
-      UtopiaCommandBase<WriteVerilogCommand, WriteDesignCommand>(
+  WriteVerilogCommand(): UtopiaCommandBase(
           "write_verilog", "Writes the design to a Verilog file") {
     setFormat(Format::VERILOG);
   }

@@ -12,7 +12,7 @@
 #include "shell/shell.h"
 
 struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
-  StatLogDbCommand(): UtopiaCommandBase<StatLogDbCommand>(
+  StatLogDbCommand(): UtopiaCommandBase(
       "stat_logdb", "Prints information about a logopt database") {
     app.add_option("--db", dbPath)->expected(1)->required(true);
     app.add_option("--otype", outputType)->expected(1);

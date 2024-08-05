@@ -12,7 +12,7 @@
 
 struct DeleteDesignCommand final :
     public UtopiaCommandBase<DeleteDesignCommand> {
-  DeleteDesignCommand(): UtopiaCommandBase<DeleteDesignCommand>(
+  DeleteDesignCommand(): UtopiaCommandBase(
       "delete_design", "Erases the design from memory") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {

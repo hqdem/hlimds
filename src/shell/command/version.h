@@ -12,7 +12,7 @@
 #include "shell/shell.h"
 
 struct VersionCommand final : public UtopiaCommandBase<VersionCommand> {
-  VersionCommand(): UtopiaCommandBase<VersionCommand>(
+  VersionCommand(): UtopiaCommandBase(
       "version", "Prints Utopia EDA version") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {

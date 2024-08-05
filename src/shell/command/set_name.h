@@ -11,7 +11,7 @@
 #include "shell/shell.h"
 
 struct SetNameCommand final : public UtopiaCommandBase<SetNameCommand> {
-  SetNameCommand(): UtopiaCommandBase<SetNameCommand>(
+  SetNameCommand(): UtopiaCommandBase(
       "set_name", "Sets the design name") {
     app.allow_extras();
   }

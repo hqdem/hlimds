@@ -23,7 +23,7 @@ static inline void printNameValue(const std::string &name,
 }
 
 struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
-  StatDesignCommand(): UtopiaCommandBase<StatDesignCommand>(
+  StatDesignCommand(): UtopiaCommandBase(
       "stat_design", "Prints the design characteristics") {
     app.allow_extras();
   }

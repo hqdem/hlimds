@@ -11,7 +11,7 @@
 #include "shell/shell.h"
 
 struct HelpCommand final : public UtopiaCommandBase<HelpCommand> {
-  HelpCommand(): UtopiaCommandBase<HelpCommand>(
+  HelpCommand(): UtopiaCommandBase(
       "help", "Prints help information") {
     app.allow_extras();
   }

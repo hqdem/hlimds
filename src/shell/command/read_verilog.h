@@ -12,7 +12,7 @@
 #include "shell/shell.h"
 
 struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
-  ReadVerilogCommand(): UtopiaCommandBase<ReadVerilogCommand>(
+  ReadVerilogCommand(): UtopiaCommandBase(
       "read_verilog", "Reads a design from a Verilog file") {
     app.add_option("--frontend", frontend);
     app.add_option("--top", topModule);

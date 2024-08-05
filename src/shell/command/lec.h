@@ -15,7 +15,7 @@ struct LecCommand final : public UtopiaCommandBase<LecCommand> {
   using BaseChecker = eda::gate::debugger::BaseChecker;
   using LecType = eda::gate::debugger::options::LecType;
 
-  LecCommand(): UtopiaCommandBase<LecCommand>(
+  LecCommand(): UtopiaCommandBase(
       "lec", "Checks logical equivalence") {
     const std::map<std::string, LecType> lecMethodMap {
       { "bdd", LecType::BDD   },

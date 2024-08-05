@@ -58,9 +58,9 @@ private:
  * @brief Executes an optimization scenario.
  */
 template <typename ID, typename Builder>
-struct ScenarioExecutor : public InPlaceTransformer<ID, Builder> {
+struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
   ScenarioExecutor(const std::string &name, const Scenario<Builder> &scenario):
-      InPlaceTransformer(name), scenario(scenario) {}
+      InPlaceTransformer<ID, Builder>(name), scenario(scenario) {}
 
   void transform(const BuilderPtr<Builder> &builder) const override {
     auto state = scenario.initialize(builder);

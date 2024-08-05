@@ -10,6 +10,7 @@ add_library(Gate OBJECT
   debugger/rnd_checker.cpp
   debugger/seq_checker.cpp
   debugger/verifier.cpp
+  estimator/cost_estimator.cpp
   estimator/simple_time_model.cpp
   model/cell.cpp
   model/celltype.cpp

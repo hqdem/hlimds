@@ -17,12 +17,50 @@ namespace eda::gate::estimator {
 /**
  * @brief Interface for design/subnet cost estimator.
  */
-class CostEstimator {
-public:
-  virtual criterion::CostVector getCost(const model::SubnetBuilder &subnet) = 0;
-  virtual criterion::CostVector getCost(const model::DesignBuilder &design) = 0;
-
+template <typename T>
+struct CostEstimator {
+  virtual criterion::CostVector getCost(const T &design) const = 0;
   virtual ~CostEstimator() {}
+};
+
+using SubnetEstimator = CostEstimator<model::SubnetBuilder>;
+using DesignEstimator = CostEstimator<model::DesignBuilder>;
+
+/**
+ * @brief Aggregates subnet cost vectors.
+ */
+class CostAggregator : public DesignEstimator {
+public:
+  CostAggregator(const SubnetEstimator &subnetEstimator):
+      subnetEstimator(subnetEstimator) {}
+
+  criterion::CostVector getCost(
+      const model::DesignBuilder &design) const override;
+
+private:
+  const SubnetEstimator &subnetEstimator;
+};
+
+/**
+ * @brief Returns logical characteristics of a subnet:
+ *        the number of cells as AREA;
+ *        the depth as DELAY;
+ *        the switching activity as POWER.
+ */
+struct LogicSubnetEstimator final : public SubnetEstimator {
+  criterion::CostVector getCost(
+      const model::SubnetBuilder &subnet) const override;
+};
+
+/**
+ * @brief Returns logical characteristics of a design.
+ */
+class LogicDesignEstimator final : public CostAggregator {
+public:
+  LogicDesignEstimator(): CostAggregator(subnetEstimator) {}
+
+private:
+  const LogicSubnetEstimator subnetEstimator{};
 };
 
 } // namespace eda::gate::estimator

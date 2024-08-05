@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "gate/model/design.h"
+#include "gate/model/subnet.h"
 #include "gate/optimizer/transformer.h"
 
 namespace eda::gate::optimizer {

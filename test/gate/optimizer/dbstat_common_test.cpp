@@ -54,8 +54,8 @@ static void deleteFileIfExists(const std::string &filename) {
   }
 }
 
-// creation fo NPNDatabase
-// T accepts variable types NPNDatabase and NPNStatDatabase
+// creation fo NpnDatabase
+// T accepts variable types NpnDatabase and NpnStatDatabase
 template <typename T> 
 static void npndbCreate(T npndb) {
   static SubnetID id1 = makeSubnet3AndOrXor();
@@ -73,7 +73,7 @@ static void npndbCreate(T npndb) {
 static void printInfo(const std::string &filename, SubnetID id) {
   std::ofstream out(filename);
   if (out.is_open()) {
-    NPNDatabase::printInfoSub(out, Subnet::get(id));
+    NpnDatabase::printInfoSub(out, Subnet::get(id));
   out.close();
   }
 }
@@ -89,10 +89,10 @@ static void printDot(const std::string &filename, SubnetID id,
   }
 }
 
-// print Info of NPNDatabase Subnet in file
-// T accepts variable types NPNDatabase and NPNStatDatabase
+// print Info of NpnDatabase Subnet in file
+// T accepts variable types NpnDatabase and NpnStatDatabase
 template <typename T>
-static void printNPNInfo(const std::string &filename, const T npndb, 
+static void printNpnInfo(const std::string &filename, const T npndb, 
                          const TT tt) {
   std::ofstream out(filename);
   if (out.is_open()) {
@@ -101,10 +101,10 @@ static void printNPNInfo(const std::string &filename, const T npndb,
   }
 }
 
-// print DOT file of NPNDatabase Subnet
-// T accepts variable types NPNDatabase and NPNStatDatabase
+// print DOT file of NpnDatabase Subnet
+// T accepts variable types NpnDatabase and NpnStatDatabase
 template <typename T>
-static void printNPNDot(const std::string &filename, const T npndb, 
+static void printNpnDot(const std::string &filename, const T npndb, 
                          const TT tt, const std::string name = "") {
   std::ofstream out(filename);
   if (out.is_open()) {
@@ -113,10 +113,10 @@ static void printNPNDot(const std::string &filename, const T npndb,
   }
 }
 
-// print DOT file of NPNDatabase Subnet
-// T accepts variable types NPNDatabase and NPNStatDatabase
+// print DOT file of NpnDatabase Subnet
+// T accepts variable types NpnDatabase and NpnStatDatabase
 template <typename T>
-static void printNPNDotFile(const std::string &filename, const T npndb, 
+static void printNpnDotFile(const std::string &filename, const T npndb, 
                          const TT tt, const std::string name = "") {
   npndb->printDotFile(tt, filename, name);
 }

@@ -8,6 +8,8 @@
 
 #include "gate/model/subnet.h"
 #include "gate/optimizer/npn.h"
+#include "gate/optimizer/npndb.h"
+#include "util/env.h"
 
 #include <percy/percy.hpp>
 
@@ -120,19 +122,26 @@ inline eda::gate::model::SubnetObject synthesize(uint8_t k, uint64_t value) {
   return synthesize(k, toHexString(k, value));
 }
 
-void generateXagNpn4() {
+void generateXagNpn4(const std::string &filename) {
+  eda::gate::optimizer::NpnDatabase db;
   constexpr uint8_t k = 4;
 
   for (size_t i = 0; i < eda::gate::optimizer::npn4Num; ++i) {
     const uint64_t mincode = eda::gate::optimizer::npn4[i];
 
-    std::cout << toHexString(k, mincode) << std::endl;
     auto subnetObject = synthesize(k, mincode);
-
-    std::cout << subnetObject.makeObject() << std::endl;
+    db.push(subnetObject.make());
   }
+
+  db.exportTo(filename);
 }
 
-int main() {
-  generateXagNpn4();
+int main(int argc, char **argv) {
+  if (argc > 1) {
+    const std::string file(argv[1], strlen(argv[1]));
+    generateXagNpn4(file);
+  } else {
+    const std::string file(eda::env::getHomePath() / "output" / "database");
+    generateXagNpn4(file);
+  }
 }

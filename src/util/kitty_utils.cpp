@@ -19,13 +19,15 @@ TT toTT(uint64_t x) {
 }
 
 gate::model::SubnetID npnTransform(const gate::model::Subnet &subnet,
-                                   const NPNTransformation &t) {
+                                   const NpnTransformation &t,
+                                   uint8_t nInUsed) {
+
   using Cell = gate::model::Subnet::Cell;
   using Subnet = gate::model::Subnet;
   using SubnetObject = gate::model::SubnetObject;
 
   uint16_t negationMask = t.negationMask;
-  NPNTransformation::InputPermutation permutation = t.permutation;
+  NpnTransformation::InputPermutation permutation = t.permutation;
 
   SubnetObject object;
   auto &builder = object.builder();
@@ -33,31 +35,49 @@ gate::model::SubnetID npnTransform(const gate::model::Subnet &subnet,
   const auto &entries = subnet.getEntries();
 
   // Checking inputs
-  size_t expectedInputCount = permutation.size();
-  assert(entries.size() >= expectedInputCount);
+  size_t expectedInCount = permutation.size();
+  assert(entries.size() >= expectedInCount);
 
-  NPNTransformation::InputPermutation rPermutation(permutation.size());
-  for (size_t i = 0; i < permutation.size(); i++) {
-    rPermutation[permutation[i]] = i;
-  }
+  NpnTransformation::InputPermutation rPermutation(permutation.size());
+  uint8_t notUsed = expectedInCount <= nInUsed ? 0 : expectedInCount - nInUsed;
+  uint8_t inputID = expectedInCount - notUsed - 1;
+  uint8_t nRemoved = 0;
+  size_t j = permutation.size();
+  do {
+    j--;
+    rPermutation[permutation[j]] = inputID;
+    const auto &refcount = entries[permutation[j]].cell.refcount;
+    if (refcount || (nRemoved == notUsed)) {
+      inputID--;
+    } else {
+      nRemoved++;
+    }
+  } while (j);
+  assert(nRemoved == notUsed &&
+         "Subnet depends on more variables than was specified");
 
   for (size_t i = 0; i < entries.size(); ++i) {
     const Cell &cell = entries[i].cell;
-    if (i < expectedInputCount) {
+    if (i < expectedInCount) {
       assert(cell.isIn() &&
              "Subnet inputs count doesn't match permutation size.");
+      if (i >= nInUsed) {
+        continue;
+      }
     }
 
     Subnet::LinkList links(cell.link, cell.link + cell.arity);
     for (auto &link : links) {
       size_t idx = link.idx;
-      if (idx < expectedInputCount) {
+      if (idx < expectedInCount) {
         link.idx = rPermutation[idx];
         if (((negationMask >> idx) & 1) == 1) {
           link.inv = 1 - link.inv;
         }
+      } else {
+        link.idx -= notUsed;
       }
-      if (cell.isOut() && (((negationMask >> expectedInputCount) & 1) == 1)) {
+      if (cell.isOut() && (((negationMask >> expectedInCount) & 1) == 1)) {
         link.inv = 1 - link.inv;
       }
     }

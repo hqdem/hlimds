@@ -20,6 +20,7 @@
 #include "gate/optimizer/rewriter.h"
 #include "gate/optimizer/synthesis/abc_npn4.h"
 #include "gate/optimizer/synthesis/associative_reordering.h"
+#include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/aigmapper.h"
 
@@ -80,6 +81,23 @@ inline SubnetPass rw() {
 /// Rewriting w/ enabled zero-cost replacements.
 inline SubnetPass rwz() {
   return rw("rwz", 4, true);
+}
+
+inline SubnetPass rwxag4(bool z) {
+  const uint16_t k = 4;
+  static Resynthesizer resynthesizer(synthesis::DbXag4Synthesizer::get());
+  return std::make_shared<Rewriter>(
+      "rwxag4", resynthesizer, k, [](const SubnetEffect &effect) -> float {
+        return static_cast<float>(effect.size);
+      }, z);
+}
+
+inline SubnetPass rwxag4() {
+  return rwxag4(false);
+}
+
+inline SubnetPass rwzxag4() {
+  return rwxag4(true);
 }
 
 //===----------------------------------------------------------------------===//

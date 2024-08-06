@@ -75,6 +75,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/synthesis/algebraic_factor_test.cpp
   gate/optimizer/synthesis/bidecomposition_test.cpp
   gate/optimizer/synthesis/cascade_test.cpp
+  gate/optimizer/synthesis/db_synthesizer_test.cpp
   gate/optimizer/synthesis/de_micheli_test.cpp
   gate/optimizer/synthesis/dsd_test.cpp
   gate/optimizer/synthesis/isop_test.cpp

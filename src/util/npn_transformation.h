@@ -21,7 +21,7 @@ namespace eda::utils {
  * n'th bit of negationMask stores output negation.
  * Where *n* is number of inputs.
  */
-struct NPNTransformation {
+struct NpnTransformation {
   using InputPermutation = std::vector<uint8_t>;
 
   uint32_t negationMask;
@@ -29,8 +29,8 @@ struct NPNTransformation {
 };
 
 /**
- * \brief Inverses NPN transformation.
+ * \brief Inverses Npn transformation.
  */
-NPNTransformation inverse(const NPNTransformation &t);
+NpnTransformation inverse(const NpnTransformation &t);
 
 } // namespace eda::utils

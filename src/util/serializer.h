@@ -9,8 +9,8 @@
 #pragma once
 
 #include <istream>
-#include <map>
 #include <ostream>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::util {
@@ -60,20 +60,20 @@ public:
 };
 
 /**
- * \brief Serializer template class for std::map<T1, T2>.
+ * \brief Serializer template class for std::unordered_map<T1, T2>.
  * Classes S1 and S2 are serializer classes for T1 and T2 respectively.
  */
 template<class T1, class T2,
          class S1 = NaiveSerializer<T1>,
          class S2 = NaiveSerializer<T2>>
-class MapSerializer : public Serializer<std::map<T1, T2>> {
+class MapSerializer : public Serializer<std::unordered_map<T1, T2>> {
 
 private:
   S1 s1;
   S2 s2;
 
 public:
-  void serialize(std::ostream &out, const std::map<T1, T2> &obj) {
+  void serialize(std::ostream &out, const std::unordered_map<T1, T2> &obj) {
     NaiveSerializer<size_t>().serialize(out, obj.size());
     for (const auto &p : obj) {
       s1.serialize(out, p.first);
@@ -81,8 +81,8 @@ public:
     }
   }
 
-  std::map<T1, T2> deserialize(std::istream &in) {
-    std::map<T1, T2> result;
+  std::unordered_map<T1, T2> deserialize(std::istream &in) {
+    std::unordered_map<T1, T2> result;
     size_t size = NaiveSerializer<size_t>().deserialize(in);
     for (size_t i = 0; i < size; i++) {
       T1 key = s1.deserialize(in);

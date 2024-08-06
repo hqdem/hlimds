@@ -21,15 +21,15 @@ using namespace eda::utils;
 using TT = kitty::dynamic_truth_table;
 
 // test of the function printDot, printDotFile
-// T accepts variable types NPNDatabase and NPNStatDatabase
+// T accepts variable types NpnDatabase and NpnStatDatabase
 template <typename T> void testDOT(T npndb, TT tt, SubnetID id) {
   std::string filename1 = "test1.dot";
   std::string filename2 = "test2.dot";
   std::string filename3 = "test3.dot";
 
   printDot(filename1, id, "test");
-  printNPNDot(filename2, &npndb, tt, "test");
-  printNPNDotFile(filename3, &npndb, tt, "test");
+  printNpnDot(filename2, &npndb, tt, "test");
+  printNpnDotFile(filename3, &npndb, tt, "test");
 
   ASSERT_TRUE(compareFiles(filename1, filename2));
   ASSERT_TRUE(compareFiles(filename2, filename3));
@@ -40,13 +40,13 @@ template <typename T> void testDOT(T npndb, TT tt, SubnetID id) {
 }
 
 // test of the function printInfo
-// T accepts variable types NPNDatabase and NPNStatDatabase
+// T accepts variable types NpnDatabase and NpnStatDatabase
 template <typename T> void testInfo(T npndb, TT tt, SubnetID id) {
   std::string filename1 = "test1.txt";
   std::string filename2 = "test2.txt";
 
   printInfo(filename1, id);
-  printNPNInfo(filename2, &npndb, tt);
+  printNpnInfo(filename2, &npndb, tt);
 
   ASSERT_TRUE(compareFiles(filename1, filename2));
 
@@ -55,7 +55,7 @@ template <typename T> void testInfo(T npndb, TT tt, SubnetID id) {
 }
 
 // test output number 1, check makeSubnet3AndOrXor() Subnet
-template <typename T> static void testNPN1(T npndb) {
+template <typename T> static void testNpn1(T npndb) {
   npndbCreate(&npndb);
   // equal to makeSubnet3AndOrXor()
   TT tt(5);
@@ -65,20 +65,20 @@ template <typename T> static void testNPN1(T npndb) {
   testInfo(npndb, tt, makeSubnet3AndOrXor());
 }
 
-// test for NPNDatabase
-TEST(NPNDatabaseStatTest, NPNDatabasePrintDOT1) {
-  NPNDatabase npndb;
-  testNPN1(npndb);
+// test for NpnDatabase
+TEST(NpnDatabaseStatTest, NpnDatabasePrintDOT1) {
+  NpnDatabase npndb;
+  testNpn1(npndb);
 }
 
-// test for NPNStatDatabase
-TEST(NPNStatDatabaseStatTest, NPNStatDatabasePrintDOT1) {
-  NPNStatDatabase npndb;
-  testNPN1(npndb);
+// test for NpnStatDatabase
+TEST(NpnStatDatabaseStatTest, NpnStatDatabasePrintDOT1) {
+  NpnStatDatabase npndb;
+  testNpn1(npndb);
 }
 
 // test output number 2, check makeSubnetXorOrXor() Subnet
-template <typename T> static void testNPN2(T npndb) {
+template <typename T> static void testNpn2(T npndb) {
   npndbCreate(&npndb);
   // equal to makeSubnetXorOrXor()
   TT tt(3);
@@ -89,20 +89,20 @@ template <typename T> static void testNPN2(T npndb) {
   testInfo(npndb, tt, makeSubnetXorOrXor());
 }
 
-// test for NPNDatabase
-TEST(NPNDatabaseStatTest, NPNDatabasePrintDOT2) {
-  NPNDatabase npndb;
-  testNPN2(npndb);
+// test for NpnDatabase
+TEST(NpnDatabaseStatTest, NpnDatabasePrintDOT2) {
+  NpnDatabase npndb;
+  testNpn2(npndb);
 }
 
-// test for NPNStatDatabase
-TEST(NPNStatDatabaseStatTest, NPNStatDatabasePrintDOT2) {
-  NPNStatDatabase npndb;
-  testNPN2(npndb);
+// test for NpnStatDatabase
+TEST(NpnStatDatabaseStatTest, NpnStatDatabasePrintDOT2) {
+  NpnStatDatabase npndb;
+  testNpn2(npndb);
 }
 
 // test output number 3, check makeSubnetAndOrXor() Subnet
-template <typename T> static void testNPN3(T npndb) {
+template <typename T> static void testNpn3(T npndb) {
   npndbCreate(&npndb);
   // equal to makeSubnetAndOrXor()
   TT tt(2);
@@ -112,14 +112,14 @@ template <typename T> static void testNPN3(T npndb) {
   testInfo(npndb, tt, makeSubnetAndOrXor());
 }
 
-// test for NPNDatabase
-TEST(NPNDatabaseStatTest, NPNDatabasePrintDOT3) {
-  NPNDatabase npndb;
-  testNPN3(npndb);
+// test for NpnDatabase
+TEST(NpnDatabaseStatTest, NpnDatabasePrintDOT3) {
+  NpnDatabase npndb;
+  testNpn3(npndb);
 }
 
-// test for NPNStatDatabase
-TEST(NPNStatDatabaseStatTest, NPNStatDatabasePrintDOT3) {
-  NPNStatDatabase npndb;
-  testNPN3(npndb);
+// test for NpnStatDatabase
+TEST(NpnStatDatabaseStatTest, NpnStatDatabasePrintDOT3) {
+  NpnStatDatabase npndb;
+  testNpn3(npndb);
 }

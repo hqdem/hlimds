@@ -10,10 +10,10 @@
 
 namespace eda::utils {
 
-NPNTransformation inverse(const NPNTransformation &t) {
+NpnTransformation inverse(const NpnTransformation &t) {
   uint32_t negationMask = 0;
-  NPNTransformation::InputPermutation
-    permutation = NPNTransformation::InputPermutation(t.permutation.size());
+  NpnTransformation::InputPermutation
+    permutation = NpnTransformation::InputPermutation(t.permutation.size());
   for (size_t i = 0; i < permutation.size(); i++) {
     permutation[t.permutation[i]] = i;
     if (t.negationMask & (1 << t.permutation[i])) {
@@ -21,7 +21,7 @@ NPNTransformation inverse(const NPNTransformation &t) {
     }
   }
   negationMask = negationMask | (t.negationMask & (1 << permutation.size()));
-  return NPNTransformation{negationMask, permutation};
+  return NpnTransformation{negationMask, permutation};
 }
 
 } // namespace eda::utils

@@ -261,6 +261,7 @@ help
 ```
 
 **P.S. It is recommended to use rlwrap to display the interactive mode correctly:** 
+
 ```console
 rlwrap ./build/src/umain
 ```
@@ -316,12 +317,23 @@ or
 ./filter-tests.sh <test-pattern>
 ```
 
-Test pattern accepts ```*``` and ```?``` wildcards.
+or set the `GTEST_FILTER` environment variable, for example, as follows:
 
-To run "shortest" test suites (which take less than 10 min) use `smoke-tests.sh`.
+```console
+export GTEST_FILTER="-ReedMuller*:\
+BiDecompositionTest*"
+
+./build/test/utest
+```
+
+Test pattern accepts ```*``` and ```?``` wildcards.
 
 #### List available tests
 
 ```console
 ./build/test/utest --gtest_list_tests
 ```
+
+#### Code coverage
+
+To evaluate code coverage is reached by tests, use `lcov.sh` script.

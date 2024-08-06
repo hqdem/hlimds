@@ -9,7 +9,7 @@
 #include "verilog_fir.h"
 
 #include "gate/model/printer/printer.h"
-#include "gate/translator/fir/fir_model2.h"
+#include "gate/translator/fir/fir_net.h"
 
 #include <filesystem>
 #include <fstream>
@@ -27,18 +27,17 @@ int translateVerilogFIR(const FirrtlConfig &firrtlConfig) {
   fs::path inputFilePath = firrtlConfig.files.back();
   fs::path outputFilePath = firrtlConfig.outputFileName;
   const std::string extension = inputFilePath.extension();
-  if (extension != ".sv" && extension != ".v" && extension != ".fir") {
-    std::cerr << "Unsupported file type: " << extension << std::endl;
-    return 1;
+  if (extension != ".v" && extension != ".fir") {
+    std::cerr << "Unsupported file type: " << extension << "\n";
+    return false;
   }
   if (!(firrtlConfig.files.size() == 1 && extension == ".fir")) {
     for (const auto &file : firrtlConfig.files) {
-      std::cout << file << std::endl;
       const fs::path filePath = file;
       std::string extension = filePath.extension();
       if (extension != ".sv" && extension != ".v") {
-        std::cerr << "The input files are not supported!" << std::endl;
-        return 1;
+        std::cerr << "The input files are not supported!\n";
+        return false;
       }
     }
     if (!firrtlConfig.outputFileName.empty()) {
@@ -49,11 +48,11 @@ int translateVerilogFIR(const FirrtlConfig &firrtlConfig) {
       if (!translateToFirrtl(firrtlConfig)) {
         inputFilePath = firrtlConfig.outputFileName;
       } else {
-        return 1;
+        return false;
       }
     } else {
-      std::cerr << "The output file name is missing!" << std::endl;
-      return 1;
+      std::cerr << "The output file name is missing!\n";
+      return false;
     }
   }
   // Parse the input 'FIRRTL' file.
@@ -65,14 +64,14 @@ int translateVerilogFIR(const FirrtlConfig &firrtlConfig) {
   // Print the resulting 'model2' representation.
 #ifdef UTOPIA_DEBUG
   for (const auto &cellTypeID : resultNetlist) {
-    std::cout << CellType::get(cellTypeID).getNet() << std::endl;
+    std::cout << CellType::get(cellTypeID).getNet() << "\n";
   }
 #endif // UTOPIA_DEBUG
 
   // Dump the output net to the '.v' file.
   if (firrtlConfig.debugMode) {
     if (firrtlConfig.outputFileName.empty()) {
-      std::cerr << "The output file name is missing!" << std::endl;
+      std::cerr << "The output file name is missing!\n";
     }
     outputFilePath.replace_extension(".v");
     std::ofstream outputStream(outputFilePath);
@@ -83,7 +82,7 @@ int translateVerilogFIR(const FirrtlConfig &firrtlConfig) {
     outputStream.close();
   }
 
-  return 0;
+  return true;
 }
 
 } // namespace eda::gate::translator

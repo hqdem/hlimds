@@ -10,6 +10,7 @@
 
 #include "gate/model/net.h"
 #include "gate/translator/firrtl.h"
+#include "util/hash.h"
 
 #include "llvm/Support/SourceMgr.h"
 
@@ -37,36 +38,66 @@ using PassManager = mlir::PassManager;
 namespace eda::gate::translator {
 
 /**
- * @brief A key for identifying a cell in net needed for creating the links.
+ * @brief A key for identifying a link in a net.
  * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>
  */
-struct CellKey {
-  CellKey(Operation *operation,
-          uint portNumber,
-          uint bitNumber) :
-      operation(operation),
-      portNumber(portNumber),
-      bitNumber(bitNumber) {}
-  CellKey() : operation(nullptr), portNumber(0), bitNumber(0) {}
-  bool operator==(const CellKey &cellKey) const;
+struct LinkKey final {
+  LinkKey(Operation *op,
+          const uint portNum,
+          const uint bitNum) :
+      op(op),
+      portNum(portNum),
+      bitNum(bitNum) {}
+  LinkKey() : op(nullptr), portNum(0), bitNum(0) {}
+  bool operator==(const LinkKey &cellKey) const;
 
-  Operation *operation;
-  uint portNumber;
-  uint bitNumber;
+  Operation *op;
+  const uint portNum;
+  const uint bitNum;
+};
+
+/**
+ * @brief A key for identifying a cell type in a net.
+ * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>
+ */
+struct CellTypeKey final {
+  CellTypeKey(const std::string &name,
+              const uint bitWidthIn,
+              const uint bitWidthOut) :
+      name(name),
+      bitWidthIn(bitWidthIn),
+      bitWidthOut(bitWidthOut) {}
+  CellTypeKey() : name(""), bitWidthIn(0), bitWidthOut(0) {}
+  bool operator==(const CellTypeKey &cellTypeKey) const;
+
+  const std::string name;
+  const uint bitWidthIn;
+  const uint bitWidthOut;
 };
 
 } // namespace eda::gate::translator
 
-using CellKey = eda::gate::translator::CellKey;
+using LinkKey = eda::gate::translator::LinkKey;
+using CellTypeKey = eda::gate::translator::CellTypeKey;
 
 namespace std {
 
 template<>
-struct hash<CellKey> {
-  size_t operator()(const CellKey &cellKey) const {
-    size_t hash = std::hash<Operation*>()(cellKey.operation);
-    hash = hash * 13 + std::hash<uint>()(cellKey.portNumber);
-    hash = hash * 13 + std::hash<uint>()(cellKey.bitNumber);
+struct hash<LinkKey> {
+  size_t operator()(const LinkKey &linkKey) const {
+    size_t hash = std::hash<Operation*>()(linkKey.op);
+    eda::util::hash_combine(hash, linkKey.portNum);
+    eda::util::hash_combine(hash, linkKey.bitNum);
+    return hash;
+  }
+};
+
+template<>
+struct hash<CellTypeKey> {
+  size_t operator()(const CellTypeKey &cellTypeKey) const {
+    size_t hash = std::hash<std::string>()(cellTypeKey.name);
+    eda::util::hash_combine(hash, cellTypeKey.bitWidthIn);
+    eda::util::hash_combine(hash, cellTypeKey.bitWidthOut);
     return hash;
   }
 };
@@ -85,7 +116,8 @@ public:
   MLIRModule &operator=(MLIRModule &&oth);
   MLIRModule clone();
   MLIRContext *getContext();
-  static MLIRModule loadFromMLIR(const std::string &string);
+  static MLIRModule loadFromMLIR(const std::string &fileName,
+                                 const std::string &string);
   static MLIRModule loadFromMLIRFile(const std::string &filename);
   static MLIRModule loadFromFIRFile(const std::string &filename);
   void print(llvm::raw_ostream &os);
@@ -99,7 +131,7 @@ private:
 };
 
 /**
- * @brief The top level module which does translation from 'FIRRTL' to 'model2'.
+ * @brief The top level module which does translation from 'FIRRTL' to net.
  * @author <a href="mailto:grigorovia@ispras.ru">Ivan Grigorov</a>
  */
 class Translator {
@@ -118,15 +150,15 @@ private:
   PassManager passManager;
 };
 
-std::vector<CellTypeID> getModel2(const std::string &inputFilePath);
+std::vector<CellTypeID> getNet(const std::string &inputFilePath);
 
-bool printNetlist(const std::string &inputFilePath,
-                  const std::string &outputDir);
-bool printNetlist(const std::vector<CellTypeID> netlist,
-                  const std::string &outFileName);
+bool printNet(const std::string &inputFilePath,
+              const std::string &outputDir);
+bool printNet(const std::vector<CellTypeID> netlist,
+              const std::string &outFileName);
 
 } // namespace eda::gate::translator
 
 std::unique_ptr<Pass> createCHIRRTLToLowFIRRTLPass();
-std::unique_ptr<Pass> createLowFIRRTLToModel2Pass(
+std::unique_ptr<Pass> createLowFIRRTLToNetPass(
     std::shared_ptr<std::vector<CellTypeID>> resultNetlist);

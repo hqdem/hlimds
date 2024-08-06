@@ -77,7 +77,11 @@ add_library(Gate OBJECT
   techmapper/matcher/func_matcher.cpp
   techmapper/subnet_techmapper.cpp
   techmapper/techmapper_wrapper.cpp
-  translator/fir/fir_model2.cpp
+  translator/fir/fir_net.cpp
+  translator/fir/fir_net_utils.cpp
+  translator/firrtl.cpp
+  translator/verilog/verilog_fir.cpp
+  translator/yosys_converter_firrtl.cpp
   translator/firrtl.cpp
   translator/graphml.cpp
   translator/model2.cpp

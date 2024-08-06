@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/translator/fir/fir_model2.h"
+#include "gate/translator/fir/fir_net.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -29,7 +29,7 @@ bool translatorFIRTest(const std::string &inFileName) {
   fs::path outputFullPath = homePath;
   outputFullPath /= outPath;
 
-  return printNetlist(inputFullName, outputFullPath);
+  return printNet(inputFullName, outputFullPath);
 }
 
 // 'MLIR' tests.
@@ -91,6 +91,16 @@ TEST(TranslatorFIRMLIR, AddSameInputs) {
 
 TEST(TranslatorFIRMLIR, AddInstanceMix) {
   EXPECT_TRUE(translatorFIRTest("add_instance_mix.mlir"));
+}
+
+/// Square Root using Harmonized Parabolic Synthesis (Pipelined).
+TEST(TranslatorFIRSquareRoot, SquareRootPipelined) {
+  EXPECT_TRUE(translatorFIRTest("sqrt_pipeline.fir"));
+}
+
+/// Square Root using Harmonized Parabolic Synthesis (Not Pipelined).
+TEST(TranslatorFIRSquareRoot, SquareRootNotPipelined) {
+  EXPECT_TRUE(translatorFIRTest("sqrt_no_pipeline.fir"));
 }
 
 } // namespace eda::gate::translator

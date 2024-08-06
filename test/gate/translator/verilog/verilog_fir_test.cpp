@@ -38,7 +38,7 @@ bool translatorVerilogFIRTest(bool debugMode,
   }
   firrtlConfig.outputFileName = (outputPath / outFileName).c_str();
 
-  return !translateVerilogFIR(firrtlConfig);
+  return translateVerilogFIR(firrtlConfig);
 }
 
 TEST(TranslatorVerilogFIR, Mux) {

@@ -39,7 +39,7 @@ public:
   static constexpr auto DefaultName = "Design";
 
   static ModelPrinter &getDefaultPrinter() {
-    return getPrinter(SIMPLE);
+    return getPrinter(DOT);
   }
 
   static ModelPrinter &getPrinter(Format format);
@@ -120,7 +120,7 @@ protected:
       }
 
       std::stringstream ss;
-      ss << cellInfo.getName() << "_" << port;
+      ss << cellInfo.getName();
 
       return ss.str();
     }

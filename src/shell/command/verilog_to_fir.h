@@ -18,7 +18,7 @@ struct VerilogToFirCommand final :
       "verilog_to_fir", "Translates Verilog to FIRRTL") {
     app.add_flag("--debug", debugMode);
     app.add_option("--top", topModule);
-    app.add_option("-o, --out", outputFile);
+    app.add_option("--out", outputFile);
     app.allow_extras();
   }
 

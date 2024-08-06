@@ -40,9 +40,8 @@ enum OutType { DOT, INFO, BOTH };
  *  Each line is a binary line for one output.
  */
 struct NpnDbConfig {
-
   std::string dbPath;
-  int ttSize;
+  size_t ttSize;
   OutType outType;
   std::string outName;
   std::vector<std::string> binLines;

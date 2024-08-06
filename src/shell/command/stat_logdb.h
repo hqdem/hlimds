@@ -14,10 +14,10 @@
 struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
   StatLogDbCommand(): UtopiaCommandBase(
       "stat_logdb", "Prints information about a logopt database") {
-    app.add_option("--db", dbPath)->expected(1)->required(true);
     app.add_option("--otype", outputType)->expected(1);
-    app.add_option("--out", outputNamefile)->expected(1);
+    app.add_option("--out", outputFile)->expected(1);
     app.add_option("--ttsize", ttSize)->expected(1)->required(true);
+    app.add_option("--tt", truthTable)->expected(1)->required(true);
     app.allow_extras();
   }
 
@@ -28,7 +28,7 @@ struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
     UTOPIA_ERROR_IF_NO_FILES(interp, app);
 
     eda::gate::optimizer::NpnDbConfig config;
-    config.dbPath = dbPath;
+    config.dbPath = app.remaining().at(0);
 
     if (outputType == "DOT") {
       config.outType = OutType::DOT;
@@ -41,15 +41,15 @@ struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
           fmt::format("unknown output type '{}'", outputType));
     }
 
-    config.outName = outputNamefile;
+    config.outName = outputFile;
     config.ttSize = ttSize;
-    config.binLines = app.remaining();
+    config.binLines.push_back(truthTable);
 
     return getDbStat(UTOPIA_OUT, config) ? TCL_ERROR : TCL_OK;
   }
 
-  std::string dbPath;
-  int ttSize;
+  size_t ttSize;
   std::string outputType = "BOTH";
-  std::string outputNamefile;
+  std::string outputFile;
+  std::string truthTable;
 };

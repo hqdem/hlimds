@@ -31,7 +31,7 @@ static void deleteFileIfExists(const std::string &filename) {
   }
 }
 
-static std::vector<SubnetID> getTransformedSubnets(NPNDatabase &db,
+static std::vector<SubnetID> getTransformedSubnets(NpnDatabase &db,
                                                    const TT &tt) {
   auto it = db.get(tt);
   std::vector<SubnetID> result;
@@ -41,7 +41,7 @@ static std::vector<SubnetID> getTransformedSubnets(NPNDatabase &db,
   return result;
 }
 
-static void getTransformedSubnetsAndInfo(NPNDatabase &db,
+static void getTransformedSubnetsAndInfo(NpnDatabase &db,
                                          const TT &tt,
                                          std::vector<SubnetID> &subnets,
                                          std::vector<SubnetInfo> &infos) {
@@ -52,10 +52,10 @@ static void getTransformedSubnetsAndInfo(NPNDatabase &db,
   }
 }
 
-TEST(NPNDatabaseSerializationTest, SavingDBIntoFile) {
+TEST(NpnDatabaseSerializationTest, SavingDBIntoFile) {
   std::string filename = "test.rwdb";
 
-  NPNDatabase npndb;
+  NpnDatabase npndb;
 
   SubnetID id1 = makeSubnet3AndOrXor();
   SubnetID id2 = makeSubnet4AndOr();
@@ -65,7 +65,7 @@ TEST(NPNDatabaseSerializationTest, SavingDBIntoFile) {
 
   npndb.exportTo(filename);
 
-  NPNDatabase npndbCopy = NPNDatabase::importFrom(filename);
+  NpnDatabase npndbCopy = NpnDatabase::importFrom(filename);
 
   auto v = getTransformedSubnets(npndb, evaluate(Subnet::get(id1)).at(0));
   ASSERT_TRUE(v.size() == 1);
@@ -78,10 +78,10 @@ TEST(NPNDatabaseSerializationTest, SavingDBIntoFile) {
   deleteFileIfExists("test.rwdb");
 }
 
-TEST(NPNDatabaseSerialization, SavingNPNStatDBIntoFile) {
+TEST(NpnDatabaseSerialization, SavingNpnStatDBIntoFile) {
   std::string filename = "test.rwdb";
 
-  NPNStatDatabase npndb;
+  NpnStatDatabase npndb;
 
   SubnetBasis basis = {
     SubnetBasis::BasisElement::AND,
@@ -95,7 +95,7 @@ TEST(NPNDatabaseSerialization, SavingNPNStatDBIntoFile) {
 
   npndb.exportTo(filename);
 
-  NPNStatDatabase npndbCopy = NPNStatDatabase::importFrom(filename);
+  NpnStatDatabase npndbCopy = NpnStatDatabase::importFrom(filename);
 
   std::vector<SubnetID> v;
   std::vector<SubnetInfo> infos;

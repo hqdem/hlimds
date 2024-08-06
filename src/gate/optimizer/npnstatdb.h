@@ -18,24 +18,24 @@
 namespace eda::gate::optimizer {
 
 /**
- * \brief Extended NPNDatabase class.
+ * \brief Extended NpnDatabase class.
  * Collects statistics and stores extra information in
  * `SubnetInfo` struct.
  */
-class NPNStatDatabase : public NPNDatabase {
-friend class NPNStatDatabaseSerializer;
+class NpnStatDatabase : public NpnDatabase {
+friend class NpnStatDatabaseSerializer;
 
 public:
 
   using SubnetInfoList = std::vector<SubnetInfo>;
 
-  ~NPNStatDatabase() override = default;
+  ~NpnStatDatabase() override = default;
 
   ResultIterator get(const TT &tt) override;
   ResultIterator get(const Subnet &subnet) override;
 
-  NPNTransformation push(const SubnetID &id, const SubnetInfo &subnetInfo);
-  NPNTransformation push(const SubnetID &id) override;
+  NpnTransformation push(const SubnetID &id, const SubnetInfo &subnetInfo);
+  NpnTransformation push(const SubnetID &id) override;
   void erase(const TT &tt) override;
 
   // Get method which doesn't trigger access counter.
@@ -53,30 +53,30 @@ public:
                            const std::string &name);
   virtual void printInfoQuietly(std::ostream &out, const TT &tt);
 
-  const std::map<TT, uint64_t> &getAccessCounter();
+  const std::unordered_map<TT, uint64_t> &getAccessCounter();
 
   // Loading to and from file
-  static NPNStatDatabase importFrom(const std::string &filename);
+  static NpnStatDatabase importFrom(const std::string &filename);
   void exportTo(const std::string &filename);
 
 protected:
-  std::map<TT, SubnetInfoList> info;
-  std::map<TT, uint64_t> accessCounter;
+  std::unordered_map<TT, SubnetInfoList> info;
+  std::unordered_map<TT, uint64_t> accessCounter;
 
 private:
   ResultIterator get(const TT &tt, bool quiet);
 };
 
-// Serializer for NPNStatDatabase class
-class NPNStatDatabaseSerializer : public util::Serializer<NPNStatDatabase> {
+// Serializer for NpnStatDatabase class
+class NpnStatDatabaseSerializer : public util::Serializer<NpnStatDatabase> {
 
 public:
-  using TT = NPNStatDatabase::TT;
+  using TT = NpnStatDatabase::TT;
   using SubnetList = std::vector<model::SubnetID>;
   using SubnetInfoList = std::vector<SubnetInfo>;
 
-  void serialize(std::ostream &out, const NPNStatDatabase &obj);
-  NPNStatDatabase deserialize(std::istream &in);
+  void serialize(std::ostream &out, const NpnStatDatabase &obj);
+  NpnStatDatabase deserialize(std::istream &in);
 
 private:
   util::MapSerializer<TT,

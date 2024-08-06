@@ -16,6 +16,24 @@
 #include <cmath>
 #include <vector>
 
+namespace std {
+template <>
+struct hash<kitty::dynamic_truth_table> {
+
+  size_t operator()(const kitty::dynamic_truth_table &table) const {
+    const size_t prime = 37;
+    size_t hash = 0;
+    for (auto iter = table.begin(); iter != table.end(); ++iter) {
+      hash += std::hash<size_t>()(*iter);
+      hash *= prime;
+    }
+    hash ^= table.num_vars();
+
+    return hash;
+  }
+};
+} // namespace std
+
 /**
  * \brief Utility methods for kitty lib.
  */
@@ -36,9 +54,9 @@ inline bool isConst(const kitty::dynamic_truth_table &tt, bool &value) {
 kitty::dynamic_truth_table toTT(uint64_t x);
 
 template<typename TT>
-NPNTransformation getTransformation(const std::tuple<TT, uint32_t,
+NpnTransformation getTransformation(const std::tuple<TT, uint32_t,
                                     std::vector<uint8_t> > &t) {
-  return NPNTransformation{std::get<1>(t), std::get<2>(t)};
+  return NpnTransformation{std::get<1>(t), std::get<2>(t)};
 }
 
 template<typename TT> TT getTT(const std::tuple<TT, uint32_t,
@@ -48,7 +66,8 @@ template<typename TT> TT getTT(const std::tuple<TT, uint32_t,
 
 // FIXME: Return SubnetObject.
 gate::model::SubnetID npnTransform(const gate::model::Subnet &subnet,
-                                   const NPNTransformation &t);
+                                   const NpnTransformation &t,
+                                   uint8_t nInUsed = -1);
 
 //===----------------------------------------------------------------------===//
 // SOP operations

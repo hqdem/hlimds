@@ -32,28 +32,28 @@ static bool areEquivalent(const Subnet &lhs,
 }
 
 static bool transformTest(const SubnetID &id) {
-  using TT = NPNDatabase::TT;
+  using TT = NpnDatabase::TT;
 
   TT tt = evaluate(Subnet::get(id))[0];
   const auto& subnet = Subnet::get(id);
   const auto config = kitty::exact_npn_canonization(tt);
   TT canonTT = eda::utils::getTT(config);
-  NPNTransformation t = eda::utils::getTransformation(config);
+  NpnTransformation t = eda::utils::getTransformation(config);
   auto& newSubnet = Subnet::get(npnTransform(subnet, t));
   tt = evaluate(newSubnet)[0];
   return tt == canonTT;
 }
 
 static bool npnDatabaseTest(const SubnetID &id) {
-  NPNDatabase npndb;
+  NpnDatabase npndb;
   const auto& subnet = Subnet::get(id);
   npndb.push(id);
   uint16_t negationMask = 5;
-  NPNTransformation::InputPermutation permutation;
+  NpnTransformation::InputPermutation permutation;
   for (size_t i = 0; i < inputsCount(subnet); i++) {
     permutation.push_back(inputsCount(subnet) - i - 1);
   }
-  NPNTransformation t = {negationMask, permutation};
+  NpnTransformation t = {negationMask, permutation};
   auto& subnet1 = Subnet::get(npnTransform(subnet, t));
   auto res = npndb.get(subnet1);
   const auto& subnet2 = Subnet::get(res.get());
@@ -61,13 +61,13 @@ static bool npnDatabaseTest(const SubnetID &id) {
   return areEquivalent(subnet1, subnet2);
 }
 
-TEST(NPNDB2, TransformTest) {
+TEST(NpnDb2, TransformTest) {
   EXPECT_TRUE(transformTest(makeSubnet3AndOrXor()));
   EXPECT_TRUE(transformTest(makeSubnetXorNorAndAndOr()));
   EXPECT_TRUE(transformTest(makeSubnetXorOrXor()));
 }
 
-TEST(NPNDB2, npnDatabaseTest) {
+TEST(NpnDb2, npnDatabaseTest) {
   EXPECT_TRUE(npnDatabaseTest(makeSubnet3AndOrXor()));
   EXPECT_TRUE(npnDatabaseTest(makeSubnetXorNorAndAndOr()));
   EXPECT_TRUE(npnDatabaseTest(makeSubnetXorOrXor()));

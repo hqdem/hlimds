@@ -10,7 +10,7 @@
 
 namespace eda::gate::optimizer {
 
-bool getDbStat(std::ostream &out, const NPNDBConfig &npndbConfig) {
+bool getDbStat(std::ostream &out, const NpnDbConfig &npndbConfig) {
 
   // processing the exclusion of wrong path to db
   if (!std::filesystem::exists(npndbConfig.dbPath)) {
@@ -18,11 +18,11 @@ bool getDbStat(std::ostream &out, const NPNDBConfig &npndbConfig) {
     return 1;
   }
 
-  NPNDatabase currDatabase;
+  NpnDatabase currDatabase;
 
   // processing the exclusion of wrong type of db
   try {
-    currDatabase = NPNDatabase::importFrom(npndbConfig.dbPath);
+    currDatabase = NpnDatabase::importFrom(npndbConfig.dbPath);
   } catch (const std::runtime_error &e) {
     out << "Wrong format of DB" << std::endl;
     return 1;
@@ -64,6 +64,12 @@ bool getDbStat(std::ostream &out, const NPNDBConfig &npndbConfig) {
   if (npndbConfig.outType != DOT && npndbConfig.outType != INFO &&
       npndbConfig.outType != BOTH) {
     out << "Wrong type of output, correct are (DOT / INFO / BOTH)" << std::endl;
+    return 1;
+  }
+
+  // processing the exclusion of empty binLines
+  if (npndbConfig.binLines.empty()) {
+    out << "Empty binary lines!" << std::endl;
     return 1;
   }
 

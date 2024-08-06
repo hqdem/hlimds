@@ -26,7 +26,7 @@ using namespace eda::utils;
 using TT = kitty::dynamic_truth_table;
 
 // print result of getDbStat in file
-static void printGetDbStat(const std::string &filename, NPNDBConfig conf) {
+static void printGetDbStat(const std::string &filename, NpnDbConfig conf) {
   std::ofstream out(filename);
   if (out.is_open()) {
     getDbStat(out, conf);
@@ -48,7 +48,7 @@ static void printInfoDot(const std::string &filename, SubnetID id,
                          const std::string name = "") {
   std::ofstream out(filename);
   if (out.is_open()) {
-    NPNDatabase::printInfoSub(out, Subnet::get(id));
+    NpnDatabase::printInfoSub(out, Subnet::get(id));
     ModelPrinter::getPrinter(ModelPrinter::Format::DOT)
         .print(out, Subnet::get(id), name);
     out.close();
@@ -56,7 +56,7 @@ static void printInfoDot(const std::string &filename, SubnetID id,
 }
 
 // test of incorrect config and compare error messages
-static void errorTest(const std::string f1, const NPNDBConfig conf,
+static void errorTest(const std::string f1, const NpnDbConfig conf,
                       const std::string f2, const std::string msg) {
   printGetDbStat(f1, conf);
   printMsg(f2, msg);
@@ -71,11 +71,11 @@ TEST(GetStatTest, GetStatTestPrintErrors) {
   std::string fnBackup = "backup.txt";
   std::string fnBackupCorrect = "backupCorrect.txt";
 
-  NPNDatabase npndb;
+  NpnDatabase npndb;
   npndbCreate(&npndb);
   npndb.exportTo(fnDb);
 
-  NPNDBConfig conf;
+  NpnDbConfig conf;
   conf.ttSize = 2;
   conf.outType = OutType::BOTH;
   conf.outName = "";
@@ -110,7 +110,7 @@ TEST(GetStatTest, GetStatTestPrintErrors) {
   conf.ttSize = 2;
   conf.binLines.clear();
   errorTest(fnBackup, conf, fnBackupCorrect,
-            "No equivalent scheme has been found\n");
+            "Empty binary lines!\n");
 
   // test 6. bad-formatted binLines
   conf.binLines.clear();
@@ -136,7 +136,7 @@ TEST(GetStatTest, GetStatTestPrintErrors) {
 }
 
 // test of correct config with all possible types and compare outputs
-static void correctTestTypes(const std::string f1, NPNDBConfig conf,
+static void correctTestTypes(const std::string f1, NpnDbConfig conf,
                              const std::string f2, const SubnetID id,
                              const std::string msg) {
 
@@ -184,12 +184,12 @@ static void correctTest(const size_t size, const SubnetID id,
   std::string fnBackup = "backup.txt";
   std::string fnBackupCorrect = "backupCorrect.txt";
 
-  NPNDatabase npndb;
+  NpnDatabase npndb;
   npndbCreate(&npndb);
 
   npndb.exportTo(fnDb);
 
-  NPNDBConfig conf;
+  NpnDbConfig conf;
 
   conf.dbPath = fnDb;
   conf.ttSize = size;

@@ -39,7 +39,7 @@ enum OutType { DOT, INFO, BOTH };
  * \param binLines list of outputs of truth table. 
  *  Each line is a binary line for one output.
  */
-struct NPNDBConfig {
+struct NpnDbConfig {
 
   std::string dbPath;
   int ttSize;
@@ -48,6 +48,6 @@ struct NPNDBConfig {
   std::vector<std::string> binLines;
 };
 
-bool getDbStat(std::ostream &out, const NPNDBConfig &npndbConfig);
+bool getDbStat(std::ostream &out, const NpnDbConfig &npndbConfig);
 
 } // namespace eda::gate::optimizer

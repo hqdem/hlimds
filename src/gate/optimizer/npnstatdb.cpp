@@ -10,9 +10,9 @@
 
 namespace eda::gate::optimizer {
 
-NPNStatDatabase::ResultIterator NPNStatDatabase::get(const TT &tt, bool quiet) {
+NpnStatDatabase::ResultIterator NpnStatDatabase::get(const TT &tt, bool quiet) {
   auto config = kitty::exact_npn_canonization(tt);
-  NPNTransformation t = utils::getTransformation(config);
+  NpnTransformation t = utils::getTransformation(config);
   auto canonTT = utils::getTT(config);
   if (!quiet) {
     accessCounter[canonTT]++;
@@ -20,31 +20,31 @@ NPNStatDatabase::ResultIterator NPNStatDatabase::get(const TT &tt, bool quiet) {
   return ResultIterator(storage[canonTT], utils::inverse(t), info[canonTT]);
 }
 
-NPNStatDatabase::ResultIterator NPNStatDatabase::get(const TT &tt) {
+NpnStatDatabase::ResultIterator NpnStatDatabase::get(const TT &tt) {
   return get(tt, false);
 }
 
-NPNStatDatabase::ResultIterator NPNStatDatabase::getQuietly(const TT &tt) {
+NpnStatDatabase::ResultIterator NpnStatDatabase::getQuietly(const TT &tt) {
   return get(tt, true);
 }
 
-NPNStatDatabase::ResultIterator NPNStatDatabase::get(const Subnet &subnet) {
+NpnStatDatabase::ResultIterator NpnStatDatabase::get(const Subnet &subnet) {
   TT tt = model::evaluate(subnet)[0];
   return get(tt, false);
 }
 
-NPNStatDatabase::ResultIterator
-NPNStatDatabase::getQuietly(const Subnet &subnet) {
+NpnStatDatabase::ResultIterator
+NpnStatDatabase::getQuietly(const Subnet &subnet) {
   TT tt = model::evaluate(subnet)[0];
   return get(tt, true);
 }
 
-NPNStatDatabase::NPNTransformation
-NPNStatDatabase::push(const SubnetID &id,
+NpnStatDatabase::NpnTransformation
+NpnStatDatabase::push(const SubnetID &id,
                       const SubnetInfo &subnetInfo) {
   TT tt = model::evaluate(Subnet::get(id))[0];
   auto config = kitty::exact_npn_canonization(tt);
-  NPNTransformation t = utils::getTransformation(config);
+  NpnTransformation t = utils::getTransformation(config);
   TT canonTT = utils::getTT(config);
   auto newId = utils::npnTransform(Subnet::get(id), t);
   storage[canonTT].push_back(newId);
@@ -52,70 +52,70 @@ NPNStatDatabase::push(const SubnetID &id,
   return t;
 }
 
-NPNStatDatabase::NPNTransformation
-NPNStatDatabase::push(const SubnetID &id) {
+NpnStatDatabase::NpnTransformation
+NpnStatDatabase::push(const SubnetID &id) {
   return push(id, SubnetInfo::makeEmpty());
 }
 
-void NPNStatDatabase::erase(const TT &tt) {
+void NpnStatDatabase::erase(const TT &tt) {
   storage.erase(tt);
   info.erase(tt);
 }
 
-const std::map<NPNStatDatabase::TT, uint64_t>
-&NPNStatDatabase::getAccessCounter() {
+const std::unordered_map<NpnStatDatabase::TT, uint64_t>
+&NpnStatDatabase::getAccessCounter() {
   return accessCounter;
 }
 
-NPNStatDatabase NPNStatDatabase::importFrom(const std::string &filename) {
+NpnStatDatabase NpnStatDatabase::importFrom(const std::string &filename) {
   std::ifstream in(filename);
-  return NPNStatDatabaseSerializer().deserialize(in);
+  return NpnStatDatabaseSerializer().deserialize(in);
 }
 
-void NPNStatDatabase::exportTo(const std::string &filename) {
+void NpnStatDatabase::exportTo(const std::string &filename) {
   std::ofstream out(filename);
-  NPNStatDatabaseSerializer().serialize(out, *this);
+  NpnStatDatabaseSerializer().serialize(out, *this);
 }
 
-void NPNStatDatabaseSerializer::serialize(std::ostream &out,
-                                          const NPNStatDatabase &obj) {
+void NpnStatDatabaseSerializer::serialize(std::ostream &out,
+                                          const NpnStatDatabase &obj) {
   storageSerializer.serialize(out, obj.storage);
   infoSerializer.serialize(out, obj.info);
   acSerializer.serialize(out, obj.accessCounter);
 }
 
-NPNStatDatabase NPNStatDatabaseSerializer::deserialize(std::istream &in) {
-  NPNStatDatabase result;
+NpnStatDatabase NpnStatDatabaseSerializer::deserialize(std::istream &in) {
+  NpnStatDatabase result;
   result.storage = storageSerializer.deserialize(in);
   result.info = infoSerializer.deserialize(in);
   result.accessCounter = acSerializer.deserialize(in);
   return result;
 }
 
-void NPNStatDatabase::printDot(std::ostream &out, const TT &tt,
+void NpnStatDatabase::printDot(std::ostream &out, const TT &tt,
                         const std::string &name, const bool quiet) {
-  NPNStatDatabase::ResultIterator iterator = get(tt, quiet);
+  NpnStatDatabase::ResultIterator iterator = get(tt, quiet);
   Printer::getPrinter(Format::DOT)
       .print(out, Subnet::get(iterator.get()), name);
 }
 
-void NPNStatDatabase::printInfo(std::ostream &out, const TT &tt, const bool quiet) {
-  NPNStatDatabase::ResultIterator iterator = get(tt, quiet);
+void NpnStatDatabase::printInfo(std::ostream &out, const TT &tt, const bool quiet) {
+  NpnStatDatabase::ResultIterator iterator = get(tt, quiet);
   Subnet &subnet1 = Subnet::get(iterator.get());
   printInfoSub(out, subnet1);
 }
 
-void NPNStatDatabase::printDotQuietly(std::ostream &out, const TT &tt,
+void NpnStatDatabase::printDotQuietly(std::ostream &out, const TT &tt,
                         const std::string &name) {
   printDot(out, tt, name, true);
 }
 
-void NPNStatDatabase::printDotFileQuietly(const TT &tt, const std::string &fileName,
+void NpnStatDatabase::printDotFileQuietly(const TT &tt, const std::string &fileName,
                            const std::string &name) {
   printDotFile(tt, fileName, name, true);
 }
 
-void NPNStatDatabase::printInfoQuietly(std::ostream &out, const TT &tt) {
+void NpnStatDatabase::printInfoQuietly(std::ostream &out, const TT &tt) {
   printInfo(out, tt, true);
 }
 

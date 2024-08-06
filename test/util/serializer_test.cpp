@@ -13,11 +13,11 @@
 namespace eda::util {
 
 TEST(SerializerTest, MapSerializerTest) {
-  std::map<int, int> m1 = {
+  std::unordered_map<int, int> m1 = {
     {-5, 2},
     {42, 0}
   };
-  std::map<int, char> m2 = {
+  std::unordered_map<int, char> m2 = {
     {142, 'a'},
     {-15, '/'}
   };

@@ -12,6 +12,9 @@
 #include "gate/model/subnet.h"
 #include "gate/optimizer/transformer.h"
 
+#include <memory>
+#include <string>
+
 namespace eda::gate::optimizer {
 
 /**
@@ -41,8 +44,8 @@ public:
   virtual std::unique_ptr<ScenarioState<Builder>> initialize(
       const BuilderPtr<Builder> &builder) const = 0;
 
-  /// Checks whether the scenario has completed.
-  virtual bool isCompleted(ScenarioState<Builder> &state) const = 0;
+  /// Checks whether the scenario is over.
+  virtual bool isOver(ScenarioState<Builder> &state) const = 0;
 
   /// Applies an optimization pass to the builder.
   virtual void transform(ScenarioState<Builder> &state) const = 0;
@@ -62,9 +65,13 @@ struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
   ScenarioExecutor(const std::string &name, const Scenario<Builder> &scenario):
       InPlaceTransformer<ID, Builder>(name), scenario(scenario) {}
 
+  void setMaxLength(const size_t maxLength) {
+    this->maxLength = maxLength;
+  }
+
   void transform(const BuilderPtr<Builder> &builder) const override {
     auto state = scenario.initialize(builder);
-    while (!scenario.isCompleted(state)) {
+    for (size_t i = 0; i < maxLength && !scenario.isOver(state); ++i) {
       scenario.transform(state);
     }
     scenario.finalize(state);
@@ -72,7 +79,11 @@ struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
 
 private:
   const Scenario<Builder> &scenario;
+  size_t maxLength{-1ull};
 };
+
+using SubnetScenarioState = ScenarioState<model::SubnetBuilder>;
+using DesignScenarioState = ScenarioState<model::DesignBuilder>;
 
 using SubnetScenario = Scenario<model::SubnetBuilder>;
 using DesignScenario = Scenario<model::DesignBuilder>;

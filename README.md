@@ -260,7 +260,7 @@ command in the shell:
 help
 ```
 
-**P.S. It is recommended to use rlwrap to display the interactive mode correctly:** 
+**P.S. It is recommended to use rlwrap to display the interactive mode correctly:**
 
 ```console
 rlwrap ./build/src/umain
@@ -278,7 +278,7 @@ To execute TCL script obtained from terminal, do the following:
 ./build/src/umain -e "command1;command2;..." 
 ```
 
-Use the ``-i`` flag to switch to interactive mode after script execution: 
+Use the ``-i`` flag to switch to interactive mode after script execution:
 
 ```console
 ./build/src/umain -ie "command1;command2;..." 

@@ -17,6 +17,7 @@
 #include "gate/optimizer/refactorer.h"
 #include "gate/optimizer/resubstitutor.h"
 #include "gate/optimizer/rewriter.h"
+#include "gate/optimizer/scenario.h"
 #include "gate/optimizer/synthesis/abc_npn4.h"
 #include "gate/optimizer/synthesis/associative_reordering.h"
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"

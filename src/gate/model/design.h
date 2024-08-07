@@ -181,7 +181,7 @@ public:
     for (size_t i = 0; i < subnets.size(); ++i) {
       auto &entry = getEntry(i);
       if (entry.builder != nullptr) {
-        entry.subnetID = entry.builder->make(DeleteBuffers);
+        setSubnetID(i, entry.builder->make(DeleteBuffers));
       }
     }
   }

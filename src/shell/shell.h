@@ -59,6 +59,8 @@
   UTOPIA_ERROR_IF(interp, !std::filesystem::exists(fileName),\
       fmt::format("file '{}' does not exist", fileName))
 
+namespace eda::shell {
+
 //===----------------------------------------------------------------------===//
 // Utility Functions
 //===----------------------------------------------------------------------===//
@@ -138,7 +140,7 @@ struct UtopiaCommand {
   }
 
   /// Returns a command processor pointer to be used in Tcl_CreateCommand.
-  virtual Tcl_CmdProc *getCmd() = 0;
+  virtual Tcl_CmdProc *getCmdProc() const = 0;
 
   void printHelp(std::ostream &out) const {
     out << app.help() << std::flush;
@@ -161,7 +163,7 @@ struct UtopiaCommandBase : public BaseCommand,
   UtopiaCommandBase(const char *name, const char *desc):
       BaseCommand(name, desc) {}
 
-  Tcl_CmdProc *getCmd() override {
+  Tcl_CmdProc *getCmdProc() const override {
     return [](ClientData,
               Tcl_Interp *interp,
               int argc,
@@ -189,9 +191,13 @@ public:
     command->shell = this;
   }
 
-  UtopiaCommand *getCommand(const std::string &name) {
+  UtopiaCommand *getCommand(const std::string &name) const {
     auto i = commands.find(name);
     return i != commands.end() ? i->second : nullptr;
+  }
+
+  const std::map<std::string, UtopiaCommand*> &getCommands() const {
+    return commands;
   }
 
   void printHelp(std::ostream &out) const {
@@ -209,20 +215,34 @@ public:
     out << std::endl << std::flush;
   }
 
-  void registerCommands(Tcl_Interp *interp) const {
-    for (const auto &[name, command] : commands) {
-      auto *proc = command->getCmd();
-
-      if (proc) {
-        // Otherwise use the default processor (e.g. exit).
-        Tcl_CreateCommand(interp, name.c_str(), proc, nullptr, nullptr);
-      }
-    }
+  virtual Tcl_AppInitProc *getAppInitProc() const {
+    return UtopiaShell::getAppInitProc<UtopiaShell>();
   }
 
   virtual ~UtopiaShell() {}
 
 protected:
+  template <typename Shell>
+  static Tcl_AppInitProc *getAppInitProc() {
+    return [](Tcl_Interp *interp) -> int {
+      if ((Tcl_Init)(interp) == TCL_ERROR) {
+        return TCL_ERROR;
+      }
+
+      auto &shell = Shell::get();
+      for (const auto &[name, command] : shell.getCommands()) {
+        auto *proc = command->getCmdProc();
+
+        if (proc) {
+          // Otherwise use the default processor (e.g. exit).
+          Tcl_CreateCommand(interp, name.c_str(), proc, nullptr, nullptr);
+        }
+      } // [name, command]
+
+      return TCL_OK;
+    };
+  }
+
   UtopiaShell();
 
   std::map<std::string, UtopiaCommand*> commands;
@@ -231,11 +251,8 @@ protected:
 /// @brief Design being synthesized.
 extern eda::gate::optimizer::DesignBuilderPtr designBuilder;
 
-int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell);
+} // namespace eda::shell
 
-int Utopia_TclInit(Tcl_Interp *interp);
+int umain(eda::shell::UtopiaShell &shell, int argc, char **argv);
 
-int Utopia_Main(
-    Tcl_AppInitProc init, UtopiaShell &shell, int argc, char **argv);
-
-int Utopia_Main(int argc, char **argv);
+int umain(int argc, char **argv);

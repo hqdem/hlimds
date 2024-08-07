@@ -13,6 +13,8 @@
 
 #include <ostream>
 
+namespace eda::shell {
+
 static inline void printDesign(
     std::ostream &out,
     eda::gate::model::DesignBuilder &designBuilder,
@@ -124,4 +126,4 @@ struct WriteVerilogCommand final :
   }
 };
 
-
+} // namespace eda::shell

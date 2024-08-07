@@ -11,6 +11,8 @@
 #include "gate/debugger/base_checker.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct LecCommand final : public UtopiaCommandBase<LecCommand> {
   using BaseChecker = eda::gate::debugger::BaseChecker;
   using LecType = eda::gate::debugger::options::LecType;
@@ -61,3 +63,5 @@ struct LecCommand final : public UtopiaCommandBase<LecCommand> {
 
   LecType method = LecType::SAT;
 };
+
+} // namespace eda::shell

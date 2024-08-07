@@ -21,6 +21,8 @@
     foreach(cmd())->transform(designBuilder);\
   })
 
+namespace eda::shell {
+
 static inline size_t getCellNum(const eda::gate::model::DesignBuilder &design) {
   using Subnet = eda::gate::model::Subnet;
 
@@ -139,3 +141,5 @@ struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {
   uint16_t rszK = 8;
   uint16_t rszN = 16;
 };
+
+} // namespace eda::shell

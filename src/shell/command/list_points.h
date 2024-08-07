@@ -10,6 +10,8 @@
 
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct ListPointsCommand final : public UtopiaCommandBase<ListPointsCommand> {
   ListPointsCommand(): UtopiaCommandBase(
       "list_points", "Lists the design checkpoints") {}
@@ -32,3 +34,5 @@ struct ListPointsCommand final : public UtopiaCommandBase<ListPointsCommand> {
     return TCL_OK;
   }
 };
+
+} // namespace eda::shell

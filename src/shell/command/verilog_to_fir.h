@@ -12,6 +12,8 @@
 #include "gate/translator/yosys_converter_firrtl.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct VerilogToFirCommand final :
     public UtopiaCommandBase<VerilogToFirCommand> {
   VerilogToFirCommand(): UtopiaCommandBase(
@@ -45,3 +47,5 @@ struct VerilogToFirCommand final :
   std::string topModule;
   bool debugMode{false};
 };
+
+} // namespace eda::shell

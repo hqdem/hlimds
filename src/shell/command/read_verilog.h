@@ -11,6 +11,8 @@
 #include "gate/translator/yosys_converter_model2.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
   ReadVerilogCommand(): UtopiaCommandBase(
       "read_verilog", "Reads a design from a Verilog file") {
@@ -53,3 +55,5 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
   std::string topModule;
   bool debugMode = false;
 };
+
+} // namespace eda::shell

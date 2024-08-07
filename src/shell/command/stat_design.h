@@ -12,6 +12,8 @@
 #include "gate/estimator/ppa_estimator.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 template <typename T>
 static inline void printNameValue(const std::string &name,
                                   const T &value,
@@ -79,3 +81,5 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
     return TCL_OK;
   }
 };
+
+} // namespace eda::shell

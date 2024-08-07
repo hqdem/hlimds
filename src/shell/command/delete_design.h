@@ -10,6 +10,8 @@
 
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct DeleteDesignCommand final :
     public UtopiaCommandBase<DeleteDesignCommand> {
   DeleteDesignCommand(): UtopiaCommandBase(
@@ -21,3 +23,5 @@ struct DeleteDesignCommand final :
     return TCL_OK;
   }
 };
+
+} // namespace eda::shell

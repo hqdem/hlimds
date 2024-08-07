@@ -27,6 +27,8 @@
 #include "shell/shell.h"
 #include "util/env.h"
 
+namespace eda::shell {
+
 eda::gate::optimizer::DesignBuilderPtr designBuilder = nullptr;
 
 static int printUtopiaFile(Tcl_Interp *interp, const std::string &fileName) {
@@ -69,21 +71,9 @@ void UtopiaShell::printTitle(Tcl_Interp *interp) {
   printNewline();
 }
 
-int Utopia_TclInit(Tcl_Interp *interp, UtopiaShell &shell) {
-  if ((Tcl_Init)(interp) == TCL_ERROR) {
-    return TCL_ERROR;
-  }
+} // namespace eda::shell
 
-  shell.registerCommands(interp);
-  return TCL_OK;
-}
-
-int Utopia_TclInit(Tcl_Interp *interp) {
-  return Utopia_TclInit(interp, UtopiaShell::get());
-}
-
-int Utopia_Main(
-    Tcl_AppInitProc init, UtopiaShell &shell, int argc, char **argv) {
+int umain(eda::shell::UtopiaShell &shell, int argc, char **argv) {
   CLI::App app{shell.getName()};
 
   std::string path = "";
@@ -108,7 +98,9 @@ int Utopia_Main(
 
   Tcl_FindExecutable(argv[0]);
   Tcl_Interp *interp = Tcl_CreateInterp();
-  if (init(interp) == TCL_ERROR) {
+  Tcl_AppInitProc *appInitProc = shell.getAppInitProc();
+
+  if (appInitProc(interp) == TCL_ERROR) {
     UTOPIA_ERR << "Failed to initialize a Tcl interpreter" << std::endl;
     return 1;
   }
@@ -149,7 +141,7 @@ int Utopia_Main(
     exitAfterEval = true;
   }
   if (interactiveMode || !exitAfterEval) {
-    Tcl_MainEx(argc, argv, init, interp);
+    Tcl_MainEx(argc, argv, appInitProc, interp);
   }
 
   Tcl_DeleteInterp(interp);
@@ -157,6 +149,6 @@ int Utopia_Main(
   return rc;
 }
 
-int Utopia_Main(int argc, char **argv) {
-  return Utopia_Main(Utopia_TclInit, UtopiaShell::get(), argc, argv);
+int umain(int argc, char **argv) {
+  return umain(eda::shell::UtopiaShell::get(), argc, argv);
 }

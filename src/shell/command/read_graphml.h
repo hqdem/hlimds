@@ -11,6 +11,8 @@
 #include "gate/translator/graphml.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct ReadGraphMlCommand final : public UtopiaCommandBase<ReadGraphMlCommand> {
   ReadGraphMlCommand(): UtopiaCommandBase(
       "read_graphml", "Reads a design from a GraphML file") {
@@ -36,3 +38,5 @@ struct ReadGraphMlCommand final : public UtopiaCommandBase<ReadGraphMlCommand> {
     return TCL_OK;
   }
 };
+
+} // namespace eda::shell

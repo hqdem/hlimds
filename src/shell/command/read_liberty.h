@@ -11,6 +11,8 @@
 #include "gate/library/library_parser.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct ReadLibertyCommand final : public UtopiaCommandBase<ReadLibertyCommand> {
   ReadLibertyCommand(): UtopiaCommandBase(
       "read_liberty", "Reads a library from a Liberty file") {
@@ -28,3 +30,5 @@ struct ReadLibertyCommand final : public UtopiaCommandBase<ReadLibertyCommand> {
     return TCL_OK;
   }
 };
+
+} // namespace eda::shell

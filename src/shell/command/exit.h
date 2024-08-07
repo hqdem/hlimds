@@ -10,6 +10,8 @@
 
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct ExitCommand final : public UtopiaCommandBase<ExitCommand> {
   ExitCommand(): UtopiaCommandBase(
       "exit", "Closes the interactive shell") {}
@@ -18,8 +20,10 @@ struct ExitCommand final : public UtopiaCommandBase<ExitCommand> {
     return TCL_OK;
   }
 
-  Tcl_CmdProc *getCmd() override {
+  Tcl_CmdProc *getCmdProc() const override {
     // Use the default processor.
     return nullptr;
   }
 };
+
+} // namespace eda::shell

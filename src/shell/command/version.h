@@ -11,6 +11,8 @@
 #include "config.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct VersionCommand final : public UtopiaCommandBase<VersionCommand> {
   VersionCommand(): UtopiaCommandBase(
       "version", "Prints Utopia EDA version") {}
@@ -27,3 +29,5 @@ struct VersionCommand final : public UtopiaCommandBase<VersionCommand> {
     return TCL_OK;
   } 
 };
+
+} // namespace eda::shell

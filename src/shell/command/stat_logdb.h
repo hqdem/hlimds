@@ -11,6 +11,8 @@
 #include "gate/optimizer/get_dbstat.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
   StatLogDbCommand(): UtopiaCommandBase(
       "stat_logdb", "Prints information about a logopt database") {
@@ -53,3 +55,5 @@ struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
   std::string outputFile;
   std::string truthTable;
 };
+
+} // namespace eda::shell

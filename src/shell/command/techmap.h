@@ -11,6 +11,8 @@
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
   using Indicator = eda::gate::criterion::Indicator;
   using Objective = eda::gate::criterion::Objective;
@@ -60,3 +62,5 @@ struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
 
   Indicator indicator = Indicator::AREA;
 };
+
+} // namespace eda::shell

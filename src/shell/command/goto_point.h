@@ -10,6 +10,8 @@
 
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct GotoPointCommand final :
     public UtopiaCommandBase<GotoPointCommand> {
   GotoPointCommand(): UtopiaCommandBase(
@@ -31,3 +33,5 @@ struct GotoPointCommand final :
     return TCL_OK;
   }
 };
+
+} // namespace eda::shell

@@ -10,6 +10,8 @@
 
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct SetNameCommand final : public UtopiaCommandBase<SetNameCommand> {
   SetNameCommand(): UtopiaCommandBase(
       "set_name", "Sets the design name") {
@@ -30,3 +32,5 @@ struct SetNameCommand final : public UtopiaCommandBase<SetNameCommand> {
     return TCL_OK;
   }
 };
+
+} // namespace eda::shell

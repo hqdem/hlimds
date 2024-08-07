@@ -10,6 +10,8 @@
 
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct SavePointCommand final : public UtopiaCommandBase<SavePointCommand> {
   SavePointCommand(): UtopiaCommandBase(
       "save_point", "Saves the design checkpoint") {
@@ -30,3 +32,5 @@ struct SavePointCommand final : public UtopiaCommandBase<SavePointCommand> {
     return TCL_OK;
   }
 };
+
+} // namespace eda::shell

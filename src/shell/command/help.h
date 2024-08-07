@@ -10,6 +10,8 @@
 
 #include "shell/shell.h"
 
+namespace eda::shell {
+
 struct HelpCommand final : public UtopiaCommandBase<HelpCommand> {
   HelpCommand(): UtopiaCommandBase(
       "help", "Prints help information") {
@@ -35,3 +37,5 @@ struct HelpCommand final : public UtopiaCommandBase<HelpCommand> {
     return makeError(interp, fmt::format("unknown command '{}'", name));
   }
 };
+
+} // namespace eda::shell

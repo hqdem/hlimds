@@ -180,8 +180,7 @@ public:
   void makeSubnets() {
     for (size_t i = 0; i < subnets.size(); ++i) {
       auto &entry = getEntry(i);
-      if (entry.subnetID == OBJ_NULL_ID) {
-        assert(entry.builder != nullptr);
+      if (entry.builder != nullptr) {
         entry.subnetID = entry.builder->make(DeleteBuffers);
       }
     }

@@ -11,6 +11,8 @@
 #include "gate/optimizer/pass.h"
 #include "shell/shell.h"
 
+#include <chrono>
+
 #define ADD_CUSTOM_CMD(app, name, desc, callback)\
   app.add_subcommand(name, desc)->parse_complete_callback([&]() {\
     measureAndRun(name, callback);\
@@ -33,17 +35,7 @@ static void measureAndRun(const std::string &name, Func func) {
   const auto end = clock::now();
   const auto newCellNum = std::get<2>(designBuilder->getCellNum());
 
-  const auto delta = static_cast<int>(newCellNum) -
-                     static_cast<int>(oldCellNum);
-
-  const auto *sign = delta > 0 ? "+" : "";
-
-  const auto percent = oldCellNum != 0 ?
-      std::abs(100.f * delta / oldCellNum) : 0.f;
-
-  printTime<clock>(name, start, end,
-      /* prefix */ "  - ",
-      /* suffix */ fmt::format(" -> {}{} [{:.2f}%]", sign, delta, percent));
+  printTimeAndEffect<clock>(name, start, end, oldCellNum, newCellNum, "  - ");
 }
 
 struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {

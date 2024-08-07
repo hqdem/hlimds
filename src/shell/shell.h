@@ -77,6 +77,26 @@ inline void printTime(const std::string &name,
              << suffix << std::endl << std::flush;
 }
 
+template <typename Clock>
+inline void printTimeAndEffect(const std::string &name,
+                               const std::chrono::time_point<Clock> &start,
+                               const std::chrono::time_point<Clock> &end,
+                               const size_t oldCellNum,
+                               const size_t newCellNum,
+                               const std::string &prefix = "",
+                               const std::string &suffix = "") {
+  const auto delta = static_cast<int>(newCellNum) -
+                     static_cast<int>(oldCellNum);
+
+  const auto *sign = delta > 0 ? "+" : "";
+
+  const auto percent = oldCellNum != 0 ?
+      std::abs(100.f * delta / oldCellNum) : 0.f;
+
+  printTime<Clock>(name, start, end, prefix,
+      fmt::format(" -> {}{} [{:.2f}%] {}", sign, delta, percent, suffix));
+}
+
 inline int makeResult(Tcl_Interp *interp, const std::string &result) {
   Tcl_SetObjResult(interp, Tcl_NewStringObj(result.c_str(), -1));
   return TCL_OK;

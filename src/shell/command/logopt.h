@@ -23,28 +23,15 @@
 
 namespace eda::shell {
 
-static inline size_t getCellNum(const eda::gate::model::DesignBuilder &design) {
-  using Subnet = eda::gate::model::Subnet;
-
-  size_t nCell{0};
-  for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
-    const auto &subnet = Subnet::get(designBuilder->getSubnetID(i));
-    nCell += subnet.getCellNum();
-    nCell -= subnet.getInNum();
-    nCell -= subnet.getOutNum();
-  }
-  return nCell;
-}
-
 template<typename Func>
 static void measureAndRun(const std::string &name, Func func) {
   using clock = std::chrono::high_resolution_clock;
 
-  const auto oldCellNum = getCellNum(*designBuilder);
+  const auto oldCellNum = std::get<2>(designBuilder->getCellNum());
   const auto start = clock::now();
   func();
   const auto end = clock::now();
-  const auto newCellNum = getCellNum(*designBuilder);
+  const auto newCellNum = std::get<2>(designBuilder->getCellNum());
 
   const auto delta = static_cast<int>(newCellNum) -
                      static_cast<int>(oldCellNum);

@@ -18,6 +18,7 @@
 #include <cassert>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace eda::gate::model {
@@ -51,6 +52,12 @@ public:
 
   /// Constructs a design builder w/ the given name from the net.
   DesignBuilder(const std::string &name, const NetID netID): name(name) {
+    const auto &net = Net::get(netID);
+
+    // Initialize the numbers of inputs and outputs.
+    nIn = net.getInNum();
+    nOut = net.getOutNum();
+
     // Generate the soft block implementations.
     synthesizer::synthSoftBlocks(netID);
 
@@ -65,6 +72,12 @@ public:
 
   /// Constructs a design builder w/ the given name from the subnet.
   DesignBuilder(const std::string &name, const SubnetID subnetID): name(name) {
+    const auto &subnet = Subnet::get(subnetID);
+
+    // Initialize the numbers of inputs and outputs.
+    nIn = subnet.getInNum();
+    nOut = subnet.getOutNum();
+
     std::vector<SubnetID> subnetIDs;
     NetDecomposer::get().decompose(subnetID, subnetIDs, mapping);
     setEntries(subnetIDs);
@@ -132,6 +145,35 @@ public:
     auto &entry = getEntry(i);
     entry.subnetID = OBJ_NULL_ID;
     entry.builder = builder;
+  }
+
+  /// Returns the number of input/output/internal cells of the i-th subnet.
+  std::tuple<size_t, size_t, size_t> getCellNum(const size_t i) const {
+    size_t n, m, k;
+    const auto &entry = getEntry(i);
+    if (entry.subnetID != OBJ_NULL_ID) {
+      const auto &subnet = Subnet::get(entry.subnetID);
+      n = subnet.getInNum();
+      m = subnet.getOutNum();
+      k = subnet.getCellNum();
+    } else {
+      assert(entry.builder != nullptr);
+      const auto &builder = entry.builder;
+      n = builder->getInNum();
+      m = builder->getOutNum();
+      k = builder->getCellNum();
+    }
+
+    return std::make_tuple(n, m, k - n - m);
+  }
+
+  /// Returns the number of input/output/internal cells of the design.
+  std::tuple<size_t, size_t, size_t> getCellNum() const {
+    size_t nInt{0};
+    for (size_t i = 0; i < subnets.size(); ++i) {
+      nInt += std::get<2>(getCellNum(i));
+    }
+    return std::make_tuple(nIn, nOut, nInt);
   }
 
   /// Returns the global check points.
@@ -274,6 +316,9 @@ private:
   std::vector<std::string> points;
   std::vector<SubnetEntry> subnets;
   std::vector<CellMapping> mapping;
+
+  size_t nIn;  // FIXME:
+  size_t nOut; // FIXME:
 };
 
 inline SubnetID makeSubnet(const NetID netID) {

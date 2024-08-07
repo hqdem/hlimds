@@ -38,8 +38,11 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
 
     const bool isTechMapped = designBuilder->isTechMapped();
 
-    size_t nIn{0}, nOut{0}, nCell{0}, depth{0};
+    size_t nIn{0}, nOut{0}, nInt{0}, depth{0};
     float area{0}, delay{0}, power{0}, activ{0};
+
+    std::tie(nIn, nOut, nInt) = designBuilder->getCellNum();
+    const size_t nCell = nIn + nOut + nInt;
 
     for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
       const auto &subnetID = designBuilder->getSubnetID(i);
@@ -49,9 +52,6 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
       eda::gate::model::SubnetBuilder builder(subnet);
       eda::gate::analyzer::ProbabilityEstimator estimator;
 
-      nIn += subnet.getInNum();
-      nOut += subnet.getOutNum();
-      nCell += subnet.getCellNum();
       activ += estimator.estimate(builder).getSwitchProbsSum();
       depth = std::max<size_t>(subnet.getPathLength().second, depth);
 
@@ -67,7 +67,7 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
     printNameValue("POs", nOut);
     printNameValue("Subnets", designBuilder->getSubnetNum());
     printNameValue("Cells", nCell, " (incl. PI/PO)");
-    printNameValue("", nCell - nIn - nOut);
+    printNameValue("", nInt);
     printNameValue("Depth", depth);
     printNameValue("SwActiv", activ);
 

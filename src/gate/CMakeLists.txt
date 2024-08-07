@@ -63,6 +63,8 @@ add_library(Gate OBJECT
   optimizer/synthesis/unitized_table.cpp
   optimizer/synthesis/zhegalkin.cpp
   premapper/aigmapper.cpp
+  premapper/migmapper.cpp
+  premapper/premapper.cpp
   simulator/simulator.cpp
   synthesizer/synthesizer.cpp
   synthesizer/synthesizer_add.cpp

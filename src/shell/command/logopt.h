@@ -32,6 +32,8 @@ static void measureAndRun(const std::string &name, Func func) {
   const auto oldCellNum = std::get<2>(designBuilder->getCellNum());
   const auto start = clock::now();
   func();
+  // To delete useless buffers.
+  designBuilder->makeSubnets();
   const auto end = clock::now();
   const auto newCellNum = std::get<2>(designBuilder->getCellNum());
 

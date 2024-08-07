@@ -182,7 +182,7 @@ public:
       auto &entry = getEntry(i);
       if (entry.subnetID == OBJ_NULL_ID) {
         assert(entry.builder != nullptr);
-        setSubnetID(i, entry.builder->make(DeleteBuffers));
+        entry.subnetID = entry.builder->make(DeleteBuffers);
       }
     }
   }

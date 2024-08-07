@@ -29,13 +29,11 @@ template<typename Func>
 static void measureAndRun(const std::string &name, Func func) {
   using clock = std::chrono::high_resolution_clock;
 
-  const auto oldCellNum = std::get<2>(designBuilder->getCellNum());
+  const auto oldCellNum = std::get<2>(designBuilder->getCellNum(false));
   const auto start = clock::now();
   func();
-  // To delete useless buffers.
-  designBuilder->makeSubnets();
   const auto end = clock::now();
-  const auto newCellNum = std::get<2>(designBuilder->getCellNum());
+  const auto newCellNum = std::get<2>(designBuilder->getCellNum(false));
 
   printTimeAndEffect<clock>(name, start, end, oldCellNum, newCellNum, "  - ");
 }

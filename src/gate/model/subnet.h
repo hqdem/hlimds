@@ -200,6 +200,8 @@ public:
   uint16_t getOutNum() const { return nOut; }
   /// Returns the number of cells.
   uint32_t getCellNum() const { return nCell; }
+  /// Returns the number of buffers.
+  uint32_t getBufNum() const { return nBuf; }
 
   /// Returns the i-th input index.
   size_t getInIdx(const size_t i) const { return i; }
@@ -255,8 +257,9 @@ private:
   Subnet(uint16_t nIn,
          uint16_t nOut,
          uint32_t nCell,
+         uint32_t nBuf,
          const std::vector<Entry> &entries):
-      nIn(nIn), nOut(nOut), nCell(nCell), nEntry(entries.size()),
+      nIn(nIn), nOut(nOut), nCell(nCell), nBuf(nBuf), nEntry(entries.size()),
       entries(ArrayBlock<Entry>::allocate(entries, true, true)) {}
 
   /// Number of inputs.
@@ -265,11 +268,10 @@ private:
   const uint16_t nOut;
   /// Number of cells.
   const uint32_t nCell;
+  /// Number of buffers.
+  const uint32_t nBuf;
   /// Total number of entries.
   const uint32_t nEntry;
-
-  /// For alignment purposes.
-  const uint32_t __reserved{0};
 
   /// Topologically sorted array of entries.
   const Array<Entry> entries;
@@ -479,13 +481,14 @@ public:
 
   SubnetBuilder &operator =(const SubnetBuilder &) = delete;
 
-  /// Returns the number of cells.
-  size_t getCellNum() const { return nCell; }
-
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
+  /// Returns the number of cells.
+  size_t getCellNum() const { return nCell; }
+  /// Returns the number of buffers.
+  size_t getBufNum() const { return nBuf; }
 
   /// Returns the maximum entry index.
   size_t getMaxIdx() const { return entries.size() - 1; }
@@ -870,7 +873,7 @@ public:
     }
     assert(checkInputsOrder() && checkOutputsOrder());
 
-    return allocateObject<Subnet>(nIn, nOut, nCell, std::move(entries));
+    return allocateObject<Subnet>(nIn, nOut, nCell, nBuf, std::move(entries));
   }
 
   /// @brief Makes a subnet.
@@ -971,7 +974,7 @@ private:
   void delFanout(size_t sourceID, size_t fanoutID);
 
   /// Allocates an entry and returns its index.
-  size_t allocEntry();
+  size_t allocEntry(bool isBuf);
   /// Returns an entry of the given type or allocates a new one.
   size_t allocEntry(CellTypeID typeID, const LinkList &links);
 
@@ -1069,9 +1072,10 @@ private:
     size_t session;
   };
 
-  size_t nCell{0};
   uint16_t nIn{0};
   uint16_t nOut{0};
+  size_t nCell{0};
+  size_t nBuf{0};
 
   std::vector<Entry> entries;
   bool isDisassembled{false};

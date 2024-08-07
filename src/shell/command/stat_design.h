@@ -41,7 +41,7 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
     size_t nIn{0}, nOut{0}, nInt{0}, depth{0};
     float area{0}, delay{0}, power{0}, activ{0};
 
-    std::tie(nIn, nOut, nInt) = designBuilder->getCellNum();
+    std::tie(nIn, nOut, nInt) = designBuilder->getCellNum(false);
     const size_t nCell = nIn + nOut + nInt;
 
     for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {

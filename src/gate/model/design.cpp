@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -15,6 +15,29 @@ namespace eda::gate::model {
 
 using LinkSet = std::unordered_set<Link>;
 using LinkMap = NetDecomposer::LinkMap;
+
+std::tuple<size_t, size_t, size_t> DesignBuilder::getCellNum(
+    const size_t i,
+    const bool withBufs) const {
+  size_t nI, nO, nC, nB;
+  const auto &entry = getEntry(i);
+  if (entry.subnetID != OBJ_NULL_ID) {
+    const auto &subnet = Subnet::get(entry.subnetID);
+    nI = subnet.getInNum();
+    nO = subnet.getOutNum();
+    nC = subnet.getCellNum();
+    nB = !withBufs ? subnet.getBufNum() : 0;
+  } else {
+    assert(entry.builder != nullptr);
+    const auto &builder = entry.builder;
+    nI = builder->getInNum();
+    nO = builder->getOutNum();
+    nC = builder->getCellNum();
+    nB = !withBufs ? builder->getBufNum() : 0;
+  }
+
+  return std::make_tuple(nI, nO, nC - nI - nO - nB);
+}
 
 static void replace(const CellID oldCellID, const CellID newCellID,
                     const std::vector<uint16_t> &newInputs,

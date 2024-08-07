@@ -871,8 +871,9 @@ void SubnetBuilder::delFanout(size_t sourceID, size_t fanoutID) {
   }
 }
 
-size_t SubnetBuilder::allocEntry() {
+size_t SubnetBuilder::allocEntry(bool isBuf) {
   nCell++;
+  if (isBuf) nBuf++;
 
   if (!emptyEntryIDs.empty()) {
     const auto allocatedID = emptyEntryIDs.back();
@@ -899,7 +900,8 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
     return status.first;
   }
 
-  const size_t idx = (status.first != invalidID) ? status.first : allocEntry();
+  const size_t idx = (status.first != invalidID) ?
+      status.first : allocEntry(typeID == CELL_TYPE_ID_BUF);
 
   desc[idx].depth = 0;
   desc[idx].session = 0;
@@ -941,6 +943,7 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
 
 void SubnetBuilder::deallocEntry(size_t entryID) {
   const auto &cell = getCell(entryID);
+  const bool isBuf = cell.isBuf();
   assert(!cell.refcount);
 
   destrashEntry(entryID);
@@ -951,6 +954,7 @@ void SubnetBuilder::deallocEntry(size_t entryID) {
   emptyEntryIDs.push_back(entryID);
 
   nCell--;
+  if (isBuf) nBuf--;
 }
 
 void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
@@ -1165,10 +1169,14 @@ Subnet::Link SubnetBuilder::replaceCell(
   assert(StrashKey::isEnabled(typeID, links));
 
   destrashEntry(entryID);
+  auto &cell = getCell(entryID);
 
-  const auto oldRootStrKey = StrashKey(getCell(entryID));
+  if (cell.isBuf()) nBuf--;
+  if (typeID == CELL_TYPE_ID_BUF) nBuf++;
+
+  const auto oldRootStrKey = StrashKey(cell);
   const auto oldRootNext = getNext(entryID);
-  const auto oldRefcount = getCell(entryID).refcount;
+  const auto oldRefcount = cell.refcount;
   const auto oldLinks = getLinks(entryID);
   const auto oldDepth = getDepth(entryID);
   size_t newDepth = 0;
@@ -1188,12 +1196,11 @@ Subnet::Link SubnetBuilder::replaceCell(
   }
 
   entries[entryID] = Entry(typeID, links);
-  auto &cell = getCell(entryID);
   cell.refcount = oldRefcount;
   const auto newRootStrKey = StrashKey(typeID, links);
   auto it = strash.find({newRootStrKey});
   if (it == strash.end()) {
-    strash.insert({StrashKey(getCell(entryID)), entryID});
+    strash.insert({StrashKey(cell), entryID});
   }
   if (newRootStrKey != oldRootStrKey) {
     desc[entryID].session = 0;
@@ -1269,6 +1276,7 @@ void SubnetBuilder::rearrangeEntries(
         relinkMapping[i] = {bufLink.idx, bufLink.inv};
       }
       nCell--;
+      nBuf--;
       continue;
     }
     relinkMapping[i] = {newEntries.size(), 0};
@@ -1361,7 +1369,7 @@ std::pair<size_t, bool> SubnetBuilder::strashEntry(
       return {i->second, false /* old */};
     }
 
-    const auto idx = allocEntry();
+    const auto idx = allocEntry(typeID == CELL_TYPE_ID_BUF);
     strash.insert({key, idx});
 
     return {idx, true /* new */};

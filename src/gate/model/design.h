@@ -148,30 +148,14 @@ public:
   }
 
   /// Returns the number of input/output/internal cells of the i-th subnet.
-  std::tuple<size_t, size_t, size_t> getCellNum(const size_t i) const {
-    size_t n, m, k;
-    const auto &entry = getEntry(i);
-    if (entry.subnetID != OBJ_NULL_ID) {
-      const auto &subnet = Subnet::get(entry.subnetID);
-      n = subnet.getInNum();
-      m = subnet.getOutNum();
-      k = subnet.getCellNum();
-    } else {
-      assert(entry.builder != nullptr);
-      const auto &builder = entry.builder;
-      n = builder->getInNum();
-      m = builder->getOutNum();
-      k = builder->getCellNum();
-    }
-
-    return std::make_tuple(n, m, k - n - m);
-  }
+  std::tuple<size_t, size_t, size_t> getCellNum(const size_t i,
+                                                const bool withBufs) const;
 
   /// Returns the number of input/output/internal cells of the design.
-  std::tuple<size_t, size_t, size_t> getCellNum() const {
+  std::tuple<size_t, size_t, size_t> getCellNum(const bool withBufs) const {
     size_t nInt{0};
     for (size_t i = 0; i < subnets.size(); ++i) {
-      nInt += std::get<2>(getCellNum(i));
+      nInt += std::get<2>(getCellNum(i, withBufs));
     }
     return std::make_tuple(nIn, nOut, nInt);
   }

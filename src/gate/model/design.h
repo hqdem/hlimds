@@ -176,6 +176,17 @@ public:
     return std::make_tuple(nIn, nOut, nInt);
   }
 
+  /// Makes the subnets.
+  void makeSubnets() {
+    for (size_t i = 0; i < subnets.size(); ++i) {
+      auto &entry = getEntry(i);
+      if (entry.subnetID == OBJ_NULL_ID) {
+        assert(entry.builder != nullptr);
+        setSubnetID(i, entry.builder->make(DeleteBuffers));
+      }
+    }
+  }
+
   /// Returns the global check points.
   std::vector<std::string> getPoints() const {
     return points;

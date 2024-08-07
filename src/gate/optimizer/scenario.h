@@ -65,6 +65,9 @@ struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
   ScenarioExecutor(const std::string &name, const Scenario<Builder> &scenario):
       InPlaceTransformer<ID, Builder>(name), scenario(scenario) {}
 
+  ScenarioExecutor(const Scenario<Builder> &scenario):
+      ScenarioExecutor(scenario.getName(), scenario) {}
+
   void setMaxLength(const size_t maxLength) {
     this->maxLength = maxLength;
   }

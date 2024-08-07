@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "fmt/format.h"
 #include "gate/analyzer/probabilistic_estimate.h"
 #include "gate/optimizer/associative_balancer.h"
 #include "gate/optimizer/design_transformer.h"
@@ -23,6 +22,8 @@
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/aigmapper.h"
+
+#include "fmt/format.h"
 
 #include <cstdint>
 #include <functional>

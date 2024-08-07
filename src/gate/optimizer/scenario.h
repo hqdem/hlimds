@@ -12,6 +12,7 @@
 #include "gate/model/subnet.h"
 #include "gate/optimizer/transformer.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -62,11 +63,21 @@ private:
  */
 template <typename ID, typename Builder>
 struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
-  ScenarioExecutor(const std::string &name, const Scenario<Builder> &scenario):
-      InPlaceTransformer<ID, Builder>(name), scenario(scenario) {}
+  using Callback = std::function<void(ScenarioState<Builder> &state)>;
 
-  ScenarioExecutor(const Scenario<Builder> &scenario):
-      ScenarioExecutor(scenario.getName(), scenario) {}
+  ScenarioExecutor(const std::string &name,
+                   const Scenario<Builder> &scenario,
+                   const Callback *onBegin = nullptr,
+                   const Callback *onEnd = nullptr):
+      InPlaceTransformer<ID, Builder>(name),
+      scenario(scenario),
+      onBegin(onBegin),
+      onEnd(onEnd) {}
+
+  ScenarioExecutor(const Scenario<Builder> &scenario,
+                   const Callback *onBegin = nullptr,
+                   const Callback *onEnd = nullptr):
+      ScenarioExecutor(scenario.getName(), scenario, onBegin, onEnd) {}
 
   void setMaxLength(const size_t maxLength) {
     this->maxLength = maxLength;
@@ -75,13 +86,19 @@ struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
   void transform(const BuilderPtr<Builder> &builder) const override {
     auto state = scenario.initialize(builder);
     for (size_t i = 0; i < maxLength && !scenario.isOver(*state); ++i) {
+      if (onBegin) onBegin(*state);
       scenario.transform(*state);
+      if (onEnd) onEnd(*state);
     }
     scenario.finalize(*state);
   }
 
 private:
   const Scenario<Builder> &scenario;
+
+  const Callback *onBegin;
+  const Callback *onEnd;
+
   size_t maxLength{-1ull};
 };
 

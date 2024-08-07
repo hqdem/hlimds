@@ -74,10 +74,10 @@ struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
 
   void transform(const BuilderPtr<Builder> &builder) const override {
     auto state = scenario.initialize(builder);
-    for (size_t i = 0; i < maxLength && !scenario.isOver(state); ++i) {
-      scenario.transform(state);
+    for (size_t i = 0; i < maxLength && !scenario.isOver(*state); ++i) {
+      scenario.transform(*state);
     }
-    scenario.finalize(state);
+    scenario.finalize(*state);
   }
 
 private:

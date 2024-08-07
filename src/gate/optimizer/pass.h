@@ -23,6 +23,7 @@
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/aigmapper.h"
+#include "gate/premapper/migmapper.h"
 
 #include "fmt/format.h"
 
@@ -50,8 +51,7 @@ inline SubnetMapper aig() {
 
 /// Mapping to the MIG representation.
 inline SubnetMapper mig() {
-  // FIXME:
-  return nullptr;
+  return std::make_shared<premapper::MigMapper>("mig");
 }
 
 //===----------------------------------------------------------------------===//

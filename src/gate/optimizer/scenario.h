@@ -32,9 +32,12 @@ struct ScenarioState {
 /**
  * @brief Interface for subnet/design optimization scenario.
  */
-template <typename Builder>
+template <typename ID, typename Builder>
 class Scenario {
 public:
+  using State = ScenarioState<Builder>;
+  using Action = std::shared_ptr<InPlaceTransformer<ID, Builder>>;
+
   Scenario(const std::string &name): name(name) {}
   virtual ~Scenario() {}
 
@@ -42,17 +45,17 @@ public:
   std::string getName() const { return name; }
 
   /// Returns the initial scenario state.
-  virtual std::unique_ptr<ScenarioState<Builder>> initialize(
+  virtual std::unique_ptr<State> initialize(
       const BuilderPtr<Builder> &builder) const = 0;
 
   /// Checks whether the scenario is over.
-  virtual bool isOver(ScenarioState<Builder> &state) const = 0;
+  virtual bool isOver(State &state) const = 0;
 
-  /// Applies an optimization pass to the builder.
-  virtual void transform(ScenarioState<Builder> &state) const = 0;
+  /// Returns an optimization pass to be applied to the builder.
+  virtual Action getAction(State &state) const = 0;
 
   /// Finalizes the sceanario.
-  virtual void finalize(ScenarioState<Builder> &state) const = 0;
+  virtual void finalize(State &state) const = 0;
 
 private:
   const std::string name;
@@ -63,10 +66,12 @@ private:
  */
 template <typename ID, typename Builder>
 struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
-  using Callback = std::function<void(ScenarioState<Builder> &state)>;
+  using State = typename Scenario<ID, Builder>::State;
+  using Action = typename Scenario<ID, Builder>::Action;
+  using Callback = std::function<void(const State &, const Action &)>;
 
   ScenarioExecutor(const std::string &name,
-                   const Scenario<Builder> &scenario,
+                   const Scenario<ID, Builder> &scenario,
                    const Callback *onBegin = nullptr,
                    const Callback *onEnd = nullptr):
       InPlaceTransformer<ID, Builder>(name),
@@ -74,7 +79,7 @@ struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
       onBegin(onBegin),
       onEnd(onEnd) {}
 
-  ScenarioExecutor(const Scenario<Builder> &scenario,
+  ScenarioExecutor(const Scenario<ID, Builder> &scenario,
                    const Callback *onBegin = nullptr,
                    const Callback *onEnd = nullptr):
       ScenarioExecutor(scenario.getName(), scenario, onBegin, onEnd) {}
@@ -86,15 +91,17 @@ struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
   void transform(const BuilderPtr<Builder> &builder) const override {
     auto state = scenario.initialize(builder);
     for (size_t i = 0; i < maxLength && !scenario.isOver(*state); ++i) {
-      if (onBegin) (*onBegin)(*state);
-      scenario.transform(*state);
-      if (onEnd) (*onEnd)(*state);
+      const auto action = scenario.getAction(state);
+
+      if (onBegin) (*onBegin)(*state, action);
+      action->transform(builder);
+      if (onEnd) (*onEnd)(*state, action);
     }
     scenario.finalize(*state);
   }
 
 private:
-  const Scenario<Builder> &scenario;
+  const Scenario<ID, Builder> &scenario;
 
   const Callback *onBegin;
   const Callback *onEnd;
@@ -105,8 +112,10 @@ private:
 using SubnetScenarioState = ScenarioState<model::SubnetBuilder>;
 using DesignScenarioState = ScenarioState<model::DesignBuilder>;
 
-using SubnetScenario = Scenario<model::SubnetBuilder>;
-using DesignScenario = Scenario<model::DesignBuilder>;
+using SubnetScenario =
+    Scenario<model::SubnetID, model::SubnetBuilder>;
+using DesignScenario =
+    Scenario<model::NetID, model::DesignBuilder>;
 
 using SubnetScenarioExecutor =
     ScenarioExecutor<model::SubnetID, model::SubnetBuilder>;

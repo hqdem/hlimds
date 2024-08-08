@@ -35,7 +35,7 @@ Link MigMapper::mapXor(const LinkList &links, bool &inv,
 Link MigMapper::addMajTree(CellSymbol symbol, const LinkList &links,
                            SubnetBuilder &builder) const {
 
-  const auto arity = symbol == CellSymbol::XOR ? 3 : 2;
+  const size_t arity = symbol == CellSymbol::XOR ? 3 : 2;
 
   if (arity >= links.size()) {
     return addMaj(symbol, links, builder);

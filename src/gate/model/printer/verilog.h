@@ -102,8 +102,7 @@ private:
     return ss.str();
   }
 
-  void declareWiresForCellOutputs(
-      std::ostream &out, const CellInfo &cellInfo) {
+  void declareWiresForCellOutputs(std::ostream &out, const CellInfo &cellInfo) {
     const auto &type = cellInfo.type.get();
 
     if (type.isIn() || type.isOut())
@@ -115,14 +114,61 @@ private:
     }
   }
 
-  void assignConstant(
-      std::ostream &out, const CellInfo &cellInfo) {
+  void assignConstant(std::ostream &out, const CellInfo &cellInfo) {
     const auto &type = cellInfo.type.get();
     assert(type.isZero() || type.isOne());
 
     printIndent(out, 1);
     out << "assign " << PortInfo(cellInfo, 0).getName()
         << " = " << (type.isZero() ? "0" : "1") << ";\n";
+  }
+
+  void inputBinding(std::ostream &out, const LinkInfo &linkInfo) {
+    out << getLinkExpr(linkInfo);
+  }
+
+  void inputBinding(std::ostream &out,
+                    const LinksInfo &linksInfo,
+                    size_t index,
+                    size_t width) {
+    assert(width > 0);
+
+    if (width == 1) {
+      inputBinding(out, linksInfo[index]);
+    } else {
+      out << "{";
+      bool comma = false;
+      for (size_t i = 0; i < width; ++i) {
+        if (comma) out << ", ";
+        inputBinding(out, linksInfo[index + width - 1 - i]);
+        comma = true;
+      }
+      out << "}";
+    }
+  }
+
+  void outputBinding(std::ostream &out, const PortInfo &portInfo) {
+    out << portInfo.getName();
+  }
+
+  void outputBinding(std::ostream &out,
+                     const CellInfo &cellInfo,
+                     size_t index,
+                     size_t width) {
+    assert(width > 0);
+
+    if (width == 1) {
+      outputBinding(out, PortInfo(cellInfo, index));
+    } else {
+      out << "{";
+      bool comma = false;
+      for (size_t i = 0; i < width; ++i) {
+        if (comma) out << ", ";
+        outputBinding(out, PortInfo(cellInfo, index + width - 1 - i));
+        comma = true;
+      }
+      out << "}";
+    }
   }
 
   void instantiateCell(std::ostream &out,
@@ -136,34 +182,36 @@ private:
 
     bool comma = false;
 
-    if (type.hasAttr() && type.getAttr().hasPortInfo()) {
-      // In custom gate, the order of ports can be arbitrary.
-      const auto &attr = type.getAttr();
-      const auto ports = attr.getOrderedPorts();
-
-      size_t input{0}, output{0};
-      for (const auto &port : ports) {
-        assert(port.width == 1 && "Multi-bit ports are not supported");
-
-        if (comma) out << ", ";
-        if (port.input) {
-          out << getLinkExpr(linksInfo[input++]);
-        } else {
-          out << PortInfo(cellInfo, output++).getName();
-        }
-        comma = true;
-      }
-    } else {
+    if (type.isGate()) {
       // In standard gates, outputs come before inputs.
       for (uint16_t output = 0; output < type.getOutNum(); ++output) {
         if (comma) out << ", ";
-        out << PortInfo(cellInfo, output).getName();
+        outputBinding(out, PortInfo(cellInfo, output));
         comma = true;
       }
 
       for (auto linkInfo : linksInfo) {
         if (comma) out << ", ";
-        out << getLinkExpr(linkInfo);
+        inputBinding(out, linkInfo);
+        comma = true;
+      }
+    } else {
+      assert(type.hasAttr() && type.getAttr().hasPortInfo());
+
+      // In custom gates, the order of ports can be arbitrary.
+      const auto &attr = type.getAttr();
+      const auto ports = attr.getOrderedPorts();
+
+      size_t input{0}, output{0};
+      for (const auto &port : ports) {
+        if (comma) out << ", ";
+        if (port.input) {
+          inputBinding(out, linksInfo, input, port.width);
+          input += port.width;
+        } else {
+          outputBinding(out, cellInfo, output, port.width);
+          output += port.width;
+        }
         comma = true;
       }
     }

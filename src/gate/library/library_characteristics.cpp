@@ -8,7 +8,10 @@
 
 #include "gate/library/library_characteristics.h"
 #include "gate/library/library_parser.h"
-#include <float.h>
+
+#include <cfloat>
+#include <filesystem>
+#include <regex>
 
 namespace eda::gate::library {
 
@@ -69,10 +72,18 @@ bool LibraryCharacteristics::areIdsInExpr(
   return true;
 }
 
+static inline bool isInput(const Pin &pin) {
+  return (pin.getIntegerAttribute("direction", 10) & 0x1) != 0;
+}
+
+static inline bool isOutput(const Pin &pin) {
+  return (pin.getIntegerAttribute("direction", 10) & 0x2) != 0;
+}
+
 std::vector<std::string> LibraryCharacteristics::getFunctions(const std::string &name) {
   std::vector<std::string> funcs;
-  for (const auto& pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
-    if (pin.getIntegerAttribute("direction", 10) & (1 << 1)) {
+  for (const auto &pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
+    if (isOutput(pin)) {
       if (pin.hasAttribute("function")) {
         const auto* func = pin.getBexprAttribute("function");
         if (func != nullptr) {
@@ -92,12 +103,20 @@ std::vector<std::string> LibraryCharacteristics::getCells() {
   return cells;
 }
 
+model::CellType::PortVector LibraryCharacteristics::getPorts(const std::string &name) {
+  model::CellType::PortVector ports;
+  size_t index{0};
+  for (const auto &pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
+    ports.emplace_back(std::string(pin.getName()), 1, isInput(pin), index++);
+  }
+  return ports; 
+}
+
 std::vector<std::string> LibraryCharacteristics::getInputs(const std::string &name) {
   std::vector<std::string> inputs;
 
-  for (const auto& pin : LibraryParser::get().getLibrary().getCell(name)->
-      getPins()) {
-    if (pin.getIntegerAttribute("direction", 10) & (1 << 0)) {
+  for (const auto &pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
+    if (isInput(pin)) {
       inputs.push_back(std::string(pin.getName()));
     }
   }
@@ -106,9 +125,8 @@ std::vector<std::string> LibraryCharacteristics::getInputs(const std::string &na
 
 std::vector<std::string> LibraryCharacteristics::getOutputs(const std::string &name) {
   std::vector<std::string> outputs;
-  for (const auto& pin : LibraryParser::get().getLibrary().getCell(name)->
-      getPins()) {
-    if (pin.getIntegerAttribute("direction", 10) & (1 << 1)) {
+  for (const auto &pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
+    if (isOutput(pin)) {
       outputs.push_back(std::string(pin.getName()));
     }
   }

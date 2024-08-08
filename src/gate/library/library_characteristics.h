@@ -8,19 +8,16 @@
 
 #pragma once
 
-#include "util/singleton.h"
+#include "gate/model/celltype.h"
 
-#include <kitty/print.hpp>
+#include <kitty/kitty.hpp>
 
 #include <readcells/ast.h>
 #include <readcells/ast_parser.h>
 #include <readcells/groups.h>
 
-#include <cstdio>
-#include <filesystem>
-#include <memory.h>
-#include <regex>
 #include <string>
+#include <vector>
 
 namespace eda::gate::library {
 
@@ -39,6 +36,8 @@ public:
   };
 
   static std::vector<std::string> getCells();
+
+  static model::CellType::PortVector getPorts(const std::string &name);
 
   static std::vector<std::string> getInputs(const std::string &name);
   static std::vector<std::string> getOutputs(const std::string &name);

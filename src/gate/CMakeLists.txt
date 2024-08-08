@@ -13,6 +13,7 @@ add_library(Gate OBJECT
   estimator/cost_estimator.cpp
   estimator/simple_time_model.cpp
   model/cell.cpp
+  model/cellattr.cpp
   model/celltype.cpp
   model/decomposer/net_decomposer.cpp
   model/design.cpp

@@ -18,11 +18,11 @@ using MinatoMorrealeAlg = optimizer::synthesis::MMSynthesizer;
 void SCLibrary::loadCells() {
   combCells.clear();
 
-  for (const auto &cell : LibraryCharacteristics::getCells()) {
-    if (LibraryCharacteristics::isIsolateCell(cell)) continue;
+  for (const auto &name : LibraryCharacteristics::getCells()) {
+    if (LibraryCharacteristics::isIsolateCell(name)) continue;
 
-    if (LibraryCharacteristics::isCombCell(cell)) {
-      addCombCell(cell);
+    if (LibraryCharacteristics::isCombCell(name)) {
+      addCombCell(name);
     } else {
       //addSeqCell(cell);
     }
@@ -30,7 +30,7 @@ void SCLibrary::loadCells() {
   permutation();
 }
 
-void SCLibrary::addCell(CellTypeID cell) {
+void SCLibrary::addCell(CellTypeID typeID) {
   //combCells.push_back(cell);
 }
 
@@ -38,30 +38,35 @@ std::vector<SCLibrary::StandardCell> SCLibrary::getCombCells() {
   return combCells;
 }
 
-void SCLibrary::addCombCell(std::string cell) {
-  const auto typeAttr = model::makeCellTypeAttr();
-  model::CellTypeAttr::get(typeAttr).props.area =
-      LibraryCharacteristics::getArea(cell);
+void SCLibrary::addCombCell(const std::string &name) {
+  const auto ports = LibraryCharacteristics::getPorts(name);
 
-  if (LibraryCharacteristics::getInputs(cell).empty() ||
-      LibraryCharacteristics::getArea(cell) == MAXFLOAT) {
+  const auto nIn = model::CellTypeAttr::getInBitWidth(ports);
+  const auto nOut = model::CellTypeAttr::getOutBitWidth(ports);
+
+  const auto area = LibraryCharacteristics::getArea(name);
+
+  if (nIn == 0 || area == MAXFLOAT) {
     return;
   }
 
-  model::CellProperties props(true, false, true, false, false, false,
-                              false, false, false);
+  const auto attrID = model::makeCellTypeAttr(ports);
+  model::CellTypeAttr::get(attrID).props.area = area;
 
-  MinatoMorrealeAlg minatoMorrealeAlg;
-  auto subnetObject = minatoMorrealeAlg.synthesize(LibraryCharacteristics::getFunction(cell));
+  const auto func = LibraryCharacteristics::getFunction(name);
+  auto subnetObject = MinatoMorrealeAlg{}.synthesize(func);
 
   const auto cellTypeID = model::makeCellType(
-      model::CellSymbol::UNDEF, cell, subnetObject.make(),
-      typeAttr, props, LibraryCharacteristics::getInputs(cell).size(),
-      static_cast<uint16_t>(1)
-  );
+      model::CellSymbol::UNDEF,
+      name,
+      subnetObject.make(),
+      attrID,
+      model::CellProperties{1, 0, 1, 0, 0, 0, 0, 0, 0},
+      nIn,
+      nOut);
 
-  std::vector<int> link = {};
-  for (size_t i = 0; i < LibraryCharacteristics::getInputs(cell).size(); i++) {
+  std::vector<int> link{};
+  for (size_t i = 0; i < nIn; i++) {
     link.push_back(i);
   }
   combCells.push_back({cellTypeID, link});

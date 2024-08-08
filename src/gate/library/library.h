@@ -38,14 +38,14 @@ public:
   };
 
   void loadCells();
-  void addCell(CellTypeID cell);
+  void addCell(CellTypeID typeID);
   std::vector<StandardCell> getCombCells();
 
 private:
   std::vector<StandardCell> combCells;
 
   void permutation();
-  void addCombCell(std::string name);
+  void addCombCell(const std::string &name);
 
   SCLibrary() : Singleton() {}
   friend class Singleton<SCLibrary>;

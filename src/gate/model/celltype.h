@@ -427,6 +427,7 @@ class CellType final : public Object<CellType, CellTypeID> {
 
 public:
   using PortWidths = CellTypeAttr::PortWidths;
+  using PortVector = CellTypeAttr::PortVector;
 
   static constexpr uint16_t AnyArity = 0xffff;
 
@@ -621,6 +622,17 @@ inline CellTypeID makeCellType(CellSymbol symbol,
 inline CellTypeID makeSoftType(CellSymbol symbol,
                                const std::string &name,
                                uint64_t implID,
+                               const CellType::PortVector &ports) {
+  const auto attrID = makeCellTypeAttr(ports);
+  const CellProperties props{0, 1, 0, 0, 0, 0, 0, 0, 0};
+  const auto nIn = CellTypeAttr::getInBitWidth(ports);
+  const auto nOut = CellTypeAttr::getOutBitWidth(ports);
+  return makeCellType(symbol, name, implID, attrID, props, nIn, nOut);
+}
+
+inline CellTypeID makeSoftType(CellSymbol symbol,
+                               const std::string &name,
+                               uint64_t implID,
                                const CellType::PortWidths &widthIn,
                                const CellType::PortWidths &widthOut) {
   const auto attrID = makeCellTypeAttr(widthIn, widthOut);
@@ -665,11 +677,21 @@ inline CellTypeID makeSoftType(CellSymbol symbol,
 
 inline CellTypeID makeHardType(CellSymbol symbol,
                                const std::string &name,
+                               const CellType::PortVector &ports) {
+  const auto attrID = makeCellTypeAttr(ports);
+  const CellProperties props{0, 0, 0, 0, 0, 0, 0, 0, 0};
+  const auto nIn = CellTypeAttr::getInBitWidth(ports);
+  const auto nOut = CellTypeAttr::getOutBitWidth(ports);
+  return makeCellType(symbol, name, OBJ_NULL_ID, attrID, props, nIn, nOut);
+}
+
+inline CellTypeID makeHardType(CellSymbol symbol,
+                               const std::string &name,
                                const CellType::PortWidths &widthIn,
                                const CellType::PortWidths &widthOut) {
   const auto attrID = makeCellTypeAttr(widthIn, widthOut);
   const CellProperties props{0, 0, 0, 0, 0, 0, 0, 0, 0};
-  const auto nIn  = CellTypeAttr::getBitWidth(widthIn);
+  const auto nIn = CellTypeAttr::getBitWidth(widthIn);
   const auto nOut = CellTypeAttr::getBitWidth(widthOut);
   return makeCellType(symbol, name, OBJ_NULL_ID, attrID, props, nIn, nOut);
 }

@@ -26,8 +26,8 @@ model::SubnetID synthNeg(const model::CellTypeAttr &attr) {
 
   model::SubnetBuilder builder;
 
-  const auto sizeA = attr.width[0];
-  const auto outSize = attr.width[1];
+  const auto sizeA = attr.getInWidth(0);
+  const auto outSize = attr.getOutWidth(0);
 
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
 

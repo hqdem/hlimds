@@ -22,8 +22,8 @@ model::SubnetID synthAdd(const model::CellTypeAttr &attr) {
 
   model::SubnetBuilder builder;
 
-  const auto sizeA = attr.width[0], sizeB = attr.width[1];
-  const auto outSize = attr.width[2];
+  const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
+  const auto outSize = attr.getOutWidth(0);
 
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
   model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
@@ -39,8 +39,8 @@ model::SubnetID synthSub(const model::CellTypeAttr &attr) {
 
   model::SubnetBuilder builder;
 
-  const auto sizeA = attr.width[0], sizeB = attr.width[1];
-  const auto outSize = attr.width[2];
+  const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
+  const auto outSize = attr.getOutWidth(0);
 
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
   model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);

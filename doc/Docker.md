@@ -17,6 +17,7 @@ The guide was checked on Ubuntu 20.04 operating system.
   - [Data exchanging](#data-exchanging)
     - [Docker Volumes](#volumes)
     - [Shared directory](#shared-directory)
+  - [Memory usage](#memory-usage)
 - [Examples](#example-of-usage)
   - [Container running](#run-utopia-eda-image-as-a-container)
   - [Image modifying](#update-utopia-eda-image-and-upload-it-to-gitlab-container-registry)
@@ -185,7 +186,7 @@ Here the main commands for Docker are described.
 | `docker rmi <image name/id>` | Remove image | |
 | `docker run -it --name <container name> <image name>` | Run and open the image. Make container from image | Press Ctrl+D to exit from container terminal |
 | `docker ps -a` | List of containers | Container status (started or stopped) |
-| `docker rm <container name/id>` | Remove container | |
+| `docker rm <container name/id>` | Remove container | Use key `-f` to remove running container |
 | `docker commit <container id> <image name>` | Make image from container | Save the state of the container |
 | `docker start/stop <container name/id>` | Run/stop backround container | Only running containers can be opened |
 | `docker exec -it <container name/id> /bin/bash` | Open a running container | Press Ctrl+D to exit from container terminal |
@@ -312,6 +313,62 @@ After that, use container terminal:
 Press `Ctrl + D` to exit from container terminal and stop the container.
 
 Then you can check changes in `path/on/host/to/input_data` on the host.
+
+---
+
+### Memory usage
+
+Here is a small guide on how to estimate disk usage by Docker.
+
+To check Docker disk usage in various ways, use:
+
+```console
+    docker system df
+```
+
+To free up the space, use command `prune`, which removes stopped
+containers, dangling images, volumes and building cache.
+
+To remove all stopped container, use:
+
+```console
+    docker container prune
+```
+
+The volumes still exist after the containers that used them are removed.
+This command removes all volumes that are not used by any container:
+
+```console
+    docker volume prune
+```
+
+Building new Docker image from Dockerfile with BuildKit makes
+build-cache.
+To remove it, use the following command:
+
+```console
+    docker builder prune
+```
+
+Building *new-image* from *base-image* with Dockerfile makes
+*base-image* dangling when there are no containers on *new-image*.
+The following command checks for dangling images:
+
+```console
+    docker image ls -f dangling=true
+```
+
+To remove all dangling images, use:
+
+```console
+    docker image prune
+```
+
+To remove all above, use:
+
+```console
+    docker system prune
+```
 
 ---
 

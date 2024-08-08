@@ -135,16 +135,37 @@ private:
     out << cellInfo.getType() << " " << getInstanceName(cellInfo) << "(";
 
     bool comma = false;
-    for (uint16_t output = 0; output < type.getOutNum(); ++output) {
-      if (comma) out << ", ";
-      out << PortInfo(cellInfo, output).getName();
-      comma = true;
-    }
 
-    for (auto linkInfo : linksInfo) {
-      if (comma) out << ", ";
-      out << getLinkExpr(linkInfo);
-      comma = true;
+    if (type.hasAttr() && type.getAttr().hasPortInfo()) {
+      // In custom gate, the order of ports can be arbitrary.
+      const auto &attr = type.getAttr();
+      const auto ports = attr.getOrderedPorts();
+
+      size_t input{0}, output{0};
+      for (const auto &port : ports) {
+        assert(port.width == 1 && "Multi-bit ports are not supported");
+
+        if (comma) out << ", ";
+        if (port.input) {
+          out << getLinkExpr(linksInfo[input++]);
+        } else {
+          out << PortInfo(cellInfo, output++).getName();
+        }
+        comma = true;
+      }
+    } else {
+      // In standard gates, outputs come before inputs.
+      for (uint16_t output = 0; output < type.getOutNum(); ++output) {
+        if (comma) out << ", ";
+        out << PortInfo(cellInfo, output).getName();
+        comma = true;
+      }
+
+      for (auto linkInfo : linksInfo) {
+        if (comma) out << ", ";
+        out << getLinkExpr(linkInfo);
+        comma = true;
+      }
     }
 
     out << ");\n";

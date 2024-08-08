@@ -32,13 +32,19 @@ struct PhysicalProperties final {
 static_assert(sizeof(PhysicalProperties) == 16);
 
 struct Port final {
-  Port(const std::string &name, uint16_t width, bool input, uint16_t index):
+  Port(const std::string &name, uint16_t width, bool input, uint16_t index = 0):
       name(allocateObject<String>(name)),
       width(width), input(input), index(index) {}
 
-  Port(uint16_t width, bool input, uint16_t index):
+  Port(uint16_t width, bool input, uint16_t index = 0):
       name(OBJ_NULL_ID),
       width(width), input(input), index(index) {}
+
+  Port(const std::string &name, bool input, uint16_t index = 0):
+      Port(name, 1, input, index) {}
+
+  Port(bool input, uint16_t index = 0):
+      Port(1, input, index) {}
 
   Port(): Port(0, false, 0) {}
 
@@ -106,7 +112,12 @@ public:
     return checkBitWidth(n);
   }
 
+  bool hasPortInfo() const {
+    return nInPort != Unknown && nOutPort != Unknown;
+  }
+
   uint16_t getWidth(uint16_t i) const {
+    assert(hasPortInfo());
     return ports[i].width;
   }
 
@@ -134,6 +145,16 @@ public:
     return n;
   }
 
+  PortVector getOrderedPorts() const {
+    const size_t n = nInPort + nOutPort;
+    PortVector ordered(n);
+    for (size_t i = 0; i < n; ++i) {
+      const auto &port = ports[i];
+      ordered[port.index] = port;
+    }
+    return ordered;
+  }
+
   /// Generalized physical characteristics.
   PhysicalProperties props;
 
@@ -151,32 +172,44 @@ private:
   CellTypeAttr(const PortVector &io):
       nInPort(getInNum(io)), nOutPort(getOutNum(io)) {
     assert(io.size() <= MaxPortNum);
+
+    uint16_t index{0};
+    uint32_t width{0};
+
     uint16_t i{0}, j{nInPort};
-    uint32_t n{0};
     for (const auto &port : io) {
       uint16_t &k = port.input ? i : j;
-      ports[k++] = port;
-      n += port.width;
+
+      ports[k] = port;
+      ports[k].index = index;
+
+      index += 1;
+      width += port.width;
     }
-    assert(n <= MaxBitWidth);
+
+    assert(width <= MaxBitWidth);
   }
 
   CellTypeAttr(const PortWidths &widthIn, const PortWidths &widthOut):
       nInPort(widthIn.size()), nOutPort(widthOut.size()) {
     assert(widthIn.size() + widthOut.size() <= MaxPortNum);
-    uint16_t i{0};
-    uint32_t n{0};
+
+    uint16_t index{0};
+    uint32_t width{0};
+
     for (const auto w : widthIn) {
-      ports[i] = Port{w, true /* input */, i};
-      i += 1;
-      n += w;
+      ports[index] = Port{w, true /* input */, index};
+      index += 1;
+      width += w;
     }
+
     for (const auto w : widthOut) {
-      ports[i] = Port{w, false /* output */, i};
-      i += 1;
-      n += w;
+      ports[index] = Port{w, false /* output */, index};
+      index += 1;
+      width += w;
     }
-    assert(n <= MaxBitWidth);
+
+    assert(width <= MaxBitWidth);
   }
 
   uint8_t __reserved[12];

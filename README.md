@@ -142,6 +142,7 @@ sudo make install
 To configure the build process using a CIRCT binary distribution avoiding the
 need to build from the source, see `doc/CirctPrebuilt.md`.
 
+To build CIRCT from sources, please follow the instruction below.
 LLVM requires a significant amount of RAM (about 8 Gb or more) to build.
 Please take this into account while moving through the guide.
 
@@ -287,7 +288,9 @@ Use the ``-i`` flag to switch to interactive mode after script execution:
 Example:
 
 ```console
-./build/src/umain -s scripts/synth_graphml.tcl test/data/gate/parser/graphml/OpenABC/graphml_openabcd/sasc_orig.bench.graphml test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib
+./build/src/umain -s scripts/synth_graphml.tcl \
+test/data/openabcd-subset/graphml/sasc_orig.bench.graphml \
+test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib
 ```
 
 ### Tests running

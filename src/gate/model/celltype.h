@@ -543,6 +543,8 @@ public:
 
   /// Checks whether the cell type is implemented by Net.
   bool isNet() const { return NetID::checkTag(implID); }
+  /// Returns the net ID of the cell type.
+  NetID getNetID() const { return implID; }
   /// Returns the net of the cell type.
   const Net &getNet() const;
   /// Sets the net implementation.
@@ -550,6 +552,8 @@ public:
 
   /// Checks whether the cell type is implemented by Subnet.
   bool isSubnet() const { return SubnetID::checkTag(implID); }
+  /// Returns the subnet ID of the cell type.
+  SubnetID getSubnetID() const { return implID; }
   /// Return the subnet of the cell type.
   const Subnet &getSubnet() const;
   /// Sets the subnet implementation.

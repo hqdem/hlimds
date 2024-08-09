@@ -13,6 +13,7 @@
 #include "shell/command/lec.h"
 #include "shell/command/list_points.h"
 #include "shell/command/logopt.h"
+#include "shell/command/read_firrtl.h"
 #include "shell/command/read_graphml.h"
 #include "shell/command/read_liberty.h"
 #include "shell/command/read_verilog.h"
@@ -49,6 +50,7 @@ UtopiaShell::UtopiaShell() {
   addCommand(&LecCommand::get());
   addCommand(&ListPointsCommand::get());
   addCommand(&LogOptCommand::get());
+  addCommand(&ReadFIRRTLCommand::get());
   addCommand(&ReadGraphMlCommand::get());
   addCommand(&ReadLibertyCommand::get());
   addCommand(&ReadVerilogCommand::get());

@@ -9,18 +9,10 @@
 #include "gate/synthesizer/synthesizer_shift.h"
 
 #include <algorithm>
-#include <cassert>
 
 namespace eda::gate::synthesizer {
 
-inline void checkSignature(const model::CellTypeAttr &attr) {
-  assert(attr.nInPort == 2);
-  assert(attr.nOutPort == 1);
-}
-
 model::SubnetID synthShiftL(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);
@@ -99,8 +91,6 @@ model::SubnetID synthShiftL(const model::CellTypeAttr &attr) {
 }
 
 model::SubnetID synthShiftRs(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);
@@ -115,8 +105,6 @@ model::SubnetID synthShiftRs(const model::CellTypeAttr &attr) {
 }
 
 model::SubnetID synthShiftRu(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);

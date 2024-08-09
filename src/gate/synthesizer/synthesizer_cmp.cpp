@@ -9,14 +9,8 @@
 #include "gate/synthesizer/synthesizer_cmp.h"
 
 #include <algorithm>
-#include <cassert>
 
 namespace eda::gate::synthesizer {
-
-static inline void checkSignature(const model::CellTypeAttr &attr) {
-  assert(attr.nInPort == 2);
-  assert(attr.nOutPort == 1 && attr.getOutWidth(0) == 1);
-}
 
 // xor operations for two inputs
 model::Subnet::LinkList
@@ -320,7 +314,6 @@ model::Subnet::Link synthDefaultEqS(const model::CellTypeAttr &attr,
                                     model::SubnetBuilder &builder) {
 
   auto inputsForA = builder.addInputs(attr.getInWidth(0));
-
   auto inputsForB = builder.addInputs(attr.getInWidth(1));
 
   fillBySignum(inputsForA, inputsForA.back(), inputsForB, inputsForB.back());
@@ -333,98 +326,70 @@ model::Subnet::Link synthDefaultEqS(const model::CellTypeAttr &attr,
 
 // functions for creating final subnets
 model::SubnetID synthEqU(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto output = synthDefaultEqU(attr, builder);
-
   builder.addOutput(output);
 
   return builder.make();
 }
 
 model::SubnetID synthEqS(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto output = synthDefaultEqS(attr, builder);
-
   builder.addOutput(output);
 
   return builder.make();
 }
 
 model::SubnetID synthNeqU(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto output = synthDefaultEqU(attr, builder);
-
   builder.addOutput(~output);
 
   return builder.make();
 }
 
 model::SubnetID synthNeqS(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto output = synthDefaultEqS(attr, builder);
-
   builder.addOutput(~output);
 
   return builder.make();
 }
 
 model::SubnetID synthLtU(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   return synthNtU(attr, true);
 }
 
 model::SubnetID synthLtS(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   return synthNtS(attr, true);
 }
 
 model::SubnetID synthLteU(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   return synthNteU(attr, true);
 }
 
 model::SubnetID synthLteS(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   return synthNteS(attr, true);
 }
 
 model::SubnetID synthGtU(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   return synthNtU(attr, false);
 }
 
 model::SubnetID synthGtS(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   return synthNtS(attr, false);
 }
 
 model::SubnetID synthGteU(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   return synthNteU(attr, false);
 }
 
 model::SubnetID synthGteS(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   return synthNteS(attr, false);
 }
 

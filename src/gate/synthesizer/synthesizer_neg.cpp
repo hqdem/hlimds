@@ -9,21 +9,9 @@
 #include "gate/synthesizer/synthesizer_add.h"
 #include "gate/synthesizer/synthesizer_neg.h"
 
-#include <cassert>
-
 namespace eda::gate::synthesizer {
 
-// Still need to use function from synthesizer_add, 
-// and both functions, this and in synthesizer_add has one
-// name and are located in same namspace
-static inline void checkNegSignature(const model::CellTypeAttr &attr) {
-  assert(attr.nInPort == 1);
-  assert(attr.nOutPort == 1);
-}
-
 model::SubnetID synthNeg(const model::CellTypeAttr &attr) {
-  checkNegSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto sizeA = attr.getInWidth(0);

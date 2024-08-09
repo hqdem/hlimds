@@ -430,6 +430,7 @@ public:
   using PortVector = CellTypeAttr::PortVector;
 
   static constexpr uint16_t AnyArity = 0xffff;
+  static constexpr uint16_t MaxArity = 0xfffe;
 
   CellType &operator =(const CellType &r) = delete;
   CellType(const CellType &r) = delete;
@@ -497,10 +498,10 @@ public:
   bool isModS()  const { return symbol == MODs;  }
   bool isUndef() const { return symbol == UNDEF; }
 
-  bool isDff()      const { return (symbol & ~FLGMASK) == DFF;     }
-  bool isSDff()     const { return (symbol & ~FLGMASK) == sDFF;    }
-  bool isADff()     const { return (symbol & ~FLGMASK) == aDFF;    }
-  bool isDffRs()    const { return (symbol & ~FLGMASK) == DFFrs;   }
+  bool isDff()      const { return (symbol & ~FLGMASK) == DFF;      }
+  bool isSDff()     const { return (symbol & ~FLGMASK) == sDFF;     }
+  bool isADff()     const { return (symbol & ~FLGMASK) == aDFF;     }
+  bool isDffRs()    const { return (symbol & ~FLGMASK) == DFFrs;    }
   bool isDLatch()   const { return (symbol & ~FLGMASK) == DLATCH;   }
   bool isADLatch()  const { return (symbol & ~FLGMASK) == aDLATCH;  }
   bool isDLatchRs() const { return (symbol & ~FLGMASK) == DLATCHrs; }
@@ -938,5 +939,7 @@ constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
 inline const CellType &getCellType(CellSymbol symbol) {
   return CellType::get(getCellTypeID(symbol));
 }
+
+bool validateCellType(const CellType &type);
 
 } // namespace eda::gate::model

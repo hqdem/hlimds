@@ -8,20 +8,9 @@
 
 #include "gate/synthesizer/synthesizer_mux.h"
 
-#include <cassert>
-
 namespace eda::gate::synthesizer {
 
-static inline void checkSignature(const model::CellTypeAttr &attr) {
-  assert(attr.nInPort == 3
-      && attr.getInWidth(0) == 1 && attr.getInWidth(1) == attr.getInWidth(2));
-  assert(attr.nOutPort == 1
-      && attr.getOutWidth(0) == attr.getInWidth(1));
-}
-
 model::SubnetID synthMux2(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
   const auto inputs = builder.addInputs(attr.getInWidth());
   const auto &select = inputs[0];

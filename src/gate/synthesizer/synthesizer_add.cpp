@@ -12,14 +12,7 @@
 
 namespace eda::gate::synthesizer {
 
-static inline void checkSignature(const model::CellTypeAttr &attr) {
-  assert(attr.nInPort == 2);
-  assert(attr.nOutPort == 1);
-}
-
 model::SubnetID synthAdd(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
@@ -35,8 +28,6 @@ model::SubnetID synthAdd(const model::CellTypeAttr &attr) {
 }
 
 model::SubnetID synthSub(const model::CellTypeAttr &attr) {
-  checkSignature(attr);
-
   model::SubnetBuilder builder;
 
   const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);

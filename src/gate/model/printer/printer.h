@@ -22,6 +22,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::gate::model {
@@ -47,6 +48,8 @@ public:
   /// Prints the net w/ the specified name.
   template <typename T /* Net/Subnet */>
   void print(std::ostream &out, const T &model, const std::string &name) {
+    cellIDs.clear();
+
     onModelBegin(out, name);
 
     onInterfaceBegin(out);
@@ -172,13 +175,29 @@ protected:
 private:
   const std::vector<Pass> passes;
 
+  using OriginalID = uint64_t;
+  using PrintingID = uint32_t;
+  std::unordered_map<OriginalID, PrintingID> cellIDs;
+
+  /// Unifies the input and output names in designs w/ the same interface.
+  size_t getCellPrintingID(OriginalID cellID) {
+    PrintingID cellPrintingID{0};
+    if (const auto found = cellIDs.find(cellID); found != cellIDs.end()) {
+      cellPrintingID = found->second;
+    } else {
+      cellPrintingID = cellIDs.size();
+      cellIDs.emplace(cellID, cellPrintingID);
+    }
+    return cellPrintingID;
+  }
+
   //----------------------------------------------------------------------------
   // Net-related methods
   //----------------------------------------------------------------------------
-  static CellInfo getCellInfo(CellID cellID);
-  static PortInfo getPortInfo(CellID cellID, uint16_t port);
-  static LinkInfo getLinkInfo(const LinkEnd &source, const LinkEnd &target);
-  static LinksInfo getLinksInfo(CellID cellID);
+  CellInfo getCellInfo(CellID cellID);
+  PortInfo getPortInfo(CellID cellID, uint16_t port);
+  LinkInfo getLinkInfo(const LinkEnd &source, const LinkEnd &target);
+  LinksInfo getLinksInfo(CellID cellID);
 
   void visitInputs(std::ostream &out, const Net &net);
   void visitOutputs(std::ostream &out, const Net &net);
@@ -190,10 +209,10 @@ private:
   //----------------------------------------------------------------------------
   // Subnet-related methods
   //----------------------------------------------------------------------------
-  static CellInfo getCellInfo(const Subnet &subnet, size_t idx);
-  static PortInfo getPortInfo(const Subnet &subnet, size_t idx, uint16_t j);
-  static LinkInfo getLinkInfo(const Subnet &subnet, size_t idx, uint16_t j);
-  static LinksInfo getLinksInfo(const Subnet &subnet, size_t idx);
+  CellInfo getCellInfo(const Subnet &subnet, size_t idx);
+  PortInfo getPortInfo(const Subnet &subnet, size_t idx, uint16_t j);
+  LinkInfo getLinkInfo(const Subnet &subnet, size_t idx, uint16_t j);
+  LinksInfo getLinksInfo(const Subnet &subnet, size_t idx);
 
   void visitInputs(std::ostream &out, const Subnet &subnet);
   void visitOutputs(std::ostream &out, const Subnet &subnet);

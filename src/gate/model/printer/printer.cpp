@@ -32,7 +32,8 @@ ModelPrinter &ModelPrinter::getPrinter(Format format) {
 //===----------------------------------------------------------------------===//
 
 ModelPrinter::CellInfo ModelPrinter::getCellInfo(CellID cellID) {
-  return CellInfo{Cell::get(cellID).getType(), Cell::makeSID(cellID)};
+  const auto cellPrintingID = getCellPrintingID(cellID);
+  return CellInfo{Cell::get(cellID).getType(), cellPrintingID};
 }
 
 ModelPrinter::PortInfo ModelPrinter::getPortInfo(CellID cellID, uint16_t port) {
@@ -130,7 +131,8 @@ ModelPrinter::CellInfo ModelPrinter::getCellInfo(
   const auto &entries = subnet.getEntries();
   const auto &cell = entries[idx].cell;
 
-  return CellInfo{cell.getType(), idx};
+  const auto cellPrintingID = getCellPrintingID(idx);
+  return CellInfo{cell.getType(), cellPrintingID};
 }
 
 ModelPrinter::PortInfo ModelPrinter::getPortInfo(

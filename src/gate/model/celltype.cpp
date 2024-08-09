@@ -117,11 +117,10 @@ const Subnet &CellType::getSubnet() const {
 }
 
 //===----------------------------------------------------------------------===//
-// Cell Type Validators
+// Cell Type Validator
 //===----------------------------------------------------------------------===//
 
-#define VALIDATE(prop)\
-  if(!(prop)) return false
+#define VALIDATE(prop) if (!(prop)) return false
 
 /// Validates IN.
 static bool validateIn(const CellType &type) {

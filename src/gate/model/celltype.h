@@ -940,6 +940,14 @@ inline const CellType &getCellType(CellSymbol symbol) {
   return CellType::get(getCellTypeID(symbol));
 }
 
+//===----------------------------------------------------------------------===//
+// Cell Type Validator
+//===----------------------------------------------------------------------===//
+
 bool validateCellType(const CellType &type);
+
+inline bool validateCellType(const CellTypeID typeID) {
+  return validateCellType(CellType::get(typeID));
+}
 
 } // namespace eda::gate::model

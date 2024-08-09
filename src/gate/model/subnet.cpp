@@ -1391,4 +1391,58 @@ void SubnetBuilder::destrashEntry(size_t entryID) {
   }
 }
 
+//===----------------------------------------------------------------------===//
+// Subnet Validators
+//===----------------------------------------------------------------------===//
+
+#define VALIDATE(prop) if (!(prop)) return false
+
+bool validateCell(const Subnet::Cell &cell) {
+  const auto &type = cell.getType();
+  VALIDATE(validateCellType(type));
+  VALIDATE(!type.isInNumFixed() || cell.getInNum() == type.getInNum());
+  VALIDATE(!type.isOutNumFixed() || cell.getOutNum() == type.getOutNum());
+  return true;
+}
+
+static bool validateCell(const Subnet::Cell &cell,
+                         const Subnet::LinkList &links,
+                         const bool isTechMapped) {
+  const auto &type = cell.getType();
+  VALIDATE(validateCell(cell));
+  VALIDATE(type.isIn() || type.isOut() || type.isHard() == isTechMapped);
+
+  for (const auto &link :links) {
+    VALIDATE(!isTechMapped || !link.inv);
+  }
+
+  return true;
+}
+
+bool validateSubnet(const Subnet &subnet) {
+  const auto isTechMapped = subnet.isTechMapped();
+  const auto &entries = subnet.getEntries();
+
+  for (size_t i = 0; i < entries.size(); ++i) {
+    const auto &cell = entries[i].cell;
+    const auto links = subnet.getLinks(i);
+    VALIDATE(validateCell(cell, links, isTechMapped));
+    i += cell.more;
+  }
+ 
+  return true;
+}
+
+bool validateSubnetBuilder(const SubnetBuilder &builder) {
+  const auto isTechMapped = builder.isTechMapped();
+
+  for (auto i = builder.begin(); i != builder.end(); i.nextCell()) {
+    const auto &cell = builder.getCell(*i);
+    const auto links = builder.getLinks(*i);
+    VALIDATE(validateCell(cell, links, isTechMapped));
+  }
+ 
+  return true;
+}
+
 } // namespace eda::gate::model

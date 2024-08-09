@@ -1194,4 +1194,16 @@ private:
   SubnetID subnetID{OBJ_NULL_ID};
 };
 
+//===----------------------------------------------------------------------===//
+// Subnet Validator
+//===----------------------------------------------------------------------===//
+
+bool validateCell(const Subnet::Cell &cell);
+bool validateSubnet(const Subnet &subnet);
+bool validateSubnetBuilder(const SubnetBuilder &builder);
+
+inline bool validateSubnet(const SubnetID subnetID) {
+  return validateSubnet(Subnet::get(subnetID));
+}
+
 } // namespace eda::gate::model

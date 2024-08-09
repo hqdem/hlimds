@@ -337,6 +337,18 @@ static bool validateUndef(const CellType &type) {
 bool validateCellType(const CellType &type) {
   VALIDATE(type.isGate() || type.hasAttr());
 
+  if (type.isNet()) {
+    const auto &net = type.getNet();
+    VALIDATE(net.getInNum() == type.getInNum());
+    VALIDATE(net.getOutNum() == type.getOutNum());
+    VALIDATE(validateNet(net));
+  } else if (type.isSubnet()) {
+    const auto &subnet = type.getSubnet();
+    VALIDATE(subnet.getInNum() == type.getInNum());
+    VALIDATE(subnet.getOutNum() == type.getOutNum());
+    VALIDATE(validateSubnet(subnet));
+  }
+
   switch(type.getSymbol() & ~FLGMASK) {
   case IN:       return validateIn(type);
   case OUT:      return validateOut(type);

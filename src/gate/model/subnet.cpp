@@ -1392,7 +1392,7 @@ void SubnetBuilder::destrashEntry(size_t entryID) {
 }
 
 //===----------------------------------------------------------------------===//
-// Subnet Validators
+// Subnet Validator
 //===----------------------------------------------------------------------===//
 
 #define VALIDATE(prop) if (!(prop)) return false

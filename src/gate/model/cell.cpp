@@ -50,4 +50,25 @@ void Cell::setLink(uint16_t port, const LinkEnd &source) {
   array[port] = LinkEnd::pack(source);
 }
 
+//===----------------------------------------------------------------------===//
+// Cell Validator
+//===----------------------------------------------------------------------===//
+
+#define VALIDATE(prop) if (!(prop)) return false
+
+bool validateCell(const Cell &cell) {
+  const auto &type = cell.getType();
+  VALIDATE(validateCellType(type));
+  VALIDATE(!type.isInNumFixed() || cell.getFanin() == type.getInNum());
+
+  const auto links = cell.getLinks();
+  VALIDATE(links.size() == cell.getFanin());
+
+  for (const auto &link : links) {
+    VALIDATE(validateLinkEnd(link));
+  }
+
+  return true;
+}
+
 } // namespace eda::gate::model

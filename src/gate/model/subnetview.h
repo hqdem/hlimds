@@ -108,7 +108,7 @@ private:
   std::vector<TruthTable> evaluateTruthTables(
     const std::vector<size_t> &entryIDs) const;
 
-  // Input/output mapping.
+  /// Input/output mapping.
   InOutMapping iomapping;
 
   /// Common care specification for all outputs.

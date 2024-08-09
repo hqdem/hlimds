@@ -131,6 +131,20 @@ private:
   List<CellID> softBlocks;
 };
 
+//===----------------------------------------------------------------------===//
+// Net Validator
+//===----------------------------------------------------------------------===//
+
+bool validateNet(const Net &net);
+
+inline bool validateNet(const NetID netID) {
+  return validateNet(Net::get(netID));
+}
+
+//===----------------------------------------------------------------------===//
+// Net Printer
+//===----------------------------------------------------------------------===//
+
 std::ostream &operator <<(std::ostream &out, const Net &net);
  
 } // namespace eda::gate::model

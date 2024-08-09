@@ -90,6 +90,35 @@ NetID NetBuilder::make() {
     nSoftBlocks);
 }
 
+//===----------------------------------------------------------------------===//
+// Net Validator
+//===----------------------------------------------------------------------===//
+
+#define VALIDATE(prop) if (!(prop)) return false
+
+static bool validateCells(const List<CellID> &cells) {
+  for (auto i = cells.begin(); i != cells.end(); ++i) {
+    VALIDATE(validateCell(*i));
+  }
+  return true;
+}
+
+bool validateNet(const Net &net) {
+  VALIDATE(net.getInNum() > 0);
+  VALIDATE(net.getOutNum() > 0);
+  VALIDATE(validateCells(net.getInputs()));
+  VALIDATE(validateCells(net.getOutputs()));
+  VALIDATE(validateCells(net.getCombCells()));
+  VALIDATE(validateCells(net.getFlipFlops()));
+  VALIDATE(validateCells(net.getSoftBlocks()));
+  VALIDATE(validateCells(net.getHardBlocks()));
+  return true;
+}
+
+//===----------------------------------------------------------------------===//
+// Net Printer
+//===----------------------------------------------------------------------===//
+
 std::ostream &operator <<(std::ostream &out, const Net &net) {
   ModelPrinter::getDefaultPrinter().print(out, net);
   return out;

@@ -87,6 +87,13 @@ struct Link final : public Object<Link, LinkID> {
 
 static_assert(sizeof(Link) == LinkID::Size);
 
+//===----------------------------------------------------------------------===//
+// Link Validator
+//===----------------------------------------------------------------------===//
+
+bool validateLinkEnd(const LinkEnd &linkEnd);
+bool validateLink(const Link &link);
+
 } // namespace eda::gate::model
 
 template<>

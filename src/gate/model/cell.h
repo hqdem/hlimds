@@ -158,4 +158,14 @@ inline CellID makeCell(CellSymbol symbol,
     LinkEnd(c1), LinkEnd(c2), LinkEnd(c3), LinkEnd(c4), LinkEnd(c5));
 }
 
+//===----------------------------------------------------------------------===//
+// Cell Validator
+//===----------------------------------------------------------------------===//
+
+bool validateCell(const Cell &cell);
+
+inline bool validateCell(const CellID cellID) {
+  return validateCell(Cell::get(cellID));
+}
+
 } // namespace eda::gate::model

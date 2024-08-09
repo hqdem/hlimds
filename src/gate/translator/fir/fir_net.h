@@ -25,6 +25,7 @@
 #include "mlir/Pass/PassManager.h"
 
 using CellID = eda::gate::model::CellID;
+using CellType = eda::gate::model::CellType;
 using CellTypeID = eda::gate::model::CellTypeID;
 using NetID = eda::gate::model::NetID;
 using MLIRContext = mlir::MLIRContext;

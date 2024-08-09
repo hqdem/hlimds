@@ -18,7 +18,7 @@ class VerilogPrinter final : public ModelPrinter,
                              public util::Singleton<VerilogPrinter> {
   friend class util::Singleton<VerilogPrinter>;
 
-  static constexpr enum { UDP, MODULE } MajMethod = UDP;
+  static constexpr enum { MODULE, UDP } MajMethod = MODULE;
 
   VerilogPrinter(): ModelPrinter({{Pass::CELL, 0}, {Pass::CELL, 1}}) {}
 

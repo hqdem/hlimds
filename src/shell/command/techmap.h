@@ -49,13 +49,12 @@ struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
     for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
       const auto &subnetBuilder = designBuilder->getSubnetBuilder(i);
       const auto techmapBuilder = techMap(Objective(indicator), subnetBuilder);
-
-      if (!techmapBuilder) {
-        return makeError(interp, "returned null");
-      }
-
+      UTOPIA_ERROR_IF(interp, !techmapBuilder, "returned null");
       designBuilder->setSubnetBuilder(i, techmapBuilder);
     }
+
+    UTOPIA_ERROR_IF(interp, !validateDesignBuilder(*designBuilder),
+        "validation checks failed");
 
     return TCL_OK;
   }

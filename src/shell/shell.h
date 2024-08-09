@@ -40,8 +40,11 @@
     return makeError(interp, e.what());\
   }
 
-#define UTOPIA_ERROR_IF(interp, cond, message)\
-  if (cond) return makeError(interp, message)
+#define UTOPIA_ERROR_IF(interp, cond, msg)\
+  if (cond) return makeError(interp, msg)
+
+#define UTOPIA_WARN_IF(interp, cond, msg)\
+  if (cond) return makeWarn(interp, msg)
 
 #define UTOPIA_ERROR_IF_NO_DESIGN(interp)\
   UTOPIA_ERROR_IF(interp, !designBuilder,\
@@ -64,6 +67,25 @@ namespace eda::shell {
 //===----------------------------------------------------------------------===//
 // Utility Functions
 //===----------------------------------------------------------------------===//
+
+inline int makeResult(Tcl_Interp *interp, const std::string &msg) {
+  Tcl_SetObjResult(interp, Tcl_NewStringObj(msg.c_str(), -1));
+  return TCL_OK;
+}
+
+inline int makeError(Tcl_Interp *interp, const std::string &msg) {
+  makeResult(interp, fmt::format("error: {}", msg));
+  return TCL_ERROR;
+} 
+
+inline int makeWarn(Tcl_Interp *interp, const std::string &msg) {
+  makeResult(interp, fmt::format("warning: {}", msg));
+  return TCL_ERROR;
+}
+
+inline void printNewline() {
+  UTOPIA_OUT << std::endl;
+}
 
 template <typename Clock>
 inline void printTime(const std::string &name,
@@ -95,20 +117,6 @@ inline void printTimeAndEffect(const std::string &name,
 
   printTime<Clock>(name, start, end, prefix,
       fmt::format(" -> {}{} [{:.2f}%] {}", sign, delta, percent, suffix));
-}
-
-inline int makeResult(Tcl_Interp *interp, const std::string &result) {
-  Tcl_SetObjResult(interp, Tcl_NewStringObj(result.c_str(), -1));
-  return TCL_OK;
-}
-
-inline int makeError(Tcl_Interp *interp, const std::string &error) {
-  makeResult(interp, fmt::format("error: {}", error));
-  return TCL_ERROR;
-} 
-
-inline void printNewline() {
-  UTOPIA_OUT << std::endl;
 }
 
 inline int printFile(Tcl_Interp *interp, const std::string &filePath) {

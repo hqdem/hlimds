@@ -13,8 +13,8 @@
 
 namespace eda::shell {
 
-struct ReadFIRRTLCommand final : public UtopiaCommandBase<ReadFIRRTLCommand> {
-  ReadFIRRTLCommand(): UtopiaCommandBase(
+struct ReadFirrtlCommand final : public UtopiaCommandBase<ReadFirrtlCommand> {
+  ReadFirrtlCommand(): UtopiaCommandBase(
       "read_firrtl", "Reads a design from a FIRRTL file") {
     app.allow_extras();
   }
@@ -28,15 +28,25 @@ struct ReadFIRRTLCommand final : public UtopiaCommandBase<ReadFIRRTLCommand> {
 
     const std::string fileName = app.remaining().at(0);
     UTOPIA_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
-    const auto netIDs = eda::gate::translator::getNet(fileName);
-    for (const auto &netID : netIDs) {
-      if (netID == eda::gate::model::OBJ_NULL_ID) {
-        return makeError(interp, "null ID received");
-      }
-    }
 
-    designBuilder = std::make_shared<DesignBuilder>(
-        CellType::get(netIDs.front()).getNetID());
+    const auto typeIDs = eda::gate::translator::getNet(fileName);
+    UTOPIA_ERROR_IF(interp, typeIDs.empty(),
+        "received empty list");
+
+    const auto typeID = typeIDs.front();
+    UTOPIA_ERROR_IF(interp, typeID == eda::gate::model::OBJ_NULL_ID,
+        "received null type");
+
+    UTOPIA_ERROR_IF(interp, validateCellType(typeID),
+        "validation checks failed");
+
+    const auto &type = CellType::get(typeID);
+    UTOPIA_ERROR_IF(interp, !type.isNet(),
+        "received null net");
+ 
+    const auto netID = type.getNetID();
+    designBuilder = std::make_shared<DesignBuilder>(netID);
+
     return TCL_OK;
   }
 };

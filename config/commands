@@ -5,6 +5,7 @@ help
 lec
 list_points
 logopt
+read_firrtl
 read_graphml
 read_liberty
 read_verilog

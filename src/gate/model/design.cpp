@@ -83,4 +83,24 @@ void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
   }
 }
 
+//===----------------------------------------------------------------------===//
+// Design Validator
+//===----------------------------------------------------------------------===//
+
+#define VALIDATE(prop) if (!(prop)) return false
+
+bool validateDesignBuilder(const DesignBuilder &builder) {
+  for (size_t i = 0; i < builder.getSubnetNum(); ++i) {
+    const auto &entry = builder.getEntry(i);
+    VALIDATE((entry.subnetID != OBJ_NULL_ID) != (entry.builder != nullptr));
+
+    if (entry.subnetID != OBJ_NULL_ID) {
+      VALIDATE(validateSubnet(entry.subnetID));
+    } else {
+      VALIDATE(validateSubnetBuilder(*entry.builder));
+    }
+  }
+  return true;
+}
+
 } // namespace eda::gate::model

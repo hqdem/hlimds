@@ -50,6 +50,17 @@ private:
 public:
   using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
 
+  struct SubnetEntry {
+    SubnetEntry(const SubnetID subnetID): subnetID(subnetID) {}
+
+    /// Check points.
+    std::unordered_map<std::string, SubnetID> points;
+    /// Current subnet identifier.
+    SubnetID subnetID;
+    /// Current subnet builder.
+    SubnetBuilderPtr builder{nullptr};
+  };
+
   /// Constructs a design builder w/ the given name from the net.
   DesignBuilder(const std::string &name, const NetID netID): name(name) {
     const auto &net = Net::get(netID);
@@ -100,6 +111,18 @@ public:
   /// Returns the number of subnets in the design.
   size_t getSubnetNum() const {
     return subnets.size();
+  }
+
+  /// Returns the i-th subnet entry.
+  const SubnetEntry &getEntry(const size_t i) const {
+    assert(i < subnets.size());
+    return subnets[i];
+  }
+
+  /// Returns the i-th subnet entry.
+  SubnetEntry &getEntry(const size_t i) {
+    assert(i < subnets.size());
+    return subnets[i];
   }
 
   /// Makes (if required) an i-th subnet and destroys the builder.
@@ -255,27 +278,6 @@ public:
 private:
   using CellMapping = NetDecomposer::CellMapping;
 
-  struct SubnetEntry {
-    SubnetEntry(const SubnetID subnetID): subnetID(subnetID) {}
-
-    /// Check points.
-    std::unordered_map<std::string, SubnetID> points;
-    /// Current subnet identifier.
-    SubnetID subnetID;
-    /// Current subnet builder.
-    SubnetBuilderPtr builder{nullptr};
-  };
-
-  const SubnetEntry &getEntry(const size_t i) const {
-    assert(i < subnets.size());
-    return subnets[i];
-  }
-
-  SubnetEntry &getEntry(const size_t i) {
-    assert(i < subnets.size());
-    return subnets[i];
-  }
-
   std::vector<SubnetID> getSubnetIDs() {
     std::vector<SubnetID> subnetIDs(subnets.size());
     for (size_t i = 0; i < subnets.size(); ++i) {
@@ -325,5 +327,11 @@ inline NetID makeNet(const SubnetID subnetID) {
   DesignBuilder builder(subnetID);
   return builder.make();
 }
+
+//===----------------------------------------------------------------------===//
+// Design Validator
+//===----------------------------------------------------------------------===//
+
+bool validateDesignBuilder(const DesignBuilder &builder);
 
 } // namespace eda::gate::model

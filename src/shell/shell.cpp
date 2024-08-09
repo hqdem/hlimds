@@ -50,7 +50,7 @@ UtopiaShell::UtopiaShell() {
   addCommand(&LecCommand::get());
   addCommand(&ListPointsCommand::get());
   addCommand(&LogOptCommand::get());
-  addCommand(&ReadFIRRTLCommand::get());
+  addCommand(&ReadFirrtlCommand::get());
   addCommand(&ReadGraphMlCommand::get());
   addCommand(&ReadLibertyCommand::get());
   addCommand(&ReadVerilogCommand::get());

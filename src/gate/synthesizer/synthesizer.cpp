@@ -18,13 +18,13 @@
 #include "gate/synthesizer/synthesizer_shift.h"
 
 #include <cassert>
+#include <iostream>
 
 namespace eda::gate::synthesizer {
 
 using namespace eda::gate::model;
 
 static SubnetID synthImpl(const CellType &type) {
-  assert(validateCellType(type));
   const auto &attr = type.getAttr();
 
   switch (type.getSymbol()) {

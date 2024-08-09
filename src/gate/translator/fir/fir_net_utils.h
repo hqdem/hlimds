@@ -64,6 +64,7 @@ using OrRPrimOp = circt::firrtl::OrRPrimOp;
 using PadPrimOp = circt::firrtl::PadPrimOp;
 using PrintFOp = circt::firrtl::PrintFOp;
 using PropAssignOp = circt::firrtl::PropAssignOp;
+using PropertyType = circt::firrtl::PropertyType;
 using RegOp = circt::firrtl::RegOp;
 using RegResetOp = circt::firrtl::RegResetOp;
 using RemPrimOp = circt::firrtl::RemPrimOp;
@@ -338,6 +339,16 @@ inline uint getTypeWidth(const Type type) {
   return static_cast<uint>(typeWidthSentinel);
 }
 
+inline uint getOperandWidth(Operation* op, const uint opNum) {
+  const Type type = op->getOperand(opNum).getType();
+  return getTypeWidth(type);
+}
+
+inline uint getResultWidth(Operation* op, const uint resNum) {
+  const Type type = op->getResult(resNum).getType();
+  return getTypeWidth(type);
+}
+
 uint findOpOperandNumber(const Value val,
                          Operation *op,
                          FModuleOp fModuleOp);
@@ -346,15 +357,17 @@ uint findOpResultNumber(const Value val,
                         FModuleOp fModuleOp);
 
 uint getInCount(Operation *op);
-uint getBitWidthIn(Operation *op);
+std::vector<uint16_t> getPortWidthIn(Operation *op);
 uint getOutCount(Operation *op);
-uint getBitWidthOut(Operation *op);
+std::vector<uint16_t> getPortWidthOut(Operation *op);
 
 Operation *getSourceOperation(Operation *destOp, const Value operand);
 
 Value getDestValue(Operation *destOp, const uint inNum);
 
 CellSymbol getCellSymbol(Operation *op);
+
+std::vector<uint16_t> getModulePortWidths(FModuleOp fModuleOp, Direction dir);
 
 uint getNetInPortNum(Operation *op,
                      const uint portNum,

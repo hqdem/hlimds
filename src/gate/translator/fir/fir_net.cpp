@@ -295,11 +295,23 @@ bool LinkKey::operator==(const LinkKey &linkKey) const {
 }
 
 bool CellTypeKey::operator==(const CellTypeKey &cellTypeKey) const {
-  return (name == cellTypeKey.name &&
-          bitWidthIn == cellTypeKey.bitWidthIn &&
-          bitWidthOut == cellTypeKey.bitWidthOut);
+  if (name != cellTypeKey.name ||
+      portWidthIn.size() != cellTypeKey.portWidthIn.size() ||
+      portWidthOut.size() != cellTypeKey.portWidthOut.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < portWidthIn.size(); i++) {
+    if (portWidthIn[i] != cellTypeKey.portWidthIn[i]) {
+      return false;
+    }
+  }
+  for (size_t i = 0; i < portWidthOut.size(); i++) {
+    if (portWidthOut[i] != cellTypeKey.portWidthOut[i]) {
+      return false;
+    }
+  }
+  return true;
 }
-
 } // namespace eda::gate::translator
 
 namespace {
@@ -708,7 +720,7 @@ void LowFIRRTLToNetPass::generateInputs(FModuleOp fModuleOp,
   }
   // Constants.
   fModuleOp.walk([&](ConstantOp constantOp) {
-    const uint outputWidth = getTypeWidth(constantOp.getResult().getType());
+    const uint outputWidth = getResultWidth(constantOp, 0);
     auto &&value = constantOp.getValue();
     for (size_t i = 0; i < outputWidth; i++) {
       const uint extractedBit = value.extractBitsAsZExtValue(1, i);
@@ -768,7 +780,7 @@ void LowFIRRTLToNetPass::generateOutputs(FModuleOp fModuleOp,
 void LowFIRRTLToNetPass::processWires(FModuleOp fModuleOp,
     NetBuilder *netBuilder) {
   fModuleOp.walk([&](WireOp wireOp) {
-    const uint outWidth = getTypeWidth(wireOp.getResult().getType());
+    const uint outWidth = getResultWidth(wireOp, 0);
     for (size_t i = 0; i < outWidth; i++) {
       LinkKey linkKeyIn(wireOp, 0, i);
       LinkKey linkKeyOut(wireOp, 0, i);
@@ -785,13 +797,13 @@ void LowFIRRTLToNetPass::walkThroughCat(std::vector<Value> &wireOrBitManValues,
     std::vector<LinkInfo> &linkInfoCol) {
   wireOrBitManValues.push_back(curOpInfo.op->getResult(0));
   if (prevOpInfo.op == curOpInfo.op && prevOpInfo.value == curOpInfo.value) {
-    linkInfo.bitOff -= getTypeWidth(curOpInfo.op->getOperand(1).getType());
+    linkInfo.bitOff -= getOperandWidth(curOpInfo.op, 1);
     opNumber++;
   }
   if (opNumber == 1) {
-    linkInfo.off += getTypeWidth(curOpInfo.op->getOperand(0).getType());
+    linkInfo.off += getOperandWidth(curOpInfo.op, 0);
   } else {
-    linkInfo.bitOff += getTypeWidth(curOpInfo.op->getOperand(1).getType());
+    linkInfo.bitOff += getOperandWidth(curOpInfo.op, 1);
   }
 }
 
@@ -808,7 +820,7 @@ void LowFIRRTLToNetPass::walkThroughBits(std::vector<Value> &wireOrBitManValues,
     newLowMargin = (newLowMargin < 0) ? 0 : newLowMargin;
     newHighMargin -= linkInfo.bitOff;
     newHighMargin = (newHighMargin < 0) ? 0 : newHighMargin;
-    const uint bitWidth = getTypeWidth(bitsOp->getOperand(0).getType());
+    const uint bitWidth = getOperandWidth(bitsOp, 0);
     const uint bitsCutFromLeft = (bitWidth - 1) - hi;
     uint newOffset = linkInfo.off - (bitsCutFromLeft -
         (linkInfo.high - newHighMargin));
@@ -827,14 +839,13 @@ void LowFIRRTLToNetPass::walkThroughShiftLeft(
     std::vector<Value> &wireOrBitManValues, ShlPrimOp shlOp, LinkInfo &linkInfo,
     std::vector<LinkInfo> &linkInfoCol) {
    wireOrBitManValues.push_back(shlOp->getResult(0));
-   linkInfo.bitOff += getTypeWidth(shlOp->getOperand(0).getType());
+   linkInfo.bitOff += getOperandWidth(shlOp, 0);
 }
 
 void LowFIRRTLToNetPass::walkThroughPad(std::vector<Value> &wireOrBitManValues,
     PadPrimOp padOp, LinkInfo &linkInfo, std::vector<LinkInfo> &linkInfoCol) {
   wireOrBitManValues.push_back(padOp->getResult(0));
-  const uint numBitsPadded = padOp.getAmount() -
-      getTypeWidth(padOp->getOperand(0).getType());
+  const uint numBitsPadded = padOp.getAmount() - getOperandWidth(padOp, 0);
   linkInfo.off += numBitsPadded;
 }
 
@@ -916,11 +927,11 @@ void LowFIRRTLToNetPass::getToLinkKeysSynthOps(const Value &val,
 
 void LowFIRRTLToNetPass::processInstance(InstanceOp instOp,
     NetBuilder *netBuilder) {
-  const uint bitWidthIn = getBitWidthIn(instOp);
-  const uint bitWidthOut = getBitWidthOut(instOp);
+  const std::vector<uint16_t> portWidthIn = getPortWidthIn(instOp);
+  const std::vector<uint16_t> portWidthOut = getPortWidthOut(instOp);
   const CellSymbol cellSymbol = getCellSymbol(instOp);
   const std::string &cellTypeName = instOp.getModuleName().str();
-  CellTypeKey cellTypeKey(cellTypeName, bitWidthIn, bitWidthOut);
+  CellTypeKey cellTypeKey(cellTypeName, portWidthIn, portWidthOut);
   CellTypeID cellTypeID;
   if (cellTypeKeyToCellTypeIDs.count(cellTypeKey) != 0) {
     cellTypeID = cellTypeKeyToCellTypeIDs[cellTypeKey];
@@ -928,12 +939,14 @@ void LowFIRRTLToNetPass::processInstance(InstanceOp instOp,
     cellTypeID = makeSoftType(cellSymbol,
                               cellTypeName,
                               model::OBJ_NULL_ID,
-                              bitWidthIn,
-                              bitWidthOut);
+                              portWidthIn,
+                              portWidthOut);
   }
   std::vector<LinkEnd> linkEnds;
-  for (uint i = 0; i < bitWidthIn; i++) {
-    linkEnds.push_back(LinkEnd());
+  for (uint i = 0; i < portWidthIn.size(); i++) {
+    for (uint16_t j = 0; j < portWidthIn[i]; j++) {
+      linkEnds.push_back(LinkEnd());
+    }
   }
   CellID cellDestID = makeCell(cellTypeID, linkEnds);
   netBuilder->addCell(cellDestID);
@@ -963,12 +976,12 @@ void LowFIRRTLToNetPass::processInstance(InstanceOp instOp,
 
 void LowFIRRTLToNetPass::processSynthesizable(Operation *synthOp,
     FModuleOp fModuleOp, NetBuilder *netBuilder) {
-  const uint bitWidthIn = getBitWidthIn(synthOp);
-  const uint bitWidthOut = getBitWidthOut(synthOp);
+  const std::vector<uint16_t> portWidthIn = getPortWidthIn(synthOp);
+  const std::vector<uint16_t> portWidthOut = getPortWidthOut(synthOp);
   const CellSymbol cellSymbol = getCellSymbol(synthOp);
   auto linkEnds = getLinkEnds(synthOp, fModuleOp);
   const std::string &cellTypeName = synthOp->getName().stripDialect().str();
-  CellTypeKey cellTypeKey(cellTypeName, bitWidthIn, bitWidthOut);
+  CellTypeKey cellTypeKey(cellTypeName, portWidthIn, portWidthOut);
   CellTypeID cellTypeID;
   if (cellTypeKeyToCellTypeIDs.count(cellTypeKey) != 0) {
     cellTypeID = cellTypeKeyToCellTypeIDs[cellTypeKey];
@@ -976,8 +989,8 @@ void LowFIRRTLToNetPass::processSynthesizable(Operation *synthOp,
     cellTypeID = makeSoftType(cellSymbol,
                               cellTypeName,
                               model::OBJ_NULL_ID,
-                              bitWidthIn,
-                              bitWidthOut);
+                              portWidthIn,
+                              portWidthOut);
   }
   CellID cellDestID = makeCell(cellTypeID, linkEnds);
   netBuilder->addCell(cellDestID);
@@ -1110,32 +1123,34 @@ void LowFIRRTLToNetPass::processBitManipulation(Operation *op,
     FModuleOp fModuleOp, NetBuilder *netBuilder, CellID &cellIDForZero) {
   auto linkEnds = getLinkEnds(op, fModuleOp);
   std::vector<LinkEnd> outLinkEnds;
-  const uint bitWidthIn = getBitWidthIn(op);
+  const std::vector<uint16_t> portWidthIn = getPortWidthIn(op);
   if (isPad(op)) {
     auto padOp = mlir::dyn_cast<PadPrimOp>(op);
-    processPad(padOp, cellIDForZero, bitWidthIn, linkEnds, outLinkEnds,
+    processPad(padOp, cellIDForZero, portWidthIn.back(), linkEnds, outLinkEnds,
                netBuilder);
   } else if (isShiftLeft(op)) {
     auto shlOp = mlir::dyn_cast<ShlPrimOp>(op);
-    processShiftLeft(shlOp, cellIDForZero, bitWidthIn, linkEnds, outLinkEnds,
-                     netBuilder);
+    processShiftLeft(shlOp, cellIDForZero, portWidthIn.back(), linkEnds,
+                     outLinkEnds, netBuilder);
   } else if (isShiftRight(op)) {
     auto shrOp = mlir::dyn_cast<ShrPrimOp>(op);
-    processShiftRight(shrOp, cellIDForZero, bitWidthIn, linkEnds, outLinkEnds,
-                      netBuilder);
+    processShiftRight(shrOp, cellIDForZero, portWidthIn.back(), linkEnds,
+                      outLinkEnds, netBuilder);
   } else if (isConcatenation(op) || isSimpleLinkMove(op)) {
-    for (uint i = 0; i < bitWidthIn; i++) {
-      outLinkEnds.push_back(linkEnds[i]);
+    for (uint i = 0; i < portWidthIn.size(); i++) {
+      for (uint j = 0; j < portWidthIn[i]; j++) {
+        outLinkEnds.push_back(linkEnds[j]);
+      }
     }
   } else if (isHead(op)) {
     auto headOp = mlir::dyn_cast<HeadPrimOp>(op);
     processHead(headOp, linkEnds, outLinkEnds);
   } else if (isTail(op)) {
     auto tailOp = mlir::dyn_cast<TailPrimOp>(op);
-    processTail(tailOp, bitWidthIn, linkEnds, outLinkEnds);
+    processTail(tailOp, portWidthIn.back(), linkEnds, outLinkEnds);
   } else if (isBits(op)) {
     auto bitsOp = mlir::dyn_cast<BitsPrimOp>(op);
-    processBits(bitsOp, bitWidthIn, linkEnds, outLinkEnds);
+    processBits(bitsOp, portWidthIn.back(), linkEnds, outLinkEnds);
   }
   uint outLinkEndNum = 0;
   const uint outCount = getOutCount(op);
@@ -1150,13 +1165,13 @@ void LowFIRRTLToNetPass::processBitManipulation(Operation *op,
   }
 }
 
-void LowFIRRTLToNetPass::processBoolLogic(Operation *boolLogiOp,
+void LowFIRRTLToNetPass::processBoolLogic(Operation *boolLogicOp,
     FModuleOp fModuleOp, NetBuilder *netBuilder) {
-  auto linkEnds = getLinkEnds(boolLogiOp, fModuleOp);
-  const CellSymbol cellSymbol = getCellSymbol(boolLogiOp);
+  auto linkEnds = getLinkEnds(boolLogicOp, fModuleOp);
+  const CellSymbol cellSymbol = getCellSymbol(boolLogicOp);
   const CellTypeID cellTypeID = getCellTypeID(cellSymbol);
-  const uint dataWidth = getTypeWidth(boolLogiOp->getResult(0).getType());
-  const uint inCount = getInCount(boolLogiOp);
+  const uint dataWidth = getResultWidth(boolLogicOp, 0);
+  const uint inCount = getInCount(boolLogicOp);
   for (uint j = 0; j < dataWidth; j++) {
     std::vector<LinkEnd> linkEndsForOne;
     for (uint i = 0; i < inCount; i++) {
@@ -1164,13 +1179,13 @@ void LowFIRRTLToNetPass::processBoolLogic(Operation *boolLogiOp,
     }
     CellID cellDestID = makeCell(cellTypeID, linkEndsForOne);
     netBuilder->addCell(cellDestID);
-    const LinkKey destKey(boolLogiOp, 0, j);
+    const LinkKey destKey(boolLogicOp, 0, j);
     linkKeyToLinkEndOuts.emplace(std::make_pair(destKey, LinkEnd(cellDestID)));
-    const LinkKey firstArgKey(boolLogiOp, 0, j);
+    const LinkKey firstArgKey(boolLogicOp, 0, j);
     std::vector<CellID> cellIDs0;
     cellIDs0.push_back(cellDestID);
     cellKeyToCellIDsIns.emplace(std::make_pair(firstArgKey, cellIDs0));
-    const LinkKey secondArgKey(boolLogiOp, 1, j);
+    const LinkKey secondArgKey(boolLogicOp, 1, j);
     std::vector<CellID> cellIDs1;
     cellIDs1.push_back(cellDestID);
     cellKeyToCellIDsIns.emplace(std::make_pair(secondArgKey, cellIDs1));
@@ -1186,7 +1201,7 @@ void LowFIRRTLToNetPass::processBoolLogicReduce(Operation *boolLogicRop,
   netBuilder->addCell(cellDestID);
   const LinkKey destKey(boolLogicRop, 0, 0);
   linkKeyToLinkEndOuts.emplace(std::make_pair(destKey, LinkEnd(cellDestID)));
-  const uint dataWidth = getTypeWidth(boolLogicRop->getOperand(0).getType());
+  const uint dataWidth = getOperandWidth(boolLogicRop, 0);
   for (uint j = 0; j < dataWidth; j++) {
     LinkKey key(boolLogicRop, 0, j);
     std::vector<CellID> cellIDs;
@@ -1200,7 +1215,7 @@ void LowFIRRTLToNetPass::processReg(RegOp regOp, FModuleOp fModuleOp,
   auto linkEnds = getLinkEnds(regOp, fModuleOp);
   const CellSymbol cellSymbol = getCellSymbol(regOp);
   const CellTypeID cellTypeID = getCellTypeID(cellSymbol);
-  const uint dataWidth = getTypeWidth(regOp->getResult(0).getType());
+  const uint dataWidth = getResultWidth(regOp, 0);
   std::vector<CellID> cellIDsForClk;
   for (uint j = 0; j < dataWidth; j++) {
     // DFF(q, d, clk).
@@ -1226,9 +1241,8 @@ void LowFIRRTLToNetPass::processRegReset(RegResetOp regResetOp,
   auto linkEnds = getLinkEnds(regResetOp, fModuleOp);
   const CellSymbol cellSymbol = getCellSymbol(regResetOp);
   const CellTypeID cellTypeID = getCellTypeID(cellSymbol);
-  const uint dataWidth = getTypeWidth(regResetOp->getResult(0).getType());
-  const uint resetValueWidth =
-      getTypeWidth(regResetOp->getOperand(2).getType());
+  const uint dataWidth = getResultWidth(regResetOp, 0);
+  const uint resetValueWidth = getOperandWidth(regResetOp, 2);
   std::vector<CellID> cellIDsForClk;
   std::vector<CellID> cellIDsForRst;
   std::vector<CellID> cellIDsForSet;
@@ -1395,10 +1409,8 @@ void LowFIRRTLToNetPass::generateModel(ModuleOp moduleOp,
     NetID netID = netBuilder.make();
     const std::string &cellName = fModuleOp.getName().str();
     CellTypeID cellTypeID = makeSoftType(CellSymbol::UNDEF,
-                                         cellName,
-                                         netID,
-                                         Net::get(netID).getInNum(),
-                                         Net::get(netID).getOutNum());
+        cellName, netID, getModulePortWidths(fModuleOp, Direction::In),
+        getModulePortWidths(fModuleOp, Direction::Out));
     if (cellName == circuitName && moduleCount != 0) {
       CellTypeID cellTypeIDBuf = resultNetlist->at(0);
       (*resultNetlist)[0] = cellTypeID;

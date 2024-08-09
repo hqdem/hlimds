@@ -62,17 +62,17 @@ struct LinkKey final {
  */
 struct CellTypeKey final {
   CellTypeKey(const std::string &name,
-              const uint bitWidthIn,
-              const uint bitWidthOut) :
+              const std::vector<uint16_t> portWidthIn,
+              const std::vector<uint16_t> portWidthOut) :
       name(name),
-      bitWidthIn(bitWidthIn),
-      bitWidthOut(bitWidthOut) {}
-  CellTypeKey() : name(""), bitWidthIn(0), bitWidthOut(0) {}
+      portWidthIn(portWidthIn),
+      portWidthOut(portWidthOut) {}
+  CellTypeKey() : name(""), portWidthIn(0), portWidthOut(0) {}
   bool operator==(const CellTypeKey &cellTypeKey) const;
 
   const std::string name;
-  const uint bitWidthIn;
-  const uint bitWidthOut;
+  const std::vector<uint16_t> portWidthIn;
+  const std::vector<uint16_t> portWidthOut;
 };
 
 } // namespace eda::gate::translator
@@ -96,8 +96,12 @@ template<>
 struct hash<CellTypeKey> {
   size_t operator()(const CellTypeKey &cellTypeKey) const {
     size_t hash = std::hash<std::string>()(cellTypeKey.name);
-    eda::util::hash_combine(hash, cellTypeKey.bitWidthIn);
-    eda::util::hash_combine(hash, cellTypeKey.bitWidthOut);
+    for (size_t i = 0; i < cellTypeKey.portWidthIn.size(); i++) {
+      eda::util::hash_combine(hash, cellTypeKey.portWidthIn[i]);
+    }
+    for (size_t i = 0; i < cellTypeKey.portWidthOut.size(); i++) {
+      eda::util::hash_combine(hash, cellTypeKey.portWidthOut[i]);
+    }
     return hash;
   }
 };

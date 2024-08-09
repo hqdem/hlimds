@@ -28,7 +28,7 @@ class SimplePrinter final : public ModelPrinter,
     out << "(";
 
     bool comma = false;
-    for (const auto linkInfo : linksInfo) {
+    for (const auto &linkInfo : linksInfo) {
       if (comma) out << ", ";
 
       if (linkInfo.inv) out << "~";

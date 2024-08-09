@@ -45,7 +45,7 @@ private:
   /// Delete buffers when making subnets.
   static constexpr bool DeleteBuffers = true;
   /// Default design name.
-  static constexpr auto DefaultName = "design";
+  static constexpr auto DefaultName = "Design";
 
 public:
   using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;

@@ -105,8 +105,8 @@ protected:
       return ss.str();
     }
 
-    std::reference_wrapper<const CellType> type;
-    size_t cell;
+    const std::reference_wrapper<const CellType> type;
+    const size_t cell;
   };
 
   /// Port information.
@@ -125,8 +125,8 @@ protected:
       return ss.str();
     }
 
-    CellInfo cellInfo;
-    uint16_t port;
+    const CellInfo cellInfo;
+    const uint16_t port;
   };
 
   /// Link information.
@@ -137,9 +137,9 @@ protected:
     std::string getSourceName() const { return sourceInfo.getName(); }
     std::string getTargetName() const { return targetInfo.getName(); }
 
-    PortInfo sourceInfo;
-    PortInfo targetInfo;
-    bool inv;
+    const PortInfo sourceInfo;
+    const PortInfo targetInfo;
+    const bool inv;
   };
 
   /// Inputs information.

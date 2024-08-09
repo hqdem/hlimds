@@ -935,4 +935,8 @@ constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
   }
 }
 
+inline const CellType &getCellType(CellSymbol symbol) {
+  return CellType::get(getCellTypeID(symbol));
+}
+
 } // namespace eda::gate::model

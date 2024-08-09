@@ -18,9 +18,32 @@ class VerilogPrinter final : public ModelPrinter,
                              public util::Singleton<VerilogPrinter> {
   friend class util::Singleton<VerilogPrinter>;
 
+  static constexpr enum { UDP, MODULE } MajMethod = UDP;
+
   VerilogPrinter(): ModelPrinter({{Pass::CELL, 0}, {Pass::CELL, 1}}) {}
 
   void onModelBegin(std::ostream &out, const std::string &name) override {
+    // MAJ gates are not supported in Verilog and handled in a special way.
+    if constexpr (MajMethod == UDP) {
+      out << "primitive maj(output out, input x, input y, input z);\n";
+      out << "  table\n";
+      out << "    // x y z   out\n";
+      out << "       0 0 0 : 0;\n";
+      out << "       0 0 1 : 0;\n";
+      out << "       0 1 0 : 0;\n";
+      out << "       0 1 1 : 1;\n";
+      out << "       1 0 0 : 0;\n";
+      out << "       1 0 1 : 1;\n";
+      out << "       1 1 0 : 1;\n";
+      out << "       1 1 1 : 1;\n";
+      out << "  endtable\n";
+      out << "endprimitive // primitive maj\n";
+    } else {
+      out << "module maj(output out, input x, input y, input z);\n";
+      out << "  assign out = (x & y) | (x & z) | (y & z);\n";
+      out << "endmodule // module maj\n";
+    }
+    out << "\n";
     out << "module " << name;
   }
 
@@ -80,7 +103,7 @@ private:
     const auto &type = cellInfo.type.get();
 
     // Standard logic gates do not require names.
-    if (!type.isCell() && !type.isSoft() && !type.isHard())
+    if (type.isGate() && !type.isMaj())
       return "";
 
     // Instances of technological cells and IPs should be named.
@@ -123,48 +146,48 @@ private:
         << " = " << (type.isZero() ? "0" : "1") << ";\n";
   }
 
-  void inputBinding(std::ostream &out, const LinkInfo &linkInfo) {
+  void defineInputBinding(std::ostream &out, const LinkInfo &linkInfo) {
     out << getLinkExpr(linkInfo);
   }
 
-  void inputBinding(std::ostream &out,
+  void defineInputBinding(std::ostream &out,
                     const LinksInfo &linksInfo,
                     size_t index,
                     size_t width) {
     assert(width > 0);
 
     if (width == 1) {
-      inputBinding(out, linksInfo[index]);
+      defineInputBinding(out, linksInfo[index]);
     } else {
       out << "{";
       bool comma = false;
       for (size_t i = 0; i < width; ++i) {
         if (comma) out << ", ";
-        inputBinding(out, linksInfo[index + width - 1 - i]);
+        defineInputBinding(out, linksInfo[index + width - 1 - i]);
         comma = true;
       }
       out << "}";
     }
   }
 
-  void outputBinding(std::ostream &out, const PortInfo &portInfo) {
+  void defineOutputBinding(std::ostream &out, const PortInfo &portInfo) {
     out << portInfo.getName();
   }
 
-  void outputBinding(std::ostream &out,
+  void defineOutputBinding(std::ostream &out,
                      const CellInfo &cellInfo,
                      size_t index,
                      size_t width) {
     assert(width > 0);
 
     if (width == 1) {
-      outputBinding(out, PortInfo(cellInfo, index));
+      defineOutputBinding(out, PortInfo(cellInfo, index));
     } else {
       out << "{";
       bool comma = false;
       for (size_t i = 0; i < width; ++i) {
         if (comma) out << ", ";
-        outputBinding(out, PortInfo(cellInfo, index + width - 1 - i));
+        defineOutputBinding(out, PortInfo(cellInfo, index + width - 1 - i));
         comma = true;
       }
       out << "}";
@@ -178,21 +201,23 @@ private:
     assert(!type.isIn() && !type.isOut());
 
     printIndent(out, 1);
-    out << cellInfo.getType() << " " << getInstanceName(cellInfo) << "(";
 
+    out << cellInfo.getType() << " " << getInstanceName(cellInfo) << "(";
     bool comma = false;
 
     if (type.isGate()) {
-      // In standard gates, outputs come before inputs.
+      assert(!type.isMaj() || linksInfo.size() == 3);
+
+      // In built-in Verilog gates, outputs come before inputs.
       for (uint16_t output = 0; output < type.getOutNum(); ++output) {
         if (comma) out << ", ";
-        outputBinding(out, PortInfo(cellInfo, output));
+        defineOutputBinding(out, PortInfo(cellInfo, output));
         comma = true;
       }
 
       for (auto linkInfo : linksInfo) {
         if (comma) out << ", ";
-        inputBinding(out, linkInfo);
+        defineInputBinding(out, linkInfo);
         comma = true;
       }
     } else {
@@ -206,10 +231,10 @@ private:
       for (const auto &port : ports) {
         if (comma) out << ", ";
         if (port.input) {
-          inputBinding(out, linksInfo, input, port.width);
+          defineInputBinding(out, linksInfo, input, port.width);
           input += port.width;
         } else {
-          outputBinding(out, cellInfo, output, port.width);
+          defineOutputBinding(out, cellInfo, output, port.width);
           output += port.width;
         }
         comma = true;
@@ -231,9 +256,7 @@ private:
   }
 
   void printIndent(std::ostream &out, size_t n) {
-    for (size_t i = 0; i < n; ++i) {
-      out << "  ";
-    }
+    out << std::string(2 * n, ' ');
   }
 
   bool isFirstPort = false;

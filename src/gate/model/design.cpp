@@ -61,7 +61,7 @@ static void replace(const CellID oldCellID, const CellID newCellID,
 
       Link newLink{(isOldSource ? newSource : oldSource),
                    (isOldTarget ? newTarget : oldTarget)};
-                   
+
       removeSet.insert(oldLink);
       insertMap.insert({newLink, idx});
     }

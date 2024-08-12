@@ -170,6 +170,10 @@ private:
   CellTypeAttr() {}
   CellTypeAttr(const PortVector &io);
   CellTypeAttr(const PortWidths &widthIn, const PortWidths &widthOut);
+  CellTypeAttr(
+      const PortWidths &widthIn,
+      const PortWidths &widthOut,
+      const PhysicalProperties &props);
 
   uint8_t __reserved[12];
 };
@@ -191,6 +195,12 @@ inline CellTypeAttrID makeCellTypeAttr(const CellTypeAttr::PortVector &ports) {
 inline CellTypeAttrID makeCellTypeAttr(const CellTypeAttr::PortWidths &widthIn,
                                        const CellTypeAttr::PortWidths &widthOut) {
   return allocateObject<CellTypeAttr>(widthIn, widthOut);
+}
+
+inline CellTypeAttrID makeCellTypeAttr(const CellTypeAttr::PortWidths &widthIn,
+                                       const CellTypeAttr::PortWidths &widthOut,
+                                       const PhysicalProperties &props) {
+  return allocateObject<CellTypeAttr>(widthIn, widthOut, props);
 }
 
 inline CellTypeAttrID makeCellTypeAttr(uint16_t widthLhs,

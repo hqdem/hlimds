@@ -42,6 +42,7 @@ add_library(Gate OBJECT
   optimizer/mffc.cpp
   optimizer/npn.cpp
   optimizer/npndb.cpp
+  optimizer/pipeliner.cpp
   optimizer/get_dbstat.cpp
   optimizer/npnstatdb.cpp
   optimizer/reconvergence_cut.cpp

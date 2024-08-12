@@ -250,7 +250,7 @@ public:
     // It is assumed that either all cells are logical or
     // all cells are technological (one check is enough).
     return !cell.getType().isGate();
-  } 
+  }
 
 private:
   /// Constructs a subnet.

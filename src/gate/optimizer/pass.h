@@ -176,7 +176,7 @@ inline SubnetPass rfp() {
     [](const SubnetEffect &effect) {
       return effect.weight > stage;
     };
-  static Refactorer::WeightCalculator weightCalculator = 
+  static Refactorer::WeightCalculator weightCalculator =
       [](SubnetBuilder & builder, const std::vector<float> &inputWeights) {
         static ProbEstimator estimator;
         const auto weights = estimator.estimateProbs(builder, inputWeights);
@@ -204,26 +204,26 @@ inline SubnetPass lrfp() {
   static synthesis::AssociativeReordering ar;
   static Resynthesizer resynthesizer(ar);
 
-  static LazyRefactorer::WeightCalculator weightCalculator = 
-      [](SubnetBuilder & builder, 
+  static LazyRefactorer::WeightCalculator weightCalculator =
+      [](SubnetBuilder & builder,
          const std::vector<float> &inputWeights) {
         static ProbEstimator estimator;
         const auto weights = estimator.estimateProbs(builder, inputWeights);
-        
+
         for (auto it{builder.begin()}; it != builder.end(); ++it) {
           builder.setWeight(*it, weights[*it]);
         }
       };
-  static LazyRefactorer::CellWeightModifier weightModifier = 
+  static LazyRefactorer::CellWeightModifier weightModifier =
       [](float p) { return 2 * p * (1.f - p); };
 
-  static LazyRefactorer::ConeConstructor coneConstructor = 
+  static LazyRefactorer::ConeConstructor coneConstructor =
       LazyRefactorer::twoLvlBldr;
 
-  return std::make_shared<LazyRefactorer>("lrfp", 
-                                          resynthesizer, 
+  return std::make_shared<LazyRefactorer>("lrfp",
+                                          resynthesizer,
                                           &coneConstructor,
-                                          &weightCalculator, 
+                                          &weightCalculator,
                                           &weightModifier);
 }
 

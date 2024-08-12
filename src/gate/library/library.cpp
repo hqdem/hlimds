@@ -44,14 +44,14 @@ void SCLibrary::addCombCell(const std::string &name) {
   const auto nIn = model::CellTypeAttr::getInBitWidth(ports);
   const auto nOut = model::CellTypeAttr::getOutBitWidth(ports);
 
-  const auto area = LibraryCharacteristics::getArea(name);
+  const auto props = LibraryCharacteristics::getPhysProps(name);
 
-  if (nIn == 0 || area == MAXFLOAT) {
+  if (nIn == 0 || props.area == MAXFLOAT) {
     return;
   }
 
   const auto attrID = model::makeCellTypeAttr(ports);
-  model::CellTypeAttr::get(attrID).props.area = area;
+  model::CellTypeAttr::get(attrID).setPhysProps(props);
 
   const auto func = LibraryCharacteristics::getFunction(name);
   auto subnetObject = MinatoMorrealeAlg{}.synthesize(func);

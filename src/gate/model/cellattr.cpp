@@ -32,6 +32,12 @@ CellTypeAttr::CellTypeAttr(const PortVector &io):
   assert(width <= MaxBitWidth);
 }
 
+CellTypeAttr::CellTypeAttr(const PortVector &io,
+                           const PhysicalProperties &props):
+    CellTypeAttr(io) {
+  setPhysProps(props);
+}
+
 CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
                            const PortWidths &widthOut):
     nInPort(widthIn.size()), nOutPort(widthOut.size()) {
@@ -61,7 +67,7 @@ CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
                            const PortWidths &widthOut,
                            const PhysicalProperties &props):
     CellTypeAttr(widthIn, widthOut) {
-  this->props = props;
+  setPhysProps(props);
 }
 
 } // namespace eda::gate::model

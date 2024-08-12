@@ -239,8 +239,8 @@ static bool validateLatchRs(const CellType &type) {
 /// Validates BNOT.
 static bool validateBitwise1(const CellType &type) {
   const auto &attr = type.getAttr();
-  VALIDATE(attr.nInPort == 1);
-  VALIDATE(attr.nOutPort == 1);
+  VALIDATE(attr.getInPortNum() == 1);
+  VALIDATE(attr.getOutPortNum() == 1);
   VALIDATE(attr.getOutWidth(0) == attr.getInWidth(0));
   return true;
 }
@@ -248,8 +248,8 @@ static bool validateBitwise1(const CellType &type) {
 /// Validates BAND, BOR, BXOR, BNAND, BNOR, and BXNOR.
 static bool validateBitwise2(const CellType &type) {
   const auto &attr = type.getAttr();
-  VALIDATE(attr.nInPort == 2);
-  VALIDATE(attr.nOutPort == 1);
+  VALIDATE(attr.getInPortNum() == 2);
+  VALIDATE(attr.getOutPortNum() == 1);
   VALIDATE(attr.getInWidth(0) == attr.getInWidth(1));
   VALIDATE(attr.getOutWidth(0) == attr.getInWidth(0));
   return true;
@@ -258,8 +258,8 @@ static bool validateBitwise2(const CellType &type) {
 /// Validates RAND, ROR, RXOR, RNAND, RNOR, and RXNOR.
 static bool validateReduce(const CellType &type) {
   const auto &attr = type.getAttr();
-  VALIDATE(attr.nInPort == 1);
-  VALIDATE(attr.nOutPort == 1);
+  VALIDATE(attr.getInPortNum() == 1);
+  VALIDATE(attr.getOutPortNum() == 1);
   VALIDATE(attr.getOutWidth(0) == 1);
   return true;
 }
@@ -267,8 +267,8 @@ static bool validateReduce(const CellType &type) {
 /// Validates MUX2.
 static bool validateMux2(const CellType &type) {
   const auto &attr = type.getAttr();
-  VALIDATE(attr.nInPort == 3);
-  VALIDATE(attr.nOutPort == 1);
+  VALIDATE(attr.getInPortNum() == 3);
+  VALIDATE(attr.getOutPortNum() == 1);
   VALIDATE(attr.getInWidth(0) == 1);
   VALIDATE(attr.getInWidth(1) == attr.getInWidth(2));
   VALIDATE(attr.getOutWidth(0) == attr.getInWidth(1));
@@ -278,16 +278,16 @@ static bool validateMux2(const CellType &type) {
 /// Validates SHL and SHR*.
 static bool validateShift(const CellType &type) {
   const auto &attr = type.getAttr();
-  VALIDATE(attr.nInPort == 2);
-  VALIDATE(attr.nOutPort == 1);
+  VALIDATE(attr.getInPortNum() == 2);
+  VALIDATE(attr.getOutPortNum() == 1);
   return true;
 }
 
 /// Validates EQ*, NEQ*, EQX*, NEQX*, LT*, LTE*, GT*, and GTE*.
 static bool validateCompare(const CellType &type) {
   const auto &attr = type.getAttr();
-  VALIDATE(attr.nInPort == 2);
-  VALIDATE(attr.nOutPort == 1);
+  VALIDATE(attr.getInPortNum() == 2);
+  VALIDATE(attr.getOutPortNum() == 1);
   VALIDATE(attr.getOutWidth(0) == 1);
   return true;
 }
@@ -295,16 +295,16 @@ static bool validateCompare(const CellType &type) {
 /// Validates NEG.
 static bool validateArith1(const CellType &type) {
   const auto &attr = type.getAttr();
-  VALIDATE(attr.nInPort == 1);
-  VALIDATE(attr.nOutPort == 1);
+  VALIDATE(attr.getInPortNum() == 1);
+  VALIDATE(attr.getOutPortNum() == 1);
   return true;
 }
 
 /// Validates ADD, SUB, MUL*, DIV*, REM*, and MOD*.
 static bool validateArith2(const CellType &type) {
   const auto &attr = type.getAttr();
-  VALIDATE(attr.nInPort == 2);
-  VALIDATE(attr.nOutPort == 1);
+  VALIDATE(attr.getInPortNum() == 2);
+  VALIDATE(attr.getOutPortNum() == 1);
   return true;
 }
 
@@ -325,8 +325,8 @@ static bool validateUndef(const CellType &type) {
     }
   }
 
-  VALIDATE(attr.nInPort == nIn);
-  VALIDATE(attr.nOutPort == nOut);
+  VALIDATE(attr.getInPortNum() == nIn);
+  VALIDATE(attr.getOutPortNum() == nOut);
   VALIDATE(type.getInNum() == wIn);
   VALIDATE(type.getOutNum() == wOut);
   VALIDATE((nIn + nOut) < CellTypeAttr::MaxPortNum);

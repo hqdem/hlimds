@@ -144,7 +144,7 @@ void Pipeliner::updateLayerDelay(
 	} else {
 		const auto &cellType = cell.getType();
 		assert(cellType.hasAttr());
-		delay = cellType.getAttr().props.delay;
+		delay = cellType.getAttr().getPhysProps().delay;
 	}
 	if (layerDelay.size() <= layerN) {
 		layerDelay.resize(layerN + 1);
@@ -223,7 +223,7 @@ float Pipeliner::findDelay(
 	}
 	const auto &cellType = cell.getType();
 	assert(cellType.hasAttr());
-	return cellType.getAttr().props.delay;
+	return cellType.getAttr().getPhysProps().delay;
 }
 
 void Pipeliner::updateLinksFanouts(

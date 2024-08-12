@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/cellattr.h"
 #include "gate/model/celltype.h"
 
 #include <kitty/kitty.hpp>
@@ -57,6 +58,15 @@ public:
       const std::string &relPin,
       const float inputTransTime,
       const float outputCap);
+
+  // FIXME:
+  static model::PhysicalProperties getPhysProps(const std::string &name) {
+    model::PhysicalProperties props;
+    props.area = getArea(name);
+    props.delay = 1.;
+    props.power = getLeakagePower(name);
+    return props;
+  }
 
 private:
   static std::string binOpToString(const Expr *lhs,

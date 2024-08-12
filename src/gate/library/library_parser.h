@@ -19,12 +19,13 @@
 #include <readcells/token_parser.h>
 
 #include <filesystem>
-#include <memory.h>
-#include <regex>
+#include <memory.h> // FIXME C header.
+#include <regex> // FIXME: not used.
 #include <string>
 
 namespace eda::gate::library {
 
+// FIXME: Remove Singleton.
 class LibraryParser : public util::Singleton<LibraryParser> {
   friend class Singleton<LibraryParser>;
 
@@ -36,7 +37,7 @@ public:
   Library &getLibrary();
 
 private:
-  FILE *file;
+  FILE *file; // FIXME: use fstream.
   Group *ast;
   Library library;
   TokenParser tokParser;

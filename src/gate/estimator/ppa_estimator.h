@@ -40,7 +40,7 @@ inline float processEntries(model::SubnetID subnetID, Func func) {
 }
 
 inline float getArea(const model::CellType &cellType) {
-  return cellType.getAttr().props.area;
+  return cellType.getAttr().getPhysProps().area;
 }
 
 inline float getArea(model::SubnetID subnetID) {

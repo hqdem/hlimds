@@ -116,13 +116,35 @@ public:
     return nInPort != Unknown && nOutPort != Unknown;
   }
 
-  uint16_t getWidth(uint16_t i) const {
+  uint16_t getInPortNum() const {
     assert(hasPortInfo());
-    return ports[i].width;
+    return nInPort;
+  }
+
+  uint16_t getOutPortNum() const {
+    assert(hasPortInfo());
+    return nOutPort;
+  }
+
+  const Port &getPort(uint16_t i) const {
+    assert(hasPortInfo());
+    return ports[i];
+  }
+
+  const Port &getInPort(uint16_t i) const {
+    return getPort(i);
+  }
+
+  const Port &getOutPort(uint16_t i) const {
+    return getPort(nInPort + i);
+  }
+
+  uint16_t getWidth(uint16_t i) const {
+    return getPort(i).width;
   }
 
   uint16_t getInWidth(uint16_t i) const {
-    return getWidth(i);
+    return getInPort(i).width;
   }
 
   uint16_t getInWidth() const {
@@ -134,7 +156,7 @@ public:
   }
 
   uint16_t getOutWidth(uint16_t i) const {
-    return getWidth(nInPort + i);
+    return getOutPort(i).width;
   }
 
   uint16_t getOutWidth() const {
@@ -155,6 +177,25 @@ public:
     return ordered;
   }
 
+  const PhysicalProperties &getPhysProps() const {
+    return props;
+  }
+
+  void setPhysProps(const PhysicalProperties &props) {
+    this->props = props;
+  }
+
+private:
+  CellTypeAttr() {}
+  CellTypeAttr(const PortVector &io);
+  CellTypeAttr(const PortVector &io,
+               const PhysicalProperties &props);
+  CellTypeAttr(const PortWidths &widthIn,
+               const PortWidths &widthOut);
+  CellTypeAttr(const PortWidths &widthIn,
+               const PortWidths &widthOut,
+               const PhysicalProperties &props);
+
   /// Generalized physical characteristics.
   PhysicalProperties props;
 
@@ -165,15 +206,6 @@ public:
   uint16_t nInPort{Unknown};
   /// Number of output (multi-bit) ports.
   uint16_t nOutPort{Unknown};
-
-private:
-  CellTypeAttr() {}
-  CellTypeAttr(const PortVector &io);
-  CellTypeAttr(const PortWidths &widthIn, const PortWidths &widthOut);
-  CellTypeAttr(
-      const PortWidths &widthIn,
-      const PortWidths &widthOut,
-      const PhysicalProperties &props);
 
   uint8_t __reserved[12];
 };
@@ -190,6 +222,11 @@ inline CellTypeAttrID makeCellTypeAttr() {
 
 inline CellTypeAttrID makeCellTypeAttr(const CellTypeAttr::PortVector &ports) {
   return allocateObject<CellTypeAttr>(ports);
+}
+
+inline CellTypeAttrID makeCellTypeAttr(const CellTypeAttr::PortVector &ports,
+                                       const PhysicalProperties &props) {
+  return allocateObject<CellTypeAttr>(ports, props);
 }
 
 inline CellTypeAttrID makeCellTypeAttr(const CellTypeAttr::PortWidths &widthIn,

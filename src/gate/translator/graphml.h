@@ -41,8 +41,10 @@ public:
   };
 
   struct Node {
-    Node(size_t type, size_t invIns) : type(type), invIns(invIns) {}
+    Node(size_t id, size_t type, size_t invIns)
+        : id(id), type(type), invIns(invIns) {}
 
+    size_t id;
     size_t type;
     size_t invIns;
     std::optional<Link> link;

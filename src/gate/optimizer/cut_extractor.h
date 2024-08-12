@@ -12,7 +12,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <iostream> // FIXME
 #include <unordered_set>
 #include <vector>
 

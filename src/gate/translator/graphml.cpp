@@ -73,7 +73,8 @@ void GmlTranslator::parseNode(XMLElement *node, ParserData &data) const {
   XMLElement *type = next(findChild(node));
   XMLElement *invIns = next(type);
 
-  auto it = data.nodes.emplace(id, Node(getNum(type), getNum(invIns))).first;
+  auto it =
+      data.nodes.emplace(id, Node(id, getNum(type), getNum(invIns))).first;
   data.groups[getGroup(type)].push_back(&(it->second));
 }
 
@@ -100,7 +101,8 @@ void GmlTranslator::buildGroup(std::vector<Node*> &group,
   for (Node* node : group) {
     LinkList links;
     for (const Input &input : node->inputs) {
-      uassert(input.node->link, "Input cells is not creared" << std::endl);
+      uassert(input.node->link,
+          "Inputs are not created for node " << node->id << std::endl);
       const auto link = input.node->link.value();
       links.emplace_back(input.inv ? ~link : link);
     }

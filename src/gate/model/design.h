@@ -156,7 +156,7 @@ public:
     if (entry.builder != nullptr) {
        return entry.builder;
     }
- 
+
     assert(entry.subnetID != OBJ_NULL_ID);
     entry.builder = std::make_unique<SubnetBuilder>(entry.subnetID);
     entry.subnetID = OBJ_NULL_ID;

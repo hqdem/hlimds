@@ -23,7 +23,7 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    using DesignBuilder = eda::gate::model::DesignBuilder;
+    namespace model = eda::gate::model;
 
     UTOPIA_ERROR_IF_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
@@ -32,6 +32,10 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
     const std::string fileName = app.remaining().at(0);
     UTOPIA_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
+    UTOPIA_ERROR_IF(interp, (frontend != "yosys"),
+        fmt::format("unknown frontend '{}'", frontend)); 
+
+    model::NetID netID{model::OBJ_NULL_ID};
     if (frontend == "yosys") {
       YosysToModel2Config cfg;
       cfg.debugMode = debugMode;
@@ -39,16 +43,16 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
       cfg.files = app.remaining();
 
       YosysConverterModel2 cvt(cfg);      
-      const auto &netID = cvt.getNetID();
-      if (netID == eda::gate::model::OBJ_NULL_ID) {
-        return makeError(interp, "null ID received");
-      }
-
-      designBuilder = std::make_shared<DesignBuilder>(netID);
-      return TCL_OK;
+      netID = cvt.getNetID();
     }
 
-    return makeError(interp, fmt::format("unknown frontend '{}'", frontend));
+    UTOPIA_ERROR_IF(interp, netID == model::OBJ_NULL_ID,
+        "null ID received");
+    UTOPIA_ERROR_IF(interp, !validateNet(netID, logger),
+        "validation checks failed");
+
+    designBuilder = std::make_shared<model::DesignBuilder>(netID);
+    return TCL_OK;
   }
  
   std::string frontend = "yosys";

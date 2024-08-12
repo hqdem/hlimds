@@ -54,18 +54,36 @@ void Cell::setLink(uint16_t port, const LinkEnd &source) {
 // Cell Validator
 //===----------------------------------------------------------------------===//
 
-#define VALIDATE(prop) if (!(prop)) return false
+#define OBJECT(cell) "Cell "
+#define PREFIX(cell) OBJECT(cell) << ": "
 
-bool validateCell(const Cell &cell) {
+#define VALIDATE(logger, prop, msg)\
+  if (!(prop)) {\
+    DIAGNOSE_ERROR(logger, msg);\
+    return false;\
+  }
+
+#define VALIDATE_CELL(logger, cell, prop, msg)\
+    VALIDATE(logger, prop, PREFIX(cell) << msg)
+
+bool validateCell(const Cell &cell, diag::Logger &logger) {
   const auto &type = cell.getType();
-  VALIDATE(validateCellType(type));
-  VALIDATE(!type.isInNumFixed() || cell.getFanin() == type.getInNum());
+  VALIDATE_CELL(logger, cell,
+      validateCellType(type, logger),
+      "[Invalid cell type]");
+  VALIDATE_CELL(logger, cell,
+      !type.isInNumFixed() || cell.getFanin() == type.getInNum(),
+      "Incorrect number of inputs: " << cell.getFanin());
 
   const auto links = cell.getLinks();
-  VALIDATE(links.size() == cell.getFanin());
+  VALIDATE_CELL(logger, cell,
+      links.size() == cell.getFanin(),
+      "Incorrect number of links: " << links.size());
 
   for (const auto &link : links) {
-    VALIDATE(validateLinkEnd(link));
+    VALIDATE_CELL(logger, cell,
+        validateSource(link, logger),
+        "[Invalid link source]");
   }
 
   return true;

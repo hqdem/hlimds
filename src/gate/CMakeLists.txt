@@ -132,8 +132,10 @@ target_link_libraries(Gate
     parallel_hashmap
     Json
   PRIVATE
+    Utopia::Diag
     Utopia::Util
     CLI
+    fmt
     Yosys::Yosys
     tinyxml2
 )

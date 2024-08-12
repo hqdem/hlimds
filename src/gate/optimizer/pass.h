@@ -25,7 +25,7 @@
 #include "gate/premapper/aigmapper.h"
 #include "gate/premapper/migmapper.h"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include <cstdint>
 #include <functional>

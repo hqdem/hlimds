@@ -53,7 +53,7 @@ struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
       designBuilder->setSubnetBuilder(i, techmapBuilder);
     }
 
-    UTOPIA_ERROR_IF(interp, !validateDesignBuilder(*designBuilder),
+    UTOPIA_ERROR_IF(interp, !validateDesign(*designBuilder, logger),
         "validation checks failed");
 
     return TCL_OK;

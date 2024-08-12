@@ -120,202 +120,264 @@ const Subnet &CellType::getSubnet() const {
 // Cell Type Validator
 //===----------------------------------------------------------------------===//
 
-#define VALIDATE(prop) if (!(prop)) return false
+#define OBJECT(type) "Type [" << type.getName() << "]"
+#define PREFIX(type) OBJECT(type) << ": "
+
+#define VALIDATE(logger, prop, msg)\
+  if (!(prop)) {\
+    DIAGNOSE_ERROR(logger, msg);\
+    return false;\
+  }
+
+#define VALIDATE_CELLTYPE(logger, type, prop, msg)\
+  VALIDATE(logger, prop, PREFIX(type) << msg)
+
+#define VALIDATE_CELLTYPE_IN_PINS(logger, type, expected)\
+  VALIDATE_CELLTYPE(logger, type,\
+      type.getInNum() == (expected),\
+      "Incorrect number of input pins: " << type.getInNum() <<\
+          ", expected " << (expected))
+
+#define VALIDATE_CELLTYPE_OUT_PINS(logger, type, expected)\
+  VALIDATE_CELLTYPE(logger, type,\
+       type.getOutNum() == (expected),\
+      "Incorrect number of output pins: " << type.getOutNum() <<\
+          ", expected " << (expected))
+
+#define VALIDATE_CELLTYPE_IN_PINS_ge(logger, type, bound)\
+  VALIDATE_CELLTYPE(logger, type,\
+      !type.isInNumFixed() || type.getInNum() >= (bound),\
+      "Incorrect number of input pins: " << type.getInNum() <<\
+          ", expected >= " << (bound))
+
+#define VALIDATE_CELLTYPE_IN_PORTS(logger, type, expected)\
+  VALIDATE_CELLTYPE(logger, type,\
+      type.getAttr().getInPortNum() == (expected),\
+      "Incorrect number of input ports: " << type.getAttr().getInPortNum() <<\
+          ", expected " << (expected))
+
+#define VALIDATE_CELLTYPE_OUT_PORTS(logger, type, expected)\
+  VALIDATE_CELLTYPE(logger, type,\
+       type.getAttr().getOutPortNum() == (expected),\
+      "Incorrect number of output ports: " << type.getAttr().getOutPortNum() <<\
+          ", expected " << (expected))
+
+#define VALIDATE_CELLTYPE_IN_WIDTH(logger, type, port, width)\
+  VALIDATE_CELLTYPE(logger, type,\
+       type.getAttr().getInWidth(port) == (width),\
+      "Incorrect width of input port #" << port << ": " <<\
+          type.getAttr().getInWidth(port) << ", expected " << (width))
+
+#define VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, port, width)\
+  VALIDATE_CELLTYPE(logger, type,\
+       type.getAttr().getOutWidth(port) == (width),\
+      "Incorrect width of output port #" << port << ": " <<\
+          type.getAttr().getOutWidth(port) << ", expected " << (width))
+
+#define VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, i, j)\
+  VALIDATE_CELLTYPE(logger, type,\
+       type.getAttr().getInWidth(i) == type.getAttr().getInWidth(j),\
+      "Input ports #" << i << " and #" << j <<\
+          " have different widths")
+
+#define VALIDATE_CELLTYPE_OUT_OUT_WIDTHS(logger, type, i, j)\
+  VALIDATE_CELLTYPE(logger, type,\
+       type.getAttr().getOutWidth(i) == type.getAttr().getOutWidth(j),\
+      "Output ports #" << i << " and #" << j <<\
+          " have different widths")
+
+#define VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, i, j)\
+  VALIDATE_CELLTYPE(logger, type,\
+       type.getAttr().getInWidth(i) == type.getAttr().getOutWidth(j),\
+      "Input ports #" << i << " and output port #" << j <<\
+          " have different widths")
 
 /// Validates IN.
-static bool validateIn(const CellType &type) {
-  VALIDATE(type.getInNum() == 0);
-  VALIDATE(type.getOutNum() == 1);
+static bool validateIn(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 0);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates OUT.
-static bool validateOut(const CellType &type) {
-  VALIDATE(type.getInNum() == 1);
-  VALIDATE(type.getOutNum() == 0);
+static bool validateOut(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 1);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 0);
   return true;
 }
 
 /// Validates ZERO and ONE.
-static bool validateConst(const CellType &type) {
-  VALIDATE(type.getInNum() == 0);
-  VALIDATE(type.getOutNum() == 1);
+static bool validateConst(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 0);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates BUF and NOT.
-static bool validateLogic1(const CellType &type) {
-  VALIDATE(type.getInNum() == 1);
-  VALIDATE(type.getOutNum() == 1);
+static bool validateLogic1(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 1);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates AND, OR, XOR, NAND, NOR, and XNOR.
-static bool validateLogic2plus(const CellType &type) {
-  VALIDATE(!type.isInNumFixed() || type.getInNum() >= 2);
-  VALIDATE(type.getOutNum() == 1);
+static bool validateLogic2plus(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PINS_ge(logger, type, 2);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates MAJ.
-static bool validateLogicMaj(const CellType &type) {
-  VALIDATE(!type.isInNumFixed() || type.getInNum() >= 3);
-  VALIDATE(type.getOutNum() == 1);
+static bool validateLogicMaj(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PINS_ge(logger, type, 3);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates DFF*.
-static bool validateDff(const CellType &type) {
+static bool validateDff(const CellType &type, diag::Logger &logger) {
   // D flip-flop (Q, D, CLK):
   // Q(t) = CLK(posedge) ? D : Q(t-1).
-  VALIDATE(type.getInNum() == 2);
-  VALIDATE(type.getOutNum() == 1);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates sDFF*.
-static bool validateSDff(const CellType &type) {
+static bool validateSDff(const CellType &type, diag::Logger &logger) {
   // D flip-flop w/ synchronous reset (Q, D, CLK, RST):
   // Q(t) = CLK(posedge) ? (RST ? 0 : D) : Q(t-1).
-  VALIDATE(type.getInNum() == 3);
-  VALIDATE(type.getOutNum() == 1);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates aDFF*.
-static bool validateADff(const CellType &type) {
+static bool validateADff(const CellType &type, diag::Logger &logger) {
   // D flip-flop w/ asynchronous reset (Q, D, CLK, RST):
   // Q(t) = RST(level=1) ? 0 : (CLK(posedge) ? D : Q(t-1)).
-  VALIDATE(type.getInNum() == 3);
-  VALIDATE(type.getOutNum() == 1);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates DFFrs*.
-static bool validateDffRs(const CellType &type) {
+static bool validateDffRs(const CellType &type, diag::Logger &logger) {
   // D flip-flop w/ (asynchronous) reset and set (Q, D, CLK, RST, SET):
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
-  VALIDATE(type.getInNum() == 4);
-  VALIDATE(type.getOutNum() == 1);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 4);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates DLATCH*.
-static bool validateDLatch(const CellType &type) {
+static bool validateDLatch(const CellType &type, diag::Logger &logger) {
   // D latch (Q, D, ENA):
   // Q(t) = ENA(level=1) ? D : Q(t-1).
-  VALIDATE(type.getInNum() == 2);
-  VALIDATE(type.getOutNum() == 1);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates aDLATCH*.
-static bool validateADLatch(const CellType &type) {
+static bool validateADLatch(const CellType &type, diag::Logger &logger) {
   // D latch w/ asynchronous reset (Q, D, ENA, RST):
   // Q(t) = RST(level=1) ? 0 : (ENA(level=1) ? D : Q(t-1)).
-  VALIDATE(type.getInNum() == 3);
-  VALIDATE(type.getOutNum() == 1);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates DLATCHrs*.
-static bool validateDLatchRs(const CellType &type) {
+static bool validateDLatchRs(const CellType &type, diag::Logger &logger) {
   // D latch w/ (asynchronous) reset and set (Q, D, ENA, RST, SET):
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (ENA(level=1) ? D : Q(t-1))).
-  VALIDATE(type.getInNum() == 4);
-  VALIDATE(type.getOutNum() == 1);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 4);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates LATCHrs*.
-static bool validateLatchRs(const CellType &type) {
+static bool validateLatchRs(const CellType &type, diag::Logger &logger) {
   // RS latch (Q, RST, SET):
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : Q(t-1)).
-  VALIDATE(type.getInNum() == 2);
-  VALIDATE(type.getOutNum() == 1);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
   return true;
 }
 
 /// Validates BNOT.
-static bool validateBitwise1(const CellType &type) {
-  const auto &attr = type.getAttr();
-  VALIDATE(attr.getInPortNum() == 1);
-  VALIDATE(attr.getOutPortNum() == 1);
-  VALIDATE(attr.getOutWidth(0) == attr.getInWidth(0));
+static bool validateBitwise1(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
   return true;
 }
 
 /// Validates BAND, BOR, BXOR, BNAND, BNOR, and BXNOR.
-static bool validateBitwise2(const CellType &type) {
-  const auto &attr = type.getAttr();
-  VALIDATE(attr.getInPortNum() == 2);
-  VALIDATE(attr.getOutPortNum() == 1);
-  VALIDATE(attr.getInWidth(0) == attr.getInWidth(1));
-  VALIDATE(attr.getOutWidth(0) == attr.getInWidth(0));
+static bool validateBitwise2(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 0, 1);
+  VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
   return true;
 }
 
 /// Validates RAND, ROR, RXOR, RNAND, RNOR, and RXNOR.
-static bool validateReduce(const CellType &type) {
-  const auto &attr = type.getAttr();
-  VALIDATE(attr.getInPortNum() == 1);
-  VALIDATE(attr.getOutPortNum() == 1);
-  VALIDATE(attr.getOutWidth(0) == 1);
+static bool validateReduce(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0, 1);
   return true;
 }
 
 /// Validates MUX2.
-static bool validateMux2(const CellType &type) {
-  const auto &attr = type.getAttr();
-  VALIDATE(attr.getInPortNum() == 3);
-  VALIDATE(attr.getOutPortNum() == 1);
-  VALIDATE(attr.getInWidth(0) == 1);
-  VALIDATE(attr.getInWidth(1) == attr.getInWidth(2));
-  VALIDATE(attr.getOutWidth(0) == attr.getInWidth(1));
+static bool validateMux2(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 3);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  VALIDATE_CELLTYPE_IN_WIDTH(logger, type, 0, 1);
+  VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 1, 2);
+  VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 1, 0);
   return true;
 }
 
 /// Validates SHL and SHR*.
-static bool validateShift(const CellType &type) {
-  const auto &attr = type.getAttr();
-  VALIDATE(attr.getInPortNum() == 2);
-  VALIDATE(attr.getOutPortNum() == 1);
+static bool validateShift(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
   return true;
 }
 
 /// Validates EQ*, NEQ*, EQX*, NEQX*, LT*, LTE*, GT*, and GTE*.
-static bool validateCompare(const CellType &type) {
-  const auto &attr = type.getAttr();
-  VALIDATE(attr.getInPortNum() == 2);
-  VALIDATE(attr.getOutPortNum() == 1);
-  VALIDATE(attr.getOutWidth(0) == 1);
+static bool validateCompare(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0, 1);
   return true;
 }
 
 /// Validates NEG.
-static bool validateArith1(const CellType &type) {
-  const auto &attr = type.getAttr();
-  VALIDATE(attr.getInPortNum() == 1);
-  VALIDATE(attr.getOutPortNum() == 1);
+static bool validateArith1(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
   return true;
 }
 
 /// Validates ADD, SUB, MUL*, DIV*, REM*, and MOD*.
-static bool validateArith2(const CellType &type) {
-  const auto &attr = type.getAttr();
-  VALIDATE(attr.getInPortNum() == 2);
-  VALIDATE(attr.getOutPortNum() == 1);
+static bool validateArith2(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
   return true;
 }
 
 /// Validates UNDEF.
-static bool validateUndef(const CellType &type) {
+static bool validateUndef(const CellType &type, diag::Logger &logger) {
   const auto &attr = type.getAttr();
   const auto ports = attr.getOrderedPorts();
 
   size_t nIn{0}, nOut{0}, wIn{0}, wOut{0};
   for (const auto &port : ports) {
-    VALIDATE(port.width > 0);
+    VALIDATE_CELLTYPE(logger, type, port.width > 0, "Zero port width");
     if (port.input) {
       nIn += 1;
       wIn += port.width;
@@ -325,69 +387,86 @@ static bool validateUndef(const CellType &type) {
     }
   }
 
-  VALIDATE(attr.getInPortNum() == nIn);
-  VALIDATE(attr.getOutPortNum() == nOut);
-  VALIDATE(type.getInNum() == wIn);
-  VALIDATE(type.getOutNum() == wOut);
-  VALIDATE((nIn + nOut) < CellTypeAttr::MaxPortNum);
-  VALIDATE((wIn + wOut) < CellTypeAttr::MaxBitWidth);
+  VALIDATE_CELLTYPE_IN_PORTS(logger, type, nIn);
+  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, nOut);
+  VALIDATE_CELLTYPE_IN_PINS(logger, type, wIn);
+  VALIDATE_CELLTYPE_OUT_PINS(logger, type, wOut);
+  VALIDATE_CELLTYPE(logger, type,
+      (nIn + nOut) <= CellTypeAttr::MaxPortNum,
+      "Too many input/output ports");
+  VALIDATE_CELLTYPE(logger, type,
+      (wIn + wOut) <= CellTypeAttr::MaxBitWidth,
+      "Too many input/output pins");
+
   return true;
 }
 
-bool validateCellType(const CellType &type) {
-  VALIDATE(type.isGate() || type.hasAttr());
+bool validateCellType(const CellType &type, diag::Logger &logger) {
+  VALIDATE_CELLTYPE(logger, type,
+      type.isGate() || type.hasAttr(),
+      "Non-gate cell has no attributes");
 
   if (type.isNet()) {
     const auto &net = type.getNet();
-    VALIDATE(net.getInNum() == type.getInNum());
-    VALIDATE(net.getOutNum() == type.getOutNum());
-    VALIDATE(validateNet(net));
+    VALIDATE_CELLTYPE(logger, type,
+        net.getInNum() == type.getInNum(),
+        "Incorrect number of input pins in the net implementation");
+    VALIDATE_CELLTYPE(logger, type,
+        net.getOutNum() == type.getOutNum(),
+        "Incorrect number of output pints in the net implementation");
+    VALIDATE_CELLTYPE(logger, type, validateNet(net, logger),
+        "[Invalid net implementation]");
   } else if (type.isSubnet()) {
     const auto &subnet = type.getSubnet();
-    VALIDATE(subnet.getInNum() == type.getInNum());
-    VALIDATE(subnet.getOutNum() == type.getOutNum());
-    VALIDATE(validateSubnet(subnet));
+    VALIDATE_CELLTYPE(logger, type,
+        subnet.getInNum() == type.getInNum(),
+        "Incorrect number of input pins in the subnet implementation");
+    VALIDATE_CELLTYPE(logger, type,
+        subnet.getOutNum() == type.getOutNum(),
+        "Incorrect number of output pins in the subnet implementation");
+    VALIDATE_CELLTYPE(logger, type, validateSubnet(subnet, logger),
+        "[Invalid subnet implementation]");
   }
 
   switch(type.getSymbol() & ~FLGMASK) {
-  case IN:       return validateIn(type);
-  case OUT:      return validateOut(type);
+  case IN:       return validateIn(type, logger);
+  case OUT:      return validateOut(type, logger);
   case ZERO:     // Constants
-  case ONE:      return validateConst(type);
+  case ONE:      return validateConst(type, logger);
   case BUF:      // Unary logic gates
-  case NOT:      return validateLogic1(type);
+  case NOT:      return validateLogic1(type, logger);
   case AND:      // Binary logic gates
   case OR:       //
   case XOR:      //
   case NAND:     //
   case NOR:      //
-  case XNOR:     return validateLogic2plus(type);
-  case MAJ:      return validateLogicMaj(type);
-  case DFF:      return validateDff(type);
-  case sDFF:     return validateSDff(type);
-  case aDFF:     return validateADff(type);
-  case DFFrs:    return validateDffRs(type);
-  case DLATCH:   return validateDLatch(type);
-  case aDLATCH:  return validateADLatch(type);
-  case DLATCHrs: return validateDLatchRs(type);
-  case LATCHrs:  return validateLatchRs(type);
-  case BNOT:     return validateBitwise1(type);
+  case XNOR:     return validateLogic2plus(type, logger);
+  case MAJ:      return validateLogicMaj(type, logger);
+  case DFF:      return validateDff(type, logger);
+  case sDFF:     return validateSDff(type, logger);
+  case aDFF:     return validateADff(type, logger);
+  case DFFrs:    return validateDffRs(type, logger);
+  case DLATCH:   return validateDLatch(type, logger);
+  case aDLATCH:  return validateADLatch(type, logger);
+  case DLATCHrs: return validateDLatchRs(type, logger);
+  case LATCHrs:  return validateLatchRs(type, logger);
+  case BNOT:     return validateBitwise1(type, logger);
   case BAND:     // Binary bitwise operations
   case BOR:      //
   case BXOR:     //
   case BNAND:    //
   case BNOR:     //
-  case BXNOR:    return validateBitwise2(type);
+  case BXNOR:    return validateBitwise2(type, logger);
   case RAND:     // Reduction operations
   case ROR:      //
   case RXOR:     //
   case RNAND:    //
   case RNOR:     //
-  case RXNOR:    return validateReduce(type);
-  case MUX2:     return validateMux2(type);
+  case RXNOR:    return validateReduce(type, logger);
+  case MUX2:     return validateMux2(type, logger);
   case SHL:      // Shift operations
   case SHRs:     //
-  case SHRu:     return validateShift(type);
+  case SHRu:     return validateShift(type, logger);
   case EQs:      // Comparison operations
   case EQu:      //
   case NEQs:     //
@@ -403,8 +482,8 @@ bool validateCellType(const CellType &type) {
   case GTs:      //
   case GTu:      //
   case GTEs:     //
-  case GTEu:     return validateCompare(type);
-  case NEG:      return validateArith1(type);
+  case GTEu:     return validateCompare(type, logger);
+  case NEG:      return validateArith1(type, logger);
   case ADD:      // Binary arithmetic operations
   case SUB:      //
   case MULs:     //
@@ -413,9 +492,12 @@ bool validateCellType(const CellType &type) {
   case DIVu:     //
   case REMs:     //
   case REMu:     //
-  case MODs:     return validateArith2(type);
-  case UNDEF:    return validateUndef(type);
+  case MODs:     return validateArith2(type, logger);
+  case UNDEF:    return validateUndef(type, logger);
   }
+
+  DIAGNOSE_ERROR(logger,
+      PREFIX(type) << "Unknown cell type symbol: " << type.getSymbol());
 
   return false;
 }

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "diag/logger.h"
 #include "gate/model/cellattr.h"
 #include "gate/model/object.h"
 #include "gate/model/storage.h"
@@ -324,7 +325,7 @@ enum CellSymbol : uint16_t {
   LATCHrs_nn = (LATCHrs | RSTLVL0 | SETLVL0),
 
   /// Custom block.
-  UNDEF = 0xffff
+  UNDEF = 0xffff & ~FLGMASK
 };
 
 static_assert(sizeof(CellSymbol) == 2);
@@ -948,10 +949,10 @@ inline const CellType &getCellType(CellSymbol symbol) {
 // Cell Type Validator
 //===----------------------------------------------------------------------===//
 
-bool validateCellType(const CellType &type);
+bool validateCellType(const CellType &type, diag::Logger &logger);
 
-inline bool validateCellType(const CellTypeID typeID) {
-  return validateCellType(CellType::get(typeID));
+inline bool validateCellType(const CellTypeID typeID, diag::Logger &logger) {
+  return validateCellType(CellType::get(typeID), logger);
 }
 
 } // namespace eda::gate::model

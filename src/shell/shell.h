@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "diag/logger.h"
+#include "diag/terminal_printer.h"
 #include "gate/optimizer/design_transformer.h"
 #include "util/singleton.h"
 
@@ -40,11 +42,17 @@
     return makeError(interp, e.what());\
   }
 
-#define UTOPIA_ERROR_IF(interp, cond, msg)\
-  if (cond) return makeError(interp, msg)
+#define UTOPIA_WARN(interp, msg)\
+  return makeWarn(interp, msg)
 
 #define UTOPIA_WARN_IF(interp, cond, msg)\
   if (cond) return makeWarn(interp, msg)
+
+#define UTOPIA_ERROR(interp, msg)\
+  return makeError(interp, msg);
+
+#define UTOPIA_ERROR_IF(interp, cond, msg)\
+  if (cond) return makeError(interp, msg)
 
 #define UTOPIA_ERROR_IF_NO_DESIGN(interp)\
   UTOPIA_ERROR_IF(interp, !designBuilder,\
@@ -73,15 +81,15 @@ inline int makeResult(Tcl_Interp *interp, const std::string &msg) {
   return TCL_OK;
 }
 
-inline int makeError(Tcl_Interp *interp, const std::string &msg) {
-  makeResult(interp, fmt::format("error: {}", msg));
-  return TCL_ERROR;
-} 
-
 inline int makeWarn(Tcl_Interp *interp, const std::string &msg) {
   makeResult(interp, fmt::format("warning: {}", msg));
   return TCL_ERROR;
 }
+
+inline int makeError(Tcl_Interp *interp, const std::string &msg) {
+  makeResult(interp, fmt::format("error: {}", msg));
+  return TCL_ERROR;
+} 
 
 inline void printNewline() {
   UTOPIA_OUT << std::endl;
@@ -158,9 +166,13 @@ struct UtopiaCommand {
   virtual int runEx(Tcl_Interp *interp, int argc, const char *argv[]) {
     using clock = std::chrono::high_resolution_clock;
 
+    logger.getDiagnostics().initialize();
+
     const auto start = clock::now();
     const auto status = run(interp, argc, argv);
     const auto end = clock::now();
+
+    printer.process(logger.getDiagnostics());
 
     printTime<clock>(fmt::format("{} [returned {}]", name, status),
         start, end, "> ");
@@ -176,6 +188,9 @@ struct UtopiaCommand {
 
   const char *name;
   const char *desc;
+
+  diag::Logger logger;
+  diag::TerminalPrinter printer;
 
   UtopiaShell *shell;
 

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "diag/logger.h"
 #include "gate/model/decomposer/net_decomposer.h"
 #include "gate/model/net.h"
 #include "gate/model/subnet.h"
@@ -332,6 +333,6 @@ inline NetID makeNet(const SubnetID subnetID) {
 // Design Validator
 //===----------------------------------------------------------------------===//
 
-bool validateDesignBuilder(const DesignBuilder &builder);
+bool validateDesign(const DesignBuilder &builder, diag::Logger &logger);
 
 } // namespace eda::gate::model

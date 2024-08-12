@@ -12,3 +12,8 @@ target_include_directories(Util
     ${PROJECT_SOURCE_DIR}/src)
 
 add_library(Utopia::Util ALIAS Util)
+
+target_link_libraries(Util
+  PRIVATE
+    fmt
+)

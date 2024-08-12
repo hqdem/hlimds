@@ -1395,51 +1395,84 @@ void SubnetBuilder::destrashEntry(size_t entryID) {
 // Subnet Validator
 //===----------------------------------------------------------------------===//
 
-#define VALIDATE(prop) if (!(prop)) return false
+#define OBJECT(cell, i) "Cell [" << cell.getType().getName() << ":" << i << "]"
+#define PREFIX(cell, i) OBJECT(cell, i) << ": "
 
-bool validateCell(const Subnet::Cell &cell) {
+#define VALIDATE(logger, prop, msg)\
+  if (!(prop)) {\
+    DIAGNOSE_ERROR(logger, msg);\
+    return false;\
+  }
+
+#define VALIDATE_CELL(logger, cell, i, prop, msg)\
+  VALIDATE(logger, prop, PREFIX(cell, i) << msg)
+
+static bool validateCell(const Subnet::Cell &cell,
+                         const size_t entryID,
+                         diag::Logger &logger) {
   const auto &type = cell.getType();
-  VALIDATE(validateCellType(type));
-  VALIDATE(!type.isInNumFixed() || cell.getInNum() == type.getInNum());
-  VALIDATE(!type.isOutNumFixed() || cell.getOutNum() == type.getOutNum());
+  VALIDATE_CELL(logger, cell, entryID,
+      validateCellType(type, logger),
+      "[Incorrect cell type]");
+  VALIDATE_CELL(logger, cell, entryID,
+      !type.isInNumFixed() || cell.getInNum() == type.getInNum(),
+      "Incorrect number of input pins: " << cell.getInNum() <<
+      ", expected " << type.getInNum());
+  VALIDATE_CELL(logger, cell, entryID,
+      !type.isOutNumFixed() || cell.getOutNum() == type.getOutNum(),
+      "Incorrect number of output pins: " << cell.getOutNum() <<
+      ", expected " << type.getOutNum());
   return true;
 }
 
 static bool validateCell(const Subnet::Cell &cell,
+                         const size_t entryID,
                          const Subnet::LinkList &links,
-                         const bool isTechMapped) {
+                         const bool isTechMapped,
+                         diag::Logger &logger) {
   const auto &type = cell.getType();
-  VALIDATE(validateCell(cell));
-  VALIDATE(type.isIn() || type.isOut() || type.isHard() == isTechMapped);
+  VALIDATE_CELL(logger, cell, entryID,
+      validateCell(cell, entryID, logger),
+      "[Incorrect cell]");
+  VALIDATE_CELL(logger, cell, entryID,
+      type.isIn() || type.isOut() || type.isHard() == isTechMapped,
+      "Cell is " << (type.isHard() ? "mapped" : "unmapped"));
 
   for (const auto &link :links) {
-    VALIDATE(!isTechMapped || !link.inv);
+    VALIDATE_CELL(logger, cell, entryID,
+        !isTechMapped || !link.inv,
+        "Technology mapped subnet contains an invertor link");
   }
 
   return true;
 }
 
-bool validateSubnet(const Subnet &subnet) {
+bool validateSubnet(const Subnet &subnet, diag::Logger &logger) {
   const auto isTechMapped = subnet.isTechMapped();
   const auto &entries = subnet.getEntries();
 
   for (size_t i = 0; i < entries.size(); ++i) {
     const auto &cell = entries[i].cell;
     const auto links = subnet.getLinks(i);
-    VALIDATE(validateCell(cell, links, isTechMapped));
+
+    if (!validateCell(cell, i, links, isTechMapped, logger))
+      return false;
+
     i += cell.more;
   }
  
   return true;
 }
 
-bool validateSubnetBuilder(const SubnetBuilder &builder) {
+bool validateSubnet(const SubnetBuilder &builder, diag::Logger &logger) {
   const auto isTechMapped = builder.isTechMapped();
 
   for (auto i = builder.begin(); i != builder.end(); i.nextCell()) {
     const auto &cell = builder.getCell(*i);
     const auto links = builder.getLinks(*i);
-    VALIDATE(validateCell(cell, links, isTechMapped));
+
+    if (!validateCell(cell, *i, links, isTechMapped, logger))
+      return false;
   }
  
   return true;

@@ -37,6 +37,7 @@ add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)
 
 # The sublibraries. 
 add_subdirectory(util)
+add_subdirectory(diag)
 add_subdirectory(gate)
 add_subdirectory(rtl)
 
@@ -54,6 +55,7 @@ target_include_directories(Shell
 
 target_link_libraries(Shell
   PUBLIC
+    Utopia::Diag
     Utopia::Gate
     Utopia::RILParser
     Utopia::RTL
@@ -73,6 +75,7 @@ add_library(Utopia::Lib ALIAS ${MAIN_LIBRARY})
 # The libraries to link with.
 target_link_libraries(${MAIN_LIBRARY}
   PUBLIC
+    Utopia::Diag
     Utopia::Gate
     Utopia::RILParser
     Utopia::RTL

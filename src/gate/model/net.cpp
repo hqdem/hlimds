@@ -94,24 +94,50 @@ NetID NetBuilder::make() {
 // Net Validator
 //===----------------------------------------------------------------------===//
 
-#define VALIDATE(prop) if (!(prop)) return false
+#define OBJECT(net) "Net"
+#define PREFIX(net) OBJECT(net) << ": "
 
-static bool validateCells(const List<CellID> &cells) {
+#define VALIDATE(logger, prop, msg)\
+  if (!(prop)) {\
+    DIAGNOSE_ERROR(logger, msg);\
+    return false;\
+  }
+
+#define VALIDATE_NET(logger, net, prop, msg)\
+  VALIDATE(logger, prop, PREFIX(net) << msg)
+
+static bool validateCells(const List<CellID> &cells, diag::Logger &logger) {
   for (auto i = cells.begin(); i != cells.end(); ++i) {
-    VALIDATE(validateCell(*i));
+    if (!validateCell(*i, logger)) return false;
   }
   return true;
 }
 
-bool validateNet(const Net &net) {
-  VALIDATE(net.getInNum() > 0);
-  VALIDATE(net.getOutNum() > 0);
-  VALIDATE(validateCells(net.getInputs()));
-  VALIDATE(validateCells(net.getOutputs()));
-  VALIDATE(validateCells(net.getCombCells()));
-  VALIDATE(validateCells(net.getFlipFlops()));
-  VALIDATE(validateCells(net.getSoftBlocks()));
-  VALIDATE(validateCells(net.getHardBlocks()));
+bool validateNet(const Net &net, diag::Logger &logger) {
+  VALIDATE_NET(logger, net,
+       net.getInNum() > 0,
+      "No inputs");
+  VALIDATE_NET(logger, net,
+       net.getOutNum() > 0,
+      "No outputs");
+  VALIDATE_NET(logger, net,
+      validateCells(net.getInputs(), logger),
+      "[Incorrect net inputs]");
+  VALIDATE_NET(logger, net,
+      validateCells(net.getOutputs(), logger),
+      "[Incorrect net outputs]");
+  VALIDATE_NET(logger, net,
+      validateCells(net.getCombCells(), logger),
+      "[Incorrect net cells]");
+  VALIDATE_NET(logger, net,
+      validateCells(net.getFlipFlops(), logger),
+      "[Incorrect net flip-flops/latches]");
+  VALIDATE_NET(logger, net,
+      validateCells(net.getSoftBlocks(), logger),
+      "[Incorrect net soft macro-blocks]");
+  VALIDATE_NET(logger, net,
+      validateCells(net.getHardBlocks(), logger),
+      "[Incorrect net hard macro-blocks]");
   return true;
 }
 

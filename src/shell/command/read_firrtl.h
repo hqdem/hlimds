@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "diag/logger.h"
 #include "gate/translator/fir/fir_net.h"
 #include "shell/shell.h"
 
@@ -37,7 +38,7 @@ struct ReadFirrtlCommand final : public UtopiaCommandBase<ReadFirrtlCommand> {
     UTOPIA_ERROR_IF(interp, typeID == eda::gate::model::OBJ_NULL_ID,
         "received null type");
 
-    UTOPIA_ERROR_IF(interp, validateCellType(typeID),
+    UTOPIA_ERROR_IF(interp, !validateCellType(typeID, logger),
         "validation checks failed");
 
     const auto &type = CellType::get(typeID);

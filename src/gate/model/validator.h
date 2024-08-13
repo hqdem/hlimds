@@ -17,23 +17,14 @@
 namespace eda::gate::model {
 
 bool validateCellType(const CellType &type, diag::Logger &logger);
+bool validateCellType(const CellTypeID typeID, diag::Logger &logger);
 
-inline bool validateCellType(const CellTypeID typeID, diag::Logger &logger) {
-  return validateCellType(CellType::get(typeID), logger);
-}
+bool validateNet(const Net &net, diag::Logger &logger);
+bool validateNet(const NetID netID, diag::Logger &logger);
 
 bool validateSubnet(const Subnet &subnet, diag::Logger &logger);
 bool validateSubnet(const SubnetBuilder &builder, diag::Logger &logger);
-
-inline bool validateSubnet(const SubnetID subnetID, diag::Logger &logger) {
-  return validateSubnet(Subnet::get(subnetID), logger);
-}
-
-bool validateNet(const Net &net, diag::Logger &logger);
-
-inline bool validateNet(const NetID netID, diag::Logger &logger) {
-  return validateNet(Net::get(netID), logger);
-}
+bool validateSubnet(const SubnetID subnetID, diag::Logger &logger);
 
 bool validateDesign(const DesignBuilder &builder, diag::Logger &logger);
 

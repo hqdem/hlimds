@@ -20,7 +20,7 @@
 
 #define ADD_CMD(app, cmd, name, desc)\
   ADD_CUSTOM_CMD(app, name, desc, [&]() {\
-    foreach(cmd())->transform(designBuilder);\
+    foreach(cmd())->transform(getDesign());\
   })
 
 namespace eda::shell {
@@ -29,11 +29,11 @@ template<typename Func>
 static void measureAndRun(const std::string &name, Func func) {
   using clock = std::chrono::high_resolution_clock;
 
-  const auto oldCellNum = std::get<2>(designBuilder->getCellNum(false));
+  const auto oldCellNum = std::get<2>(getDesign()->getCellNum(false));
   const auto start = clock::now();
   func();
   const auto end = clock::now();
-  const auto newCellNum = std::get<2>(designBuilder->getCellNum(false));
+  const auto newCellNum = std::get<2>(getDesign()->getCellNum(false));
 
   printTimeAndEffect<clock>(name, start, end, oldCellNum, newCellNum, "  - ");
 }
@@ -53,7 +53,7 @@ struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {
     // Rewriting.
     auto *passRw = ADD_CUSTOM_CMD(app,
         "rw", "Rewriting", [&]() {
-      foreach(pass::rw(rwName, rwK, rwZ))->transform(designBuilder);
+      foreach(pass::rw(rwName, rwK, rwZ))->transform(getDesign());
     });
     passRw->add_option("--name", rwName);
     passRw->add_option("-k", rwK);
@@ -71,7 +71,7 @@ struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {
     // Resubstitution.
     auto *passRs = ADD_CUSTOM_CMD(app,
         "rs", "Resubstitution", [&]() {
-      foreach(pass::rs(rsName, rsK, rsN))->transform(designBuilder);
+      foreach(pass::rs(rsName, rsK, rsN))->transform(getDesign());
     });
     passRs->add_option("--name", rsName);
     passRs->add_option("-k", rsK);
@@ -79,7 +79,7 @@ struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {
 
     auto *passRsz = ADD_CUSTOM_CMD(app,
         "rsz", "Resubstitution w/ zero-cost replacements", [&]() {
-      foreach(pass::rsz(rszName, rszK, rszN))->transform(designBuilder);
+      foreach(pass::rsz(rszName, rszK, rszN))->transform(getDesign());
     });
     passRsz->add_option("--name", rszName);
     passRsz->add_option("-k", rszK);

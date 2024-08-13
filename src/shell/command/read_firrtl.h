@@ -21,8 +21,6 @@ struct ReadFirrtlCommand final : public UtopiaCommandBase<ReadFirrtlCommand> {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    using DesignBuilder = eda::gate::model::DesignBuilder;
-
     UTOPIA_ERROR_IF_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
     UTOPIA_ERROR_IF_NO_FILES(interp, app);
@@ -34,19 +32,8 @@ struct ReadFirrtlCommand final : public UtopiaCommandBase<ReadFirrtlCommand> {
     UTOPIA_ERROR_IF(interp, typeIDs.empty(),
         "received empty list");
 
-    const auto typeID = typeIDs.front();
-    UTOPIA_ERROR_IF(interp, typeID == eda::gate::model::OBJ_NULL_ID,
-        "received null type");
-
-    UTOPIA_ERROR_IF(interp, !validateCellType(typeID, logger),
+    UTOPIA_ERROR_IF(interp, !setDesign(typeIDs.front(), logger),
         "validation checks failed");
-
-    const auto &type = CellType::get(typeID);
-    UTOPIA_ERROR_IF(interp, !type.isNet(),
-        "received null net");
- 
-    const auto netID = type.getNetID();
-    designBuilder = std::make_shared<DesignBuilder>(netID);
 
     return TCL_OK;
   }

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/validator.h"
 #include "gate/translator/graphml.h"
 #include "shell/shell.h"
 
@@ -20,7 +21,6 @@ struct ReadGraphMlCommand final : public UtopiaCommandBase<ReadGraphMlCommand> {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    using DesignBuilder = eda::gate::model::DesignBuilder;
     using GmlTranslator = eda::gate::translator::GmlTranslator;
 
     UTOPIA_ERROR_IF_DESIGN(interp);
@@ -32,8 +32,10 @@ struct ReadGraphMlCommand final : public UtopiaCommandBase<ReadGraphMlCommand> {
 
     GmlTranslator::ParserData data;
     GmlTranslator parser;
-    const auto &subnet = parser.translate(fileName, data)->make(true);
-    designBuilder = std::make_shared<DesignBuilder>(subnet);
+    const auto subnetID = parser.translate(fileName, data)->make(true);
+
+    UTOPIA_ERROR_IF(interp, !setDesign(subnetID, logger),
+        "validation checks failed");
 
     return TCL_OK;
   }

@@ -55,11 +55,11 @@
   if (cond) return makeError(interp, msg)
 
 #define UTOPIA_ERROR_IF_NO_DESIGN(interp)\
-  UTOPIA_ERROR_IF(interp, !designBuilder,\
+  UTOPIA_ERROR_IF(interp, !getDesign(),\
       "design has not been loaded")
 
 #define UTOPIA_ERROR_IF_DESIGN(interp)\
-  UTOPIA_ERROR_IF(interp, designBuilder,\
+  UTOPIA_ERROR_IF(interp, getDesign(),\
       "design has been already loaded")
 
 #define UTOPIA_ERROR_IF_NO_FILES(interp, app)\
@@ -291,8 +291,18 @@ protected:
   std::map<std::string, UtopiaCommand*> commands;
 };
 
-/// @brief Design being synthesized.
-extern eda::gate::optimizer::DesignBuilderPtr designBuilder;
+/// @brief Returns the design being synthesized.
+eda::gate::optimizer::DesignBuilderPtr getDesign();
+
+/// @brief Initializes the design from the cell type.
+bool setDesign(const eda::gate::model::CellTypeID typeID, diag::Logger &logger);
+/// @brief Initializes the design from the net.
+bool setDesign(const eda::gate::model::NetID netID, diag::Logger &logger);
+/// @brief Initializes the design from the subnet.
+bool setDesign(const eda::gate::model::SubnetID subnetID, diag::Logger &logger);
+
+/// @brief Deletes the design from memory.
+void deleteDesign();
 
 } // namespace eda::shell
 

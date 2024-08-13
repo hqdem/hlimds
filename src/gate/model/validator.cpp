@@ -436,6 +436,12 @@ bool validateCellType(const CellType &type, diag::Logger &logger) {
   return passed;
 }
 
+bool validateCellType(const CellTypeID typeID, diag::Logger &logger) {
+  bool passed = true;
+  VALIDATE(logger, (typeID != OBJ_NULL_ID), "Null cell-type identifier");
+  return passed && validateCellType(CellType::get(typeID), logger);
+}
+
 //===----------------------------------------------------------------------===//
 // Net Validator
 //===----------------------------------------------------------------------===//
@@ -521,6 +527,12 @@ bool validateNet(const Net &net, diag::Logger &logger) {
 
   VALIDATE_GROUP_END(logger);
   return passed;
+}
+
+bool validateNet(const NetID netID, diag::Logger &logger) {
+  bool passed = true;
+  VALIDATE(logger, (netID != OBJ_NULL_ID), "Null net identifier");
+  return passed && validateNet(Net::get(netID), logger);
 }
 
 //===----------------------------------------------------------------------===//
@@ -626,6 +638,12 @@ bool validateSubnet(const SubnetBuilder &builder, diag::Logger &logger) {
  
   VALIDATE_GROUP_END(logger);
   return passed;
+}
+
+bool validateSubnet(const SubnetID subnetID, diag::Logger &logger) {
+  bool passed = true;
+  VALIDATE(logger, (subnetID != OBJ_NULL_ID), "Null subnet identifier");
+  return passed && validateSubnet(Subnet::get(subnetID), logger);
 }
 
 //===----------------------------------------------------------------------===//

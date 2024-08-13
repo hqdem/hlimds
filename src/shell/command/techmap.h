@@ -41,20 +41,20 @@ struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
       return makeError(interp, "library has not been loaded");
     }
 
-    if (designBuilder->isTechMapped()) {
+    if (getDesign()->isTechMapped()) {
       return makeError(interp, "design has been already techmapped");
     }
 
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
-      const auto &subnetBuilder = designBuilder->getSubnetBuilder(i);
+    for (size_t i = 0; i < getDesign()->getSubnetNum(); ++i) {
+      const auto &subnetBuilder = getDesign()->getSubnetBuilder(i);
       const auto techmapBuilder = techMap(Objective(indicator), subnetBuilder);
       UTOPIA_ERROR_IF(interp, !techmapBuilder, "returned null");
-      designBuilder->setSubnetBuilder(i, techmapBuilder);
+      getDesign()->setSubnetBuilder(i, techmapBuilder);
     }
 
-    UTOPIA_ERROR_IF(interp, !validateDesign(*designBuilder, logger),
+    UTOPIA_ERROR_IF(interp, !validateDesign(*getDesign(), logger),
         "validation checks failed");
 
     return TCL_OK;

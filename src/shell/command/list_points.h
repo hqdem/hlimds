@@ -19,7 +19,7 @@ struct ListPointsCommand final : public UtopiaCommandBase<ListPointsCommand> {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
 
-    const auto points = designBuilder->getPoints();
+    const auto points = getDesign()->getPoints();
 
     if (points.empty()) {
       UTOPIA_OUT << "  <empty>" << std::endl << std::flush;

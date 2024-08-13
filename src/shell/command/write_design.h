@@ -77,7 +77,7 @@ struct WriteDesignCommand : public UtopiaCommand {
         "path does not contain a file name");
 
     if (subnetOption->count() != 0) {
-      UTOPIA_ERROR_IF(interp, subnetIndex >= designBuilder->getSubnetNum(),
+      UTOPIA_ERROR_IF(interp, subnetIndex >= getDesign()->getSubnetNum(),
            fmt::format("subnet {} does not exist", subnetIndex));
     }
 
@@ -89,9 +89,9 @@ struct WriteDesignCommand : public UtopiaCommand {
 
     std::ofstream out(fileName);
     if (subnetOption->count() == 0) {
-      printDesign(out, *designBuilder, *printer);
+      printDesign(out, *getDesign(), *printer);
     } else {
-      printSubnet(out, *designBuilder, subnetIndex, *printer);
+      printSubnet(out, *getDesign(), subnetIndex, *printer);
     }
 
     return TCL_OK;

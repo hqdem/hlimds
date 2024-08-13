@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/validator.h"
 #include "shell/command/delete_design.h"
 #include "shell/command/exit.h"
 #include "shell/command/goto_point.h"
@@ -30,7 +31,53 @@
 
 namespace eda::shell {
 
-eda::gate::optimizer::DesignBuilderPtr designBuilder = nullptr;
+namespace model = eda::gate::model;
+namespace optimizer = eda::gate::optimizer;
+
+static optimizer::DesignBuilderPtr designBuilder{nullptr};
+
+optimizer::DesignBuilderPtr getDesign() {
+  return designBuilder;
+}
+
+bool setDesign(const model::CellTypeID typeID, diag::Logger &logger) {
+  if (!model::validateCellType(typeID, logger))
+    return false;
+
+  const auto &type = model::CellType::get(typeID);
+  if (!type.isNet() && !type.isSubnet())
+    return false;
+
+  if (type.isNet()) {
+    const auto netID = type.getNetID();
+    designBuilder = std::make_shared<model::DesignBuilder>(netID);
+  } else {
+    const auto subnetID = type.getSubnetID();
+    designBuilder = std::make_shared<model::DesignBuilder>(subnetID);
+  }
+
+  return true;
+}
+
+bool setDesign(const model::NetID netID, diag::Logger &logger) {
+  if (!model::validateNet(netID, logger))
+    return false;
+
+  designBuilder = std::make_shared<model::DesignBuilder>(netID);
+  return true;
+}
+
+bool setDesign(const model::SubnetID subnetID, diag::Logger &logger) {
+  if (!model::validateSubnet(subnetID, logger))
+    return false;
+
+  designBuilder = std::make_shared<model::DesignBuilder>(subnetID);
+  return true;
+}
+
+void deleteDesign() {
+  designBuilder = nullptr;
+}
 
 static int printUtopiaFile(Tcl_Interp *interp, const std::string &fileName) {
   const char *utopiaHome = std::getenv("UTOPIA_HOME");

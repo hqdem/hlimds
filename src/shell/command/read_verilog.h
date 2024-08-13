@@ -47,12 +47,9 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
       netID = cvt.getNetID();
     }
 
-    UTOPIA_ERROR_IF(interp, netID == model::OBJ_NULL_ID,
-        "null ID received");
-    UTOPIA_ERROR_IF(interp, !validateNet(netID, logger),
-        "validation checks failed");
+    UTOPIA_ERROR_IF(interp, !setDesign(netID, logger),
+      "validation checks failed");
 
-    designBuilder = std::make_shared<model::DesignBuilder>(netID);
     return TCL_OK;
   }
  

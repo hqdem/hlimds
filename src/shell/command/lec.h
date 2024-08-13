@@ -46,16 +46,16 @@ struct LecCommand final : public UtopiaCommandBase<LecCommand> {
     if (point1 == point2) {
       return makeError(interp, "equal points specified");
     }
-    if (!designBuilder->hasPoint(point1)) {
+    if (!getDesign()->hasPoint(point1)) {
       return makeError(interp, fmt::format("unknown point '{}'", point1));
     }
-    if (!designBuilder->hasPoint(point2)) {
+    if (!getDesign()->hasPoint(point2)) {
       return makeError(interp, fmt::format("unknown point '{}'", point2));
     }
 
     const auto &checker = BaseChecker::getChecker(method);
     const bool verdict = checker.areEquivalent(
-        *designBuilder, point1, point2).equal();
+        *getDesign(), point1, point2).equal();
 
     const char *result = verdict ? "equivalent" : "not equivalent";
     return makeResult(interp, result);

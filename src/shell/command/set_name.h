@@ -27,7 +27,7 @@ struct SetNameCommand final : public UtopiaCommandBase<SetNameCommand> {
     }
 
     const auto name = app.remaining().at(0);
-    designBuilder->setName(name);
+    getDesign()->setName(name);
 
     return TCL_OK;
   }

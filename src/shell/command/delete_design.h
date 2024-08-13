@@ -19,7 +19,7 @@ struct DeleteDesignCommand final :
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
-    designBuilder = nullptr;
+    deleteDesign();
     return TCL_OK;
   }
 };

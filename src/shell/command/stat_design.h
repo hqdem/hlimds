@@ -36,16 +36,16 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
     UTOPIA_ERROR_IF_NO_DESIGN(interp);
     UTOPIA_PARSE_ARGS(interp, app, argc, argv);
 
-    const bool isTechMapped = designBuilder->isTechMapped();
+    const bool isTechMapped = getDesign()->isTechMapped();
 
     size_t nIn{0}, nOut{0}, nInt{0}, depth{0};
     float area{0}, delay{0}, power{0}, activ{0};
 
-    std::tie(nIn, nOut, nInt) = designBuilder->getCellNum(false);
+    std::tie(nIn, nOut, nInt) = getDesign()->getCellNum(false);
     const size_t nCell = nIn + nOut + nInt;
 
-    for (size_t i = 0; i < designBuilder->getSubnetNum(); ++i) {
-      const auto &subnetID = designBuilder->getSubnetID(i);
+    for (size_t i = 0; i < getDesign()->getSubnetNum(); ++i) {
+      const auto &subnetID = getDesign()->getSubnetID(i);
       const auto &subnet = eda::gate::model::Subnet::get(subnetID);
 
       /// FIXME: Use SubnetBuilder instead of Subnet.
@@ -62,10 +62,10 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
       }
     } // for subnet
 
-    printNameValue("Design", fmt::format("'{}'", designBuilder->getName()));
+    printNameValue("Design", fmt::format("'{}'", getDesign()->getName()));
     printNameValue("PIs", nIn);
     printNameValue("POs", nOut);
-    printNameValue("Subnets", designBuilder->getSubnetNum());
+    printNameValue("Subnets", getDesign()->getSubnetNum());
     printNameValue("Cells", nCell, " (incl. PI/PO)");
     printNameValue("", nInt);
     printNameValue("Depth", depth);

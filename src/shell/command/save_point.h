@@ -27,7 +27,7 @@ struct SavePointCommand final : public UtopiaCommandBase<SavePointCommand> {
     }
 
     const auto point = app.remaining().at(0);
-    designBuilder->save(point);
+    getDesign()->save(point);
 
     return TCL_OK;
   }

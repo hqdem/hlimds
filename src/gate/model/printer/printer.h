@@ -40,7 +40,7 @@ public:
   static constexpr auto DefaultName = "Design";
 
   static ModelPrinter &getDefaultPrinter() {
-    return getPrinter(DOT);
+    return getPrinter(SIMPLE);
   }
 
   static ModelPrinter &getPrinter(Format format);

@@ -28,7 +28,7 @@ struct GotoPointCommand final :
     }
 
     const auto point = app.remaining().at(0);
-    designBuilder->rollback(point);
+    getDesign()->rollback(point);
 
     return TCL_OK;
   }

@@ -468,9 +468,11 @@ void SubnetBuilder::replace(
 
   auto rootStrashIt = strash.end();
   const auto lhsRootEntryID = rhsToLhs[rhsOutEntryID];
+  const auto &lhsRootCell = getCell(lhsRootEntryID);
 
   const auto oldLhsRootDepth = getDepth(lhsRootEntryID);
-  const auto &rhsOutLink = rhsContainer.getLink(rhsOutEntryID, 0);
+  const auto rhsOutLink = lhsRootCell.isOut() ? Link(rhsOutEntryID, 0, 0) :
+      rhsContainer.getLink(rhsOutEntryID, 0);
 
   // Delete the root entry from the strash map.
   if (rhsToLhs[0] != lhsRootEntryID) {
@@ -478,33 +480,39 @@ void SubnetBuilder::replace(
   }
 
   size_t i = 0;
-  for (auto rhsIt = rhsIterable.begin();
-       !rhsContainer.getCell(getEntryID(rhsIt, i)).isOut();
+  for (auto rhsIt = rhsIterable.begin(); rhsIt != rhsIterable.end();
        ++rhsIt, ++i) {
     const size_t rhsEntryID = getEntryID(rhsIt, i);
     const auto &rhsCell = rhsContainer.getCell(rhsEntryID);
+    const auto rhsCellTypeID = rhsCell.getTypeID();
     assert(rhsCell.arity <= Cell::InPlaceLinks);
+
+    size_t prevEntriesN = entries.size();
+    size_t prevEmptyEntriesN = emptyEntryIDs.size();
+    size_t newEntryID;
+    bool isNewEntry = false;
+
     if (rhsCell.isIn()) {
       continue;
+    }
+    if (rhsCell.isOut() && !lhsRootCell.isOut()) {
+      break;
     }
     LinkList curCellLinks;
     for (const auto &link : rhsContainer.getLinks(rhsEntryID)) {
       curCellLinks.push_back(Link(rhsToLhs[link.idx], link.out, link.inv));
     }
 
-    size_t prevEntriesN = entries.size();
-    size_t prevEmptyEntriesN = emptyEntryIDs.size();
-
-    size_t newEntryID;
-    bool isNewEntry = false;
-    const auto curEntryStrKey = StrashKey{rhsCell.getTypeID(), curCellLinks};
     if (rhsOutLink.idx == rhsEntryID && !rhsOutLink.inv &&
-        (rootStrashIt = strash.find(curEntryStrKey)) == strash.end()) {
-      newEntryID = replaceCell(lhsRootEntryID, rhsCell.getTypeID(),
+        (lhsRootCell.isOut() ||
+        (rootStrashIt = strash.find(StrashKey{rhsCellTypeID, curCellLinks})) ==
+        strash.end())) {
+
+      newEntryID = replaceCell(lhsRootEntryID, rhsCellTypeID,
                                curCellLinks, true, onNewCell,
                                onRecomputedDepth).idx;
     } else {
-      newEntryID = addCell(rhsCell.getTypeID(), curCellLinks).idx;
+      newEntryID = addCell(rhsCellTypeID, curCellLinks).idx;
       if (prevEntriesN + 1 == entries.size() ||
           prevEmptyEntriesN == emptyEntryIDs.size() + 1) {
         isNewEntry = true;
@@ -701,13 +709,30 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
 
   size_t rhsRootEntryID = invalidID;
   size_t i = 0;
-  for (auto rhsIt = rhsIterable.begin();
-       !rhsContainer.getCell(getEntryID(rhsIt, i)).isOut();
+  for (auto rhsIt = rhsIterable.begin(); rhsIt != rhsIterable.end();
        ++rhsIt, ++i) {
 
     const size_t rhsEntryID = getEntryID(rhsIt, i);
-    rhsRootEntryID = rhsEntryID;
     const auto &rhsCell = rhsContainer.getCell(rhsEntryID);
+    if (rhsCell.isOut()) {
+      const auto lhsEntryID = rhsToLhs[rhsEntryID];
+      if (!getCell(lhsEntryID).isOut()) {
+        break;
+      }
+      rhsRootEntryID = rhsEntryID;
+      const auto rhsLink = rhsContainer.getLink(rhsEntryID, 0);
+      const auto lhsLink = getLink(lhsEntryID, 0);
+      if (lhsLink.idx == rhsToLhs[rhsLink.idx] && lhsLink.inv == rhsLink.inv) {
+        reusedLhsEntries.insert(lhsEntryID);
+      } else {
+        ++addedEntriesN;
+        addedWeight += weight(rhsEntryID, weightProvider, weightModifier);
+        incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs, entryNewRefcount);
+      }
+      virtualDepth[rhsEntryID] = virtualDepth[rhsLink.idx] + 1;
+      break;
+    }
+    rhsRootEntryID = rhsEntryID;
     if (rhsCell.isIn()) {
       const auto lhsEntryID = rhsToLhs[rhsEntryID];
       reusedLhsEntries.insert(lhsEntryID);
@@ -729,22 +754,16 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
                                    rhsLink.out, rhsLink.inv));
       }
     }
-    if (isNewElem) {
+    StrashKey key(rhsCell.getTypeID(), newRhsLinks);
+    auto it = strash.end();
+    if (isNewElem || (it = strash.find(key)) == strash.end()) {
       ++addedEntriesN;
       addedWeight += weight(rhsEntryID, weightProvider, weightModifier);
       incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs, entryNewRefcount);
       continue;
     }
-    StrashKey key(rhsCell.getTypeID(), newRhsLinks);
-    const auto it = strash.find(key);
-    if (it != strash.end()) {
-      rhsToLhs[rhsEntryID] = it->second;
-      reusedLhsEntries.insert(it->second);
-    } else {
-      ++addedEntriesN;
-      addedWeight += weight(rhsEntryID, weightProvider, weightModifier);
-      incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs, entryNewRefcount);
-    }
+    rhsToLhs[rhsEntryID] = it->second;
+    reusedLhsEntries.insert(it->second);
   }
   return Effect{addedEntriesN, virtualDepth[rhsRootEntryID], addedWeight};
 }
@@ -1166,15 +1185,17 @@ Subnet::Link SubnetBuilder::replaceCell(
     bool delZeroRefcount,
     const CellActionCallback *onNewCell,
     const CellActionCallback *onRecomputedDepth) {
-  assert(StrashKey::isEnabled(typeID, links));
+
+  auto &cell = getCell(entryID);
+  const auto &cellTypeID = cell.getTypeID();
+  assert(StrashKey::isEnabled(typeID, links) ||
+         (typeID == CELL_TYPE_ID_OUT && cellTypeID == CELL_TYPE_ID_OUT));
 
   destrashEntry(entryID);
-  auto &cell = getCell(entryID);
 
   if (cell.isBuf()) nBuf--;
   if (typeID == CELL_TYPE_ID_BUF) nBuf++;
 
-  const auto oldRootStrKey = StrashKey(cell);
   const auto oldRootNext = getNext(entryID);
   const auto oldRefcount = cell.refcount;
   const auto oldLinks = getLinks(entryID);
@@ -1197,12 +1218,21 @@ Subnet::Link SubnetBuilder::replaceCell(
 
   entries[entryID] = Entry(typeID, links);
   cell.refcount = oldRefcount;
-  const auto newRootStrKey = StrashKey(typeID, links);
-  auto it = strash.find({newRootStrKey});
-  if (it == strash.end()) {
-    strash.insert({StrashKey(cell), entryID});
+
+  bool equalRoots;
+  if (StrashKey::isEnabled(typeID, links)) {
+    const auto newRootStrKey = StrashKey(typeID, links);
+    const auto oldRootStrKey = StrashKey(cellTypeID, oldLinks);
+    auto it = strash.find({newRootStrKey});
+    if (it == strash.end()) {
+      strash.insert({StrashKey(cell), entryID});
+    }
+    equalRoots = newRootStrKey == oldRootStrKey;
+  } else {
+    equalRoots = links[0] == oldLinks[0];
   }
-  if (newRootStrKey != oldRootStrKey) {
+
+  if (!equalRoots) {
     desc[entryID].session = 0;
   }
   if (oldDepth != newDepth) {

@@ -1622,6 +1622,216 @@ TEST(ReplaceBuilderTest, EvaluationTest) {
   EXPECT_EQ(effect.depth, 0);
 }
 
+TEST(ReplaceBuilderTest, AddInvToPO) {
+  SubnetBuilder builder;
+  const auto &inLinks = builder.addInputs(2);
+  const auto &andLink0 = builder.addCell(model::AND, inLinks[0], inLinks[1]);
+  builder.addOutput(andLink0);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(2);
+  const auto &rhsAndLink0 = rhsBuilder.addCell(model::AND, rhsInLinks[0],
+      rhsInLinks[1]);
+  rhsBuilder.addOutput(~rhsAndLink0);
+
+  InOutMapping mapping({0, 1}, {3});
+
+  const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
+  EXPECT_EQ(effect.size, 0);
+  EXPECT_EQ(effect.depth, 0);
+
+  builder.replace(rhsBuilder, mapping);
+  printBidirectCellsTrav(builder);
+
+  const SubnetID resultID = builder.make();
+  const Subnet &result = Subnet::get(resultID);
+  std::cout << result << '\n';
+
+  {
+    SubnetBuilder builder;
+    const auto &inputLinks = builder.addInputs(2);
+    const auto &andLink0 = builder.addCell(model::AND, inputLinks[0],
+                                          inputLinks[1]);
+    builder.addOutput(~andLink0);
+    subnetsEqual(resultID, builder.make());
+  }
+}
+
+TEST(ReplaceBuilderTest, POReplaceLarger) {
+  SubnetBuilder builder;
+  const auto &inLinks = builder.addInputs(2);
+  const auto &andLink0 = builder.addCell(model::AND, inLinks[0], inLinks[1]);
+  builder.addOutput(andLink0);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(2);
+  const auto &rhsBufLink0 = rhsBuilder.addCell(model::BUF, rhsInLinks[0]);
+  const auto &rhsBufLink1 = rhsBuilder.addCell(model::BUF, rhsInLinks[1]);
+  const auto &rhsAndLink0 = rhsBuilder.addCell(model::AND, rhsBufLink0,
+      rhsBufLink1);
+  rhsBuilder.addOutput(~rhsAndLink0);
+
+  InOutMapping mapping({0, 1}, {3});
+
+  const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
+  EXPECT_EQ(effect.size, -2);
+  EXPECT_EQ(effect.depth, -1);
+
+  builder.replace(rhsBuilder, mapping);
+  printBidirectCellsTrav(builder);
+
+  const SubnetID resultID = builder.make();
+  const Subnet &result = Subnet::get(resultID);
+  std::cout << result << '\n';
+
+  {
+    SubnetBuilder builder;
+    const auto &inputLinks = builder.addInputs(2);
+    const auto &bufLink0 = builder.addCell(model::BUF, inputLinks[0]);
+    const auto &bufLink1 = builder.addCell(model::BUF, inputLinks[1]);
+    const auto &andLink0 = builder.addCell(model::AND, bufLink0, bufLink1);
+    builder.addOutput(~andLink0);
+    subnetsEqual(resultID, builder.make());
+  }
+}
+
+TEST(ReplaceBuilderTest, POReplaceSmaller) {
+  SubnetBuilder builder;
+  const auto &inLinks = builder.addInputs(3);
+  const auto &andLink0 = builder.addCell(model::AND, inLinks[0], inLinks[1]);
+  const auto &andLink1 = builder.addCell(model::AND, inLinks[1], inLinks[2]);
+  const auto &andLink2 = builder.addCell(model::AND, andLink0, andLink1);
+  builder.addOutput(~andLink2);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(3);
+  const auto &rhsAndLink0 = rhsBuilder.addCell(model::AND, rhsInLinks[0],
+      rhsInLinks[1], rhsInLinks[2]);
+  rhsBuilder.addOutput(rhsAndLink0);
+
+  InOutMapping mapping({0, 1, 2}, {6});
+
+  const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
+  EXPECT_EQ(effect.size, 2);
+  EXPECT_EQ(effect.depth, 1);
+
+  builder.replace(rhsBuilder, mapping);
+  printBidirectCellsTrav(builder);
+
+  const SubnetID resultID = builder.make();
+  const Subnet &result = Subnet::get(resultID);
+  std::cout << result << '\n';
+
+  {
+    SubnetBuilder builder;
+    const auto &inputLinks = builder.addInputs(3);
+    const auto &andLink0 = builder.addCell(model::AND, inputLinks[0],
+        inputLinks[1], inputLinks[2]);
+    builder.addOutput(andLink0);
+    subnetsEqual(resultID, builder.make());
+  }
+}
+
+TEST(ReplaceBuilderTest, InOutInvert) {
+  SubnetBuilder builder;
+  const auto &inLink = builder.addInput();
+  builder.addOutput(inLink);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLink = rhsBuilder.addInput();
+  rhsBuilder.addOutput(~rhsInLink);
+
+  InOutMapping mapping({0}, {1});
+
+  const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
+  EXPECT_EQ(effect.size, 0);
+  EXPECT_EQ(effect.depth, 0);
+
+  builder.replace(rhsBuilder, mapping);
+  printBidirectCellsTrav(builder);
+
+  const SubnetID resultID = builder.make();
+  const Subnet &result = Subnet::get(resultID);
+  std::cout << result << '\n';
+
+  {
+    SubnetBuilder builder;
+    const auto &inputLink = builder.addInput();
+    builder.addOutput(~inputLink);
+    subnetsEqual(resultID, builder.make());
+  }
+}
+
+TEST(ReplaceBuilderTest, POReplaceEqual) {
+  SubnetBuilder builder;
+  const auto &inLinks = builder.addInputs(2);
+  const auto &andLink0 = builder.addCell(model::AND, inLinks[0], inLinks[1]);
+  builder.addOutput(andLink0);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(2);
+  const auto &rhsAndLink0 = rhsBuilder.addCell(model::AND, rhsInLinks[0],
+      rhsInLinks[1]);
+  rhsBuilder.addOutput(rhsAndLink0);
+
+  InOutMapping mapping({0, 1}, {3});
+
+  const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
+  EXPECT_EQ(effect.size, 0);
+  EXPECT_EQ(effect.depth, 0);
+
+  builder.replace(rhsBuilder, mapping);
+  printBidirectCellsTrav(builder);
+
+  const SubnetID resultID = builder.make();
+  const Subnet &result = Subnet::get(resultID);
+  std::cout << result << '\n';
+
+  {
+    SubnetBuilder builder;
+    const auto &inputLinks = builder.addInputs(2);
+    const auto &andLink0 = builder.addCell(model::AND, inputLinks[0],
+        inputLinks[1]);
+    builder.addOutput(andLink0);
+    subnetsEqual(resultID, builder.make());
+  }
+}
+
+TEST(ReplaceBuilderTest, POReplaceNotEqual) {
+  SubnetBuilder builder;
+  const auto &inLinks = builder.addInputs(2);
+  const auto &andLink0 = builder.addCell(model::AND, inLinks[0], inLinks[1]);
+  builder.addOutput(andLink0);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(2);
+  const auto &rhsOrLink0 = rhsBuilder.addCell(model::OR, rhsInLinks[0],
+      rhsInLinks[1]);
+  rhsBuilder.addOutput(rhsOrLink0);
+
+  InOutMapping mapping({0, 1}, {3});
+
+  const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
+  EXPECT_EQ(effect.size, 0);
+  EXPECT_EQ(effect.depth, 0);
+
+  builder.replace(rhsBuilder, mapping);
+  printBidirectCellsTrav(builder);
+
+  const SubnetID resultID = builder.make();
+  const Subnet &result = Subnet::get(resultID);
+  std::cout << result << '\n';
+
+  {
+    SubnetBuilder builder;
+    const auto &inputLinks = builder.addInputs(2);
+    const auto &andLink0 = builder.addCell(model::OR, inputLinks[0],
+        inputLinks[1]);
+    builder.addOutput(andLink0);
+    subnetsEqual(resultID, builder.make());
+  }
+}
+
 TEST(ReplaceBuilderTest, OneEntryTraversal) {
   SubnetBuilder builder;
   builder.addInput();

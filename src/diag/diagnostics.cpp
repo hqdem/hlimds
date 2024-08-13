@@ -14,6 +14,7 @@ void Diagnostics::initialize() {
   diagnosis.reset();
   groups = std::stack<Entry *>{};
   groups.push(&diagnosis);
+  nError = nWarn = 0;
 }
 
 void Diagnostics::beginGroup(const std::string &msg) {

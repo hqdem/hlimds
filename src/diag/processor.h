@@ -19,10 +19,18 @@ public:
   Processor() {}
   virtual ~Processor() {}
 
+  /// Begins the diagnostics output.
+  virtual void onBegin(const Diagnostics &diagnostics) const = 0;
+
   /// Process the diagnostics entry (e.g., outputs to a terminal).
   virtual void onEntry(const Entry &entry, const unsigned depth) const = 0;
 
+  /// Ends the diagnostics output.
+  virtual void onEnd(const Diagnostics &diagnostics) const = 0;
+
   void process(const Diagnostics &diagnostics) const {
+    onBegin(diagnostics);
+
     std::stack<std::pair<const Entry *, size_t>> dfsStack;
     // The root entry is not processed.
     dfsStack.push({&diagnostics.getDiagnosis(), 0});
@@ -39,6 +47,8 @@ public:
         dfsStack.pop();
       }
     } // while DFS
+
+    onEnd(diagnostics);
   }
 };
 

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "diag/logger.h"
 #include "gate/model/array.h"
 #include "gate/model/cell.h"
 #include "gate/model/celltype.h"
@@ -1194,16 +1193,5 @@ private:
   SubnetBuilder *subnetBuilder{nullptr};
   SubnetID subnetID{OBJ_NULL_ID};
 };
-
-//===----------------------------------------------------------------------===//
-// Subnet Validator
-//===----------------------------------------------------------------------===//
-
-bool validateSubnet(const Subnet &subnet, diag::Logger &logger);
-bool validateSubnet(const SubnetBuilder &builder, diag::Logger &logger);
-
-inline bool validateSubnet(const SubnetID subnetID, diag::Logger &logger) {
-  return validateSubnet(Subnet::get(subnetID), logger);
-}
 
 } // namespace eda::gate::model

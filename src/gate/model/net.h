@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "diag/logger.h"
 #include "gate/model/cell.h"
 #include "gate/model/list.h"
 #include "gate/model/object.h"
@@ -131,16 +130,6 @@ private:
   List<CellID> hardBlocks;
   List<CellID> softBlocks;
 };
-
-//===----------------------------------------------------------------------===//
-// Net Validator
-//===----------------------------------------------------------------------===//
-
-bool validateNet(const Net &net, diag::Logger &logger);
-
-inline bool validateNet(const NetID netID, diag::Logger &logger) {
-  return validateNet(Net::get(netID), logger);
-}
 
 //===----------------------------------------------------------------------===//
 // Net Printer

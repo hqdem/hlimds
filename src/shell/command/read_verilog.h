@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/validator.h"
 #include "gate/translator/yosys_converter_model2.h"
 #include "shell/shell.h"
 

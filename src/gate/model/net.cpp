@@ -91,57 +91,6 @@ NetID NetBuilder::make() {
 }
 
 //===----------------------------------------------------------------------===//
-// Net Validator
-//===----------------------------------------------------------------------===//
-
-#define OBJECT(net) "Net"
-#define PREFIX(net) OBJECT(net) << ": "
-
-#define VALIDATE(logger, prop, msg)\
-  if (!(prop)) {\
-    DIAGNOSE_ERROR(logger, msg);\
-    return false;\
-  }
-
-#define VALIDATE_NET(logger, net, prop, msg)\
-  VALIDATE(logger, prop, PREFIX(net) << msg)
-
-static bool validateCells(const List<CellID> &cells, diag::Logger &logger) {
-  for (auto i = cells.begin(); i != cells.end(); ++i) {
-    if (!validateCell(*i, logger)) return false;
-  }
-  return true;
-}
-
-bool validateNet(const Net &net, diag::Logger &logger) {
-  VALIDATE_NET(logger, net,
-       net.getInNum() > 0,
-      "No inputs");
-  VALIDATE_NET(logger, net,
-       net.getOutNum() > 0,
-      "No outputs");
-  VALIDATE_NET(logger, net,
-      validateCells(net.getInputs(), logger),
-      "[Incorrect net inputs]");
-  VALIDATE_NET(logger, net,
-      validateCells(net.getOutputs(), logger),
-      "[Incorrect net outputs]");
-  VALIDATE_NET(logger, net,
-      validateCells(net.getCombCells(), logger),
-      "[Incorrect net cells]");
-  VALIDATE_NET(logger, net,
-      validateCells(net.getFlipFlops(), logger),
-      "[Incorrect net flip-flops/latches]");
-  VALIDATE_NET(logger, net,
-      validateCells(net.getSoftBlocks(), logger),
-      "[Incorrect net soft macro-blocks]");
-  VALIDATE_NET(logger, net,
-      validateCells(net.getHardBlocks(), logger),
-      "[Incorrect net hard macro-blocks]");
-  return true;
-}
-
-//===----------------------------------------------------------------------===//
 // Net Printer
 //===----------------------------------------------------------------------===//
 

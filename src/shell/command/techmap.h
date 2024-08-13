@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/validator.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "shell/shell.h"
 

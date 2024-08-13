@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "diag/logger.h"
+#include "gate/model/validator.h"
 #include "gate/translator/fir/fir_net.h"
 #include "shell/shell.h"
 

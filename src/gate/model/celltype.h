@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "diag/logger.h"
 #include "gate/model/cellattr.h"
 #include "gate/model/object.h"
 #include "gate/model/storage.h"
@@ -943,16 +942,6 @@ constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
 
 inline const CellType &getCellType(CellSymbol symbol) {
   return CellType::get(getCellTypeID(symbol));
-}
-
-//===----------------------------------------------------------------------===//
-// Cell Type Validator
-//===----------------------------------------------------------------------===//
-
-bool validateCellType(const CellType &type, diag::Logger &logger);
-
-inline bool validateCellType(const CellTypeID typeID, diag::Logger &logger) {
-  return validateCellType(CellType::get(typeID), logger);
 }
 
 } // namespace eda::gate::model

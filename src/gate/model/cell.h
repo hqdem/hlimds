@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "diag/logger.h"
 #include "gate/model/array.h"
 #include "gate/model/celltype.h"
 #include "gate/model/link.h"
@@ -157,16 +156,6 @@ inline CellID makeCell(CellSymbol symbol,
     CellID c1, CellID c2, CellID c3, CellID c4, CellID c5) {
   return makeCell(symbol,
     LinkEnd(c1), LinkEnd(c2), LinkEnd(c3), LinkEnd(c4), LinkEnd(c5));
-}
-
-//===----------------------------------------------------------------------===//
-// Cell Validator
-//===----------------------------------------------------------------------===//
-
-bool validateCell(const Cell &cell, diag::Logger &logger);
-
-inline bool validateCell(const CellID cellID, diag::Logger &logger) {
-  return validateCell(Cell::get(cellID), logger);
 }
 
 } // namespace eda::gate::model

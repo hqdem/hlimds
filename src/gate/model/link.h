@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "diag/logger.h"
 #include "gate/model/object.h"
 #include "gate/model/storage.h"
 
@@ -87,14 +86,6 @@ struct Link final : public Object<Link, LinkID> {
 };
 
 static_assert(sizeof(Link) == LinkID::Size);
-
-//===----------------------------------------------------------------------===//
-// Link Validator
-//===----------------------------------------------------------------------===//
-
-bool validateSource(const LinkEnd &source, diag::Logger &logger);
-bool validateTarget(const LinkEnd &target, diag::Logger &logger);
-bool validateLink(const Link &link, diag::Logger &logger);
 
 } // namespace eda::gate::model
 

@@ -50,43 +50,4 @@ void Cell::setLink(uint16_t port, const LinkEnd &source) {
   array[port] = LinkEnd::pack(source);
 }
 
-//===----------------------------------------------------------------------===//
-// Cell Validator
-//===----------------------------------------------------------------------===//
-
-#define OBJECT(cell) "Cell "
-#define PREFIX(cell) OBJECT(cell) << ": "
-
-#define VALIDATE(logger, prop, msg)\
-  if (!(prop)) {\
-    DIAGNOSE_ERROR(logger, msg);\
-    return false;\
-  }
-
-#define VALIDATE_CELL(logger, cell, prop, msg)\
-    VALIDATE(logger, prop, PREFIX(cell) << msg)
-
-bool validateCell(const Cell &cell, diag::Logger &logger) {
-  const auto &type = cell.getType();
-  VALIDATE_CELL(logger, cell,
-      validateCellType(type, logger),
-      "[Invalid cell type]");
-  VALIDATE_CELL(logger, cell,
-      !type.isInNumFixed() || cell.getFanin() == type.getInNum(),
-      "Incorrect number of inputs: " << cell.getFanin());
-
-  const auto links = cell.getLinks();
-  VALIDATE_CELL(logger, cell,
-      links.size() == cell.getFanin(),
-      "Incorrect number of links: " << links.size());
-
-  for (const auto &link : links) {
-    VALIDATE_CELL(logger, cell,
-        validateSource(link, logger),
-        "[Invalid link source]");
-  }
-
-  return true;
-}
-
 } // namespace eda::gate::model

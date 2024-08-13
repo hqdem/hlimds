@@ -10,7 +10,6 @@
 
 #include "diag/diagnostics.h"
 
-#include <fmt/core.h>
 #include <fmt/format.h>
 
 #include <cassert>
@@ -23,9 +22,11 @@
     eda::diag::log(logger, lvl, out.str());\
   } while(false)
 
-#define DIAGNOSE_NOTE(logger, msg)  DIAGNOSE(logger, eda::diag::NOTE, msg)
-#define DIAGNOSE_WARN(logger, msg)  DIAGNOSE(logger, eda::diag::WARN, msg)
+#define DIAGNOSE_NOTE(logger, msg)  DIAGNOSE(logger, eda::diag::NOTE,  msg)
+#define DIAGNOSE_WARN(logger, msg)  DIAGNOSE(logger, eda::diag::WARN,  msg)
 #define DIAGNOSE_ERROR(logger, msg) DIAGNOSE(logger, eda::diag::ERROR, msg)
+#define DIAGNOSE_BEGIN(logger, msg) DIAGNOSE(logger, eda::diag::BEGIN, msg)
+#define DIAGNOSE_END(logger)        DIAGNOSE(logger, eda::diag::END,   "")
 
 namespace eda::diag {
 
@@ -63,10 +64,20 @@ inline void vlog(Logger &logger,
   logger.log(entry);
 }
 
-template <typename... T>
-inline void log(Logger &logger,
-                Severity lvl, fmt::string_view fmt, T&&... args) {
-  vlog(logger, lvl, fmt, fmt::make_format_args(args...));
-}
+#if __cplusplus >= 202002L
+  template <typename... T>
+  inline void log(Logger &logger,
+                  Severity lvl, fmt::format_string<T...> fmt, T&&... args) {
+    // W/ compile-time checks of the format string.
+    vlog(logger, lvl, fmt, fmt::make_format_args(args...));
+  }
+#else
+  template <typename... T>
+  inline void log(Logger &logger,
+                  Severity lvl, fmt::string_view fmt, T&&... args) {
+    // W/o compile-time checks of the format string.
+    vlog(logger, lvl, fmt, fmt::make_format_args(args...));
+  }
+#endif // C++20
 
 } // namespace eda::diag

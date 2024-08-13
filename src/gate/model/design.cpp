@@ -83,40 +83,4 @@ void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
   }
 }
 
-//===----------------------------------------------------------------------===//
-// Design Validator
-//===----------------------------------------------------------------------===//
-
-#define OBJECT(design, i) "Design [" << design.getName() << "], subnet #" << i
-#define PREFIX(design, i) OBJECT(design, i) << ": "
-
-#define VALIDATE(logger, prop, msg)\
-  if (!(prop)) {\
-    DIAGNOSE_ERROR(logger, msg);\
-    return false;\
-  }
-
-#define VALIDATE_DESIGN(logger, design, i, prop, msg)\
-  VALIDATE(logger, prop, PREFIX(design, i) << msg)
-
-bool validateDesign(const DesignBuilder &builder, diag::Logger &logger) {
-  for (size_t i = 0; i < builder.getSubnetNum(); ++i) {
-    const auto &entry = builder.getEntry(i);
-    VALIDATE_DESIGN(logger, builder, i,
-        (entry.subnetID != OBJ_NULL_ID) != (entry.builder != nullptr),
-        "Inconsistent subnet");
-
-    if (entry.subnetID != OBJ_NULL_ID) {
-      VALIDATE_DESIGN(logger, builder, i,
-          validateSubnet(entry.subnetID, logger),
-          "[Incorrect subnet]");
-    } else {
-      VALIDATE_DESIGN(logger, builder, i,
-          validateSubnet(*entry.builder, logger),
-          "[Incorrect subnet]");
-    }
-  }
-  return true;
-}
-
 } // namespace eda::gate::model

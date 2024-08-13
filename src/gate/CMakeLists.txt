@@ -30,6 +30,7 @@ add_library(Gate OBJECT
   model/utils/subnet_checking.cpp
   model/utils/subnet_to_bdd.cpp
   model/utils/subnet_truth_table.cpp
+  model/validator.cpp
   mutator/mutator.cpp
   mutator/mutator_transformer.cpp
   library/library.cpp

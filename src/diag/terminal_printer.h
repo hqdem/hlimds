@@ -14,7 +14,7 @@ namespace eda::diag {
 
 class TerminalPrinter final : public Processor {
 public:
-  virtual void onEntry(const Entry &entry) const override;
+  virtual void onEntry(const Entry &entry, const unsigned depth) const override;
 };
 
 } // namespace eda::diag

@@ -8,23 +8,8 @@
 
 #pragma once
 
-// FIXME: fix includes!
 #include "gate/model/celltype.h"
-#include "gate/model/subnet.h"
 #include "util/singleton.h"
-
-#include <kitty/print.hpp>
-
-#include <readcells/ast.h>
-#include <readcells/ast_parser.h>
-#include <readcells/groups.h>
-#include <readcells/token_parser.h>
-
-#include <cstdio>
-#include <filesystem>
-#include <memory.h>
-#include <regex>
-#include <string>
 
 namespace eda::gate::library {
 

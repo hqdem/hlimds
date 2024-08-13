@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include "gate/model/cellattr.h"
 #include "gate/model/celltype.h"
 
 #include <kitty/kitty.hpp>
 
-#include <readcells/ast.h>
-#include <readcells/ast_parser.h>
 #include <readcells/groups.h>
 
 #include <string>

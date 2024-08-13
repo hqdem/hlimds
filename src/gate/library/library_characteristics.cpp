@@ -10,8 +10,6 @@
 #include "gate/library/library_parser.h"
 
 #include <cfloat>
-#include <filesystem>
-#include <regex>
 
 namespace eda::gate::library {
 
@@ -56,17 +54,23 @@ std::string LibraryCharacteristics::exprToString(const Expr *expr) {
 
 bool LibraryCharacteristics::areIdsInExpr(
     const std::string &expr, const std::vector<std::string> &ids) {
-  std::set<std::string> uniqueIds(ids.begin(), ids.end());
-  std::regex wordRegex(R"(\b[a-zA-Z0-9]+\b)");
-  std::sregex_iterator next(expr.begin(), expr.end(), wordRegex);
-  std::sregex_iterator end;
-  while (next != end) {
-    std::smatch match = *next;
-    std::string token = match.str();
-    if (uniqueIds.find(token) == uniqueIds.end()) {
+
+  for (const auto &id : ids) {
+    size_t pos, pos_next = 0;
+    while ((pos = expr.find(id, pos_next)) != std::string::npos) {
+      char prevChar = (pos > 0 ? expr.at(pos - 1) : ' ');
+      char nextChar = (pos < (expr.size() - id.size()) ? expr.at(pos + id.size()) : ' ');
+      if (std::isalpha(prevChar) || std::isalpha(nextChar) ||
+          std::isdigit(prevChar) || std::isdigit(nextChar)) {
+        pos_next = pos + 1;
+        continue;
+      } else {
+        break;
+      }
+    }
+    if (pos == std::string::npos) {
       return false;
     }
-    next++;
   }
 
   return true;
@@ -141,7 +145,8 @@ kitty::dynamic_truth_table LibraryCharacteristics::getFunction(const std::string
 
 bool LibraryCharacteristics::isCombCell(const std::string &name){
   const auto *cell = LibraryParser::get().getLibrary().getCell(name);
-  bool funcVerify = !(getFunctions(name).empty()) && areIdsInExpr(getFunctions(name).at(0), getInputs(name));
+  bool funcVerify = !(getFunctions(name).empty()) &&
+    areIdsInExpr(getFunctions(name).at(0), getInputs(name));
 
   auto outputs = getOutputs(name);
   return !cell->hasAttribute("ff") &&

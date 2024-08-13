@@ -7,8 +7,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/library/library.h"
-#include "gate/library/library_characteristics.h"
 #include "gate/library/library_parser.h"
+
+#include <readcells/ast_parser.h>
 
 namespace eda::gate::library {
 

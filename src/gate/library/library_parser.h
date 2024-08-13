@@ -10,18 +10,11 @@
 
 #include "util/singleton.h"
 
-// FIXME: fix includes!!!
-#include <kitty/print.hpp>
-
 #include <readcells/ast.h>
-#include <readcells/ast_parser.h>
 #include <readcells/groups.h>
 #include <readcells/token_parser.h>
 
 #include <filesystem>
-#include <memory.h> // FIXME C header.
-#include <regex> // FIXME: not used.
-#include <string>
 
 namespace eda::gate::library {
 

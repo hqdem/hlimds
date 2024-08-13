@@ -82,7 +82,7 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 
 static inline std::string debugInfo(const CellType &type) {
-  return fmt::format("celltype {}", type.getName());
+  return fmt::format("celltype '{}'", type.getName());
 }
 
 /// Validates IN.
@@ -497,17 +497,11 @@ static bool validateCell(const CellID &cellID, diag::Logger &logger) {
   return passed;
 }
 
-static bool validateCells(const std::string &msg,
-                          const List<CellID> &cells,
-                          diag::Logger &logger) {
+static bool validateCells(const List<CellID> &cells, diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, msg);
-
   for (auto i = cells.begin(); i != cells.end(); ++i) {
     VALIDATE_QUIET(validateCell(*i, logger));
   }
-
-  VALIDATE_GROUP_END(logger);
   return passed;
 }
 
@@ -518,18 +512,12 @@ bool validateNet(const Net &net, diag::Logger &logger) {
   VALIDATE(logger, (net.getInNum() > 0), "No inputs");
   VALIDATE(logger, (net.getOutNum() > 0), "No outputs");
 
-  VALIDATE_QUIET(validateCells("In inputs",
-      net.getInputs(), logger));
-  VALIDATE_QUIET(validateCells("In outputs",
-      net.getOutputs(), logger));
-  VALIDATE_QUIET(validateCells("In combinational cells",
-      net.getCombCells(), logger));
-  VALIDATE_QUIET(validateCells("In flip-flops/latches",
-      net.getFlipFlops(), logger));
-  VALIDATE_QUIET(validateCells("In soft macro-blocks",
-      net.getSoftBlocks(), logger));
-  VALIDATE_QUIET(validateCells("In hard macro-blocks",
-      net.getHardBlocks(), logger));
+  VALIDATE_QUIET(validateCells(net.getInputs(), logger));
+  VALIDATE_QUIET(validateCells(net.getOutputs(), logger));
+  VALIDATE_QUIET(validateCells(net.getCombCells(), logger));
+  VALIDATE_QUIET(validateCells(net.getFlipFlops(), logger));
+  VALIDATE_QUIET(validateCells(net.getSoftBlocks(), logger));
+  VALIDATE_QUIET(validateCells(net.getHardBlocks(), logger));
 
   VALIDATE_GROUP_END(logger);
   return passed;
@@ -589,7 +577,8 @@ static bool validateCell(const Subnet::Cell &cell,
 
   const auto &type = cell.getType();
   if (!type.isIn() && !type.isOut()) {
-    VALIDATE(logger, (type.isHard() == isTechMapped),
+    const auto isTechCell = type.isHard() || type.isCell();
+    VALIDATE(logger, (isTechCell == isTechMapped),
        "Incorrect " << debugInfo(type) << ", expected a technology-" <<
        (isTechMapped ? "" : "in") << "dependent one");
   }

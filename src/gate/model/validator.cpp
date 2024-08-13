@@ -82,7 +82,7 @@ namespace eda::gate::model {
 //===----------------------------------------------------------------------===//
 
 static inline std::string debugInfo(const CellType &type) {
-  return fmt::format("celltype '{}'", type.getName());
+  return fmt::format("cell-type '{}'", type.getName());
 }
 
 /// Validates IN.
@@ -480,7 +480,7 @@ static bool validateCell(const CellID &cellID, diag::Logger &logger) {
   const auto &cell = Cell::get(cellID);
   const auto &type = cell.getType();
   VALIDATE_QUIET(validateCellType(type, logger));
-  VALIDATE(logger, (type.isInNumFixed() || cell.getFanin() == type.getInNum()),
+  VALIDATE(logger, (!type.isInNumFixed() || cell.getFanin() == type.getInNum()),
       "Incorrect number of inputs: " << cell.getFanin() <<
       ", expected " << type.getInNum());
 

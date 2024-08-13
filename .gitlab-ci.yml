@@ -1,7 +1,7 @@
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH
 
 image: gitlab.ispras.ru:4567/mvg/utopia-eda:latest
 
@@ -14,6 +14,7 @@ variables:
   MLIR_DIR: "/workdir/circt/llvm/build/lib/cmake/mlir/"
   UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
   Yosys_ROOT: "/workdir/yosys"
+  TEST_REPORTS_PATH: "${UTOPIA_HOME}/test-reports/test-results.xml"
 
 stages:
   - build
@@ -45,7 +46,8 @@ test_project:
   script:
     - cd ${UTOPIA_HOME}
     - rm -rf ${UTOPIA_HOME}/output
-    - ${BUILD_PATH}/test/utest
+    - mkdir -p $(dirname ${TEST_REPORTS_PATH})
+    - ${BUILD_PATH}/test/utest --gtest_output="xml:${TEST_REPORTS_PATH}"
 
   dependencies:
     - build_project
@@ -54,6 +56,9 @@ test_project:
     expire_in: 10 min
     paths:
       - ${BUILD_PATH}
+      - ${TEST_REPORTS_PATH}
+    reports:
+      junit: ${TEST_REPORTS_PATH}
     when: always
 
 get_coverage_info:
@@ -91,4 +96,3 @@ valgrind_test_demo:
     expire_in: 10 min
     paths:
       - ${BUILD_PATH}
-

@@ -91,6 +91,7 @@ add_library(Gate OBJECT
   translator/graphml.cpp
   translator/model2.cpp
   translator/verilog/verilog_fir.cpp
+  translator/rtlil_net_builder.cpp
   translator/yosys_converter_firrtl.cpp
   translator/yosys_converter_model2.cpp)
 add_library(Utopia::Gate ALIAS Gate)
@@ -139,4 +140,5 @@ target_link_libraries(Gate
     fmt
     Yosys::Yosys
     tinyxml2
+    easyloggingpp
 )

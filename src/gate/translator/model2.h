@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <gate/model/object.h>
+
 #include <string>
 #include <vector>
 
@@ -22,3 +24,11 @@ struct YosysToModel2Config {
  */
 
 int translateVerilogToModel2(const YosysToModel2Config &config);
+
+namespace eda::gate::translator {
+
+model::NetID
+readVerilogDesign(
+    const std::string &top, const std::vector<std::string> &files);
+
+} // namespace eda::gate::translator

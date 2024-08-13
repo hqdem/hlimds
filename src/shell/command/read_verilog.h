@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/validator.h"
+#include "gate/translator/model2.h"
 #include "gate/translator/yosys_converter_model2.h"
 #include "shell/shell.h"
 
@@ -33,7 +34,7 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
     const std::string fileName = app.remaining().at(0);
     UTOPIA_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
-    UTOPIA_ERROR_IF(interp, (frontend != "yosys"),
+    UTOPIA_ERROR_IF(interp, (frontend != "yosys" && frontend != "rtlil"),
         fmt::format("unknown frontend '{}'", frontend)); 
 
     model::NetID netID{model::OBJ_NULL_ID};
@@ -45,6 +46,8 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
 
       YosysConverterModel2 cvt(cfg);      
       netID = cvt.getNetID();
+    } else if (frontend == "rtlil" ) {
+      netID = eda::gate::translator::readVerilogDesign(topModule, app.remaining());
     }
 
     UTOPIA_ERROR_IF(interp, !setDesign(netID, logger),

@@ -63,7 +63,6 @@ bool LibraryCharacteristics::areIdsInExpr(
       if (std::isalpha(prevChar) || std::isalpha(nextChar) ||
           std::isdigit(prevChar) || std::isdigit(nextChar)) {
         pos_next = pos + 1;
-        continue;
       } else {
         break;
       }

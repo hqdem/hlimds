@@ -106,9 +106,9 @@ UtopiaShell::UtopiaShell() {
   addCommand(&StatDesignCommand::get());
   addCommand(&StatLogDbCommand::get());
   addCommand(&TechMapCommand::get());
-#ifdef UTOPIA_ENABLE_VERILOG_TO_FIR
+#ifdef UTOPIA_SHELL_ENABLE_VERILOG_TO_FIR
   addCommand(&VerilogToFirCommand::get());
-#endif // UTOPIA_ENABLE_VERILOG_TO_FIR
+#endif // UTOPIA_SHELL_ENABLE_VERILOG_TO_FIR
   addCommand(&VersionCommand::get());
   addCommand(&WriteDebugCommand::get());
   addCommand(&WriteDotCommand::get());
@@ -150,7 +150,7 @@ int umain(eda::shell::UtopiaShell &shell, int argc, char **argv) {
   Tcl_AppInitProc *appInitProc = shell.getAppInitProc();
 
   if (appInitProc(interp) == TCL_ERROR) {
-    UTOPIA_ERR << "Failed to initialize a Tcl interpreter" << std::endl;
+    UTOPIA_SHELL_ERR << "Failed to initialize a Tcl interpreter" << std::endl;
     return 1;
   }
 
@@ -178,13 +178,13 @@ int umain(eda::shell::UtopiaShell &shell, int argc, char **argv) {
     Tcl_SetVar2Ex(interp, "argv", nullptr, tclArgvList, TCL_GLOBAL_ONLY);
 
     if (Tcl_EvalFile(interp, fileName) == TCL_ERROR) {
-      UTOPIA_ERR << Tcl_GetStringResult(interp) << std::endl;
+      UTOPIA_SHELL_ERR << Tcl_GetStringResult(interp) << std::endl;
       rc = 1;
     }
     exitAfterEval = true;
   } else if (evalMode->count()) {
     if (Tcl_Eval(interp, script.c_str()) == TCL_ERROR) {
-      UTOPIA_ERR << Tcl_GetStringResult(interp) << std::endl;
+      UTOPIA_SHELL_ERR << Tcl_GetStringResult(interp) << std::endl;
       rc = 1;
     }
     exitAfterEval = true;

@@ -15,23 +15,41 @@
 #include <cassert>
 #include <sstream>
 
-#define DIAGNOSE(logger, lvl, msg)\
+#define UTOPIA_DIAGNOSE(logger, lvl, msg)\
   do {\
     std::stringstream out;\
     out << msg;\
     eda::diag::log(logger, lvl, out.str());\
   } while(false)
 
-#define DIAGNOSE_NOTE(logger, msg)  DIAGNOSE(logger, eda::diag::NOTE,  msg)
-#define DIAGNOSE_WARN(logger, msg)  DIAGNOSE(logger, eda::diag::WARN,  msg)
-#define DIAGNOSE_ERROR(logger, msg) DIAGNOSE(logger, eda::diag::ERROR, msg)
-#define DIAGNOSE_BEGIN(logger, msg) DIAGNOSE(logger, eda::diag::BEGIN, msg)
-#define DIAGNOSE_END(logger)        DIAGNOSE(logger, eda::diag::END,   "")
+#define UTOPIA_LOG_NOTE(logger, msg)\
+  UTOPIA_DIAGNOSE(logger, eda::diag::NOTE, msg)
+#define UTOPIA_LOG_WARN(logger, msg)\
+  UTOPIA_DIAGNOSE(logger, eda::diag::WARN, msg)
+#define UTOPIA_LOG_ERROR(logger, msg)\
+  UTOPIA_DIAGNOSE(logger, eda::diag::ERROR, msg)
+#define UTOPIA_LOG_BEGIN(logger, msg)\
+  UTOPIA_DIAGNOSE(logger, eda::diag::BEGIN, msg)
+#define UTOPIA_LOG_END(logger)\
+  UTOPIA_DIAGNOSE(logger, eda::diag::END, "")
+
+#define UTOPIA_LOGGER eda::diag::Logger::getDefault()
+
+#define UTOPIA_NOTE(msg)  UTOPIA_LOG_NOTE(UTOPIA_LOGGER, msg)
+#define UTOPIA_WARN(msg)  UTOPIA_LOG_WARN(UTOPIA_LOGGER, msg)
+#define UTOPIA_ERROR(msg) UTOPIA_LOG_ERROR(UTOPIA_LOGGER, msg)
+#define UTOPIA_BEGIN(msg) UTOPIA_LOG_BEGIN(UTOPIA_LOGGER, msg)
+#define UTOPIA_END()      UTOPIA_LOG_END(UTOPIA_LOGGER, msg)
 
 namespace eda::diag {
 
 class Logger {
 public:
+  static Logger &getDefault() {
+    static Logger logger;
+    return logger;
+  }
+
   Logger(): locallyCreated(true), diagnostics(new Diagnostics()) {}
   Logger(Diagnostics &diagnostics): diagnostics(&diagnostics) {}
 

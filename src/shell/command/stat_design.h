@@ -18,10 +18,10 @@ template <typename T>
 static inline void printNameValue(const std::string &name,
                                   const T &value,
                                   const std::string &suffix = "") {
-  UTOPIA_OUT << std::setw(8) << std::left << name
-             << std::fixed << value
-             << suffix
-             << std::endl;
+  UTOPIA_SHELL_OUT << std::setw(8) << std::left << name
+                   << std::fixed << value
+                   << suffix
+                   << std::endl;
 }
 
 struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
@@ -33,8 +33,8 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     namespace estimator = eda::gate::estimator;
 
-    UTOPIA_ERROR_IF_NO_DESIGN(interp);
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_SHELL_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
 
     const bool isTechMapped = getDesign()->isTechMapped();
 
@@ -77,7 +77,7 @@ struct StatDesignCommand final : public UtopiaCommandBase<StatDesignCommand> {
       printNameValue("Power", power, " uW");
     }
 
-    UTOPIA_OUT << std::flush;
+    UTOPIA_SHELL_OUT << std::flush;
     return TCL_OK;
   }
 };

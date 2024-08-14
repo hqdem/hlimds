@@ -70,6 +70,11 @@ struct Entry final {
 
 class Diagnostics final {
 public:
+  static Diagnostics &getDefault() {
+    static Diagnostics diagnostics;
+    return diagnostics;
+  }
+
   const Entry &getDiagnosis() const { return diagnosis; }
 
   unsigned getWarnNum()  const { return nWarn;  }

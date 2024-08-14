@@ -19,10 +19,10 @@ struct HelpCommand final : public UtopiaCommandBase<HelpCommand> {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
 
     if (app.remaining().empty()) {
-      shell->printHelp(UTOPIA_OUT);
+      shell->printHelp(UTOPIA_SHELL_OUT);
       return TCL_OK;
     }
 
@@ -30,7 +30,7 @@ struct HelpCommand final : public UtopiaCommandBase<HelpCommand> {
     auto *command = shell->getCommand(name);
 
     if (command) {
-      command->printHelp(UTOPIA_OUT);
+      command->printHelp(UTOPIA_SHELL_OUT);
       return TCL_OK;
     }
 

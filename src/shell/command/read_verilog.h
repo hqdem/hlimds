@@ -26,15 +26,16 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     namespace model = eda::gate::model;
+    namespace translator = eda::gate::translator;
 
-    UTOPIA_ERROR_IF_DESIGN(interp);
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-    UTOPIA_ERROR_IF_NO_FILES(interp, app);
+    UTOPIA_SHELL_ERROR_IF_DESIGN(interp);
+    UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_SHELL_ERROR_IF_NO_FILES(interp, app);
 
     const std::string fileName = app.remaining().at(0);
-    UTOPIA_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
+    UTOPIA_SHELL_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
-    UTOPIA_ERROR_IF(interp, (frontend != "yosys" && frontend != "rtlil"),
+    UTOPIA_SHELL_ERROR_IF(interp, (frontend != "yosys" && frontend != "rtlil"),
         fmt::format("unknown frontend '{}'", frontend)); 
 
     model::NetID netID{model::OBJ_NULL_ID};
@@ -47,10 +48,10 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
       YosysConverterModel2 cvt(cfg);      
       netID = cvt.getNetID();
     } else if (frontend == "rtlil" ) {
-      netID = eda::gate::translator::readVerilogDesign(topModule, app.remaining());
+      netID = translator::readVerilogDesign(topModule, app.remaining());
     }
 
-    UTOPIA_ERROR_IF(interp, !setDesign(netID, logger),
+    UTOPIA_SHELL_ERROR_IF(interp, !setDesign(netID, logger),
       "validation checks failed");
 
     return TCL_OK;

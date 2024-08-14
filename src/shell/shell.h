@@ -30,44 +30,44 @@
 #include <string>
 #include <vector>
 
-#define UTOPIA_OUT std::cout
-#define UTOPIA_ERR std::cerr
+#define UTOPIA_SHELL_OUT std::cout
+#define UTOPIA_SHELL_ERR std::cerr
 
-#undef UTOPIA_ENABLE_VERILOG_TO_FIR
+#undef UTOPIA_SHELL_ENABLE_VERILOG_TO_FIR
 
-#define UTOPIA_PARSE_ARGS(interp, app, argc, argv)\
+#define UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv)\
   try {\
     app.parse(argc, argv);\
   } catch (CLI::ParseError &e) {\
     return makeError(interp, e.what());\
   }
 
-#define UTOPIA_WARN(interp, msg)\
+#define UTOPIA_SHELL_WARN(interp, msg)\
   return makeWarn(interp, msg)
 
-#define UTOPIA_WARN_IF(interp, cond, msg)\
+#define UTOPIA_SHELL_WARN_IF(interp, cond, msg)\
   if (cond) return makeWarn(interp, msg)
 
-#define UTOPIA_ERROR(interp, msg)\
+#define UTOPIA_SHELL_ERROR(interp, msg)\
   return makeError(interp, msg);
 
-#define UTOPIA_ERROR_IF(interp, cond, msg)\
+#define UTOPIA_SHELL_ERROR_IF(interp, cond, msg)\
   if (cond) return makeError(interp, msg)
 
-#define UTOPIA_ERROR_IF_NO_DESIGN(interp)\
-  UTOPIA_ERROR_IF(interp, !getDesign(),\
+#define UTOPIA_SHELL_ERROR_IF_NO_DESIGN(interp)\
+  UTOPIA_SHELL_ERROR_IF(interp, !getDesign(),\
       "design has not been loaded")
 
-#define UTOPIA_ERROR_IF_DESIGN(interp)\
-  UTOPIA_ERROR_IF(interp, getDesign(),\
+#define UTOPIA_SHELL_ERROR_IF_DESIGN(interp)\
+  UTOPIA_SHELL_ERROR_IF(interp, getDesign(),\
       "design has been already loaded")
 
-#define UTOPIA_ERROR_IF_NO_FILES(interp, app)\
-  UTOPIA_ERROR_IF(interp, app.remaining().empty(),\
+#define UTOPIA_SHELL_ERROR_IF_NO_FILES(interp, app)\
+  UTOPIA_SHELL_ERROR_IF(interp, app.remaining().empty(),\
       "no file(s) specified")
 
-#define UTOPIA_ERROR_IF_FILE_NOT_EXIST(interp, fileName)\
-  UTOPIA_ERROR_IF(interp, !std::filesystem::exists(fileName),\
+#define UTOPIA_SHELL_ERROR_IF_FILE_NOT_EXIST(interp, fileName)\
+  UTOPIA_SHELL_ERROR_IF(interp, !std::filesystem::exists(fileName),\
       fmt::format("file '{}' does not exist", fileName))
 
 namespace eda::shell {
@@ -92,7 +92,7 @@ inline int makeError(Tcl_Interp *interp, const std::string &msg) {
 } 
 
 inline void printNewline() {
-  UTOPIA_OUT << std::endl;
+  UTOPIA_SHELL_OUT << std::endl;
 }
 
 template <typename Clock>
@@ -102,7 +102,7 @@ inline void printTime(const std::string &name,
                       const std::string &prefix = "",
                       const std::string &suffix = "") {
   std::chrono::duration<double> elapsed = end - start;
-  UTOPIA_OUT << prefix << name << ": "
+  UTOPIA_SHELL_OUT << prefix << name << ": "
              << std::fixed << elapsed.count() << "s"
              << suffix << std::endl << std::flush;
 }
@@ -135,7 +135,7 @@ inline int printFile(Tcl_Interp *interp, const std::string &filePath) {
 
   std::string line;
   while (getline(file, line)) {
-    UTOPIA_OUT << line << std::endl;
+    UTOPIA_SHELL_OUT << line << std::endl;
   }
 
   file.close();
@@ -189,7 +189,7 @@ struct UtopiaCommand {
   const char *name;
   const char *desc;
 
-  diag::Logger logger;
+  diag::Logger logger{UTOPIA_LOGGER};
   diag::TerminalPrinter printer;
 
   UtopiaShell *shell;

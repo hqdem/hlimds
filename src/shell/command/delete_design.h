@@ -18,7 +18,7 @@ struct DeleteDesignCommand final :
       "delete_design", "Erases the design from memory") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    UTOPIA_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_SHELL_ERROR_IF_NO_DESIGN(interp);
     deleteDesign();
     return TCL_OK;
   }

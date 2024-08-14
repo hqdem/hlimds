@@ -66,24 +66,24 @@ struct WriteDesignCommand : public UtopiaCommand {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     assert(printer);
 
-    UTOPIA_ERROR_IF_NO_DESIGN(interp);
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-    UTOPIA_ERROR_IF_NO_FILES(interp, app);
+    UTOPIA_SHELL_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_SHELL_ERROR_IF_NO_FILES(interp, app);
 
     const std::string fileName = app.remaining().at(0);
     std::filesystem::path filePath = fileName;
 
-    UTOPIA_ERROR_IF(interp, !filePath.has_filename(),
+    UTOPIA_SHELL_ERROR_IF(interp, !filePath.has_filename(),
         "path does not contain a file name");
 
     if (subnetOption->count() != 0) {
-      UTOPIA_ERROR_IF(interp, subnetIndex >= getDesign()->getSubnetNum(),
+      UTOPIA_SHELL_ERROR_IF(interp, subnetIndex >= getDesign()->getSubnetNum(),
            fmt::format("subnet {} does not exist", subnetIndex));
     }
 
     const std::string dir = filePath.remove_filename();
     if (!dir.empty()) {
-      UTOPIA_ERROR_IF(interp, !createDirectories(dir),
+      UTOPIA_SHELL_ERROR_IF(interp, !createDirectories(dir),
           fmt::format("cannot create directory '{}'", dir));
     }
 

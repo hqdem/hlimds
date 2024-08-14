@@ -13,6 +13,9 @@
 #include <queue>
 #include <unordered_set>
 
+// Disables cut extraction and matching for outputs.
+#define UTOPIA_TECHMAP_SKIP_OUTPUTS 1
+
 namespace eda::gate::techmapper {
 
 using CellSpace = criterion::SolutionSpace<SubnetTechMapper::Match>;
@@ -202,12 +205,14 @@ RECOVERY:
 
     // Handle the output cells.
     if (cell.isOut()) {
+      outputs.insert(entryID);
+
+#if UTOPIA_TECHMAP_SKIP_OUTPUTS == 1
       const auto link = builder->getLink(entryID, 0);
       const Match match{model::getCellTypeID(model::OUT), {link}, false};
       space[entryID]->add(match, space[link.idx]->getBest().vector);
-
-      outputs.insert(entryID);
       continue;
+#endif // UTOPIA_TECHMAP_SKIP_OUTPUTS
     }
 
     const auto cuts = cutProvider(*builder, entryID);

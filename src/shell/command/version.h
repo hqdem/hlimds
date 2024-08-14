@@ -18,14 +18,13 @@ struct VersionCommand final : public UtopiaCommandBase<VersionCommand> {
       "version", "Prints Utopia EDA version") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    UTOPIA_OUT << "Utopia EDA "
-               << "version "
-               << VERSION_MAJOR
-               << "."
-               << VERSION_MINOR
-               << std::endl
-               << std::flush;
-
+    UTOPIA_SHELL_OUT << "Utopia EDA "
+                     << "version "
+                     << VERSION_MAJOR
+                     << "."
+                     << VERSION_MINOR
+                     << std::endl
+                     << std::flush;
     return TCL_OK;
   } 
 };

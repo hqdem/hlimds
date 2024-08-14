@@ -98,8 +98,8 @@ struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    UTOPIA_ERROR_IF_NO_DESIGN(interp);
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_SHELL_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
 
     // Passes are executed as callbacks when parsing the arguments.
     return TCL_OK;

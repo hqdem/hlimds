@@ -35,7 +35,7 @@ struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     using namespace eda::gate::techmapper;
 
-    UTOPIA_ERROR_IF_NO_DESIGN(interp);
+    UTOPIA_SHELL_ERROR_IF_NO_DESIGN(interp);
 
     if (!eda::gate::library::LibraryParser::get().isInit()) {
       return makeError(interp, "library has not been loaded");
@@ -45,16 +45,16 @@ struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
       return makeError(interp, "design has been already techmapped");
     }
 
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
 
     for (size_t i = 0; i < getDesign()->getSubnetNum(); ++i) {
       const auto &subnetBuilder = getDesign()->getSubnetBuilder(i);
       const auto techmapBuilder = techMap(Objective(indicator), subnetBuilder);
-      UTOPIA_ERROR_IF(interp, !techmapBuilder, "returned null");
+      UTOPIA_SHELL_ERROR_IF(interp, !techmapBuilder, "returned null");
       getDesign()->setSubnetBuilder(i, techmapBuilder);
     }
 
-    UTOPIA_ERROR_IF(interp, !validateDesign(*getDesign(), logger),
+    UTOPIA_SHELL_ERROR_IF(interp, !validateDesign(*getDesign(), logger),
         "validation checks failed");
 
     return TCL_OK;

@@ -26,8 +26,8 @@ struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
     using OutType = eda::gate::optimizer::OutType;
 
-    UTOPIA_PARSE_ARGS(interp, app, argc, argv);
-    UTOPIA_ERROR_IF_NO_FILES(interp, app);
+    UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
+    UTOPIA_SHELL_ERROR_IF_NO_FILES(interp, app);
 
     eda::gate::optimizer::NpnDbConfig config;
     config.dbPath = app.remaining().at(0);
@@ -47,7 +47,7 @@ struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
     config.ttSize = ttSize;
     config.binLines.push_back(truthTable);
 
-    return getDbStat(UTOPIA_OUT, config) ? TCL_ERROR : TCL_OK;
+    return getDbStat(UTOPIA_SHELL_OUT, config) ? TCL_ERROR : TCL_OK;
   }
 
   size_t ttSize;

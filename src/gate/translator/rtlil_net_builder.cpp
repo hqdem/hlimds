@@ -8,6 +8,9 @@
 #include <kernel/yosys.h>
 
 #include <algorithm>
+#include <cctype>
+#include <cerrno>
+#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <string_view>
@@ -966,6 +969,72 @@ readVerilogDesign(
   return static_cast<int>(design.modules_.size());
 }
 
+struct SemVersion {
+  int major, minor, patch;
+
+  SemVersion(int major, int minor)
+      : SemVersion(major, minor, 0)
+  {}
+
+  SemVersion(int major, int minor, int patch)
+      : major(major), minor(minor), patch(patch) {
+    LOG_FMT(ERROR, "rtlil", "semantic version: {}.{}.{}", major, minor, patch);
+  }
+
+  COPY_MOVE(SemVersion);
+
+  #define RET_DIFF(x, y, f) do { \
+    int d = (x).f - (y).f; \
+    if (d != 0) return d; \
+  } while (0)
+  static int compare(const SemVersion &x, const SemVersion &y) {
+    RET_DIFF(x, y, major);
+    RET_DIFF(x, y, minor);
+    RET_DIFF(x, y, patch);
+    return 0;
+  }
+  #undef RET_DIFF
+};
+
+#define OPERATOR(opc, Name) \
+  bool operator opc (const Name &lhs, const Name &rhs) { \
+    return Name::compare(lhs, rhs) opc 0; \
+  }
+
+OPERATOR(<, SemVersion)
+OPERATOR(<=, SemVersion)
+OPERATOR(>, SemVersion)
+OPERATOR(>=, SemVersion)
+OPERATOR(==, SemVersion)
+OPERATOR(!=, SemVersion)
+
+static SemVersion
+yosysVersion() {
+  const char *s = Yosys::yosys_version_str;
+  while (*s && !isdigit(*s)) {
+    ++s;
+  }
+  char *endp = nullptr;
+  // FIXME check errno
+  long major = strtol(s, &endp, 10);
+  if (*endp != '.') {
+    return SemVersion(major, 0);
+  }
+  s = endp + 1;
+
+  // FIXME check errno
+  long minor = strtol(s, &endp, 10);
+  if (*endp != '.') {
+    return SemVersion(major, minor);
+  }
+  s = endp + 1;
+
+  // FIXME check errno
+  long patch = std::strtol(s, &endp, 10);
+
+  return SemVersion(major, minor, patch);
+}
+
 namespace eda::gate::translator {
 
 model::NetID
@@ -986,7 +1055,12 @@ readVerilogDesign(
   Yosys::run_pass("opt -nodffe", &design);
   Yosys::run_pass("memory", &design);
   Yosys::run_pass("pmuxtree", &design);
-  Yosys::run_pass("flatten -noscopeinfo", &design);
+
+  if (yosysVersion() >= SemVersion(0, 39)) {
+    Yosys::run_pass("flatten -noscopeinfo", &design);
+  } else {
+    Yosys::run_pass("flatten", &design);
+  }
   Yosys::run_pass("opt -nodffe -fast", &design);
   // Yosys::run_pass("splitnets -ports", &design);
 

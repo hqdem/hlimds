@@ -9,26 +9,16 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
 #include <memory>
 #include <unordered_set>
 
-/// type for set size
-typedef uint16_t SizeType;
-
 template <class NumType = unsigned, class Allocator = std::allocator<NumType>>
 class BoundedSet final {
-typedef  NumType* iterator;
-private:
-  Allocator setAllocator;
-  SizeType maxSize;
-  SizeType setSize;
-  iterator setPtr;
-  uint64_t signature;
 public:
-  /// returns the signature of set.
-  uint64_t getSign() const;
-  /// sets the new signature for collections.
-  void setSign(uint64_t sign);
+  using iterator = NumType*;
+  using SizeType = uint16_t;
+
   /**
    * @brief Constructs a new BoundedSet with elements from
    * std::unordered_set with maxSize equal it's size
@@ -46,6 +36,17 @@ public:
   BoundedSet(SizeType maxSize);
   /// Constructs set-singleton with fixed size.
   BoundedSet(SizeType maxSize, NumType singleElement);
+  /// Allows to assign already existing BoundedSet with elements of another std::unoredred_set
+  BoundedSet<NumType, Allocator> &operator=(const std::unordered_set<NumType> &set);
+  /// Copy constructor for BoundedSet
+  BoundedSet(const BoundedSet<NumType, Allocator> &other);
+  /// Destructor of set
+  ~BoundedSet();
+
+  /// returns the signature of set.
+  uint64_t getSign() const;
+  /// sets the new signature for collections.
+  void setSign(uint64_t sign);
   /// Merges two BoundedSets in one. Target of method becomes union if it can.
   bool merge(const BoundedSet<NumType, Allocator> &other);
   /// Checks if the union of two sets has size less than maxSize of parent sets.
@@ -72,16 +73,17 @@ public:
   bool empty() const;
   /// Returns count of target element in set (no more than one in this collection)
   SizeType count(NumType target) const;
-  /// Destructor of set
-  ~BoundedSet();
-  /// Allows to assign already existing BoundedSet with elements of another std::unoredred_set
-  BoundedSet<NumType, Allocator> &operator =(const std::unordered_set<NumType> &set);
-  /// Copy constructor for BoundedSet
-  BoundedSet(const BoundedSet<NumType, Allocator> &other);
   /// Allows to compare two BoundedSets
-  bool operator ==(const BoundedSet<NumType, Allocator> &other) const;
+  bool operator==(const BoundedSet<NumType, Allocator> &other) const;
   /// Allows to compare BoundedSet with unordered_set
-  bool operator ==(const std::unordered_set<NumType> &set) const;
+  bool operator==(const std::unordered_set<NumType> &set) const;
+
+private:
+  Allocator setAllocator;
+  SizeType maxSize;
+  SizeType setSize;
+  iterator setPtr;
+  uint64_t signature;
 };
 
 template <class NumType, class Allocator>
@@ -95,7 +97,7 @@ uint64_t BoundedSet<NumType, Allocator>::getSign() const{
 }
 
 template <class NumType, class Allocator>
-BoundedSet<NumType, Allocator>::BoundedSet(SizeType maxSize){
+BoundedSet<NumType, Allocator>::BoundedSet(SizeType maxSize) {
   this->maxSize = maxSize;
   this->setSize = 0;
   this->signature = 0;
@@ -157,7 +159,7 @@ bool BoundedSet<NumType, Allocator>::merge(
   this->setSign(this->signature | other.getSign());
   return true;
 }
-                                                                                                                                                                                                                                                                                                                                                           
+
 template <class NumType, class Allocator>
 bool BoundedSet<NumType, Allocator>::unionCheck(
     const BoundedSet<NumType, Allocator> &other) {
@@ -247,7 +249,8 @@ typename BoundedSet<NumType, Allocator>::iterator
 }
 
 template <class NumType, class Allocator>
-SizeType BoundedSet<NumType, Allocator>::size() const {
+typename BoundedSet<NumType, Allocator>::SizeType
+    BoundedSet<NumType, Allocator>::size() const {
   return this->setSize;
 }
 
@@ -268,7 +271,8 @@ BoundedSet<NumType, Allocator>::~BoundedSet() {
 }
 
 template <class NumType, class Allocator>
-SizeType BoundedSet<NumType, Allocator>::count(NumType target) const {
+typename BoundedSet<NumType, Allocator>::SizeType
+    BoundedSet<NumType, Allocator>::count(NumType target) const {
   SizeType result = 0;
   for (auto i = 0; i < this->size(); i++) { 
     if (target == this->begin()[i]) 
@@ -276,6 +280,7 @@ SizeType BoundedSet<NumType, Allocator>::count(NumType target) const {
   }
   return result;
 }
+
 template <class NumType, class Allocator>
 typename BoundedSet<NumType, Allocator>::iterator
     BoundedSet<NumType, Allocator>::begin() const {
@@ -283,7 +288,7 @@ typename BoundedSet<NumType, Allocator>::iterator
 }
 
 template <class NumType, class Allocator>
-BoundedSet<NumType, Allocator>& BoundedSet<NumType, Allocator>::operator =(
+BoundedSet<NumType, Allocator>& BoundedSet<NumType, Allocator>::operator=(
     const std::unordered_set<NumType> &set) {
   setAllocator.deallocate(this->setPtr, maxSize);
   this->maxSize = set.size();
@@ -296,7 +301,7 @@ BoundedSet<NumType, Allocator>& BoundedSet<NumType, Allocator>::operator =(
 }
 
 template <class NumType, class Allocator>
-bool BoundedSet<NumType, Allocator>::operator ==(
+bool BoundedSet<NumType, Allocator>::operator==(
     const BoundedSet<NumType, Allocator> &other) const {
   bool result = 1;
   if (this->size() != other.size()) result = 0;
@@ -329,7 +334,7 @@ BoundedSet<NumType, Allocator>::BoundedSet(
 
 template <class NumType, class Allocator>
 BoundedSet<NumType, Allocator>::BoundedSet(
-    const std::unordered_set<NumType>&set, const SizeType maxSize) {
+    const std::unordered_set<NumType> &set, const SizeType maxSize) {
   assert(set.size() <= maxSize);
   this->maxSize = maxSize;
   this->setPtr = setAllocator.allocate(this->maxSize);
@@ -340,7 +345,7 @@ BoundedSet<NumType, Allocator>::BoundedSet(
 }
 
 template <class NumType, class Allocator>
-bool BoundedSet<NumType, Allocator>::operator ==(
+bool BoundedSet<NumType, Allocator>::operator==(
     const std::unordered_set<NumType> &set) const {
   bool result = 1;
   if (this->size() != set.size()) result = 0;
@@ -348,4 +353,3 @@ bool BoundedSet<NumType, Allocator>::operator ==(
     result = result && (this->find(i) != this->end());
   return result;
 }
-

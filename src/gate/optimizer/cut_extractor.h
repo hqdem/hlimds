@@ -43,7 +43,7 @@ public:
         this->entryIdxs.setSign(sign);
     }
     
-    Cut( const size_t rootEntryIdx,
+    Cut(const size_t rootEntryIdx,
         const uint64_t sign,
         const std::unordered_set<size_t> &entryIdxs) {
       this->k = entryIdxs.size();

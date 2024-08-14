@@ -34,8 +34,7 @@ add_library(Gate OBJECT
   mutator/mutator.cpp
   mutator/mutator_transformer.cpp
   library/library.cpp
-  library/library_parser.cpp
-  library/library_characteristics.cpp
+  library/readcells_iface.cpp
   optimizer/associative_balancer.cpp
   optimizer/cut_extractor.cpp
   optimizer/conflict_graph.cpp

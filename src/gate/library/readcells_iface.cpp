@@ -6,20 +6,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/library/library_characteristics.h"
-#include "gate/library/library_parser.h"
+#include "gate/library/readcells_iface.h"
 
 #include <cfloat>
 
 namespace eda::gate::library {
 
-std::string LibraryCharacteristics::binOpToString(const Expr *lhs,
+std::string ReadCellsIface::binOpToString(const Expr *lhs,
                                                   const std::string &op,
                                                   const Expr *rhs) {
   return "(" + exprToString(lhs) + op + exprToString(rhs) + ")";
 }
 
-std::string LibraryCharacteristics::exprToString(const Expr *expr) {
+std::string ReadCellsIface::exprToString(const Expr *expr) {
   if (!expr) return "";
 
   std::stringstream ss;
@@ -52,7 +51,7 @@ std::string LibraryCharacteristics::exprToString(const Expr *expr) {
   return ss.str();
 }
 
-bool LibraryCharacteristics::areIdsInExpr(
+bool ReadCellsIface::areIdsInExpr(
     const std::string &expr, const std::vector<std::string> &ids) {
 
   for (const auto &id : ids) {
@@ -83,9 +82,9 @@ static inline bool isOutput(const Pin &pin) {
   return (pin.getIntegerAttribute("direction", 10) & 0x2) != 0;
 }
 
-std::vector<std::string> LibraryCharacteristics::getFunctions(const std::string &name) {
+std::vector<std::string> ReadCellsIface::getFunctions(const std::string &name) {
   std::vector<std::string> funcs;
-  for (const auto &pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
+  for (const auto &pin : library.getCell(name)->getPins()) {
     if (isOutput(pin)) {
       if (pin.hasAttribute("function")) {
         const auto* func = pin.getBexprAttribute("function");
@@ -98,27 +97,27 @@ std::vector<std::string> LibraryCharacteristics::getFunctions(const std::string 
   return funcs;
 }
 
-std::vector<std::string> LibraryCharacteristics::getCells() {
+std::vector<std::string> ReadCellsIface::getCells() {
   std::vector<std::string> cells;
-  for (const auto &cell : LibraryParser::get().getLibrary().getCells()) {
+  for (const auto &cell : library.getCells()) {
     cells.push_back(std::string(cell.getName()));
   }
   return cells;
 }
 
-model::CellType::PortVector LibraryCharacteristics::getPorts(const std::string &name) {
+model::CellType::PortVector ReadCellsIface::getPorts(const std::string &name) {
   model::CellType::PortVector ports;
   size_t index{0};
-  for (const auto &pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
+  for (const auto &pin : library.getCell(name)->getPins()) {
     ports.emplace_back(std::string(pin.getName()), 1, isInput(pin), index++);
   }
   return ports; 
 }
 
-std::vector<std::string> LibraryCharacteristics::getInputs(const std::string &name) {
+std::vector<std::string> ReadCellsIface::getInputs(const std::string &name) {
   std::vector<std::string> inputs;
 
-  for (const auto &pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
+  for (const auto &pin : library.getCell(name)->getPins()) {
     if (isInput(pin)) {
       inputs.push_back(std::string(pin.getName()));
     }
@@ -126,9 +125,9 @@ std::vector<std::string> LibraryCharacteristics::getInputs(const std::string &na
   return inputs;
 }
 
-std::vector<std::string> LibraryCharacteristics::getOutputs(const std::string &name) {
+std::vector<std::string> ReadCellsIface::getOutputs(const std::string &name) {
   std::vector<std::string> outputs;
-  for (const auto &pin : LibraryParser::get().getLibrary().getCell(name)->getPins()) {
+  for (const auto &pin : library.getCell(name)->getPins()) {
     if (isOutput(pin)) {
       outputs.push_back(std::string(pin.getName()));
     }
@@ -136,14 +135,14 @@ std::vector<std::string> LibraryCharacteristics::getOutputs(const std::string &n
   return outputs;
 }
 
-kitty::dynamic_truth_table LibraryCharacteristics::getFunction(const std::string &name) {
+kitty::dynamic_truth_table ReadCellsIface::getFunction(const std::string &name) {
   kitty::dynamic_truth_table truthTable(getInputs(name).size());
   kitty::create_from_formula(truthTable, getFunctions(name).at(0), getInputs(name));
   return truthTable;
 }
 
-bool LibraryCharacteristics::isCombCell(const std::string &name){
-  const auto *cell = LibraryParser::get().getLibrary().getCell(name);
+bool ReadCellsIface::isCombCell(const std::string &name){
+  const auto *cell = library.getCell(name);
   bool funcVerify = !(getFunctions(name).empty()) &&
     areIdsInExpr(getFunctions(name).at(0), getInputs(name));
 
@@ -155,23 +154,23 @@ bool LibraryCharacteristics::isCombCell(const std::string &name){
          outputs.size() == 1;
 }
 
-float LibraryCharacteristics::getArea(const std::string &name) {
-  const auto *cell = LibraryParser::get().getLibrary().getCell(name);
+float ReadCellsIface::getArea(const std::string &name) {
+  const auto *cell = library.getCell(name);
   return cell ?
          cell->getFloatAttribute("area", FLT_MAX) : FLT_MAX;
 }
 
-float LibraryCharacteristics::getLeakagePower(const std::string &name) {
-  const auto *cell = LibraryParser::get().getLibrary().getCell(name);
+float ReadCellsIface::getLeakagePower(const std::string &name) {
+  const auto *cell = library.getCell(name);
   return cell ?
          cell->getFloatAttribute("cell_leakage_power", FLT_MAX) : FLT_MAX;
 }
 
-std::vector<LibraryCharacteristics::Delay> LibraryCharacteristics::getDelay(
+std::vector<ReadCellsIface::Delay> ReadCellsIface::getDelay(
     const std::string &name,
     const std::vector<float> &inputTransTime,
     const float outputCap) {
-  std::vector<LibraryCharacteristics::Delay> delay;
+  std::vector<ReadCellsIface::Delay> delay;
   auto ins = getInputs(name);
   for (size_t i = 0; i < ins.size(); i++) {
     delay.push_back(getDelay(name,
@@ -182,7 +181,7 @@ std::vector<LibraryCharacteristics::Delay> LibraryCharacteristics::getDelay(
   return delay;
 }
 
-float LibraryCharacteristics::getLutValue(const LookupTable *lut,
+float ReadCellsIface::getLutValue(const LookupTable *lut,
                                           const std::vector<std::size_t> &paramsID) {
   if (paramsID.empty() || lut->getIndicesSize() != paramsID.size()) {
     throw std::invalid_argument("Invalid search parameters or lookup table.");
@@ -204,7 +203,7 @@ float LibraryCharacteristics::getLutValue(const LookupTable *lut,
   return lut->getValues().at(index);
 }
 
-float LibraryCharacteristics::getTwoAxisLutInterValue(
+float ReadCellsIface::getTwoAxisLutInterValue(
     const LookupTable *lut,
     const std::vector<InterParamIDs> &paramsID,
     const std::vector<float> &searchParams) {
@@ -228,7 +227,7 @@ float LibraryCharacteristics::getTwoAxisLutInterValue(
   return p;
 }
 
-float LibraryCharacteristics::getLutInterValue(
+float ReadCellsIface::getLutInterValue(
     const LookupTable *lut,
     const std::vector<InterParamIDs> &paramsID,
     const std::vector<float> &searchParams) {
@@ -240,7 +239,7 @@ float LibraryCharacteristics::getLutInterValue(
   return FLT_MAX;
 }
 
-float LibraryCharacteristics::getValue(const LookupTable* lut,
+float ReadCellsIface::getValue(const LookupTable* lut,
                                        const std::vector<float> &searchParams) {
   std::vector<InterParamIDs> paramsIndices;
   std::vector<size_t> searParamIndices;
@@ -285,14 +284,14 @@ float LibraryCharacteristics::getValue(const LookupTable* lut,
   return getLutValue(lut, searParamIndices);
 }
 
-LibraryCharacteristics::Delay LibraryCharacteristics::getDelay(
+ReadCellsIface::Delay ReadCellsIface::getDelay(
     const std::string &name,
     const std::string &relPin,
     const float inputTransTime,
     const float outputCap) {
-  LibraryCharacteristics::Delay delay;
+  Delay delay;
   std::vector<float> searchParams = {inputTransTime,outputCap};
-  const auto *cell = LibraryParser::get().getLibrary().getCell(name);
+  const auto *cell = library.getCell(name);
   const auto *pin = cell->getPin(getOutputs(name).at(0));
   const auto *timing = pin->getTiming(relPin);
 
@@ -308,8 +307,8 @@ LibraryCharacteristics::Delay LibraryCharacteristics::getDelay(
 }
 
 
-bool LibraryCharacteristics::isIsolateCell(const std::string &name) {
-  return LibraryParser::get().getLibrary().getCell(name)->
+bool ReadCellsIface::isIsolateCell(const std::string &name) {
+  return library.getCell(name)->
       getBooleanAttribute("is_isolation_cell", false);
 }
 

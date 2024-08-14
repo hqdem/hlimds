@@ -9,7 +9,6 @@
 #include "gate/estimator/ppa_estimator.h"
 #include "gate/model/utils/subnet_random.h"
 #include "gate/model/utils/subnet_truth_table.h"
-#include "gate/library/library_parser.h"
 #include "gate/library/library.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/subnet_techmapper.h"
@@ -71,12 +70,12 @@ const SubnetID commonPart(
 
   // funcMatcher is created once the library is loaded.
   if (funcMatcher == nullptr) {
-    library::LibraryParser::get().loadLibrary(techLib);
-    if (!LibraryParser::get().isInit()) {
+    library::library = new library::SCLibrary(techLib);
+    if (library::library != nullptr) {
       std::cout << "Loaded Liberty file: " << techLib << std::endl;
     }
     funcMatcher = Matcher<FuncMatcher, std::size_t>::create(
-      library::SCLibrary::get().getCombCells());
+      library::library->getCombCells());
   }
 
   SubnetTechMapper *techmapper =

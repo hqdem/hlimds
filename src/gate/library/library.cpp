@@ -7,21 +7,40 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/library/library.h"
-#include "gate/library/library_characteristics.h"
 #include "gate/optimizer/synthesis/isop.h"
+
+#include <readcells/ast.h>
+#include <readcells/ast_parser.h>
 
 namespace eda::gate::library {
 
 using CellTypeID = model::CellTypeID;
 using MinatoMorrealeAlg = optimizer::synthesis::MMSynthesizer;
 
+SCLibrary::SCLibrary(const std::string &fileName) {
+  // TODO: if we want to avoid usage FILE, we need to fix it in ReadCells.
+  FILE *file = fopen(fileName.c_str(), "rb");
+  ast = tokParser.parseLibrary(file, fileName.c_str());
+
+  AstParser parser(library, tokParser);
+  parser.run(*ast);
+  fclose(file);
+
+  iface = new ReadCellsIface(library);
+  loadCells();
+}
+
+SCLibrary::~SCLibrary() {
+  if (iface != nullptr) {
+    delete iface;
+  }
+}
+
 void SCLibrary::loadCells() {
-  combCells.clear();
+  for (const auto &name : iface->getCells()) {
+    if (iface->isIsolateCell(name)) continue;
 
-  for (const auto &name : LibraryCharacteristics::getCells()) {
-    if (LibraryCharacteristics::isIsolateCell(name)) continue;
-
-    if (LibraryCharacteristics::isCombCell(name)) {
+    if (iface->isCombCell(name)) {
       addCombCell(name);
     } else {
       //addSeqCell(cell);
@@ -39,12 +58,12 @@ std::vector<SCLibrary::StandardCell> SCLibrary::getCombCells() {
 }
 
 void SCLibrary::addCombCell(const std::string &name) {
-  const auto ports = LibraryCharacteristics::getPorts(name);
+  const auto ports = iface->getPorts(name);
 
   const auto nIn = model::CellTypeAttr::getInBitWidth(ports);
   const auto nOut = model::CellTypeAttr::getOutBitWidth(ports);
 
-  const auto props = LibraryCharacteristics::getPhysProps(name);
+  const auto props = iface->getPhysProps(name);
 
   if (nIn == 0 || props.area == MAXFLOAT) {
     return;
@@ -53,7 +72,7 @@ void SCLibrary::addCombCell(const std::string &name) {
   const auto attrID = model::makeCellTypeAttr(ports);
   model::CellTypeAttr::get(attrID).setPhysProps(props);
 
-  const auto func = LibraryCharacteristics::getFunction(name);
+  const auto func = iface->getFunction(name);
   auto subnetObject = MinatoMorrealeAlg{}.synthesize(func);
 
   const auto cellTypeID = model::makeCellType(
@@ -85,4 +104,7 @@ void SCLibrary::permutation() {
     combCells.push_back(cell);
   }
 }
+
+SCLibrary *library = nullptr;
+
 } // namespace eda::gate::library

@@ -8,32 +8,50 @@
 
 #pragma once
 
+#include "gate/library/readcells_iface.h"
 #include "gate/model/celltype.h"
-#include "util/singleton.h"
+
+#include <readcells/groups.h>
+#include <readcells/token_parser.h>
+
+#include <string>
 
 namespace eda::gate::library {
 
-class SCLibrary : public util::Singleton<SCLibrary> {
+class SCLibrary {
   using CellTypeID = model::CellTypeID;
 
 public:
+  SCLibrary(const std::string &fileName);
+  virtual ~SCLibrary();
+
   struct StandardCell {
     CellTypeID cellTypeID;
     std::vector<int> link;
   };
 
-  void loadCells();
-  void addCell(CellTypeID typeID);
   std::vector<StandardCell> getCombCells();
 
+  Library &getLibrary() {
+    return library;
+  }
+
 private:
+  void loadCells();
+  void addCell(CellTypeID typeID);
+
+  // ReadCells
+  Group *ast;
+  Library library;
+  TokenParser tokParser;
+  ReadCellsIface *iface;
+
   std::vector<StandardCell> combCells;
 
   void permutation();
   void addCombCell(const std::string &name);
-
-  SCLibrary() : Singleton() {}
-  friend class Singleton<SCLibrary>;
 };
+
+extern SCLibrary *library;
 
 } // namespace eda::gate::library

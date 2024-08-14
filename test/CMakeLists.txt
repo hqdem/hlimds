@@ -89,8 +89,8 @@ add_executable(${TEST_TARGET}
   gate/synthesizer/adder_test.cpp
   gate/synthesizer/cmp_test.cpp
   gate/synthesizer/shift_test.cpp
-  gate/techmapper/library_characteristics_test.cpp
   gate/techmapper/parser_lib_test.cpp
+  gate/techmapper/readcells_iface_test.cpp
   gate/techmapper/subnet_techmapper_test.cpp
   gate/techmapper/techmapper_test_util.cpp
   gate/translator/fir/fir_test.cpp

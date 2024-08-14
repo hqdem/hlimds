@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/library/library_parser.h"
 #include "gate/library/library.h"
 #include "util/env.h"
 
@@ -24,7 +23,7 @@ const path techLibPath = home /
 
 namespace eda::gate::library {
 bool checkLibParser(std::string libertyPath) {
-  LibraryParser::get().loadLibrary(libertyPath);
+  SCLibrary library(libertyPath);
   std::cout << "Loaded Liberty: " << libertyPath << std::endl;// TODO
 
 #ifdef UTOPIA_DEBUG

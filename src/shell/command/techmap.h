@@ -37,7 +37,7 @@ struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
 
     UTOPIA_SHELL_ERROR_IF_NO_DESIGN(interp);
 
-    if (!eda::gate::library::LibraryParser::get().isInit()) {
+    if (eda::gate::library::library == nullptr) {
       return makeError(interp, "library has not been loaded");
     }
 

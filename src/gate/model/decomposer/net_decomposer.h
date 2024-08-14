@@ -37,12 +37,12 @@ public:
   };
 
   /// Decomposes the net into subnets and fills the cell mapping.
-  void decompose(const NetID netID,
+  bool decompose(const NetID netID,
                  std::vector<SubnetID> &subnets,
                  std::vector<CellMapping> &mapping) const;
 
   /// Imitates decomposition of the net consisting of a single subnet.
-  void decompose(const SubnetID subnetID,
+  bool decompose(const SubnetID subnetID,
                  std::vector<SubnetID> &subnet,
                  std::vector<CellMapping> &mapping) const;
 

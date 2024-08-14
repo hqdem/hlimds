@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "diag/logger.h"
 #include "gate/model/decomposer/net_decomposer.h"
 
 #include <cassert>
@@ -425,7 +426,7 @@ static SubnetID makeSubnet(
   return subnetID;
 }
 
-void NetDecomposer::decompose(const NetID netID,
+bool NetDecomposer::decompose(const NetID netID,
                               std::vector<SubnetID> &subnets,
                               std::vector<CellMapping> &mapping) const {
   assert(netID != OBJ_NULL_ID);
@@ -440,14 +441,25 @@ void NetDecomposer::decompose(const NetID netID,
 
   for (const auto &component : components) {
     if (!component.empty()) {
+      if (component.inputs.empty()) {
+        UTOPIA_ERROR("Non-empty net component has no inputs");
+        goto FAILED;
+      }
+
       CellMapping subnetMapping;
       subnets.push_back(makeSubnet(net, component, subnetMapping));
       mapping.push_back(subnetMapping);
     }
   }
+  return true;
+
+FAILED:
+  subnets.clear();
+  mapping.clear();
+  return false;
 }
 
-void NetDecomposer::decompose(const SubnetID subnetID,
+bool NetDecomposer::decompose(const SubnetID subnetID,
                               std::vector<SubnetID> &subnets,
                               std::vector<CellMapping> &mapping) const {
   assert(subnetID != OBJ_NULL_ID);
@@ -474,6 +486,7 @@ void NetDecomposer::decompose(const SubnetID subnetID,
   }
 
   mapping.push_back(subnetMapping);
+  return true;
 }
 
 //===----------------------------------------------------------------------===//

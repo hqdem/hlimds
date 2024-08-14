@@ -35,11 +35,11 @@ static inline void printIndent(const unsigned n) {
 }
 
 static inline void printErrorNum(const unsigned n) {
-  fmt::print(fmt::emphasis::bold | fg(ErrorColor), "{} errors", n);
+  fmt::print(fmt::emphasis::bold | fg(ErrorColor), "{} error(s)", n);
 }
 
 static inline void printWarnNum(const unsigned n) {
-  fmt::print(fmt::emphasis::bold | fg(WarnColor), "{} warnings", n);
+  fmt::print(fmt::emphasis::bold | fg(WarnColor), "{} warning(s)", n);
 }
 
 void TerminalPrinter::onBegin(const Diagnostics &diagnostics) const {
@@ -93,15 +93,17 @@ void TerminalPrinter::onEntry(
   } else {
     depth = context.isEmpty() ? 0 : 1;
 
-    auto delimiter = false;
-    auto style = fmt::emphasis::italic | fg(GroupColor);
-    fmt::print(style, "In ");
-    for (const auto &scope : context.scopes) {
-      if (delimiter) fmt::print(style, " -> ");
-      fmt::print(style, scope);
-      delimiter = true;
+    if (!context.isEmpty()) {
+      auto delimiter = false;
+      auto style = fmt::emphasis::italic | fg(GroupColor);
+      fmt::print(style, "In ");
+      for (const auto &scope : context.scopes) {
+        if (delimiter) fmt::print(style, " -> ");
+        fmt::print(style, scope);
+        delimiter = true;
+      }
+      fmt::print(style, ":\n");
     }
-    fmt::print(style, ":\n");
   }
 
   const auto lvl = entry.lvl;

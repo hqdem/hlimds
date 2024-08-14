@@ -80,7 +80,7 @@ SubnetTechMapper::SubnetTechMapper(const std::string &name,
                    defaultCostAggregator,
                    defaultCostPropagator) {}
 
-static optimizer::SubnetBuilderPtr makeBuilder(
+static optimizer::SubnetBuilderPtr makeMappedSubnet(
     const SubnetSpace &space, const optimizer::SubnetBuilderPtr oldBuilder) {
   // Maps old entry indices to matches.
   const size_t oldSize = oldBuilder->getMaxIdx() + 1;
@@ -111,7 +111,7 @@ static optimizer::SubnetBuilderPtr makeBuilder(
         queue.push(oldLink.idx);
       }
     }
-  }
+  } // backward BFS
 
   auto newBuilder = std::make_shared<model::SubnetBuilder>();
 
@@ -294,7 +294,7 @@ RECOVERY:
     }
   }
 
-  return makeBuilder(space, builder);  
+  return makeMappedSubnet(space, builder);  
 }
 
 } // namespace eda::gate::techmapper

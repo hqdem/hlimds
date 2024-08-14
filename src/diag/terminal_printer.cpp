@@ -76,7 +76,7 @@ void TerminalPrinter::onGroupBegin(
   if constexpr (!NoHierarchy) {
     printIndent(context.getDepth());
     fmt::print(fmt::emphasis::italic | fg(GroupColor), "In {}", entry.msg);
-    fmt::print(":\n");
+    fmt::print(fg(GroupColor), ":\n");
   }
 }
 
@@ -101,7 +101,7 @@ void TerminalPrinter::onEntry(
       fmt::print(fmt::emphasis::italic | fg(GroupColor), scope);
       delimiter = true;
     }
-    fmt::print(":\n");
+    fmt::print(fg(GroupColor), ":\n");
   }
 
   const auto lvl = entry.lvl;

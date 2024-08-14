@@ -13,7 +13,11 @@
 #include <fmt/format.h>
 
 #include <cassert>
+#include <iostream>
 #include <sstream>
+
+#define UTOPIA_OUT std::cout
+#define UTOPIA_ERR std::cerr
 
 #define UTOPIA_DIAGNOSE(logger, lvl, msg)\
   do {\

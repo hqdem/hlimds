@@ -53,8 +53,14 @@ public:
   Logger(): locallyCreated(true), diagnostics(new Diagnostics()) {}
   Logger(Diagnostics &diagnostics): diagnostics(&diagnostics) {}
 
+  Logger(const Logger &) = delete;
+  Logger &operator=(const Logger &) = delete;
+
   virtual ~Logger() {
-    if (locallyCreated) delete diagnostics;
+    if (locallyCreated && diagnostics) {
+      delete diagnostics;
+      diagnostics = nullptr;
+    }
   }
 
   virtual void log(const Entry &entry) {

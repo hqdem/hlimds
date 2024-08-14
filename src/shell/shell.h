@@ -189,7 +189,7 @@ struct UtopiaCommand {
   const char *name;
   const char *desc;
 
-  diag::Logger logger{UTOPIA_LOGGER};
+  diag::Logger &logger{UTOPIA_LOGGER};
   diag::TerminalPrinter printer;
 
   UtopiaShell *shell;

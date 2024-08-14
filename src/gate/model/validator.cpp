@@ -597,7 +597,8 @@ static bool validateCell(const Subnet::Cell &cell,
 
   for (size_t i = 0; i < links.size(); ++i) {
     VALIDATE(logger, (!isTechMapped || !links[i].inv),
-        "Invertor " << debugInfo(links[i], i) << " in a tech-mapped subnet");
+        "Invertor " << debugInfo(links[i], i) <<
+        " (logical gate NOT) in a tech-mapped subnet");
   }
 
   VALIDATE_GROUP_END(logger);

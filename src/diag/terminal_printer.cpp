@@ -75,8 +75,7 @@ void TerminalPrinter::onGroupBegin(
     const Entry &entry, const Context &context) const {
   if constexpr (!NoHierarchy) {
     printIndent(context.getDepth());
-    fmt::print(fmt::emphasis::italic | fg(GroupColor), "In {}", entry.msg);
-    fmt::print(fg(GroupColor), ":\n");
+    fmt::print(fmt::emphasis::italic | fg(GroupColor), "In {}:\n", entry.msg);
   }
 }
 
@@ -95,13 +94,14 @@ void TerminalPrinter::onEntry(
     depth = context.isEmpty() ? 0 : 1;
 
     auto delimiter = false;
-    fmt::print(fmt::emphasis::italic | fg(GroupColor), "In ");
+    auto style = fmt::emphasis::italic | fg(GroupColor);
+    fmt::print(style, "In ");
     for (const auto &scope : context.scopes) {
-      if (delimiter) fmt::print(" -> ");
-      fmt::print(fmt::emphasis::italic | fg(GroupColor), scope);
+      if (delimiter) fmt::print(style, " -> ");
+      fmt::print(style, scope);
       delimiter = true;
     }
-    fmt::print(fg(GroupColor), ":\n");
+    fmt::print(style, ":\n");
   }
 
   const auto lvl = entry.lvl;

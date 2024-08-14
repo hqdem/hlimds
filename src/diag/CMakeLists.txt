@@ -1,6 +1,7 @@
 add_compile_options(-fno-rtti)
 add_library(Diag OBJECT
   diagnostics.cpp
+  processor.cpp
   terminal_printer.cpp
 )
 add_library(Utopia::Diag ALIAS Diag)

@@ -318,7 +318,7 @@ static bool validateUndef(const CellType &type, diag::Logger &logger) {
 
 bool validateCellType(const CellType &type, diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(type) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(type));
 
   VALIDATE(logger, (type.isGate() || type.hasAttr()),
       "Non-gate cell has no attributes");
@@ -464,7 +464,7 @@ static bool validateLinkSource(const LinkEnd &source,
                                const size_t i,
                                diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(source, i) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(source, i));
 
   VALIDATE(logger, (source.isValid() && source.getCellID() != OBJ_NULL_ID),
       "Unconnected link source");
@@ -481,7 +481,7 @@ static bool validateLinkSource(const LinkEnd &source,
 
 static bool validateCell(const CellID &cellID, diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(cellID) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(cellID));
 
   const auto &cell = Cell::get(cellID);
   const auto &type = cell.getType();
@@ -513,7 +513,7 @@ static bool validateCells(const List<CellID> &cells, diag::Logger &logger) {
 
 bool validateNet(const Net &net, diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(net) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(net));
 
   VALIDATE(logger, (net.getInNum() > 0), "No inputs");
   VALIDATE(logger, (net.getOutNum() > 0), "No outputs");
@@ -560,7 +560,7 @@ static bool validateCell(const Subnet::Cell &cell,
                          const size_t entryID,
                          diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(cell, entryID) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(cell, entryID));
 
   const auto &type = cell.getType();
   VALIDATE_QUIET(validateCellType(type, logger));
@@ -583,7 +583,7 @@ static bool validateCell(const Subnet::Cell &cell,
                          const bool isTechMapped,
                          diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(cell, entryID) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(cell, entryID));
   
   VALIDATE_QUIET(validateCell(cell, entryID, logger));
 
@@ -606,7 +606,7 @@ static bool validateCell(const Subnet::Cell &cell,
 
 bool validateSubnet(const Subnet &subnet, diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(subnet) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(subnet));
 
   const auto isTechMapped = subnet.isTechMapped();
   const auto &entries = subnet.getEntries();
@@ -625,7 +625,7 @@ bool validateSubnet(const Subnet &subnet, diag::Logger &logger) {
 
 bool validateSubnet(const SubnetBuilder &builder, diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(builder) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(builder));
 
   const auto isTechMapped = builder.isTechMapped();
 
@@ -656,7 +656,7 @@ static inline std::string debugInfo(const DesignBuilder &builder) {
 
 bool validateDesign(const DesignBuilder &builder, diag::Logger &logger) {
   bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, "In " << debugInfo(builder) << ":");
+  VALIDATE_GROUP_BEGIN(logger, debugInfo(builder));
 
   for (size_t i = 0; i < builder.getSubnetNum(); ++i) {
     const auto &entry = builder.getEntry(i);

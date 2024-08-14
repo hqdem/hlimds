@@ -12,11 +12,19 @@
 
 namespace eda::diag {
 
-class TerminalPrinter final : public Processor {
-public:
-  virtual void onBegin(const Diagnostics &diagnostics) const override;
-  virtual void onEntry(const Entry &entry, const unsigned depth) const override;
-  virtual void onEnd(const Diagnostics &diagnostics) const override;
+struct TerminalPrinter final : public Processor {
+  static constexpr auto NoHierarchy = true;
+  static constexpr auto IndentWidth = 0;
+
+  void onBegin(const Diagnostics &diagnostics) const override;
+  void onEnd(const Diagnostics &diagnostics) const override;
+
+  void onGroupBegin(
+      const Entry &entry, const Context &context) const override;
+  void onGroupEnd(
+      const Entry &entry, const Context &context) const override;
+
+  void onEntry(const Entry &entry, const Context &context) const override;
 };
 
 } // namespace eda::diag

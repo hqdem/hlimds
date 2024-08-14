@@ -105,6 +105,7 @@ add_executable(${TEST_TARGET}
   test_shell.cpp
   util/kitty_utils_test.cpp
   util/serializer_test.cpp
+  util/bounded_set_test.cpp
 )
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET}

@@ -96,7 +96,7 @@ void CutExtractor::addCut(
     uint64_t cutsCombinationIdx,
     RawCutsList &addedCuts,
     const std::vector<size_t> &suffCutsCombN) const {
-  Cut newCut;
+  Cut newCut = Cut(k, 0, 0, BoundedSet<size_t>(k));
   newCut.rootEntryIdx = entryIdx;
 
   if (countSetBits(getNewCutSign(cutsCombinationIdx,
@@ -112,8 +112,7 @@ void CutExtractor::addCut(
       cutsCombinationIdx %= suffCutsCombN[j + 1];
     }
     const Cut &cutToUnite = entriesCuts[inEntryIdx][inEntryCutIdx];
-    newCut.uniteCut(cutToUnite);
-    if (newCut.entryIdxs.size() > k) {
+    if (!newCut.uniteCut(cutToUnite)) {
       return;
     }
   }
@@ -123,7 +122,7 @@ void CutExtractor::addCut(
 }
 
 CutExtractor::Cut CutExtractor::getOneElemCut(const size_t entryIdx) const {
-  return Cut(entryIdx, (size_t)1 << (entryIdx % 64), { entryIdx });
+  return Cut(k, entryIdx, (size_t)1 << (entryIdx % 64), BoundedSet<size_t>(k, entryIdx));
 }
 
 bool CutExtractor::cutNotDominated(const Cut &cut, RawCutsList &cuts) const {
@@ -157,7 +156,7 @@ bool CutExtractor::cutDominates(const Cut &cut1, const Cut &cut2) const {
   if (cut1.entryIdxs.size() >= cut2.entryIdxs.size()) {
     return false;
   }
-  if ((cut1.signature | cut2.signature) != cut2.signature) {
+  if ((cut1.entryIdxs.getSign() | cut2.entryIdxs.getSign()) != cut2.entryIdxs.getSign()) {
     return false;
   }
   for (const auto &cut1Entry : cut1.entryIdxs) {
@@ -184,7 +183,7 @@ uint64_t CutExtractor::getNewCutSign(
       cutsCombinationIdx %= suffCutsCombN[j + 1];
     }
     const Cut &cutToUnite = entriesCuts[inEntryIdx][inEntryCutIdx];
-    newCutSignature |= cutToUnite.signature;
+    newCutSignature |= cutToUnite.entryIdxs.getSign();
   }
 
   return newCutSignature;

@@ -31,7 +31,7 @@ bool cutsEqual(const Cut &cut1, const Cut &cut2) {
   const auto &cut1EntryIdxs = cut1.entryIdxs;
   const auto &cut2EntryIdxs = cut2.entryIdxs;
   if (cut1.rootEntryIdx != cut2.rootEntryIdx ||
-      cut1.signature != cut2.signature ||
+      cut1.entryIdxs.getSign() != cut2.entryIdxs.getSign() ||
       cut1EntryIdxs.size() != cut2EntryIdxs.size()) {
     return false;
   }
@@ -275,17 +275,18 @@ TEST(CutExtractorTest, GetEntriesIdxs) {
   const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
   builder.addOutput(andLink0);
   const auto &subnet = Subnet::get(builder.make());
-
-  CutExtractor cutExtractor(&subnet, 2);
+  BoundedSet<size_t> a {2, 1};
+  a.checkedInsert(0);
+  CutExtractor cutExtractor(&subnet, 2); 
   const std::vector<CutsEntries> validRes {
-    { { 0 } },
-    { { 1 } },
-    { { 2 }, { 0, 1 } },
-    { { 3 }, { 2 }, { 0, 1 } }
+    { { 2, 0 } },
+    { { 2, 1 } },
+    { { 2, 2 }, a } ,
+    { { 2, 3 }, { 2, 2 }, a }
   };
 
   for (std::size_t i = 0; i < subnet.getEntries().size(); ++i) {
-    EXPECT_TRUE(validRes[i] == cutExtractor.getCutsEntries(i));
+    EXPECT_TRUE(cutExtractor.getCutsEntries(i) == validRes[i]);
   }
 }
 

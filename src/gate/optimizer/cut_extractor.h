@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/subnet.h"
+#include "util/bounded_set.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -28,18 +29,28 @@ public:
   using Subnet = model::Subnet;
   using Link = Subnet::Link;
   using SubnetBuilder = model::SubnetBuilder;
-  using CutsEntries = std::vector<std::unordered_set<size_t>>;
+  using CutsEntries = std::vector<BoundedSet<size_t>>;
   using CutsList = std::vector<Cut>;
   using RawCutsList = std::vector<std::pair<Cut, char>>;
 
   /// Cut class with its signature and indices.
   struct Cut final {
     Cut() = default;
-    Cut(const size_t rootEntryIdx,
+    Cut(const uint16_t k, const size_t rootEntryIdx,
         const uint64_t sign,
-        const std::unordered_set<size_t> &entryIdxs):
-      rootEntryIdx(rootEntryIdx), signature(sign), entryIdxs(entryIdxs) {}
-
+        const BoundedSet<size_t> &entryIdxs):
+      k(k), rootEntryIdx(rootEntryIdx),  entryIdxs(entryIdxs) {
+        this->entryIdxs.setSign(sign);
+    }
+    
+    Cut( const size_t rootEntryIdx,
+        const uint64_t sign,
+        const std::unordered_set<size_t> &entryIdxs) {
+      this->k = entryIdxs.size();
+      this->rootEntryIdx = rootEntryIdx;
+      this->entryIdxs = entryIdxs;
+      this->entryIdxs.setSign(sign);
+    }
     /// Checks whether the cut is trivial.
     bool isTrivial() const {
       return entryIdxs.size() == 1 &&
@@ -47,16 +58,12 @@ public:
     }
 
     /// Unites other cut to current.
-    void uniteCut(const Cut &other) {
-      for (const auto &otherEntryIdx : other.entryIdxs) {
-        entryIdxs.insert(otherEntryIdx);
-      }
-      signature |= other.signature;
+    bool uniteCut(const Cut &other) {
+      return entryIdxs.merge(other.entryIdxs);
     }
-
-    size_t rootEntryIdx{0};
-    uint64_t signature{0};
-    std::unordered_set<size_t> entryIdxs;
+    uint16_t k {20}; 
+    size_t rootEntryIdx {0};
+    BoundedSet<size_t> entryIdxs = BoundedSet<size_t>(k);
   };
 
   CutExtractor() = delete;
@@ -140,9 +147,8 @@ private:
 private:
   const Subnet *subnet;
   const SubnetBuilder *builder;
-
-  uint16_t k;
   std::vector<CutsList> entriesCuts;
+  uint16_t k;
 };
 
 } // namespace eda::gate::optimizer

@@ -20,14 +20,16 @@ using MinatoMorrealeAlg = optimizer::synthesis::MMSynthesizer;
 SCLibrary::SCLibrary(const std::string &fileName) {
   // TODO: if we want to avoid usage FILE, we need to fix it in ReadCells.
   FILE *file = fopen(fileName.c_str(), "rb");
-  ast = tokParser.parseLibrary(file, fileName.c_str());
+  if (file != nullptr) {
+    ast = tokParser.parseLibrary(file, fileName.c_str());
 
-  AstParser parser(library, tokParser);
-  parser.run(*ast);
-  fclose(file);
+    AstParser parser(library, tokParser);
+    parser.run(*ast);
+    fclose(file);
 
-  iface = new ReadCellsIface(library);
-  loadCells();
+    iface = new ReadCellsIface(library);
+    loadCells();
+  }
 }
 
 SCLibrary::~SCLibrary() {

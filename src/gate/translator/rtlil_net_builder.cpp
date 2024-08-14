@@ -978,7 +978,6 @@ struct SemVersion {
 
   SemVersion(int major, int minor, int patch)
       : major(major), minor(minor), patch(patch) {
-    LOG_FMT(ERROR, "rtlil", "semantic version: {}.{}.{}", major, minor, patch);
   }
 
   COPY_MOVE(SemVersion);

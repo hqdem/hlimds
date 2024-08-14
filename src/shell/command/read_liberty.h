@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/library/library_parser.h"
+#include "gate/library/library.h"
 #include "shell/shell.h"
 
 namespace eda::shell {
@@ -26,7 +26,11 @@ struct ReadLibertyCommand final : public UtopiaCommandBase<ReadLibertyCommand> {
     const std::string fileName = app.remaining().at(0);
     UTOPIA_SHELL_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
-    eda::gate::library::LibraryParser::get().loadLibrary(fileName);
+    if (eda::gate::library::library != nullptr) {
+      delete eda::gate::library::library;
+    }
+    eda::gate::library::library = new eda::gate::library::SCLibrary(fileName);
+
     return TCL_OK;
   }
 };

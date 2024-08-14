@@ -10,7 +10,7 @@
 
 #include "gate/criterion/criterion.h"
 #include "gate/estimator/simple_time_model.h"
-#include "gate/library/library_parser.h"
+#include "gate/library/library.h"
 #include "gate/model/subnet.h"
 #include "gate/techmapper/subnet_techmapper.h"
 
@@ -19,8 +19,6 @@
 #include <unordered_map>
 
 namespace eda::gate::estimator {
-
-using LibraryParser = library::LibraryParser;
 
 inline bool shouldSkipCell(const model::Subnet::Cell &cell) {
   return cell.isIn() || cell.isOut() || cell.isOne() || cell.isZero();
@@ -50,7 +48,7 @@ inline float getArea(model::SubnetID subnetID) {
 }
 
 inline float getLeakagePower(const model::CellType &cellType) {
-    const auto *cell = LibraryParser::get().getLibrary().getCell(
+    const auto *cell = library::library->getLibrary().getCell(
         cellType.getName());
     return cell ?
       cell->getFloatAttribute("cell_leakage_power", FLT_MAX) : 0.0f;
@@ -64,7 +62,7 @@ inline float getLeakagePower(model::SubnetID subnetID) {
 
 inline float getDelay(const model::CellType &cellType,
                float inputTransTime, float outputCap) {
-  return NLDM::delayEstimation(LibraryParser::get().getLibrary(),
+  return NLDM::delayEstimation(library::library->getLibrary(),
      cellType.getName(), inputTransTime, outputCap);
 }
 
@@ -89,7 +87,7 @@ inline float getArrivalTime(model::SubnetID subnetID) {
       WLM wlm; // TODO
       float fanoutCap = wlm.getFanoutCap(outNum) + capacitance;
       float slew;
-      NLDM::delayEstimation(LibraryParser::get().getLibrary(), entries[i].cell.getType().getName(),
+      NLDM::delayEstimation(library::library->getLibrary(), entries[i].cell.getType().getName(),
                             delay, fanoutCap, timingSense, slew, delay, capacitance);
 
       arrivalMap[i] = slew + arrival;

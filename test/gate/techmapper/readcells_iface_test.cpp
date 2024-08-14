@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/library/library_parser.h"
-#include "gate/library/library_characteristics.h"
+#include "gate/library/library.h"
+#include "gate/library/readcells_iface.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -19,16 +19,18 @@ const path techLibPath = home /
                          "test/data/gate/techmapper";
 
 namespace eda::gate::library {
-void loadLibrary(std::string libertyPath) {
-  LibraryParser::get().loadLibrary(libertyPath);
-}
 
-library::LibraryCharacteristics::Delay checkDelayInterpolation(std::string libertyPath) {
-  loadLibrary(libertyPath);
-  auto delay = library::LibraryCharacteristics::getDelay("sky130_fd_sc_hd__nor2b_1",
-                                                         "A",
-                                                         0.122,
-                                                         0.00291);
+ReadCellsIface::Delay checkDelayInterpolation(
+    path libertyPath) {
+  if (library::library == nullptr) {
+    library::library = new SCLibrary(libertyPath);
+  }
+  ReadCellsIface iface(library::library->getLibrary());
+
+  auto delay = iface.getDelay("sky130_fd_sc_hd__nor2b_1",
+                                                     "A",
+                                                   0.122,
+                                                 0.00291);
 
 //#ifdef UTOPIA_DEBUG
   std::cout << delay.cellRise << std::endl;
@@ -39,14 +41,14 @@ library::LibraryCharacteristics::Delay checkDelayInterpolation(std::string liber
   return delay;
 }
 
-TEST(LibraryCharacteristic, DelayInterpolation) {
-auto delay = checkDelayInterpolation(techLibPath / "test_nor.lib");
-bool isCorrect = false;
+TEST(ReadCellsIface, DelayInterpolation) {
+  auto delay = checkDelayInterpolation(techLibPath / "test_nor.lib");
+  bool isCorrect = false;
 
-if (0.0769735000 < delay.cellRise && delay.cellRise < 0.1284223000) {
-  isCorrect = true;
-}
-EXPECT_TRUE(isCorrect);
+  if (0.0769735000 < delay.cellRise && delay.cellRise < 0.1284223000) {
+    isCorrect = true;
+  }
+  EXPECT_TRUE(isCorrect);
 }
 
 } // namespace eda::gate::techmapper

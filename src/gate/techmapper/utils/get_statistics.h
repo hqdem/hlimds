@@ -9,23 +9,15 @@
 #pragma once
 
 #include "gate/estimator/ppa_estimator.h"
-#include "gate/library/library_parser.h"
-#include "gate/model/subnet.h"
-
-#include <readcells/groups.h>
-
-#include <filesystem>
 
 namespace eda::gate::techmapper {
-
-using LibraryParser = library::LibraryParser;
 
 inline void printStatistics(model::SubnetID subnetID) {
   size_t nWires = 0;
   size_t nCells = 0;
 
   std::unordered_map<std::string, int> statistic;
-  for (const auto &cell : LibraryParser::get().getLibrary().getCells()) {
+  for (const auto &cell : library::library->getLibrary().getCells()) {
     statistic[std::string(cell.getName())] = 0;
   }
   const auto &entries = model::Subnet::get(subnetID).getEntries();

@@ -53,7 +53,7 @@ std::shared_ptr<SubnetBuilder> techMap(
 
   // Set matcher type
   funcMatcher = Matcher<FuncMatcher, std::size_t>::create(
-    library::SCLibrary::get().getCombCells());
+    library::library->getCombCells());
 
   // Techmapping
   SubnetTechMapper *techmapper =

@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/sat_checker.h"
-#include "gate/library/library_parser.h"
 #include "gate/library/sdc_manager.h"
 #include "gate/model/printer/printer.h"
 #include "gate/model/utils/subnet_random.h"

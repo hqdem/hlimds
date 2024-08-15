@@ -2,9 +2,10 @@ FROM isprasmvg/ubuntu:base
 
 # Install required packages for Utopa EDA
 
-RUN apt update && apt install -y autoconf bison clang clang-tidy flex g++ gcc \
-    git graphviz gtkwave iverilog lcov liblpsolve55-dev libssl-dev libtool lld \
-    make ninja-build pkg-config python3 zlib1g zlib1g-dev
+RUN apt update && apt install -y autoconf bison clang clang-tidy doxygen flex \
+    g++ gcc git graphviz gtkwave iverilog lcov libctemplate-dev libfmt-dev \
+    liblpsolve55-dev libssl-dev libtool lld make ninja-build pkg-config \
+    python3 rlwrap zlib1g zlib1g-dev
 
 # Install CMake of proper version
 
@@ -16,16 +17,6 @@ RUN tar xzf cmake-3.28.1.tar.gz
 RUN rm -rf cmake-3.28.1.tar.gz
 WORKDIR /workdir/cmake-3.28.1
 RUN ./bootstrap
-RUN make -j$(nproc)
-RUN make install
-
-# Install C++ CTemplate library
-
-WORKDIR /workdir
-RUN git clone https://github.com/OlafvdSpek/ctemplate.git
-WORKDIR /workdir/ctemplate
-RUN ./autogen.sh
-RUN ./configure --prefix=/usr
 RUN make -j$(nproc)
 RUN make install
 

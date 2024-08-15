@@ -33,8 +33,6 @@ else()
 endif()
 
 include(UtopiaFindHelper)
-set_local_from_env(CTemplate_ROOT CT_DIR)
-set_local_from_env(Z3_ROOT Z3_DIR)
 set_local_from_env(Cudd_ROOT CUDD_DIR)
 set_local_from_env(CIRCT_DIR CIRCT_DIR)
 

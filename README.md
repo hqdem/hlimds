@@ -31,6 +31,8 @@ below are specific to this operating system:
 * `graphviz`
 * `gtkwave`
 * `iverilog`
+* `libctemplate-dev`
+* `libfmt-dev`
 * `liblpsolve55-dev`
 * `libssl-dev`
 * `libtool`
@@ -46,10 +48,10 @@ below are specific to this operating system:
 To install them, do the following:
 
 ```console
-sudo apt install autoconf bison build-essential clang clang-tidy cmake doxygen \
-     flex g++ gcc git graphviz gtkwave iverilog libfmt-dev liblpsolve55-dev \
-     libssl-dev libtool lld make ninja-build pkg-config python3 rlwrap zlib1g \
-     zlib1g-dev
+sudo apt install autoconf bison clang clang-tidy doxygen flex g++ gcc git \
+     graphviz gtkwave iverilog libctemplate-dev libfmt-dev liblpsolve55-dev \
+     libssl-dev libtool lld make ninja-build pkg-config python3 rlwrap \
+     zlib1g zlib1g-dev
 ```
 
 If you are working on Fedora Linux OS, see `doc/Fedora.md`.
@@ -71,24 +73,6 @@ sudo make install
 ```
 
 If you prefer to install CMake as package, please follow this [guide](https://apt.kitware.com).
-
-### C++ CTemplate installation
-
-To build C++ CTemplate library from sources, do the following:
-
-```console
-cd <workdir>
-git clone https://github.com/OlafvdSpek/ctemplate.git
-cd ctemplate
-./autogen.sh
-./configure --prefix=/usr
-make
-sudo make install
-```
-
-If you would like to install CTemplate to a non-standard location, please
-specify `--prefix` option of `configure` script to installation directory
-you want and set `CT_DIR` environment variable to it too.
 
 ### CUDD installation
 

@@ -8,12 +8,9 @@ image: gitlab.ispras.ru:4567/mvg/utopia-eda:latest
 variables:
   BUILD_DIR: "build"
   BUILD_PATH: "${UTOPIA_HOME}/${BUILD_DIR}"
-  CIRCT_DIR: "/workdir/circt/build/lib/cmake/circt/"
   GIT_DEPTH: "1"
   GIT_SUBMODULE_STRATEGY: recursive
-  MLIR_DIR: "/workdir/circt/llvm/build/lib/cmake/mlir/"
   UTOPIA_HOME: "/builds/${CI_PROJECT_PATH}"
-  Yosys_ROOT: "/workdir/yosys"
   TEST_REPORTS_PATH: "${UTOPIA_HOME}/test-reports/test-results.xml"
 
 stages:

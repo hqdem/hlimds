@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -84,8 +84,7 @@ TEST(BoundedSetTest, Merge) {
   EXPECT_TRUE(result);
 }
 
-TEST(BoundedSetTest, MergeRandomSingletons)
-{
+TEST(BoundedSetTest, MergeRandomSingletons) {
   srand(time(0));
   bool result = 1;
   const unsigned n = 1000;
@@ -112,8 +111,7 @@ TEST(BoundedSetTest, MergeRandomSingletons)
   EXPECT_TRUE(result);
 }
 
-TEST(BoundedSetTest, MergeWithoutChecks)
-{
+TEST(BoundedSetTest, MergeWithoutChecks) {
   srand(time(0));
   bool result = 1;
   const unsigned n = 1000;

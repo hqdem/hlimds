@@ -8,7 +8,7 @@
 
 #include "gate/analyzer/probabilistic_estimate.h"
 #include "gate/model/utils/subnet_truth_table.h"
-#include "gate/optimizer/reconvergence_cut.h"
+#include "gate/optimizer/reconvergence.h"
 #include "gate/optimizer/refactorer.h"
 
 #include "util/truth_table.h"
@@ -37,7 +37,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder,
 
   if (careCutSize > cutSize) {
     const auto &roots = window.getInputs();
-    auto careWindow = getReconvergenceCut(builder, roots, careCutSize);
+    auto careWindow = getReconvergentCut(builder, roots, careCutSize);
     window.setCare(utils::computeCare(careWindow.evaluateTruthTables()));
   }
 

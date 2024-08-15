@@ -10,127 +10,170 @@
 
 namespace eda::gate::optimizer {
 
-using Builder  = model::SubnetBuilder;
-using Cell     = model::Subnet::Cell;
-using Link     = model::Subnet::Link;
-using LinkList = model::Subnet::LinkList;
-using Nodes    = std::vector<size_t>;
-using IdxMap   = std::unordered_map<size_t, size_t>;
-
-static uint16_t leaveNumber = 0;
-
-static void buildFromRoot(const Builder &builder,
-                          Builder &coneBuilder,
-                          size_t cellId,
-                          IdxMap &oldToNew) {
-
-  const auto &cell = builder.getCell(cellId);
-  const auto links = builder.getLinks(cellId);
-
-  LinkList inputs;
-  for (const auto &link : links) {
-    if (oldToNew.find(link.idx) == oldToNew.end()) {
-      buildFromRoot(builder, coneBuilder, link.idx, oldToNew);
-    }
-    inputs.emplace_back(oldToNew.at(link.idx), link.inv);
-  }
-
-  const size_t idx = coneBuilder.addCell(cell.getSymbol(), inputs).idx;
-  oldToNew[cellId] = idx;
-}
+using Builder    = model::SubnetBuilder;
+using Cell       = model::Subnet::Cell;
+using Link       = model::Subnet::Link;
+using LinkList   = model::Subnet::LinkList;
+using Nodes      = std::vector<size_t>;
+using SubnetView = model::SubnetView;
 
 static void getMffcBounds(Builder &builder,
-                          size_t cellId,
-                          IdxMap &cellToRef,
-                          IdxMap &newToOld,
-                          IdxMap &oldToNew) {
+                          size_t idx,
+                          size_t &counter,
+                          size_t boundsID,
+                          Nodes &bounds) {
 
-  for (const auto &link : builder.getLinks(cellId)) {
-    const auto &cell = builder.getCell(link.idx);
-    if (builder.isMarked(link.idx) || cell.isOne() || cell.isZero()) {
+  for (const auto &link : builder.getLinks(idx)) {
+    Cell &cell = builder.getCell(link.idx);
+    if ((builder.getSessionID(link.idx) == boundsID) || cell.isIn()) {
+      builder.mark(link.idx);
+      bounds.push_back(link.idx);
+    }
+
+    if (builder.isMarked(link.idx) || cell.isZero() || cell.isOne()) {
+      cell.incRefCount();
+      counter--;
       continue;
     }
     builder.mark(link.idx);
 
-    if (!cellToRef.at(link.idx)) {
-      getMffcBounds(builder, link.idx, cellToRef, newToOld, oldToNew);
+    if (!cell.refcount) {
+      getMffcBounds(builder, link.idx, counter, boundsID, bounds);
+      cell.incRefCount();
+      counter--;
       continue;
     }
 
-    newToOld[leaveNumber] = link.idx;
-    oldToNew[link.idx] = leaveNumber;
-    leaveNumber++;
+    cell.incRefCount();
+    counter--;
+
+    bounds.push_back(link.idx);
   }
 }
 
-static void dereferenceCells(const Builder &builder,
-                             size_t cellId,
-                             IdxMap &cellToRef) {
+static void findMffcBounds(Builder &builder,
+                           size_t rootID,
+                           size_t counter,
+                           size_t boundsID,
+                           Nodes &bounds) {
 
-  for (const auto &link : builder.getLinks(cellId)) {
-    const auto &cell = builder.getCell(link.idx);
-    if (cellToRef.find(link.idx) == cellToRef.end()) {
-      cellToRef[link.idx] = cell.refcount;
-    }
+  // Reference cells back and get inputs(bounds) of MFFC.
+  builder.startSession();
+  getMffcBounds(builder, rootID, counter, boundsID, bounds);
+  builder.endSession();
+  assert(!counter && "Unequal number of reference and dereference operations");
+}
 
-    if (builder.isMarked(link.idx)) {
-      continue;
-    }
+//===----------------------------------------------------------------------===//
+// Bound -- CUT
+//===----------------------------------------------------------------------===//
 
-    --cellToRef[link.idx];
-    if (!cellToRef.at(link.idx)) {
-      dereferenceCells(builder, link.idx, cellToRef);
+static void dereferenceCells(Builder &builder, size_t idx, size_t &counter) {
+  for (const auto &link : builder.getLinks(idx)) {
+    Cell &cell = builder.getCell(link.idx);
+    cell.decRefCount();
+    counter++;
+
+    if (!cell.refcount && !builder.isMarked(link.idx)) {
+      dereferenceCells(builder, link.idx, counter);
     }
   }
 }
 
-static IdxMap findMffcBounds(Builder &builder,
-                             size_t root,
-                             const Nodes &leaves,
-                             IdxMap &newToOld) {
-  IdxMap cellToRef;
-  IdxMap oldToNew;
-  leaveNumber = 0;
+static size_t dereferenceCells(Builder &builder,
+                               size_t rootID,
+                               size_t &counter,
+                               const Nodes &cut) {
 
   builder.startSession();
-  for (size_t i = 0; i < leaves.size(); ++i) {
-    builder.mark(leaves[i]);
+  size_t boundsID = builder.getSessionID();
+  for (const auto &idx : cut) {
+    builder.mark(idx);
   }
-  dereferenceCells(builder, root, cellToRef);
+  dereferenceCells(builder, rootID, counter);
   builder.endSession();
-
-  builder.startSession();
-  oldToNew.reserve(cellToRef.size());
-  getMffcBounds(builder, root, cellToRef, newToOld, oldToNew);
-  builder.endSession();
-
-  return oldToNew;
+  return boundsID;
 }
 
-model::SubnetID getMffc(model::SubnetBuilder &builder, size_t root,
-                        const std::vector<size_t> &leaves,
-                        std::unordered_map<size_t, size_t> &map) {
-  assert(!leaves.empty() && "Bounds for a fanout-free cone are empty!");
-  const size_t nLeaves = leaves.size();
-  auto subnetID = model::OBJ_NULL_ID;
-  map.reserve(nLeaves + 1);
-
-  if (nLeaves < 2) {
-    subnetID = getReconvergenceCone(builder, root, Cell::MaxArity, map);
-    return subnetID;
+SubnetView getMffc(Builder &builder, size_t rootID, const Nodes &cut) {
+  const size_t nLeaves = cut.size();
+  if ((nLeaves == 1) && (rootID == cut[0])) {
+    return SubnetView{builder, {Nodes{rootID}, Nodes{rootID}}};
   }
 
-  IdxMap oldToNew = findMffcBounds(builder, root, leaves, map);
+  size_t counter = 0;
+  const size_t boundsID = dereferenceCells(builder, rootID, counter, cut);
 
-  Builder coneBuilder;
-  coneBuilder.addInputs(oldToNew.size());
-  buildFromRoot(builder, coneBuilder, root, oldToNew);
-  size_t outId = coneBuilder.addOutput(Link(oldToNew.at(root))).idx;
+  Nodes bounds;
+  bounds.reserve(cut.size());
+  findMffcBounds(builder, rootID, counter, boundsID, bounds);
+  Nodes output{rootID};
 
-  map[outId] = root;
-  subnetID = coneBuilder.make();
+  return SubnetView{builder, {std::move(bounds), std::move(output)}};
+}
 
-  return subnetID;
+SubnetView getMffc(Builder &builder, const SubnetView &view) {
+  const Nodes &roots = view.getOutputs();
+  assert((roots.size() == 1) && "Multiple outputs are not supported");
+  return getMffc(builder, roots[0], view.getInputs());
+}
+
+SubnetView getMffc(Builder &builder, size_t rootID) {
+  Nodes emptyBounds;
+  return getMffc(builder, rootID, emptyBounds);
+}
+
+//===----------------------------------------------------------------------===//
+// Bound -- DEPTH
+//===----------------------------------------------------------------------===//
+
+static void dereferenceCells(Builder &builder,
+                             size_t idx,
+                             size_t &counter,
+                             size_t maxDepth,
+                             size_t depth) {
+
+  for (const auto &link : builder.getLinks(idx)) {
+    Cell &cell = builder.getCell(link.idx);
+    cell.decRefCount();
+    counter++;
+
+    if (depth >= maxDepth) {
+      builder.mark(link.idx);
+    }
+
+    if (!cell.refcount && !builder.isMarked(link.idx)) {
+      dereferenceCells(builder, link.idx, counter, maxDepth, depth + 1);
+    }
+  }
+}
+
+static size_t dereferenceCells(Builder &builder,
+                               size_t rootID,
+                               size_t &counter,
+                               size_t maxDepth) {
+
+  builder.startSession();
+  size_t boundsID = builder.getSessionID();
+  dereferenceCells(builder, rootID, counter, maxDepth, 1);
+  builder.endSession();
+  return boundsID;
+}
+
+SubnetView getMffc(Builder &builder, size_t rootID, size_t maxDepth) {
+  if (!maxDepth) {
+    return SubnetView{builder, {Nodes{rootID}, Nodes{rootID}}};
+  }
+
+  size_t counter = 0;
+  const size_t boundsID = dereferenceCells(builder, rootID, counter, maxDepth);
+
+  Nodes bounds;
+  bounds.reserve(1u << (maxDepth + 1));
+  findMffcBounds(builder, rootID, counter, boundsID, bounds);
+  Nodes output{rootID};
+
+  return SubnetView{builder, {std::move(bounds), std::move(output)}};
 }
 
 } // namespace eda::gate::optimizer

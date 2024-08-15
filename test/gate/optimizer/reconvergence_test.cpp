@@ -7,15 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/celltype.h"
-#include "gate/optimizer/reconvergence_cut.h"
+#include "gate/optimizer/reconvergence.h"
 
 #include "gtest/gtest.h"
 
 namespace eda::gate::optimizer {
 
-TEST(ReconvergenceCutTest, CorrectnessTest) {
+TEST(ReconvergenceTest, CorrectnessTest) {
   using CellSymbol    = eda::gate::model::CellSymbol;
-  using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   /*
   * in(0)  in(1) CONST - Inputs
@@ -35,26 +34,16 @@ TEST(ReconvergenceCutTest, CorrectnessTest) {
   links.push_back(builder.addCell(CellSymbol::AND, links[3], links[4]));
   builder.addOutput(links.back());
 
-  std::unordered_map<size_t, size_t> mapping;
-
-  const auto cut   = getReconvergenceCut(builder, 5, 4).getInputs();
-  const auto coneID = getReconvergenceCone(builder, 5, 2, mapping);
-  const auto &cone  = Subnet::get(coneID);
+  const auto cutView = getReconvergentCut(builder, 5, 4);
 
   const std::vector<size_t> check = {1, 0};
 
-  EXPECT_EQ(check, cut);
-  EXPECT_EQ(cone.size(), 7);
-  EXPECT_EQ(mapping.at(0), check[0]);
-  EXPECT_EQ(mapping.at(1), check[1]);
-  EXPECT_EQ(mapping.at(6), 5);
-  EXPECT_EQ(mapping.size(), 3);
-  EXPECT_EQ(mapping.size() - 1, cone.getInNum());
+  EXPECT_EQ(check, cutView.getInputs());
+  EXPECT_EQ(std::vector<size_t>{5}, cutView.getOutputs());
 }
 
-TEST(ReconvergenceCutTest, SimpleTest) {
+TEST(ReconvergenceTest, SimpleTest) {
   using CellSymbol    = eda::gate::model::CellSymbol;
-  using Subnet        = eda::gate::model::Subnet;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   /*
   *   0  1  2  3  4  5 - Inputs
@@ -92,22 +81,12 @@ TEST(ReconvergenceCutTest, SimpleTest) {
   }
   builder.addOutput(links.back());
 
-  std::unordered_map<size_t, size_t> mapping;
-
-  const auto cut   = getReconvergenceCut(builder, rootId, cutSize).getInputs();
-  const auto coneID = getReconvergenceCone(builder, rootId, cutSize, mapping);
-  const auto &cone  = Subnet::get(coneID);
+  const auto cutView = getReconvergentCut(builder, rootId, cutSize);
 
   const std::vector<size_t> check = {11, 12, 13, 14};
 
-  EXPECT_EQ(cut, check);
-  EXPECT_EQ(cone.size(), 11);
-  EXPECT_EQ(mapping.size(), 5);
-  EXPECT_EQ(mapping.size() - 1, cone.getInNum());
-  EXPECT_EQ(mapping.at(10), rootId);
-  for (size_t i = 0; i < cut.size(); ++i) {
-      EXPECT_EQ(mapping.at(i), cut[i]);
-  }
+  EXPECT_EQ(cutView.getInputs(), check);
+  EXPECT_EQ(cutView.getOutputs(), std::vector<size_t>{rootId});
 }
 
 } // namespace eda::gate::optimizer

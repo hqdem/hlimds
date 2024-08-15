@@ -45,7 +45,7 @@ add_library(Gate OBJECT
   optimizer/pipeliner.cpp
   optimizer/get_dbstat.cpp
   optimizer/npnstatdb.cpp
-  optimizer/reconvergence_cut.cpp
+  optimizer/reconvergence.cpp
   optimizer/refactorer.cpp
   optimizer/resubstitutor.cpp
   optimizer/rewriter.cpp
@@ -65,7 +65,6 @@ add_library(Gate OBJECT
   optimizer/synthesis/unitized_table.cpp
   optimizer/synthesis/zhegalkin.cpp
   premapper/aigmapper.cpp
-  premapper/migmapper.cpp
   premapper/premapper.cpp
   simulator/simulator.cpp
   synthesizer/synthesizer.cpp

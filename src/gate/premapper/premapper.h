@@ -8,67 +8,52 @@
 
 #pragma once
 
+#include "gate/model/iomapping.h"
+#include "gate/model/subnetview.h"
+#include "gate/optimizer/mffc.h"
+#include "gate/optimizer/reconvergence.h"
+#include "gate/optimizer/resynthesizer.h"
+#include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/subnet_transformer.h"
-
-#include <unordered_map>
 
 namespace eda::gate::premapper {
 
-/// @brief Interface class for premappers.
-class Premapper : virtual public optimizer::SubnetTransformer {
+enum Basis {AIG, XAG, MIG, XMG};
+
+class Premapper : public optimizer::SubnetTransformer {
 public:
-  using CellIdMap = std::unordered_map<uint32_t, model::Subnet::Link>;
-  using CellSymbol = model::CellSymbol;
-  using Entries = model::Array<eda::gate::model::Subnet::Entry>;
-  using Link = model::Subnet::Link;
-  using LinkList = model::Subnet::LinkList;
-  using Subnet = model::Subnet;
-  using SubnetBuilder = model::SubnetBuilder;
-  using SubnetID = model::SubnetID;
+ 
+  using Cell = gate::model::Subnet::Cell;
+  using InOutMapping = gate::model::InOutMapping;
+  using Link = gate::model::Subnet::Link;
+  using SafePasser = gate::optimizer::SafePasser;
+  using SubnetBuilder = gate::model::SubnetBuilder;
+  using SubnetBuilderPtr = gate::optimizer::SubnetBuilderPtr;
+  using SubnetObject = gate::model::SubnetObject;
 
-  virtual ~Premapper() {}
+  Premapper(const std::string &name, Basis basis,
+            const optimizer::ResynthesizerBase &resynthesizer, uint16_t k = 4):
+      optimizer::SubnetTransformer(name), basis(basis),
+      resynthesizer(resynthesizer), k(k) {
+        arity = (basis == MIG) || (basis == XMG) ? 3 : 2;
+        assert(k >= 3 && "The cut size is too small!");
+      }
 
-  optimizer::SubnetBuilderPtr make(const SubnetID subnetID) const override;
+  SubnetBuilderPtr map(const SubnetBuilderPtr &builder) const override;
 
-protected:
-  Link mapCell(CellSymbol symbol, const LinkList &links, bool &inv,
-               size_t n0, size_t n1, SubnetBuilder &builder) const;
+private:
+  void decomposeCell(const SubnetBuilderPtr &builder,
+                     SafePasser &iter,
+                     const size_t entryID) const;
 
-  LinkList getNewLinks(const CellIdMap &oldToNew, uint32_t idx,
-                       const Subnet &oldSubnet,
-                       size_t &n0, size_t &n1, SubnetBuilder &builder) const;
+  void constantCase(const SubnetBuilderPtr &builder,
+                    SafePasser &iter,
+                    const size_t entryID) const;
 
-  virtual Link mapIn(SubnetBuilder &builder) const;
-
-  virtual Link mapOut(const LinkList &links, SubnetBuilder &builder) const;
-
-  virtual Link mapVal(bool val, SubnetBuilder &builder) const;
-
-  virtual Link mapBuf(const LinkList &links, SubnetBuilder &builder) const;
-
-  virtual Link mapAnd(const LinkList &links, bool &inv, size_t n0, size_t n1,
-                      SubnetBuilder &builder) const;
-  
-  virtual Link mapAnd(const LinkList &links, bool &inv,
-                      SubnetBuilder &builder) const = 0;
-
-  virtual Link mapOr(const LinkList &links, bool &inv, size_t n0, size_t n1,
-                     SubnetBuilder &builder) const;
-
-  virtual Link mapOr(const LinkList &links, bool &inv,
-                     SubnetBuilder &builder) const = 0;
-
-  virtual Link mapXor(const LinkList &links, bool &inv, size_t n0, size_t n1,
-                      SubnetBuilder &builder) const;
-
-  virtual Link mapXor(const LinkList &links, bool &inv,
-                      SubnetBuilder &builder) const = 0;
-
-  virtual Link mapMaj(const LinkList &links, bool &inv, size_t n0, size_t n1,
-                      SubnetBuilder &builder) const;
-
-  virtual Link mapMaj(const LinkList &links, bool &inv,
-                      SubnetBuilder &builder) const = 0;
+  const Basis basis;
+  const optimizer::ResynthesizerBase &resynthesizer;
+  const uint16_t k;
+  uint16_t arity;
 };
 
 } // namespace eda::gate::premapper

@@ -742,200 +742,25 @@ inline CellTypeID makeHardType(CellSymbol symbol,
   /* Full cell type identifier */ \
   extern const CellTypeID CELL_TYPE_ID(symbol); \
   /* Short cell type identifier */ \
-  extern const uint32_t CELL_TYPE_SID(symbol)
+  extern const uint32_t CELL_TYPE_SID(symbol);
 
-DECLARE_CELL_TYPE_ID(IN);
-DECLARE_CELL_TYPE_ID(OUT);
-DECLARE_CELL_TYPE_ID(ZERO);
-DECLARE_CELL_TYPE_ID(ONE);
-DECLARE_CELL_TYPE_ID(BUF);
-DECLARE_CELL_TYPE_ID(NOT);
-DECLARE_CELL_TYPE_ID(AND);
-DECLARE_CELL_TYPE_ID(OR);
-DECLARE_CELL_TYPE_ID(XOR);
-DECLARE_CELL_TYPE_ID(NAND);
-DECLARE_CELL_TYPE_ID(NOR);
-DECLARE_CELL_TYPE_ID(XNOR);
-DECLARE_CELL_TYPE_ID(MAJ);
-DECLARE_CELL_TYPE_ID(DFF_p);
-DECLARE_CELL_TYPE_ID(DFF_n);
-DECLARE_CELL_TYPE_ID(sDFF_pp0);
-DECLARE_CELL_TYPE_ID(sDFF_pp1);
-DECLARE_CELL_TYPE_ID(sDFF_pn0);
-DECLARE_CELL_TYPE_ID(sDFF_pn1);
-DECLARE_CELL_TYPE_ID(sDFF_np0);
-DECLARE_CELL_TYPE_ID(sDFF_np1);
-DECLARE_CELL_TYPE_ID(sDFF_nn0);
-DECLARE_CELL_TYPE_ID(sDFF_nn1);
-DECLARE_CELL_TYPE_ID(aDFF_pp0);
-DECLARE_CELL_TYPE_ID(aDFF_pp1);
-DECLARE_CELL_TYPE_ID(aDFF_pn0);
-DECLARE_CELL_TYPE_ID(aDFF_pn1);
-DECLARE_CELL_TYPE_ID(aDFF_np0);
-DECLARE_CELL_TYPE_ID(aDFF_np1);
-DECLARE_CELL_TYPE_ID(aDFF_nn0);
-DECLARE_CELL_TYPE_ID(aDFF_nn1);
-DECLARE_CELL_TYPE_ID(DFFrs_ppp);
-DECLARE_CELL_TYPE_ID(DFFrs_ppn);
-DECLARE_CELL_TYPE_ID(DFFrs_pnp);
-DECLARE_CELL_TYPE_ID(DFFrs_pnn);
-DECLARE_CELL_TYPE_ID(DFFrs_npp);
-DECLARE_CELL_TYPE_ID(DFFrs_npn);
-DECLARE_CELL_TYPE_ID(DFFrs_nnp);
-DECLARE_CELL_TYPE_ID(DFFrs_nnn);
-DECLARE_CELL_TYPE_ID(DLATCH_p);
-DECLARE_CELL_TYPE_ID(DLATCH_n);
-DECLARE_CELL_TYPE_ID(aDLATCH_pp0);
-DECLARE_CELL_TYPE_ID(aDLATCH_pp1);
-DECLARE_CELL_TYPE_ID(aDLATCH_pn0);
-DECLARE_CELL_TYPE_ID(aDLATCH_pn1);
-DECLARE_CELL_TYPE_ID(aDLATCH_np0);
-DECLARE_CELL_TYPE_ID(aDLATCH_np1);
-DECLARE_CELL_TYPE_ID(aDLATCH_nn0);
-DECLARE_CELL_TYPE_ID(aDLATCH_nn1);
-DECLARE_CELL_TYPE_ID(DLATCHrs_ppp);
-DECLARE_CELL_TYPE_ID(DLATCHrs_ppn);
-DECLARE_CELL_TYPE_ID(DLATCHrs_pnp);
-DECLARE_CELL_TYPE_ID(DLATCHrs_pnn);
-DECLARE_CELL_TYPE_ID(DLATCHrs_npp);
-DECLARE_CELL_TYPE_ID(DLATCHrs_npn);
-DECLARE_CELL_TYPE_ID(DLATCHrs_nnp);
-DECLARE_CELL_TYPE_ID(DLATCHrs_nnn);
-DECLARE_CELL_TYPE_ID(LATCHrs_pp);
-DECLARE_CELL_TYPE_ID(LATCHrs_pn);
-DECLARE_CELL_TYPE_ID(LATCHrs_np);
-DECLARE_CELL_TYPE_ID(LATCHrs_nn);
+#define UTOPIA_FOREACH_GATE(s) DECLARE_CELL_TYPE_ID(s)
+#include "celltype_gates.inc"
 
+#define UTOPIA_FOREACH_GATE(S) \
+  case S: return CELL_TYPE_ID_##S;
 constexpr uint64_t getCellTypeID(CellSymbol symbol) {
   switch(symbol) {
-  case IN:           return CELL_TYPE_ID_IN;
-  case OUT:          return CELL_TYPE_ID_OUT;
-  case ZERO:         return CELL_TYPE_ID_ZERO;
-  case ONE:          return CELL_TYPE_ID_ONE;
-  case BUF:          return CELL_TYPE_ID_BUF;
-  case NOT:          return CELL_TYPE_ID_NOT;
-  case AND:          return CELL_TYPE_ID_AND;
-  case OR:           return CELL_TYPE_ID_OR;
-  case XOR:          return CELL_TYPE_ID_XOR;
-  case NAND:         return CELL_TYPE_ID_NAND;
-  case NOR:          return CELL_TYPE_ID_NOR;
-  case XNOR:         return CELL_TYPE_ID_XNOR;
-  case MAJ:          return CELL_TYPE_ID_MAJ;
-  case DFF_p:        return CELL_TYPE_ID_DFF_p;
-  case DFF_n:        return CELL_TYPE_ID_DFF_n;
-  case sDFF_pp0:     return CELL_TYPE_ID_sDFF_pp0;
-  case sDFF_pp1:     return CELL_TYPE_ID_sDFF_pp1;
-  case sDFF_pn0:     return CELL_TYPE_ID_sDFF_pn0;
-  case sDFF_pn1:     return CELL_TYPE_ID_sDFF_pn1;
-  case sDFF_np0:     return CELL_TYPE_ID_sDFF_np0;
-  case sDFF_np1:     return CELL_TYPE_ID_sDFF_np1;
-  case sDFF_nn0:     return CELL_TYPE_ID_sDFF_nn0;
-  case sDFF_nn1:     return CELL_TYPE_ID_sDFF_nn1;
-  case aDFF_pp0:     return CELL_TYPE_ID_aDFF_pp0;
-  case aDFF_pp1:     return CELL_TYPE_ID_aDFF_pp1;
-  case aDFF_pn0:     return CELL_TYPE_ID_aDFF_pn0;
-  case aDFF_pn1:     return CELL_TYPE_ID_aDFF_pn1;
-  case aDFF_np0:     return CELL_TYPE_ID_aDFF_np0;
-  case aDFF_np1:     return CELL_TYPE_ID_aDFF_np1;
-  case aDFF_nn0:     return CELL_TYPE_ID_aDFF_nn0;
-  case aDFF_nn1:     return CELL_TYPE_ID_aDFF_nn1;
-  case DFFrs_ppp:    return CELL_TYPE_ID_DFFrs_ppp;
-  case DFFrs_ppn:    return CELL_TYPE_ID_DFFrs_ppn;
-  case DFFrs_pnp:    return CELL_TYPE_ID_DFFrs_pnp;
-  case DFFrs_pnn:    return CELL_TYPE_ID_DFFrs_pnn;
-  case DFFrs_npp:    return CELL_TYPE_ID_DFFrs_npp;
-  case DFFrs_npn:    return CELL_TYPE_ID_DFFrs_npn;
-  case DFFrs_nnp:    return CELL_TYPE_ID_DFFrs_nnp;
-  case DFFrs_nnn:    return CELL_TYPE_ID_DFFrs_nnn;
-  case DLATCH_p:     return CELL_TYPE_ID_DLATCH_p;
-  case DLATCH_n:     return CELL_TYPE_ID_DLATCH_n;
-  case aDLATCH_pp0:  return CELL_TYPE_ID_aDLATCH_pp0;
-  case aDLATCH_pp1:  return CELL_TYPE_ID_aDLATCH_pp1;
-  case aDLATCH_pn0:  return CELL_TYPE_ID_aDLATCH_pn0;
-  case aDLATCH_pn1:  return CELL_TYPE_ID_aDLATCH_pn1;
-  case aDLATCH_np0:  return CELL_TYPE_ID_aDLATCH_np0;
-  case aDLATCH_np1:  return CELL_TYPE_ID_aDLATCH_np1;
-  case aDLATCH_nn0:  return CELL_TYPE_ID_aDLATCH_nn0;
-  case aDLATCH_nn1:  return CELL_TYPE_ID_aDLATCH_nn1;
-  case DLATCHrs_ppp: return CELL_TYPE_ID_DLATCHrs_ppp;
-  case DLATCHrs_ppn: return CELL_TYPE_ID_DLATCHrs_ppn;
-  case DLATCHrs_pnp: return CELL_TYPE_ID_DLATCHrs_pnp;
-  case DLATCHrs_pnn: return CELL_TYPE_ID_DLATCHrs_pnn;
-  case DLATCHrs_npp: return CELL_TYPE_ID_DLATCHrs_npp;
-  case DLATCHrs_npn: return CELL_TYPE_ID_DLATCHrs_npn;
-  case DLATCHrs_nnp: return CELL_TYPE_ID_DLATCHrs_nnp;
-  case DLATCHrs_nnn: return CELL_TYPE_ID_DLATCHrs_nnn;
-  case LATCHrs_pp:   return CELL_TYPE_ID_LATCHrs_pp;
-  case LATCHrs_pn:   return CELL_TYPE_ID_LATCHrs_pn;
-  case LATCHrs_np:   return CELL_TYPE_ID_LATCHrs_np;
-  case LATCHrs_nn:   return CELL_TYPE_ID_LATCHrs_nn;
+#include "celltype_gates.inc"
   default:           return OBJ_NULL_ID;
   }
 }
 
+#define UTOPIA_FOREACH_GATE(S) \
+  case S: return CELL_TYPE_SID_##S;
 constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
   switch(symbol) {
-  case IN:           return CELL_TYPE_SID_IN;
-  case OUT:          return CELL_TYPE_SID_OUT;
-  case ZERO:         return CELL_TYPE_SID_ZERO;
-  case ONE:          return CELL_TYPE_SID_ONE;
-  case BUF:          return CELL_TYPE_SID_BUF;
-  case NOT:          return CELL_TYPE_SID_NOT;
-  case AND:          return CELL_TYPE_SID_AND;
-  case OR:           return CELL_TYPE_SID_OR;
-  case XOR:          return CELL_TYPE_SID_XOR;
-  case NAND:         return CELL_TYPE_SID_NAND;
-  case NOR:          return CELL_TYPE_SID_NOR;
-  case XNOR:         return CELL_TYPE_SID_XNOR;
-  case MAJ:          return CELL_TYPE_SID_MAJ;
-  case DFF_p:        return CELL_TYPE_SID_DFF_p;
-  case DFF_n:        return CELL_TYPE_SID_DFF_n;
-  case sDFF_pp0:     return CELL_TYPE_SID_sDFF_pp0;
-  case sDFF_pp1:     return CELL_TYPE_SID_sDFF_pp1;
-  case sDFF_pn0:     return CELL_TYPE_SID_sDFF_pn0;
-  case sDFF_pn1:     return CELL_TYPE_SID_sDFF_pn1;
-  case sDFF_np0:     return CELL_TYPE_SID_sDFF_np0;
-  case sDFF_np1:     return CELL_TYPE_SID_sDFF_np1;
-  case sDFF_nn0:     return CELL_TYPE_SID_sDFF_nn0;
-  case sDFF_nn1:     return CELL_TYPE_SID_sDFF_nn1;
-  case aDFF_pp0:     return CELL_TYPE_SID_aDFF_pp0;
-  case aDFF_pp1:     return CELL_TYPE_SID_aDFF_pp1;
-  case aDFF_pn0:     return CELL_TYPE_SID_aDFF_pn0;
-  case aDFF_pn1:     return CELL_TYPE_SID_aDFF_pn1;
-  case aDFF_np0:     return CELL_TYPE_SID_aDFF_np0;
-  case aDFF_np1:     return CELL_TYPE_SID_aDFF_np1;
-  case aDFF_nn0:     return CELL_TYPE_SID_aDFF_nn0;
-  case aDFF_nn1:     return CELL_TYPE_SID_aDFF_nn1;
-  case DFFrs_ppp:    return CELL_TYPE_SID_DFFrs_ppp;
-  case DFFrs_ppn:    return CELL_TYPE_SID_DFFrs_ppn;
-  case DFFrs_pnp:    return CELL_TYPE_SID_DFFrs_pnp;
-  case DFFrs_pnn:    return CELL_TYPE_SID_DFFrs_pnn;
-  case DFFrs_npp:    return CELL_TYPE_SID_DFFrs_npp;
-  case DFFrs_npn:    return CELL_TYPE_SID_DFFrs_npn;
-  case DFFrs_nnp:    return CELL_TYPE_SID_DFFrs_nnp;
-  case DFFrs_nnn:    return CELL_TYPE_SID_DFFrs_nnn;
-  case DLATCH_p:     return CELL_TYPE_SID_DLATCH_p;
-  case DLATCH_n:     return CELL_TYPE_SID_DLATCH_n;
-  case aDLATCH_pp0:  return CELL_TYPE_SID_aDLATCH_pp0;
-  case aDLATCH_pp1:  return CELL_TYPE_SID_aDLATCH_pp1;
-  case aDLATCH_pn0:  return CELL_TYPE_SID_aDLATCH_pn0;
-  case aDLATCH_pn1:  return CELL_TYPE_SID_aDLATCH_pn1;
-  case aDLATCH_np0:  return CELL_TYPE_SID_aDLATCH_np0;
-  case aDLATCH_np1:  return CELL_TYPE_SID_aDLATCH_np1;
-  case aDLATCH_nn0:  return CELL_TYPE_SID_aDLATCH_nn0;
-  case aDLATCH_nn1:  return CELL_TYPE_SID_aDLATCH_nn1;
-  case DLATCHrs_ppp: return CELL_TYPE_SID_DLATCHrs_ppp;
-  case DLATCHrs_ppn: return CELL_TYPE_SID_DLATCHrs_ppn;
-  case DLATCHrs_pnp: return CELL_TYPE_SID_DLATCHrs_pnp;
-  case DLATCHrs_pnn: return CELL_TYPE_SID_DLATCHrs_pnn;
-  case DLATCHrs_npp: return CELL_TYPE_SID_DLATCHrs_npp;
-  case DLATCHrs_npn: return CELL_TYPE_SID_DLATCHrs_npn;
-  case DLATCHrs_nnp: return CELL_TYPE_SID_DLATCHrs_nnp;
-  case DLATCHrs_nnn: return CELL_TYPE_SID_DLATCHrs_nnn;
-  case LATCHrs_pp:   return CELL_TYPE_SID_LATCHrs_pp;
-  case LATCHrs_pn:   return CELL_TYPE_SID_LATCHrs_pn;
-  case LATCHrs_np:   return CELL_TYPE_SID_LATCHrs_np;
-  case LATCHrs_nn:   return CELL_TYPE_SID_LATCHrs_nn;
+#include "celltype_gates.inc"
   default:           return -1u;
   }
 }

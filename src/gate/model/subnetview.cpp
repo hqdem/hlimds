@@ -175,58 +175,86 @@ SubnetObject &SubnetView::getSubnet() {
 // Subnet View Walker
 //===----------------------------------------------------------------------===//
 
+static inline size_t defaultArityProvider(
+    SubnetBuilder &builder, const size_t entryID) {
+  return builder.getCell(entryID).arity;
+}
+
+static inline Subnet::Link defaultLinkProvider(
+    SubnetBuilder &builder, const size_t entryID, const size_t linkIdx) {
+  return builder.getLink(entryID, linkIdx);
+}
+
+SubnetViewWalker::SubnetViewWalker(const SubnetView &view):
+    view(view),
+    arityProvider(defaultArityProvider),
+    linkProvider(defaultLinkProvider) {}
+
+SubnetViewWalker::SubnetViewWalker(const SubnetView &view,
+                                   const ArityProvider arityProvider,
+                                   const LinkProvider linkProvider):
+    view(view),
+    arityProvider(arityProvider),
+    linkProvider(linkProvider) {}
+
+#define UTOPIA_ON_BACKWARD_DFS_POP(builder, isIn, isOut, cellID)\
+  if (!onBackwardDfsPop(builder, isIn, isOut, cellID)) \
+    goto ABORTED
+
+#define UTOPIA_ON_BACKWARD_DFS_PUSH(builder, isIn, isOut, cellID)\
+  if (onBackwardDfsPush && !(*onBackwardDfsPush)(builder, isIn, isOut, cellID))\
+    goto ABORTED
+
 static bool traverseForward(SubnetBuilder &builder,
                             const InOutMapping &iomapping,
-                            const SubnetViewWalker::Visitor visitor) {
+                            const SubnetViewWalker::ArityProvider arityProvider,
+                            const SubnetViewWalker::LinkProvider linkProvider,
+                            const SubnetViewWalker::Visitor onBackwardDfsPop,
+                            const SubnetViewWalker::Visitor *onBackwardDfsPush) {
   builder.startSession();
 
+  size_t nPureOut{0};
   std::unordered_set<size_t> inout;
 
   for (const auto inputID : iomapping.inputs) {
     builder.mark(inputID);
   } // for input
 
-  std::stack<std::pair<size_t, size_t>> stack;
+  std::stack<std::pair<size_t /* entry */, size_t /* link */>> stack;
   for (const auto outputID : iomapping.outputs) {
     if (!builder.isMarked(outputID)) {
+      UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, true, outputID);
       stack.push({outputID, 0});
     } else {
       inout.insert(outputID);
     }
   } // for output
 
-  const auto nOut = stack.size();
+  nPureOut = stack.size();
 
   for (const auto inputID : iomapping.inputs) {
-    const auto isIn = true;
     const auto isOut = (inout.find(inputID) != inout.end());
-    // Call the visitor.
-    if (!visitor(builder, isIn, isOut, inputID)) {
-      goto ABORTED;
-    }
+    UTOPIA_ON_BACKWARD_DFS_POP(builder, true, isOut, inputID);
   } // for input
 
   while (!stack.empty()) {
     auto &[i, j] = stack.top();
-    const auto &cell = builder.getCell(i);
+    const auto arity = arityProvider(builder, i);
 
     bool isFinished = true;
-    for (; j < cell.arity; ++j) {
-      const auto link = builder.getLink(i, j);
+    for (; j < arity; ++j) {
+      const auto link = linkProvider(builder, i, j);
       if (!builder.isMarked(link.idx)) {
         isFinished = false;
+        UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, false, link.idx);
         stack.push({link.idx, 0});
         break;
       }
     } // for link
 
     if (isFinished) {
-      const auto isIn = false;
-      const auto isOut = stack.size() <= nOut;
-      // Call the visitor.
-      if (!visitor(builder, isIn, isOut, i)) {
-        goto ABORTED;
-      }
+      const auto isOut = (stack.size() <= nPureOut);
+      UTOPIA_ON_BACKWARD_DFS_POP(builder, false, isOut, i);
       builder.mark(i);
       stack.pop();
     }
@@ -258,44 +286,52 @@ static inline bool traverseBackward(SubnetBuilder &builder,
   return true;
 }
 
-bool SubnetViewWalker::run(const Visitor visitor,
-                           const Direction direction,
-                           const bool saveEntries) {
+bool SubnetViewWalker::runForward(const Visitor  onBackwardDfsPop,
+                                  const Visitor *onBackwardDfsPush,
+                                  const bool saveEntries) {
   SubnetBuilder &builder = const_cast<SubnetBuilder&>(view.getParent());
 
-  if (direction == FORWARD) {
-    if (entries)
-      return traverseForward(builder, *entries, visitor);
-    if (!saveEntries)
-      return traverseForward(builder, view.getInOutMapping(), visitor);
-
-    bool status{true};
-    entries = std::make_unique<Entries>();
-    entries->reserve(builder.getCellNum());
-
-    const Visitor visitorAndFiller = [this, &status, visitor](SubnetBuilder &builder,
-        const bool isIn, const bool isOut, const size_t entryID) -> bool {
-      status = status && visitor(builder, isIn, isOut, entryID);
-      entries->emplace_back(isIn, isOut, entryID);
-      return true /* traverse all entries */;
-    };
-
-    return traverseForward(builder, view.getInOutMapping(), visitorAndFiller);
+  if (entries && !onBackwardDfsPush) {
+    return traverseForward(builder, *entries, onBackwardDfsPop);
+  }
+  if (!saveEntries) {
+    return traverseForward(builder, view.getInOutMapping(),
+        arityProvider, linkProvider, onBackwardDfsPop, onBackwardDfsPush);
   }
 
-  // Traverse backward.
+  bool status{true};
+  entries = std::make_unique<Entries>();
+  entries->reserve(builder.getCellNum());
+
+  const Visitor onBackwardDfsPopEx =
+      [this, &status, onBackwardDfsPop](SubnetBuilder &builder,
+          const bool isIn, const bool isOut, const size_t entryID) -> bool {
+        status = status && onBackwardDfsPop(builder, isIn, isOut, entryID);
+        entries->emplace_back(isIn, isOut, entryID);
+        return true /* traverse all entries */;
+      };
+
+  return traverseForward(builder, view.getInOutMapping(),
+      arityProvider, linkProvider, onBackwardDfsPopEx, onBackwardDfsPush);
+}
+
+bool SubnetViewWalker::runBackward(const Visitor visitor,
+                                   const bool saveEntries) {
+  SubnetBuilder &builder = const_cast<SubnetBuilder&>(view.getParent());
+
   if (!entries) {
     entries = std::make_unique<Entries>();
     entries->reserve(builder.getCellNum());
 
-    const Visitor filler = [this](SubnetBuilder &,
+    const Visitor entrySaver = [this](SubnetBuilder &,
         const bool isIn, const bool isOut, const size_t entryID) -> bool {
       entries->emplace_back(isIn, isOut, entryID);
       return true /* traverse all entries */;
     };
 
     // Do not return: fill the entries.
-    traverseForward(builder, view.getInOutMapping(), filler);
+    traverseForward(builder, view.getInOutMapping(),
+        arityProvider, linkProvider, entrySaver, nullptr);
   }
 
   return traverseBackward(builder, *entries, visitor);

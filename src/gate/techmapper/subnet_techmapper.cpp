@@ -80,22 +80,19 @@ SubnetTechMapper::SubnetTechMapper(const std::string &name,
                    defaultCostAggregator,
                    defaultCostPropagator) {}
 
-static optimizer::SubnetBuilderPtr makeMappedSubnet(
-    const SubnetSpace &space, const optimizer::SubnetBuilderPtr oldBuilder) {
-  // Maps old entry indices to matches.
-  const size_t oldSize = oldBuilder->getMaxIdx() + 1;
-  std::vector<const SubnetTechMapper::Match*> matches(oldSize);
+/// Maps a entry ID to the best match (null stands for no match).
+using MatchSelection = std::vector<const SubnetTechMapper::Match*>;
 
+static void selectBestMatches(const SubnetSpace &space,
+                              const optimizer::SubnetBuilderPtr oldBuilder,
+                              MatchSelection &matches) {
   // Traverse the subnet in reverse order starting from the outputs.
   std::queue<size_t> queue;
   for (auto it = --oldBuilder->end(); it != oldBuilder->begin(); --it) {
     const auto entryID = *it;
     const auto &oldCell = oldBuilder->getCell(entryID);
 
-    if (!oldCell.isOut()) {
-      break;
-    }
-
+    if (!oldCell.isOut()) break;
     queue.push(entryID);
   } // for output
 
@@ -104,7 +101,6 @@ static optimizer::SubnetBuilderPtr makeMappedSubnet(
     queue.pop();
 
     matches[entryID] = &space[entryID]->getBest().solution;
-    assert(matches[entryID]);
 
     for (const auto &oldLink : matches[entryID]->links) {
       if (!matches[oldLink.idx]) {
@@ -112,6 +108,16 @@ static optimizer::SubnetBuilderPtr makeMappedSubnet(
       }
     }
   } // backward BFS
+}
+
+static optimizer::SubnetBuilderPtr makeMappedSubnet(
+    const SubnetSpace &space, const optimizer::SubnetBuilderPtr oldBuilder) {
+  // Maps old entry indices to matches.
+  const size_t oldSize = oldBuilder->getMaxIdx() + 1;
+  MatchSelection matches(oldSize);
+
+  // Find best coverage.
+  selectBestMatches(space, oldBuilder, matches);
 
   auto newBuilder = std::make_shared<model::SubnetBuilder>();
 

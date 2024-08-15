@@ -115,18 +115,33 @@ private:
 //===----------------------------------------------------------------------===//
 
 /**
- * @brief DFS subnet-view walker.
+ * @brief Traverses a subnet view in topological order.
  */
 class SubnetViewWalker final {
 public:
   /// Direction of traversal.
-  enum Direction { FORWARD, BACKWARD };
+  enum Direction {
+    /// Direct topological order: from inputs to outputs.
+    FORWARD,
+    /// Revese topological order: from outputs to inputs.
+    BACKWARD
+  };
 
-  /// Returns false to exit traveral.
-  using Visitor = std::function<bool(SubnetBuilder &builder,
-                                     const bool isIn,
-                                     const bool isOut,
-                                     const size_t entryID)>;
+  using ArityProvider =
+      std::function<size_t(
+                        SubnetBuilder &builder,
+                        const size_t entryID)>;
+  using LinkProvider =
+      std::function<Subnet::Link(
+                        SubnetBuilder &builder,
+                        const size_t entryID,
+                        const size_t linkIdx)>;
+  using Visitor =
+      std::function<bool(
+                        SubnetBuilder &builder,
+                        const bool isIn,
+                        const bool isOut,
+                        const size_t entryID)>;
 
   /// Traversal entry.
   struct Entry final {
@@ -141,17 +156,54 @@ public:
   /// Ordered sequence of entries.
   using Entries = std::vector<Entry>;
 
-  /// Constructs a subnet-view walker.
-  SubnetViewWalker(const SubnetView &view): view(view) {}
+  explicit SubnetViewWalker(const SubnetView &view);
 
-  /// Visits the cells of the subnet view in topological order.
+  SubnetViewWalker(const SubnetView &view,
+                   const ArityProvider arityProvider,
+                   const LinkProvider linkProvider);
+
+  /**
+   * @brief Visits the subnet cells in direct topological order.
+   *
+   * Implementation is based on the backward depth-first search (BDFS).
+   * The main visitor is called when a cell is popped from the BDFS stack.
+   *
+   * @param onBackwardDfsPop  Called on each pop from the BDFS stack.
+   *                          All inputs and outputs are visited (unless abort).
+   * @param onBackwardDfsPush Called on each push to the BDFS stack.
+   *                          All outputs are visited; inputs are ignored.
+   * @param saveEntries       Indicates whether to save entries to optimize
+   *                          next runs (if required).
+   *
+   * @return false iff traversal is aborted.
+   */
+  bool runForward(const Visitor  onBackwardDfsPop,
+                  const Visitor *onBackwardDfsPush,
+                  const bool saveEntries = false);
+
+  /// Visits the subnet cells in direct topological order.
+  bool runForward(const Visitor visitor, const bool saveEntries = false) {
+    return runForward(visitor, nullptr, saveEntries);
+  }
+
+  /// Visits the subnet cells in reverse topological order.
+  bool runBackward(const Visitor visitor, const bool saveEntries = false);
+
+  /// Visits the subnet cells in direct or reverse topological order.
   bool run(const Visitor visitor,
            const Direction direction = FORWARD,
-           const bool saveEntries = false);
+           const bool saveEntries = false) {
+    return (direction == FORWARD)
+        ? runForward(visitor, saveEntries)
+        : runBackward(visitor, saveEntries);
+  }
 
 private:
-  /// Subnet view being traversed.
   const SubnetView &view;
+
+  const ArityProvider arityProvider;
+  const LinkProvider linkProvider;
+
   /// Ordered sequence of entries to fasten multiple traversals (if required).
   std::unique_ptr<Entries> entries{nullptr};
 };

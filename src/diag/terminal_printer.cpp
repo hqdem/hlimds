@@ -106,8 +106,9 @@ void TerminalPrinter::onEntry(
     }
   }
 
-  const auto lvl = entry.lvl;
   printIndent(depth);
+
+  const auto lvl = entry.lvl;
   fmt::print(fg(getSeverityColor(lvl)), "{}: ", getSeverityString(lvl));
   fmt::print("{}\n", entry.msg);
 }

@@ -31,24 +31,13 @@ public:
   using Cut = optimizer::CutExtractor::Cut;
   using TruthTable = eda::utils::TruthTable;
 
-  /**
-   * @brief Constructs a subnet view corresponding to the whole subnet.
-   */
+  /// Constructs a subnet view corresponding to the whole subnet.
   SubnetView(const SubnetBuilder &parent);
-
-  /**
-   * @brief Constructs a subnet view corresponding to the maximum cone.
-   */
+  /// Constructs a subnet view corresponding to the maximum cone.
   SubnetView(const SubnetBuilder &parent, const size_t rootID);
-
-  /**
-   * @brief Constructs a subnet view corresponding to the given cut.
-   */
+  /// Constructs a subnet view corresponding to the given cut.
   SubnetView(const SubnetBuilder &parent, const Cut &cut);
-
-  /**
-   * @brief Constructs a subnet view corresponding to the given IO mapping.
-   */
+  /// Constructs a subnet view corresponding to the given IO mapping.
   SubnetView(const SubnetBuilder &parent, const InOutMapping &iomapping);
 
   const InOutMapping &getInOutMapping() const {
@@ -126,27 +115,45 @@ private:
 //===----------------------------------------------------------------------===//
 
 /**
- * @brief DFS subnet view walker.
+ * @brief DFS subnet-view walker.
  */
 class SubnetViewWalker final {
 public:
-  /**
-   * @brief Returns false to exit traveral.
-   */
+  /// Direction of traversal.
+  enum Direction { FORWARD, BACKWARD };
+
+  /// Returns false to exit traveral.
   using Visitor = std::function<bool(SubnetBuilder &builder,
                                      const bool isIn,
                                      const bool isOut,
                                      const size_t entryID)>;
 
+  /// Traversal entry.
+  struct Entry final {
+    Entry(const bool isIn, const bool isOut, const uint32_t entryID):
+        isIn(isIn), isOut(isOut), entryID(entryID) {}
+
+    bool isIn;
+    bool isOut;
+    uint32_t entryID;
+  };
+
+  /// Ordered sequence of entries.
+  using Entries = std::vector<Entry>;
+
+  /// Constructs a subnet-view walker.
   SubnetViewWalker(const SubnetView &view): view(view) {}
 
-  /**
-   * @brief Visits the cells of the subnet view in topological order.
-   */
-  void run(const Visitor visitor) const;
+  /// Visits the cells of the subnet view in topological order.
+  bool run(const Visitor visitor,
+           const Direction direction = FORWARD,
+           const bool saveEntries = false);
 
 private:
+  /// Subnet view being traversed.
   const SubnetView &view;
+  /// Ordered sequence of entries to fasten multiple traversals (if required).
+  std::unique_ptr<Entries> entries{nullptr};
 };
 
 } // namespace eda::gate::model

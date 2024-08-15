@@ -295,7 +295,7 @@ static bool isConst0And(const TTn &tt1, const TTn &tt2) {
 
 static size_t countNodes(const SubnetView &view) {
   size_t counter = 0;
-  const SubnetViewWalker walker(view);
+  SubnetViewWalker walker(view);
 
   walker.run([&counter](SubnetBuilder &builder,
                         const bool isIn,
@@ -1146,7 +1146,7 @@ static void simulateCone(SubnetBuilder &builder,
   if (arity <= 6) {
     view.evaluateTruthTable();
   } else {
-    const SubnetViewWalker walker(view);
+    SubnetViewWalker walker(view);
     size_t nIn = 0;
 
     walker.run([&cellTables, &nIn, arity](SubnetBuilder &builder,
@@ -1180,8 +1180,7 @@ static TruthTables evaluateRoots(SubnetBuilder &builder,
                                  CellTables &cellTables) {
 
   TruthTables result(view.getOutNum());
-
-  const SubnetViewWalker walker(view);
+  SubnetViewWalker walker(view);
 
   if (arity <= 6) {
     walker.run([arity](SubnetBuilder &builder,
@@ -1375,7 +1374,7 @@ static void reserveOuters(const SubnetView &view,
                           CellTables &cellTables,
                           size_t arity) {
 
-  const SubnetViewWalker walker(view);
+  SubnetViewWalker walker(view);
 
   walker.run([&cellTables, arity](SubnetBuilder &parent,
                                   const bool isIn,

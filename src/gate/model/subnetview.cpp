@@ -43,7 +43,7 @@ SubnetView::SubnetView(const SubnetBuilder &parent):
 SubnetView::SubnetView(const SubnetBuilder &parent, const size_t rootID):
     parent(parent) {
   // Find all reachable inputs for the given root cell.
-  const SubnetViewWalker walker(*this);
+  SubnetViewWalker walker(*this);
 
   iomapping.inputs.reserve(parent.getInNum());
   iomapping.outputs.push_back(rootID);
@@ -85,7 +85,7 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
     const std::vector<size_t> &entryIDs) const {
   std::vector<TruthTable> result(entryIDs.size());
 
-  const SubnetViewWalker walker(*this);
+  SubnetViewWalker walker(*this);
   const size_t arity = getInNum();
 
   size_t nIn = 0;
@@ -135,7 +135,7 @@ SubnetObject &SubnetView::getSubnet() {
     return subnet;
   }
 
-  const SubnetViewWalker walker(*this);
+  SubnetViewWalker walker(*this);
   auto &subnetBuilder = subnet.builder();
 
   walker.run([&subnetBuilder](SubnetBuilder &parent,
@@ -175,19 +175,19 @@ SubnetObject &SubnetView::getSubnet() {
 // Subnet View Walker
 //===----------------------------------------------------------------------===//
 
-void SubnetViewWalker::run(const Visitor visitor) const {
-  SubnetBuilder &builder = const_cast<SubnetBuilder&>(view.getParent());
-
+static bool traverseForward(SubnetBuilder &builder,
+                            const InOutMapping &iomapping,
+                            const SubnetViewWalker::Visitor visitor) {
   builder.startSession();
 
   std::unordered_set<size_t> inout;
 
-  for (const auto inputID : view.getInputs()) {
+  for (const auto inputID : iomapping.inputs) {
     builder.mark(inputID);
   } // for input
 
   std::stack<std::pair<size_t, size_t>> stack;
-  for (const auto outputID : view.getOutputs()) {
+  for (const auto outputID : iomapping.outputs) {
     if (!builder.isMarked(outputID)) {
       stack.push({outputID, 0});
     } else {
@@ -197,11 +197,12 @@ void SubnetViewWalker::run(const Visitor visitor) const {
 
   const auto nOut = stack.size();
 
-  for (const auto inputID : view.getInputs()) {
+  for (const auto inputID : iomapping.inputs) {
     const auto isIn = true;
     const auto isOut = (inout.find(inputID) != inout.end());
+    // Call the visitor.
     if (!visitor(builder, isIn, isOut, inputID)) {
-      goto FINISH_TRAVERSAL;
+      goto ABORTED;
     }
   } // for input
 
@@ -222,16 +223,82 @@ void SubnetViewWalker::run(const Visitor visitor) const {
     if (isFinished) {
       const auto isIn = false;
       const auto isOut = stack.size() <= nOut;
+      // Call the visitor.
       if (!visitor(builder, isIn, isOut, i)) {
-        goto FINISH_TRAVERSAL;
+        goto ABORTED;
       }
       builder.mark(i);
       stack.pop();
     }
   } // while stack
 
-FINISH_TRAVERSAL:
   builder.endSession();
+  return true;
+
+ABORTED:
+  builder.endSession();
+  return false;
+}
+
+static inline bool traverseForward(SubnetBuilder &builder,
+                                   const SubnetViewWalker::Entries &entries,
+                                   const SubnetViewWalker::Visitor visitor) {
+  for (auto i = entries.begin(); i != entries.end(); ++i) {
+    if (!visitor(builder, i->isIn, i->isOut, i->entryID)) return false;
+  }
+  return true;
+}
+
+static inline bool traverseBackward(SubnetBuilder &builder,
+                                    const SubnetViewWalker::Entries &entries,
+                                    const SubnetViewWalker::Visitor visitor) {
+  for (auto i = entries.rbegin(); i != entries.rend(); ++i) {
+    if (!visitor(builder, i->isIn, i->isOut, i->entryID)) return false;
+  }
+  return true;
+}
+
+bool SubnetViewWalker::run(const Visitor visitor,
+                           const Direction direction,
+                           const bool saveEntries) {
+  SubnetBuilder &builder = const_cast<SubnetBuilder&>(view.getParent());
+
+  if (direction == FORWARD) {
+    if (entries)
+      return traverseForward(builder, *entries, visitor);
+    if (!saveEntries)
+      return traverseForward(builder, view.getInOutMapping(), visitor);
+
+    bool status{true};
+    entries = std::make_unique<Entries>();
+    entries->reserve(builder.getCellNum());
+
+    const Visitor visitorAndFiller = [this, &status, visitor](SubnetBuilder &builder,
+        const bool isIn, const bool isOut, const size_t entryID) -> bool {
+      status = status && visitor(builder, isIn, isOut, entryID);
+      entries->emplace_back(isIn, isOut, entryID);
+      return true /* traverse all entries */;
+    };
+
+    return traverseForward(builder, view.getInOutMapping(), visitorAndFiller);
+  }
+
+  // Traverse backward.
+  if (!entries) {
+    entries = std::make_unique<Entries>();
+    entries->reserve(builder.getCellNum());
+
+    const Visitor filler = [this](SubnetBuilder &,
+        const bool isIn, const bool isOut, const size_t entryID) -> bool {
+      entries->emplace_back(isIn, isOut, entryID);
+      return true /* traverse all entries */;
+    };
+
+    // Do not return: fill the entries.
+    traverseForward(builder, view.getInOutMapping(), filler);
+  }
+
+  return traverseBackward(builder, *entries, visitor);
 }
 
 } // namespace eda::gate::model

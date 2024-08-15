@@ -63,7 +63,7 @@ public:
   virtual ~Logger() {
     if (locallyCreated && diagnostics) {
       delete diagnostics;
-      diagnostics = nullptr;
+      diagnostics = nullptr /* paranoid */;
     }
   }
 

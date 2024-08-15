@@ -1,11 +1,19 @@
 // -*- C++ -*-
 
-/** The file contains names of internal gate symbols ready for
- *  macroprocessing. Allows multiple inclusions.
- */
+//===----------------------------------------------------------------------===//
+//
+// Part of the Utopia EDA Project, under the Apache License v2.0
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
+//
+//===----------------------------------------------------------------------===//
 
+/**
+ * Applies UTOPIA_FOREACH_GATE macro to each standard gate symbol (see below).
+ * Allows multiple inclusions.
+ */
 #ifndef UTOPIA_FOREACH_GATE
-  #define UTOPIA_FOREACH_GATE(s)
+  #define UTOPIA_FOREACH_GATE(S)
 #endif
 
 UTOPIA_FOREACH_GATE(IN)

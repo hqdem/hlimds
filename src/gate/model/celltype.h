@@ -752,7 +752,7 @@ inline CellTypeID makeHardType(CellSymbol symbol,
 constexpr uint64_t getCellTypeID(CellSymbol symbol) {
   switch(symbol) {
 #include "celltype_gates.inc"
-  default:           return OBJ_NULL_ID;
+  default: return OBJ_NULL_ID;
   }
 }
 
@@ -761,7 +761,7 @@ constexpr uint64_t getCellTypeID(CellSymbol symbol) {
 constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
   switch(symbol) {
 #include "celltype_gates.inc"
-  default:           return -1u;
+  default: return -1u;
   }
 }
 

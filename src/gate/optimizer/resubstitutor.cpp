@@ -293,6 +293,24 @@ static bool isConst0And(const TTn &tt1, const TTn &tt2) {
   return kitty::is_const0(tt1 & tt2);
 }
 
+static size_t countNodes(const SubnetView &view) {
+  size_t counter = 0;
+  const SubnetViewWalker walker(view);
+
+  walker.run([&counter](SubnetBuilder &builder,
+                        const bool isIn,
+                        const bool isOut,
+                        const size_t i) -> bool {
+      if (isIn) {
+        return true;
+      }
+      counter++;
+      return true;
+    });
+
+  return counter;
+}
+
 static void buildFromDivisor(const SubnetBuilder &builder,
                              SubnetBuilder &rhs,
                              size_t idx,
@@ -364,12 +382,12 @@ static void markMffcRecursively(SubnetBuilder &builder, size_t idx) {
 
 static size_t markMffc(SubnetBuilder &builder,
                        const SubnetView &view,
-                       const IdxMap &mffc) {
+                       const std::vector<size_t> &mffc) {
 
   builder.startSession();
 
-  for (size_t i = 0; i < mffc.size() - 1; ++i) {
-    builder.mark(mffc.at(i));
+  for (const auto &in : mffc) {
+    builder.mark(in);
   }
   markMffcRecursively(builder, view.getOut(0));
 
@@ -806,7 +824,7 @@ static bool getInnerDivisors(SubnetBuilder &builder,
                              Divisors &divs,
                              const TruthTable &onset,
                              const TruthTable &offset,
-                             const IdxMap &mffcMap) {
+                             const std::vector<size_t> &mffc) {
 
   builder.startSession();
 
@@ -825,9 +843,9 @@ static bool getInnerDivisors(SubnetBuilder &builder,
     }
   }
   // Get divisors from the inputs of the mffc to cut.
-  for (size_t i = 0; i < mffcMap.size() - 1; ++i) {
+  for (size_t i = 0; i < mffc.size(); ++i) {
     const auto res = getInnerDivisors(
-        builder, divs, mffcMap.at(i), arity, onset, offset);
+        builder, divs, mffc[i], arity, onset, offset);
     
     if (res.first) {
       builder.endSession();
@@ -850,7 +868,7 @@ static bool getDivisors(SubnetBuilder &builder,
                         const TruthTable &onset,
                         const TruthTable &offset,
                         CellTables &tables,
-                        const IdxMap &mffc) {
+                        const std::vector<size_t> &mffc) {
 
   const size_t id = markMffc(builder, view, mffc);
   if (getInnerDivisors(builder, iter, view, divs, onset, offset, mffc)) {
@@ -1051,9 +1069,9 @@ inline bool makeZeroResubstitution(SubnetBuilder &builder,
                                    const TruthTable &onset,
                                    const TruthTable &offset,
                                    CellTables &tables,
-                                   const IdxMap &mffcMap) {
+                                   const std::vector<size_t> &mffc) {
 
-  return getDivisors(builder, iter, view, divs, onset, offset, tables, mffcMap);
+  return getDivisors(builder, iter, view, divs, onset, offset, tables, mffc);
 }
 
 static bool makeOneResubstitution(SubnetBuilder &builder,
@@ -1625,9 +1643,9 @@ void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
     }
 
     cellTables.clear();
-    const auto view = getReconvergenceCut(*builderPtr, pivot, cutSize);
+    const auto view = getReconvergentCut(*builderPtr, pivot, cutSize);
 
-    // Mark TFO of reconvergence cut bypassing pivot.
+    // Mark TFO of reconvergent cut bypassing pivot.
     markCutTFO(*builderPtr, view, maxLevels);
   
     const std::vector<size_t> roots = collectRoots(*builderPtr, pivot);
@@ -1657,19 +1675,18 @@ void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
       continue;
     }
 
-    IdxMap mffcMap;
-    const auto mffc = getMffc(*builderPtr, pivot, view.getInputs(), mffcMap);
+    const auto mffc = getMffc(*builderPtr, pivot, view.getInputs());
 
     Divisors divs;
     divs.reserveUnates(maxDivisors);
     divs.reservePairs(maxDivisorsPairs);
 
     if (makeZeroResubstitution(*builderPtr, iter, view, divs, onset,
-                               offset, cellTables, mffcMap)) {
+                               offset, cellTables, mffc.getInputs())) {
       continue;
     }
 
-    const size_t maxGain = Subnet::get(mffc).size() - mffcMap.size();
+    const size_t maxGain = countNodes(mffc);
     bool skip = (maxGain == 1) && !zero;
     if (skip || makeOneResubstitution(*builderPtr, iter, view,
                                       divs, onset, offset, saveDepth)) {

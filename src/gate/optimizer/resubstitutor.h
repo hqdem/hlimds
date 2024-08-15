@@ -11,7 +11,7 @@
 #include "gate/model/subnetview.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/mffc.h"
-#include "gate/optimizer/reconvergence_cut.h"
+#include "gate/optimizer/reconvergence.h"
 #include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/subnet_transformer.h"
 #include "util/truth_table.h"

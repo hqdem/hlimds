@@ -13,17 +13,18 @@
 #include "gate/optimizer/design_transformer.h"
 #include "gate/optimizer/lazy_refactorer.h"
 #include "gate/optimizer/mffc.h"
-#include "gate/optimizer/reconvergence_cut.h"
+#include "gate/optimizer/reconvergence.h"
 #include "gate/optimizer/refactorer.h"
 #include "gate/optimizer/resubstitutor.h"
 #include "gate/optimizer/rewriter.h"
 #include "gate/optimizer/scenario.h"
 #include "gate/optimizer/synthesis/abc_npn4.h"
+#include "gate/optimizer/synthesis/akers.h"
 #include "gate/optimizer/synthesis/associative_reordering.h"
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/aigmapper.h"
-#include "gate/premapper/migmapper.h"
+#include "gate/premapper/premapper.h"
 
 #include <fmt/format.h>
 
@@ -51,7 +52,11 @@ inline SubnetMapper aig() {
 
 /// Mapping to the MIG representation.
 inline SubnetMapper mig() {
-  return std::make_shared<premapper::MigMapper>("mig");
+  const uint16_t k = 6;
+  static synthesis::AkersSynthesizer akers;
+  static Resynthesizer resynthesizer(akers);
+  const premapper::Basis base = premapper::Basis::MIG;
+  return std::make_shared<premapper::Premapper>("mig", base, resynthesizer, k);
 }
 
 //===----------------------------------------------------------------------===//
@@ -112,7 +117,7 @@ inline SubnetPass rfarea(const std::string &name,
   static Resynthesizer resynthesizer(mmFactor);
   static Refactorer::WindowConstructor windowConstructor =
   [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
-    return getReconvergenceCut(builder, root, cutSize);
+    return getReconvergentCut(builder, root, cutSize);
   };
   return std::make_shared<Refactorer>(name,
                                       resynthesizer,
@@ -150,7 +155,7 @@ inline SubnetPass rfd() {
   static Resynthesizer resynthesizer(mm);
   static Refactorer::WindowConstructor windowConstructor =
   [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
-    return getReconvergenceCut(builder, root, cutSize);
+    return getReconvergentCut(builder, root, cutSize);
   };
   static Refactorer::ReplacePredicate replacePredicate =
     [](const SubnetEffect &effect) {
@@ -169,7 +174,7 @@ inline SubnetPass rfp() {
   static Resynthesizer resynthesizer(mm);
   static Refactorer::WindowConstructor windowConstructor =
   [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
-    return getReconvergenceCut(builder, root, cutSize);
+    return getReconvergentCut(builder, root, cutSize);
   };
   static const float stage{0.1f};
   static Refactorer::ReplacePredicate replacePredicate =

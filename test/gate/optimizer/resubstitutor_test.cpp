@@ -24,27 +24,11 @@ using Subnet        = eda::gate::model::Subnet;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 using SubnetID      = eda::gate::model::SubnetID;
 
-void checkResubstitutionEquivalence(SubnetID lhs, SubnetID rhs) {
-  SatChecker &checker = SatChecker::get();
-  const auto &subnet = Subnet::get(lhs);
-  const auto &opt = Subnet::get(rhs);
-
-  std::unordered_map<size_t, size_t> map;
-  for (size_t i = 0; i < subnet.getInNum(); ++i) {
-    map[i] = i;
-  }
-
-  for (size_t j = subnet.getOutNum(); j > 0; --j) {
-    map[subnet.size() - j] = opt.size() - j;
-  }
-
-  EXPECT_TRUE(checker.areEquivalent(lhs, rhs, map).equal());
-}
-
-void runResubstitutor(SubnetID subnetId) {
-  const auto &subnet = Subnet::get(subnetId);
+void runResubstitutor(const std::string &file) {
+  const auto subnetID = eda::gate::translator::translateGmlOpenabc(file)->make();
+  const auto &subnet = Subnet::get(subnetID);
   // Builder for optimization.
-  auto builder = std::make_shared<SubnetBuilder>(subnetId);
+  auto builder = std::make_shared<SubnetBuilder>(subnetID);
   // Area optimization.
   Resubstitutor resub("rs", 8, 3, false, false);
   resub.transform(builder);
@@ -57,14 +41,8 @@ void runResubstitutor(SubnetID subnetId) {
   EXPECT_TRUE(optimized.size() <= subnet.size());
 
   // Equivalence checking.
-  checkResubstitutionEquivalence(subnetId, optimizedId);
-}
-
-void runResubstitutor(std::string file) {
-  // Parsing.
-  const auto builder = eda::gate::translator::translateGmlOpenabc(file);
-  // Optimize.
-  runResubstitutor(builder->make());
+  SatChecker &checker = SatChecker::get();
+  EXPECT_TRUE(checker.areEquivalent(subnetID, optimizedId).equal());
 }
 
 TEST(ResubstitutorTest, C7552) {

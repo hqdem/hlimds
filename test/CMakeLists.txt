@@ -60,12 +60,13 @@ add_executable(${TEST_TARGET}
   gate/optimizer/cone_builder_test.cpp
   gate/optimizer/cut_extractor_test.cpp
   gate/optimizer/getdbstat_test.cpp
+  gate/optimizer/mffc_test.cpp
   gate/optimizer/npndb_test.cpp
   gate/optimizer/npndbserial_test.cpp
   gate/optimizer/npndbstat_test.cpp
   gate/optimizer/pass_test.cpp
   gate/optimizer/pipeliner_test.cpp
-  gate/optimizer/reconvergence_cut_test.cpp
+  gate/optimizer/reconvergence_test.cpp
   gate/optimizer/refactor_test.cpp
   gate/optimizer/resubstitutor_test.cpp
   gate/optimizer/resynthesizer_test.cpp
@@ -83,7 +84,7 @@ add_executable(${TEST_TARGET}
   gate/optimizer/synthesis/reed_muller_test.cpp
   gate/optimizer/synthesis/zhegalkin_test.cpp
   gate/premapper/aigmapper_test.cpp
-  gate/premapper/migmapper_test.cpp
+  gate/premapper/premapper_test.cpp
   gate/simulator/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/synthesizer/adder_test.cpp

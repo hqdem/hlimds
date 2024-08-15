@@ -6,259 +6,137 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <gate/premapper/premapper.h>
+#include "gate/premapper/premapper.h"
 
 namespace eda::gate::premapper {
 
-using Link          = Premapper::Link;
-using LinkList      = Premapper::LinkList;
-using SubnetBuilder = Premapper::SubnetBuilder;
+using Link             = Premapper::Link;
+using LinkList         = model::Subnet::LinkList;
+using SubnetBuilder    = Premapper::SubnetBuilder;
+using SubnetBuilderPtr = Premapper::SubnetBuilderPtr;
 
-optimizer::SubnetBuilderPtr Premapper::make(const SubnetID subnetID) const {
-  auto builder = std::make_shared<SubnetBuilder>();
+SubnetBuilderPtr Premapper::map(const SubnetBuilderPtr &builder) const {
+  SubnetBuilder *builderPtr = builder.get();
+  for (SafePasser iter = --builderPtr->end();
+       !builderPtr->getCell(*iter).isIn(); --iter) {
 
-  CellIdMap oldToNew;
-  const auto &oldSubnet = Subnet::get(subnetID);
-  const auto &entries = oldSubnet.getEntries();
+    const size_t entryID = *iter;
+    const auto &cell = builderPtr->getCell(entryID);
+    assert(cell.arity <= Cell::InPlaceLinks && "Too great cell arity");
 
-  for (uint32_t i = 0; i < oldSubnet.size(); ++i) {
-    const auto &cell = entries[i].cell;
-    const auto symbol = cell.getSymbol();
+    bool skip = cell.isZero() || cell.isOne() || cell.isBuf() || cell.isOut();
+    switch (basis) {
+      case XAG: skip |= cell.isXor(); [[fallthrough]];
+      case AIG: skip |= cell.isAnd(); break;
+      case XMG: skip |= cell.isXor(); [[fallthrough]];
+      case MIG: skip |= cell.isMaj(); break;
+      default: assert(false && "Invalid basis for the premapper!");
+    }
+    if (skip) continue;
 
-    size_t n0 = 0;
-    size_t n1 = 0;
+    const auto cutView = optimizer::getReconvergentCut(*builderPtr, entryID, k);
+    const auto mffc = optimizer::getMffc(*builderPtr, cutView);
+    const InOutMapping &iomapping = mffc.getInOutMapping();
+    if (iomapping.inputs == iomapping.outputs) {
+      if (cell.arity > k) {
+        decomposeCell(builder, iter, entryID);
+      } else { // Case when TFI of the entry are constants.
+        constantCase(builder, iter, entryID);
+      }
+      continue;
+    }
 
-    const LinkList links = getNewLinks(oldToNew, i, oldSubnet,
-                                       n0, n1, *builder);
+    SubnetObject rhs = resynthesizer.resynthesize(mffc, arity);
+    assert(!rhs.isNull() && "Subnet wasn't synthesized!");
 
-    bool inv = false;
-    Link link = mapCell(symbol, links, inv, n0, n1, *builder);
-    link.inv = link.inv != inv;
-    oldToNew[i] = link;
-
-    i += cell.more;
+    iter.replace(rhs, iomapping);
   }
-
   return builder;
 }
 
-Link Premapper::mapCell(CellSymbol symbol, const LinkList &links, bool &inv,
-                        size_t n0, size_t n1, SubnetBuilder &builder) const {
+static Link addMaj5(SubnetBuilder &builder, const LinkList &links) {
+  // <xyztu> = < <xyz> t <<xyu>uz> >
+  LinkList tmp(links.begin(), links.begin() + 3);
+  const Link xyzLink = builder.addCell(model::CellSymbol::MAJ, tmp);
 
-  switch (symbol) {
-    case CellSymbol::IN   : return mapIn (                    builder);
-    case CellSymbol::OUT  : return mapOut(links,              builder);
-    case CellSymbol::ZERO : return mapVal(       false,       builder);
-    case CellSymbol::ONE  : return mapVal(       true,        builder);
-    case CellSymbol::BUF  : return mapBuf(links,              builder);
-    case CellSymbol::AND  : return mapAnd(links, inv, n0, n1, builder);
-    case CellSymbol::OR   : return mapOr (links, inv, n0, n1, builder);
-    case CellSymbol::XOR  : return mapXor(links, inv, n0, n1, builder);
-    case CellSymbol::MAJ  : return mapMaj(links, inv, n0, n1, builder);
-    default: assert(false && "Unknown gate");
-  }
+  tmp[0] = links[0];
+  tmp[1] = links[1];
+  tmp[2] = links[4];
+  const Link xyuLink = builder.addCell(model::CellSymbol::MAJ, tmp);
+  // <<xyu>uz>
+  tmp[0] = links[2];
+  tmp[1] = xyuLink;
+  tmp[2] = links[4];
+  const Link muzLink = builder.addCell(model::CellSymbol::MAJ, tmp);
+
+  tmp[0] = xyzLink;
+  tmp[1] = links[3];
+  tmp[2] = muzLink;
+  return builder.addCell(model::CellSymbol::MAJ, tmp);
 }
 
-LinkList Premapper::getNewLinks(const CellIdMap &oldToNew, uint32_t idx,
-                                const Subnet &oldSubnet,
-                                size_t &n0, size_t &n1,
-                                SubnetBuilder &builder) const {
-
-  LinkList links = oldSubnet.getLinks(idx);
-  for (auto &link : links) {
-    const uint32_t oldId = link.idx;
-
-    const auto search = oldToNew.find(oldId);
-    assert(search != oldToNew.end() && "Old cell ID not found");
-
-    const Link cellLink = search->second;
-    link.idx = cellLink.idx;
-    link.inv = cellLink.inv != link.inv;
-
-    const auto &cell = builder.getCell(link.idx);
-
-    bool isZero = (cell.isZero() && !link.inv) || (cell.isOne() &&  link.inv);
-    bool isOne  = (cell.isZero() &&  link.inv) || (cell.isOne() && !link.inv);
-
-    if (isZero) n0++;
-    if (isOne ) n1++;
+static Link decomposeMaj(SubnetBuilder &builder, const LinkList &links) {
+  if (links.size() == 5) {
+    return addMaj5(builder, links);
   }
-
-  return links;
+  assert(false && "Unsupported number of links in MAJ cell");
 }
 
-Link Premapper::mapIn(SubnetBuilder &builder) const {
-  return builder.addInput();
+void Premapper::decomposeCell(const SubnetBuilderPtr &builder,
+                              SafePasser &iter,
+                              const size_t entryID) const {
+
+  InOutMapping iomapping;
+  SubnetObject object;
+  SubnetBuilder &rhs{object.builder()};
+  SubnetBuilder *builderPtr = builder.get();
+
+  const auto &cell = builderPtr->getCell(entryID);
+  auto links = rhs.addInputs(cell.arity);
+  for (size_t i = 0; i < links.size(); ++i) {
+    const auto link = builderPtr->getLink(entryID, i);
+    iomapping.inputs.push_back(link.idx);
+    links[i].inv = link.inv;
+  }
+  iomapping.outputs.push_back(entryID);
+
+  Link outLink;
+  if (cell.isMaj()) {
+    outLink = decomposeMaj(rhs, links);
+  } else {
+    outLink = rhs.addCellTree(cell.getSymbol(), links, 2);
+  }
+  rhs.addOutput(outLink);
+
+  bool skipPremapping = false;
+  switch (basis) {
+    case XAG: skipPremapping |= cell.isXor(); [[fallthrough]];
+    case AIG: skipPremapping |= cell.isAnd(); break;
+    case XMG: skipPremapping |= cell.isXor(); [[fallthrough]];
+    case MIG: skipPremapping |= cell.isMaj(); break;
+    default: assert(false && "Invalid basis for the premapper!");
+  }
+  if (skipPremapping) {
+    iter.replace(object, iomapping);
+    return;
+  }
+
+  Premapper premapper("tmp", basis, resynthesizer, k);
+  const auto rhsPtr = premapper.map(std::make_shared<SubnetBuilder>(rhs));
+  iter.replace(*(rhsPtr.get()), iomapping);
 }
 
-Link Premapper::mapOut(const LinkList &links, SubnetBuilder &builder) const {
-  assert(links.size() == 1 && "Only single input is allowed in OUT cell");
-  Link link = links.front();
+void Premapper::constantCase(const SubnetBuilderPtr &builder,
+                             SafePasser &iter,
+                             const size_t entryID) const {
 
-  if (link.inv) {
-    link = builder.addCell(CellSymbol::BUF, links);
-  }
+  SubnetBuilder *builderPtr = builder.get();
 
-  return builder.addOutput(link);
-}
-
-Link Premapper::mapVal(bool val, SubnetBuilder &builder) const {
-  if (val) {
-    return builder.addCell(CellSymbol::ONE);
-  }
-  return builder.addCell(CellSymbol::ZERO);
-}
-
-Link Premapper::mapBuf(const LinkList &links, SubnetBuilder &builder) const {
-  assert(links.size() == 1 && "Only single input is allowed in BUF cell");
-  return builder.addCell(CellSymbol::BUF, links);
-}
-
-Link Premapper::mapAnd(const LinkList &links, bool &inv, size_t n0, size_t n1,
-                       SubnetBuilder &builder) const {
-
-  const size_t linksSize = links.size();
-  // Consider simple cases.
-  if (n0 > 0) {
-    return mapVal(false, builder);
-  }
-  if (n1 == linksSize) {
-    return mapVal(true, builder);
-  }
-  if (linksSize == 1) {
-    return mapBuf(links, builder);
-  }
-  // Erase links from constant cells.
-  LinkList linkList(links);
-  size_t i = linksSize;
-  do {
-    --i;
-    const auto &cell = builder.getCell(linkList[i].idx);
-    if (cell.isOne() || cell.isZero()) {
-      linkList.erase(linkList.begin() + i);
-    }
-  } while (i);
-
-  // Consider simple cases for one and two inputs only.
-  if (linkList.size() == 1) {
-    return mapBuf(linkList, builder);
-  }
-  if (linkList[0].idx == linkList[1].idx) {
-    if ((linkList.size() == 2) && (linkList[0].inv == linkList[1].inv)) {
-      return mapBuf(LinkList{linkList[0]}, builder);
-    }
-    if (linkList[0].inv != linkList[1].inv) {
-      return mapVal(false, builder);
-    }
-    linkList.erase(linkList.begin() + 1);
-  }
-
-  return mapAnd(linkList, inv, builder);
-}
-
-Link Premapper::mapOr(const LinkList &links, bool &inv, size_t n0, size_t n1,
-                      SubnetBuilder &builder) const {
-
-  const size_t linksSize = links.size();
-  // Consider simple cases.
-  if (n1 > 0) {
-    return mapVal(true, builder);
-  }
-  if (n0 == linksSize) {
-    return mapVal(false, builder);
-  }
-  if (linksSize == 1) {
-    return mapBuf(links, builder);
-  }
-  // Erase links from constants.
-  LinkList linkList(links);
-  size_t i = linksSize;
-  do {
-    --i;
-    const auto &cell = builder.getCell(linkList[i].idx);
-    if (cell.isOne() || cell.isZero()) {
-      linkList.erase(linkList.begin() + i);
-    }
-  } while (i);
-
-  // Consider simple cases for one and two inputs only.
-  if (linkList.size() == 1) {
-    return mapBuf(linkList, builder);
-  }
-  if (linkList[0].idx == linkList[1].idx) {
-    if ((linkList.size() == 2) && (linkList[0].inv == linkList[1].inv)) {
-      return mapBuf(LinkList{linkList[0]}, builder);
-    }
-    if (linkList[0].inv != linkList[1].inv) {
-      return mapVal(true, builder);
-    }
-    linkList.erase(linkList.begin() + 1);
-  }
-
-  return mapOr(linkList, inv, builder);
-}
-
-Link Premapper::mapXor(const LinkList &links, bool &inv, size_t n0, size_t n1,
-                       SubnetBuilder &builder) const {
-
-  const size_t linksSize = links.size();
-  // Consider simple cases.
-  if (n0 == linksSize) {
-    return mapVal(false, builder);
-  }
-  if (n1 + n0 == linksSize) {
-    return mapVal(n1 & 1u, builder);
-  }
-  if (linksSize == 1) {
-    return mapBuf(links, builder);
-  }
-  // Erase links from constant cells.
-  LinkList linkList(links);
-  size_t i = linksSize;
-  do {
-    --i;
-
-    const auto &link = linkList[i];
-    const auto &cell = builder.getCell(link.idx);
-
-    if (cell.isOne() || cell.isZero()) {
-      bool one = (cell.isOne() && !link.inv) || (cell.isZero() && link.inv);
-      inv = inv != one;
-      linkList.erase(linkList.begin() + i);
-    }
-  } while (i);
-
-  // Consider simple cases for one and two inputs only.
-  if (linkList.size() == 1) {
-    return mapBuf(linkList, builder);
-  }
-  if ((linkList.size() == 2) && (linkList[0].idx == linkList[1].idx)) {
-    if (linkList[0].inv == linkList[1].inv) {
-      return mapVal(false, builder);
-    }
-    return mapVal(true, builder);
-  }
-
-  return mapXor(linkList, inv, builder);
-}
-
-Link Premapper::mapMaj(const LinkList &links, bool &inv, size_t n0, size_t n1,
-                       SubnetBuilder &builder) const {
-
-  size_t linksSize = links.size();
-  if (linksSize == 1) {
-    return mapBuf(links, builder);
-  }
-
-  assert((linksSize % 2 == 1) && (linksSize >= 3) && "Invalid number of links");
-  
-  if (n0 > linksSize / 2) {
-    return mapVal(false, builder);
-  }
-  if (n1 > linksSize / 2) {
-    return mapVal(true, builder);
-  }
-  return mapMaj(links, inv, builder);
+  InOutMapping iomapping(std::vector<size_t>{0}, std::vector<size_t>{entryID});
+  model::SubnetView view(*builderPtr, iomapping);
+  SubnetObject rhs = resynthesizer.resynthesize(view, arity);
+  assert(!rhs.isNull() && "Subnet wasn't synthesized!");
+  iter.replace(rhs, iomapping);
 }
 
 } // namespace eda::gate::premapper

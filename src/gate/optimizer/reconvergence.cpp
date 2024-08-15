@@ -6,33 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer/reconvergence_cut.h"
+#include "gate/optimizer/reconvergence.h"
 
 namespace eda::gate::optimizer {
 
-using IdxMap        = std::unordered_map<size_t, size_t>;
-using Link          = eda::gate::model::Subnet::Link;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
-
-static void buildFromRoot(SubnetBuilder &coneBuilder,
-                          const SubnetBuilder &builder,
-                          size_t idx,
-                          IdxMap &map) {
-
-  if (map.find(idx) != map.end()) {
-    return;
-  }
-  auto links = builder.getLinks(idx);
-  auto symbol = builder.getCell(idx).getSymbol();
-  for (size_t i = 0; i < links.size(); ++i) {
-    if (map.find(links[i].idx) == map.end()) {
-      buildFromRoot(coneBuilder, builder, links[i].idx, map);
-    }
-    size_t idNew = map.at(links[i].idx);
-    links[i].idx = idNew;
-  }
-  map[idx] = coneBuilder.addCell(symbol, links).idx;
-}
 
 static unsigned computeCost(SubnetBuilder &builder, size_t idx) {
   const auto &cell = builder.getCell(idx);
@@ -79,9 +57,9 @@ static size_t findBestLeave(SubnetBuilder &builder,
   return bestLeave;
 }
 
-model::SubnetView getReconvergenceCut(SubnetBuilder &builder,
-                                      const std::vector<size_t> &roots,
-                                      uint16_t cutSize) {
+model::SubnetView getReconvergentCut(SubnetBuilder &builder,
+                                     const std::vector<size_t> &roots,
+                                     uint16_t cutSize) {
 
   assert(roots.size() <= cutSize && "Number of roots more than the cut size");
 
@@ -113,44 +91,6 @@ model::SubnetView getReconvergenceCut(SubnetBuilder &builder,
   }
   builder.endSession();
   return model::SubnetView{builder, {leaves, roots}};
-}
-
-model::SubnetID getReconvergenceWindow(SubnetBuilder &builder,
-                                       const std::vector<size_t> &roots,
-                                       uint16_t cutSize,
-                                       IdxMap &map) {
-
-  assert(roots.size() <= cutSize && "Number of roots more than the cut size");
-
-  const std::vector<size_t> leaves =
-      getReconvergenceCut(builder, roots, cutSize).getInputs();
-
-  map.clear();
-  SubnetBuilder coneBuilder;
-  IdxMap mapping;
-  // Case when there are only constant inputs or the roots are constant or INs.
-  bool equal = leaves == roots;
-  for (size_t i = 0; i < leaves.size(); ++i) {
-    if (!equal || (equal && builder.getCell(leaves[i]).isIn())) {
-      coneBuilder.addInput();
-      mapping[leaves[i]] = i;
-      map[i] = leaves[i];
-    }
-  }
-  // Case when there are only constant inputs.
-  if (map.empty()) {
-    mapping[0] = 0;
-    map[0] = 0;
-    coneBuilder.addInput();
-  }
-  for (const auto &root : roots) {
-    buildFromRoot(coneBuilder, builder, root, mapping);
-  }
-  for (const auto &root : roots) {
-    const size_t outId = coneBuilder.addOutput(Link(mapping.at(root))).idx;
-    map[outId] = root;
-  }
-  return coneBuilder.make();
 }
 
 } // namespace eda::gate::optimizer

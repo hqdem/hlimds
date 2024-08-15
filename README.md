@@ -14,7 +14,15 @@ See `doc/CodeStyle.md` for more details about our coding convention.
 
 See `doc/Notes.md` if you're not familiar with program building/installing on Linux.
 
-## System requirements
+## Building Utopia EDA
+
+To run Utopia EDA, you should build it either from source, or using Docker.
+
+If you prefer Docker-based solution, use `Dockerfile.local` for that purpose.
+
+To build the project from source on your own machine, see the instruction below.
+
+### System requirements
 
 The recommended operating system for Utopia is Ubuntu 20.04. The package names
 below are specific to this operating system:
@@ -194,8 +202,6 @@ cmake -G Ninja .. \
 ninja
 ```
 
-## Working in command line
-
 ### Clone project repository and set environment variables
 
 ```console
@@ -233,7 +239,7 @@ Here they are (see `debug-build.sh` as example):
 * `NPN4_USAGE_STATS` &mdash; statistics for 4-in cones distribution on NPN classes;
 * `UTOPIA_DEBUG` &mdash; extended debug printing.
 
-### Running Utopia EDA
+## Running Utopia EDA
 
 Running `umain` without arguments takes you to the TCL shell. Available commands
 are listed in the `doc/CLI.md`, or can be printed using the `help`
@@ -277,9 +283,9 @@ test/data/openabcd-subset/graphml/sasc_orig.bench.graphml \
 test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib
 ```
 
-### Tests running
+## Testing
 
-#### All tests running
+### All tests running
 
 ```console
 rm -rf $UTOPIA_HOME/output
@@ -292,7 +298,7 @@ or
 ./run-tests.sh
 ```
 
-#### Specific tests running
+### Specific tests running
 
 ```console
 ./build/test/utest --gtest_filter=<test-pattern>
@@ -315,12 +321,12 @@ BiDecompositionTest*"
 
 Test pattern accepts ```*``` and ```?``` wildcards.
 
-#### List available tests
+### List available tests
 
 ```console
 ./build/test/utest --gtest_list_tests
 ```
 
-#### Code coverage
+### Code coverage
 
 To evaluate code coverage is reached by tests, use `lcov.sh` script.

@@ -19,6 +19,7 @@ See `doc/Notes.md` if you're not familiar with program building/installing on Li
 To run Utopia EDA, you should build it either from source, or using Docker.
 
 If you prefer Docker-based solution, use `Dockerfile.local` for that purpose.
+See `doc/Docker.md` if you're not familiar with Docker.
 
 To build the project from source on your own machine, see the instruction below.
 

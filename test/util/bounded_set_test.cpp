@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,13 +14,21 @@
 #include <vector>
 #include <unordered_set>
 
+bool equal(const BoundedSet<size_t> &b, const std::unordered_set<size_t> &u) {
+  bool result = 1;
+  if (b.size() != u.size()) result = 0;
+  for (auto i : u)
+    result = result && (b.find(i) != b.end());
+  return result;
+}
+
 TEST(BoundedSetTest, CheckedInsert) {
   std::unordered_set<size_t> set1 {1, 2, 3, 4, 5, 8};
   std::unordered_set<size_t> set2 {10, 11, 1, 0};
   BoundedSet<size_t> bSet1 {5};
   BoundedSet<size_t> bSet2 {6};
-  for (auto i : set1) bSet1.checkedInsert(i);
-  for (auto i : set2) bSet2.checkedInsert(i);
+  for (auto i : set1) bSet1.insert(i, 1);
+  for (auto i : set2) bSet2.insert(i, 1);
   bool result = 1;
   std::unordered_set<size_t> tempSet;
   for (auto i : bSet2) tempSet.insert(i);
@@ -36,7 +44,7 @@ TEST(BoundedSetTest, Insert) {
   bool result = 1;
   bSet.insert(1);
   bSet.insert(1);
-  result &= (bSet.count(1) == 1);
+  result &= (std::count(bSet.begin(), bSet.end(), 1) == 1);
   for (auto i : set1) bSet.insert(i);
   for (auto i : set2) bSet.insert(i);
   std::unordered_set<size_t> tempSet;
@@ -44,7 +52,7 @@ TEST(BoundedSetTest, Insert) {
   for (auto i : bSet) tempSet.insert(i);
   result &= (tempSet == set1);
   for (auto i : bSet) 
-      result &= (bSet.count(i) == 1);
+      result &= (std::count(bSet.begin(), bSet.end(), i) == 1);
   EXPECT_TRUE(result);
 }
 
@@ -78,9 +86,9 @@ TEST(BoundedSetTest, Merge) {
   set1.insert(set2.begin(), set2.end());
   bSet3.merge(bSet1);
   bSet2.merge(bSet1);
-  result &= (bSet1 == set1);
-  result &= (bSet3 == set2);
-  result &= (bSet1 ==  bSet2);
+  result &= equal(bSet1, set1);
+  result &= equal(bSet3, set2);
+  result &= (bSet1 == bSet2);
   EXPECT_TRUE(result);
 }
 
@@ -105,7 +113,7 @@ TEST(BoundedSetTest, MergeRandomSingletons) {
       vectorBS[first].merge(vectorBS[second]);
       vectorUS[first].insert(vectorUS[second].begin(),
           vectorUS[second].end());
-      result &= (vectorBS[first] == vectorUS[first]);
+      result &= equal(vectorBS[first], vectorUS[first]);
     }
   }
   EXPECT_TRUE(result);

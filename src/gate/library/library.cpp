@@ -15,7 +15,6 @@
 namespace eda::gate::library {
 
 using CellTypeID = model::CellTypeID;
-using MinatoMorrealeAlg = optimizer::synthesis::MMSynthesizer;
 
 SCLibrary::SCLibrary(const std::string &fileName) {
   // TODO: if we want to avoid usage FILE, we need to fix it in ReadCells.
@@ -28,7 +27,16 @@ SCLibrary::SCLibrary(const std::string &fileName) {
     fclose(file);
 
     iface = new ReadCellsIface(library);
-    loadCells();
+
+    for (const auto &name : iface->getCells()) {
+      if (iface->isIsolateCell(name)) continue;
+
+      if (iface->isCombCell(name)) {
+        loadCombCell(name);
+      } else {
+        //loadSeqCell(cell);
+      }
+    }
   }
 }
 
@@ -38,36 +46,15 @@ SCLibrary::~SCLibrary() {
   }
 }
 
-void SCLibrary::loadCells() {
-  for (const auto &name : iface->getCells()) {
-    if (iface->isIsolateCell(name)) continue;
-
-    if (iface->isCombCell(name)) {
-      addCombCell(name);
-    } else {
-      //addSeqCell(cell);
-    }
-  }
-  permutation();
-}
-
-void SCLibrary::addCell(CellTypeID typeID) {
-  //combCells.push_back(cell);
-}
-
-std::vector<SCLibrary::StandardCell> SCLibrary::getCombCells() {
-  return combCells;
-}
-
-void SCLibrary::addCombCell(const std::string &name) {
+void SCLibrary::loadCombCell(const std::string &name) {
   const auto ports = iface->getPorts(name);
 
-  const auto nIn = model::CellTypeAttr::getInBitWidth(ports);
-  const auto nOut = model::CellTypeAttr::getOutBitWidth(ports);
+  const auto nInputs = model::CellTypeAttr::getInBitWidth(ports);
+  const auto nOutputs = model::CellTypeAttr::getOutBitWidth(ports);
 
   const auto props = iface->getPhysProps(name);
 
-  if (nIn == 0 || props.area == MAXFLOAT) {
+  if (nInputs == 0 || props.area == MAXFLOAT) {
     return;
   }
 
@@ -75,36 +62,26 @@ void SCLibrary::addCombCell(const std::string &name) {
   model::CellTypeAttr::get(attrID).setPhysProps(props);
 
   const auto func = iface->getFunction(name);
-  auto subnetObject = MinatoMorrealeAlg{}.synthesize(func);
+  auto subnetObject = optimizer::synthesis::MMSynthesizer{}.synthesize(func);
+  const auto subnetID = subnetObject.make();
 
   const auto cellTypeID = model::makeCellType(
       model::CellSymbol::UNDEF,
       name,
-      subnetObject.make(),
+      subnetID,
       attrID,
       model::CellProperties{1, 0, 1, 0, 0, 0, 0, 0, 0},
-      nIn,
-      nOut);
+      nInputs,
+      nOutputs);
 
-  std::vector<int> link{};
-  for (size_t i = 0; i < nIn; i++) {
-    link.push_back(i);
-  }
-  combCells.push_back({cellTypeID, link});
-}
+  std::vector<int> links(nInputs);
+  std::iota(std::begin(links), std::end(links), 0);
 
-void SCLibrary::permutation() {
-  std::vector<StandardCell> perCells;
-  for (size_t i = 0; i < combCells.size(); i++) {
-    auto link = combCells.at(i).link;
-    std::sort(link.begin(), link.end());
-    while (std::next_permutation(link.begin(), link.end())) {
-      perCells.push_back({combCells.at(i).cellTypeID, link});
-    }
-  }
-  for (const auto &cell : perCells) {
-    combCells.push_back(cell);
-  }
+  auto config = kitty::exact_p_canonization(func);
+  const auto &ctt = utils::getTT(config); // canonized TT
+  utils::NpnTransformation t = utils::getTransformation(config);
+
+  combCells.push_back({cellTypeID, links, ctt, t});
 }
 
 SCLibrary *library = nullptr;

@@ -12,8 +12,7 @@
 #include "gate/library/library.h"
 #include "gate/premapper/aigmapper.h"
 #include "gate/techmapper/subnet_techmapper.h"
-#include "gate/techmapper/matcher/func_matcher.h"
-#include "gate/techmapper/matcher/matcher.h"
+#include "gate/techmapper/matcher/pbool_matcher.h"
 #include "gate/library/library.h"
 #include "gate/optimizer/cut_extractor.h"
 
@@ -21,6 +20,8 @@
 #include "gate/techmapper/utils/get_statistics.h"
 
 #include "gtest/gtest.h"
+
+#include <kitty/kitty.hpp>
 
 namespace eda::gate::techmapper {
 
@@ -33,7 +34,7 @@ using SubnetID = model::SubnetID;
 
 std::string name = "UtopiaTechMapper";
 CutExtractor *cutExtractor = nullptr;
-FuncMatcher *funcMatcher = nullptr;
+PBoolMatcher *boolMatcher = nullptr;
 
 CutExtractor::CutsList cutProvider(
   const model::SubnetBuilder &builder, const size_t entryID) {
@@ -45,7 +46,7 @@ CutExtractor::CutsList cutProvider(
 
 std::vector<Match> matchFinder(const model::SubnetBuilder &builder,
                                const CutExtractor::Cut &cut) {
-  return funcMatcher->match(builder, cut);
+  return boolMatcher->match(builder, cut);
 }
 
 void finishMatching() {
@@ -68,13 +69,13 @@ const SubnetID commonPart(
   };
   criterion::Criterion criterion{objective, constraints};
 
-  // funcMatcher is created once the library is loaded.
-  if (funcMatcher == nullptr) {
+  // boolMatcher is created once the library is loaded.
+  if (boolMatcher == nullptr) {
     library::library = new library::SCLibrary(techLib);
     if (library::library != nullptr) {
       std::cout << "Loaded Liberty file: " << techLib << std::endl;
     }
-    funcMatcher = Matcher<FuncMatcher, std::size_t>::create(
+    boolMatcher = Matcher<PBoolMatcher, kitty::dynamic_truth_table>::create(
       library::library->getCombCells());
   }
 

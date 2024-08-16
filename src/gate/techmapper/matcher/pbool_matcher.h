@@ -13,18 +13,11 @@
 
 namespace eda::gate::techmapper {
 
-class FuncMatcher final : public Matcher<FuncMatcher, std::size_t> {
-  using Subnet = model::Subnet;
+class PBoolMatcher final : public Matcher<PBoolMatcher, kitty::dynamic_truth_table> {
 public:
-  ~FuncMatcher() = default;
-
   std::vector<SubnetTechMapper::Match> match(
       const model::SubnetBuilder &builder,
       const optimizer::CutExtractor::Cut &cut) override;
-
-private:
-  std::size_t makeHash(model::SubnetID subnetID) override;
-  std::size_t hash_dynamic_tt(const kitty::dynamic_truth_table &dtt);
 };
 
 } // namespace eda::gate::techmapper

@@ -77,7 +77,7 @@ add_library(Gate OBJECT
   synthesizer/synthesizer_neg.cpp
   synthesizer/synthesizer_red.cpp
   synthesizer/synthesizer_shift.cpp
-  techmapper/matcher/func_matcher.cpp
+  techmapper/matcher/pbool_matcher.cpp
   techmapper/subnet_techmapper.cpp
   techmapper/techmapper_wrapper.cpp
   translator/fir/fir_net.cpp

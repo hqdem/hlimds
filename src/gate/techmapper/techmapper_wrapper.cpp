@@ -9,8 +9,7 @@
 #include "gate/library/sdc_manager.h"
 #include "gate/model/printer/printer.h"
 #include "gate/premapper/aigmapper.h"
-#include "gate/techmapper/matcher/func_matcher.h"
-#include "gate/techmapper/matcher/matcher.h"
+#include "gate/techmapper/matcher/pbool_matcher.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/translator/graphml.h"
@@ -26,7 +25,7 @@ using CutExtractor  = optimizer::CutExtractor;
 
 //TODO
 CutExtractor *cutExtractor = nullptr;
-FuncMatcher *funcMatcher = nullptr;
+PBoolMatcher *boolMatcher = nullptr;
 
 static CutExtractor::CutsList cutProvider(
     const SubnetBuilder &builder, const size_t entryID) {
@@ -38,7 +37,7 @@ static CutExtractor::CutsList cutProvider(
 
 static std::vector<SubnetTechMapper::Match> matchFinder(
     const SubnetBuilder &builder, const CutExtractor::Cut &cut) {
-  return funcMatcher->match(builder, cut);
+  return boolMatcher->match(builder, cut);
 }
 
 std::shared_ptr<SubnetBuilder> techMap(
@@ -52,7 +51,7 @@ std::shared_ptr<SubnetBuilder> techMap(
   criterion::Criterion criterion{objective, constraints};
 
   // Set matcher type
-  funcMatcher = Matcher<FuncMatcher, std::size_t>::create(
+  boolMatcher = Matcher<PBoolMatcher, std::size_t>::create(
     library::library->getCombCells());
 
   // Techmapping
@@ -64,9 +63,9 @@ std::shared_ptr<SubnetBuilder> techMap(
     delete cutExtractor;
     cutExtractor = nullptr;
   }
-  if (funcMatcher != nullptr) {
-    delete funcMatcher;
-    funcMatcher = nullptr;
+  if (boolMatcher != nullptr) {
+    delete boolMatcher;
+    boolMatcher = nullptr;
   }
 
   delete techmapper;

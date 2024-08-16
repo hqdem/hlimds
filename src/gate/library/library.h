@@ -10,6 +10,7 @@
 
 #include "gate/library/readcells_iface.h"
 #include "gate/model/celltype.h"
+#include "util/kitty_utils.h"
 
 #include <readcells/groups.h>
 #include <readcells/token_parser.h>
@@ -19,37 +20,35 @@
 namespace eda::gate::library {
 
 class SCLibrary {
-  using CellTypeID = model::CellTypeID;
-
 public:
   SCLibrary(const std::string &fileName);
   virtual ~SCLibrary();
 
   struct StandardCell {
-    CellTypeID cellTypeID;
-    std::vector<int> link;
+    model::CellTypeID cellTypeID;
+    std::vector<int> inLinks;
+    kitty::dynamic_truth_table ctt; // canonized TT
+    utils::NpnTransformation transform;
   };
 
-  std::vector<StandardCell> getCombCells();
+  std::vector<StandardCell> &getCombCells() {
+    return combCells;
+  }
 
   Library &getLibrary() {
     return library;
   }
 
 private:
-  void loadCells();
-  void addCell(CellTypeID typeID);
+  std::vector<StandardCell> combCells;
+
+  void loadCombCell(const std::string &name);
 
   // ReadCells
   Group *ast;
   Library library;
   TokenParser tokParser;
   ReadCellsIface *iface;
-
-  std::vector<StandardCell> combCells;
-
-  void permutation();
-  void addCombCell(const std::string &name);
 };
 
 extern SCLibrary *library;

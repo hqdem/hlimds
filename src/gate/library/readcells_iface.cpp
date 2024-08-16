@@ -128,7 +128,6 @@ std::vector<std::string> ReadCellsIface::getInputs(const std::string &name) {
 std::vector<std::string> ReadCellsIface::getOutputs(const std::string &name) {
   std::vector<std::string> outputs;
   for (const auto &pin : library.getCell(name)->getPins()) {
-    //std::cout << "read pin " << pin.getName() << std::endl;
     if (isOutput(pin)) {
       outputs.push_back(std::string(pin.getName()));
     }

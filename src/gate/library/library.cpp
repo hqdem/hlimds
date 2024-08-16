@@ -74,14 +74,11 @@ void SCLibrary::loadCombCell(const std::string &name) {
       nInputs,
       nOutputs);
 
-  std::vector<int> links(nInputs);
-  std::iota(std::begin(links), std::end(links), 0);
-
   auto config = kitty::exact_p_canonization(func);
   const auto &ctt = utils::getTT(config); // canonized TT
   utils::NpnTransformation t = utils::getTransformation(config);
 
-  combCells.push_back({cellTypeID, links, ctt, t});
+  combCells.push_back({cellTypeID, ctt, t});
 }
 
 SCLibrary *library = nullptr;

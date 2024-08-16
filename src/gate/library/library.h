@@ -26,7 +26,6 @@ public:
 
   struct StandardCell {
     model::CellTypeID cellTypeID;
-    std::vector<int> inLinks;
     kitty::dynamic_truth_table ctt; // canonized TT
     utils::NpnTransformation transform;
   };

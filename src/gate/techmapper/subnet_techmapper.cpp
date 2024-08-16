@@ -320,8 +320,7 @@ RECOVERY:
   } // for cells
 
   assert(outputs.size() == builder->getOutNum());
-  optimizer::CutExtractor::Cut resultCut(
-      outputs.size(), model::OBJ_NULL_ID, 0, outputs);
+  optimizer::CutExtractor::Cut resultCut(model::OBJ_NULL_ID, outputs);
   const auto subnetCostVectors = getCostVectors(space, resultCut);
   const auto subnetAggregation = costAggregator(subnetCostVectors);
 

@@ -10,12 +10,6 @@
 
 namespace eda::gate::optimizer {
 
-uint16_t countSetBits(uint64_t x) {
-  x = x - ((x >> 1) & 0x5555555555555555ull);
-  x = (x & 0x3333333333333333UL) + ((x >> 2) & 0x3333333333333333ull);
-  x = (((x + (x >> 4)) & 0xF0F0F0F0F0F0F0Full) * 0x101010101010101ull) >> 56;
-  return static_cast<uint16_t>(x);
-}
 
 CutExtractor::CutExtractor(const Subnet *subnet, const uint16_t k):
     subnet(subnet),
@@ -96,13 +90,8 @@ void CutExtractor::addCut(
     uint64_t cutsCombinationIdx,
     RawCutsList &addedCuts,
     const std::vector<size_t> &suffCutsCombN) const {
-  Cut newCut = Cut(k, 0, 0, BoundedSet<size_t>(k));
-  newCut.rootEntryIdx = entryIdx;
+  Cut newCut = Cut(k, BoundedSet<size_t>(k), entryIdx);
 
-  if (countSetBits(getNewCutSign(cutsCombinationIdx,
-                                 links, nLinks, suffCutsCombN)) > k) {
-    return;
-  }
 
   for (size_t j = 0; j < nLinks; ++j) {
     size_t inEntryIdx = links[j].idx;
@@ -122,7 +111,7 @@ void CutExtractor::addCut(
 }
 
 CutExtractor::Cut CutExtractor::getOneElemCut(const size_t entryIdx) const {
-  return Cut(k, entryIdx, (size_t)1 << (entryIdx % 64), BoundedSet<size_t>(k, entryIdx));
+  return Cut(k, BoundedSet<size_t>(k, entryIdx), entryIdx);
 }
 
 bool CutExtractor::cutNotDominated(const Cut &cut, RawCutsList &cuts) const {
@@ -156,9 +145,6 @@ bool CutExtractor::cutDominates(const Cut &cut1, const Cut &cut2) const {
   if (cut1.entryIdxs.size() >= cut2.entryIdxs.size()) {
     return false;
   }
-  if ((cut1.entryIdxs.getSign() | cut2.entryIdxs.getSign()) != cut2.entryIdxs.getSign()) {
-    return false;
-  }
   for (const auto &cut1Entry : cut1.entryIdxs) {
     if (cut2.entryIdxs.find(cut1Entry) == cut2.entryIdxs.end()) {
       return false;
@@ -167,26 +153,5 @@ bool CutExtractor::cutDominates(const Cut &cut1, const Cut &cut2) const {
   return true;
 }
 
-uint64_t CutExtractor::getNewCutSign(
-    uint64_t cutsCombinationIdx,
-    const Link links[],
-    const uint16_t nLinks,
-    const std::vector<size_t> &suffCutsCombN) const {
-
-  uint64_t newCutSignature = 0;
-
-  for (size_t j = 0; j < nLinks; ++j) {
-    size_t inEntryIdx = links[j].idx;
-    size_t inEntryCutIdx = cutsCombinationIdx;
-    if (j + 1 != nLinks) {
-      inEntryCutIdx = cutsCombinationIdx / suffCutsCombN[j + 1];
-      cutsCombinationIdx %= suffCutsCombN[j + 1];
-    }
-    const Cut &cutToUnite = entriesCuts[inEntryIdx][inEntryCutIdx];
-    newCutSignature |= cutToUnite.entryIdxs.getSign();
-  }
-
-  return newCutSignature;
-}
 
 } // namespace eda::gate::optimizer

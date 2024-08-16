@@ -35,22 +35,13 @@ public:
 
   /// Cut class with its signature and indices.
   struct Cut final {
-    Cut() = default;
-    Cut(const uint16_t k, const size_t rootEntryIdx,
-        const uint64_t sign,
-        const BoundedSet<size_t> &entryIdxs):
-      k(k), rootEntryIdx(rootEntryIdx),  entryIdxs(entryIdxs) {
-        this->entryIdxs.setSign(sign);
-    }
+    Cut(const uint16_t k, const BoundedSet<size_t> &entryIdxs,
+            const size_t rootEntryIdx):
+      k(k), rootEntryIdx(rootEntryIdx),  entryIdxs{entryIdxs} { }
     
     Cut(const size_t rootEntryIdx,
-        const uint64_t sign,
-        const std::unordered_set<size_t> &entryIdxs) {
-      this->k = entryIdxs.size();
-      this->rootEntryIdx = rootEntryIdx;
-      this->entryIdxs = entryIdxs;
-      this->entryIdxs.setSign(sign);
-    }
+        const std::unordered_set<size_t> &entryIdxs) :
+      k (entryIdxs.size()), rootEntryIdx(rootEntryIdx), entryIdxs{entryIdxs}{ }
     /// Checks whether the cut is trivial.
     bool isTrivial() const {
       return entryIdxs.size() == 1 &&
@@ -61,9 +52,9 @@ public:
     bool uniteCut(const Cut &other) {
       return entryIdxs.merge(other.entryIdxs);
     }
-    uint16_t k {20}; 
-    size_t rootEntryIdx {0};
-    BoundedSet<size_t> entryIdxs = BoundedSet<size_t>(k);
+    uint16_t k; 
+    size_t rootEntryIdx;
+    BoundedSet<size_t> entryIdxs;
   };
 
   CutExtractor() = delete;
@@ -136,13 +127,6 @@ private:
 
   /// Checks if cut1 dominates cut2.
   bool cutDominates(const Cut &cut1, const Cut &cut2) const;
-
-  /// Computes signature of the combination of the passed entry links.
-  uint64_t getNewCutSign(
-      uint64_t cutsCombinationIdx,
-      const Link links[],
-      const uint16_t nLinks,
-      const std::vector<size_t> &suffCutsCombN) const;
 
 private:
   const Subnet *subnet;

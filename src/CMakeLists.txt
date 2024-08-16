@@ -63,6 +63,7 @@ target_link_libraries(Shell
     Yosys::Yosys
   PRIVATE
     CLI
+    easyloggingpp
     fmt
     Json
     Tcl::Tcl

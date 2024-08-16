@@ -31,8 +31,8 @@ struct CostVector final {
   explicit CostVector(const std::valarray<Cost> &vector):
       vector(vector) {}
 
-  CostVector(const Cost c1, const Cost c2, const Cost c3):
-      CostVector(std::valarray<Cost>{c1, c2, c3}) {}
+  CostVector(const Cost a, const Cost d, const Cost p):
+      CostVector(std::valarray<Cost>{a, d, p}) {}
 
   CostVector(const CostVector &vector):
       CostVector(vector.vector) {}
@@ -110,14 +110,14 @@ using CostFunction = std::function<Cost(const CostVector &)>;
 
 /// @brief Indicator identifier (index in a cost vector).
 enum Indicator {
-  AREA  = 0,
-  DELAY = 1,
-  POWER = 2,
+  AREA  =  0,
+  DELAY =  1,
+  POWER =  2,
   MIXED = -1
 };
 
 inline CostFunction getCostFunction(const Indicator indicator) {
-  return [indicator](const CostVector &vector) {
+  return [indicator](const CostVector &vector) -> Cost {
     return vector[indicator];
   };
 }

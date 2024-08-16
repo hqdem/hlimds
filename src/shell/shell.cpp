@@ -123,6 +123,8 @@ void UtopiaShell::printTitle(Tcl_Interp *interp) {
 } // namespace eda::shell
 
 int umain(eda::shell::UtopiaShell &shell, int argc, char **argv) {
+  UTOPIA_INITIALIZE_LOGGER();
+
   CLI::App app{shell.getName()};
 
   std::string path = "";

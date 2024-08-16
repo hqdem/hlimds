@@ -10,6 +10,7 @@
 
 #include "diag/diagnostics.h"
 
+#include <easylogging++.h>
 #include <fmt/format.h>
 
 #include <cassert>
@@ -19,31 +20,40 @@
 #define UTOPIA_OUT std::cout
 #define UTOPIA_ERR std::cerr
 
-#define UTOPIA_DIAGNOSE(logger, lvl, msg)\
+// Diagnostics.
+#define UTOPIA_RAISE_DIAGNOSTICS(logger, lvl, msg)\
   do {\
     std::stringstream out;\
     out << msg;\
     eda::diag::log(logger, lvl, out.str());\
   } while(false)
 
-#define UTOPIA_LOG_NOTE(logger, msg)\
-  UTOPIA_DIAGNOSE(logger, eda::diag::NOTE, msg)
-#define UTOPIA_LOG_WARN(logger, msg)\
-  UTOPIA_DIAGNOSE(logger, eda::diag::WARN, msg)
-#define UTOPIA_LOG_ERROR(logger, msg)\
-  UTOPIA_DIAGNOSE(logger, eda::diag::ERROR, msg)
-#define UTOPIA_LOG_BEGIN(logger, msg)\
-  UTOPIA_DIAGNOSE(logger, eda::diag::BEGIN, msg)
-#define UTOPIA_LOG_END(logger)\
-  UTOPIA_DIAGNOSE(logger, eda::diag::END, "")
+#define UTOPIA_RAISE_NOTE(logger, msg)\
+  UTOPIA_RAISE_DIAGNOSTICS(logger, eda::diag::NOTE, msg)
+#define UTOPIA_RAISE_WARN(logger, msg)\
+  UTOPIA_RAISE_DIAGNOSTICS(logger, eda::diag::WARN, msg)
+#define UTOPIA_RAISE_ERROR(logger, msg)\
+  UTOPIA_RAISE_DIAGNOSTICS(logger, eda::diag::ERROR, msg)
+#define UTOPIA_RAISE_BEGIN(logger, msg)\
+  UTOPIA_RAISE_DIAGNOSTICS(logger, eda::diag::BEGIN, msg)
+#define UTOPIA_RAISE_END(logger)\
+  UTOPIA_RAISE_DIAGNOSTICS(logger, eda::diag::END, "")
 
 #define UTOPIA_LOGGER eda::diag::Logger::getDefault()
 
-#define UTOPIA_NOTE(msg)  UTOPIA_LOG_NOTE(UTOPIA_LOGGER, msg)
-#define UTOPIA_WARN(msg)  UTOPIA_LOG_WARN(UTOPIA_LOGGER, msg)
-#define UTOPIA_ERROR(msg) UTOPIA_LOG_ERROR(UTOPIA_LOGGER, msg)
-#define UTOPIA_BEGIN(msg) UTOPIA_LOG_BEGIN(UTOPIA_LOGGER, msg)
-#define UTOPIA_END()      UTOPIA_LOG_END(UTOPIA_LOGGER, msg)
+#define UTOPIA_NOTE(msg)  UTOPIA_RAISE_NOTE(UTOPIA_LOGGER, msg)
+#define UTOPIA_WARN(msg)  UTOPIA_RAISE_WARN(UTOPIA_LOGGER, msg)
+#define UTOPIA_ERROR(msg) UTOPIA_RAISE_ERROR(UTOPIA_LOGGER, msg)
+#define UTOPIA_BEGIN(msg) UTOPIA_RAISE_BEGIN(UTOPIA_LOGGER, msg)
+#define UTOPIA_END()      UTOPIA_RAISE_END(UTOPIA_LOGGER, msg)
+
+// Logging.
+#define UTOPIA_INFO(msg)  LOG(INFO) << msg
+#define UTOPIA_DEBUG(msg) LOG(DEBUG) << msg
+
+#define UTOPIA_INITIALIZE_LOGGER()\
+  el::Loggers::reconfigureAllLoggers(\
+      el::ConfigurationType::Format, "%level %datetime{%H:%m:%s}: %msg");
 
 namespace eda::diag {
 

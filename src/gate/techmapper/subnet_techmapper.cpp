@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "diag/logger.h"
+#include "gate/model/subnetview.h"
 #include "gate/techmapper/subnet_techmapper.h"
 
 #include <cassert>
@@ -14,9 +15,16 @@
 #include <queue>
 #include <unordered_set>
 
-// Disables cut extraction and matching for outputs.
+/// Disables cut extraction and matching for outputs.
 #define UTOPIA_TECHMAP_NO_MATCHING_FOR_OUTPUTS 0
 
+/// Outputs the cost vector.
+#define UTOPIA_LOG_COST_VECTOR(prefix, vector)\
+  UTOPIA_INFO(prefix << std::endl\
+      << "Area:  " << vector[criterion::AREA]  << std::endl\
+      << "Delay: " << vector[criterion::DELAY] << std::endl\
+      << "Power: " << vector[criterion::POWER] << std::endl)
+ 
 namespace eda::gate::techmapper {
 
 using CellSpace = criterion::SolutionSpace<SubnetTechMapper::Match>;
@@ -60,9 +68,10 @@ static criterion::CostVector defaultCostPropagator(
     const criterion::CostVector &vector, const uint32_t fanout) {
   criterion::CostVector result;
 
-  result[criterion::AREA]  = vector[criterion::AREA] / fanout;
+  const auto divisor = fanout ? fanout : 1;
+  result[criterion::AREA]  = vector[criterion::AREA] / divisor;
   result[criterion::DELAY] = vector[criterion::DELAY];
-  result[criterion::POWER] = vector[criterion::POWER] / fanout;
+  result[criterion::POWER] = vector[criterion::POWER] / divisor;
 
   return result;
 }
@@ -86,28 +95,30 @@ using MatchSelection = std::vector<const SubnetTechMapper::Match*>;
 static void selectBestMatches(const SubnetSpace &space,
                               const optimizer::SubnetBuilderPtr oldBuilder,
                               MatchSelection &matches) {
-  // Traverse the subnet in reverse order starting from the outputs.
-  std::queue<size_t> queue;
-  for (auto it = --oldBuilder->end(); it != oldBuilder->begin(); --it) {
-    const auto entryID = *it;
-    const auto &oldCell = oldBuilder->getCell(entryID);
-
-    if (!oldCell.isOut()) break;
-    queue.push(entryID);
-  } // for output
-
-  while (!queue.empty()) {
-    const auto entryID = queue.front();
-    queue.pop();
-
-    matches[entryID] = &space[entryID]->getBest().solution;
-
-    for (const auto &oldLink : matches[entryID]->links) {
-      if (!matches[oldLink.idx]) {
-        queue.push(oldLink.idx);
+  model::SubnetView view(*oldBuilder);
+  model::SubnetViewWalker walker(view,
+      [&matches](model::SubnetBuilder &,
+                 const size_t entryID) -> size_t {
+        // Returns the cell arity.
+        return matches[entryID]->links.size();
+      },
+      [&matches](model::SubnetBuilder &,
+                 const size_t entryID,
+                 const size_t linkIdx) -> model::Subnet::Link {
+        // Returns the corresponding link (cut boundary).
+        return matches[entryID]->links[linkIdx];
       }
-    }
-  } // backward BFS
+  );
+
+  walker.runForward(
+      nullptr /* forward visitor */,
+      [&space, &matches](model::SubnetBuilder &,
+                         bool, bool,
+                         const size_t entryID) -> bool {
+        assert(!matches[entryID]);
+        matches[entryID] = &space[entryID]->getBest().solution;
+        return true;
+      });
 }
 
 static optimizer::SubnetBuilderPtr makeMappedSubnet(
@@ -116,7 +127,7 @@ static optimizer::SubnetBuilderPtr makeMappedSubnet(
   const size_t oldSize = oldBuilder->getMaxIdx() + 1;
   MatchSelection matches(oldSize);
 
-  // Find best coverage.
+  // Find best coverage by traversing the subnet in reverse order.
   selectBestMatches(space, oldBuilder, matches);
 
   auto newBuilder = std::make_shared<model::SubnetBuilder>();
@@ -132,23 +143,37 @@ static optimizer::SubnetBuilderPtr makeMappedSubnet(
       // Add all inputs even if some of them are not used (matches[i] is null).
       links[entryID] = newBuilder->addInput();
     } else if (matches[entryID]) {
-      const auto &type = model::CellType::get(matches[entryID]->typeID);
-      assert(type.getInNum() == matches[entryID]->links.size());
+      const auto &newType = model::CellType::get(matches[entryID]->typeID);
+      assert(newType.getInNum() == matches[entryID]->links.size());
 
-      model::Subnet::LinkList newLinks(type.getInNum());
-      for (size_t j = 0; j < type.getInNum(); ++j) {
+      model::Subnet::LinkList newLinks(newType.getInNum());
+      for (size_t j = 0; j < newType.getInNum(); ++j) {
         const auto oldLink = matches[entryID]->links[j];
         const auto newLink = links[oldLink.idx];
         newLinks[j] = oldLink.inv ? ~newLink : newLink;
-        assert(!(type.isCell() && newLinks[j].inv)
-            && "Inversions in a techmapped net are not allowed");
+
+        if (!matches[oldLink.idx] && !oldBuilder->getCell(oldLink.idx).isIn()) {
+          const auto &oldType = oldCell.getType();
+
+          UTOPIA_ERROR("No match found for "
+              << fmt::format("link#{}", j) << " of "
+              << fmt::format("cell#{}:{}", entryID, oldType.getName()));
+          return nullptr /* error */;
+        } 
+
+        if (newType.isCell() && newLinks[j].inv) {
+          UTOPIA_ERROR("Invertor (logical gate NOT) "
+              << fmt::format("link#{}",  j) << " in "
+              << fmt::format("cell#<new>:{}", newType.getName()));
+          return nullptr /* error */;
+        }
       }
       
       const auto link = newBuilder->addCell(matches[entryID]->typeID, newLinks);
       links[entryID] = matches[entryID]->inversion ? ~link : link;
 
       const auto isOldOut = oldCell.isOut();
-      const auto isNewOut = type.isOut();
+      const auto isNewOut = newType.isOut();
 
 #if UTOPIA_TECHMAP_NO_MATCHING_FOR_OUTPUTS
       assert(isOldOut == isNewOut);
@@ -273,31 +298,46 @@ RECOVERY:
     } // for cuts
 
     if (!space[entryID]->hasSolution()) {
-      UTOPIA_ERROR("No match found for "
+      UTOPIA_WARN("No match found for "
           << fmt::format("cell#{}:{}", entryID, cell.getType().getName()));
-      return nullptr /* error */;
     }
 
-    if (progress > 0.5 && !space[entryID]->hasFeasible()) {
+    if (progress > 0.5 &&  space[entryID]->hasSolution()
+                       && !space[entryID]->hasFeasible()) {
       // Do recovery.
       if (tryCount < maxTries) {
+        UTOPIA_LOG_COST_VECTOR(
+            "Solution is likely not to satisfy the constraints ("
+                << static_cast<unsigned>(100 * progress) << "%)",
+            space[entryID]->getBest().vector);
+
         tension *= space[entryID]->getTension();
+
+        UTOPIA_DEBUG("Starting the recovery process");
         goto RECOVERY;
       }
     }
   } // for cells
 
   assert(outputs.size() == builder->getOutNum());
-  optimizer::CutExtractor::Cut resultCut(outputs.size(), model::OBJ_NULL_ID, 0, outputs);
+  optimizer::CutExtractor::Cut resultCut(
+      outputs.size(), model::OBJ_NULL_ID, 0, outputs);
   const auto subnetCostVectors = getCostVectors(space, resultCut);
   const auto subnetAggregation = costAggregator(subnetCostVectors);
 
-  if (!criterion.check(subnetAggregation)) {
-    // Do recovery.
-    if (tryCount < maxTries) {
-      tension *= criterion.getTension(subnetAggregation);
-      goto RECOVERY;
-    }
+  const auto isFeasible = criterion.check(subnetAggregation);
+
+  UTOPIA_LOG_COST_VECTOR(
+      (isFeasible
+          ? "Solution satisfies the constraints"
+          : "Solution does not satisfy the constraints"),
+      subnetAggregation);
+ 
+  if (!isFeasible && tryCount < maxTries) {
+    tension *= criterion.getTension(subnetAggregation);
+
+    UTOPIA_DEBUG("Starting the recovery process");
+    goto RECOVERY;
   }
 
   return makeMappedSubnet(space, builder);  

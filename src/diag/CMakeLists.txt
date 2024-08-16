@@ -14,5 +14,6 @@ target_include_directories(Diag
 
 target_link_libraries(Diag
   PRIVATE
+    easyloggingpp
     fmt
 )

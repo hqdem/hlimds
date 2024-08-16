@@ -99,7 +99,7 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
       const auto tt = utils::getTruthTable<utils::TT6>(
           parent, arity, i, isIn, nIn++);
       utils::setTruthTable<utils::TT6>(parent, i, tt);
-      return true; // Continue traversal.
+      return true /* continue traversal */;
     });
 
     for (size_t i = 0; i < entryIDs.size(); ++i) {
@@ -118,7 +118,7 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
           parent, arity, i, isIn, nIn++);
       tables.push_back(tt);
       utils::setTruthTable<TruthTable>(parent, i, tables.back());
-      return true; // Continue traversal.
+      return true /* continue traversal */;
     });
 
     for (size_t i = 0; i < entryIDs.size(); ++i) {
@@ -198,11 +198,11 @@ SubnetViewWalker::SubnetViewWalker(const SubnetView &view,
     linkProvider(linkProvider) {}
 
 #define UTOPIA_ON_BACKWARD_DFS_POP(builder, isIn, isOut, cellID)\
-  if (!onBackwardDfsPop(builder, isIn, isOut, cellID)) \
+  if (onBackwardDfsPop && !onBackwardDfsPop(builder, isIn, isOut, cellID))\
     goto ABORTED
 
 #define UTOPIA_ON_BACKWARD_DFS_PUSH(builder, isIn, isOut, cellID)\
-  if (onBackwardDfsPush && !(*onBackwardDfsPush)(builder, isIn, isOut, cellID))\
+  if (onBackwardDfsPush && !onBackwardDfsPush(builder, isIn, isOut, cellID))\
     goto ABORTED
 
 static bool traverseForward(SubnetBuilder &builder,
@@ -210,7 +210,7 @@ static bool traverseForward(SubnetBuilder &builder,
                             const SubnetViewWalker::ArityProvider arityProvider,
                             const SubnetViewWalker::LinkProvider linkProvider,
                             const SubnetViewWalker::Visitor onBackwardDfsPop,
-                            const SubnetViewWalker::Visitor *onBackwardDfsPush) {
+                            const SubnetViewWalker::Visitor onBackwardDfsPush) {
   builder.startSession();
 
   size_t nPureOut{0};
@@ -286,10 +286,11 @@ static inline bool traverseBackward(SubnetBuilder &builder,
   return true;
 }
 
-bool SubnetViewWalker::runForward(const Visitor  onBackwardDfsPop,
-                                  const Visitor *onBackwardDfsPush,
+bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
+                                  const Visitor onBackwardDfsPush,
                                   const bool saveEntries) {
-  SubnetBuilder &builder = const_cast<SubnetBuilder&>(view.getParent());
+  assert(onBackwardDfsPop || onBackwardDfsPush);
+  auto &builder = const_cast<SubnetBuilder&>(view.getParent());
 
   if (entries && !onBackwardDfsPush) {
     return traverseForward(builder, *entries, onBackwardDfsPop);
@@ -299,25 +300,34 @@ bool SubnetViewWalker::runForward(const Visitor  onBackwardDfsPop,
         arityProvider, linkProvider, onBackwardDfsPop, onBackwardDfsPush);
   }
 
-  bool status{true};
   entries = std::make_unique<Entries>();
   entries->reserve(builder.getCellNum());
 
+  bool doPop{onBackwardDfsPop != nullptr};
   const Visitor onBackwardDfsPopEx =
-      [this, &status, onBackwardDfsPop](SubnetBuilder &builder,
+      [this, &doPop, onBackwardDfsPop](SubnetBuilder &builder,
           const bool isIn, const bool isOut, const size_t entryID) -> bool {
-        status = status && onBackwardDfsPop(builder, isIn, isOut, entryID);
+        doPop = doPop && onBackwardDfsPop(builder, isIn, isOut, entryID);
         entries->emplace_back(isIn, isOut, entryID);
         return true /* traverse all entries */;
       };
 
+  bool doPush{onBackwardDfsPush != nullptr};
+  const Visitor onBackwardDfsPushEx =
+      [&doPush, onBackwardDfsPush](SubnetBuilder &builder,
+          const bool isIn, const bool isOut, const size_t entryID) -> bool {
+        doPush = doPush && onBackwardDfsPush(builder, isIn, isOut, entryID);
+        return true /* traverse all entries */;
+      };
+
   return traverseForward(builder, view.getInOutMapping(),
-      arityProvider, linkProvider, onBackwardDfsPopEx, onBackwardDfsPush);
+      arityProvider, linkProvider, onBackwardDfsPopEx,
+      (onBackwardDfsPush ? onBackwardDfsPushEx : nullptr));
 }
 
 bool SubnetViewWalker::runBackward(const Visitor visitor,
                                    const bool saveEntries) {
-  SubnetBuilder &builder = const_cast<SubnetBuilder&>(view.getParent());
+  auto &builder = const_cast<SubnetBuilder&>(view.getParent());
 
   if (!entries) {
     entries = std::make_unique<Entries>();

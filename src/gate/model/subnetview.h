@@ -177,8 +177,8 @@ public:
    *
    * @return false iff traversal is aborted.
    */
-  bool runForward(const Visitor  onBackwardDfsPop,
-                  const Visitor *onBackwardDfsPush,
+  bool runForward(const Visitor onBackwardDfsPop,
+                  const Visitor onBackwardDfsPush,
                   const bool saveEntries = false);
 
   /// Visits the subnet cells in direct topological order.

@@ -20,7 +20,7 @@ namespace eda::gate::criterion {
 struct Constraint final {
   Constraint(const CostFunction function, const Cost min, const Cost max):
       function(function), min(min), max(max) {
-    assert(0.0 <= min && min <= max);
+    assert(0.0 <= min && min < max);
   } 
  
   Constraint(const CostFunction function, const Cost max):

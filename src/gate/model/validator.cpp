@@ -12,7 +12,7 @@
 
 #define VALIDATE(logger, prop, msg)\
   if (!(prop)) {\
-    UTOPIA_LOG_ERROR(logger, msg);\
+    UTOPIA_RAISE_ERROR(logger, msg);\
     passed = false;\
   }
 
@@ -20,10 +20,10 @@
   passed &= (prop)
 
 #define VALIDATE_GROUP_BEGIN(logger, msg)\
-  UTOPIA_LOG_BEGIN(logger, msg)
+  UTOPIA_RAISE_BEGIN(logger, msg)
 
 #define VALIDATE_GROUP_END(logger)\
-  UTOPIA_LOG_END(logger)
+  UTOPIA_RAISE_END(logger)
 
 #define VALIDATE_CELLTYPE_IN_PINS(logger, type, expected)\
   VALIDATE(logger, type.getInNum() == (expected),\

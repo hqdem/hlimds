@@ -65,7 +65,7 @@ public:
       tension(tension),
       progress(progress) {}
 
-  bool getCost(const CostVector &vector) const {
+  Cost getCost(const CostVector &vector) const {
     return criterion.getCost(vector);
   }
 
@@ -100,7 +100,7 @@ public:
     const auto cost = getPenalizedCost(vector);
     const auto isFeasible = check(vector);  
 
-    if (feasibleCount == 0 || (isFeasible && cost < best.cost)) {
+    if (feasibleCount == 0 || cost < best.cost) {
       best = Solution(solution, cost, vector);
     }
 

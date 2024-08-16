@@ -16,11 +16,14 @@
 #include <unordered_set>
 
 /// Disables cut extraction and matching for outputs.
-#define UTOPIA_TECHMAP_NO_MATCHING_FOR_OUTPUTS 0
+#define UTOPIA_TECHMAP_MATCH_OUTPUTS 1
+
+/// Saves mapped subnet points when selecting best matches.
+#define UTOPIA_TECHMAP_SAVE_MAPPED_POINTS 1
 
 /// Outputs the cost vector.
 #define UTOPIA_LOG_COST_VECTOR(prefix, vector)\
-  UTOPIA_INFO(prefix << std::endl\
+  UTOPIA_LOG_INFO(prefix << std::endl\
       << "Area:  " << vector[criterion::AREA]  << std::endl\
       << "Delay: " << vector[criterion::DELAY] << std::endl\
       << "Power: " << vector[criterion::POWER] << std::endl)
@@ -29,6 +32,16 @@ namespace eda::gate::techmapper {
 
 using CellSpace = criterion::SolutionSpace<SubnetTechMapper::Match>;
 using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
+
+static inline bool hasSolutions(
+    const SubnetSpace &space, const optimizer::CutExtractor::Cut &cut) {
+  for (const auto entryID : cut.entryIdxs) {
+    if (!space[entryID]->hasSolution()) {
+      return false;
+    }
+  }
+  return true;
+}
 
 static inline const criterion::CostVector &getCostVector(
     const SubnetSpace &space, const size_t entryID) {
@@ -92,20 +105,26 @@ SubnetTechMapper::SubnetTechMapper(const std::string &name,
 /// Maps a entry ID to the best match (null stands for no match).
 using MatchSelection = std::vector<const SubnetTechMapper::Match*>;
 
-static void selectBestMatches(const SubnetSpace &space,
-                              const optimizer::SubnetBuilderPtr oldBuilder,
-                              MatchSelection &matches) {
+static optimizer::SubnetBuilderPtr makeMappedSubnet(
+    const SubnetSpace &space, const optimizer::SubnetBuilderPtr oldBuilder) {
+  // Maps old entry indices to matches.
+  const size_t oldSize = oldBuilder->getMaxIdx() + 1;
+  MatchSelection matches(oldSize);
+
+  // Find best coverage by traversing the subnet in reverse order.
   model::SubnetView view(*oldBuilder);
   model::SubnetViewWalker walker(view,
       [&matches](model::SubnetBuilder &,
                  const size_t entryID) -> size_t {
         // Returns the cell arity.
+        assert(matches[entryID]);
         return matches[entryID]->links.size();
       },
       [&matches](model::SubnetBuilder &,
                  const size_t entryID,
                  const size_t linkIdx) -> model::Subnet::Link {
         // Returns the corresponding link (cut boundary).
+        assert(matches[entryID]);
         return matches[entryID]->links[linkIdx];
       }
   );
@@ -115,34 +134,40 @@ static void selectBestMatches(const SubnetSpace &space,
       [&space, &matches](model::SubnetBuilder &,
                          bool, bool,
                          const size_t entryID) -> bool {
-        assert(!matches[entryID]);
+        assert(!matches[entryID] && space[entryID]->hasSolution());
         matches[entryID] = &space[entryID]->getBest().solution;
         return true;
-      });
-}
-
-static optimizer::SubnetBuilderPtr makeMappedSubnet(
-    const SubnetSpace &space, const optimizer::SubnetBuilderPtr oldBuilder) {
-  // Maps old entry indices to matches.
-  const size_t oldSize = oldBuilder->getMaxIdx() + 1;
-  MatchSelection matches(oldSize);
-
-  // Find best coverage by traversing the subnet in reverse order.
-  selectBestMatches(space, oldBuilder, matches);
+      }, UTOPIA_TECHMAP_SAVE_MAPPED_POINTS);
 
   auto newBuilder = std::make_shared<model::SubnetBuilder>();
 
   // Maps old entry indices to new links.
   std::vector<model::Subnet::Link> links(oldSize);
 
+#if !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
+  // Iterate over all subnet cells and handle the mapped ones.
   for (auto it = oldBuilder->begin(); it != oldBuilder->end(); ++it) {
     const auto entryID = *it;
+#else
+  // Iterate over the saved (mapped) subnet cells.
+  const auto &sequence = walker.getSavedEntries();
+  for (size_t s = 0; s < sequence.size(); ++s) {
+    const auto entryID = sequence[s].entryID;
+#endif // !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
+
     const auto &oldCell = oldBuilder->getCell(entryID);
 
     if (oldCell.isIn()) {
       // Add all inputs even if some of them are not used (matches[i] is null).
       links[entryID] = newBuilder->addInput();
-    } else if (matches[entryID]) {
+    }
+#if !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
+    else if (matches[entryID]) {
+#else
+    else {
+      assert(matches[entryID]);
+#endif // !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
+
       const auto &newType = model::CellType::get(matches[entryID]->typeID);
       assert(newType.getInNum() == matches[entryID]->links.size());
 
@@ -175,13 +200,13 @@ static optimizer::SubnetBuilderPtr makeMappedSubnet(
       const auto isOldOut = oldCell.isOut();
       const auto isNewOut = newType.isOut();
 
-#if UTOPIA_TECHMAP_NO_MATCHING_FOR_OUTPUTS
+#if !UTOPIA_TECHMAP_MATCH_OUTPUTS
       assert(isOldOut == isNewOut);
 #else
       if (isOldOut && !isNewOut) {
         newBuilder->addOutput(link);
       }
-#endif // UTOPIA_TECHMAP_NO_MATCHING_FOR_OUTPUTS
+#endif // !UTOPIA_TECHMAP_MATCH_OUTPUTS
     }
 
     if (oldCell.isIn() || oldCell.isOut()) {
@@ -258,12 +283,12 @@ RECOVERY:
     if (cell.isOut()) {
       outputs.insert(entryID);
 
-#if UTOPIA_TECHMAP_NO_MATCHING_FOR_OUTPUTS
+#if !UTOPIA_TECHMAP_MATCH_OUTPUTS
       const auto link = builder->getLink(entryID, 0);
       const Match match{model::getCellTypeID(model::OUT), {link}, false};
       space[entryID]->add(match, space[link.idx]->getBest().vector);
       continue;
-#endif // UTOPIA_TECHMAP_NO_MATCHING_FOR_OUTPUTS
+#endif // !UTOPIA_TECHMAP_MATCH_OUTPUTS
     }
 
     const auto cuts = cutProvider(*builder, entryID);
@@ -271,8 +296,8 @@ RECOVERY:
     for (const auto &cut : cuts) {
       assert(cut.rootEntryIdx == entryID);
 
-      // Skip trivial cuts.
-      if (cut.isTrivial()) {
+      // Skip trivial and unmapped cuts.
+      if (cut.isTrivial() || !hasSolutions(space, cut)) {
         continue;
       }
 
@@ -298,7 +323,7 @@ RECOVERY:
     } // for cuts
 
     if (!space[entryID]->hasSolution()) {
-      UTOPIA_WARN("No match found for "
+      UTOPIA_LOG_WARN("No match found for "
           << fmt::format("cell#{}:{}", entryID, cell.getType().getName()));
     }
 
@@ -313,7 +338,7 @@ RECOVERY:
 
         tension *= space[entryID]->getTension();
 
-        UTOPIA_DEBUG("Starting the recovery process");
+        UTOPIA_LOG_INFO("Starting the recovery process");
         goto RECOVERY;
       }
     }
@@ -321,6 +346,13 @@ RECOVERY:
 
   assert(outputs.size() == builder->getOutNum());
   optimizer::CutExtractor::Cut resultCut(model::OBJ_NULL_ID, outputs);
+
+  if (!hasSolutions(space, resultCut)) {
+    UTOPIA_ERROR("Incomplete mapping: "
+        "there are cuts that do not match library cells");
+    return nullptr /* error */;
+  }
+
   const auto subnetCostVectors = getCostVectors(space, resultCut);
   const auto subnetAggregation = costAggregator(subnetCostVectors);
 
@@ -335,7 +367,7 @@ RECOVERY:
   if (!isFeasible && tryCount < maxTries) {
     tension *= criterion.getTension(subnetAggregation);
 
-    UTOPIA_DEBUG("Starting the recovery process");
+    UTOPIA_LOG_INFO("Starting the recovery process");
     goto RECOVERY;
   }
 

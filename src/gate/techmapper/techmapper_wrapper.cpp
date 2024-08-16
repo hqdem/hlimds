@@ -46,9 +46,9 @@ std::shared_ptr<SubnetBuilder> techMap(
     const std::shared_ptr<SubnetBuilder> &builder) {
   // Set constraints
   criterion::Constraints constraints = {
-      criterion::Constraint(criterion::AREA, 1000000),   // FIXME:
-      criterion::Constraint(criterion::DELAY, 1000000),  // FIXME:
-      criterion::Constraint(criterion::POWER, 1000000)}; // FIXME:
+      criterion::Constraint(criterion::AREA, 100000),    // FIXME:
+      criterion::Constraint(criterion::DELAY, 10),       // FIXME:
+      criterion::Constraint(criterion::POWER, 100000)};  // FIXME:
   criterion::Criterion criterion{objective, constraints};
 
   // Set matcher type

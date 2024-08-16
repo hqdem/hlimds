@@ -100,7 +100,8 @@ public:
     const auto cost = getPenalizedCost(vector);
     const auto isFeasible = check(vector);  
 
-    if (feasibleCount == 0 || cost < best.cost) {
+    if ((feasibleCount == 0 && cost < best.cost) ||
+        (feasibleCount != 0 && isFeasible && cost < best.cost)) {
       best = Solution(solution, cost, vector);
     }
 

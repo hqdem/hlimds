@@ -48,8 +48,13 @@
 #define UTOPIA_END()      UTOPIA_RAISE_END(UTOPIA_LOGGER, msg)
 
 // Logging.
-#define UTOPIA_INFO(msg)  LOG(INFO) << msg
-#define UTOPIA_DEBUG(msg) LOG(DEBUG) << msg
+#define UTOPIA_LOG_INFO(msg)  LOG(INFO)    << msg
+#define UTOPIA_LOG_DEBUG(msg) LOG(DEBUG)   << msg
+#define UTOPIA_LOG_NOTE(msg)  LOG(INFO)    << msg; UTOPIA_NOTE(msg)
+#define UTOPIA_LOG_WARN(msg)  LOG(WARNING) << msg; UTOPIA_WARN(msg)
+#define UTOPIA_LOG_ERROR(msg) LOG(ERROR)   << msg; UTOPIA_ERROR(msg)
+#define UTOPIA_LOG_BEGIN(msg) LOG(INFO)    << msg; UTOPIA_BEGIN(msg)
+#define UTOPIA_LOG_END()      /* nothing to log */ UTOPIA_END()
 
 #define UTOPIA_INITIALIZE_LOGGER()\
   el::Loggers::reconfigureAllLoggers(\

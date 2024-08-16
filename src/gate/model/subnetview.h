@@ -198,6 +198,17 @@ public:
         : runBackward(visitor, saveEntries);
   }
 
+  /// Returns the saved entries to fasten traversal.
+  const Entries &getSavedEntries() const {
+    assert(entries);
+    return *entries;
+  }
+
+  /// Resets the entries.
+  void resetSavedEntries() {
+    entries = nullptr;
+  }
+
 private:
   const SubnetView &view;
 

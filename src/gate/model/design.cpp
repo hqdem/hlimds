@@ -83,4 +83,26 @@ void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
   }
 }
 
+std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder) {
+  out << "digraph " << builder.getName() << " {\n";
+
+  const size_t nSubnet = builder.getSubnetNum();
+  std::vector<std::vector<size_t>> subnetLinks(nSubnet);
+  for (size_t i = 0; i < nSubnet; ++i) {
+    out << "  snet_" << i << ";\n";
+    const auto &outArcs = builder.getOutArcs(i);
+    for (const auto &outArc : outArcs) {
+      subnetLinks[outArc].push_back(i);
+    }
+  }
+  for (size_t i = 0; i < nSubnet; ++i) {
+    for (const auto &link : subnetLinks[i]) {
+      out << "  snet_" << link << " -> " <<  "snet_" << i << ";\n";
+    }
+  }
+
+  out << "}\n";
+  return out;
+}
+
 } // namespace eda::gate::model

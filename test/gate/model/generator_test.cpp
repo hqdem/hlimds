@@ -20,7 +20,7 @@
 
 namespace eda::gate::model {
 
-const std::string testOutPath = "output/data/gate/optimizer/generator/";
+const std::string testOutPath = "data/gate/optimizer/generator/";
 const std::string matrixGenSubfolder = "matrix/";
 const std::string layerGenSubfolder = "layer/";
 

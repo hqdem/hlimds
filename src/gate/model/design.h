@@ -49,9 +49,13 @@ private:
 
 public:
   using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
+  using SubnetToSubnetSet = std::vector<std::unordered_set<size_t>>;
 
   struct SubnetEntry {
-    SubnetEntry(const SubnetID subnetID): subnetID(subnetID) {}
+    SubnetEntry(
+        const SubnetID subnetID,
+        const std::unordered_set<size_t> &arcs):
+      subnetID(subnetID), arcs(arcs) {};
 
     /// Check points.
     std::unordered_map<std::string, SubnetID> points;
@@ -59,6 +63,8 @@ public:
     SubnetID subnetID;
     /// Current subnet builder.
     SubnetBuilderPtr builder{nullptr};
+    /// Adjency list of connected subnets.
+    std::unordered_set<size_t> arcs;
   };
 
   /// Constructs a design builder w/ the given name from the net.
@@ -74,7 +80,8 @@ public:
 
     std::vector<SubnetID> subnetIDs;
     NetDecomposer::get().decompose(netID, subnetIDs, mapping);
-    setEntries(subnetIDs);
+    auto adjList = getAdjList(subnetIDs);
+    setEntries(subnetIDs, adjList);
   }
 
   /// Constructs a design builder from the net.
@@ -91,7 +98,8 @@ public:
 
     std::vector<SubnetID> subnetIDs;
     NetDecomposer::get().decompose(subnetID, subnetIDs, mapping);
-    setEntries(subnetIDs);
+    auto adjList = getAdjList(subnetIDs);
+    setEntries(subnetIDs, adjList);
   }
 
   /// Constructs a design builder from the subnet.
@@ -181,6 +189,16 @@ public:
       nInt += std::get<2>(getCellNum(i, withBufs));
     }
     return std::make_tuple(nIn, nOut, nInt);
+  }
+
+  /// Returns true if there is an arc between subnets, false otherwise.
+  bool isArc(const size_t from, const size_t to) const {
+    return subnets[from].arcs.find(to) != subnets[from].arcs.end();
+  }
+
+  /// Returns all fanout arcs of the i-th subnet.
+  std::unordered_set<size_t> getOutArcs(const size_t i) const {
+    return subnets[i].arcs;
   }
 
   /// Makes the subnets.
@@ -294,10 +312,59 @@ private:
     return subnetIDs;
   }
 
-  void setEntries(const std::vector<SubnetID> &subnetIDs) {
-    for (const auto &subnetID : subnetIDs) {
-      subnets.emplace_back(subnetID);
+  void setEntries(
+      const std::vector<SubnetID> &subnetIDs,
+      const SubnetToSubnetSet &adjList) {
+
+    for (size_t i = 0; i < subnetIDs.size(); ++i) {
+      subnets.emplace_back(subnetIDs[i], adjList[i]);
     }
+  }
+
+  SubnetToSubnetSet findTriggerPOs(
+      const std::vector<SubnetID> &subnetIDs) const {
+
+    SubnetToSubnetSet triggerPOs(subnetIDs.size());
+    // Find trigger POs.
+    for (size_t i = 0; i < subnetIDs.size(); ++i) {
+      const auto &subnet = Subnet::get(subnetIDs[i]);
+      for (size_t outN = 0; outN < subnet.getOutNum(); ++outN) {
+        const size_t outEntryID = subnet.getOutIdx(outN);
+        const auto &outCell = subnet.getCell(outEntryID);
+        if (outCell.isFlipFlop()) {
+          triggerPOs[i].insert(outCell.flipFlopID);
+        }
+      }
+    }
+    return triggerPOs;
+  }
+
+  SubnetToSubnetSet findArcs(
+      const std::vector<SubnetID> &subnetIDs,
+      const SubnetToSubnetSet &triggerPOs) const {
+
+    SubnetToSubnetSet adjList(subnetIDs.size());
+    for (size_t i = 0; i < subnetIDs.size(); ++i) {
+      const auto &subnet = Subnet::get(subnetIDs[i]);
+      for (size_t inN = 0; inN < subnet.getInNum(); ++inN) {
+        const auto &inCell = subnet.getCell(inN);
+        if (!inCell.isFlipFlop()) {
+          continue;
+        }
+        const auto flipFlopID = inCell.flipFlopID;
+        for (size_t j = 0; j < triggerPOs.size(); ++j) {
+          if (triggerPOs[j].find(flipFlopID) != triggerPOs[j].end()) {
+            adjList[j].insert(i);
+          }
+        }
+      }
+    }
+    return adjList;
+  }
+
+  SubnetToSubnetSet getAdjList(const std::vector<SubnetID> &subnetIDs) const {
+    auto triggerPOs = findTriggerPOs(subnetIDs);
+    return findArcs(subnetIDs, triggerPOs);
   }
 
   // Clock domains.
@@ -327,5 +394,7 @@ inline NetID makeNet(const SubnetID subnetID) {
   DesignBuilder builder(subnetID);
   return builder.make();
 }
+
+std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder);
 
 } // namespace eda::gate::model

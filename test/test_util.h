@@ -12,7 +12,7 @@
 
 inline std::filesystem::path createOutDir(const std::string &folderName) {
   std::filesystem::path homePath = eda::env::getHomePath();
-  std::filesystem::path outputPath = homePath / "build" / folderName;
+  std::filesystem::path outputPath = homePath / "output" / folderName;
 
   std::filesystem::create_directories(outputPath);
 

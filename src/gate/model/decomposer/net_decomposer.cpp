@@ -638,7 +638,7 @@ static void makeCellsForOutputs(NetBuilder &netBuilder,
     const auto newSource = makeLinkEnd(netBuilder, link, inverse);
 
     const auto oldTargetID = oldLink.target.getCellID();
-    const auto newTargetID = makeCell(netBuilder, oldTargetID, inout); 
+    const auto newTargetID = makeCell(netBuilder, oldTargetID, inout);
     const auto targetPort = oldLink.target.getPort();
 
     netBuilder.connect(newTargetID, targetPort, newSource);

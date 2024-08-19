@@ -25,6 +25,7 @@
 #include "shell/command/techmap.h"
 #include "shell/command/verilog_to_fir.h"
 #include "shell/command/version.h"
+#include "shell/command/write_dataflow.h"
 #include "shell/command/write_design.h"
 #include "shell/shell.h"
 #include "util/env.h"
@@ -110,6 +111,7 @@ UtopiaShell::UtopiaShell() {
   addCommand(&VerilogToFirCommand::get());
 #endif // UTOPIA_SHELL_ENABLE_VERILOG_TO_FIR
   addCommand(&VersionCommand::get());
+  addCommand(&WriteDataflowCommand::get());
   addCommand(&WriteDebugCommand::get());
   addCommand(&WriteDotCommand::get());
   addCommand(&WriteVerilogCommand::get());

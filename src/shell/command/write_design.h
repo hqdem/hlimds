@@ -41,14 +41,6 @@ static inline void printSubnet(
   printer.print(out, subnet, subnetName);
 }
 
-static inline bool createDirectories(const std::string &dir) {
-  if (std::filesystem::exists(dir)) {
-    return true;
-  }
-  std::error_code error;
-  return std::filesystem::create_directories(dir, error);
-}
-
 struct WriteDesignCommand : public UtopiaCommand {
   using ModelPrinter = eda::gate::model::ModelPrinter;
   using Format = ModelPrinter::Format;

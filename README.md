@@ -311,7 +311,7 @@ or
 ./filter-tests.sh <test-pattern>
 ```
 
-or set the `GTEST_FILTER` environment variable, for example, as follows:
+or set the `GTEST_FILTER` environment variable to filter some tests out:
 
 ```console
 export GTEST_FILTER="-ReedMuller*:\
@@ -320,7 +320,7 @@ BiDecompositionTest*"
 ./build/test/utest
 ```
 
-Test pattern accepts ```*``` and ```?``` wildcards.
+Test pattern accepts ```-```, ```*``` and ```?``` wildcards.
 
 ### List available tests
 

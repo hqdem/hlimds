@@ -209,10 +209,15 @@ private:
 
     printIndent(out, 1);
 
+    const auto instanceName = getInstanceName(cellInfo);
+    out << cellInfo.getType();
+    if (!instanceName.empty()) {
+      out << " ";
+    }
     // Space before "(" is for escaped identifiers.
-    out << cellInfo.getType() << " " << getInstanceName(cellInfo) << " (";
-    bool comma = false;
+    out << instanceName << " ( ";
 
+    bool comma = false;
     if (type.isGate()) {
       assert(!type.isMaj() || linksInfo.size() == 3);
 

@@ -83,6 +83,53 @@ void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
   }
 }
 
+DesignBuilder::SubnetToSubnetSet DesignBuilder::findFlipFlopPOs(
+    const std::vector<SubnetID> &subnetIDs) const {
+
+  SubnetToSubnetSet flipFlopPOs(subnetIDs.size());
+  // Find flip-flops POs.
+  for (size_t i = 0; i < subnetIDs.size(); ++i) {
+    const auto &subnet = Subnet::get(subnetIDs[i]);
+    for (size_t outN = 0; outN < subnet.getOutNum(); ++outN) {
+      const size_t outEntryID = subnet.getOutIdx(outN);
+      const auto &outCell = subnet.getCell(outEntryID);
+      if (outCell.isFlipFlop()) {
+        flipFlopPOs[i].insert(outCell.flipFlopID);
+      }
+    }
+  }
+  return flipFlopPOs;
+}
+
+DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
+    const std::vector<SubnetID> &subnetIDs,
+    const SubnetToSubnetSet &flipFlopPOs) const {
+
+  SubnetToSubnetSet adjList(subnetIDs.size());
+  for (size_t i = 0; i < subnetIDs.size(); ++i) {
+    const auto &subnet = Subnet::get(subnetIDs[i]);
+    for (size_t inN = 0; inN < subnet.getInNum(); ++inN) {
+      const auto &inCell = subnet.getCell(inN);
+      if (!inCell.isFlipFlop()) {
+        continue;
+      }
+      const auto flipFlopID = inCell.flipFlopID;
+      for (size_t j = 0; j < flipFlopPOs.size(); ++j) {
+        if (flipFlopPOs[j].find(flipFlopID) != flipFlopPOs[j].end()) {
+          adjList[j].insert(i);
+        }
+      }
+    }
+  }
+  return adjList;
+}
+
+DesignBuilder::SubnetToSubnetSet DesignBuilder::getAdjList(
+    const std::vector<SubnetID> &subnetIDs) const {
+  auto flipFlopPOs = findFlipFlopPOs(subnetIDs);
+  return findArcs(subnetIDs, flipFlopPOs);
+}
+
 std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder) {
   out << "digraph " << builder.getName() << " {\n";
 

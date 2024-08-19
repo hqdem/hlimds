@@ -321,51 +321,15 @@ private:
     }
   }
 
-  SubnetToSubnetSet findTriggerPOs(
-      const std::vector<SubnetID> &subnetIDs) const {
-
-    SubnetToSubnetSet triggerPOs(subnetIDs.size());
-    // Find trigger POs.
-    for (size_t i = 0; i < subnetIDs.size(); ++i) {
-      const auto &subnet = Subnet::get(subnetIDs[i]);
-      for (size_t outN = 0; outN < subnet.getOutNum(); ++outN) {
-        const size_t outEntryID = subnet.getOutIdx(outN);
-        const auto &outCell = subnet.getCell(outEntryID);
-        if (outCell.isFlipFlop()) {
-          triggerPOs[i].insert(outCell.flipFlopID);
-        }
-      }
-    }
-    return triggerPOs;
-  }
+  SubnetToSubnetSet findFlipFlopPOs(
+      const std::vector<SubnetID> &subnetIDs) const;
 
   SubnetToSubnetSet findArcs(
       const std::vector<SubnetID> &subnetIDs,
-      const SubnetToSubnetSet &triggerPOs) const {
+      const SubnetToSubnetSet &flipFlopPOs) const;
 
-    SubnetToSubnetSet adjList(subnetIDs.size());
-    for (size_t i = 0; i < subnetIDs.size(); ++i) {
-      const auto &subnet = Subnet::get(subnetIDs[i]);
-      for (size_t inN = 0; inN < subnet.getInNum(); ++inN) {
-        const auto &inCell = subnet.getCell(inN);
-        if (!inCell.isFlipFlop()) {
-          continue;
-        }
-        const auto flipFlopID = inCell.flipFlopID;
-        for (size_t j = 0; j < triggerPOs.size(); ++j) {
-          if (triggerPOs[j].find(flipFlopID) != triggerPOs[j].end()) {
-            adjList[j].insert(i);
-          }
-        }
-      }
-    }
-    return adjList;
-  }
-
-  SubnetToSubnetSet getAdjList(const std::vector<SubnetID> &subnetIDs) const {
-    auto triggerPOs = findTriggerPOs(subnetIDs);
-    return findArcs(subnetIDs, triggerPOs);
-  }
+  SubnetToSubnetSet getAdjList(
+      const std::vector<SubnetID> &subnetIDs) const;
 
   // Clock domains.
   // TODO

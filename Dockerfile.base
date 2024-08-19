@@ -41,8 +41,7 @@ RUN make install
 # Install Yosys tool & library
 
 RUN apt install -y build-essential bison gawk libboost-system-dev \
-    libboost-python-dev libboost-filesystem-dev libffi-dev libreadline-dev \
-    tcl-dev xdot
+    libboost-python-dev libboost-filesystem-dev libffi-dev libreadline-dev xdot
 
 WORKDIR /workdir
 RUN git clone https://github.com/YosysHQ/yosys.git

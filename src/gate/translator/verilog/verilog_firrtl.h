@@ -14,6 +14,6 @@
 
 namespace eda::gate::translator {
 
-int translateVerilogFIR(const FirrtlConfig &firrtlConfig);
+int translateVerilogFIRRTL(const FirrtlConfig &firrtlConfig);
 
 } // namespace eda::gate::translator

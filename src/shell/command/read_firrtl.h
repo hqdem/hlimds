@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/model/validator.h"
-#include "gate/translator/fir/fir_net.h"
+#include "gate/translator/firrtl/firrtl_net.h"
 #include "shell/shell.h"
 
 namespace eda::shell {
@@ -28,7 +28,7 @@ struct ReadFirrtlCommand final : public UtopiaCommandBase<ReadFirrtlCommand> {
     const std::string fileName = app.remaining().at(0);
     UTOPIA_SHELL_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
-    const auto typeIDs = eda::gate::translator::getNet(fileName);
+    const auto typeIDs = eda::gate::translator::getNetlist(fileName);
     UTOPIA_SHELL_ERROR_IF(interp, typeIDs.empty(),
         "received empty list");
 

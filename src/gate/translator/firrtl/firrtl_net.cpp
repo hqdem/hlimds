@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "fir_net.h"
-#include "fir_net_utils.h"
+#include "firrtl_net.h"
+#include "firrtl_net_utils.h"
 
 #include "gate/model/celltype.h"
 #include "gate/model/object.h"
@@ -115,7 +115,7 @@ namespace sv = circt::sv;
 
 namespace eda::gate::translator {
 
-std::vector<CellTypeID> getNet(const std::string &inputFilePath) {
+std::vector<CellTypeID> getNetlist(const std::string &inputFilePath) {
   const fs::path inPath = inputFilePath;
   if (!fs::exists(inPath)) {
     std::cerr << "File does not exist: " << inputFilePath << "\n";
@@ -140,8 +140,8 @@ std::vector<CellTypeID> getNet(const std::string &inputFilePath) {
   return translator.translate();
 }
 
-bool printNet(const std::vector<CellTypeID> netlist,
-              const std::string &outputFileName) {
+bool printNetlist(const std::vector<CellTypeID> netlist,
+                  const std::string &outputFileName) {
 
   // Dump the output net to the console (Format::SIMPLE).
 #ifdef UTOPIA_DEBUG
@@ -159,9 +159,9 @@ bool printNet(const std::vector<CellTypeID> netlist,
   return true;
 }
 
-bool printNet(const std::string &inputFilePath,
-              const std::string &outputDir) {
-  const auto resultNetlist = getNet(inputFilePath);
+bool printNetlist(const std::string &inputFilePath,
+                  const std::string &outputDir) {
+  const auto resultNetlist = getNetlist(inputFilePath);
   if (resultNetlist.empty()) {
     return false;
   }
@@ -170,7 +170,7 @@ bool printNet(const std::string &inputFilePath,
   outPath.replace_extension(".v");
   fs::create_directories(outputDir);
   const fs::path outputFullName = outputDir / outPath;
-  return printNet(resultNetlist, outputFullName.c_str());
+  return printNetlist(resultNetlist, outputFullName.c_str());
 }
 
 MLIRModule MLIRModule::loadFromMLIR(const std::string &fileName,
@@ -610,6 +610,7 @@ private:
   void processConnects(StrictConnectOp strictConnectOp, FModuleOp fModuleOp,
       NetBuilder *netBuilder,
       CellID &cellIDForZero, CellID &cellIDForOne);
+  bool checkConnections();
   void processOperation(Operation *destOp, FModuleOp fModuleOp,
       NetBuilder *netBuilder,
       CellID &cellIDForZero, CellID &cellIDForOne);
@@ -648,22 +649,18 @@ private:
       const uint typeWidth, LinkInfo &linkInfo,
       std::vector<std::pair<uint,uint>> &fromLinkKeysMargins,
       std::vector<std::vector<LinkKey>> &toLinkKeys);
-  void walkThroughPad(std::vector<Value> &wireOrBitManValues, PadPrimOp padOp,
-      LinkInfo &linkInfo, std::vector<LinkInfo> &linkInfoCol);
-  void walkThroughShiftLeft(std::vector<Value> &wireOrBitManValues,
-      ShlPrimOp shlOp, LinkInfo &linkInfo, std::vector<LinkInfo> &linkInfoCol);
-  void walkThroughBits(std::vector<Value> &wireOrBitManValues,
-      BitsPrimOp bitsOp, LinkInfo &linkInfo,
-      std::vector<LinkInfo> &linkInfoCol);
-  void walkThroughCat(std::vector<Value> &wireOrBitManValues, OpInfo curOpInfo,
-      OpInfo prevOpInfo, uint opNumber, LinkInfo &linkInfo,
-      std::vector<LinkInfo> &linkInfoCol);
+  LinkInfo walkThroughPad(std::vector<Value> &bitManVals, PadPrimOp padOp,
+      const LinkInfo &linkInfo);
+  LinkInfo walkThroughShiftLeft(std::vector<Value> &bitManVals, ShlPrimOp shlOp,
+      const LinkInfo &linkInfo);
+  void walkThroughBits(std::vector<Value> &bitManVals, BitsPrimOp bitsOp,
+      const LinkInfo &linkInfo, std::vector<LinkInfo> &linkInfoCol);
+  LinkInfo walkThroughCat(std::vector<Value> &bitManVals, OpInfo curOpInfo,
+      OpInfo prevOpInfo, uint opNum, const LinkInfo &linkInfo);
   void processWires(FModuleOp fModuleOp, NetBuilder *netBuilder);
   void generateOutputs(FModuleOp fModuleOp, NetBuilder *netBuilder);
-  void generateInputs(FModuleOp fModuleOp,
-      NetBuilder *netBuilder,
-      CellID &cellIDForZero,
-      CellID &cellIDForOne);
+  void generateInputs(FModuleOp fModuleOp, NetBuilder *netBuilder,
+      CellID &cellIDForZero, CellID &cellIDForOne);
   std::vector<LinkEnd> getLinkEnds(Operation *destOp, FModuleOp fModuleOp);
 public:
   LowFIRRTLToNetPass(
@@ -792,135 +789,134 @@ void LowFIRRTLToNetPass::processWires(FModuleOp fModuleOp,
   });
 }
 
-void LowFIRRTLToNetPass::walkThroughCat(std::vector<Value> &wireOrBitManValues,
-    OpInfo curOpInfo, OpInfo prevOpInfo, uint opNumber, LinkInfo &linkInfo,
-    std::vector<LinkInfo> &linkInfoCol) {
-  wireOrBitManValues.push_back(curOpInfo.op->getResult(0));
+LinkInfo LowFIRRTLToNetPass::walkThroughCat(std::vector<Value> &bitManVals,
+    OpInfo curOpInfo, OpInfo prevOpInfo, uint opNum, const LinkInfo &linkInfo) {
+  uint newOff = linkInfo.off;
+  int newBitOff = linkInfo.bitOff;
+  bitManVals.push_back(curOpInfo.op->getResult(0));
   if (prevOpInfo.op == curOpInfo.op && prevOpInfo.value == curOpInfo.value) {
-    linkInfo.bitOff -= getOperandWidth(curOpInfo.op, 1);
-    opNumber++;
+    opNum++;
   }
-  if (opNumber == 1) {
-    linkInfo.off += getOperandWidth(curOpInfo.op, 0);
+  if (opNum == 1) {
+    newOff += getOperandWidth(curOpInfo.op, 0);
   } else {
-    linkInfo.bitOff += getOperandWidth(curOpInfo.op, 1);
+    newBitOff += getOperandWidth(curOpInfo.op, 1);
   }
+  return {linkInfo.low, linkInfo.high, newOff, newBitOff};
 }
 
-void LowFIRRTLToNetPass::walkThroughBits(std::vector<Value> &wireOrBitManValues,
-    BitsPrimOp bitsOp, LinkInfo &linkInfo, std::vector<LinkInfo> &linkInfoCol) {
-  wireOrBitManValues.push_back(bitsOp->getResult(0));
+void LowFIRRTLToNetPass::walkThroughBits(std::vector<Value> &bitManVals,
+    BitsPrimOp bitsOp, const LinkInfo &linkInfo,
+    std::vector<LinkInfo> &linkInfoCol) {
   const uint hi = bitsOp.getHi();
   const uint lo = bitsOp.getLo();
-  uint newLowMargin = std::max(lo, linkInfo.low + linkInfo.bitOff);
-  uint newHighMargin = std::min(hi, linkInfo.high + linkInfo.bitOff);
-  if (newHighMargin >= newLowMargin) {
-    // Offsetting back to old margins.
-    newLowMargin -= linkInfo.bitOff;
-    newLowMargin = (newLowMargin < 0) ? 0 : newLowMargin;
-    newHighMargin -= linkInfo.bitOff;
-    newHighMargin = (newHighMargin < 0) ? 0 : newHighMargin;
+  uint newLow = std::max(lo, linkInfo.low + linkInfo.bitOff);
+  uint newHigh = std::min(hi, linkInfo.high + linkInfo.bitOff);
+  if (newHigh >= newLow) {
+    newLow -= linkInfo.bitOff;
+    newLow = (newLow < 0) ? 0 : newLow;
+    newHigh -= linkInfo.bitOff;
+    newHigh = (newHigh < 0) ? 0 : newHigh;
     const uint bitWidth = getOperandWidth(bitsOp, 0);
     const uint bitsCutFromLeft = (bitWidth - 1) - hi;
-    uint newOffset = linkInfo.off - (bitsCutFromLeft -
-        (linkInfo.high - newHighMargin));
+    uint newOff = linkInfo.off - (bitsCutFromLeft - (linkInfo.high - newHigh));
     const uint bitsCutFromRight = lo;
-    int newOffsetForBits = linkInfo.bitOff - bitsCutFromRight;
-    linkInfo.bitOff = newOffsetForBits;
-    linkInfo.off = newOffset;
-    linkInfo.low = newLowMargin;
-    linkInfo.high = newHighMargin;
-  } else {
-    wireOrBitManValues.pop_back();
+    int newBitOff = linkInfo.bitOff - bitsCutFromRight;
+    bitManVals.push_back(bitsOp->getResult(0));
+    linkInfoCol.push_back({newLow, newHigh, newOff, newBitOff});
   }
 }
 
-void LowFIRRTLToNetPass::walkThroughShiftLeft(
-    std::vector<Value> &wireOrBitManValues, ShlPrimOp shlOp, LinkInfo &linkInfo,
-    std::vector<LinkInfo> &linkInfoCol) {
-   wireOrBitManValues.push_back(shlOp->getResult(0));
-   linkInfo.bitOff += getOperandWidth(shlOp, 0);
+LinkInfo LowFIRRTLToNetPass::walkThroughShiftLeft(
+    std::vector<Value> &bitManVals, ShlPrimOp shlOp,
+    const LinkInfo &linkInfo) {
+  int newBifOff = linkInfo.bitOff;
+  bitManVals.push_back(shlOp->getResult(0));
+  newBifOff += getOperandWidth(shlOp, 0);
+  return {linkInfo.low, linkInfo.high, linkInfo.off, newBifOff};
 }
 
-void LowFIRRTLToNetPass::walkThroughPad(std::vector<Value> &wireOrBitManValues,
-    PadPrimOp padOp, LinkInfo &linkInfo, std::vector<LinkInfo> &linkInfoCol) {
-  wireOrBitManValues.push_back(padOp->getResult(0));
+LinkInfo LowFIRRTLToNetPass::walkThroughPad( std::vector<Value> &bitManVals,
+    PadPrimOp padOp, const LinkInfo &linkInfo) {
+  uint newOff = linkInfo.off;
+  bitManVals.push_back(padOp->getResult(0));
   const uint numBitsPadded = padOp.getAmount() - getOperandWidth(padOp, 0);
-  linkInfo.off += numBitsPadded;
+  newOff += numBitsPadded;
+  return {linkInfo.low, linkInfo.high, newOff, linkInfo.bitOff};
 }
 
-void LowFIRRTLToNetPass::walkFinal(Operation *op, const uint opNumber,
-               const uint typeWidth, LinkInfo &linkInfo,
-               std::vector<std::pair<uint,uint>> &fromLinkKeysMargins,
-               std::vector<std::vector<LinkKey>> &toLinkKeys) {
+void LowFIRRTLToNetPass::walkFinal(Operation *op, const uint opNum,
+    const uint typeWidth, LinkInfo &linkInfo,
+    std::vector<std::pair<uint,uint>> &fromLinkKeysMargins,
+    std::vector<std::vector<LinkKey>> &toLinkKeys) {
   std::vector<LinkKey> toLinkKeysSimple;
   // Reversing the margins because of the difference in endianness.
-  const uint lowMarginReversed = typeWidth - linkInfo.high - 1;
-  const uint highMarginReversed = typeWidth - linkInfo.low;
-  for (uint i = 0; i < highMarginReversed - lowMarginReversed; i++) {
-    toLinkKeysSimple.push_back(LinkKey(op, opNumber, linkInfo.off + i));
+  const uint lowRev = typeWidth - linkInfo.high - 1;
+  const uint highRev = typeWidth - linkInfo.low;
+  for (uint i = 0; i < highRev - lowRev; i++) {
+    toLinkKeysSimple.push_back(LinkKey(op, opNum, linkInfo.off + i));
   }
   toLinkKeys.push_back(toLinkKeysSimple);
-  fromLinkKeysMargins.push_back({ lowMarginReversed, highMarginReversed });
+  fromLinkKeysMargins.push_back({ lowRev, highRev });
 }
 
 void LowFIRRTLToNetPass::getToLinkKeysSynthOps(const Value &val,
     FModuleOp fModuleOp, std::vector<std::pair<uint,uint>> &fromLinkKeysMargins,
     std::vector<std::vector<LinkKey>> &toLinkKeys) {
-  std::vector<Value> wireOrBitManValues;
-  wireOrBitManValues.push_back(val);
+  std::vector<Value> bitManVals;
+  bitManVals.push_back(val);
   std::vector<LinkInfo> linkInfoCol;
   uint typeWidth = getTypeWidth(val.getType());
   linkInfoCol.push_back({0, typeWidth - 1, 0, 0});
   Operation* prevOp;
-  Value prevValue;
-  while (!wireOrBitManValues.empty()) {
-    Value currentValue = wireOrBitManValues.back();
-    wireOrBitManValues.pop_back();
-    auto linkInfo = linkInfoCol.back();
+  Value prevVal;
+  while(!bitManVals.empty()) {
+    Value curVal = bitManVals.back();
+    bitManVals.pop_back();
+    LinkInfo linkInfo = linkInfoCol.back();
     linkInfoCol.pop_back();
-    for (auto *user : currentValue.getUsers()) {
-      if (auto connect = mlir::dyn_cast<StrictConnectOp>(user)) {
-        if (connect.getSrc() == currentValue) {
-          Value nextValue = connect.getDest();
-          Operation *nextOp = nextValue.getDefiningOp();
+    for (auto *user : curVal.getUsers()) {
+      if (auto connect = mlir::dyn_cast<FConnectLike>(user)) {
+        if (connect.getSrc() == curVal) {
+          Value nextVal = connect.getDest();
+          Operation *nextOp = nextVal.getDefiningOp();
           if (nextOp && (isWire(nextOp) || isSimpleLinkMove(nextOp))) {
-            wireOrBitManValues.push_back(nextValue);
+            bitManVals.push_back(nextVal);
             linkInfoCol.push_back(linkInfo);
           } else {
-            uint opNumber = findOpOperandNumber(nextValue, nextOp, fModuleOp);
-            walkFinal(nextOp, opNumber, typeWidth, linkInfo,
+            uint opNum = findOpOperandNumber(nextVal, nextOp, fModuleOp);
+            walkFinal(nextOp, opNum, typeWidth, linkInfo,
                       fromLinkKeysMargins, toLinkKeys);
           }
         }
       } else {
-        uint opNumber = findOpOperandNumber(currentValue, user, fModuleOp);
-        if (isBitManipulation(user)) {
+        uint opNum = findOpOperandNumber(curVal, user, fModuleOp);
+        if (isBits(user)) {
+          auto bitsOp = mlir::dyn_cast<BitsPrimOp>(user);
+          walkThroughBits(bitManVals, bitsOp, linkInfo, linkInfoCol);
+        } else if (isBitManipulation(user)) {
+          LinkInfo newLinkInfo = linkInfo;
           if (isConcatenation(user)) {
             auto catOp = mlir::dyn_cast<CatPrimOp>(user);
-            walkThroughCat(wireOrBitManValues, {currentValue, catOp},
-                          {prevValue, prevOp}, opNumber, linkInfo, linkInfoCol);
-          } else if (isBits(user)) {
-            auto bitOp = mlir::dyn_cast<BitsPrimOp>(user);
-            walkThroughBits(wireOrBitManValues, bitOp, linkInfo, linkInfoCol);
+            newLinkInfo = walkThroughCat(bitManVals, {curVal, catOp},
+                {prevVal, prevOp}, opNum, linkInfo);
           } else if (isShiftLeft(user)) {
             auto shlOp = mlir::dyn_cast<ShlPrimOp>(user);
-            walkThroughShiftLeft(wireOrBitManValues, shlOp, linkInfo,
-                                 linkInfoCol);
+            newLinkInfo = walkThroughShiftLeft(bitManVals, shlOp, linkInfo);
           } else if (isPad(user)) {
             auto padOp = mlir::dyn_cast<PadPrimOp>(user);
-            walkThroughPad(wireOrBitManValues, padOp, linkInfo, linkInfoCol);
+            newLinkInfo = walkThroughPad(bitManVals, padOp, linkInfo);
           } else if (isSimpleLinkMove(user)) {
-            wireOrBitManValues.push_back(user->getResult(0));
+            bitManVals.push_back(user->getResult(0));
           }
-          linkInfoCol.push_back(linkInfo);
+          linkInfoCol.push_back(newLinkInfo);
         } else {
-          walkFinal(user, opNumber, typeWidth, linkInfo,
+          walkFinal(user, opNum, typeWidth, linkInfo,
                     fromLinkKeysMargins, toLinkKeys);
         }
       }
       prevOp = user;
-      prevValue = currentValue;
+      prevVal = curVal;
     }
   }
 }
@@ -1017,9 +1013,8 @@ void LowFIRRTLToNetPass::processSynthesizable(Operation *synthOp,
 }
 
 void LowFIRRTLToNetPass::processPad(PadPrimOp padOp, CellID &cellIDForZero,
-    const uint bitWidthIn,
-    std::vector<LinkEnd> &linkEnds, std::vector<LinkEnd> &outLinkEnds,
-    NetBuilder *netBuilder) {
+    const uint bitWidthIn, std::vector<LinkEnd> &linkEnds,
+    std::vector<LinkEnd> &outLinkEnds, NetBuilder *netBuilder) {
   auto &&argument = padOp->getOperand(0);
   auto &&type = argument.getType();
   const uint amount = padOp.getAmount();
@@ -1111,10 +1106,10 @@ void LowFIRRTLToNetPass::processBits(BitsPrimOp bitsOp, const uint bitWidthIn,
   const uint highMargin = bitsOp.getHi();
 
   // Reversing the margins because of the difference in endianness.
-  const uint lowMarginReversed = bitWidthIn - highMargin - 1;
-  const uint highMarginReversed = bitWidthIn - lowMargin;
+  const uint lowRev = bitWidthIn - highMargin - 1;
+  const uint highRev = bitWidthIn - lowMargin;
 
-  for (uint i = lowMarginReversed; i < highMarginReversed; i++) {
+  for (uint i = lowRev; i < highRev; i++) {
     outLinkEnds.push_back(linkEnds[i]);
   }
 }
@@ -1137,9 +1132,10 @@ void LowFIRRTLToNetPass::processBitManipulation(Operation *op,
     processShiftRight(shrOp, cellIDForZero, portWidthIn.back(), linkEnds,
                       outLinkEnds, netBuilder);
   } else if (isConcatenation(op) || isSimpleLinkMove(op)) {
+    uint count = 0;
     for (uint i = 0; i < portWidthIn.size(); i++) {
       for (uint j = 0; j < portWidthIn[i]; j++) {
-        outLinkEnds.push_back(linkEnds[j]);
+        outLinkEnds.push_back(linkEnds[count++]);
       }
     }
   } else if (isHead(op)) {
@@ -1311,7 +1307,7 @@ void LowFIRRTLToNetPass::processOperation(Operation *destOp,
       processRegReset(regResetOp, fModuleOp, netBuilder);
     } else {
       const std::string &destOpName = destOp->getName().getIdentifier().str();
-      uassert(false, "Invalid operation in 'LoFIRRTL' code:" << destOpName <<
+      uassert(false, "Invalid operation in 'LowFIRRTL' code:" << destOpName <<
               "!\n");
     }
   }
@@ -1402,10 +1398,9 @@ void LowFIRRTLToNetPass::generateModel(ModuleOp moduleOp,
       processConnects(strictConnectOp, fModuleOp, &netBuilder,
                       cellIDForZero, cellIDForZero);
     });
-    // For debug purposes.
-#ifdef UTOPIA_DEBUG
-    checkConnections(cellKeyToCellIDsIns);
-#endif
+
+    uassert(checkConnections(), "Some cells remain not fully connected!\n");
+
     NetID netID = netBuilder.make();
     const std::string &cellName = fModuleOp.getName().str();
     CellTypeID cellTypeID = makeSoftType(CellSymbol::UNDEF,
@@ -1424,38 +1419,37 @@ void LowFIRRTLToNetPass::generateModel(ModuleOp moduleOp,
   }
 }
 
-#ifdef UTOPIA_DEBUG
-void LowFIRRTLToNetPass::checkConnections() {
-  // Check whether all cells have been correctly connected.
-  uint count = 0;
+bool LowFIRRTLToNetPass::checkConnections() {
   for (const auto &[cellKey, cellIDIns] : cellKeyToCellIDsIns) {
     Operation* op = cellKey.op;
-    const uint portNum = cellKey.portNum;
-    const uint bitNum = cellKey.bitNum;
     // For wires keys with empty dummies were created.
     if (op && isWire(op)) {
       continue;
     }
+#ifdef UTOPIA_DEBUG
+    const uint portNum = cellKey.portNum;
+    const uint bitNum = cellKey.bitNum;
     std::cout << "Cell key:\n";
     std::cout << op << " " << portNum << " " << bitNum << "\n";
     if (op) {
       std::cout << op->getName().getIdentifier().str() << "\n";
     }
     std::cout << "Cell IDs:\n";
+#endif // UTOPIA_DEBUG
     for (const auto &cellID : cellIDIns) {
+#ifdef UTOPIA_DEBUG
       std::cout << cellID << "\n";
+#endif // UTOPIA_DEBUG
       const auto& cell = Cell::get(cellID);
       for (uint i = 0; i < cell.getFanin(); i++) {
         if (!(cell.getLink(i)).isValid()) {
-          count++;
-          std::cout << count << "\n";
-          std::cout << "Link " << i << " remains unconnected!" << "\n";
+          return false;
         }
       }
     }
   }
+  return true;
 }
-#endif
 
 } // namespace
 

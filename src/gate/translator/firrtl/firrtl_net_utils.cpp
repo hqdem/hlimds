@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "fir_net_utils.h"
+#include "firrtl_net_utils.h"
 
 #include <iostream>
 

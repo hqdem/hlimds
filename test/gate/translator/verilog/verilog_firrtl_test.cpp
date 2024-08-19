@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/translator/verilog/verilog_fir.h"
+#include "gate/translator/verilog/verilog_firrtl.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -20,10 +20,10 @@ namespace eda::gate::translator {
 static constexpr const char *inPath = "test/data/gate/translator/verilog";
 static constexpr const char *outPath = "output/test/gate/translator/verilog";
 
-bool translatorVerilogFIRTest(bool debugMode,
-                              const std::string &inFileName,
-                              const std::string &topModule,
-                              const std::string &outFileName) {
+bool translatorVerilogFIRRTLTest(bool debugMode,
+                                 const std::string &inFileName,
+                                 const std::string &topModule,
+                                 const std::string &outFileName) {
   fs::path inputPath = inPath;
   const fs::path inputName = inputPath / inFileName;
 
@@ -38,21 +38,21 @@ bool translatorVerilogFIRTest(bool debugMode,
   }
   firrtlConfig.outputFileName = (outputPath / outFileName).c_str();
 
-  return translateVerilogFIR(firrtlConfig);
+  return translateVerilogFIRRTL(firrtlConfig);
 }
 
-TEST(TranslatorVerilogFIR, Mux) {
-  EXPECT_TRUE(translatorVerilogFIRTest(true,
-                                       "mux_test.v",
-                                       "mux",
-                                       "mux.fir"));
+TEST(TranslatorVerilogFIRRTL, Mux) {
+  EXPECT_TRUE(translatorVerilogFIRRTLTest(false,
+                                          "mux_test.v",
+                                          "mux",
+                                          "mux.fir"));
 }
 
-TEST(TranslatorVerilogFIR, AndOr) {
-  EXPECT_TRUE(translatorVerilogFIRTest(true,
-                                       "andor_test.v",
-                                       "andor",
-                                       "andor.fir"));
+TEST(TranslatorVerilogFIRRTL, AndOr) {
+  EXPECT_TRUE(translatorVerilogFIRRTLTest(false,
+                                          "andor_test.v",
+                                          "andor",
+                                          "andor.fir"));
 }
 
 } // namespace eda::gate::translator

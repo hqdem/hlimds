@@ -5,7 +5,7 @@ FROM isprasmvg/ubuntu:base
 RUN apt update && apt install -y autoconf bison clang clang-tidy doxygen flex \
     g++ gcc git graphviz gtkwave iverilog lcov libctemplate-dev libfmt-dev \
     liblpsolve55-dev libssl-dev libtool lld make ninja-build pkg-config \
-    python3 rlwrap zlib1g zlib1g-dev
+    python3 rlwrap tcl-dev zlib1g zlib1g-dev
 
 # Install CMake of proper version
 

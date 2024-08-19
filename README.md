@@ -51,6 +51,7 @@ below are specific to this operating system:
 * `pkg-config`
 * `python3`
 * `rlwrap`
+* `tcl-dev`
 * `zlib1g`
 * `zlib1g-dev`
 
@@ -59,7 +60,7 @@ To install them, do the following:
 ```console
 sudo apt install autoconf bison clang clang-tidy doxygen flex g++ gcc git \
      graphviz gtkwave iverilog libctemplate-dev libfmt-dev liblpsolve55-dev \
-     libssl-dev libtool lld make ninja-build pkg-config python3 rlwrap \
+     libssl-dev libtool lld make ninja-build pkg-config python3 rlwrap tcl-dev \
      zlib1g zlib1g-dev
 ```
 

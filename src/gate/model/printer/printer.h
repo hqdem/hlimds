@@ -124,6 +124,8 @@ protected:
 
       std::stringstream ss;
       ss << cellInfo.getName();
+      ss << "_";
+      ss << port;
 
       return ss.str();
     }

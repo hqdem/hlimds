@@ -52,7 +52,8 @@ class VerilogPrinter final : public ModelPrinter,
   }
 
   void onInterfaceBegin(std::ostream &out) override {
-    out << "(\n";
+    // Space before "(" is for escaped identifiers.
+    out << " (\n";
     isFirstPort = true;
   }
 
@@ -62,7 +63,8 @@ class VerilogPrinter final : public ModelPrinter,
 
   void onPort(std::ostream &out, const CellInfo &cellInfo) override {
     if (!isFirstPort) {
-      out << ",\n";
+      // Space before "," is for escaped identifiers.
+      out << " ,\n";
     }
 
     out << "  " << (cellInfo.type.get().isIn() ? "input" : "output") << " ";
@@ -109,8 +111,8 @@ private:
     // Instances of technological cells and IPs should be named.
     std::stringstream ss;
 
-    ss << "cell_" << cellInfo.getType();
-    ss << "_";
+    ss << cellInfo.getType();
+    ss << "_cell_";
     ss << cellInfo.cell;
 
     return ss.str();
@@ -133,7 +135,8 @@ private:
 
     for (uint16_t output = 0; output < type.getOutNum(); ++output) {
       printIndent(out, 1);
-      out << "wire " << PortInfo(cellInfo, output).getName() << ";\n";
+      // Space before ";" is for escaped identifiers.
+      out << "wire " << PortInfo(cellInfo, output).getName() << " ;\n";
     }
   }
 
@@ -159,14 +162,16 @@ private:
     if (width == 1) {
       defineInputBinding(out, linksInfo[index]);
     } else {
-      out << "{";
+      out << "{ ";
       bool comma = false;
       for (size_t i = 0; i < width; ++i) {
-        if (comma) out << ", ";
+        // Space before "," is for escaped identifiers.
+        if (comma) out << " , ";
         defineInputBinding(out, linksInfo[index + width - 1 - i]);
         comma = true;
       }
-      out << "}";
+      // Space before "}" is for escaped identifiers.
+      out << " }";
     }
   }
 
@@ -183,14 +188,16 @@ private:
     if (width == 1) {
       defineOutputBinding(out, PortInfo(cellInfo, index));
     } else {
-      out << "{";
+      out << "{ ";
       bool comma = false;
       for (size_t i = 0; i < width; ++i) {
-        if (comma) out << ", ";
+        // Space before "," is for escaped identifiers.
+        if (comma) out << " , ";
         defineOutputBinding(out, PortInfo(cellInfo, index + width - 1 - i));
         comma = true;
       }
-      out << "}";
+      // Space before "}" is for escaped identifiers.
+      out << " }";
     }
   }
 
@@ -202,7 +209,8 @@ private:
 
     printIndent(out, 1);
 
-    out << cellInfo.getType() << " " << getInstanceName(cellInfo) << "(";
+    // Space before "(" is for escaped identifiers.
+    out << cellInfo.getType() << " " << getInstanceName(cellInfo) << " (";
     bool comma = false;
 
     if (type.isGate()) {
@@ -210,13 +218,15 @@ private:
 
       // In built-in Verilog gates, outputs come before inputs.
       for (uint16_t output = 0; output < type.getOutNum(); ++output) {
-        if (comma) out << ", ";
+        // Space before "," is for escaped identifiers.
+        if (comma) out << " , ";
         defineOutputBinding(out, PortInfo(cellInfo, output));
         comma = true;
       }
 
       for (auto linkInfo : linksInfo) {
-        if (comma) out << ", ";
+        // Space before "," is for escaped identifiers.
+        if (comma) out << " , ";
         defineInputBinding(out, linkInfo);
         comma = true;
       }
@@ -229,7 +239,8 @@ private:
 
       size_t input{0}, output{0};
       for (const auto &port : ports) {
-        if (comma) out << ", ";
+        // Space before "," is for escaped identifiers.
+        if (comma) out << " , ";
         if (port.input) {
           defineInputBinding(out, linksInfo, input, port.width);
           input += port.width;
@@ -241,7 +252,8 @@ private:
       }
     }
 
-    out << ");\n";
+    // Space before ")" is for escaped identifiers.
+    out << " );\n";
   }
 
   void assignModelOutputs(std::ostream &out,
@@ -251,8 +263,9 @@ private:
     assert(type.isOut());
 
     printIndent(out, 1);
+    // Space before ";" is for escaped identifiers.
     out << "assign " << PortInfo(cellInfo, 0).getName()
-        << " = " << getLinkExpr(linksInfo.front()) << ";\n"; 
+        << " = " << getLinkExpr(linksInfo.front()) << " ;\n"; 
   }
 
   void printIndent(std::ostream &out, size_t n) {

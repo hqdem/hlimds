@@ -23,6 +23,7 @@ add_library(Gate OBJECT
   model/link.cpp
   model/net.cpp
   model/printer/printer.cpp
+  model/printer/verilog.cpp
   model/serializer.cpp
   model/subnet.cpp
   model/subnetview.cpp

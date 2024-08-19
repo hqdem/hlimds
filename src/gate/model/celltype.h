@@ -67,20 +67,28 @@ inline bool getRstValue(uint16_t symbol) {
 }
 
 enum CellSymbol : uint16_t {
+  //===-------------------------- Inputs/Outputs --------------------------===//
+
   /// Input.
   IN,
   /// Output.
   OUT,
+
+  //===----------------------------- Constants ----------------------------===//
 
   /// Constant 0: OUT = 0.
   ZERO,
   /// Constant 1: OUT = 1.
   ONE,
 
+  //===---------------------------- Unary Gates ---------------------------===//
+
   /// Identity: OUT = X.
   BUF,
   /// Negation: OUT = ~X.
   NOT,
+
+  //===-------------------------- Multiarity Gates ------------------------===//
 
   /// Conjunction: OUT = X & Y (& ...).
   AND,
@@ -97,6 +105,8 @@ enum CellSymbol : uint16_t {
   /// Majority function: OUT = Majority(X, Y, ...).
   MAJ,
 
+  //===---------------------------- Flip-Flops ----------------------------===//
+
   /// D flip-flop (Q, D, CLK):
   /// Q(t) = CLK(posedge) ? D : Q(t-1).
   DFF,
@@ -110,6 +120,8 @@ enum CellSymbol : uint16_t {
   /// Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
   DFFrs,
 
+  //===------------------------------ Latches -----------------------------===//
+
   /// D latch (Q, D, ENA):
   /// Q(t) = ENA(level=1) ? D : Q(t-1).
   DLATCH,
@@ -119,10 +131,11 @@ enum CellSymbol : uint16_t {
   /// D latch w/ (asynchronous) reset and set (Q, D, ENA, RST, SET):
   /// Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (ENA(level=1) ? D : Q(t-1))).
   DLATCHrs,
-
   /// RS latch (Q, RST, SET):
   /// Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : Q(t-1)).
   LATCHrs,
+
+  //===------------------------ Bitwise Operations ------------------------===//
 
   /// Bitwise NOT: OUT = ~X.
   BNOT,
@@ -139,6 +152,8 @@ enum CellSymbol : uint16_t {
   /// Bitwise XNOR: OUT = ~(X + Y) (mod 2).
   BXNOR,
 
+  //===------------------------- Reduce Operations ------------------------===//
+
   /// Reduction AND: OUT = X & Y.
   RAND,
   /// Reduction OR: OUT = X | Y.
@@ -152,8 +167,12 @@ enum CellSymbol : uint16_t {
   /// Reduction XNOR: OUT = ~(X + Y) (mod 2).
   RXNOR,
 
+  //===--------------------------- Multiplexors ---------------------------===//
+
   /// Multiplexor 2-to-1: OUT = S == 0 ? X : Y.
   MUX2,
+
+  //===------------------------- Shift Operations -------------------------===//
 
   /// Shift left: OUT = X << Y.
   SHL,
@@ -161,6 +180,8 @@ enum CellSymbol : uint16_t {
   SHRs,
   /// Shift right (unsigned): OUT = X >> Y.
   SHRu,
+
+  //===----------------------- Comparison Operations ----------------------===//
 
   /// Equality comparison (signed): OUT = X == Y.
   EQs,
@@ -197,6 +218,8 @@ enum CellSymbol : uint16_t {
   /// Greater-than-equal comparison (unsigned): OUT = X >= Y.
   GTEu,
 
+  //===----------------------- Arithmetic Operations ----------------------===//
+
   /// Negation (unary minus): OUT = -X.
   NEG,
   /// Addition: OUT = X + Y.
@@ -218,6 +241,8 @@ enum CellSymbol : uint16_t {
   REMu,
   /// Modulo (signed): OUT = X mod Y = sign(Y)*(|X| rem |Y|).
   MODs,
+
+  //===--------------------- Flip-Flop Specializations --------------------===//
 
   /// DFF[CLK(posedge)] = DFF.
   DFF_p = (DFF | POSEDGE),
@@ -275,6 +300,8 @@ enum CellSymbol : uint16_t {
   /// DFFrs[CLK(negedge), RST(level=0), SET(level=0)].
   DFFrs_nnn = (DFFrs | NEGEDGE | RSTLVL0 | SETLVL0),
 
+  //===----------------------- Latch Specializations ----------------------===//
+
   /// DLATCH[ENA(level=1)] = DLATCH.
   DLATCH_p = (DLATCH | ENALVL1),
   /// DLATCH[ENA(level=0)].
@@ -323,8 +350,10 @@ enum CellSymbol : uint16_t {
   /// LATCHrs[RST(level=0), SET(level=0)].
   LATCHrs_nn = (LATCHrs | RSTLVL0 | SETLVL0),
 
+  //===------------------------- Custom Operations ------------------------===//
+
   /// Custom block.
-  UNDEF = 0xffff & ~FLGMASK
+  UNDEF = (0xffff & ~FLGMASK)
 };
 
 static_assert(sizeof(CellSymbol) == 2);

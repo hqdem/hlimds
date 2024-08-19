@@ -37,58 +37,6 @@ public:
     VERILOG
   };
 
-  static constexpr auto DefaultName = "Design";
-
-  static ModelPrinter &getDefaultPrinter() {
-    return getPrinter(SIMPLE);
-  }
-
-  static ModelPrinter &getPrinter(Format format);
-
-  /// Prints the net w/ the specified name.
-  template <typename T /* Net/Subnet */>
-  void print(std::ostream &out, const T &model, const std::string &name) {
-    cellIDs.clear();
-
-    onModelBegin(out, name);
-
-    onInterfaceBegin(out);
-    visitInputs (out, model);
-    visitOutputs(out, model);
-    onInterfaceEnd(out);
-
-    onDefinitionBegin(out);
-    for (const auto pass : passes) {
-      switch (pass.type) {
-      case Pass::LINK:
-        visitLinks(out, model, pass.num);
-        break;
-      case Pass::CELL:
-        visitCells(out, model, pass.num);
-        break;
-      default:
-        assert(false);
-        break;
-      }
-    }
-    onDefinitionEnd(out);
-
-    onModelEnd(out, name);
-  }
-
-  /// Prints the net w/ the default name.
-  template <typename T /* Net/Subnet */>
-  void print(std::ostream &out, const T &model) {
-    print(out, model, DefaultName);
-  }
-
-protected:
-  /// Describes a print pass.
-  struct Pass {
-    enum { LINK, CELL } type;
-    unsigned num;
-  };
-
   /// Cell information.
   struct CellInfo final {
     CellInfo(const CellType &type, size_t cell):
@@ -149,6 +97,58 @@ protected:
 
   /// Inputs information.
   using LinksInfo = std::vector<LinkInfo>;
+
+  static constexpr auto DefaultName = "Design";
+
+  static ModelPrinter &getDefaultPrinter() {
+    return getPrinter(SIMPLE);
+  }
+
+  static ModelPrinter &getPrinter(Format format);
+
+  /// Prints the net w/ the specified name.
+  template <typename T /* Net/Subnet */>
+  void print(std::ostream &out, const T &model, const std::string &name) {
+    cellIDs.clear();
+
+    onModelBegin(out, name);
+
+    onInterfaceBegin(out);
+    visitInputs (out, model);
+    visitOutputs(out, model);
+    onInterfaceEnd(out);
+
+    onDefinitionBegin(out);
+    for (const auto pass : passes) {
+      switch (pass.type) {
+      case Pass::LINK:
+        visitLinks(out, model, pass.num);
+        break;
+      case Pass::CELL:
+        visitCells(out, model, pass.num);
+        break;
+      default:
+        assert(false);
+        break;
+      }
+    }
+    onDefinitionEnd(out);
+
+    onModelEnd(out, name);
+  }
+
+  /// Prints the net w/ the default name.
+  template <typename T /* Net/Subnet */>
+  void print(std::ostream &out, const T &model) {
+    print(out, model, DefaultName);
+  }
+
+protected:
+  /// Describes a print pass.
+  struct Pass {
+    enum { LINK, CELL } type;
+    unsigned num;
+  };
 
   ModelPrinter(const std::vector<Pass> passes): passes(passes) {}
   virtual ~ModelPrinter() {}

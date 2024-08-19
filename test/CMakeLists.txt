@@ -94,12 +94,10 @@ add_executable(${TEST_TARGET}
   gate/techmapper/readcells_iface_test.cpp
   gate/techmapper/subnet_techmapper_test.cpp
   gate/techmapper/techmapper_test_util.cpp
-  gate/translator/fir/fir_test.cpp
-  gate/translator/verilog/verilog_fir_test.cpp
-  gate/translator/fir/fir_test.cpp
-  gate/translator/verilog/verilog_fir_test.cpp
+  gate/translator/firrtl/firrtl_test.cpp
   gate/translator/graphml_test_utils.cpp
   gate/translator/graphml_test.cpp
+  gate/translator/verilog/verilog_firrtl_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   test_main.cpp

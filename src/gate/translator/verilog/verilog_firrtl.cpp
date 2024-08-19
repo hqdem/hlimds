@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "verilog_fir.h"
+#include "verilog_firrtl.h"
 
 #include "gate/model/printer/printer.h"
-#include "gate/translator/fir/fir_net.h"
+#include "gate/translator/firrtl/firrtl_net.h"
 
 #include <filesystem>
 #include <fstream>
@@ -23,7 +23,7 @@ namespace fs = std::filesystem;
 
 namespace eda::gate::translator {
 
-int translateVerilogFIR(const FirrtlConfig &firrtlConfig) {
+int translateVerilogFIRRTL(const FirrtlConfig &firrtlConfig) {
   fs::path inputFilePath = firrtlConfig.files.back();
   fs::path outputFilePath = firrtlConfig.outputFileName;
   const std::string extension = inputFilePath.extension();

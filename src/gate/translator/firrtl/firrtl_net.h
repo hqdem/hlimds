@@ -155,12 +155,12 @@ private:
   PassManager passManager;
 };
 
-std::vector<CellTypeID> getNet(const std::string &inputFilePath);
+std::vector<CellTypeID> getNetlist(const std::string &inputFilePath);
 
-bool printNet(const std::string &inputFilePath,
-              const std::string &outputDir);
-bool printNet(const std::vector<CellTypeID> netlist,
-              const std::string &outFileName);
+bool printNetlist(const std::string &inputFilePath,
+                  const std::string &outputDir);
+bool printNetlist(const std::vector<CellTypeID> netlist,
+                  const std::string &outFileName);
 
 } // namespace eda::gate::translator
 

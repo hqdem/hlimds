@@ -13,17 +13,11 @@
 namespace eda::gate::synthesizer {
 
 model::SubnetID synthBNot(const model::CellTypeAttr &attr);
-
 model::SubnetID synthBAnd(const model::CellTypeAttr &attr);
-
 model::SubnetID synthBOr(const model::CellTypeAttr &attr);
-
 model::SubnetID synthBXor(const model::CellTypeAttr &attr);
-
 model::SubnetID synthBNand(const model::CellTypeAttr &attr);
-
 model::SubnetID synthBNor(const model::CellTypeAttr &attr);
-
 model::SubnetID synthBXnor(const model::CellTypeAttr &attr);
  
 } // namespace eda::gate::synthesizer

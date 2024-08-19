@@ -123,8 +123,6 @@ static inline void fillLinks(const CellID cellID, LinkVec &result) {
 static inline void fillLinks(const List<CellID> &cells, LinkVec &result) {
   for (auto i = cells.begin(); i != cells.end(); ++i) {
     const auto &type = Cell::get(*i).getType();
-
-    // Skip synthesizable blocks.
     if (!(type.isSoft() && type.isSubnet())) {
       fillLinks(*i, result);
     }
@@ -383,8 +381,9 @@ static SubnetID makeSubnet(
 
     Subnet::LinkList olinks;
 
-    if (info.type.isSoft() && info.type.isSubnet()) {
-      // Inline the soft block implementation.
+    if (info.type.isSoft()) {
+      // Inline the soft block implementation (subnet).
+      assert(info.type.isSubnet());
       olinks = subnetBuilder.addSubnet(info.type.getSubnet(), ilinks);
     } else {
       const auto neg = info.type.isNegative();

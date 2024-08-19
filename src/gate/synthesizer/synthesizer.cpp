@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "diag/logger.h"
 #include "gate/synthesizer/synthesizer.h"
 #include "gate/synthesizer/synthesizer_add.h"
 #include "gate/synthesizer/synthesizer_bit.h"
@@ -67,11 +68,8 @@ static SubnetID synthImpl(const CellType &type) {
   case SHL:   return synthShiftL(attr);
   case SHRu:  return synthShiftRu(attr);
   case SHRs:  return synthShiftRs(attr);
-
-  default: assert(false && "Unsupported operation");
+  default:    return OBJ_NULL_ID;
   }
-
-  return OBJ_NULL_ID;
 }
 
 void synthSoftBlocks(const NetID netID) {
@@ -83,7 +81,12 @@ void synthSoftBlocks(const NetID netID) {
     auto &type = const_cast<CellType&>(cell.getType());
 
     const auto subnetID = synthImpl(type);
-    type.setSubnet(subnetID);
+    if (subnetID == OBJ_NULL_ID) {
+       UTOPIA_WARN("Unsupported soft block type "
+          << type.getName() << " (treated as a hard block)");
+    } else {
+      type.setSubnet(subnetID);
+    }
   }
 }
 

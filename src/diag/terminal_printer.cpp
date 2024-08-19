@@ -63,7 +63,7 @@ void TerminalPrinter::onEnd(const Diagnostics &diagnostics) const {
   } else if (nError > 0) {
     printErrorNum(nError);
   } else if (nWarn > 0) {
-    printWarnNum(nError);
+    printWarnNum(nWarn);
   }
 
   if (needsSummary) {

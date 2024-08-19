@@ -57,7 +57,7 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
     return TCL_OK;
   }
  
-  std::string frontend = "yosys";
+  std::string frontend = "rtlil";
   std::string topModule;
   bool debugMode = false;
 };

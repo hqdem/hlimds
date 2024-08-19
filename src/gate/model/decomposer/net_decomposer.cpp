@@ -367,7 +367,6 @@ static SubnetID makeSubnet(
     const Net &net, const NetComponent &component, CellMapping &mapping) {
   SubnetBuilder subnetBuilder;
 
-  assert(!component.inputs.empty());
   for (const auto &input : component.inputs) {
     const auto info = getCellInfo(input.source);
     const auto link = info.type.isCombinational()
@@ -442,8 +441,7 @@ bool NetDecomposer::decompose(const NetID netID,
   for (const auto &component : components) {
     if (!component.empty()) {
       if (component.inputs.empty()) {
-        UTOPIA_ERROR("Non-empty net component has no inputs");
-        goto FAILED;
+        UTOPIA_LOG_WARN("Non-empty net component has no inputs");
       }
 
       CellMapping subnetMapping;
@@ -453,10 +451,12 @@ bool NetDecomposer::decompose(const NetID netID,
   }
   return true;
 
-FAILED:
+#if 0
+ABORTED:
   subnets.clear();
   mapping.clear();
   return false;
+#endif
 }
 
 bool NetDecomposer::decompose(const SubnetID subnetID,

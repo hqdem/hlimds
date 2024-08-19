@@ -320,7 +320,7 @@ BiDecompositionTest*"
 ./build/test/utest
 ```
 
-Test pattern accepts ```-```, ```*``` and ```?``` wildcards.
+Test pattern accepts ```*``` and ```?``` wildcards.
 
 ### List available tests
 

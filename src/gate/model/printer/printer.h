@@ -16,18 +16,21 @@
 #include "gate/model/string.h"
 #include "gate/model/subnet.h"
 
+#include "fmt/format.h"
+
 #include <cassert>
 #include <cstdint>
 #include <functional>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace eda::gate::model {
 
-/// Base Net/Subnet printer class.
+/**
+ * @brief Base Net/Subnet printer class.
+ */
 class ModelPrinter {
 public:
   /// Supported output formats.
@@ -47,13 +50,7 @@ public:
     }
 
     std::string getName() const {
-      std::stringstream ss;
-
-      ss << getType();
-      ss << "_";
-      ss << cell;
-
-      return ss.str();
+      return fmt::format("{}_{}", getType(), cell);
     }
 
     const std::reference_wrapper<const CellType> type;
@@ -70,12 +67,7 @@ public:
         return cellInfo.getName();
       }
 
-      std::stringstream ss;
-      ss << cellInfo.getName();
-      ss << "_";
-      ss << port;
-
-      return ss.str();
+      return fmt::format("{}_{}", cellInfo.getName(), port);
     }
 
     const CellInfo cellInfo;
@@ -109,8 +101,9 @@ public:
   /// Prints the net w/ the specified name.
   template <typename T /* Net/Subnet */>
   void print(std::ostream &out, const T &model, const std::string &name) {
-    cellIDs.clear();
+    visitTypes(out, model);
 
+    cellIDs.clear();
     onModelBegin(out, name);
 
     onInterfaceBegin(out);
@@ -162,6 +155,9 @@ protected:
   virtual void onDefinitionBegin(std::ostream &out) {}
   virtual void onDefinitionEnd(std::ostream &out) {}
 
+  virtual void onType(std::ostream &out,
+                      const CellType &cellType) {}
+
   virtual void onPort(std::ostream &out,
                       const CellInfo &cellInfo) {}
 
@@ -193,14 +189,17 @@ private:
     return cellPrintingID;
   }
 
-  //----------------------------------------------------------------------------
+  //===--------------------------------------------------------------------===//
   // Net-related methods
-  //----------------------------------------------------------------------------
+  //===--------------------------------------------------------------------===//
+
   CellInfo getCellInfo(CellID cellID);
   PortInfo getPortInfo(CellID cellID, uint16_t port);
   LinkInfo getLinkInfo(const LinkEnd &source, const LinkEnd &target);
   LinksInfo getLinksInfo(CellID cellID);
 
+  void visitTypes(std::ostream &out, const List<CellID> &cells);
+  void visitTypes(std::ostream &out, const Net &net);
   void visitInputs(std::ostream &out, const Net &net);
   void visitOutputs(std::ostream &out, const Net &net);
   void visitCells(std::ostream &out, const List<CellID> &cells, unsigned pass);
@@ -208,14 +207,16 @@ private:
   void visitLinks(std::ostream &out, const List<CellID> &cells, unsigned pass);
   void visitLinks(std::ostream &out, const Net &net, unsigned pass);
 
-  //----------------------------------------------------------------------------
+  //===--------------------------------------------------------------------===//
   // Subnet-related methods
-  //----------------------------------------------------------------------------
+  //===--------------------------------------------------------------------===//
+
   CellInfo getCellInfo(const Subnet &subnet, size_t idx);
   PortInfo getPortInfo(const Subnet &subnet, size_t idx, uint16_t j);
   LinkInfo getLinkInfo(const Subnet &subnet, size_t idx, uint16_t j);
   LinksInfo getLinksInfo(const Subnet &subnet, size_t idx);
 
+  void visitTypes(std::ostream &out, const Subnet &subnet);
   void visitInputs(std::ostream &out, const Subnet &subnet);
   void visitOutputs(std::ostream &out, const Subnet &subnet);
   void visitCells(std::ostream &out, const Subnet &subnet, unsigned pass);

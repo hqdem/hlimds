@@ -29,11 +29,17 @@ enum CellSymbolFlags : uint8_t {
   RSTVAL_BIT = SETLVL_BIT
 };
 
-static constexpr uint16_t FLGMASK = (1u << PNEDGE_BIT)
-                                  | (1u << ENALVL_BIT)
-                                  | (1u << RSTLVL_BIT)
-                                  | (1u << SETLVL_BIT)
-                                  | (1u << RSTVAL_BIT);
+static constexpr uint16_t PNEDGE_MASK = (1u << PNEDGE_BIT);
+static constexpr uint16_t ENALVL_MASK = (1u << ENALVL_BIT);
+static constexpr uint16_t RSTLVL_MASK = (1u << RSTLVL_BIT);
+static constexpr uint16_t SETLVL_MASK = (1u << SETLVL_BIT);
+static constexpr uint16_t RSTVAL_MASK = (1u << RSTVAL_BIT);
+
+static constexpr uint16_t FLGMASK = PNEDGE_MASK
+                                  | ENALVL_MASK
+                                  | RSTLVL_MASK
+                                  | SETLVL_MASK
+                                  | RSTVAL_MASK;
 
 static constexpr uint16_t POSEDGE = (0u << PNEDGE_BIT); // Default
 static constexpr uint16_t NEGEDGE = (1u << PNEDGE_BIT);
@@ -47,23 +53,23 @@ static constexpr uint16_t RSTVAL0 = (0u << RSTVAL_BIT); // Default
 static constexpr uint16_t RSTVAL1 = (1u << RSTVAL_BIT);
 
 inline bool getClkEdge(uint16_t symbol) {
-  return (symbol & PNEDGE_BIT) == POSEDGE;
+  return (symbol & PNEDGE_MASK) == POSEDGE;
 }
 
 inline bool getEnaLevel(uint16_t symbol) {
-  return (symbol & ENALVL_BIT) == ENALVL1;
+  return (symbol & ENALVL_MASK) == ENALVL1;
 }
 
 inline bool getRstLevel(uint16_t symbol) {
-  return (symbol & RSTLVL_BIT) == RSTLVL1;
+  return (symbol & RSTLVL_MASK) == RSTLVL1;
 }
 
 inline bool getSetLevel(uint16_t symbol) {
-  return (symbol & SETLVL_BIT) == SETLVL1;
+  return (symbol & SETLVL_MASK) == SETLVL1;
 }
 
 inline bool getRstValue(uint16_t symbol) {
-  return (symbol & RSTVAL_BIT) == RSTVAL1;
+  return (symbol & RSTVAL_MASK) == RSTVAL1;
 }
 
 enum CellSymbol : uint16_t {

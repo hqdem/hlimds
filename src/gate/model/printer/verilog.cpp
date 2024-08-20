@@ -7,8 +7,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/printer/verilog.h"
+#include "gate/model/printer/verilog_lib.h"
 
 #include <cassert>
+#include <sstream>
 
 namespace eda::gate::model {
 
@@ -21,7 +23,7 @@ static inline std::string getInstanceName(
   const auto &type = cellInfo.type.get();
 
   // Standard logic gates do not require names.
-  if (type.isGate() && !type.isMaj())
+  if (type.isGate() && !type.isMaj() && !type.isSeqGate())
     return "";
 
   // Instances of technological cells and IPs should be named.
@@ -200,27 +202,6 @@ static inline void assignModelOutputs(
 }
 
 void VerilogPrinter::onModelBegin(std::ostream &out, const std::string &name) {
-  // MAJ gates are not supported in Verilog and handled in a special way.
-  if constexpr (MajMethod == UDP) {
-    out << "primitive maj(output out, input x, input y, input z);\n";
-    out << "  table\n";
-    out << "    // x y z   out\n";
-    out << "       0 0 0 : 0;\n";
-    out << "       0 0 1 : 0;\n";
-    out << "       0 1 0 : 0;\n";
-    out << "       0 1 1 : 1;\n";
-    out << "       1 0 0 : 0;\n";
-    out << "       1 0 1 : 1;\n";
-    out << "       1 1 0 : 1;\n";
-    out << "       1 1 1 : 1;\n";
-    out << "  endtable\n";
-    out << "endprimitive // primitive maj\n";
-  } else {
-    out << "module maj(output out, input x, input y, input z);\n";
-    out << "  assign out = (x & y) | (x & z) | (y & z);\n";
-    out << "endmodule // module maj\n";
-  }
-  out << "\n";
   out << "module " << name;
 }
 
@@ -236,6 +217,41 @@ void VerilogPrinter::onInterfaceBegin(std::ostream &out) {
 
 void VerilogPrinter::onInterfaceEnd(std::ostream &out) {
   out << "\n);\n";
+}
+
+void VerilogPrinter::onType(std::ostream &out, const CellType &cellType) {
+  const auto symbol = cellType.getSymbol();
+  switch(symbol & ~FLGMASK) {
+  case MAJ:      printMajType(out, cellType);
+                 out << "\n";
+                 break;
+  case DFF:      printDffType(out, cellType);
+                 out << "\n";
+                 break;
+  case sDFF:     printSDffType(out, cellType);
+                 out << "\n";
+                 break;
+  case aDFF:     printADffType(out, cellType);
+                 out << "\n";
+                 break;
+  case DFFrs:    printDffRsType(out, cellType);
+                 out << "\n";
+                 break;
+  case DLATCH:   printDLatchType(out, cellType);
+                 out << "\n";
+                 break;
+  case aDLATCH:  printADLatchType(out, cellType);
+                 out << "\n";
+                 break;
+  case DLATCHrs: printDLatchRsType(out, cellType);
+                 out << "\n";
+                 break;
+  case LATCHrs:  printLatchRsType(out, cellType);
+                 out << "\n";
+                 break;
+  default:       /* print nothing */
+                 break;
+  }
 }
 
 void VerilogPrinter::onPort(std::ostream &out, const CellInfo &cellInfo) {

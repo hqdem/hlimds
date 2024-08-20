@@ -28,6 +28,8 @@ class VerilogPrinter final : public ModelPrinter,
   void onInterfaceBegin(std::ostream &out) override;
   void onInterfaceEnd(std::ostream &out) override;
 
+  void onType(std::ostream &out, const CellType &cellType) override;
+
   void onPort(std::ostream &out, const CellInfo &cellInfo) override;
 
   void onCell(std::ostream &out,
@@ -36,8 +38,6 @@ class VerilogPrinter final : public ModelPrinter,
               unsigned pass) override;
 
 private:
-  static constexpr enum { MODULE, UDP } MajMethod = MODULE;
-
   bool isFirstPort{false};
 };
 

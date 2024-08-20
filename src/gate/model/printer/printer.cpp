@@ -11,6 +11,7 @@
 #include "gate/model/printer/verilog.h"
 
 #include <cassert>
+#include <set>
 
 namespace eda::gate::model {
 
@@ -65,16 +66,35 @@ ModelPrinter::LinksInfo ModelPrinter::getLinksInfo(CellID cellID) {
   return linksInfo;
 }
 
-void ModelPrinter::visitInputs(
-    std::ostream &out, const Net &net) {
+void ModelPrinter::visitTypes(std::ostream &out, const List<CellID> &cells) {
+  std::set<CellTypeID> typeIDs;
+  for (auto i = cells.begin(); i != cells.end(); ++i) {
+    const auto &cell = Cell::get(*i);
+    typeIDs.insert(cell.getTypeID());
+  }
+  for (const auto &typeID : typeIDs) {
+    onType(out, CellType::get(typeID));
+  }
+}
+ 
+void ModelPrinter::visitTypes(std::ostream &out, const Net &net) {
+  // TODO: Implement list view combining a number of lists.
+  visitTypes(out, net.getInputs());
+  visitTypes(out, net.getOutputs());
+  visitTypes(out, net.getCombCells());
+  visitTypes(out, net.getFlipFlops());
+  visitTypes(out, net.getSoftBlocks());
+  visitTypes(out, net.getHardBlocks());
+}
+
+void ModelPrinter::visitInputs(std::ostream &out, const Net &net) {
   const List<CellID> inputs = net.getInputs();
   for (auto i = inputs.begin(); i != inputs.end(); ++i) {
     onPort(out, getCellInfo(*i));
   }
 }
 
-void ModelPrinter::visitOutputs(
-    std::ostream &out, const Net &net) {
+void ModelPrinter::visitOutputs(std::ostream &out, const Net &net) {
   const List<CellID> outputs = net.getOutputs();
   for (auto i = outputs.begin(); i != outputs.end(); ++i) {
     onPort(out, getCellInfo(*i));
@@ -165,15 +185,25 @@ ModelPrinter::LinksInfo ModelPrinter::getLinksInfo(
   return linksInfo;
 }
 
-void ModelPrinter::visitInputs(
-    std::ostream &out, const Subnet &subnet) {
+void ModelPrinter::visitTypes(std::ostream &out, const Subnet &subnet) {
+  std::set<CellTypeID> typeIDs;
+  for (size_t i = 0; i < subnet.getCellNum(); ++i) {
+    const auto &cell = subnet.getCell(i);
+    typeIDs.insert(cell.getTypeID());
+    i += cell.more;
+  }
+  for (const auto &typeID : typeIDs) {
+    onType(out, CellType::get(typeID));
+  }
+}
+
+void ModelPrinter::visitInputs(std::ostream &out, const Subnet &subnet) {
   for (size_t i = 0; i < subnet.getInNum(); ++i) {
     onPort(out, getCellInfo(subnet, i));
   }
 }
 
-void ModelPrinter::visitOutputs(
-    std::ostream &out, const Subnet &subnet) {
+void ModelPrinter::visitOutputs(std::ostream &out, const Subnet &subnet) {
   for (size_t i = subnet.size() - subnet.getOutNum(); i < subnet.size(); ++i) {
     onPort(out, getCellInfo(subnet, i));
   }

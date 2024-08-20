@@ -75,6 +75,8 @@ public:
     return diagnostics;
   }
 
+  Diagnostics() { initialize(); }
+
   const Entry &getDiagnosis() const { return diagnosis; }
 
   unsigned getWarnNum()  const { return nWarn;  }

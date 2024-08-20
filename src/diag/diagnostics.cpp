@@ -29,6 +29,7 @@ void Diagnostics::endGroup() {
   groups.pop();
   auto *scope = groups.top();
   if (group->more.empty()) {
+    // Remove the empty group from the diagnostics.
     scope->more.resize(scope->more.size() - 1);
   }
 }

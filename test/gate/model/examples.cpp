@@ -344,7 +344,7 @@ NetID makeNetRandomMatrix(const size_t nIn,
       nCell, nIn, nOut, {AND, OR, XOR, NAND, NOR, XNOR}, seed);
 
   generator.setFaninLim(minArity, maxArity);
-  return  generator.generate();
+  return generator.generate();
 }
 
 NetID makeTriggerNetRandomMatrix(const size_t nIn,
@@ -358,7 +358,7 @@ NetID makeTriggerNetRandomMatrix(const size_t nIn,
       sDFF_pn0, sDFF_pn1, sDFF_nn0, sDFF_nn1, sDFF_pp0, sDFF_pp1}, seed);
 
   generator.setFaninLim(minArity, maxArity);
-  return  generator.generate();
+  return generator.generate();
 }
 
 NetID makeTriggerNetRandomLayer(const size_t nIn,

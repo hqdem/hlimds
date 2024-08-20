@@ -52,9 +52,8 @@ public:
   using SubnetToSubnetSet = std::vector<std::unordered_set<size_t>>;
 
   struct SubnetEntry {
-    SubnetEntry(
-        const SubnetID subnetID,
-        const std::unordered_set<size_t> &arcs):
+    SubnetEntry(const SubnetID subnetID,
+                const std::unordered_set<size_t> &arcs):
       subnetID(subnetID), arcs(arcs) {};
 
     /// Check points.
@@ -67,11 +66,11 @@ public:
     std::unordered_set<size_t> arcs;
   };
 
-  /// Constructs a design builder w/ the given name from the net.
-  DesignBuilder(const std::string &name, const NetID netID): name(name) {
+private:
+  void initialize(const NetID netID) {
+    assert(netID != OBJ_NULL_ID);
     const auto &net = Net::get(netID);
 
-    // Initialize the numbers of inputs and outputs.
     nIn = net.getInNum();
     nOut = net.getOutNum();
 
@@ -84,15 +83,10 @@ public:
     setEntries(subnetIDs, adjList);
   }
 
-  /// Constructs a design builder from the net.
-  DesignBuilder(const NetID netID):
-      DesignBuilder(DefaultName, netID) {}
-
-  /// Constructs a design builder w/ the given name from the subnet.
-  DesignBuilder(const std::string &name, const SubnetID subnetID): name(name) {
+  void initialize(const SubnetID subnetID) {
+    assert(subnetID != OBJ_NULL_ID);
     const auto &subnet = Subnet::get(subnetID);
 
-    // Initialize the numbers of inputs and outputs.
     nIn = subnet.getInNum();
     nOut = subnet.getOutNum();
 
@@ -102,9 +96,46 @@ public:
     setEntries(subnetIDs, adjList);
   }
 
+public:
+
+  /// Constructs a design builder w/ the given name from the net.
+  DesignBuilder(const std::string &name, const NetID netID):
+      name(name), typeID(OBJ_NULL_ID) {
+    initialize(netID);
+  }
+
+  /// Constructs a design builder from the net.
+  DesignBuilder(const NetID netID):
+      DesignBuilder(DefaultName, netID) {}
+
+  /// Constructs a design builder w/ the given name from the subnet.
+  DesignBuilder(const std::string &name, const SubnetID subnetID):
+        name(name), typeID(OBJ_NULL_ID) {
+    initialize(subnetID);
+  }
+
   /// Constructs a design builder from the subnet.
   DesignBuilder(const SubnetID subnetID):
       DesignBuilder(DefaultName, subnetID) {}
+
+  /// Constructs a design builder w/ the given name from the cell type.
+  DesignBuilder(const std::string &name, const CellTypeID typeID):
+      name(name), typeID(typeID) {
+    assert(typeID != OBJ_NULL_ID);
+
+    const auto &type = CellType::get(typeID);
+    assert(type.hasImpl());
+
+    if (type.isNet()) {
+      initialize(type.getNetID());
+    } else {
+      initialize(type.getSubnetID());
+    }
+  }
+
+  /// Constructs a design builder from the cell type.
+  DesignBuilder(const CellTypeID typeID):
+      DesignBuilder(DefaultName, typeID) {}
 
   /// Return the design name.
   const std::string getName() const {
@@ -114,6 +145,22 @@ public:
   /// Sets the design name.
   void setName(const std::string &name) {
     this->name = name;
+  }
+
+  /// Checks whether the design has type information.
+  bool hasType() const {
+    return typeID != OBJ_NULL_ID;
+  }
+
+  /// Returns the type identifier associated w/ the design.
+  CellTypeID getTypeID() const {
+    return typeID;
+  }
+
+  /// Returns the type information associated w/ the design.
+  CellType &getType() const {
+    assert(typeID != OBJ_NULL_ID);
+    return CellType::get(typeID);
   }
 
   /// Returns the number of subnets in the design.
@@ -337,8 +384,10 @@ private:
   // Reset domains.
   // TODO
 
-  // Design name.
+  /// Design name.
   std::string name;
+  /// Type information.
+  const CellTypeID typeID{OBJ_NULL_ID};
 
   std::vector<std::string> points;
   std::vector<SubnetEntry> subnets;

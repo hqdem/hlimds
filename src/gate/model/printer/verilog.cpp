@@ -46,6 +46,18 @@ static inline std::string getLinkExpr(
   return ss.str();
 }
 
+static inline std::string getPinName(CellTypeID typeID, unsigned index) {
+  const auto &attr = CellType::get(typeID).getAttr();
+  assert(attr.hasPortInfo());
+
+  const auto [i, j] = attr.mapPinToPort(index);
+  const auto &port = attr.getPort(i);
+
+  return port.width == 1 ? port.getName() :
+      // Space before "[" is for escaped identifiers.
+      fmt::format("{} [{}]", port.getName(), j);
+}
+
 static inline void declareWiresForCellOutputs(
     std::ostream &out, const ModelPrinter::CellInfo &cellInfo) {
   const auto &type = cellInfo.type.get();
@@ -66,8 +78,9 @@ static inline void assignConstant(
   assert(type.isZero() || type.isOne());
 
   printIndent(out, 1);
+  // Space before ";" is for unification.
   out << "assign " << ModelPrinter::PortInfo(cellInfo, 0).getName()
-      << " = " << (type.isZero() ? "0" : "1") << ";\n";
+      << " = " << (type.isZero() ? "0" : "1") << " ;\n";
 }
 
 static inline void defineInputBinding(
@@ -75,7 +88,7 @@ static inline void defineInputBinding(
   out << getLinkExpr(linkInfo);
 }
 
-static inline void defineInputBinding(
+static void defineInputBinding(
     std::ostream &out,
     const ModelPrinter::LinksInfo &linksInfo,
     size_t index,
@@ -103,7 +116,7 @@ static inline void defineOutputBinding(
   out << portInfo.getName();
 }
 
-static inline void defineOutputBinding(
+static void defineOutputBinding(
     std::ostream &out,
     const ModelPrinter::CellInfo &cellInfo,
     size_t index,
@@ -127,7 +140,7 @@ static inline void defineOutputBinding(
   }
 }
 
-static inline void instantiateCell(
+static void instantiateCell(
     std::ostream &out,
     const ModelPrinter::CellInfo &cellInfo,
     const ModelPrinter::LinksInfo &linksInfo) {
@@ -188,34 +201,85 @@ static inline void instantiateCell(
   out << " );\n";
 }
 
-static inline void assignModelOutputs(
+static inline void assignModelInput(
     std::ostream &out,
     const ModelPrinter::CellInfo &cellInfo,
-    const ModelPrinter::LinksInfo &linksInfo) {
-  const auto &type = cellInfo.type.get();
-  assert(type.isOut());
-
+    const std::string &rhs) {
   printIndent(out, 1);
   // Space before ";" is for escaped identifiers.
-  out << "assign " << ModelPrinter::PortInfo(cellInfo, 0).getName()
-      << " = " << getLinkExpr(linksInfo.front()) << " ;\n"; 
+  out << "assign " << ModelPrinter::PortInfo(cellInfo, 0).getName() << " = "
+                   << rhs << " ;\n";
 }
 
-void VerilogPrinter::onModelBegin(std::ostream &out, const std::string &name) {
+static inline void assignModelOutput(
+    std::ostream &out,
+    const std::string &outputName,
+    const ModelPrinter::LinksInfo &linksInfo) {
+  printIndent(out, 1);
+  // Space before ";" is for escaped identifiers.
+  out << "assign " << outputName << " = "
+                   << getLinkExpr(linksInfo.front()) << " ;\n"; 
+}
+
+static bool defineOriginalInterface(std::ostream &out, const CellTypeID typeID) {
+  if (typeID == OBJ_NULL_ID)
+    return false;
+
+  const auto &type = CellType::get(typeID);
+  if (!type.hasAttr())
+    return false;
+
+  const auto &attr = type.getAttr();
+  if (!attr.hasPortInfo())
+    return false;
+
+  // Space before "(" is for escaped identifiers.
+  out << " (\n";
+  bool comma = false;
+  for (const auto &port : attr.getOrderedPorts()) {
+    // Space before "," is for escaped identifiers.
+    if (comma) out << " ,\n";
+    printIndent(out, 1);
+    out << (port.input ? "input" : "output");
+    if (port.width > 1) {
+      out << " [" << (port.width - 1) << ":0]";
+    }
+    out << " " << port.getName();
+    comma = true;
+  }
+  out << "\n);\n";
+
+  return true;
+}
+
+void VerilogPrinter::onModelBegin(
+    std::ostream &out,
+    const std::string &name,
+    const CellTypeID typeID) {
   out << "module " << name;
+
+  isOrigIface = defineOriginalInterface(out, typeID);
+  this->typeID = typeID;
 }
 
-void VerilogPrinter::onModelEnd(std::ostream &out, const std::string &name) {
-  out << "endmodule" << " // module " << name << "\n";
+void VerilogPrinter::onModelEnd(
+    std::ostream &out,
+    const std::string &name,
+    const CellTypeID typeID) {
+  out << "endmodule" << " // " << name << "\n";
 }
 
 void VerilogPrinter::onInterfaceBegin(std::ostream &out) {
+  if (isOrigIface) return;
+
   // Space before "(" is for escaped identifiers.
   out << " (\n";
-  isFirstPort = true;
+  pins.clear();
 }
 
 void VerilogPrinter::onInterfaceEnd(std::ostream &out) {
+  if (isOrigIface) return;
+
   out << "\n);\n";
 }
 
@@ -254,16 +318,30 @@ void VerilogPrinter::onType(std::ostream &out, const CellType &cellType) {
   }
 }
 
-void VerilogPrinter::onPort(std::ostream &out, const CellInfo &cellInfo) {
-  if (!isFirstPort) {
-    // Space before "," is for escaped identifiers.
-    out << " ,\n";
+void VerilogPrinter::onPort(std::ostream &out,
+                            const CellInfo &cellInfo,
+                            unsigned index) {
+  const auto &type = cellInfo.type.get();
+ 
+  // Save mapping between input/output cells and pin indices.
+  pins.emplace(cellInfo.cell, index);
+
+  if (isOrigIface) {
+    if (type.isIn()) {
+      printIndent(out, 1);
+      // Space before ";" is for escaped identifiers.
+      out << "wire " << PortInfo(cellInfo, 0).getName() << " ;\n";
+    }
+  } else {
+    if (index > 0) {
+      // Space before "," is for escaped identifiers.
+      out << " ,\n";
+    }
+
+    printIndent(out, 1);
+    out << (type.isIn() ? "input" : "output") << " ";
+    out << PortInfo(cellInfo, 0).getName();
   }
-
-  out << "  " << (cellInfo.type.get().isIn() ? "input" : "output") << " ";
-  out << PortInfo(cellInfo, 0).getName();
-
-  isFirstPort = false;
 }
 
 void VerilogPrinter::onCell(std::ostream &out,
@@ -287,8 +365,28 @@ void VerilogPrinter::onCell(std::ostream &out,
     return;
   }
 
+  if (type.isIn() && isOrigIface) {
+    const auto found = pins.find(cellInfo.cell);
+    assert(found != pins.end());
+
+    const auto rhs = getPinName(typeID, found->second);
+    assignModelInput(out, cellInfo, rhs);
+    return;
+  }
+
   if (type.isOut()) {
-    assignModelOutputs(out, cellInfo, linksInfo);
+    std::string lhs;
+
+    if (isOrigIface) {
+      const auto found = pins.find(cellInfo.cell);
+      assert(found != pins.end());
+
+      lhs = getPinName(typeID, found->second);
+    } else {
+      lhs = ModelPrinter::PortInfo(cellInfo, 0).getName();
+    }
+
+    assignModelOutput(out, lhs, linksInfo);
     return;
   }
 }

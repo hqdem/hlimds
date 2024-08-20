@@ -11,6 +11,8 @@
 #include "gate/model/printer/printer.h"
 #include "util/singleton.h"
 
+#include <unordered_map>
+
 namespace eda::gate::model {
 
 /**
@@ -22,23 +24,39 @@ class VerilogPrinter final : public ModelPrinter,
 
   VerilogPrinter(): ModelPrinter({{Pass::CELL, 0}, {Pass::CELL, 1}}) {}
 
-  void onModelBegin(std::ostream &out, const std::string &name) override;
-  void onModelEnd(std::ostream &out, const std::string &name) override;
+  void onModelBegin(
+      std::ostream &out,
+      const std::string &name,
+      const CellTypeID typeID) override;
+
+  void onModelEnd(
+      std::ostream &out,
+      const std::string &name,
+      const CellTypeID typeID) override;
 
   void onInterfaceBegin(std::ostream &out) override;
+
   void onInterfaceEnd(std::ostream &out) override;
 
   void onType(std::ostream &out, const CellType &cellType) override;
 
-  void onPort(std::ostream &out, const CellInfo &cellInfo) override;
+  void onPort(
+      std::ostream &out,
+      const CellInfo &cellInfo,
+      unsigned index) override;
 
-  void onCell(std::ostream &out,
-              const CellInfo &cellInfo,
-              const LinksInfo &linksInfo,
-              unsigned pass) override;
+  void onCell(
+      std::ostream &out,
+      const CellInfo &cellInfo,
+      const LinksInfo &linksInfo,
+      unsigned pass) override;
 
 private:
-  bool isFirstPort{false};
+  bool isOrigIface{false};
+  CellTypeID typeID{OBJ_NULL_ID};
+
+  /// Maps an input/output cell to the pin index.
+  std::unordered_map<uint32_t, unsigned> pins;
 };
 
 } // namespace eda::gate::model

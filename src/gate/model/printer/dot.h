@@ -20,11 +20,15 @@ class DotPrinter final : public ModelPrinter,
 
   DotPrinter(): ModelPrinter({{Pass::CELL, 0}, {Pass::LINK, 0}}) {}
 
-  void onModelBegin(std::ostream &out, const std::string &name) override {
+  void onModelBegin(std::ostream &out,
+                    const std::string &name,
+                    const CellTypeID typeID) override {
     out << "digraph " << name << " {\n";
   }
 
-  void onModelEnd(std::ostream &out, const std::string &name) override {
+  void onModelEnd(std::ostream &out,
+                  const std::string &name,
+                  const CellTypeID typeID) override {
     out << "}\n";
   }
 

@@ -70,4 +70,18 @@ CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
   setPhysProps(props);
 }
 
+std::pair<uint16_t, uint16_t> CellTypeAttr::mapPinToPort(uint16_t i) const {
+  assert(hasPortInfo());
+
+  uint16_t width{0};
+  for (size_t index = 0; index < nInPort + nOutPort; ++index) {
+    if (i < width + ports[index].width)
+      return {index, i - width};
+    width += ports[index].width;
+  }
+
+  assert(false);
+  return {Unknown, Unknown};
+}
+
 } // namespace eda::gate::model

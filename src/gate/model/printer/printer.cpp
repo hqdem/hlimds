@@ -89,15 +89,17 @@ void ModelPrinter::visitTypes(std::ostream &out, const Net &net) {
 
 void ModelPrinter::visitInputs(std::ostream &out, const Net &net) {
   const List<CellID> inputs = net.getInputs();
+  unsigned index{0};
   for (auto i = inputs.begin(); i != inputs.end(); ++i) {
-    onPort(out, getCellInfo(*i));
+    onPort(out, getCellInfo(*i), index++);
   }
 }
 
 void ModelPrinter::visitOutputs(std::ostream &out, const Net &net) {
   const List<CellID> outputs = net.getOutputs();
+  unsigned index{net.getInNum()};
   for (auto i = outputs.begin(); i != outputs.end(); ++i) {
-    onPort(out, getCellInfo(*i));
+    onPort(out, getCellInfo(*i), index++);
   }
 }
 
@@ -199,13 +201,16 @@ void ModelPrinter::visitTypes(std::ostream &out, const Subnet &subnet) {
 
 void ModelPrinter::visitInputs(std::ostream &out, const Subnet &subnet) {
   for (size_t i = 0; i < subnet.getInNum(); ++i) {
-    onPort(out, getCellInfo(subnet, i));
+    onPort(out, getCellInfo(subnet, i), i);
   }
 }
 
 void ModelPrinter::visitOutputs(std::ostream &out, const Subnet &subnet) {
-  for (size_t i = subnet.size() - subnet.getOutNum(); i < subnet.size(); ++i) {
-    onPort(out, getCellInfo(subnet, i));
+  const auto cellOffset = subnet.size() - subnet.getOutNum();
+  const auto portOffset = subnet.getInNum();
+
+  for (size_t i = 0; i < subnet.getOutNum(); ++i) {
+    onPort(out, getCellInfo(subnet, cellOffset + i), portOffset + i);
   }
 }
 

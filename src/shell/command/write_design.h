@@ -24,7 +24,7 @@ static inline void printDesign(
   const auto &net = Net::get(designBuilder.make());
   const auto designName = designBuilder.getName();
 
-  printer.print(out, net, designName);
+  printer.print(out, net, designName, designBuilder.getTypeID());
 }
 
 static inline void printSubnet(
@@ -38,7 +38,7 @@ static inline void printSubnet(
   const auto &subnet = Subnet::get(subnetID);
 
   const auto subnetName = fmt::format("{}_{}", designBuilder.getName(), i);
-  printer.print(out, subnet, subnetName);
+  printer.print(out, subnet, subnetName, designBuilder.getTypeID());
 }
 
 struct WriteDesignCommand : public UtopiaCommand {

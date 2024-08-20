@@ -46,17 +46,10 @@ bool setDesign(const model::CellTypeID typeID, diag::Logger &logger) {
     return false;
 
   const auto &type = model::CellType::get(typeID);
-  if (!type.isNet() && !type.isSubnet())
+  if (!type.hasImpl())
     return false;
 
-  if (type.isNet()) {
-    const auto netID = type.getNetID();
-    designBuilder = std::make_shared<model::DesignBuilder>(netID);
-  } else {
-    const auto subnetID = type.getSubnetID();
-    designBuilder = std::make_shared<model::DesignBuilder>(subnetID);
-  }
-
+  designBuilder = std::make_shared<model::DesignBuilder>(typeID);
   return true;
 }
 

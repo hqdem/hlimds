@@ -33,11 +33,11 @@ static_assert(sizeof(PhysicalProperties) == 16);
 
 struct Port final {
   Port(const std::string &name, uint16_t width, bool input, uint16_t index = 0):
-      name(allocateObject<String>(name)),
+      nameID(allocateObject<String>(name)),
       width(width), input(input), index(index) {}
 
   Port(uint16_t width, bool input, uint16_t index = 0):
-      name(OBJ_NULL_ID),
+      nameID(OBJ_NULL_ID),
       width(width), input(input), index(index) {}
 
   Port(const std::string &name, bool input, uint16_t index = 0):
@@ -48,7 +48,9 @@ struct Port final {
 
   Port(): Port(0, false, 0) {}
 
-  StringID name;
+  std::string getName() const { return String::get(nameID); }
+
+  StringID nameID;
   uint16_t width;
   uint16_t input;
   uint16_t index;
@@ -166,6 +168,8 @@ public:
     }
     return n;
   }
+
+  std::pair<uint16_t, uint16_t> mapPinToPort(uint16_t i) const;
 
   PortVector getOrderedPorts() const {
     const size_t n = nInPort + nOutPort;

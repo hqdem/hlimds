@@ -100,11 +100,12 @@ public:
 
   /// Prints the net w/ the specified name.
   template <typename T /* Net/Subnet */>
-  void print(std::ostream &out, const T &model, const std::string &name) {
+  void print(std::ostream &out, const T &model, const std::string &name,
+             const CellTypeID typeID = OBJ_NULL_ID) {
     visitTypes(out, model);
 
     cellIDs.clear();
-    onModelBegin(out, name);
+    onModelBegin(out, name, typeID);
 
     onInterfaceBegin(out);
     visitInputs (out, model);
@@ -127,13 +128,14 @@ public:
     }
     onDefinitionEnd(out);
 
-    onModelEnd(out, name);
+    onModelEnd(out, name, typeID);
   }
 
   /// Prints the net w/ the default name.
   template <typename T /* Net/Subnet */>
-  void print(std::ostream &out, const T &model) {
-    print(out, model, DefaultName);
+  void print(std::ostream &out, const T &model,
+             const CellTypeID typeID = OBJ_NULL_ID) {
+    print(out, model, DefaultName, typeID);
   }
 
 protected:
@@ -146,8 +148,12 @@ protected:
   ModelPrinter(const std::vector<Pass> passes): passes(passes) {}
   virtual ~ModelPrinter() {}
 
-  virtual void onModelBegin(std::ostream &out, const std::string &name) {}
-  virtual void onModelEnd(std::ostream &out, const std::string &name) {}
+  virtual void onModelBegin(std::ostream &out,
+                            const std::string &name,
+                            const CellTypeID typeID) {}
+  virtual void onModelEnd(std::ostream &out,
+                          const std::string &name,
+                          const CellTypeID typeID) {}
 
   virtual void onInterfaceBegin(std::ostream &out) {}
   virtual void onInterfaceEnd(std::ostream &out) {}
@@ -159,7 +165,8 @@ protected:
                       const CellType &cellType) {}
 
   virtual void onPort(std::ostream &out,
-                      const CellInfo &cellInfo) {}
+                      const CellInfo &cellInfo,
+                      unsigned index) {}
 
   virtual void onCell(std::ostream &out,
                       const CellInfo &cellInfo,

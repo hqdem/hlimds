@@ -27,7 +27,7 @@ int translateVerilogToModel2(const YosysToModel2Config &config);
 
 namespace eda::gate::translator {
 
-model::NetID
+model::CellTypeID
 readVerilogDesign(
     const std::string &top, const std::vector<std::string> &files);
 

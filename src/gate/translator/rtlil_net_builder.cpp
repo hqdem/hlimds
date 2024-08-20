@@ -231,8 +231,15 @@ ModuleType::ModuleType(const RTLIL::Module &m) {
   std::sort(inputs.begin(), inputs.end(), orderWiresByPortId);
   std::sort(outputs.begin(), outputs.end(), orderWiresByPortId);
 
+  std::vector<model::Port> ports;
+  for (const RTLIL::Wire *wire: inputs) {
+    ports.emplace_back(wire->name.str(), wire->width, true);
+  }
+  for (const RTLIL::Wire *wire: outputs) {
+    ports.emplace_back(wire->name.str(), wire->width, false);
+  }
   typeId = model::makeSoftType(
-      model::UNDEF, m.name.str(), model::OBJ_NULL_ID, nIn, nOut);
+      model::UNDEF, m.name.str(), model::OBJ_NULL_ID, ports);
   nInputBits = nIn;
   nOutputBits = nOut;
 }
@@ -1036,7 +1043,7 @@ yosysVersion() {
 
 namespace eda::gate::translator {
 
-model::NetID
+model::CellTypeID
 readVerilogDesign(
     const std::string &top, const std::vector<std::string> &files) {
   RTLIL::Design design;
@@ -1069,9 +1076,7 @@ readVerilogDesign(
   DesignBuilder builder;
   builder.translateDesign(design);
 
-  model::CellTypeID typeId =
-      builder.getModuleType(*design.top_module()).typeId;
-  return model::CellType::get(typeId).getImpl();
+  return builder.getModuleType(*design.top_module()).typeId;
 }
 
 } // namespace eda::gate::translator

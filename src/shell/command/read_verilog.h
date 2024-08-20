@@ -48,7 +48,9 @@ struct ReadVerilogCommand final : public UtopiaCommandBase<ReadVerilogCommand> {
       YosysConverterModel2 cvt(cfg);      
       netID = cvt.getNetID();
     } else if (frontend == "rtlil" ) {
-      netID = translator::readVerilogDesign(topModule, app.remaining());
+      model::CellTypeID typeId =
+          translator::readVerilogDesign(topModule, app.remaining());
+      netID = model::CellType::get(typeId).getNetID();
     }
 
     UTOPIA_SHELL_ERROR_IF(interp, !setDesign(netID, logger),

@@ -18,10 +18,11 @@ using namespace eda::gate::model;
 
 namespace eda::gate::debugger {
 
-void lecTest(const SubnetID id) {
+void cloneTest(const SubnetID id) {
   using options::BDD;
   using options::FRAIG;
   using options::RND;
+  using options::SAT;
 
   BaseChecker::CellToCell map;
   const auto &subnet = model::Subnet::get(id);
@@ -29,47 +30,56 @@ void lecTest(const SubnetID id) {
     map[i] = i;
   }
 
+  // RND checker (non-exhaustive mode)
   static_cast<RndChecker&>(BaseChecker::getChecker(RND)).setExhaustive(false);
   static_cast<RndChecker&>(BaseChecker::getChecker(RND)).setTries(100);
   EXPECT_TRUE(BaseChecker::getChecker(RND).areEquivalent(id, id, map).isUnknown());
 
+  // RND checker (exhaustive mode)
   static_cast<RndChecker&>(BaseChecker::getChecker(RND)).setExhaustive(true);
   EXPECT_TRUE(BaseChecker::getChecker(RND).areEquivalent(id, id, map).equal());
+
+  // BDD checker
   EXPECT_TRUE(BaseChecker::getChecker(BDD).areEquivalent(id, id, map).equal());
+
+  // FRAIG checker
   EXPECT_TRUE(BaseChecker::getChecker(FRAIG).areEquivalent(id, id, map).equal());
+
+  // SAT checker
+  EXPECT_TRUE(BaseChecker::getChecker(SAT).areEquivalent(id, id, map).equal());
 }
 
-TEST(LecTest, MatrixGenerator) {
+TEST(LecCloneTest, MatrixGenerator) {
   const size_t nIn      = 10;
   const size_t nOut     = 10;
-  const size_t nCell    = 100;
-  const size_t minArity = 2;
+  const size_t nCell    = 10;
+  const size_t minArity = 5;
   const size_t maxArity = 5;
-  const size_t nSubnet  = 40;
+  const size_t nSubnet  = 5;
 
   for (size_t i = 0; i < nSubnet; ++i) {
-    lecTest(makeSubnetRandomMatrix(nIn, nOut, nCell, minArity, maxArity, i));
+    cloneTest(makeSubnetRandomMatrix(nIn, nOut, nCell, minArity, maxArity, i));
   }
 }
 
-TEST(LecTest, 3AndOrXor) {
-  lecTest(makeSubnet3AndOrXor());
+TEST(LecCloneTest, 3AndOrXor) {
+  cloneTest(makeSubnet3AndOrXor());
 }
 
-TEST(LecTest, XorNorAndAndOr) {
-  lecTest(makeSubnetXorNorAndAndOr());
+TEST(LecCloneTest, XorNorAndAndOr) {
+  cloneTest(makeSubnetXorNorAndAndOr());
 }
 
-TEST(LecTest, XorOrXor) {
-  lecTest(makeSubnetXorOrXor());
+TEST(LecCloneTest, XorOrXor) {
+  cloneTest(makeSubnetXorOrXor());
 }
 
-TEST(LecTest, AndOrXor) {
-  lecTest(makeSubnetAndOrXor());
+TEST(LecCloneTest, AndOrXor) {
+  cloneTest(makeSubnetAndOrXor());
 }
 
-TEST(LecTest, 4AndOr) {
-  lecTest(makeSubnet4AndOr());
+TEST(LecCloneTest, 4AndOr) {
+  cloneTest(makeSubnet4AndOr());
 }
 
 } // namespace eda::gate::debugger

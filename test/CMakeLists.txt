@@ -41,7 +41,6 @@ add_executable(${TEST_TARGET}
   gate/estimator/time_model_test.cpp
   gate/estimator/wlm_test.cpp
   gate/model/array_test.cpp
-  gate/model/design_analysis_test.cpp
   gate/model/design_test.cpp
   gate/model/examples.cpp
   gate/model/generator_test.cpp

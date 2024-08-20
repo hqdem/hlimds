@@ -10,7 +10,7 @@
 #include "gate/model/utils/subnet_random.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/library/library.h"
-#include "gate/premapper/aigmapper.h"
+#include "gate/premapper/cell_aigmapper.h"
 #include "gate/techmapper/subnet_techmapper.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
 #include "gate/library/library.h"
@@ -158,7 +158,7 @@ TEST(SubnetTechMapperTest, FourInANDSubnet) {
 
 TEST(SubnetTechMapperTest, DISABLED_RandomSubnet) {
   const auto subnetID = model::randomSubnet(6, 2, 20, 2, 2);
-  premapper::AigMapper aigMapper("aig");
+  premapper::CellAigMapper aigMapper("aig");
   const auto premappedBuilder = aigMapper.make(subnetID);
   const auto premappedSubnetID = premappedBuilder->make();
   std::cout << "Random Subnet:" << std::endl <<
@@ -172,7 +172,7 @@ TEST(SubnetTechMapperTest, DISABLED_RandomSubnet) {
 
 TEST(SubnetTechMapperTest, GraphMLSubnetSmall) {
   auto builderPtr = parseGraphML("simple_spi_orig"); // 2k nodes
-  premapper::AigMapper aigMapper("aig");
+  premapper::CellAigMapper aigMapper("aig");
   // TODO: it's better to use buffer-insert pass
   // FIXME: do not call make(); implement another aigMapper.transform instead
   const auto subnetID = builderPtr->make();
@@ -184,7 +184,7 @@ TEST(SubnetTechMapperTest, GraphMLSubnetSmall) {
 
 TEST(SubnetTechMapperTest, DISABLED_GraphMLSubnetLarge) {
   auto builderPtr = parseGraphML("wb_conmax_orig"); // 80k nodes
-  premapper::AigMapper aigMapper("aig");
+  premapper::CellAigMapper aigMapper("aig");
   const auto subnetID = builderPtr->make();
   const auto premappedBuilder = aigMapper.make(subnetID); // TODO: it's better to use buffer-insert pass
   const auto mappedSubnetID =

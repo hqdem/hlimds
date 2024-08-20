@@ -25,12 +25,15 @@ static void getMffcBounds(Builder &builder,
 
   for (const auto &link : builder.getLinks(idx)) {
     Cell &cell = builder.getCell(link.idx);
+    if (builder.isMarked(link.idx) || cell.isZero() || cell.isOne()) {
+      cell.incRefCount();
+      counter--;
+      continue;
+    }
+
     if ((builder.getSessionID(link.idx) == boundsID) || cell.isIn()) {
       builder.mark(link.idx);
       bounds.push_back(link.idx);
-    }
-
-    if (builder.isMarked(link.idx) || cell.isZero() || cell.isOne()) {
       cell.incRefCount();
       counter--;
       continue;

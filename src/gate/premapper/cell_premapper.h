@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -14,8 +14,8 @@
 
 namespace eda::gate::premapper {
 
-/// @brief Transforms a subnet to an AIG basis.
-class AigMapper final : public optimizer::SubnetTransformer {
+/// @brief Interface class for premappers that map one cell at a time.
+class CellPremapper : public optimizer::SubnetTransformer {
 public:
   using CellIdMap = std::unordered_map<uint32_t, model::Subnet::Link>;
   using CellSymbol = model::CellSymbol;
@@ -24,19 +24,20 @@ public:
   using LinkList = model::Subnet::LinkList;
   using Subnet = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
+  using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
   using SubnetID = model::SubnetID;
 
-  AigMapper(const std::string &name): optimizer::SubnetTransformer(name) {}
+  CellPremapper(const std::string &name): optimizer::SubnetTransformer(name) {}
 
-  optimizer::SubnetBuilderPtr make(const SubnetID subnetID) const override;
+  SubnetBuilderPtr map(const SubnetBuilderPtr &builder) const override;
 
 protected:
-  virtual Link mapCell(CellSymbol symbol, const LinkList &links, bool &inv,
-                       size_t n0, size_t n1, SubnetBuilder &builder) const;
+  Link mapCell(CellSymbol symbol, const LinkList &links, bool &inv,
+               size_t n0, size_t n1, SubnetBuilder &builder) const;
 
-  virtual LinkList getNewLinks(const CellIdMap &oldToNew, uint32_t idx,
-                               const Subnet &oldSubnet, size_t &n0,
-                               size_t &n1, SubnetBuilder &builder) const;
+  LinkList getNewLinks(const CellIdMap &oldToNew, uint32_t idx,
+                       const Subnet &oldSubnet, size_t &n0, size_t &n1,
+                       SubnetBuilder &builder) const;
 
   virtual Link mapIn(SubnetBuilder &builder) const;
 
@@ -50,28 +51,25 @@ protected:
                       SubnetBuilder &builder) const;
   
   virtual Link mapAnd(const LinkList &links, bool &inv,
-                      SubnetBuilder &builder) const;
+                      SubnetBuilder &builder) const = 0;
 
   virtual Link mapOr(const LinkList &links, bool &inv, size_t n0, size_t n1,
                      SubnetBuilder &builder) const;
 
   virtual Link mapOr(const LinkList &links, bool &inv,
-                     SubnetBuilder &builder) const;
+                     SubnetBuilder &builder) const = 0;
 
   virtual Link mapXor(const LinkList &links, bool &inv, size_t n0, size_t n1,
                       SubnetBuilder &builder) const;
 
   virtual Link mapXor(const LinkList &links, bool &inv,
-                      SubnetBuilder &builder) const;
+                      SubnetBuilder &builder) const = 0;
 
   virtual Link mapMaj(const LinkList &links, bool &inv, size_t n0, size_t n1,
                       SubnetBuilder &builder) const;
 
   virtual Link mapMaj(const LinkList &links, bool &inv,
-                      SubnetBuilder &builder) const;
-
-  Link addMaj3(const LinkList &links, bool &inv, SubnetBuilder &builder) const;
-  Link addMaj5(const LinkList &links, bool &inv, SubnetBuilder &builder) const;
+                      SubnetBuilder &builder) const = 0;
 };
 
 } // namespace eda::gate::premapper

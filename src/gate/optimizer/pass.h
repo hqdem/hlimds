@@ -23,7 +23,6 @@
 #include "gate/optimizer/synthesis/associative_reordering.h"
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
 #include "gate/optimizer/synthesis/isop.h"
-#include "gate/premapper/aigmapper.h"
 #include "gate/premapper/premapper.h"
 
 #include <fmt/format.h>
@@ -47,16 +46,22 @@ using SubnetEffect  = model::SubnetBuilder::Effect;
 
 /// Mapping to the AIG representation.
 inline SubnetMapper aig() {
-  return std::make_shared<premapper::AigMapper>("aig");
+  return premapper::getCellAigMapper();
 }
 
 /// Mapping to the MIG representation.
 inline SubnetMapper mig() {
-  const uint16_t k = 6;
-  static synthesis::AkersSynthesizer akers;
-  static Resynthesizer resynthesizer(akers);
-  const premapper::Basis base = premapper::Basis::MIG;
-  return std::make_shared<premapper::Premapper>("mig", base, resynthesizer, k);
+  return premapper::getConeMigMapper();
+}
+
+/// Mapping to the XAG representation.
+inline SubnetMapper xag() {
+  return premapper::getCellXagMapper();
+}
+
+/// Mapping to the XMG representation.
+inline SubnetMapper xmg() {
+  return premapper::getConeXmgMapper();
 }
 
 //===----------------------------------------------------------------------===//

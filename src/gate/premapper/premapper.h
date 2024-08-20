@@ -8,52 +8,56 @@
 
 #pragma once
 
-#include "gate/model/iomapping.h"
-#include "gate/model/subnetview.h"
-#include "gate/optimizer/mffc.h"
-#include "gate/optimizer/reconvergence.h"
-#include "gate/optimizer/resynthesizer.h"
-#include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/synthesis/akers.h"
+#include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
+#include "gate/optimizer/synthesis/isop.h"
+#include "gate/premapper/cell_aigmapper.h"
+#include "gate/premapper/cell_migmapper.h"
+#include "gate/premapper/cell_xagmapper.h"
+#include "gate/premapper/cell_xmgmapper.h"
+#include "gate/premapper/cone_premapper.h"
 
 namespace eda::gate::premapper {
 
-enum Basis {AIG, XAG, MIG, XMG};
+inline optimizer::SubnetMapper getCellAigMapper() {
+  return std::make_shared<CellAigMapper>("aig");
+}
 
-class Premapper : public optimizer::SubnetTransformer {
-public:
- 
-  using Cell = gate::model::Subnet::Cell;
-  using InOutMapping = gate::model::InOutMapping;
-  using Link = gate::model::Subnet::Link;
-  using SafePasser = gate::optimizer::SafePasser;
-  using SubnetBuilder = gate::model::SubnetBuilder;
-  using SubnetBuilderPtr = gate::optimizer::SubnetBuilderPtr;
-  using SubnetObject = gate::model::SubnetObject;
+inline optimizer::SubnetMapper getCellMigMapper() {
+  return std::make_shared<CellMigMapper>("mig");
+}
 
-  Premapper(const std::string &name, Basis basis,
-            const optimizer::ResynthesizerBase &resynthesizer, uint16_t k = 4):
-      optimizer::SubnetTransformer(name), basis(basis),
-      resynthesizer(resynthesizer), k(k) {
-        arity = (basis == MIG) || (basis == XMG) ? 3 : 2;
-        assert(k >= 3 && "The cut size is too small!");
-      }
+inline optimizer::SubnetMapper getCellXagMapper() {
+  return std::make_shared<CellXagMapper>("xag");
+}
 
-  SubnetBuilderPtr map(const SubnetBuilderPtr &builder) const override;
+inline optimizer::SubnetMapper getCellXmgMapper() {
+  return std::make_shared<CellXmgMapper>("xmg");
+}
 
-private:
-  void decomposeCell(const SubnetBuilderPtr &builder,
-                     SafePasser &iter,
-                     const size_t entryID) const;
+inline optimizer::SubnetMapper getConeAigMapper() {
+  static optimizer::synthesis::MMFactorSynthesizer isop;
+  static optimizer::Resynthesizer resynthesizer(isop);
+  return std::make_shared<ConePremapper>("aig", AIG, resynthesizer, 4);
+}
 
-  void constantCase(const SubnetBuilderPtr &builder,
-                    SafePasser &iter,
-                    const size_t entryID) const;
+inline optimizer::SubnetMapper getConeMigMapper() {
+  static optimizer::synthesis::AkersSynthesizer akers;
+  static optimizer::Resynthesizer resynthesizer(akers);
+  return std::make_shared<ConePremapper>("mig", MIG, resynthesizer, 6);
+}
 
-  const Basis basis;
-  const optimizer::ResynthesizerBase &resynthesizer;
-  const uint16_t k;
-  uint16_t arity;
-};
+inline optimizer::SubnetMapper getConeXagMapper() {
+  static optimizer::Resynthesizer resynthesizer(
+      optimizer::synthesis::DbXag4Synthesizer::get());
+  return std::make_shared<ConePremapper>("xag", XAG, resynthesizer, 4);
+}
+
+inline optimizer::SubnetMapper getConeXmgMapper() {
+  static optimizer::synthesis::AkersSynthesizer akers;
+  static optimizer::Resynthesizer resynthesizer(akers);
+  return std::make_shared<ConePremapper>("xmg", XMG, resynthesizer, 5);
+}
 
 } // namespace eda::gate::premapper

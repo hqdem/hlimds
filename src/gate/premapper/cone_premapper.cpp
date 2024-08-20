@@ -6,16 +6,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/premapper/premapper.h"
+#include "gate/premapper/cone_premapper.h"
 
 namespace eda::gate::premapper {
 
-using Link             = Premapper::Link;
+using Link             = ConePremapper::Link;
 using LinkList         = model::Subnet::LinkList;
-using SubnetBuilder    = Premapper::SubnetBuilder;
-using SubnetBuilderPtr = Premapper::SubnetBuilderPtr;
+using SubnetBuilder    = ConePremapper::SubnetBuilder;
+using SubnetBuilderPtr = ConePremapper::SubnetBuilderPtr;
 
-SubnetBuilderPtr Premapper::map(const SubnetBuilderPtr &builder) const {
+SubnetBuilderPtr ConePremapper::map(const SubnetBuilderPtr &builder) const {
   SubnetBuilder *builderPtr = builder.get();
   for (SafePasser iter = --builderPtr->end();
        !builderPtr->getCell(*iter).isIn(); --iter) {
@@ -82,17 +82,17 @@ static Link decomposeMaj(SubnetBuilder &builder, const LinkList &links) {
   assert(false && "Unsupported number of links in MAJ cell");
 }
 
-void Premapper::decomposeCell(const SubnetBuilderPtr &builder,
-                              SafePasser &iter,
-                              const size_t entryID) const {
+void ConePremapper::decomposeCell(const SubnetBuilderPtr &builder,
+                                  SafePasser &iter,
+                                  const size_t entryID) const {
 
   InOutMapping iomapping;
-  SubnetObject object;
-  SubnetBuilder &rhs{object.builder()};
+  const auto rhs = std::make_shared<SubnetBuilder>();
   SubnetBuilder *builderPtr = builder.get();
+  SubnetBuilder *rhsPtr = rhs.get();
 
   const auto &cell = builderPtr->getCell(entryID);
-  auto links = rhs.addInputs(cell.arity);
+  auto links = rhsPtr->addInputs(cell.arity);
   for (size_t i = 0; i < links.size(); ++i) {
     const auto link = builderPtr->getLink(entryID, i);
     iomapping.inputs.push_back(link.idx);
@@ -102,11 +102,11 @@ void Premapper::decomposeCell(const SubnetBuilderPtr &builder,
 
   Link outLink;
   if (cell.isMaj()) {
-    outLink = decomposeMaj(rhs, links);
+    outLink = decomposeMaj(*rhsPtr, links);
   } else {
-    outLink = rhs.addCellTree(cell.getSymbol(), links, 2);
+    outLink = rhsPtr->addCellTree(cell.getSymbol(), links, 2);
   }
-  rhs.addOutput(outLink);
+  rhsPtr->addOutput(outLink);
 
   bool skipPremapping = false;
   switch (basis) {
@@ -117,18 +117,18 @@ void Premapper::decomposeCell(const SubnetBuilderPtr &builder,
     default: assert(false && "Invalid basis for the premapper!");
   }
   if (skipPremapping) {
-    iter.replace(object, iomapping);
+    iter.replace(*rhsPtr, iomapping);
     return;
   }
 
-  Premapper premapper("tmp", basis, resynthesizer, k);
-  const auto rhsPtr = premapper.map(std::make_shared<SubnetBuilder>(rhs));
-  iter.replace(*(rhsPtr.get()), iomapping);
+  ConePremapper premapper("tmp", basis, resynthesizer, k);
+  premapper.map(rhs);
+  iter.replace(*rhsPtr, iomapping);
 }
 
-void Premapper::constantCase(const SubnetBuilderPtr &builder,
-                             SafePasser &iter,
-                             const size_t entryID) const {
+void ConePremapper::constantCase(const SubnetBuilderPtr &builder,
+                                 SafePasser &iter,
+                                 const size_t entryID) const {
 
   SubnetBuilder *builderPtr = builder.get();
 

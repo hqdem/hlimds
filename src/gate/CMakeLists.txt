@@ -66,8 +66,12 @@ add_library(Gate OBJECT
   optimizer/synthesis/ternary_bi_clique.cpp
   optimizer/synthesis/unitized_table.cpp
   optimizer/synthesis/zhegalkin.cpp
-  premapper/aigmapper.cpp
-  premapper/premapper.cpp
+  premapper/cell_aigmapper.cpp
+  premapper/cell_migmapper.cpp
+  premapper/cell_premapper.cpp
+  premapper/cell_xagmapper.cpp
+  premapper/cell_xmgmapper.cpp
+  premapper/cone_premapper.cpp
   simulator/simulator.cpp
   synthesizer/synthesizer.cpp
   synthesizer/synthesizer_add.cpp

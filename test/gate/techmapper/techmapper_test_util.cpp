@@ -10,7 +10,7 @@
 #include "gate/library/sdc_manager.h"
 #include "gate/model/printer/printer.h"
 #include "gate/model/utils/subnet_random.h"
-#include "gate/premapper/aigmapper.h"
+#include "gate/premapper/cell_aigmapper.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/translator/graphml_test_utils.h"
@@ -21,7 +21,7 @@
 
 namespace eda::gate::techmapper {
 
-using AigMapper  = premapper::AigMapper;
+using AigMapper  = premapper::CellAigMapper;
 using CellSymbol = model::CellSymbol;
 using Link       = model::Subnet::Link;
 using LinkList   = model::Subnet::LinkList;

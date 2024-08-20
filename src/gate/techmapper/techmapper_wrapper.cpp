@@ -8,7 +8,7 @@
 
 #include "gate/library/sdc_manager.h"
 #include "gate/model/printer/printer.h"
-#include "gate/premapper/aigmapper.h"
+#include "gate/premapper/cell_aigmapper.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"

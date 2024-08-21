@@ -10,6 +10,7 @@
 
 #include "gate/model/design.h"
 #include "gate/model/subnet.h"
+#include "gate/model/subnetview.h"
 
 #include <string>
 #include <unordered_map>
@@ -155,6 +156,27 @@ public:
   }
 
   /**
+   * @brief Constructs the miter for the specified subnets.
+   * @param builder Builder for constructing the miter.
+   * @param builder1 Builder of the first subnet.
+   * @param builder2 Builder of the second subnet.
+   * @param mapping Mapping between the PI/PO of the specified subnets.
+   */
+  static void makeMiter(model::SubnetBuilder &builder,
+                        const model::SubnetBuilder &builder1,
+                        const model::SubnetBuilder &builder2,
+                        const CellToCell &mapping);
+  
+  /**
+   * @brief Constructs the miter for the specified subnets.
+   * @param builder Builder for constructing the miter.
+   * @param builder1 Builder of the first subnet.
+   * @param builder2 Builder of the second subnet.
+   */
+  static void makeMiter(model::SubnetBuilder &builder,
+                        const model::SubnetBuilder &builder1,
+                        const model::SubnetBuilder &builder2);
+  /**
    * @brief Checks if the given single-output subnet is satisfiable.
    * @param subnetID Subnet to checked.
    * @return Checking result.
@@ -168,6 +190,15 @@ public:
    */
   CheckerResult isSat(const model::SubnetID subnetID) const {
     return isSat(model::Subnet::get(subnetID));
+  }
+
+  /**
+   * @brief Checks if the given subnet builder is satisfiable.
+   * @param builder Builder of the subnet.
+   * @return Checking result.
+   */
+  CheckerResult isSat(model::SubnetBuilder &builder) const {
+    return isSat(builder.make());
   }
 
   /**
@@ -228,8 +259,27 @@ public:
                               const std::string &point1,
                               const std::string &point2) const;
 
+  /**
+   * @brief Checks the equivalence of the given subnet views.
+   * @param subnetView1 View of the first subnet.
+   * @param subnetView2 View of the second subnet.
+   * @return Checking result.
+   */
+  CheckerResult areEquivalent(const model::SubnetView &subnetView1,
+                              const model::SubnetView &subnetView2) const;
+
+  /**
+   * @brief Checks the equivalence of the given subnet builders.
+   * @param builder1 Builder of the first subnet.
+   * @param builder2 Builder of the second subnet.
+   * @param mapping Mapping between the PI/PO of the specified builders.
+   * @return Checking result.
+   */
+  CheckerResult areEquivalent(const model::SubnetBuilder &builder1,
+                              const model::SubnetBuilder &builder2,
+                              const CellToCell &mapping) const;
+
   virtual ~BaseChecker() {}
 };
-
 
 } // namespace eda::gate::debugger

@@ -19,28 +19,143 @@ namespace eda::gate::debugger {
 using options::SAT;
 using UniformIntDistribution = std::uniform_int_distribution<uint64_t>;
 
-void FraigChecker::netSimulation(simulator::Simulator &simulator,
-                                 const uint16_t &nIn,
-                                 const CounterEx &counterEx) {
-  simulator::Simulator::DataVector values(nIn);
-  if (counterEx.size()) {
-    for (size_t k = 0; k < nIn; ++k) {
-      values[k] = counterEx[k].to_ullong();
+struct EqPointResult {
+  /**
+   * Equivalence checking point statuses.
+   * UNKNOWN if the result is undefined.
+   * NOTEQUAL if the points are not equivalent.
+   * EQUAL if the points are equivalent.
+   */
+  enum EqPointStatus {
+    UNKNOWN = -2,
+    NOTEQUAL = -1,
+    EQUAL = 0,
+  };
+
+  /// Equivalence checking status.
+  EqPointStatus status;
+
+  /**
+   * @brief Point equivalence checking result.
+   * @param status Status of the occurred check.
+   */
+  EqPointResult(EqPointStatus status): status(status) {}
+
+  /**
+   * @copydoc EqPointResult::EqPointResult(EqPointStatus)
+   * @param counterEx Input values on which the nets are unequal.
+   * @param inputs Inputs mapping for a max cone.
+   */
+  EqPointResult(EqPointStatus status,
+                        std::vector<bool> counterExample,
+                        std::vector<size_t> inputs) {
+    assert(status == EqPointStatus::NOTEQUAL);
+    this->status = status;
+    this->counterExample = counterExample;
+    this->inputs = inputs;
+    this->counterExampleFlag = true;
+  }
+
+  void fillStorage(SimValuesStorage &storage,
+                   uint16_t &storageCount,
+                   const uint16_t nIn) {
+  if (storageCount >= FraigChecker::simLimit ||
+      !counterExampleFlag) {
+    return;
+  }
+  size_t counterExampleSize = counterExample.size();
+
+  UniformIntDistribution distribution(0, counterExampleSize);
+  //TODO: Replace with general generator.
+  std::mt19937 generator(std::random_device{}());
+  uint16_t index = distribution(generator);
+  counterExample[index].flip();
+  std::vector<bool> proof(nIn, false);
+  for (uint16_t i = 0; i < counterExampleSize; i++) {
+    proof[inputs[i]] = counterExample[i];
+  }
+  for (size_t i = 0; i < proof.size(); i++) {
+    storage[i].set(storageCount, proof[i]);
+  }
+  storageCount += 1;
+}
+
+private:
+  bool counterExampleFlag = false;
+  std::vector<bool> counterExample{};
+  std::vector<size_t> inputs{};
+};
+
+EqPointResult check(const size_t point1,
+                    const size_t point2,
+                    const model::SubnetBuilder &builder) {
+
+  model::SubnetView cone1(builder, point1);
+
+  model::SubnetView cone2(builder, point2);
+
+  const auto cone1InNum = cone1.getInNum();
+  const auto cone2InNum = cone2.getInNum();
+
+  if (cone1InNum != cone2InNum) {
+    return EqPointResult::NOTEQUAL;
+  }
+  auto inputs1 = cone1.getInputs();
+  auto inputs2 = cone2.getInputs();
+  std::unordered_map<size_t, size_t> inputToPos;
+  for (size_t i = 0; i < inputs2.size(); i++) {
+    inputToPos[inputs2[i]] = i;
+  }
+
+  for (size_t i = 0; i < cone1InNum; ++i) {
+    try {
+      inputToPos.at(inputs1[i]);
     }
-  } else {
-    std::mt19937 generator;
-    UniformIntDistribution distrib(0, std::numeric_limits<uint64_t>::max());
-    for (size_t k = 0; k < nIn; ++k) {
-      values[k] = distrib(generator);
+    catch (const std::out_of_range &e) {
+      return EqPointResult::NOTEQUAL;
     }
   }
+  // FIXME: Returns unknown.
+  CheckerResult res = BaseChecker::getChecker(SAT).areEquivalent(cone1, cone2);
+
+  if (res.notEqual()) {
+    return EqPointResult(EqPointResult::NOTEQUAL,
+                                 res.getCounterExample(),
+                                 cone1.getInputs());
+  }
+  if (res.equal()) {
+    return EqPointResult::EQUAL;
+  }
+  return EqPointResult::UNKNOWN;
+}
+
+void simulate(simulator::Simulator &simulator,
+              const uint16_t nIn) {
+  simulator::Simulator::DataVector values(nIn);
+  //TODO: Replace with general generator.
+  std::mt19937 generator;
+  UniformIntDistribution distrib(0, std::numeric_limits<uint64_t>::max());
+  for (size_t k = 0; k < nIn; ++k) {
+    values[k] = distrib(generator);
+  }
   simulator.simulate(values);
+}
+
+void simulate(simulator::Simulator &simulator,
+              const uint16_t nIn,
+              SimValuesStorage &storage) {
+  simulator::Simulator::DataVector values(nIn);
+  for (size_t k = 0; k < nIn; ++k) {
+    values[k] = storage[k].to_ullong();
+  }
+  simulator.simulate(values);
+  std::fill(storage.begin(), storage.end(), std::bitset<64>());
 }
 
 CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
   model::SubnetBuilder miterBuilder(subnet);
   uint16_t storageCount = 0;
-  CounterEx counterExStorage(subnet.getInNum());
+  SimValuesStorage storage(subnet.getInNum());
 
   while (true) {
     size_t compareCount = 0;
@@ -49,114 +164,65 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
     // Simulation
     simulator::Simulator simulator(miterBuilder);
     if (storageCount) {
-      netSimulation(simulator, nIn, counterExStorage);
-      std::fill(counterExStorage.begin(),
-                counterExStorage.end(),
-                std::bitset<64>());
+      simulate(simulator, nIn, storage);
       storageCount = 0;
     } else {
-      netSimulation(simulator, nIn);
+      simulate(simulator, nIn);
     }
     
     // Initial classes
-    std::map<uint32_t, uint64_t> idxToValue;
-
-    for (auto it = miterBuilder.begin(); it != miterBuilder.end(); it.nextCell()) {
-      idxToValue.emplace(*it, simulator.getValue(*it));
+    std::vector<uint64_t> values(miterBuilder.getCellNum(), 0);
+    for (auto it = miterBuilder.begin();
+              it != miterBuilder.end();
+              it.nextCell()) {
+      auto cell = miterBuilder.getCell(*it);
+      if (!cell.isOut() && !cell.isIn()) {
+        values[*it] = simulator.getValue(*it);
+      }
     }
-
     std::unordered_map<uint64_t, std::set<uint32_t>> eqClassToIdx;
     model::SubnetBuilder::MergeMap toBeMerged;
     std::unordered_set<uint32_t> checked;
 
-    for (auto const &[cell, eqClass] : idxToValue) {
+    for (auto it = miterBuilder.begin();
+              it != miterBuilder.end();
+              it.nextCell()) {
+      const auto &cell = miterBuilder.getCell(*it);
+      if (cell.isOut() || cell.isIn()) {
+        continue;
+      }
+      uint64_t const cellIdx1 = *it;
+      uint64_t const eqClass = values[cellIdx1];
       if (compareCount > compareLimit) {
         break;
       }
       if (eqClassToIdx.find(eqClass) != eqClassToIdx.end()) {
-        for (auto idx : eqClassToIdx[eqClass]) {
+        for (auto cellIdx2 : eqClassToIdx[eqClass]) {
+          if (cellIdx1 == cellIdx2 || checked.find(cellIdx2) != checked.end()) {
+            continue;
+          }
           compareCount += 1;
-          if (idx == cell || checked.find(idx) != checked.end()) {
-            continue;    
-          }
-
-          model::SubnetView cone1(miterBuilder, cell);
-          const auto coneSubnetID1 = cone1.getSubnet().make(); // FIXME: Do not create a subnet.
-          const auto &coneSubnet1 = cone1.getSubnet().object();
-          const auto coneInNum1 = coneSubnet1.getInNum();
-          assert(coneInNum1 == cone1.getInNum());
-
-          model::SubnetView cone2(miterBuilder, idx);
-          const auto coneSubnetID2 = cone2.getSubnet().make(); // FIXME: Do not create a subnet.
-          const auto &coneSubnet2 = cone2.getSubnet().object();
-          const auto coneInNum2 = coneSubnet2.getInNum();
-          assert(coneInNum2 == cone2.getInNum());
-
-          CellToCell map = {};
-          if (coneInNum1 != coneInNum2) {
-            eqClassToIdx[eqClass].insert(cell);
-            continue;
-          }
-          bool inputsFlag = false;
-          for (size_t i = 0; i < coneInNum1; ++i) {
-            map[i] = i; // FIXME: Order of inputs may by different.
-            if (cone1.getIn(i) != cone2.getIn(i)) {
-              inputsFlag = true;
-              break;
-            }
-          }
-          if (inputsFlag) {
-            eqClassToIdx[eqClass].insert(cell);
-            continue;
-          }
-          map[coneSubnet1.getEntries().size() - 1] =
-          coneSubnet2.getEntries().size() - 1;
-          CheckerResult res = getChecker(SAT).areEquivalent(coneSubnetID1, // FIXME: Use a builder.
-                                                            coneSubnetID2, // FIXME: Use a builder.
-                                                            map);
-          if (res.equal()) {
-            toBeMerged[idx].insert(cell);
-            checked.insert(cell);   
+          auto res = check(cellIdx1, cellIdx2, miterBuilder);
+          res.fillStorage(storage, storageCount, nIn);
+          if (res.status == EqPointResult::EQUAL) {
+            toBeMerged[cellIdx2].insert(cellIdx1);
+            checked.insert(cellIdx1);
           } else {
-            eqClassToIdx[eqClass].insert(cell);
-            if (storageCount >= simLimit) {
-              continue;
-            }
-            std::vector<bool> counterEx = res.getCounterExample();
-            size_t counterExSize = counterEx.size();
-
-            UniformIntDistribution distribution(0, counterExSize);
-            std::mt19937 generator(std::random_device{}());
-            uint16_t index = distribution(generator);
-            counterEx[index].flip();
-            std::vector<bool> proof(nIn, false);
-            for (uint16_t i = 0; i < counterExSize; i++) {
-              proof[cone1.getIn(i) /*FIXME*/] = counterEx[i];
-            }
-            for (size_t i = 0; i < proof.size(); i++) {
-              counterExStorage[i].set(storageCount, proof[i]);
-            }
-            storageCount += 1;
+            eqClassToIdx[eqClass].insert(cellIdx1);
           }
         }
       } else {
-        eqClassToIdx[eqClass].insert(cell);
+        eqClassToIdx[eqClass].insert(cellIdx1);
       }
     } // for idx-to-val
-
+    
     if (toBeMerged.empty()) {
       break;
     }
-#if 0
-    // FIXME: Uncomment.
     miterBuilder.mergeCells(toBeMerged);
-#else
-    // FIXME: Remove. 
-    break;
-#endif
   }
-
-  return getChecker(SAT).isSat(miterBuilder.make()); // FIXME: Do not create a subnet.
+  // FIXME: Creates a subnet.
+  return getChecker(SAT).isSat(miterBuilder);
 }
 
 } // namespace eda::gate::debugger

@@ -10,6 +10,7 @@
 
 #include "gate/model/validator.h"
 #include "gate/translator/model2.h"
+#include "gate/translator/rtlil/rtlil_net_builder.h"
 #include "gate/translator/yosys_converter_model2.h"
 #include "shell/shell.h"
 

@@ -1,4 +1,4 @@
-#include "model2.h"
+#include "rtlil_net_builder.h"
 
 #include <gate/model/net.h>
 

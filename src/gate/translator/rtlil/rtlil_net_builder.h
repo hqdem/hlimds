@@ -13,14 +13,10 @@
 #include <string>
 #include <vector>
 
-struct YosysToModel2Config {
-  bool debugMode;
-  std::string topModule;
-  std::vector<std::string> files;
-};
+namespace eda::gate::translator {
 
-/**
- * Translates the Verilog file to model2.
- */
+model::CellTypeID
+readVerilogDesign(
+    const std::string &top, const std::vector<std::string> &files);
 
-int translateVerilogToModel2(const YosysToModel2Config &config);
+} // namespace eda::gate::translator

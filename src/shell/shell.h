@@ -19,7 +19,7 @@
 
 #include <cassert>
 #include <chrono>
-#include <cmath> 
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -89,7 +89,7 @@ inline int makeWarn(Tcl_Interp *interp, const std::string &msg) {
 inline int makeError(Tcl_Interp *interp, const std::string &msg) {
   makeResult(interp, fmt::format("error: {}", msg));
   return TCL_ERROR;
-} 
+}
 
 inline void printNewline() {
   UTOPIA_SHELL_OUT << std::endl;

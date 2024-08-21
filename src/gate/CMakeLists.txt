@@ -22,6 +22,7 @@ add_library(Gate OBJECT
   model/generator/matrix_generator.cpp
   model/link.cpp
   model/net.cpp
+  model/printer/dataflow_printer.cpp
   model/printer/printer.cpp
   model/printer/verilog.cpp
   model/printer/verilog_lib.cpp

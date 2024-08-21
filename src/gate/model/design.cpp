@@ -83,11 +83,10 @@ void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
   }
 }
 
-DesignBuilder::SubnetToSubnetSet DesignBuilder::findFlipFlopPOs(
+DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPOs(
     const std::vector<SubnetID> &subnetIDs) const {
 
-  SubnetToSubnetSet flipFlopPOs(subnetIDs.size());
-  // Find flip-flops POs.
+  SubnetToFFSet flipFlopPOs(subnetIDs.size());
   for (size_t i = 0; i < subnetIDs.size(); ++i) {
     const auto &subnet = Subnet::get(subnetIDs[i]);
     for (size_t outN = 0; outN < subnet.getOutNum(); ++outN) {
@@ -109,7 +108,8 @@ DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
   for (size_t i = 0; i < subnetIDs.size(); ++i) {
     const auto &subnet = Subnet::get(subnetIDs[i]);
     for (size_t inN = 0; inN < subnet.getInNum(); ++inN) {
-      const auto &inCell = subnet.getCell(inN);
+      const size_t inEntryID = subnet.getInIdx(inN);
+      const auto &inCell = subnet.getCell(inEntryID);
       if (!inCell.isFlipFlop()) {
         continue;
       }
@@ -128,28 +128,6 @@ DesignBuilder::SubnetToSubnetSet DesignBuilder::getAdjList(
     const std::vector<SubnetID> &subnetIDs) const {
   auto flipFlopPOs = findFlipFlopPOs(subnetIDs);
   return findArcs(subnetIDs, flipFlopPOs);
-}
-
-std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder) {
-  out << "digraph " << builder.getName() << " {\n";
-
-  const size_t nSubnet = builder.getSubnetNum();
-  std::vector<std::vector<size_t>> subnetLinks(nSubnet);
-  for (size_t i = 0; i < nSubnet; ++i) {
-    out << "  snet_" << i << ";\n";
-    const auto &outArcs = builder.getOutArcs(i);
-    for (const auto &outArc : outArcs) {
-      subnetLinks[outArc].push_back(i);
-    }
-  }
-  for (size_t i = 0; i < nSubnet; ++i) {
-    for (const auto &link : subnetLinks[i]) {
-      out << "  snet_" << link << " -> " <<  "snet_" << i << ";\n";
-    }
-  }
-
-  out << "}\n";
-  return out;
 }
 
 } // namespace eda::gate::model

@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/printer/verilog.h"
-#include "gate/model/printer/verilog_lib.h"
+#include "net_printer_verilog.h"
+#include "net_printer_verilog_lib.h"
 
 #include <cassert>
 #include <sstream>
@@ -19,7 +19,7 @@ static inline void printIndent(std::ostream &out, size_t n) {
 }
 
 static inline std::string getInstanceName(
-    const ModelPrinter::CellInfo &cellInfo) { 
+    const NetPrinter::CellInfo &cellInfo) { 
   const auto &type = cellInfo.type.get();
 
   // Standard logic gates do not require names.
@@ -37,7 +37,7 @@ static inline std::string getInstanceName(
 }
 
 static inline std::string getLinkExpr(
-    const ModelPrinter::LinkInfo &linkInfo) {
+    const NetPrinter::LinkInfo &linkInfo) {
   std::stringstream ss;
 
   if (linkInfo.inv) ss << "~";
@@ -59,7 +59,7 @@ static inline std::string getPinName(CellTypeID typeID, unsigned index) {
 }
 
 static inline void declareWiresForCellOutputs(
-    std::ostream &out, const ModelPrinter::CellInfo &cellInfo) {
+    std::ostream &out, const NetPrinter::CellInfo &cellInfo) {
   const auto &type = cellInfo.type.get();
 
   if (type.isIn() || type.isOut())
@@ -68,29 +68,29 @@ static inline void declareWiresForCellOutputs(
   for (uint16_t output = 0; output < type.getOutNum(); ++output) {
     printIndent(out, 1);
     // Space before ";" is for escaped identifiers.
-    out << "wire " << ModelPrinter::PortInfo(cellInfo, output).getName() << " ;\n";
+    out << "wire " << NetPrinter::PortInfo(cellInfo, output).getName() << " ;\n";
   }
 }
 
 static inline void assignConstant(
-    std::ostream &out, const ModelPrinter::CellInfo &cellInfo) {
+    std::ostream &out, const NetPrinter::CellInfo &cellInfo) {
   const auto &type = cellInfo.type.get();
   assert(type.isZero() || type.isOne());
 
   printIndent(out, 1);
   // Space before ";" is for unification.
-  out << "assign " << ModelPrinter::PortInfo(cellInfo, 0).getName()
+  out << "assign " << NetPrinter::PortInfo(cellInfo, 0).getName()
       << " = " << (type.isZero() ? "0" : "1") << " ;\n";
 }
 
 static inline void defineInputBinding(
-    std::ostream &out, const ModelPrinter::LinkInfo &linkInfo) {
+    std::ostream &out, const NetPrinter::LinkInfo &linkInfo) {
   out << getLinkExpr(linkInfo);
 }
 
 static void defineInputBinding(
     std::ostream &out,
-    const ModelPrinter::LinksInfo &linksInfo,
+    const NetPrinter::LinksInfo &linksInfo,
     size_t index,
     size_t width) {
   assert(width > 0);
@@ -112,19 +112,19 @@ static void defineInputBinding(
 }
 
 static inline void defineOutputBinding(
-    std::ostream &out, const ModelPrinter::PortInfo &portInfo) {
+    std::ostream &out, const NetPrinter::PortInfo &portInfo) {
   out << portInfo.getName();
 }
 
 static void defineOutputBinding(
     std::ostream &out,
-    const ModelPrinter::CellInfo &cellInfo,
+    const NetPrinter::CellInfo &cellInfo,
     size_t index,
     size_t width) {
   assert(width > 0);
 
   if (width == 1) {
-    defineOutputBinding(out, ModelPrinter::PortInfo(cellInfo, index));
+    defineOutputBinding(out, NetPrinter::PortInfo(cellInfo, index));
   } else {
     out << "{ ";
     bool comma = false;
@@ -132,7 +132,7 @@ static void defineOutputBinding(
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
       const auto upperBitIndex = index + width - 1 - i;
-      defineOutputBinding(out, ModelPrinter::PortInfo(cellInfo, upperBitIndex));
+      defineOutputBinding(out, NetPrinter::PortInfo(cellInfo, upperBitIndex));
       comma = true;
     }
     // Space before "}" is for escaped identifiers.
@@ -142,8 +142,8 @@ static void defineOutputBinding(
 
 static void instantiateCell(
     std::ostream &out,
-    const ModelPrinter::CellInfo &cellInfo,
-    const ModelPrinter::LinksInfo &linksInfo) {
+    const NetPrinter::CellInfo &cellInfo,
+    const NetPrinter::LinksInfo &linksInfo) {
   const auto &type = cellInfo.type.get();
   assert(!type.isIn() && !type.isOut());
 
@@ -165,7 +165,7 @@ static void instantiateCell(
     for (uint16_t output = 0; output < type.getOutNum(); ++output) {
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
-      defineOutputBinding(out, ModelPrinter::PortInfo(cellInfo, output));
+      defineOutputBinding(out, NetPrinter::PortInfo(cellInfo, output));
       comma = true;
     }
 
@@ -203,18 +203,18 @@ static void instantiateCell(
 
 static inline void assignModelInput(
     std::ostream &out,
-    const ModelPrinter::CellInfo &cellInfo,
+    const NetPrinter::CellInfo &cellInfo,
     const std::string &rhs) {
   printIndent(out, 1);
   // Space before ";" is for escaped identifiers.
-  out << "assign " << ModelPrinter::PortInfo(cellInfo, 0).getName() << " = "
+  out << "assign " << NetPrinter::PortInfo(cellInfo, 0).getName() << " = "
                    << rhs << " ;\n";
 }
 
 static inline void assignModelOutput(
     std::ostream &out,
     const std::string &outputName,
-    const ModelPrinter::LinksInfo &linksInfo) {
+    const NetPrinter::LinksInfo &linksInfo) {
   printIndent(out, 1);
   // Space before ";" is for escaped identifiers.
   out << "assign " << outputName << " = "
@@ -252,24 +252,22 @@ static bool defineOriginalInterface(std::ostream &out, const CellTypeID typeID) 
   return true;
 }
 
-void VerilogPrinter::onModelBegin(
-    std::ostream &out,
-    const std::string &name,
-    const CellTypeID typeID) {
+void NetPrinterVerilog::onModelBegin(std::ostream &out,
+                                     const std::string &name,
+                                     const CellTypeID typeID) {
   out << "module " << name;
 
   isOrigIface = defineOriginalInterface(out, typeID);
   this->typeID = typeID;
 }
 
-void VerilogPrinter::onModelEnd(
-    std::ostream &out,
-    const std::string &name,
-    const CellTypeID typeID) {
+void NetPrinterVerilog::onModelEnd(std::ostream &out,
+                                   const std::string &name,
+                                   const CellTypeID typeID) {
   out << "endmodule" << " // " << name << "\n";
 }
 
-void VerilogPrinter::onInterfaceBegin(std::ostream &out) {
+void NetPrinterVerilog::onInterfaceBegin(std::ostream &out) {
   if (isOrigIface) return;
 
   // Space before "(" is for escaped identifiers.
@@ -277,13 +275,13 @@ void VerilogPrinter::onInterfaceBegin(std::ostream &out) {
   pins.clear();
 }
 
-void VerilogPrinter::onInterfaceEnd(std::ostream &out) {
+void NetPrinterVerilog::onInterfaceEnd(std::ostream &out) {
   if (isOrigIface) return;
 
   out << "\n);\n";
 }
 
-void VerilogPrinter::onType(std::ostream &out, const CellType &cellType) {
+void NetPrinterVerilog::onType(std::ostream &out, const CellType &cellType) {
   const auto symbol = cellType.getSymbol();
   switch(symbol & ~FLGMASK) {
   case MAJ:      printMajType(out, cellType);
@@ -318,9 +316,9 @@ void VerilogPrinter::onType(std::ostream &out, const CellType &cellType) {
   }
 }
 
-void VerilogPrinter::onPort(std::ostream &out,
-                            const CellInfo &cellInfo,
-                            unsigned index) {
+void NetPrinterVerilog::onPort(std::ostream &out,
+                               const CellInfo &cellInfo,
+                               unsigned index) {
   const auto &type = cellInfo.type.get();
  
   // Save mapping between input/output cells and pin indices.
@@ -344,10 +342,10 @@ void VerilogPrinter::onPort(std::ostream &out,
   }
 }
 
-void VerilogPrinter::onCell(std::ostream &out,
-                            const CellInfo &cellInfo,
-                            const LinksInfo &linksInfo,
-                            unsigned pass) {
+void NetPrinterVerilog::onCell(std::ostream &out,
+                               const CellInfo &cellInfo,
+                               const LinksInfo &linksInfo,
+                               unsigned pass) {
   const auto &type = cellInfo.type.get();
 
   if (pass == 0) {
@@ -383,7 +381,7 @@ void VerilogPrinter::onCell(std::ostream &out,
 
       lhs = getPinName(typeID, found->second);
     } else {
-      lhs = ModelPrinter::PortInfo(cellInfo, 0).getName();
+      lhs = NetPrinter::PortInfo(cellInfo, 0).getName();
     }
 
     assignModelOutput(out, lhs, linksInfo);

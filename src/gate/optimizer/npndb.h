@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "gate/model/printer/printer.h"
 #include "gate/model/serializer.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/subnet_info.h"
@@ -104,8 +103,6 @@ class NpnDatabase {
 friend class NpnDatabaseSerializer;
 
 public:
-  using Printer = eda::gate::model::ModelPrinter;
-  using Format = eda::gate::model::ModelPrinter::Format;
   using ResultIterator = NpnDb2ResultIterator;
   using NpnTransformation = utils::NpnTransformation;
   using Subnet = model::Subnet;

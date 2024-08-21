@@ -8,7 +8,7 @@
 
 #include "gate/debugger/sat_checker.h"
 #include "gate/library/sdc_manager.h"
-#include "gate/model/printer/printer.h"
+#include "gate/model/printer/net_printer.h"
 #include "gate/model/utils/subnet_random.h"
 #include "gate/premapper/cell_aigmapper.h"
 #include "gate/techmapper/techmapper_test_util.h"
@@ -53,9 +53,8 @@ SubnetID createPrimitiveSubnet(const CellSymbol symbol,
 }
 
 void printVerilog(const SubnetID subnet) {
-  using ModelPrinter = eda::gate::model::ModelPrinter;
-  ModelPrinter& verilogPrinter =
-    ModelPrinter::getPrinter(ModelPrinter::VERILOG);
+  using NetPrinter = eda::gate::model::NetPrinter;
+  auto &verilogPrinter = NetPrinter::getPrinter(NetPrinter::VERILOG);
   std::ofstream outFile("test/data/gate/techmapper/print/techmappedNet.v");
   verilogPrinter.print(outFile, model::Subnet::get(subnet), "techmappedNet");
   std::cout << "Output Verilog file: " <<

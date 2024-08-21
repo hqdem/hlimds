@@ -7,8 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/net.h"
-#include "gate/model/printer/dot.h"
-#include "gate/model/printer/printer.h"
+#include "gate/model/printer/net_printer.h"
 #include "test_util.h"
 
 #include "gtest/gtest.h"
@@ -121,14 +120,14 @@ const Net &genSeqNet() {
 }
 
 TEST(SeqNet, netWithLatch) {
-  const Net &net = genSeqNet();
-  ModelPrinter *dotPrinter = &ModelPrinter::getDefaultPrinter();
+  const auto &net = genSeqNet();
+  auto &dotPrinter = NetPrinter::getPrinter(NetPrinter::DOT);
 
   std::filesystem::path filePath = createOutDir(testOutPath);
   std::ofstream out(filePath.c_str() + fileName);
 
   if (out.is_open()) {
-    dotPrinter->print(out, net);
+    dotPrinter.print(out, net);
     out.close();
     EXPECT_TRUE(std::filesystem::exists(filePath.c_str() + fileName));
     EXPECT_TRUE(std::filesystem::file_size(filePath.c_str() + fileName) > 0);

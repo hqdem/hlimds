@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/printer/net_printer.h"
 #include "gate/optimizer/npnstatdb.h"
 
 namespace eda::gate::optimizer {
@@ -95,7 +96,7 @@ NpnStatDatabase NpnStatDatabaseSerializer::deserialize(std::istream &in) {
 void NpnStatDatabase::printDot(std::ostream &out, const TT &tt,
                         const std::string &name, const bool quiet) {
   NpnStatDatabase::ResultIterator iterator = get(tt, quiet);
-  Printer::getPrinter(Format::DOT)
+  model::NetPrinter::getPrinter(model::NetPrinter::Format::DOT)
       .print(out, Subnet::get(iterator.get()), name);
 }
 

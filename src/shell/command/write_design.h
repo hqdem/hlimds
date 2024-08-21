@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model/printer/printer.h"
+#include "gate/model/printer/net_printer.h"
 #include "shell/shell.h"
 
 #include <ostream>
@@ -18,7 +18,7 @@ namespace eda::shell {
 static inline void printDesign(
     std::ostream &out,
     eda::gate::model::DesignBuilder &designBuilder,
-    eda::gate::model::ModelPrinter &printer) {
+    eda::gate::model::NetPrinter &printer) {
   using Net = eda::gate::model::Net;
 
   const auto &net = Net::get(designBuilder.make());
@@ -31,7 +31,7 @@ static inline void printSubnet(
     std::ostream &out,
     eda::gate::model::DesignBuilder &designBuilder,
     size_t i,
-    eda::gate::model::ModelPrinter &printer) {
+    eda::gate::model::NetPrinter &printer) {
   using Subnet = eda::gate::model::Subnet;
 
   const auto subnetID = designBuilder.getSubnetID(i);
@@ -42,8 +42,8 @@ static inline void printSubnet(
 }
 
 struct WriteDesignCommand : public UtopiaCommand {
-  using ModelPrinter = eda::gate::model::ModelPrinter;
-  using Format = ModelPrinter::Format;
+  using NetPrinter = eda::gate::model::NetPrinter;
+  using Format = NetPrinter::Format;
 
   WriteDesignCommand(const char *name, const char *desc):
       UtopiaCommand(name, desc) {
@@ -52,7 +52,7 @@ struct WriteDesignCommand : public UtopiaCommand {
   }
 
   void setFormat(const Format format) {
-    printer = &ModelPrinter::getPrinter(format);
+    printer = &NetPrinter::getPrinter(format);
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
@@ -89,7 +89,7 @@ struct WriteDesignCommand : public UtopiaCommand {
     return TCL_OK;
   }
 
-  ModelPrinter *printer;
+  NetPrinter *printer;
   CLI::Option *subnetOption;
   size_t subnetIndex;
 };

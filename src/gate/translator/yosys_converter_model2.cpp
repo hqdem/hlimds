@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/translator/yosys_converter_model2.h"
+#include "yosys_converter_model2.h"
 
-#include "fmt/ostream.h"
+#include <fmt/ostream.h>
 
 #include <algorithm>
 

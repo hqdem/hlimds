@@ -8,17 +8,17 @@
 
 #pragma once
 
-#include "gate/model/printer/printer.h"
+#include "net_printer.h"
 #include "util/singleton.h"
 
 namespace eda::gate::model {
 
 /// Prints nets in dot notation.
-class DotPrinter final : public ModelPrinter,
-                         public util::Singleton<DotPrinter> {
-  friend class util::Singleton<DotPrinter>;
+class NetPrinterDot final : public NetPrinter,
+                            public util::Singleton<NetPrinterDot> {
+  friend class util::Singleton<NetPrinterDot>;
 
-  DotPrinter(): ModelPrinter({{Pass::CELL, 0}, {Pass::LINK, 0}}) {}
+  NetPrinterDot(): NetPrinter({{Pass::CELL, 0}, {Pass::LINK, 0}}) {}
 
   void onModelBegin(std::ostream &out,
                     const std::string &name,

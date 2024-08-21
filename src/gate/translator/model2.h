@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <gate/model/object.h>
-
 #include <string>
 #include <vector>
 
@@ -22,5 +20,4 @@ struct YosysToModel2Config {
 /**
  * Translates the Verilog file to model2.
  */
-
 int translateVerilogToModel2(const YosysToModel2Config &config);

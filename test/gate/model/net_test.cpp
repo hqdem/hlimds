@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/net.h"
-#include "gate/model/printer/printer.h"
+#include "gate/model/printer/net_printer.h"
 
 #include "gtest/gtest.h"
 

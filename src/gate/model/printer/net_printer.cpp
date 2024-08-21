@@ -6,23 +6,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/printer/dot.h"
-#include "gate/model/printer/simple.h" 
-#include "gate/model/printer/verilog.h"
+#include "net_printer_dot.h"
+#include "net_printer_simple.h" 
+#include "net_printer_verilog.h"
 
 #include <cassert>
 #include <set>
 
 namespace eda::gate::model {
 
-ModelPrinter &ModelPrinter::getPrinter(Format format) {
+NetPrinter &NetPrinter::getPrinter(Format format) {
   switch (format) {
   case SIMPLE:
-    return SimplePrinter::get();
+    return NetPrinterSimple::get();
   case DOT:
-    return DotPrinter::get();
+    return NetPrinterDot::get();
   case VERILOG:
-    return VerilogPrinter::get();
+    return NetPrinterVerilog::get();
   default:
     return getDefaultPrinter();
   }
@@ -32,17 +32,17 @@ ModelPrinter &ModelPrinter::getPrinter(Format format) {
 // Net-related methods
 //===----------------------------------------------------------------------===//
 
-ModelPrinter::CellInfo ModelPrinter::getCellInfo(CellID cellID) {
+NetPrinter::CellInfo NetPrinter::getCellInfo(CellID cellID) {
   const auto cellPrintingID = getCellPrintingID(cellID);
   return CellInfo{Cell::get(cellID).getType(), cellPrintingID};
 }
 
-ModelPrinter::PortInfo ModelPrinter::getPortInfo(CellID cellID, uint16_t port) {
+NetPrinter::PortInfo NetPrinter::getPortInfo(CellID cellID, uint16_t port) {
   return PortInfo(getCellInfo(cellID), port);
 }
 
-ModelPrinter::LinkInfo ModelPrinter::getLinkInfo(const LinkEnd &source,
-                                                 const LinkEnd &target) {
+NetPrinter::LinkInfo NetPrinter::getLinkInfo(const LinkEnd &source,
+                                               const LinkEnd &target) {
   return LinkInfo {
       getPortInfo(source.getCellID(), source.getPort()),
       getPortInfo(target.getCellID(), target.getPort()),
@@ -50,7 +50,7 @@ ModelPrinter::LinkInfo ModelPrinter::getLinkInfo(const LinkEnd &source,
   }; 
 }
 
-ModelPrinter::LinksInfo ModelPrinter::getLinksInfo(CellID cellID) {
+NetPrinter::LinksInfo NetPrinter::getLinksInfo(CellID cellID) {
   const auto links = Cell::get(cellID).getLinks();
 
   LinksInfo linksInfo;
@@ -66,7 +66,7 @@ ModelPrinter::LinksInfo ModelPrinter::getLinksInfo(CellID cellID) {
   return linksInfo;
 }
 
-void ModelPrinter::visitTypes(std::ostream &out, const List<CellID> &cells) {
+void NetPrinter::visitTypes(std::ostream &out, const List<CellID> &cells) {
   std::set<CellTypeID> typeIDs;
   for (auto i = cells.begin(); i != cells.end(); ++i) {
     const auto &cell = Cell::get(*i);
@@ -77,7 +77,7 @@ void ModelPrinter::visitTypes(std::ostream &out, const List<CellID> &cells) {
   }
 }
  
-void ModelPrinter::visitTypes(std::ostream &out, const Net &net) {
+void NetPrinter::visitTypes(std::ostream &out, const Net &net) {
   // TODO: Implement list view combining a number of lists.
   visitTypes(out, net.getInputs());
   visitTypes(out, net.getOutputs());
@@ -87,7 +87,7 @@ void ModelPrinter::visitTypes(std::ostream &out, const Net &net) {
   visitTypes(out, net.getHardBlocks());
 }
 
-void ModelPrinter::visitInputs(std::ostream &out, const Net &net) {
+void NetPrinter::visitInputs(std::ostream &out, const Net &net) {
   const List<CellID> inputs = net.getInputs();
   unsigned index{0};
   for (auto i = inputs.begin(); i != inputs.end(); ++i) {
@@ -95,7 +95,7 @@ void ModelPrinter::visitInputs(std::ostream &out, const Net &net) {
   }
 }
 
-void ModelPrinter::visitOutputs(std::ostream &out, const Net &net) {
+void NetPrinter::visitOutputs(std::ostream &out, const Net &net) {
   const List<CellID> outputs = net.getOutputs();
   unsigned index{net.getInNum()};
   for (auto i = outputs.begin(); i != outputs.end(); ++i) {
@@ -103,14 +103,14 @@ void ModelPrinter::visitOutputs(std::ostream &out, const Net &net) {
   }
 }
 
-void ModelPrinter::visitCells(
+void NetPrinter::visitCells(
     std::ostream &out, const List<CellID> &cells, unsigned pass) {
   for (auto i = cells.begin(); i != cells.end(); ++i) {
     onCell(out, getCellInfo(*i), getLinksInfo(*i), pass);
   }
 }
 
-void ModelPrinter::visitCells(
+void NetPrinter::visitCells(
     std::ostream &out, const Net &net, unsigned pass) {
   // TODO: Implement list view combining a number of lists.
   visitCells(out, net.getInputs(),     pass);
@@ -121,7 +121,7 @@ void ModelPrinter::visitCells(
   visitCells(out, net.getHardBlocks(), pass);
 }
 
-void ModelPrinter::visitLinks(
+void NetPrinter::visitLinks(
     std::ostream &out, const List<CellID> &cells, unsigned pass) {
   for (auto i = cells.begin(); i != cells.end(); ++i) {
     const Cell::LinkList links = Cell::get(*i).getLinks();
@@ -133,7 +133,7 @@ void ModelPrinter::visitLinks(
   }
 }
 
-void ModelPrinter::visitLinks(
+void NetPrinter::visitLinks(
     std::ostream &out, const Net &net, unsigned pass) {
   // TODO: Implement list view combining a number of lists.
   visitLinks(out, net.getInputs(),     pass);
@@ -148,7 +148,7 @@ void ModelPrinter::visitLinks(
 // Subnet-related methods
 //===----------------------------------------------------------------------===//
 
-ModelPrinter::CellInfo ModelPrinter::getCellInfo(
+NetPrinter::CellInfo NetPrinter::getCellInfo(
     const Subnet &subnet, size_t idx) {
   const auto &entries = subnet.getEntries();
   const auto &cell = entries[idx].cell;
@@ -157,12 +157,12 @@ ModelPrinter::CellInfo ModelPrinter::getCellInfo(
   return CellInfo{cell.getType(), cellPrintingID};
 }
 
-ModelPrinter::PortInfo ModelPrinter::getPortInfo(
+NetPrinter::PortInfo NetPrinter::getPortInfo(
     const Subnet &subnet, size_t idx, uint16_t j) {
   return PortInfo{getCellInfo(subnet, idx), j};
 }
 
-ModelPrinter::LinkInfo ModelPrinter::getLinkInfo(
+NetPrinter::LinkInfo NetPrinter::getLinkInfo(
     const Subnet &subnet, size_t idx, uint16_t j) {
   const auto link = subnet.getLink(idx, j);
 
@@ -173,7 +173,7 @@ ModelPrinter::LinkInfo ModelPrinter::getLinkInfo(
   }; 
 }
 
-ModelPrinter::LinksInfo ModelPrinter::getLinksInfo(
+NetPrinter::LinksInfo NetPrinter::getLinksInfo(
     const Subnet &subnet, size_t idx) {
   const auto links = subnet.getLinks(idx);
 
@@ -187,7 +187,7 @@ ModelPrinter::LinksInfo ModelPrinter::getLinksInfo(
   return linksInfo;
 }
 
-void ModelPrinter::visitTypes(std::ostream &out, const Subnet &subnet) {
+void NetPrinter::visitTypes(std::ostream &out, const Subnet &subnet) {
   std::set<CellTypeID> typeIDs;
   for (size_t i = 0; i < subnet.getCellNum(); ++i) {
     const auto &cell = subnet.getCell(i);
@@ -199,13 +199,13 @@ void ModelPrinter::visitTypes(std::ostream &out, const Subnet &subnet) {
   }
 }
 
-void ModelPrinter::visitInputs(std::ostream &out, const Subnet &subnet) {
+void NetPrinter::visitInputs(std::ostream &out, const Subnet &subnet) {
   for (size_t i = 0; i < subnet.getInNum(); ++i) {
     onPort(out, getCellInfo(subnet, i), i);
   }
 }
 
-void ModelPrinter::visitOutputs(std::ostream &out, const Subnet &subnet) {
+void NetPrinter::visitOutputs(std::ostream &out, const Subnet &subnet) {
   const auto cellOffset = subnet.size() - subnet.getOutNum();
   const auto portOffset = subnet.getInNum();
 
@@ -214,7 +214,7 @@ void ModelPrinter::visitOutputs(std::ostream &out, const Subnet &subnet) {
   }
 }
 
-void ModelPrinter::visitCells(
+void NetPrinter::visitCells(
     std::ostream &out, const Subnet &subnet, unsigned pass) {
   const auto &entries = subnet.getEntries();
   for (size_t i = 0; i < subnet.size(); ++i) {
@@ -224,7 +224,7 @@ void ModelPrinter::visitCells(
   }
 }
 
-void ModelPrinter::visitLinks(
+void NetPrinter::visitLinks(
     std::ostream &out, const Subnet &subnet, unsigned pass) {
   const auto &entries = subnet.getEntries();
   for (size_t i = 0; i < subnet.size(); ++i) {

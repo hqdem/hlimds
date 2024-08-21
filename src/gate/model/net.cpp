@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/net.h"
-#include "gate/model/printer/printer.h"
+#include "gate/model/printer/net_printer.h"
 
 #include <cassert>
 
@@ -95,7 +95,7 @@ NetID NetBuilder::make() {
 //===----------------------------------------------------------------------===//
 
 std::ostream &operator <<(std::ostream &out, const Net &net) {
-  ModelPrinter::getDefaultPrinter().print(out, net);
+  NetPrinter::getDefaultPrinter().print(out, net);
   return out;
 }
 

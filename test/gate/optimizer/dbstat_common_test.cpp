@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/examples.h"
+#include "gate/model/printer/net_printer.h"
 #include "gate/optimizer/npndb.h"
 #include "gate/optimizer/get_dbstat.h"
 #include "gate/optimizer/npnstatdb.h"
@@ -83,7 +84,7 @@ static void printDot(const std::string &filename, SubnetID id,
                        const std::string name = "") {
   std::ofstream out(filename);
   if (out.is_open()) {
-    ModelPrinter::getPrinter(ModelPrinter::Format::DOT)
+    NetPrinter::getPrinter(NetPrinter::Format::DOT)
           .print(out, Subnet::get(id), name);
   out.close();
   }

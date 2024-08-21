@@ -8,7 +8,7 @@
 
 #include "gate/model/decomposer/net_decomposer.h"
 #include "gate/model/generator/layer_generator.h"
-#include "gate/model/printer/printer.h"
+#include "gate/model/printer/net_printer.h"
 
 #include "gtest/gtest.h"
 

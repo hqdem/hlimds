@@ -49,7 +49,7 @@ static void printInfoDot(const std::string &filename, SubnetID id,
   std::ofstream out(filename);
   if (out.is_open()) {
     NpnDatabase::printInfoSub(out, Subnet::get(id));
-    ModelPrinter::getPrinter(ModelPrinter::Format::DOT)
+    NetPrinter::getPrinter(NetPrinter::Format::DOT)
         .print(out, Subnet::get(id), name);
     out.close();
   }

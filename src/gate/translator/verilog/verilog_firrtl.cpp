@@ -8,7 +8,7 @@
 
 #include "verilog_firrtl.h"
 
-#include "gate/model/printer/printer.h"
+#include "gate/model/printer/net_printer.h"
 #include "gate/translator/firrtl/firrtl_net.h"
 
 #include <filesystem>
@@ -16,8 +16,8 @@
 #include <iostream>
 
 using CellType = eda::gate::model::CellType;
-using Format = eda::gate::model::ModelPrinter::Format;
-using ModelPrinter = eda::gate::model::ModelPrinter;
+using Format = eda::gate::model::NetPrinter::Format;
+using ModelPrinter = eda::gate::model::NetPrinter;
 
 namespace fs = std::filesystem;
 

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/model/printer/printer.h"
+#include "net_printer.h"
 #include "util/singleton.h"
 
 #include <unordered_map>
@@ -18,11 +18,11 @@ namespace eda::gate::model {
 /**
  * @brief Prints nets/subnets in Verilog.
  */
-class VerilogPrinter final : public ModelPrinter,
-                             public util::Singleton<VerilogPrinter> {
-  friend class util::Singleton<VerilogPrinter>;
+class NetPrinterVerilog final : public NetPrinter,
+                                public util::Singleton<NetPrinterVerilog> {
+  friend class util::Singleton<NetPrinterVerilog>;
 
-  VerilogPrinter(): ModelPrinter({{Pass::CELL, 0}, {Pass::CELL, 1}}) {}
+  NetPrinterVerilog(): NetPrinter({{Pass::CELL, 0}, {Pass::CELL, 1}}) {}
 
   void onModelBegin(
       std::ostream &out,

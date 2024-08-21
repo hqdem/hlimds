@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/library/sdc_manager.h"
-#include "gate/model/printer/printer.h"
 #include "gate/premapper/cell_aigmapper.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
 #include "gate/techmapper/techmapper_wrapper.h"
@@ -17,7 +16,6 @@
 
 namespace eda::gate::techmapper {
 
-using ModelPrinter  = model::ModelPrinter;
 using Subnet        = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetID      = model::SubnetID;

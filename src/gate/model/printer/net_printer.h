@@ -8,15 +8,10 @@
 
 #pragma once
 
-#include "gate/model/cell.h"
-#include "gate/model/celltype.h"
-#include "gate/model/link.h"
-#include "gate/model/list.h"
 #include "gate/model/net.h"
-#include "gate/model/string.h"
 #include "gate/model/subnet.h"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include <cassert>
 #include <cstdint>
@@ -31,7 +26,7 @@ namespace eda::gate::model {
 /**
  * @brief Base Net/Subnet printer class.
  */
-class ModelPrinter {
+class NetPrinter {
 public:
   /// Supported output formats.
   enum Format {
@@ -92,11 +87,11 @@ public:
 
   static constexpr auto DefaultName = "Design";
 
-  static ModelPrinter &getDefaultPrinter() {
+  static NetPrinter &getDefaultPrinter() {
     return getPrinter(SIMPLE);
   }
 
-  static ModelPrinter &getPrinter(Format format);
+  static NetPrinter &getPrinter(Format format);
 
   /// Prints the net w/ the specified name.
   template <typename T /* Net/Subnet */>
@@ -145,8 +140,8 @@ protected:
     unsigned num;
   };
 
-  ModelPrinter(const std::vector<Pass> passes): passes(passes) {}
-  virtual ~ModelPrinter() {}
+  NetPrinter(const std::vector<Pass> passes): passes(passes) {}
+  virtual ~NetPrinter() {}
 
   virtual void onModelBegin(std::ostream &out,
                             const std::string &name,

@@ -6,9 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/translator/yosys_converter_firrtl.h"
+#include "yosys_converter_firrtl.h"
 
-#include "fmt/ostream.h"
+#include <fmt/ostream.h>
 
 #include <sstream>
 

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/model/printer/verilog_lib.h"
+#include "net_printer_verilog_lib.h"
 
 namespace eda::gate::model {
 

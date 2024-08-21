@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/printer/net_printer.h"
 #include "gate/optimizer/npndb.h"
 
 namespace eda::gate::optimizer {
@@ -32,7 +33,7 @@ void NpnDatabase::printDot(std::ostream &out, const TT &tt,
   if (iterator.isEnd()) {
     return;
   }
-  Printer::getPrinter(Format::DOT)
+  model::NetPrinter::getPrinter(model::NetPrinter::Format::DOT)
       .print(out, Subnet::get(iterator.get()), name);
 }
 

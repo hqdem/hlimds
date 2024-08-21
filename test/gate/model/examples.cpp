@@ -284,7 +284,7 @@ SubnetID makeSubnetStuckLatches() {
   return sb.make();
 }
 
-NetID makeNetStuchLatches() {
+NetID makeNetStuckLatches() {
   return makeNet(makeSubnetStuckLatches());
 }
 
@@ -332,6 +332,18 @@ SubnetID makeSubnetRandomMatrix(const size_t nIn,
 
   DesignBuilder builder(netID);
   return builder.getSubnetID(0);
+}
+
+const SubnetBuilderPtr makeBuilderRandomMatrix(const size_t nIn,
+                                               const size_t nOut,
+                                               const size_t nCell,
+                                               const size_t minArity,
+                                               const size_t maxArity,
+                                               const unsigned seed) {
+  const auto netID = makeNetRandomMatrix(
+      nIn, nOut, nCell, minArity, maxArity, seed);
+  DesignBuilder builder(netID);
+  return builder.getSubnetBuilder(0);
 }
 
 NetID makeNetRandomMatrix(const size_t nIn,

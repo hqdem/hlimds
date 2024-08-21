@@ -16,7 +16,7 @@
 
 namespace eda::gate::debugger {
 
-using CounterEx = std::vector<std::bitset<64>>;
+using SimValuesStorage = std::vector<std::bitset<64>>;
 
 /**
  * \brief Implements FRAIG-based method of LEC.
@@ -41,10 +41,6 @@ public:
   static constexpr size_t compareLimit = 500;
 
 private:
-  static void netSimulation(simulator::Simulator &simulator,
-                            const uint16_t &nIn,
-                            const CounterEx &counterEx = {});
-
   FraigChecker() {}
 };
 

@@ -46,17 +46,22 @@ test_project:
     - rm -rf ${UTOPIA_HOME}/output
     - mkdir -p $(dirname ${TEST_REPORTS_PATH})
     - ${BUILD_PATH}/test/utest --gtest_output="xml:${TEST_REPORTS_PATH}"
+    - gcovr --xml-pretty --print-summary -o ${BUILD_PATH}/coverage.xml --root ${UTOPIA_HOME}
 
   dependencies:
     - build_project
 
   artifacts:
-    expire_in: 10 min
+    name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
+    expire_in: 60 min
     paths:
       - ${BUILD_PATH}
       - ${TEST_REPORTS_PATH}
     reports:
       junit: ${TEST_REPORTS_PATH}
+      coverage_report:
+        coverage_format: cobertura
+        path: ${BUILD_PATH}/coverage.xml
     when: always
 
 get_coverage_info:

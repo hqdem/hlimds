@@ -27,23 +27,12 @@ static inline std::string getInstanceName(
     return "";
 
   // Instances of technological cells and IPs should be named.
-  std::stringstream ss;
-
-  ss << cellInfo.getType();
-  ss << "_cell_";
-  ss << cellInfo.cell;
-
-  return ss.str();
+  return fmt::format("{}_cell_{}", cellInfo.getType(), cellInfo.cell);
 }
 
-static inline std::string getLinkExpr(
-    const NetPrinter::LinkInfo &linkInfo) {
-  std::stringstream ss;
-
-  if (linkInfo.inv) ss << "~";
-  ss << linkInfo.getSourceName();
-
-  return ss.str();
+static inline std::string getLinkExpr(const NetPrinter::LinkInfo &linkInfo) {
+  const std::string modifier = linkInfo.inv ? "~" : "";
+  return fmt::format("{}{}", modifier, linkInfo.getSourceName());
 }
 
 static inline std::string getPinName(CellTypeID typeID, unsigned index) {

@@ -257,8 +257,8 @@ void NetPrinterVerilog::onModelBegin(std::ostream &out,
                                      const CellTypeID typeID) {
   out << "module " << name;
 
-  isOrigIface = defineOriginalInterface(out, typeID);
-  this->typeID = typeID;
+  printOriginalInterface = defineOriginalInterface(out, typeID);
+  topLevelTypeID = typeID;
 }
 
 void NetPrinterVerilog::onModelEnd(std::ostream &out,
@@ -268,7 +268,7 @@ void NetPrinterVerilog::onModelEnd(std::ostream &out,
 }
 
 void NetPrinterVerilog::onInterfaceBegin(std::ostream &out) {
-  if (isOrigIface) return;
+  if (printOriginalInterface) return;
 
   // Space before "(" is for escaped identifiers.
   out << " (\n";
@@ -276,7 +276,7 @@ void NetPrinterVerilog::onInterfaceBegin(std::ostream &out) {
 }
 
 void NetPrinterVerilog::onInterfaceEnd(std::ostream &out) {
-  if (isOrigIface) return;
+  if (printOriginalInterface) return;
 
   out << "\n);\n";
 }
@@ -324,7 +324,7 @@ void NetPrinterVerilog::onPort(std::ostream &out,
   // Save mapping between input/output cells and pin indices.
   pins.emplace(cellInfo.cell, index);
 
-  if (isOrigIface) {
+  if (printOriginalInterface) {
     if (type.isIn()) {
       printIndent(out, 1);
       // Space before ";" is for escaped identifiers.
@@ -363,11 +363,11 @@ void NetPrinterVerilog::onCell(std::ostream &out,
     return;
   }
 
-  if (type.isIn() && isOrigIface) {
+  if (type.isIn() && printOriginalInterface) {
     const auto found = pins.find(cellInfo.cell);
     assert(found != pins.end());
 
-    const auto rhs = getPinName(typeID, found->second);
+    const auto rhs = getPinName(topLevelTypeID, found->second);
     assignModelInput(out, cellInfo, rhs);
     return;
   }
@@ -375,11 +375,11 @@ void NetPrinterVerilog::onCell(std::ostream &out,
   if (type.isOut()) {
     std::string lhs;
 
-    if (isOrigIface) {
+    if (printOriginalInterface) {
       const auto found = pins.find(cellInfo.cell);
       assert(found != pins.end());
 
-      lhs = getPinName(typeID, found->second);
+      lhs = getPinName(topLevelTypeID, found->second);
     } else {
       lhs = NetPrinter::PortInfo(cellInfo, 0).getName();
     }

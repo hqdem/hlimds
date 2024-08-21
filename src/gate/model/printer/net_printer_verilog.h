@@ -52,8 +52,8 @@ class NetPrinterVerilog final : public NetPrinter,
       unsigned pass) override;
 
 private:
-  bool isOrigIface{false};
-  CellTypeID typeID{OBJ_NULL_ID};
+  bool printOriginalInterface{false};
+  CellTypeID topLevelTypeID{OBJ_NULL_ID};
 
   /// Maps an input/output cell to the pin index.
   std::unordered_map<uint32_t, unsigned> pins;

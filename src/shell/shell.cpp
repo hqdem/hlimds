@@ -17,7 +17,6 @@
 #include "shell/command/read_firrtl.h"
 #include "shell/command/read_graphml.h"
 #include "shell/command/read_liberty.h"
-#include "shell/command/read_verilog.h"
 #include "shell/command/save_point.h"
 #include "shell/command/set_name.h"
 #include "shell/command/stat_design.h"
@@ -94,7 +93,6 @@ UtopiaShell::UtopiaShell() {
   addCommand(&ReadFirrtlCommand::get());
   addCommand(&ReadGraphMlCommand::get());
   addCommand(&ReadLibertyCommand::get());
-  addCommand(&ReadVerilogCommand::get());
   addCommand(&SavePointCommand::get());
   addCommand(&SetNameCommand::get());
   addCommand(&StatDesignCommand::get());

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/printer/dataflow_printer.h"
 #include "shell/shell.h"
 
 #include <ostream>

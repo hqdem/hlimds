@@ -10,6 +10,7 @@
 #include "gate/model/design.h"
 #include "gate/model/examples.h"
 #include "gate/model/net.h"
+#include "gate/model/printer/dataflow_printer.h"
 #include "gate/optimizer/pass.h"
 #include "test_util.h"
 

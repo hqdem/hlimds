@@ -50,6 +50,7 @@ private:
 public:
   using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
   using SubnetToSubnetSet = std::vector<std::unordered_set<size_t>>;
+  using SubnetToFFSet = std::vector<std::unordered_set<size_t>>;
 
   struct SubnetEntry {
     SubnetEntry(const SubnetID subnetID,
@@ -225,6 +226,32 @@ public:
     entry.builder = builder;
   }
 
+  /// Returns the number of primary inputs.
+  size_t getInNum() const { return nIn; }
+
+  /// Returns the number of primary outputs.
+  size_t getOutNum() const { return nOut; }
+
+  bool subnetLinkedWithPI(const size_t i) const {
+    for (const auto &[oldLink, oldIdx] : mapping[i].inputs) {
+      const auto oldSourceID = oldLink.source.getCellID();
+      if (Cell::get(oldSourceID).getTypeID() == CELL_TYPE_ID_IN) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool subnetLinkedWithPO(const size_t i) const {
+    for (const auto &[oldLink, oldIdx] : mapping[i].outputs) {
+      const auto oldTargetID = oldLink.target.getCellID();
+      if (Cell::get(oldTargetID).getTypeID() == CELL_TYPE_ID_OUT) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Returns the number of input/output/internal cells of the i-th subnet.
   std::tuple<size_t, size_t, size_t> getCellNum(const size_t i,
                                                 const bool withBufs) const;
@@ -368,7 +395,7 @@ private:
     }
   }
 
-  SubnetToSubnetSet findFlipFlopPOs(
+  SubnetToFFSet findFlipFlopPOs(
       const std::vector<SubnetID> &subnetIDs) const;
 
   SubnetToSubnetSet findArcs(
@@ -407,7 +434,5 @@ inline NetID makeNet(const SubnetID subnetID) {
   DesignBuilder builder(subnetID);
   return builder.make();
 }
-
-std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder);
 
 } // namespace eda::gate::model

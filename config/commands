@@ -8,7 +8,6 @@ logopt
 read_firrtl
 read_graphml
 read_liberty
-read_verilog
 save_point
 set_name
 stat_design

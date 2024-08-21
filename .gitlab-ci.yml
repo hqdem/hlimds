@@ -50,7 +50,7 @@ test_project:
     - build_project
 
   artifacts:
-    expire_in: 10 min
+    expire_in: 60 min
     paths:
       - ${BUILD_PATH}
       - ${TEST_REPORTS_PATH}
@@ -60,6 +60,7 @@ test_project:
 
 get_coverage_info:
   stage: coverage
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
   tags:
     - docker
 
@@ -67,6 +68,7 @@ get_coverage_info:
     - lcov --capture --directory ${UTOPIA_HOME} -o lcoverage.info
     - lcov --remove lcoverage.info "${BUILD_PATH}/*" "${UTOPIA_HOME}/lib/*" "/usr/*" -o clean_cov.info
     - genhtml clean_cov.info -o clean_coverage
+    - gcovr --xml-pretty --print-summary -o ${BUILD_PATH}/coverage.xml --root ${UTOPIA_HOME}
   when: always
 
   dependencies:
@@ -76,6 +78,11 @@ get_coverage_info:
     expire_in: 1 day
     paths:
       - ${UTOPIA_HOME}/clean_coverage
+      - ${BUILD_PATH}
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: ${BUILD_PATH}/coverage.xml
 
 valgrind_test_demo:
   stage: valgrind

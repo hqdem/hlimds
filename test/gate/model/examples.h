@@ -13,6 +13,8 @@
  * \brief Synthetic nets examples.
  */
 namespace eda::gate::model {
+    
+using SubnetBuilderPtr = std::shared_ptr<model::SubnetBuilder>;
 
 SubnetID makeSubnet2AndOr();
 NetID makeNet2AndOr();
@@ -53,6 +55,12 @@ SubnetID makeSubnetRandomMatrix(const size_t nIn,
                                 const size_t minArity,
                                 const size_t maxArity,
                                 const unsigned seed);
+const SubnetBuilderPtr makeBuilderRandomMatrix(const size_t nIn,
+                                               const size_t nOut,
+                                               const size_t nCell,
+                                               const size_t minArity,
+                                               const size_t maxArity,
+                                               const unsigned seed);
 
 NetID makeNetRandomMatrix(const size_t nIn,
                           const size_t nOut,

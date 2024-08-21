@@ -37,6 +37,7 @@ build_project:
 
 test_project:
   stage: test
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
   tags:
     - docker
 

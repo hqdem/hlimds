@@ -60,7 +60,7 @@ test_project:
 
 get_coverage_info:
   stage: coverage
-  coverage: '/^lines: \d+.\d+% \(\s+\)$/'
+  coverage: '/^lines: \d+.\d+% \(\d+ out of \d+\)$/'
   tags:
     - docker
 

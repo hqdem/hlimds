@@ -37,7 +37,6 @@ build_project:
 
 test_project:
   stage: test
-  coverage: '/^TOTAL.*\s+(\d+\%)$/'
   tags:
     - docker
 
@@ -46,26 +45,22 @@ test_project:
     - rm -rf ${UTOPIA_HOME}/output
     - mkdir -p $(dirname ${TEST_REPORTS_PATH})
     - ${BUILD_PATH}/test/utest --gtest_output="xml:${TEST_REPORTS_PATH}"
-    - gcovr --xml-pretty --print-summary -o ${BUILD_PATH}/coverage.xml --root ${UTOPIA_HOME}
 
   dependencies:
     - build_project
 
   artifacts:
-    name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
     expire_in: 60 min
     paths:
       - ${BUILD_PATH}
       - ${TEST_REPORTS_PATH}
     reports:
       junit: ${TEST_REPORTS_PATH}
-      coverage_report:
-        coverage_format: cobertura
-        path: ${BUILD_PATH}/coverage.xml
     when: always
 
 get_coverage_info:
   stage: coverage
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
   tags:
     - docker
 
@@ -73,6 +68,7 @@ get_coverage_info:
     - lcov --capture --directory ${UTOPIA_HOME} -o lcoverage.info
     - lcov --remove lcoverage.info "${BUILD_PATH}/*" "${UTOPIA_HOME}/lib/*" "/usr/*" -o clean_cov.info
     - genhtml clean_cov.info -o clean_coverage
+    - gcovr --xml-pretty --print-summary -o ${BUILD_PATH}/coverage.xml --root ${UTOPIA_HOME}
   when: always
 
   dependencies:
@@ -82,6 +78,11 @@ get_coverage_info:
     expire_in: 1 day
     paths:
       - ${UTOPIA_HOME}/clean_coverage
+      - ${BUILD_PATH}
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: ${BUILD_PATH}/coverage.xml
 
 valgrind_test_demo:
   stage: valgrind

@@ -32,11 +32,11 @@ struct ScenarioState {
 /**
  * @brief Interface for subnet/design optimization scenario.
  */
-template <typename ID, typename Builder>
+template <typename Builder>
 class Scenario {
 public:
   using State = ScenarioState<Builder>;
-  using Action = std::shared_ptr<InPlaceTransformer<ID, Builder>>;
+  using Action = std::shared_ptr<InPlaceTransformer<Builder>>;
 
   Scenario(const std::string &name): name(name) {}
   virtual ~Scenario() {}
@@ -64,22 +64,22 @@ private:
 /**
  * @brief Executes an optimization scenario.
  */
-template <typename ID, typename Builder>
-struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
-  using State = typename Scenario<ID, Builder>::State;
-  using Action = typename Scenario<ID, Builder>::Action;
+template <typename Builder>
+struct ScenarioExecutor final : public InPlaceTransformer<Builder> {
+  using State = typename Scenario<Builder>::State;
+  using Action = typename Scenario<Builder>::Action;
   using Callback = std::function<void(const State &, const Action &)>;
 
   ScenarioExecutor(const std::string &name,
-                   const Scenario<ID, Builder> &scenario,
+                   const Scenario<Builder> &scenario,
                    const Callback *onBegin = nullptr,
                    const Callback *onEnd = nullptr):
-      InPlaceTransformer<ID, Builder>(name),
+      InPlaceTransformer<Builder>(name),
       scenario(scenario),
       onBegin(onBegin),
       onEnd(onEnd) {}
 
-  ScenarioExecutor(const Scenario<ID, Builder> &scenario,
+  ScenarioExecutor(const Scenario<Builder> &scenario,
                    const Callback *onBegin = nullptr,
                    const Callback *onEnd = nullptr):
       ScenarioExecutor(scenario.getName(), scenario, onBegin, onEnd) {}
@@ -102,7 +102,7 @@ struct ScenarioExecutor final : public InPlaceTransformer<ID, Builder> {
   }
 
 private:
-  const Scenario<ID, Builder> &scenario;
+  const Scenario<Builder> &scenario;
 
   const Callback *onBegin;
   const Callback *onEnd;
@@ -113,14 +113,10 @@ private:
 using SubnetScenarioState = ScenarioState<model::SubnetBuilder>;
 using DesignScenarioState = ScenarioState<model::DesignBuilder>;
 
-using SubnetScenario =
-    Scenario<model::SubnetID, model::SubnetBuilder>;
-using DesignScenario =
-    Scenario<model::NetID, model::DesignBuilder>;
+using SubnetScenario = Scenario<model::SubnetBuilder>;
+using DesignScenario = Scenario<model::DesignBuilder>;
 
-using SubnetScenarioExecutor =
-    ScenarioExecutor<model::SubnetID, model::SubnetBuilder>;
-using DesignScenarioExecutor =
-    ScenarioExecutor<model::NetID, model::DesignBuilder>;
+using SubnetScenarioExecutor = ScenarioExecutor<model::SubnetBuilder>;
+using DesignScenarioExecutor = ScenarioExecutor<model::DesignBuilder>;
 
 } // namespace eda::gate::optimizer

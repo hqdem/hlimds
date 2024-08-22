@@ -15,14 +15,12 @@ namespace eda::gate::optimizer {
 
 using DesignBuilderPtr = BuilderPtr<model::DesignBuilder>;
 
-using DesignTransformer =
-    Transformer<model::NetID, model::DesignBuilder>;
+using DesignTransformer = Transformer<model::DesignBuilder>;
 
-using DesignInPlaceTransformer =
-    InPlaceTransformer<model::NetID, model::DesignBuilder>;
+using DesignInPlaceTransformer = InPlaceTransformer<model::DesignBuilder>;
 
 using DesignInPlaceTransformerChain =
-    InPlaceTransformerChain<model::NetID, model::DesignBuilder>;
+  InPlaceTransformerChain<model::DesignBuilder>;
 
 using DesignPass = std::shared_ptr<DesignInPlaceTransformer>;
 
@@ -50,7 +48,7 @@ public:
 
   void transform(const DesignBuilderPtr &builder) const override {
     for (size_t i = 0; i < builder->getSubnetNum(); ++i) {
-      builder->setSubnetBuilder(i, mapper->make(builder->getSubnetID(i)));
+      builder->setSubnetBuilder(i, mapper->map(builder->getSubnetBuilder(i)));
     }
   }
 

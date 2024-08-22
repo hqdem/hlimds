@@ -15,14 +15,12 @@ namespace eda::gate::optimizer {
 
 using SubnetBuilderPtr = BuilderPtr<model::SubnetBuilder>;
 
-using SubnetTransformer =
-    Transformer<model::SubnetID, model::SubnetBuilder>;
+using SubnetTransformer = Transformer<model::SubnetBuilder>;
 
-using SubnetInPlaceTransformer =
-    InPlaceTransformer<model::SubnetID, model::SubnetBuilder>;
+using SubnetInPlaceTransformer = InPlaceTransformer<model::SubnetBuilder>;
 
 using SubnetInPlaceTransformerChain =
-    InPlaceTransformerChain<model::SubnetID, model::SubnetBuilder>;
+    InPlaceTransformerChain<model::SubnetBuilder>;
 
 using SubnetPass = std::shared_ptr<SubnetInPlaceTransformer>;
 

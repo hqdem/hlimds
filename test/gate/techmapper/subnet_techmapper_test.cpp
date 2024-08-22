@@ -158,8 +158,10 @@ TEST(SubnetTechMapperTest, FourInANDSubnet) {
 
 TEST(SubnetTechMapperTest, DISABLED_RandomSubnet) {
   const auto subnetID = model::randomSubnet(6, 2, 20, 2, 2);
+  const auto builderPtr = std::make_shared<SubnetBuilder>(subnetID);
+
   premapper::CellAigMapper aigMapper("aig");
-  const auto premappedBuilder = aigMapper.make(subnetID);
+  const auto premappedBuilder = aigMapper.map(builderPtr);
   const auto premappedSubnetID = premappedBuilder->make();
   std::cout << "Random Subnet:" << std::endl <<
           Subnet::get(subnetID) << std::endl;
@@ -176,7 +178,7 @@ TEST(SubnetTechMapperTest, GraphMLSubnetSmall) {
   // TODO: it's better to use buffer-insert pass
   // FIXME: do not call make(); implement another aigMapper.transform instead
   const auto subnetID = builderPtr->make();
-  const auto premappedBuilder = aigMapper.make(subnetID);
+  const auto premappedBuilder = aigMapper.map(builderPtr);
   const auto mappedSubnetID =
     commonPart(premappedBuilder, 1000000, 1000000, 1000000);
   checkEQ(subnetID, mappedSubnetID);
@@ -186,9 +188,10 @@ TEST(SubnetTechMapperTest, DISABLED_GraphMLSubnetLarge) {
   auto builderPtr = parseGraphML("wb_conmax_orig"); // 80k nodes
   premapper::CellAigMapper aigMapper("aig");
   const auto subnetID = builderPtr->make();
-  const auto premappedBuilder = aigMapper.make(subnetID); // TODO: it's better to use buffer-insert pass
+  const auto premappedBuilder = aigMapper.map(builderPtr); // TODO: it's better to use buffer-insert pass
   const auto mappedSubnetID =
     commonPart(premappedBuilder, 10000000, 10000000, 10000000);
   checkEQ(subnetID, mappedSubnetID);
 }
+
 } // namespace eda::gate::techmapper

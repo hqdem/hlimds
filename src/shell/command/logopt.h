@@ -44,8 +44,10 @@ struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {
     namespace pass = eda::gate::optimizer;
 
     // Premapping.
-    ADD_CMD(app, pass::aig, "aig", "Mapping to AIG");
-    ADD_CMD(app, pass::mig, "mig", "Mapping to MIG");
+    ADD_CMD(app, pass::aig, "aig", "Mapping to AIG (and-inv graph)");
+    ADD_CMD(app, pass::xag, "xag", "Mapping to XAG (xor-and-inv graph)");
+    ADD_CMD(app, pass::mig, "mig", "Mapping to MIG (maj-inv graph)");
+    ADD_CMD(app, pass::xmg, "xmg", "Mapping to XMG (xor-maj-inv graph)");
 
     // Balancing.
     ADD_CMD(app, pass::b, "b", "Depth-aware balancing");

@@ -21,7 +21,7 @@ using BuilderPtr = std::shared_ptr<Builder>;
 /**
  * @brief Interface for component-to-component transformers.
  */
-template <typename ID, typename Builder>
+template <typename Builder>
 class Transformer {
 public:
   Transformer(const std::string &name): name(name) {}
@@ -34,16 +34,6 @@ public:
     return builder;
   }
 
-  /// @deprecated
-  virtual BuilderPtr<Builder> make(const ID componentID) const {
-    return std::make_shared<Builder>(componentID);
-  }
-
-  /// @deprecated
-  ID transform(const ID componentID) const {
-    return map(make(componentID))->make();
-  }
-
 private:
   const std::string name;
 };
@@ -51,34 +41,27 @@ private:
 /**
  * @brief Interface for in-place component transformers.
  */
-template <typename ID, typename Builder>
-class InPlaceTransformer : public Transformer<ID, Builder> {
+template <typename Builder>
+class InPlaceTransformer : public Transformer<Builder> {
 public:
   InPlaceTransformer(const std::string &name):
-      Transformer<ID, Builder>(name) {}
+      Transformer<Builder>(name) {}
   virtual ~InPlaceTransformer() {}
 
   /// Transforms the component stored in the builder (in-place).
   virtual void transform(const BuilderPtr<Builder> &builder) const = 0;
-
-  /// Default implementation of the base method.
-  BuilderPtr<Builder> make(const ID componentID) const override {
-    auto builder = std::make_shared<Builder>(componentID);
-    transform(builder);
-    return builder;
-  }
 };
 
 /**
  * @brief Composite in-place component transformer.
  */
-template <typename ID, typename Builder>
-class InPlaceTransformerChain final : public InPlaceTransformer<ID, Builder> {
+template <typename Builder>
+class InPlaceTransformerChain final : public InPlaceTransformer<Builder> {
 public:
-  using Chain = std::vector<std::shared_ptr<InPlaceTransformer<ID, Builder>>>;
+  using Chain = std::vector<std::shared_ptr<InPlaceTransformer<Builder>>>;
 
   InPlaceTransformerChain(const std::string &name, const Chain &chain):
-      InPlaceTransformer<ID, Builder>(name), chain(chain) {}
+      InPlaceTransformer<Builder>(name), chain(chain) {}
   virtual ~InPlaceTransformerChain() {}
 
   const Chain &getChain() const { return chain; }

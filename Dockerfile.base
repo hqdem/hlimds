@@ -1,15 +1,18 @@
 FROM isprasmvg/ubuntu:base
 
-# Install required packages for Utopa EDA
+# Install project dependencies
 
 RUN apt update && apt install -y autoconf bison clang clang-tidy doxygen flex \
-    g++ gcc git graphviz gtkwave iverilog lcov libctemplate-dev libfmt-dev \
+    g++ gcc git graphviz gtkwave iverilog libctemplate-dev libfmt-dev \
     liblpsolve55-dev libssl-dev libtool lld make ninja-build pkg-config \
-    python3 python3-pip rlwrap tcl-dev zlib1g zlib1g-dev
+    python3 rlwrap tcl-dev zlib1g zlib1g-dev
 
+# Install code coverage collection/visualization packages
+
+RUN apt install -y lcov python3-pip
 RUN pip install gcovr
 
-# Install CMake of proper version
+# Install CMake
 
 RUN apt install -y wget tar
 

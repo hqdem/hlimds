@@ -170,7 +170,7 @@ TEST(SubnetTechMapperTest, DISABLED_RandomSubnet) {
   checkEQ(subnetID, mappedSubnetID);
 }
 
-TEST(SubnetTechMapperTest, DISABLED_GraphMLSubnetSmall) {
+TEST(SubnetTechMapperTest, GraphMLSubnetSmall) {
   auto builderPtr = parseGraphML("simple_spi_orig"); // 2k nodes
   premapper::CellAigMapper aigMapper("aig");
   // TODO: it's better to use buffer-insert pass

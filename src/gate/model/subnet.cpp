@@ -62,7 +62,7 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   for (size_t i = 0; i < nEntry; ++i) {
     const auto &cell = getCell(i);
 
-    if (cell.isIn()) {
+    if (cell.arity == 0) {
       min[i] = max[i] = 0;
     } else {
       min[i] = nEntry; max[i] = 0;

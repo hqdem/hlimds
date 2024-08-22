@@ -70,7 +70,6 @@ get_coverage_info:
     - lcov --remove lcoverage.info "${BUILD_PATH}/*" "${UTOPIA_HOME}/lib/*" "/usr/*" 
             -o clean_cov.info
     - genhtml clean_cov.info -o clean_coverage
-    - gcovr --version
     - gcovr --root ${UTOPIA_HOME}
             --cobertura ${BUILD_PATH}/coverage.xml --cobertura-pretty
             --gcov-ignore-errors all

@@ -8,16 +8,16 @@
 
 #pragma once
 
-#include "net_printer.h"
+#include "net_printer_base.h"
 #include "util/singleton.h"
 
 namespace eda::gate::model {
 
-class NetPrinterSimple final : public NetPrinter,
-                               public util::Singleton<NetPrinterSimple> {
-  friend class util::Singleton<NetPrinterSimple>;
+class NetPrinterDebug final : public NetPrinter,
+                              public util::Singleton<NetPrinterDebug> {
+  friend class util::Singleton<NetPrinterDebug>;
 
-  NetPrinterSimple(): NetPrinter({{Pass::CELL, 0}}) {}
+  NetPrinterDebug(): NetPrinter({{Pass::CELL, 0}}) {}
 
   void onCell(std::ostream &out,
               const CellInfo &cellInfo,

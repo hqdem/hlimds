@@ -53,10 +53,9 @@ SubnetID createPrimitiveSubnet(const CellSymbol symbol,
 }
 
 void printVerilog(const SubnetID subnet) {
-  using NetPrinter = eda::gate::model::NetPrinter;
-  auto &verilogPrinter = NetPrinter::getPrinter(NetPrinter::VERILOG);
+  static constexpr auto name = "techmappedNet";
   std::ofstream outFile("test/data/gate/techmapper/print/techmappedNet.v");
-  verilogPrinter.print(outFile, model::Subnet::get(subnet), "techmappedNet");
+  model::print(outFile, model::VERILOG, name, model::Subnet::get(subnet));
   std::cout << "Output Verilog file: " <<
     "test/data/gate/techmapper/print/techmappedNet.v" << std::endl;
   outFile.close();

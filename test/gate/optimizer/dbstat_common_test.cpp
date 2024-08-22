@@ -84,9 +84,8 @@ static void printDot(const std::string &filename, SubnetID id,
                        const std::string name = "") {
   std::ofstream out(filename);
   if (out.is_open()) {
-    NetPrinter::getPrinter(NetPrinter::Format::DOT)
-          .print(out, Subnet::get(id), name);
-  out.close();
+    eda::gate::model::print(out, eda::gate::model::DOT, name, Subnet::get(id));
+    out.close();
   }
 }
 

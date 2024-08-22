@@ -95,7 +95,7 @@ NetID NetBuilder::make() {
 //===----------------------------------------------------------------------===//
 
 std::ostream &operator <<(std::ostream &out, const Net &net) {
-  NetPrinter::getDefaultPrinter().print(out, net);
+  print(out, Format::DOT, net);
   return out;
 }
 

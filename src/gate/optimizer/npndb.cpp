@@ -33,8 +33,7 @@ void NpnDatabase::printDot(std::ostream &out, const TT &tt,
   if (iterator.isEnd()) {
     return;
   }
-  model::NetPrinter::getPrinter(model::NetPrinter::Format::DOT)
-      .print(out, Subnet::get(iterator.get()), name);
+  model::print(out, model::DOT, name, Subnet::get(iterator.get()));
 }
 
 void NpnDatabase::printDotFile(const TT &tt, const std::string &fileName,

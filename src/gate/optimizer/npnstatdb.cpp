@@ -96,8 +96,7 @@ NpnStatDatabase NpnStatDatabaseSerializer::deserialize(std::istream &in) {
 void NpnStatDatabase::printDot(std::ostream &out, const TT &tt,
                         const std::string &name, const bool quiet) {
   NpnStatDatabase::ResultIterator iterator = get(tt, quiet);
-  model::NetPrinter::getPrinter(model::NetPrinter::Format::DOT)
-      .print(out, Subnet::get(iterator.get()), name);
+  model::print(out, model::DOT, name, Subnet::get(iterator.get()));
 }
 
 void NpnStatDatabase::printInfo(std::ostream &out, const TT &tt, const bool quiet) {

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "net_printer.h"
+#include "net_printer_base.h"
 #include "util/singleton.h"
 
 namespace eda::gate::model {

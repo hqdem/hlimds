@@ -10,7 +10,7 @@
 
 #include "gate/model/generator/matrix_generator.h"
 #include "gate/model/generator/layer_generator.h"
-#include "gate/model/printer/net_printer_dot.h"
+#include "gate/model/printer/net_printer.h"
 #include "test_util.h"
 
 #include "gtest/gtest.h"
@@ -142,11 +142,10 @@ void printGeneratedNet(const NetID netID,
     return;
   }
   const auto &net = Net::get(netID);
-  auto &dotPrinter = NetPrinter::getPrinter(NetPrinter::DOT);
   std::ofstream out;
   std::filesystem::path filePath = createOutDir(testOutPath + subFolder);
   out.open(filePath.c_str() + fileName);
-  dotPrinter.print(out, net);
+  model::print(out, model::DOT, net);
   out.close();
 }
 

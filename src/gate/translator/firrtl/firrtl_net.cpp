@@ -64,7 +64,6 @@ using EmitDialect = circt::emit::EmitDialect;
 using FModuleOp = circt::firrtl::FModuleOp;
 using FIRParserOptions = circt::firrtl::FIRParserOptions;
 using FIRRTLDialect = circt::firrtl::FIRRTLDialect;
-using Format = eda::gate::model::NetPrinter::Format;
 using LLVMStringLiteral = llvm::StringLiteral;
 using LLVMStringRef = llvm::StringRef;
 using LinkEnd = eda::gate::model::LinkEnd;
@@ -74,7 +73,6 @@ using ModuleOp = mlir::ModuleOp;
 using NameKindEnum = circt::firrtl::NameKindEnum;
 using Net = eda::gate::model::Net;
 using NetBuilder = eda::gate::model::NetBuilder;
-using NetPrinter = eda::gate::model::NetPrinter;
 using OMDialect = circt::om::OMDialect;
 template<typename OperationType>
 using OpConversionPattern = mlir::OpConversionPattern<OperationType>;
@@ -152,8 +150,8 @@ bool printNetlist(const std::vector<CellTypeID> netlist,
 
   std::ofstream outputStream(outputFileName);
   for (const auto &cellTypeID : netlist) {
-    NetPrinter::getPrinter(Format::VERILOG).print(outputStream,
-        CellType::get(cellTypeID).getNet());
+    const auto &net = CellType::get(cellTypeID).getNet();
+    model::print(outputStream, model::VERILOG, net);
   }
   outputStream.close();
   return true;

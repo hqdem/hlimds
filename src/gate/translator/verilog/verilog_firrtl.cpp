@@ -16,8 +16,6 @@
 #include <iostream>
 
 using CellType = eda::gate::model::CellType;
-using Format = eda::gate::model::NetPrinter::Format;
-using ModelPrinter = eda::gate::model::NetPrinter;
 
 namespace fs = std::filesystem;
 
@@ -76,8 +74,8 @@ int translateVerilogFIRRTL(const FirrtlConfig &firrtlConfig) {
     outputFilePath.replace_extension(".v");
     std::ofstream outputStream(outputFilePath);
     for (const auto &cellTypeID : resultNetlist) {
-      ModelPrinter::getPrinter(Format::VERILOG).print(outputStream,
-          CellType::get(cellTypeID).getNet());
+      const auto &net = CellType::get(cellTypeID).getNet();
+      model::print(outputStream, model::VERILOG, net);
     }
     outputStream.close();
   }

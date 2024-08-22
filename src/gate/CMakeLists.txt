@@ -24,6 +24,7 @@ add_library(Gate OBJECT
   model/net.cpp
   model/printer/dataflow_printer.cpp
   model/printer/net_printer.cpp
+  model/printer/net_printer_base.cpp
   model/printer/net_printer_verilog.cpp
   model/printer/net_printer_verilog_lib.cpp
   model/serializer.cpp

@@ -15,10 +15,12 @@
 
 #include "gtest/gtest.h"
 
+#include <memory>
+
 namespace eda::gate::premapper {
 
 using Builder      = eda::gate::model::SubnetBuilder;
-using BuilderPtr   = eda::gate::optimizer::SubnetBuilderPtr;
+using BuilderPtr   = std::shared_ptr<Builder>;
 using CellSymbol   = eda::gate::model::CellSymbol;
 using Link         = eda::gate::model::Subnet::Link;
 using LinkList     = eda::gate::model::Subnet::LinkList;

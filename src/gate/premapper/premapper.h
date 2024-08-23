@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "gate/optimizer/subnet_transformer.h"
 #include "gate/optimizer/synthesis/db_mig4_synthesizer.h"
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
 #include "gate/optimizer/synthesis/isop.h"

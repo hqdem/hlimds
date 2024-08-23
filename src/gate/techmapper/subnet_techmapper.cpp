@@ -105,8 +105,9 @@ SubnetTechMapper::SubnetTechMapper(const std::string &name,
 /// Maps a entry ID to the best match (null stands for no match).
 using MatchSelection = std::vector<const SubnetTechMapper::Match*>;
 
-static optimizer::SubnetBuilderPtr makeMappedSubnet(
-    const SubnetSpace &space, const optimizer::SubnetBuilderPtr oldBuilder) {
+static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
+    const SubnetSpace &space,
+    const std::shared_ptr<model::SubnetBuilder> oldBuilder) {
   // Maps old entry indices to matches.
   const size_t oldSize = oldBuilder->getMaxIdx() + 1;
   MatchSelection matches(oldSize);
@@ -227,7 +228,7 @@ static optimizer::SubnetBuilderPtr makeMappedSubnet(
   return newBuilder;
 }
 
-static inline float getProgress(const optimizer::SubnetBuilderPtr &builder,
+static inline float getProgress(const std::shared_ptr<model::SubnetBuilder> &builder,
                                 const size_t count) {
   const auto nIn = builder->getInNum();
   const auto nOut = builder->getOutNum();
@@ -245,8 +246,8 @@ static inline float getProgress(const optimizer::SubnetBuilderPtr &builder,
          static_cast<float>(nAll - nIn);
 }
 
-optimizer::SubnetBuilderPtr SubnetTechMapper::map(
-    const optimizer::SubnetBuilderPtr &builder) const {
+std::shared_ptr<model::SubnetBuilder> SubnetTechMapper::map(
+    const std::shared_ptr<model::SubnetBuilder> &builder) const {
   // Partial solutions for the subnet cells.
   SubnetSpace space(builder->getMaxIdx() + 1);
   criterion::CostVector tension{1.0, 1.0, 1.0};

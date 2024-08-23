@@ -10,7 +10,7 @@
 
 #include "diag/logger.h"
 #include "diag/terminal_printer.h"
-#include "gate/optimizer/design_transformer.h"
+#include "gate/model/design.h"
 #include "util/singleton.h"
 
 #include <CLI/CLI.hpp>
@@ -300,7 +300,7 @@ protected:
 };
 
 /// @brief Returns the design being synthesized.
-eda::gate::optimizer::DesignBuilderPtr getDesign();
+std::shared_ptr<eda::gate::model::DesignBuilder> getDesign();
 
 /// @brief Initializes the design from the cell type.
 bool setDesign(const eda::gate::model::CellTypeID typeID, diag::Logger &logger);

@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,10 +12,13 @@
 
 #include "gtest/gtest.h"
 
+#include <memory>
+
 namespace eda::gate::optimizer {
 
 using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
+using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
 using SubnetObject = model::SubnetObject;
 using CellSymbol = model::CellSymbol;
 using CellTypeID = model::CellTypeID;

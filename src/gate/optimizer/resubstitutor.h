@@ -13,7 +13,7 @@
 #include "gate/optimizer/mffc.h"
 #include "gate/optimizer/reconvergence.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 #include "util/truth_table.h"
 
 #include <string>
@@ -51,7 +51,7 @@ public:
       Resubstitutor(name, 8, 3, false, false) {}
 
   /// @brief Tranforms the subnet by applying a resubstitution algorithm.
-  void transform(const SubnetBuilderPtr &builder) const override;
+  void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
 
 private:
   const unsigned cutSize;

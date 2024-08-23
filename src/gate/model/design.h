@@ -11,7 +11,6 @@
 #include "gate/model/decomposer/net_decomposer.h"
 #include "gate/model/net.h"
 #include "gate/model/subnet.h"
-#include "gate/optimizer/subnet_transformer.h"
 #include "gate/synthesizer/synthesizer.h"
 
 #include <algorithm>
@@ -48,7 +47,7 @@ private:
   static constexpr auto DefaultName = "Design";
 
 public:
-  using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
+  using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
   using SubnetToSubnetSet = std::vector<std::unordered_set<size_t>>;
   using SubnetToFFSet = std::vector<std::unordered_set<size_t>>;
 

@@ -10,7 +10,6 @@
 
 #include "gate/analyzer/probabilistic_estimate.h"
 #include "gate/optimizer/associative_balancer.h"
-#include "gate/optimizer/design_transformer.h"
 #include "gate/optimizer/lazy_refactorer.h"
 #include "gate/optimizer/mffc.h"
 #include "gate/optimizer/reconvergence.h"

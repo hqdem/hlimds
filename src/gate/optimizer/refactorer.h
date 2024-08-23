@@ -11,7 +11,7 @@
 #include "gate/model/subnetview.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 
 #include <functional>
 #include <string>
@@ -69,7 +69,7 @@ public:
   /*
    * @brief Optimizes the SubnetBuilder.
    */
-  void transform(const SubnetBuilderPtr &builder) const override;
+  void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
 
 private:
 

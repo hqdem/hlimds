@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "gate/model/design.h"
+#include "gate/model/subnet.h"
+
 #include <memory>
 #include <sstream>
 #include <string>
@@ -85,6 +88,70 @@ public:
 
 private:
   const Chain chain;
+};
+
+//===----------------------------------------------------------------------===//
+// Subnet Transformer
+//===----------------------------------------------------------------------===//
+
+using SubnetTransformer =
+    Transformer<model::SubnetBuilder>;
+
+using SubnetInPlaceTransformer =
+    InPlaceTransformer<model::SubnetBuilder>;
+
+using SubnetInPlaceTransformerChain =
+    InPlaceTransformerChain<model::SubnetBuilder>;
+
+using SubnetPass = std::shared_ptr<SubnetInPlaceTransformer>;
+using SubnetMapper = std::shared_ptr<SubnetTransformer>;
+
+//===----------------------------------------------------------------------===//
+// Design Transformer
+//===----------------------------------------------------------------------===//
+
+using DesignTransformer =
+    Transformer<model::DesignBuilder>;
+
+using DesignInPlaceTransformer =
+    InPlaceTransformer<model::DesignBuilder>;
+
+using DesignInPlaceTransformerChain =
+    InPlaceTransformerChain<model::DesignBuilder>;
+
+using DesignPass = std::shared_ptr<DesignInPlaceTransformer>;
+using DesignMapper = std::shared_ptr<DesignTransformer>;
+
+class EachSubnetInPlaceTransformer final : public DesignInPlaceTransformer {
+public:
+  EachSubnetInPlaceTransformer(const SubnetPass &pass):
+      DesignInPlaceTransformer(pass->getName()), pass(pass) {}
+
+  void transform(
+      const std::shared_ptr<model::DesignBuilder> &builder) const override {
+    for (size_t i = 0; i < builder->getSubnetNum(); ++i) {
+      pass->transform(builder->getSubnetBuilder(i));
+    }
+  }
+
+private:
+  const SubnetPass pass;
+};
+
+class EachSubnetTransformer final : public DesignInPlaceTransformer {
+public:
+  EachSubnetTransformer(const SubnetMapper &mapper):
+      DesignInPlaceTransformer(mapper->getName()), mapper(mapper) {}
+
+  void transform(
+      const std::shared_ptr<model::DesignBuilder> &builder) const override {
+    for (size_t i = 0; i < builder->getSubnetNum(); ++i) {
+      builder->setSubnetBuilder(i, mapper->map(builder->getSubnetBuilder(i)));
+    }
+  }
+
+private:
+  const SubnetMapper mapper;
 };
 
 } // namespace eda::gate::optimizer

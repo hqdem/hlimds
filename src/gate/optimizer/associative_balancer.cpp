@@ -17,7 +17,8 @@ template<typename Iter>
 struct is_reverse_iterator<std::reverse_iterator<Iter>>
        : std::integral_constant<bool, !is_reverse_iterator<Iter>::value> {};
 
-void AssociativeBalancer::transform(const SubnetBuilderPtr &builder) const {
+void AssociativeBalancer::transform(
+    const std::shared_ptr<SubnetBuilder> &builder) const {
   SubnetBuilder *builderPtr = builder.get();
 
   for (auto it = builderPtr->begin(); it != builderPtr->end();) {

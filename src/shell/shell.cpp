@@ -34,9 +34,9 @@ namespace eda::shell {
 namespace model = eda::gate::model;
 namespace optimizer = eda::gate::optimizer;
 
-static optimizer::DesignBuilderPtr designBuilder{nullptr};
+static std::shared_ptr<model::DesignBuilder> designBuilder{nullptr};
 
-optimizer::DesignBuilderPtr getDesign() {
+std::shared_ptr<model::DesignBuilder> getDesign() {
   return designBuilder;
 }
 

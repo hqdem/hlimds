@@ -12,7 +12,7 @@
 #include "gate/criterion/solution_space.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/cut_extractor.h"
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 
 #include <cstddef>
 #include <functional>
@@ -76,8 +76,8 @@ public:
                    const MatchFinder matchFinder,
                    const CellEstimator cellEstimator);
 
-  optimizer::SubnetBuilderPtr map(
-      const optimizer::SubnetBuilderPtr &builder) const override;
+  std::shared_ptr<model::SubnetBuilder> map(
+      const std::shared_ptr<model::SubnetBuilder> &builder) const override;
 
 private:
   const criterion::Criterion &criterion;

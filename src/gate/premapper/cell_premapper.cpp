@@ -13,7 +13,7 @@ namespace eda::gate::premapper {
 using Link             = model::Subnet::Link;
 using LinkList         = model::Subnet::LinkList;
 using SubnetBuilder    = model::SubnetBuilder;
-using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
+using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
 
 SubnetBuilderPtr CellPremapper::map(const SubnetBuilderPtr &builder) const {
   const auto subnetID = builder->make();

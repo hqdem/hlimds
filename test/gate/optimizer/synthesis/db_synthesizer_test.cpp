@@ -9,12 +9,13 @@
 #include "gate/debugger/sat_checker.h"
 #include "gate/model/utils/subnet_checking.h"
 #include "gate/optimizer/pass.h"
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 #include "gate/translator/graphml_test_utils.h"
 
 #include "gtest/gtest.h"
 
 #include <chrono>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -22,7 +23,7 @@ namespace eda::gate::optimizer {
 
 void runDbSynthesizer(const std::string &info,
                       const SubnetPass &p,
-                      SubnetBuilderPtr &builder,
+                      std::shared_ptr<model::SubnetBuilder> &builder,
                       model::SubnetID beforeID) {
 
   const auto start{std::chrono::steady_clock::now()};

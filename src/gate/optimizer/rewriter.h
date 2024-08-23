@@ -11,7 +11,7 @@
 #include "gate/model/subnetview.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 
 #include <cstdint>
 #include <functional>
@@ -61,7 +61,7 @@ public:
    *
    * @param builder SubnetBuilder with the subnet to rewrite.
    */
-  void transform(const SubnetBuilderPtr &builder) const override;
+  void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
 
 private:
   void rewriteOnNode(

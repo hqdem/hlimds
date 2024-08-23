@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 
 #include <unordered_map>
 
@@ -24,7 +24,7 @@ public:
   using LinkList = model::Subnet::LinkList;
   using Subnet = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
-  using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
+  using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
   using SubnetID = model::SubnetID;
 
   CellPremapper(const std::string &name): optimizer::SubnetTransformer(name) {}

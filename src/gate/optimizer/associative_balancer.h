@@ -10,7 +10,7 @@
 
 #include "gate/model/object.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 
 #include <map>
 
@@ -27,7 +27,7 @@ public:
   AssociativeBalancer(const std::string &name):
     SubnetInPlaceTransformer(name) {};
 
-  void transform(const SubnetBuilderPtr &builder) const override;
+  void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
 
 private:
   void updateDepth(const size_t entryID) const;

@@ -28,7 +28,7 @@ using NetBuilder = model::NetBuilder;
 static const std::string designOutPath =
     "test/gate/model/design/";
 
-static void test(const DesignBuilderPtr &builder) {
+static void test(const std::shared_ptr<DesignBuilder> &builder) {
   EXPECT_TRUE(builder->getSubnetNum() != 0);
 
   foreach(aig())->transform(builder);
@@ -53,7 +53,8 @@ static void test(const DesignBuilderPtr &builder) {
 #endif // UTOPIA_DEUB
 }
 
-void printDesign(const DesignBuilderPtr &builder, const std::string &name) {
+void printDesign(const std::shared_ptr<DesignBuilder> &builder,
+                 const std::string &name) {
   std::ofstream out;
   std::filesystem::path filePath = createOutDir(designOutPath);
   out.open(filePath.c_str() + name + ".dot");

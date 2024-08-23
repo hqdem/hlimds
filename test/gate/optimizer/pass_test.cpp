@@ -16,7 +16,7 @@
 
 namespace eda::gate::optimizer {
 
-static SubnetBuilderPtr getSubnetBuilder() {
+static std::shared_ptr<model::SubnetBuilder> getSubnetBuilder() {
   auto builder = std::make_shared<SubnetBuilder>();
 
   const auto &links = builder->addInputs(8);

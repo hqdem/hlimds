@@ -15,7 +15,7 @@
 
 namespace eda::gate::optimizer {
 
-void Refactorer::transform(const SubnetBuilderPtr &builder) const {
+void Refactorer::transform(const std::shared_ptr<SubnetBuilder> &builder) const {
   SubnetBuilder *builderPtr = builder.get();
 
   if (weightCalculator) {

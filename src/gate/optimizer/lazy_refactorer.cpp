@@ -13,14 +13,15 @@
 namespace eda::gate::optimizer {
 
 using SubnetBuilder = eda::gate::model::SubnetBuilder;  
-using Subnet = eda::gate::model::Subnet;;
+using Subnet = eda::gate::model::Subnet;
 
 using Visitor = std::function<bool(SubnetBuilder &builder,
                                    const bool isIn,
                                    const bool isOut,
                                    const size_t entryID)>;
 
-void LazyRefactorer::transform(const SubnetBuilderPtr &builderPtr) const {
+void LazyRefactorer::transform(
+    const std::shared_ptr<SubnetBuilder> &builderPtr) const {
   SubnetBuilder *builder = builderPtr.get();
   ConflictGraph g;
   if (weightCalculator) {
@@ -114,4 +115,5 @@ eda::gate::model::SubnetView LazyRefactorer::twoLvlBldr(SubnetBuilder &builder,
   entryMap.outputs.push_back(numCell);
   return SubnetView(builder, entryMap);
 }
+
 } // namespace eda::gate::optimizer

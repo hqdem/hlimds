@@ -23,6 +23,8 @@
 
 #include <kitty/kitty.hpp>
 
+#include <memory>
+
 namespace eda::gate::techmapper {
 
 using CutExtractor = optimizer::CutExtractor;
@@ -57,7 +59,7 @@ void finishMatching() {
 }
 
 const SubnetID commonPart(
-    const optimizer::SubnetBuilderPtr builderPtr,
+    const std::shared_ptr<SubnetBuilder> builderPtr,
     const float maxArea,
     const float maxDelay,
     const float maxPower) {

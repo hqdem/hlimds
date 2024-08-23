@@ -14,7 +14,7 @@
 #include "gate/optimizer/reconvergence.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 
 namespace eda::gate::premapper {
 
@@ -28,7 +28,7 @@ public:
   using Link = gate::model::Subnet::Link;
   using SafePasser = gate::optimizer::SafePasser;
   using SubnetBuilder = gate::model::SubnetBuilder;
-  using SubnetBuilderPtr = gate::optimizer::SubnetBuilderPtr;
+  using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
   using SubnetObject = gate::model::SubnetObject;
 
   ConePremapper(const std::string &name, Basis basis,

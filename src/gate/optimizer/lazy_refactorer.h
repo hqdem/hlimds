@@ -12,7 +12,7 @@
 #include "gate/optimizer/conflict_graph.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"
-#include "gate/optimizer/subnet_transformer.h"
+#include "gate/optimizer/transformer.h"
 
 #include <functional>
 #include <string>
@@ -25,7 +25,6 @@ namespace eda::gate::optimizer {
  * Lazy refactoring with replacement non-intersect subcircuits 
  * after optimization.
  */
-
 class LazyRefactorer final : public SubnetInPlaceTransformer {
 public:
   /// @cond ALIASES
@@ -39,7 +38,6 @@ public:
   using SubnetView         = eda::gate::model::SubnetView;
   using CellWeightModifier = SubnetBuilder::CellWeightModifier;
   using SubnetViewWalker   = eda::gate::model::SubnetViewWalker;
-  using SubnetBuilderPtr   = eda::gate::optimizer::SubnetBuilderPtr;
   /// @endcond
 
   using Visitor = std::function<bool(SubnetBuilder &builder,
@@ -76,7 +74,7 @@ public:
     resynthesizer(resynthesizer),
     coneConstructor(coneConstructor),
     weightCalculator(weightCalculator),
-    weightModifier(weightModifier) { };
+    weightModifier(weightModifier) {}
 
   /**
    * @brief Rewrites the subnet stored in the builder by applying the
@@ -84,10 +82,9 @@ public:
    *
    * @param builder SubnetBuilder with the subnet to rewrite.
    */
-  void transform(const SubnetBuilderPtr &builder) const override;
+  void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
 
-  static SubnetView twoLvlBldr(SubnetBuilder &builder, 
-                               size_t numCell);
+  static SubnetView twoLvlBldr(SubnetBuilder &builder, size_t numCell);
 
 private:
 

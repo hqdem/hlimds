@@ -1622,7 +1622,8 @@ static bool isAcceptable(const SubnetBuilder *builderPtr, size_t pivot) {
   return true;
 }
 
-void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
+void Resubstitutor::transform(
+    const std::shared_ptr<SubnetBuilder> &builder) const {
   SubnetBuilder *builderPtr = builder.get();
   builderPtr->enableFanouts();
 

@@ -12,7 +12,7 @@
 
 namespace eda::gate::optimizer {
 
-void Rewriter::transform(const SubnetBuilderPtr &builder) const {
+void Rewriter::transform(const std::shared_ptr<SubnetBuilder> &builder) const {
   SubnetBuilder *builderPtr = builder.get();
   CutExtractor cutExtractor(builderPtr, k, false);
   std::function cutRecompute = [&cutExtractor](const size_t entryID) {

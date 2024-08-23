@@ -18,19 +18,19 @@
 #include "gtest/gtest.h"
 
 #include <fstream>
+#include <memory>
 
 namespace eda::gate::techmapper {
 
-using AigMapper  = premapper::CellAigMapper;
+using AigMapper = premapper::CellAigMapper;
 using CellSymbol = model::CellSymbol;
-using Link       = model::Subnet::Link;
-using LinkList   = model::Subnet::LinkList;
+using Link = model::Subnet::Link;
+using LinkList = model::Subnet::LinkList;
 using NetBuilder = model::NetBuilder;
-using SDC        = library::SDC;
-using Subnet     = model::Subnet;
+using SDC = library::SDC;
+using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
-using SubnetBuilderPtr = optimizer::SubnetBuilderPtr;
-using SubnetID   = model::SubnetID;
+using SubnetID = model::SubnetID;
 
 std::shared_ptr<SubnetBuilder> parseGraphML(const std::string &fileName) {
   return translator::translateGmlOpenabc(fileName);

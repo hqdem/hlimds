@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <unordered_set>
 
@@ -30,15 +31,11 @@ private:
   uint64_t signature;
 
 public:
-  /// Copy constructor for BoundedSet.
-  BoundedSet(const BoundedSet<NumType, Allocator> &other);
+  /// Constructs an empty set w/ the given size bound.
+  explicit BoundedSet(SizeType maxSize);
 
-  /**
-   * @brief Constructs a new BoundedSet with elements from
-   * std::unordered_set with maxSize equal it's size.
-   * @param set std::unordered_set with elements for new BoundedSet.
-   */
-  BoundedSet(const std::unordered_set<NumType> &set);
+  /// Constructs a singleton-set w/ the given size bound.
+  BoundedSet(SizeType maxSize, NumType singleElement);
 
   /**
    * @brief Constructs a new BoundedSet with elements from
@@ -48,79 +45,70 @@ public:
    */
   BoundedSet(SizeType maxSize, const std::unordered_set<NumType> &set);
 
-  /// Constructs BoundedSet without any elements and with fixed size.
-  BoundedSet(SizeType maxSize);
+  BoundedSet(const BoundedSet<NumType, Allocator> &other);
 
-  /// Constructs set-singleton with fixed size.
-  BoundedSet(SizeType maxSize, NumType singleElement);
-
-  /// Destructor of set.
   ~BoundedSet();
 
   /// Returns the maximum size of the set.
   SizeType capacity() const { return maxSize; }
-
-  /// Returns the current size of the set.
+  /// Returns the size of the set.
   SizeType size() const { return setSize; }
-
-  /// Checks the set for emptiness.
+  /// Checks if the set is empty.
   bool empty() const { return setSize == 0; }
 
-  /// Returns a pointer to the first element of the set.
+  /// Returns the pointer to the first element of the set.
   iterator begin() const { return setPtr; }
-
-  /// Returns a pointer to the last nonexistent element of the set.
+  /// Returns the pointer to the element following the last one.
   iterator end() const { return setPtr + setSize; }
 
+  /// Returns the minimum value in the set.
+  NumType minValue() const;
+  /// Returns the maximum value in the set.
+  NumType maxValue() const;
+
   /**
-  * @brief Merges two sets into one, if possible.
-  * @return True if the operation was successful, otherwise it is a false.
-  */
+   * @brief Merges two sets into one, if possible.
+   * @return True if the operation was successful, otherwise it is a false.
+   */
   bool merge(const BoundedSet<NumType, Allocator> &other);
 
   /**
-  * @brief Checks whether it is possible to merge
-  * two sets into one with a valid size.
-  */
+   * @brief Checks whether it is possible to merge
+   * two sets into one with a valid size.
+   */
   bool unionCheck(const BoundedSet<NumType, Allocator> &other);
 
   /**  
-  * @brief Adds a new element to the set if there is
-  * a place for it and it is not there yet.
-  * @param newElement New element for set.
-  * @param isChecked Specifies whether to perform an additional check 
-  * for the occurrence of an element in the set.
-  * @return True if the element was placed in the set, otherwise it is false.
-  */
+   * @brief Adds a new element to the set if there is
+   * a place for it and it is not there yet.
+   * @param newElement New element for set.
+   * @param isChecked Specifies whether to perform an additional check 
+   * for the occurrence of an element in the set.
+   * @return True if the element was placed in the set, otherwise it is false.
+   */
   bool insert(NumType newElement, bool isChecked = false);
+
   /**
-  * @brief Searches for the location of an element in the set.
-  * @param num The target element value.
-  * @return Returns a pointer to the targeted element, if it
-  * locates in the set. Otherwise, it returns a pointer to the end of the set.
-  */
+   * @brief Searches for the location of an element in the set.
+   * @param num The target element value.
+   * @return Returns a pointer to the targeted element, if it
+   * locates in the set. Otherwise, it returns a pointer to the end of the set.
+   */
   iterator find(NumType num) const;
 
   /**
-  * @brief AAllows to fill an already
-  * existing BoundedSet with elements of std::unordered_set.
-  */
+   * @brief AAllows to fill an already
+   * existing BoundedSet with elements of std::unordered_set.
+   */
   BoundedSet<NumType, Allocator> &operator=
       (const std::unordered_set<NumType> &set);
 
   /// Checks whether two sets are equal.
   bool operator ==(const BoundedSet<NumType, Allocator> &other) const;
-
-
-  /// Returns minimum value in the set.
-  NumType minValue() const;
-
-  /// Returns maximum value in the set.
-  NumType maxValue() const;
 };
 
 /// Counts the number of bits in the signature
-static inline uint16_t countSBits(uint64_t x) {
+static inline uint16_t countUnits(uint64_t x) {
   x = x - ((x >> 1) & 0x5555555555555555ull);
   x = (x & 0x3333333333333333UL) + ((x >> 2) & 0x3333333333333333ull);
   x = (((x + (x >> 4)) & 0xF0F0F0F0F0F0F0Full) * 0x101010101010101ull) >> 56;
@@ -128,57 +116,71 @@ static inline uint16_t countSBits(uint64_t x) {
 }
 
 template <class NumType, class Allocator>
-BoundedSet<NumType, Allocator>::BoundedSet(SizeType maxSize){
-  this->maxSize = maxSize;
-  this->setSize = 0;
-  this->signature = 0;
-  this->setPtr = setAllocator.allocate(maxSize);
+BoundedSet<NumType, Allocator>::BoundedSet(SizeType maxSize):
+    maxSize(maxSize),
+    setSize(0),
+    setPtr(setAllocator.allocate(maxSize)),
+    signature(0) {
+  assert(maxSize > 0);
 }
 
 template <class NumType, class Allocator>
-BoundedSet<NumType, Allocator>::BoundedSet(SizeType maxSize,
-    NumType singleElement): BoundedSet(maxSize) {
-  this->insert(singleElement, 1);
+BoundedSet<NumType, Allocator>::BoundedSet(
+    SizeType maxSize, NumType singleElement):
+    maxSize(maxSize),
+    setSize(1),
+    setPtr(setAllocator.allocate(maxSize)),
+    signature((uint64_t) 1 << (singleElement % 64)) {
+  assert(maxSize > 0);
+  this->setPtr[0] = singleElement;
+}
+
+template <class NumType, class Allocator>
+BoundedSet<NumType, Allocator>::BoundedSet(
+    const SizeType maxSize, const std::unordered_set<NumType> &set) {
+  assert(set.size() <= maxSize);
+  this->maxSize = maxSize;
+  this->setPtr = setAllocator.allocate(this->maxSize);
+  this->setSize = 0;
+  this->signature = 0;
+  for (auto i : set) 
+    this->insert(i, 1);
+}
+
+template <class NumType, class Allocator>
+BoundedSet<NumType, Allocator>::BoundedSet(
+    const BoundedSet<NumType, Allocator> &other):
+    maxSize(other.maxSize),
+    setSize(other.setSize),
+    setPtr(setAllocator.allocate(maxSize)),
+    signature(other.signature) {
+  std::memcpy(this->setPtr, other.setPtr, setSize * sizeof(NumType));
 }
 
 template <class NumType, class Allocator>
 bool BoundedSet<NumType, Allocator>::merge(
     const BoundedSet<NumType, Allocator> &other) {
   if (!this->unionCheck(other)) return false;
-  NumType* newPtr = this->setAllocator.allocate(this->maxSize);
+  NumType *newPtr = this->setAllocator.allocate(this->maxSize);
+
   const SizeType n = this->setSize;
   const SizeType m = other.size();
-  SizeType i = 0;
-  SizeType j = 0;
-  SizeType cnt = 0;
+  SizeType i = 0, j = 0, cnt = 0;
   while ((i < n) && (j < m)) {
     if (this->setPtr[i] == other.setPtr[j]) {
-      newPtr[cnt] = this->setPtr[i];
-      cnt++;
-      i++;
+      newPtr[cnt++] = this->setPtr[i++];
       j++;
-    }
-    else {
-      if (this->setPtr[i] < other.setPtr[j]) {
-        newPtr[cnt] = this->setPtr[i];
-        cnt++;
-        i++;
-      } else {
-        newPtr[cnt] = other.setPtr[j];
-        cnt++;
-        j++;
-      }
+    } else if (this->setPtr[i] < other.setPtr[j]) {
+      newPtr[cnt++] = this->setPtr[i++];
+    } else {
+      newPtr[cnt++] = other.setPtr[j++];
     }
   }
   while (i < n) {
-    newPtr[cnt] = this->setPtr[i];
-    cnt++;
-    i++;
+    newPtr[cnt++] = this->setPtr[i++];
   }
   while (j < m) {
-    newPtr[cnt] = other.setPtr[j];
-    cnt++;
-    j++;
+    newPtr[cnt++] = other.setPtr[j++];
   }
   setAllocator.deallocate(this->setPtr, this->maxSize);
   this->setPtr = newPtr;
@@ -190,17 +192,19 @@ bool BoundedSet<NumType, Allocator>::merge(
 template <class NumType, class Allocator>
 bool BoundedSet<NumType, Allocator>::unionCheck(
     const BoundedSet<NumType, Allocator> &other) {
-  if (other.empty()) return true;
-  if (this->size() + other.size() <= this->maxSize) return true;
-  if (this->empty()) return false;
-  if (!(this->signature & other.signature)) return false;
-  if (!(this->signature & other.signature) ||
-      (this->minValue() > other.maxValue()) || (this->maxValue() < other.minValue())) return false;
-  if (countSBits(this->signature | other.signature) > this->maxSize) return false;
-  SizeType cnt = 0;
+  if (this->size() + other.size() <= this->maxSize)
+    return true;
+  if (!(this->signature & other.signature))
+    return false;
+  if (countUnits(this->signature | other.signature) > this->maxSize)
+    return false;
+  if ((this->minValue() > other.maxValue()) ||
+      (this->maxValue() < other.minValue()))
+    return false;
+
   const SizeType n = this->setSize;
   const SizeType m = other.size();
-  SizeType i = 0, j = 0;
+  SizeType i = 0, j = 0, cnt = 0;
   while ((i < n) && (j < m)) {
     if (this->setPtr[i] == other.setPtr[j]) {
       i++;
@@ -212,7 +216,8 @@ bool BoundedSet<NumType, Allocator>::unionCheck(
     }
     cnt++;
   }
-  cnt+= (n - i) + (m - j);
+  cnt += (n - i) + (m - j);
+
   return (cnt <= this->maxSize);
 }
 
@@ -259,7 +264,7 @@ BoundedSet<NumType, Allocator>& BoundedSet<NumType, Allocator>::operator=(
   this->signature = 0;
   for (auto i : set) 
     this->insert(i, 1);
-  return  *this;
+  return *this;
 }
 
 template <class NumType, class Allocator>
@@ -270,32 +275,6 @@ bool BoundedSet<NumType, Allocator>::operator==(
   for (auto i : other)
     result = result && (this->find(i) != this->end());
   return result;
-}
-
-template <class NumType, class Allocator>
-BoundedSet<NumType, Allocator>::BoundedSet(
-    const BoundedSet<NumType, Allocator> &other) : BoundedSet(other.maxSize) {
-  for (auto i : other)
-    this->insert(i, 1);
-}
-
-template <class NumType, class Allocator>
-BoundedSet<NumType, Allocator>::BoundedSet(
-    const std::unordered_set<NumType> &set) : BoundedSet(set.size()) {
-  for (auto i : set) 
-    this->insert(i, 1);
-}
-
-template <class NumType, class Allocator>
-BoundedSet<NumType, Allocator>::BoundedSet(
-    const SizeType maxSize, const std::unordered_set<NumType> &set) {
-  assert(set.size() <= maxSize);
-  this->maxSize = maxSize;
-  this->setPtr = setAllocator.allocate(this->maxSize);
-  this->setSize = 0;
-  this->signature = 0;
-  for (auto i : set) 
-    this->insert(i, 1);
 }
 
 template <class NumType, class Allocator>

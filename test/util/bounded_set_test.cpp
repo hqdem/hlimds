@@ -83,7 +83,7 @@ TEST(BoundedSetTest, Merge) {
       {0, 2, 67, 9, 10001, 11, 12, 100, 5, 3, 444, 555, 22};
   BoundedSet<size_t> bSet1{64, set1};
   BoundedSet<size_t> bSet2{64, set2};
-  BoundedSet<size_t> bSet3{set2};
+  BoundedSet<size_t> bSet3{32, set2};
   bSet1.merge(bSet2);
   set1.insert(set2.begin(), set2.end());
   bSet3.merge(bSet1);

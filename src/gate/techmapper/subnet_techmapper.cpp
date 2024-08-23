@@ -346,7 +346,7 @@ RECOVERY:
   } // for cells
 
   assert(outputs.size() == builder->getOutNum());
-  optimizer::Cut resultCut(model::OBJ_NULL_ID, outputs);
+  optimizer::Cut resultCut(outputs.size(), model::OBJ_NULL_ID, outputs);
 
   if (!hasSolutions(space, resultCut)) {
     UTOPIA_ERROR("Incomplete mapping: "

@@ -25,10 +25,10 @@ bool equal(const BoundedSet<size_t> &b, const std::unordered_set<size_t> &u) {
 }
 
 TEST(BoundedSetTest, CheckedInsert) {
-  std::unordered_set<size_t> set1 {1, 2, 3, 4, 5, 8};
-  std::unordered_set<size_t> set2 {10, 11, 1, 0};
-  BoundedSet<size_t> bSet1 {5};
-  BoundedSet<size_t> bSet2 {6};
+  std::unordered_set<size_t> set1{1, 2, 3, 4, 5, 8};
+  std::unordered_set<size_t> set2{10, 11, 1, 0};
+  BoundedSet<size_t> bSet1{5};
+  BoundedSet<size_t> bSet2{6};
   for (auto i : set1) bSet1.insert(i, 1);
   for (auto i : set2) bSet2.insert(i, 1);
   bool result = 1;
@@ -40,9 +40,9 @@ TEST(BoundedSetTest, CheckedInsert) {
 }
 
 TEST(BoundedSetTest, Insert) {
-  std::unordered_set<size_t> set1 {1, 2, 3, 4, 5, 8};
-  std::unordered_set<size_t> set2 {10, 11, 1, 0, 4, 8};
-  BoundedSet<size_t> bSet {12};
+  std::unordered_set<size_t> set1{1, 2, 3, 4, 5, 8};
+  std::unordered_set<size_t> set2{10, 11, 1, 0, 4, 8};
+  BoundedSet<size_t> bSet{12};
   bool result = 1;
   bSet.insert(1);
   bSet.insert(1);
@@ -60,13 +60,13 @@ TEST(BoundedSetTest, Insert) {
 
 TEST(BoundedSetTest, UnionCheck) {
   bool result = 1;
-  BoundedSet<size_t> bSet1 {2, 5};
-  BoundedSet<size_t> bSet2 {2, 5};
+  BoundedSet<size_t> bSet1{2, 5};
+  BoundedSet<size_t> bSet2{2, 5};
   result &= (bSet1.unionCheck(bSet2));
-  std::unordered_set<size_t> set1 {1, 2, 4, 7, 9, 10};
-  std::unordered_set<size_t> set2 {0, 2, 4, 7, 9, 10};
-  BoundedSet<size_t> bSet3 {set1, 7};
-  BoundedSet<size_t> bSet4 {set2, 7};
+  std::unordered_set<size_t> set1{1, 2, 4, 7, 9, 10};
+  std::unordered_set<size_t> set2{0, 2, 4, 7, 9, 10};
+  BoundedSet<size_t> bSet3{7, set1};
+  BoundedSet<size_t> bSet4{7, set2};
   result &= (bSet3.unionCheck(bSet1));
   result &= (bSet3.unionCheck(bSet4));
   result &= (bSet4.unionCheck(bSet4));
@@ -77,13 +77,13 @@ TEST(BoundedSetTest, UnionCheck) {
 
 TEST(BoundedSetTest, Merge) {
   bool result = 1;
-  std::unordered_set<size_t> set1 {1, 2, 4, 7, 9, 10, 10001,
-      112, 12, 3, 55, 88};
-  std::unordered_set<size_t> set2 {0, 2, 67, 9, 10001, 11,
-      12, 100, 5, 3, 444, 555, 22};
-  BoundedSet<size_t> bSet1 {set1, 64};
-  BoundedSet<size_t> bSet2 {set2, 64};
-  BoundedSet<size_t> bSet3 {set2};
+  std::unordered_set<size_t> set1
+      {1, 2, 4, 7, 9, 10, 10001, 112, 12, 3, 55, 88};
+  std::unordered_set<size_t> set2
+      {0, 2, 67, 9, 10001, 11, 12, 100, 5, 3, 444, 555, 22};
+  BoundedSet<size_t> bSet1{64, set1};
+  BoundedSet<size_t> bSet2{64, set2};
+  BoundedSet<size_t> bSet3{set2};
   bSet1.merge(bSet2);
   set1.insert(set2.begin(), set2.end());
   bSet3.merge(bSet1);

@@ -25,7 +25,7 @@ using SubnetBuilder = model::SubnetBuilder;
 using Link = model::Subnet::Link;
 using CutsEntries = CutExtractor::CutsEntries;
 
-bool cutsEqual(const Cut &cut1, const Cut &cut2) {
+static bool cutsEqual(const Cut &cut1, const Cut &cut2) {
   const auto &cut1EntryIDs = cut1.entryIDs;
   const auto &cut2EntryIDs = cut2.entryIDs;
   if (cut1.rootID != cut2.rootID ||
@@ -40,8 +40,7 @@ bool cutsEqual(const Cut &cut1, const Cut &cut2) {
   return true;
 }
 
-bool cutsSetsEqual(const CutsList &cuts1, const CutsList &cuts2) {
-
+static bool cutsSetsEqual(const CutsList &cuts1, const CutsList &cuts2) {
   if (cuts1.size() != cuts2.size()) {
     return false;
   }
@@ -66,7 +65,6 @@ bool resultValid(const CutExtractor &cutExtractor,
 
   for (std::size_t i = 0; i < cellToCuts.size(); ++i) {
     if (!cutsSetsEqual(cutExtractor.getCuts(i), cellToCuts[i])) {
-
       return false;
     }
   }
@@ -74,46 +72,49 @@ bool resultValid(const CutExtractor &cutExtractor,
 }
 
 TEST(CutExtractorTest, OneAND) {
+  constexpr auto k = 4;
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(2);
   const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
   builder.addOutput(andLink0);
-  const Subnet &subnet = Subnet::get(builder.make());
+  const auto &subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 10);
   const std::vector<CutsList> validRes {
-    { Cut(0,  { 0 }) },
-    { Cut(1, { 1 }) },
-    { Cut(2,  { 2 }), Cut(2,  { 0, 1 }) },
-    { Cut(3,  { 3 }), Cut(3, { 2 }), Cut(3,  { 1, 0 }) }
+    { Cut(k, 0, { 0 }) },
+    { Cut(k, 1, { 1 }) },
+    { Cut(k, 2, { 2 }), Cut(k, 2, { 0, 1 }) },
+    { Cut(k, 3, { 3 }), Cut(k, 3, { 2 }), Cut(k, 3, { 1, 0 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }
 
 TEST(CutExtractorTest, TwoAND) {
+  constexpr auto k = 4;
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(3);
   const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
   const auto andLink1 = builder.addCell(model::AND, andLink0, inputs[2]);
   builder.addOutput(andLink1);
-  const Subnet &subnet = Subnet::get(builder.make());
+  const auto &subnet = Subnet::get(builder.make());
 
   CutExtractor cutExtractor(&subnet, 10);
   const std::vector<CutsList> validRes {
-    { Cut(0,  { 0 }) },
-    { Cut(1,  { 1 }) },
-    { Cut(2,  { 2 }) },
-    { Cut(3, { 3 }), Cut(3,  { 0, 1 }) },
-    { Cut(4,  { 4 }), Cut(4,  { 3, 2 }), Cut(4,  { 0, 1, 2 }) },
-    { Cut(5,  { 5 }), Cut(5,  { 4 }), Cut(5,  { 3, 2 }),
-      Cut(5, { 0, 1, 2 }) }
+    { Cut(k, 0, { 0 }) },
+    { Cut(k, 1, { 1 }) },
+    { Cut(k, 2, { 2 }) },
+    { Cut(k, 3, { 3 }), Cut(k, 3, { 0, 1 }) },
+    { Cut(k, 4, { 4 }), Cut(k, 4, { 3, 2 }), Cut(k, 4, { 0, 1, 2 }) },
+    { Cut(k, 5, { 5 }), Cut(k, 5, { 4 }), Cut(k, 5, { 3, 2 }),
+      Cut(k, 5, { 0, 1, 2 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }
 
 TEST(CutExtractorTest, Domination) {
+  constexpr auto k = 4;
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(2);
@@ -125,18 +126,19 @@ TEST(CutExtractorTest, Domination) {
 
   CutExtractor cutExtractor(&subnet, 10);
   const std::vector<CutsList> validRes {
-    { Cut(0,  { 0 }) },
-    { Cut(1, { 1 }) },
-    { Cut(2, { 2 }), Cut(2, { 1, 0 }) },
-    { Cut(3, { 3 }), Cut(3, { 2 }), Cut(3, { 1, 0 }) },
-    { Cut(4, { 4 }), Cut(4, { 2 }), Cut(4, { 1, 0 }) },
-    { Cut(5, { 5 }), Cut(5, { 4 }), Cut(5, { 2 }),
-      Cut(5, { 1, 0 }) }
+    { Cut(k, 0, { 0 }) },
+    { Cut(k, 1, { 1 }) },
+    { Cut(k, 2, { 2 }), Cut(k, 2, { 1, 0 }) },
+    { Cut(k, 3, { 3 }), Cut(k, 3, { 2 }), Cut(k, 3, { 1, 0 }) },
+    { Cut(k, 4, { 4 }), Cut(k, 4, { 2 }), Cut(k, 4, { 1, 0 }) },
+    { Cut(k, 5, { 5 }), Cut(k, 5, { 4 }), Cut(k, 5, { 2 }),
+      Cut(k, 5, { 1, 0 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }
 
 TEST(CutExtractorTest, LimitedK) {
+  constexpr auto k = 4;
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(1);
@@ -154,27 +156,28 @@ TEST(CutExtractorTest, LimitedK) {
 
   CutExtractor cutExtractor(&subnet, 2);
   const std::vector<CutsList> validRes {
-    { Cut(0,  { 0 }) },
-    { Cut(1,  { 1 }), Cut(1,  { 0 }) },
-    { Cut(2,  { 2 }), Cut(2,  { 0 }) },
-    { Cut(3,  { 3 }), Cut(3,  { 1 }), Cut(3, { 0 }) },
-    { Cut(4,  { 4 }), Cut(4, { 1 }), Cut(4,  { 0 }) },
-    { Cut(5,  { 5 }), Cut(5, { 2 }), Cut(5, { 0 }) },
-    { Cut(6,  { 6 }), Cut(6, { 2 }), Cut(6, { 0 }) },
-    { Cut(7,  { 7 }), Cut(7,  { 3, 4 }), Cut(7, { 1 }),
-      Cut(7,  { 0 }) },
-    { Cut(8,  { 8 }), Cut(8,  { 5, 6 }), Cut(8, { 2 }),
-      Cut(8,  { 0 }) },
-    { Cut(9,  { 9 }), Cut(9, { 7, 8 }), Cut(9, { 7, 2 }),
-      Cut(9,  { 8, 1 }), Cut(9, { 1, 2 }), Cut(9, { 0 }) },
-    { Cut(10,  { 10 }), Cut(10,  { 9 }), Cut(10,  { 7, 8 }),
-      Cut(10,  { 7, 2 }), Cut(10, { 8, 1 }), Cut(10, { 1, 2 }),
-      Cut(10,  { 0 }) }
+    { Cut(k, 0, { 0 }) },
+    { Cut(k, 1, { 1 }), Cut(k, 1, { 0 }) },
+    { Cut(k, 2, { 2 }), Cut(k, 2, { 0 }) },
+    { Cut(k, 3, { 3 }), Cut(k, 3, { 1 }), Cut(k, 3, { 0 }) },
+    { Cut(k, 4, { 4 }), Cut(k, 4, { 1 }), Cut(k, 4, { 0 }) },
+    { Cut(k, 5, { 5 }), Cut(k, 5, { 2 }), Cut(k, 5, { 0 }) },
+    { Cut(k, 6, { 6 }), Cut(k, 6, { 2 }), Cut(k, 6, { 0 }) },
+    { Cut(k, 7, { 7 }), Cut(k, 7, { 3, 4 }), Cut(k, 7, { 1 }),
+      Cut(k, 7, { 0 }) },
+    { Cut(k, 8, { 8 }), Cut(k, 8, { 5, 6 }), Cut(k, 8, { 2 }),
+      Cut(k, 8, { 0 }) },
+    { Cut(k, 9, { 9 }), Cut(k, 9, { 7, 8 }), Cut(k, 9, { 7, 2 }),
+      Cut(k, 9, { 8, 1 }), Cut(k, 9, { 1, 2 }), Cut(k, 9, { 0 }) },
+    { Cut(k, 10, { 10 }), Cut(k, 10,  { 9 }), Cut(k, 10,  { 7, 8 }),
+      Cut(k, 10, { 7, 2 }), Cut(k, 10, { 8, 1 }), Cut(k, 10, { 1, 2 }),
+      Cut(k, 10, { 0 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }
 
 TEST(CutExtractorTest, CutsIntersection) {
+  constexpr auto k = 4;
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(3);
@@ -186,20 +189,21 @@ TEST(CutExtractorTest, CutsIntersection) {
 
   CutExtractor cutExtractor(&subnet, 3);
   const std::vector<CutsList> validRes {
-    { Cut(0,  { 0 }) },
-    { Cut(1,  { 1 }) },
-    { Cut(2, { 2 }) },
-    { Cut(3, { 3 }), Cut(3,  { 1, 0 }) },
-    { Cut(4,  { 4 }), Cut(4,  { 1, 2 }) },
-    { Cut(5,  { 5 }), Cut(5,  { 3, 4 }), Cut(5,  { 3, 1, 2 }),
-      Cut(5,  { 4, 0, 1 }), Cut(5, { 0, 1, 2 }) },
-    { Cut(6,  { 6 }), Cut(6,  { 5 }), Cut(6, { 3, 4 }),
-      Cut(6,  { 3, 1, 2 }), Cut(6,  { 4, 0, 1 }), Cut(6, { 0, 1, 2 }) }
+    { Cut(k, 0, { 0 }) },
+    { Cut(k, 1, { 1 }) },
+    { Cut(k, 2, { 2 }) },
+    { Cut(k, 3, { 3 }), Cut(k, 3, { 1, 0 }) },
+    { Cut(k, 4, { 4 }), Cut(k, 4, { 1, 2 }) },
+    { Cut(k, 5, { 5 }), Cut(k, 5, { 3, 4 }), Cut(k, 5, { 3, 1, 2 }),
+      Cut(k, 5, { 4, 0, 1 }), Cut(k, 5, { 0, 1, 2 }) },
+    { Cut(k, 6, { 6 }), Cut(k, 6, { 5 }), Cut(k, 6, { 3, 4 }),
+      Cut(k, 6, { 3, 1, 2 }), Cut(k, 6, { 4, 0, 1 }), Cut(k, 6, { 0, 1, 2 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }
 
 TEST(CutExtractorTest, NoCuts) {
+  constexpr auto k = 2;
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(3);
@@ -210,16 +214,17 @@ TEST(CutExtractorTest, NoCuts) {
 
   CutExtractor cutExtractor(&subnet, 2);
   const std::vector<CutsList> validRes {
-    { Cut(0,  { 0 }) },
-    { Cut(1, { 1 }) },
-    { Cut(2,  { 2 }) },
-    { Cut(3,  { 3 }) },
-    { Cut(4, { 4 }), Cut(4, { 3 }) }
+    { Cut(k, 0, { 0 }) },
+    { Cut(k, 1, { 1 }) },
+    { Cut(k, 2, { 2 }) },
+    { Cut(k, 3, { 3 }) },
+    { Cut(k, 4, { 4 }), Cut(k, 4, { 3 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }
 
 TEST(CutExtractorTest, SameElementsInCuts) {
+  constexpr auto k = 2;
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(1);
@@ -231,16 +236,17 @@ TEST(CutExtractorTest, SameElementsInCuts) {
 
   CutExtractor cutExtractor(&subnet, 1);
   const std::vector<CutsList> validRes {
-    { Cut(0, { 0 }) },
-    { Cut(1, { 1 }), Cut(1,  { 0 }) },
-    { Cut(2, { 2 }), Cut(2, { 0 }) },
-    { Cut(3, { 3 }), Cut(3,  { 0 }) },
-    { Cut(4, { 4 }), Cut(4,  { 3 }), Cut(4,  { 0 }) }
+    { Cut(k, 0, { 0 }) },
+    { Cut(k, 1, { 1 }), Cut(k, 1, { 0 }) },
+    { Cut(k, 2, { 2 }), Cut(k, 2, { 0 }) },
+    { Cut(k, 3, { 3 }), Cut(k, 3, { 0 }) },
+    { Cut(k, 4, { 4 }), Cut(k, 4, { 3 }), Cut(k, 4, { 0 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }
 
 TEST(CutExtractorTest, LinkEntriesInSubnet) {
+  constexpr auto k = 6;
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(6);
@@ -252,15 +258,15 @@ TEST(CutExtractorTest, LinkEntriesInSubnet) {
 
   CutExtractor cutExtractor(&subnet, 6);
   const std::vector<CutsList> validRes {
-    { Cut(0, { 0 }) },
-    { Cut(1,  { 1 }) },
-    { Cut(2,  { 2 }) },
-    { Cut(3,  { 3 }) },
-    { Cut(4,  { 4 }) },
-    { Cut(5,  { 5 }) },
-    { Cut(6,  { 6 }), Cut(6,  { 0, 1, 2, 3, 4, 5 }) },
+    { Cut(k, 0, { 0 }) },
+    { Cut(k, 1, { 1 }) },
+    { Cut(k, 2, { 2 }) },
+    { Cut(k, 3, { 3 }) },
+    { Cut(k, 4, { 4 }) },
+    { Cut(k, 5, { 5 }) },
+    { Cut(k, 6, { 6 }), Cut(k, 6, { 0, 1, 2, 3, 4, 5 }) },
     {  },
-    { Cut(8,  { 8 }), Cut(8,  { 6 }), Cut(8,  { 0, 1, 2, 3, 4, 5 }) }
+    { Cut(k, 8, { 8 }), Cut(k, 8, { 6 }), Cut(k, 8, { 0, 1, 2, 3, 4, 5 }) }
   };
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }

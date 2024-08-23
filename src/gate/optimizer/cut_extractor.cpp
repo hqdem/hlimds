@@ -90,7 +90,7 @@ void CutExtractor::addCut(
     uint64_t cutsCombinationID,
     RawCutsList &addedCuts,
     const std::vector<size_t> &suffCutsCombN) const {
-  Cut newCut{k, entryID, util::BoundedSet<size_t>(k)};
+  Cut newCut{entryID, util::BoundedSet<size_t>(k)};
 
   for (size_t j = 0; j < nLinks; ++j) {
     size_t inEntryID = links[j].idx;

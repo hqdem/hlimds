@@ -28,6 +28,7 @@ private:
   SizeType setSize;
   iterator setPtr;
   uint64_t signature;
+
 public:
   /// Copy constructor for BoundedSet.
   BoundedSet(const BoundedSet<NumType, Allocator> &other);
@@ -38,13 +39,14 @@ public:
    * @param set std::unordered_set with elements for new BoundedSet.
    */
   BoundedSet(const std::unordered_set<NumType> &set);
+
   /**
    * @brief Constructs a new BoundedSet with elements from
    * std::unordered_set with custom maxSize.
-   * @param set std::unordered_set with elements for new BoundedSet.
    * @param maxSize Max amount of elements in new BoundedSet.
+   * @param set std::unordered_set with elements for new BoundedSet.
    */
-  BoundedSet(const std::unordered_set<NumType> &set, const SizeType maxSize);
+  BoundedSet(SizeType maxSize, const std::unordered_set<NumType> &set);
 
   /// Constructs BoundedSet without any elements and with fixed size.
   BoundedSet(SizeType maxSize);
@@ -54,6 +56,21 @@ public:
 
   /// Destructor of set.
   ~BoundedSet();
+
+  /// Returns the maximum size of the set.
+  SizeType capacity() const { return maxSize; }
+
+  /// Returns the current size of the set.
+  SizeType size() const { return setSize; }
+
+  /// Checks the set for emptiness.
+  bool empty() const { return setSize == 0; }
+
+  /// Returns a pointer to the first element of the set.
+  iterator begin() const { return setPtr; }
+
+  /// Returns a pointer to the last nonexistent element of the set.
+  iterator end() const { return setPtr + setSize; }
 
   /**
   * @brief Merges two sets into one, if possible.
@@ -83,18 +100,6 @@ public:
   * locates in the set. Otherwise, it returns a pointer to the end of the set.
   */
   iterator find(NumType num) const;
-
-  /// Returns the current size of the set.
-  SizeType size() const;
-
-  /// Returns a pointer to the last nonexistent element of the set.
-  iterator end() const;
-
-  /// Returns a pointer to the first element of the set.
-  iterator begin() const;
-
-  /// Checks the set for emptiness.
-  bool empty() const;
 
   /**
   * @brief AAllows to fill an already
@@ -240,31 +245,8 @@ BoundedSet<NumType, Allocator>::find(NumType num) const {
 }
 
 template <class NumType, class Allocator>
-typename BoundedSet<NumType, Allocator>::SizeType
-BoundedSet<NumType, Allocator>::size() const {
-  return this->setSize;
-}
-
-template <class NumType, class Allocator>
-typename BoundedSet<NumType, Allocator>::iterator
-    BoundedSet<NumType, Allocator>::end() const {
-  return this->setPtr + this->setSize;
-}
-
-template <class NumType, class Allocator>
-bool BoundedSet<NumType, Allocator>::empty() const {
-  return (this->setSize == 0);
-}
-
-template <class NumType, class Allocator>
 BoundedSet<NumType, Allocator>::~BoundedSet() {
   setAllocator.deallocate(setPtr, maxSize);
-}
-
-template <class NumType, class Allocator>
-typename BoundedSet<NumType, Allocator>::iterator
-    BoundedSet<NumType, Allocator>::begin() const {
-  return this->setPtr;
 }
 
 template <class NumType, class Allocator>
@@ -306,7 +288,7 @@ BoundedSet<NumType, Allocator>::BoundedSet(
 
 template <class NumType, class Allocator>
 BoundedSet<NumType, Allocator>::BoundedSet(
-    const std::unordered_set<NumType> &set, const SizeType maxSize) {
+    const SizeType maxSize, const std::unordered_set<NumType> &set) {
   assert(set.size() <= maxSize);
   this->maxSize = maxSize;
   this->setPtr = setAllocator.allocate(this->maxSize);

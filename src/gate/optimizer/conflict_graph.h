@@ -29,14 +29,13 @@ using SubnetBuilder = eda::gate::model::SubnetBuilder;
  * An edge means that there is an intersection between this subcircuits.
  * The weigth of vertex is the effect of the replacement.
  */
-
 class ConflictGraph {
 public:
 
   /// Empty constructor.
   ConflictGraph() {};
 
-/**
+  /**
    * @brief Finds the set of disjoint vertexes with max total weight.
    * A greedy algorithm is used.
    *
@@ -44,7 +43,7 @@ public:
    */
   float findBestColoring(SubnetBuilder *builder);
 
-/**
+  /**
    * @brief Adds a vertex(subcircuit) to the graph.
    *
    * @param delta effect of the replacement current subcircuit.
@@ -82,4 +81,5 @@ private:
 
   float coloring(SubnetBuilder *builder);
 };
+
 } // namespace eda::gate::optimizer 

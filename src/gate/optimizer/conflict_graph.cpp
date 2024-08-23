@@ -83,4 +83,5 @@ float ConflictGraph::findBestColoring(SubnetBuilder *builder) {
 
   return maxDelta;
 }
+
 } // namespace eda::gate::optimizer

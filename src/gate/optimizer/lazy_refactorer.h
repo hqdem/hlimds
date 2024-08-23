@@ -63,7 +63,6 @@ public:
    * metric after replacement.
    * @param weightModifier Function that calculates sum weight for each cell.
    */
-
   LazyRefactorer(const std::string &name,
                  const ResynthesizerBase &resynthesizer,
                  const ConeConstructor *coneConstructor,
@@ -99,4 +98,5 @@ private:
 
   constexpr static float eps = 1e-7;
 };
+
 } // namespace eda::gate::optimizer

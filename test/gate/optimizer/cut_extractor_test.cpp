@@ -272,7 +272,7 @@ TEST(CutExtractorTest, GetEntriesIDs) {
   const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
   builder.addOutput(andLink0);
   const auto &subnet = Subnet::get(builder.make());
-  BoundedSet<size_t> a {2, 1};
+  util::BoundedSet<size_t> a{2, 1};
   a.insert(0, 1);
   CutExtractor cutExtractor(&subnet, 2); 
   const std::vector<CutsEntries> validRes {

@@ -13,14 +13,15 @@
 #include <memory>
 #include <unordered_set>
 
-
-/// Type for set size.
-typedef uint16_t SizeType;    
+namespace eda::util {
 
 template <class NumType = unsigned, class Allocator = std::allocator<NumType>>
 class BoundedSet final {
-typedef  NumType* iterator;
-static_assert(std::is_integral_v<NumType>, "NumType must be integral");
+  typedef NumType* iterator;
+  static_assert(std::is_integral_v<NumType>, "NumType must be integral");
+
+  typedef uint16_t SizeType;    
+
 private:
   Allocator setAllocator;
   SizeType maxSize;
@@ -180,7 +181,7 @@ bool BoundedSet<NumType, Allocator>::merge(
   this->signature |= other.signature;
   return true;
 }
-                                                                                                                                                                                                                                                                                                                                                           
+
 template <class NumType, class Allocator>
 bool BoundedSet<NumType, Allocator>::unionCheck(
     const BoundedSet<NumType, Allocator> &other) {
@@ -232,14 +233,15 @@ bool BoundedSet<NumType, Allocator>::insert(NumType newElement, bool isChecked) 
 
 template <class NumType, class Allocator>
 typename BoundedSet<NumType, Allocator>::iterator
-    BoundedSet<NumType, Allocator>::find(NumType num) const {
+BoundedSet<NumType, Allocator>::find(NumType num) const {
   iterator r = std::lower_bound(this->begin(), this->end(), num);
   if (*r == num) return r;
   return this->end();
 }
 
 template <class NumType, class Allocator>
-SizeType BoundedSet<NumType, Allocator>::size() const {
+typename BoundedSet<NumType, Allocator>::SizeType
+BoundedSet<NumType, Allocator>::size() const {
   return this->setSize;
 }
 
@@ -325,3 +327,5 @@ NumType BoundedSet<NumType, Allocator>::maxValue() const {
   assert(!this->empty());
   return this->setPtr[this->size() - 1];
 }
+
+} // namespace eda::util

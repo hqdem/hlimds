@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -13,6 +13,8 @@
 #include <ctime>
 #include <vector>
 #include <unordered_set>
+
+namespace eda::util {
 
 bool equal(const BoundedSet<size_t> &b, const std::unordered_set<size_t> &u) {
   bool result = 1;
@@ -140,3 +142,5 @@ TEST(BoundedSetTest, MergeWithoutChecks) {
     result &= (vectorBS[i].size() <= k);
   EXPECT_TRUE(result);
 }
+
+} // namespace eda::util

@@ -23,7 +23,7 @@ namespace eda::gate::optimizer {
 struct Cut final {
   Cut(const uint16_t k,
       const size_t rootID,
-      const BoundedSet<size_t> &entryIDs):
+      const util::BoundedSet<size_t> &entryIDs):
       k(k), rootID(rootID), entryIDs{entryIDs} {}
   
   Cut(const size_t rootID,
@@ -32,7 +32,7 @@ struct Cut final {
 
   Cut(const uint16_t k,
       const size_t entryID):
-      Cut(k, entryID, BoundedSet<size_t>(k, entryID)) {}
+      Cut(k, entryID, util::BoundedSet<size_t>(k, entryID)) {}
 
   Cut(const size_t entryID):
       Cut(1, entryID) {}
@@ -53,7 +53,7 @@ struct Cut final {
 
   const uint16_t k; 
   const size_t rootID;
-  BoundedSet<size_t> entryIDs;
+  util::BoundedSet<size_t> entryIDs;
 };
 
 using CutsList = std::vector<Cut>;

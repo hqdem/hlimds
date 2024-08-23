@@ -27,7 +27,7 @@ public:
   using Subnet = model::Subnet;
   using Link = Subnet::Link;
   using SubnetBuilder = model::SubnetBuilder;
-  using CutsEntries = std::vector<BoundedSet<size_t>>;
+  using CutsEntries = std::vector<util::BoundedSet<size_t>>;
   using RawCutsList = std::vector<std::pair<Cut, char>>;
 
   CutExtractor() = delete;

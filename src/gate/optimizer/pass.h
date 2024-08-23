@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/analyzer/probabilistic_estimate.h"
-#include "gate/optimizer/associative_balancer.h"
+#include "gate/optimizer/balancer.h"
 #include "gate/optimizer/lazy_refactorer.h"
 #include "gate/optimizer/mffc.h"
 #include "gate/optimizer/reconvergence.h"
@@ -69,7 +69,7 @@ inline SubnetMapper xmg() {
 
 /// Depth-aware balancing.
 inline SubnetPass b() {
-  return std::make_shared<AssociativeBalancer>("b");
+  return std::make_shared<Balancer>("b");
 }
 
 //===----------------------------------------------------------------------===//

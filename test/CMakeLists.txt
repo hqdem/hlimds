@@ -55,7 +55,7 @@ add_executable(${TEST_TARGET}
   gate/model/utils/bdd_dnf_test.cpp
   gate/model/utils/subnet_truth_table_test.cpp
   gate/mutator/mutator_test.cpp
-  gate/optimizer/associative_balancer_test.cpp
+  gate/optimizer/balancer_test.cpp
   gate/optimizer/cone_builder_test.cpp
   gate/optimizer/cut_extractor_test.cpp
   gate/optimizer/getdbstat_test.cpp

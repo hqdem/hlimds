@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "associative_balancer.h"
+#include "balancer.h"
 
 namespace eda::gate::optimizer {
 
@@ -17,7 +17,7 @@ template<typename Iter>
 struct is_reverse_iterator<std::reverse_iterator<Iter>>
        : std::integral_constant<bool, !is_reverse_iterator<Iter>::value> {};
 
-void AssociativeBalancer::transform(
+void Balancer::transform(
     const std::shared_ptr<SubnetBuilder> &builder) const {
   SubnetBuilder *builderPtr = builder.get();
 
@@ -28,7 +28,7 @@ void AssociativeBalancer::transform(
   }
 }
 
-bool AssociativeBalancer::canBalanceCompl(
+bool Balancer::canBalanceCompl(
     const SubnetBuilder &builder,
     const size_t uOpEntryID,
     const size_t dOpEntryID,
@@ -55,7 +55,7 @@ bool AssociativeBalancer::canBalanceCompl(
       builder.getDepth(uOpSwapInput) < builder.getDepth(dOpSwapInput);
 }
 
-bool AssociativeBalancer::canBalanceAssoc(
+bool Balancer::canBalanceAssoc(
     const SubnetBuilder &builder,
     const size_t uOpEntryID,
     const size_t dOpEntryID) const {
@@ -74,7 +74,7 @@ bool AssociativeBalancer::canBalanceAssoc(
   return true;
 }
 
-bool AssociativeBalancer::canBalance(
+bool Balancer::canBalance(
     const SubnetBuilder &builder,
     const size_t uOpEntryID,
     const size_t dOpEntryID,
@@ -84,7 +84,7 @@ bool AssociativeBalancer::canBalance(
          canBalanceAssoc(builder, uOpEntryID, dOpEntryID);
 }
 
-void AssociativeBalancer::balanceComplAssoc(
+void Balancer::balanceComplAssoc(
     SubnetBuilder &builder,
     const size_t entryID) const {
   const auto &cell = builder.getCell(entryID);
@@ -121,7 +121,7 @@ void AssociativeBalancer::balanceComplAssoc(
       false);
 }
 
-size_t AssociativeBalancer::balanceOnEntry(
+size_t Balancer::balanceOnEntry(
     SubnetBuilder &builder,
     const size_t entryID) const {
   size_t depthBeforeBalancings = builder.getDepth(entryID);
@@ -146,7 +146,7 @@ size_t AssociativeBalancer::balanceOnEntry(
 }
 
 template<typename Iter>
-void AssociativeBalancer::moveOp(
+void Balancer::moveOp(
     SubnetBuilder &builder,
     const size_t entryID,
     const Iter &operIter,
@@ -189,7 +189,7 @@ void AssociativeBalancer::moveOp(
 }
 
 template<typename Iter>
-void AssociativeBalancer::moveOpToLim(
+void Balancer::moveOpToLim(
     SubnetBuilder &builder,
     const size_t entryID,
     Iter operIter,
@@ -235,7 +235,7 @@ void AssociativeBalancer::moveOpToLim(
   }
 }
 
-void AssociativeBalancer::moveAllOpsLToLim(
+void Balancer::moveAllOpsLToLim(
     SubnetBuilder &builder,
     const size_t entryID) const {
   LinkList entryInputs = builder.getLinks(entryID);
@@ -267,7 +267,7 @@ void AssociativeBalancer::moveAllOpsLToLim(
   }
 }
 
-void AssociativeBalancer::moveAllOpsRToLim(
+void Balancer::moveAllOpsRToLim(
     SubnetBuilder &builder,
     const size_t entryID) const {
   LinkList entryInputs = builder.getLinks(entryID);
@@ -300,14 +300,14 @@ void AssociativeBalancer::moveAllOpsRToLim(
   }
 }
 
-void AssociativeBalancer::balanceAssoc(
+void Balancer::balanceAssoc(
     SubnetBuilder &builder,
     const size_t entryID) const {
   moveAllOpsLToLim(builder, entryID);
   moveAllOpsRToLim(builder, entryID);
 }
 
-void AssociativeBalancer::balanceCommutAssoc(
+void Balancer::balanceCommutAssoc(
     SubnetBuilder &builder,
     const size_t entryID) const {
 

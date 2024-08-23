@@ -10,7 +10,7 @@
 
 #include "gate/debugger/sat_checker.h"
 #include "gate/model/subnet.h"
-#include "gate/optimizer/associative_balancer.h"
+#include "gate/optimizer/balancer.h"
 #include "util/assert.h"
 
 #include <chrono>
@@ -66,7 +66,7 @@ void printBalancingInfo(SubnetBuilder &builder,
   const auto subnetBeforeID = builder.make();
   auto copyBuilder = std::make_shared<SubnetBuilder>(subnetBeforeID);
 
-  AssociativeBalancer balancer("TestBalancer");
+  Balancer balancer("TestBalancer");
 
   const auto startBalancingTime{std::chrono::steady_clock::now()};
 
@@ -88,7 +88,7 @@ void printBalancingInfo(SubnetBuilder &builder,
   EXPECT_EQ(expectedDepthAfter, depthAfterBalance);
 }
 
-TEST(AssociativeBalanceTest, DoubleLinksSwap) {
+TEST(Balancer, DoubleLinksSwap) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(8);
   const auto &andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
@@ -102,7 +102,7 @@ TEST(AssociativeBalanceTest, DoubleLinksSwap) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, SeveralLinksToSwap) {
+TEST(Balancer, SeveralLinksToSwap) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(6);
   const auto &andLink0 = builder.addCell(model::AND, inputs[4], inputs[5]);
@@ -114,7 +114,7 @@ TEST(AssociativeBalanceTest, SeveralLinksToSwap) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, AND) {
+TEST(Balancer, AND) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(5);
   const auto &andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
@@ -126,7 +126,7 @@ TEST(AssociativeBalanceTest, AND) {
   printBalancingInfo(builder, 5, 4);
 }
 
-TEST(AssociativeBalanceTest, AND2) {
+TEST(Balancer, AND2) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(4);
   const auto &andLink0 = builder.addCell(model::AND, inputs[2], inputs[1]);
@@ -137,7 +137,7 @@ TEST(AssociativeBalanceTest, AND2) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, BalanceANDTwice) {
+TEST(Balancer, BalanceANDTwice) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(6);
   const auto &andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
@@ -150,7 +150,7 @@ TEST(AssociativeBalanceTest, BalanceANDTwice) {
   printBalancingInfo(builder, 6, 4);
 }
 
-TEST(AssociativeBalanceTest, BalanceANDThrice) {
+TEST(Balancer, BalanceANDThrice) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(9);
   const auto &andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
@@ -167,7 +167,7 @@ TEST(AssociativeBalanceTest, BalanceANDThrice) {
   printBalancingInfo(builder, 7, 5);
 }
 
-TEST(AssociativeBalanceTest, UnbalancableANDOR) {
+TEST(Balancer, UnbalancableANDOR) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(9);
   const auto &andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
@@ -184,7 +184,7 @@ TEST(AssociativeBalanceTest, UnbalancableANDOR) {
   printBalancingInfo(builder, 7, 7);
 }
 
-TEST(AssociativeBalanceTest, OneInOneOut) {
+TEST(Balancer, OneInOneOut) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(1);
   builder.addOutput(inputs[0]);
@@ -192,7 +192,7 @@ TEST(AssociativeBalanceTest, OneInOneOut) {
   printBalancingInfo(builder, 1, 1);
 }
 
-TEST(AssociativeBalanceTest, OR) {
+TEST(Balancer, OR) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(4);
   const auto &orLink0 = builder.addCell(model::OR, inputs[0], inputs[1]);
@@ -203,7 +203,7 @@ TEST(AssociativeBalanceTest, OR) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, XOR) {
+TEST(Balancer, XOR) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(4);
   const auto &xorLink0 = builder.addCell(model::XOR, inputs[0], inputs[1]);
@@ -214,7 +214,7 @@ TEST(AssociativeBalanceTest, XOR) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, SeveralOut) {
+TEST(Balancer, SeveralOut) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(4);
   const auto &andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
@@ -226,7 +226,7 @@ TEST(AssociativeBalanceTest, SeveralOut) {
   printBalancingInfo(builder, 4, 4);
 }
 
-TEST(AssociativeBalanceTest, Arity3) {
+TEST(Balancer, Arity3) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(6);
   const auto &andLink0 = builder.addCell(model::AND, inputs[1], inputs[2]);
@@ -239,7 +239,7 @@ TEST(AssociativeBalanceTest, Arity3) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, Arity4) {
+TEST(Balancer, Arity4) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(8);
   const auto &orLink0 = builder.addCell(model::OR, inputs[2], inputs[3]);
@@ -252,7 +252,7 @@ TEST(AssociativeBalanceTest, Arity4) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, Arity4_2) {
+TEST(Balancer, Arity4_2) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(10);
   const auto &orLink0 = builder.addCell(model::OR, inputs[2], inputs[3]);
@@ -267,7 +267,7 @@ TEST(AssociativeBalanceTest, Arity4_2) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, Arity4LR) {
+TEST(Balancer, Arity4LR) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(10);
   const auto &andLink0 = builder.addCell(model::AND, inputs[3], inputs[4]);
@@ -283,7 +283,7 @@ TEST(AssociativeBalanceTest, Arity4LR) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, MajLeft) {
+TEST(Balancer, MajLeft) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(5);
   const auto &andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
@@ -296,7 +296,7 @@ TEST(AssociativeBalanceTest, MajLeft) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, MajRight) {
+TEST(Balancer, MajRight) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(5);
   const auto &andLink0 = builder.addCell(model::AND, inputs[3], inputs[4]);
@@ -309,7 +309,7 @@ TEST(AssociativeBalanceTest, MajRight) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(AssociativeBalanceTest, MajUnbalancable) {
+TEST(Balancer, MajUnbalancable) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(6);
   const auto &andLink0 = builder.addCell(model::AND, inputs[4], inputs[5]);
@@ -322,7 +322,7 @@ TEST(AssociativeBalanceTest, MajUnbalancable) {
   printBalancingInfo(builder, 4, 4);
 }
 
-TEST(AssociativeBalanceTest, Maj2Options) {
+TEST(Balancer, Maj2Options) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(6);
   const auto &majLink0 = builder.addCell(model::MAJ, inputs[0], inputs[2],
@@ -338,7 +338,7 @@ TEST(AssociativeBalanceTest, Maj2Options) {
   printBalancingInfo(builder, 5, 4);
 }
 
-TEST(AssociativeBalanceTest, BalanceMajTwice) {
+TEST(Balancer, BalanceMajTwice) {
   SubnetBuilder builder;
   const auto &inputs = builder.addInputs(6);
   const auto &andLink0 = builder.addCell(model::AND, inputs[4], inputs[5]);

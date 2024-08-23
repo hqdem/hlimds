@@ -39,7 +39,7 @@ add_library(Gate OBJECT
   mutator/mutator_transformer.cpp
   library/library.cpp
   library/readcells_iface.cpp
-  optimizer/associative_balancer.cpp
+  optimizer/balancer.cpp
   optimizer/cut_extractor.cpp
   optimizer/conflict_graph.cpp
   optimizer/lazy_refactorer.cpp

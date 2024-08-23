@@ -16,7 +16,7 @@
 
 namespace eda::gate::optimizer {
 
-class AssociativeBalancer final : public SubnetInPlaceTransformer {
+class Balancer final : public SubnetInPlaceTransformer {
 public:
   using Subnet = eda::gate::model::Subnet;
   using SubnetID = eda::gate::model::SubnetID;
@@ -24,8 +24,7 @@ public:
   using LinkList = Subnet::LinkList;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
-  AssociativeBalancer(const std::string &name):
-    SubnetInPlaceTransformer(name) {};
+  Balancer(const std::string &name): SubnetInPlaceTransformer(name) {}
 
   void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
 

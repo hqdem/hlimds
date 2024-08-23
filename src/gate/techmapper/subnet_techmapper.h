@@ -11,7 +11,7 @@
 #include "gate/criterion/criterion.h"
 #include "gate/criterion/solution_space.h"
 #include "gate/model/subnet.h"
-#include "gate/optimizer/cut_extractor.h"
+#include "gate/optimizer/cut.h"
 #include "gate/optimizer/transformer.h"
 
 #include <cstddef>

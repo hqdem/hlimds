@@ -10,7 +10,7 @@
 
 #include "gate/model/iomapping.h"
 #include "gate/model/subnet.h"
-#include "gate/optimizer/cut_extractor.h"
+#include "gate/optimizer/cut.h"
 #include "util/truth_table.h"
 
 #include <cstddef>

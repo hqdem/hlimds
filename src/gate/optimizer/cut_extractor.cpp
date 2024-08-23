@@ -64,7 +64,7 @@ void CutExtractor::findCuts(const size_t entryIdx) {
   const auto *links = getLinks(entryIdx, nullptr, nLinks);
 
   RawCutsList cuts;
-  cuts.push_back({getOneElemCut(entryIdx), true});
+  cuts.push_back({Cut(k, entryIdx), true});
 
   if (nLinks == 0) {
     addViableCuts(cuts, entryIdx);
@@ -90,8 +90,7 @@ void CutExtractor::addCut(
     uint64_t cutsCombinationIdx,
     RawCutsList &addedCuts,
     const std::vector<size_t> &suffCutsCombN) const {
-  Cut newCut = Cut(k, BoundedSet<size_t>(k), entryIdx);
-
+  Cut newCut = Cut(k, entryIdx, BoundedSet<size_t>(k));
 
   for (size_t j = 0; j < nLinks; ++j) {
     size_t inEntryIdx = links[j].idx;
@@ -100,33 +99,14 @@ void CutExtractor::addCut(
       inEntryCutIdx = cutsCombinationIdx / suffCutsCombN[j + 1];
       cutsCombinationIdx %= suffCutsCombN[j + 1];
     }
-    const Cut &cutToUnite = entriesCuts[inEntryIdx][inEntryCutIdx];
-    if (!newCut.uniteCut(cutToUnite)) {
+    const Cut &cutToMerge = entriesCuts[inEntryIdx][inEntryCutIdx];
+    if (!newCut.merge(cutToMerge)) {
       return;
     }
   }
   if (cutNotDominated(newCut, addedCuts)) {
     addedCuts.push_back({ newCut, true });
   }
-}
-
-Cut CutExtractor::getOneElemCut(const size_t entryIdx) const {
-  return Cut(k, BoundedSet<size_t>(k, entryIdx), entryIdx);
-}
-
-bool CutExtractor::cutNotDominated(const Cut &cut, RawCutsList &cuts) const {
-  for (size_t i = 0; i < cuts.size(); ++i) {
-    if (cutDominates(cuts[i].first, cut)) {
-      return false;
-    }
-    if (!cuts[i].second) {
-      continue;
-    }
-    if (cutDominates(cut, cuts[i].first)) {
-      cuts[i].second = false;
-    }
-  }
-  return true;
 }
 
 void CutExtractor::addViableCuts(
@@ -141,13 +121,16 @@ void CutExtractor::addViableCuts(
   }
 }
 
-bool CutExtractor::cutDominates(const Cut &cut1, const Cut &cut2) const {
-  if (cut1.entryIdxs.size() >= cut2.entryIdxs.size()) {
-    return false;
-  }
-  for (const auto &cut1Entry : cut1.entryIdxs) {
-    if (cut2.entryIdxs.find(cut1Entry) == cut2.entryIdxs.end()) {
+bool CutExtractor::cutNotDominated(const Cut &cut, RawCutsList &cuts) const {
+  for (size_t i = 0; i < cuts.size(); ++i) {
+    if (cuts[i].first.dominates(cut)) {
       return false;
+    }
+    if (!cuts[i].second) {
+      continue;
+    }
+    if (cut.dominates(cuts[i].first)) {
+      cuts[i].second = false;
     }
   }
   return true;

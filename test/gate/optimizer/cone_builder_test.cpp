@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/subnetview.h"
+#include "gate/optimizer/cut_extractor.h"
 
 #include "gtest/gtest.h"
 

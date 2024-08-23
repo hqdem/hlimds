@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/subnetview.h"
+#include "gate/optimizer/cut_extractor.h"
 #include "gate/optimizer/resynthesizer.h"
 #include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/transformer.h"

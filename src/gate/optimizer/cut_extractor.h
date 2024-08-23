@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/model/subnet.h"
-#include "util/bounded_set.h"
+#include "gate/optimizer/cut.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -17,35 +17,6 @@
 #include <vector>
 
 namespace eda::gate::optimizer {
-
-/// Cut class with its signature and indices.
-struct Cut final {
-  Cut(const uint16_t k,
-      const BoundedSet<size_t> &entryIdxs,
-      const size_t rootEntryIdx):
-    k(k), rootEntryIdx(rootEntryIdx), entryIdxs{entryIdxs} {}
-  
-  Cut(const size_t rootEntryIdx,
-      const std::unordered_set<size_t> &entryIdxs):
-    k(entryIdxs.size()), rootEntryIdx(rootEntryIdx), entryIdxs{entryIdxs} {}
-
-  /// Checks whether the cut is trivial.
-  bool isTrivial() const {
-    return entryIdxs.size() == 1 &&
-           entryIdxs.find(rootEntryIdx) != entryIdxs.end();
-  }
-
-  /// Unites other cut to current.
-  bool uniteCut(const Cut &other) {
-    return entryIdxs.merge(other.entryIdxs);
-  }
-
-  uint16_t k; 
-  size_t rootEntryIdx;
-  BoundedSet<size_t> entryIdxs;
-};
-
-using CutsList = std::vector<Cut>;
 
 /**
  * @brief Extracts all cuts of the bounded size for each cell of a subnet.
@@ -113,22 +84,16 @@ private:
       RawCutsList &addedCuts,
       const std::vector<size_t> &suffCutsCombinationsN) const;
 
-  /// Creates and gets cut with passed cell.
-  Cut getOneElemCut(const size_t entryIdx) const;
-
   /// Adds only viable cuts (with set flag) to the cuts storage.
   void addViableCuts(const RawCutsList &cuts, const size_t entryIdx);
 
   /**
-   * @brief Checks if the passed cut is not dominated by any element from the
+   * @brief Checks if the cut is not dominated by any element from the
    * passed cuts.
    * This method also marks elements from the passed cuts as unviable if they
    * are dominated by the passed cut.
    */
   bool cutNotDominated(const Cut &cut, RawCutsList &cuts) const;
-
-  /// Checks if cut1 dominates cut2.
-  bool cutDominates(const Cut &cut1, const Cut &cut2) const;
 
 private:
   const Subnet *subnet;

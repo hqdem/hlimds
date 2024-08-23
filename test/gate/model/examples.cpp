@@ -25,19 +25,13 @@ namespace eda::gate::model {
 /*             └─┘───└─┘───└─┘        */
 /*             in3   or6   out7       */
 SubnetID makeSubnet2AndOr() {
-  SubnetBuilder subnetBuilder;
-  Subnet::LinkList inputs = subnetBuilder.addInputs(4);
-  Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND,
-                                          inputs[0],
-                                          inputs[1]);
-  Subnet::Link andCell5 = subnetBuilder.addCell(CellSymbol::AND,
-                                          inputs[2],
-                                          andCell4);
-  Subnet::Link orCell6 = subnetBuilder.addCell(CellSymbol::OR,
-                                         andCell5,
-                                         inputs[3]);
-  subnetBuilder.addOutput(orCell6);
-  return subnetBuilder.make();
+  SubnetBuilder builder;
+  auto inputs = builder.addInputs(4);
+  auto andCell4 = builder.addCell(CellSymbol::AND, inputs[0], inputs[1]);
+  auto andCell5 = builder.addCell(CellSymbol::AND, inputs[2], andCell4);
+  auto orCell6 = builder.addCell(CellSymbol::OR, andCell5, inputs[3]);
+  builder.addOutput(orCell6);
+  return builder.make();
 }
 
 NetID makeNet2AndOr() {
@@ -54,18 +48,13 @@ NetID makeNet2AndOr() {
 /*             └─┘───└─┘───└─┘        */
 /*             in3   or6   out7       */
 SubnetID makeSubnet2AndOr2() {
-  SubnetBuilder subnetBuilder;
-  Subnet::LinkList inputs = subnetBuilder.addInputs(4);
-  Subnet::Link andCell4 = subnetBuilder.addCell(CellSymbol::AND,
-                                          inputs[0],
-                                          inputs[1]);
-  subnetBuilder.addCell(CellSymbol::AND, inputs[2], andCell4);
-  Subnet::Link orCell6 = subnetBuilder.addCell(CellSymbol::OR,
-                                         inputs[2],
-                                         inputs[3]);
-  subnetBuilder.addOutput(orCell6);
-
-  return subnetBuilder.make();
+  SubnetBuilder builder;
+  auto inputs = builder.addInputs(4);
+  auto andCell4 = builder.addCell(CellSymbol::AND, inputs[0], inputs[1]);
+  builder.addCell(CellSymbol::AND, inputs[2], andCell4);
+  auto orCell6 = builder.addCell(CellSymbol::OR, inputs[2], inputs[3]);
+  builder.addOutput(orCell6);
+  return builder.make();
 }
 
 NetID makeNet2AndOr2() {
@@ -83,16 +72,16 @@ NetID makeNet2AndOr2() {
 /*       in5 ┌─┐ |_┌─┐ |_┌─┐__┌─┐ */
 /*           └─┘───└─┘───└─┘  └─┘ */
 SubnetID makeSubnet3AndOrXor() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[10];
-  Subnet::LinkList inputs = sb.addInputs(5);
+  auto inputs = builder.addInputs(5);
   std::copy(inputs.begin(), inputs.end(), links);
-  links[5] = sb.addCell(AND, links[0], links[1]);
-  links[6] = sb.addCell(AND, links[5], links[2]);
-  links[7] = sb.addCell(XOR, links[3], links[4]);
-  links[8] = sb.addCell(OR, links[6], links[7]);
-  links[9] = sb.addOutput(links[8]);
-  return sb.make();
+  links[5] = builder.addCell(AND, links[0], links[1]);
+  links[6] = builder.addCell(AND, links[5], links[2]);
+  links[7] = builder.addCell(XOR, links[3], links[4]);
+  links[8] = builder.addCell(OR, links[6], links[7]);
+  links[9] = builder.addOutput(links[8]);
+  return builder.make();
 }
 
 NetID makeNet3AndOrXor() {
@@ -112,19 +101,19 @@ NetID makeNet3AndOrXor() {
 /* in6 ┌─┐ |_┌─┐ |_┌─┐___┌─┐ |_┌─┐__┌─┐ */
 /*     └─┘───└─┘───└─┘   └─┘───└─┘  └─┘ */
 SubnetID makeSubnetXorNorAndAndOr() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[13];
-  Subnet::LinkList inp = sb.addInputs(6);
-  std::copy(inp.begin(), inp.end(), links);
-  links[6] = sb.addCell(OR, links[0], links[1]);
-  links[7] = sb.addCell(XOR, links[2], links[3]);
-  links[8] = sb.addCell(AND, links[4], links[5]);
-  links[9] = sb.addCell(OR, links[7], links[8]);
+  auto inputs = builder.addInputs(6);
+  std::copy(inputs.begin(), inputs.end(), links);
+  links[6] = builder.addCell(OR, links[0], links[1]);
+  links[7] = builder.addCell(XOR, links[2], links[3]);
+  links[8] = builder.addCell(AND, links[4], links[5]);
+  links[9] = builder.addCell(OR, links[7], links[8]);
   links[9].inv = true;
-  links[10] = sb.addCell(BUF, links[9]);
-  links[11] = sb.addCell(AND, links[6], links[10]);
-  sb.addOutput(links[11]);
-  return sb.make();
+  links[10] = builder.addCell(BUF, links[9]);
+  links[11] = builder.addCell(AND, links[6], links[10]);
+  builder.addOutput(links[11]);
+  return builder.make();
 }
 
 NetID makeNetXorNorAndAndOr() {
@@ -139,15 +128,15 @@ NetID makeNetXorNorAndAndOr() {
 /*     └─┘───└─┘───└─┘  └─┘ */
 /*           xor            */
 SubnetID makeSubnetXorOrXor() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[7];
-  Subnet::LinkList inp = sb.addInputs(3);
-  std::copy(inp.begin(), inp.end(), links);
-  links[3] = sb.addCell(XOR, links[0], links[1]);
-  links[4] = sb.addCell(XOR, links[1], links[2]);
-  links[5] = sb.addCell(OR, links[3], links[4]);
-  sb.addOutput(links[5]);
-  return sb.make();
+  auto inputs = builder.addInputs(3);
+  std::copy(inputs.begin(), inputs.end(), links);
+  links[3] = builder.addCell(XOR, links[0], links[1]);
+  links[4] = builder.addCell(XOR, links[1], links[2]);
+  links[5] = builder.addCell(OR, links[3], links[4]);
+  builder.addOutput(links[5]);
+  return builder.make();
 }
 
 NetID makeNetXorOrXor() {
@@ -164,17 +153,17 @@ NetID makeNetXorOrXor() {
 /*         | └─┌─┐──┌─┐  */
 /*         └───└─┘  └─┘  */
 SubnetID makeSubnetAndOrXor() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[8];
-  Subnet::LinkList inp = sb.addInputs(2);
-  std::copy(inp.begin(), inp.end(), links);
-  links[2] = sb.addCell(AND, links[0], links[1]);
-  links[3] = sb.addCell(OR, links[0], links[1]);
-  links[4] = sb.addCell(XOR, links[0], links[1]);
-  sb.addOutput(links[2]);
-  sb.addOutput(links[3]);
-  sb.addOutput(links[4]);
-  return sb.make();
+  auto inputs = builder.addInputs(2);
+  std::copy(inputs.begin(), inputs.end(), links);
+  links[2] = builder.addCell(AND, links[0], links[1]);
+  links[3] = builder.addCell(OR, links[0], links[1]);
+  links[4] = builder.addCell(XOR, links[0], links[1]);
+  builder.addOutput(links[2]);
+  builder.addOutput(links[3]);
+  builder.addOutput(links[4]);
+  return builder.make();
 }
 
 NetID makeNetAndOrXor() {
@@ -191,19 +180,19 @@ NetID makeNetAndOrXor() {
 /* ┌─┐     | └─┌─┐──┴────┌─┐──┌─┐ */
 /* └─┘─────┴───└─┘       └─┘  └─┘ */
 SubnetID makeSubnet4AndOr() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[10];
-  Subnet::LinkList inp = sb.addInputs(2);
-  std::copy(inp.begin(), inp.end(), links);
-  links[2] = sb.addCell(AND, links[0], links[1]);
-  links[3] = sb.addCell(OR, links[0], links[1]);
-  links[4] = sb.addCell(AND, links[2]);
-  links[5] = sb.addCell(AND, links[2], links[3]);
-  links[6] = sb.addCell(OR, links[3]);
-  sb.addOutput(links[4]);
-  sb.addOutput(links[5]);
-  sb.addOutput(links[6]);
-  return sb.make();
+  auto inputs = builder.addInputs(2);
+  std::copy(inputs.begin(), inputs.end(), links);
+  links[2] = builder.addCell(AND, links[0], links[1]);
+  links[3] = builder.addCell(OR, links[0], links[1]);
+  links[4] = builder.addCell(AND, links[2]);
+  links[5] = builder.addCell(AND, links[2], links[3]);
+  links[6] = builder.addCell(OR, links[3]);
+  builder.addOutput(links[4]);
+  builder.addOutput(links[5]);
+  builder.addOutput(links[6]);
+  return builder.make();
 }
 
 NetID makeNet4AndOr() {
@@ -219,17 +208,17 @@ in   lat  out
 └─┘  └─┘  └─┘
 */
 SubnetID makeSubnet2Latches() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[8];
-  Subnet::LinkList inp = sb.addInputs(2);
-  std::copy(inp.begin(), inp.end(), links);
-  links[2] = sb.addInput(0);
-  links[3] = sb.addInput(1);
-  sb.addOutput(links[0], 0);
-  sb.addOutput(links[1], 1);
-  sb.addOutput(links[2]);
-  sb.addOutput(links[3]);
-  return sb.make();
+  auto inputs = builder.addInputs(2);
+  std::copy(inputs.begin(), inputs.end(), links);
+  links[2] = builder.addInput(0);
+  links[3] = builder.addInput(1);
+  builder.addOutput(links[0], 0);
+  builder.addOutput(links[1], 1);
+  builder.addOutput(links[2]);
+  builder.addOutput(links[3]);
+  return builder.make();
 }
 
 NetID makeNet2Latches() {
@@ -245,17 +234,17 @@ NetID makeNet2Latches() {
 /* ┌─┐     | └─┌─┐──┘                  */
 /* └─┘─────┴───└─┘                     */
 SubnetID makeSubnetLatch() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[8];
-  Subnet::LinkList inp = sb.addInputs(2);
-  std::copy(inp.begin(), inp.end(), links);
-  links[2] = sb.addInput(0);
-  links[3] = sb.addCell(AND, links[0], links[1]);
-  links[4] = sb.addCell(OR, links[0], links[1]);
-  links[5] = sb.addCell(OR, links[3], links[4]);
-  sb.addOutput(links[5], 0);
-  sb.addOutput(links[2]);
-  return sb.make();
+  auto inputs = builder.addInputs(2);
+  std::copy(inputs.begin(), inputs.end(), links);
+  links[2] = builder.addInput(0);
+  links[3] = builder.addCell(AND, links[0], links[1]);
+  links[4] = builder.addCell(OR, links[0], links[1]);
+  links[5] = builder.addCell(OR, links[3], links[4]);
+  builder.addOutput(links[5], 0);
+  builder.addOutput(links[2]);
+  return builder.make();
 }
 
 NetID makeNetLatch() {
@@ -269,19 +258,19 @@ NetID makeNetLatch() {
 /*      └─┌─┐──┌─┐─┘     └─┌─┐──┌─┐ */
 /*        └─┘  └─┘         └─┘  └─┘ */
 SubnetID makeSubnetStuckLatches() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[10];
-  links[0] = sb.addInput();
-  links[1] = sb.addInput(0);
-  links[2] = sb.addInput(1);
-  links[3] = sb.addCell(OR, links[0]);
-  links[4] = sb.addCell(OR, Subnet::Link(links[0].idx, true));
-  links[5] = sb.addCell(AND, links[3], links[4]);
-  sb.addOutput(links[5], 0);
-  sb.addOutput(links[5], 1);
-  sb.addOutput(links[1]);
-  sb.addOutput(links[2]);
-  return sb.make();
+  links[0] = builder.addInput();
+  links[1] = builder.addInput(0);
+  links[2] = builder.addInput(1);
+  links[3] = builder.addCell(OR, links[0]);
+  links[4] = builder.addCell(OR, Subnet::Link(links[0].idx, true));
+  links[5] = builder.addCell(AND, links[3], links[4]);
+  builder.addOutput(links[5], 0);
+  builder.addOutput(links[5], 1);
+  builder.addOutput(links[1]);
+  builder.addOutput(links[2]);
+  return builder.make();
 }
 
 NetID makeNetStuckLatches() {
@@ -300,21 +289,21 @@ in   lat  out
 └─┘  └─┘  └─┘
 */
 SubnetID makeSubnetStuckLatch() {
-  SubnetBuilder sb;
+  SubnetBuilder builder;
   Subnet::Link links[12];
-  links[0] = sb.addInput();
-  links[1] = sb.addInput();
-  links[3] = sb.addInput(0);
-  links[4] = sb.addInput(1);
-  links[5] = sb.addInput(2);
-  links[2] = sb.addCell(ZERO);
-  sb.addOutput(links[0], 0);
-  sb.addOutput(links[1], 1);
-  sb.addOutput(links[2], 2);
-  sb.addOutput(links[3]);
-  sb.addOutput(links[4]);
-  sb.addOutput(links[5]);
-  return sb.make();
+  links[0] = builder.addInput();
+  links[1] = builder.addInput();
+  links[3] = builder.addInput(0);
+  links[4] = builder.addInput(1);
+  links[5] = builder.addInput(2);
+  links[2] = builder.addCell(ZERO);
+  builder.addOutput(links[0], 0);
+  builder.addOutput(links[1], 1);
+  builder.addOutput(links[2], 2);
+  builder.addOutput(links[3]);
+  builder.addOutput(links[4]);
+  builder.addOutput(links[5]);
+  return builder.make();
 }
 
 NetID makeNetStuckLatch() {

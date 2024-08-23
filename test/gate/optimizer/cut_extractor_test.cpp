@@ -23,9 +23,7 @@ using Subnet = model::Subnet;
 using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
 using Link = model::Subnet::Link;
-using Cut = optimizer::CutExtractor::Cut;
 using CutsEntries = CutExtractor::CutsEntries;
-using CutsList = CutExtractor::CutsList;
 
 bool cutsEqual(const Cut &cut1, const Cut &cut2) {
   const auto &cut1EntryIdxs = cut1.entryIdxs;

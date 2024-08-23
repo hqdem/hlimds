@@ -25,7 +25,7 @@ using CutExtractor  = optimizer::CutExtractor;
 CutExtractor *cutExtractor = nullptr;
 PBoolMatcher *boolMatcher = nullptr;
 
-static CutExtractor::CutsList cutProvider(
+static optimizer::CutsList cutProvider(
     const SubnetBuilder &builder, const size_t entryID) {
   if (cutExtractor == nullptr) {
     cutExtractor = new CutExtractor(&builder, 6, true);
@@ -34,7 +34,7 @@ static CutExtractor::CutsList cutProvider(
 }
 
 static std::vector<SubnetTechMapper::Match> matchFinder(
-    const SubnetBuilder &builder, const CutExtractor::Cut &cut) {
+    const SubnetBuilder &builder, const optimizer::Cut &cut) {
   return boolMatcher->match(builder, cut);
 }
 

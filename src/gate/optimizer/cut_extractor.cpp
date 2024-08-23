@@ -110,7 +110,7 @@ void CutExtractor::addCut(
   }
 }
 
-CutExtractor::Cut CutExtractor::getOneElemCut(const size_t entryIdx) const {
+Cut CutExtractor::getOneElemCut(const size_t entryIdx) const {
   return Cut(k, BoundedSet<size_t>(k, entryIdx), entryIdx);
 }
 
@@ -152,6 +152,5 @@ bool CutExtractor::cutDominates(const Cut &cut1, const Cut &cut2) const {
   }
   return true;
 }
-
 
 } // namespace eda::gate::optimizer

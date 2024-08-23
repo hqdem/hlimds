@@ -14,7 +14,7 @@ namespace eda::gate::techmapper {
 
 std::vector<SubnetTechMapper::Match> PBoolMatcher::match(
     const model::SubnetBuilder &builder,
-    const optimizer::CutExtractor::Cut &cut) {
+    const optimizer::Cut &cut) {
   using SubnetView = model::SubnetView;
 
   std::vector<SubnetTechMapper::Match> matches;

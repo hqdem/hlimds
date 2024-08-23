@@ -17,7 +17,7 @@ class PBoolMatcher final : public Matcher<PBoolMatcher, kitty::dynamic_truth_tab
 public:
   std::vector<SubnetTechMapper::Match> match(
       const model::SubnetBuilder &builder,
-      const optimizer::CutExtractor::Cut &cut) override;
+      const optimizer::Cut &cut) override;
 };
 
 } // namespace eda::gate::techmapper

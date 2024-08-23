@@ -27,27 +27,21 @@
 
 namespace eda::gate::techmapper {
 
-using CutExtractor = optimizer::CutExtractor;
-using Link = model::Link;
-using Match = SubnetTechMapper::Match;
-using Subnet = model::Subnet;
-using SubnetBuilder = model::SubnetBuilder;
-using SubnetID = model::SubnetID;
-
 std::string name = "UtopiaTechMapper";
-CutExtractor *cutExtractor = nullptr;
+optimizer::CutExtractor *cutExtractor = nullptr;
 PBoolMatcher *boolMatcher = nullptr;
 
-CutExtractor::CutsList cutProvider(
+optimizer::CutsList cutProvider(
   const model::SubnetBuilder &builder, const size_t entryID) {
   if (cutExtractor == nullptr) {
-    cutExtractor = new CutExtractor(&builder, 6, true);
+    cutExtractor = new optimizer::CutExtractor(&builder, 6, true);
   }
   return cutExtractor->getCuts(entryID);
 }
 
-std::vector<Match> matchFinder(const model::SubnetBuilder &builder,
-                               const CutExtractor::Cut &cut) {
+std::vector<SubnetTechMapper::Match> matchFinder(
+    const model::SubnetBuilder &builder,
+    const optimizer::Cut &cut) {
   return boolMatcher->match(builder, cut);
 }
 
@@ -58,8 +52,8 @@ void finishMatching() {
   }
 }
 
-const SubnetID commonPart(
-    const std::shared_ptr<SubnetBuilder> builderPtr,
+const model::SubnetID commonPart(
+    const std::shared_ptr<model::SubnetBuilder> builderPtr,
     const float maxArea,
     const float maxDelay,
     const float maxPower) {
@@ -97,7 +91,7 @@ const SubnetID commonPart(
 
     printStatistics(mappedSubnetID);
     printVerilog(mappedSubnetID);
-    std::cout << "Mapped Subnet: " << Subnet::get(mappedSubnetID);
+    std::cout << "Mapped Subnet: " << model::Subnet::get(mappedSubnetID);
     return mappedSubnetID;
   } else {
     return builderPtr->make(); // TODO
@@ -105,7 +99,7 @@ const SubnetID commonPart(
 }
 
 TEST(SubnetTechMapperTest, SimpleSubnet) {
-  auto builderPtr = std::make_shared<SubnetBuilder>();
+  auto builderPtr = std::make_shared<model::SubnetBuilder>();
 
   const auto idx0 = builderPtr->addInput();
   const auto idx1 = builderPtr->addInput();
@@ -166,9 +160,9 @@ TEST(SubnetTechMapperTest, DISABLED_RandomSubnet) {
   const auto premappedBuilder = aigMapper.map(builderPtr);
   const auto premappedSubnetID = premappedBuilder->make();
   std::cout << "Random Subnet:" << std::endl <<
-          Subnet::get(subnetID) << std::endl;
+          model::Subnet::get(subnetID) << std::endl;
   std::cout << "AIG-premapped Random Subnet:" << std::endl <<
-          Subnet::get(premappedSubnetID) << std::endl;
+          model::Subnet::get(premappedSubnetID) << std::endl;
   const auto mappedSubnetID =
     commonPart(premappedBuilder, 100000, 100000, 100000);
   checkEQ(subnetID, mappedSubnetID);

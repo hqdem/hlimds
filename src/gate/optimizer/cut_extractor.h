@@ -18,44 +18,46 @@
 
 namespace eda::gate::optimizer {
 
+/// Cut class with its signature and indices.
+struct Cut final {
+  Cut(const uint16_t k,
+      const BoundedSet<size_t> &entryIdxs,
+      const size_t rootEntryIdx):
+    k(k), rootEntryIdx(rootEntryIdx), entryIdxs{entryIdxs} {}
+  
+  Cut(const size_t rootEntryIdx,
+      const std::unordered_set<size_t> &entryIdxs):
+    k(entryIdxs.size()), rootEntryIdx(rootEntryIdx), entryIdxs{entryIdxs} {}
+
+  /// Checks whether the cut is trivial.
+  bool isTrivial() const {
+    return entryIdxs.size() == 1 &&
+           entryIdxs.find(rootEntryIdx) != entryIdxs.end();
+  }
+
+  /// Unites other cut to current.
+  bool uniteCut(const Cut &other) {
+    return entryIdxs.merge(other.entryIdxs);
+  }
+
+  uint16_t k; 
+  size_t rootEntryIdx;
+  BoundedSet<size_t> entryIdxs;
+};
+
+using CutsList = std::vector<Cut>;
+
 /**
- * @brief Extracts cuts for each cell of the passed subnet.
- * Dominated cuts and cuts with size > k are not added to the result.
+ * @brief Extracts all cuts of the bounded size for each cell of a subnet.
+ *        Dominated cuts are not added to the result.
  */
 class CutExtractor final {
 public:
-  struct Cut;
-
   using Subnet = model::Subnet;
   using Link = Subnet::Link;
   using SubnetBuilder = model::SubnetBuilder;
   using CutsEntries = std::vector<BoundedSet<size_t>>;
-  using CutsList = std::vector<Cut>;
   using RawCutsList = std::vector<std::pair<Cut, char>>;
-
-  /// Cut class with its signature and indices.
-  struct Cut final {
-    Cut(const uint16_t k, const BoundedSet<size_t> &entryIdxs,
-            const size_t rootEntryIdx):
-      k(k), rootEntryIdx(rootEntryIdx),  entryIdxs{entryIdxs} { }
-    
-    Cut(const size_t rootEntryIdx,
-        const std::unordered_set<size_t> &entryIdxs) :
-      k (entryIdxs.size()), rootEntryIdx(rootEntryIdx), entryIdxs{entryIdxs}{ }
-    /// Checks whether the cut is trivial.
-    bool isTrivial() const {
-      return entryIdxs.size() == 1 &&
-             entryIdxs.find(rootEntryIdx) != entryIdxs.end();
-    }
-
-    /// Unites other cut to current.
-    bool uniteCut(const Cut &other) {
-      return entryIdxs.merge(other.entryIdxs);
-    }
-    uint16_t k; 
-    size_t rootEntryIdx;
-    BoundedSet<size_t> entryIdxs;
-  };
 
   CutExtractor() = delete;
   CutExtractor(const CutExtractor &other) = default;

@@ -32,7 +32,7 @@ public:
 
   virtual std::vector<SubnetTechMapper::Match> match(
     const model::SubnetBuilder &builder,
-    const optimizer::CutExtractor::Cut &cut) = 0;
+    const optimizer::Cut &cut) = 0;
 
   virtual ~Matcher() = default;
 

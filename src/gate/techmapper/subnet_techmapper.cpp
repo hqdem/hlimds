@@ -34,7 +34,7 @@ using CellSpace = criterion::SolutionSpace<SubnetTechMapper::Match>;
 using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
 
 static inline bool hasSolutions(
-    const SubnetSpace &space, const optimizer::CutExtractor::Cut &cut) {
+    const SubnetSpace &space, const optimizer::Cut &cut) {
   for (const auto entryID : cut.entryIdxs) {
     if (!space[entryID]->hasSolution()) {
       return false;
@@ -49,7 +49,7 @@ static inline const criterion::CostVector &getCostVector(
 }
 
 static inline std::vector<criterion::CostVector> getCostVectors(
-    const SubnetSpace &space, const optimizer::CutExtractor::Cut &cut) {
+    const SubnetSpace &space, const optimizer::Cut &cut) {
   std::vector<criterion::CostVector> vectors;
   vectors.reserve(cut.entryIdxs.size());
 
@@ -346,7 +346,7 @@ RECOVERY:
   } // for cells
 
   assert(outputs.size() == builder->getOutNum());
-  optimizer::CutExtractor::Cut resultCut(model::OBJ_NULL_ID, outputs);
+  optimizer::Cut resultCut(model::OBJ_NULL_ID, outputs);
 
   if (!hasSolutions(space, resultCut)) {
     UTOPIA_ERROR("Incomplete mapping: "

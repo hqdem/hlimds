@@ -36,13 +36,13 @@ public:
   struct Context final {};
 
   using CutProvider =
-      std::function<optimizer::CutExtractor::CutsList(
+      std::function<optimizer::CutsList(
                         const model::SubnetBuilder &,
                         const size_t entryID)>;
   using MatchFinder =
       std::function<std::vector<Match>(
                         const model::SubnetBuilder &,
-                        const optimizer::CutExtractor::Cut &)>;
+                        const optimizer::Cut &)>;
   using CellEstimator =
       std::function<criterion::CostVector(
                         const model::CellTypeID,

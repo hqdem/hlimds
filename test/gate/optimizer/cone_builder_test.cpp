@@ -17,7 +17,6 @@ using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetView = model::SubnetView;
 using Link = model::Subnet::Link;
-using Cut = CutExtractor::Cut;
 
 static size_t getConeRootIdx(const Subnet &coneSubnet) {
   return coneSubnet.getLink(coneSubnet.getMaxIdx(), 0).idx;

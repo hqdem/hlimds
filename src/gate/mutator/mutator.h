@@ -23,7 +23,7 @@ namespace eda::gate::mutator {
   using CellIDList = std::vector<CellID>;
   using CellSymbol = eda::gate::model::CellSymbol;
   using CellSymbolList = std::vector<CellSymbol>;
-  using Cut = eda::gate::optimizer::CutExtractor::Cut;
+  using Cut = eda::gate::optimizer::Cut;
   using CutExtractor = eda::gate::optimizer::CutExtractor;
   using Link = eda::gate::model::Subnet::Link;
   using LinkList = eda::gate::model::Subnet::LinkList;

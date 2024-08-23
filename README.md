@@ -38,8 +38,6 @@ below are specific to this operating system:
 * `gcc`
 * `git`
 * `graphviz`
-* `gtkwave`
-* `iverilog`
 * `libctemplate-dev`
 * `libfmt-dev`
 * `liblpsolve55-dev`
@@ -49,7 +47,6 @@ below are specific to this operating system:
 * `make`
 * `ninja-build`
 * `pkg-config`
-* `python3`
 * `rlwrap`
 * `tcl-dev`
 * `zlib1g`
@@ -59,9 +56,8 @@ To install them, do the following:
 
 ```console
 sudo apt install autoconf bison clang clang-tidy doxygen flex g++ gcc git \
-     graphviz gtkwave iverilog libctemplate-dev libfmt-dev liblpsolve55-dev \
-     libssl-dev libtool lld make ninja-build pkg-config python3 rlwrap tcl-dev \
-     zlib1g zlib1g-dev
+     graphviz libctemplate-dev libfmt-dev liblpsolve55-dev libssl-dev libtool \
+     lld make ninja-build pkg-config rlwrap tcl-dev zlib1g zlib1g-dev
 ```
 
 If you are working on Fedora Linux OS, see `doc/Fedora.md`.

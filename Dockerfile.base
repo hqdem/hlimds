@@ -2,17 +2,15 @@ FROM isprasmvg/ubuntu:base
 
 # Install project dependencies
 
-RUN apt update && apt install -y autoconf bison clang clang-tidy doxygen flex \
-    g++ gcc git graphviz gtkwave iverilog libctemplate-dev libfmt-dev \
-    liblpsolve55-dev libssl-dev libtool lld make ninja-build pkg-config \
-    python3 rlwrap tcl-dev zlib1g zlib1g-dev
+RUN apt update && apt install -y autoconf bison clang clang-tidy flex g++ gcc \
+    git libctemplate-dev libfmt-dev liblpsolve55-dev libssl-dev libtool lld \
+    make ninja-build pkg-config rlwrap tcl-dev zlib1g zlib1g-dev
 
-# Install code coverage collection/visualization packages
+# Install packages for documentation generation
 
-RUN apt install -y lcov python3-pip
-RUN pip install gcovr
+RUN apt install -y doxygen graphviz
 
-# Install CMake
+# Install CMake 3.28.1
 
 RUN apt install -y wget tar
 
@@ -43,7 +41,7 @@ WORKDIR /workdir/staccato
 RUN make BUILD_TYPE=shared CUDD_INCLUDE=/workdir/cudd SM="-DDISABLE_SM" -j$(nproc)
 RUN make install
 
-# Install Yosys tool & library
+# Install Yosys 0.3
 
 RUN apt install -y build-essential bison gawk libboost-system-dev \
     libboost-python-dev libboost-filesystem-dev libffi-dev libreadline-dev xdot
@@ -62,7 +60,7 @@ RUN sed -i "s|$old_line|$new_line|" "$file_path"
 RUN make -j$(nproc)
 RUN make install
 
-# Install LLVM/MLIR & CIRCT
+# Install LLVM/MLIR & CIRCT 1.72.0
 
 ENV circt_version="1.72.0"
 ENV circt_archive="circt-full-shared-linux-x64.tar.gz"
@@ -94,25 +92,3 @@ RUN sed -i 's'/\
 '"LLVMX86AsmParser" "LLVMX86Disassembler")/' "/workdir/${circt_dir}/${mlir_targets}"
 ENV CIRCT_DIR="/workdir/${circt_dir}/lib/cmake/circt"
 ENV MLIR_DIR="/workdir/${circt_dir}/lib/cmake/mlir"
-
-# Install Valgrind
-
-WORKDIR /workdir/
-RUN git clone https://sourceware.org/git/valgrind.git
-WORKDIR /workdir/valgrind/
-RUN git checkout VALGRIND_3_23_0
-ENV old_line1="   if (req_alignB > 16 \* 1024 \* 1024) {"
-ENV new_line1="   if (req_alignB > 1024 * 1024 * 1024) {"
-ENV old_line2="                  a, req_alignB, req_pszB, req_alignB, 16 \* 1024 \* 1024 );"
-ENV new_line2="                  a, req_alignB, req_pszB, req_alignB, 1024 * 1024 * 1024 );"
-ENV path="/workdir/valgrind/coregrind/m_mallocfree.c"
-RUN sed -i "s|$old_line1|$new_line1|" "$path"
-RUN sed -i "s|$old_line2|$new_line2|" "$path"
-RUN ./autogen.sh
-RUN ./configure
-RUN make
-RUN make install
-
-# Set up debug info
-
-RUN echo export DEBUGINFOD_URLS="https://debuginfod.archlinux.org" >> ~/.bashrc

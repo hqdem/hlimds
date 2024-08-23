@@ -6,7 +6,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/optimizer/subnet_basis.h"
 #include "subnet_basis.h"
 
 namespace eda::gate::optimizer {

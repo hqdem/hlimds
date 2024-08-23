@@ -15,12 +15,12 @@
 namespace eda::gate::optimizer {
 
 /**
- * \brief Represents functional elements basis of subnet.
+ * @brief Represents subnet basis.
  */
-struct SubnetBasis {
-  inline static constexpr uint16_t maxNumberOfElements = 16;
-  using IntegerType = uint16_t;
+struct SubnetBasis final {
+  static constexpr uint16_t maxNumberOfElements = 16;
 
+  using IntegerType = uint16_t;
   static_assert(sizeof(IntegerType) * 8 >= maxNumberOfElements);
 
   enum class BasisElement {

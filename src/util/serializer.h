@@ -29,7 +29,7 @@ template <class T>
 void pullFromStream(std::istream &in, T &dest) {
   in.read((char*)&dest, sizeof(T));
   if (in.fail()) {
-    throw std::runtime_error("Deserializaion: Failed to pull data from stream");
+    throw std::runtime_error("Deserialization: Failed to pull data from stream");
   }
 }
 

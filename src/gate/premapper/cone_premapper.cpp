@@ -17,8 +17,12 @@ using SubnetBuilderPtr = ConePremapper::SubnetBuilderPtr;
 
 SubnetBuilderPtr ConePremapper::map(const SubnetBuilderPtr &builder) const {
   SubnetBuilder *builderPtr = builder.get();
+  if (builderPtr->begin() == builderPtr->end()) {
+    return builder;
+  }
   for (SafePasser iter = --builderPtr->end();
-       !builderPtr->getCell(*iter).isIn(); --iter) {
+       !builderPtr->getCell(*iter).isIn() && (iter != builderPtr->begin());
+       --iter) {
 
     const size_t entryID = *iter;
     const auto &cell = builderPtr->getCell(entryID);

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "gate/optimizer/subnet_transformer.h"
-#include "gate/optimizer/synthesis/akers.h"
+#include "gate/optimizer/synthesis/db_mig4_synthesizer.h"
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/cell_aigmapper.h"
@@ -43,9 +43,9 @@ inline optimizer::SubnetMapper getConeAigMapper() {
 }
 
 inline optimizer::SubnetMapper getConeMigMapper() {
-  static optimizer::synthesis::AkersSynthesizer akers;
-  static optimizer::Resynthesizer resynthesizer(akers);
-  return std::make_shared<ConePremapper>("mig", MIG, resynthesizer, 6);
+  static optimizer::Resynthesizer resynthesizer(
+      optimizer::synthesis::DbMig4Synthesizer::get());
+  return std::make_shared<ConePremapper>("mig", MIG, resynthesizer, 4);
 }
 
 inline optimizer::SubnetMapper getConeXagMapper() {
@@ -55,9 +55,9 @@ inline optimizer::SubnetMapper getConeXagMapper() {
 }
 
 inline optimizer::SubnetMapper getConeXmgMapper() {
-  static optimizer::synthesis::AkersSynthesizer akers;
-  static optimizer::Resynthesizer resynthesizer(akers);
-  return std::make_shared<ConePremapper>("xmg", XMG, resynthesizer, 5);
+  static optimizer::Resynthesizer resynthesizer(
+      optimizer::synthesis::DbMig4Synthesizer::get());
+  return std::make_shared<ConePremapper>("xmg", XMG, resynthesizer, 4);
 }
 
 } // namespace eda::gate::premapper

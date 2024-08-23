@@ -15,29 +15,29 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-static optimizer::NpnDatabase dbXag4;
+static optimizer::NpnDatabase dbMig4;
 
 /**
- * \brief Implements synthesis based on NPN4 database precomputed in XAG basis.
+ * \brief Implements synthesis based on NPN4 database precomputed in MIG basis.
  */
-class DbXag4Synthesizer : public DbSynthesizer,
-                          public util::Singleton<DbXag4Synthesizer> {
+class DbMig4Synthesizer : public DbSynthesizer,
+                          public util::Singleton<DbMig4Synthesizer> {
 public:
-  friend class util::Singleton<DbXag4Synthesizer>;
+  friend class util::Singleton<DbMig4Synthesizer>;
 
   model::SubnetObject synthesize(const utils::TTn &func,
                                  const utils::TTn &,
                                  uint16_t) const override {
 
-    return DbSynthesizer::synthesize(func, dbXag4);
+    return DbSynthesizer::synthesize(func, dbMig4);
   }
 
 private:
-  DbXag4Synthesizer() {
+  DbMig4Synthesizer() {
     const size_t k = 4;
-    const auto xag4 = env::getHomePath() / "logdb" / "area_delay_xag4";
-    dbXag4 = optimizer::NpnDatabase::importFrom(xag4);
-    dbXag4.setInNum(k);
+    const auto mig4 = env::getHomePath() / "logdb" / "percy_akers_mig4";
+    dbMig4 = optimizer::NpnDatabase::importFrom(mig4);
+    dbMig4.setInNum(k);
   }
 };
 

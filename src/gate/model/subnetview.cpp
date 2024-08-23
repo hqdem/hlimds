@@ -64,14 +64,14 @@ SubnetView::SubnetView(const SubnetBuilder &parent, const size_t rootID):
 
 SubnetView::SubnetView(const SubnetBuilder &parent, const Cut &cut):
     parent(parent) {
-  assert(!cut.entryIdxs.empty());
+  assert(!cut.entryIDs.empty());
 
-  iomapping.inputs.reserve(cut.entryIdxs.size());
-  for (const auto entryID : cut.entryIdxs) {
+  iomapping.inputs.reserve(cut.entryIDs.size());
+  for (const auto entryID : cut.entryIDs) {
     iomapping.inputs.push_back(entryID);
   }
 
-  iomapping.outputs.push_back(cut.rootEntryIdx);
+  iomapping.outputs.push_back(cut.rootID);
 }
 
 SubnetView::SubnetView(const SubnetBuilder &parent,

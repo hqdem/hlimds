@@ -35,7 +35,7 @@ using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
 
 static inline bool hasSolutions(
     const SubnetSpace &space, const optimizer::Cut &cut) {
-  for (const auto entryID : cut.entryIdxs) {
+  for (const auto entryID : cut.entryIDs) {
     if (!space[entryID]->hasSolution()) {
       return false;
     }
@@ -51,9 +51,9 @@ static inline const criterion::CostVector &getCostVector(
 static inline std::vector<criterion::CostVector> getCostVectors(
     const SubnetSpace &space, const optimizer::Cut &cut) {
   std::vector<criterion::CostVector> vectors;
-  vectors.reserve(cut.entryIdxs.size());
+  vectors.reserve(cut.entryIDs.size());
 
-  for (const auto entryID : cut.entryIdxs) {
+  for (const auto entryID : cut.entryIDs) {
     vectors.push_back(getCostVector(space, entryID));
   }
 
@@ -295,7 +295,7 @@ RECOVERY:
     const auto cuts = cutProvider(*builder, entryID);
 
     for (const auto &cut : cuts) {
-      assert(cut.rootEntryIdx == entryID);
+      assert(cut.rootID == entryID);
 
       // Skip trivial and unmapped cuts.
       if (cut.isTrivial() || !hasSolutions(space, cut)) {

@@ -53,7 +53,7 @@ CellIDList makeListCell(Subnet &net,
       }
       const auto &cuts = cutExtractor.getCuts(cellID);
       for (const auto &cut : cuts) {
-        for (size_t cutCellId : cut.entryIdxs) {
+        for (size_t cutCellId : cut.entryIDs) {
           auto findCell = std::find(answerList.begin(), 
                                     answerList.end(), 
                                     cutCellId);

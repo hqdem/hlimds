@@ -19,7 +19,7 @@ std::vector<SubnetTechMapper::Match> PBoolMatcher::match(
 
   std::vector<SubnetTechMapper::Match> matches;
 
-  std::vector<size_t> entryIdxs(cut.entryIdxs.begin(), cut.entryIdxs.end());
+  std::vector<size_t> entryIdxs(cut.entryIDs.begin(), cut.entryIDs.end());
 
   SubnetView cone(builder, cut);
   auto truthTable = cone.evaluateTruthTable();

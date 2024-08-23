@@ -42,32 +42,32 @@ CutExtractor::CutExtractor(const SubnetBuilder *builder,
   }
 }
 
-void CutExtractor::recomputeCuts(const size_t entryIdx) {
-  if (entriesCuts.size() <= entryIdx) {
-    entriesCuts.resize(entryIdx + 1);
+void CutExtractor::recomputeCuts(const size_t entryID) {
+  if (entriesCuts.size() <= entryID) {
+    entriesCuts.resize(entryID + 1);
   }
-  entriesCuts[entryIdx].clear();
-  findCuts(entryIdx);
+  entriesCuts[entryID].clear();
+  findCuts(entryID);
 }
 
 CutExtractor::CutsEntries CutExtractor::getCutsEntries(
-    const size_t entryIdx) const {
+    const size_t entryID) const {
   CutsEntries cutsEntries;
-  for (const auto &cut : getCuts(entryIdx)) {
-    cutsEntries.push_back(cut.entryIdxs);
+  for (const auto &cut : getCuts(entryID)) {
+    cutsEntries.push_back(cut.entryIDs);
   }
   return cutsEntries;
 }
 
-void CutExtractor::findCuts(const size_t entryIdx) {
+void CutExtractor::findCuts(const size_t entryID) {
   uint16_t nLinks;
-  const auto *links = getLinks(entryIdx, nullptr, nLinks);
+  const auto *links = getLinks(entryID, nullptr, nLinks);
 
   RawCutsList cuts;
-  cuts.push_back({Cut(k, entryIdx), true});
+  cuts.push_back({Cut(k, entryID), true});
 
   if (nLinks == 0) {
-    addViableCuts(cuts, entryIdx);
+    addViableCuts(cuts, entryID);
     return;
   }
 
@@ -78,28 +78,28 @@ void CutExtractor::findCuts(const size_t entryIdx) {
     suffCutsCombinationsN[i] = cutsCombinationsN;
   }
   for (size_t i = 0; i < cutsCombinationsN; ++i) {
-    addCut(entryIdx, links, nLinks, i, cuts, suffCutsCombinationsN);
+    addCut(entryID, links, nLinks, i, cuts, suffCutsCombinationsN);
   }
-  addViableCuts(cuts, entryIdx);
+  addViableCuts(cuts, entryID);
 }
 
 void CutExtractor::addCut(
-    const size_t entryIdx,
+    const size_t entryID,
     const Link links[],
     const uint16_t nLinks,
-    uint64_t cutsCombinationIdx,
+    uint64_t cutsCombinationID,
     RawCutsList &addedCuts,
     const std::vector<size_t> &suffCutsCombN) const {
-  Cut newCut = Cut(k, entryIdx, BoundedSet<size_t>(k));
+  Cut newCut = Cut(k, entryID, BoundedSet<size_t>(k));
 
   for (size_t j = 0; j < nLinks; ++j) {
-    size_t inEntryIdx = links[j].idx;
-    size_t inEntryCutIdx = cutsCombinationIdx;
+    size_t inEntryID = links[j].idx;
+    size_t inEntryCutID = cutsCombinationID;
     if (j + 1 != nLinks) {
-      inEntryCutIdx = cutsCombinationIdx / suffCutsCombN[j + 1];
-      cutsCombinationIdx %= suffCutsCombN[j + 1];
+      inEntryCutID = cutsCombinationID / suffCutsCombN[j + 1];
+      cutsCombinationID %= suffCutsCombN[j + 1];
     }
-    const Cut &cutToMerge = entriesCuts[inEntryIdx][inEntryCutIdx];
+    const Cut &cutToMerge = entriesCuts[inEntryID][inEntryCutID];
     if (!newCut.merge(cutToMerge)) {
       return;
     }
@@ -110,12 +110,12 @@ void CutExtractor::addCut(
 }
 
 void CutExtractor::addViableCuts(
-    const RawCutsList &cuts, const size_t entryIdx) {
-  entriesCuts[entryIdx].clear();
+    const RawCutsList &cuts, const size_t entryID) {
+  entriesCuts[entryID].clear();
 
   for (const auto &cut : cuts) {
     if (cut.second) {
-      auto &cutEntry = entriesCuts[entryIdx];
+      auto &cutEntry = entriesCuts[entryID];
       cutEntry.push_back(cut.first);
     }
   }

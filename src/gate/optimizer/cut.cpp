@@ -11,11 +11,11 @@
 namespace eda::gate::optimizer {
 
 bool Cut::dominates(const Cut &other) const {
-  if (entryIdxs.size() >= other.entryIdxs.size()) {
+  if (entryIDs.size() >= other.entryIDs.size()) {
     return false;
   }
-  for (const auto &entryIdx : entryIdxs) {
-    if (other.entryIdxs.find(entryIdx) == other.entryIdxs.end()) {
+  for (const auto &entryIdx : entryIDs) {
+    if (other.entryIDs.find(entryIdx) == other.entryIDs.end()) {
       return false;
     }
   }

@@ -26,14 +26,14 @@ using Link = model::Subnet::Link;
 using CutsEntries = CutExtractor::CutsEntries;
 
 bool cutsEqual(const Cut &cut1, const Cut &cut2) {
-  const auto &cut1EntryIdxs = cut1.entryIdxs;
-  const auto &cut2EntryIdxs = cut2.entryIdxs;
-  if (cut1.rootEntryIdx != cut2.rootEntryIdx ||
-      cut1EntryIdxs.size() != cut2EntryIdxs.size()) {
+  const auto &cut1EntryIDs = cut1.entryIDs;
+  const auto &cut2EntryIDs = cut2.entryIDs;
+  if (cut1.rootID != cut2.rootID ||
+      cut1EntryIDs.size() != cut2EntryIDs.size()) {
     return false;
   }
-  for (const auto entryIdx: cut1EntryIdxs) {
-    if (cut2EntryIdxs.find(entryIdx) == cut2EntryIdxs.end()) {
+  for (const auto entryID: cut1EntryIDs) {
+    if (cut2EntryIDs.find(entryID) == cut2EntryIDs.end()) {
       return false;
     }
   }
@@ -45,12 +45,12 @@ bool cutsSetsEqual(const CutsList &cuts1, const CutsList &cuts2) {
   if (cuts1.size() != cuts2.size()) {
     return false;
   }
-  std::vector<char> cuts2IdxsUsed(cuts2.size(), false);
+  std::vector<char> cuts2IDsUsed(cuts2.size(), false);
   for (const Cut &cut1 : cuts1) {
     bool foundEqualCut = false;
     for (std::size_t i = 0; i < cuts2.size(); ++i) {
-      if (!cuts2IdxsUsed[i] && cutsEqual(cut1, cuts2[i])) {
-        cuts2IdxsUsed[i] = true;
+      if (!cuts2IDsUsed[i] && cutsEqual(cut1, cuts2[i])) {
+        cuts2IDsUsed[i] = true;
         foundEqualCut = true;
       }
     }
@@ -265,7 +265,7 @@ TEST(CutExtractorTest, LinkEntriesInSubnet) {
   EXPECT_TRUE(resultValid(cutExtractor, validRes));
 }
 
-TEST(CutExtractorTest, GetEntriesIdxs) {
+TEST(CutExtractorTest, GetEntriesIDs) {
   SubnetBuilder builder;
 
   const auto inputs = builder.addInputs(2);

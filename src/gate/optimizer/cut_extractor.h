@@ -53,17 +53,17 @@ public:
                const uint16_t k,
                const bool extractNow);
 
-  /// Gets cuts (entries indexes and signatures) for cell with entryIdx index.
-  const CutsList getCuts(const size_t entryIdx) const {
-    return entriesCuts[entryIdx];
+  /// Gets cuts (entries indexes and signatures) for cell with entryID index.
+  const CutsList getCuts(const size_t entryID) const {
+    return entriesCuts[entryID];
   }
 
-  /// Gets cuts (entries indexes) for cell with entryIdx index.
-  CutsEntries getCutsEntries(const size_t entryIdx) const;
+  /// Gets cuts (entries indexes) for cell with entryID index.
+  CutsEntries getCutsEntries(const size_t entryID) const;
 
   /// Recomputes cuts for passed entry.
   /// All entries used by passed entry must be computed.
-  void recomputeCuts(const size_t entryIdx);
+  void recomputeCuts(const size_t entryID);
 
 private:
   const Link *getLinks(
@@ -72,12 +72,12 @@ private:
                   : builder->getLinks(entryID, links, nLinks);
   }
 
-  /// Finds all cuts for cell with entryIdx index.
-  void findCuts(const size_t entryIdx);
+  /// Finds all cuts for cell with entryID index.
+  void findCuts(const size_t entryID);
 
   /// Adds new cut into addedCuts if it is not dominated and its size < k.
   void addCut(
-      const size_t entryIdx,
+      const size_t entryID,
       const Link links[],
       const uint16_t nLinks,
       uint64_t cutsCombinationIdx,
@@ -85,7 +85,7 @@ private:
       const std::vector<size_t> &suffCutsCombinationsN) const;
 
   /// Adds only viable cuts (with set flag) to the cuts storage.
-  void addViableCuts(const RawCutsList &cuts, const size_t entryIdx);
+  void addViableCuts(const RawCutsList &cuts, const size_t entryID);
 
   /**
    * @brief Checks if the cut is not dominated by any element from the

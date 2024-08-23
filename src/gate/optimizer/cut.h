@@ -18,42 +18,42 @@
 namespace eda::gate::optimizer {
 
 /**
- * @brief Represents a cut of a given cell.
+ * @brief Represents a k-feasible cut of a given subnet cell (root).
  */
 struct Cut final {
   Cut(const uint16_t k,
-      const size_t rootEntryIdx,
-      const BoundedSet<size_t> &entryIdxs):
-      k(k), rootEntryIdx(rootEntryIdx), entryIdxs{entryIdxs} {}
+      const size_t rootID,
+      const BoundedSet<size_t> &entryIDs):
+      k(k), rootID(rootID), entryIDs{entryIDs} {}
   
-  Cut(const size_t rootEntryIdx,
-      const std::unordered_set<size_t> &entryIdxs):
-      Cut(entryIdxs.size(), rootEntryIdx, entryIdxs) {}
+  Cut(const size_t rootID,
+      const std::unordered_set<size_t> &entryIDs):
+      Cut(entryIDs.size(), rootID, entryIDs) {}
 
   Cut(const uint16_t k,
-      const size_t entryIdx):
-      Cut(k, entryIdx, BoundedSet<size_t>(k, entryIdx)) {}
+      const size_t entryID):
+      Cut(k, entryID, BoundedSet<size_t>(k, entryID)) {}
 
-  Cut(const size_t entryIdx):
-      Cut(1, entryIdx) {}
+  Cut(const size_t entryID):
+      Cut(1, entryID) {}
 
   /// Checks whether the cut is trivial.
   bool isTrivial() const {
-    return entryIdxs.size() == 1 &&
-           entryIdxs.find(rootEntryIdx) != entryIdxs.end();
+    return entryIDs.size() == 1 &&
+           entryIDs.find(rootID) != entryIDs.end();
   }
 
   /// Merges the given cut to this one.
   bool merge(const Cut &other) {
-    return entryIdxs.merge(other.entryIdxs);
+    return entryIDs.merge(other.entryIDs);
   }
 
-  /// Checks if this dominates the other.
+  /// Checks if this dominates over the other.
   bool dominates(const Cut &other) const;
 
   const uint16_t k; 
-  size_t rootEntryIdx;
-  BoundedSet<size_t> entryIdxs;
+  const size_t rootID;
+  BoundedSet<size_t> entryIDs;
 };
 
 using CutsList = std::vector<Cut>;

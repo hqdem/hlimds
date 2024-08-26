@@ -24,7 +24,9 @@ namespace eda::gate::optimizer {
 struct Cut final {
   Cut(const size_t rootID,
       const util::BoundedSet<size_t> &entryIDs):
-      rootID(rootID), entryIDs{entryIDs} {}
+      rootID(rootID), entryIDs{entryIDs} {
+    assert(!entryIDs.empty());
+  }
 
   Cut(const uint16_t k,
       const size_t rootID,

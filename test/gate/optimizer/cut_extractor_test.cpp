@@ -26,14 +26,14 @@ using Link = model::Subnet::Link;
 using CutsEntries = CutExtractor::CutsEntries;
 
 static bool cutsEqual(const Cut &cut1, const Cut &cut2) {
-  const auto &cut1EntryIDs = cut1.entryIDs;
-  const auto &cut2EntryIDs = cut2.entryIDs;
+  const auto &cut1LeafIDs = cut1.leafIDs;
+  const auto &cut2LeafIDs = cut2.leafIDs;
   if (cut1.rootID != cut2.rootID ||
-      cut1EntryIDs.size() != cut2EntryIDs.size()) {
+      cut1LeafIDs.size() != cut2LeafIDs.size()) {
     return false;
   }
-  for (const auto entryID: cut1EntryIDs) {
-    if (cut2EntryIDs.find(entryID) == cut2EntryIDs.end()) {
+  for (const auto leafID: cut1LeafIDs) {
+    if (cut2LeafIDs.find(leafID) == cut2LeafIDs.end()) {
       return false;
     }
   }

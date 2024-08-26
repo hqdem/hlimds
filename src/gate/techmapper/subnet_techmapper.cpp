@@ -35,7 +35,7 @@ using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
 
 static inline bool hasSolutions(
     const SubnetSpace &space, const optimizer::Cut &cut) {
-  for (const auto entryID : cut.entryIDs) {
+  for (const auto entryID : cut.leafIDs) {
     if (!space[entryID]->hasSolution()) {
       return false;
     }
@@ -51,9 +51,9 @@ static inline const criterion::CostVector &getCostVector(
 static inline std::vector<criterion::CostVector> getCostVectors(
     const SubnetSpace &space, const optimizer::Cut &cut) {
   std::vector<criterion::CostVector> vectors;
-  vectors.reserve(cut.entryIDs.size());
+  vectors.reserve(cut.leafIDs.size());
 
-  for (const auto entryID : cut.entryIDs) {
+  for (const auto entryID : cut.leafIDs) {
     vectors.push_back(getCostVector(space, entryID));
   }
 

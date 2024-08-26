@@ -40,7 +40,6 @@ add_library(Gate OBJECT
   library/library.cpp
   library/readcells_iface.cpp
   optimizer/balancer.cpp
-  optimizer/cut.cpp
   optimizer/cut_extractor.cpp
   optimizer/conflict_graph.cpp
   optimizer/lazy_refactorer.cpp

@@ -10,7 +10,6 @@
 
 namespace eda::gate::optimizer {
 
-
 CutExtractor::CutExtractor(const Subnet *subnet, const uint16_t k):
     subnet(subnet),
     builder(nullptr),
@@ -54,7 +53,7 @@ CutExtractor::CutsEntries CutExtractor::getCutsEntries(
     const size_t entryID) const {
   CutsEntries cutsEntries;
   for (const auto &cut : getCuts(entryID)) {
-    cutsEntries.push_back(cut.entryIDs);
+    cutsEntries.push_back(cut.leafIDs);
   }
   return cutsEntries;
 }
@@ -77,9 +76,11 @@ void CutExtractor::findCuts(const size_t entryID) {
     cutsCombinationsN *= entriesCuts[links[i].idx].size();
     suffCutsCombinationsN[i] = cutsCombinationsN;
   }
+
   for (size_t i = 0; i < cutsCombinationsN; ++i) {
     addCut(entryID, links, nLinks, i, cuts, suffCutsCombinationsN);
   }
+
   addViableCuts(cuts, entryID);
 }
 
@@ -90,7 +91,7 @@ void CutExtractor::addCut(
     uint64_t cutsCombinationID,
     RawCutsList &addedCuts,
     const std::vector<size_t> &suffCutsCombN) const {
-  Cut newCut{entryID, util::BoundedSet<size_t>(k)};
+  Cut newCut(entryID, Cut::Set(k /* empty */));
 
   for (size_t j = 0; j < nLinks; ++j) {
     size_t inEntryID = links[j].idx;

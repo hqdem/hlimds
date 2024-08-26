@@ -27,7 +27,7 @@ public:
   using Subnet = model::Subnet;
   using Link = Subnet::Link;
   using SubnetBuilder = model::SubnetBuilder;
-  using CutsEntries = std::vector<util::BoundedSet<size_t>>;
+  using CutsEntries = std::vector<Cut::Set>;
   using RawCutsList = std::vector<std::pair<Cut, char>>;
 
   CutExtractor() = delete;
@@ -45,7 +45,7 @@ public:
   /**
    * @brief Constructs a cut extractor for the given subnet builder.
    *
-   * @param builder Subnet builder to find cuts.
+   * @param builder Subnet builder to find cuts in.
    * @param k Maximum cut size.
    * @param extractNow Extracts cuts right now.
    */

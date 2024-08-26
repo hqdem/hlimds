@@ -24,6 +24,9 @@ class BoundedSet final {
   typedef uint16_t SizeType;    
 
 private:
+  static constexpr auto CheckSignature = true;
+  static constexpr auto CheckElemRange = false;
+
   Allocator setAllocator;
   SizeType maxSize;
   SizeType setSize;
@@ -65,6 +68,9 @@ public:
   NumType minValue() const;
   /// Returns the maximum value in the set.
   NumType maxValue() const;
+
+  /// Checks whether this set contains the other as a subset.
+  bool contains(const BoundedSet<NumType, Allocator> &other) const;
 
   /**
    * @brief Merges two sets into one, if possible.
@@ -158,6 +164,31 @@ BoundedSet<NumType, Allocator>::BoundedSet(
 }
 
 template <class NumType, class Allocator>
+bool BoundedSet<NumType, Allocator>::contains(
+    const BoundedSet<NumType, Allocator> &other) const {
+  if (other.size() > this->size())
+    return false;
+
+  if constexpr (CheckSignature) {
+    if (this->signature != (this->signature | other.signature))
+      return false;
+  }
+
+  if constexpr (CheckElemRange) {
+    if ((this->minValue() > other.minValue()) ||
+        (this->maxValue() < other.maxValue()))
+      return false;
+  }
+
+  for (const auto elem : other) {
+    if (this->find(elem) == this->end())
+      return false;
+  }
+
+  return true;
+}
+
+template <class NumType, class Allocator>
 bool BoundedSet<NumType, Allocator>::merge(
     const BoundedSet<NumType, Allocator> &other) {
   if (!this->unionCheck(other)) return false;
@@ -194,13 +225,19 @@ bool BoundedSet<NumType, Allocator>::unionCheck(
     const BoundedSet<NumType, Allocator> &other) {
   if (this->size() + other.size() <= this->maxSize)
     return true;
-  if (!(this->signature & other.signature))
-    return false;
-  if (countUnits(this->signature | other.signature) > this->maxSize)
-    return false;
-  if ((this->minValue() > other.maxValue()) ||
-      (this->maxValue() < other.minValue()))
-    return false;
+
+  if constexpr (CheckSignature) {
+    if (!(this->signature & other.signature))
+      return false;
+    if (countUnits(this->signature | other.signature) > this->maxSize)
+      return false;
+  }
+
+  if constexpr (CheckElemRange) {
+    if ((this->minValue() > other.maxValue()) ||
+        (this->maxValue() < other.minValue()))
+      return false;
+  }
 
   const SizeType n = this->setSize;
   const SizeType m = other.size();

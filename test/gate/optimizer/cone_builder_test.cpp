@@ -104,7 +104,7 @@ static bool cutConeValid(const SubnetBuilder &builder,
     const auto coneEntryID = getConeRootID(coneSubnet);
 
     if (!coneOutputCorrect(coneSubnet) ||
-        coneSubnet.getInNum() != cut.entryIDs.size() ||
+        coneSubnet.getInNum() != cut.leafIDs.size() ||
         !inputsAtTheBeginning(coneSubnet) ||
         !coneValid(builder, coneSubnet, origEntryID, coneEntryID, false)) {
       return false;

@@ -170,16 +170,6 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
       simulate(simulator, nIn);
     }
     
-    // Initial classes
-    std::vector<uint64_t> values(miterBuilder.getCellNum(), 0);
-    for (auto it = miterBuilder.begin();
-              it != miterBuilder.end();
-              it.nextCell()) {
-      auto cell = miterBuilder.getCell(*it);
-      if (!cell.isOut() && !cell.isIn()) {
-        values[*it] = simulator.getValue(*it);
-      }
-    }
     std::unordered_map<uint64_t, std::set<uint32_t>> eqClassToIdx;
     model::SubnetBuilder::MergeMap toBeMerged;
     std::unordered_set<uint32_t> checked;
@@ -192,7 +182,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
         continue;
       }
       uint64_t const cellIdx1 = *it;
-      uint64_t const eqClass = values[cellIdx1];
+      uint64_t const eqClass = simulator.getValue(cellIdx1);
       if (compareCount > compareLimit) {
         break;
       }

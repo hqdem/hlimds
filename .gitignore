@@ -1,12 +1,19 @@
+.*
+
+# Aux directories
 build
 output
+
+# Generated files
 *.cnf
 *.dot
 *.log
-.cproject
-.project
-.vscode
-CMakeLists.txt.user
-a.out
-annealing.txt
-estimation.txt
+*.out
+*.txt
+*.user
+
+# Exceptions
+!.gitignore
+!.gitlab-ci.yml
+!.gitmodules
+!CMakeLists.txt

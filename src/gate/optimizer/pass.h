@@ -45,7 +45,7 @@ using SubnetEffect  = model::SubnetBuilder::Effect;
 
 /// Mapping to the AIG representation.
 inline SubnetMapper aig() {
-  return premapper::getCellAigMapper();
+  return premapper::getConeAigMapper();
 }
 
 /// Mapping to the MIG representation.
@@ -55,7 +55,7 @@ inline SubnetMapper mig() {
 
 /// Mapping to the XAG representation.
 inline SubnetMapper xag() {
-  return premapper::getCellXagMapper();
+  return premapper::getConeXagMapper();
 }
 
 /// Mapping to the XMG representation.

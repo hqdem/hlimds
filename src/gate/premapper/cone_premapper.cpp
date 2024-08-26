@@ -10,16 +10,34 @@
 
 namespace eda::gate::premapper {
 
-using Link             = ConePremapper::Link;
-using LinkList         = model::Subnet::LinkList;
-using SubnetBuilder    = ConePremapper::SubnetBuilder;
-using SubnetBuilderPtr = ConePremapper::SubnetBuilderPtr;
+using Link              = ConePremapper::Link;
+using LinkList          = model::Subnet::LinkList;
+using ResynthesizerBase = ConePremapper::ResynthesizerBase;
+using SubnetBuilder     = ConePremapper::SubnetBuilder;
+using SubnetBuilderPtr  = ConePremapper::SubnetBuilderPtr;
+
+int ConePremapper::resynthesize(const SubnetBuilder *builderPtr,
+                                SafePasser &iter,
+                                const SubnetView &view,
+                                bool mayOptimize) const {
+
+  auto rhs = resynthesizer.resynthesize(view, arity);
+  int gain = builderPtr->evaluateReplace(rhs, view.getInOutMapping()).size;
+  assert(!rhs.isNull() && "Subnet wasn't synthesized!");
+
+  if ((gain > 0) || !mayOptimize) {
+    iter.replace(rhs, view.getInOutMapping());
+    return gain;
+  }
+  return 0;
+}
 
 SubnetBuilderPtr ConePremapper::map(const SubnetBuilderPtr &builder) const {
   SubnetBuilder *builderPtr = builder.get();
   if (builderPtr->begin() == builderPtr->end()) {
     return builder;
   }
+  int64_t gain = 0;
   for (SafePasser iter = --builderPtr->end();
        !builderPtr->getCell(*iter).isIn() && (iter != builderPtr->begin());
        --iter) {
@@ -29,12 +47,18 @@ SubnetBuilderPtr ConePremapper::map(const SubnetBuilderPtr &builder) const {
     assert(cell.arity <= Cell::InPlaceLinks && "Too great cell arity");
 
     bool skip = cell.isZero() || cell.isOne() || cell.isBuf() || cell.isOut();
+    bool mayOptimize = !skip && (gain < 0);
     switch (basis) {
-      case XAG: skip |= cell.isXor(); [[fallthrough]];
-      case AIG: skip |= cell.isAnd(); break;
-      case XMG: skip |= cell.isXor(); [[fallthrough]];
-      case MIG: skip |= cell.isMaj(); break;
+      case XAG: skip |= cell.isXor() && (cell.arity == 2); [[fallthrough]];
+      case AIG: skip |= cell.isAnd() && (cell.arity == 2); break;
+      case XMG: skip |= cell.isXor() && (cell.arity == 2); [[fallthrough]];
+      case MIG: skip |= cell.isMaj() && (cell.arity == 3); break;
       default: assert(false && "Invalid basis for the premapper!");
+    }
+    if (skip && mayOptimize) {
+      skip = false;
+    } else {
+      mayOptimize = false;
     }
     if (skip) continue;
 
@@ -49,11 +73,11 @@ SubnetBuilderPtr ConePremapper::map(const SubnetBuilderPtr &builder) const {
       }
       continue;
     }
-
-    SubnetObject rhs = resynthesizer.resynthesize(mffc, arity);
-    assert(!rhs.isNull() && "Subnet wasn't synthesized!");
-
-    iter.replace(rhs, iomapping);
+    if (mffc.getInNum() > k) {
+      gain += resynthesize(builderPtr, iter, cutView, mayOptimize);
+    } else {
+      gain += resynthesize(builderPtr, iter, mffc, mayOptimize);
+    }
   }
   return builder;
 }

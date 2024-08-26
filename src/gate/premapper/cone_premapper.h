@@ -26,15 +26,18 @@ public:
   using Cell = gate::model::Subnet::Cell;
   using InOutMapping = gate::model::InOutMapping;
   using Link = gate::model::Subnet::Link;
+  using ResynthesizerBase = optimizer::ResynthesizerBase;
   using SafePasser = gate::optimizer::SafePasser;
   using SubnetBuilder = gate::model::SubnetBuilder;
   using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
   using SubnetObject = gate::model::SubnetObject;
+  using SubnetView = gate::model::SubnetView;
 
   ConePremapper(const std::string &name, Basis basis,
-                const optimizer::ResynthesizerBase &resynthesizer, uint16_t k):
+                const ResynthesizerBase &resynthesizer, uint16_t k):
       optimizer::SubnetTransformer(name), basis(basis),
       resynthesizer(resynthesizer), k(k) {
+
         arity = (basis == MIG) || (basis == XMG) ? 3 : 2;
         assert(k >= 3 && "The cut size is too small!");
       }
@@ -42,6 +45,11 @@ public:
   SubnetBuilderPtr map(const SubnetBuilderPtr &builder) const override;
 
 private:
+  int resynthesize(const SubnetBuilder *builderPtr,
+                   SafePasser &iter,
+                   const SubnetView &view,
+                   bool mayOptimize) const;
+
   void decomposeCell(const SubnetBuilderPtr &builder,
                      SafePasser &iter,
                      const size_t entryID) const;
@@ -51,7 +59,7 @@ private:
                     const size_t entryID) const;
 
   const Basis basis;
-  const optimizer::ResynthesizerBase &resynthesizer;
+  const ResynthesizerBase &resynthesizer;
   const uint16_t k;
   uint16_t arity;
 };

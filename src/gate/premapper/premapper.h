@@ -38,7 +38,7 @@ inline optimizer::SubnetMapper getCellXmgMapper() {
 inline optimizer::SubnetMapper getConeAigMapper() {
   static optimizer::synthesis::MMFactorSynthesizer isop;
   static optimizer::Resynthesizer resynthesizer(isop);
-  return std::make_shared<ConePremapper>("aig", AIG, resynthesizer, 4);
+  return std::make_shared<ConePremapper>("aig", AIG, resynthesizer, 6);
 }
 
 inline optimizer::SubnetMapper getConeMigMapper() {

@@ -262,14 +262,63 @@ Link CellPremapper::mapMaj(const LinkList &links, bool &inv,
   }
 
   assert((linksSize % 2 == 1) && (linksSize >= 3) && "Invalid number of links");
-  
+
   if (n0 > linksSize / 2) {
     return mapVal(false, builder);
   }
   if (n1 > linksSize / 2) {
     return mapVal(true, builder);
   }
-  return mapMaj(links, inv, builder);
+  if (!n0 && !n1) {
+    return mapMaj(links, inv, builder);
+  }
+
+  bool n0More = n0 > n1;
+  size_t nRemained = n0More ? n0 - n1 : n1 - n0;
+  LinkList linkList(links);
+  // Erase redundant constants.
+  size_t i = linksSize;
+  do {
+    --i;
+    auto link = linkList[i];
+    const auto &cell = builder.getCell(link.idx);
+
+    bool zero = (cell.isZero() && !link.inv) || (cell.isOne() && link.inv);
+    if ((zero && !n0More) || (zero && n0More && (n0 != nRemained))) {
+      linkList.erase(linkList.begin() + i);
+      assert(n0);
+      --n0;
+      continue;
+    }
+
+    bool one = (cell.isOne() && !link.inv) || (cell.isZero() && link.inv);
+    if ((one && n0More) || (one && !n0More && (n1 != nRemained))) {
+      linkList.erase(linkList.begin() + i);
+      assert(n1);
+      --n1;
+    }
+  } while (i);
+
+  const size_t linkListSize = linkList.size();
+  if (linkListSize == 1) {
+    return mapBuf(linkList, builder);
+  }
+  // Check whether MAJ cell implements AND, OR cells.
+  if ((linkListSize / 2 == n0) || (linkListSize / 2 == n1)) {
+    i = linkListSize;
+    do {
+      --i;
+      const auto &cell = builder.getCell(linkList[i].idx);
+      if (cell.isZero() || cell.isOne()) {
+        linkList.erase(linkList.begin() + i);
+      }
+    } while (i);
+
+    if (n0) return mapAnd(linkList, inv, builder);
+    if (n1) return mapOr (linkList, inv, builder);
+  }
+
+  return mapMaj(linkList, inv, builder);
 }
 
 } // namespace eda::gate::premapper

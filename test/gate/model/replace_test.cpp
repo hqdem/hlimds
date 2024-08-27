@@ -24,7 +24,7 @@ void printCellsTrav(SubnetBuilder &builder, IterT it, IterT contaiterEnd) {
   for (; it != contaiterEnd; ++it) {
     const auto &cell = builder.getEntry(*it).cell;
     std::cout << "Current entry ID: " << *it << "; input entries IDs: ";
-    for (std::size_t i = 0; i < cell.arity; ++i) {
+    for (uint64_t i = 0; i < cell.arity; ++i) {
       std::cout << cell.link[i].idx << ' ';
     }
     std::cout << '\n';
@@ -55,7 +55,7 @@ bool cellsEqual(const Subnet::Cell &targetCell, const Subnet::Cell &srcCell) {
         targetCell.type == srcCell.type)) {
     return false;
   }
-  for (std::size_t i = 0; i < targetCell.arity; ++i) {
+  for (uint64_t i = 0; i < targetCell.arity; ++i) {
     if (!linksEqual(targetCell.link[i], srcCell.link[i])) {
       return false;
     }

@@ -210,7 +210,13 @@ struct NetTraversalContext final {
     components.reserve(1024*1024);     // FIXME:
     componentCells.reserve(1024*1024); // FIXME:
 
-    stack.push(NetTraversalEntry{OBJ_NULL_ID, extractOutputs(net), 0});
+    const auto outputs = extractOutputs(net);
+
+    if (!outputs.empty()) {
+      stack.push(NetTraversalEntry{OBJ_NULL_ID, extractOutputs(net), 0});
+    } else {
+      UTOPIA_LOG_WARN("Net has no outputs");
+    }
   }
 
   /// Checks if the traversal is completed.
@@ -320,7 +326,7 @@ struct NetTraversalContext final {
 static std::vector<NetComponent> extractComponents(const Net &net) {
   NetTraversalContext context(net);
 
-  while (true) {
+  while (!context.isCompleted()) {
     auto &entry = context.top();
 
     if (entry.isOutput() && entry.linkIndex > 0) {

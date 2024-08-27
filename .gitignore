@@ -13,6 +13,7 @@ output
 *.user
 
 # Exceptions
+!.gitattributes
 !.gitignore
 !.gitlab-ci.yml
 !.gitmodules

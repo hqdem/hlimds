@@ -295,7 +295,7 @@ class EntryIterator {
   friend class SubnetBuilder;
 
 public:
-  typedef uint32_t value_type;
+  typedef EntryID value_type;
   typedef std::ptrdiff_t difference_type;
   typedef const value_type *pointer;
   typedef const value_type &reference;
@@ -427,14 +427,14 @@ public:
   using LinkList = Subnet::LinkList;
 
   /// Returns the weight of the cell identified by the index.
-  using CellWeightProvider = std::function<float(uint32_t)>;
+  using CellWeightProvider = std::function<float(EntryID)>;
   /// Calculates the real weight used for replace estimation.
   using CellWeightModifier = std::function<float(float)>;
   /// Performs a certain action in a certain situation.
-  using CellActionCallback = std::function<void(uint32_t)>;
+  using CellActionCallback = std::function<void(EntryID)>;
 
   /// Fanouts container wrapper;
-  using FanoutsContainer = std::vector<uint32_t>;
+  using FanoutsContainer = std::vector<EntryID>;
 
   /// Represents a replacement effect.
   struct Effect final {
@@ -493,80 +493,80 @@ public:
   uint32_t getBufNum() const { return nBuf; }
 
   /// Returns the maximum entry index.
-  uint32_t getMaxIdx() const { return entries.size() - 1; }
+  EntryID getMaxIdx() const { return entries.size() - 1; }
 
   /// Returns the constant reference to the i-th entry.
-  const Entry &getEntry(uint32_t i) const {
+  const Entry &getEntry(EntryID i) const {
     return entries[i];
   }
 
   /// Returns the non-constant reference to the i-th entry.
-  Entry &getEntry(uint32_t i) {
+  Entry &getEntry(EntryID i) {
     return entries[i];
   }
 
   /// Returns the constant reference to the i-th cell.
-  const Cell &getCell(uint32_t i) const {
+  const Cell &getCell(EntryID i) const {
     return entries[i].cell;
   }
 
   /// Returns the non-constant reference to the i-th cell.
-  Cell &getCell(uint32_t i) {
+  Cell &getCell(EntryID i) {
     return entries[i].cell;
   }
 
   /// Returns the depth of the i-th cell.
-  uint32_t getDepth(uint32_t i) const {
+  uint32_t getDepth(EntryID i) const {
     return desc[i].depth;
   }
 
   /// Returns the first cell in the topological order with the passed depth.
-  uint32_t getFirstWithDepth(uint32_t d) const {
+  EntryID getFirstWithDepth(uint32_t d) const {
     return depthBounds[d].first;
   }
 
   /// Returns the last cell in the topological order with the passed depth.
-  uint32_t getLastWithDepth(uint32_t d) const {
+  EntryID getLastWithDepth(uint32_t d) const {
     return depthBounds[d].second;
   }
 
   /// Returns the weigth of the i-th cell.
-  float getWeight(uint32_t i) const {
+  float getWeight(EntryID i) const {
     return desc[i].weight;
   }
 
   /// Sets the weigth of the i-th cell.
-  void setWeight(uint32_t i, float weight) {
+  void setWeight(EntryID i, float weight) {
     desc[i].weight = weight;
   }
 
   /// Returns the pointer to the data associated w/ the i-th cell.
   template <typename T>
-  const T *getDataPtr(uint32_t i) const {
+  const T *getDataPtr(EntryID i) const {
     return static_cast<T*>(desc[i].data);
   }
 
   /// Sets the pointer to the data associated w/ the i-th cell.
-  void setDataPtr(uint32_t i, const void *data) {
+  void setDataPtr(EntryID i, const void *data) {
     desc[i].data = const_cast<void*>(data);
   }
 
   /// Returns the pointer to the data associated w/ the i-th cell.
   template <typename T>
-  const T &getDataVal(uint32_t i) const {
+  const T &getDataVal(EntryID i) const {
     static_assert(sizeof(T) <= sizeof(void*));
     return reinterpret_cast<const T&>(desc[i].data);
   }
 
   /// Sets the pointer to the data associated w/ the i-th cell.
   template <typename T>
-  void setDataVal(uint32_t i, const T &data) {
+  void setDataVal(EntryID i, const T &data) {
     static_assert(sizeof(T) <= sizeof(void*));
     desc[i].data = reinterpret_cast<void*>(data);
   }
 
   /// Returns fanouts of the i-th cell.
-  FanoutsContainer getFanouts(uint32_t i) const {
+  FanoutsContainer getFanouts(EntryID i) const {
     assert(fanoutsEnabled);
     assert(i < entries.size());
     if (fanouts.size() <= i) {
@@ -576,7 +576,7 @@ public:
   }
 
   /// Returns the entry/link indices of the j-th link of the i-th entry.
-  std::pair<uint32_t, uint16_t> getLinkIndices(uint32_t i, uint16_t j) const {
+  std::pair<EntryID, uint16_t> getLinkIndices(EntryID i, uint16_t j) const {
     if (j < Cell::InPlaceLinks) {
       return {i, j};
     }
@@ -593,11 +593,11 @@ public:
   }
 
   /// Returns the j-th link of the i-th cell.
-  const Link &getLink(uint32_t i, uint16_t j) const;
+  const Link &getLink(EntryID i, uint16_t j) const;
   /// Returns the links of the i-th cell.
-  const LinkList getLinks(uint32_t i) const; // FIXME: Deprecated.
+  const LinkList getLinks(EntryID i) const; // FIXME: Deprecated.
   /// Returns an array filled by the links.
-  const Link *getLinks(uint32_t i, Link *links, uint16_t &nLinks) const;
+  const Link *getLinks(EntryID i, Link *links, uint16_t &nLinks) const;
 
   /// Checks if the subnet is tech-mapped.
   bool isTechMapped() const {
@@ -690,9 +690,9 @@ public:
   }
 
   /// Adds the given number of inputs.
-  LinkList addInputs(uint32_t nIn) {
+  LinkList addInputs(uint16_t nIn) {
     LinkList result(nIn);
-    for (uint32_t i = 0; i < nIn; ++i) {
+    for (uint16_t i = 0; i < nIn; ++i) {
       result[i] = Link(addInput());
     }
     return result;
@@ -745,13 +745,13 @@ public:
 
   /// Marks the given entry (in the current session).
   /// Precondition: session is started.
-  void mark(uint32_t i) {
+  void mark(EntryID i) {
     assert(isSessionStarted);
     desc[i].session = sessionID;
   }
 
   /// Checks whether the given entry is marked (in the current session).
-  bool isMarked(uint32_t i) const {
+  bool isMarked(EntryID i) const {
     return desc[i].session == sessionID;
   }
 
@@ -762,7 +762,7 @@ public:
 
   /// Returns the latest session ID in which the given entry was marked.
   /// If the entry has not beent marked during, returns 0.
-  uint32_t getSessionID(uint32_t i) const {
+  uint32_t getSessionID(EntryID i) const {
     return desc[i].session;
   }
 
@@ -824,15 +824,15 @@ public:
   /// (if @param delZeroRefcount is set).
   /// The number of links in both cells must be <= Cell::InPlaceLinks.
   Link replaceCell(
-      uint32_t entryID, CellTypeID typeID, const LinkList &links,
+      EntryID entryID, CellTypeID typeID, const LinkList &links,
       bool delZeroRefcount = true,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onRecomputedDepth = nullptr);
 
   /// Merges the cells from each map item leaving the one stored in the key.
   /// Precondition: remaining entries precede the entries being removed.
-  using EntrySet = std::unordered_set<uint32_t>;
-  using MergeMap = std::unordered_map<uint32_t, EntrySet>;
+  using EntrySet = std::unordered_set<EntryID>;
+  using MergeMap = std::unordered_map<EntryID, EntrySet>;
   void mergeCells(const MergeMap &entryIDs);
 
   /// Replaces the given cells w/ zero.
@@ -866,7 +866,7 @@ public:
   /// @param entryMapping To be filled w/ Subnet entry indices.
   /// @param deleteBufs Indicates if BUFs should be deleted.
   SubnetID make(
-      std::vector<uint32_t> &entryMapping,
+      std::vector<EntryID> &entryMapping,
       const bool deleteBufs = false) {
     assert(/* Constant nets have no inputs */ nOut > 0 && !entries.empty());
 
@@ -881,7 +881,7 @@ public:
   /// @brief Makes a subnet.
   /// @param deleteBufs If set all BUF cells will be deleted.
   SubnetID make(const bool deleteBufs = false) {
-    std::vector<uint32_t> mapping{};
+    std::vector<EntryID> mapping{};
     return make(mapping, deleteBufs);
   }
 
@@ -891,9 +891,9 @@ private:
   void replace(
       const RhsContainer &rhsContainer,
       const RhsIterable &rhsIterable,
-      const uint32_t rhsOutEntryID,
+      const EntryID rhsOutEntryID,
       const InOutMapping &iomapping,
-      const std::function<uint32_t(RhsIt iter, uint32_t i)> &getEntryID,
+      const std::function<EntryID(RhsIt iter, EntryID i)> &getEntryID,
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
       const CellActionCallback *onEqualDepth = nullptr,
@@ -904,7 +904,7 @@ private:
   template <typename RhsContainer>
   Effect evaluateReplace(
       const RhsContainer &rhsContainer,
-      const uint32_t rhsOutEntryID,
+      const EntryID rhsOutEntryID,
       const InOutMapping &iomapping,
       const CellWeightProvider *weightProvider = nullptr,
       const CellWeightModifier *weightModifier = nullptr) const;
@@ -913,9 +913,9 @@ private:
   template <typename RhsContainer>
   void incOldLinksRefcnt(
       const RhsContainer &rhsContainer,
-      const uint32_t rhsEntryID,
-      const std::vector<uint32_t> &rhsToLhs,
-      std::unordered_map<uint32_t, uint32_t> &entryNewRefcount) const;
+      const EntryID rhsEntryID,
+      const std::vector<EntryID> &rhsToLhs,
+      std::unordered_map<EntryID, uint32_t> &entryNewRefcount) const;
 
   /// Template new entries evaluating method.
   template <typename RhsContainer, typename RhsIterable, typename RhsIt>
@@ -923,9 +923,9 @@ private:
       const RhsContainer &rhsContainer,
       const RhsIterable &rhsIterable,
       const InOutMapping &iomapping,
-      const std::function<uint32_t(RhsIt iter, uint32_t i)> &getEntryID,
-      std::unordered_set<uint32_t> &reusedLhsEntries,
-      std::unordered_map<uint32_t, uint32_t> &entryNewRefcount,
+      const std::function<EntryID(RhsIt iter, EntryID i)> &getEntryID,
+      std::unordered_set<EntryID> &reusedLhsEntries,
+      std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;
 
@@ -934,8 +934,8 @@ private:
   Effect newEntriesEval(
       const Subnet &rhs,
       const InOutMapping &iomapping,
-      std::unordered_set<uint32_t> &reusedLhsEntries,
-      std::unordered_map<uint32_t, uint32_t> &entryNewRefcount,
+      std::unordered_set<EntryID> &reusedLhsEntries,
+      std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;
 
@@ -944,86 +944,86 @@ private:
   Effect newEntriesEval(
       const SubnetBuilder &rhsBuilder,
       const InOutMapping &iomapping,
-      std::unordered_set<uint32_t> &reusedLhsEntries,
-      std::unordered_map<uint32_t, uint32_t> &entryNewRefcount,
+      std::unordered_set<EntryID> &reusedLhsEntries,
+      std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
       const CellWeightProvider *weightProvider,
       const CellWeightModifier *weightModifier) const;
 
   /// Returns the delete-effect of the replacement:
   /// the number of cells (value of weight) deleted.
   Effect deletedEntriesEval(
-      const uint32_t lhsRootEntryID,
-      std::unordered_set<uint32_t> &reusedLhsEntries,
-      std::unordered_map<uint32_t, uint32_t> &entryNewRefcount,
+      const EntryID lhsRootEntryID,
+      std::unordered_set<EntryID> &reusedLhsEntries,
+      std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
       const CellWeightModifier *weightModifier) const;
 
   /// Return the reference to the j-th link of the given cell.
-  Link &getLinkRef(uint32_t entryID, uint16_t j);
+  Link &getLinkRef(EntryID entryID, uint16_t j);
 
   /// Updates deleted entry depth bounds and deletes it from the topological
   /// order.
-  void deleteDepthBounds(uint32_t entryID);
+  void deleteDepthBounds(EntryID entryID);
 
   /// Updates added entry depth bounds and adds it to the topological order.
-  void addDepthBounds(uint32_t entryID);
+  void addDepthBounds(EntryID entryID);
 
   /// Adds fanoutID index in the sourceID fanouts storage
   /// (if fanouts storing is enabled).
-  void addFanout(uint32_t sourceID, uint32_t fanoutID);
+  void addFanout(EntryID sourceID, uint32_t fanoutID);
 
   /// Deletes fanoutID index from the sourceID fanouts storage
   /// (if fanouts storing is enabled).
-  void delFanout(uint32_t sourceID, uint32_t fanoutID);
+  void delFanout(EntryID sourceID, uint32_t fanoutID);
 
   /// Allocates an entry and returns its index.
-  uint32_t allocEntry(bool isBuf);
+  EntryID allocEntry(bool isBuf);
   /// Returns an entry of the given type or allocates a new one.
-  uint32_t allocEntry(CellTypeID typeID, const LinkList &links);
+  EntryID allocEntry(CellTypeID typeID, const LinkList &links);
 
   /// Deallocates the given entry.
-  void deallocEntry(uint32_t entryID);
+  void deallocEntry(EntryID entryID);
 
   /// Returns first entry index in topological order.
-  uint32_t getSubnetBegin() const {
+  EntryID getSubnetBegin() const {
     return subnetBegin == normalOrderID ? 0 : subnetBegin;
   }
 
   /// Returns last entry index in topological order.
-  uint32_t getSubnetEnd() const {
+  EntryID getSubnetEnd() const {
     return subnetEnd == normalOrderID ? entries.size() - 1 : subnetEnd;
   }
 
   /// Returns the index of the next entry (topological ordering).
-  uint32_t getNext(uint32_t entryID) const;
+  EntryID getNext(EntryID entryID) const;
 
   /// Returns the index of the previous entry (topological ordering).
-  uint32_t getPrev(uint32_t entryID) const;
+  EntryID getPrev(EntryID entryID) const;
 
   /// Specifies the order between the given entries.
-  void setOrder(uint32_t firstID, uint32_t secondID);
+  void setOrder(EntryID firstID, EntryID secondID);
 
   /// Places the given entry after the pivot.
   /// The given entry should not be in the topological order.
-  void placeAfter(uint32_t entryID, uint32_t pivotEntryID);
+  void placeAfter(EntryID entryID, EntryID pivotEntryID);
 
   /// Places the given entry before the pivot.
   /// The given entry should not be in the topological order.
-  void placeBefore(uint32_t entryID, uint32_t pivotEntryID);
+  void placeBefore(EntryID entryID, EntryID pivotEntryID);
 
   /// Recursively recomputes the root fanouts depths and updates positions in
   /// the topological order.
   void recomputeFanoutDepths(
-      uint32_t rootEntryID,
-      uint32_t oldRootNextEntryID,
+      EntryID rootEntryID,
+      EntryID oldRootNextEntryID,
       const CellActionCallback *onRecomputedDepth = nullptr);
 
   /// Assigns the new links to the given cell.
   /// The number of new links must be the same as the number of old links.
-  void relinkCell(uint32_t entryID, const LinkList &newLinks);
+  void relinkCell(EntryID entryID, const LinkList &newLinks);
 
   /// Deletes the given cell and the cells from the transitive fanin cone
   /// whose reference counts have become zero (recursively).
-  void deleteCell(uint32_t entryID);
+  void deleteCell(EntryID entryID);
 
   /// Checks if the inputs are located at the beginning of the array.
   bool checkInputsOrder() const;
@@ -1033,28 +1033,28 @@ private:
   /// Sorts entries in topological order accoring to the prev and next arrays.
   /// Removes the holes.
   void rearrangeEntries(
-      std::vector<uint32_t> &entryMapping,
+      std::vector<EntryID> &entryMapping,
       const bool deleteBufs);
 
   /// Clears the replacement context.
   void clearContext();
 
 private:
-  using StrashMap = std::unordered_map<StrashKey, uint32_t>;
+  using StrashMap = std::unordered_map<StrashKey, EntryID>;
 
   /// Returns {invalidID, false} unless strashing is enabled.
   /// Otherwise, returns {entryID, existed (false) / newly created (true)}.
-  std::pair<uint32_t, bool> strashEntry(CellTypeID typeID, const LinkList &links);
+  std::pair<EntryID, bool> strashEntry(CellTypeID typeID, const LinkList &links);
 
   /// Removes the given entry from the strashing map.
-  void destrashEntry(uint32_t entryID);
+  void destrashEntry(EntryID entryID);
 
 public:
-  static constexpr uint32_t invalidID = static_cast<uint32_t>(-1);
+  static constexpr EntryID invalidID = static_cast<EntryID>(-1);
 
-  static constexpr uint32_t normalOrderID = invalidID - 1;
-  static constexpr uint32_t lowerBoundID  = invalidID - 2;
-  static constexpr uint32_t upperBoundID  = invalidID - 3;
+  static constexpr EntryID normalOrderID = invalidID - 1;
+  static constexpr EntryID lowerBoundID  = invalidID - 2;
+  static constexpr EntryID upperBoundID  = invalidID - 3;
 
 private:
   struct EntryDescriptor final {
@@ -1066,8 +1066,8 @@ private:
         data(nullptr),
         session(0) {}
 
-    uint32_t prev;
-    uint32_t next;
+    EntryID prev;
+    EntryID next;
     uint32_t depth;
     float weight;
     void *data;
@@ -1086,11 +1086,11 @@ private:
   std::vector<FanoutsContainer> fanouts{};
   bool fanoutsEnabled{false};
 
-  std::vector<std::pair<uint32_t, uint32_t>> depthBounds;
-  std::vector<uint32_t> emptyEntryIDs;
+  std::vector<std::pair<EntryID, EntryID>> depthBounds;
+  std::vector<EntryID> emptyEntryIDs;
 
-  uint32_t subnetBegin{invalidID};
-  uint32_t subnetEnd{invalidID};
+  EntryID subnetBegin{invalidID};
+  EntryID subnetEnd{invalidID};
 
   StrashMap strash;
 

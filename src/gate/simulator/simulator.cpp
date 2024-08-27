@@ -47,7 +47,7 @@ Simulator::Simulator(const SubnetBuilder &builder):
 }
 
 Simulator::Function Simulator::getFunction(
-    const Cell &cell, size_t entryID) const {
+    const Cell &cell, EntryID entryID) const {
   using CellSymbol = eda::gate::model::CellSymbol;
 
   const auto func = cell.getSymbol();

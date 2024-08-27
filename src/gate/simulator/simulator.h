@@ -24,6 +24,7 @@ class Simulator final {
 public:
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetView = model::SubnetView;
+  using EntryID = model::EntryID;
   using Cell = model::Subnet::Cell;
   using Link = model::Subnet::Link;
   using LinkList = model::Subnet::LinkList;
@@ -32,7 +33,7 @@ public:
   using DataVector = std::vector<DataChunk>;
 
   /// Data chunk size in bits.
-  static constexpr size_t DataChunkBits = (sizeof(DataChunk) << 3);
+  static constexpr uint16_t DataChunkBits = (sizeof(DataChunk) << 3);
 
   Simulator(const SubnetBuilder &builder);
 
@@ -45,44 +46,44 @@ public:
 
   /// Sets the input values (value = uint64_t).
   void setInputs(const DataVector &values) {
-    const size_t nIn = subnet.getInNum();
+    const uint16_t nIn = subnet.getInNum();
     assert(values.size() == nIn);
 
-    for (size_t i = 0; i < nIn; ++i) {
+    for (uint16_t i = 0; i < nIn; ++i) {
       setInput(i, values[i]);
     }
   }
 
   /// Sets the input values (value = bit).
   void setInputs(uint64_t values) {
-    const size_t nIn = subnet.getInNum();
+    const uint16_t nIn = subnet.getInNum();
     assert(nIn <= (sizeof(values) << 3));
 
-    for (size_t i = 0; i < nIn; ++i) {
+    for (uint16_t i = 0; i < nIn; ++i) {
       setInput(i, (values >> i) & 1);
     }
   }
 
   /// Sets the input values (value = bool).
   void setInputs(const std::vector<bool> &values) {
-    const size_t nIn = subnet.getInNum();
+    const uint16_t nIn = subnet.getInNum();
     assert(values.size() == nIn);
 
-    for (size_t i = 0; i < nIn; ++i) {
+    for (uint16_t i = 0; i < nIn; ++i) {
       setInput(i, values[i]);
     }
   }
 
   /// Sets the input value.
   template <typename T = DataChunk>
-  void setInput(size_t i, T value) {
+  void setInput(uint16_t i, T value) {
     const auto entryID = subnet.getIn(i);
     setValue(entryID, value);
   }
 
   /// Gets the output value.
   template <typename T = DataChunk>
-  T getOutput(size_t i) const {
+  T getOutput(uint16_t i) const {
     const auto entryID = subnet.getOut(i);
     return getValue(entryID);
   }
@@ -95,13 +96,13 @@ public:
 
   /// Gets the cell value.
   template <typename T = DataChunk>
-  T getValue(size_t entryID) const {
+  T getValue(EntryID entryID) const {
     return getValue(Link(entryID));
   }
 
   /// Sets the cell value.
   template <typename T = DataChunk>
-  void setValue(size_t entryID, T value) {
+  void setValue(EntryID entryID, T value) {
     access(entryID) = static_cast<DataChunk>(value);
   }
 
@@ -121,11 +122,11 @@ private:
     return state[index(link)];
   }
 
-  DataChunk &access(size_t entryID) {
+  DataChunk &access(EntryID entryID) {
     return state[index(entryID)];
   }
 
-  const DataChunk &access(size_t entryID) const {
+  const DataChunk &access(EntryID entryID) const {
     return state[index(entryID)];
   }
 
@@ -137,26 +138,26 @@ private:
     return index(link.idx) + link.out;
   }
 
-  size_t index(size_t entryID) const {
+  size_t index(EntryID entryID) const {
     const auto idx = subnet.getParent().getDataVal<size_t>(entryID);
     return pos[idx];
   }
 
   /// Cell function.
-  using Function = std::function<void(size_t, const LinkList&)>;
+  using Function = std::function<void(EntryID, const LinkList&)>;
 
   /// Single command.
   struct Command final {
-    Command(Function op, size_t entryID, const LinkList &links):
+    Command(Function op, EntryID entryID, const LinkList &links):
         op(op), entryID(entryID), links(links) {}
 
     const Function op;
-    const size_t entryID;
+    const EntryID entryID;
     const LinkList links;
   };
 
   /// Returns the cell function.
-  Function getFunction(const Cell &cell, size_t entryID) const;
+  Function getFunction(const Cell &cell, EntryID entryID) const;
 
   /// Compiled program for the given subnet.
   std::vector<Command> program;
@@ -172,7 +173,7 @@ private:
   // ZERO
   //------------------------------------------------------------------------//
 
-  const Function opZero = [this](size_t entryID, const LinkList &links) {
+  const Function opZero = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = 0ull;
   };
 
@@ -185,7 +186,7 @@ private:
   // ONE
   //------------------------------------------------------------------------//
 
-  const Function opOne = [this](size_t entryID, const LinkList &links) {
+  const Function opOne = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = -1ull;
   };
 
@@ -198,7 +199,7 @@ private:
   // BUF
   //------------------------------------------------------------------------//
 
-  const Function opBuf = [this](size_t entryID, const LinkList &links) {
+  const Function opBuf = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = value(links[0]);
   };
 
@@ -211,7 +212,7 @@ private:
   // NOT
   //------------------------------------------------------------------------//
 
-  const Function opNot = [this](size_t entryID, const LinkList &links) {
+  const Function opNot = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = ~value(links[0]);
   };
 
@@ -224,21 +225,22 @@ private:
   // AND
   //------------------------------------------------------------------------//
 
-  const Function opAnd2 = [this](size_t entryID, const LinkList &links) {
+  const Function opAnd2 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = (value(links[0]) & value(links[1]));
   };
 
-  const Function opAnd3 = [this](size_t entryID, const LinkList &links) {
+  const Function opAnd3 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = (value(links[0]) & value(links[1]) & value(links[2]));
   };
 
-  const Function opAndN = [this](size_t entryID, const LinkList &links) {
+  const Function opAndN = [this](EntryID entryID, const LinkList &links) {
     DataChunk result = -1ull;
 
-    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+    const uint32_t nLinks = links.size();
+    for (uint32_t i = 0; i + 1 < nLinks; i += 2) {
       result &= (value(links[i]) & value(links[i + 1]));
     }
-    if (links.size() & 1) {
+    if (nLinks & 1) {
       result &= value(links.back());
     }
 
@@ -260,21 +262,22 @@ private:
   // OR
   //------------------------------------------------------------------------//
 
-  const Function opOr2 = [this](size_t entryID, const LinkList &links) {
+  const Function opOr2 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = (value(links[0]) | value(links[1]));
   };
 
-  const Function opOr3 = [this](size_t entryID, const LinkList &links) {
+  const Function opOr3 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = (value(links[0]) | value(links[1]) | value(links[2]));
   };
 
-  const Function opOrN = [this](size_t entryID, const LinkList &links) {
+  const Function opOrN = [this](EntryID entryID, const LinkList &links) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+    const uint32_t nLinks = links.size();
+    for (uint32_t i = 0; i + 1 < links.size(); i += 2) {
       result |= (value(links[i]) | value(links[i + 1]));
     }
-    if (links.size() & 1) {
+    if (nLinks & 1) {
       result |= value(links.back());
     }
 
@@ -296,21 +299,22 @@ private:
   // XOR
   //------------------------------------------------------------------------//
 
-  const Function opXor2 = [this](size_t entryID, const LinkList &links) {
+  const Function opXor2 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = (value(links[0]) ^ value(links[1]));
   };
 
-  const Function opXor3 = [this](size_t entryID, const LinkList &links) {
+  const Function opXor3 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = (value(links[0]) ^ value(links[1]) ^ value(links[2]));
   };
 
-  const Function opXorN = [this](size_t entryID, const LinkList &links) {
+  const Function opXorN = [this](EntryID entryID, const LinkList &links) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+    const uint32_t nLinks = links.size();
+    for (uint32_t i = 0; i + 1 < nLinks; i += 2) {
       result ^= (value(links[i]) ^ value(links[i + 1]));
     }
-    if (links.size() & 1) {
+    if (nLinks & 1) {
       result ^= value(links.back());
     }
 
@@ -332,21 +336,22 @@ private:
   // NAND
   //------------------------------------------------------------------------//
 
-  const Function opNand2 = [this](size_t entryID, const LinkList &links) {
+  const Function opNand2 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = ~(value(links[0]) & value(links[1]));
   };
 
-  const Function opNand3 = [this](size_t entryID, const LinkList &links) {
+  const Function opNand3 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = ~(value(links[0]) & value(links[1]) & value(links[2]));
   };
 
-  const Function opNandN = [this](size_t entryID, const LinkList &links) {
+  const Function opNandN = [this](EntryID entryID, const LinkList &links) {
     DataChunk result = -1ull;
 
-    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+    const uint32_t nLinks = links.size();
+    for (uint32_t i = 0; i + 1 < nLinks; i += 2) {
       result &= (value(links[i]) & value(links[i + 1]));
     }
-    if (links.size() & 1) {
+    if (nLinks & 1) {
       result &= value(links.back());
     }
 
@@ -368,21 +373,22 @@ private:
   // NOR
   //------------------------------------------------------------------------//
 
-  const Function opNor2 = [this](size_t entryID, const LinkList &links) {
+  const Function opNor2 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = ~(value(links[0]) | value(links[1]));
   };
 
-  const Function opNor3 = [this](size_t entryID, const LinkList &links) {
+  const Function opNor3 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = ~(value(links[0]) | value(links[1]) | value(links[2]));
   };
 
-  const Function opNorN = [this](size_t entryID, const LinkList &links) {
+  const Function opNorN = [this](EntryID entryID, const LinkList &links) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+    const uint32_t nLinks = links.size();
+    for (uint32_t i = 0; i + 1 < nLinks; i += 2) {
       result |= (value(links[i]) | value(links[i + 1]));
     }
-    if (links.size() & 1) {
+    if (nLinks & 1) {
       result |= value(links.back());
     }
 
@@ -404,21 +410,22 @@ private:
   // XNOR
   //------------------------------------------------------------------------//
 
-  const Function opXnor2 = [this](size_t entryID, const LinkList &links) {
+  const Function opXnor2 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = ~(value(links[0]) ^ value(links[1]));
   };
 
-  const Function opXnor3 = [this](size_t entryID, const LinkList &links) {
+  const Function opXnor3 = [this](EntryID entryID, const LinkList &links) {
     access(entryID) = ~(value(links[0]) ^ value(links[1]) ^ value(links[2]));
   };
 
-  const Function opXnorN = [this](size_t entryID, const LinkList &links) {
+  const Function opXnorN = [this](EntryID entryID, const LinkList &links) {
     DataChunk result = 0ull;
 
-    for (size_t i = 0; i + 1 < links.size(); i += 2) {
+    const uint32_t nLinks = links.size();
+    for (uint32_t i = 0; i + 1 < nLinks; i += 2) {
       result ^= (value(links[i]) ^ value(links[i + 1]));
     }
-    if (links.size() & 1) {
+    if (nLinks & 1) {
       result ^= value(links.back());
     }
 
@@ -440,7 +447,7 @@ private:
   // MAJ
   //------------------------------------------------------------------------//
 
-  const Function opMaj3 = [this](size_t entryID, const LinkList &links) {
+  const Function opMaj3 = [this](EntryID entryID, const LinkList &links) {
     const auto x = value(links[0]);
     const auto y = value(links[1]);
     const auto z = value(links[2]);
@@ -448,17 +455,17 @@ private:
     access(entryID) = ((x & y) | (x & z) | (y & z));
   };
 
-  const Function opMajN = [this](size_t entryID, const LinkList &links) {
-    const size_t n = links.size();
-    const size_t k = (n >> 1);
+  const Function opMajN = [this](EntryID entryID, const LinkList &links) {
+    const auto n = links.size();
+    const auto k = (n >> 1);
 
     DataChunk result = 0u;
-    for (size_t bit = 0; bit <= DataChunkBits; ++bit) {
+    for (uint16_t bit = 0; bit <= DataChunkBits; ++bit) {
       auto upperBits = value(links[n - 1]) >> bit;
       auto zerosLeft = (upperBits == 0);
 
       auto weight = (upperBits & 1);
-      for (size_t i = 0; i < k; i++) {
+      for (uint16_t i = 0; i < k; i++) {
         const auto upperBits0 = value(links[(i << 1)|0]) >> bit;
         const auto upperBits1 = value(links[(i << 1)|1]) >> bit;
 
@@ -489,7 +496,7 @@ private:
   // CELL
   //------------------------------------------------------------------------//
 
-  const Function opCell = [this](size_t entryID, const LinkList &links) {
+  const Function opCell = [this](EntryID entryID, const LinkList &links) {
     const auto &cell = subnet.getParent().getCell(entryID);
     const auto &type = cell.getType();
     const auto &subnet = type.getSubnet();
@@ -497,18 +504,18 @@ private:
     SubnetBuilder builder(subnet);
     Simulator simulator(builder);
 
-    for (size_t i = 0; i < subnet.getInNum(); ++i) {
+    for (uint16_t i = 0; i < subnet.getInNum(); ++i) {
       simulator.setValue(i, value(links[i]));
     }
 
     simulator.simulate();
 
-    for (size_t i = 0; i < subnet.getOutNum(); ++i) {
+    for (uint16_t i = 0; i < subnet.getOutNum(); ++i) {
       access(Link(entryID, i)) = simulator.value(subnet.getOut(i));
     }
   };
 
-  Function getCell(size_t entryID, uint16_t nIn, uint16_t nOut) const {
+  Function getCell(EntryID entryID, uint16_t nIn, uint16_t nOut) const {
     const auto &cell = subnet.getParent().getCell(entryID);
     const auto &type = cell.getType();
     assert(type.isSubnet());

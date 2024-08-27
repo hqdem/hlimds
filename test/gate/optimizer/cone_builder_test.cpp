@@ -18,8 +18,9 @@ using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetView = model::SubnetView;
 using Link = model::Subnet::Link;
+using EntryID = model::EntryID;
 
-static size_t getConeRootID(const Subnet &coneSubnet) {
+static EntryID getConeRootID(const Subnet &coneSubnet) {
   return coneSubnet.getLink(coneSubnet.getMaxIdx(), 0).idx;
 }
 
@@ -32,7 +33,7 @@ static bool coneOutputCorrect(const Subnet &coneSubnet) {
 static bool inputsAtTheBeginning(const Subnet &coneSubnet) {
   bool foundNotInput = false;
   const auto &entries = coneSubnet.getEntries();
-  for (size_t entryID = 0; entryID < entries.size(); ++entryID) {
+  for (EntryID entryID = 0; entryID < entries.size(); ++entryID) {
     const auto &curCell = entries[entryID].cell;
     if ((curCell.isIn() || curCell.isOne() || curCell.isZero()) &&
         foundNotInput) {
@@ -49,8 +50,8 @@ static bool inputsAtTheBeginning(const Subnet &coneSubnet) {
 
 static bool coneValid(const SubnetBuilder &builder,
                       const Subnet &coneSubnet,
-                      const size_t origEntryID,
-                      const size_t coneEntryID,
+                      const EntryID origEntryID,
+                      const EntryID coneEntryID,
                       const bool isMaxCone) {
   const auto &coneEntries = coneSubnet.getEntries();
   const auto &coneCell = coneEntries[coneEntryID].cell;
@@ -74,12 +75,12 @@ static bool coneValid(const SubnetBuilder &builder,
     return false;
   }
 
-  size_t inputN = 0;
+  uint32_t inputN = 0;
   for (const auto coneLink : coneLinks) {
     const auto origLink = origLinks[inputN];
 
-    const size_t origLinkID = origLink.idx;
-    const size_t coneLinkID = coneLink.idx;
+    const uint32_t origLinkID = origLink.idx;
+    const uint32_t coneLinkID = coneLink.idx;
 
     if (origLink.out != coneLink.out ||
         origLink.inv != coneLink.inv) {
@@ -96,7 +97,7 @@ static bool coneValid(const SubnetBuilder &builder,
 
 static bool cutConeValid(const SubnetBuilder &builder,
                          const CutExtractor &cutExtractor,
-                         const size_t origEntryID) {
+                         const EntryID origEntryID) {
   const auto &cuts = cutExtractor.getCuts(origEntryID);
   for (const auto &cut : cuts) {
     SubnetView cone(builder, cut);
@@ -114,7 +115,7 @@ static bool cutConeValid(const SubnetBuilder &builder,
 }
 
 static bool maxConeValid(const SubnetBuilder &builder,
-                         const size_t origEntryID) {
+                         const EntryID origEntryID) {
   SubnetView cone(builder, origEntryID);
   const auto &coneSubnet = cone.getSubnet().makeObject();
   const auto coneEntryID = getConeRootID(coneSubnet);

@@ -22,6 +22,7 @@ using SubnetObject = model::SubnetObject;
 using SubnetView = model::SubnetView;
 using Effect = SubnetBuilder::Effect;
 using TruthTable = utils::TruthTable;
+using EntryID = model::EntryID;
 
 static SubnetID getSubnetID(const SubnetView &window) {
   auto &subnetWindow = const_cast<SubnetView&>(window);
@@ -49,12 +50,12 @@ public:
     const auto &entries = oldSubnet.getEntries();
     SubnetBuilder newSubnetBuilder;
     LinkList newSubnetLinks;
-    std::unordered_map<size_t, size_t> linkMapping;
+    std::unordered_map<EntryID, EntryID> linkMapping;
     for (size_t i = 0; i < entries.size(); ++i) {
       const auto &cell = entries[i].cell;
       LinkList cellLinks;
       for (const auto &link : oldSubnet.getLinks(i)) {
-        size_t linkID;
+        EntryID linkID;
         if (linkMapping.find(link.idx) != linkMapping.end()) {
           linkID = linkMapping[link.idx];
         } else {
@@ -84,12 +85,12 @@ public:
     const auto &entries = oldSubnet.getEntries();
     SubnetBuilder newSubnetBuilder;
     LinkList newSubnetLinks;
-    std::unordered_map<size_t, size_t> linkMapping;
+    std::unordered_map<EntryID, EntryID> linkMapping;
     for (size_t i = 0; i < entries.size(); ++i) {
       const auto &cell = entries[i].cell;
       LinkList cellLinks;
       for (const auto &link : oldSubnet.getLinks(i)) {
-        size_t linkID;
+        EntryID linkID;
         if (linkMapping.find(link.idx) != linkMapping.end()) {
           linkID = linkMapping[link.idx];
         } else {

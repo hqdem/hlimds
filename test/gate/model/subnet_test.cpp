@@ -29,11 +29,11 @@ static bool truthTablesEqual(
   return t1 == t2;
 }
 
-static SubnetID makeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
+static SubnetID makeTreeSubnet(CellSymbol symbol, uint64_t arity, uint16_t k) {
   SubnetBuilder builder;
   Subnet::LinkList links;
 
-  for (size_t i = 0; i < arity; i++) {
+  for (uint64_t i = 0; i < arity; i++) {
     const auto idx = builder.addInput();
     links.emplace_back(idx);
   }
@@ -44,7 +44,7 @@ static SubnetID makeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   return builder.make();
 }
 
-inline void checkMakeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
+inline void checkMakeTreeSubnet(CellSymbol symbol, uint64_t arity, uint16_t k) {
   const auto &cellSubnet = Subnet::get(makeTreeSubnet(symbol, arity, arity));
   const auto &treeSubnet = Subnet::get(makeTreeSubnet(symbol, arity, k));
 
@@ -52,8 +52,11 @@ inline void checkMakeTreeSubnet(CellSymbol symbol, size_t arity, uint16_t k) {
   EXPECT_EQ(evaluateSingleOut(cellSubnet), evaluateSingleOut(treeSubnet));
 }
 
-inline void testMakeTreeSubnet(CellSymbol symbol, size_t maxArity, uint16_t k) {
-  for (size_t i = 2; i <= maxArity; ++i) {
+inline void testMakeTreeSubnet(
+    CellSymbol symbol,
+    uint64_t maxArity,
+    uint16_t k) {
+  for (uint64_t i = 2; i <= maxArity; ++i) {
     checkMakeTreeSubnet(symbol, i, k);
   }
 }
@@ -68,14 +71,14 @@ inline void checkFanoutsCorrect(
 
 inline void checkSessionsCorrect(
     const SubnetBuilder &builder,
-    const std::vector<size_t> &correctSessions) {
+    const std::vector<uint32_t> &correctSessions) {
   for (const auto entry : builder) {
     EXPECT_EQ(builder.getSessionID(entry), correctSessions[entry]);
   }
 }
 
 TEST(SubnetTest, AddCellTreeTest) {
-  constexpr size_t MaxArity = 10u;
+  constexpr uint64_t MaxArity = 10u;
   constexpr size_t K = 2u;
 
   checkMakeTreeSubnet(OR,  MaxArity, K);
@@ -84,15 +87,15 @@ TEST(SubnetTest, AddCellTreeTest) {
 }
 
 TEST(SubnetTest, AddCellTest) {
-  constexpr size_t Depth  = 3u;
-  constexpr size_t InNum  = (1u << Depth);
-  constexpr size_t OutNum = 1u;
+  constexpr uint32_t Depth  = 3u;
+  constexpr uint32_t InNum  = (1u << Depth);
+  constexpr uint32_t OutNum = 1u;
 
   SubnetBuilder builder;
   Subnet::LinkList links = builder.addInputs(InNum);
 
-  for (size_t n = (InNum >> 1); n != 0; n >>= 1) {
-    for (size_t i = 0; i < n; ++i) {
+  for (uint32_t n = (InNum >> 1); n != 0; n >>= 1) {
+    for (uint32_t i = 0; i < n; ++i) {
       const auto lhs = links[(i << 1)];
       const auto rhs = links[(i << 1) | 1];
 
@@ -120,9 +123,9 @@ TEST(SubnetTest, AddCellTest) {
 }
 
 TEST(SubnetTest, AddSingleOutputSubnetTest) {
-  constexpr size_t InNum = 4;
+  constexpr uint32_t InNum = 4;
   constexpr size_t SubnetNum = 4;
-  constexpr size_t TotalInNum = InNum * SubnetNum;
+  constexpr uint64_t TotalInNum = InNum * SubnetNum;
 
   const auto subnetID = makeTreeSubnet(AND, InNum, 2);
   const auto &subnet = Subnet::get(subnetID);
@@ -134,7 +137,7 @@ TEST(SubnetTest, AddSingleOutputSubnetTest) {
 
   for (size_t i = 0; i < SubnetNum; ++i) {
     Subnet::LinkList links(InNum);
-    for (size_t j = 0; j < InNum; ++j) {
+    for (uint32_t j = 0; j < InNum; ++j) {
       links[j] = inputs[i*InNum + j];
     }
 
@@ -148,14 +151,14 @@ TEST(SubnetTest, AddSingleOutputSubnetTest) {
 }
 
 TEST(SubnetTest, SimpleStrashTest) {
-  constexpr size_t InNum = 5;
-  constexpr size_t OutNum = 10;
+  constexpr uint32_t InNum = 5;
+  constexpr uint32_t OutNum = 10;
 
   SubnetBuilder builder;
 
   Subnet::LinkList inputs = builder.addInputs(InNum);
 
-  for (size_t i = 0; i < OutNum; ++i) {
+  for (uint32_t i = 0; i < OutNum; ++i) {
     Subnet::Link link = builder.addCell(AND, inputs);
     builder.addOutput(link);
   }
@@ -299,9 +302,9 @@ TEST(SubnetTest, DepthsAfterMake) {
 
   std::cout << Subnet::get(builder.make(true)) << '\n';
 
-  std::vector<size_t> correctDepths{0, 0, 0, 1, 2, 3};
+  std::vector<uint32_t> correctDepths{0, 0, 0, 1, 2, 3};
   for (auto it = builder.begin(); it != builder.end(); ++it) {
-    const size_t j = *it;
+    const EntryID j = *it;
     EXPECT_EQ(correctDepths[j], builder.getDepth(j));
   }
 }
@@ -319,7 +322,7 @@ TEST(SubnetTest, WeightsAfterMake) {
 
   std::vector<float> weights{0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5};
   for (auto it = builder.begin(); it != builder.end(); ++it) {
-    const size_t j = *it;
+    const EntryID j = *it;
     builder.setWeight(j, weights[j]);
   }
 
@@ -327,7 +330,7 @@ TEST(SubnetTest, WeightsAfterMake) {
 
   std::vector<float> correctWeights{0.1, 0.15, 0.2, 0.25, 0.45, 0.5};
   for (auto it = builder.begin(); it != builder.end(); ++it) {
-    size_t j = *it;
+    EntryID j = *it;
     EXPECT_EQ(correctWeights[j], builder.getWeight(j));
   }
 }

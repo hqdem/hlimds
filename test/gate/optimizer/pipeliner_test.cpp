@@ -27,8 +27,9 @@ using MatrixGenerator = model::MatrixGenerator;
 using NetID = model::NetID;
 using DesignBuilder = model::DesignBuilder;
 using SubnetMarkup = Pipeliner::SubnetMarkup;
+using EntryID = model::EntryID;
 
-static size_t curCellID = 1;
+static EntryID curCellID = 1;
 
 static bool markupsEqual(
     const SubnetMarkup &lhs,
@@ -40,7 +41,7 @@ static bool checkTriggersEachPath(
     const SubnetBuilderPtr &builder,
     const SubnetMarkup &subnetMarkup,
     const size_t k,
-    const size_t entryID,
+    const EntryID entryID,
     const size_t triggersN = 0) {
 
   const auto &cell = builder->getCell(entryID);
@@ -65,7 +66,7 @@ static void testTriggersN(
 
   bool correctTriggersN = true;
   for (auto it = builder->rbegin(); it != builder->rend(); ++it) {
-    const size_t entryID = *it;
+    const EntryID entryID = *it;
     if (!builder->getCell(entryID).isOut()) {
       break;
     }
@@ -84,20 +85,6 @@ static void test(
   Pipeliner pipeliner(k);
   auto subnetMarkup = pipeliner.markCascades(builder);
 
-  // const auto &marked = subnetMarkup.markedLinks;
-  // for (std::size_t i = 0; i < marked.size(); ++i) {
-  //   if (marked[i].empty()) {
-  //     std::cout << "{}\n";
-  //     continue;
-  //   }
-  //   std::cout << "{";
-  //   for (const auto elem : marked[i]) {
-  //     std::cout << elem << ' ';
-  //   }
-  //   std::cout << "}\n";
-  // }
-  // std::cout << '\n';
-
   testTriggersN(builder, subnetMarkup, k);
 
   EXPECT_TRUE(markupsEqual(subnetMarkup, correctSubnetMarkup));
@@ -106,8 +93,8 @@ static void test(
 CellTypeID makeTmpType(
     const CellSymbol symbol,
     const PhysicalProperties &physProps,
-    const size_t nIn = 1,
-    const size_t nOut = 1) {
+    const uint16_t nIn = 1,
+    const uint16_t nOut = 1) {
   const auto attrID = makeCellTypeAttr({1}, {1}, physProps);
   const model::CellProperties props(1, 1, 0, 0, 0, 0, 0, 0, 0);
   std::string name = "tmp_" + std::to_string(curCellID);

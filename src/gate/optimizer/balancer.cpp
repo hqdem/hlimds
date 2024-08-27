@@ -30,9 +30,9 @@ void Balancer::transform(
 
 bool Balancer::canBalanceCompl(
     const SubnetBuilder &builder,
-    const size_t uOpEntryID,
-    const size_t dOpEntryID,
-    const size_t uOpSwapInput) const {
+    const EntryID uOpEntryID,
+    const EntryID dOpEntryID,
+    const EntryID uOpSwapInput) const {
 
   const auto &uCell = builder.getCell(uOpEntryID);
   const auto &dCell = builder.getCell(dOpEntryID);
@@ -46,10 +46,10 @@ bool Balancer::canBalanceCompl(
     return false;
   }
 
-  const size_t uOpInput2 = uInputs[1].idx;
-  const size_t dOpInput2 = dInputs[1].idx;
-  const size_t dOpSwapInput = uInputs[0].idx == dOpEntryID ?
-                              dInputs[0].idx : dInputs[2].idx;
+  const EntryID uOpInput2 = uInputs[1].idx;
+  const EntryID dOpInput2 = dInputs[1].idx;
+  const EntryID dOpSwapInput = uInputs[0].idx == dOpEntryID ?
+                               dInputs[0].idx : dInputs[2].idx;
 
   return dCell.refcount == 1 && dOpInput2 == uOpInput2 &&
       builder.getDepth(uOpSwapInput) < builder.getDepth(dOpSwapInput);
@@ -57,8 +57,8 @@ bool Balancer::canBalanceCompl(
 
 bool Balancer::canBalanceAssoc(
     const SubnetBuilder &builder,
-    const size_t uOpEntryID,
-    const size_t dOpEntryID) const {
+    const EntryID uOpEntryID,
+    const EntryID dOpEntryID) const {
 
   const auto &uOpCell = builder.getCell(uOpEntryID);
   const auto &dOpCell = builder.getCell(dOpEntryID);
@@ -76,9 +76,9 @@ bool Balancer::canBalanceAssoc(
 
 bool Balancer::canBalance(
     const SubnetBuilder &builder,
-    const size_t uOpEntryID,
-    const size_t dOpEntryID,
-    const size_t uOpSwapInput) const {
+    const EntryID uOpEntryID,
+    const EntryID dOpEntryID,
+    const EntryID uOpSwapInput) const {
 
   return canBalanceCompl(builder, uOpEntryID, dOpEntryID, uOpSwapInput) ||
          canBalanceAssoc(builder, uOpEntryID, dOpEntryID);
@@ -86,12 +86,12 @@ bool Balancer::canBalance(
 
 void Balancer::balanceComplAssoc(
     SubnetBuilder &builder,
-    const size_t entryID) const {
+    const EntryID entryID) const {
   const auto &cell = builder.getCell(entryID);
   const auto &entryInputs = builder.getLinks(entryID);
-  const size_t inputEntryID0 = entryInputs[0].idx;
-  const size_t InputEntryID2 = entryInputs[2].idx;
-  size_t dOperEntryID;
+  const EntryID inputEntryID0 = entryInputs[0].idx;
+  const EntryID InputEntryID2 = entryInputs[2].idx;
+  EntryID dOperEntryID;
 
   if (canBalance(builder, entryID, inputEntryID0, InputEntryID2) &&
       !entryInputs[0].inv) {
@@ -121,12 +121,12 @@ void Balancer::balanceComplAssoc(
       false);
 }
 
-size_t Balancer::balanceOnEntry(
+uint32_t Balancer::balanceOnEntry(
     SubnetBuilder &builder,
-    const size_t entryID) const {
-  size_t depthBeforeBalancings = builder.getDepth(entryID);
+    const EntryID entryID) const {
+  uint32_t depthBeforeBalancings = builder.getDepth(entryID);
   const auto &cell = builder.getCell(entryID);
-  size_t depthBeforeBalancing;
+  uint32_t depthBeforeBalancing;
 
   do {
     depthBeforeBalancing = builder.getDepth(entryID);
@@ -148,7 +148,7 @@ size_t Balancer::balanceOnEntry(
 template<typename Iter>
 void Balancer::moveOp(
     SubnetBuilder &builder,
-    const size_t entryID,
+    const EntryID entryID,
     const Iter &operIter,
     const Iter &inputsBegin,
     const Iter &inputsEnd,
@@ -156,7 +156,7 @@ void Balancer::moveOp(
     const Iter &dInputsEnd) const {
 
   const auto &cell = builder.getCell(entryID);
-  const size_t dOperEntryID = operIter->idx;
+  const EntryID dOperEntryID = operIter->idx;
   const auto &dOperCell = builder.getCell(dOperEntryID);
   LinkList newEntryInputs;
   LinkList newDOperEntryInputs;
@@ -191,16 +191,16 @@ void Balancer::moveOp(
 template<typename Iter>
 void Balancer::moveOpToLim(
     SubnetBuilder &builder,
-    const size_t entryID,
+    const EntryID entryID,
     Iter operIter,
     Iter inputsBegin,
     Iter inputsEnd,
     Iter dOpInputsBegin,
     Iter dOpInputsEnd) const {
 
-  const size_t dOperEntryId = operIter->idx;
-  size_t sideInput = (operIter + 1)->idx;
-  const size_t curEntryDepth = builder.getDepth(entryID);
+  const EntryID dOperEntryId = operIter->idx;
+  EntryID sideInput = (operIter + 1)->idx;
+  const uint32_t curEntryDepth = builder.getDepth(entryID);
 
   while(operIter != (inputsEnd - 1) &&
         canBalance(builder, entryID, dOperEntryId, sideInput)) {
@@ -237,19 +237,19 @@ void Balancer::moveOpToLim(
 
 void Balancer::moveAllOpsLToLim(
     SubnetBuilder &builder,
-    const size_t entryID) const {
+    const EntryID entryID) const {
   LinkList entryInputs = builder.getLinks(entryID);
   for (long long i = 1; i < (long long)entryInputs.size(); ++i) {
-    size_t dOpEntryID = entryInputs[i].idx;
-    size_t leftEntryID = entryInputs[i - 1].idx;
+    EntryID dOpEntryID = entryInputs[i].idx;
+    EntryID leftEntryID = entryInputs[i - 1].idx;
     if (!canBalance(builder, entryID, dOpEntryID, leftEntryID) ||
         entryInputs[i].inv) {
       continue;
     }
     LinkList dOpEntryInputs = builder.getLinks(dOpEntryID);
     for (long long j = (long long)dOpEntryInputs.size() - 2; j >= 0; --j) {
-      size_t ddOpEntryInput = dOpEntryInputs[j].idx;
-      size_t ddOpEntryRightInput = dOpEntryInputs[j + 1].idx;
+      EntryID ddOpEntryInput = dOpEntryInputs[j].idx;
+      EntryID ddOpEntryRightInput = dOpEntryInputs[j + 1].idx;
       if (!canBalance(builder, dOpEntryID, ddOpEntryInput, ddOpEntryRightInput)
           || dOpEntryInputs[j].inv) {
         continue;
@@ -269,11 +269,11 @@ void Balancer::moveAllOpsLToLim(
 
 void Balancer::moveAllOpsRToLim(
     SubnetBuilder &builder,
-    const size_t entryID) const {
+    const EntryID entryID) const {
   LinkList entryInputs = builder.getLinks(entryID);
   for (long long i = (long long)entryInputs.size() - 2; i >= 0; --i) {
-    const size_t dOpEntryID = entryInputs[i].idx;
-    const size_t rightEntryID = entryInputs[i + 1].idx;
+    const EntryID dOpEntryID = entryInputs[i].idx;
+    const EntryID rightEntryID = entryInputs[i + 1].idx;
 
     if (!canBalance(builder, entryID, dOpEntryID, rightEntryID) ||
         entryInputs[i].inv) {
@@ -281,8 +281,8 @@ void Balancer::moveAllOpsRToLim(
     }
     LinkList dOpEntryInputs = builder.getLinks(dOpEntryID);
     for (long long j = 1; j < (long long)dOpEntryInputs.size(); ++j) {
-      const size_t ddOpEntryInput = dOpEntryInputs[j].idx;
-      const size_t ddOpEntryLeftInput = dOpEntryInputs[j - 1].idx;
+      const EntryID ddOpEntryInput = dOpEntryInputs[j].idx;
+      const EntryID ddOpEntryLeftInput = dOpEntryInputs[j - 1].idx;
       if (!canBalance(builder, dOpEntryID, ddOpEntryInput, ddOpEntryLeftInput)
           || dOpEntryInputs[j].inv) {
         continue;
@@ -302,24 +302,24 @@ void Balancer::moveAllOpsRToLim(
 
 void Balancer::balanceAssoc(
     SubnetBuilder &builder,
-    const size_t entryID) const {
+    const EntryID entryID) const {
   moveAllOpsLToLim(builder, entryID);
   moveAllOpsRToLim(builder, entryID);
 }
 
 void Balancer::balanceCommutAssoc(
     SubnetBuilder &builder,
-    const size_t entryID) const {
+    const EntryID entryID) const {
 
   const auto &cell = builder.getCell(entryID);
   const auto &cellLinks = builder.getLinks(entryID);
   LinkList newCellLinks = cellLinks;
-  const size_t curDepth = builder.getDepth(entryID);
+  const uint32_t curDepth = builder.getDepth(entryID);
 
   /* Adding all input gates in increasing depth order. */
-  std::multimap<size_t, Link> depthLink;
+  std::multimap<uint32_t, Link> depthLink;
   for (const auto &input : cellLinks) {
-    size_t inEntryId = input.idx;
+    EntryID inEntryId = input.idx;
     depthLink.insert({ builder.getDepth(inEntryId), input });
   }
 
@@ -329,7 +329,7 @@ void Balancer::balanceCommutAssoc(
 
   bool isOptimizable = false;
   for (const auto &link : cellLinks) {
-    size_t linkIdx = link.idx;
+    EntryID linkIdx = link.idx;
     const auto &inputCell = builder.getCell(linkIdx);
     const auto &inCellLinks = builder.getLinks(linkIdx);
     LinkList newInCellLinks = inCellLinks;
@@ -342,7 +342,7 @@ void Balancer::balanceCommutAssoc(
     }
 
     for (const auto &inLinkToSwap : inCellLinks) {
-      size_t inputLinkIdx = inLinkToSwap.idx;
+      EntryID inputLinkIdx = inLinkToSwap.idx;
       if (depthLink.empty() || depthLink.begin()->first + 2 >= curDepth) {
         break;
       }

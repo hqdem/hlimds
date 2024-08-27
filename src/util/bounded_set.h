@@ -110,7 +110,7 @@ public:
       (const std::unordered_set<NumType> &set);
 
   /// Checks whether two sets are equal.
-  bool operator ==(const BoundedSet<NumType, Allocator> &other) const;
+  bool operator==(const BoundedSet<NumType, Allocator> &other) const;
 };
 
 /// Counts the number of bits in the signature
@@ -161,6 +161,18 @@ BoundedSet<NumType, Allocator>::BoundedSet(
     setPtr(setAllocator.allocate(maxSize)),
     signature(other.signature) {
   std::memcpy(this->setPtr, other.setPtr, setSize * sizeof(NumType));
+}
+
+template <class NumType, class Allocator>
+NumType BoundedSet<NumType, Allocator>::minValue() const {
+  assert(!this->empty());
+  return this->setPtr[0];
+}
+
+template <class NumType, class Allocator>
+NumType BoundedSet<NumType, Allocator>::maxValue() const {
+  assert(!this->empty());
+  return this->setPtr[this->size() - 1];
 }
 
 template <class NumType, class Allocator>
@@ -307,23 +319,20 @@ BoundedSet<NumType, Allocator>& BoundedSet<NumType, Allocator>::operator=(
 template <class NumType, class Allocator>
 bool BoundedSet<NumType, Allocator>::operator==(
     const BoundedSet<NumType, Allocator> &other) const {
-  bool result = 1;
-  if (this->size() != other.size()) result = 0;
-  for (auto i : other)
-    result = result && (this->find(i) != this->end());
-  return result;
-}
+  if (this->size() != other.size())
+    return false;
 
-template <class NumType, class Allocator>
-NumType BoundedSet<NumType, Allocator>::minValue() const {
-  assert(!this->empty());
-  return this->setPtr[0];
-}
+  if constexpr (CheckSignature) {
+    if (this->signature != other.signature)
+      return false;
+  }
 
-template <class NumType, class Allocator>
-NumType BoundedSet<NumType, Allocator>::maxValue() const {
-  assert(!this->empty());
-  return this->setPtr[this->size() - 1];
+  for (size_t i = 0; i < this->size(); ++i) {
+    if (this->setPtr[i] != other.setPtr[i])
+      return false;
+  }
+
+  return true;
 }
 
 } // namespace eda::util

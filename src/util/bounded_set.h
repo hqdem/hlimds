@@ -27,7 +27,7 @@ private:
   static constexpr auto CheckSignature = true;
   static constexpr auto CheckElemRange = false;
 
-  Allocator setAllocator;
+  [[no_unique_address]] Allocator setAllocator;
   SizeType maxSize;
   SizeType setSize;
   iterator setPtr;

@@ -10,6 +10,7 @@
 
 namespace eda::gate::premapper {
 
+using EntryID          = model::EntryID;
 using Link             = model::Subnet::Link;
 using LinkList         = model::Subnet::LinkList;
 using SubnetBuilder    = model::SubnetBuilder;
@@ -23,7 +24,7 @@ SubnetBuilderPtr CellPremapper::map(const SubnetBuilderPtr &builder) const {
   const auto &oldSubnet = Subnet::get(subnetID);
   const auto &entries = oldSubnet.getEntries();
 
-  for (uint32_t i = 0; i < oldSubnet.size(); ++i) {
+  for (EntryID i = 0; i < oldSubnet.size(); ++i) {
     const auto &cell = entries[i].cell;
     const auto symbol = cell.getSymbol();
 
@@ -62,14 +63,14 @@ Link CellPremapper::mapCell(CellSymbol symbol, const LinkList &links,
   }
 }
 
-LinkList CellPremapper::getNewLinks(const CellIdMap &oldToNew, uint32_t idx,
+LinkList CellPremapper::getNewLinks(const CellIdMap &oldToNew, EntryID idx,
                                     const Subnet &oldSubnet,
                                     size_t &n0, size_t &n1,
                                     SubnetBuilder &builder) const {
 
   LinkList links = oldSubnet.getLinks(idx);
   for (auto &link : links) {
-    const uint32_t oldId = link.idx;
+    const EntryID oldId = link.idx;
 
     const auto search = oldToNew.find(oldId);
     assert(search != oldToNew.end() && "Old cell ID not found");

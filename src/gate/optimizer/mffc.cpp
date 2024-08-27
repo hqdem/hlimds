@@ -12,36 +12,38 @@ namespace eda::gate::optimizer {
 
 using Builder    = model::SubnetBuilder;
 using Cell       = model::Subnet::Cell;
+using EntryID    = model::EntryID;
 using Link       = model::Subnet::Link;
 using LinkList   = model::Subnet::LinkList;
-using Nodes      = std::vector<model::EntryID>;
+using Nodes      = model::EntryIDList;
 using SubnetView = model::SubnetView;
 
 static void getMffcBounds(Builder &builder,
-                          model::EntryID idx,
+                          EntryID idx,
                           size_t &counter,
-                          size_t boundsID,
+                          uint32_t boundsID,
                           Nodes &bounds) {
 
   for (const auto &link : builder.getLinks(idx)) {
-    Cell &cell = builder.getCell(link.idx);
-    if (builder.isMarked(link.idx) || cell.isZero() || cell.isOne()) {
+    const auto index = link.idx;
+    Cell &cell = builder.getCell(index);
+    if (builder.isMarked(index) || cell.isZero() || cell.isOne()) {
       cell.incRefCount();
       counter--;
       continue;
     }
 
-    if ((builder.getSessionID(link.idx) == boundsID) || cell.isIn()) {
-      builder.mark(link.idx);
-      bounds.push_back(link.idx);
+    if ((builder.getSessionID(index) == boundsID) || cell.isIn()) {
+      builder.mark(index);
+      bounds.push_back(index);
       cell.incRefCount();
       counter--;
       continue;
     }
-    builder.mark(link.idx);
+    builder.mark(index);
 
     if (!cell.refcount) {
-      getMffcBounds(builder, link.idx, counter, boundsID, bounds);
+      getMffcBounds(builder, index, counter, boundsID, bounds);
       cell.incRefCount();
       counter--;
       continue;
@@ -50,14 +52,14 @@ static void getMffcBounds(Builder &builder,
     cell.incRefCount();
     counter--;
 
-    bounds.push_back(link.idx);
+    bounds.push_back(index);
   }
 }
 
 static void findMffcBounds(Builder &builder,
-                           model::EntryID rootID,
+                           EntryID rootID,
                            size_t counter,
-                           size_t boundsID,
+                           uint32_t boundsID,
                            Nodes &bounds) {
 
   // Reference cells back and get inputs(bounds) of MFFC.
@@ -71,27 +73,26 @@ static void findMffcBounds(Builder &builder,
 // Bound -- CUT
 //===----------------------------------------------------------------------===//
 
-static void dereferenceCells(Builder &builder,
-                             model::EntryID idx,
-                             size_t &counter) {
+static void dereferenceCells(Builder &builder, EntryID idx, size_t &counter) {
   for (const auto &link : builder.getLinks(idx)) {
-    Cell &cell = builder.getCell(link.idx);
+    const auto index = link.idx;
+    Cell &cell = builder.getCell(index);
     cell.decRefCount();
     counter++;
 
-    if (!cell.refcount && !builder.isMarked(link.idx)) {
-      dereferenceCells(builder, link.idx, counter);
+    if (!cell.refcount && !builder.isMarked(index)) {
+      dereferenceCells(builder, index, counter);
     }
   }
 }
 
-static size_t dereferenceCells(Builder &builder,
-                               model::EntryID rootID,
-                               size_t &counter,
-                               const Nodes &cut) {
+static uint32_t dereferenceCells(Builder &builder,
+                                 EntryID rootID,
+                                 size_t &counter,
+                                 const Nodes &cut) {
 
   builder.startSession();
-  auto boundsID = builder.getSessionID();
+  const auto boundsID = builder.getSessionID();
   for (const auto &idx : cut) {
     builder.mark(idx);
   }
@@ -100,14 +101,14 @@ static size_t dereferenceCells(Builder &builder,
   return boundsID;
 }
 
-SubnetView getMffc(Builder &builder, model::EntryID rootID, const Nodes &cut) {
+SubnetView getMffc(Builder &builder, EntryID rootID, const Nodes &cut) {
   const auto nLeaves = cut.size();
   if ((nLeaves == 1) && (rootID == cut[0])) {
     return SubnetView{builder, {Nodes{rootID}, Nodes{rootID}}};
   }
 
   size_t counter = 0;
-  const size_t boundsID = dereferenceCells(builder, rootID, counter, cut);
+  const auto boundsID = dereferenceCells(builder, rootID, counter, cut);
 
   Nodes bounds;
   bounds.reserve(cut.size());
@@ -123,7 +124,7 @@ SubnetView getMffc(Builder &builder, const SubnetView &view) {
   return getMffc(builder, roots[0], view.getInputs());
 }
 
-SubnetView getMffc(Builder &builder, model::EntryID rootID) {
+SubnetView getMffc(Builder &builder, EntryID rootID) {
   Nodes emptyBounds;
   return getMffc(builder, rootID, emptyBounds);
 }
@@ -133,45 +134,46 @@ SubnetView getMffc(Builder &builder, model::EntryID rootID) {
 //===----------------------------------------------------------------------===//
 
 static void dereferenceCells(Builder &builder,
-                             model::EntryID idx,
+                             EntryID idx,
                              size_t &counter,
-                             size_t maxDepth,
-                             size_t depth) {
+                             uint32_t maxDepth,
+                             uint32_t depth) {
 
   for (const auto &link : builder.getLinks(idx)) {
-    Cell &cell = builder.getCell(link.idx);
+    const auto index = link.idx;
+    Cell &cell = builder.getCell(index);
     cell.decRefCount();
     counter++;
 
     if (depth >= maxDepth) {
-      builder.mark(link.idx);
+      builder.mark(index);
     }
 
-    if (!cell.refcount && !builder.isMarked(link.idx)) {
-      dereferenceCells(builder, link.idx, counter, maxDepth, depth + 1);
+    if (!cell.refcount && !builder.isMarked(index)) {
+      dereferenceCells(builder, index, counter, maxDepth, depth + 1);
     }
   }
 }
 
-static size_t dereferenceCells(Builder &builder,
-                               model::EntryID rootID,
-                               size_t &counter,
-                               size_t maxDepth) {
+static uint32_t dereferenceCells(Builder &builder,
+                                 EntryID rootID,
+                                 size_t &counter,
+                                 uint32_t maxDepth) {
 
   builder.startSession();
-  size_t boundsID = builder.getSessionID();
+  const auto boundsID = builder.getSessionID();
   dereferenceCells(builder, rootID, counter, maxDepth, 1);
   builder.endSession();
   return boundsID;
 }
 
-SubnetView getMffc(Builder &builder, model::EntryID rootID, size_t maxDepth) {
+SubnetView getMffc(Builder &builder, EntryID rootID, uint32_t maxDepth) {
   if (!maxDepth) {
     return SubnetView{builder, {Nodes{rootID}, Nodes{rootID}}};
   }
 
   size_t counter = 0;
-  const size_t boundsID = dereferenceCells(builder, rootID, counter, maxDepth);
+  const auto boundsID = dereferenceCells(builder, rootID, counter, maxDepth);
 
   Nodes bounds;
   bounds.reserve(1u << (maxDepth + 1));

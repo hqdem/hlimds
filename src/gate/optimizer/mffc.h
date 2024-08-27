@@ -21,7 +21,7 @@ namespace eda::gate::optimizer {
  *  @return The subnet view of MFFC.
  */
 model::SubnetView getMffc(model::SubnetBuilder &builder, model::EntryID rootID,
-                          const std::vector<model::EntryID> &cut);
+                          const model::EntryIDList &cut);
 
 /** @brief Returns a view of fanout-free cone limited by inputs of view.
  *  @param builoder The builder of a subnet.
@@ -38,7 +38,7 @@ model::SubnetView getMffc(model::SubnetBuilder &builder,
  *  @return The subnet view of MFFC.
  */
 model::SubnetView getMffc(model::SubnetBuilder &builder, model::EntryID rootID,
-                          size_t maxDepth);
+                          uint32_t maxDepth);
 
 /** @brief Returns a view of maximum fanout-free cone.
  *  @param builder The builder of a subnet.

@@ -18,7 +18,7 @@ namespace eda::gate::optimizer {
 /// Returns a view of reconvergence-driven cut based on the given builder.
 model::SubnetView getReconvergentCut(
     model::SubnetBuilder &builder,
-    const std::vector<model::EntryID> &roots,
+    const model::EntryIDList &roots,
     uint16_t cutSize);
 
 /// Returns a view of reconvergence-driven cut based on the given builder.
@@ -27,8 +27,7 @@ inline model::SubnetView getReconvergentCut(
     model::EntryID root,
     uint16_t cutSize) {
 
-  return getReconvergentCut(
-      builder, std::vector<model::EntryID>{root}, cutSize);
+  return getReconvergentCut(builder, model::EntryIDList{root}, cutSize);
 }
 
 } // namespace eda::gate::optimizer

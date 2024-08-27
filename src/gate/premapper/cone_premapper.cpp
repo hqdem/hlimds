@@ -160,8 +160,7 @@ void ConePremapper::constantCase(const SubnetBuilderPtr &builder,
 
   SubnetBuilder *builderPtr = builder.get();
 
-  InOutMapping iomapping(std::vector<model::EntryID>{0},
-                         std::vector<model::EntryID>{entryID});
+  InOutMapping iomapping(model::EntryIDList{0}, model::EntryIDList{entryID});
   model::SubnetView view(*builderPtr, iomapping);
   SubnetObject rhs = resynthesizer.resynthesize(view, arity);
   assert(!rhs.isNull() && "Subnet wasn't synthesized!");

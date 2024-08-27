@@ -38,13 +38,13 @@ TEST(MffcTest, CutBound1) {
   builder.addOutput(links[3]);
   builder.addOutput(links.back());
 
-  std::vector<model::EntryID> cut{0, 1};
+  model::EntryIDList cut{0, 1};
   model::EntryID rootID = 5;
 
   const auto view = getMffc(builder, rootID, cut);
 
-  const std::vector<model::EntryID> &viewIns  = view.getInputs();
-  const std::vector<model::EntryID> &viewOuts = view.getOutputs();
+  const model::EntryIDList &viewIns  = view.getInputs();
+  const model::EntryIDList &viewOuts = view.getOutputs();
 
   // Check MFFC.
   EXPECT_EQ(viewIns.size(), 2);
@@ -81,7 +81,7 @@ TEST(MffcTest, CutBound2) {
   links.push_back(builder.addCell(CellSymbol::AND, links[3], links[4]));
   builder.addOutput(links.back());
 
-  std::vector<model::EntryID> cut{3, 4};
+  model::EntryIDList cut{3, 4};
   model::EntryID rootID = 5;
 
   const auto view = getMffc(builder, rootID, cut);
@@ -123,8 +123,8 @@ TEST(MffcTest, DepthBound1) {
 
   const auto view = getMffc(builder, rootID, maxDepth);
 
-  const std::vector<model::EntryID> &viewIns  = view.getInputs();
-  const std::vector<model::EntryID> &viewOuts = view.getOutputs();
+  const model::EntryIDList &viewIns  = view.getInputs();
+  const model::EntryIDList &viewOuts = view.getOutputs();
   // Check MFFC.
   EXPECT_EQ(viewIns.size(), 4);
   std::set<model::EntryID> cut(viewIns.begin(), viewIns.end());
@@ -181,8 +181,10 @@ TEST(MffcTest, DepthBound2) {
   const auto view = getMffc(builder, rootId, maxDepth);
 
   const std::set<model::EntryID> check{11, 12, 13, 14};
-  const std::set<model::EntryID> cut(view.getInputs().begin(), view.getInputs().end());
+  const std::set<model::EntryID> cut(view.getInputs().begin(),
+                                     view.getInputs().end());
 
+  EXPECT_EQ(view.getInputs().size(), 4);
   EXPECT_EQ(cut, check);
   EXPECT_EQ(view.getOutputs(), std::vector<model::EntryID>{rootId});
 }

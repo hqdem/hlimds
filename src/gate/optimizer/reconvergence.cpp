@@ -32,7 +32,7 @@ static unsigned computeCost(SubnetBuilder &builder, model::EntryID idx) {
 }
 
 static model::EntryID findBestLeave(SubnetBuilder &builder,
-                                    const std::vector<model::EntryID> &leaves,
+                                    const model::EntryIDList &leaves,
                                     uint16_t cutSize) {
 
   const unsigned worstCost = -1;
@@ -58,12 +58,12 @@ static model::EntryID findBestLeave(SubnetBuilder &builder,
 }
 
 model::SubnetView getReconvergentCut(SubnetBuilder &builder,
-                                     const std::vector<model::EntryID> &roots,
+                                     const model::EntryIDList &roots,
                                      uint16_t cutSize) {
 
   assert(roots.size() <= cutSize && "Number of roots more than the cut size");
 
-  std::vector<model::EntryID> leaves(roots.begin(), roots.end());
+  model::EntryIDList leaves(roots.begin(), roots.end());
   leaves.reserve(cutSize + 1);
 
   builder.startSession();

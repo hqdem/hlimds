@@ -30,8 +30,8 @@ using SubnetID     = eda::gate::model::SubnetID;
 using SubnetMapper = eda::gate::optimizer::SubnetMapper;
 
 static BuilderPtr createPrimitiveSubnet(CellSymbol symbol,
-                                        size_t nIn,
-                                        size_t arity) {
+                                        uint16_t nIn,
+                                        uint16_t arity) {
 
   BuilderPtr builder = std::make_shared<Builder>();
   LinkList links = builder->addInputs(nIn);
@@ -89,11 +89,11 @@ static void checkConstCases(const SubnetMapper &premapper) {
 }
 
 static void checkMAJ(const SubnetMapper &premapper) {
-  const size_t nIn = 5;
+  const uint16_t nIn = 5;
   BuilderPtr builder = std::make_shared<Builder>();
   LinkList links;
 
-  for (size_t i = 0; i < nIn; ++i) {
+  for (uint16_t i = 0; i < nIn; ++i) {
     const auto link = builder->addInput();
     links.push_back(i % 2 ? ~link : link);
   }
@@ -144,14 +144,14 @@ static void checkXOR(const SubnetMapper &premapper) {
 }
 
 static void checkRandomSubnet(const SubnetMapper &premapper) {
-  const size_t nIn      = 10u;
-  const size_t nOut     = 1u;
-  const size_t nCell    = 60u;
-  const size_t MinArity = 1u;
-  const size_t MaxArity = 6u;
-  const size_t nLoops   = 20u;
+  const uint16_t nIn      = 10u;
+  const uint16_t nOut     = 1u;
+  const uint32_t nCell    = 60u;
+  const uint16_t MinArity = 1u;
+  const uint16_t MaxArity = 6u;
+  const uint16_t nLoops   = 20u;
 
-  for (size_t i = 0; i < nLoops; ++i) {
+  for (uint16_t i = 0; i < nLoops; ++i) {
     const auto id = eda::gate::model::randomSubnet(nIn, nOut, nCell,
                                                    MinArity, MaxArity);
 

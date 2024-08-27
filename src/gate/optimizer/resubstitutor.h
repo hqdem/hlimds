@@ -36,7 +36,7 @@ public:
    * @param saveDepth Depth preserving flag.
    */
   Resubstitutor(const std::string &name,
-                unsigned cutSize,
+                uint16_t cutSize,
                 unsigned maxLevels,
                 bool zero,
                 bool saveDepth) :
@@ -54,7 +54,7 @@ public:
   void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
 
 private:
-  const unsigned cutSize;
+  const uint16_t cutSize;
   const unsigned maxLevels;
   const bool zero;
   const bool saveDepth;

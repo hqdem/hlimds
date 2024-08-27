@@ -35,7 +35,7 @@ protected:
   Link mapCell(CellSymbol symbol, const LinkList &links, bool &inv,
                size_t n0, size_t n1, SubnetBuilder &builder) const;
 
-  LinkList getNewLinks(const CellIdMap &oldToNew, uint32_t idx,
+  LinkList getNewLinks(const CellIdMap &oldToNew, model::EntryID idx,
                        const Subnet &oldSubnet, size_t &n0, size_t &n1,
                        SubnetBuilder &builder) const;
 

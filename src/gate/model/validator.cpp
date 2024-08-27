@@ -351,10 +351,10 @@ bool validateCellType(const CellType &type, diag::Logger &logger) {
   case NOT:      VALIDATE_QUIET(validateLogic1(type, logger));
                  break;
   case AND:      // Binary logic gates
-  case OR:       //
-  case XOR:      //
-  case NAND:     //
-  case NOR:      //
+  case OR:       [[fallthrough]];
+  case XOR:      [[fallthrough]];
+  case NAND:     [[fallthrough]];
+  case NOR:      [[fallthrough]];
   case XNOR:     VALIDATE_QUIET(validateLogic2plus(type, logger));
                  break;
   case MAJ:      VALIDATE_QUIET(validateLogicMaj(type, logger));
@@ -378,52 +378,52 @@ bool validateCellType(const CellType &type, diag::Logger &logger) {
   case BNOT:     VALIDATE_QUIET(validateBitwise1(type, logger));
                  break;
   case BAND:     // Binary bitwise operations
-  case BOR:      //
-  case BXOR:     //
-  case BNAND:    //
-  case BNOR:     //
+  case BOR:      [[fallthrough]];
+  case BXOR:     [[fallthrough]];
+  case BNAND:    [[fallthrough]];
+  case BNOR:     [[fallthrough]];
   case BXNOR:    VALIDATE_QUIET(validateBitwise2(type, logger));
                  break;
   case RAND:     // Reduction operations
-  case ROR:      //
-  case RXOR:     //
-  case RNAND:    //
-  case RNOR:     //
+  case ROR:      [[fallthrough]];
+  case RXOR:     [[fallthrough]];
+  case RNAND:    [[fallthrough]];
+  case RNOR:     [[fallthrough]];
   case RXNOR:    VALIDATE_QUIET(validateReduce(type, logger));
                  break;
   case MUX2:     VALIDATE_QUIET(validateMux2(type, logger));
                  break;
   case SHL:      // Shift operations
-  case SHRs:     //
+  case SHRs:     [[fallthrough]];
   case SHRu:     VALIDATE_QUIET(validateShift(type, logger));
                  break;
   case EQs:      // Comparison operations
-  case EQu:      //
-  case NEQs:     //
-  case NEQu:     //
-  case EQXs:     //
-  case EQXu:     //
-  case NEQXs:    //
-  case NEQXu:    //
-  case LTs:      //
-  case LTu:      //
-  case LTEs:     //
-  case LTEu:     //
-  case GTs:      //
-  case GTu:      //
-  case GTEs:     //
+  case EQu:      [[fallthrough]];
+  case NEQs:     [[fallthrough]];
+  case NEQu:     [[fallthrough]];
+  case EQXs:     [[fallthrough]];
+  case EQXu:     [[fallthrough]];
+  case NEQXs:    [[fallthrough]];
+  case NEQXu:    [[fallthrough]];
+  case LTs:      [[fallthrough]];
+  case LTu:      [[fallthrough]];
+  case LTEs:     [[fallthrough]];
+  case LTEu:     [[fallthrough]];
+  case GTs:      [[fallthrough]];
+  case GTu:      [[fallthrough]];
+  case GTEs:     [[fallthrough]];
   case GTEu:     VALIDATE_QUIET(validateCompare(type, logger));
                  break;
   case NEG:      VALIDATE_QUIET(validateArith1(type, logger));
                  break;
   case ADD:      // Binary arithmetic operations
-  case SUB:      //
-  case MULs:     //
-  case MULu:     //
-  case DIVs:     //
-  case DIVu:     //
-  case REMs:     //
-  case REMu:     //
+  case SUB:      [[fallthrough]];
+  case MULs:     [[fallthrough]];
+  case MULu:     [[fallthrough]];
+  case DIVs:     [[fallthrough]];
+  case DIVu:     [[fallthrough]];
+  case REMs:     [[fallthrough]];
+  case REMu:     [[fallthrough]];
   case MODs:     VALIDATE_QUIET(validateArith2(type, logger));
                  break;
   case UNDEF:    VALIDATE_QUIET(validateUndef(type, logger));

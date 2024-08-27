@@ -10,7 +10,6 @@
 #include "gate/model/printer/net_printer.h"
 
 #include <cstring>
-#include <iostream>
 #include <queue>
 
 namespace eda::gate::model {
@@ -19,7 +18,7 @@ namespace eda::gate::model {
 // Subnet
 //===----------------------------------------------------------------------===//
 
-const Subnet::Link &Subnet::getLink(size_t i, size_t j) const {
+const Subnet::Link &Subnet::getLink(uint32_t i, uint16_t j) const {
   const auto &cell = getCell(i);
 
   if (j < Cell::InPlaceLinks) {
@@ -30,11 +29,11 @@ const Subnet::Link &Subnet::getLink(size_t i, size_t j) const {
   return entries[k.first].link[k.second];
 }
 
-const Subnet::LinkList Subnet::getLinks(size_t i) const {
+const Subnet::LinkList Subnet::getLinks(uint32_t i) const {
   const auto &cell = getCell(i);
   LinkList links(cell.arity);
 
-  size_t j = 0;
+  uint16_t j = 0;
   for (; j < cell.arity && j < Cell::InPlaceLinks; ++j) {
     links[j] = cell.link[j];
   }
@@ -48,7 +47,7 @@ const Subnet::LinkList Subnet::getLinks(size_t i) const {
 }
 
 const Subnet::Link *Subnet::getLinks(
-    size_t i, Link *links, uint16_t &nLinks) const {
+    uint32_t i, Link *links, uint16_t &nLinks) const {
   const auto &cell = getCell(i);
   nLinks = cell.arity;
   // Return the pointer to the inner array.
@@ -59,7 +58,7 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
   uint32_t minLength = nEntry, maxLength = 0;
   std::vector<uint32_t> min(nEntry), max(nEntry);
 
-  for (size_t i = 0; i < nEntry; ++i) {
+  for (uint32_t i = 0; i < nEntry; ++i) {
     const auto &cell = getCell(i);
 
     if (cell.arity == 0) {
@@ -67,7 +66,7 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
     } else {
       min[i] = nEntry; max[i] = 0;
 
-      for (size_t j = 0; j < cell.arity; ++j) {
+      for (uint16_t j = 0; j < cell.arity; ++j) {
         auto link = getLink(i, j);
         min[i] = std::min(min[i], min[link.idx]);
         max[i] = std::max(max[i], max[link.idx]);
@@ -98,7 +97,7 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
 // Subnet Builder
 //===----------------------------------------------------------------------===//
 
-inline float weight(const size_t entryID,
+inline float weight(const uint32_t entryID,
                     const SubnetBuilder::CellWeightProvider *provider) {
   return provider != nullptr ? (*provider)(entryID) : 0.0;
 }
@@ -108,7 +107,7 @@ inline float weight(const float providedWeight,
   return modifier != nullptr ? (*modifier)(providedWeight) : providedWeight;
 }
 
-inline float weight(const size_t entryID,
+inline float weight(const uint32_t entryID,
                     const SubnetBuilder::CellWeightProvider *provider,
                     const SubnetBuilder::CellWeightModifier *modifier) {
   return provider != nullptr ? weight((*provider)(entryID), modifier) : 0.0;
@@ -154,14 +153,14 @@ EntryIterator EntryIterator::prev() const {
 
 void EntryIterator::nextCell() {
   const auto &cell = builder->getCell(entry);
-  for (size_t i = 0; i <= cell.more; ++i) {
+  for (uint32_t i = 0; i <= cell.more; ++i) {
     entry = builder->getNext(entry);
   }
 }
 
 template <CellSymbol symbol>
-static SubnetID makeConstSubnet(const size_t nIn) {
-  constexpr size_t size{8};
+static SubnetID makeConstSubnet(const uint16_t nIn) {
+  constexpr uint16_t size{8};
   static std::vector<SubnetID> cache(size + 1, OBJ_NULL_ID);
 
   auto &subnetID = nIn < size ? cache[nIn] : cache[size];
@@ -176,19 +175,19 @@ static SubnetID makeConstSubnet(const size_t nIn) {
   return (subnetID = builder.make());
 }
 
-SubnetID SubnetBuilder::makeZero(const size_t nIn) {
+SubnetID SubnetBuilder::makeZero(const uint16_t nIn) {
   return makeConstSubnet<ZERO>(nIn);
 }
 
-SubnetID SubnetBuilder::makeOne(const size_t nIn) {
+SubnetID SubnetBuilder::makeOne(const uint16_t nIn) {
   return makeConstSubnet<ONE>(nIn);
 }
 
-SubnetID SubnetBuilder::makeConst(const size_t nIn, const bool value) {
+SubnetID SubnetBuilder::makeConst(const uint16_t nIn, const bool value) {
   return value ? makeOne(nIn) : makeZero(nIn);
 }
 
-const Subnet::Link &SubnetBuilder::getLink(size_t i, size_t j) const {
+const Subnet::Link &SubnetBuilder::getLink(uint32_t i, uint16_t j) const {
   const auto &cell = getCell(i);
   if (j < Cell::InPlaceLinks) {
     return cell.link[j];
@@ -197,17 +196,17 @@ const Subnet::Link &SubnetBuilder::getLink(size_t i, size_t j) const {
   return entries[k.first].link[k.second];
 }
 
-const Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
+const Subnet::LinkList SubnetBuilder::getLinks(uint32_t i) const {
   const auto &cell = getCell(i);
   LinkList links(cell.arity);
 
-  size_t j = 0;
+  uint16_t j = 0;
   for (; j < cell.arity && j < Cell::InPlaceLinks; ++j) {
     links[j] = cell.link[j];
   }
 
-  size_t k = 0;
-  size_t n = getNext(i);
+  uint32_t k = 0;
+  uint32_t n = getNext(i);
 
   for (; j < cell.arity; ++j) {
     links[j] = entries[n].link[k++];
@@ -222,7 +221,7 @@ const Subnet::LinkList SubnetBuilder::getLinks(size_t i) const {
 }
 
 const Subnet::Link *SubnetBuilder::getLinks(
-    size_t i, Link *links, uint16_t &nLinks) const {
+    uint32_t i, Link *links, uint16_t &nLinks) const {
   const auto &cell = getCell(i);
   nLinks = cell.arity;
 
@@ -239,7 +238,7 @@ const Subnet::Link *SubnetBuilder::getLinks(
   buffer += Cell::InPlaceLinks;
   nItems -= Cell::InPlaceLinks;
 
-  size_t n = getNext(i);
+  uint32_t n = getNext(i);
   for(; nItems >= Cell::InEntryLinks; n = getNext(n)) {
     std::memcpy(buffer, entries[n].link, Cell::InEntryLinks * sizeof(Link));
     buffer += Cell::InEntryLinks;
@@ -283,12 +282,12 @@ Subnet::Link SubnetBuilder::addCellTree(
   LinkList linkList = links;
   linkList.reserve(2 * links.size() - 1);
 
-  for (size_t i = 0; i < linkList.size() - 1;) {
-    const size_t nRest = linkList.size() - i;
-    const size_t nArgs = (nRest > maxTreeArity) ? maxTreeArity : nRest;
+  for (uint32_t i = 0; i < linkList.size() - 1;) {
+    const uint32_t nRest = linkList.size() - i;
+    const uint16_t nArgs = (nRest > maxTreeArity) ? maxTreeArity : nRest;
 
     LinkList args(nArgs);
-    for (size_t j = 0; j < nArgs; ++j) {
+    for (uint16_t j = 0; j < nArgs; ++j) {
       args[j] = linkList[i++];
     }
 
@@ -309,10 +308,10 @@ Subnet::LinkList SubnetBuilder::addSubnet(
   LinkList outs;
   outs.reserve(subnet.getOutNum());
 
-  for (size_t i = subnet.getInNum(); i < subnetEntries.size(); ++i) {
+  for (uint32_t i = subnet.getInNum(); i < subnetEntries.size(); ++i) {
     auto newLinks = subnet.getLinks(i);
 
-    for (size_t j = 0; j < newLinks.size(); ++j) {
+    for (uint16_t j = 0; j < newLinks.size(); ++j) {
       auto &newLink = newLinks[j];
       if (newLink.idx < subnet.getInNum()) {
         const bool inv = newLink.inv;
@@ -381,7 +380,9 @@ void SubnetBuilder::replace(
   const auto &rhsEntries = rhs.getEntries();
   replace<Subnet, Array<Entry>, ArrayIterator<Entry>>(
     rhs, rhsEntries, rhsEntries.size() - 1, iomapping,
-    [&](ArrayIterator<Entry> iter, size_t i) {return i;},
+    [&](ArrayIterator<Entry> iter, uint32_t i) {
+      return i;
+    },
     weightProvider, onNewCell, onEqualDepth, onGreaterDepth, onRecomputedDepth
   );
 }
@@ -394,12 +395,12 @@ void SubnetBuilder::replace(
     const CellActionCallback *onGreaterDepth,
     const CellActionCallback *onRecomputedDepth) {
 
-  const CellWeightProvider weightProvider = [&](size_t i) -> float {
+  const CellWeightProvider weightProvider = [&](uint32_t i) -> float {
     return rhsBuilder.getWeight(i);
   };
   replace<SubnetBuilder, SubnetBuilder, EntryIterator>(
     rhsBuilder, rhsBuilder, *(--rhsBuilder.end()), iomapping,
-    [&](EntryIterator iter, size_t i) {return *iter;},
+    [&](EntryIterator iter, uint32_t i) {return *iter;},
     &weightProvider, onNewCell, onEqualDepth, onGreaterDepth, onRecomputedDepth
   );
 }
@@ -408,21 +409,21 @@ void SubnetBuilder::replace(
 template <typename RhsContainer>
 void fillMapping(const RhsContainer &rhs,
                  const InOutMapping &iomapping,
-                 std::vector<size_t> &rhsToLhs) {
+                 std::vector<uint32_t> &rhsToLhs) {
   assert(false && "Specialization is required");
 }
 
 template <>
 void fillMapping<Subnet>(const Subnet &rhs,
                          const InOutMapping &iomapping,
-                         std::vector<size_t> &rhsToLhs) {
+                         std::vector<uint32_t> &rhsToLhs) {
   assert(rhs.getInNum() == iomapping.getInNum());
   assert(rhs.getOutNum() == iomapping.getOutNum());
 
-  for (size_t i = 0; i < iomapping.getInNum(); ++i) {
+  for (uint32_t i = 0; i < iomapping.getInNum(); ++i) {
     rhsToLhs[rhs.getInIdx(i)] = iomapping.getIn(i);
   }
-  for (size_t i = 0; i < iomapping.getOutNum(); ++i) {
+  for (uint32_t i = 0; i < iomapping.getOutNum(); ++i) {
     rhsToLhs[rhs.getOutIdx(i)] = iomapping.getOut(i);
   }
 }
@@ -430,17 +431,17 @@ void fillMapping<Subnet>(const Subnet &rhs,
 template <>
 void fillMapping<SubnetBuilder>(const SubnetBuilder &rhs,
                                 const InOutMapping &iomapping,
-                                std::vector<size_t> &rhsToLhs) {
+                                std::vector<uint32_t> &rhsToLhs) {
   assert(rhs.getInNum() == iomapping.getInNum());
   assert(rhs.getOutNum() == iomapping.getOutNum());
 
-  size_t i = 0;
+  uint32_t i = 0;
   for (auto it = rhs.begin(); it != rhs.end(); ++it, ++i) {
     if (!rhs.getCell(*it).isIn()) break;
     rhsToLhs[*it] = iomapping.getIn(i);
   }
 
-  size_t j = 0;
+  uint32_t j = 0;
   for (auto it = --rhs.end(); it != rhs.begin(); --it, ++j) {
     if (!rhs.getCell(*it).isOut()) break;
     rhsToLhs[*it] = iomapping.getOut(rhs.getOutNum() - 1 - j);
@@ -452,9 +453,9 @@ template <typename RhsContainer, typename RhsIterable, typename RhsIt>
 void SubnetBuilder::replace(
     const RhsContainer &rhsContainer,
     const RhsIterable &rhsIterable,
-    const size_t rhsOutEntryID,
+    const uint32_t rhsOutEntryID,
     const InOutMapping &iomapping,
-    const std::function<size_t(RhsIt iter, size_t i)> &getEntryID,
+    const std::function<uint32_t(RhsIt iter, uint32_t i)> &getEntryID,
     const CellWeightProvider *weightProvider,
     const CellActionCallback *onNewCell,
     const CellActionCallback *onEqualDepth,
@@ -463,7 +464,7 @@ void SubnetBuilder::replace(
 
   assert(rhsContainer.getOutNum() == 1);
 
-  std::vector<size_t> rhsToLhs(rhsContainer.getMaxIdx() + 1);
+  std::vector<uint32_t> rhsToLhs(rhsContainer.getMaxIdx() + 1);
   fillMapping(rhsContainer, iomapping, rhsToLhs);
 
   auto rootStrashIt = strash.end();
@@ -479,17 +480,17 @@ void SubnetBuilder::replace(
     destrashEntry(lhsRootEntryID);
   }
 
-  size_t i = 0;
+  uint32_t i = 0;
   for (auto rhsIt = rhsIterable.begin(); rhsIt != rhsIterable.end();
        ++rhsIt, ++i) {
-    const size_t rhsEntryID = getEntryID(rhsIt, i);
+    const auto rhsEntryID = getEntryID(rhsIt, i);
     const auto &rhsCell = rhsContainer.getCell(rhsEntryID);
     const auto rhsCellTypeID = rhsCell.getTypeID();
     assert(rhsCell.arity <= Cell::InPlaceLinks);
 
-    size_t prevEntriesN = entries.size();
-    size_t prevEmptyEntriesN = emptyEntryIDs.size();
-    size_t newEntryID;
+    uint32_t prevEntriesN = entries.size();
+    uint32_t prevEmptyEntriesN = emptyEntryIDs.size();
+    uint32_t newEntryID;
     bool isNewEntry = false;
 
     if (rhsCell.isIn()) {
@@ -585,8 +586,8 @@ SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
     const InOutMapping &iomapping,
     const CellWeightModifier *weightModifier) const {
 
-  const size_t rhsOutEntryID = *rhsBuilder.rbegin();
-  const CellWeightProvider weightProvider = [&](size_t i) -> float {
+  const auto rhsOutEntryID = *rhsBuilder.rbegin();
+  const CellWeightProvider weightProvider = [&](uint32_t i) -> float {
     return rhsBuilder.getWeight(i);
   };
   return evaluateReplace<SubnetBuilder>(rhsBuilder, rhsOutEntryID,
@@ -596,13 +597,13 @@ SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
 template <typename RhsContainer>
 SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
     const RhsContainer &rhsContainer,
-    const size_t rhsOutEntryID,
+    const uint32_t rhsOutEntryID,
     const InOutMapping &iomapping,
     const CellWeightProvider *weightProvider,
     const CellWeightModifier *weightModifier) const {
   assert(rhsContainer.getOutNum() == 1);
-  std::unordered_set<size_t> reusedLhsEntries;
-  std::unordered_map<size_t, size_t> entryNewRefcount;
+  std::unordered_set<uint32_t> reusedLhsEntries;
+  std::unordered_map<uint32_t, uint32_t> entryNewRefcount;
   const auto addEffect = newEntriesEval(rhsContainer, iomapping,
       reusedLhsEntries, entryNewRefcount, weightProvider, weightModifier);
   const auto delEffect = deletedEntriesEval(iomapping.getOut(0),
@@ -612,19 +613,19 @@ SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
 }
 
 void SubnetBuilder::replaceWithZero(const EntrySet &entryIDs) {
-  const size_t zeroID = addCell(ZERO).idx;
+  const uint32_t zeroID = addCell(ZERO).idx;
   mergeCells(MergeMap{{zeroID, entryIDs}});
 }
 
 void SubnetBuilder::replaceWithOne(const EntrySet &entryIDs) {
-  const size_t oneID = addCell(ONE).idx;
+  const uint32_t oneID = addCell(ONE).idx;
   mergeCells(MergeMap{{oneID, entryIDs}});
 }
 
 void SubnetBuilder::enableFanouts() {
   fanoutsEnabled = true;
   fanouts.reserve(entries.size());
-  for (size_t i = getSubnetBegin(); i != upperBoundID && i != invalidID;
+  for (uint32_t i = getSubnetBegin(); i != upperBoundID && i != invalidID;
        i = getNext(i)) {
     const auto &links = getLinks(i);
     for (const auto &link : links) {
@@ -641,15 +642,17 @@ void SubnetBuilder::disableFanouts() {
 SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     const Subnet &rhs,
     const InOutMapping &iomapping,
-    std::unordered_set<size_t> &reusedLhsEntries,
-    std::unordered_map<size_t, size_t> &entryNewRefcount,
+    std::unordered_set<uint32_t> &reusedLhsEntries,
+    std::unordered_map<uint32_t, uint32_t> &entryNewRefcount,
     const CellWeightProvider *weightProvider,
     const CellWeightModifier *weightModifier) const {
 
   const auto &rhsEntries = rhs.getEntries();
   return newEntriesEval<Subnet, Array<Entry>, ArrayIterator<Entry>>(
     rhs, rhsEntries, iomapping,
-    [&](ArrayIterator<Entry> iter, size_t i) {return i;},
+    [&](ArrayIterator<Entry> iter, uint32_t i) {
+      return i;
+     },
     reusedLhsEntries, entryNewRefcount, weightProvider, weightModifier
   );
 }
@@ -657,14 +660,16 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
 SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     const SubnetBuilder &rhsBuilder,
     const InOutMapping &iomapping,
-    std::unordered_set<size_t> &reusedLhsEntries,
-    std::unordered_map<size_t, size_t> &entryNewRefcount,
+    std::unordered_set<uint32_t> &reusedLhsEntries,
+    std::unordered_map<uint32_t, uint32_t> &entryNewRefcount,
     const CellWeightProvider *weightProvider,
     const CellWeightModifier *weightModifier) const {
 
   return newEntriesEval<SubnetBuilder, SubnetBuilder, EntryIterator>(
     rhsBuilder, rhsBuilder, iomapping,
-    [&](EntryIterator iter, size_t i) {return *iter;},
+    [&](EntryIterator iter, uint32_t i) {
+      return *iter;
+    },
     reusedLhsEntries, entryNewRefcount, weightProvider, weightModifier
   );
 }
@@ -672,9 +677,9 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
 template <typename RhsContainer>
 void SubnetBuilder::incOldLinksRefcnt(
     const RhsContainer &rhsContainer,
-    const size_t rhsEntryID,
-    const std::vector<size_t> &rhsToLhs,
-    std::unordered_map<size_t, size_t> &entryNewRefcount) const {
+    const uint32_t rhsEntryID,
+    const std::vector<uint32_t> &rhsToLhs,
+    std::unordered_map<uint32_t, uint32_t> &entryNewRefcount) const {
   for (const auto &rhsLink : rhsContainer.getLinks(rhsEntryID)) {
     const auto rhsLinkIdx = rhsLink.idx;
     const auto lhsLinkIdx = rhsToLhs[rhsLinkIdx];
@@ -693,9 +698,9 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     const RhsContainer &rhsContainer,
     const RhsIterable &rhsIterable,
     const InOutMapping &iomapping,
-    const std::function<size_t(RhsIt iter, size_t i)> &getEntryID, // FIXME: Add iterator to Subnet
-    std::unordered_set<size_t> &reusedLhsEntries,
-    std::unordered_map<size_t, size_t> &entryNewRefcount,
+    const std::function<uint32_t(RhsIt iter, uint32_t i)> &getEntryID, // FIXME: Add iterator to Subnet
+    std::unordered_set<uint32_t> &reusedLhsEntries,
+    std::unordered_map<uint32_t, uint32_t> &entryNewRefcount,
     const CellWeightProvider *weightProvider,
     const CellWeightModifier *weightModifier) const {
 
@@ -704,15 +709,15 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
 
   std::vector<int> virtualDepth(rhsContainer.getMaxIdx() + 1);
 
-  std::vector<size_t> rhsToLhs(rhsContainer.getMaxIdx() + 1, -1u);
+  std::vector<uint32_t> rhsToLhs(rhsContainer.getMaxIdx() + 1, -1u);
   fillMapping(rhsContainer, iomapping, rhsToLhs);
 
-  size_t rhsRootEntryID = invalidID;
-  size_t i = 0;
+  uint32_t rhsRootEntryID = invalidID;
+  uint32_t i = 0;
   for (auto rhsIt = rhsIterable.begin(); rhsIt != rhsIterable.end();
        ++rhsIt, ++i) {
 
-    const size_t rhsEntryID = getEntryID(rhsIt, i);
+    const auto rhsEntryID = getEntryID(rhsIt, i);
     const auto &rhsCell = rhsContainer.getCell(rhsEntryID);
     if (rhsCell.isOut()) {
       const auto lhsEntryID = rhsToLhs[rhsEntryID];
@@ -769,9 +774,9 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
 }
 
 SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
-    const size_t lhsRootEntryID,
-    std::unordered_set<size_t> &reusedLhsEntries,
-    std::unordered_map<size_t, size_t> &entryNewRefcount,
+    const uint32_t lhsRootEntryID,
+    std::unordered_set<uint32_t> &reusedLhsEntries,
+    std::unordered_map<uint32_t, uint32_t> &entryNewRefcount,
     const CellWeightModifier *weightModifier) const {
   if (reusedLhsEntries.find(lhsRootEntryID) != reusedLhsEntries.end()) {
     Effect effect;
@@ -783,14 +788,14 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
   float deletedWeight = 0.0;
   deletedEntriesN++;
   deletedWeight += weight(getWeight(lhsRootEntryID), weightModifier);
-  std::queue<size_t> entryIDQueue;
-  size_t entryID = lhsRootEntryID;
+  std::queue<uint32_t> entryIDQueue;
+  uint32_t entryID = lhsRootEntryID;
   entryIDQueue.push(entryID);
   while (!entryIDQueue.empty()) {
     entryID = entryIDQueue.front();
     entryIDQueue.pop();
     const auto &cell = entries[entryID].cell;
-    for (size_t i = 0; i < cell.arity; ++i) {
+    for (uint16_t i = 0; i < cell.arity; ++i) {
       const auto linkIdx = cell.link[i].idx;
       if (entries[linkIdx].cell.isIn()) {
         continue;
@@ -811,12 +816,12 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
   return Effect{deletedEntriesN, oldRootDepth, deletedWeight};
 }
 
-Subnet::Link &SubnetBuilder::getLinkRef(size_t entryID, size_t j) {
+Subnet::Link &SubnetBuilder::getLinkRef(uint32_t entryID, uint16_t j) {
   return const_cast<Subnet::Link&>(getLink(entryID, j));
 }
 
-void SubnetBuilder::deleteDepthBounds(size_t entryID) {
-  const size_t entryDepth = getDepth(entryID);
+void SubnetBuilder::deleteDepthBounds(uint32_t entryID) {
+  const uint32_t entryDepth = getDepth(entryID);
   assert(depthBounds.size() > entryDepth);
   if (depthBounds[entryDepth].first == depthBounds[entryDepth].second) {
     depthBounds[entryDepth].first = depthBounds[entryDepth].second = invalidID;
@@ -828,10 +833,10 @@ void SubnetBuilder::deleteDepthBounds(size_t entryID) {
   setOrder(getPrev(entryID), getNext(entryID));
 }
 
-void SubnetBuilder::addDepthBounds(size_t entryID) {
+void SubnetBuilder::addDepthBounds(uint32_t entryID) {
   const auto &cell = getCell(entryID);
   const auto typeID = cell.getTypeID();
-  const size_t curDepth = getDepth(entryID);
+  const auto curDepth = getDepth(entryID);
   if (depthBounds.size() <= curDepth) {
     depthBounds.resize(curDepth + 1, {invalidID, invalidID});
   }
@@ -845,7 +850,7 @@ void SubnetBuilder::addDepthBounds(size_t entryID) {
       placeAfter(entryID, depthBounds[curDepth - 1].second);
     }
   } else {
-    size_t entryToPlaceAfter = depthBounds[curDepth].second;
+    auto entryToPlaceAfter = depthBounds[curDepth].second;
     if (!curDepth && typeID == CELL_TYPE_ID_IN) {
       auto cellToPlaceAfter = getCell(entryToPlaceAfter);
       while (entryToPlaceAfter != lowerBoundID &&
@@ -863,7 +868,7 @@ void SubnetBuilder::addDepthBounds(size_t entryID) {
   }
 }
 
-void SubnetBuilder::addFanout(size_t sourceID, size_t fanoutID) {
+void SubnetBuilder::addFanout(uint32_t sourceID, uint32_t fanoutID) {
   assert(sourceID < entries.size());
   assert(fanoutID < entries.size());
   if (!fanoutsEnabled) {
@@ -875,7 +880,7 @@ void SubnetBuilder::addFanout(size_t sourceID, size_t fanoutID) {
   fanouts[sourceID].push_back(fanoutID);
 }
 
-void SubnetBuilder::delFanout(size_t sourceID, size_t fanoutID) {
+void SubnetBuilder::delFanout(uint32_t sourceID, uint32_t fanoutID) {
   assert(sourceID < entries.size());
   assert(fanoutID < entries.size());
   if (!fanoutsEnabled) {
@@ -890,7 +895,7 @@ void SubnetBuilder::delFanout(size_t sourceID, size_t fanoutID) {
   }
 }
 
-size_t SubnetBuilder::allocEntry(bool isBuf) {
+uint32_t SubnetBuilder::allocEntry(bool isBuf) {
   nCell++;
   if (isBuf) nBuf++;
 
@@ -906,7 +911,7 @@ size_t SubnetBuilder::allocEntry(bool isBuf) {
   return entries.size() - 1;
 }
 
-size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
+uint32_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
   // Fixating subnet begin and subnet end
   if (subnetBegin == normalOrderID) {
     subnetBegin = getSubnetBegin();
@@ -919,7 +924,7 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
     return status.first;
   }
 
-  const size_t idx = (status.first != invalidID) ?
+  const uint32_t idx = (status.first != invalidID) ?
       status.first : allocEntry(typeID == CELL_TYPE_ID_BUF);
 
   desc[idx].depth = 0;
@@ -936,17 +941,17 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
 
   addDepthBounds(idx);
 
-  const size_t curDepth = getDepth(idx);
-  const size_t nLinks = links.size();
+  const auto curDepth = getDepth(idx);
+  const auto nLinks = links.size();
 
   if (Cell::InPlaceLinks >= nLinks) {
     return idx;
   }
 
-  const size_t saveNextEntryID = getNext(idx);
-  size_t prevEntryID = idx;
+  const uint32_t saveNextEntryID = getNext(idx);
+  uint32_t prevEntryID = idx;
 
-  for (size_t i = Cell::InPlaceLinks; i < nLinks; i += Cell::InEntryLinks) {
+  for (uint32_t i = Cell::InPlaceLinks; i < nLinks; i += Cell::InEntryLinks) {
     if (depthBounds[curDepth].second == entries.size() - 1) {
       depthBounds[curDepth].second = entries.size();
     }
@@ -960,7 +965,7 @@ size_t SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
   return idx;
 }
 
-void SubnetBuilder::deallocEntry(size_t entryID) {
+void SubnetBuilder::deallocEntry(uint32_t entryID) {
   const auto &cell = getCell(entryID);
   const bool isBuf = cell.isBuf();
   assert(!cell.refcount);
@@ -977,9 +982,9 @@ void SubnetBuilder::deallocEntry(size_t entryID) {
 }
 
 void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
-  size_t refcount = 0;
+  uint32_t refcount = 0;
 
-  std::unordered_map<size_t, size_t> mergeTo;
+  std::unordered_map<uint32_t, uint32_t> mergeTo;
   for (const auto &[entryID, otherIDs] : entryIDs) {
     assert(getCell(entryID).getOutNum() == 1);
     assert(otherIDs.find(entryID) == otherIDs.end());
@@ -999,7 +1004,7 @@ void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
   if (i != end()) ++i;
   for (; refcount && i != end(); ++i) {
     auto &target = getCell(*i);
-    for (size_t j = 0; j < target.arity; ++j) {
+    for (uint16_t j = 0; j < target.arity; ++j) {
       auto &link = getLinkRef(*i, j);
 
       const auto r = mergeTo.find(link.idx);
@@ -1029,7 +1034,7 @@ void SubnetBuilder::mergeCells(const MergeMap &entryIDs) {
   }
 }
 
-size_t SubnetBuilder::getNext(const size_t entryID) const {
+uint32_t SubnetBuilder::getNext(const uint32_t entryID) const {
   assert(entryID != upperBoundID && entryID != invalidID &&
          entryID != normalOrderID);
   if (entryID == lowerBoundID) {
@@ -1042,7 +1047,7 @@ size_t SubnetBuilder::getNext(const size_t entryID) const {
   return desc[entryID].next == normalOrderID ? entryID + 1 : desc[entryID].next;
 }
 
-size_t SubnetBuilder::getPrev(const size_t entryID) const {
+uint32_t SubnetBuilder::getPrev(const uint32_t entryID) const {
   assert(entryID != lowerBoundID && entryID != invalidID &&
          entryID != normalOrderID);
   if (entryID == upperBoundID) {
@@ -1055,7 +1060,7 @@ size_t SubnetBuilder::getPrev(const size_t entryID) const {
   return desc[entryID].prev == normalOrderID ? entryID - 1 : desc[entryID].prev;
 }
 
-void SubnetBuilder::setOrder(const size_t firstID, const size_t secondID) {
+void SubnetBuilder::setOrder(const uint32_t firstID, const uint32_t secondID) {
   assert(firstID != upperBoundID && secondID != lowerBoundID);
   assert(firstID != invalidID && firstID != normalOrderID &&
          secondID != invalidID && secondID != normalOrderID);
@@ -1084,39 +1089,39 @@ void SubnetBuilder::setOrder(const size_t firstID, const size_t secondID) {
   }
 }
 
-void SubnetBuilder::placeAfter(size_t entryID, size_t pivotEntryID) {
+void SubnetBuilder::placeAfter(uint32_t entryID, uint32_t pivotEntryID) {
   assert(pivotEntryID != upperBoundID);
   setOrder(entryID, getNext(pivotEntryID));
   setOrder(pivotEntryID, entryID);
 }
 
-void SubnetBuilder::placeBefore(size_t entryID, size_t pivotEntryID) {
+void SubnetBuilder::placeBefore(uint32_t entryID, uint32_t pivotEntryID) {
   assert(pivotEntryID != lowerBoundID);
   setOrder(getPrev(pivotEntryID), entryID);
   setOrder(entryID, pivotEntryID);
 }
 
 void SubnetBuilder::recomputeFanoutDepths(
-    size_t rootEntryID,
-    size_t oldRootNextEntryID,
+    uint32_t rootEntryID,
+    uint32_t oldRootNextEntryID,
     const CellActionCallback *onRecomputedDepth) {
   const auto &rootCell = getCell(rootEntryID);
   if (!rootCell.refcount) {
     return;
   }
 
-  std::unordered_set<size_t> toRecompute;
+  std::unordered_set<uint32_t> toRecompute;
   toRecompute.insert(rootEntryID);
-  size_t toRecomputeN = rootCell.refcount;
-  size_t curEntryID = oldRootNextEntryID;
+  auto toRecomputeN = rootCell.refcount;
+  auto curEntryID = oldRootNextEntryID;
   while (toRecomputeN) {
     if (toRecompute.find(curEntryID) != toRecompute.end()) {
       curEntryID = getNext(curEntryID);
       continue;
     }
     const auto &curCell = getCell(curEntryID);
-    size_t newDepth = 0;
-    const size_t curDepth = getDepth(curEntryID);
+    uint32_t newDepth = 0;
+    const auto curDepth = getDepth(curEntryID);
     for (const auto &link : getLinks(curEntryID)) {
       if (toRecompute.find(link.idx) != toRecompute.end()) {
         toRecomputeN--;
@@ -1130,7 +1135,7 @@ void SubnetBuilder::recomputeFanoutDepths(
     }
     toRecomputeN += curCell.refcount;
     toRecompute.insert(curEntryID);
-    size_t nextEntryID = getNext(curEntryID);
+    auto nextEntryID = getNext(curEntryID);
     // Changing topological order
     deleteDepthBounds(curEntryID);
     desc[curEntryID].depth = newDepth;
@@ -1142,11 +1147,11 @@ void SubnetBuilder::recomputeFanoutDepths(
   }
 }
 
-void SubnetBuilder::relinkCell(size_t entryID, const LinkList &newLinks) {
+void SubnetBuilder::relinkCell(uint32_t entryID, const LinkList &newLinks) {
   auto &cell = getCell(entryID);
   assert(cell.arity == newLinks.size());
 
-  for (size_t j = 0; j < cell.arity; ++j) {
+  for (uint16_t j = 0; j < cell.arity; ++j) {
     auto &link = getLinkRef(entryID, j);
     delFanout(link.idx, entryID);
     link = newLinks[j];
@@ -1154,20 +1159,20 @@ void SubnetBuilder::relinkCell(size_t entryID, const LinkList &newLinks) {
   }
 }
 
-void SubnetBuilder::deleteCell(size_t entryID) {
-  std::queue<size_t> queue;
+void SubnetBuilder::deleteCell(uint32_t entryID) {
+  std::queue<uint32_t> queue;
   queue.push(entryID);
 
   do {
-    const size_t currentID = queue.front();
+    const auto currentID = queue.front();
     queue.pop();
 
     auto &cell = getCell(currentID);
     assert(cell.arity <= Cell::InPlaceLinks);
     deallocEntry(currentID);
 
-    for (size_t j = 0; j < cell.arity; ++j) {
-      const size_t inputID = cell.link[j].idx;
+    for (uint16_t j = 0; j < cell.arity; ++j) {
+      const uint32_t inputID = cell.link[j].idx;
 
       auto &inputCell = getCell(inputID);
       delFanout(inputID, currentID);
@@ -1181,7 +1186,7 @@ void SubnetBuilder::deleteCell(size_t entryID) {
 }
 
 Subnet::Link SubnetBuilder::replaceCell(
-    size_t entryID, CellTypeID typeID, const LinkList &links,
+    uint32_t entryID, CellTypeID typeID, const LinkList &links,
     bool delZeroRefcount,
     const CellActionCallback *onNewCell,
     const CellActionCallback *onRecomputedDepth) {
@@ -1200,7 +1205,7 @@ Subnet::Link SubnetBuilder::replaceCell(
   const auto oldRefcount = cell.refcount;
   const auto oldLinks = getLinks(entryID);
   const auto oldDepth = getDepth(entryID);
-  size_t newDepth = 0;
+  uint32_t newDepth = 0;
 
   for (const auto &link : links) {
     addFanout(link.idx, entryID);
@@ -1251,7 +1256,7 @@ Subnet::Link SubnetBuilder::replaceCell(
 }
 
 bool SubnetBuilder::checkInputsOrder() const {
-  for (size_t i = 0; i < nIn; ++i) {
+  for (uint32_t i = 0; i < nIn; ++i) {
     const auto &cell = getCell(i);
 
     if (!cell.isIn()) {
@@ -1264,7 +1269,7 @@ bool SubnetBuilder::checkInputsOrder() const {
 }
 
 bool SubnetBuilder::checkOutputsOrder() const {
-  for (size_t i = entries.size() - nOut; i < entries.size(); ++i) {
+  for (uint32_t i = entries.size() - nOut; i < entries.size(); ++i) {
     const auto &cell = getCell(i);
 
     if (!cell.isOut()) {
@@ -1277,23 +1282,23 @@ bool SubnetBuilder::checkOutputsOrder() const {
 }
 
 void SubnetBuilder::rearrangeEntries(
-    std::vector<size_t> &entryMapping,
+    std::vector<uint32_t> &entryMapping,
     const bool deleteBufs) {
   std::vector<Entry> newEntries;
   std::vector<EntryDescriptor> newDesc;
-  std::vector<size_t> saveMapping;
+  std::vector<uint32_t> saveMapping;
   newEntries.reserve(entries.size());
   newDesc.reserve(desc.size());
   if (!entryMapping.empty()) {
     saveMapping.resize(entryMapping.size(), invalidID);
   }
 
-  std::unordered_map<size_t, std::pair<size_t, uint32_t>> relinkMapping;
+  std::unordered_map<uint32_t, std::pair<uint32_t, uint32_t>> relinkMapping;
   relinkMapping.reserve(entries.size());
   bool outVisited = false;
-  size_t lastCellDepth = invalidID;
-  size_t isLink = 0;
-  for(size_t i = getSubnetBegin(); i != upperBoundID; i = getNext(i)) {
+  uint32_t lastCellDepth = invalidID;
+  uint16_t isLink = 0;
+  for(uint32_t i = getSubnetBegin(); i != upperBoundID; i = getNext(i)) {
     // Delete buffers.
     if (deleteBufs && !isLink && getCell(i).isBuf()) {
       const auto bufLink = getLinks(i)[0];
@@ -1321,13 +1326,14 @@ void SubnetBuilder::rearrangeEntries(
 
     // Find new links; update the input refcounts and descriptor.
     const auto &cell = getCell(i);
-    isLink += std::max(cell.arity, Cell::InPlaceLinks) - Cell::InPlaceLinks;
+    const uint16_t nFanin = cell.arity;
+    isLink += std::max(nFanin, Cell::InPlaceLinks) - Cell::InPlaceLinks;
     EntryDescriptor newCellDesc;
     newCellDesc.weight = getWeight(i);
     newCellDesc.depth = 0;
     const auto &oldLinks = getLinks(i);
     LinkList newLinks;
-    for (size_t j = 0; j < oldLinks.size(); ++j) {
+    for (uint16_t j = 0; j < oldLinks.size(); ++j) {
       const auto &link = oldLinks[j];
       if (j < cell.arity) {
         const auto it = relinkMapping.find(link.idx);
@@ -1389,7 +1395,7 @@ void SubnetBuilder::clearContext() {
   isSessionStarted = false;
 }
 
-std::pair<size_t, bool> SubnetBuilder::strashEntry(
+std::pair<uint32_t, bool> SubnetBuilder::strashEntry(
     CellTypeID typeID, const LinkList &links) {
   if (StrashKey::isEnabled(typeID, links)) {
     const StrashKey key(typeID, links);
@@ -1408,7 +1414,7 @@ std::pair<size_t, bool> SubnetBuilder::strashEntry(
   return {invalidID, false};
 }
 
-void SubnetBuilder::destrashEntry(size_t entryID) {
+void SubnetBuilder::destrashEntry(uint32_t entryID) {
   const auto &cell = getCell(entryID);
 
   if (StrashKey::isEnabled(cell)) {

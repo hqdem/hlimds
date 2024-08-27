@@ -8,27 +8,31 @@
 
 #pragma once
 
-#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 namespace eda::gate::model {
 
-/// Represents an input/output mapping for replacement.
+using EntryID = uint32_t;
+using EntryIDList = std::vector<EntryID>;
+
+/**
+ * @brief Represents an input/output mapping for replacement.
+ */
 struct InOutMapping final {
   InOutMapping() = default;
 
-  InOutMapping(const std::vector<size_t> &inputs,
-               const std::vector<size_t> &outputs):
+  InOutMapping(const EntryIDList &inputs, const EntryIDList &outputs):
       inputs(inputs), outputs(outputs) {}
 
-  size_t getInNum() const { return inputs.size(); }
-  size_t getOutNum() const { return outputs.size(); }
+  uint16_t getInNum() const { return inputs.size(); }
+  uint16_t getOutNum() const { return outputs.size(); }
 
-  size_t getIn(const size_t i) const { return inputs[i]; }
-  size_t getOut(const size_t i) const { return outputs[i]; }
+  EntryID getIn(const uint16_t i) const { return inputs[i]; }
+  EntryID getOut(const uint16_t i) const { return outputs[i]; }
 
-  std::vector<size_t> inputs;
-  std::vector<size_t> outputs;
+  EntryIDList inputs;
+  EntryIDList outputs;
 };
 
 } // namespace eda::gate::model

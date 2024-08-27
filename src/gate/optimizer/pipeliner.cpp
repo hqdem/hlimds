@@ -25,7 +25,7 @@ Pipeliner::SubnetMarkup Pipeliner::markCascades(
 }
 
 size_t Pipeliner::findSubnetDepth(const SubnetBuilderPtr &builder) const {
-  size_t depth = 0;
+  uint32_t depth = 0;
   for (auto it = builder->rbegin(); it != builder->rend(); ++it) {
     const size_t entryID = *it;
     if (!builder->getCell(entryID).isOut()) {

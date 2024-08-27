@@ -42,7 +42,7 @@ SubnetBuilderPtr ConePremapper::map(const SubnetBuilderPtr &builder) const {
        !builderPtr->getCell(*iter).isIn() && (iter != builderPtr->begin());
        --iter) {
 
-    const size_t entryID = *iter;
+    const auto entryID = *iter;
     const auto &cell = builderPtr->getCell(entryID);
     assert(cell.arity <= Cell::InPlaceLinks && "Too great cell arity");
 
@@ -112,7 +112,7 @@ static Link decomposeMaj(SubnetBuilder &builder, const LinkList &links) {
 
 void ConePremapper::decomposeCell(const SubnetBuilderPtr &builder,
                                   SafePasser &iter,
-                                  const size_t entryID) const {
+                                  const model::EntryID entryID) const {
 
   InOutMapping iomapping;
   const auto rhs = std::make_shared<SubnetBuilder>();
@@ -156,11 +156,12 @@ void ConePremapper::decomposeCell(const SubnetBuilderPtr &builder,
 
 void ConePremapper::constantCase(const SubnetBuilderPtr &builder,
                                  SafePasser &iter,
-                                 const size_t entryID) const {
+                                 const model::EntryID entryID) const {
 
   SubnetBuilder *builderPtr = builder.get();
 
-  InOutMapping iomapping(std::vector<size_t>{0}, std::vector<size_t>{entryID});
+  InOutMapping iomapping(std::vector<model::EntryID>{0},
+                         std::vector<model::EntryID>{entryID});
   model::SubnetView view(*builderPtr, iomapping);
   SubnetObject rhs = resynthesizer.resynthesize(view, arity);
   assert(!rhs.isNull() && "Subnet wasn't synthesized!");

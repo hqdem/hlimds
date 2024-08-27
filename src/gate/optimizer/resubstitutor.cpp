@@ -25,7 +25,7 @@ static_assert(maxBranches <= 16);
 //----------------------------------------------------------------------------//
 
 using Cell             = eda::gate::model::Subnet::Cell;
-using IdxMap           = std::unordered_map<size_t, size_t>;
+using IdxMap           = std::unordered_map<model::EntryID, model::EntryID>;
 using InOutMapping     = eda::gate::model::InOutMapping;
 using Link             = eda::gate::model::Subnet::Link;
 using LinkList         = eda::gate::model::Subnet::LinkList;
@@ -54,7 +54,7 @@ struct Divisor {
   Divisor() = delete;
   Divisor(uint64_t divisor) = delete;
   Divisor(const Divisor &div) = default;
-  Divisor(size_t idx, bool inv): idx(idx), inv(inv) {}
+  Divisor(model::EntryID idx, bool inv): idx(idx), inv(inv) {}
 
   uint64_t idx : 63;
   uint64_t inv : 1;
@@ -93,7 +93,7 @@ public:
     negativeTTs.push_back(table);
   }
 
-  const TruthTable &getTruthTable(DivisorType pair, size_t i) const {
+  const TruthTable &getTruthTable(DivisorType pair, model::EntryID i) const {
     switch (pair) {
       case DivisorType::Positive: return positiveTTs[i];
       case DivisorType::Negative: return negativeTTs[i];
@@ -154,7 +154,7 @@ public:
     }
   }
 
-  Divisor getDivisor(DivisorType unate, size_t i) const {
+  Divisor getDivisor(DivisorType unate, model::EntryID i) const {
     switch (unate) {
       case DivisorType::Positive: return posUnate[i];
       case DivisorType::Negative: return negUnate[i];
@@ -164,7 +164,7 @@ public:
     }
   }
 
-  DivisorsPair getDivisorsPair(DivisorType pair, size_t i) const {
+  DivisorsPair getDivisorsPair(DivisorType pair, model::EntryID i) const {
     switch (pair) {
       case DivisorType::Positive: return pairPos[i];
       case DivisorType::Negative: return pairNeg[i];
@@ -173,7 +173,7 @@ public:
     }
   }
 
-  void erase(DivisorType unate, size_t i) {
+  void erase(DivisorType unate, model::EntryID i) {
     switch (unate) {
       case DivisorType::Positive: posUnate.erase(posUnate.begin() + i); break;
       case DivisorType::Negative: negUnate.erase(negUnate.begin() + i); break;
@@ -213,21 +213,21 @@ public:
     pivotID = -1;
   }
 
-  void setPivotID(size_t idx) { pivotID = idx; }
+  void setPivotID(model::EntryID idx) { pivotID = idx; }
 
   void reserve(size_t nCells) {
     tables.reserve(nCells);
   }
 
   void pushBranch(const TruthTable &table) {
-    if (firstBranchID == (size_t)-1) {
+    if (firstBranchID == (model::EntryID)-1) {
       firstBranchID = tables.size();
     }
     nBranches++;
     tables.push_back(table);
   }
   void pushBranch(TruthTable &&table) {
-    if (firstBranchID == (size_t)-1) {
+    if (firstBranchID == (model::EntryID)-1) {
       firstBranchID = tables.size();
     }
     nBranches++;
@@ -235,14 +235,14 @@ public:
   }
 
   void pushOuter(const TruthTable &table) {
-    if (firstOuterID == (size_t)-1) {
+    if (firstOuterID == (model::EntryID)-1) {
       firstOuterID = tables.size();
     }
     nOuters++;
     tables.push_back(table);
   }
   void pushOuter(TruthTable &&table) {
-    if (firstOuterID == (size_t)-1) {
+    if (firstOuterID == (model::EntryID)-1) {
       firstOuterID = tables.size();
     }
     nOuters++;
@@ -274,8 +274,8 @@ public:
 
 private:
   TruthTables tables;
-  size_t firstBranchID = -1;
-  size_t firstOuterID = -1;
+  model::EntryID firstBranchID = -1;
+  model::EntryID firstOuterID = -1;
   size_t nBranches = 0;
   size_t nOuters = 0;
   size_t pivotID = -1;
@@ -300,7 +300,7 @@ static size_t countNodes(const SubnetView &view) {
   walker.run([&counter](SubnetBuilder &builder,
                         const bool isIn,
                         const bool isOut,
-                        const size_t i) -> bool {
+                        const model::EntryID i) -> bool {
       if (isIn) {
         return true;
       }
@@ -313,7 +313,7 @@ static size_t countNodes(const SubnetView &view) {
 
 static void buildFromDivisor(const SubnetBuilder &builder,
                              SubnetBuilder &rhs,
-                             size_t idx,
+                             model::EntryID idx,
                              IdxMap &oldToNew) {
 
   if (oldToNew.find(idx) != oldToNew.end()) {
@@ -326,7 +326,7 @@ static void buildFromDivisor(const SubnetBuilder &builder,
     if (oldToNew.find(links[i].idx) == oldToNew.end()) {
       buildFromDivisor(builder, rhs, links[i].idx, oldToNew);
     }
-    size_t idNew = oldToNew.at(links[i].idx);
+    auto idNew = oldToNew.at(links[i].idx);
     links[i].idx = idNew;
   }
   oldToNew[idx] = rhs.addCell(symbol, links).idx;
@@ -350,14 +350,14 @@ static Link addCell(SubnetBuilder &builder,
 static void removeDeepDivisors(const SubnetBuilder &builder,
                                DivisorType unate,
                                Divisors &divs,
-                               size_t pivot,
+                               model::EntryID pivot,
                                uint16_t delta) {
 
   const size_t maxDepth = builder.getDepth(pivot) - delta;
   size_t i = divs.sizeUnate(unate);
   while (i) {
     --i;
-    const size_t divID = divs.getDivisor(unate, i).idx;
+    const auto divID = divs.getDivisor(unate, i).idx;
     if (builder.getDepth(divID) > maxDepth) {
       divs.erase(unate, i);
     }
@@ -368,7 +368,7 @@ static void removeDeepDivisors(const SubnetBuilder &builder,
 // Maximum fanout-free cone marking
 //----------------------------------------------------------------------------//
 
-static void markMffcRecursively(SubnetBuilder &builder, size_t idx) {
+static void markMffcRecursively(SubnetBuilder &builder, model::EntryID idx) {
   if (builder.isMarked(idx)) {
     return;
   }
@@ -382,7 +382,7 @@ static void markMffcRecursively(SubnetBuilder &builder, size_t idx) {
 
 static size_t markMffc(SubnetBuilder &builder,
                        const SubnetView &view,
-                       const std::vector<size_t> &mffc) {
+                       const std::vector<model::EntryID> &mffc) {
 
   builder.startSession();
 
@@ -569,7 +569,7 @@ static std::pair<bool, Divisor> classifyDivisor(Divisor div,
 }
 
 template <typename TT>
-static std::pair<bool, Divisor> classifyDivisor(size_t idx,
+static std::pair<bool, Divisor> classifyDivisor(model::EntryID idx,
                                                 Divisors &divs,
                                                 const TT &table,
                                                 const TruthTable &onset,
@@ -689,8 +689,8 @@ static std::pair<bool, Divisor> getSideDivisors(SubnetBuilder &builder,
                                                 const TruthTable &onset,
                                                 const TruthTable &offset,
                                                 CellTables &cellTables,
-                                                size_t mffcID,
-                                                size_t idx) {
+                                                model::EntryID mffcID,
+                                                model::EntryID idx) {
 
   if (builder.isMarked(idx) || (builder.getSessionID(idx) == mffcID)) {
     return std::make_pair(false, Divisor(0, 0));
@@ -747,7 +747,7 @@ static bool getSideDivisors(SubnetBuilder &builder,
                             const TruthTable &onset,
                             const TruthTable &offset,
                             CellTables &cellTables,
-                            size_t mffcID) {
+                            model::EntryID mffcID) {
 
   builder.startSession();
 
@@ -777,7 +777,7 @@ static bool getSideDivisors(SubnetBuilder &builder,
 
 static std::pair<bool, Divisor> addInnerDivisor(const SubnetBuilder &builder,
                                                 Divisors &divs,
-                                                size_t idx,
+                                                model::EntryID idx,
                                                 size_t arity,
                                                 const TruthTable &onset,
                                                 const TruthTable &offset) {
@@ -792,7 +792,7 @@ static std::pair<bool, Divisor> addInnerDivisor(const SubnetBuilder &builder,
 
 static std::pair<bool, Divisor> getInnerDivisors(SubnetBuilder &builder,
                                                  Divisors &divs,
-                                                 size_t idx,
+                                                 model::EntryID idx,
                                                  size_t arity,
                                                  const TruthTable &onset,
                                                  const TruthTable &offset) {
@@ -824,7 +824,7 @@ static bool getInnerDivisors(SubnetBuilder &builder,
                              Divisors &divs,
                              const TruthTable &onset,
                              const TruthTable &offset,
-                             const std::vector<size_t> &mffc) {
+                             const std::vector<model::EntryID> &mffc) {
 
   builder.startSession();
 
@@ -868,7 +868,7 @@ static bool getDivisors(SubnetBuilder &builder,
                         const TruthTable &onset,
                         const TruthTable &offset,
                         CellTables &tables,
-                        const std::vector<size_t> &mffc) {
+                        const std::vector<model::EntryID> &mffc) {
 
   const size_t id = markMffc(builder, view, mffc);
   if (getInnerDivisors(builder, iter, view, divs, onset, offset, mffc)) {
@@ -1069,7 +1069,7 @@ inline bool makeZeroResubstitution(SubnetBuilder &builder,
                                    const TruthTable &onset,
                                    const TruthTable &offset,
                                    CellTables &tables,
-                                   const std::vector<size_t> &mffc) {
+                                   const std::vector<model::EntryID> &mffc) {
 
   return getDivisors(builder, iter, view, divs, onset, offset, tables, mffc);
 }
@@ -1152,7 +1152,7 @@ static void simulateCone(SubnetBuilder &builder,
     walker.run([&cellTables, &nIn, arity](SubnetBuilder &builder,
                                           const bool isIn,
                                           const bool isOut,
-                                          const size_t i) -> bool {
+                                          const model::EntryID i) -> bool {
       const auto tt = utils::getTruthTable<TTn>(builder, arity, i, isIn, nIn++);
       cellTables.push(std::move(tt));
       utils::setTruthTable<TTn>(builder, i, cellTables.back());
@@ -1162,7 +1162,7 @@ static void simulateCone(SubnetBuilder &builder,
 }
 
 static void invertPivotTT(SubnetBuilder &builder,
-                          size_t pivot,
+                          model::EntryID pivot,
                           CellTables &cellTables,
                           size_t arity) {
 
@@ -1186,7 +1186,7 @@ static TruthTables evaluateRoots(SubnetBuilder &builder,
     walker.run([arity](SubnetBuilder &builder,
                        const bool isIn,
                        const bool isOut,
-                       const size_t i) -> bool {
+                       const model::EntryID i) -> bool {
                                 
       if (isIn) {
         return true; // Continue traversal.
@@ -1205,7 +1205,7 @@ static TruthTables evaluateRoots(SubnetBuilder &builder,
     walker.run([&nOuter, &cellTables, arity](SubnetBuilder &builder,
                                              const bool isIn,
                                              const bool isOut,
-                                             const size_t i) -> bool {
+                                             const model::EntryID i) -> bool {
 
       if (isIn) {
         return true; // Continue traversal.
@@ -1230,9 +1230,9 @@ static TruthTables evaluateRoots(SubnetBuilder &builder,
 static TruthTable computeCare(SubnetBuilder &builder,
                               uint64_t status,
                               const SubnetView &careView,
-                              size_t pivot,
+                              model::EntryID pivot,
                               size_t arity,
-                              const std::vector<size_t> &branches,
+                              const std::vector<model::EntryID> &branches,
                               CellTables &cellTables) {
 
   auto care = utils::getZeroTruthTable<TTn>(arity);
@@ -1270,7 +1270,7 @@ static TruthTable computeCare(SubnetBuilder &builder,
   return care;
 }
 
-static void markInnerRecursively(SubnetBuilder &builder, size_t idx) {
+static void markInnerRecursively(SubnetBuilder &builder, model::EntryID idx) {
   if (builder.isMarked(idx)) {
     return;
   }
@@ -1311,8 +1311,8 @@ static void prepareStatus(uint64_t &status, uint64_t iteration) {
 
 static void addInnerToInputs(SubnetBuilder &builder,
                              InOutMapping &iomapping,
-                             size_t idx,
-                             size_t innerID) {
+                             model::EntryID idx,
+                             model::EntryID innerID) {
 
   if (builder.isMarked(idx)) {
     return;
@@ -1332,12 +1332,12 @@ static void addInnerToInputs(SubnetBuilder &builder,
 }
 
 static SubnetView getCareView(SubnetBuilder &builder,
-                              size_t pivot,
-                              const std::vector<size_t> &roots,
-                              const std::vector<size_t> &branches,
+                              model::EntryID pivot,
+                              const std::vector<model::EntryID> &roots,
+                              const std::vector<model::EntryID> &branches,
                               size_t k,
                               CellTables &cellTables,
-                              size_t innerID) {
+                              model::EntryID innerID) {
 
   builder.startSession();
 
@@ -1379,7 +1379,7 @@ static void reserveOuters(const SubnetView &view,
   walker.run([&cellTables, arity](SubnetBuilder &parent,
                                   const bool isIn,
                                   const bool isOut,
-                                  const size_t i) -> bool {
+                                  const model::EntryID i) -> bool {
 
     if (isIn) {
       return true; // Continue traversal.
@@ -1393,16 +1393,16 @@ static void reserveOuters(const SubnetView &view,
 
 static TruthTable computeCare(SubnetBuilder &builder,
                               const SubnetView &view,
-                              const std::vector<size_t> &roots,
-                              const std::vector<size_t> &branches,
+                              const std::vector<model::EntryID> &roots,
+                              const std::vector<model::EntryID> &branches,
                               uint64_t status,
                               CellTables &tables) {
 
-  const size_t k = view.getInNum();
-  const size_t pivot = view.getOut(0);
+  const auto k = view.getInNum();
+  const auto pivot = view.getOut(0);
 
   // Mark inner nodes (from pivot to cut).
-  const size_t innerID = markInner(builder, view);
+  const auto innerID = markInner(builder, view);
 
   const auto careView = getCareView(builder, pivot, roots, branches,
                                     k, tables, innerID);
@@ -1430,9 +1430,9 @@ static TruthTable computeCare(SubnetBuilder &builder,
 //----------------------------------------------------------------------------//
 
 static bool collectBranchesRecursively(SubnetBuilder &builder,
-                                       size_t idx,
+                                       model::EntryID idx,
                                        uint64_t &status,
-                                       std::vector<size_t> &branches) {
+                                       std::vector<model::EntryID> &branches) {
 
   if (builder.isMarked(idx)) {
     return false;
@@ -1476,8 +1476,8 @@ static bool collectBranchesRecursively(SubnetBuilder &builder,
 
 static uint64_t collectBranches(SubnetBuilder &builder,
                                 const SubnetView &view,
-                                const std::vector<size_t> &roots,
-                                std::vector<size_t> &branches) {
+                                const std::vector<model::EntryID> &roots,
+                                std::vector<model::EntryID> &branches) {
 
   uint64_t status = 0;
   bool overflow = false;
@@ -1508,8 +1508,8 @@ static uint64_t collectBranches(SubnetBuilder &builder,
 //----------------------------------------------------------------------------//
 
 static void collectRootsRecursively(SubnetBuilder &builder,
-                                    size_t idx,
-                                    std::vector<size_t> &roots) {
+                                    model::EntryID idx,
+                                    std::vector<model::EntryID> &roots) {
 
   if (builder.isMarked(idx)) {
     return;
@@ -1535,8 +1535,9 @@ static void collectRootsRecursively(SubnetBuilder &builder,
   }
 }
 
-static std::vector<size_t> collectRoots(SubnetBuilder &builder, size_t pivot) {
-  std::vector<size_t> roots;
+static std::vector<model::EntryID> collectRoots(SubnetBuilder &builder,
+                                                model::EntryID pivot) {
+  std::vector<model::EntryID> roots;
   builder.startSession();
   collectRootsRecursively(builder, pivot, roots);
   builder.endSession();
@@ -1548,7 +1549,7 @@ static std::vector<size_t> collectRoots(SubnetBuilder &builder, size_t pivot) {
 //----------------------------------------------------------------------------//
 
 static void markEntryTFORecursively(SubnetBuilder &builder,
-                                    size_t idx,
+                                    model::EntryID idx,
                                     unsigned maxDepth) {
 
   if (builder.isMarked(idx)) {
@@ -1571,7 +1572,7 @@ static void markCutTFO(SubnetBuilder &builder,
 
   assert(!view.getOutputs().empty());
   builder.startSession();
-  const size_t pivot = view.getOut(0);
+  const auto pivot = view.getOut(0);
   const size_t maxDepth = builder.getDepth(pivot) + maxLevels;
 
   // Mark nodes bypassing pivot (try to find reconvergence).
@@ -1590,7 +1591,7 @@ static void markCutTFO(SubnetBuilder &builder,
 
 static void getTarget(const SubnetBuilder *builderPtr,
                       const TruthTable &care,
-                      size_t pivot,
+                      model::EntryID pivot,
                       size_t arity,
                       TruthTable &onset,
                       TruthTable &offset) {
@@ -1606,7 +1607,7 @@ static void getTarget(const SubnetBuilder *builderPtr,
   offset = ~utils::convertTruthTable<TT6>(tt, arity) & care;
 }
 
-static bool isAcceptable(const SubnetBuilder *builderPtr, size_t pivot) {
+static bool isAcceptable(const SubnetBuilder *builderPtr, model::EntryID pivot) {
   const auto &cell = builderPtr->getCell(pivot);
   if (cell.isIn() || cell.isOne() || cell.isZero()) {
     return false;
@@ -1648,13 +1649,13 @@ void Resubstitutor::transform(
     // Mark TFO of reconvergent cut bypassing pivot.
     markCutTFO(*builderPtr, view, maxLevels);
   
-    const std::vector<size_t> roots = collectRoots(*builderPtr, pivot);
+    const std::vector<model::EntryID> roots = collectRoots(*builderPtr, pivot);
     if (((roots.size() == 1) && (roots[0] == pivot)) || roots.empty()) {
       continue;
     }
 
     // Collect branches (new inputs for "don't care" evaluation).
-    std::vector<size_t> branches;
+    std::vector<model::EntryID> branches;
     uint64_t status = collectBranches(*builderPtr, view, roots, branches);
     if (status == (uint64_t)-1) {
       continue;

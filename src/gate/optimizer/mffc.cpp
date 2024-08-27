@@ -14,11 +14,11 @@ using Builder    = model::SubnetBuilder;
 using Cell       = model::Subnet::Cell;
 using Link       = model::Subnet::Link;
 using LinkList   = model::Subnet::LinkList;
-using Nodes      = std::vector<size_t>;
+using Nodes      = std::vector<model::EntryID>;
 using SubnetView = model::SubnetView;
 
 static void getMffcBounds(Builder &builder,
-                          size_t idx,
+                          model::EntryID idx,
                           size_t &counter,
                           size_t boundsID,
                           Nodes &bounds) {
@@ -55,7 +55,7 @@ static void getMffcBounds(Builder &builder,
 }
 
 static void findMffcBounds(Builder &builder,
-                           size_t rootID,
+                           model::EntryID rootID,
                            size_t counter,
                            size_t boundsID,
                            Nodes &bounds) {
@@ -71,7 +71,9 @@ static void findMffcBounds(Builder &builder,
 // Bound -- CUT
 //===----------------------------------------------------------------------===//
 
-static void dereferenceCells(Builder &builder, size_t idx, size_t &counter) {
+static void dereferenceCells(Builder &builder,
+                             model::EntryID idx,
+                             size_t &counter) {
   for (const auto &link : builder.getLinks(idx)) {
     Cell &cell = builder.getCell(link.idx);
     cell.decRefCount();
@@ -84,12 +86,12 @@ static void dereferenceCells(Builder &builder, size_t idx, size_t &counter) {
 }
 
 static size_t dereferenceCells(Builder &builder,
-                               size_t rootID,
+                               model::EntryID rootID,
                                size_t &counter,
                                const Nodes &cut) {
 
   builder.startSession();
-  size_t boundsID = builder.getSessionID();
+  auto boundsID = builder.getSessionID();
   for (const auto &idx : cut) {
     builder.mark(idx);
   }
@@ -98,8 +100,8 @@ static size_t dereferenceCells(Builder &builder,
   return boundsID;
 }
 
-SubnetView getMffc(Builder &builder, size_t rootID, const Nodes &cut) {
-  const size_t nLeaves = cut.size();
+SubnetView getMffc(Builder &builder, model::EntryID rootID, const Nodes &cut) {
+  const auto nLeaves = cut.size();
   if ((nLeaves == 1) && (rootID == cut[0])) {
     return SubnetView{builder, {Nodes{rootID}, Nodes{rootID}}};
   }
@@ -121,7 +123,7 @@ SubnetView getMffc(Builder &builder, const SubnetView &view) {
   return getMffc(builder, roots[0], view.getInputs());
 }
 
-SubnetView getMffc(Builder &builder, size_t rootID) {
+SubnetView getMffc(Builder &builder, model::EntryID rootID) {
   Nodes emptyBounds;
   return getMffc(builder, rootID, emptyBounds);
 }
@@ -131,7 +133,7 @@ SubnetView getMffc(Builder &builder, size_t rootID) {
 //===----------------------------------------------------------------------===//
 
 static void dereferenceCells(Builder &builder,
-                             size_t idx,
+                             model::EntryID idx,
                              size_t &counter,
                              size_t maxDepth,
                              size_t depth) {
@@ -152,7 +154,7 @@ static void dereferenceCells(Builder &builder,
 }
 
 static size_t dereferenceCells(Builder &builder,
-                               size_t rootID,
+                               model::EntryID rootID,
                                size_t &counter,
                                size_t maxDepth) {
 
@@ -163,7 +165,7 @@ static size_t dereferenceCells(Builder &builder,
   return boundsID;
 }
 
-SubnetView getMffc(Builder &builder, size_t rootID, size_t maxDepth) {
+SubnetView getMffc(Builder &builder, model::EntryID rootID, size_t maxDepth) {
   if (!maxDepth) {
     return SubnetView{builder, {Nodes{rootID}, Nodes{rootID}}};
   }

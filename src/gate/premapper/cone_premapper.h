@@ -52,11 +52,11 @@ private:
 
   void decomposeCell(const SubnetBuilderPtr &builder,
                      SafePasser &iter,
-                     const size_t entryID) const;
+                     const model::EntryID entryID) const;
 
   void constantCase(const SubnetBuilderPtr &builder,
                     SafePasser &iter,
-                    const size_t entryID) const;
+                    const model::EntryID entryID) const;
 
   const Basis basis;
   const ResynthesizerBase &resynthesizer;

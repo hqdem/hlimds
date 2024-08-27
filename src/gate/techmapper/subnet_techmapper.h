@@ -38,7 +38,7 @@ public:
   using CutProvider =
       std::function<optimizer::CutsList(
                         const model::SubnetBuilder &,
-                        const size_t entryID)>;
+                        const uint32_t entryID)>;
   using MatchFinder =
       std::function<std::vector<Match>(
                         const model::SubnetBuilder &,

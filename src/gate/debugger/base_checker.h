@@ -97,7 +97,7 @@ private:
 /// Basic class for equivalence checkers.
 class BaseChecker {
 public:
-  using CellToCell = std::unordered_map<size_t, size_t>;
+  using CellToCell = std::unordered_map<uint32_t, uint32_t>;
   using LecType = eda::gate::debugger::options::LecType;
 
   /// Returns the LEC checker.

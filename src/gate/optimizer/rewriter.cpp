@@ -15,11 +15,11 @@ namespace eda::gate::optimizer {
 void Rewriter::transform(const std::shared_ptr<SubnetBuilder> &builder) const {
   SubnetBuilder *builderPtr = builder.get();
   CutExtractor cutExtractor(builderPtr, k, false);
-  std::function cutRecompute = [&cutExtractor](const size_t entryID) {
+  std::function cutRecompute = [&cutExtractor](const uint32_t entryID) {
     cutExtractor.recomputeCuts(entryID);
   };
-  std::function cutRecomputeDepthCond = [&cutExtractor](const size_t entryID,
-      const size_t oldRootDepth, const size_t curEntryDepth) {
+  std::function cutRecomputeDepthCond = [&cutExtractor](const uint32_t entryID,
+      const uint32_t oldRootDepth, const uint32_t curEntryDepth) {
 
     if (curEntryDepth <= oldRootDepth) {
       cutExtractor.recomputeCuts(entryID);
@@ -39,7 +39,7 @@ void Rewriter::rewriteOnNode(
     CutExtractor &cutExtractor,
     const CellActionCallback *cutRecompute,
     const CellCallbackCondition *cutRecomputeDepthCond) const {
-  const size_t entryID = *iter;
+  const auto entryID = *iter;
   const auto &cuts = cutExtractor.getCuts(entryID);
   float bestMetricValue = std::numeric_limits<float>::lowest();
   SubnetObject bestRhs{};

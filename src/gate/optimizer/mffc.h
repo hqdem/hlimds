@@ -20,8 +20,8 @@ namespace eda::gate::optimizer {
  *  @param cut The nodes of the cut that limit MFFC.
  *  @return The subnet view of MFFC.
  */
-model::SubnetView getMffc(model::SubnetBuilder &builder, size_t rootID,
-                          const std::vector<size_t> &cut);
+model::SubnetView getMffc(model::SubnetBuilder &builder, model::EntryID rootID,
+                          const std::vector<model::EntryID> &cut);
 
 /** @brief Returns a view of fanout-free cone limited by inputs of view.
  *  @param builoder The builder of a subnet.
@@ -37,7 +37,7 @@ model::SubnetView getMffc(model::SubnetBuilder &builder,
  *  @param maxDepth Max distance from the root to inputs of MFFC.
  *  @return The subnet view of MFFC.
  */
-model::SubnetView getMffc(model::SubnetBuilder &builder, size_t rootID,
+model::SubnetView getMffc(model::SubnetBuilder &builder, model::EntryID rootID,
                           size_t maxDepth);
 
 /** @brief Returns a view of maximum fanout-free cone.
@@ -45,6 +45,6 @@ model::SubnetView getMffc(model::SubnetBuilder &builder, size_t rootID,
  *  @param rootID The root ID.
  *  @return The subnet view of MFFC.
  */
-model::SubnetView getMffc(model::SubnetBuilder &builder, size_t rootID);
+model::SubnetView getMffc(model::SubnetBuilder &builder, model::EntryID rootID);
 
 } // namespace eda::gate::optimizer

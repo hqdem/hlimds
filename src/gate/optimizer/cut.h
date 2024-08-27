@@ -21,17 +21,17 @@ namespace eda::gate::optimizer {
  * @brief Represents a k-feasible cut of a given subnet cell (root).
  */
 struct Cut final {
-  using Set = util::BoundedSet<size_t>;
+  using Set = util::BoundedSet<model::EntryID>;
 
-  Cut(const size_t rootID, const Set &leafIDs):
+  Cut(const model::EntryID rootID, const Set &leafIDs):
       rootID(rootID), leafIDs(leafIDs /* might be empty */) {}
 
   Cut(const uint16_t k,
-      const size_t rootID,
-      const std::unordered_set<size_t> &leafIDs):
+      const model::EntryID rootID,
+      const std::unordered_set<model::EntryID> &leafIDs):
       Cut(rootID, Set(k, leafIDs)) {}
 
-  Cut(const uint16_t k, const size_t rootID):
+  Cut(const uint16_t k, const model::EntryID rootID):
       Cut(rootID, Set(k, rootID)) {}
 
   /// Returns the maximum size of the cut.
@@ -55,7 +55,7 @@ struct Cut final {
         && other.leafIDs.contains(leafIDs);
   }
 
-  const size_t rootID;
+  const model::EntryID rootID;
   Set leafIDs /* modifiable */;
 };
 

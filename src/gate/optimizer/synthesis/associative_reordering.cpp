@@ -34,8 +34,8 @@ using SubnetViewWalker = eda::gate::model::SubnetViewWalker;
 
 bool AssociativeReordering::isAssociative(const SubnetBuilder &builder) const {
 
-  size_t last = *builder.end().prev();
-  size_t depth = builder.getDepth(last);
+  auto last = *builder.end().prev();
+  auto depth = builder.getDepth(last);
   return (depth > 2);
 }
 
@@ -46,7 +46,7 @@ bool AssociativeReordering::isOpen(SubnetView &view) const {
   auto func = [&open](SubnetBuilder &builder,
                       const bool isIn,
                       const bool isOut,
-                      const size_t entryID) ->bool { 
+                      const model::EntryID entryID) ->bool { 
       
       if (builder.getCell(entryID).refcount > 1) {
         open = true;
@@ -162,7 +162,7 @@ std::shared_ptr<SubnetBuilder> AssociativeReordering::createBuilder(
     const size_t arity,
     std::vector<std::set<int>> &permut, 
     const CellSymbol cellSymbol, 
-    const std::set<size_t> &negInputs) const {
+    const std::set<model::EntryID> &negInputs) const {
   
   std::shared_ptr<SubnetBuilder> newBuilder = std::make_shared<SubnetBuilder>();
   LinkList inputs = newBuilder->addInputs(numInputs);
@@ -227,7 +227,7 @@ std::shared_ptr<SubnetBuilder> AssociativeReordering::createBuilder(
 
 std::shared_ptr<SubnetBuilder> AssociativeReordering::makeBuilder(
     SubnetView &view, 
-    const std::set<size_t> &negInpts) const {
+    const std::set<model::EntryID> &negInpts) const {
   
   std::shared_ptr<SubnetBuilder> newBuilder = 
       std::make_shared<SubnetBuilder>(view.getSubnet().make());
@@ -268,8 +268,8 @@ std::shared_ptr<SubnetBuilder> AssociativeReordering::makeBuilder(
 
 void AssociativeReordering::dfsBuilder(const SubnetBuilder &builder, 
                                        size_t start, 
-                                       std::vector<size_t> &mapInputs, 
-                                       std::set<size_t> &negLinks) const {
+                                       std::vector<model::EntryID> &mapInputs, 
+                                       std::set<model::EntryID> &negLinks) const {
 
   std::stack<size_t> st;
   st.push(start);
@@ -348,7 +348,7 @@ void AssociativeReordering::setWeights(SubnetBuilder &newBuilder,
 
 void AssociativeReordering::setWeights(SubnetView &view, 
                                        SubnetBuilder &newBuilder, 
-                                       const std::set<size_t> &negLinks) const {
+                                       const std::set<model::EntryID> &negLinks) const {
   
   std::vector<float> inpProb;
   
@@ -386,9 +386,9 @@ model::SubnetObject AssociativeReordering::synthesize(
   
   for (; builder.getDepth(*curCell) > 1; --curCell) {
   
-    size_t curNum = *curCell; 
-    std::vector<size_t> mapInp;
-    std::set<size_t> negLinks;
+    auto curNum = *curCell; 
+    std::vector<model::EntryID> mapInp;
+    std::set<model::EntryID> negLinks;
     
     dfsBuilder(builder, curNum, mapInp, negLinks);
     model::InOutMapping map(mapInp, {curNum});
@@ -403,7 +403,7 @@ model::SubnetObject AssociativeReordering::synthesize(
       continue;
     }
     setWeights(view, *builderPtr, negLinks);
-    std::set<size_t> negInputs;
+    std::set<model::EntryID> negInputs;
     
     for (size_t i = 0; i < mapInp.size(); ++i) {
       if (negLinks.count(mapInp[i])) {

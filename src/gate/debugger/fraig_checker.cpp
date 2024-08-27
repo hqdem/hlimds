@@ -48,7 +48,7 @@ struct EqPointResult {
    */
   EqPointResult(EqPointStatus status,
                         std::vector<bool> counterExample,
-                        std::vector<size_t> inputs) {
+                        std::vector<uint32_t> inputs) {
     assert(status == EqPointStatus::NOTEQUAL);
     this->status = status;
     this->counterExample = counterExample;
@@ -63,7 +63,7 @@ struct EqPointResult {
       !counterExampleFlag) {
     return;
   }
-  size_t counterExampleSize = counterExample.size();
+  auto counterExampleSize = counterExample.size();
 
   UniformIntDistribution distribution(0, counterExampleSize);
   //TODO: Replace with general generator.
@@ -83,11 +83,11 @@ struct EqPointResult {
 private:
   bool counterExampleFlag = false;
   std::vector<bool> counterExample{};
-  std::vector<size_t> inputs{};
+  std::vector<uint32_t> inputs{};
 };
 
-EqPointResult check(const size_t point1,
-                    const size_t point2,
+EqPointResult check(const uint32_t point1,
+                    const uint32_t point2,
                     const model::SubnetBuilder &builder) {
 
   model::SubnetView cone1(builder, point1);
@@ -102,7 +102,7 @@ EqPointResult check(const size_t point1,
   }
   auto inputs1 = cone1.getInputs();
   auto inputs2 = cone2.getInputs();
-  std::unordered_map<size_t, size_t> inputToPos;
+  std::unordered_map<uint32_t, uint32_t> inputToPos;
   for (size_t i = 0; i < inputs2.size(); i++) {
     inputToPos[inputs2[i]] = i;
   }

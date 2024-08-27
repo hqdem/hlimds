@@ -27,7 +27,7 @@ class SafePasser : public EntryIterator {
   using SubnetObject = eda::gate::model::SubnetObject;
   using CellActionCallback = SubnetBuilder::CellActionCallback;
   using CellCallbackCondition =
-      std::function<void(const size_t, const size_t, const size_t)>;
+      std::function<void(const uint32_t, const uint32_t, const uint32_t)>;
   using CellWeightProvider = SubnetBuilder::CellWeightProvider;
 
   enum Direction {
@@ -47,7 +47,7 @@ public:
    */
   SafePasser(
     EntryIterator iter,
-    const std::function<void(const size_t)> *onEachEntry = nullptr);
+    const std::function<void(const uint32_t)> *onEachEntry = nullptr);
 
   SafePasser &operator=(const SafePasser &other) = delete;
   SafePasser &operator=(SafePasser &&other) = default;
@@ -107,7 +107,7 @@ public:
 private:
   /// Checks replacement possibility and saves old cone root next entry.
   void prepareForReplace(
-      const size_t rhsOutEntryID,
+      const uint32_t rhsOutEntryID,
       const InOutMapping &rhsToLhsMapping) {
     assert(/* Replacing unsafe root entry */
            isNewEntry.size() <= entry || !isNewEntry[entry]);
@@ -120,14 +120,14 @@ private:
   }
 
   /// Recomputes saveNext according to the passer direction and new root depth.
-  void recomputeNext(const size_t oldRootDepth, const bool rootLastDepth) {
+  void recomputeNext(const uint32_t oldRootDepth, const bool rootLastDepth) {
     if (direction == FORWARD) {
-      const size_t curRootDepth = builder->getDepth(entry);
+      const auto curRootDepth = builder->getDepth(entry);
       if (oldRootDepth < curRootDepth && rootLastDepth) {
         saveNext = builder->getFirstWithDepth(oldRootDepth + 1);
       }
     } else if (direction == BACKWARD) {
-      const size_t curRootDepth = builder->getDepth(entry);
+      const auto curRootDepth = builder->getDepth(entry);
       if (oldRootDepth > curRootDepth && rootLastDepth) {
         saveNext = builder->getLastWithDepth(oldRootDepth);
       }
@@ -154,7 +154,7 @@ private:
 
   std::vector<char> isNewEntry{};
   std::vector<char> isPassedEntry{};
-  const std::function<void(const size_t)> *onEachEntry;
+  const std::function<void(const uint32_t)> *onEachEntry;
 
   value_type saveNext{SubnetBuilder::invalidID};
 };

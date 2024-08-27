@@ -36,10 +36,10 @@ TEST(ReconvergenceTest, CorrectnessTest) {
 
   const auto cutView = getReconvergentCut(builder, 5, 4);
 
-  const std::vector<size_t> check = {1, 0};
+  const std::vector<model::EntryID> check = {1, 0};
 
   EXPECT_EQ(check, cutView.getInputs());
-  EXPECT_EQ(std::vector<size_t>{5}, cutView.getOutputs());
+  EXPECT_EQ(std::vector<model::EntryID>{5}, cutView.getOutputs());
 }
 
 TEST(ReconvergenceTest, SimpleTest) {
@@ -62,8 +62,8 @@ TEST(ReconvergenceTest, SimpleTest) {
   */
   const size_t cutSize = 4;
   const size_t nInputs = 6;
-  const size_t rootId = 20;
   const size_t nLoops = 19;
+  const model::EntryID rootId = 20;
 
   SubnetBuilder builder;
   auto links = builder.addInputs(nInputs);
@@ -83,10 +83,10 @@ TEST(ReconvergenceTest, SimpleTest) {
 
   const auto cutView = getReconvergentCut(builder, rootId, cutSize);
 
-  const std::vector<size_t> check = {11, 12, 13, 14};
+  const std::vector<model::EntryID> check = {11, 12, 13, 14};
 
   EXPECT_EQ(cutView.getInputs(), check);
-  EXPECT_EQ(cutView.getOutputs(), std::vector<size_t>{rootId});
+  EXPECT_EQ(cutView.getOutputs(), std::vector<model::EntryID>{rootId});
 }
 
 } // namespace eda::gate::optimizer

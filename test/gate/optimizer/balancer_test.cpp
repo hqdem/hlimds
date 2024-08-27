@@ -34,20 +34,20 @@ static void checkBalancingEquivalence(SubnetID lhs, SubnetID rhs) {
 
   std::cout << subnet.getInNum() << " ins " << subnet.getOutNum() << " outs\n";
 
-  std::unordered_map<size_t, size_t> map;
-  for (size_t i = 0; i < subnet.getInNum(); ++i) {
+  std::unordered_map<uint32_t, uint32_t> map;
+  for (uint32_t i = 0; i < subnet.getInNum(); ++i) {
     map[i] = i;
   }
 
-  for (size_t j = subnet.getOutNum(); j > 0; --j) {
+  for (uint32_t j = subnet.getOutNum(); j > 0; --j) {
     map[subnet.size() - j] = opt.size() - j;
   }
 
   EXPECT_TRUE(checker.areEquivalent(lhs, rhs, map).equal());
 }
 
-size_t getSubnetDepth(const SubnetBuilder &builder) {
-  size_t depth = 0;
+uint32_t getSubnetDepth(const SubnetBuilder &builder) {
+  uint32_t depth = 0;
   for (auto it = builder.begin(); it != builder.end(); ++it) {
     depth = std::max(depth, builder.getDepth(*it));
   }
@@ -55,10 +55,10 @@ size_t getSubnetDepth(const SubnetBuilder &builder) {
 }
 
 void printBalancingInfo(SubnetBuilder &builder,
-                        const size_t expectedDepthBefore,
-                        const size_t expectedDepthAfter) {
+                        const uint32_t expectedDepthBefore,
+                        const uint32_t expectedDepthAfter) {
 
-  const size_t depthBeforeBalance = getSubnetDepth(builder);
+  const auto depthBeforeBalance = getSubnetDepth(builder);
   EXPECT_EQ(expectedDepthBefore, depthBeforeBalance);
 
   std::cout << "Net depth before balancing: " << depthBeforeBalance << std::endl;
@@ -81,7 +81,7 @@ void printBalancingInfo(SubnetBuilder &builder,
   checkBalancingEquivalence(subnetBeforeID, subnetAfterID);
 #endif
 
-  const size_t depthAfterBalance = getSubnetDepth(*copyBuilder);
+  const auto depthAfterBalance = getSubnetDepth(*copyBuilder);
   std::cout << "Net depth after balancing: " << depthAfterBalance << std::endl;
   std::cout << "Balancing time: " << balancingTime.count() << " s" << std::endl;
 

@@ -75,12 +75,12 @@ private:
 
 void dfsBuilder(const SubnetBuilder &builder, 
                 size_t start, 
-                std::vector<size_t> &mapInputs, 
-                std::set<size_t> &negInpts) const;
+                std::vector<model::EntryID> &mapInputs, 
+                std::set<model::EntryID> &negInpts) const;
 
 std::shared_ptr<SubnetBuilder> makeBuilder(
     SubnetView &view, 
-    const std::set<size_t> &negInpts = {}) const;
+    const std::set<model::EntryID> &negInpts = {}) const;
 
 std::shared_ptr<SubnetBuilder> createBuilder(
     const size_t numInputs, 
@@ -88,7 +88,7 @@ std::shared_ptr<SubnetBuilder> createBuilder(
     const size_t arity,
     std::vector<std::set<int>> &permut, 
     const CellSymbol cellSymbol, 
-    const std::set<size_t> &negInputs = {}) const;
+    const std::set<model::EntryID> &negInputs = {}) const;
 
 float getEffect(FragmentInfo &info,
                 const std::vector<int> &permutation) const;
@@ -108,7 +108,7 @@ void setWeights(SubnetBuilder &newBuilder,
 
 void setWeights(SubnetView &view,
                 SubnetBuilder &newBuilder, 
-                const std::set<size_t> &negLinks = {}) const;
+                const std::set<model::EntryID> &negLinks = {}) const;
 
 bool isAssociative(const SubnetBuilder &builder) const;
 bool isOpen(SubnetView &view) const;

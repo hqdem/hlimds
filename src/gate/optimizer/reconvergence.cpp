@@ -12,7 +12,7 @@ namespace eda::gate::optimizer {
 
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
 
-static unsigned computeCost(SubnetBuilder &builder, size_t idx) {
+static unsigned computeCost(SubnetBuilder &builder, model::EntryID idx) {
   const auto &cell = builder.getCell(idx);
 
   if (cell.isIn() || cell.isZero() || cell.isOne()) {
@@ -31,13 +31,13 @@ static unsigned computeCost(SubnetBuilder &builder, size_t idx) {
   return cost;
 }
 
-static size_t findBestLeave(SubnetBuilder &builder,
-                            const std::vector<size_t> &leaves,
-                            uint16_t cutSize) {
+static model::EntryID findBestLeave(SubnetBuilder &builder,
+                                    const std::vector<model::EntryID> &leaves,
+                                    uint16_t cutSize) {
 
   const unsigned worstCost = -1;
   unsigned bestCost = worstCost;
-  size_t bestLeave = 0;
+  model::EntryID bestLeave = 0;
   // Choose a leave with the best cost.
   for (size_t i = 0; i < leaves.size(); ++i) {
     const unsigned cost = computeCost(builder, leaves[i]);
@@ -58,19 +58,19 @@ static size_t findBestLeave(SubnetBuilder &builder,
 }
 
 model::SubnetView getReconvergentCut(SubnetBuilder &builder,
-                                     const std::vector<size_t> &roots,
+                                     const std::vector<model::EntryID> &roots,
                                      uint16_t cutSize) {
 
   assert(roots.size() <= cutSize && "Number of roots more than the cut size");
 
-  std::vector<size_t> leaves(roots.begin(), roots.end());
+  std::vector<model::EntryID> leaves(roots.begin(), roots.end());
   leaves.reserve(cutSize + 1);
 
   builder.startSession();
   // Construct a cut.
   while (true) {
-    size_t bestLeave = findBestLeave(builder, leaves, cutSize);
-    if (bestLeave == (size_t)-1) {
+    auto bestLeave = findBestLeave(builder, leaves, cutSize);
+    if (bestLeave == (model::EntryID)-1) {
       builder.endSession();
       // Case when there are only constant inputs.
       if (leaves.empty()) {

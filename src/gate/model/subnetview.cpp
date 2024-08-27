@@ -25,14 +25,14 @@ SubnetView::SubnetView(const SubnetBuilder &parent):
   const auto nOut = parent.getOutNum();
   iomapping.outputs.resize(nOut);
 
-  size_t i = 0;
+  uint32_t i = 0;
   for (auto it = parent.begin(); i < nIn; ++it, ++i) {
     const auto &cell = parent.getCell(*it);
     assert(cell.isIn());
     iomapping.inputs[i] = *it;
   }
 
-  size_t j = 0;
+  uint32_t j = 0;
   for (auto it = --parent.end(); j < nOut; --it, ++j) {
     const auto &cell = parent.getCell(*it);
     assert(cell.isOut());
@@ -40,7 +40,7 @@ SubnetView::SubnetView(const SubnetBuilder &parent):
   }
 }
 
-SubnetView::SubnetView(const SubnetBuilder &parent, const size_t rootID):
+SubnetView::SubnetView(const SubnetBuilder &parent, const EntryID rootID):
     parent(parent) {
   // Find all reachable inputs for the given root cell.
   SubnetViewWalker walker(*this);
@@ -51,7 +51,7 @@ SubnetView::SubnetView(const SubnetBuilder &parent, const size_t rootID):
   walker.run([this](SubnetBuilder &parent,
                     const bool isIn,
                     const bool isOut,
-                    const size_t i) -> bool {
+                    const EntryID i) -> bool {
     const auto &cell = parent.getCell(i);
     if (cell.isIn() || cell.isZero() || cell.isOne()) {
       iomapping.inputs.push_back(i);
@@ -82,20 +82,20 @@ SubnetView::SubnetView(const SubnetBuilder &parent,
 }
 
 std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
-    const std::vector<size_t> &entryIDs) const {
+    const std::vector<EntryID> &entryIDs) const {
   std::vector<TruthTable> result(entryIDs.size());
 
   SubnetViewWalker walker(*this);
-  const size_t arity = getInNum();
+  const auto arity = getInNum();
 
-  size_t nIn = 0;
+  uint32_t nIn = 0;
 
   // Optimized calculator for views w/ a small number of inputs.
   if (arity <= 6) {
     walker.run([&nIn, arity](SubnetBuilder &parent,
                              const bool isIn,
                              const bool isOut,
-                             const size_t i) -> bool {
+                             const EntryID i) -> bool {
       const auto tt = utils::getTruthTable<utils::TT6>(
           parent, arity, i, isIn, nIn++);
       utils::setTruthTable<utils::TT6>(parent, i, tt);
@@ -113,7 +113,7 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
     walker.run([&tables, &nIn, arity](SubnetBuilder &parent,
                                       const bool isIn,
                                       const bool isOut,
-                                      const size_t i) -> bool {
+                                      const EntryID i) -> bool {
       const auto tt = utils::getTruthTable<TruthTable>(
           parent, arity, i, isIn, nIn++);
       tables.push_back(tt);
@@ -141,7 +141,7 @@ SubnetObject &SubnetView::getSubnet() {
   walker.run([&subnetBuilder](SubnetBuilder &parent,
                               const bool isIn,
                               const bool isOut,
-                              const size_t i) -> bool {
+                              const EntryID i) -> bool {
     const auto &oldCell = parent.getCell(i);
 
     Subnet::Link newLink;
@@ -150,15 +150,15 @@ SubnetObject &SubnetView::getSubnet() {
     } else {
       assert(oldCell.getInNum() > 0);
       Subnet::LinkList newLinks(oldCell.getInNum());
-      for (size_t j = 0; j < oldCell.getInNum(); ++j) {
+      for (uint16_t j = 0; j < oldCell.getInNum(); ++j) {
         const auto &oldLink = parent.getLink(i, j);
-        const auto newIdx = parent.getDataVal<uint32_t>(oldLink.idx);
+        const auto newIdx = parent.getDataVal<EntryID>(oldLink.idx);
         const bool oldInv = oldLink.inv;
         newLinks[j] = Subnet::Link{newIdx, oldInv};
       }
       newLink = subnetBuilder.addCell(oldCell.getTypeID(), newLinks);
     }
-    parent.setDataVal<uint32_t>(i, newLink.idx);
+    parent.setDataVal<EntryID>(i, newLink.idx);
 
     if (isOut && !oldCell.isOut()) {
       subnetBuilder.addOutput(newLink);
@@ -175,13 +175,13 @@ SubnetObject &SubnetView::getSubnet() {
 // Subnet View Walker
 //===----------------------------------------------------------------------===//
 
-static inline size_t defaultArityProvider(
-    SubnetBuilder &builder, const size_t entryID) {
+static inline uint16_t defaultArityProvider(
+    SubnetBuilder &builder, const EntryID entryID) {
   return builder.getCell(entryID).arity;
 }
 
 static inline Subnet::Link defaultLinkProvider(
-    SubnetBuilder &builder, const size_t entryID, const size_t linkIdx) {
+    SubnetBuilder &builder, const EntryID entryID, const uint16_t linkIdx) {
   return builder.getLink(entryID, linkIdx);
 }
 
@@ -213,14 +213,14 @@ static bool traverseForward(SubnetBuilder &builder,
                             const SubnetViewWalker::Visitor onBackwardDfsPush) {
   builder.startSession();
 
-  size_t nPureOut{0};
-  std::unordered_set<size_t> inout;
+  uint32_t nPureOut{0};
+  std::unordered_set<EntryID> inout;
 
   for (const auto inputID : iomapping.inputs) {
     builder.mark(inputID);
   } // for input
 
-  std::stack<std::pair<size_t /* entry */, size_t /* link */>> stack;
+  std::stack<std::pair<EntryID /* entry */, uint16_t /* link */>> stack;
   for (const auto outputID : iomapping.outputs) {
     if (!builder.isMarked(outputID)) {
       UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, true, outputID);
@@ -306,7 +306,7 @@ bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
   bool doPop{onBackwardDfsPop != nullptr};
   const Visitor onBackwardDfsPopEx =
       [this, &doPop, onBackwardDfsPop](SubnetBuilder &builder,
-          const bool isIn, const bool isOut, const size_t entryID) -> bool {
+          const bool isIn, const bool isOut, const EntryID entryID) -> bool {
         doPop = doPop && onBackwardDfsPop(builder, isIn, isOut, entryID);
         entries->emplace_back(isIn, isOut, entryID);
         return true /* traverse all entries */;
@@ -315,7 +315,7 @@ bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
   bool doPush{onBackwardDfsPush != nullptr};
   const Visitor onBackwardDfsPushEx =
       [&doPush, onBackwardDfsPush](SubnetBuilder &builder,
-          const bool isIn, const bool isOut, const size_t entryID) -> bool {
+          const bool isIn, const bool isOut, const EntryID entryID) -> bool {
         doPush = doPush && onBackwardDfsPush(builder, isIn, isOut, entryID);
         return true /* traverse all entries */;
       };
@@ -334,7 +334,7 @@ bool SubnetViewWalker::runBackward(const Visitor visitor,
     entries->reserve(builder.getCellNum());
 
     const Visitor entrySaver = [this](SubnetBuilder &,
-        const bool isIn, const bool isOut, const size_t entryID) -> bool {
+        const bool isIn, const bool isOut, const EntryID entryID) -> bool {
       entries->emplace_back(isIn, isOut, entryID);
       return true /* traverse all entries */;
     };

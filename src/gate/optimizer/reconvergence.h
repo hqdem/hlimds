@@ -18,16 +18,17 @@ namespace eda::gate::optimizer {
 /// Returns a view of reconvergence-driven cut based on the given builder.
 model::SubnetView getReconvergentCut(
     model::SubnetBuilder &builder,
-    const std::vector<size_t> &roots,
+    const std::vector<model::EntryID> &roots,
     uint16_t cutSize);
 
 /// Returns a view of reconvergence-driven cut based on the given builder.
 inline model::SubnetView getReconvergentCut(
     model::SubnetBuilder &builder,
-    size_t root,
+    model::EntryID root,
     uint16_t cutSize) {
 
-  return getReconvergentCut(builder, std::vector<size_t>{root}, cutSize);
+  return getReconvergentCut(
+      builder, std::vector<model::EntryID>{root}, cutSize);
 }
 
 } // namespace eda::gate::optimizer

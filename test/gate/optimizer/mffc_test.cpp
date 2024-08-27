@@ -38,13 +38,13 @@ TEST(MffcTest, CutBound1) {
   builder.addOutput(links[3]);
   builder.addOutput(links.back());
 
-  std::vector<size_t> cut{0, 1};
-  size_t rootID = 5;
+  std::vector<model::EntryID> cut{0, 1};
+  model::EntryID rootID = 5;
 
   const auto view = getMffc(builder, rootID, cut);
 
-  const std::vector<size_t> &viewIns  = view.getInputs();
-  const std::vector<size_t> &viewOuts = view.getOutputs();
+  const std::vector<model::EntryID> &viewIns  = view.getInputs();
+  const std::vector<model::EntryID> &viewOuts = view.getOutputs();
 
   // Check MFFC.
   EXPECT_EQ(viewIns.size(), 2);
@@ -81,8 +81,8 @@ TEST(MffcTest, CutBound2) {
   links.push_back(builder.addCell(CellSymbol::AND, links[3], links[4]));
   builder.addOutput(links.back());
 
-  std::vector<size_t> cut{3, 4};
-  size_t rootID = 5;
+  std::vector<model::EntryID> cut{3, 4};
+  model::EntryID rootID = 5;
 
   const auto view = getMffc(builder, rootID, cut);
   EXPECT_EQ(view.getInputs(), cut);
@@ -119,16 +119,16 @@ TEST(MffcTest, DepthBound1) {
   builder.addOutput(links.back());
 
   size_t maxDepth = 3;
-  size_t rootID = 9;
+  model::EntryID rootID = 9;
 
   const auto view = getMffc(builder, rootID, maxDepth);
 
-  const std::vector<size_t> &viewIns  = view.getInputs();
-  const std::vector<size_t> &viewOuts = view.getOutputs();
+  const std::vector<model::EntryID> &viewIns  = view.getInputs();
+  const std::vector<model::EntryID> &viewOuts = view.getOutputs();
   // Check MFFC.
   EXPECT_EQ(viewIns.size(), 4);
-  std::set<size_t> cut(viewIns.begin(), viewIns.end());
-  std::set<size_t> check{0, 1, 2, 5};
+  std::set<model::EntryID> cut(viewIns.begin(), viewIns.end());
+  std::set<model::EntryID> check{0, 1, 2, 5};
   EXPECT_EQ(cut, check);
   EXPECT_TRUE((viewOuts.size() == 1) && (viewOuts[0] == rootID));
   // Check refcounts.
@@ -158,9 +158,9 @@ TEST(MffcTest, DepthBound2) {
   *       out
   */
   const size_t nInputs = 6;
-  const size_t rootId = 20;
   const size_t nLoops = 19;
   const size_t maxDepth = 3;
+  const model::EntryID rootId = 20;
 
   SubnetBuilder builder;
   auto links = builder.addInputs(nInputs);
@@ -180,11 +180,11 @@ TEST(MffcTest, DepthBound2) {
 
   const auto view = getMffc(builder, rootId, maxDepth);
 
-  const std::set<size_t> check{11, 12, 13, 14};
-  const std::set<size_t> cut(view.getInputs().begin(), view.getInputs().end());
+  const std::set<model::EntryID> check{11, 12, 13, 14};
+  const std::set<model::EntryID> cut(view.getInputs().begin(), view.getInputs().end());
 
   EXPECT_EQ(cut, check);
-  EXPECT_EQ(view.getOutputs(), std::vector<size_t>{rootId});
+  EXPECT_EQ(view.getOutputs(), std::vector<model::EntryID>{rootId});
 }
 
 } // namespace eda::gate::optimizer

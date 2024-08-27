@@ -35,7 +35,7 @@ public:
   using Effect = SubnetBuilder::Effect;
   using CellActionCallback = SubnetBuilder::CellActionCallback;
   using CellCallbackCondition =
-      std::function<void(const size_t, const size_t, const size_t)>;
+      std::function<void(const uint32_t, const uint32_t, const uint32_t)>;
 
   /**
    * @brief Constructs a rewriter.

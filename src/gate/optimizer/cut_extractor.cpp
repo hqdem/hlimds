@@ -41,7 +41,7 @@ CutExtractor::CutExtractor(const SubnetBuilder *builder,
   }
 }
 
-void CutExtractor::recomputeCuts(const size_t entryID) {
+void CutExtractor::recomputeCuts(const model::EntryID entryID) {
   if (entriesCuts.size() <= entryID) {
     entriesCuts.resize(entryID + 1);
   }
@@ -50,7 +50,7 @@ void CutExtractor::recomputeCuts(const size_t entryID) {
 }
 
 CutExtractor::CutsEntries CutExtractor::getCutsEntries(
-    const size_t entryID) const {
+    const model::EntryID entryID) const {
   CutsEntries cutsEntries;
   for (const auto &cut : getCuts(entryID)) {
     cutsEntries.push_back(cut.leafIDs);
@@ -58,7 +58,7 @@ CutExtractor::CutsEntries CutExtractor::getCutsEntries(
   return cutsEntries;
 }
 
-void CutExtractor::findCuts(const size_t entryID) {
+void CutExtractor::findCuts(const model::EntryID entryID) {
   uint16_t nLinks;
   const auto *links = getLinks(entryID, nullptr, nLinks);
 
@@ -71,13 +71,13 @@ void CutExtractor::findCuts(const size_t entryID) {
   }
 
   uint64_t cutsCombinationsN = 1;
-  std::vector<size_t> suffCutsCombinationsN(nLinks);
+  std::vector<uint64_t> suffCutsCombinationsN(nLinks);
   for (int i = nLinks - 1; i >= 0; --i) {
     cutsCombinationsN *= entriesCuts[links[i].idx].size();
     suffCutsCombinationsN[i] = cutsCombinationsN;
   }
 
-  for (size_t i = 0; i < cutsCombinationsN; ++i) {
+  for (uint64_t i = 0; i < cutsCombinationsN; ++i) {
     addCut(entryID, links, nLinks, i, cuts, suffCutsCombinationsN);
   }
 
@@ -85,17 +85,17 @@ void CutExtractor::findCuts(const size_t entryID) {
 }
 
 void CutExtractor::addCut(
-    const size_t entryID,
+    const model::EntryID entryID,
     const Link links[],
     const uint16_t nLinks,
     uint64_t cutsCombinationID,
     RawCutsList &addedCuts,
-    const std::vector<size_t> &suffCutsCombN) const {
+    const std::vector<uint64_t> &suffCutsCombN) const {
   Cut newCut(entryID, Cut::Set(k /* empty */));
 
-  for (size_t j = 0; j < nLinks; ++j) {
-    size_t inEntryID = links[j].idx;
-    size_t inEntryCutID = cutsCombinationID;
+  for (uint16_t j = 0; j < nLinks; ++j) {
+    model::EntryID inEntryID = links[j].idx;
+    model::EntryID inEntryCutID = cutsCombinationID;
     if (j + 1 != nLinks) {
       inEntryCutID = cutsCombinationID / suffCutsCombN[j + 1];
       cutsCombinationID %= suffCutsCombN[j + 1];
@@ -106,12 +106,12 @@ void CutExtractor::addCut(
     }
   }
   if (cutNotDominated(newCut, addedCuts)) {
-    addedCuts.push_back({ newCut, true });
+    addedCuts.push_back({newCut, true});
   }
 }
 
 void CutExtractor::addViableCuts(
-    const RawCutsList &cuts, const size_t entryID) {
+    const RawCutsList &cuts, const model::EntryID entryID) {
   entriesCuts[entryID].clear();
 
   for (const auto &cut : cuts) {

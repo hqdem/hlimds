@@ -44,7 +44,7 @@ static inline bool hasSolutions(
 }
 
 static inline const criterion::CostVector &getCostVector(
-    const SubnetSpace &space, const size_t entryID) {
+    const SubnetSpace &space, const uint32_t entryID) {
   return space[entryID]->getBest().vector;
 }
 
@@ -64,7 +64,7 @@ static criterion::CostVector defaultCostAggregator(
    const std::vector<criterion::CostVector> &vectors) {
   criterion::CostVector result = criterion::CostVector::Zero;
 
-  for (size_t i = 0; i < vectors.size(); ++i) {
+  for (uint16_t i = 0; i < vectors.size(); ++i) {
     const auto &vector = vectors[i];
     assert(vector.size() >= criterion::CostVector::DefaultSize);
 
@@ -109,21 +109,21 @@ static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
     const SubnetSpace &space,
     const std::shared_ptr<model::SubnetBuilder> oldBuilder) {
   // Maps old entry indices to matches.
-  const size_t oldSize = oldBuilder->getMaxIdx() + 1;
+  const uint32_t oldSize = oldBuilder->getMaxIdx() + 1;
   MatchSelection matches(oldSize);
 
   // Find best coverage by traversing the subnet in reverse order.
   model::SubnetView view(*oldBuilder);
   model::SubnetViewWalker walker(view,
       [&matches](model::SubnetBuilder &,
-                 const size_t entryID) -> size_t {
+                 const uint32_t entryID) -> uint16_t {
         // Returns the cell arity.
         assert(matches[entryID]);
         return matches[entryID]->links.size();
       },
       [&matches](model::SubnetBuilder &,
-                 const size_t entryID,
-                 const size_t linkIdx) -> model::Subnet::Link {
+                 const uint32_t entryID,
+                 const uint16_t linkIdx) -> model::Subnet::Link {
         // Returns the corresponding link (cut boundary).
         assert(matches[entryID]);
         return matches[entryID]->links[linkIdx];
@@ -134,7 +134,7 @@ static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
       nullptr /* forward visitor */,
       [&space, &matches](model::SubnetBuilder &,
                          bool, bool,
-                         const size_t entryID) -> bool {
+                         const uint32_t entryID) -> bool {
         assert(!matches[entryID] && space[entryID]->hasSolution());
         matches[entryID] = &space[entryID]->getBest().solution;
         return true;
@@ -173,7 +173,7 @@ static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
       assert(newType.getInNum() == matches[entryID]->links.size());
 
       model::Subnet::LinkList newLinks(newType.getInNum());
-      for (size_t j = 0; j < newType.getInNum(); ++j) {
+      for (uint32_t j = 0; j < newType.getInNum(); ++j) {
         const auto oldLink = matches[entryID]->links[j];
         const auto newLink = links[oldLink.idx];
         newLinks[j] = oldLink.inv ? ~newLink : newLink;
@@ -229,7 +229,7 @@ static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
 }
 
 static inline float getProgress(const std::shared_ptr<model::SubnetBuilder> &builder,
-                                const size_t count) {
+                                const uint32_t count) {
   const auto nIn = builder->getInNum();
   const auto nOut = builder->getOutNum();
   const auto nAll = builder->getCellNum();
@@ -253,17 +253,17 @@ std::shared_ptr<model::SubnetBuilder> SubnetTechMapper::map(
   criterion::CostVector tension{1.0, 1.0, 1.0};
 
   // Subnet outputs to be filled in the loop below.
-  std::unordered_set<size_t> outputs;
+  std::unordered_set<uint32_t> outputs;
   outputs.reserve(builder->getOutNum());
 
   // Maximum number of tries for recovery.
-  constexpr size_t maxTries{3};
-  size_t tryCount = 0;
+  constexpr uint16_t maxTries{3};
+  uint16_t tryCount = 0;
 
 RECOVERY:
   tryCount++;
 
-  size_t cellCount{0};
+  uint32_t cellCount{0};
   for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
     const auto progress = getProgress(builder, cellCount++);
     assert(0.0 <= progress && progress <= 1.0);

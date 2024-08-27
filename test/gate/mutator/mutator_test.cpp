@@ -27,7 +27,7 @@
 namespace eda::gate::mutator {
 
   using Cell = eda::gate::model::Subnet::Cell;
-  using CellIdMap = std::unordered_map<size_t, size_t>;
+  using CellIdMap = std::unordered_map<uint32_t, uint32_t>;
   using CellType = eda::gate::model::CellType;
   using CellSymbol = eda::gate::model::CellSymbol;
   using eda::gate::debugger::BaseChecker;

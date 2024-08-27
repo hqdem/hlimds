@@ -34,7 +34,7 @@ public:
   /// Constructs a subnet view corresponding to the whole subnet.
   SubnetView(const SubnetBuilder &parent);
   /// Constructs a subnet view corresponding to the maximum cone.
-  SubnetView(const SubnetBuilder &parent, const size_t rootID);
+  SubnetView(const SubnetBuilder &parent, const EntryID rootID);
   /// Constructs a subnet view corresponding to the given cut.
   SubnetView(const SubnetBuilder &parent, const Cut &cut);
   /// Constructs a subnet view corresponding to the given IO mapping.
@@ -44,27 +44,27 @@ public:
     return iomapping;
   }
 
-  size_t getInNum() const {
+  uint16_t getInNum() const {
     return iomapping.getInNum();
   }
 
-  size_t getOutNum() const {
+  uint16_t getOutNum() const {
     return iomapping.getOutNum();
   }
 
-  size_t getIn(const size_t i) const {
+  EntryID getIn(const uint16_t i) const {
     return iomapping.getIn(i);
   }
 
-  size_t getOut(const size_t i) const {
+  EntryID getOut(const uint16_t i) const {
     return iomapping.getOut(i);
   }
 
-  const std::vector<size_t> &getInputs() const {
+  const std::vector<EntryID> &getInputs() const {
     return iomapping.inputs;
   }
 
-  const std::vector<size_t> &getOutputs() const {
+  const std::vector<EntryID> &getOutputs() const {
     return iomapping.outputs;
   }
 
@@ -95,7 +95,7 @@ public:
 private:
   /// Evaluates the truth tables for the given cells.
   std::vector<TruthTable> evaluateTruthTables(
-    const std::vector<size_t> &entryIDs) const;
+    const std::vector<EntryID> &entryIDs) const;
 
   /// Input/output mapping.
   InOutMapping iomapping;
@@ -128,29 +128,29 @@ public:
   };
 
   using ArityProvider =
-      std::function<size_t(
+      std::function<uint16_t(
                         SubnetBuilder &builder,
-                        const size_t entryID)>;
+                        const EntryID entryID)>;
   using LinkProvider =
       std::function<Subnet::Link(
                         SubnetBuilder &builder,
-                        const size_t entryID,
-                        const size_t linkIdx)>;
+                        const EntryID entryID,
+                        const uint16_t linkIdx)>;
   using Visitor =
       std::function<bool(
                         SubnetBuilder &builder,
                         const bool isIn,
                         const bool isOut,
-                        const size_t entryID)>;
+                        const EntryID entryID)>;
 
   /// Traversal entry.
   struct Entry final {
-    Entry(const bool isIn, const bool isOut, const uint32_t entryID):
+    Entry(const bool isIn, const bool isOut, const EntryID entryID):
         isIn(isIn), isOut(isOut), entryID(entryID) {}
 
     bool isIn;
     bool isOut;
-    uint32_t entryID;
+    EntryID entryID;
   };
 
   /// Ordered sequence of entries.

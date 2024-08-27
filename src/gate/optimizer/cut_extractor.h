@@ -28,7 +28,7 @@ public:
   using Link = Subnet::Link;
   using SubnetBuilder = model::SubnetBuilder;
   using CutsEntries = std::vector<Cut::Set>;
-  using RawCutsList = std::vector<std::pair<Cut, char>>;
+  using RawCutsList = std::vector<std::pair<Cut, bool>>;
 
   CutExtractor() = delete;
   CutExtractor(const CutExtractor &other) = default;
@@ -54,38 +54,38 @@ public:
                const bool extractNow);
 
   /// Gets cuts (entries indexes and signatures) for cell with entryID index.
-  const CutsList getCuts(const size_t entryID) const {
+  const CutsList getCuts(const model::EntryID entryID) const {
     return entriesCuts[entryID];
   }
 
   /// Gets cuts (entries indexes) for cell with entryID index.
-  CutsEntries getCutsEntries(const size_t entryID) const;
+  CutsEntries getCutsEntries(const model::EntryID entryID) const;
 
   /// Recomputes cuts for passed entry.
   /// All entries used by passed entry must be computed.
-  void recomputeCuts(const size_t entryID);
+  void recomputeCuts(const model::EntryID entryID);
 
 private:
   const Link *getLinks(
-      const size_t entryID, Link *links, uint16_t &nLinks) const {
+      const model::EntryID entryID, Link *links, uint16_t &nLinks) const {
     return subnet ? subnet->getLinks(entryID, links, nLinks)
                   : builder->getLinks(entryID, links, nLinks);
   }
 
   /// Finds all cuts for cell with entryID index.
-  void findCuts(const size_t entryID);
+  void findCuts(const model::EntryID entryID);
 
   /// Adds new cut into addedCuts if it is not dominated and its size < k.
   void addCut(
-      const size_t entryID,
+      const model::EntryID entryID,
       const Link links[],
       const uint16_t nLinks,
       uint64_t cutsCombinationIdx,
       RawCutsList &addedCuts,
-      const std::vector<size_t> &suffCutsCombinationsN) const;
+      const std::vector<uint64_t> &suffCutsCombinationsN) const;
 
   /// Adds only viable cuts (with set flag) to the cuts storage.
-  void addViableCuts(const RawCutsList &cuts, const size_t entryID);
+  void addViableCuts(const RawCutsList &cuts, const model::EntryID entryID);
 
   /**
    * @brief Checks if the cut is not dominated by any element from the

@@ -23,23 +23,24 @@ public:
   using Link = Subnet::Link;
   using LinkList = Subnet::LinkList;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
+  using EntryID = model::EntryID;
 
   Balancer(const std::string &name): SubnetInPlaceTransformer(name) {}
 
   void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
 
 private:
-  void updateDepth(const size_t entryID) const;
+  void updateDepth(const EntryID entryID) const;
 
   /// Starts balancing on the passed entryID.
-  size_t balanceOnEntry(SubnetBuilder &builder, const size_t entryID) const;
+  uint32_t balanceOnEntry(SubnetBuilder &builder, const EntryID entryID) const;
 
   /// Moves associative operation to the left/right, depending on what type of
   /// iterator is provided (reverse iterator or common iterator).
   template<typename Iter>
   void moveOp(
       SubnetBuilder &builder,
-      const size_t entryID,
+      const EntryID entryID,
       const Iter &operIter,
       const Iter &inputsBegin,
       const Iter &inputsEnd,
@@ -51,7 +52,7 @@ private:
   template<typename Iter>
   void moveOpToLim(
       SubnetBuilder &builder,
-      const size_t entryID,
+      const EntryID entryID,
       Iter operIter,
       Iter inputsBegin,
       Iter inputsEnd,
@@ -62,42 +63,42 @@ private:
   /// property.
   bool canBalanceAssoc(
       const SubnetBuilder &builder,
-      const size_t entryID1,
-      const size_t entryID2) const;
+      const EntryID entryID1,
+      const EntryID entryID2) const;
 
   /// Checks if it is possible to balance operations using complementary
   /// associativity property.
   bool canBalanceCompl(
       const SubnetBuilder &builder,
-      const size_t entryID1,
-      const size_t entryID2,
-      const size_t entryID3) const;
+      const EntryID entryID1,
+      const EntryID entryID2,
+      const EntryID entryID3) const;
 
   /// Checks if it is possible to balance operations using associativity or
   /// complementary associativity.
   bool canBalance(
       const SubnetBuilder &builder,
-      const size_t entryID1,
-      const size_t entryID2,
-      const size_t entryID3) const;
+      const EntryID entryID1,
+      const EntryID entryID2,
+      const EntryID entryID3) const;
 
   /// Moves all associative input operations left while the depth of the entryID
   /// cell is not increasing.
-  void moveAllOpsLToLim(SubnetBuilder &builder, const size_t entryID) const;
+  void moveAllOpsLToLim(SubnetBuilder &builder, const EntryID entryID) const;
 
   /// Moves all associative input operations right while the depth of the
   /// entryID cell is not increasing.
-  void moveAllOpsRToLim(SubnetBuilder &builder, const size_t entryID) const;
+  void moveAllOpsRToLim(SubnetBuilder &builder, const EntryID entryID) const;
 
   /// Implements associative balancing for operations.
-  void balanceAssoc(SubnetBuilder &builder, const size_t entryID) const;
+  void balanceAssoc(SubnetBuilder &builder, const EntryID entryID) const;
 
   /// Implements associative balancing for operations with commutative property.
-  void balanceCommutAssoc(SubnetBuilder &builder, const size_t entryID) const;
+  void balanceCommutAssoc(SubnetBuilder &builder, const EntryID entryID) const;
 
   /// Implements complementary associative balancing. In the current version it
   /// is only MAJ cell type.
-  void balanceComplAssoc(SubnetBuilder &builder, const size_t entryID) const;
+  void balanceComplAssoc(SubnetBuilder &builder, const EntryID entryID) const;
 };
 
 } // namespace eda::gate::optimizer

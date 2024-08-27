@@ -38,6 +38,7 @@ struct Domain final {
 
 using ClockDomain = Domain;
 using ResetDomain = Domain;
+using EntryID = model::EntryID;
 
 class DesignBuilder final {
 private:
@@ -49,7 +50,7 @@ private:
 public:
   using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
   using SubnetToSubnetSet = std::vector<std::unordered_set<size_t>>;
-  using SubnetToFFSet = std::vector<std::unordered_set<size_t>>;
+  using SubnetToFFSet = std::vector<std::unordered_set<EntryID>>;
 
   struct SubnetEntry {
     SubnetEntry(const SubnetID subnetID,
@@ -252,8 +253,8 @@ public:
   }
 
   /// Returns the number of input/output/internal cells of the i-th subnet.
-  std::tuple<size_t, size_t, size_t> getCellNum(const size_t i,
-                                                const bool withBufs) const;
+  std::tuple<EntryID, EntryID, EntryID> getCellNum(const size_t i,
+                                                   const bool withBufs) const;
 
   /// Returns the number of input/output/internal cells of the design.
   std::tuple<size_t, size_t, size_t> getCellNum(const bool withBufs) const {
@@ -399,7 +400,7 @@ private:
 
   SubnetToSubnetSet findArcs(
       const std::vector<SubnetID> &subnetIDs,
-      const SubnetToSubnetSet &flipFlopPOs) const;
+      const SubnetToFFSet &flipFlopPOs) const;
 
   SubnetToSubnetSet getAdjList(
       const std::vector<SubnetID> &subnetIDs) const;

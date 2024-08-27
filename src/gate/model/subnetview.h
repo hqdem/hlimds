@@ -60,11 +60,11 @@ public:
     return iomapping.getOut(i);
   }
 
-  const std::vector<EntryID> &getInputs() const {
+  const EntryIDList &getInputs() const {
     return iomapping.inputs;
   }
 
-  const std::vector<EntryID> &getOutputs() const {
+  const EntryIDList &getOutputs() const {
     return iomapping.outputs;
   }
 
@@ -95,7 +95,7 @@ public:
 private:
   /// Evaluates the truth tables for the given cells.
   std::vector<TruthTable> evaluateTruthTables(
-    const std::vector<EntryID> &entryIDs) const;
+      const EntryIDList &entryIDs) const;
 
   /// Input/output mapping.
   InOutMapping iomapping;

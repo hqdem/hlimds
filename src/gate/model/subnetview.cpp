@@ -82,7 +82,7 @@ SubnetView::SubnetView(const SubnetBuilder &parent,
 }
 
 std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
-    const std::vector<EntryID> &entryIDs) const {
+    const EntryIDList &entryIDs) const {
   std::vector<TruthTable> result(entryIDs.size());
 
   SubnetViewWalker walker(*this);

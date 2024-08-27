@@ -509,7 +509,7 @@ void SubnetBuilder::replace(
     if (rhsOutLink.idx == rhsEntryID && !rhsOutLink.inv &&
         (lhsRootCell.isOut() ||
         (rootStrashIt = strash.find(StrashKey{rhsCellTypeID, curCellLinks})) ==
-        strash.end())) {
+         strash.end())) {
 
       newEntryID = replaceCell(lhsRootEntryID, rhsCellTypeID,
                                curCellLinks, true, onNewCell,
@@ -543,17 +543,14 @@ void SubnetBuilder::replace(
     }
   }
   // Add an extra buffer.
-  if ((rhsOutLink.idx == 0 && rhsToLhs[0] != lhsRootEntryID) ||
-      rhsOutLink.inv || rootStrashIt != strash.end()) {
+  if ((rhsOutLink.idx < iomapping.getInNum() &&
+       rhsToLhs[0] != lhsRootEntryID) ||
+       rhsOutLink.inv || rootStrashIt != strash.end()) {
 
     LinkList bufLinks;
     CellTypeID bufTID = CELL_TYPE_ID_BUF;
-    if (rhsOutLink.idx == 0) {
-      bufLinks = {Link(rhsToLhs[0], rhsOutLink.out, rhsOutLink.inv)};
-    } else {
-      bufLinks = {Link(rhsToLhs[rhsOutLink.idx], rhsOutLink.out,
-                  rhsOutLink.inv)};
-    }
+    bufLinks = {Link(rhsToLhs[rhsOutLink.idx], rhsOutLink.out,
+                rhsOutLink.inv)};
     replaceCell(lhsRootEntryID, bufTID, bufLinks, true, onNewCell,
                 onRecomputedDepth);
   }

@@ -129,6 +129,13 @@ private:
     } else if (direction == BACKWARD) {
       const auto curRootDepth = builder->getDepth(entry);
       if (oldRootDepth > curRootDepth && rootLastDepth) {
+        uint32_t depthToCheck = oldRootDepth;
+        while (builder->getLastWithDepth(depthToCheck) ==
+               SubnetBuilder::invalidID) {
+          depthToCheck--;
+        }
+        saveNext = builder->getLastWithDepth(depthToCheck);
+      } else if (oldRootDepth < curRootDepth && rootLastDepth) {
         saveNext = builder->getLastWithDepth(oldRootDepth);
       }
     }

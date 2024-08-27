@@ -1376,6 +1376,37 @@ TEST(ReplaceBuilderTest, DeleteCellWithInvOut) {
   }
 }
 
+TEST(ReplaceBuilderTest, DeleteCellSeveralIns) {
+  SubnetBuilder builder;
+  const auto &inputLinks = builder.addInputs(2);
+  const auto &andLink0 = builder.addCell(model::AND, inputLinks[0],
+      inputLinks[1]);
+  builder.addOutput(andLink0);
+
+  SubnetBuilder rhsBuilder;
+  const auto &rhsInLinks = rhsBuilder.addInputs(2);
+  rhsBuilder.addOutput(rhsInLinks[1]);
+
+  InOutMapping mapping({0, 1}, {2});
+
+  const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
+  EXPECT_EQ(effect.size, 1);
+  EXPECT_EQ(effect.depth, 1);
+  builder.replace(rhsBuilder, mapping);
+  printBidirectCellsTrav(builder);
+  const SubnetID resultID = builder.make();
+  const Subnet &result = Subnet::get(resultID);
+  std::cout << result << '\n';
+
+  {
+    SubnetBuilder builder;
+    const auto &inLinks = builder.addInputs(2);
+    const auto &bufLink0 = builder.addCell(model::BUF, inLinks[1]);
+    builder.addOutput(bufLink0);
+    subnetsEqual(resultID, builder.make());
+  }
+}
+
 TEST(ReplaceBuilderTest, InvertFanouts) {
   SubnetBuilder builder;
   addCellsToBuilder1(builder);

@@ -15,6 +15,8 @@
 
 namespace eda::gate::model {
 
+using EntryID = model::EntryID;
+
 std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder);
 
 } // namespace eda::gate::model

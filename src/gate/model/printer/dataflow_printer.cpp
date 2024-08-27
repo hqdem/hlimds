@@ -18,7 +18,7 @@ static void printLabels(
     std::ostream &out,
     const DesignBuilder &builder,
     std::vector<std::vector<size_t>> &subnetLinks,
-    size_t &minSubnetSize, size_t &maxSubnetSize) {
+    uint32_t &minSubnetSize, uint32_t &maxSubnetSize) {
 
   const std::string printHead = " [label=\"";
   const std::string printTail = "\"];\n";
@@ -29,7 +29,7 @@ static void printLabels(
   out << 0 << printHead << "PIs_" << designInNum << printTail;
   for (size_t i = 0; i < nSubnet; ++i) {
     const auto &entry = builder.getEntry(i);
-    size_t subnetSize = 0;
+    uint32_t subnetSize = 0;
     if (entry.subnetID != OBJ_NULL_ID) {
       subnetSize = Subnet::get(entry.subnetID).getCellNum();
     } else {
@@ -49,15 +49,17 @@ static void printLabels(
       subnetLinks[outArc].push_back(i);
     }
   }
-  minSubnetSize = std::min(minSubnetSize, std::min(designInNum, designOutNum));
-  maxSubnetSize = std::max(maxSubnetSize, std::min(designInNum, designOutNum));
+  minSubnetSize = std::min((size_t)minSubnetSize,
+      std::min(designInNum, designOutNum));
+  maxSubnetSize = std::max((size_t)maxSubnetSize,
+      std::min(designInNum, designOutNum));
   out << nSubnet + 1 << printHead << "POs_" << designOutNum << printTail;
 }
 
 /// @brief Finds the vertices hue according to the number of cells inside.
 static float findHue(
-    const size_t cellsNum,
-    const size_t minSubnetSize, const size_t maxSubnetSize) {
+    const uint32_t cellsNum,
+    const uint32_t minSubnetSize, const uint32_t maxSubnetSize) {
   float hue = 0.f;
   if (std::fabs(maxSubnetSize - minSubnetSize) >= 1e-6) {
     float ratio = static_cast<float>(cellsNum - minSubnetSize) /
@@ -74,7 +76,7 @@ static float findHue(
 static void printColors(
     std::ostream &out,
     const DesignBuilder &builder,
-    const size_t &minSubnetSize, const size_t &maxSubnetSize) {
+    const uint32_t minSubnetSize, const uint32_t maxSubnetSize) {
 
   const std::string printHead = " [style=filled, color=\"";
   const std::string printTail = " 0.8 1.0\"];\n";
@@ -83,7 +85,7 @@ static void printColors(
   out << 0 << printHead << insHue << printTail;
   for (size_t i = 0; i < nSubnet; ++i) {
     const auto &entry = builder.getEntry(i);
-    size_t subnetSize = 0;
+    uint32_t subnetSize = 0;
     if (entry.subnetID != OBJ_NULL_ID) {
       subnetSize = Subnet::get(entry.subnetID).getCellNum();
     } else {
@@ -121,7 +123,7 @@ std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder) {
   out << "digraph " << builder.getName() << " {\n";
 
   const size_t nSubnet = builder.getSubnetNum();
-  size_t minSubnetSize = 0, maxSubnetSize = 0;
+  uint32_t minSubnetSize = 0, maxSubnetSize = 0;
   std::vector<std::vector<size_t>> subnetLinks(nSubnet);
 
   printLabels(out, builder, subnetLinks, minSubnetSize, maxSubnetSize);

@@ -16,10 +16,10 @@ namespace eda::gate::model {
 using LinkSet = std::unordered_set<Link>;
 using LinkMap = NetDecomposer::LinkMap;
 
-std::tuple<size_t, size_t, size_t> DesignBuilder::getCellNum(
+std::tuple<EntryID, EntryID, EntryID> DesignBuilder::getCellNum(
     const size_t i,
     const bool withBufs) const {
-  size_t nI, nO, nC, nB;
+  EntryID nI, nO, nC, nB;
   const auto &entry = getEntry(i);
   if (entry.subnetID != OBJ_NULL_ID) {
     const auto &subnet = Subnet::get(entry.subnetID);
@@ -89,8 +89,8 @@ DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPOs(
   SubnetToFFSet flipFlopPOs(subnetIDs.size());
   for (size_t i = 0; i < subnetIDs.size(); ++i) {
     const auto &subnet = Subnet::get(subnetIDs[i]);
-    for (size_t outN = 0; outN < subnet.getOutNum(); ++outN) {
-      const size_t outEntryID = subnet.getOutIdx(outN);
+    for (EntryID outN = 0; outN < subnet.getOutNum(); ++outN) {
+      const EntryID outEntryID = subnet.getOutIdx(outN);
       const auto &outCell = subnet.getCell(outEntryID);
       if (outCell.isFlipFlop()) {
         flipFlopPOs[i].insert(outCell.flipFlopID);
@@ -102,13 +102,13 @@ DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPOs(
 
 DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
     const std::vector<SubnetID> &subnetIDs,
-    const SubnetToSubnetSet &flipFlopPOs) const {
+    const SubnetToFFSet &flipFlopPOs) const {
 
   SubnetToSubnetSet adjList(subnetIDs.size());
   for (size_t i = 0; i < subnetIDs.size(); ++i) {
     const auto &subnet = Subnet::get(subnetIDs[i]);
-    for (size_t inN = 0; inN < subnet.getInNum(); ++inN) {
-      const size_t inEntryID = subnet.getInIdx(inN);
+    for (EntryID inN = 0; inN < subnet.getInNum(); ++inN) {
+      const EntryID inEntryID = subnet.getInIdx(inN);
       const auto &inCell = subnet.getCell(inEntryID);
       if (!inCell.isFlipFlop()) {
         continue;

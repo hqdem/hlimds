@@ -16,18 +16,18 @@ Pipeliner::SubnetMarkup Pipeliner::markCascades(
     const SubnetBuilderPtr &builder) const {
 
   PipeliningState state;
-  const size_t builderMaxIdx = builder->getMaxIdx();
-  state.layerBounds.resize(builderMaxIdx + 1, {size_t(-1), size_t(-1)});
+  const EntryID builderMaxIdx = builder->getMaxIdx();
+  state.layerBounds.resize(builderMaxIdx + 1, {uint32_t(-1), uint32_t(-1)});
   state.fanouts.resize(builderMaxIdx + 1);
   initPipeliningState(builder, state);
   divideIntoLayers(builder, state);
   return divideIntoCascades(builder, state);
 }
 
-size_t Pipeliner::findSubnetDepth(const SubnetBuilderPtr &builder) const {
+uint32_t Pipeliner::findSubnetDepth(const SubnetBuilderPtr &builder) const {
   uint32_t depth = 0;
   for (auto it = builder->rbegin(); it != builder->rend(); ++it) {
-    const size_t entryID = *it;
+    const EntryID entryID = *it;
     if (!builder->getCell(entryID).isOut()) {
       break;
     }
@@ -40,16 +40,16 @@ void Pipeliner::initPipeliningState(
     const SubnetBuilderPtr &builder,
     PipeliningState &state) const {
 
-  const size_t subnetDepth = findSubnetDepth(builder);
+  const uint32_t subnetDepth = findSubnetDepth(builder);
   for (auto it = builder->rbegin(); it != builder->rend(); ++it) {
-    const size_t entryID = *it;
+    const EntryID entryID = *it;
     // if (builder->isLink(entryID)) { //TODO: fixme
     // 	continue;
     // }
 
     // Update current cell layer bounds
     updateLeftLayerBound(builder, state, entryID);
-    updateRightLayerBound(builder, state, entryID, (size_t)-1, subnetDepth);
+    updateRightLayerBound(builder, state, entryID, (uint32_t)-1, subnetDepth);
 
     // Update links layer bounds
     const auto &links = builder->getLinks(entryID);
@@ -65,8 +65,8 @@ void Pipeliner::initPipeliningState(
 
     // Update layer delays
     const auto &layerBounds = state.layerBounds;
-    const size_t cellLayerLeftBound = layerBounds[entryID].first,
-                 cellLayerRightBound = layerBounds[entryID].second;
+    const uint32_t cellLayerLeftBound = layerBounds[entryID].first,
+                   cellLayerRightBound = layerBounds[entryID].second;
     if (cellLayerLeftBound == cellLayerRightBound) {
       updateLayerDelay(builder, state, cellLayerLeftBound, entryID);
     }
@@ -81,9 +81,9 @@ void Pipeliner::divideIntoLayers(
   auto &layerBounds = state.layerBounds;
   while(!delayCellSet.empty()) {
     const auto delayCell = *(--delayCellSet.end());
-    const size_t entryID = delayCell.second;
-    size_t &cellLayerLeftBound = layerBounds[entryID].first,
-           &cellLayerRightBound = layerBounds[entryID].second;
+    const EntryID entryID = delayCell.second;
+    uint32_t &cellLayerLeftBound = layerBounds[entryID].first,
+             &cellLayerRightBound = layerBounds[entryID].second;
     if (cellLayerLeftBound == cellLayerRightBound) {
       updateLayerDelay(builder, state, cellLayerLeftBound, entryID);
       delayCellSet.erase(--delayCellSet.end());
@@ -103,7 +103,7 @@ void Pipeliner::divideIntoLayers(
 void Pipeliner::updateLeftLayerBound(
     const SubnetBuilderPtr &builder,
     PipeliningState &state,
-    const size_t entryID) const {
+    const EntryID entryID) const {
 
   state.layerBounds[entryID].first = builder->getDepth(entryID);
 }
@@ -111,13 +111,13 @@ void Pipeliner::updateLeftLayerBound(
 void Pipeliner::updateRightLayerBound(
     const SubnetBuilderPtr &builder,
     PipeliningState &state,
-    const size_t entryID,
-    const size_t parEntryID,
-    const size_t subnetDepth) const {
+    const EntryID entryID,
+    const EntryID parEntryID,
+    const uint32_t subnetDepth) const {
 
   auto &layerBounds = state.layerBounds;
-  if (parEntryID == (size_t)-1) {
-    if (layerBounds[entryID].second == (size_t)-1) {
+  if (parEntryID == (EntryID)-1) {
+    if (layerBounds[entryID].second == (uint32_t)-1) {
       layerBounds[entryID].second = subnetDepth;
     }
     return;
@@ -132,8 +132,8 @@ void Pipeliner::updateRightLayerBound(
 void Pipeliner::updateLayerDelay(
     const SubnetBuilderPtr &builder,
     PipeliningState &state,
-    const size_t layerN,
-    const size_t entryID) const {
+    const uint32_t layerN,
+    const EntryID entryID) const {
 
   auto &layerDelay = state.layerDelay;
 
@@ -155,24 +155,24 @@ void Pipeliner::updateLayerDelay(
 void Pipeliner::limitLayerBounds(
     const SubnetBuilderPtr &builder,
     PipeliningState &state,
-    const size_t entryID) const {
+    const EntryID entryID) const {
 
   auto &layerBounds = state.layerBounds;
   const auto &fanouts = state.fanouts;
-  std::stack<size_t> toLimLayers;
+  std::stack<EntryID> toLimLayers;
 
   toLimLayers.push(entryID);
   while(!toLimLayers.empty()) {
-    const size_t curEntryID = toLimLayers.top();
+    const EntryID curEntryID = toLimLayers.top();
     toLimLayers.pop();
-    size_t &layerLeftBound = layerBounds[curEntryID].first;
-    size_t &layerRightBound = layerBounds[curEntryID].second;
+    uint32_t &layerLeftBound = layerBounds[curEntryID].first;
+    uint32_t &layerRightBound = layerBounds[curEntryID].second;
     layerLeftBound = layerRightBound =
         findMaxDelayLayer(state, layerLeftBound, layerRightBound);
 
     for (const auto &fanoutIdx : fanouts[curEntryID]) {
-      size_t &fanoutLayerLeftBound = layerBounds[fanoutIdx].first;
-      const size_t fanoutLayerRightBound = layerBounds[fanoutIdx].second;
+      uint32_t &fanoutLayerLeftBound = layerBounds[fanoutIdx].first;
+      const uint32_t fanoutLayerRightBound = layerBounds[fanoutIdx].second;
       if (fanoutLayerLeftBound == fanoutLayerRightBound) {
         continue;
       }
@@ -182,9 +182,9 @@ void Pipeliner::limitLayerBounds(
       }
     }
     for (const auto &link : builder->getLinks(curEntryID)) {
-      const size_t linkIdx = link.idx;
-      const size_t linkLayerLeftBound = layerBounds[linkIdx].first;
-      size_t &linkLayerRightBound = layerBounds[linkIdx].second;
+      const EntryID linkIdx = link.idx;
+      const uint32_t linkLayerLeftBound = layerBounds[linkIdx].first;
+      uint32_t &linkLayerRightBound = layerBounds[linkIdx].second;
       if (linkLayerLeftBound == linkLayerRightBound) {
         continue;
       }
@@ -196,14 +196,14 @@ void Pipeliner::limitLayerBounds(
   }
 }
 
-size_t Pipeliner::findMaxDelayLayer(
+uint32_t Pipeliner::findMaxDelayLayer(
     const PipeliningState &state,
-    const size_t leftLayer,
-    const size_t rightLayer) const {
+    const uint32_t leftLayer,
+    const uint32_t rightLayer) const {
 
-  size_t maxDelayLayer = leftLayer;
+  uint32_t maxDelayLayer = leftLayer;
   float maxDelay = state.layerDelay[leftLayer];
-  for (size_t i = leftLayer + 1; i <= rightLayer; ++i) {
+  for (uint32_t i = leftLayer + 1; i <= rightLayer; ++i) {
     const float curDelay = state.layerDelay[i];
     if (curDelay > maxDelay) {
       maxDelayLayer = i;
@@ -215,7 +215,7 @@ size_t Pipeliner::findMaxDelayLayer(
 
 float Pipeliner::findDelay(
     const SubnetBuilderPtr &builder,
-    const size_t entryID) const {
+    const EntryID entryID) const {
 
   const auto &cell = builder->getCell(entryID);
   if (cell.isIn() || cell.isOut() || cell.isOne() || cell.isZero()) {
@@ -229,7 +229,7 @@ float Pipeliner::findDelay(
 void Pipeliner::updateLinksFanouts(
     const SubnetBuilderPtr &builder,
     PipeliningState &state,
-    const size_t parEntryID) const {
+    const EntryID parEntryID) const {
   for (const auto &link : builder->getLinks(parEntryID)) {
     state.fanouts[link.idx].push_back(parEntryID);
   }
@@ -295,13 +295,13 @@ Pipeliner::SubnetMarkup Pipeliner::markLinks(
 
   for (const auto &entryID : *builder) {
     const auto &curCell = builder->getCell(entryID);
-    const size_t entryLayer = state.layerBounds[entryID].first;
+    const uint32_t entryLayer = state.layerBounds[entryID].first;
     const size_t curCascade = layerCascade[entryLayer];
     const auto &entryLinks = builder->getLinks(entryID);
 
     for (size_t i = 0; i < entryLinks.size(); ++i) {
-      const size_t linkIdx = entryLinks[i].idx;
-      const size_t linkLayer = state.layerBounds[linkIdx].first;
+      const EntryID linkIdx = entryLinks[i].idx;
+      const uint32_t linkLayer = state.layerBounds[linkIdx].first;
       const size_t linkCascade = layerCascade[linkLayer];
       entryPathTriggers[entryID] =
           std::max(entryPathTriggers[entryID], entryPathTriggers[linkIdx]);

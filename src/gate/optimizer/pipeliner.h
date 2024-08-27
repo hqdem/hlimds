@@ -20,8 +20,8 @@ static inline bool floatComp(const float &a, const float &b) {
 }
 
 static inline bool delayCellComp(
-    const std::pair<float, size_t> &a,
-    const std::pair<float, size_t> &b) {
+    const std::pair<float, uint32_t> &a,
+    const std::pair<float, uint32_t> &b) {
 
   if (std::fabs(a.first - b.first) < 1e-6) {
     return b.second > a.second;
@@ -36,9 +36,11 @@ class Pipeliner final {
 public:
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
-  using LayerBounds = std::pair<size_t, size_t>;
+  using LayerBounds = std::pair<uint32_t, uint32_t>;
   using CellLayerBounds = std::vector<LayerBounds>;
-  using DelayCell = std::pair<float, size_t>;
+  using EntryID = model::EntryID;
+  using EntryIDList = model::EntryIDList;
+  using DelayCell = std::pair<float, EntryID>;
 
   /**
    * @brief Pipelining algorithm state. Contains all the required intermediate
@@ -48,7 +50,7 @@ public:
     PipeliningState() : delayCellSet(delayCellComp) {};
 
     std::vector<LayerBounds> layerBounds{};
-    std::vector<std::vector<size_t>> fanouts{};
+    std::vector<EntryIDList> fanouts{};
     std::vector<float> layerDelay{};
     float layerDelaySum{0.f};
     std::set<DelayCell, decltype(&delayCellComp)> delayCellSet;
@@ -58,18 +60,18 @@ public:
   struct SubnetMarkup final {
   public:
     SubnetMarkup() = default;
-    SubnetMarkup(std::initializer_list<std::vector<size_t>> initList):
+    SubnetMarkup(std::initializer_list<std::vector<uint32_t>> initList):
       markedLinks(initList) {};
 
     /// Returns number of triggers to add between entryID and its linkN'th link.
-    size_t getTriggersN(const size_t entryID, const size_t linkN) const {
+    uint32_t getTriggersN(const EntryID entryID, const uint32_t linkN) const {
       if (markedLinks[entryID].size() <= linkN) {
         return 0;
       }
       return markedLinks[entryID][linkN];
     }
 
-    std::vector<std::vector<size_t>> markedLinks{};
+    std::vector<std::vector<uint32_t>> markedLinks{};
   };
 
   /**
@@ -87,7 +89,7 @@ public:
 
 private:
   /// Finds the provided subnet depth.
-  size_t findSubnetDepth(const SubnetBuilderPtr &builder) const;
+  uint32_t findSubnetDepth(const SubnetBuilderPtr &builder) const;
 
   /// Initializes pipelining algorithm state.
 
@@ -111,22 +113,22 @@ private:
   void updateLeftLayerBound(
       const SubnetBuilderPtr &builder,
       PipeliningState &state,
-      const size_t entryID) const;
+      const EntryID entryID) const;
 
   /// Updates the right layer bound of the provided cell based on its parent.
   void updateRightLayerBound(
       const SubnetBuilderPtr &builder,
       PipeliningState &state,
-      const size_t entryID,
-      const size_t parEntryID,
-      const size_t subnetDepth) const;
+      const EntryID entryID,
+      const EntryID parEntryID,
+      const uint32_t subnetDepth) const;
 
   /// Updates the layer delay based on the added cell.
   void updateLayerDelay(
       const SubnetBuilderPtr &builder,
       PipeliningState &state,
-      const size_t layerN,
-      const size_t entryID) const;
+      const uint32_t layerN,
+      const EntryID entryID) const;
 
   /// Recursively limits entries layer bounds starting with i-th cell.
 
@@ -139,27 +141,27 @@ private:
   void limitLayerBounds(
       const SubnetBuilderPtr &builder,
       PipeliningState &state,
-      const size_t entryID) const;
+      const EntryID entryID) const;
 
   /**
    * @brief Finds the layers with the maximum delay on the segment
    * [leftLayer; rightLayer].
    */
-  size_t findMaxDelayLayer(
+  uint32_t findMaxDelayLayer(
       const PipeliningState &state,
-      const size_t leftLayer,
-      const size_t rightLayer) const;
+      const uint32_t leftLayer,
+      const uint32_t rightLayer) const;
 
   /// Finds the entryID-th cell delay.
   float findDelay(
       const SubnetBuilderPtr &builder,
-      const size_t entryID) const;
+      const EntryID entryID) const;
 
   /// Updates the parEntryID-th cell links fanouts.
   void updateLinksFanouts(
       const SubnetBuilderPtr &builder,
       PipeliningState &state,
-      const size_t parEntryID) const;
+      const EntryID parEntryID) const;
 
   /**
    * @brief Marks the layers below which triggers should be inserted.

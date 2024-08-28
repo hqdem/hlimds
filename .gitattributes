@@ -1,1 +1,3 @@
 *.h gitlab-language=C++
+*.h linguist-language=C++
+*/lib/* linguist-vendored=false

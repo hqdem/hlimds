@@ -1,5 +1,7 @@
 *.h gitlab-language=C++
+*.tpl gitlab-language=CTemplate
 *.h linguist-language=C++
+*.tpl linguist-language=CTemplate
 *lib/aiger/** linguist-vendored
 *lib/bill/** linguist-vendored
 *lib/CLI11/** linguist-vendored

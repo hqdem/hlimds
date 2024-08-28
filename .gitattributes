@@ -1,3 +1,13 @@
 *.h gitlab-language=C++
 *.h linguist-language=C++
-*/lib/* linguist-vendored=false
+*lib/aiger/** linguist-vendored
+*lib/bill/** linguist-vendored
+*lib/CLI11/** linguist-vendored
+*lib/easyloggingpp/** linguist-vendored
+*lib/json/nlohmann/** linguist-vendored
+*lib/kitty/** linguist-vendored
+*lib/minisat/** linguist-vendored
+*lib/mockturtle/** linguist-vendored
+*lib/readcells/** linguist-vendored
+*lib/sqlite3/** linguist-vendored
+*lib/tinyxml2/** linguist-vendored

@@ -28,11 +28,12 @@ struct Cut final {
 
   Cut(const uint16_t k,
       const model::EntryID rootID,
-      const std::unordered_set<model::EntryID> &leafIDs):
-      Cut(rootID, Set(k, leafIDs)) {}
+      const std::unordered_set<model::EntryID> &leafIDs,
+      const bool isImmutable):
+      Cut(rootID, Set(k, leafIDs, isImmutable)) {}
 
-  Cut(const uint16_t k, const model::EntryID rootID):
-      Cut(rootID, Set(k, rootID)) {}
+  Cut(const uint16_t k, const model::EntryID rootID, const bool isImmutable):
+      Cut(rootID, Set(k, rootID, isImmutable)) {}
 
   /// Returns the maximum size of the cut.
   uint16_t getK() const {

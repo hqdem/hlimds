@@ -25,11 +25,34 @@ static bool equal(const BoundedSet<size_t> &b,
   return result;
 }
 
+TEST(BoundedSetTest, Singleton) {
+  BoundedSet<size_t> bSet1{4, 1, true};
+  BoundedSet<size_t> bSet2{5, 1, false};
+  BoundedSet<size_t> bSet3{5, false};
+  bSet3.insert(1, true);
+  BoundedSet<size_t> bSet4{6, 1, false};
+  bSet4.merge(bSet1);
+  bSet4.merge(bSet2);
+  bSet4.merge(bSet3);
+  BoundedSet<size_t> bSet5(bSet1);
+  BoundedSet<size_t> bSet6(bSet2);
+  BoundedSet<size_t> bSet7(4, { 1 }, true);
+  BoundedSet<size_t> bSet8(4, { 1 }, false);
+  EXPECT_TRUE(*bSet1.begin() == 1);
+  EXPECT_TRUE(*bSet2.begin() == 1);
+  EXPECT_TRUE(*bSet3.begin() == 1);
+  EXPECT_TRUE(*bSet4.begin() == 1);
+  EXPECT_TRUE(*bSet5.begin() == 1);
+  EXPECT_TRUE(*bSet6.begin() == 1);
+  EXPECT_TRUE(*bSet7.begin() == 1);
+  EXPECT_TRUE(*bSet8.begin() == 1);
+}
+
 TEST(BoundedSetTest, CheckedInsert) {
   std::unordered_set<size_t> set1{1, 2, 3, 4, 5, 8};
   std::unordered_set<size_t> set2{10, 11, 1, 0};
-  BoundedSet<size_t> bSet1{5};
-  BoundedSet<size_t> bSet2{6};
+  BoundedSet<size_t> bSet1{5, false};
+  BoundedSet<size_t> bSet2{6, false};
   for (auto i : set1) bSet1.insert(i, 1);
   for (auto i : set2) bSet2.insert(i, 1);
   std::unordered_set<size_t> tempSet;
@@ -41,7 +64,7 @@ TEST(BoundedSetTest, CheckedInsert) {
 TEST(BoundedSetTest, Insert) {
   std::unordered_set<size_t> set1{1, 2, 3, 4, 5, 8};
   std::unordered_set<size_t> set2{10, 11, 1, 0, 4, 8};
-  BoundedSet<size_t> bSet{12};
+  BoundedSet<size_t> bSet{12, false};
   bSet.insert(1);
   bSet.insert(1);
   EXPECT_TRUE(std::count(bSet.begin(), bSet.end(), 1) == 1);
@@ -56,13 +79,13 @@ TEST(BoundedSetTest, Insert) {
 }
 
 TEST(BoundedSetTest, UnionCheck) {
-  BoundedSet<size_t> bSet1{2, 5};
-  BoundedSet<size_t> bSet2{2, 5};
+  BoundedSet<size_t> bSet1{2, 5, true};
+  BoundedSet<size_t> bSet2{2, 5, true};
   EXPECT_TRUE(bSet1.unionCheck(bSet2));
   std::unordered_set<size_t> set1{1, 2, 4, 7, 9, 10};
   std::unordered_set<size_t> set2{0, 2, 4, 7, 9, 10};
-  BoundedSet<size_t> bSet3{7, set1};
-  BoundedSet<size_t> bSet4{7, set2};
+  BoundedSet<size_t> bSet3{7, set1, false};
+  BoundedSet<size_t> bSet4{7, set2, false};
   EXPECT_TRUE(bSet3.unionCheck(bSet1));
   EXPECT_TRUE(bSet3.unionCheck(bSet4));
   EXPECT_TRUE(bSet4.unionCheck(bSet4));
@@ -75,9 +98,9 @@ TEST(BoundedSetTest, Merge) {
       {1, 2, 4, 7, 9, 10, 10001, 112, 12, 3, 55, 88};
   std::unordered_set<size_t> set2
       {0, 2, 67, 9, 10001, 11, 12, 100, 5, 3, 444, 555, 22};
-  BoundedSet<size_t> bSet1{64, set1};
-  BoundedSet<size_t> bSet2{64, set2};
-  BoundedSet<size_t> bSet3{32, set2};
+  BoundedSet<size_t> bSet1{64, set1, false};
+  BoundedSet<size_t> bSet2{64, set2, false};
+  BoundedSet<size_t> bSet3{32, set2, false};
   bSet1.merge(bSet2);
   set1.insert(set2.begin(), set2.end());
   bSet3.merge(bSet1);
@@ -97,7 +120,7 @@ TEST(BoundedSetTest, MergeRandomSingletons) {
   std::vector<std::unordered_set<size_t>> vectorUS;
   for (unsigned i = 0; i < n; i++) {
     r = rand();
-    vectorBS.push_back(BoundedSet<size_t>(k, r));
+    vectorBS.push_back(BoundedSet<size_t>(k, r, false));
     vectorUS.push_back( { r } );
   }
   for (unsigned i = 0; i < merges; i++) {
@@ -121,7 +144,7 @@ TEST(BoundedSetTest, MergeWithoutChecks) {
   std::vector<BoundedSet<size_t>> vectorBS;
   for (unsigned i = 0; i < n; i++) {
     r = rand();
-    vectorBS.push_back(BoundedSet<size_t>(k, r));
+    vectorBS.push_back(BoundedSet<size_t>(k, r, false));
   }
   for (unsigned i = 0; i < merges; i++) {
     unsigned first = rand() % n;

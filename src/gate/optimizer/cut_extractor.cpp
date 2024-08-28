@@ -63,9 +63,9 @@ void CutExtractor::findCuts(const model::EntryID entryID) {
   const auto *links = getLinks(entryID, nullptr, nLinks);
 
   RawCutsList cuts;
-  cuts.push_back({Cut(k, entryID), true});
 
   if (nLinks == 0) {
+    cuts.emplace_back(Cut(k, entryID, true /* immutable */), true);
     addViableCuts(cuts, entryID);
     return;
   }
@@ -76,6 +76,9 @@ void CutExtractor::findCuts(const model::EntryID entryID) {
     cutsCombinationsN *= entriesCuts[links[i].idx].size();
     suffCutsCombinationsN[i] = cutsCombinationsN;
   }
+
+  cuts.reserve(cutsCombinationsN + 1);
+  cuts.emplace_back(Cut(k, entryID, true /* immutable */), true);
 
   for (uint64_t i = 0; i < cutsCombinationsN; ++i) {
     addCut(entryID, links, nLinks, i, cuts, suffCutsCombinationsN);
@@ -91,22 +94,22 @@ void CutExtractor::addCut(
     uint64_t cutsCombinationID,
     RawCutsList &addedCuts,
     const std::vector<uint64_t> &suffCutsCombN) const {
-  Cut newCut(entryID, Cut::Set(k /* empty */));
+  Cut newCut(entryID, Cut::Set(k /* empty k-set */, false /* modifiable */));
 
   for (uint16_t j = 0; j < nLinks; ++j) {
-    model::EntryID inEntryID = links[j].idx;
-    model::EntryID inEntryCutID = cutsCombinationID;
+    model::EntryID inputID = links[j].idx;
+    size_t inputCutIndex = cutsCombinationID;
     if (j + 1 != nLinks) {
-      inEntryCutID = cutsCombinationID / suffCutsCombN[j + 1];
+      inputCutIndex = cutsCombinationID / suffCutsCombN[j + 1];
       cutsCombinationID %= suffCutsCombN[j + 1];
     }
-    const Cut &cutToMerge = entriesCuts[inEntryID][inEntryCutID];
+    const Cut &cutToMerge = entriesCuts[inputID][inputCutIndex];
     if (!newCut.merge(cutToMerge)) {
       return;
     }
   }
   if (cutNotDominated(newCut, addedCuts)) {
-    addedCuts.push_back({newCut, true});
+    addedCuts.emplace_back(std::move(newCut), true);
   }
 }
 

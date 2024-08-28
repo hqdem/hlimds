@@ -2,7 +2,7 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2023 ISP RAS (http://www.ispras.ru)
+// Copyright 2023-2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
@@ -18,7 +18,7 @@
 using MMSynthesizer = eda::gate::optimizer::synthesis::MMSynthesizer;
 using Subnet        = eda::gate::model::Subnet;
 
-void ISOPTest(size_t numVars) {
+void IsopTest(size_t numVars) {
   MMSynthesizer mm;
   static const size_t funcCount = 100;
   for (size_t i { 0 }; i < funcCount; ++i) {
@@ -35,42 +35,42 @@ void ISOPTest(size_t numVars) {
   }
 }
 
-TEST(ISOPTest, RandomFunc1Vars) {
-  ISOPTest(1);
+TEST(IsopTest, RandomFunc1Vars) {
+  IsopTest(1);
 }
 
-TEST(ISOPTest, RandomFunc2Vars) {
-  ISOPTest(2);
+TEST(IsopTest, RandomFunc2Vars) {
+  IsopTest(2);
 }
 
-TEST(ISOPTest, RandomFunc3Vars) {
-  ISOPTest(3);
+TEST(IsopTest, RandomFunc3Vars) {
+  IsopTest(3);
 }
 
-TEST(ISOPTest, RandomFunc4Vars) {
-  ISOPTest(4);
+TEST(IsopTest, RandomFunc4Vars) {
+  IsopTest(4);
 }
 
-TEST(ISOPTest, RandomFunc5Vars) {
-  ISOPTest(5);
+TEST(IsopTest, RandomFunc5Vars) {
+  IsopTest(5);
 }
 
-TEST(ISOPTest, RandomFunc6Vars) {
-  ISOPTest(6);
+TEST(IsopTest, RandomFunc6Vars) {
+  IsopTest(6);
 }
 
-TEST(ISOPTest, RandomFunc7Vars) {
-  ISOPTest(7);
+TEST(IsopTest, RandomFunc7Vars) {
+  IsopTest(7);
 }
 
-TEST(ISOPTest, RandomFunc8Vars) {
-  ISOPTest(8);
+TEST(IsopTest, RandomFunc8Vars) {
+  IsopTest(8);
 }
 
-TEST(ISOPTest, RandomFunc9Vars) {
-  ISOPTest(9);
+TEST(IsopTest, RandomFunc9Vars) {
+  IsopTest(9);
 }
 
-TEST(ISOPTest, RandomFunc10Vars) {
-  ISOPTest(10);
+TEST(IsopTest, RandomFunc10Vars) {
+  IsopTest(10);
 }

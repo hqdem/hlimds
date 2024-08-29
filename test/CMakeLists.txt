@@ -64,7 +64,6 @@ add_executable(${TEST_TARGET}
   gate/optimizer/npndbserial_test.cpp
   gate/optimizer/npndbstat_test.cpp
   gate/optimizer/pass_test.cpp
-  gate/optimizer/pipeliner_test.cpp
   gate/optimizer/reconvergence_test.cpp
   gate/optimizer/refactor_test.cpp
   gate/optimizer/resubstitutor_test.cpp

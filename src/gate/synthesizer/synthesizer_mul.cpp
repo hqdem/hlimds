@@ -8,18 +8,15 @@
 
 #include "gate/synthesizer/synthesizer_mul.h"
 
-#include <cassert>
-
 namespace eda::gate::synthesizer {
 
 model::SubnetID synthMulS(const model::CellTypeAttr &attr) {
-  // FIXME:
-  assert(false && "MulS is unsupported");
+  // TODO: Unsupported.
   return model::OBJ_NULL_ID;
 }
 
 model::SubnetID synthMulU(const model::CellTypeAttr &attr) {
-  // FIXME:
+  // TODO: Unsupported.
   assert(false && "MulU is unsupported");
   return model::OBJ_NULL_ID;
 }

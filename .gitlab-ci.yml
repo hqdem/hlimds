@@ -67,7 +67,7 @@ get_coverage_info:
   script:
     - lcov --capture --directory ${UTOPIA_HOME}
             -o lcoverage.info
-    - lcov --remove lcoverage.info "${BUILD_PATH}/*" "${UTOPIA_HOME}/lib/*" "/usr/*" 
+    - lcov --remove lcoverage.info "${BUILD_PATH}/*" "${CIRCT_ROOT}/*" "${UTOPIA_HOME}/lib/*" "/usr/*"
             -o clean_cov.info
     - genhtml clean_cov.info -o clean_coverage
     - gcovr --root ${UTOPIA_HOME}

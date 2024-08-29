@@ -14,6 +14,7 @@
 #include "gate/optimizer/reconvergence.h"
 #include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/transformer.h"
+#include "util/bits.h"
 #include "util/truth_table.h"
 
 #include <string>

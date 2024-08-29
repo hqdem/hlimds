@@ -56,9 +56,11 @@
 #define UTOPIA_LOG_BEGIN(msg) LOG(INFO)    << msg; UTOPIA_BEGIN(msg)
 #define UTOPIA_LOG_END()      /* nothing to log */ UTOPIA_END()
 
-#define UTOPIA_INITIALIZE_LOGGER()\
+#define UTOPIA_INITIALIZE_LOGGER() do {\
   el::Loggers::reconfigureAllLoggers(\
-      el::ConfigurationType::Format, "%level %datetime{%H:%m:%s}: %msg");
+      el::ConfigurationType::Format, "%level %datetime{%H:%m:%s}: %msg"); \
+  el::Loggers::addFlag(el::LoggingFlag::CreateLoggerAutomatically); \
+} while (0)
 
 namespace eda::diag {
 

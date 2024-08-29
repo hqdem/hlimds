@@ -15,7 +15,7 @@ namespace eda::util {
 /// Hash combination function as it is implemented in the Boost library.
 /// Based on http://www.cs.rmit.edu.au/~jz/fulltext/jasist-tch.pdf. 
 template <typename T>
-void hash_combine(size_t &seed, const T &val) {
+inline void hash_combine(size_t &seed, const T &val) {
   seed ^= std::hash<T>{}(val) + 0x9e3779b9 + (seed  << 6) + (seed >> 2);
 }
 

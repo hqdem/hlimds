@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "bits.h"
+
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -77,9 +79,9 @@ public:
   iterator end() const { return setPtr + setSize; }
 
   /// Returns the minimum value in the set.
-  NumType minValue() const;
+  NumType minValue() const { return setPtr[0]; }
   /// Returns the maximum value in the set.
-  NumType maxValue() const;
+  NumType maxValue() const { return setPtr[setSize - 1]; }
 
   /// Checks whether this set contains the other as a subset.
   bool contains(const BoundedSet<NumType, Allocator> &other) const;
@@ -126,16 +128,18 @@ public:
 
 private:
   bool insertRaw(NumType newElement, bool isChecked);
-  void allocate(SizeType maxSize, SizeType setSize, bool isImmutable);
-};
 
-/// Counts the number of units in the 64-bit number.
-static inline uint16_t countUnits(uint64_t x) {
-  x = x - ((x >> 1) & 0x5555555555555555ull);
-  x = (x & 0x3333333333333333UL) + ((x >> 2) & 0x3333333333333333ull);
-  x = (((x + (x >> 4)) & 0xF0F0F0F0F0F0F0Full) * 0x101010101010101ull) >> 56;
-  return static_cast<uint16_t>(x);
-}
+  void allocate(SizeType maxSize, SizeType setSize, bool isImmutable);
+  void deallocate();
+
+  template<auto begin, auto end>
+  void copyInPlaceSet(const BoundedSet<NumType, Allocator> &other) {
+    if constexpr (begin < end) {
+      this->small[begin] = other.small[begin];
+      copyInPlaceSet<begin + 1, end>(other);
+    }
+  }
+};
 
 /// Calculates the signature of the given element.
 template <class NumType>
@@ -152,6 +156,14 @@ inline void BoundedSet<NumType, Allocator>::allocate(
     setPtr = small;
   } else {
     setPtr = setAllocator.allocate(setSize);
+  }
+}
+
+template <class NumType, class Allocator>
+inline void BoundedSet<NumType, Allocator>::deallocate() {
+  if (setPtr != small) {
+    auto size = isImmutable ? setSize : 2 * maxSize;
+    setAllocator.deallocate(setPtr - offset, size);
   }
 }
 
@@ -219,23 +231,7 @@ BoundedSet<NumType, Allocator>::BoundedSet(
     setPtr(other.setPtr == other.small ? this->small : other.setPtr),
     signature(other.signature) {
   other.setPtr = other.small;
-
-  if constexpr (InPlaceSetSize >= 1) {
-    static_assert(InPlaceSetSize <= 1);
-    this->small[0] = other.small[0];
-  }
-}
-
-template <class NumType, class Allocator>
-NumType BoundedSet<NumType, Allocator>::minValue() const {
-  assert(!this->empty());
-  return this->setPtr[0];
-}
-
-template <class NumType, class Allocator>
-NumType BoundedSet<NumType, Allocator>::maxValue() const {
-  assert(!this->empty());
-  return this->setPtr[this->setSize - 1];
+  copyInPlaceSet<0, InPlaceSetSize>(other);
 }
 
 template <class NumType, class Allocator>
@@ -278,26 +274,26 @@ bool BoundedSet<NumType, Allocator>::merge(
   const SizeType n = this->setSize;
   const SizeType m = other.setSize;
 
-  SizeType i = 0, j = 0, cnt = 0;
+  SizeType i = 0, j = 0, k = 0;
   while ((i < n) && (j < m)) {
     if (this->setPtr[i] == other.setPtr[j]) {
-      newPtr[cnt++] = this->setPtr[i++];
+      newPtr[k++] = this->setPtr[i++];
       j++;
     } else if (this->setPtr[i] < other.setPtr[j]) {
-      newPtr[cnt++] = this->setPtr[i++];
+      newPtr[k++] = this->setPtr[i++];
     } else {
-      newPtr[cnt++] = other.setPtr[j++];
+      newPtr[k++] = other.setPtr[j++];
     }
   }
   while (i < n) {
-    newPtr[cnt++] = this->setPtr[i++];
+    newPtr[k++] = this->setPtr[i++];
   }
   while (j < m) {
-    newPtr[cnt++] = other.setPtr[j++];
+    newPtr[k++] = other.setPtr[j++];
   }
 
   this->setPtr = newPtr;
-  this->setSize = cnt;
+  this->setSize = k;
   this->signature |= other.signature;
 
   return true;
@@ -312,7 +308,7 @@ bool BoundedSet<NumType, Allocator>::unionCheck(
   if constexpr (CheckSignature) {
     if (!(this->signature & other.signature))
       return false;
-    if (countUnits(this->signature | other.signature) > this->maxSize)
+    if (count_units(this->signature | other.signature) > this->maxSize)
       return false;
   }
 
@@ -324,7 +320,8 @@ bool BoundedSet<NumType, Allocator>::unionCheck(
 
   const SizeType n = this->setSize;
   const SizeType m = other.setSize;
-  SizeType i = 0, j = 0, cnt = 0;
+
+  SizeType i = 0, j = 0, k = 0;
   while ((i < n) && (j < m)) {
     if (this->setPtr[i] == other.setPtr[j]) {
       i++;
@@ -334,11 +331,11 @@ bool BoundedSet<NumType, Allocator>::unionCheck(
     } else {
       j++;
     }
-    cnt++;
+    k++;
   }
-  cnt += (n - i) + (m - j);
+  k += (n - i) + (m - j);
 
-  return (cnt <= this->maxSize);
+  return (k <= this->maxSize);
 }
 
 template <class NumType, class Allocator>
@@ -359,6 +356,7 @@ bool BoundedSet<NumType, Allocator>::insertRaw(
     this->signature |= getSignature(newElement);
     return true;
   }
+
   return false;
 }
 
@@ -379,10 +377,7 @@ BoundedSet<NumType, Allocator>::find(NumType num) const {
 
 template <class NumType, class Allocator>
 BoundedSet<NumType, Allocator>::~BoundedSet() {
-  if (setPtr != small) {
-    setAllocator.deallocate(
-        setPtr - offset, isImmutable ? setSize : 2 * maxSize);
-  }
+  deallocate();
 }
 
 template <class NumType, class Allocator>

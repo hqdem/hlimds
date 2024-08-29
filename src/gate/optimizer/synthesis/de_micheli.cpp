@@ -36,7 +36,7 @@ SubnetObject DMSynthesizer::synthesize(const TruthTable &func,
 
   std::vector<MajNode> topNodes;
   createTopNodes(topNodes, tree, divisors, nOnes,
-      care.num_vars() ? care : utils::generateConstTT(func.num_vars()));
+      care.num_vars() ? care : util::generateConstTT(func.num_vars()));
   if (!tree.empty()) {
     return buildSubnet(tree, divisors);
   }
@@ -483,7 +483,7 @@ bool DMSynthesizer::selectLastArg(std::vector<MajNode> &topNodes,
     node.args[0] = -firstArg - 1;
     node.args[1] = -secondArg - 1;
     node.args[2] = -i - 1;
-    if (utils::isZero(~top)) {
+    if (util::isZero(~top)) {
       topNodes.clear();
       topNodes.emplace_back(node);
       return true;

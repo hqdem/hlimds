@@ -37,7 +37,7 @@ struct hash<kitty::dynamic_truth_table> {
 /**
  * \brief Utility methods for kitty lib.
  */
-namespace eda::utils {
+namespace eda::util {
 
 inline bool isZero(const kitty::dynamic_truth_table &tt) {
   return kitty::is_const0(tt);
@@ -119,4 +119,4 @@ Cube cutCube(Cube large, Cube small);
 
 KittyTT generateConstTT(size_t numVars, bool on = true);
 
-} // namespace eda::utils
+} // namespace eda::util

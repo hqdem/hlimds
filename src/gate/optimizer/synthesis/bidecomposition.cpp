@@ -25,7 +25,7 @@ SubnetObject BiDecSynthesizer::run(const TruthTable &func, const TruthTable &car
   SubnetBuilder &subnetBuilder{object.builder()};
   LinkList inputs = subnetBuilder.addInputs(func.num_vars());
   TernaryBiClique initBiClique(func,
-      care.num_vars() ? care : utils::generateConstTT(func.num_vars()));
+      care.num_vars() ? care : util::generateConstTT(func.num_vars()));
   subnetBuilder.addOutput(decompose(initBiClique, subnetBuilder, maxArity));
   return object;
 }

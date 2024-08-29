@@ -8,7 +8,7 @@
 
 #include "kitty_utils.h"
 
-namespace eda::utils {
+namespace eda::util {
 
 using TT = kitty::dynamic_truth_table;
 
@@ -201,4 +201,4 @@ KittyTT generateConstTT(size_t numVars, bool on) {
   return tt;
 }
 
-} // namespace eda::utils
+} // namespace eda::util

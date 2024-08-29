@@ -75,8 +75,8 @@ void SCLibrary::loadCombCell(const std::string &name) {
       nOutputs);
 
   auto config = kitty::exact_p_canonization(func);
-  const auto &ctt = utils::getTT(config); // canonized TT
-  utils::NpnTransformation t = utils::getTransformation(config);
+  const auto &ctt = util::getTT(config); // canonized TT
+  util::NpnTransformation t = util::getTransformation(config);
 
   combCells.push_back({cellTypeID, ctt, t});
 }

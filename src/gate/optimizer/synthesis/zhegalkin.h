@@ -22,7 +22,7 @@ using LinkList = std::vector<Link>;
 using Polynomial = std::vector<uint64_t>;
 using SubnetObject = model::SubnetObject;
 using Polarization = std::vector<bool>;
-using TruthTable = utils::TruthTable;
+using TruthTable = util::TruthTable;
 
 /**
  * Function that creates SubnetObject by a given Polynomial and its

@@ -29,7 +29,7 @@ namespace eda::gate::model {
 class SubnetView final {
 public:
   using Cut = optimizer::Cut;
-  using TruthTable = eda::utils::TruthTable;
+  using TruthTable = eda::util::TruthTable;
 
   /// Constructs a subnet view corresponding to the whole subnet.
   SubnetView(const SubnetBuilder &parent);

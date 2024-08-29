@@ -38,7 +38,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder,
   if (careCutSize > cutSize) {
     const auto &roots = window.getInputs();
     auto careWindow = getReconvergentCut(builder, roots, careCutSize);
-    window.setCare(utils::computeCare(careWindow.evaluateTruthTables()));
+    window.setCare(util::computeCare(careWindow.evaluateTruthTables()));
   }
 
   auto newCone = resynthesizer.resynthesize(window, 2);

@@ -48,7 +48,7 @@ Link AlgebraicFactor::getFactoring(const SOP &func, const LinkList &inputs,
   if (quo.size() == 1) {
     return getLiteralFactoring(func, quo[0], inputs, subnetBuilder, maxArity);
   }
-  utils::makeCubeFree(quo);
+  util::makeCubeFree(quo);
 
   div = std::move(quo);
   quo.resize(0);
@@ -56,7 +56,7 @@ Link AlgebraicFactor::getFactoring(const SOP &func, const LinkList &inputs,
 
   divide(func, div, quo, rem, true);
 
-  if (utils::cubeFree(div)) {
+  if (util::cubeFree(div)) {
     Link divLink = getFactoring(div, inputs, subnetBuilder, maxArity);
     Link quoLink = getFactoring(quo, inputs, subnetBuilder, maxArity);
     if (rem.size()) {
@@ -67,7 +67,7 @@ Link AlgebraicFactor::getFactoring(const SOP &func, const LinkList &inputs,
     return subnetBuilder.addCell(model::AND, divLink, quoLink);;
   }
 
-  Cube common = utils::findCommonCube(quo);
+  Cube common = util::findCommonCube(quo);
 
   return getLiteralFactoring(func, common, inputs, subnetBuilder, maxArity);  
 }
@@ -76,7 +76,7 @@ Link AlgebraicFactor::getLiteralFactoring(const SOP &func, const Cube lits,
                                           const LinkList &inputs,
                                           SubnetBuilder &subnetBuilder,
                                           uint16_t maxArity) const {
-  Cube lit = utils::findBestLiteral(func, lits);
+  Cube lit = util::findBestLiteral(func, lits);
   SOP quo;
   SOP rem;
   divideByCube(func, lit, quo, rem);
@@ -92,10 +92,10 @@ Link AlgebraicFactor::getLiteralFactoring(const SOP &func, const Cube lits,
 }
 
 AlgebraicFactor::SOP AlgebraicFactor::findDivisor(const SOP &func) const {
-  if ((func.size() <= 1) || (utils::findAnyRepeatLiteral(func)._mask == 0u)) {
+  if ((func.size() <= 1) || (util::findAnyRepeatLiteral(func)._mask == 0u)) {
     return {};
   }
-  return utils::findAnyLevel0Kernel(func);
+  return util::findAnyLevel0Kernel(func);
 }
 
 void AlgebraicFactor::divide(const SOP &func, const SOP &div,
@@ -122,14 +122,14 @@ void AlgebraicFactor::divide(const SOP &func, const SOP &div,
     }
     size_t j{0};
     for (; j < div.size(); ++j) {
-      if (utils::cubeContain(func[i], div[j])) {
+      if (util::cubeContain(func[i], div[j])) {
         break;
       }
     }
     if (j == div.size()) {
       continue;
     }
-    Cube qCube = utils::cutCube(func[i], div[j]);
+    Cube qCube = util::cutCube(func[i], div[j]);
     std::vector<size_t> toMark;
     toMark.reserve(div.size());
     for (size_t c = 0; c < div.size(); ++c) {
@@ -172,8 +172,8 @@ void AlgebraicFactor::divideByCube(const SOP &func, const Cube div,
   quo.reserve(func.size());
   rem.reserve(func.size());
   for (const Cube fCube : func) {
-    if (utils::cubeContain(fCube, div)) {
-      quo.push_back(utils::cutCube(fCube, div));
+    if (util::cubeContain(fCube, div)) {
+      quo.push_back(util::cutCube(fCube, div));
     } else {
       rem.push_back(fCube);
     }

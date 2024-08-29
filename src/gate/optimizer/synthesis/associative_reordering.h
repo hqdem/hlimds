@@ -62,7 +62,7 @@ AssociativeReordering() {};
 
 /// Synthesizes a SubnetObject for the given builder and care specification.
 virtual model::SubnetObject synthesize(const SubnetBuilder &builder,
-                                       const utils::TruthTable &care,
+                                       const util::TruthTable &care,
                                        const uint16_t maxArity = -1) const {
   return synthesize(builder, maxArity);
 };

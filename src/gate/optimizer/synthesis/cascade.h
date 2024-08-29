@@ -28,7 +28,7 @@ public:
   /// Conjunctive normal form
   using CNF = std::vector<std::vector<int>>;
   using SubnetObject = model::SubnetObject;
-  using TruthTable = utils::TruthTable;
+  using TruthTable = util::TruthTable;
 
   CascadeSynthesizer() {}
 

@@ -63,7 +63,7 @@ SubnetObject createScheme(Polynomial &resultFunction,
       continue;
     }
 
-    std::vector<int> temporaryInputNodes = eda::utils::popcnt(i);
+    std::vector<int> temporaryInputNodes = eda::util::popcnt(i);
     LinkList currentNode;
 
     for (auto n : temporaryInputNodes) {
@@ -124,7 +124,7 @@ uint64_t ZhegalkinSynthesizer::apply(const Polynomial &func,
   uint64_t size = positionsOfOnes.size();
   uint64_t base = 1 << size;
   for (uint64_t i = 0; i < base; ++i) {
-    std::string str = eda::utils::toBinString(i, size);
+    std::string str = eda::util::toBinString(i, size);
     int pos = 0;
     for (uint64_t j = 0; j < size; ++j) {
       if (str[j] == '1') {
@@ -159,7 +159,7 @@ Polynomial ZhegalkinSynthesizer::charFromFunction(
   Polynomial resultFunction(numBits + 1);
 
   for (uint64_t i = 0; i < numBits; ++i) {
-    resultFunction[i] = apply(func, eda::utils::toBinString(i, numVar));
+    resultFunction[i] = apply(func, eda::util::toBinString(i, numVar));
   }
 
   resultFunction[resultFunction.size() - 1] = numVar;

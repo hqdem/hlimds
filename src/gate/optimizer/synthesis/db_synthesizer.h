@@ -29,7 +29,7 @@ public:
 
   virtual ~DbSynthesizer() = default;
 
-  SubnetObject synthesize(const utils::TTn &func, NpnDatabase &db) const {
+  SubnetObject synthesize(const util::TTn &func, NpnDatabase &db) const {
     const auto &iter = db.get(func);
     if (iter.isEnd()) {
       return SubnetObject();

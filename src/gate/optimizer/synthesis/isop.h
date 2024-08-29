@@ -27,7 +27,7 @@ using LinkList      = model::Subnet::LinkList;
 using SOP           = std::vector<Cube>;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetObject  = model::SubnetObject;
-using TruthTable    = utils::TruthTable;
+using TruthTable    = util::TruthTable;
 /// @endcond
 
 /**

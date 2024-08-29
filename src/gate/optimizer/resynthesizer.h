@@ -61,7 +61,7 @@ private:
 };
 
 template<>
-inline utils::TruthTable construct<utils::TruthTable>(
+inline util::TruthTable construct<util::TruthTable>(
     const model::SubnetView &window) {
   return window.evaluateTruthTable();
 }

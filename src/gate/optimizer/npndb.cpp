@@ -17,9 +17,9 @@ NpnDatabase::ResultIterator NpnDatabase::get(const TT &tt) {
   const size_t nVars = tt.num_vars();
   const TT ttk = nVars < nInputs ? kitty::extend_to(tt, nInputs) : tt;
   auto config = kitty::exact_npn_canonization(ttk);
-  NpnTransformation t = utils::getTransformation(config);
-  const auto &canonTT = utils::getTT(config);
-  return ResultIterator(storage[canonTT], utils::inverse(t), nVars);
+  NpnTransformation t = util::getTransformation(config);
+  const auto &canonTT = util::getTT(config);
+  return ResultIterator(storage[canonTT], util::inverse(t), nVars);
 }
 
 NpnDatabase::ResultIterator NpnDatabase::get(const Subnet &subnet) {
@@ -64,8 +64,8 @@ void NpnDatabase::printInfoSub(std::ostream &out, const Subnet &subnet) {
 NpnDatabase::NpnTransformation NpnDatabase::push(const SubnetID &id) {
   TT tt = model::evaluate(Subnet::get(id))[0];
   auto config = kitty::exact_npn_canonization(tt);
-  NpnTransformation t = utils::getTransformation(config);
-  auto newId = utils::npnTransform(Subnet::get(id), t);
+  NpnTransformation t = util::getTransformation(config);
+  auto newId = util::npnTransform(Subnet::get(id), t);
   storage[std::get<0>(config)].push_back(newId);
   return t;
 }

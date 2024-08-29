@@ -19,7 +19,7 @@ using CNF = CascadeSynthesizer::CNF;
 using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetObject = model::SubnetObject;
-using TruthTable = utils::TruthTable;
+using TruthTable = util::TruthTable;
 
 void CascadeSynthesizer::initialize(
     CNF &output, int times, int num1, int num2, int num3) const {

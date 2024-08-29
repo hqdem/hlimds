@@ -15,7 +15,7 @@
 /**
  * \brief Utility methods for arithmetic-related tasks.
  */
-namespace eda::utils {
+namespace eda::util {
 
 //===--------------------------------------------------------------------===//
 // Num-to-string conversion
@@ -43,5 +43,5 @@ std::string toBinString(int num, uint64_t size);
 */
 std::vector<int> popcnt(int num);
 
-} // namespace eda::utils
+} // namespace eda::util
 

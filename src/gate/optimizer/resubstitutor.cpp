@@ -33,12 +33,12 @@ using SubnetBuilder    = eda::gate::model::SubnetBuilder;
 using SubnetView       = eda::gate::model::SubnetView;
 using SubnetViewWalker = eda::gate::model::SubnetViewWalker;
 using Symbol           = eda::gate::model::CellSymbol;
-using TruthTable       = eda::utils::TruthTable;
+using TruthTable       = eda::util::TruthTable;
 using TruthTables      = std::vector<TruthTable>;
 
 // Shortcuts
 using TTn = TruthTable;
-using TT6 = utils::TT6;
+using TT6 = util::TT6;
 
 //----------------------------------------------------------------------------//
 // Data structures
@@ -599,16 +599,16 @@ static void classifyBinatePair(const TT &table,
 
   if (isConst0And(table, offset)) {
     divs.addPositive(divPair);
-    divsTT.addPositiveTT(utils::convertTruthTable<TT>(table, arity));
+    divsTT.addPositiveTT(util::convertTruthTable<TT>(table, arity));
   } else if (isConst0And(~table, offset)) {
     divs.addPositive(~divPair);
-    divsTT.addPositiveTT(utils::convertTruthTable<TT>(~table, arity));
+    divsTT.addPositiveTT(util::convertTruthTable<TT>(~table, arity));
   } else if (isConst0And(~table, onset)) {
     divs.addNegative(divPair);
-    divsTT.addNegativeTT(utils::convertTruthTable<TT>(table, arity));
+    divsTT.addNegativeTT(util::convertTruthTable<TT>(table, arity));
   } else if (isConst0And(table, onset)) {
     divs.addNegative(~divPair);
-    divsTT.addNegativeTT(utils::convertTruthTable<TT>(~table, arity));
+    divsTT.addNegativeTT(util::convertTruthTable<TT>(~table, arity));
   }
 }
 
@@ -659,13 +659,13 @@ static void classifyBinatePairs(SubnetBuilder &builder,
       const DivisorsPair divPair(div1, div2, false);
 
       if (arity > 6) {
-        const TTn &tt1 = utils::getTruthTable<TTn>(builder, div1.idx);
-        const TTn &tt2 = utils::getTruthTable<TTn>(builder, div2.idx);
+        const TTn &tt1 = util::getTruthTable<TTn>(builder, div1.idx);
+        const TTn &tt2 = util::getTruthTable<TTn>(builder, div2.idx);
 
         classifyBinatePair(tt1, tt2, divPair, divs, divsTT, onset, offset);
       } else {
-        const TT6 &tt1 = utils::getTruthTable<TT6>(builder, div1.idx);
-        const TT6 &tt2 = utils::getTruthTable<TT6>(builder, div2.idx);
+        const TT6 &tt1 = util::getTruthTable<TT6>(builder, div1.idx);
+        const TT6 &tt2 = util::getTruthTable<TT6>(builder, div2.idx);
 
         classifyBinatePair(tt1, tt2, divPair, divs, divsTT, onset, offset);
       }
@@ -712,13 +712,13 @@ static std::pair<bool, Divisor> getSideDivisors(SubnetBuilder &builder,
     builder.mark(idx);
 
     if (arity > 6) {
-      const TTn &tt = utils::getTruthTable<TTn>(builder, arity, idx, false, 0);
+      const TTn &tt = util::getTruthTable<TTn>(builder, arity, idx, false, 0);
       cellTables.push(tt);
-      utils::setTruthTable<TTn>(builder, idx, cellTables.back());
+      util::setTruthTable<TTn>(builder, idx, cellTables.back());
       res = classifyDivisor(idx, divs, tt, onset, offset);
     } else {
-      const TT6 tt = utils::getTruthTable<TT6>(builder, arity, idx, false, 0);
-      utils::setTruthTable<TT6>(builder, idx, tt);
+      const TT6 tt = util::getTruthTable<TT6>(builder, arity, idx, false, 0);
+      util::setTruthTable<TT6>(builder, idx, tt);
       res = classifyDivisor(idx, divs, tt, onset, offset);
     }
 
@@ -783,10 +783,10 @@ static std::pair<bool, Divisor> addInnerDivisor(const SubnetBuilder &builder,
                                                 const TruthTable &offset) {
 
   if (arity > 6) {
-    const TTn &tt = utils::getTruthTable<TTn>(builder, idx);
+    const TTn &tt = util::getTruthTable<TTn>(builder, idx);
     return classifyDivisor(idx, divs, tt, onset, offset);
   }
-  const TT6 &tt = utils::getTruthTable<TT6>(builder, idx);
+  const TT6 &tt = util::getTruthTable<TT6>(builder, idx);
   return classifyDivisor(idx, divs, tt, onset, offset);
 }
 
@@ -943,12 +943,12 @@ static bool checkUnates(SubnetBuilder &builder,
       bool success = false;
 
       if (arity <= 6) {
-        const TT6 &tt1 = utils::getTruthTable<TT6>(builder, div1.idx);
-        const TT6 &tt2 = utils::getTruthTable<TT6>(builder, div2.idx);
+        const TT6 &tt1 = util::getTruthTable<TT6>(builder, div1.idx);
+        const TT6 &tt2 = util::getTruthTable<TT6>(builder, div2.idx);
         success = checkUnates(tt1, tt2, div1.inv, div2.inv, target, unate);
       } else {
-        const TTn &tt1 = utils::getTruthTable<TTn>(builder, div1.idx);
-        const TTn &tt2 = utils::getTruthTable<TTn>(builder, div2.idx);
+        const TTn &tt1 = util::getTruthTable<TTn>(builder, div1.idx);
+        const TTn &tt2 = util::getTruthTable<TTn>(builder, div2.idx);
         success = checkUnates(tt1, tt2, div1.inv, div2.inv, target, unate);
       }
 
@@ -982,10 +982,10 @@ static bool checkUnatePair(SubnetBuilder &builder,
 
       const TruthTable &tt1 = divsTT.getTruthTable(unate, i);
       if (arity <= 6) {
-        const TT6 &tt2 = utils::getTruthTable<TT6>(builder, div2.idx);
+        const TT6 &tt2 = util::getTruthTable<TT6>(builder, div2.idx);
         success = checkUnates(tt1, tt2, false, div2.inv, target, unate);
       } else {
-        const TTn &tt2 = utils::getTruthTable<TTn>(builder, div2.idx);
+        const TTn &tt2 = util::getTruthTable<TTn>(builder, div2.idx);
         success = checkUnates(tt1, tt2, false, div2.inv, target, unate);
       }
 
@@ -1151,9 +1151,9 @@ static void simulateCone(SubnetBuilder &builder,
                                           const bool isIn,
                                           const bool isOut,
                                           const model::EntryID i) -> bool {
-      const auto tt = utils::getTruthTable<TTn>(builder, arity, i, isIn, nIn++);
+      const auto tt = util::getTruthTable<TTn>(builder, arity, i, isIn, nIn++);
       cellTables.push(std::move(tt));
-      utils::setTruthTable<TTn>(builder, i, cellTables.back());
+      util::setTruthTable<TTn>(builder, i, cellTables.back());
       return true; // Continue traversal.
     });
   }
@@ -1167,8 +1167,8 @@ static void invertPivotTT(SubnetBuilder &builder,
   if (arity > 6) {
     cellTables.invertPivotTT();
   } else {
-    const auto inverted = ~utils::getTruthTable<TT6>(builder, pivot);
-    utils::setTruthTable<TT6>(builder, pivot, inverted);
+    const auto inverted = ~util::getTruthTable<TT6>(builder, pivot);
+    util::setTruthTable<TT6>(builder, pivot, inverted);
   }
 }
 
@@ -1189,14 +1189,14 @@ static TruthTables evaluateRoots(SubnetBuilder &builder,
       if (isIn) {
         return true; // Continue traversal.
       }
-      const auto tt = utils::getTruthTable<TT6>(builder, arity, i, isIn, 0);
-      utils::setTruthTable<TT6>(builder, i, tt);
+      const auto tt = util::getTruthTable<TT6>(builder, arity, i, isIn, 0);
+      util::setTruthTable<TT6>(builder, i, tt);
       return true; // Continue traversal.
     });
 
     for (size_t i = 0; i < view.getOutNum(); ++i) {
-      const auto tt = utils::getTruthTable<TT6>(builder, view.getOut(i));
-      result[i] = utils::convertTruthTable<TT6>(tt, arity);
+      const auto tt = util::getTruthTable<TT6>(builder, view.getOut(i));
+      result[i] = util::convertTruthTable<TT6>(tt, arity);
     }
   } else {
     size_t nOuter = 0;
@@ -1208,13 +1208,13 @@ static TruthTables evaluateRoots(SubnetBuilder &builder,
       if (isIn) {
         return true; // Continue traversal.
       }
-      auto tt = utils::getTruthTable<TTn>(builder, arity, i, isIn, 0);
+      auto tt = util::getTruthTable<TTn>(builder, arity, i, isIn, 0);
       cellTables.setOuterTT(nOuter++, std::move(tt));
       return true; // Continue traversal.
     });
 
     for (size_t i = 0; i < view.getOutNum(); ++i) {
-      result[i] = utils::getTruthTable<TTn>(builder, view.getOut(i));
+      result[i] = util::getTruthTable<TTn>(builder, view.getOut(i));
     }
   }
 
@@ -1233,20 +1233,20 @@ static TruthTable computeCare(SubnetBuilder &builder,
                               const std::vector<model::EntryID> &branches,
                               CellTables &cellTables) {
 
-  auto care = utils::getZeroTruthTable<TTn>(arity);
+  auto care = util::getZeroTruthTable<TTn>(arity);
 
   // Init branches.
   for (size_t i = 0; i < branches.size(); ++i) {
     if (arity <= 6) {
       const auto constant = ((status >> i) & 1ull) ?
-          utils::getOneTruthTable<TT6>(arity):
-          utils::getZeroTruthTable<TT6>(arity);
+          util::getOneTruthTable<TT6>(arity):
+          util::getZeroTruthTable<TT6>(arity);
 
-      utils::setTruthTable<TT6>(builder, branches[i], constant);
+      util::setTruthTable<TT6>(builder, branches[i], constant);
     } else {
       auto constant = ((status >> i) & 1ull) ?
-          utils::getOneTruthTable<TTn>(arity):
-          utils::getZeroTruthTable<TTn>(arity);
+          util::getOneTruthTable<TTn>(arity):
+          util::getZeroTruthTable<TTn>(arity);
 
       cellTables.setBranchTT(i, std::move(constant));
     }
@@ -1342,18 +1342,18 @@ static SubnetView getCareView(SubnetBuilder &builder,
   InOutMapping iomapping;
   if (arity > 6) {
     for (size_t i = 0; i < branches.size(); ++i) {
-      auto zero = utils::getZeroTruthTable<TTn>(arity);
+      auto zero = util::getZeroTruthTable<TTn>(arity);
       builder.mark(branches[i]);
       iomapping.inputs.push_back(branches[i]);
       cellTables.pushBranch(std::move(zero));
-      utils::setTruthTable<TTn>(builder, branches[i], cellTables.back());
+      util::setTruthTable<TTn>(builder, branches[i], cellTables.back());
     }
   } else {
     for (size_t i = 0; i < branches.size(); ++i) {
-      const auto zero = utils::getZeroTruthTable<TT6>(arity);
+      const auto zero = util::getZeroTruthTable<TT6>(arity);
       builder.mark(branches[i]);
       iomapping.inputs.push_back(branches[i]);
-      utils::setTruthTable<TT6>(builder, branches[i], zero);
+      util::setTruthTable<TT6>(builder, branches[i], zero);
     }
   }
 
@@ -1382,9 +1382,9 @@ static void reserveOuters(const SubnetView &view,
     if (isIn) {
       return true; // Continue traversal.
     }
-    const auto zero = utils::getZeroTruthTable<TTn>(arity);
+    const auto zero = util::getZeroTruthTable<TTn>(arity);
     cellTables.pushOuter(std::move(zero));
-    utils::setTruthTable<TTn>(parent, i, cellTables.back());
+    util::setTruthTable<TTn>(parent, i, cellTables.back());
     return true; // Continue traversal.
   });
 }
@@ -1409,7 +1409,7 @@ static TruthTable computeCare(SubnetBuilder &builder,
     reserveOuters(careView, tables, k);
   }
 
-  auto care = utils::getZeroTruthTable<TTn>(k);
+  auto care = util::getZeroTruthTable<TTn>(k);
 
   const size_t nSetBits = countSetBits(status >> 32);
   const size_t rounds = 1ull << nSetBits;
@@ -1596,14 +1596,14 @@ static void getTarget(const SubnetBuilder *builderPtr,
                       TruthTable &offset) {
 
   if (arity > 6) {
-    onset = utils::getTruthTable<TTn>(*builderPtr, pivot) & care;
-    offset = ~utils::getTruthTable<TTn>(*builderPtr, pivot) & care;
+    onset = util::getTruthTable<TTn>(*builderPtr, pivot) & care;
+    offset = ~util::getTruthTable<TTn>(*builderPtr, pivot) & care;
     return;
   }
-  const auto tt = utils::getTruthTable<TT6>(*builderPtr, pivot);
+  const auto tt = util::getTruthTable<TT6>(*builderPtr, pivot);
 
-  onset = utils::convertTruthTable<TT6>(tt, arity) & care;
-  offset = ~utils::convertTruthTable<TT6>(tt, arity) & care;
+  onset = util::convertTruthTable<TT6>(tt, arity) & care;
+  offset = ~util::convertTruthTable<TT6>(tt, arity) & care;
 }
 
 static bool isAcceptable(const SubnetBuilder *builderPtr,

@@ -13,7 +13,7 @@
 
 using std::filesystem::path;
 
-namespace eda::utils {
+namespace eda::util {
 
 inline bool createDir(const path &dir) {
   if (!std::filesystem::exists(dir)) {
@@ -27,4 +27,4 @@ inline bool createDir(const std::string &name) {
   return createDir(dir);
 }
 
-} // namespace eda::utils
+} // namespace eda::util

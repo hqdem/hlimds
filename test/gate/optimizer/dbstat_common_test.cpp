@@ -23,7 +23,7 @@
 
 using namespace eda::gate::model;
 using namespace eda::gate::optimizer;
-using namespace eda::utils;
+using namespace eda::util;
 
 using TT = kitty::dynamic_truth_table;
 

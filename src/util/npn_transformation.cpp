@@ -8,7 +8,7 @@
 
 #include "npn_transformation.h"
 
-namespace eda::utils {
+namespace eda::util {
 
 NpnTransformation inverse(const NpnTransformation &t) {
   uint32_t negationMask = 0;
@@ -24,4 +24,4 @@ NpnTransformation inverse(const NpnTransformation &t) {
   return NpnTransformation{negationMask, permutation};
 }
 
-} // namespace eda::utils
+} // namespace eda::util

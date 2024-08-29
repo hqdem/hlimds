@@ -3,7 +3,6 @@ add_library(Util OBJECT
   kitty_utils.cpp
   npn_transformation.cpp
   partition_hgraph.cpp
-  string.cpp
 )
 
 target_include_directories(Util

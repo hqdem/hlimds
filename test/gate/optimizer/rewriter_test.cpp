@@ -21,7 +21,7 @@ using SubnetBuilder = model::SubnetBuilder;
 using SubnetObject = model::SubnetObject;
 using SubnetView = model::SubnetView;
 using Effect = SubnetBuilder::Effect;
-using TruthTable = utils::TruthTable;
+using TruthTable = util::TruthTable;
 using EntryID = model::EntryID;
 
 static SubnetID getSubnetID(const SubnetView &window) {

@@ -13,7 +13,7 @@
 #include <cassert>
 #include <cstddef>
 
-using namespace eda::utils;
+using namespace eda::util;
 
 namespace eda::rtl::model {
  
@@ -202,7 +202,7 @@ VNode *Net::createMux(const Variable &output, const VNode::List &defines) {
 void Net::sortTopologically() {
   assert(!_isCreated);
 
-  auto vnodeIds = eda::utils::graph::topologicalSort<Net>(*this);
+  auto vnodeIds = eda::util::graph::topologicalSort<Net>(*this);
   for (size_t i = 0; i < vnodeIds.size(); i++) {
     auto vnodeId = vnodeIds[i];
     _vnodes[i] = VNode::get(vnodeId);

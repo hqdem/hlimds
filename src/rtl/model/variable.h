@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <fmt/format.h>
+
 #include <cstddef>
 #include <iostream>
 #include <vector>
@@ -79,6 +81,11 @@ private:
   const Bind _bind;
   const Type _type;
 };
+
+inline std::string unique_name(const std::string &prefix) {
+  static int i = 0;
+  return fmt::format("{}_{}", prefix.c_str(), i++);
+}
 
 inline std::ostream &operator <<(std::ostream &out, const Variable &variable) {
   return out << variable.name();

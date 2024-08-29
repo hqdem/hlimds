@@ -25,8 +25,8 @@ std::vector<SubnetTechMapper::Match> PBoolMatcher::match(
   auto truthTable = cone.evaluateTruthTable();
 
   auto config = kitty::exact_p_canonization(truthTable);
-  const auto &ctt = utils::getTT(config); // canonized TT
-  utils::NpnTransformation t = utils::getTransformation(config);
+  const auto &ctt = util::getTT(config); // canonized TT
+  util::NpnTransformation t = util::getTransformation(config);
 
   if (auto it = cells.find(ctt); it != cells.end()) {
     for (const auto &cell : it->second) {

@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-namespace eda::utils {
+namespace eda::util {
 
 std::string toBinString(int num, uint64_t size) {
   std::string res;
@@ -51,5 +51,5 @@ std::vector<int> popcnt(int a) {
   return res;
 }
 
-} // namespace eda::utils
+} // namespace eda::util
 

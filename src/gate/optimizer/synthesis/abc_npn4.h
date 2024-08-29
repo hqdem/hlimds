@@ -31,8 +31,8 @@ public:
   using Synthesizer::synthesize;
 
   model::SubnetObject synthesize(
-      const utils::TruthTable &tt,
-      const utils::TruthTable &,
+      const util::TruthTable &tt,
+      const util::TruthTable &,
       const uint16_t maxArity = -1) const override;
 
 #ifdef NPN4_USAGE_STATS

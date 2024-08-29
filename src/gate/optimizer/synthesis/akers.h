@@ -43,7 +43,7 @@ public:
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID      = eda::gate::model::SubnetID;
   using SubnetObject  = eda::gate::model::SubnetObject;
-  using TruthTable    = utils::TruthTable;
+  using TruthTable    = util::TruthTable;
   using UnitizedTable = eda::gate::optimizer::synthesis::UnitizedTable;
 
   /// Empty constructor.

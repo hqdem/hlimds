@@ -33,7 +33,7 @@ public:
    */
   virtual model::SubnetObject synthesize(
       const IR &ir,
-      const utils::TruthTable &care,
+      const util::TruthTable &care,
       const uint16_t maxArity = -1) const = 0;
 
   /**
@@ -43,11 +43,11 @@ public:
   model::SubnetObject synthesize(
       const IR &ir,
       const uint16_t maxArity = -1) const {
-    return synthesize(ir, utils::TruthTable{}, maxArity);
+    return synthesize(ir, util::TruthTable{}, maxArity);
   }  
 };
 
 /// Truth-table-based synthesizer.
-using TruthTableSynthesizer = Synthesizer<utils::TruthTable>;
+using TruthTableSynthesizer = Synthesizer<util::TruthTable>;
 
 } // namespace eda::gate::optimizer

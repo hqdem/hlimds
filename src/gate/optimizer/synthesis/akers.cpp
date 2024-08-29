@@ -72,7 +72,7 @@ SubnetObject AkersSynthesizer::synthesize(const TruthTable &func,
   /// TODO: Wrong argument processing is needed.
   assert(arity > 2 && "Arity of MAJ gate should be >= 3!");
   return run(func,
-      care.num_vars() ? care : utils::generateConstTT(func.num_vars()));
+      care.num_vars() ? care : util::generateConstTT(func.num_vars()));
 }
 
 //===----------------------------------------------------------------------===//

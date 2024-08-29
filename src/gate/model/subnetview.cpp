@@ -96,15 +96,15 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
                              const bool isIn,
                              const bool isOut,
                              const EntryID i) -> bool {
-      const auto tt = utils::getTruthTable<utils::TT6>(
+      const auto tt = util::getTruthTable<util::TT6>(
           parent, arity, i, isIn, nIn++);
-      utils::setTruthTable<utils::TT6>(parent, i, tt);
+      util::setTruthTable<util::TT6>(parent, i, tt);
       return true /* continue traversal */;
     });
 
     for (size_t i = 0; i < entryIDs.size(); ++i) {
-      const auto tt = utils::getTruthTable<utils::TT6>(parent, entryIDs[i]);
-      result[i] = utils::convertTruthTable<utils::TT6>(tt, arity);
+      const auto tt = util::getTruthTable<util::TT6>(parent, entryIDs[i]);
+      result[i] = util::convertTruthTable<util::TT6>(tt, arity);
     }
   } else {
     std::vector<TruthTable> tables;
@@ -114,16 +114,16 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
                                       const bool isIn,
                                       const bool isOut,
                                       const EntryID i) -> bool {
-      const auto tt = utils::getTruthTable<TruthTable>(
+      const auto tt = util::getTruthTable<TruthTable>(
           parent, arity, i, isIn, nIn++);
       tables.push_back(tt);
-      utils::setTruthTable<TruthTable>(parent, i, tables.back());
+      util::setTruthTable<TruthTable>(parent, i, tables.back());
       return true /* continue traversal */;
     });
 
     for (size_t i = 0; i < entryIDs.size(); ++i) {
-      const auto tt = utils::getTruthTable<utils::TTn>(parent, entryIDs[i]);
-      result[i] = utils::convertTruthTable<utils::TTn>(tt, arity);
+      const auto tt = util::getTruthTable<util::TTn>(parent, entryIDs[i]);
+      result[i] = util::convertTruthTable<util::TTn>(tt, arity);
     }
   }
 

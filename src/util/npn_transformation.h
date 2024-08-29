@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace eda::utils {
+namespace eda::util {
 
 /**
  * Represents NPN transformation.
@@ -33,4 +33,4 @@ struct NpnTransformation {
  */
 NpnTransformation inverse(const NpnTransformation &t);
 
-} // namespace eda::utils
+} // namespace eda::util

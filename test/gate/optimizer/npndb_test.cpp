@@ -13,7 +13,7 @@
 
 using namespace eda::gate::model;
 using namespace eda::gate::optimizer;
-using namespace eda::utils;
+using namespace eda::util;
 
 static size_t inputsCount(const Subnet &subnet) {
   size_t result = 0;
@@ -37,8 +37,8 @@ static bool transformTest(const SubnetID &id) {
   TT tt = evaluate(Subnet::get(id))[0];
   const auto& subnet = Subnet::get(id);
   const auto config = kitty::exact_npn_canonization(tt);
-  TT canonTT = eda::utils::getTT(config);
-  NpnTransformation t = eda::utils::getTransformation(config);
+  TT canonTT = eda::util::getTT(config);
+  NpnTransformation t = eda::util::getTransformation(config);
   auto& newSubnet = Subnet::get(npnTransform(subnet, t));
   tt = evaluate(newSubnet)[0];
   return tt == canonTT;

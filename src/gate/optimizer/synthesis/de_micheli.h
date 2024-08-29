@@ -57,7 +57,7 @@ public:
   using Link         = eda::gate::model::Subnet::Link;
   using LinkList     = eda::gate::model::Subnet::LinkList;
   using SubnetObject = eda::gate::model::SubnetObject;
-  using TruthTable   = utils::TruthTable;
+  using TruthTable   = util::TruthTable;
 
   static constexpr size_t BOUND = 2000;
   static constexpr size_t OUTID = 4611686018427387903;
@@ -187,7 +187,7 @@ private:
   }
 
   bool mayImprove(const TruthTable &divisor, const TruthTable &care) const {
-    return !utils::isZero(~divisor & care);
+    return !util::isZero(~divisor & care);
   }
 };
 

@@ -11,7 +11,7 @@
 #include "kitty/kitty.hpp"
 #include "gtest/gtest.h"
 
-namespace eda::utils {
+namespace eda::util {
   
 TEST(KittyUtilsTest, FindRepeatLiteral) {
   SOP sop1 {
@@ -101,4 +101,4 @@ TEST(KittyUtilsTest, FindAnyLevel0Kernel) {
   EXPECT_EQ(kernel2, findAnyLevel0Kernel(func2));
 }
 
-} // namespace eda::utils
+} // namespace eda::util

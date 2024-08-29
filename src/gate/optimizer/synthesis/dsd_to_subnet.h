@@ -65,7 +65,7 @@ class DsdSynthesizer : public Synthesizer<BddWithDdManager>,
 
 public:
 
-  using TruthTable = utils::TruthTable;
+  using TruthTable = util::TruthTable;
 
   //===--------------------------------------------------------------------===//
   // Constructors/Destructors

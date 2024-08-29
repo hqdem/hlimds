@@ -25,8 +25,8 @@ class DbMig4Synthesizer : public DbSynthesizer,
 public:
   friend class util::Singleton<DbMig4Synthesizer>;
 
-  model::SubnetObject synthesize(const utils::TTn &func,
-                                 const utils::TTn &,
+  model::SubnetObject synthesize(const util::TTn &func,
+                                 const util::TTn &,
                                  uint16_t) const override {
 
     return DbSynthesizer::synthesize(func, dbMig4);

@@ -13,12 +13,12 @@ namespace eda::gate::optimizer {
 
 NpnStatDatabase::ResultIterator NpnStatDatabase::get(const TT &tt, bool quiet) {
   auto config = kitty::exact_npn_canonization(tt);
-  NpnTransformation t = utils::getTransformation(config);
-  auto canonTT = utils::getTT(config);
+  NpnTransformation t = util::getTransformation(config);
+  auto canonTT = util::getTT(config);
   if (!quiet) {
     accessCounter[canonTT]++;
   }
-  return ResultIterator(storage[canonTT], utils::inverse(t), info[canonTT]);
+  return ResultIterator(storage[canonTT], util::inverse(t), info[canonTT]);
 }
 
 NpnStatDatabase::ResultIterator NpnStatDatabase::get(const TT &tt) {
@@ -45,9 +45,9 @@ NpnStatDatabase::push(const SubnetID &id,
                       const SubnetInfo &subnetInfo) {
   TT tt = model::evaluate(Subnet::get(id))[0];
   auto config = kitty::exact_npn_canonization(tt);
-  NpnTransformation t = utils::getTransformation(config);
-  TT canonTT = utils::getTT(config);
-  auto newId = utils::npnTransform(Subnet::get(id), t);
+  NpnTransformation t = util::getTransformation(config);
+  TT canonTT = util::getTT(config);
+  auto newId = util::npnTransform(Subnet::get(id), t);
   storage[canonTT].push_back(newId);
   info[canonTT].push_back(subnetInfo);
   return t;

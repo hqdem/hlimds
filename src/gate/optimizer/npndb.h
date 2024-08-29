@@ -25,7 +25,7 @@ namespace eda::gate::optimizer {
 
 class NpnDb2ResultIterator : public ConstIterator<model::SubnetID> {
 public:
-  using NpnTransformation = eda::utils::NpnTransformation;
+  using NpnTransformation = eda::util::NpnTransformation;
   using Subnet = eda::gate::model::Subnet;
   using SubnetID = model::SubnetID;
   using SubnetIDList = std::vector<SubnetID>;
@@ -66,7 +66,7 @@ public:
       throw std::runtime_error("The iterator has reached end of the list");
     }
     const auto &subnet = Subnet::get(list[ind]);
-    return eda::utils::npnTransform(subnet, transformation, nInUsed);
+    return eda::util::npnTransform(subnet, transformation, nInUsed);
   }
 
   size_t size() const override {
@@ -104,7 +104,7 @@ friend class NpnDatabaseSerializer;
 
 public:
   using ResultIterator = NpnDb2ResultIterator;
-  using NpnTransformation = utils::NpnTransformation;
+  using NpnTransformation = util::NpnTransformation;
   using Subnet = model::Subnet;
   using SubnetID = model::SubnetID;
   using SubnetIDList = std::vector<SubnetID>;

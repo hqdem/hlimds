@@ -71,7 +71,7 @@ SubnetObject MMSynthesizer::synthesize(const TruthTable &func,
 
   const auto [tt, inv] = handleCare(func, care);
   
-  if (bool value; utils::isConst(tt, value)) {
+  if (bool value; util::isConst(tt, value)) {
     return SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
   }
 
@@ -85,7 +85,7 @@ SubnetObject MMFactorSynthesizer::synthesize(const TruthTable &func,
                                              uint16_t maxArity) const {
   const auto [tt, inv] = handleCare(func, care);
 
-  if (bool value; utils::isConst(tt, value)) {
+  if (bool value; util::isConst(tt, value)) {
     const auto subnetID =
         SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
     return SubnetObject{subnetID};

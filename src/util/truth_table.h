@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace eda::utils {
+namespace eda::util {
 
 //===----------------------------------------------------------------------===//
 // Data types
@@ -463,4 +463,4 @@ inline TruthTable computeCare(const std::vector<TruthTable> &tables) {
   return care;
 }
 
-} // namespace eda::utils
+} // namespace eda::util

@@ -8,9 +8,16 @@ add_library(RTL OBJECT
 )
 add_library(Utopia::RTL ALIAS RTL)
 
-target_include_directories(RTL PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(RTL
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/lib
+)
+
 target_link_libraries(RTL
   PUBLIC
     Utopia::Util
     Utopia::Gate
+  PRIVATE
+    fmt
 )

@@ -13,7 +13,11 @@ add_library(Utopia::RILParser ALIAS RILParser)
 target_include_directories(RILParser
   PUBLIC
     ${PROJECT_SOURCE_DIR}/src
-
   PRIVATE
     ${PROJECT_BINARY_DIR}/src
+)
+
+target_link_libraries(RILParser
+  PRIVATE
+    fmt
 )

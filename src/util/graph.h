@@ -14,7 +14,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace eda::utils::graph {
+namespace eda::util::graph {
 
 //===----------------------------------------------------------------------===//
 //
@@ -123,4 +123,4 @@ void traverseTopologicalOrder(const G &graph,
   }
 }
 
-} // namespace eda::utils::graph
+} // namespace eda::util::graph

@@ -14,7 +14,7 @@
 #include <unordered_map>
 
 using namespace eda::rtl;
-using namespace eda::utils;
+using namespace eda::util;
 
 namespace eda::rtl::parser::ril {
 

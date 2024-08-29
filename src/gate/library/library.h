@@ -27,7 +27,7 @@ public:
   struct StandardCell {
     model::CellTypeID cellTypeID;
     kitty::dynamic_truth_table ctt; // canonized TT
-    utils::NpnTransformation transform;
+    util::NpnTransformation transform;
   };
 
   std::vector<StandardCell> &getCombCells() {

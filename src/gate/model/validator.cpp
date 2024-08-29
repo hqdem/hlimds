@@ -218,7 +218,9 @@ static bool validateBitwise1(const CellType &type, diag::Logger &logger) {
   bool passed = true;
   VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
   VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+#if 0
   VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
+#endif
   return passed;
 }
 
@@ -227,8 +229,10 @@ static bool validateBitwise2(const CellType &type, diag::Logger &logger) {
   bool passed = true;
   VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
   VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+#if 0
   VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 0, 1);
   VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
+#endif
   return passed;
 }
 

@@ -145,32 +145,50 @@ enum CellSymbol : uint16_t {
 
   /// Bitwise NOT: OUT = ~X.
   BNOT,
-  /// Bitwise AND: OUT = X & Y.
-  BAND,
-  /// Bitwise OR: OUT = X | Y.
-  BOR,
-  /// Bitwise XOR: OUT = X + Y (mod 2).
-  BXOR,
-  /// Bitwise NAND: OUT = ~(X & Y).
-  BNAND,
-  /// Bitwise NOR: OUT = ~(X | Y).
-  BNOR,
-  /// Bitwise XNOR: OUT = ~(X + Y) (mod 2).
-  BXNOR,
+  /// Bitwise AND (signed): OUT = X & Y.
+  BANDs,
+  /// Bitwise AND (unsigned): OUT = X & Y.
+  BANDu,
+  BAND = BANDu,
+  /// Bitwise OR (signed): OUT = X | Y.
+  BORs,
+  /// Bitwise OR (unsigned): OUT = X | Y.
+  BORu,
+  BOR = BORu,
+  /// Bitwise XOR (signed): OUT = X + Y (mod 2).
+  BXORs,
+  /// Bitwise XOR (unsigned): OUT = X + Y (mod 2).
+  BXORu,
+  BXOR = BXORu,
+  /// Bitwise NAND (signed): OUT = ~(X & Y).
+  BNANDs,
+  /// Bitwise NAND (unsigned): OUT = ~(X & Y).
+  BNANDu,
+  BNAND = BNANDu,
+  /// Bitwise NOR (signed): OUT = ~(X | Y).
+  BNORs,
+  /// Bitwise NOR (unsigned): OUT = ~(X | Y).
+  BNORu,
+  BNOR = BNORu,
+  /// Bitwise XNOR (signed): OUT = ~(X + Y) (mod 2).
+  BXNORs,
+  /// Bitwise XNOR (unsigned): OUT = ~(X + Y) (mod 2).
+  BXNORu,
+  BXNOR = BXNORu,
 
   //===------------------------- Reduce Operations ------------------------===//
 
-  /// Reduction AND: OUT = X & Y.
+  /// Reduction AND: OUT = X[1] & ... & X[n].
   RAND,
-  /// Reduction OR: OUT = X | Y.
+  /// Reduction OR: OUT = X[1] | ... | X[n].
   ROR,
-  /// Reduction XOR: OUT = X + Y (mod 2).
+  /// Reduction XOR: OUT = (X[1] + ... + X[n]) (mod 2).
   RXOR,
-  /// Reduction NAND: OUT = ~(X & Y).
+  /// Reduction NAND: OUT = ~(X[1] & ... & X[n]).
   RNAND,
-  /// Reduction NOR: OUT = ~(X | Y).
+  /// Reduction NOR: OUT = ~(X[1] | ... | X[n]).
   RNOR,
-  /// Reduction XNOR: OUT = ~(X + Y) (mod 2).
+  /// Reduction XNOR: OUT = ~(X[1] + ... + X[n]) (mod 2).
   RXNOR,
 
   //===--------------------------- Multiplexors ---------------------------===//
@@ -186,6 +204,7 @@ enum CellSymbol : uint16_t {
   SHRs,
   /// Shift right (unsigned): OUT = X >> Y.
   SHRu,
+  SHR = SHRu,
 
   //===----------------------- Comparison Operations ----------------------===//
 
@@ -193,36 +212,44 @@ enum CellSymbol : uint16_t {
   EQs,
   /// Equality comparison (unsigned): OUT = X == Y.
   EQu,
+  EQ = EQu,
   /// Non-equality comparison (signed): OUT = X != Y.
   NEQs,
   /// Non-equality comparison (unsigned): OUT = X != Y.
   NEQu,
+  NEQ = NEQu,
 
   /// Equality comparison (signed): OUT = X === Y (non-synthesizable).
   EQXs,
   /// Equality comparison (unsigned): OUT = X === Y (non-synthesizable).
   EQXu,
+  EQX = EQXu,
   /// Non-equality comparison (signed): OUT = X !== Y (non-synthesizable).
   NEQXs,
   /// Non-equality comparison (unsigned): OUT = X !== Y (non-synthesizable).
   NEQXu,
+  NEQX = NEQXu,
 
   /// Less-than comparison (signed): OUT = X < Y.
   LTs,
   /// Less-than comparison (unsigned): OUT = X < Y.
   LTu,
+  LT = LTu,
   /// Less-than-equal comparison (signed): OUT = X <= Y.
   LTEs,
   /// Less-than-equal comparison (unsigned): OUT = X <= Y.
   LTEu,
+  LTE = LTEu,
   /// Greater-than comparison (signed): OUT = X > Y.
   GTs,
   /// Greater-than comparison (unsigned): OUT = X > Y.
   GTu,
+  GT = GTu,
   /// Greater-than-equal comparison (signed): OUT = X >= Y.
   GTEs,
   /// Greater-than-equal comparison (unsigned): OUT = X >= Y.
   GTEu,
+  GTE = GTEu,
 
   //===----------------------- Arithmetic Operations ----------------------===//
 
@@ -237,14 +264,17 @@ enum CellSymbol : uint16_t {
   MULs,
   /// Multiplication (unsigned): OUT = X * Y.
   MULu,
+  MUL = MULu,
   /// Division (signed): OUT = X / Y.
   DIVs,
   /// Division (unsigned): OUT = X / Y.
   DIVu,
+  DIV = DIVu,
   /// Remainder (signed): OUT = X rem Y = sign(X)*(|X| rem |Y|).
   REMs,
   /// Remainder (unsigned): OUT = X rem Y.
   REMu,
+  REM = REMu,
   /// Modulo (signed): OUT = X mod Y = sign(Y)*(|X| rem |Y|).
   MODs,
 
@@ -467,7 +497,7 @@ public:
   static constexpr uint16_t AnyArity = 0xffff;
   static constexpr uint16_t MaxArity = 0xfffe;
 
-  CellType &operator =(const CellType &r) = delete;
+  CellType &operator=(const CellType &r) = delete;
   CellType(const CellType &r) = delete;
 
   /// Returns the cell type name.
@@ -475,63 +505,69 @@ public:
   /// Returns the cell type function/kind.
   CellSymbol getSymbol() const { return symbol; }
 
-  bool isIn()    const { return symbol == IN;    }
-  bool isOut()   const { return symbol == OUT;   }
-  bool isZero()  const { return symbol == ZERO;  }
-  bool isOne()   const { return symbol == ONE;   }
-  bool isBuf()   const { return symbol == BUF;   }
-  bool isNot()   const { return symbol == NOT;   }
-  bool isAnd()   const { return symbol == AND;   }
-  bool isOr()    const { return symbol == OR;    }
-  bool isXor()   const { return symbol == XOR;   }
-  bool isNand()  const { return symbol == NAND;  }
-  bool isNor()   const { return symbol == NOR;   }
-  bool isXnor()  const { return symbol == XNOR;  }
-  bool isMaj()   const { return symbol == MAJ;   }
-  bool isBNot()  const { return symbol == BNOT;  }
-  bool isBAnd()  const { return symbol == BAND;  }
-  bool isBOr()   const { return symbol == BOR;   }
-  bool isBXor()  const { return symbol == BXOR;  }
-  bool isBNand() const { return symbol == BNAND; }
-  bool isBNor()  const { return symbol == BNOR;  }
-  bool isBXnor() const { return symbol == BXNOR; }
-  bool isRAnd()  const { return symbol == RAND;  }
-  bool isROr()   const { return symbol == ROR;   }
-  bool isRXor()  const { return symbol == RXOR;  }
-  bool isRNand() const { return symbol == RNAND; }
-  bool isRNor()  const { return symbol == RNOR;  }
-  bool isRXnor() const { return symbol == RXNOR; }
-  bool isMux2()  const { return symbol == MUX2;  }
-  bool isShl()   const { return symbol == SHL;   }
-  bool isShrS()  const { return symbol == SHRs;  }
-  bool isShrU()  const { return symbol == SHRu;  }
-  bool isEqS()   const { return symbol == EQs;   }
-  bool isEqU()   const { return symbol == EQu;   }
-  bool isNeqS()  const { return symbol == NEQs;  }
-  bool isNeqU()  const { return symbol == NEQu;  }
-  bool isEqxS()  const { return symbol == EQXs;  }
-  bool isEqxU()  const { return symbol == EQXu;  }
-  bool isNeqxS() const { return symbol == NEQXs; }
-  bool isNeqxU() const { return symbol == NEQXu; }
-  bool isLtS()   const { return symbol == LTs;   }
-  bool isLtU()   const { return symbol == LTu;   }
-  bool isLteS()  const { return symbol == LTEs;  }
-  bool isLteU()  const { return symbol == LTEu;  }
-  bool isGtS()   const { return symbol == GTs;   }
-  bool isGtU()   const { return symbol == GTu;   }
-  bool isGteS()  const { return symbol == GTEs;  }
-  bool isGteU()  const { return symbol == GTEu;  }
-  bool isNeg()   const { return symbol == NEG;   }
-  bool isAdd()   const { return symbol == ADD;   }
-  bool isSub()   const { return symbol == SUB;   }
-  bool isMulS()  const { return symbol == MULs;  }
-  bool isMulU()  const { return symbol == MULu;  }
-  bool isDivS()  const { return symbol == DIVs;  }
-  bool isDivU()  const { return symbol == DIVu;  }
-  bool isRemS()  const { return symbol == REMs;  }
-  bool isRemU()  const { return symbol == REMu;  }
-  bool isModS()  const { return symbol == MODs;  }
-  bool isUndef() const { return symbol == UNDEF; }
+  bool isIn()     const { return symbol == IN;     }
+  bool isOut()    const { return symbol == OUT;    }
+  bool isZero()   const { return symbol == ZERO;   }
+  bool isOne()    const { return symbol == ONE;    }
+  bool isBuf()    const { return symbol == BUF;    }
+  bool isNot()    const { return symbol == NOT;    }
+  bool isAnd()    const { return symbol == AND;    }
+  bool isOr()     const { return symbol == OR;     }
+  bool isXor()    const { return symbol == XOR;    }
+  bool isNand()   const { return symbol == NAND;   }
+  bool isNor()    const { return symbol == NOR;    }
+  bool isXnor()   const { return symbol == XNOR;   }
+  bool isMaj()    const { return symbol == MAJ;    }
+  bool isBNot()   const { return symbol == BNOT;   }
+  bool isBAndS()  const { return symbol == BANDs;  }
+  bool isBAndU()  const { return symbol == BANDu;  }
+  bool isBOrS()   const { return symbol == BORs;   }
+  bool isBOrU()   const { return symbol == BORu;   }
+  bool isBXorS()  const { return symbol == BXORs;  }
+  bool isBXorU()  const { return symbol == BXORu;  }
+  bool isBNandS() const { return symbol == BNANDs; }
+  bool isBNandU() const { return symbol == BNANDu; }
+  bool isBNorS()  const { return symbol == BNORs;  }
+  bool isBNorU()  const { return symbol == BNORu;  }
+  bool isBXnorS() const { return symbol == BXNORs; }
+  bool isBXnorU() const { return symbol == BXNORu; }
+  bool isRAnd()   const { return symbol == RAND;   }
+  bool isROr()    const { return symbol == ROR;    }
+  bool isRXor()   const { return symbol == RXOR;   }
+  bool isRNand()  const { return symbol == RNAND;  }
+  bool isRNor()   const { return symbol == RNOR;   }
+  bool isRXnor()  const { return symbol == RXNOR;  }
+  bool isMux2()   const { return symbol == MUX2;   }
+  bool isShl()    const { return symbol == SHL;    }
+  bool isShrS()   const { return symbol == SHRs;   }
+  bool isShrU()   const { return symbol == SHRu;   }
+  bool isEqS()    const { return symbol == EQs;    }
+  bool isEqU()    const { return symbol == EQu;    }
+  bool isNeqS()   const { return symbol == NEQs;   }
+  bool isNeqU()   const { return symbol == NEQu;   }
+  bool isEqxS()   const { return symbol == EQXs;   }
+  bool isEqxU()   const { return symbol == EQXu;   }
+  bool isNeqxS()  const { return symbol == NEQXs;  }
+  bool isNeqxU()  const { return symbol == NEQXu;  }
+  bool isLtS()    const { return symbol == LTs;    }
+  bool isLtU()    const { return symbol == LTu;    }
+  bool isLteS()   const { return symbol == LTEs;   }
+  bool isLteU()   const { return symbol == LTEu;   }
+  bool isGtS()    const { return symbol == GTs;    }
+  bool isGtU()    const { return symbol == GTu;    }
+  bool isGteS()   const { return symbol == GTEs;   }
+  bool isGteU()   const { return symbol == GTEu;   }
+  bool isNeg()    const { return symbol == NEG;    }
+  bool isAdd()    const { return symbol == ADD;    }
+  bool isSub()    const { return symbol == SUB;    }
+  bool isMulS()   const { return symbol == MULs;   }
+  bool isMulU()   const { return symbol == MULu;   }
+  bool isDivS()   const { return symbol == DIVs;   }
+  bool isDivU()   const { return symbol == DIVu;   }
+  bool isRemS()   const { return symbol == REMs;   }
+  bool isRemU()   const { return symbol == REMu;   }
+  bool isModS()   const { return symbol == MODs;   }
+  bool isUndef()  const { return symbol == UNDEF;  }
 
   bool isDff()      const { return (symbol & ~FLGMASK) == DFF;      }
   bool isSDff()     const { return (symbol & ~FLGMASK) == sDFF;     }

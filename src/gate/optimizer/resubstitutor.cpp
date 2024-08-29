@@ -1295,13 +1295,6 @@ static uint32_t markInner(SubnetBuilder &builder, const SubnetView &view) {
   return ret;
 }
 
-static size_t countSetBits(uint64_t n) {
-  if (!n) {
-    return 0;
-  }
-  return 1 + countSetBits(n & (n - 1));
-}
-
 static void prepareStatus(uint64_t &status, uint64_t iteration) {
   status &= 0xFFFFFFFF00000000;
   status |= iteration;
@@ -1411,7 +1404,7 @@ static TruthTable computeCare(SubnetBuilder &builder,
 
   auto care = util::getZeroTruthTable<TTn>(k);
 
-  const size_t nSetBits = countSetBits(status >> 32);
+  const size_t nSetBits = eda::util::count_units(status >> 32);
   const size_t rounds = 1ull << nSetBits;
   for (uint64_t i = 0; i < rounds; ++i) {
     prepareStatus(status, i);

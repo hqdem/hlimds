@@ -70,6 +70,7 @@ ENV mlir_targets="lib/cmake/mlir/MLIRTargets.cmake"
 WORKDIR /workdir
 RUN wget ${circt_url}
 RUN tar xzf ${circt_archive}
+ENV CIRCT_ROOT="/workdir/${circt_dir}"
 RUN sed -i 's'/\
 'foreach(_target "LLVMSupport" "LLVMCore" "LLVMMC" "LLVMTarget" "LLVMAsmParser" "LLVMBinaryFormat" '\
 '"LLVMBitReader" "LLVMBitWriter" "LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" '\
@@ -89,6 +90,6 @@ RUN sed -i 's'/\
 '"LLVMFrontendOpenMP" "LLVMTransformUtils" "LLVMTargetParser" "LLVMIRReader" "LLVMipo" "LLVMLinker" "LLVMPasses" "LLVMMCParser" '\
 '"LLVMLineEditor" "LLVMTableGen" "LLVMCoroutines" "LLVMExecutionEngine" "LLVMObject" "LLVMOrcJIT" "LLVMJITLink" "LLVMAnalysis" '\
 '"LLVMAggressiveInstCombine" "LLVMInstCombine" "LLVMScalarOpts" "LLVMVectorize" "LLVMX86CodeGen" "LLVMX86Desc" "LLVMX86Info" '\
-'"LLVMX86AsmParser" "LLVMX86Disassembler")/' "/workdir/${circt_dir}/${mlir_targets}"
-ENV CIRCT_DIR="/workdir/${circt_dir}/lib/cmake/circt"
-ENV MLIR_DIR="/workdir/${circt_dir}/lib/cmake/mlir"
+'"LLVMX86AsmParser" "LLVMX86Disassembler")/' "${CIRCT_ROOT}/${mlir_targets}"
+ENV CIRCT_DIR="${CIRCT_ROOT}/lib/cmake/circt"
+ENV MLIR_DIR="${CIRCT_ROOT}/lib/cmake/mlir"

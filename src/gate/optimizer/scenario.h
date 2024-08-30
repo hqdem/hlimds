@@ -23,10 +23,10 @@ namespace eda::gate::optimizer {
  */
 template <typename Builder>
 struct ScenarioState {
-  ScenarioState(const BuilderPtr<Builder> &builder): builder(builder) {}
+  ScenarioState(const std::shared_ptr<Builder> &builder): builder(builder) {}
   virtual ~ScenarioState() {}
 
-  const BuilderPtr<Builder> &builder;
+  const std::shared_ptr<Builder> &builder;
 }; 
 
 /**
@@ -46,7 +46,7 @@ public:
 
   /// Returns the initial scenario state.
   virtual std::unique_ptr<State> initialize(
-      const BuilderPtr<Builder> &builder) const = 0;
+      const std::shared_ptr<Builder> &builder) const = 0;
 
   /// Checks whether the scenario is over.
   virtual bool isOver(State &state) const = 0;
@@ -88,7 +88,7 @@ struct ScenarioExecutor final : public InPlaceTransformer<Builder> {
     this->maxLength = maxLength;
   }
 
-  void transform(const BuilderPtr<Builder> &builder) const override {
+  void transform(const std::shared_ptr<Builder> &builder) const override {
     auto state = scenario.initialize(builder);
     for (size_t i = 0; i < maxLength && !scenario.isOver(*state); ++i) {
       const auto action = scenario.getAction(*state);

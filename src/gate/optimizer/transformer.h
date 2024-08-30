@@ -18,9 +18,6 @@
 
 namespace eda::gate::optimizer {
 
-template <typename Builder>
-using BuilderPtr = std::shared_ptr<Builder>;
-
 /**
  * @brief Interface for component-to-component transformers.
  */
@@ -33,7 +30,8 @@ public:
   const std::string &getName() const { return name; }
 
   /// Processes the given component and contructs a new one. 
-  virtual BuilderPtr<Builder> map(const BuilderPtr<Builder> &builder) const {
+  virtual std::shared_ptr<Builder> map(
+      const std::shared_ptr<Builder> &builder) const {
     return builder;
   }
 
@@ -52,7 +50,7 @@ public:
   virtual ~InPlaceTransformer() {}
 
   /// Transforms the component stored in the builder (in-place).
-  virtual void transform(const BuilderPtr<Builder> &builder) const = 0;
+  virtual void transform(const std::shared_ptr<Builder> &builder) const = 0;
 };
 
 /**
@@ -80,7 +78,7 @@ public:
     return ss.str();
   }
 
-  void transform(const BuilderPtr<Builder> &builder) const override {
+  void transform(const std::shared_ptr<Builder> &builder) const override {
     for (const auto &pass : chain) {
       pass->transform(builder);
     }

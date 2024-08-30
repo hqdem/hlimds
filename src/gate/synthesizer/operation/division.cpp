@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "div.h"
+#include "division.h"
 
 namespace eda::gate::synthesizer {
 

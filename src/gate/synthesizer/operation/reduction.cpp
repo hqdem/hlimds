@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "reduce.h"
+#include "reduction.h"
 #include "utils.h"
 
 namespace eda::gate::synthesizer {
@@ -22,8 +22,9 @@ static inline model::SubnetID synthROp(const model::CellSymbol symbol,
   const auto res = builder.addCellTree(symbol, arg, 2);
   builder.addOutput(positive ? res : ~res);
 
-  // Zero extension of the output (if required).
-  extendOutput(builder, wOut, false /* zero */);
+  // Comparison and reduction operator results are unsigned,
+  // regardless of the operands [IEEE 1800-2017 11.8.1].
+  extendOutput(builder, wOut, false /* zero extension */);
 
   return builder.make();
 }

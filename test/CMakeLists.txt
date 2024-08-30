@@ -85,8 +85,8 @@ add_executable(${TEST_TARGET}
   gate/premapper/cone_premapper_test.cpp
   gate/simulator/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
-  gate/synthesizer/adder_test.cpp
-  gate/synthesizer/cmp_test.cpp
+  gate/synthesizer/addition_test.cpp
+  gate/synthesizer/comparison_test.cpp
   gate/synthesizer/shift_test.cpp
   gate/techmapper/parser_lib_test.cpp
   gate/techmapper/readcells_iface_test.cpp

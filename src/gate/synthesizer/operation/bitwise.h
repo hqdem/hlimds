@@ -12,7 +12,8 @@
 
 namespace eda::gate::synthesizer {
 
-model::SubnetID synthBNot(const model::CellTypeAttr &attr);
+model::SubnetID synthBNotS(const model::CellTypeAttr &attr);
+model::SubnetID synthBNotU(const model::CellTypeAttr &attr);
 
 model::SubnetID synthBAndS(const model::CellTypeAttr &attr);
 model::SubnetID synthBAndU(const model::CellTypeAttr &attr);

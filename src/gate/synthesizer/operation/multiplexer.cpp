@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "mux.h"
+#include "multiplexer.h"
 
 namespace eda::gate::synthesizer {
 

@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "add.h"
-#include "neg.h"
+#include "addition.h"
+#include "negation.h"
 
 namespace eda::gate::synthesizer {
 

@@ -7,14 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "diag/logger.h"
-#include "gate/synthesizer/operation/add.h"
-#include "gate/synthesizer/operation/bit.h"
-#include "gate/synthesizer/operation/cmp.h"
-#include "gate/synthesizer/operation/div.h"
-#include "gate/synthesizer/operation/mul.h"
-#include "gate/synthesizer/operation/mux.h"
-#include "gate/synthesizer/operation/neg.h"
-#include "gate/synthesizer/operation/reduce.h"
+#include "gate/synthesizer/operation/addition.h"
+#include "gate/synthesizer/operation/bitwise.h"
+#include "gate/synthesizer/operation/comparison.h"
+#include "gate/synthesizer/operation/division.h"
+#include "gate/synthesizer/operation/multiplexer.h"
+#include "gate/synthesizer/operation/multiplication.h"
+#include "gate/synthesizer/operation/negation.h"
+#include "gate/synthesizer/operation/reduction.h"
 #include "gate/synthesizer/operation/shift.h"
 #include "gate/synthesizer/synthesizer.h"
 
@@ -29,7 +29,8 @@ static SubnetID synthImpl(const CellType &type) {
   const auto &attr = type.getAttr();
 
   switch (type.getSymbol()) {
-  case BNOT:   return synthBNot(attr);
+  case BNOTs:  return synthBNotS(attr);
+  case BNOTu:  return synthBNotU(attr);
   case BANDs:  return synthBAndS(attr);
   case BANDu:  return synthBAndU(attr);
   case BORs:   return synthBOrS(attr);

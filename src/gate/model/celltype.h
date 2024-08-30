@@ -143,8 +143,11 @@ enum CellSymbol : uint16_t {
 
   //===------------------------ Bitwise Operations ------------------------===//
 
-  /// Bitwise NOT: OUT = ~X.
-  BNOT,
+  /// Bitwise NOT (signed): OUT = ~X.
+  BNOTs,
+  /// Bitwise NOT (unsigned): OUT = ~X.
+  BNOTu,
+  BNOT = BNOTu,
   /// Bitwise AND (signed): OUT = X & Y.
   BANDs,
   /// Bitwise AND (unsigned): OUT = X & Y.

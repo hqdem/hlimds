@@ -6,10 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "bit.h"
+#include "bitwise.h"
 #include "utils.h"
-
-#include <cmath>
 
 namespace eda::gate::synthesizer {
 
@@ -23,47 +21,50 @@ static inline model::SubnetID synthBOp2(const model::CellSymbol symbol,
   const auto wIn1 = attr.getInWidth(1);
   const auto wOut = attr.getOutWidth(0);
 
-  const auto nIn0 = std::min(wIn0, wOut);
-  const auto nIn1 = std::min(wIn1, wOut);
-  const auto nOut = std::max(nIn0, nIn1);
-
   auto lhs = builder.addInputs(wIn0);
   auto rhs = builder.addInputs(wIn1);
 
-  // Sign/zero extension of the inputs (if required).
-  extend(builder, lhs, nOut, signExtend);
-  extend(builder, rhs, nOut, signExtend);
+  // If the operand shall be extended, then it shall be sign-extended only
+  // if the propagated type is signed [IEEE 1800-2017 11.8.2].
+  extend(builder, lhs, wOut, signExtend);
+  extend(builder, rhs, wOut, signExtend);
 
   // Bitwise binary operation.
-  for (auto i = 0u; i < nOut; ++i) {
+  for (auto i = 0u; i < wOut; ++i) {
     const auto res = builder.addCell(symbol, lhs[i], rhs[i]);
     builder.addOutput(positive ? res : ~res);
   }
 
-  // Zero extension of the output (if required).
-  extendOutput(builder, wOut, false /* zero */);
-
   return builder.make();
 }
 
-model::SubnetID synthBNot(const model::CellTypeAttr &attr) {
+static inline model::SubnetID synthBNot(const model::CellTypeAttr &attr,
+                                        const bool signExtend) {
   model::SubnetBuilder builder;
 
   const auto wIn = attr.getInWidth(0);
   const auto wOut = attr.getOutWidth(0);
-  const auto nOut = std::min(wIn, wOut);
 
   auto arg = builder.addInputs(wIn);
 
+  // If the operand shall be extended, then it shall be sign-extended only
+  // if the propagated type is signed [IEEE 1800-2017 11.8.2].
+  extend(builder, arg, wOut, signExtend);
+
   // Bitwise negation.
-  for (auto i = 0u; i < nOut; ++i) {
+  for (auto i = 0u; i < wOut; ++i) {
     builder.addOutput(~arg[i]);
   }
 
-  // Zero extension of the output (if required).
-  extendOutput(builder, wOut, false /* zero */);
-
   return builder.make();
+}
+
+model::SubnetID synthBNotS(const model::CellTypeAttr &attr) {
+  return synthBNot(attr, true);
+}
+
+model::SubnetID synthBNotU(const model::CellTypeAttr &attr) {
+  return synthBNot(attr, false);
 }
 
 model::SubnetID synthBAndS(const model::CellTypeAttr &attr) {

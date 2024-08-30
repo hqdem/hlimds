@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "mul.h"
+#include "multiplication.h"
 
 namespace eda::gate::synthesizer {
 

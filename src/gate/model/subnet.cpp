@@ -89,7 +89,7 @@ std::pair<uint32_t, uint32_t> Subnet::getPathLength() const {
 }
 
 std::ostream &operator <<(std::ostream &out, const Subnet &subnet) {
-  print(out, Format::DOT, subnet);
+  print(out, Format::DEBUG, subnet);
   return out;
 }
 

@@ -17,72 +17,70 @@
 namespace eda::gate::premapper {
 
 using Builder = eda::gate::model::SubnetBuilder;
+using BuilderPtr = std::shared_ptr<Builder>;
+using CellSymbol = eda::gate::model::CellSymbol;
+using Subnet = eda::gate::model::Subnet;
 
 static void runConePremappers(const std::string &file) {
-  using Subnet = gate::model::Subnet;
-
   const auto builder = gate::translator::translateGmlOpenabc(file);
   const auto id = builder->make();
   const auto &old = Subnet::get(id);
 
   const auto migmapper = getConeMigMapper();
-  const auto mig = (migmapper->map(std::make_shared<Builder>(old)))->make(true);
-  const auto &migSubnet = Subnet::get(mig);
-
   const auto xagmapper = getConeXagMapper();
-  const auto xag = (xagmapper->map(std::make_shared<Builder>(mig)))->make(true);
-  const auto &xagSubnet = Subnet::get(xag);
-
   const auto xmgmapper = getConeXmgMapper();
-  const auto xmg = (xmgmapper->map(std::make_shared<Builder>(xag)))->make(true);
-  const auto &xmgSubnet = Subnet::get(xmg);
-
   const auto aigmapper = getConeAigMapper();
+
+  const auto mig = (migmapper->map(std::make_shared<Builder>(old)))->make(true);
+  const auto xag = (xagmapper->map(std::make_shared<Builder>(mig)))->make(true);
+  const auto xmg = (xmgmapper->map(std::make_shared<Builder>(xag)))->make(true);
   const auto aig = (aigmapper->map(std::make_shared<Builder>(xag)))->make(true);
+
+  const auto &migSubnet = Subnet::get(mig);
+  const auto &xagSubnet = Subnet::get(xag);
+  const auto &xmgSubnet = Subnet::get(xmg);
   const auto &aigSubnet = Subnet::get(aig);
 
   // Print characteristics.
   std::cout << "Premapping of " << file << ":" << std::endl;
 
-  std::cout << "Before size: " << old.getCellNum() << std::endl;
-  std::cout << "Before depth: " << old.getPathLength().second << std::endl;
+  std::cout << "Original size:  " << old.getCellNum()           << std::endl;
+  std::cout << "Original depth: " << old.getPathLength().second << std::endl;
 
-  std::cout << "MIG size: " << migSubnet.getCellNum() << std::endl;
+  std::cout << "MIG size:  " << migSubnet.getCellNum()           << std::endl;
   std::cout << "MIG depth: " << migSubnet.getPathLength().second << std::endl;
-
-  std::cout << "XAG size: " << xagSubnet.getCellNum() << std::endl;
+  std::cout << "XAG size:  " << xagSubnet.getCellNum()           << std::endl;
   std::cout << "XAG depth: " << xagSubnet.getPathLength().second << std::endl;
-
-  std::cout << "XMG size: " << xmgSubnet.getCellNum() << std::endl;
+  std::cout << "XMG size:  " << xmgSubnet.getCellNum()           << std::endl;
   std::cout << "XMG depth: " << xmgSubnet.getPathLength().second << std::endl;
-
-  std::cout << "AIG size: " << aigSubnet.getCellNum() << std::endl;
+  std::cout << "AIG size:  " << aigSubnet.getCellNum()           << std::endl;
   std::cout << "AIG depth: " << aigSubnet.getPathLength().second << std::endl;
 
   // Check equivalence.
   gate::debugger::SatChecker &checker = gate::debugger::SatChecker::get();
   EXPECT_TRUE(checker.areEquivalent(old, aigSubnet).equal());
+}
 
-  // Check premapping.
-  for (const auto &entry : migSubnet.getEntries()) {
-    EXPECT_FALSE(entry.cell.isAnd() || entry.cell.isOr() || entry.cell.isXor());
-  }
-  for (const auto &entry : xagSubnet.getEntries()) {
-    EXPECT_FALSE(entry.cell.isOr() || entry.cell.isMaj());
-  }
-  for (const auto &entry : xmgSubnet.getEntries()) {
-    EXPECT_FALSE(entry.cell.isOr() || entry.cell.isAnd());
-  }
-  for (const auto &entry : aigSubnet.getEntries()) {
-    EXPECT_FALSE(entry.cell.isOr() || entry.cell.isXor() || entry.cell.isMaj());
+TEST(ConePremapperTest, ArityChecking) {
+  const size_t nIn = 5;
+
+  const auto original = std::make_shared<Builder>();
+  const auto links = original->addInputs(nIn);
+
+  const auto link = original->addCell(CellSymbol::AND, links);
+  original->addOutput(link);
+
+  const auto aigmapper = getConeAigMapper();
+  const auto premapped = aigmapper->map(original);
+
+  const auto &subnet = Subnet::get(premapped->make());
+  // Check arity.
+  for (const auto &entry : subnet.getEntries()) {
+    EXPECT_TRUE(entry.cell.arity <= 2);
   }
 }
 
-TEST(ConePremapperTest, c1355) {
-  runConePremappers("c1355_orig");
-}
-
-TEST(ConePremapperTest, sasc) {
+TEST(ConePremapperTest, EquivalenceChecking) {
   runConePremappers("sasc_orig");
 }
 

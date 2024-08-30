@@ -7,16 +7,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "diag/logger.h"
+#include "gate/synthesizer/operation/add.h"
+#include "gate/synthesizer/operation/bit.h"
+#include "gate/synthesizer/operation/cmp.h"
+#include "gate/synthesizer/operation/div.h"
+#include "gate/synthesizer/operation/mul.h"
+#include "gate/synthesizer/operation/mux.h"
+#include "gate/synthesizer/operation/neg.h"
+#include "gate/synthesizer/operation/reduce.h"
+#include "gate/synthesizer/operation/shift.h"
 #include "gate/synthesizer/synthesizer.h"
-#include "gate/synthesizer/synthesizer_add.h"
-#include "gate/synthesizer/synthesizer_bit.h"
-#include "gate/synthesizer/synthesizer_cmp.h"
-#include "gate/synthesizer/synthesizer_div.h"
-#include "gate/synthesizer/synthesizer_mul.h"
-#include "gate/synthesizer/synthesizer_mux.h"
-#include "gate/synthesizer/synthesizer_neg.h"
-#include "gate/synthesizer/synthesizer_red.h"
-#include "gate/synthesizer/synthesizer_shift.h"
 
 #include <cassert>
 #include <iostream>
@@ -71,9 +71,9 @@ static SubnetID synthImpl(const CellType &type) {
   case REMs:   return synthRemS(attr);
   case REMu:   return synthRemU(attr);
   case MODs:   return synthModS(attr);
-  case SHL:    return synthShiftL(attr);
-  case SHRu:   return synthShiftRu(attr);
-  case SHRs:   return synthShiftRs(attr);
+  case SHL:    return synthShl(attr);
+  case SHRu:   return synthShrU(attr);
+  case SHRs:   return synthShrS(attr);
   default:     return OBJ_NULL_ID;
   }
 }

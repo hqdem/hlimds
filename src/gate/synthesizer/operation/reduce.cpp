@@ -6,7 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/synthesizer/synthesizer_red.h"
+#include "reduce.h"
+#include "utils.h"
 
 namespace eda::gate::synthesizer {
 
@@ -15,9 +16,14 @@ static inline model::SubnetID synthROp(const model::CellSymbol symbol,
                                        const bool positive) {
   model::SubnetBuilder builder;
 
+  const auto wOut = attr.getOutWidth(0);
+
   const auto arg = builder.addInputs(attr.getInWidth(0));
   const auto res = builder.addCellTree(symbol, arg, 2);
   builder.addOutput(positive ? res : ~res);
+
+  // Zero extension of the output (if required).
+  extendOutput(builder, wOut, false /* zero */);
 
   return builder.make();
 }

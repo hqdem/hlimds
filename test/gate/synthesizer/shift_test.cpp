@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/simulator/simulator.h"
-#include "gate/synthesizer/synthesizer_shift.h"
+#include "gate/synthesizer/operation/shift.h"
 
 #include "gtest/gtest.h"
 
@@ -31,9 +31,9 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
   SubnetBuilder result(
-      shiftL ? eda::gate::synthesizer::synthShiftL(attr)
-             : (useSign ? eda::gate::synthesizer::synthShiftRs(attr)
-                        : eda::gate::synthesizer::synthShiftRu(attr)));
+      shiftL ? eda::gate::synthesizer::synthShl(attr)
+             : (useSign ? eda::gate::synthesizer::synthShrS(attr)
+                        : eda::gate::synthesizer::synthShrU(attr)));
 
   Simulator simulator(result);
   Simulator::DataVector values(inputSize + shiftSize);

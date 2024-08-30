@@ -6,26 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/synthesizer/synthesizer_bit.h"
+#include "bit.h"
+#include "utils.h"
 
 #include <cmath>
 
 namespace eda::gate::synthesizer {
-
-static inline void extend(model::SubnetBuilder &builder,
-                          model::Subnet::LinkList &word,
-                          const uint32_t width,
-                          const bool signExtend) {
-  if (word.size() >= width) return;
-
-  const auto link = (signExtend && !word.empty())
-      ? word.back()
-      : builder.addCell(model::ZERO);
-
-  while (word.size() < width) {
-    word.push_back(link);
-  }
-}
 
 static inline model::SubnetID synthBOp2(const model::CellSymbol symbol,
                                         const model::CellTypeAttr &attr,
@@ -55,9 +41,7 @@ static inline model::SubnetID synthBOp2(const model::CellSymbol symbol,
   }
 
   // Zero extension of the output (if required).
-  for (auto i = nOut; i < wOut; ++i) {
-    builder.addOutput(builder.addCell(model::ZERO));
-  }
+  extendOutput(builder, wOut, false /* zero */);
 
   return builder.make();
 }
@@ -77,9 +61,7 @@ model::SubnetID synthBNot(const model::CellTypeAttr &attr) {
   }
 
   // Zero extension of the output (if required).
-  for (auto i = nOut; i < wOut; ++i) {
-    builder.addOutput(builder.addCell(model::ZERO));
-  }
+  extendOutput(builder, wOut, false /* zero */);
 
   return builder.make();
 }

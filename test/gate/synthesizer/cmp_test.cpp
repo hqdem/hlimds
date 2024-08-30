@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/simulator/simulator.h"
-#include "gate/synthesizer/synthesizer_cmp.h"
+#include "gate/synthesizer/operation/cmp.h"
 
 #include "gtest/gtest.h"
 

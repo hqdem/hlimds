@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/synthesizer/synthesizer_add.h"
+#include "add.h"
 
 #include <cassert>
 

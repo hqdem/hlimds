@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/synthesizer/synthesizer_add.h"
-#include "gate/synthesizer/synthesizer_neg.h"
+#include "add.h"
+#include "neg.h"
 
 namespace eda::gate::synthesizer {
 

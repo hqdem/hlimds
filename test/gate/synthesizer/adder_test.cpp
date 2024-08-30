@@ -8,8 +8,8 @@
 
 
 #include "gate/simulator/simulator.h"
-#include "gate/synthesizer/synthesizer_add.h"
-#include "gate/synthesizer/synthesizer_neg.h"
+#include "gate/synthesizer/operation/add.h"
+#include "gate/synthesizer/operation/neg.h"
 
 #include "gtest/gtest.h"
 

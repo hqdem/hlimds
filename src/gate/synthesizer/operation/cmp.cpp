@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/synthesizer/synthesizer_cmp.h"
+#include "cmp.h"
 
 #include <algorithm>
 

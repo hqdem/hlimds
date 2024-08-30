@@ -6,19 +6,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/synthesizer/synthesizer_mul.h"
+#include "mul.h"
 
 namespace eda::gate::synthesizer {
 
 model::SubnetID synthMulS(const model::CellTypeAttr &attr) {
-  // TODO: Unsupported.
-  return model::OBJ_NULL_ID;
+  return model::OBJ_NULL_ID /* unsupported */;
 }
 
 model::SubnetID synthMulU(const model::CellTypeAttr &attr) {
-  // TODO: Unsupported.
-  assert(false && "MulU is unsupported");
-  return model::OBJ_NULL_ID;
+  return model::OBJ_NULL_ID /* unsupported */;
 }
 
 } // namespace eda::gate::synthesizer

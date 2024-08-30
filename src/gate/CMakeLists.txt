@@ -75,15 +75,15 @@ add_library(Gate OBJECT
   premapper/cone_premapper.cpp
   simulator/simulator.cpp
   synthesizer/synthesizer.cpp
-  synthesizer/synthesizer_add.cpp
-  synthesizer/synthesizer_bit.cpp
-  synthesizer/synthesizer_cmp.cpp
-  synthesizer/synthesizer_div.cpp
-  synthesizer/synthesizer_mul.cpp
-  synthesizer/synthesizer_mux.cpp
-  synthesizer/synthesizer_neg.cpp
-  synthesizer/synthesizer_red.cpp
-  synthesizer/synthesizer_shift.cpp
+  synthesizer/operation/add.cpp
+  synthesizer/operation/bit.cpp
+  synthesizer/operation/cmp.cpp
+  synthesizer/operation/div.cpp
+  synthesizer/operation/mul.cpp
+  synthesizer/operation/mux.cpp
+  synthesizer/operation/neg.cpp
+  synthesizer/operation/reduce.cpp
+  synthesizer/operation/shift.cpp
   techmapper/matcher/pbool_matcher.cpp
   techmapper/subnet_techmapper.cpp
   techmapper/techmapper_wrapper.cpp

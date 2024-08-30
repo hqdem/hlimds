@@ -2,17 +2,17 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/synthesizer/synthesizer_shift.h"
+#include "shift.h"
 
 #include <algorithm>
 
 namespace eda::gate::synthesizer {
 
-model::SubnetID synthShiftL(const model::CellTypeAttr &attr) {
+model::SubnetID synthShl(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
 
   const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);
@@ -90,7 +90,7 @@ model::SubnetID synthShiftL(const model::CellTypeAttr &attr) {
   return builder.make();
 }
 
-model::SubnetID synthShiftRs(const model::CellTypeAttr &attr) {
+model::SubnetID synthShrS(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
 
   const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);
@@ -104,7 +104,7 @@ model::SubnetID synthShiftRs(const model::CellTypeAttr &attr) {
   return builder.make();
 }
 
-model::SubnetID synthShiftRu(const model::CellTypeAttr &attr) {
+model::SubnetID synthShrU(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
 
   const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);

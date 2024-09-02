@@ -55,6 +55,9 @@ public:
                         const criterion::CostVector &,
                         const uint32_t fanout)>;
 
+  using CellSpace = criterion::SolutionSpace<Match>;
+  using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
+
   SubnetTechMapper(const std::string &name,
                    const criterion::Criterion &criterion,
                    const CutProvider cutProvider,
@@ -80,6 +83,55 @@ public:
       const std::shared_ptr<model::SubnetBuilder> &builder) const override;
 
 private:
+  struct Status final {
+    enum Verdict {
+      /// Solution is found (tension shows how good it is).
+      FOUND,
+      /// Solution does not exist (no matching).
+      UNSAT,
+      /// Early recovery (before finding a solution).
+      RERUN
+    };
+
+    Status() = default;
+
+    Status(const Verdict verdict): verdict(verdict) {}
+
+    Status(const Verdict verdict,
+           const bool isFeasible,
+           const float progress,
+           const criterion::CostVector &vector,
+           const criterion::CostVector &tension):
+        verdict(verdict),
+        isFeasible(isFeasible),
+        vector(vector),
+        tension(tension) {}
+
+    Status(const Verdict verdict,
+           const float progress,
+           const criterion::CostVector &vector,
+           const criterion::CostVector &tension):
+        Status(verdict, false, progress, vector, tension) {}
+
+    Status(const Verdict verdict,
+           const bool isFeasible,
+           const criterion::CostVector &vector,
+           const criterion::CostVector &tension):
+        Status(verdict, isFeasible, 1., vector, tension) {}
+
+    Verdict verdict{UNSAT};
+    bool isFeasible{false};
+    float progress{1.0};
+    criterion::CostVector vector;
+    criterion::CostVector tension;
+  };
+
+  Status map(
+      const std::shared_ptr<model::SubnetBuilder> &builder,
+      const criterion::CostVector &tension,
+      const bool enableEarlyRecovery,
+      SubnetSpace &space /* to be filled */) const;
+
   const criterion::Criterion &criterion;
   const CutProvider cutProvider;
   const MatchFinder matchFinder;

@@ -35,7 +35,7 @@ public:
   CutExtractor &operator=(const CutExtractor &other) = default;
 
   /**
-   * @brief Constructs a cut extractor for the given subnet.
+   * @brief Constructs a cut extractor for the subnet.
    *
    * @param subnet Subnet to find cuts.
    * @param k Maximum cut size.
@@ -43,7 +43,7 @@ public:
   CutExtractor(const Subnet *subnet, const uint16_t k);
 
   /**
-   * @brief Constructs a cut extractor for the given subnet builder.
+   * @brief Constructs a cut extractor for the subnet builder.
    *
    * @param builder Subnet builder to find cuts in.
    * @param k Maximum cut size.
@@ -61,8 +61,8 @@ public:
   /// Gets cuts (entries indexes) for cell with entryID index.
   CutsEntries getCutsEntries(const model::EntryID entryID) const;
 
-  /// Recomputes cuts for passed entry.
-  /// All entries used by passed entry must be computed.
+  /// Recomputes the set of cuts for the given entry.
+  /// All entries used by the entry must be computed.
   void recomputeCuts(const model::EntryID entryID);
 
 private:

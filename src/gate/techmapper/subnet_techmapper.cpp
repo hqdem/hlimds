@@ -30,11 +30,8 @@
  
 namespace eda::gate::techmapper {
 
-using CellSpace = criterion::SolutionSpace<SubnetTechMapper::Match>;
-using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
-
 static inline bool hasSolutions(
-    const SubnetSpace &space, const optimizer::Cut &cut) {
+    const SubnetTechMapper::SubnetSpace &space, const optimizer::Cut &cut) {
   for (const auto entryID : cut.leafIDs) {
     if (!space[entryID]->hasSolution()) {
       return false;
@@ -44,12 +41,12 @@ static inline bool hasSolutions(
 }
 
 static inline const criterion::CostVector &getCostVector(
-    const SubnetSpace &space, const uint32_t entryID) {
+    const SubnetTechMapper::SubnetSpace &space, const uint32_t entryID) {
   return space[entryID]->getBest().vector;
 }
 
 static inline std::vector<criterion::CostVector> getCostVectors(
-    const SubnetSpace &space, const optimizer::Cut &cut) {
+    const SubnetTechMapper::SubnetSpace &space, const optimizer::Cut &cut) {
   std::vector<criterion::CostVector> vectors;
   vectors.reserve(cut.leafIDs.size());
 
@@ -106,7 +103,7 @@ SubnetTechMapper::SubnetTechMapper(const std::string &name,
 using MatchSelection = std::vector<const SubnetTechMapper::Match*>;
 
 static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
-    const SubnetSpace &space,
+    const SubnetTechMapper::SubnetSpace &space,
     const std::shared_ptr<model::SubnetBuilder> oldBuilder) {
   // Maps old entry indices to matches.
   const uint32_t oldSize = oldBuilder->getMaxIdx() + 1;
@@ -228,8 +225,9 @@ static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
   return newBuilder;
 }
 
-static inline float getProgress(const std::shared_ptr<model::SubnetBuilder> &builder,
-                                const uint32_t count) {
+static inline float getProgress(
+    const std::shared_ptr<model::SubnetBuilder> &builder,
+    const uint32_t count) {
   const auto nIn = builder->getInNum();
   const auto nOut = builder->getOutNum();
   const auto nAll = builder->getCellNum();
@@ -246,22 +244,14 @@ static inline float getProgress(const std::shared_ptr<model::SubnetBuilder> &bui
          static_cast<float>(nAll - nIn);
 }
 
-std::shared_ptr<model::SubnetBuilder> SubnetTechMapper::map(
-    const std::shared_ptr<model::SubnetBuilder> &builder) const {
-  // Partial solutions for the subnet cells.
-  SubnetSpace space(builder->getMaxIdx() + 1);
-  criterion::CostVector tension{1.0, 1.0, 1.0};
-
+SubnetTechMapper::Status SubnetTechMapper::map(
+    const std::shared_ptr<model::SubnetBuilder> &builder,
+    const criterion::CostVector &tension,
+    const bool enableEarlyRecovery,
+    SubnetSpace &space) const {
   // Subnet outputs to be filled in the loop below.
   std::unordered_set<uint32_t> outputs;
   outputs.reserve(builder->getOutNum());
-
-  // Maximum number of tries for recovery.
-  constexpr uint16_t maxTries{3};
-  uint16_t tryCount = 0;
-
-RECOVERY:
-  tryCount++;
 
   uint32_t cellCount{0};
   for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
@@ -330,17 +320,10 @@ RECOVERY:
 
     if (progress > 0.5 &&  space[entryID]->hasSolution()
                        && !space[entryID]->hasFeasible()) {
-      // Do recovery.
-      if (tryCount < maxTries) {
-        UTOPIA_LOG_COST_VECTOR(
-            "Solution is likely not to satisfy the constraints ("
-                << static_cast<unsigned>(100 * progress) << "%)",
-            space[entryID]->getBest().vector);
-
-        tension *= space[entryID]->getTension();
-
-        UTOPIA_LOG_INFO("Starting the recovery process");
-        goto RECOVERY;
+      if (enableEarlyRecovery) {
+        const auto &partialVector = space[entryID]->getBest().vector;
+        const auto &partialTension = space[entryID]->getTension();
+        return Status{Status::RERUN, progress, partialVector, partialTension};
       }
     }
   } // for cells
@@ -349,30 +332,56 @@ RECOVERY:
   optimizer::Cut resultCut(outputs.size(), model::OBJ_NULL_ID, outputs, true);
 
   if (!hasSolutions(space, resultCut)) {
-    UTOPIA_ERROR("Incomplete mapping: "
-        "there are cuts that do not match library cells");
-    return nullptr /* error */;
+    return Status{Status::UNSAT};
   }
 
   const auto subnetCostVectors = getCostVectors(space, resultCut);
   const auto subnetAggregation = costAggregator(subnetCostVectors);
 
   const auto isFeasible = criterion.check(subnetAggregation);
+  const auto subnetTension = criterion.getTension(subnetAggregation);
 
-  UTOPIA_LOG_COST_VECTOR(
-      (isFeasible
-          ? "Solution satisfies the constraints"
-          : "Solution does not satisfy the constraints"),
-      subnetAggregation);
- 
-  if (!isFeasible && tryCount < maxTries) {
-    tension *= criterion.getTension(subnetAggregation);
+  return Status{Status::FOUND, isFeasible, subnetAggregation, subnetTension};
+}
 
+std::shared_ptr<model::SubnetBuilder> SubnetTechMapper::map(
+    const std::shared_ptr<model::SubnetBuilder> &builder) const {
+  // Partial solutions for the subnet cells.
+  SubnetSpace space(builder->getMaxIdx() + 1);
+  criterion::CostVector tension{1.0, 1.0, 1.0};
+
+  // Maximum number of tries for recovery.
+  constexpr uint16_t maxTries{3};
+  for (uint16_t tryCount = 0; tryCount < maxTries; ++tryCount) {
+    const auto finalTry = (tryCount == maxTries - 1);
+
+    // Do technology mapping.
+    const auto status = map(builder, tension, !finalTry, space);
+    if (status.verdict == Status::UNSAT) break;
+
+    if (status.verdict == Status::FOUND && (status.isFeasible || finalTry)) {
+      UTOPIA_LOG_COST_VECTOR(
+          (status.isFeasible
+              ? "Solution satisfies the constraints"
+              : "Solution does not satisfy the constraints"),
+           status.vector);
+      return makeMappedSubnet(space, builder);  
+    }
+
+    // Do recovery.
+    UTOPIA_LOG_COST_VECTOR(
+        "Solution is likely not to satisfy the constraints ("
+            << static_cast<unsigned>(100 * status.progress) << "%)",
+        status.vector);
+
+    tension *= status.tension;
     UTOPIA_LOG_INFO("Starting the recovery process");
-    goto RECOVERY;
   }
 
-  return makeMappedSubnet(space, builder);  
+  UTOPIA_ERROR("Incomplete mapping: "
+      "there are cuts that do not match library cells");
+
+  return nullptr;
 }
 
 } // namespace eda::gate::techmapper

@@ -25,7 +25,7 @@ namespace eda::gate::techmapper {
 /**
  * @brief General dynamic programming-based subnet mapper.
  */
-class SubnetTechMapper final : public optimizer::SubnetTransformer {
+class SubnetTechMapperBase : public optimizer::SubnetTransformer {
 public:
   struct Match final {
     model::CellTypeID typeID{model::OBJ_NULL_ID};
@@ -58,13 +58,13 @@ public:
   using CellSpace = criterion::SolutionSpace<Match>;
   using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
 
-  SubnetTechMapper(const std::string &name,
-                   const criterion::Criterion &criterion,
-                   const CutProvider cutProvider,
-                   const MatchFinder matchFinder,
-                   const CellEstimator cellEstimator,
-                   const CostAggregator costAggregator,
-                   const CostPropagator costPropagator):
+  SubnetTechMapperBase(const std::string &name,
+                       const criterion::Criterion &criterion,
+                       const CutProvider cutProvider,
+                       const MatchFinder matchFinder,
+                       const CellEstimator cellEstimator,
+                       const CostAggregator costAggregator,
+                       const CostPropagator costPropagator):
       optimizer::SubnetTransformer(name),
       criterion(criterion),
       cutProvider(cutProvider),
@@ -73,23 +73,25 @@ public:
       costAggregator(costAggregator),
       costPropagator(costPropagator) {}
 
-  SubnetTechMapper(const std::string &name,
-                   const criterion::Criterion &criterion,
-                   const CutProvider cutProvider,
-                   const MatchFinder matchFinder,
-                   const CellEstimator cellEstimator);
+  SubnetTechMapperBase(const std::string &name,
+                       const criterion::Criterion &criterion,
+                       const CutProvider cutProvider,
+                       const MatchFinder matchFinder,
+                       const CellEstimator cellEstimator);
 
   std::shared_ptr<model::SubnetBuilder> map(
       const std::shared_ptr<model::SubnetBuilder> &builder) const override;
 
-private:
+  virtual ~SubnetTechMapperBase() {}
+
+protected:
   struct Status final {
     enum Verdict {
-      /// Solution is found (tension shows how good it is).
+      /// Solution is found.
       FOUND,
-      /// Solution does not exist (no matching).
+      /// Solution does not exist.
       UNSAT,
-      /// Early recovery (before finding a solution).
+      /// Early recovery.
       RERUN
     };
 
@@ -126,11 +128,15 @@ private:
     criterion::CostVector tension;
   };
 
-  Status map(
-      const std::shared_ptr<model::SubnetBuilder> &builder,
-      const criterion::CostVector &tension,
-      const bool enableEarlyRecovery,
-      SubnetSpace &space /* to be filled */) const;
+  virtual void onRecovery(const Status &status,
+                          criterion::CostVector &tension) const {
+    tension *= status.tension;
+  }
+
+  Status map(const std::shared_ptr<model::SubnetBuilder> &builder,
+             const criterion::CostVector &tension,
+             const bool enableEarlyRecovery,
+             SubnetSpace &space /* to be filled */) const;
 
   const criterion::Criterion &criterion;
   const CutProvider cutProvider;

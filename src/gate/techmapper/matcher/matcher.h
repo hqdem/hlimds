@@ -12,7 +12,7 @@
 #include "gate/model/celltype.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/cut_extractor.h"
-#include "gate/techmapper/subnet_techmapper.h"
+#include "gate/techmapper/subnet_techmapper_base.h"
 
 #include <functional>
 #include <vector>
@@ -30,7 +30,7 @@ public:
     return instance;
   }
 
-  virtual std::vector<SubnetTechMapper::Match> match(
+  virtual std::vector<SubnetTechMapperBase::Match> match(
     const model::SubnetBuilder &builder,
     const optimizer::Cut &cut) = 0;
 

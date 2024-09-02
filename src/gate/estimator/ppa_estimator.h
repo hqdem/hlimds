@@ -12,7 +12,7 @@
 #include "gate/estimator/simple_time_model.h"
 #include "gate/library/library.h"
 #include "gate/model/subnet.h"
-#include "gate/techmapper/subnet_techmapper.h"
+#include "gate/techmapper/subnet_techmapper_base.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -101,7 +101,8 @@ inline float getArrivalTime(model::SubnetID subnetID) {
 }
 
 inline criterion::CostVector getPPA(
-  const model::CellTypeID cellTypeID, const techmapper::SubnetTechMapper::Context &context) {
+    const model::CellTypeID cellTypeID,
+    const techmapper::SubnetTechMapperBase::Context &context) {
   const auto &cellType = model::CellType::get(cellTypeID);
   const auto name = cellType.getName();
 

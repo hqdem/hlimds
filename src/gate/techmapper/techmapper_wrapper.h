@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/techmapper/subnet_techmapper.h"
+#include "subnet_techmapper_base.h"
 
 namespace eda::gate::techmapper {
 

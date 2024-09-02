@@ -33,7 +33,7 @@ static optimizer::CutsList cutProvider(
   return cutExtractor->getCuts(entryID);
 }
 
-static std::vector<SubnetTechMapper::Match> matchFinder(
+static std::vector<SubnetTechMapperBase::Match> matchFinder(
     const SubnetBuilder &builder, const optimizer::Cut &cut) {
   return boolMatcher->match(builder, cut);
 }
@@ -53,9 +53,9 @@ std::shared_ptr<SubnetBuilder> techMap(
     library::library->getCombCells());
 
   // Techmapping
-  SubnetTechMapper *techmapper =
-      new SubnetTechMapper("SubnetTechMapper", criterion, cutProvider,
-                           matchFinder, estimator::getPPA);
+  SubnetTechMapperBase *techmapper =
+      new SubnetTechMapperBase("SubnetTechMapper", criterion, cutProvider,
+                               matchFinder, estimator::getPPA);
   auto builderTechmap = techmapper->map(builder);
   if (cutExtractor != nullptr) {
     delete cutExtractor;

@@ -12,12 +12,12 @@
 
 namespace eda::gate::techmapper {
 
-std::vector<SubnetTechMapper::Match> PBoolMatcher::match(
+std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
     const model::SubnetBuilder &builder,
     const optimizer::Cut &cut) {
   using SubnetView = model::SubnetView;
 
-  std::vector<SubnetTechMapper::Match> matches;
+  std::vector<SubnetTechMapperBase::Match> matches;
 
   std::vector<size_t> entryIdxs(cut.leafIDs.begin(), cut.leafIDs.end());
 
@@ -36,7 +36,7 @@ std::vector<SubnetTechMapper::Match> PBoolMatcher::match(
         linkList[cell.transform.permutation.at(i++)] =
           model::Subnet::Link{(uint32_t)entryIdxs.at(index)};
       }
-      matches.push_back(SubnetTechMapper::Match{cell.cellTypeID, linkList});
+      matches.push_back(SubnetTechMapperBase::Match{cell.cellTypeID, linkList});
     }
   }
 

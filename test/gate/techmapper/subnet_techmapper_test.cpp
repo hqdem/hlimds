@@ -11,7 +11,7 @@
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/library/library.h"
 #include "gate/premapper/cell_aigmapper.h"
-#include "gate/techmapper/subnet_techmapper.h"
+#include "gate/techmapper/subnet_techmapper_base.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
 #include "gate/library/library.h"
 #include "gate/optimizer/cut_extractor.h"
@@ -39,7 +39,7 @@ optimizer::CutsList cutProvider(
   return cutExtractor->getCuts(entryID);
 }
 
-std::vector<SubnetTechMapper::Match> matchFinder(
+std::vector<SubnetTechMapperBase::Match> matchFinder(
     const model::SubnetBuilder &builder,
     const optimizer::Cut &cut) {
   return boolMatcher->match(builder, cut);
@@ -75,8 +75,8 @@ const model::SubnetID commonPart(
       library::library->getCombCells());
   }
 
-  SubnetTechMapper *techmapper =
-    new SubnetTechMapper(name, criterion, cutProvider,
+  SubnetTechMapperBase *techmapper =
+    new SubnetTechMapperBase(name, criterion, cutProvider,
                          matchFinder, estimator::getPPA);
 
   auto builder = techmapper->map(builderPtr);

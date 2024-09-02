@@ -8,7 +8,7 @@
 
 #include "diag/logger.h"
 #include "gate/model/subnetview.h"
-#include "gate/techmapper/subnet_techmapper.h"
+#include "gate/techmapper/subnet_techmapper_base.h"
 
 #include <cassert>
 #include <memory>
@@ -31,7 +31,7 @@
 namespace eda::gate::techmapper {
 
 static inline bool hasSolutions(
-    const SubnetTechMapper::SubnetSpace &space, const optimizer::Cut &cut) {
+    const SubnetTechMapperBase::SubnetSpace &space, const optimizer::Cut &cut) {
   for (const auto entryID : cut.leafIDs) {
     if (!space[entryID]->hasSolution()) {
       return false;
@@ -41,12 +41,12 @@ static inline bool hasSolutions(
 }
 
 static inline const criterion::CostVector &getCostVector(
-    const SubnetTechMapper::SubnetSpace &space, const uint32_t entryID) {
+    const SubnetTechMapperBase::SubnetSpace &space, const uint32_t entryID) {
   return space[entryID]->getBest().vector;
 }
 
 static inline std::vector<criterion::CostVector> getCostVectors(
-    const SubnetTechMapper::SubnetSpace &space, const optimizer::Cut &cut) {
+    const SubnetTechMapperBase::SubnetSpace &space, const optimizer::Cut &cut) {
   std::vector<criterion::CostVector> vectors;
   vectors.reserve(cut.leafIDs.size());
 
@@ -58,7 +58,7 @@ static inline std::vector<criterion::CostVector> getCostVectors(
 }
 
 static criterion::CostVector defaultCostAggregator(
-   const std::vector<criterion::CostVector> &vectors) {
+    const std::vector<criterion::CostVector> &vectors) {
   criterion::CostVector result = criterion::CostVector::Zero;
 
   for (uint16_t i = 0; i < vectors.size(); ++i) {
@@ -86,24 +86,25 @@ static criterion::CostVector defaultCostPropagator(
   return result;
 }
 
-SubnetTechMapper::SubnetTechMapper(const std::string &name,
-                                   const criterion::Criterion &criterion,
-                                   const CutProvider cutProvider,
-                                   const MatchFinder matchFinder,
-                                   const CellEstimator cellEstimator):
-  SubnetTechMapper(name,
-                   criterion,
-                   cutProvider,
-                   matchFinder,
-                   cellEstimator,
-                   defaultCostAggregator,
-                   defaultCostPropagator) {}
+SubnetTechMapperBase::SubnetTechMapperBase(
+    const std::string &name,
+    const criterion::Criterion &criterion,
+    const CutProvider cutProvider,
+    const MatchFinder matchFinder,
+    const CellEstimator cellEstimator):
+    SubnetTechMapperBase(name,
+                         criterion,
+                         cutProvider,
+                         matchFinder,
+                         cellEstimator,
+                         defaultCostAggregator,
+                         defaultCostPropagator) {}
 
 /// Maps a entry ID to the best match (null stands for no match).
-using MatchSelection = std::vector<const SubnetTechMapper::Match*>;
+using MatchSelection = std::vector<const SubnetTechMapperBase::Match*>;
 
 static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
-    const SubnetTechMapper::SubnetSpace &space,
+    const SubnetTechMapperBase::SubnetSpace &space,
     const std::shared_ptr<model::SubnetBuilder> oldBuilder) {
   // Maps old entry indices to matches.
   const uint32_t oldSize = oldBuilder->getMaxIdx() + 1;
@@ -244,7 +245,7 @@ static inline float getProgress(
          static_cast<float>(nAll - nIn);
 }
 
-SubnetTechMapper::Status SubnetTechMapper::map(
+SubnetTechMapperBase::Status SubnetTechMapperBase::map(
     const std::shared_ptr<model::SubnetBuilder> &builder,
     const criterion::CostVector &tension,
     const bool enableEarlyRecovery,
@@ -344,7 +345,7 @@ SubnetTechMapper::Status SubnetTechMapper::map(
   return Status{Status::FOUND, isFeasible, subnetAggregation, subnetTension};
 }
 
-std::shared_ptr<model::SubnetBuilder> SubnetTechMapper::map(
+std::shared_ptr<model::SubnetBuilder> SubnetTechMapperBase::map(
     const std::shared_ptr<model::SubnetBuilder> &builder) const {
   // Partial solutions for the subnet cells.
   SubnetSpace space(builder->getMaxIdx() + 1);
@@ -374,8 +375,8 @@ std::shared_ptr<model::SubnetBuilder> SubnetTechMapper::map(
             << static_cast<unsigned>(100 * status.progress) << "%)",
         status.vector);
 
-    tension *= status.tension;
     UTOPIA_LOG_INFO("Starting the recovery process");
+    onRecovery(status, tension /* to be updated */);
   }
 
   UTOPIA_ERROR("Incomplete mapping: "

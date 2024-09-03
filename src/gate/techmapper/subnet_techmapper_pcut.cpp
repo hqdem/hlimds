@@ -8,39 +8,48 @@
 
 #include "subnet_techmapper_pcut.h"
 
+#include <cassert>
+
 namespace eda::gate::techmapper {
+
+#define UTOPIA_CUT_PROVIDER_LAMBDA() \
+  [this](const model::SubnetBuilder &builder,\
+         const model::EntryID entryID) -> optimizer::CutsList {\
+    return cutExtractor->getCuts(entryID);\
+  }
 
 SubnetTechMapperPCut::SubnetTechMapperPCut(
     const std::string &name,
     const criterion::Criterion &criterion,
-    const CutProvider cutProvider, // TODO: max cut size
+    const uint16_t maxCutSize,
     const MatchFinder matchFinder,
     const CellEstimator cellEstimator,
     const CostAggregator costAggregator,
     const CostPropagator costPropagator):
     SubnetTechMapperBase(name,
                          criterion,
-                         cutProvider,
+                         UTOPIA_CUT_PROVIDER_LAMBDA(),
                          matchFinder,
                          cellEstimator,
                          costAggregator,
-                         costPropagator) {}
+                         costPropagator),
+    maxCutSize(maxCutSize) {}
 
 SubnetTechMapperPCut::SubnetTechMapperPCut(
     const std::string &name,
     const criterion::Criterion &criterion,
-    const CutProvider cutProvider, // TODO: max cut size
+    const uint16_t maxCutSize,
     const MatchFinder matchFinder,
     const CellEstimator cellEstimator):
     SubnetTechMapperBase(name,
                          criterion,
-                         cutProvider,
+                         UTOPIA_CUT_PROVIDER_LAMBDA(),
                          matchFinder,
-                         cellEstimator) {}
+                         cellEstimator),
+    maxCutSize(maxCutSize) {}
 
 void SubnetTechMapperPCut::onRecovery(
-    const Status &status, criterion::CostVector &tension) const {
-  // TODO:
+    const Status &status, criterion::CostVector &tension) {
   tension *= status.tension;
 }
 

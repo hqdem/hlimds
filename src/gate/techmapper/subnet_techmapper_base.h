@@ -38,7 +38,7 @@ public:
   using CutProvider =
       std::function<optimizer::CutsList(
                         const model::SubnetBuilder &,
-                        const uint32_t entryID)>;
+                        const model::EntryID entryID)>;
   using MatchFinder =
       std::function<std::vector<Match>(
                         const model::SubnetBuilder &,
@@ -57,6 +57,8 @@ public:
 
   using CellSpace = criterion::SolutionSpace<Match>;
   using SubnetSpace = std::vector<std::unique_ptr<CellSpace>>;
+
+  using SubnetBuilderPtr = std::shared_ptr<model::SubnetBuilder>;
 
   SubnetTechMapperBase(const std::string &name,
                        const criterion::Criterion &criterion,
@@ -79,8 +81,7 @@ public:
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator);
 
-  std::shared_ptr<model::SubnetBuilder> map(
-      const std::shared_ptr<model::SubnetBuilder> &builder) const override;
+  SubnetBuilderPtr map(const SubnetBuilderPtr &builder) const override;
 
   virtual ~SubnetTechMapperBase() {}
 
@@ -128,12 +129,16 @@ protected:
     criterion::CostVector tension;
   };
 
+  virtual void onBegin(const SubnetBuilderPtr &oldBuilder) {}
+
   virtual void onRecovery(const Status &status,
-                          criterion::CostVector &tension) const {
+                          criterion::CostVector &tension) {
     tension *= status.tension;
   }
 
-  Status map(const std::shared_ptr<model::SubnetBuilder> &builder,
+  virtual void onEnd(const SubnetBuilderPtr &newBuilder) {}
+
+  Status map(const SubnetBuilderPtr &builder,
              const criterion::CostVector &tension,
              const bool enableEarlyRecovery,
              SubnetSpace &space /* to be filled */) const;

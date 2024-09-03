@@ -8,7 +8,10 @@
 
 #pragma once
 
-#include "subnet_techmapper_base.h"
+#include "gate/optimizer/cut_extractor.h"
+#include "gate/techmapper/subnet_techmapper_base.h"
+
+#include <memory>
 
 namespace eda::gate::techmapper {
 
@@ -19,7 +22,7 @@ class SubnetTechMapperPCut final : public SubnetTechMapperBase {
 public:
   SubnetTechMapperPCut(const std::string &name,
                        const criterion::Criterion &criterion,
-                       const CutProvider cutProvider, // TODO: max cut size
+                       const uint16_t maxCutSize,
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator,
                        const CostAggregator costAggregator,
@@ -27,16 +30,22 @@ public:
 
   SubnetTechMapperPCut(const std::string &name,
                        const criterion::Criterion &criterion,
-                       const CutProvider cutProvider, // TODO: max cut size
+                       const uint16_t maxCutSize,
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator);
 
 protected:
+  void onBegin(const SubnetBuilderPtr &oldBuilder) override {
+    cutExtractor = std::make_unique<optimizer::CutExtractor>(
+        oldBuilder.get(), maxCutSize, true /* extract now */);
+  }
+
   void onRecovery(const Status &status,
-                  criterion::CostVector &tension) const override;
+                  criterion::CostVector &tension) override;
 
 private:
-  // Cut extractor.
+  const uint16_t maxCutSize;
+  std::unique_ptr<optimizer::CutExtractor> cutExtractor;
 };
 
 } // namespace eda::gate::techmapper

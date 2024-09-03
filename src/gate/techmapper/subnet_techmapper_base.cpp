@@ -103,9 +103,9 @@ SubnetTechMapperBase::SubnetTechMapperBase(
 /// Maps a entry ID to the best match (null stands for no match).
 using MatchSelection = std::vector<const SubnetTechMapperBase::Match*>;
 
-static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
+static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
     const SubnetTechMapperBase::SubnetSpace &space,
-    const std::shared_ptr<model::SubnetBuilder> oldBuilder) {
+    const SubnetTechMapperBase::SubnetBuilderPtr oldBuilder) {
   // Maps old entry indices to matches.
   const uint32_t oldSize = oldBuilder->getMaxIdx() + 1;
   MatchSelection matches(oldSize);
@@ -227,7 +227,7 @@ static std::shared_ptr<model::SubnetBuilder> makeMappedSubnet(
 }
 
 static inline float getProgress(
-    const std::shared_ptr<model::SubnetBuilder> &builder,
+    const SubnetTechMapperBase::SubnetBuilderPtr &builder,
     const uint32_t count) {
   const auto nIn = builder->getInNum();
   const auto nOut = builder->getOutNum();
@@ -246,7 +246,7 @@ static inline float getProgress(
 }
 
 SubnetTechMapperBase::Status SubnetTechMapperBase::map(
-    const std::shared_ptr<model::SubnetBuilder> &builder,
+    const SubnetBuilderPtr &builder,
     const criterion::CostVector &tension,
     const bool enableEarlyRecovery,
     SubnetSpace &space) const {
@@ -345,8 +345,13 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
   return Status{Status::FOUND, isFeasible, subnetAggregation, subnetTension};
 }
 
-std::shared_ptr<model::SubnetBuilder> SubnetTechMapperBase::map(
-    const std::shared_ptr<model::SubnetBuilder> &builder) const {
+SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
+    const SubnetBuilderPtr &builder) const {
+  auto *thisPtr = const_cast<SubnetTechMapperBase *>(this);
+  thisPtr->onBegin(builder);
+
+  SubnetBuilderPtr result = nullptr;
+
   // Partial solutions for the subnet cells.
   SubnetSpace space(builder->getMaxIdx() + 1);
   criterion::CostVector tension{1.0, 1.0, 1.0};
@@ -366,7 +371,8 @@ std::shared_ptr<model::SubnetBuilder> SubnetTechMapperBase::map(
               ? "Solution satisfies the constraints"
               : "Solution does not satisfy the constraints"),
            status.vector);
-      return makeMappedSubnet(space, builder);  
+      result = makeMappedSubnet(space, builder);
+      break;
     }
 
     // Do recovery.
@@ -376,13 +382,16 @@ std::shared_ptr<model::SubnetBuilder> SubnetTechMapperBase::map(
         status.vector);
 
     UTOPIA_LOG_INFO("Starting the recovery process");
-    onRecovery(status, tension /* to be updated */);
+    thisPtr->onRecovery(status, tension /* to be updated */);
   }
 
-  UTOPIA_ERROR("Incomplete mapping: "
-      "there are cuts that do not match library cells");
+  if (!result) {
+    UTOPIA_ERROR("Incomplete mapping: "
+        "there are cuts that do not match library cells");
+  }
 
-  return nullptr;
+  thisPtr->onEnd(result);
+  return result;
 }
 
 } // namespace eda::gate::techmapper

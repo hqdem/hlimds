@@ -1,4 +1,4 @@
-### Running DBStat 
+# Running DBStat
 
 `dbstat` is a utility that shows information about subnet from the database.
 At the input, the utility receives the path to the serialized database and additional parameters. The utility expands the database instance in memory and outputs the required information about the desired subnet.

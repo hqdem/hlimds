@@ -8,7 +8,7 @@ The guide was checked on Ubuntu 20.04 operating system.
 
 To install Valgrind, do the following:
 
-```console
+```shell
 cd <workdir>
 git clone https://sourceware.org/git/valgrind.git
 cd valgrind
@@ -36,7 +36,7 @@ sudo apt install libc6-dbg
 
 To check program on memory leaks with Valgrind, do the following:
 
-```console
+```shell
 valgrind ./program args
 ```
 

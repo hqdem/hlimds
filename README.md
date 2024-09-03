@@ -54,7 +54,7 @@ below are specific to this operating system:
 
 To install them, do the following:
 
-```console
+```shell
 sudo apt install autoconf bison clang clang-tidy doxygen flex g++ gcc git \
      graphviz libctemplate-dev libfmt-dev liblpsolve55-dev libssl-dev libtool \
      lld make ninja-build pkg-config rlwrap tcl-dev zlib1g zlib1g-dev
@@ -66,7 +66,7 @@ If you are working on Fedora Linux OS, see `doc/Fedora.md`.
 
 To build the appropriate version of CMake from sources, do the following:
 
-```console
+```shell
 sudo apt install tar wget
 cd <workdir>
 wget https://cmake.org/files/v3.28/cmake-3.28.1.tar.gz
@@ -84,7 +84,7 @@ If you prefer to install CMake as package, please follow this [guide](https://ap
 
 To build CUDD library from sources, do the following:
 
-```console
+```shell
 cd <workdir>
 git clone https://github.com/ivmai/cudd
 cd cudd
@@ -104,7 +104,7 @@ to the `CUDD` actual installation directory.
 To build STACCATO library from sources, do the following
 (here `<cudd-path>` refers to the path to the CUDD sources directory):
 
-```console
+```shell
 cd <workdir>
 git clone https://github.com/ispras/staccato
 cd staccato
@@ -116,7 +116,7 @@ sudo make install
 
 1. Get `Yosys` version 0.36 source code from [repo](https://github.com/YosysHQ/yosys/tree/yosys-0.36) into `<yosys-dir>`.
 
-   ```console
+   ```shell
    git clone https://github.com/YosysHQ/yosys.git <yosys-dir>
    cd <yosys-dir>
    git checkout yosys-0.36
@@ -138,7 +138,7 @@ Please take this into account while moving through the guide.
 
 #### Check out LLVM and CIRCT repos
 
-```console
+```shell
 cd <workdir>
 git clone https://github.com/circt/circt.git
 cd circt
@@ -151,13 +151,13 @@ git submodule update
 
 Set `MLIR_DIR` environment variable to the directory with MLIR CMake files:
 
-```console
+```shell
 export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
 
 Type the following commands:
 
-```console
+```shell
 cd <workdir>/circt
 mkdir llvm/build
 cd llvm/build
@@ -178,13 +178,13 @@ ninja
 
 Set `CIRCT_DIR` environment variable to the directory with CIRCT CMake files:
 
-```console
+```shell
 export CIRCT_DIR=<workdir>/circt/build/lib/cmake/circt/
 ```
 
 Type the following commands:
 
-```console
+```shell
 cd <workdir>/circt
 mkdir build
 cd build
@@ -202,7 +202,7 @@ ninja
 
 ### Clone project repository and set environment variables
 
-```console
+```shell
 cd <workdir>
 git clone --recursive https://gitlab.ispras.ru/mvg/utopia-eda.git
 cd utopia-eda
@@ -214,7 +214,7 @@ Please keep `UTOPIA_HOME` and `Yosys_ROOT` variables and the values in your syst
 
 ### Project building
 
-```console
+```shell
 cd utopia-eda
 cmake -S . -B build -G Ninja
 cmake --build build
@@ -222,7 +222,7 @@ cmake --build build
 
 or simply run the following script:
 
-```console
+```shell
 ./build.sh
 ```
 
@@ -243,7 +243,7 @@ Running `umain` without arguments takes you to the TCL shell. Available commands
 are listed in the `doc/CLI.md`, or can be printed using the `help`
 command in the shell:
 
-```console
+```shell
 ./build/src/umain
 
 help
@@ -251,31 +251,31 @@ help
 
 **P.S. It is recommended to use rlwrap to display the interactive mode correctly:**
 
-```console
+```shell
 rlwrap ./build/src/umain
 ```
 
 To pass a TCL script with arguments, do the following:
 
-```console
+```shell
 ./build/src/umain -s <script-path> <arg1> <agr2> ... 
 ```
 
 To execute TCL script obtained from terminal, do the following:
 
-```console
+```shell
 ./build/src/umain -e "command1;command2;..." 
 ```
 
 Use the ``-i`` flag to switch to interactive mode after script execution:
 
-```console
+```shell
 ./build/src/umain -ie "command1;command2;..." 
 ```
 
 Example:
 
-```console
+```shell
 ./build/src/umain -s scripts/synth_graphml.tcl \
 test/data/openabcd-subset/graphml/sasc_orig.bench.graphml \
 test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib
@@ -285,32 +285,32 @@ test/data/gate/techmapper/sky130_fd_sc_hd__ff_100C_1v65.lib
 
 ### All tests running
 
-```console
+```shell
 rm -rf $UTOPIA_HOME/output
 $UTOPIA_HOME/build/test/utest
 ```
 
 or
 
-```console
+```shell
 ./run-tests.sh
 ```
 
 ### Specific tests running
 
-```console
+```shell
 ./build/test/utest --gtest_filter=<test-pattern>
 ```
 
 or
 
-```console
+```shell
 ./filter-tests.sh <test-pattern>
 ```
 
 or set the `GTEST_FILTER` environment variable to filter some tests out:
 
-```console
+```shell
 export GTEST_FILTER="-ReedMuller*:\
 BiDecompositionTest*"
 
@@ -321,7 +321,7 @@ Test pattern accepts ```*``` and ```?``` wildcards.
 
 ### List available tests
 
-```console
+```shell
 ./build/test/utest --gtest_list_tests
 ```
 

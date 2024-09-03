@@ -9,7 +9,7 @@ To keep the value of the environment variable in your system permanenly, add the
 appropriate command to either `.profile` or `.bashrc` file. For example, to set
 the `/usr` value to the `SOME_DIR` variable, the command should be as follows:
 
-```console
+```shell
 export SOME_DIR=/usr
 ```
 
@@ -17,7 +17,7 @@ To make this variable-value pair active in your terminal session you need either
 to reboot your OS or restart your session or run the following command
 (it is supposed that the variable was initialized in `.profile`):
 
-```console
+```shell
 source ~/.profile
 ```
 
@@ -29,7 +29,7 @@ To speed up building, several tools like `make` or `ninja` provide options
 that aimed at running multiple jobs in parallel. For example, to run `make`
 in 4 threads do the following:
 
-```console
+```shell
 make -j4
 ```
 
@@ -45,7 +45,7 @@ because of significant reduction of the compilation time.
   * Wait until the package is downloaded
 * Install the VS Studio package
 
-  ```console
+  ```shell
   sudo apt install -f ~/Downloads/code_1.60.2-1632313585_amd64.deb
   ```
   

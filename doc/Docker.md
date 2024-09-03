@@ -28,7 +28,7 @@ The guide was checked on Ubuntu 20.04 operating system.
 
 To install Docker, do following:
 
-```console
+```shell
     sudo apt update
     sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -50,7 +50,7 @@ DockerHub, do authentication.
 
 If you want to pull and push images to GitLab Container Registry at gitlab.ispras.ru, login as follows:
 
-```console
+```shell
     docker login gitlab.ispras.ru:4567
     *Enter GitLab login & password, if needed*
 ```
@@ -59,7 +59,7 @@ If you want to share your images on DockerHub, then:
 
 Create account on [Docker Hub](https://hub.docker.com "Click here to go to the website")
 
-```console
+```shell
     docker login
 *Enter DockerHub login & password, if needed*
 ```
@@ -80,13 +80,13 @@ image to work with Utopia EDA.
 
 To build new image from Dockerfile, use:
 
-```console
+```shell
     docker build -t <image name> <path/to/dir/with/Dockerfile>
 ```
 
 *Example:*
 
-```console
+```shell
     docker build -t new_image:test /home/user/workdir/utopia-eda
 ```
 
@@ -144,7 +144,7 @@ To copy file from your host to image, use:
 
 To upload your images to GitLab Container Registry or DockerHub, use:
 
-```console
+```shell
     docker push <image name>
 ```
 
@@ -162,7 +162,7 @@ To push image to GitLab Container Registry use `docker push <image name>`.
 
 *Example:*
 
-```console
+```shell
     docker build -t gitlab.ispras.ru:4567/your_login/utopia-eda/your_imagename /path/to/Dockerfile
     docker push gitlab.ispras.ru:4567/your_login/utopia-eda/your_imagename
 ```
@@ -212,13 +212,13 @@ container. You can get data from volume after container finished.
 
 To create volume:
 
-```console
+```shell
     docker volume create <volume name>
 ```
 
 To connect volume with container:
 
-```console
+```shell
     docker run -v <volume name>:/path/in/container -it --name <container name> <image name>
 ```
 
@@ -227,25 +227,25 @@ after container ceases to operate.
 
 To check information about volume, use:
 
-```console
+```shell
     docker volume inspect <volume name>
 ```
 
 To list all volumes, use:
 
-```console
+```shell
     docker volume ls
 ```
 
 To remove volume, use:
 
-```console
+```shell
     docker volume rm <volume name>
 ```
 
 *Example:*
 
-```console
+```shell
     docker volume create vol
     docker volume inspect vol
 ```
@@ -266,14 +266,14 @@ To remove volume, use:
     ]
 ```
 
-```console
+```shell
     cp /home/workdir/test_data/example.ril /var/lib/docker/volumes/vol/_data
     docker run -v vol:/workdir/utopia-eda/io_data -it --name container_for_running_utopia-eda image-with-utopia-eda
 ```
 
 After that, use container terminal:
 
-```console
+```shell
     export UTOPIA_HOME=workdir/utopia-eda
     ${UTOPIA_HOME}/build/src/umain rtl io_data/example.ril
     cp ${UTOPIA_HOME}/output ${UTOPIA_HOME}/io_data
@@ -289,7 +289,7 @@ You can embed host directory in the container file system.
 
 For sharing host directory with container, use:
 
-```console
+```shell
     docker run -v /path/in/host:/path/in/container -it --name <container name> <image name>
 ```
 
@@ -298,13 +298,13 @@ on the host will be available in container and vice versa.
 
 *Example:*
 
-```console
+```shell
     docker run -v path/on/host/to/input_data:/workdir/utopia-eda/io_data -it --name container_for_running_utopia-eda image-with-utopia-eda
 ```
 
 After that, use container terminal:
 
-```console
+```shell
     export UTOPIA_HOME=workdir/utopia-eda
     ${UTOPIA_HOME}/build/src/umain rtl io_data/example.ril
     cp ${UTOPIA_HOME}/output ${UTOPIA_HOME}/io_data
@@ -322,7 +322,7 @@ Here is a small guide on how to estimate disk usage by Docker.
 
 To check Docker disk usage in various ways, use:
 
-```console
+```shell
     docker system df
 ```
 
@@ -331,14 +331,14 @@ containers, dangling images, volumes and building cache.
 
 To remove all stopped container, use:
 
-```console
+```shell
     docker container prune
 ```
 
 The volumes still exist after the containers that used them are removed.
 This command removes all volumes that are not used by any container:
 
-```console
+```shell
     docker volume prune
 ```
 
@@ -346,7 +346,7 @@ Building new Docker image from Dockerfile with BuildKit makes
 build-cache.
 To remove it, use the following command:
 
-```console
+```shell
     docker builder prune
 ```
 
@@ -354,19 +354,19 @@ Building *new-image* from *base-image* with Dockerfile makes
 *base-image* dangling when there are no containers on *new-image*.
 The following command checks for dangling images:
 
-```console
+```shell
     docker image ls -f dangling=true
 ```
 
 To remove all dangling images, use:
 
-```console
+```shell
     docker image prune
 ```
 
 To remove all above, use:
 
-```console
+```shell
     docker system prune
 ```
 
@@ -396,7 +396,7 @@ This example includes the following steps:
 
 Terminal:
 
-```console
+```shell
     docker pull gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:build
     docker volume create vol
     docker volume inspect vol
@@ -422,14 +422,14 @@ Output:
 
 ---
 
-```console
+```shell
     cp example.ril /var/lib/docker/volumes/vol/_data
     docker run -v vol:/workdir/utopia-eda/io_data -it --name runutopia gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:build
 ```
 
 Container terminal:
 
-```console
+```shell
     cd workdir/utopia-eda
     export UTOPIA_HOME=workdir/utopia-eda
     rm -rf ${UTOPIA_HOME}/output
@@ -440,7 +440,7 @@ Press `Ctrl + D` to exit from container terminal and stop the container.
 
 Terminal:
 
-```console
+```shell
     docker rm runutopia
     cat /var/lib/docker/volumes/vol/_data/output_data.txt
 ```
@@ -475,7 +475,7 @@ Dockerfile:
 
 Terminal:
 
-```console
+```shell
     docker build -t gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:updated /home/user/utopia-eda
     docker push gitlab.ispras.ru:4567/mvg/utopia-eda/utopia-eda:updated
 ```

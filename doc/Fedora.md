@@ -8,7 +8,7 @@ All the steps were made on Fedora 39.
 
 First of all, install next packages:
 
-```console
+```shell
 sudo dnf groupinstall "Development Tools" && sudo dnf install autoconf bison \
     openssl-devel libtool lld make ninja-build python python3-pip zlib zlib-devel \
     flex readline-devel gawk tcl-devel libffi-devel git graphviz g++ cmake \
@@ -20,7 +20,7 @@ sudo dnf groupinstall "Development Tools" && sudo dnf install autoconf bison \
 
 ### C++ CTemplate installation
 
-```console
+```shell
 cd <workdir>
 git clone https://github.com/OlafvdSpek/ctemplate.git
 cd ctemplate
@@ -36,7 +36,7 @@ you want and set `CT_DIR` environment variable to it too.
 
 ### CUDD installation
 
-```console
+```shell
 cd <workdir>
 git clone https://github.com/ivmai/cudd
 cd cudd
@@ -52,14 +52,14 @@ will require environment variable `CUDD_DIR` that contains the path
 to the `CUDD` actual installation directory. By default, cudd would be installed to
 `/usr/lib64`, but it also can be installed in `/usr/lib`. Please, check both folders.
 
-```console
+```shell
 ls /usr/lib | grep cudd
 ls /usr/lib64 | grep cudd
 ```
 
 And set correct folder name as `CUDD_DIR`:
 
-```console
+```shell
 export CUDD_DIR=<correct_dir>
 ```
 
@@ -67,7 +67,7 @@ export CUDD_DIR=<correct_dir>
 
 The `<path_to_cudd_dir>` refers to the path to the CUDD sources directory.
 
-```console
+```shell
 cd <workdir>
 git clone https://github.com/ispras/staccato
 cd staccato
@@ -93,7 +93,7 @@ Please take this into account while moving through the guide.
 
 #### Check out LLVM and CIRCT repos
 
-```console
+```shell
 cd <workdir>
 git clone https://github.com/circt/circt.git
 cd circt
@@ -106,13 +106,13 @@ git submodule update
 
 Set `MLIR_DIR` environment variable to the directory with MLIR CMake files:
 
-```console
+```shell
 export MLIR_DIR=<workdir>/circt/llvm/build/lib/cmake/mlir/
 ```
 
 Type the following commands:
 
-```console
+```shell
 cd <workdir>/circt
 mkdir llvm/build
 cd llvm/build
@@ -134,13 +134,13 @@ ninja
 
 Set `CIRCT_DIR` environment variable to the directory with CIRCT CMake files:
 
-```console
+```shell
 export CIRCT_DIR=<workdir>/circt/build/lib/cmake/circt/
 ```
 
 Type the following commands:
 
-```console
+```shell
 cd <workdir>/circt
 mkdir build
 cd build
@@ -160,7 +160,7 @@ ninja
 
 ### Clone project repository and set environment variable
 
-```console
+```shell
 cd <workdir>
 git clone --recursive https://gitlab.ispras.ru/mvg/utopia-eda.git
 cd utopia-eda
@@ -174,13 +174,13 @@ Please keep `UTOPIA_HOME` and `Yosys_ROOT` variables and the values in your syst
 
 After doing all this steps, reboot your pc:
 
-```console
+```shell
 reboot
 ```
 
 ### Project building
 
-```console
+```shell
 cd utopia-eda
 cmake -S . -B build -G Ninja
 cmake --build build
@@ -188,7 +188,7 @@ cmake --build build
 
 or simply run the following script:
 
-```console
+```shell
 ./build.sh
 ```
 

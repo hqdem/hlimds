@@ -67,9 +67,14 @@ get_coverage_info:
   script:
     - lcov --capture --directory ${UTOPIA_HOME}
             -o lcoverage.info
-    - lcov --remove lcoverage.info "${BUILD_PATH}/*" "${CIRCT_ROOT}/*" "${UTOPIA_HOME}/lib/*" "/usr/*"
+    - lcov --remove lcoverage.info
+             "${BUILD_PATH}/*"
+             "${CIRCT_ROOT}/*"
+             "${UTOPIA_HOME}/lib/*"
+             "/usr/*"
+             "${Yosys_ROOT}/*"
             -o clean_cov.info
-    - genhtml clean_cov.info -o clean_coverage
+    - genhtml clean_cov.info -o coverage
     - gcovr --root ${UTOPIA_HOME}
             --cobertura ${BUILD_PATH}/coverage.xml --cobertura-pretty
             --gcov-ignore-errors all
@@ -82,7 +87,7 @@ get_coverage_info:
   artifacts:
     expire_in: 1 day
     paths:
-      - ${UTOPIA_HOME}/clean_coverage
+      - ${UTOPIA_HOME}/coverage
       - ${BUILD_PATH}
     reports:
       coverage_report:

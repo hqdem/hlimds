@@ -9,6 +9,7 @@
 #include "gate/library/sdc_manager.h"
 #include "gate/premapper/cell_aigmapper.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
+#include "gate/techmapper/subnet_techmapper_pcut.h"
 #include "gate/techmapper/techmapper_wrapper.h"
 #include "gate/techmapper/utils/get_statistics.h"
 #include "gate/translator/graphml.h"
@@ -22,9 +23,10 @@ using SubnetID      = model::SubnetID;
 using CutExtractor  = optimizer::CutExtractor;
 
 //TODO
-CutExtractor *cutExtractor = nullptr;
+//CutExtractor *cutExtractor = nullptr;
 PBoolMatcher *boolMatcher = nullptr;
 
+/*
 static optimizer::CutsList cutProvider(
     const SubnetBuilder &builder, const size_t entryID) {
   if (cutExtractor == nullptr) {
@@ -33,6 +35,7 @@ static optimizer::CutsList cutProvider(
   }
   return cutExtractor->getCuts(entryID);
 }
+*/
 
 static std::vector<SubnetTechMapperBase::Match> matchFinder(
     const SubnetBuilder &builder, const optimizer::Cut &cut) {
@@ -54,14 +57,21 @@ std::shared_ptr<SubnetBuilder> techMap(
     library::library->getCombCells());
 
   // Techmapping
-  SubnetTechMapperBase *techmapper =
-      new SubnetTechMapperBase("SubnetTechMapper", criterion, cutProvider,
-                               matchFinder, estimator::getPPA);
+  auto *techmapper = new SubnetTechMapperPCut(
+      "SubnetTechMapper",
+      criterion,
+      library::library->getMaxArity(),
+      80, // maxCutNum
+      //cutProvider,
+      matchFinder,
+      estimator::getPPA);
+
   auto builderTechmap = techmapper->map(builder);
-  if (cutExtractor != nullptr) {
-    delete cutExtractor;
-    cutExtractor = nullptr;
-  }
+
+//  if (cutExtractor != nullptr) {
+//    delete cutExtractor;
+//    cutExtractor = nullptr;
+//  }
   if (boolMatcher != nullptr) {
     delete boolMatcher;
     boolMatcher = nullptr;

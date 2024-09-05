@@ -233,6 +233,10 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
     const auto entryID = *it;
     const auto &cell = builder->getCell(entryID);
 
+    // Must be called for all entries (even for inputs).
+    const auto cuts = cutProvider(*builder, entryID);
+    assert(!cuts.empty());
+
     space[entryID] = std::make_unique<CellSpace>(criterion, tension, progress);
 
     // Handle the input cells.
@@ -253,9 +257,6 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
       continue;
 #endif // !UTOPIA_TECHMAP_MATCH_OUTPUTS
     }
-
-    const auto cuts = cutProvider(*builder, entryID);
-    assert(!cuts.empty());
 
     for (const auto &cut : cuts) {
       assert(cut.rootID == entryID);

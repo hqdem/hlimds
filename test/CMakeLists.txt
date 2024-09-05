@@ -38,6 +38,7 @@ add_executable(${TEST_TARGET}
   gate/debugger/seq_sweep_test.cpp
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verifier_test.cpp
+  gate/estimator/npn_estimator_test.cpp
   gate/estimator/time_model_test.cpp
   gate/estimator/wlm_test.cpp
   gate/model/array_test.cpp

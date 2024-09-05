@@ -28,7 +28,8 @@ PBoolMatcher *boolMatcher = nullptr;
 static optimizer::CutsList cutProvider(
     const SubnetBuilder &builder, const size_t entryID) {
   if (cutExtractor == nullptr) {
-    cutExtractor = new CutExtractor(&builder, 6, true);
+    cutExtractor = new CutExtractor(&builder,
+      library::library->getMaxArity(), true);
   }
   return cutExtractor->getCuts(entryID);
 }

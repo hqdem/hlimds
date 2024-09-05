@@ -3,8 +3,8 @@ FROM isprasmvg/ubuntu:base
 # Install project dependencies
 
 RUN apt update && apt install -y autoconf bison clang clang-tidy flex g++ gcc \
-    git libctemplate-dev libfmt-dev liblpsolve55-dev libssl-dev libtool lld \
-    make ninja-build pkg-config rlwrap tcl-dev zlib1g zlib1g-dev
+    git libctemplate-dev libfmt-dev libssl-dev libtool lld make ninja-build \
+    pkg-config rlwrap tcl-dev zlib1g zlib1g-dev
 
 # Install packages for documentation generation
 

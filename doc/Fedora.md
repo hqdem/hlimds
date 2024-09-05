@@ -13,7 +13,7 @@ sudo dnf groupinstall "Development Tools" && sudo dnf install autoconf bison \
     openssl-devel libtool lld make ninja-build python python3-pip zlib zlib-devel \
     flex readline-devel gawk tcl-devel libffi-devel git graphviz g++ cmake \
     pkgconf-pkg-config boost-system boost-python3-devel boost-filesystem python-xdot \
-    clang clang-tools-extra lpsolve lpsolve-devel
+    clang clang-tools-extra
 ```
 
 ## Installing libraries

@@ -40,7 +40,6 @@ below are specific to this operating system:
 * `graphviz`
 * `libctemplate-dev`
 * `libfmt-dev`
-* `liblpsolve55-dev`
 * `libssl-dev`
 * `libtool`
 * `lld`
@@ -56,8 +55,8 @@ To install them, do the following:
 
 ```shell
 sudo apt install autoconf bison clang clang-tidy doxygen flex g++ gcc git \
-     graphviz libctemplate-dev libfmt-dev liblpsolve55-dev libssl-dev libtool \
-     lld make ninja-build pkg-config rlwrap tcl-dev zlib1g zlib1g-dev
+     graphviz libctemplate-dev libfmt-dev libssl-dev libtool lld make \
+     ninja-build pkg-config rlwrap tcl-dev zlib1g zlib1g-dev
 ```
 
 If you are working on Fedora Linux OS, see `doc/Fedora.md`.

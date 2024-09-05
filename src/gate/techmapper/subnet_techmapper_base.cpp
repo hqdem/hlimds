@@ -30,33 +30,6 @@
  
 namespace eda::gate::techmapper {
 
-static inline bool hasSolutions(
-    const SubnetTechMapperBase::SubnetSpace &space, const optimizer::Cut &cut) {
-  for (const auto entryID : cut.leafIDs) {
-    if (!space[entryID]->hasSolution()) {
-      return false;
-    }
-  }
-  return true;
-}
-
-static inline const criterion::CostVector &getCostVector(
-    const SubnetTechMapperBase::SubnetSpace &space, const uint32_t entryID) {
-  return space[entryID]->getBest().vector;
-}
-
-static inline std::vector<criterion::CostVector> getCostVectors(
-    const SubnetTechMapperBase::SubnetSpace &space, const optimizer::Cut &cut) {
-  std::vector<criterion::CostVector> vectors;
-  vectors.reserve(cut.leafIDs.size());
-
-  for (const auto entryID : cut.leafIDs) {
-    vectors.push_back(getCostVector(space, entryID));
-  }
-
-  return vectors;
-}
-
 static criterion::CostVector defaultCostAggregator(
     const std::vector<criterion::CostVector> &vectors) {
   criterion::CostVector result = criterion::CostVector::Zero;
@@ -234,7 +207,7 @@ static inline float getProgress(
   const auto nAll = builder->getCellNum();
 
   // Ignore the subnet inputs.
-  if (count < nIn) { return 0.0; }
+  if (count < nIn) { return 0.; }
 
   // Last non-output cell index.
   const auto k = nAll - nOut - 1;
@@ -247,17 +220,15 @@ static inline float getProgress(
 
 SubnetTechMapperBase::Status SubnetTechMapperBase::map(
     const SubnetBuilderPtr &builder,
-    const criterion::CostVector &tension,
-    const bool enableEarlyRecovery,
-    SubnetSpace &space) const {
+    const bool enableEarlyRecovery) {
   // Subnet outputs to be filled in the loop below.
-  std::unordered_set<uint32_t> outputs;
+  std::unordered_set<model::EntryID> outputs;
   outputs.reserve(builder->getOutNum());
 
   uint32_t cellCount{0};
   for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
     const auto progress = getProgress(builder, cellCount++);
-    assert(0.0 <= progress && progress <= 1.0);
+    assert(0. <= progress && progress <= 1.);
 
     const auto entryID = *it;
     const auto &cell = builder->getCell(entryID);
@@ -284,16 +255,17 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
     }
 
     const auto cuts = cutProvider(*builder, entryID);
+    assert(!cuts.empty());
 
     for (const auto &cut : cuts) {
       assert(cut.rootID == entryID);
 
       // Skip trivial and unmapped cuts.
-      if (cut.isTrivial() || !hasSolutions(space, cut)) {
+      if (cut.isTrivial() || !hasSolutions(cut)) {
         continue;
       }
 
-      const auto cutCostVectors = getCostVectors(space, cut);
+      const auto cutCostVectors = getCostVectors(cut);
       const auto cutAggregation = costAggregator(cutCostVectors);
 
       if (!criterion.check(cutAggregation)) {
@@ -319,24 +291,23 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
           << fmt::format("cell#{}:{}", entryID, cell.getType().getName()));
     }
 
-    if (progress > 0.5 &&  space[entryID]->hasSolution()
-                       && !space[entryID]->hasFeasible()) {
-      if (enableEarlyRecovery) {
-        const auto &partialVector = space[entryID]->getBest().vector;
-        const auto &partialTension = space[entryID]->getTension();
-        return Status{Status::RERUN, progress, partialVector, partialTension};
-      }
+    if (enableEarlyRecovery && progress > 0.5 &&
+        space[entryID]->hasSolution() &&
+       !space[entryID]->hasFeasible()) {
+      const auto &partialVector = space[entryID]->getBest().vector;
+      const auto &partialTension = space[entryID]->getTension();
+      return Status{Status::RERUN, progress, partialVector, partialTension};
     }
   } // for cells
 
   assert(outputs.size() == builder->getOutNum());
   optimizer::Cut resultCut(outputs.size(), model::OBJ_NULL_ID, outputs, true);
 
-  if (!hasSolutions(space, resultCut)) {
+  if (!hasSolutions(resultCut)) {
     return Status{Status::UNSAT};
   }
 
-  const auto subnetCostVectors = getCostVectors(space, resultCut);
+  const auto subnetCostVectors = getCostVectors(resultCut);
   const auto subnetAggregation = costAggregator(subnetCostVectors);
 
   const auto isFeasible = criterion.check(subnetAggregation);
@@ -352,17 +323,13 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
 
   SubnetBuilderPtr result = nullptr;
 
-  // Partial solutions for the subnet cells.
-  SubnetSpace space(builder->getMaxIdx() + 1);
-  criterion::CostVector tension{1.0, 1.0, 1.0};
-
   // Maximum number of tries for recovery.
   constexpr uint16_t maxTries{3};
   for (uint16_t tryCount = 0; tryCount < maxTries; ++tryCount) {
     const auto finalTry = (tryCount == maxTries - 1);
 
     // Do technology mapping.
-    const auto status = map(builder, tension, !finalTry, space);
+    const auto status = thisPtr->map(builder, !finalTry);
     if (status.verdict == Status::UNSAT) break;
 
     if (status.verdict == Status::FOUND && (status.isFeasible || finalTry)) {
@@ -378,11 +345,11 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
     // Do recovery.
     UTOPIA_LOG_COST_VECTOR(
         "Solution is likely not to satisfy the constraints ("
-            << static_cast<unsigned>(100 * status.progress) << "%)",
+            << static_cast<unsigned>(100. * status.progress) << "%)",
         status.vector);
 
     UTOPIA_LOG_INFO("Starting the recovery process");
-    thisPtr->onRecovery(status, tension /* to be updated */);
+    thisPtr->onRecovery(status);
   }
 
   if (!result) {

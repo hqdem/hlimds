@@ -129,19 +129,39 @@ protected:
     criterion::CostVector tension;
   };
 
-  virtual void onBegin(const SubnetBuilderPtr &oldBuilder) {}
+  virtual void onBegin(const SubnetBuilderPtr &oldBuilder) {
+    space.resize(oldBuilder->getMaxIdx() + 1);
+    tension = {1.0, 1.0, 1.0};
+  }
 
-  virtual void onRecovery(const Status &status,
-                          criterion::CostVector &tension) {
+  virtual void onRecovery(const Status &status) {
     tension *= status.tension;
   }
 
-  virtual void onEnd(const SubnetBuilderPtr &newBuilder) {}
+  virtual void onEnd(const SubnetBuilderPtr &newBuilder) {
+    // Do nothing.
+  }
 
-  Status map(const SubnetBuilderPtr &builder,
-             const criterion::CostVector &tension,
-             const bool enableEarlyRecovery,
-             SubnetSpace &space /* to be filled */) const;
+  bool hasSolutions(const optimizer::Cut &cut) const {
+    for (const auto leafID : cut.leafIDs) {
+      if (!space[leafID]->hasSolution()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  std::vector<criterion::CostVector> getCostVectors(
+      const optimizer::Cut &cut) const {
+    std::vector<criterion::CostVector> vectors;
+    vectors.reserve(cut.leafIDs.size());
+    for (const auto leafID : cut.leafIDs) {
+      vectors.push_back(space[leafID]->getBest().vector);
+    }
+    return vectors;
+  }
+
+  Status map(const SubnetBuilderPtr &builder, const bool enableEarlyRecovery);
 
   const criterion::Criterion &criterion;
   const CutProvider cutProvider;
@@ -149,6 +169,10 @@ protected:
   const CellEstimator cellEstimator;
   const CostAggregator costAggregator;
   const CostPropagator costPropagator;
+
+  // Changed during technology mapping.
+  SubnetSpace space;
+  criterion::CostVector tension;
 };
 
 } // namespace eda::gate::techmapper

@@ -53,10 +53,18 @@ public:
                const uint16_t k,
                const bool extractNow);
 
-  /// Gets cuts (entries indexes and signatures) for cell with entryID index.
+  /// Returns the number of cuts extracted for the given cell.
+  size_t getCutNum(const model::EntryID entryID) const {
+    return entriesCuts[entryID].size();
+  }
+
+  /// Gets the list of cuts for the given cell.
   const CutsList getCuts(const model::EntryID entryID) const {
     return entriesCuts[entryID];
   }
+
+  /// Sets the list of cuts for the given cell.
+  void setCuts(const model::EntryID entryID, const CutsList cuts);
 
   /// Gets cuts (entries indexes) for cell with entryID index.
   CutsEntries getCutsEntries(const model::EntryID entryID) const;

@@ -41,12 +41,13 @@ CutExtractor::CutExtractor(const SubnetBuilder *builder,
   }
 }
 
-void CutExtractor::recomputeCuts(const model::EntryID entryID) {
-  if (entriesCuts.size() <= entryID) {
-    entriesCuts.resize(entryID + 1);
+void CutExtractor::setCuts(const model::EntryID entryID, const CutsList cuts) {
+  auto &cutEntry = entriesCuts[entryID];
+  cutEntry.clear();
+
+  for (const auto &cut : cuts) {
+    cutEntry.push_back(cut);
   }
-  entriesCuts[entryID].clear();
-  findCuts(entryID);
 }
 
 CutExtractor::CutsEntries CutExtractor::getCutsEntries(
@@ -56,6 +57,14 @@ CutExtractor::CutsEntries CutExtractor::getCutsEntries(
     cutsEntries.push_back(cut.leafIDs);
   }
   return cutsEntries;
+}
+
+void CutExtractor::recomputeCuts(const model::EntryID entryID) {
+  if (entriesCuts.size() <= entryID) {
+    entriesCuts.resize(entryID + 1);
+  }
+  entriesCuts[entryID].clear();
+  findCuts(entryID);
 }
 
 void CutExtractor::findCuts(const model::EntryID entryID) {
@@ -115,11 +124,11 @@ void CutExtractor::addCut(
 
 void CutExtractor::addViableCuts(
     const RawCutsList &cuts, const model::EntryID entryID) {
-  entriesCuts[entryID].clear();
+  auto &cutEntry = entriesCuts[entryID];
+  cutEntry.clear();
 
   for (const auto &cut : cuts) {
     if (cut.second) {
-      auto &cutEntry = entriesCuts[entryID];
       cutEntry.push_back(cut.first);
     }
   }

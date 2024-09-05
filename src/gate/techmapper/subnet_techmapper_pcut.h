@@ -23,6 +23,7 @@ public:
   SubnetTechMapperPCut(const std::string &name,
                        const criterion::Criterion &criterion,
                        const uint16_t maxCutSize,
+                       const uint16_t maxCutNum,
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator,
                        const CostAggregator costAggregator,
@@ -31,20 +32,24 @@ public:
   SubnetTechMapperPCut(const std::string &name,
                        const criterion::Criterion &criterion,
                        const uint16_t maxCutSize,
+                       const uint16_t maxCutNum,
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator);
 
 protected:
   void onBegin(const SubnetBuilderPtr &oldBuilder) override {
+    SubnetTechMapperBase::onBegin(oldBuilder);
+
     cutExtractor = std::make_unique<optimizer::CutExtractor>(
-        oldBuilder.get(), maxCutSize, true /* extract now */);
+        oldBuilder.get(), maxCutSize, false /* extract on demand */);
   }
 
-  void onRecovery(const Status &status,
-                  criterion::CostVector &tension) override;
-
 private:
+  void computePriorityCuts(const model::EntryID entryID);
+
   const uint16_t maxCutSize;
+  const uint16_t maxCutNum;
+
   std::unique_ptr<optimizer::CutExtractor> cutExtractor;
 };
 

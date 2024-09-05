@@ -12,13 +12,12 @@
 
 namespace eda::gate::library {
 
-std::string ReadCellsIface::binOpToString(const Expr *lhs,
-                                                  const std::string &op,
-                                                  const Expr *rhs) {
-  return "(" + exprToString(lhs) + op + exprToString(rhs) + ")";
-}
+// TODO: move this Expr functions to std::string into ReadCells
 
-std::string ReadCellsIface::exprToString(const Expr *expr) {
+std::string binOpToString(
+    const Expr *expr, const std::string &op);
+
+std::string exprToString(const Expr *expr) {
   if (!expr) return "";
 
   std::stringstream ss;
@@ -28,6 +27,7 @@ std::string ReadCellsIface::exprToString(const Expr *expr) {
       ss << expr->name;
       break;
     case EK_Literal:
+      ss << (expr->bval ? "1" : "0");
       break;
     case EK_Subscript:
       ss << expr->name << "[" << exprToString(expr->opnd) << "]";
@@ -36,13 +36,13 @@ std::string ReadCellsIface::exprToString(const Expr *expr) {
       ss << "!(" << exprToString(expr->opnd) << ")";
       break;
     case EK_Xor:
-      ss << binOpToString(expr->binop.lhs, "^", expr->binop.rhs);
+      ss << binOpToString(expr, "^");
       break;
     case EK_And:
-      ss << binOpToString(expr->binop.lhs, "&", expr->binop.rhs);
+      ss << binOpToString(expr, "&");
       break;
     case EK_Or:
-      ss << binOpToString(expr->binop.lhs, "|", expr->binop.rhs);
+      ss << binOpToString(expr, "|");
       break;
     default:
       ss << "unknown";
@@ -51,50 +51,75 @@ std::string ReadCellsIface::exprToString(const Expr *expr) {
   return ss.str();
 }
 
-bool ReadCellsIface::areIdsInExpr(
-    const std::string &expr, const std::vector<std::string> &ids) {
+std::string binOpToString(
+    const Expr *expr, const std::string &op) {
+  return "(" + exprToString(expr->binop.lhs) + op +
+               exprToString(expr->binop.rhs) + ")";
+}
 
+void getIdsInExpr(std::map<std::string, int> &ids, const Expr *expr) {
+  if (expr->kind == EK_Identifier) {
+    ids[std::string(expr->name)] = 1;
+  } else if (expr->kind == EK_Not || expr->kind == EK_Subscript) {
+    getIdsInExpr(ids, expr->opnd);
+  } else if (expr->kind == EK_Xor ||
+             expr->kind == EK_And || expr->kind == EK_Or) {
+    getIdsInExpr(ids, expr->binop.lhs);
+    getIdsInExpr(ids, expr->binop.rhs);
+  }
+}
+
+bool checkIdsInExpr(const Expr *expr, const std::vector<std::string> &ids) {
+  std::map<std::string, int> existingIds;
+  getIdsInExpr(existingIds, expr);
   for (const auto &id : ids) {
-    size_t pos, pos_next = 0;
-    while ((pos = expr.find(id, pos_next)) != std::string::npos) {
-      char prevChar = (pos > 0 ? expr.at(pos - 1) : ' ');
-      char nextChar = (pos < (expr.size() - id.size()) ? expr.at(pos + id.size()) : ' ');
-      if (std::isalpha(prevChar) || std::isalpha(nextChar) ||
-          std::isdigit(prevChar) || std::isdigit(nextChar)) {
-        pos_next = pos + 1;
-      } else {
-        break;
-      }
-    }
-    if (pos == std::string::npos) {
+    if (existingIds.find(id) == existingIds.end()) {
       return false;
     }
   }
-
   return true;
 }
 
-static inline bool isInput(const Pin &pin) {
+inline bool isInputPin(const Pin &pin) {
   return (pin.getIntegerAttribute("direction", 10) & 0x1) != 0;
 }
 
-static inline bool isOutput(const Pin &pin) {
+inline bool isOutputPin(const Pin &pin) {
   return (pin.getIntegerAttribute("direction", 10) & 0x2) != 0;
 }
 
-std::vector<std::string> ReadCellsIface::getFunctions(const std::string &name) {
-  std::vector<std::string> funcs;
+const Pin *ReadCellsIface::getOutputPin(
+    const std::string &name, uint number) {
+  const Pin *output = nullptr;
+  uint currentPin = 0;
   for (const auto &pin : library.getCell(name)->getPins()) {
-    if (isOutput(pin)) {
-      if (pin.hasAttribute("function")) {
-        const auto* func = pin.getBexprAttribute("function");
-        if (func != nullptr) {
-          funcs.push_back(exprToString(func));
-        }
-      }
+    if (isOutputPin(pin) && (currentPin++ == number)) {
+      output = &pin;
+      break;
     }
   }
-  return funcs;
+  return output;
+}
+
+const Expr *ReadCellsIface::getExprFunction(
+    const std::string &name, uint number) {
+  const auto *pin = getOutputPin(name, number);
+  if (pin != nullptr) {
+    const Expr *func = pin->getBexprAttribute("function");
+    return func;
+  } else {
+    return nullptr;
+  }
+}
+
+const std::string ReadCellsIface::getStringFunction(
+    const std::string &name, uint number) {
+  const auto *func = getExprFunction(name, number);
+  if (func != nullptr) {
+    return exprToString(func);
+  } else {
+    return "";
+  }
 }
 
 std::vector<std::string> ReadCellsIface::getCells() {
@@ -109,16 +134,15 @@ model::CellType::PortVector ReadCellsIface::getPorts(const std::string &name) {
   model::CellType::PortVector ports;
   size_t index{0};
   for (const auto &pin : library.getCell(name)->getPins()) {
-    ports.emplace_back(std::string(pin.getName()), 1, isInput(pin), index++);
+    ports.emplace_back(std::string(pin.getName()), 1, isInputPin(pin), index++);
   }
   return ports; 
 }
 
 std::vector<std::string> ReadCellsIface::getInputs(const std::string &name) {
   std::vector<std::string> inputs;
-
   for (const auto &pin : library.getCell(name)->getPins()) {
-    if (isInput(pin)) {
+    if (isInputPin(pin)) {
       inputs.push_back(std::string(pin.getName()));
     }
   }
@@ -128,30 +152,35 @@ std::vector<std::string> ReadCellsIface::getInputs(const std::string &name) {
 std::vector<std::string> ReadCellsIface::getOutputs(const std::string &name) {
   std::vector<std::string> outputs;
   for (const auto &pin : library.getCell(name)->getPins()) {
-    if (isOutput(pin)) {
+    if (isOutputPin(pin)) {
       outputs.push_back(std::string(pin.getName()));
     }
   }
   return outputs;
 }
 
-kitty::dynamic_truth_table ReadCellsIface::getFunction(const std::string &name) {
-  kitty::dynamic_truth_table truthTable(getInputs(name).size());
-  kitty::create_from_formula(truthTable, getFunctions(name).at(0), getInputs(name));
+kitty::dynamic_truth_table ReadCellsIface::getFunction(
+    const std::string &name, uint number) {
+  const auto &inputs = getInputs(name); // TODO: assert inputs.size() != 0
+  kitty::dynamic_truth_table truthTable(inputs.size());
+  kitty::create_from_formula(truthTable,
+    getStringFunction(name, number), inputs);
   return truthTable;
 }
 
 bool ReadCellsIface::isCombCell(const std::string &name){
+  const auto &inputs = getInputs(name);
+  const auto &outputs = getOutputs(name);
   const auto *cell = library.getCell(name);
-  bool funcVerify = !(getFunctions(name).empty()) &&
-    areIdsInExpr(getFunctions(name).at(0), getInputs(name));
+  bool funcVerify = (inputs.size() == 0 && outputs.size() != 0) ||
+                    ((getExprFunction(name) != nullptr) &&
+                    checkIdsInExpr(getExprFunction(name), getInputs(name)));
 
-  auto outputs = getOutputs(name);
   return !cell->hasAttribute("ff") &&
          !cell->hasAttribute("latch") &&
          std::find(outputs.begin(), outputs.end(), "CLK") == outputs.end() &&
          funcVerify &&
-         outputs.size() == 1;
+         outputs.size() > 0/*== 1*/;
 }
 
 float ReadCellsIface::getArea(const std::string &name) {
@@ -240,7 +269,7 @@ float ReadCellsIface::getLutInterValue(
 }
 
 float ReadCellsIface::getValue(const LookupTable* lut,
-                                       const std::vector<float> &searchParams) {
+                               const std::vector<float> &searchParams) {
   std::vector<InterParamIDs> paramsIndices;
   std::vector<size_t> searParamIndices;
   searParamIndices.reserve(lut->getIndicesSize());
@@ -304,12 +333,6 @@ ReadCellsIface::Delay ReadCellsIface::getDelay(
   delay.riseTransition = getValue(timing->getLut("rise_transition"),
                                   searchParams);
   return delay;
-}
-
-
-bool ReadCellsIface::isIsolateCell(const std::string &name) {
-  return library.getCell(name)->
-      getBooleanAttribute("is_isolation_cell", false);
 }
 
 } // namespace eda::gate::library

@@ -363,13 +363,34 @@ void NLDM::delayEstimation(Library &library, const std::string &cellType,
   //===---------------------------------------------------------------===//
   std::vector<float> cfall, crise, tfall, trise;
   bool readyFlag = false;
-  int newTimingSense = 0;
+  int newTimingSense = timingSense;
   DataTimingContext context{inputTransTime, outputTotalCap};
 
   //===---------------------------------------------------------------===//
   //  Delay and Slew estimation
   //===---------------------------------------------------------------===//
   const Cell *cell = library.getCell(cellType);
+
+  // Attempt to sum timings in case of complex cells.
+  if (cell == nullptr) {
+    auto delim = cellType.find("*");
+    auto cell1 = cellType.substr(0, delim);
+    auto cell2 = cellType.substr(delim + 1);
+
+    float slew1 = 0, delay1 = 0, cap1 = 0;
+    float slew2 = 0, delay2 = 0, cap2 = 0;
+    if (delim == std::string::npos) {
+      return;
+    }
+    delayEstimation(library, cell1, inputTransTime, outputTotalCap,
+      timingSense, slew1, delay1, cap1);
+    delayEstimation(library, cell2, inputTransTime, outputTotalCap,
+      timingSense, slew2, delay2, cap2);
+    slew = slew1 + slew2;
+    delay = delay1 + delay2;
+    cap = cap1 + cap2;
+    return;
+  }
 
   cap = 0;
   for (const Pin &pin : (*cell).getPins()) {
@@ -405,21 +426,26 @@ void NLDM::delayEstimation(Library &library, const std::string &cellType,
     }
   }
 
-  if (timingSense == 0) {
-    delay = *max_element(crise.begin(), crise.end());
-    for (size_t i = 0; i < crise.size(); ++i)
-      if (crise[i] == delay) {
-        slew = (tfall[i] + trise[i])/2;
-        break;
-      }
-  }
-  else {
-    delay = *max_element(cfall.begin(), cfall.end());
-    for (size_t i = 0; i < cfall.size(); ++i)
-      if (cfall[i] == delay) {
-        slew = (tfall[i] + trise[i])/2;
-        break;
-      }
+  if (crise.empty() || cfall.empty() || trise.empty() || tfall.empty()) {
+    delay = 0;
+    slew = 0;
+  } else {
+    if (timingSense == 0) {
+      delay = *max_element(crise.begin(), crise.end());
+      for (size_t i = 0; i < crise.size(); ++i)
+        if (crise[i] == delay) {
+          slew = (tfall[i] + trise[i])/2;
+          break;
+        }
+    }
+    else {
+      delay = *max_element(cfall.begin(), cfall.end());
+      for (size_t i = 0; i < cfall.size(); ++i)
+        if (cfall[i] == delay) {
+          slew = (tfall[i] + trise[i])/2;
+          break;
+        }
+    }
   }
   timingSense = newTimingSense;
 }

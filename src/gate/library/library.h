@@ -38,10 +38,30 @@ public:
     return library;
   }
 
+  inline uint getMaxArity() const { return maxArity; }
+
 private:
+  uint maxArity = 0;
   std::vector<StandardCell> combCells;
+  std::vector<StandardCell> negCombCells;
+  std::vector<StandardCell> constOneCells;
+  std::vector<StandardCell> constZeroCells;
+
+  // const StandardCell *cheapBuf; TODO: add buffer to avoid using consts
+  const StandardCell *cheapNegCell;
+  const StandardCell *cheapOneCell;
+  const StandardCell *cheapZeroCell;
 
   void loadCombCell(const std::string &name);
+  const StandardCell *findCheapestCell(std::vector<StandardCell> &scs);
+  void findCheapestCells();
+  void addSuperCell(
+      const model::CellTypeID cellTypeID,
+      const model::CellTypeID cellTypeIDToAdd,
+      void(*func)(std::string &in, const std::string &fIn),
+      std::vector<StandardCell> &scs);
+  void addSuperCells();
+  void addConstCells();
 
   // ReadCells
   Group *ast;

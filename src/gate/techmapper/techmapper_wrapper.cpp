@@ -22,20 +22,7 @@ using SubnetBuilder = model::SubnetBuilder;
 using SubnetID      = model::SubnetID;
 using CutExtractor  = optimizer::CutExtractor;
 
-//TODO
-//CutExtractor *cutExtractor = nullptr;
 PBoolMatcher *boolMatcher = nullptr;
-
-/*
-static optimizer::CutsList cutProvider(
-    const SubnetBuilder &builder, const size_t entryID) {
-  if (cutExtractor == nullptr) {
-    cutExtractor = new CutExtractor(&builder,
-      library::library->getMaxArity(), true);
-  }
-  return cutExtractor->getCuts(entryID);
-}
-*/
 
 static std::vector<SubnetTechMapperBase::Match> matchFinder(
     const SubnetBuilder &builder, const optimizer::Cut &cut) {
@@ -47,10 +34,13 @@ std::shared_ptr<SubnetBuilder> techMap(
     const std::shared_ptr<SubnetBuilder> &builder) {
   // Set constraints
   criterion::Constraints constraints = {
-      criterion::Constraint(criterion::AREA, 100000),    // FIXME:
+      criterion::Constraint(criterion::AREA,  100000),   // FIXME:
       criterion::Constraint(criterion::DELAY, 10),       // FIXME:
       criterion::Constraint(criterion::POWER, 100000)};  // FIXME:
   criterion::Criterion criterion{objective, constraints};
+
+  // Maximum number of cuts per cell
+  constexpr uint16_t maxCutNum = 8;
 
   // Set matcher type
   boolMatcher = Matcher<PBoolMatcher, std::size_t>::create(
@@ -61,17 +51,12 @@ std::shared_ptr<SubnetBuilder> techMap(
       "SubnetTechMapper",
       criterion,
       library::library->getMaxArity(),
-      10, // maxCutNum
-      //cutProvider,
+      maxCutNum,
       matchFinder,
       estimator::getPPA);
 
   auto builderTechmap = techmapper->map(builder);
 
-//  if (cutExtractor != nullptr) {
-//    delete cutExtractor;
-//    cutExtractor = nullptr;
-//  }
   if (boolMatcher != nullptr) {
     delete boolMatcher;
     boolMatcher = nullptr;

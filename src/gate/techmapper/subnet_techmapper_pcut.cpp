@@ -76,7 +76,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
 
     // TODO:
     const auto matches = matchFinder(builder, cut);
-    cost /= (1. + matches.size());
+    cost /= (matches.size() + .25);
  
     sorted[i] = {i, cost};
   }

@@ -116,18 +116,15 @@ static inline kitty::dynamic_truth_table evaluateDummy() {
   return kitty::create<kitty::dynamic_truth_table>(0);
 }
 
-std::vector<kitty::dynamic_truth_table> evaluate(const Subnet &subnet) {
-  assert(subnet.getInNum() > 0);
-  assert(subnet.getOutNum() > 0);
-
-  const auto &entries = subnet.getEntries();
-
-  std::vector<kitty::dynamic_truth_table> tables;
+static std::vector<kitty::dynamic_truth_table> evaluate(
+    const Subnet &subnet, std::vector<kitty::dynamic_truth_table> &tables) {
   std::vector<kitty::dynamic_truth_table> result;
-  tables.reserve(entries.size());
   result.reserve(subnet.getOutNum());
 
+  const auto &entries = subnet.getEntries();
   for (size_t i = 0; i < entries.size(); ++i) {
+    if (i < tables.size()) continue;
+
     const auto &cell = entries[i].cell;
     assert(!cell.isNull());
 
@@ -142,7 +139,22 @@ std::vector<kitty::dynamic_truth_table> evaluate(const Subnet &subnet) {
     else if (cell.isOr())   { table = evaluateOr  (subnet, cell, i, tables); }
     else if (cell.isXor())  { table = evaluateXor (subnet, cell, i, tables); }
     else if (cell.isMaj())  { table = evaluateMaj (subnet, cell, i, tables); }
-    else                    { assert(false && "Unsupported operation");      }
+    else {
+      const auto &type = cell.getType();
+      assert(type.isSubnet() && "Unspecified subnet");
+
+      const auto &impl = type.getSubnet();
+      assert(impl.getInNum() == cell.arity && impl.getOutNum() == 1);
+
+      std::vector<kitty::dynamic_truth_table> subtables;
+      subtables.reserve(impl.size());
+
+      for (size_t j = 1; j < cell.arity; ++j) {
+        subtables.push_back(getLinkTable(subnet.getLink(i, j), tables));
+      }
+
+      table = evaluate(impl, subtables)[0];
+    }
 
     tables.push_back(table);
     if (cell.isOut()) {
@@ -157,6 +169,13 @@ std::vector<kitty::dynamic_truth_table> evaluate(const Subnet &subnet) {
     }
   }
   return result;
+}
+
+std::vector<kitty::dynamic_truth_table> evaluate(const Subnet &subnet) {
+  std::vector<kitty::dynamic_truth_table> tables;
+  tables.reserve(subnet.size());
+
+  return evaluate(subnet, tables);
 }
 
 kitty::dynamic_truth_table computeCare(const Subnet &subnet) {

@@ -124,17 +124,19 @@ protected:
 
     Verdict verdict{UNSAT};
     bool isFeasible{false};
-    float progress{1.0};
+    float progress{1.};
     criterion::CostVector vector;
     criterion::CostVector tension;
   };
 
   virtual void onBegin(const SubnetBuilderPtr &oldBuilder) {
+    tryCount = 0;
     space.resize(oldBuilder->getMaxIdx() + 1);
-    tension = {1.0, 1.0, 1.0};
+    tension = {1., 1., 1.};
   }
 
   virtual void onRecovery(const Status &status) {
+    tryCount++;
     tension *= status.tension;
   }
 
@@ -163,6 +165,9 @@ protected:
 
   Status map(const SubnetBuilderPtr &builder, const bool enableEarlyRecovery);
 
+  // Maximum number of tries for recovery.
+  const uint16_t maxTries{3};
+
   const criterion::Criterion &criterion;
   const CutProvider cutProvider;
   const MatchFinder matchFinder;
@@ -170,7 +175,8 @@ protected:
   const CostAggregator costAggregator;
   const CostPropagator costPropagator;
 
-  // Changed during technology mapping.
+  // Modified during technology mapping.
+  uint16_t tryCount;
   SubnetSpace space;
   criterion::CostVector tension;
 };

@@ -324,9 +324,7 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
 
   SubnetBuilderPtr result = nullptr;
 
-  // Maximum number of tries for recovery.
-  constexpr uint16_t maxTries{3};
-  for (uint16_t tryCount = 0; tryCount < maxTries; ++tryCount) {
+  while (tryCount < maxTries) {
     const auto finalTry = (tryCount == maxTries - 1);
 
     // Do technology mapping.

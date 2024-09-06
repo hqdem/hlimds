@@ -61,7 +61,7 @@ std::shared_ptr<SubnetBuilder> techMap(
       "SubnetTechMapper",
       criterion,
       library::library->getMaxArity(),
-      80, // maxCutNum
+      10, // maxCutNum
       //cutProvider,
       matchFinder,
       estimator::getPPA);

@@ -16,7 +16,7 @@ namespace eda::gate::techmapper {
 #define UTOPIA_CUT_PROVIDER_LAMBDA()\
   [this](const model::SubnetBuilder &builder,\
          const model::EntryID entryID) -> optimizer::CutsList {\
-    computePriorityCuts(entryID);\
+    computePCuts(builder, entryID);\
     return cutExtractor->getCuts(entryID);\
   }
 
@@ -52,7 +52,8 @@ SubnetTechMapperPCut::SubnetTechMapperPCut(
                          cellEstimator),
     maxCutSize(maxCutSize), maxCutNum(maxCutNum) {}
 
-void SubnetTechMapperPCut::computePriorityCuts(const model::EntryID entryID) {
+void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
+                                        const model::EntryID entryID) {
   const size_t n = maxCutNum + 1 /* trivial cut */;
 
   cutExtractor->recomputeCuts(entryID);
@@ -73,6 +74,10 @@ void SubnetTechMapperPCut::computePriorityCuts(const model::EntryID entryID) {
       cost = criterion.getPenalizedCost(aggregation, tension);
     }
 
+    // TODO:
+    const auto matches = matchFinder(builder, cut);
+    cost /= (1. + matches.size());
+ 
     sorted[i] = {i, cost};
   }
 

@@ -40,7 +40,7 @@ std::shared_ptr<SubnetBuilder> techMap(
   criterion::Criterion criterion{objective, constraints};
 
   // Maximum number of cuts per cell
-  constexpr uint16_t maxCutNum = 8;
+  constexpr uint16_t maxCutNum = 4;
 
   // Set matcher type
   boolMatcher = Matcher<PBoolMatcher, std::size_t>::create(

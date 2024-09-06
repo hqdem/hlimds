@@ -40,8 +40,16 @@ protected:
   void onBegin(const SubnetBuilderPtr &oldBuilder) override {
     SubnetTechMapperBase::onBegin(oldBuilder);
 
+    cutsPerCell = maxCutNum;
     cutExtractor = std::make_unique<optimizer::CutExtractor>(
         oldBuilder.get(), maxCutSize, false /* extract on demand */);
+  }
+
+  bool onRecovery(const Status &status) override {
+    if (!SubnetTechMapperBase::onRecovery(status)) {
+      cutsPerCell = static_cast<uint16_t>(1.5 * cutsPerCell);
+    }
+    return true;
   }
 
 private:
@@ -51,6 +59,7 @@ private:
   const uint16_t maxCutSize;
   const uint16_t maxCutNum;
 
+  uint16_t cutsPerCell;
   std::unique_ptr<optimizer::CutExtractor> cutExtractor;
 };
 

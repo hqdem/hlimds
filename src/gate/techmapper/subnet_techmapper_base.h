@@ -135,9 +135,16 @@ protected:
     tension = {1., 1., 1.};
   }
 
-  virtual void onRecovery(const Status &status) {
+  virtual bool onRecovery(const Status &status) {
     tryCount++;
+
+    if (status.verdict == Status::UNSAT) {
+      // No chance: break the technology mapping.
+      return false;
+    }
+
     tension *= status.tension;
+    return true;
   }
 
   virtual void onEnd(const SubnetBuilderPtr &newBuilder) {

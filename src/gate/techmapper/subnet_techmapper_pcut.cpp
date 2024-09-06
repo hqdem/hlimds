@@ -54,7 +54,7 @@ SubnetTechMapperPCut::SubnetTechMapperPCut(
 
 void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
                                         const model::EntryID entryID) {
-  const size_t n = maxCutNum + 1 /* trivial cut */;
+  const size_t n = cutsPerCell + 1 /* trivial cut */;
 
   cutExtractor->recomputeCuts(entryID);
   if (cutExtractor->getCutNum(entryID) <= n) return;

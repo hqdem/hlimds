@@ -329,7 +329,6 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
 
     // Do technology mapping.
     const auto status = thisPtr->map(builder, !finalTry);
-    if (status.verdict == Status::UNSAT) break;
 
     if (status.verdict == Status::FOUND && (status.isFeasible || finalTry)) {
       UTOPIA_LOG_COST_VECTOR(
@@ -341,14 +340,15 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
       break;
     }
 
-    // Do recovery.
-    UTOPIA_LOG_COST_VECTOR(
-        "Solution is likely not to satisfy the constraints ("
-            << static_cast<unsigned>(100. * status.progress) << "%)",
-        status.vector);
+    if (status.verdict != Status::UNSAT) {
+      UTOPIA_LOG_COST_VECTOR(
+          "Solution is likely not to satisfy the constraints ("
+              << static_cast<unsigned>(100. * status.progress) << "%)",
+          status.vector);
+    }
 
     UTOPIA_LOG_INFO("Starting the recovery process");
-    thisPtr->onRecovery(status);
+    if (!thisPtr->onRecovery(status)) break;
   }
 
   if (!result) {

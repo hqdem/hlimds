@@ -13,9 +13,7 @@
 #include "gate/model/subnet.h"
 #include "gate/synthesizer/synthesizer.h"
 
-#include <algorithm>
 #include <cassert>
-#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -41,6 +39,12 @@ using ResetDomain = Domain;
 using EntryID = model::EntryID;
 
 class DesignBuilder final {
+public:
+  /// Index of virtual primary inputs subnet entry.
+  static constexpr size_t PISubnetEntryIdx = static_cast<size_t>(-1);
+  /// Index of virtual primary outputs subnet entry.
+  static constexpr size_t POSubnetEntryIdx = static_cast<size_t>(-2);
+
 private:
   /// Delete buffers when making subnets.
   static constexpr bool DeleteBuffers = true;
@@ -49,13 +53,79 @@ private:
 
 public:
   using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
+  using ConnectionDesc = NetDecomposer::ConnectionDesc;
+  using ArcToDesc = std::unordered_map<size_t, ConnectionDesc>;
+  using LinkToDesc = NetDecomposer::LinkToDesc;
   using SubnetToSubnetSet = std::vector<std::unordered_set<size_t>>;
+  using SubnetToArcDescs = std::vector<ArcToDesc>;
   using SubnetToFFSet = std::vector<std::unordered_set<EntryID>>;
 
   struct SubnetEntry {
-    SubnetEntry(const SubnetID subnetID,
-                const std::unordered_set<size_t> &arcs):
-      subnetID(subnetID), arcs(arcs) {};
+    SubnetEntry(
+        const SubnetID subnetID,
+        const std::unordered_set<size_t> &arcs,
+        const std::unordered_map<size_t, ConnectionDesc> &arcToDesc) {
+
+      this->subnetID = subnetID;
+      for (const auto &arcSubnet : arcs) {
+        if (arcSubnet == PISubnetEntryIdx) {
+          connectedPI = true;
+          PIArcDesc = arcToDesc.find(arcSubnet)->second;
+          continue;
+        }
+        if (arcSubnet == POSubnetEntryIdx) {
+          connectedPO = true;
+          POArcDesc = arcToDesc.find(arcSubnet)->second;
+          continue;
+        }
+        this->arcs.insert(arcSubnet);
+        this->arcToDesc[arcSubnet] = arcToDesc.find(arcSubnet)->second;
+      }
+    };
+
+    /**
+     * @brief Returns true if the currect entry has an input arc with the i-th
+     * entry index, false otherwise.
+     */
+    bool hasArc(const size_t i) const {
+      return arcs.find(i) != arcs.end();
+    }
+    /**
+     * @brief Returns true if the current entry has an input arc with the
+     * primary inputs of the net, false otherwise.
+     */
+    bool hasPIArc() const {
+      return connectedPI;
+    }
+    /**
+     * @brief Returns true if the current entry has an input arc with the
+     * primary outputs of the net, false otherwise.
+     */
+    bool hasPOArc() const {
+      return connectedPO;
+    }
+
+    /// Returns all fanin arcs (no PI and PO arcs) of the current subnet.
+    const std::unordered_set<size_t> &getInArcs() const {
+      return arcs;
+    }
+
+    /// Returns i-th entry arc descriptor.
+    const ConnectionDesc &getArcDesc(const size_t i) const {
+      const auto it = arcToDesc.find(i);
+      assert(it != arcToDesc.end() && "No such arc");
+      return it->second;
+    }
+    /// Returns primary inputs arc descriptor.
+    const ConnectionDesc &getPIArcDesc() const {
+      assert(hasPIArc());
+      return PIArcDesc;
+    }
+    /// Returns primary outputs arc descriptor.
+    const ConnectionDesc &getPOArcDesc() const {
+      assert(hasPOArc());
+      return POArcDesc;
+    }
 
     /// Check points.
     std::unordered_map<std::string, SubnetID> points;
@@ -63,8 +133,18 @@ public:
     SubnetID subnetID;
     /// Current subnet builder.
     SubnetBuilderPtr builder{nullptr};
-    /// Adjency list of connected subnets.
+    /// Adjency list of connected input subnets.
     std::unordered_set<size_t> arcs;
+    /// Arcs descriptors.
+    std::unordered_map<size_t, ConnectionDesc> arcToDesc;
+    /// Net's primary inputs connection flag.
+    bool connectedPI{false};
+    /// Net's primary inputs arc descriptor.
+    ConnectionDesc PIArcDesc;
+    /// Net's primary ouputs connection flag.
+    bool connectedPO{false};
+    /// Net's primary outputs arc descriptor.
+    ConnectionDesc POArcDesc;
   };
 
 private:
@@ -79,9 +159,12 @@ private:
     synthesizer::synthSoftBlocks(netID);
 
     std::vector<SubnetID> subnetIDs;
-    NetDecomposer::get().decompose(netID, subnetIDs, mapping);
-    auto adjList = getAdjList(subnetIDs);
-    setEntries(subnetIDs, adjList);
+    std::vector<NetDecomposer::EntryToDesc> ioEntryDesc;
+    NetDecomposer::get().decompose(netID, subnetIDs, mapping, ioEntryDesc);
+    SubnetToSubnetSet adjList;
+    SubnetToArcDescs arcDescs;
+    setAdjList(subnetIDs, ioEntryDesc, adjList, arcDescs);
+    setEntries(subnetIDs, adjList, arcDescs);
   }
 
   void initialize(const SubnetID subnetID) {
@@ -92,13 +175,35 @@ private:
     nOut = subnet.getOutNum();
 
     std::vector<SubnetID> subnetIDs;
-    NetDecomposer::get().decompose(subnetID, subnetIDs, mapping);
-    auto adjList = getAdjList(subnetIDs);
-    setEntries(subnetIDs, adjList);
+    std::vector<NetDecomposer::EntryToDesc> ioEntryDesc;
+    NetDecomposer::get().decompose(subnetID, subnetIDs, mapping, ioEntryDesc);
+    SubnetToSubnetSet adjList;
+    SubnetToArcDescs arcDescs;
+    setAdjList(subnetIDs, ioEntryDesc, adjList, arcDescs);
+    setEntries(subnetIDs, adjList, arcDescs);
+  }
+
+  std::pair<bool, EntryID> getPIConnectionEntry(const size_t i) const {
+    for (const auto &[oldLink, oldIdx] : mapping[i].inputs) {
+      const auto oldSourceID = oldLink.source.getCellID();
+      if (Cell::get(oldSourceID).getTypeID() == CELL_TYPE_ID_IN) {
+        return { true, oldIdx };
+      }
+    }
+    return { false, EntryID() };
+  }
+
+  std::pair<bool, EntryID> getPOConnectionEntry(const size_t i) const {
+    for (const auto &[oldLink, oldIdx] : mapping[i].outputs) {
+      const auto oldTargetID = oldLink.target.getCellID();
+      if (Cell::get(oldTargetID).getTypeID() == CELL_TYPE_ID_OUT) {
+        return { true, oldIdx };
+      }
+    }
+    return { false, EntryID() };
   }
 
 public:
-
   /// Constructs a design builder w/ the given name from the net.
   DesignBuilder(const std::string &name, const NetID netID):
       name(name), typeID(OBJ_NULL_ID) {
@@ -232,26 +337,6 @@ public:
   /// Returns the number of primary outputs.
   size_t getOutNum() const { return nOut; }
 
-  bool subnetLinkedWithPI(const size_t i) const {
-    for (const auto &[oldLink, oldIdx] : mapping[i].inputs) {
-      const auto oldSourceID = oldLink.source.getCellID();
-      if (Cell::get(oldSourceID).getTypeID() == CELL_TYPE_ID_IN) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool subnetLinkedWithPO(const size_t i) const {
-    for (const auto &[oldLink, oldIdx] : mapping[i].outputs) {
-      const auto oldTargetID = oldLink.target.getCellID();
-      if (Cell::get(oldTargetID).getTypeID() == CELL_TYPE_ID_OUT) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /// Returns the number of input/output/internal cells of the i-th subnet.
   std::tuple<EntryID, EntryID, EntryID> getCellNum(const size_t i,
                                                    const bool withBufs) const;
@@ -263,16 +348,6 @@ public:
       nInt += std::get<2>(getCellNum(i, withBufs));
     }
     return std::make_tuple(nIn, nOut, nInt);
-  }
-
-  /// Returns true if there is an arc between subnets, false otherwise.
-  bool isArc(const size_t from, const size_t to) const {
-    return subnets[from].arcs.find(to) != subnets[from].arcs.end();
-  }
-
-  /// Returns all fanout arcs of the i-th subnet.
-  std::unordered_set<size_t> getOutArcs(const size_t i) const {
-    return subnets[i].arcs;
   }
 
   /// Makes the subnets.
@@ -388,22 +463,28 @@ private:
 
   void setEntries(
       const std::vector<SubnetID> &subnetIDs,
-      const SubnetToSubnetSet &adjList) {
+      const SubnetToSubnetSet &adjList,
+      const SubnetToArcDescs &arcDescs) {
 
     for (size_t i = 0; i < subnetIDs.size(); ++i) {
-      subnets.emplace_back(subnetIDs[i], adjList[i]);
+      subnets.emplace_back(subnetIDs[i], adjList[i], arcDescs[i]);
     }
   }
 
-  SubnetToFFSet findFlipFlopPOs(
+  SubnetToFFSet findFlipFlopPIs(
       const std::vector<SubnetID> &subnetIDs) const;
 
   SubnetToSubnetSet findArcs(
       const std::vector<SubnetID> &subnetIDs,
-      const SubnetToFFSet &flipFlopPOs) const;
+      const std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc,
+      const SubnetToFFSet &flipFlopPOs,
+      SubnetToArcDescs &arcDesc) const;
 
-  SubnetToSubnetSet getAdjList(
-      const std::vector<SubnetID> &subnetIDs) const;
+  void setAdjList(
+      const std::vector<SubnetID> &subnetIDs,
+      const std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc,
+      SubnetToSubnetSet &adjList,
+      SubnetToArcDescs &arcDescs) const;
 
   // Clock domains.
   // TODO

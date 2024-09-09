@@ -16,6 +16,7 @@
 namespace eda::gate::model {
 
 using EntryID = model::EntryID;
+using SignalType = NetDecomposer::SignalType;
 
 std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder);
 

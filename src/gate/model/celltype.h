@@ -579,6 +579,7 @@ public:
   bool isDLatch()   const { return (symbol & ~FLGMASK) == DLATCH;   }
   bool isADLatch()  const { return (symbol & ~FLGMASK) == aDLATCH;  }
   bool isDLatchRs() const { return (symbol & ~FLGMASK) == DLATCHrs; }
+  bool isLatchRs()  const { return (symbol & ~FLGMASK) == LATCHrs;  }
 
   bool getClkEdge()  const { return model::getClkEdge(symbol);  }
   bool getEnaLevel() const { return model::getEnaLevel(symbol); }

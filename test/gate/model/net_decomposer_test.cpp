@@ -25,7 +25,8 @@ static std::vector<SubnetID> decomposeNet(NetID netID) {
 
   std::vector<SubnetID> subnets;
   std::vector<NetDecomposer::CellMapping> mapping;
-  NetDecomposer::get().decompose(netID, subnets, mapping);
+  std::vector<NetDecomposer::EntryToDesc> ioLinkDesc;
+  NetDecomposer::get().decompose(netID, subnets, mapping, ioLinkDesc);
 
 #ifdef UTOPIA_DEBUG
   for (const auto subnetID : subnets) {
@@ -95,7 +96,8 @@ TEST(NetDecomposerTest, CellReductionTest) {
 
   std::vector<SubnetID> subnets;
   std::vector<NetDecomposer::CellMapping> mapping;
-  NetDecomposer::get().decompose(netID, subnets, mapping);
+  std::vector<NetDecomposer::EntryToDesc> ioLinkDesc;
+  NetDecomposer::get().decompose(netID, subnets, mapping, ioLinkDesc);
 
 #ifdef UTOPIA_DEBUG
   for (const auto subnetID : subnets) {

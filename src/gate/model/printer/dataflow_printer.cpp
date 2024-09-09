@@ -10,65 +10,57 @@
 
 namespace eda::gate::model {
 
+const std::string labelHead = " [label=\"";
+const std::string labelTail = "\"];\n";
+
+const std::string colorHead = " [style=filled, color=\"";
+const std::string colorTail = " 0.8 1.0\"];\n";
+
 /**
- * @brief Returns true if the i-th subnet links PI and PO from the builder,
- * false otherwise.
+ * @brief Returns true if the i-th subnet links PI and PO from the builder and
+ * has no inner cells, false otherwise.
  */
 static bool isInOutLink(const DesignBuilder &builder, const size_t i) {
   const auto inOutInner = builder.getCellNum(i, true);
+  const auto &entry = builder.getEntry(i);
   uint32_t inN = std::get<0>(inOutInner);
   uint32_t outN = std::get<1>(inOutInner);
   uint32_t innerN = std::get<2>(inOutInner);
-  return builder.subnetLinkedWithPI(i) && builder.subnetLinkedWithPO(i) &&
+  return entry.hasPIArc() && entry.hasPOArc() &&
       !innerN && inN == 1 && outN == 1;
 }
 
-/**
- * @brief Prints vertices labels, finds subnet links, minimum and maximum
- * subnet size.
- */
-static void printLabels(
-    std::ostream &out,
-    const DesignBuilder &builder,
-    std::vector<std::vector<size_t>> &subnetLinks,
-    uint32_t &maxSubnetSize) {
-
-  const std::string labelHead = " [label=\"";
-  const std::string labelTail = "\"];\n";
-  const size_t nSubnet = builder.getSubnetNum();
-  const size_t designInNum = builder.getInNum(),
-               designOutNum = builder.getOutNum();
-
-  out << 0 << labelHead << "0 (" << designInNum << ", 0)" << labelTail;
-  for (size_t i = 0; i < nSubnet; ++i) {
-    const auto inOutInner = builder.getCellNum(i, true);
-    uint32_t inN = std::get<0>(inOutInner);
-    uint32_t outN = std::get<1>(inOutInner);
-    uint32_t innerN = std::get<2>(inOutInner);
-    if (isInOutLink(builder, i)) {
-      continue;
-    }
-    if (!i) {
-      maxSubnetSize = innerN;
-    } else {
-      maxSubnetSize = std::max(innerN, maxSubnetSize);
-    }
-
-    out << i + 1 << labelHead << innerN << " (" << inN << ", " << outN << ")" <<
-        labelTail;
-    const auto &outArcs = builder.getOutArcs(i);
-    for (const auto outArc : outArcs) {
-      subnetLinks[outArc].push_back(i);
-    }
-  }
-  out << nSubnet + 1 << labelHead << "0 (0, " << designOutNum << ")" <<
-      labelTail;
+/// Prints primary inputs label.
+static void printPILabel(std::ostream &out, const DesignBuilder &builder) {
+  const size_t designInNum = std::get<0>(builder.getCellNum(true));
+  out << DesignBuilder::PISubnetEntryIdx << labelHead << 0 << " (" <<
+      designInNum << ", " << 0 << ")" << labelTail;
 }
 
-/// @brief Finds the vertices hue according to the number of cells inside.
-static float findHue(
-    const uint32_t cellsNum,
-    const uint32_t maxSubnetSize) {
+/// Prints primary outputs label.
+static void printPOLabel(std::ostream &out, const DesignBuilder &builder) {
+  const size_t designOutNum = std::get<1>(builder.getCellNum(true));
+  out << DesignBuilder::POSubnetEntryIdx << labelHead << 0 << " (" <<
+      0 << ", " << designOutNum << ")" << labelTail;
+}
+
+/// Prints subnet entry label.
+static void printEntryLabel(
+    std::ostream &out,
+    const DesignBuilder &builder,
+    const size_t entryIdx) {
+
+  const auto inOutInner = builder.getCellNum(entryIdx, true);
+  uint32_t inN = std::get<0>(inOutInner);
+  uint32_t outN = std::get<1>(inOutInner);
+  uint32_t innerN = std::get<2>(inOutInner);
+
+  out << entryIdx << labelHead << innerN << " (" << inN << ", " << outN <<
+      ")" << labelTail;
+}
+
+/// Finds hue according to the number of cells inside the node.
+static float findHue(const uint32_t cellsNum, const uint32_t maxSubnetSize) {
   float hue = 0.f;
   if (maxSubnetSize >= 1e-6) {
     float ratio = static_cast<float>(cellsNum) / maxSubnetSize;
@@ -80,56 +72,100 @@ static float findHue(
   return hue;
 }
 
-/// @brief Prints vertices colors.
+/// Prints nodes' colors.
 static void printColors(
     std::ostream &out,
     const DesignBuilder &builder,
+    std::unordered_set<size_t> &printedLabels,
     const uint32_t maxSubnetSize) {
 
-  const std::string colorHead = " [style=filled, color=\"";
-  const std::string colorTail = " 0.8 1.0\"];\n";
   const size_t nSubnet = builder.getSubnetNum();
   float insHue = findHue(0, maxSubnetSize);
-  out << 0 << colorHead << insHue << colorTail;
+  out << DesignBuilder::PISubnetEntryIdx << colorHead << insHue << colorTail;
   for (size_t i = 0; i < nSubnet; ++i) {
-    const auto inOutInner = builder.getCellNum(i, true);
-    uint32_t innerN = std::get<2>(inOutInner);
-    if (isInOutLink(builder, i)) {
+    const auto inOutInnerN = builder.getCellNum(i, true);
+    uint32_t innerN = std::get<2>(inOutInnerN);
+    if (isInOutLink(builder, i) ||
+        printedLabels.find(i) == printedLabels.end()) {
       continue;
     }
-
     float hue = findHue(innerN, maxSubnetSize);
-    out << i + 1 << colorHead << hue << colorTail;
+    out << i << colorHead << hue << colorTail;
   }
   float outsHue = findHue(0, maxSubnetSize);
-  out << nSubnet + 1 << colorHead << outsHue << colorTail;
+  out << DesignBuilder::POSubnetEntryIdx << colorHead << outsHue << colorTail;
 }
 
-/// @brief Prints directed arcs between vertices.
-static void printArcs(
+static void printArc(
     std::ostream &out,
     const DesignBuilder &builder,
-    const std::vector<std::vector<size_t>> &subnetLinks) {
+    std::unordered_set<size_t> &printedLabel,
+    const size_t from,
+    const size_t to) {
+
+  if (printedLabel.find(from) == printedLabel.end()) {
+    if (from == DesignBuilder::PISubnetEntryIdx) {
+      printPILabel(out, builder);
+    } else {
+      printEntryLabel(out, builder, from);
+    }
+    printedLabel.insert(from);
+  }
+  if (printedLabel.find(to) == printedLabel.end()) {
+    if (to == DesignBuilder::POSubnetEntryIdx) {
+      printPOLabel(out, builder);
+    } else {
+      printEntryLabel(out, builder, to);
+    }
+    printedLabel.insert(to);
+  }
+  out << from << " -> " << to << ";\n";
+}
+
+/// @brief Prints directed arcs between nodes and finds max node size.
+static void printAllArcs(
+    std::ostream &out,
+    const DesignBuilder &builder,
+    std::unordered_set<size_t> &printedLabels,
+    uint32_t &maxSubnetSize) {
 
   const size_t nSubnet = builder.getSubnetNum();
   bool inOutLink = false;
   for (size_t i = 0; i < nSubnet; ++i) {
+    const auto entry = builder.getEntry(i);
+    maxSubnetSize =
+        std::max(maxSubnetSize, std::get<2>(builder.getCellNum(i, true)));
+
     if (isInOutLink(builder, i)) {
       inOutLink = true;
       continue;
     }
-    if (builder.subnetLinkedWithPI(i)) {
-      out << 0 << " -> " << i + 1 << ";\n";
+    if (entry.hasPIArc() &&
+        entry.getPIArcDesc().signalType == SignalType::DATA) {
+      printArc(out, builder, printedLabels, DesignBuilder::PISubnetEntryIdx, i);
     }
-    if (builder.subnetLinkedWithPO(i)) {
-      out << i + 1 << " -> " << nSubnet + 1 << ";\n";
+    if (entry.hasPOArc() &&
+        entry.getPOArcDesc().signalType == SignalType::DATA) {
+      printArc(out, builder, printedLabels, i, DesignBuilder::POSubnetEntryIdx);
     }
-    for (const auto link : subnetLinks[i]) {
-      out << link + 1 << " -> " << i + 1 << ";\n";
+    for (const auto link : entry.getInArcs()) {
+      if (entry.getArcDesc(link).signalType == SignalType::DATA) {
+        printArc(out, builder, printedLabels, link, i);
+      }
     }
   }
   if (inOutLink) {
-    out << 0 << " -> " << nSubnet + 1 << ";\n";
+    printArc(out, builder, printedLabels,
+        DesignBuilder::PISubnetEntryIdx,
+        DesignBuilder::POSubnetEntryIdx);
+  }
+  if (printedLabels.find(DesignBuilder::PISubnetEntryIdx) ==
+      printedLabels.end()) {
+    printPILabel(out, builder);
+  }
+  if (printedLabels.find(DesignBuilder::POSubnetEntryIdx) ==
+      printedLabels.end()) {
+    printPOLabel(out, builder);
   }
 }
 
@@ -137,13 +173,11 @@ std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder) {
   out << "digraph " << builder.getName() << " {\n";
   out << "graph [ranksep=2.0];\n";
 
-  const size_t nSubnet = builder.getSubnetNum();
   uint32_t maxSubnetSize = 0;
-  std::vector<std::vector<size_t>> subnetLinks(nSubnet);
+  std::unordered_set<size_t> printedLabels;
 
-  printLabels(out, builder, subnetLinks, maxSubnetSize);
-  printColors(out, builder, maxSubnetSize);
-  printArcs(out, builder, subnetLinks);
+  printAllArcs(out, builder, printedLabels, maxSubnetSize);
+  printColors(out, builder, printedLabels, maxSubnetSize);
 
   out << "}\n";
   return out;

@@ -26,6 +26,10 @@ namespace eda::gate::model {
 using LinkVec = std::vector<Link>;
 using LinkSet = std::unordered_set<Link>;
 using LinkMap = NetDecomposer::LinkMap;
+using SignalType = NetDecomposer::SignalType;
+using LinkDescVec = NetDecomposer::LinkDescVec;
+using LinkToDesc = NetDecomposer::LinkToDesc;
+using ConnectionDesc = NetDecomposer::ConnectionDesc;
 
 using CellVec = std::vector<CellID>;
 using CellSet = std::unordered_set<CellID>;
@@ -51,6 +55,54 @@ static inline CellInfo getCellInfo(const CellID cellID) {
 /// Gets information on the given cell (link-end).
 static inline CellInfo getCellInfo(const LinkEnd linkEnd) {
   return getCellInfo(linkEnd.getCellID());
+}
+
+/// Checks if the provided type has DFF pinout.
+static inline bool dffPinout(const CellType &type) {
+  return type.isDff() || type.isSDff() || type.isADff() || type.isDffRs();
+}
+
+/// Checks if the provided type has DLATCH pinout.
+static inline bool dlatchPinout(const CellType &type) {
+  return type.isDLatch() || type.isADLatch() || type.isDLatchRs();
+}
+
+/// Checks if the provided type has LATCHrs pinout.
+static inline bool latchRsPinout(const CellType &type) {
+  return type.isLatchRs();
+}
+
+static inline SignalType getSignalType(const Cell &cell, const uint16_t j) {
+  const auto &cellType = cell.getType();
+  if (cellType.isIn() || cellType.isOut()) {
+    return SignalType::DATA;
+  }
+  if (dffPinout(cellType)) {
+    switch (j) {
+      case CellPin::DFF_IN_D: return SignalType::DATA;
+      case CellPin::DFF_IN_CLK: return SignalType::CLOCK;
+      case CellPin::DFF_IN_RST: return SignalType::RESET;
+      case CellPin::DFF_IN_SET: return SignalType::SET;
+      default: assert(false && "Link number is too high for the cell type");
+    }
+  }
+  if (dlatchPinout(cellType)) {
+    switch (j) {
+      case CellPin::DLATCH_IN_D: return SignalType::DATA;
+      case CellPin::DLATCH_IN_ENA: return SignalType::ENABLE;
+      case CellPin::DLATCH_IN_RST: return SignalType::RESET;
+      case CellPin::DLATCH_IN_SET: return SignalType::SET;
+      default: assert(false && "Link number is too high for the cell type");
+    }
+  }
+  if (latchRsPinout(cellType)) {
+    switch (j) {
+      case CellPin::LATCHrs_IN_RST: return SignalType::RESET;
+      case CellPin::LATCHrs_IN_SET: return SignalType::SET;
+      default: assert(false && "Link number is too high for the cell type");
+    }
+  }
+  return SignalType::DATA;
 }
 
 //===----------------------------------------------------------------------===//
@@ -110,41 +162,61 @@ static inline bool isInputLink(const Link &link) {
       || (info.type.isSoft() && !info.type.isSubnet());
 }
 
-/// Stores the cell links to the given list.
-static inline void fillLinks(const CellID cellID, LinkVec &result) {
+/**
+ * @brief Stores the cell links to the given list and specifies connnected links
+ * descriptors.
+ */
+static inline void fillLinks(
+    const CellID cellID,
+    const ConnectionDesc *descToPropagate,
+    LinkDescVec &result) {
   const auto &cell = Cell::get(cellID);
   const auto links = cell.getLinks();
   for (uint16_t j = 0; j != links.size(); ++j) {
-    result.push_back(Link{links[j], LinkEnd{cellID, j}});
+    SignalType linkSignalType = (descToPropagate != nullptr) ?
+        descToPropagate->signalType : SignalType::DATA;
+    if (cell.getType().isSeqGate() && descToPropagate == nullptr) {
+       linkSignalType = getSignalType(cell, j);
+    }
+    const auto link = Link{links[j], LinkEnd{cellID, j}};
+    result.push_back({link, ConnectionDesc{linkSignalType}});
   }
 }
 
-/// Stores the cells links to the given list.
-static inline void fillLinks(const List<CellID> &cells, LinkVec &result) {
+/**
+ * @brief Stores the cells links to the given list and specifies connected links
+ * descriptors.
+ */
+static inline void fillLinks(
+    const List<CellID> &cells,
+    const ConnectionDesc *descToPropagate,
+    LinkDescVec &result) {
   for (auto i = cells.begin(); i != cells.end(); ++i) {
     const auto &type = Cell::get(*i).getType();
     if (!(type.isSoft() && type.isSubnet())) {
-      fillLinks(*i, result);
+      fillLinks(*i, descToPropagate, result);
     }
   }
 }
 
-/// Returns the cell links.
-static inline LinkVec getLinks(const CellID cellID) {
-  LinkVec links{};
-  fillLinks(cellID, links);
+/// Returns the cell links with connection descriptors.
+static inline LinkDescVec getLinks(
+    const CellID cellID,
+    const ConnectionDesc *desc) {
+  LinkDescVec links{};
+  fillLinks(cellID, desc, links);
   return links;
 }
 
 /// Returns the component outputs (primary outputs and block inputs).
-static inline LinkVec extractOutputs(const Net &net) {
-  LinkVec result{};
+static inline LinkDescVec extractOutputs(const Net &net) {
+  LinkDescVec result{};
   result.reserve(net.getCellNum());
 
-  fillLinks(net.getOutputs(),    result);
-  fillLinks(net.getFlipFlops(),  result);
-  fillLinks(net.getSoftBlocks(), result); // Skip synthesizable blocks.
-  fillLinks(net.getHardBlocks(), result);
+  fillLinks(net.getOutputs(),    nullptr, result);
+  fillLinks(net.getFlipFlops(),  nullptr, result);
+  fillLinks(net.getSoftBlocks(), nullptr, result); // Skip synthesizable blocks.
+  fillLinks(net.getHardBlocks(), nullptr, result);
 
   return result;
 }
@@ -154,11 +226,15 @@ struct NetComponent final {
   /// Inputs are links of the form <(src-cell:src-port), (0:0)>,
   /// i.e. only sources matter.
   LinkSet inputs;
+  /// Connnection descriptors of the primary inputs of the component.
+  LinkToDesc inputsDesc;
   /// Inner cells are just cells, not links (topologically sorted).
   CellVec inners;
   /// Outputs are links of the form <(src-cell:src-port), (dst-cell:dst-port)>,
   /// i.e. targets matter (especially flip-flops).
   LinkSet outputs;
+  /// Connnection descriptors of the primary ouputs of the component.
+  LinkToDesc outputsDesc;
 
   /// Checks whether the component is empty.
   bool empty() const {
@@ -168,15 +244,19 @@ struct NetComponent final {
   /// Resets the component state.
   void clear() {
     inputs.clear();
+    inputsDesc.clear();
     inners.clear();
     outputs.clear();
+    outputsDesc.clear();
   }
 
   /// Merges the component w/ this one.
   void merge(const NetComponent &rhs) {
     inputs.insert(rhs.inputs.begin(), rhs.inputs.end());
+    inputsDesc.insert(rhs.inputsDesc.begin(), rhs.inputsDesc.end());
     inners.insert(inners.end(), rhs.inners.begin(), rhs.inners.end());
     outputs.insert(rhs.outputs.begin(), rhs.outputs.end());
+    outputsDesc.insert(rhs.outputsDesc.begin(), rhs.outputsDesc.end());
   }
 };
 
@@ -187,12 +267,16 @@ struct NetTraversalEntry final {
   /// Checks if the entry corresponds to an output.
   bool isOutput() const { return cellID == OBJ_NULL_ID; }
   /// Checks if the entry is fully traversed.
-  bool isPassed() const { return linkIndex >= links.size(); }
+  bool isPassed() const { return linkIndex >= linkDesc.size(); }
   /// Returns the current link of the entry.
-  const Link &getLink() const { return links[linkIndex]; }
+  const Link &getLink() const { return linkDesc[linkIndex].first; }
+  /// Returns the current link descriptor of the entry.
+  const ConnectionDesc &getLinkDesc() const {
+    return linkDesc[linkIndex].second;
+  }
 
   const CellID cellID;
-  const LinkVec links;
+  const LinkDescVec linkDesc;
 
   size_t linkIndex;
 };
@@ -227,7 +311,7 @@ struct NetTraversalContext final {
   void pop() { stack.pop(); }
 
   /// Checks if the cell is new and pushes it to the stack.
-  void push(const CellID cellID) {
+  void push(const CellID cellID, const ConnectionDesc *desc) {
     const auto i = belongsTo.find(cellID);
     if (i != belongsTo.end()) {
       merging.insert(i->second);
@@ -237,14 +321,15 @@ struct NetTraversalContext final {
     const auto j = componentCells.find(cellID);
     if (j == componentCells.end()) {
       componentCells.insert(cellID);
-      stack.push(NetTraversalEntry{cellID, getLinks(cellID), 0});
+      stack.push(NetTraversalEntry{cellID, getLinks(cellID, desc), 0});
     }
   }
 
-  /// Adds the input link to the current component.
-  void addInput(const Link &link) {
+  /// Adds the input link with its descriptor to the current component.
+  void addInput(const Link &link, const ConnectionDesc &linkDesc) {
     // Using a set avoids duplicates.
     component.inputs.insert(link);
+    component.inputsDesc[link] = linkDesc;
   }
 
   /// Adds the inner cell to the current component.
@@ -252,9 +337,10 @@ struct NetTraversalContext final {
     component.inners.push_back(cellID);
   }
 
-  /// Adds the output link to the current component.
-  void addOutput(const Link &link) {
+  /// Adds the output link with its descriptor to the current component.
+  void addOutput(const Link &link, const ConnectionDesc &linkDesc) {
     component.outputs.insert(link);
+    component.outputsDesc[link] = linkDesc;
   }
 
   /// Merge the current component w/ the ones it depends on.
@@ -341,20 +427,21 @@ static std::vector<NetComponent> extractComponents(const Net &net) {
 
     if (!entry.isPassed()) {
       const auto &link = entry.getLink();
+      const auto &linkDesc = entry.getLinkDesc();
       const auto isInput = entry.isInput();
       const auto isOutput = entry.isOutput();
 
       if (isOutput) {
-        context.addOutput(makeOutputLink(link));
+        context.addOutput(makeOutputLink(link), linkDesc);
       }
       if (isInput) {
-        context.addInput(makeInputLink(link));
+        context.addInput(makeInputLink(link), linkDesc);
       }
 
       context.nextLink();
 
       if (!isInput) {
-        context.push(link.source.getCellID());
+        context.push(link.source.getCellID(), &linkDesc);
       }
     } else {
       // For topological ordering, add a cell right before popping.
@@ -366,10 +453,17 @@ static std::vector<NetComponent> extractComponents(const Net &net) {
   return context.components;
 }
 
-/// Makes a subnet for the given net component.
+/**
+ * @brief Makes a subnet for the given net component and specifies PI, PO
+ * connection descriptors.
+ */
 static SubnetID makeSubnet(
-    const Net &net, const NetComponent &component, CellMapping &mapping) {
+    const Net &net,
+    const NetComponent &component,
+    CellMapping &mapping,
+    std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc) {
   SubnetBuilder subnetBuilder;
+  ioEntryDesc.resize(ioEntryDesc.size() + 1);
 
   for (const auto &input : component.inputs) {
     const auto info = getCellInfo(input.source);
@@ -379,6 +473,7 @@ static SubnetID makeSubnet(
 
     const auto inputLink = makeInputLink(input);
     mapping.inputs.emplace(inputLink, link.idx);
+    ioEntryDesc.back()[link.idx] = component.inputsDesc.find(input)->second;
   }
 
   for (const auto &inner : component.inners) {
@@ -419,6 +514,7 @@ static SubnetID makeSubnet(
 
     const auto outputLink = makeOutputLink(output);
     mapping.outputs.emplace(outputLink, olink.idx);
+    ioEntryDesc.back()[olink.idx] = component.outputsDesc.find(output)->second;
   }
 
   const auto subnetID = subnetBuilder.make();
@@ -432,7 +528,8 @@ static SubnetID makeSubnet(
 
 bool NetDecomposer::decompose(const NetID netID,
                               std::vector<SubnetID> &subnets,
-                              std::vector<CellMapping> &mapping) const {
+                              std::vector<CellMapping> &mapping,
+                              std::vector<EntryToDesc> &ioEntryDesc) const {
   assert(netID != OBJ_NULL_ID);
   const auto &net = Net::get(netID);
   const auto components = extractComponents(net);
@@ -450,7 +547,7 @@ bool NetDecomposer::decompose(const NetID netID,
       }
 
       CellMapping subnetMapping;
-      subnets.push_back(makeSubnet(net, component, subnetMapping));
+      subnets.push_back(makeSubnet(net, component, subnetMapping, ioEntryDesc));
       mapping.push_back(subnetMapping);
     }
   }
@@ -466,12 +563,14 @@ ABORTED:
 
 bool NetDecomposer::decompose(const SubnetID subnetID,
                               std::vector<SubnetID> &subnets,
-                              std::vector<CellMapping> &mapping) const {
+                              std::vector<CellMapping> &mapping,
+                              std::vector<EntryToDesc> &ioEntryDesc) const {
   assert(subnetID != OBJ_NULL_ID);
   const auto &subnet = Subnet::get(subnetID);
 
   assert(subnets.empty());
   subnets.push_back(subnetID);
+  ioEntryDesc.resize(1);
 
   assert(mapping.empty());
   CellMapping subnetMapping;
@@ -482,12 +581,16 @@ bool NetDecomposer::decompose(const SubnetID subnetID,
     const auto cellID = makeCell(IN);
     const Link link{cellID, 0, OBJ_NULL_ID, 0};
     subnetMapping.inputs.emplace(link, i);
+    ioEntryDesc.back()[subnet.getInIdx(i)] =
+        {getSignalType(Cell::get(cellID), 0)};
   }
 
   for (size_t i = 0; i < subnet.getOutNum(); ++i) {
     const auto cellID = makeCell(OUT, LinkEnd());
     const Link link{OBJ_NULL_ID, 0, cellID, 0};
     subnetMapping.outputs.emplace(link, subnet.size() - subnet.getOutNum() + i);
+    ioEntryDesc.back()[subnet.getOutIdx(i)] =
+        {getSignalType(Cell::get(cellID), 0)};
   }
 
   mapping.push_back(subnetMapping);
@@ -599,7 +702,8 @@ static void makeCellsForInputs(NetBuilder &netBuilder,
     const auto newSourceID = makeCell(netBuilder, oldSourceID, inout);
 
     Link newLink{newSourceID, oldLink.source.getPort(), OBJ_NULL_ID, 0};
-    inverse[newIdx] = CellDescriptor{CellDescriptor::INPUT, newLink, OBJ_NULL_ID};
+    inverse[newIdx] =
+        CellDescriptor{CellDescriptor::INPUT, newLink, OBJ_NULL_ID};
   }
 }
 
@@ -649,7 +753,8 @@ static void makeCellsForOutputs(NetBuilder &netBuilder,
     netBuilder.connect(newTargetID, targetPort, newSource);
 
     Link newLink{newSource, LinkEnd{newTargetID, targetPort}};
-    inverse[newIdx] = CellDescriptor{CellDescriptor::OUTPUT, newLink, OBJ_NULL_ID};
+    inverse[newIdx] =
+        CellDescriptor{CellDescriptor::OUTPUT, newLink, OBJ_NULL_ID};
   }
 }
 

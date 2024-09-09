@@ -23,10 +23,28 @@ class NetDecomposer final : public util::Singleton<NetDecomposer> {
   friend class util::Singleton<NetDecomposer>;
 
 public:
+  /// Type of incoming signal.
+  enum SignalType {
+    DATA,
+    CLOCK,
+    RESET,
+    SET,
+    ENABLE,
+  };
+
+  struct ConnectionDesc final {
+    SignalType signalType;
+  };
+
   /// Maps net links to subnet input/output cell indices.
-  using LinkMap = std::unordered_map<Link, size_t>;
+  using LinkMap = std::unordered_map<Link, uint32_t>;
   /// Maps net cells to the subnet links corresponding to the output ports.
   using CellMap = std::unordered_map<CellID, Subnet::LinkList>;
+  /// Maps subnet entry index to connection descriptor.
+  using EntryToDesc = std::unordered_map<EntryID, ConnectionDesc>;
+
+  using LinkDescVec = std::vector<std::pair<Link, ConnectionDesc>>;
+  using LinkToDesc = std::unordered_map<Link, ConnectionDesc>;
 
   /// Maps net cells/links to subnet cell indices.
   struct CellMapping final {
@@ -36,15 +54,20 @@ public:
     LinkMap outputs; // Decomposition => composition.
   };
 
-  /// Decomposes the net into subnets and fills the cell mapping.
+  /**
+   * @brief Decomposes the net into subnets, fills the cell mapping and inputs
+   * outputs entries descriptors.
+   */
   bool decompose(const NetID netID,
                  std::vector<SubnetID> &subnets,
-                 std::vector<CellMapping> &mapping) const;
+                 std::vector<CellMapping> &mapping,
+                 std::vector<EntryToDesc> &ioEntryDesc) const;
 
   /// Imitates decomposition of the net consisting of a single subnet.
   bool decompose(const SubnetID subnetID,
                  std::vector<SubnetID> &subnet,
-                 std::vector<CellMapping> &mapping) const;
+                 std::vector<CellMapping> &mapping,
+                 std::vector<EntryToDesc> &ioEntryDesc) const;
 
   /// Composes the subnets into a net.
   NetID compose(const std::vector<SubnetID> &subnets,

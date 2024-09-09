@@ -83,40 +83,56 @@ void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
   }
 }
 
-DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPOs(
+DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPIs(
     const std::vector<SubnetID> &subnetIDs) const {
 
-  SubnetToFFSet flipFlopPOs(subnetIDs.size());
-  for (size_t i = 0; i < subnetIDs.size(); ++i) {
-    const auto &subnet = Subnet::get(subnetIDs[i]);
-    for (EntryID outN = 0; outN < subnet.getOutNum(); ++outN) {
-      const EntryID outEntryID = subnet.getOutIdx(outN);
-      const auto &outCell = subnet.getCell(outEntryID);
-      if (outCell.isFlipFlop()) {
-        flipFlopPOs[i].insert(outCell.flipFlopID);
-      }
-    }
-  }
-  return flipFlopPOs;
-}
-
-DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
-    const std::vector<SubnetID> &subnetIDs,
-    const SubnetToFFSet &flipFlopPOs) const {
-
-  SubnetToSubnetSet adjList(subnetIDs.size());
+  SubnetToFFSet flipFlopPIs(subnetIDs.size());
   for (size_t i = 0; i < subnetIDs.size(); ++i) {
     const auto &subnet = Subnet::get(subnetIDs[i]);
     for (EntryID inN = 0; inN < subnet.getInNum(); ++inN) {
       const EntryID inEntryID = subnet.getInIdx(inN);
       const auto &inCell = subnet.getCell(inEntryID);
-      if (!inCell.isFlipFlop()) {
+      if (inCell.isFlipFlop()) {
+        flipFlopPIs[i].insert(inCell.flipFlopID);
+      }
+    }
+  }
+  return flipFlopPIs;
+}
+
+DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
+    const std::vector<SubnetID> &subnetIDs,
+    const std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc,
+    const SubnetToFFSet &flipFlopPIs,
+    SubnetToArcDescs &arcDesc) const {
+
+  SubnetToSubnetSet adjList(subnetIDs.size());
+  arcDesc.resize(subnetIDs.size());
+  for (size_t i = 0; i < subnetIDs.size(); ++i) {
+    const auto &subnet = Subnet::get(subnetIDs[i]);
+    for (uint16_t outN = 0; outN < subnet.getOutNum(); ++outN) {
+      const EntryID outEntryID = subnet.getOutIdx(outN);
+      const auto &outCell = subnet.getCell(outEntryID);
+      const auto PILinking = getPIConnectionEntry(i);
+      const auto POLinking = getPOConnectionEntry(i);
+      if (PILinking.first) {
+        adjList[i].insert(PISubnetEntryIdx);
+        arcDesc[i][PISubnetEntryIdx] =
+            ioEntryDesc[i].find(PILinking.second)->second;
+      }
+      if (POLinking.first) {
+        adjList[i].insert(POSubnetEntryIdx);
+        arcDesc[i][POSubnetEntryIdx] =
+            ioEntryDesc[i].find(POLinking.second)->second;
+      }
+      if (!outCell.isFlipFlop()) {
         continue;
       }
-      const auto flipFlopID = inCell.flipFlopID;
-      for (size_t j = 0; j < flipFlopPOs.size(); ++j) {
-        if (flipFlopPOs[j].find(flipFlopID) != flipFlopPOs[j].end()) {
+      const auto flipFlopID = outCell.flipFlopID;
+      for (size_t j = 0; j < flipFlopPIs.size(); ++j) {
+        if (flipFlopPIs[j].find(flipFlopID) != flipFlopPIs[j].end()) {
           adjList[j].insert(i);
+          arcDesc[j][i] = ioEntryDesc[i].find(outEntryID)->second;
         }
       }
     }
@@ -124,10 +140,13 @@ DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
   return adjList;
 }
 
-DesignBuilder::SubnetToSubnetSet DesignBuilder::getAdjList(
-    const std::vector<SubnetID> &subnetIDs) const {
-  auto flipFlopPOs = findFlipFlopPOs(subnetIDs);
-  return findArcs(subnetIDs, flipFlopPOs);
+void DesignBuilder::setAdjList(
+    const std::vector<SubnetID> &subnetIDs,
+    const std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc,
+    SubnetToSubnetSet &adjList,
+    SubnetToArcDescs &arcDesc) const {
+  auto flipFlopPIs = findFlipFlopPIs(subnetIDs);
+  adjList = findArcs(subnetIDs, ioEntryDesc, flipFlopPIs, arcDesc);
 }
 
 } // namespace eda::gate::model

@@ -104,22 +104,21 @@ const Pin *ReadCellsIface::getOutputPin(
 const Expr *ReadCellsIface::getExprFunction(
     const std::string &name, uint number) {
   const auto *pin = getOutputPin(name, number);
+  const Expr *func = nullptr;
   if (pin != nullptr) {
-    const Expr *func = pin->getBexprAttribute("function");
-    return func;
-  } else {
-    return nullptr;
+    func = pin->getBexprAttribute("function");
   }
+  return func;
 }
 
 const std::string ReadCellsIface::getStringFunction(
     const std::string &name, uint number) {
-  const auto *func = getExprFunction(name, number);
+  const Expr *func = getExprFunction(name, number);
+  std::string result;
   if (func != nullptr) {
-    return exprToString(func);
-  } else {
-    return "";
+    result = exprToString(func);
   }
+  return result;
 }
 
 std::vector<std::string> ReadCellsIface::getCells() {

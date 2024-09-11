@@ -257,17 +257,18 @@ void NetPrinterVerilog::onModelEnd(std::ostream &out,
 }
 
 void NetPrinterVerilog::onInterfaceBegin(std::ostream &out) {
-  if (printOriginalInterface) return;
-
-  // Space before "(" is for escaped identifiers.
-  out << " (\n";
   pins.clear();
+
+  if (!printOriginalInterface) {
+    // Space before "(" is for escaped identifiers.
+    out << " (\n";
+  }
 }
 
 void NetPrinterVerilog::onInterfaceEnd(std::ostream &out) {
-  if (printOriginalInterface) return;
-
-  out << "\n);\n";
+  if (!printOriginalInterface) {
+    out << "\n);\n";
+  }
 }
 
 void NetPrinterVerilog::onType(std::ostream &out, const CellType &cellType) {

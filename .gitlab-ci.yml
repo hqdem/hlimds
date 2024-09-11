@@ -18,7 +18,6 @@ stages:
   - test
   - coverage
   - valgrind
-  - trigger_others
 
 build_project:
   stage: build
@@ -30,9 +29,6 @@ build_project:
     - cd ${UTOPIA_HOME}
     - cmake -S ${UTOPIA_HOME} -B ${BUILD_DIR} -G Ninja
     - cmake --build ${BUILD_DIR}
-
-  rules:
-    - if: '$CI_PIPELINE_SOURCE != "schedule"'
 
   artifacts:
     expire_in: 90 min
@@ -49,9 +45,6 @@ test_project:
     - rm -rf ${UTOPIA_HOME}/output
     - mkdir -p $(dirname ${TEST_REPORTS_PATH})
     - ${BUILD_PATH}/test/utest --gtest_output="xml:${TEST_REPORTS_PATH}"
-
-  rules:
-    - if: '$CI_PIPELINE_SOURCE != "schedule"'
 
   dependencies:
     - build_project
@@ -86,9 +79,6 @@ get_coverage_info:
             --cobertura ${BUILD_PATH}/coverage.xml --cobertura-pretty
             --gcov-ignore-errors all
             --print-summary
-
-  rules:
-    - if: '$CI_PIPELINE_SOURCE != "schedule"'
   when: always
 
   dependencies:
@@ -111,9 +101,6 @@ valgrind_test_demo:
 
   script:
     - valgrind ${BUILD_PATH}/test/utest --gtest_filter=MiterTest*
-
-  rules:
-    - if: '$CI_PIPELINE_SOURCE != "schedule"'
   when: manual
 
   dependencies:
@@ -123,46 +110,3 @@ valgrind_test_demo:
     expire_in: 10 min
     paths:
       - ${BUILD_PATH}
-
-night_build:
-  stage: build
-  tags:
-    - docker
-  script:
-    - rm -rf ${BUILD_PATH}
-    - cd ${UTOPIA_HOME}
-    - cmake -S ${UTOPIA_HOME} -B ${BUILD_DIR} -G Ninja
-    - cmake --build ${BUILD_DIR}
-
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-
-trigger_utopia_testing:
-  stage: trigger_others
-  script:
-    - curl -X POST -F token=$UTOPIA_TESTING_BUILD -F ref=main https://gitlab.ispras.ru/api/v4/projects/1645/trigger/pipeline
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-  needs:
-    - night_build
-  when: on_success
-
-trigger_intellect:
-  stage: trigger_others
-  script:
-    - curl -X POST -F token=$INTELLECT_BUILD -F ref=main https://gitlab.ispras.ru/api/v4/projects/2070/trigger/pipeline
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-  needs:
-    - night_build
-  when: on_success
-
-trigger_intellect_testing:
-  stage: trigger_others
-  script:
-    - curl -X POST -F token=$INTELLECT_TESTING_BUILD -F ref=main https://gitlab.ispras.ru/api/v4/projects/2072/trigger/pipeline
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-  needs:
-    - trigger_intellect
-  when: on_success

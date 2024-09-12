@@ -87,6 +87,7 @@ add_executable(${TEST_TARGET}
   gate/simulator/simulator_test.cpp
   gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/synthesizer/addition_test.cpp
+  gate/synthesizer/bitwise_test.cpp
   gate/synthesizer/comparison_test.cpp
   gate/synthesizer/shift_test.cpp
   gate/techmapper/matcher_test.cpp

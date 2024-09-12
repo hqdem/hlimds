@@ -21,6 +21,7 @@ namespace eda::util {
 template <class NumType, class Allocator = std::allocator<NumType>>
 class BoundedSet final {
   static_assert(std::is_integral_v<NumType>, "NumType must be integral");
+  friend std::hash<BoundedSet<NumType, Allocator>>;
 
   typedef NumType* iterator;
   typedef uint16_t SizeType;    
@@ -117,7 +118,7 @@ public:
   iterator find(NumType num) const;
 
   /**
-   * @brief AAllows to fill an already
+   * @brief Allows to fill an already
    * existing BoundedSet with elements of std::unordered_set.
    */
   BoundedSet<NumType, Allocator> &operator=
@@ -415,3 +416,11 @@ bool BoundedSet<NumType, Allocator>::operator==(
 }
 
 } // namespace eda::util
+
+template <class NumType, class Allocator>
+struct std::hash<eda::util::BoundedSet<NumType, Allocator>> {
+  size_t operator()(
+      const eda::util::BoundedSet<NumType, Allocator> &bset) const noexcept {
+    return bset.signature;
+  }
+};

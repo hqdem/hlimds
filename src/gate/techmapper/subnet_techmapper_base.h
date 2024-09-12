@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <functional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -133,6 +134,7 @@ protected:
     tryCount = 0;
     space.resize(oldBuilder->getMaxIdx() + 1);
     tension = {1., 1., 1.};
+    cutMatches.clear();
   }
 
   virtual bool onRecovery(const Status &status) {
@@ -172,6 +174,17 @@ protected:
 
   Status map(const SubnetBuilderPtr &builder, const bool enableEarlyRecovery);
 
+  std::vector<Match> &getMatches(const model::SubnetBuilder &builder,
+                                 const optimizer::Cut &cut) {
+    const auto i = cutMatches.find(cut);
+    if (i != cutMatches.end()) {
+      return i->second;
+    }
+
+    const auto j = cutMatches.emplace(cut, matchFinder(builder, cut));
+    return j.first->second;
+  }
+
   // Maximum number of tries for recovery.
   const uint16_t maxTries{3};
 
@@ -182,10 +195,13 @@ protected:
   const CostAggregator costAggregator;
   const CostPropagator costPropagator;
 
-  // Modified during technology mapping.
+  // State modified during technology mapping.
   uint16_t tryCount;
   SubnetSpace space;
   criterion::CostVector tension;
+
+  // Cache of matches (to speed up multiple tries).
+  std::unordered_map<optimizer::Cut, std::vector<Match>> cutMatches;
 };
 
 } // namespace eda::gate::techmapper

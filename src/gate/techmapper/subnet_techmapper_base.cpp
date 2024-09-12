@@ -52,8 +52,11 @@ static criterion::CostVector defaultCostPropagator(
   criterion::CostVector result;
 
   const auto divisor = fanout ? fanout : 1;
+  // Area flow heuristic.
   result[criterion::AREA]  = vector[criterion::AREA] / divisor;
+  // Time delay propagation.
   result[criterion::DELAY] = vector[criterion::DELAY];
+  // Power flow heuristic.
   result[criterion::POWER] = vector[criterion::POWER] / divisor;
 
   return result;
@@ -273,7 +276,7 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
         continue;
       }
 
-      const auto matches = matchFinder(*builder, cut);
+      const auto &matches = getMatches(*builder, cut);
 
       for (const auto &match : matches) {
         const auto cellCostVector = cellEstimator(match.typeID, Context{});

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "util/bounded_set.h"
+#include "util/hash.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -35,6 +36,11 @@ struct Cut final {
   Cut(const uint16_t k, const model::EntryID rootID, const bool isImmutable):
       Cut(rootID, Set(k, rootID, isImmutable)) {}
 
+  /// Compares this cut w/ the other one.
+  bool operator==(const Cut &other) const {
+    return rootID == other.rootID && leafIDs == other.leafIDs;
+  }
+
   /// Returns the maximum size of the cut.
   uint16_t getK() const {
     return leafIDs.capacity();
@@ -56,10 +62,19 @@ struct Cut final {
         && other.leafIDs.contains(leafIDs);
   }
 
-  const model::EntryID rootID;
+  model::EntryID rootID;
   Set leafIDs /* modifiable */;
 };
 
 using CutsList = std::vector<Cut>;
 
 } // namespace eda::gate::optimizer
+
+template <>
+struct std::hash<eda::gate::optimizer::Cut> {
+  size_t operator()(const eda::gate::optimizer::Cut &cut) const noexcept {
+    size_t h = std::hash<eda::gate::model::EntryID>{}(cut.rootID);
+    eda::util::hash_combine<eda::gate::optimizer::Cut::Set>(h, cut.leafIDs);
+    return h;
+  }
+};

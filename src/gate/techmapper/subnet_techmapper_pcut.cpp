@@ -60,6 +60,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
   if (cutExtractor->getCutNum(entryID) <= n) return;
 
   auto cuts = cutExtractor->getCuts(entryID);
+  std::vector<std::vector<Match>> matches(cuts.size());
   std::vector<std::pair<size_t, criterion::Cost>> sorted(cuts.size());
 
   for (size_t i = 0; i < cuts.size(); ++i) {
@@ -74,9 +75,9 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
       cost = criterion.getPenalizedCost(aggregation, tension);
     }
 
-    // TODO:
-    const auto matches = matchFinder(builder, cut);
-    cost /= (matches.size() + .25);
+    // No matches => large cost.
+    matches[i] = matchFinder(builder, cut);
+    cost /= (matches[i].size() + .25);
  
     sorted[i] = {i, cost};
   }
@@ -89,7 +90,13 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
   pcuts.reserve(n);
 
   for (size_t i = 0; i < n; ++i) {
-    pcuts.push_back(cuts[sorted[i].first]);
+    const auto index = sorted[i].first;
+    const auto &pcut = cuts[index];
+
+    // Store priority cuts.
+    pcuts.push_back(pcut);
+    // Cache the cut matches.
+    cutMatches.emplace(pcut, matches[index]);
   }
 
   cutExtractor->setCuts(entryID, pcuts);

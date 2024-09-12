@@ -40,26 +40,28 @@ add_subdirectory(util)
 add_subdirectory(diag)
 add_subdirectory(gate)
 add_subdirectory(rtl)
+add_subdirectory(shell)
 
-add_library(Shell OBJECT
-  shell/shell.cpp
+add_library(Umain OBJECT
+  umain.cpp
 )
-add_library(Utopia::Shell ALIAS Shell)
+add_library(Utopia::Umain ALIAS Umain)
 
-target_include_directories(Shell
+target_include_directories(Umain
   PUBLIC
     ${PROJECT_SOURCE_DIR}/src
   PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR} # config.h
 )
 
-target_link_libraries(Shell
+target_link_libraries(Umain
   PUBLIC
     Utopia::Diag
     Utopia::Gate
     Utopia::RILParser
     Utopia::RTL
     Utopia::Util
+    Utopia::Shell
     Yosys::Yosys
   PRIVATE
     CLI
@@ -82,6 +84,7 @@ target_link_libraries(${MAIN_LIBRARY}
     Utopia::RTL
     Utopia::Shell
     Utopia::Util
+    Utopia::Umain
     Yosys::Yosys
 )
 

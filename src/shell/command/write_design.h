@@ -91,25 +91,22 @@ struct WriteDesignCommand : public UtopiaCommand {
   size_t subnetIndex;
 };
 
-struct WriteDebugCommand final :
-    public UtopiaCommandBase<WriteDebugCommand, WriteDesignCommand> {
-  WriteDebugCommand(): UtopiaCommandBase(
+struct WriteDebugCommand final : public WriteDesignCommand {
+  WriteDebugCommand(): WriteDesignCommand(
           "write_debug", "Writes the design to a debug file") {
     setFormat(eda::gate::model::DEBUG);
   }
 };
 
-struct WriteDotCommand final :
-    public UtopiaCommandBase<WriteDotCommand, WriteDesignCommand> {
-  WriteDotCommand(): UtopiaCommandBase(
+struct WriteDotCommand final : public WriteDesignCommand {
+  WriteDotCommand(): WriteDesignCommand(
           "write_dot", "Writes the design to a DOT file") {
     setFormat(eda::gate::model::DOT);
   }
 };
 
-struct WriteVerilogCommand final :
-    public UtopiaCommandBase<WriteVerilogCommand, WriteDesignCommand> {
-  WriteVerilogCommand(): UtopiaCommandBase(
+struct WriteVerilogCommand final : public WriteDesignCommand {
+  WriteVerilogCommand(): WriteDesignCommand(
           "write_verilog", "Writes the design to a Verilog file") {
     setFormat(eda::gate::model::VERILOG);
   }

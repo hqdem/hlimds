@@ -12,8 +12,8 @@
 
 namespace eda::shell {
 
-struct ListPointsCommand final : public UtopiaCommandBase<ListPointsCommand> {
-  ListPointsCommand(): UtopiaCommandBase(
+struct ListPointsCommand final : public UtopiaCommand {
+  ListPointsCommand(): UtopiaCommand(
       "list_points", "Lists the design checkpoints") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {

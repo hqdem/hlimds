@@ -13,8 +13,8 @@
 
 namespace eda::shell {
 
-struct VersionCommand final : public UtopiaCommandBase<VersionCommand> {
-  VersionCommand(): UtopiaCommandBase(
+struct VersionCommand final : public UtopiaCommand {
+  VersionCommand(): UtopiaCommand(
       "version", "Prints Utopia EDA version") {}
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {

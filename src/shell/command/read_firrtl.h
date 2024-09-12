@@ -14,8 +14,8 @@
 
 namespace eda::shell {
 
-struct ReadFirrtlCommand final : public UtopiaCommandBase<ReadFirrtlCommand> {
-  ReadFirrtlCommand(): UtopiaCommandBase(
+struct ReadFirrtlCommand final : public UtopiaCommand {
+  ReadFirrtlCommand(): UtopiaCommand(
       "read_firrtl", "Reads a design from a FIRRTL file") {
     app.allow_extras();
   }

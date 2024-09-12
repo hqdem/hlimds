@@ -13,8 +13,8 @@
 
 namespace eda::shell {
 
-struct ReadLibertyCommand final : public UtopiaCommandBase<ReadLibertyCommand> {
-  ReadLibertyCommand(): UtopiaCommandBase(
+struct ReadLibertyCommand final : public UtopiaCommand {
+  ReadLibertyCommand(): UtopiaCommand(
       "read_liberty", "Reads a library from a Liberty file") {
     app.allow_extras();
   }

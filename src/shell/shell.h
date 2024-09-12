@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "context/utopia_context.h"
 #include "diag/logger.h"
 #include "diag/terminal_printer.h"
 #include "gate/model/design.h"
@@ -160,15 +161,15 @@ class UtopiaShell;
  * @brief Utopia EDA shell command interface.
  */
 struct UtopiaCommand {
-  UtopiaCommand(const char *name, const char *desc):
-      name(name), desc(desc), app(desc, name) {
+  UtopiaCommand(const char *name, const char *desc, bool useDefTCLProc = false):
+      name(name), desc(desc), app(desc, name), useDefaultTclProc(useDefTCLProc) {
     // CLI::App adds the help option, but it is not required.
     auto *helpOption = app.get_help_ptr();
     if (helpOption) {
       app.remove_option(helpOption);
     }
   }
-
+  virtual ~UtopiaCommand() = default;
   virtual int run(Tcl_Interp *interp, int argc, const char *argv[]) = 0;
 
   virtual int runEx(Tcl_Interp *interp, int argc, const char *argv[]) {
@@ -187,11 +188,19 @@ struct UtopiaCommand {
     return status;
   }
 
-  /// Returns a command processor pointer to be used in Tcl_CreateCommand.
-  virtual Tcl_CmdProc *getCmdProc() const = 0;
-
   void printHelp(std::ostream &out) const {
     out << app.help() << std::flush;
+  }
+
+  static int addCmd(ClientData clientData, Tcl_Interp *interp,
+                    int argc, const char *argv[]) {
+    return (reinterpret_cast<UtopiaCommand*>(clientData))->
+              runEx (interp, argc, argv);
+  }
+
+  void setContext(eda::context::UtopiaContext *uContext) {
+    assert(uContext);
+    context = uContext;
   }
 
   const char *name;
@@ -201,53 +210,42 @@ struct UtopiaCommand {
   diag::TerminalPrinter printer;
 
   UtopiaShell *shell;
-
+  eda::context::UtopiaContext *context = nullptr;
+  
   CLI::App app;
-};
-
-/*
- * @brief Utopia EDA shell command base class.
- */
-template <typename Command, typename BaseCommand = UtopiaCommand>
-struct UtopiaCommandBase : public BaseCommand,
-                           public eda::util::Singleton<Command> {
-  UtopiaCommandBase(const char *name, const char *desc):
-      BaseCommand(name, desc) {}
-
-  Tcl_CmdProc *getCmdProc() const override {
-    return [](ClientData,
-              Tcl_Interp *interp,
-              int argc,
-              const char *argv[]) -> int {
-      auto &cmd = Command::get();
-      return cmd.runEx(interp, argc, argv);
-    };
-  }
+  bool useDefaultTclProc = false;
 };
 
 /**
  * @brief Utopia EDA shell.
  */
-class UtopiaShell : public eda::util::Singleton<UtopiaShell> {
-  friend class eda::util::Singleton<UtopiaShell>;
-
+class UtopiaShell {
 public:
+  UtopiaShell();
   virtual std::string getName() const { return "Utopia EDA"; }
 
   virtual void printTitle(Tcl_Interp *interp);
 
-  void addCommand(UtopiaCommand *command) {
+  void addCommand(std::unique_ptr<UtopiaCommand> command) {
     assert(command);
-    commands.emplace(std::string(command->name), command);
     command->shell = this;
+    commands.emplace(std::string(command->name), std::move(command));
+  }
+
+  void setContext(eda::context::UtopiaContext *context) {
+    assert(context);
+    for (const auto &[name, command] : commands) {
+      command->setContext(context);
+    }
   }
 
   UtopiaCommand *getCommand(const std::string &name) const {
     auto i = commands.find(name);
-    return i != commands.end() ? i->second : nullptr;
+    return i != commands.cend() ? i->second.get() : nullptr;
   }
 
-  const std::map<std::string, UtopiaCommand*> &getCommands() const {
+  const std::map<std::string, std::unique_ptr<UtopiaCommand>>
+        &getCommands() const {
     return commands;
   }
 
@@ -266,37 +264,26 @@ public:
     out << std::endl << std::flush;
   }
 
-  virtual Tcl_AppInitProc *getAppInitProc() const {
-    return UtopiaShell::getAppInitProc<UtopiaShell>();
-  }
-
   virtual ~UtopiaShell() {}
 
-protected:
-  template <typename Shell>
-  static Tcl_AppInitProc *getAppInitProc() {
-    return [](Tcl_Interp *interp) -> int {
-      if ((Tcl_Init)(interp) == TCL_ERROR) {
-        return TCL_ERROR;
+  int appInitProc(Tcl_Interp *interp) const {
+    if ((Tcl_Init)(interp) == TCL_ERROR) {
+      return TCL_ERROR;
+    }
+
+    for (const auto &[name, command] : commands) {
+      if (!command->useDefaultTclProc) {
+        // Otherwise use the default processor (e.g. exit).
+        Tcl_CreateCommand(interp, name.c_str(), command->addCmd,
+                          reinterpret_cast<ClientData>(command.get()), nullptr);
       }
+    } // [name, command]
 
-      auto &shell = Shell::get();
-      for (const auto &[name, command] : shell.getCommands()) {
-        auto *proc = command->getCmdProc();
-
-        if (proc) {
-          // Otherwise use the default processor (e.g. exit).
-          Tcl_CreateCommand(interp, name.c_str(), proc, nullptr, nullptr);
-        }
-      } // [name, command]
-
-      return TCL_OK;
-    };
+    return TCL_OK;
   }
 
-  UtopiaShell();
-
-  std::map<std::string, UtopiaCommand*> commands;
+protected:
+  std::map<std::string, std::unique_ptr<UtopiaCommand>> commands;
 };
 
 /// @brief Returns the design being synthesized.
@@ -313,7 +300,3 @@ bool setDesign(const eda::gate::model::SubnetID subnetID, diag::Logger &logger);
 void deleteDesign();
 
 } // namespace eda::shell
-
-int umain(eda::shell::UtopiaShell &shell, int argc, char **argv);
-
-int umain(int argc, char **argv);

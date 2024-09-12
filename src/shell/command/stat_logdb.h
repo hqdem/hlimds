@@ -13,8 +13,8 @@
 
 namespace eda::shell {
 
-struct StatLogDbCommand final : public UtopiaCommandBase<StatLogDbCommand> {
-  StatLogDbCommand(): UtopiaCommandBase(
+struct StatLogDbCommand final : public UtopiaCommand {
+  StatLogDbCommand(): UtopiaCommand(
       "stat_logdb", "Prints information about a logopt database") {
     app.add_option("--otype", outputType)->expected(1);
     app.add_option("--out", outputFile)->expected(1);

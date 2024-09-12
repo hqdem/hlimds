@@ -8,18 +8,10 @@
 
 #pragma once
 
+#include "context/utopia_context.h"
 #include "shell/shell.h"
 
-namespace eda::shell {
-
-struct ExitCommand final : public UtopiaCommand {
-  ExitCommand(): UtopiaCommand(
-      "exit", "Closes the interactive shell", true) {}
-
-  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    return TCL_OK;
-  }
-
-};
-
-} // namespace eda::shell
+int umain(eda::shell::UtopiaShell &shell,
+          eda::context::UtopiaContext &context,
+          int argc, char **argv);
+int umain(int argc, char **argv);

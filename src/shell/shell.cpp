@@ -83,29 +83,29 @@ static int printUtopiaFile(Tcl_Interp *interp, const std::string &fileName) {
 }
 
 UtopiaShell::UtopiaShell() {
-  addCommand(&DeleteDesignCommand::get());
-  addCommand(&GotoPointCommand::get());
-  addCommand(&ExitCommand::get());
-  addCommand(&HelpCommand::get());
-  addCommand(&LecCommand::get());
-  addCommand(&ListPointsCommand::get());
-  addCommand(&LogOptCommand::get());
-  addCommand(&ReadFirrtlCommand::get());
-  addCommand(&ReadGraphMlCommand::get());
-  addCommand(&ReadLibertyCommand::get());
-  addCommand(&SavePointCommand::get());
-  addCommand(&SetNameCommand::get());
-  addCommand(&StatDesignCommand::get());
-  addCommand(&StatLogDbCommand::get());
-  addCommand(&TechMapCommand::get());
+  addCommand(std::make_unique<DeleteDesignCommand>());
+  addCommand(std::make_unique<GotoPointCommand>());
+  addCommand(std::make_unique<ExitCommand>());
+  addCommand(std::make_unique<HelpCommand>());
+  addCommand(std::make_unique<LecCommand>());
+  addCommand(std::make_unique<ListPointsCommand>());
+  addCommand(std::make_unique<LogOptCommand>());
+  addCommand(std::make_unique<ReadFirrtlCommand>());
+  addCommand(std::make_unique<ReadGraphMlCommand>());
+  addCommand(std::make_unique<ReadLibertyCommand>());
+  addCommand(std::make_unique<SavePointCommand>());
+  addCommand(std::make_unique<SetNameCommand>());
+  addCommand(std::make_unique<StatDesignCommand>());
+  addCommand(std::make_unique<StatLogDbCommand>());
+  addCommand(std::make_unique<TechMapCommand>());
 #ifdef UTOPIA_SHELL_ENABLE_VERILOG_TO_FIR
-  addCommand(&VerilogToFirCommand::get());
+  addCommand(std::make_unique<VerilogToFirCommand>());
 #endif // UTOPIA_SHELL_ENABLE_VERILOG_TO_FIR
-  addCommand(&VersionCommand::get());
-  addCommand(&WriteDataflowCommand::get());
-  addCommand(&WriteDebugCommand::get());
-  addCommand(&WriteDotCommand::get());
-  addCommand(&WriteVerilogCommand::get());
+  addCommand(std::make_unique<VersionCommand>());
+  addCommand(std::make_unique<WriteDataflowCommand>());
+  addCommand(std::make_unique<WriteDebugCommand>());
+  addCommand(std::make_unique<WriteDotCommand>());
+  addCommand(std::make_unique<WriteVerilogCommand>());
 }
 
 void UtopiaShell::printTitle(Tcl_Interp *interp) {
@@ -115,84 +115,3 @@ void UtopiaShell::printTitle(Tcl_Interp *interp) {
 
 } // namespace eda::shell
 
-int umain(eda::shell::UtopiaShell &shell, int argc, char **argv) {
-  UTOPIA_INITIALIZE_LOGGER();
-
-  CLI::App app{shell.getName()};
-
-  std::string path = "";
-  std::string script = "";
-  bool interactiveMode = false;
-  bool exitAfterEval = false;
-  auto *fileMode = app.add_option(
-      "-s, --script",
-      path,
-      "Executes a TCL script from a file");
-  auto *evalMode = app.add_option(
-      "-e, --evaluate",
-      script,
-      "Executes a TCL script from the terminal");
-  app.add_flag(
-      "-i, --interactive",
-      interactiveMode,
-      "Enters to interactive mode");
-  app.allow_extras();
-
-  CLI11_PARSE(app, argc, argv);
-
-  Tcl_FindExecutable(argv[0]);
-  Tcl_Interp *interp = Tcl_CreateInterp();
-  Tcl_AppInitProc *appInitProc = shell.getAppInitProc();
-
-  if (appInitProc(interp) == TCL_ERROR) {
-    UTOPIA_SHELL_ERR << "Failed to initialize a Tcl interpreter" << std::endl;
-    return 1;
-  }
-
-  shell.printTitle(interp);
-
-  int rc = 0;
-  if (fileMode->count()) {
-    std::vector<std::string> scriptArgs = app.remaining();
-    const char *fileName = path.c_str();
-
-    Tcl_Obj *tclArgv0 = Tcl_NewStringObj(fileName, -1);
-    Tcl_SetVar2Ex(interp, "argv0", nullptr, tclArgv0, TCL_GLOBAL_ONLY);
-
-    Tcl_Obj *tclArgvList = Tcl_NewListObj(0, nullptr);
-    for (const auto &arg : scriptArgs) {
-      Tcl_ListObjAppendElement(
-          interp,
-          tclArgvList,
-          Tcl_NewStringObj(arg.c_str(), -1));
-    }
-
-    Tcl_Obj *tclArgc =
-        Tcl_NewLongObj(static_cast<long>(scriptArgs.size()));
-    Tcl_SetVar2Ex(interp, "argc", nullptr, tclArgc, TCL_GLOBAL_ONLY);
-    Tcl_SetVar2Ex(interp, "argv", nullptr, tclArgvList, TCL_GLOBAL_ONLY);
-
-    if (Tcl_EvalFile(interp, fileName) == TCL_ERROR) {
-      UTOPIA_SHELL_ERR << Tcl_GetStringResult(interp) << std::endl;
-      rc = 1;
-    }
-    exitAfterEval = true;
-  } else if (evalMode->count()) {
-    if (Tcl_Eval(interp, script.c_str()) == TCL_ERROR) {
-      UTOPIA_SHELL_ERR << Tcl_GetStringResult(interp) << std::endl;
-      rc = 1;
-    }
-    exitAfterEval = true;
-  }
-  if (interactiveMode || !exitAfterEval) {
-    Tcl_MainEx(argc, argv, appInitProc, interp);
-  }
-
-  Tcl_DeleteInterp(interp);
-  Tcl_Finalize();
-  return rc;
-}
-
-int umain(int argc, char **argv) {
-  return umain(eda::shell::UtopiaShell::get(), argc, argv);
-}

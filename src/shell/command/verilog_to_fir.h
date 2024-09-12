@@ -14,9 +14,8 @@
 
 namespace eda::shell {
 
-struct VerilogToFirCommand final :
-    public UtopiaCommandBase<VerilogToFirCommand> {
-  VerilogToFirCommand(): UtopiaCommandBase(
+struct VerilogToFirCommand final : public UtopiaCommand {
+  VerilogToFirCommand(): UtopiaCommand(
       "verilog_to_fir", "Translates Verilog to FIRRTL") {
     app.add_flag("--debug", debugMode);
     app.add_option("--top", topModule);

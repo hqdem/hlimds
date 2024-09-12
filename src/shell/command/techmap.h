@@ -14,11 +14,11 @@
 
 namespace eda::shell {
 
-struct TechMapCommand final : public UtopiaCommandBase<TechMapCommand> {
+struct TechMapCommand final : public UtopiaCommand {
   using Indicator = eda::gate::criterion::Indicator;
   using Objective = eda::gate::criterion::Objective;
 
-  TechMapCommand(): UtopiaCommandBase(
+  TechMapCommand(): UtopiaCommand(
       "techmap", "Performs technology mapping") {
     const std::map<std::string, Indicator> indicatorMap {
       { "area",  Indicator::AREA  },

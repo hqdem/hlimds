@@ -12,8 +12,8 @@
 
 namespace eda::shell {
 
-struct SavePointCommand final : public UtopiaCommandBase<SavePointCommand> {
-  SavePointCommand(): UtopiaCommandBase(
+struct SavePointCommand final : public UtopiaCommand {
+  SavePointCommand(): UtopiaCommand(
       "save_point", "Saves the design checkpoint") {
     app.allow_extras();
   }

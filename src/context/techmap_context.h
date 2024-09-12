@@ -8,18 +8,14 @@
 
 #pragma once
 
-#include "shell/shell.h"
+#include "gate/library/library.h"
 
-namespace eda::shell {
+#include <memory>
 
-struct ExitCommand final : public UtopiaCommand {
-  ExitCommand(): UtopiaCommand(
-      "exit", "Closes the interactive shell", true) {}
+namespace eda::context {
 
-  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    return TCL_OK;
-  }
-
+struct TechMapContext final {
+  std::unique_ptr<gate::library::SCLibrary> library;
 };
 
-} // namespace eda::shell
+} //namespace eda::context

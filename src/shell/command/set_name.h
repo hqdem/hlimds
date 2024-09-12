@@ -12,8 +12,8 @@
 
 namespace eda::shell {
 
-struct SetNameCommand final : public UtopiaCommandBase<SetNameCommand> {
-  SetNameCommand(): UtopiaCommandBase(
+struct SetNameCommand final : public UtopiaCommand {
+  SetNameCommand(): UtopiaCommand(
       "set_name", "Sets the design name") {
     app.allow_extras();
   }

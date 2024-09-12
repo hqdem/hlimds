@@ -12,9 +12,8 @@
 
 namespace eda::shell {
 
-struct GotoPointCommand final :
-    public UtopiaCommandBase<GotoPointCommand> {
-  GotoPointCommand(): UtopiaCommandBase(
+struct GotoPointCommand final : public UtopiaCommand {
+  GotoPointCommand(): UtopiaCommand(
       "goto_point", "Rolls back to a checkpoint") {
     app.allow_extras();
   }

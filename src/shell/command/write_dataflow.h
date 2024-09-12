@@ -15,9 +15,8 @@
 
 namespace eda::shell {
 
-struct WriteDataflowCommand final :
-    public UtopiaCommandBase<WriteDataflowCommand> {
-  WriteDataflowCommand(): UtopiaCommandBase(
+struct WriteDataflowCommand final : public UtopiaCommand {
+  WriteDataflowCommand(): UtopiaCommand(
       "write_dataflow", "Writes the dataflow graph to a DOT file") {
     app.allow_extras();
   }

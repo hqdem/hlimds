@@ -8,18 +8,11 @@
 
 #pragma once
 
-#include "shell/shell.h"
+#include "context/techmap_context.h"
 
-namespace eda::shell {
-
-struct ExitCommand final : public UtopiaCommand {
-  ExitCommand(): UtopiaCommand(
-      "exit", "Closes the interactive shell", true) {}
-
-  int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    return TCL_OK;
-  }
-
+namespace eda::context {
+struct UtopiaContext final {
+  TechMapContext techMapContext;
 };
 
-} // namespace eda::shell
+} //namespace eda::context

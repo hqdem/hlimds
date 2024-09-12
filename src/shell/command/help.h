@@ -12,8 +12,8 @@
 
 namespace eda::shell {
 
-struct HelpCommand final : public UtopiaCommandBase<HelpCommand> {
-  HelpCommand(): UtopiaCommandBase(
+struct HelpCommand final : public UtopiaCommand {
+  HelpCommand(): UtopiaCommand(
       "help", "Prints help information") {
     app.allow_extras();
   }

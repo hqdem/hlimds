@@ -38,8 +38,8 @@ static void measureAndRun(const std::string &name, Func func) {
   printTimeAndEffect<clock>(name, start, end, oldCellNum, newCellNum, "  - ");
 }
 
-struct LogOptCommand final : public UtopiaCommandBase<LogOptCommand> {
-  LogOptCommand() : UtopiaCommandBase(
+struct LogOptCommand final : public UtopiaCommand {
+  LogOptCommand() : UtopiaCommand(
       "logopt", "Applies an optimization pass to the design") {
     namespace pass = eda::gate::optimizer;
 

@@ -14,8 +14,8 @@
 
 namespace eda::shell {
 
-struct ReadGraphMlCommand final : public UtopiaCommandBase<ReadGraphMlCommand> {
-  ReadGraphMlCommand(): UtopiaCommandBase(
+struct ReadGraphMlCommand final : public UtopiaCommand {
+  ReadGraphMlCommand(): UtopiaCommand(
       "read_graphml", "Reads a design from a GraphML file") {
     app.allow_extras();
   }

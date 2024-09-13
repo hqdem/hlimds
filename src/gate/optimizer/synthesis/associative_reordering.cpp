@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "associative_reordering.h"
-#include "gate/analyzer/probabilistic_estimate.h"
+#include "gate/estimator/probabilistic_estimate.h"
 #include "gate/model/subnetview.h"
 
 #include <algorithm>
@@ -26,7 +26,7 @@ using LinkList = Subnet::LinkList;
 using Cell = Subnet::Cell;
 using CellSymbol = eda::gate::model::CellSymbol;
 using Effect = SubnetBuilder::Effect;
-using Estimator = eda::gate::analyzer::ProbabilityEstimator;
+using Estimator = eda::gate::estimator::ProbabilityEstimator;
 using InOutMapping = eda::gate::model::InOutMapping;
 using CellTypeID = eda::gate::model::CellTypeID;
 using SubnetView = eda::gate::model::SubnetView;

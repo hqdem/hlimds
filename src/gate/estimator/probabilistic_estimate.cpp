@@ -6,15 +6,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "probabilistic_estimate.h"
+#include "gate/estimator/probabilistic_estimate.h"
 
-namespace eda::gate::analyzer {
+namespace eda::gate::estimator {
 
 using Probabilities = ProbabilityEstimator::Probabilities;
 
 float ProbabilityEstimator::combinations(
     size_t k, size_t n, std::vector<float> &prob) const {
-  
+
   float p = 0.0;
 
   for (size_t i = 0; i < (1ul << n); ++i) {
@@ -30,7 +30,7 @@ float ProbabilityEstimator::combinations(
       p += pComb;
     }
   }
-  
+
   return p;
 }
 
@@ -50,7 +50,7 @@ float ProbabilityEstimator::xorEstimate(
     std::vector<float> &xorProb, size_t nXorP) const {
 
   float p = 0.0;
-    
+
   for (size_t i = 1; i <= nXorP; i = i + 2) {
     p = p + combinations(i, nXorP, xorProb);
   }
@@ -58,7 +58,7 @@ float ProbabilityEstimator::xorEstimate(
   return p;
 }
 
-void ProbabilityEstimator::estimateCell(const SubnetBuilder &builder,
+void ProbabilityEstimator::estimateCell(const Builder &builder,
                                         Probabilities &probs,
                                         const size_t i,
                                         const Probabilities &inProbs) const {
@@ -108,7 +108,7 @@ void ProbabilityEstimator::estimateCell(const SubnetBuilder &builder,
 
   if (cell.isMaj() or cell.isXor()) {
     Probabilities arrProbability;
-      
+
     for (size_t j = 0; j < cell.arity; ++j) {
       const auto link = links[j];
       auto cellEst = probs[link.idx];
@@ -134,9 +134,10 @@ void ProbabilityEstimator::estimateCell(const SubnetBuilder &builder,
   probs[i] = 0.0;
 }
 
-Probabilities ProbabilityEstimator::estimateProbs(const SubnetBuilder &builder, 
+Probabilities ProbabilityEstimator::estimateProbs(
+    const Builder &builder,
     const Probabilities &probabilities) const {
-  
+
   Probabilities probs(builder.getMaxIdx() + 1);
 
   for (auto it = builder.begin(); it != builder.end(); ++it) {
@@ -146,18 +147,19 @@ Probabilities ProbabilityEstimator::estimateProbs(const SubnetBuilder &builder,
   return probs;
 }
 
-SwitchActivity ProbabilityEstimator::estimate(const SubnetBuilder &builder,
-    const Probabilities &probabilities) const {
+void ProbabilityEstimator::estimate(const std::shared_ptr<Builder> &builder,
+                                    const Probabilities &probabilities,
+                                    SwitchActivity &result) const {
 
-  Probabilities onState = estimateProbs(builder, probabilities);
+  Probabilities onState = estimateProbs(*(builder.get()), probabilities);
   Probabilities switching{onState};
 
-  for (auto it = builder.begin(); it != builder.end(); ++it) {
+  for (auto it = builder->begin(); it != builder->end(); ++it) {
     float p = switching[*it];
     switching[*it] = (2.f * p * (1.f - p));
   }
 
-  return SwitchActivity(std::move(switching), std::move(onState));
+  result.setSwitchActivity(switching, onState);
 }
 
-} // namespace eda::gate::analyzer
+} // namespace eda::gate::estimator

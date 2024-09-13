@@ -6,13 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/analyzer/simulation_estimator.h"
+#include "gate/estimator/simulation_estimator.h"
 
 #include <kitty/kitty.hpp>
 
 #include <bitset>
 
-namespace eda::gate::analyzer {
+namespace eda::gate::estimator {
 
 using OnStates = SimulationEstimator::OnStates;
 using Switches = SimulationEstimator::Switches;
@@ -37,8 +37,9 @@ struct PrevBits {
   std::vector<uint64_t> _bits;
 };
 
-SwitchActivity SimulationEstimator::estimate(const SubnetBuilder &builder,
-    const Probabilities &probabilities) const {
+void SimulationEstimator::estimate(const std::shared_ptr<Builder> &builder,
+                                   const Probabilities &probabilities,
+                                   SwitchActivity &result) const {
 
   InValuesList inValuesList;
   inValuesList.reserve(simulationCount);
@@ -51,27 +52,25 @@ SwitchActivity SimulationEstimator::estimate(const SubnetBuilder &builder,
 
   for (size_t i{0}; i < simulationCount; ++i) {
     CacheList cacheList;
-    for (size_t id{0}; id < builder.getInNum(); ++id) {
+    for (size_t id{0}; id < builder->getInNum(); ++id) {
       cacheList.push_back(generateInValues(distributions, id));
     }
     inValuesList.push_back(std::move(cacheList));
   }
 
-  auto [switchesOn, switchesOff, onStates] = simulate(builder, inValuesList);
-  
-  Probabilities switching(switchesOn.size());
-  for (size_t id{0}; id < switchesOn.size(); ++id) {
-    switching[id] = static_cast<double>(switchesOn[id] + switchesOff[id]) /
-        (ticks - 1);
-    onStates[id] /= ticks; 
+  auto [on, off, onStates] = simulate(*(builder.get()), inValuesList);
+
+  Probabilities switching(on.size());
+  for (size_t id{0}; id < on.size(); ++id) {
+    switching[id] = static_cast<double>(on[id] + off[id]) / (ticks - 1);
+    onStates[id] /= ticks;
   }
 
-  return SwitchActivity{std::move(switching), std::move(onStates),
-      std::move(switchesOn), std::move(switchesOff), ticks};
+  result.setSwitchActivity(switching, onStates, on, off, ticks);
 }
 
 std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
-    const SubnetBuilder &builder, const InValuesList &inValuesList) const {
+    const Builder &builder, const InValuesList &inValuesList) const {
 
   Simulator simulator(builder);
 
@@ -120,4 +119,4 @@ SimulationEstimator::Cache SimulationEstimator::generateInValues(
   return bits;
 }
 
-} // namespace eda::gate::analyzer
+} // namespace eda::gate::estimator

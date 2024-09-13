@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "gate/analyzer/probabilistic_estimate.h"
 #include "gate/estimator/ppa_estimator.h"
+#include "gate/estimator/probabilistic_estimate.h"
 #include "shell/shell.h"
 
 namespace eda::shell {
@@ -48,11 +48,13 @@ struct StatDesignCommand final : public UtopiaCommand {
       const auto &subnetID = getDesign()->getSubnetID(i);
       const auto &subnet = eda::gate::model::Subnet::get(subnetID);
 
-      /// FIXME: Use SubnetBuilder instead of Subnet.
-      eda::gate::model::SubnetBuilder builder(subnet);
-      eda::gate::analyzer::ProbabilityEstimator estimator;
+      const auto builder = std::make_shared<gate::model::SubnetBuilder>(subnet);
+      eda::gate::estimator::ProbabilityEstimator estimator;
+      eda::gate::estimator::SwitchActivity::Probabilities probs;
+      eda::gate::estimator::SwitchActivity activity;
 
-      activ += estimator.estimate(builder).getSwitchProbsSum();
+      estimator.estimate(builder, probs, activity);
+      activ += activity.getSwitchProbsSum();
       depth = std::max<size_t>(subnet.getPathLength().second, depth);
 
       if (isTechMapped) {

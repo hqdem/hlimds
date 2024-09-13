@@ -8,13 +8,14 @@
 
 #pragma once
 
+#include "gate/estimator/estimator.h"
 #include "gate/model/subnet.h"
 
 #include <ostream>
 #include <utility>
 #include <vector>
 
-namespace eda::gate::analyzer {
+namespace eda::gate::estimator {
 
 /**
  * @brief Stores information about the switching activity of subnet cells.
@@ -26,6 +27,8 @@ public:
   using Probabilities = std::vector<float>;
   /// The switches of cells.
   using Switches = std::vector<size_t>;
+
+  SwitchActivity() = default;
 
   /**
    * Constructor from cells switching and on state probabilities
@@ -65,6 +68,7 @@ public:
    * @brief Returns cell switching probability.
    */
   float getSwitchProbability(size_t id) const {
+    assert(switchProbabilities.size() > id);
     return switchProbabilities[id];
   }
 
@@ -72,6 +76,7 @@ public:
    * @brief Returns cell on state probability.
    */
   float getOnStateProbability(size_t id) const {
+    assert(onStateProbabilities.size() > id);
     return onStateProbabilities[id];
   }
 
@@ -79,6 +84,7 @@ public:
    * @brief Returns cell switches from 0 to 1.
    */
   size_t getSwitchesOn(size_t id) const {
+    assert(switchesOn.size() > id);
     return switchesOn[id];
   }
 
@@ -86,6 +92,7 @@ public:
    * @brief Returns switches from 1 to 0.
    */
   size_t getSwitchesOff(size_t id) const {
+    assert(switchesOff.size() > id);
     return switchesOff[id];
   }
 
@@ -94,6 +101,20 @@ public:
    */
   size_t getTicks() const {
     return ticks;
+  }
+
+  void setSwitchActivity(Probabilities &switching, Probabilities &onState,
+                         Switches &on, Switches &off, size_t ts) {
+
+    setSwitchActivity(switching, onState);
+    std::swap(switchesOn, on);
+    std::swap(switchesOff, off);
+    ticks = ts;
+  }
+
+  void setSwitchActivity(Probabilities &switching, Probabilities &onState) {
+    std::swap(switchProbabilities, switching);
+    std::swap(onStateProbabilities, onState);
   }
 
 private:
@@ -109,29 +130,9 @@ private:
   size_t ticks{0};
 };
 
-/**
- * @brief Implements an interface for switching activity estimators.
- */
-class SwitchActivityEstimator {
-public:
-
-  /// @cond ALIASES
-  using Probabilities = SwitchActivity::Probabilities;
-  using SubnetBuilder  = model::SubnetBuilder;
-  /// @endcond
-
-  /**
-   * @brief Estimates the switching activity of each cell in the subnet.
-   * @param subnet The subnet for estimating.
-   * @param inputProbabilities The probabilities of getting 1 for each input in
-   * the subnet. If it is not passed, the probability of getting 1
-   * for each input is 0.5.
-   */
-  virtual SwitchActivity estimate(const SubnetBuilder &builder,
-      const Probabilities &inputProbabilities = {}) const = 0;
-
-  virtual ~SwitchActivityEstimator() = default;
-};
+/// @brief Implements an interface for switching activity estimators.
+using SwitchActivityEstimator = SubnetEstimator<SwitchActivity::Probabilities,
+                                                SwitchActivity>;
 
 /**
  * @brief Print information about switching activity of the subnet.
@@ -143,4 +144,4 @@ void printSwitchActivity(const SwitchActivity &switchActivity,
                          const model::SubnetBuilder &builder,
                          std::ostream &out);
 
-} // namespace eda::gate::analyzer
+} // namespace eda::gate::estimator

@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/analyzer/probabilistic_estimate.h"
+#include "gate/estimator/probabilistic_estimate.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/reconvergence.h"
 #include "gate/optimizer/refactorer.h"

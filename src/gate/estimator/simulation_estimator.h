@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/analyzer/switching_activity.h"
+#include "gate/estimator/switching_activity.h"
 #include "gate/simulator/simulator.h"
 #include "util/assert.h"
 
@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace eda::gate::analyzer {
+namespace eda::gate::estimator {
 
 /**
  * @brief Evaluates switching activity by counting switches using simulation.
@@ -27,11 +27,13 @@ class SimulationEstimator final : public SwitchActivityEstimator {
 public:
 
   /// @cond ALIASES
+  using Builder       = model::SubnetBuilder;
   using Cache         = simulator::Simulator::DataChunk;
   using CacheList     = simulator::Simulator::DataVector;
   using Distributions = std::vector<std::discrete_distribution<int>>;
   using InValuesList  = std::vector<CacheList>;
-  using OnStates      = Probabilities;
+  using OnStates      = SwitchActivity::Probabilities;
+  using Probabilities = SwitchActivity::Probabilities;
   using Simulator     = simulator::Simulator;
   using Switches      = SwitchActivity::Switches;
   /// @endcond
@@ -59,7 +61,7 @@ public:
   }
 
   /**
-   * Estimates the switching activity by calculating the number of 
+   * Estimates the switching activity by calculating the number of
    * transitions from 0 to 1 and from 1 to 0 of each cell during simulation:
    * 
    *  SwitchActivity[i] = tc[i] / (n - 1),
@@ -68,29 +70,30 @@ public:
    *  tc - the number of 0->1 and 0->1 switches for the cell,
    *  n  - the number of the ticks.
    *  
-   * @param subnet The subnet for estimating.
+   * @param builder The builder with Subnet for estimating.
    * @param probabilities The probabilities of getting 1 for each input in
    * the subnet. If it is not passed, the probability of getting 1
    * for each input is 0.5.
-   * @return The switching activity of the subnet.
+   * @param result The switching activity of the subnet.
    */
-  SwitchActivity estimate(const SubnetBuilder &builder,
-      const Probabilities &probabilities = {}) const override;
+  void estimate(const std::shared_ptr<Builder> &builder,
+                const Probabilities &probabilities,
+                SwitchActivity &result) const override;
 
   /**
-   * @brief Simulates the subnet and stores information about cells states. 
+   * @brief Simulates the subnet and stores information about cells states.
    * @param subnet The subnet for simulation.
    * @param inValuesList The input values for simulation of the subnet.
    * @return Switches from 1 to 0 and from 0 to 1 for the subnet and count
    * of on state for cells.
    */
   std::tuple<Switches, Switches, OnStates> simulate(
-      const SubnetBuilder &builder,
+      const Builder &builder,
       const InValuesList &inValuesList) const;
 
 private:
 
-  Cache generateInValues(Distributions &distributions, size_t id) const;  
+  Cache generateInValues(Distributions &distributions, size_t id) const;
 
   static uint8_t popCount(uint64_t number) {
     return std::bitset<64>(number).count();
@@ -113,4 +116,4 @@ private:
   mutable std::mt19937 generator;
 };
 
-} // namespace eda::gate::analyzer
+} // namespace eda::gate::estimator

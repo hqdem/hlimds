@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/analyzer/switching_activity.h"
+#include "gate/estimator/switching_activity.h"
 
 #include <algorithm>
 #include <iterator>
@@ -18,7 +18,7 @@ void printDelimitedString(std::vector<std::string> &data, std::ostream &out) {
   out << std::endl;
 }
 
-namespace eda::gate::analyzer {
+namespace eda::gate::estimator {
 
 void printSwitchActivity(const SwitchActivity &switchActivity,
                          const model::SubnetBuilder &builder,
@@ -52,4 +52,4 @@ void printSwitchActivity(const SwitchActivity &switchActivity,
   }
 }
 
-} // namespace eda::gate::analyzer
+} // namespace eda::gate::estimator

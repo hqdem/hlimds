@@ -1,8 +1,5 @@
 add_compile_options(-fno-rtti)
 add_library(Gate OBJECT
-  analyzer/probabilistic_estimate.cpp
-  analyzer/simulation_estimator.cpp
-  analyzer/switching_activity.cpp
   criterion/cost_function.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
@@ -12,7 +9,10 @@ add_library(Gate OBJECT
   debugger/verifier.cpp
   estimator/cost_estimator.cpp
   estimator/npn_estimator.cpp
+  estimator/probabilistic_estimate.cpp
   estimator/simple_time_model.cpp
+  estimator/simulation_estimator.cpp
+  estimator/switching_activity.cpp
   model/cell.cpp
   model/cellattr.cpp
   model/celltype.cpp

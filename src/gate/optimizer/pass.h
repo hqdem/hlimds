@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/analyzer/probabilistic_estimate.h"
+#include "gate/estimator/probabilistic_estimate.h"
 #include "gate/optimizer/balancer.h"
 #include "gate/optimizer/lazy_refactorer.h"
 #include "gate/optimizer/mffc.h"
@@ -34,7 +34,7 @@
 
 namespace eda::gate::optimizer {
 
-using ProbEstimator = eda::gate::analyzer::ProbabilityEstimator;
+using ProbEstimator = eda::gate::estimator::ProbabilityEstimator;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetChain   = SubnetInPlaceTransformerChain;
 using SubnetEffect  = model::SubnetBuilder::Effect;

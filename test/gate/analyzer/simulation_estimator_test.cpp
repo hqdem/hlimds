@@ -6,21 +6,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/analyzer/simulation_estimator.h"
+#include "gate/estimator/simulation_estimator.h"
 #include "gate/model/subnet.h"
 
 #include "gtest/gtest.h"
 #include <bitset>
 
 using CellSymbol    = eda::gate::model::CellSymbol;
-using InValuesList  = eda::gate::analyzer::SimulationEstimator::InValuesList;
+using InValuesList  = eda::gate::estimator::SimulationEstimator::InValuesList;
 using Link          = eda::gate::model::Subnet::Link;
 using LinkList      = eda::gate::model::Subnet::LinkList;
-using OnStates      = eda::gate::analyzer::SimulationEstimator::OnStates;
-using SimEstimator  = eda::gate::analyzer::SimulationEstimator;
+using OnStates      = eda::gate::estimator::SimulationEstimator::OnStates;
+using SimEstimator  = eda::gate::estimator::SimulationEstimator;
 using Subnet        = eda::gate::model::Subnet;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
-using Switches      = eda::gate::analyzer::SimulationEstimator::Switches;
+using Switches      = eda::gate::estimator::SimulationEstimator::Switches;
 
 TEST(SwitchActivityTest, ToggleRateTest) {
   // Generating Subnet.

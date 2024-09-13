@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/analyzer/probabilistic_estimate.h"
 #include "gate/debugger/sat_checker.h"
+#include "gate/estimator/probabilistic_estimate.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/pass.h"
 #include "gate/translator/graphml_test_utils.h"
@@ -16,12 +16,14 @@
 
 namespace eda::gate::optimizer {
 
-using Estimator     = eda::gate::analyzer::ProbabilityEstimator;
-using SatChecker    = eda::gate::debugger::SatChecker;
-using Subnet        = eda::gate::model::Subnet;
-using SubnetBuilder = eda::gate::model::SubnetBuilder;
-using SubnetID      = eda::gate::model::SubnetID;
-using SubnetPass    = eda::gate::optimizer::SubnetPass;
+using Estimator      = eda::gate::estimator::ProbabilityEstimator;
+using Probabilities  = eda::gate::estimator::SwitchActivity::Probabilities;
+using SatChecker     = eda::gate::debugger::SatChecker;
+using Subnet         = eda::gate::model::Subnet;
+using SubnetBuilder  = eda::gate::model::SubnetBuilder;
+using SubnetID       = eda::gate::model::SubnetID;
+using SubnetPass     = eda::gate::optimizer::SubnetPass;
+using SwitchActivity = eda::gate::estimator::SwitchActivity;
 
 void checkEquivalence(SubnetID source, SubnetID optimized) {
   SatChecker &checker = SatChecker::get();
@@ -39,10 +41,10 @@ SubnetID optimize(SubnetID source, SubnetPass &&pass) {
 void testRF(const std::string &design) {
   auto sourceID = eda::gate::translator::translateGmlOpenabc(design)->make();
   const auto &source = Subnet::get(sourceID);
-  
+
   const auto &optimizedA = Subnet::get(optimize(sourceID, rf()));
   EXPECT_TRUE(optimizedA.size() <= source.size());
-  
+
   const auto &optimizedD = Subnet::get(optimize(sourceID, rfd()));
   double sourceDepth = source.getPathLength().second;
   double optimizedDepth = optimizedD.getPathLength().second;
@@ -50,11 +52,14 @@ void testRF(const std::string &design) {
 
   const auto optimizedP = optimize(sourceID, rfp());
   Estimator estimator;
-  SubnetBuilder sourceBuilder(sourceID);
-  SubnetBuilder optimizedPBuilder(optimizedP);
-  double sourcePower = estimator.estimate(sourceBuilder).getSwitchProbsSum();
-  double optimizedPower = 
-      estimator.estimate(optimizedPBuilder).getSwitchProbsSum();
+  Probabilities probs;
+  SwitchActivity activity;
+  const auto sourceBuilder = std::make_shared<SubnetBuilder>(sourceID);
+  const auto optimizedPBuilder = std::make_shared<SubnetBuilder>(optimizedP);
+  estimator.estimate(sourceBuilder, probs, activity);
+  double sourcePower = activity.getSwitchProbsSum();
+  estimator.estimate(optimizedPBuilder, probs, activity);
+  double optimizedPower = activity.getSwitchProbsSum();
   EXPECT_TRUE(optimizedPower <= sourcePower);
 }
 

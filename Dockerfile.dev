@@ -2,7 +2,7 @@ FROM gitlab.ispras.ru:4567/mvg/utopia-eda:base
 
 # Install code coverage collection/visualization packages
 
-RUN apt install -y curl lcov python3 python3-pip
+RUN apt install -y lcov python3 python3-pip
 RUN pip install gcovr
 
 # Install Valgrind 3.23.0

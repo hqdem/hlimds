@@ -56,6 +56,21 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
                                         const model::EntryID entryID) {
   const size_t n = cutsPerCell + 1 /* trivial cut */;
 
+  // Use good cuts from the previous try.
+  constexpr size_t oldCutNum = 1;
+
+  std::unordered_set<optimizer::Cut> goodOldCuts;
+  if (tryCount /* not the first try */) {
+    const auto oldCuts = cutExtractor->getCuts(entryID);
+
+    for (const auto &oldCut : oldCuts) {
+      if (!oldCut.isTrivial()) {
+        goodOldCuts.insert(oldCut);
+        if (oldCuts.size() == oldCutNum) break;
+      }
+    }
+  }
+
   cutExtractor->recomputeCuts(entryID);
   if (cutExtractor->getCutNum(entryID) <= n) return;
 
@@ -78,8 +93,16 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
     // No matches => large cost.
     matches[i] = matchFinder(builder, cut);
     cost /= (matches[i].size() + .25);
- 
+
     sorted[i] = {i, cost};
+
+    goodOldCuts.erase(cut);
+  }
+
+  // Add good cuts from the previous try.
+  for (const auto &oldCut : goodOldCuts) {
+    cuts.push_back(oldCut);
+    sorted.emplace_back(sorted.size(), 0. /* good */);
   }
 
   std::sort(sorted.begin(), sorted.end(), [](const auto &lhs, const auto &rhs) {

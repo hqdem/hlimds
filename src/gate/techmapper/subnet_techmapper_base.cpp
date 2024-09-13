@@ -22,11 +22,21 @@
 #define UTOPIA_TECHMAP_SAVE_MAPPED_POINTS 1
 
 /// Outputs the cost vector.
-#define UTOPIA_LOG_COST_VECTOR(prefix, vector)\
+#define UTOPIA_LOG_VECTOR(prefix, vector)\
   UTOPIA_LOG_INFO(prefix << std::endl\
       << "Area:  " << vector[criterion::AREA]  << std::endl\
       << "Delay: " << vector[criterion::DELAY] << std::endl\
       << "Power: " << vector[criterion::POWER] << std::endl)
+
+/// Outputs the cost vector.
+#define UTOPIA_LOG_COST_AND_TENSION_VECTORS(prefix, vector, tension)\
+  UTOPIA_LOG_INFO(prefix << std::endl\
+      << "Area:  " << vector[criterion::AREA]\
+          << " (" << tension[criterion::AREA] << ")" << std::endl\
+      << "Delay: " << vector[criterion::DELAY]\
+          << " (" << tension[criterion::DELAY] << ")" << std::endl\
+      << "Power: " << vector[criterion::POWER]\
+          << " (" << tension[criterion::POWER] << ")" << std::endl)
  
 namespace eda::gate::techmapper {
 
@@ -334,24 +344,24 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
     const auto status = thisPtr->map(builder, !finalTry);
 
     if (status.verdict == Status::FOUND && (status.isFeasible || finalTry)) {
-      UTOPIA_LOG_COST_VECTOR(
+      UTOPIA_LOG_COST_AND_TENSION_VECTORS(
           (status.isFeasible
               ? "Solution satisfies the constraints"
               : "Solution does not satisfy the constraints"),
-           status.vector);
+           status.vector, status.tension);
       result = makeMappedSubnet(space, builder);
       break;
     }
 
     if (status.verdict != Status::UNSAT) {
-      UTOPIA_LOG_COST_VECTOR(
+      UTOPIA_LOG_COST_AND_TENSION_VECTORS(
           "Solution is likely not to satisfy the constraints ("
               << static_cast<unsigned>(100. * status.progress) << "%)",
-          status.vector);
+          status.vector, status.tension);
     }
 
-    UTOPIA_LOG_INFO("Starting the recovery process");
     if (!thisPtr->onRecovery(status)) break;
+    UTOPIA_LOG_VECTOR("Starting the recovery process w/ direction", tension);
   }
 
   if (!result) {

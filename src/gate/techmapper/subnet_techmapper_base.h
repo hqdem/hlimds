@@ -133,19 +133,23 @@ protected:
   virtual void onBegin(const SubnetBuilderPtr &oldBuilder) {
     tryCount = 0;
     space.resize(oldBuilder->getMaxIdx() + 1);
-    tension = {1., 1., 1.};
-    cutMatches.clear();
+    tension = {0., 0., 0.} /* no penalties */;
   }
 
   virtual bool onRecovery(const Status &status) {
-    tryCount++;
-
     if (status.verdict == Status::UNSAT) {
       // No chance: break the technology mapping.
       return false;
     }
 
-    tension *= status.tension;
+    if (tryCount == 0) {
+      tension = {1., 1., 1.};
+    }
+
+    constexpr criterion::Cost coefficient = 1.25;
+    tension *= status.tension * status.tension * coefficient;
+
+    tryCount++;
     return true;
   }
 
@@ -186,7 +190,7 @@ protected:
   }
 
   // Maximum number of tries for recovery.
-  const uint16_t maxTries{3};
+  const uint16_t maxTries{5};
 
   const criterion::Criterion &criterion;
   const CutProvider cutProvider;

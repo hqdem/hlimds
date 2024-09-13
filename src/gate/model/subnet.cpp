@@ -252,12 +252,27 @@ const Subnet::Link *SubnetBuilder::getLinks(
   return links;
 }
 
-Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
-  const bool isPositive = !CellType::get(typeID).isNegative();
-  assert(isPositive && "Negative cells are not allowed");
+Subnet::LinkList SubnetBuilder::addMultiOutputCell(
+    CellTypeID typeID, const LinkList &links) {
+  const auto &type = CellType::get(typeID);
+  LinkList result(type.getOutNum());
 
-  const bool in  = (typeID == CELL_TYPE_ID_IN);
-  const bool out = (typeID == CELL_TYPE_ID_OUT);
+  result[0] = addCell(typeID, links);
+  const auto idx = links[0].idx;
+
+  for (uint16_t i = 1; i < type.getOutNum(); ++i) {
+    result[i] = Link(idx, i, false);
+  }
+
+  return result;
+}
+
+Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
+  assert(!CellType::get(typeID).isNegative()
+      && "Negative cells are not allowed");
+
+  const auto in  = (typeID == CELL_TYPE_ID_IN);
+  const auto out = (typeID == CELL_TYPE_ID_OUT);
 
   const auto idx = allocEntry(typeID, links);
 

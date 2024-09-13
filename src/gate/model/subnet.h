@@ -650,7 +650,10 @@ public:
     return result;
   }
 
-  /// Adds a general-type cell.
+  /// Adds a multi-output general-type cell.
+  LinkList addMultiOutputCell(CellTypeID typeID, const LinkList &links);
+
+  /// Adds a single-output general-type cell.
   Link addCell(CellTypeID typeID, const LinkList &links);
 
   /// Adds a cell w/o inputs.

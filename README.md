@@ -25,7 +25,7 @@ To build the project from source on your own machine, see the instruction below.
 
 ### System requirements
 
-The recommended operating system for Utopia is Ubuntu 20.04. The package names
+The recommended operating system for Utopia is **Ubuntu 20.04**. The package names
 below are specific to this operating system:
 
 * `autoconf`
@@ -63,21 +63,8 @@ If you are working on Fedora Linux OS, see `doc/Fedora.md`.
 
 ### CMake installation
 
-To build the appropriate version of CMake from sources, do the following:
-
-```shell
-sudo apt install tar wget
-cd <workdir>
-wget https://cmake.org/files/v3.28/cmake-3.28.1.tar.gz
-tar xzf cmake-3.28.1.tar.gz
-rm -rf cmake-3.28.1.tar.gz
-cd cmake-3.28.1
-./bootstrap
-make
-sudo make install
-```
-
-If you prefer to install CMake as package, please follow this [guide](https://apt.kitware.com).
+For project building we use [CMake](https://cmake.org). The minimum required version for CMake is **3.28**.
+Check whether it is available on your OS, and if it is not, see `doc/CMake.md`.
 
 ### CUDD installation
 

@@ -63,7 +63,8 @@ If you are working on Fedora Linux OS, see `doc/Fedora.md`.
 
 ### CMake installation
 
-For project building we use [CMake](https://cmake.org). The minimum required version for CMake is **3.28**.
+For project building we use [CMake](https://cmake.org). 
+The minimum required version for CMake is **3.28**.
 Check whether it is available on your OS, and if it is not, see `doc/CMake.md`.
 
 ### CUDD installation

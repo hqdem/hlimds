@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "gate/criterion/criterion.h"
+#include "context/utopia_context.h"
 #include "gate/criterion/solution_space.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/cut.h"
@@ -63,14 +63,14 @@ public:
   using SubnetBuilderPtr = std::shared_ptr<model::SubnetBuilder>;
 
   SubnetTechMapperBase(const std::string &name,
-                       const criterion::Criterion &criterion,
+                       const context::UtopiaContext &context,
                        const CutProvider cutProvider,
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator,
                        const CostAggregator costAggregator,
                        const CostPropagator costPropagator):
       optimizer::SubnetTransformer(name),
-      criterion(criterion),
+      context(context),
       cutProvider(cutProvider),
       matchFinder(matchFinder),
       cellEstimator(cellEstimator),
@@ -78,7 +78,7 @@ public:
       costPropagator(costPropagator) {}
 
   SubnetTechMapperBase(const std::string &name,
-                       const criterion::Criterion &criterion,
+                       const context::UtopiaContext &context,
                        const CutProvider cutProvider,
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator);
@@ -193,7 +193,7 @@ protected:
   // Maximum number of tries for recovery.
   const uint16_t maxTries{5};
 
-  const criterion::Criterion &criterion;
+  const context::UtopiaContext &context;
   const CutProvider cutProvider;
   const MatchFinder matchFinder;
   const CellEstimator cellEstimator;

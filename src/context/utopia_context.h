@@ -9,9 +9,15 @@
 #pragma once
 
 #include "context/techmap_context.h"
+#include "gate/criterion/criterion.h"
+
+#include <memory>
 
 namespace eda::context {
+
 struct UtopiaContext final {
+  std::unique_ptr<gate::criterion::Criterion> criterion;
+
   TechMapContext techMapContext;
 };
 

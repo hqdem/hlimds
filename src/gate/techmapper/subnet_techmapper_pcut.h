@@ -21,7 +21,7 @@ namespace eda::gate::techmapper {
 class SubnetTechMapperPCut final : public SubnetTechMapperBase {
 public:
   SubnetTechMapperPCut(const std::string &name,
-                       const criterion::Criterion &criterion,
+                       const context::UtopiaContext &context,
                        const uint16_t maxCutSize,
                        const uint16_t maxCutNum,
                        const MatchFinder matchFinder,
@@ -30,7 +30,7 @@ public:
                        const CostPropagator costPropagator);
 
   SubnetTechMapperPCut(const std::string &name,
-                       const criterion::Criterion &criterion,
+                       const context::UtopiaContext &context,
                        const uint16_t maxCutSize,
                        const uint16_t maxCutNum,
                        const MatchFinder matchFinder,

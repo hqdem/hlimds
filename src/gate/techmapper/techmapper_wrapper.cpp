@@ -37,7 +37,10 @@ std::shared_ptr<SubnetBuilder> techMap(
       criterion::Constraint(criterion::AREA,  45000),   // FIXME:
       criterion::Constraint(criterion::DELAY, 1),       // FIXME:
       criterion::Constraint(criterion::POWER, 25000)};  // FIXME:
-  criterion::Criterion criterion{objective, constraints};
+
+  context::UtopiaContext context;
+  context.criterion = std::make_unique<criterion::Criterion>(
+      objective, constraints);
 
   // Maximum number of cuts per cell
   constexpr uint16_t maxCutNum = 4;
@@ -49,7 +52,7 @@ std::shared_ptr<SubnetBuilder> techMap(
   // Techmapping
   auto *techmapper = new SubnetTechMapperPCut(
       "SubnetTechMapper",
-      criterion,
+      context,
       library::library->getMaxArity(),
       maxCutNum,
       matchFinder,

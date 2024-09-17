@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "context/utopia_context.h"
 #include "gate/estimator/ppa_estimator.h"
 #include "gate/model/utils/subnet_random.h"
 #include "gate/model/utils/subnet_truth_table.h"
@@ -63,7 +64,10 @@ const model::SubnetID commonPart(
     criterion::Constraint(criterion::DELAY, maxDelay),
     criterion::Constraint(criterion::POWER, maxPower)
   };
-  criterion::Criterion criterion{objective, constraints};
+
+  context::UtopiaContext context;
+  context.criterion = std::make_unique<criterion::Criterion>(
+      objective, constraints);
 
   // boolMatcher is created once the library is loaded.
   if (boolMatcher == nullptr) {
@@ -75,9 +79,8 @@ const model::SubnetID commonPart(
       library::library->getCombCells());
   }
 
-  SubnetTechMapperBase *techmapper =
-    new SubnetTechMapperBase(name, criterion, cutProvider,
-                         matchFinder, estimator::getPPA);
+  SubnetTechMapperBase *techmapper = new SubnetTechMapperBase(
+      name, context, cutProvider, matchFinder, estimator::getPPA);
 
   auto builder = techmapper->map(builderPtr);
   finishMatching();

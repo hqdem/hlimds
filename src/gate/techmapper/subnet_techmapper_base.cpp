@@ -74,12 +74,12 @@ static criterion::CostVector defaultCostPropagator(
 
 SubnetTechMapperBase::SubnetTechMapperBase(
     const std::string &name,
-    const criterion::Criterion &criterion,
+    const context::UtopiaContext &context,
     const CutProvider cutProvider,
     const MatchFinder matchFinder,
     const CellEstimator cellEstimator):
     SubnetTechMapperBase(name,
-                         criterion,
+                         context,
                          cutProvider,
                          matchFinder,
                          cellEstimator,
@@ -253,7 +253,8 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
     const auto cuts = cutProvider(*builder, entryID);
     assert(!cuts.empty());
 
-    space[entryID] = std::make_unique<CellSpace>(criterion, tension, progress);
+    space[entryID] = std::make_unique<CellSpace>(
+        *context.criterion, tension, progress);
 
     // Handle the input cells.
     if (cell.isIn()) {
@@ -285,7 +286,7 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
       const auto cutCostVectors = getCostVectors(cut);
       const auto cutAggregation = costAggregator(cutCostVectors);
 
-      if (!criterion.check(cutAggregation)) {
+      if (!context.criterion->check(cutAggregation)) {
         continue;
       }
 
@@ -295,7 +296,7 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
         const auto cellCostVector = cellEstimator(match.typeID, Context{});
         const auto costVector = cutAggregation + cellCostVector;
 
-        if (!criterion.check(costVector)) {
+        if (!context.criterion->check(costVector)) {
           continue;
         }
 
@@ -327,8 +328,8 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
   const auto subnetCostVectors = getCostVectors(resultCut);
   const auto subnetAggregation = costAggregator(subnetCostVectors);
 
-  const auto isFeasible = criterion.check(subnetAggregation);
-  const auto subnetTension = criterion.getTension(subnetAggregation);
+  const auto isFeasible = context.criterion->check(subnetAggregation);
+  const auto subnetTension = context.criterion->getTension(subnetAggregation);
 
   return Status{Status::FOUND, isFeasible, subnetAggregation, subnetTension};
 }

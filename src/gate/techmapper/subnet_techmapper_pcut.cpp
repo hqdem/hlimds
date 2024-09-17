@@ -22,7 +22,7 @@ namespace eda::gate::techmapper {
 
 SubnetTechMapperPCut::SubnetTechMapperPCut(
     const std::string &name,
-    const criterion::Criterion &criterion,
+    const context::UtopiaContext &context,
     const uint16_t maxCutSize,
     const uint16_t maxCutNum,
     const MatchFinder matchFinder,
@@ -30,7 +30,7 @@ SubnetTechMapperPCut::SubnetTechMapperPCut(
     const CostAggregator costAggregator,
     const CostPropagator costPropagator):
     SubnetTechMapperBase(name,
-                         criterion,
+                         context,
                          UTOPIA_CUT_PROVIDER_LAMBDA(),
                          matchFinder,
                          cellEstimator,
@@ -40,13 +40,13 @@ SubnetTechMapperPCut::SubnetTechMapperPCut(
 
 SubnetTechMapperPCut::SubnetTechMapperPCut(
     const std::string &name,
-    const criterion::Criterion &criterion,
+    const context::UtopiaContext &context,
     const uint16_t maxCutSize,
     const uint16_t maxCutNum,
     const MatchFinder matchFinder,
     const CellEstimator cellEstimator):
     SubnetTechMapperBase(name,
-                         criterion,
+                         context,
                          UTOPIA_CUT_PROVIDER_LAMBDA(),
                          matchFinder,
                          cellEstimator),
@@ -87,7 +87,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
     } else {
       const auto leafVectors = getCostVectors(cut);
       const auto aggregation = costAggregator(leafVectors);
-      cost = criterion.getPenalizedCost(aggregation, tension);
+      cost = context.criterion->getPenalizedCost(aggregation, tension);
     }
 
     // No matches => large cost.

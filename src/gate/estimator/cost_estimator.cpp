@@ -13,19 +13,6 @@
 
 namespace eda::gate::estimator {
 
-static inline void aggregateCost(criterion::CostVector &result,
-                                 const criterion::CostVector &vector) {
-  assert(vector.size() >= criterion::CostVector::DefaultSize);
-
-  auto &area  = result[criterion::AREA];
-  auto &delay = result[criterion::DELAY];
-  auto &power = result[criterion::POWER];
-
-  area  += vector[criterion::AREA];
-  delay = std::max(delay, vector[criterion::DELAY]);
-  power += vector[criterion::POWER];
-}
-
 criterion::CostVector CostAggregator::getCost(
     const model::DesignBuilder &design) const {
   auto designBuilder = const_cast<model::DesignBuilder&>(design);
@@ -35,7 +22,7 @@ criterion::CostVector CostAggregator::getCost(
     const auto subnetBuilder = designBuilder.getSubnetBuilder(i);
     const auto subnetCost = subnetEstimator.getCost(*subnetBuilder);
 
-    aggregateCost(designCost, subnetCost);
+    criterion::aggregateCost(designCost, subnetCost);
   }
 
   return designCost;

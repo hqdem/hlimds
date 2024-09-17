@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <functional>
 #include <valarray>
@@ -115,6 +116,23 @@ enum Indicator {
   POWER =  2,
   MIXED = -1
 };
+
+static_assert(AREA  == 0);
+static_assert(DELAY == 1);
+static_assert(POWER == 2);
+
+/// Aggregates two cost vector and assigns the result to the first one.
+inline void aggregateCost(CostVector &result, const CostVector &vector) {
+  assert(vector.size() >= CostVector::DefaultSize);
+
+  auto &area  = result[Indicator::AREA];
+  auto &delay = result[Indicator::DELAY];
+  auto &power = result[Indicator::POWER];
+
+  area  += vector[Indicator::AREA];
+  delay = std::max(delay, vector[Indicator::DELAY]);
+  power += vector[Indicator::POWER];
+}
 
 inline CostFunction getCostFunction(const Indicator indicator) {
   return [indicator](const CostVector &vector) -> Cost {

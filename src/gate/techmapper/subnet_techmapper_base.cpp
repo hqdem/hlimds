@@ -44,14 +44,8 @@ static criterion::CostVector defaultCostAggregator(
     const std::vector<criterion::CostVector> &vectors) {
   criterion::CostVector result = criterion::CostVector::Zero;
 
-  for (uint16_t i = 0; i < vectors.size(); ++i) {
-    const auto &vector = vectors[i];
-    assert(vector.size() >= criterion::CostVector::DefaultSize);
-
-    result[criterion::AREA] += vector[criterion::AREA];
-    result[criterion::DELAY] = std::max(result[criterion::DELAY],
-                                        vector[criterion::DELAY]);
-    result[criterion::POWER] += vector[criterion::POWER];
+  for (const auto &vector : vectors) {
+    criterion::aggregateCost(result, vector);
   }
 
   return result;
@@ -59,17 +53,12 @@ static criterion::CostVector defaultCostAggregator(
 
 static criterion::CostVector defaultCostPropagator(
     const criterion::CostVector &vector, const uint32_t fanout) {
-  criterion::CostVector result;
-
   const auto divisor = fanout ? fanout : 1;
-  // Area flow heuristic.
-  result[criterion::AREA]  = vector[criterion::AREA] / divisor;
-  // Time delay propagation.
-  result[criterion::DELAY] = vector[criterion::DELAY];
-  // Power flow heuristic.
-  result[criterion::POWER] = vector[criterion::POWER] / divisor;
 
-  return result;
+  return criterion::CostVector(
+      vector[criterion::AREA] / divisor /* area flow */,
+      vector[criterion::DELAY],
+      vector[criterion::POWER] / divisor /* power flow */);
 }
 
 SubnetTechMapperBase::SubnetTechMapperBase(
@@ -89,14 +78,11 @@ SubnetTechMapperBase::SubnetTechMapperBase(
 /// Maps a entry ID to the best match (null stands for no match).
 using MatchSelection = std::vector<const SubnetTechMapperBase::Match*>;
 
-static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
+/// Find best coverage by traversing the subnet in reverse order.
+static model::SubnetViewWalker findBestCoverage(
+    const SubnetTechMapperBase::SubnetBuilderPtr &oldBuilder,
     const SubnetTechMapperBase::SubnetSpace &space,
-    const SubnetTechMapperBase::SubnetBuilderPtr oldBuilder) {
-  // Maps old entry indices to matches.
-  const uint32_t oldSize = oldBuilder->getMaxIdx() + 1;
-  MatchSelection matches(oldSize);
-
-  // Find best coverage by traversing the subnet in reverse order.
+    MatchSelection &matches) {
   model::SubnetView view(*oldBuilder);
   model::SubnetViewWalker walker(view,
       [&matches](model::SubnetBuilder &,
@@ -123,6 +109,19 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
         matches[entryID] = &space[entryID]->getBest().solution;
         return true;
       }, UTOPIA_TECHMAP_SAVE_MAPPED_POINTS);
+
+  return walker;
+} 
+
+static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
+    const SubnetTechMapperBase::SubnetSpace &space,
+    const SubnetTechMapperBase::SubnetBuilderPtr oldBuilder) {
+  // Maps old entry indices to matches.
+  const uint32_t oldSize = oldBuilder->getMaxIdx() + 1;
+  MatchSelection matches(oldSize);
+
+  // Find best coverage by traversing the subnet in reverse order.
+  model::SubnetViewWalker walker = findBestCoverage(oldBuilder, space, matches);
 
   auto newBuilder = std::make_shared<model::SubnetBuilder>();
 
@@ -234,6 +233,42 @@ static inline float getProgress(
          static_cast<float>(nAll - nIn);
 }
 
+void SubnetTechMapperBase::findCellSolutions(
+    const SubnetBuilderPtr &builder,
+    const model::EntryID entryID,
+    const optimizer::CutsList &cuts) {
+  const auto &cell = builder->getCell(entryID);
+
+  for (const auto &cut : cuts) {
+    assert(cut.rootID == entryID);
+
+    // Skip trivial and unmapped cuts.
+    if (cut.isTrivial() || !hasSolutions(cut)) {
+      continue;
+    }
+
+    const auto cutCostVectors = getCostVectors(cut);
+    const auto cutAggregation = costAggregator(cutCostVectors);
+
+    if (!context.criterion->check(cutAggregation)) {
+      continue;
+    }
+
+    const auto &matches = getMatches(*builder, cut);
+
+    for (const auto &match : matches) {
+      const auto cellCostVector = cellEstimator(match.typeID, Context{});
+      const auto costVector = cutAggregation + cellCostVector;
+
+      if (!context.criterion->check(costVector)) {
+        continue;
+      }
+
+      space[entryID]->add(match, costPropagator(costVector, cell.refcount));
+    } // for match
+  } // for cuts
+}
+
 SubnetTechMapperBase::Status SubnetTechMapperBase::map(
     const SubnetBuilderPtr &builder,
     const bool enableEarlyRecovery) {
@@ -275,34 +310,7 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
 #endif // !UTOPIA_TECHMAP_MATCH_OUTPUTS
     }
 
-    for (const auto &cut : cuts) {
-      assert(cut.rootID == entryID);
-
-      // Skip trivial and unmapped cuts.
-      if (cut.isTrivial() || !hasSolutions(cut)) {
-        continue;
-      }
-
-      const auto cutCostVectors = getCostVectors(cut);
-      const auto cutAggregation = costAggregator(cutCostVectors);
-
-      if (!context.criterion->check(cutAggregation)) {
-        continue;
-      }
-
-      const auto &matches = getMatches(*builder, cut);
-
-      for (const auto &match : matches) {
-        const auto cellCostVector = cellEstimator(match.typeID, Context{});
-        const auto costVector = cutAggregation + cellCostVector;
-
-        if (!context.criterion->check(costVector)) {
-          continue;
-        }
-
-        space[entryID]->add(match, costPropagator(costVector, cell.refcount));
-      } // for match
-    } // for cuts
+    findCellSolutions(builder, entryID, cuts);
 
     if (!space[entryID]->hasSolution()) {
       UTOPIA_LOG_WARN("No match found for "

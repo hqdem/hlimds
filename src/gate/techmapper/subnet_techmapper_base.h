@@ -179,6 +179,10 @@ protected:
 
   Status map(const SubnetBuilderPtr &builder, const bool enableEarlyRecovery);
 
+  void findCellSolutions(const SubnetBuilderPtr &builder,
+                         const model::EntryID entryID,
+                         const optimizer::CutsList &cuts);
+
   std::vector<Match> &getMatches(const model::SubnetBuilder &builder,
                                  const optimizer::Cut &cut) {
     const auto i = cutMatches.find(cut);

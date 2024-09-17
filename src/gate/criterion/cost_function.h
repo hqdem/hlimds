@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <valarray>
@@ -32,11 +33,17 @@ struct CostVector final {
   explicit CostVector(const std::valarray<Cost> &vector):
       vector(vector) {}
 
+  explicit CostVector(const std::valarray<Cost> &&vector):
+      vector(std::move(vector)) {}
+
   CostVector(const Cost a, const Cost d, const Cost p):
       CostVector(std::valarray<Cost>{a, d, p}) {}
 
   CostVector(const CostVector &vector):
       CostVector(vector.vector) {}
+
+  CostVector(CostVector &&vector):
+      CostVector(std::move(vector.vector)) {}
 
   size_t size() const {
     return vector.size();
@@ -66,12 +73,20 @@ struct CostVector final {
     return CostVector{vector / other.vector};
   }
 
-  CostVector operator*(const Cost coefficient) const {
-    return CostVector{vector * coefficient};
+  CostVector operator+(const Cost other) const {
+    return CostVector{vector + other};
   }
 
-  CostVector operator/(const Cost coefficient) const {
-    return CostVector{vector / coefficient};
+  CostVector operator*(const Cost other) const {
+    return CostVector{vector * other};
+  }
+
+  CostVector operator/(const Cost other) const {
+    return CostVector{vector / other};
+  }
+
+  CostVector pow(const Cost other) const {
+    return CostVector{std::pow(vector, other)};
   }
 
   CostVector &operator=(const CostVector &other) {

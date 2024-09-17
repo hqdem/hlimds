@@ -24,7 +24,7 @@ static inline std::pair<float, float> getProgressRange(float progress) {
 static inline CostVector predictCostVector(
     const CostVector &vector, const float progress) {
   constexpr float e{1.0e-6};
-  return progress > e ? vector / progress : CostVector::Zero;
+  return progress > e ? (vector / progress) : CostVector::Zero;
 }
 
 template <typename T>

@@ -14,6 +14,7 @@
 #include "gate/optimizer/cut.h"
 #include "gate/optimizer/transformer.h"
 
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <string>
@@ -148,7 +149,7 @@ protected:
     }
 
     constexpr criterion::Cost coefficient = 1.25;
-    tension *= status.tension * status.tension * coefficient;
+    tension *= status.tension.pow(2.) * coefficient;
 
     tryCount++;
     return true;

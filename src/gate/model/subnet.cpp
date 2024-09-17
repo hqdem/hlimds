@@ -258,7 +258,7 @@ Subnet::LinkList SubnetBuilder::addMultiOutputCell(
   LinkList result(type.getOutNum());
 
   result[0] = addCell(typeID, links);
-  const auto idx = links[0].idx;
+  const auto idx = result[0].idx;
 
   for (uint16_t i = 1; i < type.getOutNum(); ++i) {
     result[i] = Link(idx, i, false);

@@ -102,6 +102,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
   // Add good cuts from the previous try.
   for (const auto &oldCut : goodOldCuts) {
     cuts.push_back(oldCut);
+    matches.push_back(matchFinder(builder, oldCut));
     sorted.emplace_back(sorted.size(), 0. /* good */);
   }
 

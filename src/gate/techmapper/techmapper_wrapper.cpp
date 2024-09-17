@@ -36,7 +36,7 @@ std::shared_ptr<SubnetBuilder> techMap(
   criterion::Constraints constraints = {
       criterion::Constraint(criterion::AREA,  45000),   // FIXME:
       criterion::Constraint(criterion::DELAY, 1),       // FIXME:
-      criterion::Constraint(criterion::POWER, 30000)};  // FIXME:
+      criterion::Constraint(criterion::POWER, 25000)};  // FIXME:
   criterion::Criterion criterion{objective, constraints};
 
   // Maximum number of cuts per cell

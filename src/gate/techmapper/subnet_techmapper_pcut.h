@@ -48,6 +48,8 @@ protected:
   bool onRecovery(const Status &status) override {
     if (!SubnetTechMapperBase::onRecovery(status)) {
       cutsPerCell = static_cast<uint16_t>(1.5 * cutsPerCell);
+    } else {
+      cutsPerCell++;
     }
     return true;
   }

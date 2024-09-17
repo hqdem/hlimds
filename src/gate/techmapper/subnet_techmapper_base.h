@@ -31,6 +31,7 @@ public:
   struct Match final {
     model::CellTypeID typeID{model::OBJ_NULL_ID};
     model::Subnet::LinkList links{};
+    uint16_t output{0};
     bool inversion{false};
   };
 

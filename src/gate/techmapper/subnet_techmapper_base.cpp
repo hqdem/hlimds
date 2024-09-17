@@ -153,12 +153,14 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
       assert(matches[entryID]);
 #endif // !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
 
-      const auto &newType = model::CellType::get(matches[entryID]->typeID);
-      assert(newType.getInNum() == matches[entryID]->links.size());
+      const auto &match = *matches[entryID];
+ 
+      const auto &newType = model::CellType::get(match.typeID);
+      assert(newType.getInNum() == match.links.size());
 
       model::Subnet::LinkList newLinks(newType.getInNum());
       for (uint32_t j = 0; j < newType.getInNum(); ++j) {
-        const auto oldLink = matches[entryID]->links[j];
+        const auto oldLink = match.links[j];
         const auto newLink = links[oldLink.idx];
         newLinks[j] = oldLink.inv ? ~newLink : newLink;
 
@@ -179,8 +181,9 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
         }
       }
       
-      const auto link = newBuilder->addCell(matches[entryID]->typeID, newLinks);
-      links[entryID] = matches[entryID]->inversion ? ~link : link;
+      const auto outs = newBuilder->addMultiOutputCell(match.typeID, newLinks);
+      const auto link = outs[match.output];
+      links[entryID] = match.inversion ? ~link : link;
 
       const auto isOldOut = oldCell.isOut();
       const auto isNewOut = newType.isOut();

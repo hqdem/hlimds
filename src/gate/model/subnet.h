@@ -14,6 +14,7 @@
 #include "gate/model/iomapping.h"
 #include "gate/model/object.h"
 #include "gate/model/storage.h"
+#include "gate/model/subnet_base.h"
 #include "util/hash.h"
 
 #include <algorithm>
@@ -44,150 +45,14 @@ public:
     return {i + 1 + (k / Cell::InEntryLinks), k % Cell::InEntryLinks};
   }
 
-  /// Link source.
-  struct Link final {
-    Link(uint32_t idx, uint8_t out, bool inv): idx(idx), out(out), inv(inv) {}
-    Link(uint32_t idx, bool inv): Link(idx, 0, inv) {}
-    explicit Link(uint32_t idx): Link(idx, false) {}
-    Link(): Link(0) {}
-
-    Link operator~() const { return Link(idx, out, !inv); }
-    bool operator==(const Link &other) const {
-      return other.idx == idx && other.inv == inv && other.out == out;
-    }
-    bool operator!=(const Link &other) const {
-      return !(*this == other);
-    }
-
-    /// Entry index.
-    uint32_t idx : 28;
-    /// Output port.
-    uint32_t out : 3;
-    /// Invertor flag (for invertor graphs, e.g. AIG).
-    uint32_t inv : 1;
-  };
+  using Link = model::SubnetLink<uint32_t>;
+  using LinkList = model::SubnetLink<uint32_t>::SubnetLinkList;
   static_assert(sizeof(Link) == 4);
 
-  using LinkList = std::vector<Link>;
-
-  /// Cell entry.
-  struct Cell final {
-    static constexpr auto FlipFlopBits = 32;
-    static constexpr auto ArityBits = 6;
-    static constexpr auto RefCountBits = 20;
-
-    static constexpr uint16_t MaxArity = (1 << ArityBits) - 1;
-    static constexpr uint32_t MaxRefCount = (1 << RefCountBits) - 1;
-
-    static constexpr uint16_t InPlaceLinks = 5;
-    static constexpr uint16_t InEntryLinks = 8;
-
-    /// Constructs a cell.
-    Cell(CellTypeID typeID,
-         const LinkList &links,
-         bool flipFlop,
-         uint32_t flipFlopID):
-        flipFlop(flipFlop),
-        flipFlopID(flipFlopID),
-        arity(links.size()),
-        more((links.size() + (InEntryLinks - 1) - InPlaceLinks) / InEntryLinks),
-        refcount(0),
-        type(CellTypeID::makeSID(typeID)) {
-      assert(links.size() <= MaxArity);
-      assert((typeID != CELL_TYPE_ID_IN) || arity == 0);
-
-      const uint16_t nLinks = links.size();
-      const uint16_t size = std::min(nLinks, InPlaceLinks);
-      for (uint16_t i = 0; i < size; ++i) {
-        link[i] = links[i];
-      }
-    }
-
-    /// Constructs a non-flip-flop cell.
-    Cell(CellTypeID typeID, const LinkList &links):
-        Cell(typeID, links, false, 0) {}
-
-    /// Constructs a flip-flop cell.
-    Cell(CellTypeID typeID, const LinkList &links, uint32_t flipFlopID):
-        Cell(typeID, links, true, flipFlopID) {}
-
-    bool isIn()   const { return type == CELL_TYPE_SID_IN;    }
-    bool isOut()  const { return type == CELL_TYPE_SID_OUT;   }
-    bool isZero() const { return type == CELL_TYPE_SID_ZERO;  }
-    bool isOne()  const { return type == CELL_TYPE_SID_ONE;   }
-    bool isBuf()  const { return type == CELL_TYPE_SID_BUF;   }
-    bool isAnd()  const { return type == CELL_TYPE_SID_AND;   }
-    bool isOr()   const { return type == CELL_TYPE_SID_OR;    }
-    bool isXor()  const { return type == CELL_TYPE_SID_XOR;   }
-    bool isMaj()  const { return type == CELL_TYPE_SID_MAJ;   }
-    bool isNull() const { return type == CellTypeID::NullSID; }
-
-    bool isFlipFlop() const { return flipFlop; }
-
-    CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
-    const CellType &getType() const { return CellType::get(getTypeID()); }
-    CellSymbol getSymbol() const { return getType().getSymbol(); }
-
-    uint16_t getInNum() const { return arity; }
-    uint16_t getOutNum() const { return getType().getOutNum(); }
-
-    LinkList getInPlaceLinks() const {
-      const uint16_t nFanin = arity;
-      LinkList links(std::min(nFanin, InPlaceLinks));
-      for (uint16_t i = 0; i < links.size(); ++i) {
-        links[i] = link[i];
-      }
-      return links;
-    }
-
-    void incRefCount() {
-      assert(refcount < Cell::MaxRefCount);
-      refcount++;
-    }
-
-    void decRefCount() {
-      assert(refcount);
-      refcount--;
-    }
-
-    /// Flip-flop input/output flag.
-    uint64_t flipFlop : 1;
-    /// Unique flip-flop identifier (for flip-flip inputs/outputs).
-    uint64_t flipFlopID : FlipFlopBits;
-
-    /// Cell arity.
-    uint64_t arity : ArityBits;
-    /// Number of entries for additional links.
-    uint64_t more : 4;
-
-    /// Reference count (fanout).
-    uint64_t refcount : RefCountBits;
-
-    /// Type SID or CellTypeID::NullSID (undefined cell).
-    uint32_t type;
-
-    /// Input links.
-    Link link[InPlaceLinks];
-  };
+  using Cell = model::SubnetCell<uint32_t>;
   static_assert(sizeof(Cell) == 32);
 
-  /// Generalized entry: a cell or an array of additional links.
-  union Entry {
-    Entry() {}
-    Entry(CellTypeID typeID, const LinkList &links):
-        cell(typeID, links) {}
-    Entry(CellTypeID typeID, const LinkList &links, uint32_t flipFlopID):
-        cell(typeID, links, flipFlopID) {}
-    Entry(const LinkList &links, uint16_t startWith) {
-      const uint16_t size = links.size() - startWith;
-      for (uint16_t i = 0; i < size && i < Cell::InEntryLinks; ++i) {
-        link[i] = links[startWith + i];
-      }
-    }
-
-    Cell cell;
-    Link link[Cell::InEntryLinks];
-  };
+  using Entry = model::SubnetEntry<uint32_t>;
   static_assert(sizeof(Entry) == 32);
 
   Subnet &operator =(const Subnet &) = delete;

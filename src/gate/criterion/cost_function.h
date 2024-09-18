@@ -33,7 +33,7 @@ struct CostVector final {
   explicit CostVector(const std::valarray<Cost> &vector):
       vector(vector) {}
 
-  explicit CostVector(const std::valarray<Cost> &&vector):
+  explicit CostVector(const std::valarray<Cost> &&vector) noexcept:
       vector(std::move(vector)) {}
 
   CostVector(const Cost a, const Cost d, const Cost p):
@@ -42,7 +42,7 @@ struct CostVector final {
   CostVector(const CostVector &vector):
       CostVector(vector.vector) {}
 
-  CostVector(CostVector &&vector):
+  CostVector(CostVector &&vector) noexcept:
       CostVector(std::move(vector.vector)) {}
 
   size_t size() const {
@@ -58,35 +58,35 @@ struct CostVector final {
   }
 
   CostVector operator+(const CostVector &other) const {
-    return CostVector{vector + other.vector};
+    return CostVector(vector + other.vector);
   }
 
   CostVector operator-(const CostVector &other) const {
-    return CostVector{vector - other.vector};
+    return CostVector(vector - other.vector);
   }
 
   CostVector operator*(const CostVector &other) const {
-    return CostVector{vector * other.vector};
+    return CostVector(vector * other.vector);
   }
 
   CostVector operator/(const CostVector &other) const {
-    return CostVector{vector / other.vector};
+    return CostVector(vector / other.vector);
   }
 
   CostVector operator+(const Cost other) const {
-    return CostVector{vector + other};
+    return CostVector(vector + other);
   }
 
   CostVector operator*(const Cost other) const {
-    return CostVector{vector * other};
+    return CostVector(vector * other);
   }
 
   CostVector operator/(const Cost other) const {
-    return CostVector{vector / other};
+    return CostVector(vector / other);
   }
 
   CostVector pow(const Cost other) const {
-    return CostVector{std::pow(vector, other)};
+    return CostVector(std::pow(vector, other));
   }
 
   CostVector &operator=(const CostVector &other) {

@@ -26,8 +26,8 @@ public:
 
   struct StandardCell {
     model::CellTypeID cellTypeID;
-    kitty::dynamic_truth_table ctt; // canonized TT
-    util::NpnTransformation transform;
+    std::vector<kitty::dynamic_truth_table> ctt; // canonized TT
+    std::vector<util::NpnTransformation> transform;
   };
 
   std::vector<StandardCell> &getCombCells() {
@@ -59,7 +59,8 @@ private:
       const model::CellTypeID cellTypeID,
       const model::CellTypeID cellTypeIDToAdd,
       void(*func)(std::string &in, const std::string &fIn),
-      std::vector<StandardCell> &scs);
+      std::vector<StandardCell> &scs,
+      uint output);
   void addSuperCells();
   void addConstCells();
 

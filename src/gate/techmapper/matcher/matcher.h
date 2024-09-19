@@ -38,12 +38,16 @@ public:
 
   void initMap(const std::vector<StandardCell> &cells) {
     for (const auto& cell : cells) {
-      this->cells[cell.ctt].push_back(cell);
+      uint16_t output = 0;
+      for (const auto& ctt : cell.ctt) {
+        this->cells[ctt].push_back(std::pair{cell, output++});
+      }
     }
   }
 
 protected:
-  std::unordered_map<KeyType, std::vector<StandardCell>> cells;
+  std::unordered_map<KeyType,
+    std::vector<std::pair<StandardCell, uint16_t>>> cells;
 };
 
 } // namespace eda::gate::techmapper

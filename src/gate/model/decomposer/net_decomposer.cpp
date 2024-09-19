@@ -176,7 +176,7 @@ static inline void fillLinks(
     SignalType linkSignalType = (descToPropagate != nullptr) ?
         descToPropagate->signalType : SignalType::DATA;
     if (cell.getType().isSeqGate() && descToPropagate == nullptr) {
-       linkSignalType = getSignalType(cell, j);
+      linkSignalType = getSignalType(cell, j);
     }
     const auto link = Link{links[j], LinkEnd{cellID, j}};
     result.push_back({link, ConnectionDesc{linkSignalType}});
@@ -297,7 +297,7 @@ struct NetTraversalContext final {
     const auto outputs = extractOutputs(net);
 
     if (!outputs.empty()) {
-      stack.push(NetTraversalEntry{OBJ_NULL_ID, extractOutputs(net), 0});
+      stack.push(NetTraversalEntry{OBJ_NULL_ID, outputs, 0});
     } else {
       UTOPIA_LOG_WARN("Net has no outputs");
     }

@@ -110,11 +110,7 @@ inline criterion::CostVector getPPA(
   const auto delay = getDelay(cellType, 0, 0); // TODO input transition time and output capacitance should be taken from Context
   const auto power = getLeakagePower(cellType);
 
-  criterion::CostVector result;
-  result[criterion::AREA] = area;
-  result[criterion::DELAY] = delay;
-  result[criterion::POWER] = power;
-  return result;
+  return criterion::CostVector(area, delay, power);
 }
 
 } // namespace eda::gate::estimator

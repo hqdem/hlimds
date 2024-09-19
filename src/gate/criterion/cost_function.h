@@ -8,118 +8,13 @@
 
 #pragma once
 
+#include "gate/criterion/cost_vector.h"
+
 #include <cassert>
 #include <cmath>
-#include <cstddef>
 #include <functional>
-#include <valarray>
 
 namespace eda::gate::criterion {
-
-/// @brief Cost datatype (must meet the NumericType requirements).
-using Cost = float;
-
-/// @brief Stores the estimated (predicted) design characteristics.
-struct CostVector final {
-  /// Area, delay, and power.
-  static constexpr size_t DefaultSize = 3;
-
-  /// Zero cost vector.
-  static const CostVector Zero;
-
-  explicit CostVector():
-      vector(DefaultSize) {}
-
-  explicit CostVector(const std::valarray<Cost> &vector):
-      vector(vector) {}
-
-  explicit CostVector(const std::valarray<Cost> &&vector) noexcept:
-      vector(std::move(vector)) {}
-
-  CostVector(const Cost a, const Cost d, const Cost p):
-      CostVector(std::valarray<Cost>{a, d, p}) {}
-
-  CostVector(const CostVector &vector):
-      CostVector(vector.vector) {}
-
-  CostVector(CostVector &&vector) noexcept:
-      CostVector(std::move(vector.vector)) {}
-
-  size_t size() const {
-    return vector.size();
-  }
-
-  const Cost &operator[](const size_t i) const {
-    return vector[i];
-  }
-
-  Cost &operator[](const size_t i) {
-    return vector[i];
-  }
-
-  CostVector operator+(const CostVector &other) const {
-    return CostVector(vector + other.vector);
-  }
-
-  CostVector operator-(const CostVector &other) const {
-    return CostVector(vector - other.vector);
-  }
-
-  CostVector operator*(const CostVector &other) const {
-    return CostVector(vector * other.vector);
-  }
-
-  CostVector operator/(const CostVector &other) const {
-    return CostVector(vector / other.vector);
-  }
-
-  CostVector operator+(const Cost other) const {
-    return CostVector(vector + other);
-  }
-
-  CostVector operator*(const Cost other) const {
-    return CostVector(vector * other);
-  }
-
-  CostVector operator/(const Cost other) const {
-    return CostVector(vector / other);
-  }
-
-  CostVector pow(const Cost other) const {
-    return CostVector(std::pow(vector, other));
-  }
-
-  CostVector &operator=(const CostVector &other) {
-    vector = other.vector;
-    return *this;
-  }
-
-  CostVector &operator+=(const CostVector &other) {
-    vector += other.vector;
-    return *this;
-  }
-
-  CostVector &operator-=(const CostVector &other) {
-    vector -= other.vector;
-    return *this;
-  }
-
-  CostVector &operator*=(const CostVector &other) {
-    vector *= other.vector;
-    return *this;
-  }
-
-  CostVector &operator/=(const CostVector &other) {
-    vector /= other.vector;
-    return *this;
-  }
-
-  CostVector normalize(const CostVector &min, const CostVector &max) const;
-
-  CostVector truncate(const Cost min, const Cost max) const;
-
-  std::valarray<Cost> vector;
-};
 
 /// @brief Cost function (objective).
 using CostFunction = std::function<Cost(const CostVector &)>;
@@ -132,9 +27,9 @@ enum Indicator {
   MIXED = -1
 };
 
-static_assert(AREA  == 0);
-static_assert(DELAY == 1);
-static_assert(POWER == 2);
+static_assert(Indicator::AREA  == 0);
+static_assert(Indicator::DELAY == 1);
+static_assert(Indicator::POWER == 2);
 
 /// Aggregates two cost vector and assigns the result to the first one.
 inline void aggregateCost(CostVector &result, const CostVector &vector) {
@@ -158,10 +53,10 @@ inline CostFunction getCostFunction(const Indicator indicator) {
 /// @brief Objective function.
 struct Objective final {
   explicit Objective(const Indicator indicator):
-    indicator(indicator), function(getCostFunction(indicator)) {}
+      indicator(indicator), function(getCostFunction(indicator)) {}
 
   explicit Objective(const CostFunction function):
-    indicator(MIXED), function(function) {}
+      indicator(Indicator::MIXED), function(function) {}
 
   const Indicator indicator;
   const CostFunction function;

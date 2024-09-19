@@ -6,14 +6,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "gate/criterion/criterion.h"
+#include "gate/criterion/cost_vector.h"
 
 #include <cassert>
 #include <cmath>
 
 namespace eda::gate::criterion {
 
-const CostVector CostVector::Zero{0.0, 0.0, 0.0};
+const CostVector CostVector::Zero{0., 0., 0.};
+const CostVector CostVector::Unit{1., 1., 1.};
 
 CostVector CostVector::normalize(
     const CostVector &min, const CostVector &max) const {
@@ -22,7 +23,7 @@ CostVector CostVector::normalize(
   return (*this - min) / (max - min);
 }
 
-CostVector CostVector::truncate(const float min, const float max) const {
+CostVector CostVector::truncate(const Cost min, const Cost max) const {
   assert(min <= max);
 
   CostVector result;

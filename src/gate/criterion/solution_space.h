@@ -16,17 +16,6 @@
 
 namespace eda::gate::criterion {
 
-static inline std::pair<float, float> getProgressRange(float progress) {
-  constexpr float t{2.0};
-  return {std::pow(progress, t), std::pow(progress, 1/t)};
-}
-
-static inline CostVector predictCostVector(
-    const CostVector &vector, const float progress) {
-  constexpr float e{1.0e-6};
-  return progress > e ? (vector / progress) : CostVector::Zero;
-}
-
 template <typename T>
 class SolutionSpace final {
   static_assert(std::is_copy_assignable_v<T>, "T must be copy-assignable");
@@ -34,9 +23,9 @@ class SolutionSpace final {
 public:
   struct Solution final {
     Solution():
-      cost(std::numeric_limits<Cost>::max()) {}
+        cost(std::numeric_limits<Cost>::max()) {}
     Solution(const T &solution, const Cost cost, const CostVector &vector):
-      solution(solution), cost(cost), vector(vector) {}
+        solution(solution), cost(cost), vector(vector) {}
     Solution(const Solution &other) = default;
 
     bool operator==(const Solution &other) const {
@@ -59,29 +48,24 @@ public:
   };
 
   SolutionSpace(const Criterion &criterion,
-                const CostVector &tension,
-                const float progress):
+                const CostVector &tension):
       criterion(criterion),
-      tension(tension),
-      progress(progress) {}
+      tension(tension) {}
 
   Cost getCost(const CostVector &vector) const {
     return criterion.getCost(vector);
   }
 
   Cost getPenalty(const CostVector &vector) const {
-    const auto prediction = predictCostVector(vector, progress);
-    return criterion.getPenalty(prediction, tension);
+    return criterion.getPenalty(vector, tension);
   }
 
   Cost getPenalizedCost(const CostVector &vector) const {
-    return getCost(vector) * getPenalty(vector);
+    return getCost(vector) + getPenalty(vector);
   }
 
   CostVector getTension(const CostVector &vector) const {
-    const auto maxProgress = getProgressRange(progress).second;
-    const auto minPrediction = predictCostVector(vector, maxProgress);
-    return criterion.getTension(minPrediction);
+    return criterion.getTension(vector);
   }
 
   CostVector getTension() const {
@@ -90,9 +74,7 @@ public:
   }
 
   bool check(const CostVector &vector) const {
-    const auto maxProgress = getProgressRange(progress).second;
-    const auto minPrediction = predictCostVector(vector, maxProgress);
-    return criterion.check(minPrediction);
+    return criterion.check(vector);
   }
 
   /// Add the solution.
@@ -110,9 +92,9 @@ public:
   }
 
   /// Checks whether there are solutions.
-  bool hasSolution() const { return solutionCount > 0; }
+  bool hasSolution() const { return solutionCount != 0; }
   /// Checks whether there are feasible solutions. 
-  bool hasFeasible() const { return feasibleCount > 0; }
+  bool hasFeasible() const { return feasibleCount != 0; }
 
   /// Returns the best solution w.r.t. to the given criterion.
   const Solution &getBest() const { return best; }
@@ -120,7 +102,6 @@ public:
 private:
   const Criterion &criterion;
   const CostVector tension;
-  const float progress;
 
   size_t solutionCount{0};
   size_t feasibleCount{0};

@@ -1,6 +1,6 @@
 add_compile_options(-fno-rtti)
 add_library(Gate OBJECT
-  criterion/cost_function.cpp
+  criterion/cost_vector.cpp
   debugger/base_checker.cpp
   debugger/bdd_checker.cpp
   debugger/fraig_checker.cpp

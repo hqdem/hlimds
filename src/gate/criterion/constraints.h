@@ -20,19 +20,19 @@ namespace eda::gate::criterion {
 struct Constraint final {
   Constraint(const CostFunction function, const Cost min, const Cost max):
       function(function), min(min), max(max) {
-    assert(0.0 <= min && min < max);
+    assert(0. <= min && min < max);
   } 
  
   Constraint(const CostFunction function, const Cost max):
-      Constraint(function, 0.0, max) {}
+      Constraint(function, 0., max) {}
 
   Constraint(const Indicator indicator, const Cost min, const Cost max):
       Constraint(getCostFunction(indicator), min, max) {
-    assert(indicator != MIXED);
+    assert(indicator != Indicator::MIXED);
   }
 
   Constraint(const Indicator indicator, const Cost max):
-      Constraint(indicator, 0.0, max) {}
+      Constraint(indicator, 0., max) {}
 
   bool check(const Cost cost) const {
     return min <= cost && cost <= max;

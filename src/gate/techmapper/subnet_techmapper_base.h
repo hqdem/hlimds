@@ -105,7 +105,6 @@ protected:
 
     Status(const Verdict verdict,
            const bool isFeasible,
-           const float progress,
            const criterion::CostVector &vector,
            const criterion::CostVector &tension):
         verdict(verdict),
@@ -114,20 +113,12 @@ protected:
         tension(tension) {}
 
     Status(const Verdict verdict,
-           const float progress,
            const criterion::CostVector &vector,
            const criterion::CostVector &tension):
-        Status(verdict, false, progress, vector, tension) {}
-
-    Status(const Verdict verdict,
-           const bool isFeasible,
-           const criterion::CostVector &vector,
-           const criterion::CostVector &tension):
-        Status(verdict, isFeasible, 1., vector, tension) {}
+        Status(verdict, false, vector, tension) {}
 
     Verdict verdict{UNSAT};
     bool isFeasible{false};
-    float progress{1.};
     criterion::CostVector vector;
     criterion::CostVector tension;
   };
@@ -135,7 +126,7 @@ protected:
   virtual void onBegin(const SubnetBuilderPtr &oldBuilder) {
     tryCount = 0;
     space.resize(oldBuilder->getMaxIdx() + 1);
-    tension = {0., 0., 0.} /* no penalties */;
+    tension = criterion::CostVector::Zero /* no penalties */;
   }
 
   virtual bool onRecovery(const Status &status) {
@@ -145,11 +136,10 @@ protected:
     }
 
     if (tryCount == 0) {
-      tension = {1., 1., 1.};
+      tension = criterion::CostVector::Unit;
     }
 
-    constexpr criterion::Cost coefficient = 1.25;
-    tension *= status.tension.pow(2.) * coefficient;
+    tension *= status.tension;
 
     tryCount++;
     return true;
@@ -178,7 +168,7 @@ protected:
     return vectors;
   }
 
-  Status map(const SubnetBuilderPtr &builder, const bool enableEarlyRecovery);
+  Status techMap(const SubnetBuilderPtr &builder);
 
   void findCellSolutions(const SubnetBuilderPtr &builder,
                          const model::EntryID entryID,

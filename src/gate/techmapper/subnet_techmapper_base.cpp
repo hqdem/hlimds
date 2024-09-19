@@ -214,25 +214,6 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
   return newBuilder;
 }
 
-static inline float getProgress(
-    const SubnetTechMapperBase::SubnetBuilderPtr &builder,
-    const uint32_t count) {
-  const auto nIn = builder->getInNum();
-  const auto nOut = builder->getOutNum();
-  const auto nAll = builder->getCellNum();
-
-  // Ignore the subnet inputs.
-  if (count < nIn) { return 0.; }
-
-  // Last non-output cell index.
-  const auto k = nAll - nOut - 1;
-  const auto j = (count > k) ? k : count;
-
-  // Progress reaches 100% when merging outputs.
-  return static_cast<float>(j + 1 - nIn) /
-         static_cast<float>(nAll - nIn);
-}
-
 void SubnetTechMapperBase::findCellSolutions(
     const SubnetBuilderPtr &builder,
     const model::EntryID entryID,
@@ -269,18 +250,13 @@ void SubnetTechMapperBase::findCellSolutions(
   } // for cuts
 }
 
-SubnetTechMapperBase::Status SubnetTechMapperBase::map(
-    const SubnetBuilderPtr &builder,
-    const bool enableEarlyRecovery) {
+SubnetTechMapperBase::Status SubnetTechMapperBase::techMap(
+    const SubnetBuilderPtr &builder) {
   // Subnet outputs to be filled in the loop below.
   std::unordered_set<model::EntryID> outputs;
   outputs.reserve(builder->getOutNum());
 
-  uint32_t cellCount{0};
   for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
-    const auto progress = getProgress(builder, cellCount++);
-    assert(0. <= progress && progress <= 1.);
-
     const auto entryID = *it;
     const auto &cell = builder->getCell(entryID);
 
@@ -288,8 +264,10 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
     const auto cuts = cutProvider(*builder, entryID);
     assert(!cuts.empty());
 
-    space[entryID] = std::make_unique<CellSpace>(
-        *context.criterion, tension, progress);
+    // TODO: Do not recreate spaces for non-first tries (update tension).
+    // TODO: Think about individual tensions for subnet points.
+    // TODO: Think about randomization (adding small noise to tensions).
+    space[entryID] = std::make_unique<CellSpace>(*context.criterion, tension);
 
     // Handle the input cells.
     if (cell.isIn()) {
@@ -315,14 +293,6 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::map(
     if (!space[entryID]->hasSolution()) {
       UTOPIA_LOG_WARN("No match found for "
           << fmt::format("cell#{}:{}", entryID, cell.getType().getName()));
-    }
-
-    if (enableEarlyRecovery && progress > 0.5 &&
-        space[entryID]->hasSolution() &&
-       !space[entryID]->hasFeasible()) {
-      const auto &partialVector = space[entryID]->getBest().vector;
-      const auto &partialTension = space[entryID]->getTension();
-      return Status{Status::RERUN, progress, partialVector, partialTension};
     }
   } // for cells
 
@@ -352,8 +322,8 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
   while (tryCount < maxTries) {
     const auto finalTry = (tryCount == maxTries - 1);
 
-    // Do technology mapping.
-    const auto status = thisPtr->map(builder, !finalTry);
+    // Do technology mapping for the given criterion and tension.
+    const auto status = thisPtr->techMap(builder);
 
     if (status.verdict == Status::FOUND && (status.isFeasible || finalTry)) {
       UTOPIA_LOG_COST_AND_TENSION_VECTORS(
@@ -367,8 +337,7 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
 
     if (status.verdict != Status::UNSAT) {
       UTOPIA_LOG_COST_AND_TENSION_VECTORS(
-          "Solution is likely not to satisfy the constraints ("
-              << static_cast<unsigned>(100. * status.progress) << "%)",
+          "Solution does not satisfy the constraints",
           status.vector, status.tension);
     }
 

@@ -16,30 +16,34 @@
 
 namespace eda::gate::criterion {
 
-/// Returns the coefficient to be multiplied to the cost.
+/// Returns the penalty to be added to the cost.
 using PenaltyFunction = std::function<Cost(const CostVector &vector,
-                                           const Constraints &constraints,
                                            const CostVector &tension)>;
 
-/// Always returns 1 => penaltized cost = cost.
+/// Always returns 0 => penalized cost = cost.
 inline Cost zeroPenalty(const CostVector &vector,
-                        const Constraints &constraints,
                         const CostVector &tension) {
-  return 1.;
+  return 0.;
 }
 
-/// Quadratic penalty.
+/// Power penalty: lambda * sum{(t[i]*v[i])^p}.
+inline Cost powerPenalty(const CostVector &vector,
+                         const CostVector &tension,
+                         const Cost power) {
+  static const CostVector lambda{0.2};
+  return (lambda * tension.pow(power) * vector).sum();
+}
+
+/// Linear penalty: power penalty w/ p = 1.
+inline Cost linearPenalty(const CostVector &vector,
+                          const CostVector &tension) {
+  return powerPenalty(vector, tension, 1.);
+}
+
+/// Quadratic penalty: power penalty w/ p = 2.
 inline Cost quadraticPenalty(const CostVector &vector,
-                             const Constraints &constraints,
                              const CostVector &tension) {
-  constexpr Cost alarm{0.9};
-
-  const auto min = getMinVector(constraints);
-  const auto max = getMaxVector(constraints) / (tension + 1.f / alarm);
-
-  const auto normalized = vector.normalize(min, max).truncate(0., 100.);
-
-  return 1. + std::pow(normalized.vector, 2.).sum();
+  return powerPenalty(vector, tension, 2.);
 }
 
 } // namespace eda::gate::criterion

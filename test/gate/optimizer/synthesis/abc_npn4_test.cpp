@@ -236,7 +236,7 @@ TEST(AbcNpn4Test, AllNpn4Test) {
     }
     covered[npnTable] = true;
 
-    const auto subnetObject = Synthesizer::get().synthesize(func);
+    auto subnetObject = Synthesizer::get().synthesize(func);
 
 #ifdef UTOPIA_DEBUG
     std::cout << std::setfill('0') << std::setw(w)

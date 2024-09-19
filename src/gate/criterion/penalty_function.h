@@ -30,7 +30,7 @@ inline Cost zeroPenalty(const CostVector &vector,
 inline Cost powerPenalty(const CostVector &vector,
                          const CostVector &tension,
                          const Cost power) {
-  static const CostVector lambda{0.2};
+  static const CostVector lambda{.25};
   return (lambda * tension.pow(power) * vector).sum();
 }
 
@@ -44,6 +44,12 @@ inline Cost linearPenalty(const CostVector &vector,
 inline Cost quadraticPenalty(const CostVector &vector,
                              const CostVector &tension) {
   return powerPenalty(vector, tension, 2.);
+}
+
+/// Cubic penalty: power penalty w/ p = 3.
+inline Cost cubicPenalty(const CostVector &vector,
+                             const CostVector &tension) {
+  return powerPenalty(vector, tension, 3.);
 }
 
 } // namespace eda::gate::criterion

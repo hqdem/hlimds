@@ -135,11 +135,16 @@ protected:
       return false;
     }
 
-    if (tryCount == 0) {
-      tension = criterion::CostVector::Unit;
-    }
+    const auto &unit = criterion::CostVector::Unit;
 
-    tension *= status.tension;
+    if (tryCount == 0) {
+      // Sharpen the tension vector.
+      const auto softmax = status.tension.softmax(.1 /* temperature */);
+      tension = softmax * (status.tension.norm(2.) / softmax.norm(2.));
+    } else {
+      constexpr criterion::Cost inflation = 1.01;
+      tension *= status.tension.smooth(unit, 0.5) * inflation;
+    }
 
     tryCount++;
     return true;
@@ -186,7 +191,7 @@ protected:
   }
 
   // Maximum number of tries for recovery.
-  const uint16_t maxTries{5};
+  const uint16_t maxTries{3};
 
   const context::UtopiaContext &context;
   const CutProvider cutProvider;

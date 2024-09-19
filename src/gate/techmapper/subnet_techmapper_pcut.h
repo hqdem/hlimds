@@ -49,7 +49,7 @@ protected:
     if (!SubnetTechMapperBase::onRecovery(status)) {
       cutsPerCell = static_cast<uint16_t>(1.5 * cutsPerCell);
     } else {
-      cutsPerCell++;
+      cutsPerCell += 2;
     }
     return true;
   }

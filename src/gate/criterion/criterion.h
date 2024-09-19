@@ -25,7 +25,7 @@ struct Criterion final {
 
   Criterion(const Objective &objective,
             const Constraints &constraints):
-      Criterion(objective, constraints, quadraticPenalty) {}
+      Criterion(objective, constraints, cubicPenalty) {}
 
   CostVector normalize(const CostVector &vector) const {
     return vector.normalize(getMinVector(constraints),

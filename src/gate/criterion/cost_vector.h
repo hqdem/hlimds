@@ -100,8 +100,21 @@ struct CostVector final {
     return CostVector(std::abs(vector));
   }
 
-  CostVector pow(const Cost other) const {
-    return CostVector(std::pow(vector, other));
+  CostVector pow(const Cost power) const {
+    return CostVector(std::pow(vector, power));
+  }
+
+  CostVector exp() const {
+    return CostVector(std::exp(vector));
+  }
+
+  CostVector softmax(const Cost tau) const {
+    const auto v = std::exp(vector / tau);
+    return CostVector(v / v.sum());
+  }
+
+  CostVector smooth(const CostVector &pivot, const Cost alpha) const {
+    return CostVector(vector * alpha + pivot.vector * (1. - alpha));
   }
 
   CostVector &operator=(const CostVector &other) {

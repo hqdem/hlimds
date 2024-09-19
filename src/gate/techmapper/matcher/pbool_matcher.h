@@ -18,7 +18,7 @@ class PBoolMatcher final : public Matcher<PBoolMatcher, kitty::dynamic_truth_tab
 public:
 
   inline void match(
-      std::vector<StandardCell> &scs,
+      std::vector<std::pair<StandardCell, uint16_t>> &scs,
       const kitty::dynamic_truth_table &ctt) {
 
     if (auto it = cells.find(ctt); it != cells.end()) {

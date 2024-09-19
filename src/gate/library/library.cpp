@@ -63,69 +63,81 @@ void SCLibrary::loadCombCell(const std::string &name) {
   model::SubnetID subnetID;
 
   // We can't consider cells with no area.
-  if (props.area == MAXFLOAT) {
+  if (props.area == MAXFLOAT || nOutputs == 0) {
     return;
   }
 
-  for (uint out = 0; out < nOutputs; out++) {
-    kitty::dynamic_truth_table func;
-    if (nInputs == 0) {
+  model::SubnetBuilder builder;
+  std::vector<kitty::dynamic_truth_table> funcs;
+  if (nInputs == 0) {
+    std::vector<std::string> varNames;
+    for (uint out = 0; out < nOutputs; out++) {
       std::string strFunc = iface->getStringFunction(name, out);
       if (strFunc == "0" || strFunc == "1") {
-        // Special construction of subnet with constant.
-        model::SubnetBuilder builder;
         const auto cell = builder.addCell(strFunc == "0" ? model::ZERO : model::ONE);
-        for (uint i = 0; i < nOutputs; i++) {
-          builder.addOutput(cell); // TODO
-        }
-        subnetID = builder.make();
-
-        // Special construction of TT.
-        std::vector<std::string> varNames;
+        builder.addOutput(cell);
+        kitty::dynamic_truth_table func;
         kitty::create_from_formula(func, strFunc, varNames);
+        funcs.push_back(func);
       } else {
-        break;
+        return;
       }
-    } else {
-      // Construction of correspondent to TT subnet by Minato Morreale algorithm.
-      func = iface->getFunction(name, out);
+    }
+  } else {
+    model::SubnetBuilder::LinkList inputs(nInputs);
+    for (uint in = 0; in < nInputs; in++) {
+      inputs[in] = builder.addInput();
+    }
+    for (uint out = 0; out < nOutputs; out++) {
+      kitty::dynamic_truth_table func {iface->getFunction(name, out)};
+      funcs.push_back(func);
       auto subnetObject = optimizer::synthesis::MMSynthesizer{}.synthesize(func);
-
       assert(subnetObject.hasBuilder());
+      auto &funcBuilder = subnetObject.builder();
+      const auto funcID = funcBuilder.make();
 
-      auto &builder = subnetObject.builder();
-      if (nOutputs > 1) {
-        for (model::EntryID i = 0; i < builder.getMaxIdx() + 1; i++) {
-          const auto &cell = builder.getCell(i);
-          if (cell.isOut()) {
-            const auto links = cell.getInPlaceLinks();
-            builder.addOutputs(links); // TODO
-            break;
-          }
-        }
-      }
-      subnetID = subnetObject.make();
+      const auto outputs = builder.addSubnet(funcID, inputs);
+      builder.addOutputs(outputs);
     }
+  }
+  subnetID = builder.make();
+#if DEBUG_MOUTS
+  if (nInputs == 0)
+    std::cout << "added no input cell: " << model::Subnet::get(subnetID);
 
-    const auto cellTypeID = model::makeCellType(
-      model::CellSymbol::UNDEF,
-      name,
-      subnetID,
-      attrID,
-      model::CellProperties{1, 0, 1, 0, 0, 0, 0, 0, 0},
-      nInputs,
-      nOutputs);
+  if (name == "sky130_fd_sc_hd__ha_1") {
+    std::cout << name << std::endl;
+    auto tt2 = model::evaluate(model::Subnet::get(subnetID));
+    std::cout << model::Subnet::get(subnetID) << std::endl <<
+      kitty::to_hex(tt2[0]) << std::endl <<
+      kitty::to_hex(tt2[1]) << std::endl;
+  }
+#endif
 
-    if (nInputs > maxArity) {
-      maxArity = nInputs;
-    }
+  const auto cellTypeID = model::makeCellType(
+    model::CellSymbol::UNDEF,
+    name,
+    subnetID,
+    attrID,
+    model::CellProperties{1, 0, 1, 0, 0, 0, 0, 0, 0},
+    nInputs,
+    nOutputs);
 
+  if (nInputs > maxArity) {
+    maxArity = nInputs;
+  }
+
+  std::vector<kitty::dynamic_truth_table> ctt;
+  std::vector<util::NpnTransformation> t;
+  for (auto func : funcs) {
     auto config = kitty::exact_p_canonization(func);
-    const auto &ctt = util::getTT(config); // canonized TT
-    util::NpnTransformation t = util::getTransformation(config);
-    StandardCell cell{cellTypeID, ctt, t};
-    const auto strFunc = kitty::to_hex(ctt);
+    ctt.push_back(util::getTT(config)); // canonized TT
+    t.push_back(util::getTransformation(config));
+  }
 
+  StandardCell cell{cellTypeID, ctt, t};
+  for (auto func : funcs) {
+    const auto strFunc = kitty::to_hex(func);
     if (nInputs == 0) {
       if (strFunc == "0") {
         constZeroCells.push_back(cell);
@@ -136,9 +148,9 @@ void SCLibrary::loadCombCell(const std::string &name) {
       if (nInputs == 1 && strFunc == "1") {
         negCombCells.push_back(cell);
       }
-      combCells.push_back(cell);
     }
   }
+  combCells.push_back(cell);
 }
 
 const SCLibrary::StandardCell *SCLibrary::findCheapestCell(
@@ -161,12 +173,15 @@ const SCLibrary::StandardCell *SCLibrary::findCheapestCell(
 
 void SCLibrary::findCheapestCells() {
   if (negCombCells.empty()) {
+    assert(false && "Neg cell is not found in Liberty file!");
     // TODO add hand-made negative combinational cell
   }
   if (constOneCells.empty()) {
+    assert(false && "Const One is not found in Liberty file!");
     // TODO add hand-made const-one cell
   }
   if (constZeroCells.empty()) {
+    assert(false && "Const Zero is not found in Liberty file!");
     // TODO add hand-made const-zero cell
   }
 
@@ -204,7 +219,8 @@ void SCLibrary::addSuperCell(
     const model::CellTypeID cellTypeID,
     const model::CellTypeID cellTypeIDToAdd,
     void(*updateFunc)(std::string &in, const std::string &fIn),
-    std::vector<StandardCell> &scs) {
+    std::vector<StandardCell> &scs,
+    uint output) {
   const auto &cellType = model::CellType::get(cellTypeID);
   const auto &cellTypeToAdd = model::CellType::get(cellTypeIDToAdd);
 
@@ -221,11 +237,13 @@ void SCLibrary::addSuperCell(
   // Construction of SubnetBuilder for two cells: the cell "cellToAdd" is
   // connected to the first input of the other cell.
   model::SubnetBuilder builder;
+  // Two LinkLists: for cellToAdd and for the cell.
   model::SubnetBuilder::LinkList inputLinks[2];
 
   size_t i = 0;
+  // First create inputs for the closer-to-inputs cell.
   if (cellTypeToAdd.getInNum() == 0) {
-    builder.addInput();
+    builder.addInput(); // TODO: Fantom input
     i++;
   } else {
     for (; i < cellTypeToAdd.getInNum(); i++) {
@@ -233,19 +251,30 @@ void SCLibrary::addSuperCell(
       inputLinks[0].push_back(input);
     }
   }
+  // Then create inputs for the second cell.
   for (; i < cellType.getInNum(); i++) {
     const auto input = builder.addInput();
     inputLinks[1].push_back(input);
   }
-  const auto cellToAdd = builder.addCell(cellTypeIDToAdd, inputLinks[0]);
 
-  inputLinks[1].insert(inputLinks[1].begin(), cellToAdd);
-  const auto cell = builder.addCell(cellTypeID, inputLinks[1]);
-  for (i = 0; i < cellType.getOutNum(); i++) {
-    builder.addOutput(cell);
+  model::Subnet::Link cellToAdd;
+  if (cellTypeToAdd.getOutNum() > 1) {
+    const auto outputs =
+      builder.addMultiOutputCell(cellTypeIDToAdd, inputLinks[0]);
+    cellToAdd = outputs[output];
+  } else {
+    cellToAdd = builder.addCell(cellTypeIDToAdd, inputLinks[0]);
   }
 
+  inputLinks[1].insert(inputLinks[1].begin(), cellToAdd);
+  const auto outputs = builder.addMultiOutputCell(cellTypeID, inputLinks[1]);
+  builder.addOutputs(outputs);
+
   const auto subnetID = builder.make();
+#if DEBUG_MOUTS
+  if (cellType.getOutNum() > 1)
+    std::cout << "Added 2-out Super Cell: " << model::Subnet::get(subnetID) << std::endl;
+#endif
 
   // Obtain new CellTypeID for the supercell.
   const auto cellTypeIDsc = model::makeCellType(
@@ -257,17 +286,21 @@ void SCLibrary::addSuperCell(
     cellType.getInNum(),
     cellType.getOutNum());
 
+  std::vector<kitty::dynamic_truth_table> ctt;
+  std::vector<util::NpnTransformation> t;
   // Calculate new truth table for the supercell.
-  auto strFunc = iface->getStringFunction(cellType.getName(), 0);
-  const auto inputs = iface->getInputs(cellType.getName());
-  updateFunc(strFunc, inputs[0]);
+  for (uint i = 0; i < cellType.getOutNum(); i++) {
+    auto strFunc = iface->getStringFunction(cellType.getName(), i);
+    const auto inputs = iface->getInputs(cellType.getName());
+    updateFunc(strFunc, inputs[0]);
 
-  kitty::dynamic_truth_table tt(inputs.size());
-  kitty::create_from_formula(tt, strFunc, inputs);
+    kitty::dynamic_truth_table tt(inputs.size());
+    kitty::create_from_formula(tt, strFunc, inputs);
 
-  auto config = kitty::exact_p_canonization(tt);
-  const auto &ctt = util::getTT(config); // canonized TT
-  util::NpnTransformation t = util::getTransformation(config);
+    auto config = kitty::exact_p_canonization(tt);
+    ctt.push_back(util::getTT(config)); // canonized TT
+    t.push_back(util::getTransformation(config));
+  }
   scs.push_back({cellTypeIDsc, ctt, t});
 }
 
@@ -280,11 +313,32 @@ void SCLibrary::addSuperCells() {
     const auto &cellType = model::CellType::get(cell.cellTypeID);
     if (cellType.getInNum() == 2) {
       addSuperCell(cell.cellTypeID, cheapNegCell->cellTypeID,
-        inverseFirstInput, superCells);
+        inverseFirstInput, superCells, 0);
+
+      uint output = 0;
+      for (const auto& ctt : cheapOneCell->ctt) {
+        if (kitty::to_hex(ctt) == "1") {
+          break;  
+        }
+        output++;
+      }
+      assert(output < model::CellType::get(
+                        cheapOneCell->cellTypeID).getOutNum());
       addSuperCell(cell.cellTypeID, cheapOneCell->cellTypeID,
-        highFirstInput, superCells);
+        highFirstInput, superCells, output);
+
+      output = 0;
+      for (const auto& ctt : cheapZeroCell->ctt) {
+        if (kitty::to_hex(ctt) == "0") {
+          break;
+        }
+        output++;
+      }
+      assert(output < model::CellType::get(
+                        cheapZeroCell->cellTypeID).getOutNum());
+
       addSuperCell(cell.cellTypeID, cheapZeroCell->cellTypeID,
-        lowFirstInput, superCells);
+        lowFirstInput, superCells, output);
     }
   }
   combCells.insert(combCells.end(), superCells.begin(), superCells.end());

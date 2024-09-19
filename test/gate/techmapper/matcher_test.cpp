@@ -37,7 +37,7 @@ TEST(MatcherTest, RandomTruthTable) {
     kitty::create_random(tt);
     auto config = kitty::exact_p_canonization(tt);
     const auto &ctt = util::getTT(config); // canonized TT
-    std::vector<library::SCLibrary::StandardCell> scs;
+    std::vector<std::pair<library::SCLibrary::StandardCell, uint16_t>> scs;
     pBoolMatcher->match(scs, ctt);
     if(scs.empty()) {
       std::cout << "truth table " << kitty::to_hex(tt) <<

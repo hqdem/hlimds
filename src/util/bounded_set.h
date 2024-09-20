@@ -63,7 +63,7 @@ public:
              bool isImmutable);
 
   BoundedSet(const BoundedSet<NumType, Allocator> &other);
-  BoundedSet(BoundedSet<NumType, Allocator> &&other);
+  BoundedSet(BoundedSet<NumType, Allocator> &&other) noexcept;
 
   ~BoundedSet();
 
@@ -224,7 +224,7 @@ BoundedSet<NumType, Allocator>::BoundedSet(
 
 template <class NumType, class Allocator>
 BoundedSet<NumType, Allocator>::BoundedSet(
-    BoundedSet<NumType, Allocator> &&other):
+    BoundedSet<NumType, Allocator> &&other) noexcept:
     maxSize(other.maxSize),
     isImmutable(other.isImmutable),
     offset(other.offset),

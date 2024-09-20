@@ -50,8 +50,8 @@ inline float getArea(model::SubnetID subnetID) {
 
 inline float getLeakagePower(const model::CellType &cellType,
                              const library::SCLibrary &library) {
-    const auto *cell = library.getLibrary().getCell(cellType.getName());
-    return cell ?
+  const auto *cell = library.getLibrary().getCell(cellType.getName());
+  return cell ?
       cell->getFloatAttribute("cell_leakage_power", FLT_MAX) : 0.0f;
 }
 
@@ -106,7 +106,7 @@ inline float getArrivalTime(model::SubnetID subnetID,
 
 inline criterion::CostVector getPPA(
     const model::CellTypeID cellTypeID,
-    const techmapper::SubnetTechMapperBase::Context &subnetContext,
+    const techmapper::SubnetTechMapperBase::CellContext &cellContext,
     const context::TechMapContext &techmapContext) {
   const auto &cellType = model::CellType::get(cellTypeID);
   const auto name = cellType.getName();

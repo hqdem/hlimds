@@ -36,7 +36,10 @@ public:
     bool inversion{false};
   };
 
-  struct Context final {};
+  struct CellContext final {
+    /// Logic-level fanout.
+    uint16_t fanout{0};
+  };
 
   using CutProvider =
       std::function<optimizer::CutsList(
@@ -49,7 +52,7 @@ public:
   using CellEstimator =
       std::function<criterion::CostVector(
                         const model::CellTypeID,
-                        const Context &,
+                        const CellContext &,
                         const context::TechMapContext &)>;
   using CostAggregator =
       std::function<criterion::CostVector(
@@ -139,10 +142,11 @@ protected:
     const auto &unit = criterion::CostVector::Unit;
 
     if (tryCount == 0) {
-      // Sharpen the tension vector.
+      // Sharpen the initial tension vector.
       const auto softmax = status.tension.softmax(.1 /* temperature */);
       tension = softmax * (status.tension.norm(2.) / softmax.norm(2.));
     } else {
+      // Modify the tension vector according to the current result.
       constexpr criterion::Cost inflation = 1.01;
       tension *= status.tension.smooth(unit, 0.5) * inflation;
     }

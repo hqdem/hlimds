@@ -219,6 +219,7 @@ void SubnetTechMapperBase::findCellSolutions(
     const model::EntryID entryID,
     const optimizer::CutsList &cuts) {
   const auto &cell = builder->getCell(entryID);
+  const CellContext cellContext{static_cast<uint16_t>(cell.refcount)};
 
   for (const auto &cut : cuts) {
     assert(cut.rootID == entryID);
@@ -238,8 +239,8 @@ void SubnetTechMapperBase::findCellSolutions(
     const auto &matches = getMatches(*builder, cut);
 
     for (const auto &match : matches) {
-      const auto cellCostVector = cellEstimator(match.typeID, Context{},
-                                                context.techMapContext);
+      const auto cellCostVector = cellEstimator(
+          match.typeID, cellContext, context.techMapContext);
       const auto costVector = cutAggregation + cellCostVector;
 
       if (!context.criterion->check(costVector)) {

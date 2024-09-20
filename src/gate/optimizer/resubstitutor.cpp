@@ -1357,8 +1357,7 @@ static SubnetView getCareView(SubnetBuilder &builder,
   builder.endSession();
 
   iomapping.outputs = roots;
-  SubnetView careView(builder, iomapping);
-  return careView;
+  return SubnetView{builder, iomapping};
 }
 
 static void reserveOuters(const SubnetView &view,
@@ -1404,7 +1403,8 @@ static TruthTable computeCare(SubnetBuilder &builder,
 
   auto care = util::getZeroTruthTable<TTn>(k);
 
-  const size_t nSetBits = eda::util::count_units(status >> 32);
+  const uint32_t halfStatus = status >> 32;
+  const size_t nSetBits = eda::util::count_units(halfStatus);
   const size_t rounds = 1ull << nSetBits;
   for (uint64_t i = 0; i < rounds; ++i) {
     prepareStatus(status, i);
@@ -1431,8 +1431,7 @@ static bool collectBranchesRecursively(SubnetBuilder &builder,
 
   while (builder.getCell(idx).isBuf()) {
     builder.mark(idx);
-    const auto &link = builder.getLink(idx, 0);
-    idx = link.idx;
+    idx = builder.getLink(idx, 0).idx;
     if (builder.isMarked(idx)) {
       return false;
     }
@@ -1445,14 +1444,11 @@ static bool collectBranchesRecursively(SubnetBuilder &builder,
   }
 
   if (builder.getSessionID(idx) < builder.getSessionID() - 2) {
+    const auto branchID = branches.size();
     builder.mark(idx);
-    size_t branchID = branches.size();
-    if (branchID == maxBranches) {
-      return true;
-    }
     branches.push_back(idx);
     status |= 1ull << (32 + branchID);
-    return false;
+    return branchID == maxBranches;
   }
   builder.mark(idx);
 
@@ -1472,6 +1468,7 @@ static uint64_t collectBranches(SubnetBuilder &builder,
 
   uint64_t status = 0;
   bool overflow = false;
+  branches.reserve(maxBranches);
 
   builder.startSession();
 
@@ -1505,12 +1502,13 @@ static void collectRootsRecursively(SubnetBuilder &builder,
   if (builder.isMarked(idx)) {
     return;
   }
-
   builder.mark(idx);
+
+  const auto previousID = builder.getSessionID() - 1;
 
   bool allMarked = true;
   for (const auto &fanout : builder.getFanouts(idx)) {
-    if (builder.getSessionID(fanout) < (builder.getSessionID() - 1)) {
+    if (builder.getSessionID(fanout) < previousID) {
       allMarked = false;
       break;
     }

@@ -26,11 +26,9 @@ struct ReadLibertyCommand final : public UtopiaCommand {
     const std::string fileName = app.remaining().at(0);
     UTOPIA_SHELL_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
-    if (eda::gate::library::library != nullptr) {
-      delete eda::gate::library::library;
-    }
-    eda::gate::library::library = new eda::gate::library::SCLibrary(fileName);
-
+    context->techMapContext.library =
+      std::make_unique<eda::gate::library::SCLibrary>(fileName);
+    
     return TCL_OK;
   }
 };

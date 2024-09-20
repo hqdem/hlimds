@@ -49,7 +49,8 @@ public:
   using CellEstimator =
       std::function<criterion::CostVector(
                         const model::CellTypeID,
-                        const Context &)>;
+                        const Context &,
+                        const context::TechMapContext &)>;
   using CostAggregator =
       std::function<criterion::CostVector(
                         const std::vector<criterion::CostVector> &)>;

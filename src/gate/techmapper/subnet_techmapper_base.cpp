@@ -238,7 +238,8 @@ void SubnetTechMapperBase::findCellSolutions(
     const auto &matches = getMatches(*builder, cut);
 
     for (const auto &match : matches) {
-      const auto cellCostVector = cellEstimator(match.typeID, Context{});
+      const auto cellCostVector = cellEstimator(match.typeID, Context{},
+                                                context.techMapContext);
       const auto costVector = cutAggregation + cellCostVector;
 
       if (!context.criterion->check(costVector)) {

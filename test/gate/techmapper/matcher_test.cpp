@@ -16,29 +16,38 @@
 
 namespace eda::gate::techmapper {
 
-PBoolMatcher *pBoolMatcher = nullptr;
+class MatcherTest : public testing::Test {
+protected:
+  MatcherTest() {
+    auto &library = context_.techMapContext.library; 
+    library = std::make_unique<library::SCLibrary>(techLib);
 
-void commonPart() {
-  // boolMatcher is created once the library is loaded.
-  if (pBoolMatcher == nullptr) {
-    library::library = new library::SCLibrary(techLib);
-    if (library::library != nullptr) {
+    if (library != nullptr) {
       std::cout << "Loaded Liberty file: " << techLib << std::endl;
+    } else {
+      throw std::runtime_error("File loading failed");
     }
-    pBoolMatcher = Matcher<PBoolMatcher, kitty::dynamic_truth_table>::create(
-      library::library->getCombCells());
+    pBoolMatcher_ = std::move(
+        Matcher<PBoolMatcher, kitty::dynamic_truth_table>::create(
+          library->getCombCells()));
   }
-}
 
-TEST(MatcherTest, RandomTruthTable) {
-  commonPart();
+  ~MatcherTest() override {}
+  void SetUp() override {}
+  void TearDown() override {}
+
+  std::unique_ptr<PBoolMatcher> pBoolMatcher_ {};
+  eda::context::UtopiaContext context_;
+};
+
+TEST_F(MatcherTest, RandomTruthTable) {
   for (uint i = 0; i < 100; i++) {
     kitty::dynamic_truth_table tt(2);
     kitty::create_random(tt);
     auto config = kitty::exact_p_canonization(tt);
     const auto &ctt = util::getTT(config); // canonized TT
     std::vector<std::pair<library::SCLibrary::StandardCell, uint16_t>> scs;
-    pBoolMatcher->match(scs, ctt);
+    pBoolMatcher_->match(scs, ctt);
     if(scs.empty()) {
       std::cout << "truth table " << kitty::to_hex(tt) <<
                          " (ctt=" << kitty::to_hex(ctt) << ")" <<

@@ -10,6 +10,7 @@
 
 #include "context/techmap_context.h"
 #include "gate/criterion/criterion.h"
+#include "gate/model/design.h"
 
 #include <memory>
 
@@ -17,7 +18,7 @@ namespace eda::context {
 
 struct UtopiaContext final {
   std::unique_ptr<gate::criterion::Criterion> criterion;
-
+  std::shared_ptr<gate::model::DesignBuilder> design;
   TechMapContext techMapContext;
 };
 

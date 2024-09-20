@@ -12,12 +12,13 @@
 
 namespace eda::gate::techmapper {
 
-inline void printStatistics(model::SubnetID subnetID) {
+inline void printStatistics(model::SubnetID subnetID,
+                            const library::SCLibrary &library) {
   size_t nWires = 0;
   size_t nCells = 0;
 
   std::unordered_map<std::string, int> statistic;
-  for (const auto &cell : library::library->getLibrary().getCells()) {
+  for (const auto &cell : library.getLibrary().getCells()) {
     statistic[std::string(cell.getName())] = 0;
   }
   const auto &entries = model::Subnet::get(subnetID).getEntries();
@@ -39,14 +40,15 @@ inline void printStatistics(model::SubnetID subnetID) {
         std::left << std::setw(36) << pair.first <<
         std::right << std::setw(8) << pair.second << std::endl;
   }
-  std::cout << "Design area: " << estimator::getArea(subnetID) <<
-    " um^2" << std::endl; // TODO export this scale from readcells
+  std::cout << "Design area: " << estimator::getArea(subnetID)
+            << " um^2" << std::endl; // TODO export this scale from readcells
 
-  std::cout << "Leakage power: " << estimator::getLeakagePower(subnetID) <<
-      " uW" << std::endl; // TODO the same
+  std::cout << "Leakage power: "
+            << estimator::getLeakagePower(subnetID, library)
+            << " uW" << std::endl; // TODO the same
 
-  std::cout << "Arrival time: " << estimator::getArrivalTime(subnetID) <<
-      " ns" << std::endl; // TODO the same
+  std::cout << "Arrival time: " << estimator::getArrivalTime(subnetID, library)
+            << " ns" << std::endl; // TODO the same
 }
 
 } // namespace eda::gate::techmapper

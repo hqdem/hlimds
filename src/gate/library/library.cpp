@@ -351,6 +351,4 @@ void SCLibrary::addConstCells() {
     combCells.end(), constZeroCells.begin(), constZeroCells.end());
 }
 
-SCLibrary *library = nullptr;
-
 } // namespace eda::gate::library

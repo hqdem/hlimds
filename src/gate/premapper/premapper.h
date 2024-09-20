@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "gate/optimizer/synthesis/db_aig4_synthesizer.h"
 #include "gate/optimizer/synthesis/db_mig4_synthesizer.h"
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
-#include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/cell_aigmapper.h"
 #include "gate/premapper/cell_migmapper.h"
 #include "gate/premapper/cell_xagmapper.h"
@@ -36,9 +36,9 @@ inline optimizer::SubnetMapper getCellXmgMapper() {
 }
 
 inline optimizer::SubnetMapper getConeAigMapper() {
-  static optimizer::synthesis::MMFactorSynthesizer isop;
-  static optimizer::Resynthesizer resynthesizer(isop);
-  return std::make_shared<ConePremapper>("aig", AIG, resynthesizer, 6);
+  static optimizer::Resynthesizer resynthesizer(
+      optimizer::synthesis::DbAig4Synthesizer::get());
+  return std::make_shared<ConePremapper>("aig", AIG, resynthesizer, 4);
 }
 
 inline optimizer::SubnetMapper getConeMigMapper() {

@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "context/utopia_context.h"
 #include "gate/library/library.h"
 #include "gate/library/readcells_iface.h"
 #include "util/env.h"
@@ -20,12 +21,9 @@ const path techLibPath = home /
 
 namespace eda::gate::library {
 
-ReadCellsIface::Delay checkDelayInterpolation(
-    path libertyPath) {
-  if (library::library == nullptr) {
-    library::library = new SCLibrary(libertyPath);
-  }
-  ReadCellsIface iface(library::library->getLibrary());
+ReadCellsIface::Delay checkDelayInterpolation(library::SCLibrary &library) {
+  
+  ReadCellsIface iface(library.getLibraryRaw());
 
   auto delay = iface.getDelay("sky130_fd_sc_hd__nor2b_1",
                                                      "A",
@@ -41,8 +39,33 @@ ReadCellsIface::Delay checkDelayInterpolation(
   return delay;
 }
 
-TEST(ReadCellsIface, DelayInterpolation) {
-  auto delay = checkDelayInterpolation(techLibPath / "test_nor.lib");
+class ReadCellsIfaceTest : public testing::Test {
+protected:
+  ReadCellsIfaceTest() {
+    //TODO: remove EXPECT_EXIT once logic basis completion is performed
+    EXPECT_EXIT({
+      context_.techMapContext.library =
+        std::make_unique<library::SCLibrary>(home_ / techLibPath_);
+    },::testing::KilledBySignal(SIGABRT), "");
+
+    if (context_.techMapContext.library != nullptr) {
+      std::cout << "Loaded Liberty file: " << home_ / techLibPath_ << std::endl;
+    } else {
+      throw std::runtime_error("File loading failed");
+    }
+  }
+
+  ~ReadCellsIfaceTest() override {}
+  void SetUp() override {}
+  void TearDown() override {}
+
+  const path home_ = eda::env::getHomePath();
+  const path techLibPath_ = "test/data/gate/techmapper/test_nor.lib";
+  eda::context::UtopiaContext context_;
+};
+
+TEST_F(ReadCellsIfaceTest, DelayInterpolation) {
+  auto delay = checkDelayInterpolation(*context_.techMapContext.library);
   bool isCorrect = false;
 
   if (0.0769735000 < delay.cellRise && delay.cellRise < 0.1284223000) {

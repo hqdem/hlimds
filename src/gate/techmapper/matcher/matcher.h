@@ -24,8 +24,8 @@ class Matcher {
   using StandardCell = library::SCLibrary::StandardCell;
 
 public:
-  static BaseType *create(const std::vector<StandardCell> &cells) {
-    auto *instance = new BaseType();
+  static std::unique_ptr<BaseType> create(const std::vector<StandardCell> &cells) {
+    auto instance = std::make_unique<BaseType>();
     instance->initMap(cells);
     return instance;
   }

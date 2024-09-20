@@ -354,7 +354,7 @@ void NLDM::pinITimingEstimator(const std::vector<const LookupTable*> &luts,
   context.delayValues = result;
 }
 
-void NLDM::delayEstimation(Library &library, const std::string &cellType,
+void NLDM::delayEstimation(const Library &library, const std::string &cellType,
                            const float inputTransTime,
                            const float outputTotalCap,
                            int &timingSense, float &slew, float &delay, float &cap) {
@@ -450,8 +450,10 @@ void NLDM::delayEstimation(Library &library, const std::string &cellType,
   timingSense = newTimingSense;
 }
 
-float NLDM::delayEstimation(Library &library, const std::string &cellTypeName,
-    const float inputTransTime, const float outputTotalCap) {
+float NLDM::delayEstimation(const Library &library,
+                            const std::string &cellTypeName,
+                            const float inputTransTime,
+                            const float outputTotalCap) {
   int timingSense = 0;
   float slew = 0;
   float delay = 0;

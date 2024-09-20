@@ -34,7 +34,12 @@ public:
     return combCells;
   }
 
-  Library &getLibrary() {
+  const Library &getLibrary() const  {
+    return library;
+  }
+
+  //TODO: should be removed. Used only in readcells_iface_test
+  Library &getLibraryRaw() {
     return library;
   }
 
@@ -70,7 +75,5 @@ private:
   TokenParser tokParser;
   ReadCellsIface *iface;
 };
-
-extern SCLibrary *library;
 
 } // namespace eda::gate::library

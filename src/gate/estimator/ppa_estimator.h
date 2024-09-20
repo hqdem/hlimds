@@ -24,15 +24,17 @@ inline bool shouldSkipCell(const model::Subnet::Cell &cell) {
   return cell.isIn() || cell.isOut() || cell.isOne() || cell.isZero();
 }
 
-template <typename Func>
-inline float processEntries(model::SubnetID subnetID, Func func) {
-  float result = 0;
-  auto entries = model::Subnet::get(subnetID).getEntries();
+//TODO: probably should be in another header file
+template <typename Result, typename Func>
+inline Result sumFromSubnetEntriesCells(model::SubnetID subnetID, Func func) {
+  Result result {};
+  const auto &entries = model::Subnet::get(subnetID).getEntries();
   for (uint64_t i = 0; i < entries.size(); ++i) {
-    if (!shouldSkipCell(entries[i].cell)) {
-      result += func(entries[i]);
+    const auto &cell = entries[i].cell;
+    if (!shouldSkipCell(cell)) {
+      result += func(cell);
     }
-    i += entries[i].cell.more;
+    i += cell.more;
   }
   return result;
 }
@@ -42,31 +44,33 @@ inline float getArea(const model::CellType &cellType) {
 }
 
 inline float getArea(model::SubnetID subnetID) {
-  return processEntries(subnetID, [](const auto &entry) {
-    return getArea(entry.cell.getType());
-  });
+  return sumFromSubnetEntriesCells<float>(subnetID, 
+          [](const auto &cell) { return getArea(cell.getType());});
 }
 
-inline float getLeakagePower(const model::CellType &cellType) {
-    const auto *cell = library::library->getLibrary().getCell(
-        cellType.getName());
+inline float getLeakagePower(const model::CellType &cellType,
+                             const library::SCLibrary &library) {
+    const auto *cell = library.getLibrary().getCell(cellType.getName());
     return cell ?
       cell->getFloatAttribute("cell_leakage_power", FLT_MAX) : 0.0f;
 }
 
-inline float getLeakagePower(model::SubnetID subnetID) {
-  return processEntries(subnetID, [](const auto &entry) {
-    return getLeakagePower(entry.cell.getType());
-  });
+inline float getLeakagePower(model::SubnetID subnetID,
+                             const library::SCLibrary &library) {
+  return sumFromSubnetEntriesCells<float>(subnetID,
+          [&](const auto &cell) {
+            return getLeakagePower(cell.getType(), library); });
 }
 
 inline float getDelay(const model::CellType &cellType,
-               float inputTransTime, float outputCap) {
-  return NLDM::delayEstimation(library::library->getLibrary(),
+                      const library::SCLibrary &library,
+                      float inputTransTime, float outputCap) {
+  return NLDM::delayEstimation(library.getLibrary(),
      cellType.getName(), inputTransTime, outputCap);
 }
 
-inline float getArrivalTime(model::SubnetID subnetID) {
+inline float getArrivalTime(model::SubnetID subnetID,
+                            const library::SCLibrary &library) {
   int timingSense = 0;
   std::unordered_map<uint64_t, float> arrivalMap, delayMap;
 
@@ -87,7 +91,7 @@ inline float getArrivalTime(model::SubnetID subnetID) {
       WLM wlm; // TODO
       float fanoutCap = wlm.getFanoutCap(outNum) + capacitance;
       float slew;
-      NLDM::delayEstimation(library::library->getLibrary(), entries[i].cell.getType().getName(),
+      NLDM::delayEstimation(library.getLibrary(), entries[i].cell.getType().getName(),
                             delay, fanoutCap, timingSense, slew, delay, capacitance);
 
       arrivalMap[i] = slew + arrival;
@@ -102,13 +106,14 @@ inline float getArrivalTime(model::SubnetID subnetID) {
 
 inline criterion::CostVector getPPA(
     const model::CellTypeID cellTypeID,
-    const techmapper::SubnetTechMapperBase::Context &context) {
+    const techmapper::SubnetTechMapperBase::Context &subnetContext,
+    const context::TechMapContext &techmapContext) {
   const auto &cellType = model::CellType::get(cellTypeID);
   const auto name = cellType.getName();
 
   const auto area = getArea(cellType);
-  const auto delay = getDelay(cellType, 0, 0); // TODO input transition time and output capacitance should be taken from Context
-  const auto power = getLeakagePower(cellType);
+  const auto delay = getDelay(cellType, *techmapContext.library, 0, 0); // TODO input transition time and output capacitance should be taken from Context
+  const auto power = getLeakagePower(cellType, *techmapContext.library);
 
   return criterion::CostVector(area, delay, power);
 }

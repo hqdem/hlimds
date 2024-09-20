@@ -78,14 +78,14 @@ public:
    *  delay - ??
    */
   static void delayEstimation(
-    Library &library,
+    const Library &library,
     const std::string &cellTypeName,
     const float inputTransTime,
     const float outputTotalCap,
     int &timingSense, float &slew, float &delay, float &cap);
 
   static float delayEstimation(
-    Library &library,
+    const Library &library,
     const std::string &cellTypeName,
     const float inputTransTime,
     const float outputTotalCap);

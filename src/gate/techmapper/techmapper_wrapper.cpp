@@ -22,54 +22,53 @@ using SubnetBuilder = model::SubnetBuilder;
 using SubnetID      = model::SubnetID;
 using CutExtractor  = optimizer::CutExtractor;
 
-PBoolMatcher *boolMatcher = nullptr;
-
-static std::vector<SubnetTechMapperBase::Match> matchFinder(
-    const SubnetBuilder &builder, const optimizer::Cut &cut) {
-  return boolMatcher->match(builder, cut);
+techMapperWrapper::techMapResult techMapperWrapper::techMap() {
+    
+  for (size_t i = 0, size = design_.getSubnetNum(); i < size; ++i) {
+    const auto &subnetBuilder = design_.getSubnetBuilder(i);
+    const auto techmapBuilder = generateTechSubnet(subnetBuilder);
+    if (!techmapBuilder) {
+      return techMapResult{false, i};
+    }
+    design_.setSubnetBuilder(i, techmapBuilder);
+  }
+  return techMapResult{true};
 }
 
-std::shared_ptr<SubnetBuilder> techMap(
-    const criterion::Objective objective,
-    const std::shared_ptr<SubnetBuilder> &builder) {
-  // Set constraints
-  criterion::Constraints constraints = {
-      criterion::Constraint(criterion::AREA,  45000),   // FIXME:
-      criterion::Constraint(criterion::DELAY, 1),       // FIXME:
-      criterion::Constraint(criterion::POWER, 25000)};  // FIXME:
+//TODO: a lot of same objects created inside for each function call,
+//until threads are implemented they should be moved to techMap()
+//function and passed as parameters here
+std::shared_ptr<model::SubnetBuilder>
+techMapperWrapper::generateTechSubnet(
+  const SubnetTechMapperBase::SubnetBuilderPtr &builder) {
 
-  context::UtopiaContext context;
-  context.criterion = std::make_unique<criterion::Criterion>(
-      objective, constraints);
-
+  //TODO: should be const ref
+  auto &techLibrary = *context_.techMapContext.library;
   // Maximum number of cuts per cell
   constexpr uint16_t maxCutNum = 4;
 
-  // Set matcher type
-  boolMatcher = Matcher<PBoolMatcher, std::size_t>::create(
-    library::library->getCombCells());
+  // Set matcher type (hardcoded to boolMatcher)
+  auto pBoolMatcher {Matcher<PBoolMatcher, std::size_t>::create(
+                      techLibrary.getCombCells())};
+
+  auto matchFinder = [&](
+    const SubnetBuilder &builder, const optimizer::Cut &cut){
+      return pBoolMatcher->match(builder, cut);};
 
   // Techmapping
-  auto *techmapper = new SubnetTechMapperPCut(
+  SubnetTechMapperPCut techmapper(
       "SubnetTechMapper",
-      context,
-      library::library->getMaxArity(),
+      context_,
+      techLibrary.getMaxArity(),
       maxCutNum,
       matchFinder,
       estimator::getPPA);
 
-  auto builderTechmap = techmapper->map(builder);
-
-  if (boolMatcher != nullptr) {
-    delete boolMatcher;
-    boolMatcher = nullptr;
-  }
-
-  delete techmapper;
+  auto builderTechmap = techmapper.map(builder);
 
   if (builderTechmap != nullptr) {
     const auto mappedSubnetID = builderTechmap->make();
-    printStatistics(mappedSubnetID);
+    printStatistics(mappedSubnetID, techLibrary);
   }
 
   return builderTechmap;

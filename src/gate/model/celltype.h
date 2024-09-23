@@ -201,8 +201,11 @@ enum CellSymbol : uint16_t {
 
   //===------------------------- Shift Operations -------------------------===//
 
-  /// Shift left: OUT = X << Y.
-  SHL,
+  /// Shift left (signed): OUT = X << Y.
+  SHLs,
+  /// Shift left (unsigned): OUT = X << Y.
+  SHLu,
+  SHL = SHLu,
   /// Shift right (signed): OUT = X >> Y.
   SHRs,
   /// Shift right (unsigned): OUT = X >> Y.
@@ -258,10 +261,16 @@ enum CellSymbol : uint16_t {
 
   /// Negation (unary minus): OUT = -X.
   NEG,
-  /// Addition: OUT = X + Y.
-  ADD,
-  /// Subtraction: OUT = X - Y.
-  SUB,
+  /// Addition (signed): OUT = X + Y.
+  ADDs,
+  /// Addition (unsigned): OUT = X + Y.
+  ADDu,
+  ADD = ADDu,
+  /// Subtraction (signed): OUT = X - Y.
+  SUBs,
+  /// Subtraction (unsigned): OUT = X - Y.
+  SUBu,
+  SUB = SUBu,
 
   /// Multiplication (signed): OUT = X * Y.
   MULs,

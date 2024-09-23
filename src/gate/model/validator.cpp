@@ -353,13 +353,13 @@ bool validateCellType(const CellType &type, diag::Logger &logger) {
                  break;
   case OUT:      VALIDATE_QUIET(validateOut(type, logger));
                  break;
-  case ZERO:     // Constants
+  case ZERO:     [[fallthrough]]; // Constants
   case ONE:      VALIDATE_QUIET(validateConst(type, logger));
                  break;
-  case BUF:      // Unary logic gates
+  case BUF:      [[fallthrough]]; // Unary logic gates
   case NOT:      VALIDATE_QUIET(validateLogic1(type, logger));
                  break;
-  case AND:      // Binary logic gates
+  case AND:      [[fallthrough]]; // Binary logic gates
   case OR:       [[fallthrough]];
   case XOR:      [[fallthrough]];
   case NAND:     [[fallthrough]];
@@ -386,14 +386,14 @@ bool validateCellType(const CellType &type, diag::Logger &logger) {
                  break;
   case BNOT:     VALIDATE_QUIET(validateBitwise1(type, logger));
                  break;
-  case BAND:     // Binary bitwise operations
+  case BAND:     [[fallthrough]]; // Binary bitwise operations
   case BOR:      [[fallthrough]];
   case BXOR:     [[fallthrough]];
   case BNAND:    [[fallthrough]];
   case BNOR:     [[fallthrough]];
   case BXNOR:    VALIDATE_QUIET(validateBitwise2(type, logger));
                  break;
-  case RAND:     // Reduction operations
+  case RAND:     [[fallthrough]]; // Reduction operations
   case ROR:      [[fallthrough]];
   case RXOR:     [[fallthrough]];
   case RNAND:    [[fallthrough]];
@@ -402,11 +402,12 @@ bool validateCellType(const CellType &type, diag::Logger &logger) {
                  break;
   case MUX2:     VALIDATE_QUIET(validateMux2(type, logger));
                  break;
-  case SHL:      // Shift operations
+  case SHLs:     [[fallthrough]]; // Shift operations
+  case SHLu:     [[fallthrough]];
   case SHRs:     [[fallthrough]];
   case SHRu:     VALIDATE_QUIET(validateShift(type, logger));
                  break;
-  case EQs:      // Comparison operations
+  case EQs:      [[fallthrough]]; // Comparison operations
   case EQu:      [[fallthrough]];
   case NEQs:     [[fallthrough]];
   case NEQu:     [[fallthrough]];
@@ -425,8 +426,10 @@ bool validateCellType(const CellType &type, diag::Logger &logger) {
                  break;
   case NEG:      VALIDATE_QUIET(validateArith1(type, logger));
                  break;
-  case ADD:      // Binary arithmetic operations
-  case SUB:      [[fallthrough]];
+  case ADDs:     [[fallthrough]]; // Binary arithmetic operations
+  case ADDu:     [[fallthrough]];
+  case SUBs:     [[fallthrough]];
+  case SUBu:     [[fallthrough]];
   case MULs:     [[fallthrough]];
   case MULu:     [[fallthrough]];
   case DIVs:     [[fallthrough]];

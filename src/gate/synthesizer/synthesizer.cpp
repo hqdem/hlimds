@@ -49,6 +49,10 @@ static SubnetID synthImpl(const CellType &type) {
   case RNAND:  return synthRNand(attr);
   case RNOR:   return synthRNor(attr);
   case RXNOR:  return synthRXnor(attr);
+  case SHLs:   return synthShl(attr); // FIXME
+  case SHLu:   return synthShl(attr); // FIXME
+  case SHRu:   return synthShrU(attr);
+  case SHRs:   return synthShrS(attr);
   case MUX2:   return synthMux2(attr);
   case EQs:    return synthEqS(attr);
   case EQu:    return synthEqU(attr);
@@ -63,8 +67,10 @@ static SubnetID synthImpl(const CellType &type) {
   case GTEs:   return synthGteS(attr);
   case GTEu:   return synthGteU(attr);
   case NEG:    return synthNeg(attr);
-  case ADD:    return synthAdd(attr);
-  case SUB:    return synthSub(attr);
+  case ADDs:   return synthAdd(attr); // FIXME
+  case ADDu:   return synthAdd(attr); // FIXME
+  case SUBs:   return synthSub(attr); // FIXME
+  case SUBu:   return synthSub(attr); // FIXME
   case MULs:   return synthMulS(attr);
   case MULu:   return synthMulU(attr);
   case DIVs:   return synthDivS(attr);
@@ -72,9 +78,6 @@ static SubnetID synthImpl(const CellType &type) {
   case REMs:   return synthRemS(attr);
   case REMu:   return synthRemU(attr);
   case MODs:   return synthModS(attr);
-  case SHL:    return synthShl(attr);
-  case SHRu:   return synthShrU(attr);
-  case SHRs:   return synthShrS(attr);
   default:     return OBJ_NULL_ID;
   }
 }

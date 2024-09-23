@@ -130,7 +130,10 @@ protected:
   virtual void onBegin(const SubnetBuilderPtr &oldBuilder) {
     tryCount = 0;
     space.resize(oldBuilder->getMaxIdx() + 1);
-    tension = criterion::CostVector::Zero /* no penalties */;
+    for (auto it = oldBuilder->begin(); it != oldBuilder->end(); it.nextCell()) {
+      space[*it] = std::make_unique<CellSpace>(
+          *context.criterion, criterion::CostVector::Zero /* no penalties */);
+    }
   }
 
   virtual bool onRecovery(const Status &status) {

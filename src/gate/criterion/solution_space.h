@@ -28,6 +28,10 @@ public:
         solution(solution), cost(cost), vector(vector) {}
     Solution(const Solution &other) = default;
 
+    void reset() {
+      cost = std::numeric_limits<Cost>::max();
+    }
+
     bool operator==(const Solution &other) const {
       return solution == other.solution;
     }
@@ -99,9 +103,18 @@ public:
   /// Returns the best solution w.r.t. to the given criterion.
   const Solution &getBest() const { return best; }
 
+  /// Resets the solution space.
+  void reset(const CostVector &newTension) {
+    tension = newTension;
+    solutionCount = 0;
+    feasibleCount = 0;
+    best.reset();
+  }
+
 private:
   const Criterion &criterion;
-  const CostVector tension;
+
+  CostVector tension;
 
   size_t solutionCount{0};
   size_t feasibleCount{0};

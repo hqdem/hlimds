@@ -266,10 +266,8 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::techMap(
     const auto cuts = cutProvider(*builder, entryID);
     assert(!cuts.empty());
 
-    // TODO: Do not recreate spaces for non-first tries (update tension).
-    // TODO: Think about individual tensions for subnet points.
-    // TODO: Think about randomization (adding small noise to tensions).
-    space[entryID] = std::make_unique<CellSpace>(*context.criterion, tension);
+    // TODO: Think about individual tensions and random noise for subnet points.
+    space[entryID]->reset(tension);
 
     // Handle the input cells.
     if (cell.isIn()) {

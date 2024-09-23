@@ -113,7 +113,7 @@ static std::vector<TT> evaluate(const Subnet &subnet, TTs &tables) {
       TTs subtables;
       subtables.reserve(impl.size());
 
-      for (size_t j = 1; j < cell.getInNum(); ++j) {
+      for (size_t j = 0; j < cell.getInNum(); ++j) {
         subtables.push_back({getLinkTable(subnet.getLink(i, j), tables)});
       }
 

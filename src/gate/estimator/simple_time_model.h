@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <readcells/groups.h>
+#include "gate/library/library_types.h"
 
 #include <string>
 #include <vector>
@@ -27,13 +27,13 @@ struct Index {
 
 /// Struct contains timingInfo from LUTS
 struct DataTimingContext {
-  std::vector<float> delayValues = {};
+  std::vector<double> delayValues = {};
   std::size_t variablesCount = 7;
   bool interpolate = true;
   Index index;
-  float inputTransTime;
-  float outputTotalCap;
-  DataTimingContext(float inputTransTime, float outputTotalCap) :
+  double inputTransTime;
+  double outputTotalCap;
+  DataTimingContext(double inputTransTime, double outputTotalCap) :
     inputTransTime(inputTransTime), outputTotalCap(outputTotalCap) {}
 };
 
@@ -50,23 +50,18 @@ public:
   virtual ~NLDM() = default;
 
 private:
-  static float getLutValue(const std::vector<float>& lut_values,
+  static double getLutValue(const std::vector<double>& lut_values,
                     DataTimingContext &context,
-                    const float x1, const float x2,
-                    const float y1, const float y2);
+                    const double x1, const double x2,
+                    const double y1, const double y2);
 
-  static float getLutValue(const LookupTable *lut,
-                    DataTimingContext &context,
-                    const float x1, const float x2,
-                    const float y1, const float y2);
-
-  static void pinTimingEstimator(const std::vector<const LookupTable*> &luts,
+  static void pinTimingEstimator(const std::vector<const library::LUT*> &luts,
                           DataTimingContext &context);
 
-  static void pinFTimingEstimator(const std::vector<const LookupTable*> &luts,
+  static void pinFTimingEstimator(const std::vector<const library::LUT*> &luts,
                            DataTimingContext &context);
 
-  static void pinITimingEstimator(const std::vector<const LookupTable*> &luts,
+  static void pinITimingEstimator(const std::vector<const library::LUT*> &luts,
                            DataTimingContext &context);
 
 public:
@@ -78,17 +73,15 @@ public:
    *  delay - ??
    */
   static void delayEstimation(
-    const Library &library,
-    const std::string &cellTypeName,
-    const float inputTransTime,
-    const float outputTotalCap,
-    int &timingSense, float &slew, float &delay, float &cap);
+    const library::StandardCell &cell,
+    const double inputTransTime,
+    const double outputTotalCap,
+    int &timingSense, double &slew, double &delay, double &cap);
 
-  static float delayEstimation(
-    const Library &library,
-    const std::string &cellTypeName,
-    const float inputTransTime,
-    const float outputTotalCap);
+  static double delayEstimation(
+    const library::StandardCell &cell,
+    const double inputTransTime,
+    const double outputTotalCap);
 };
 
 //===---------------------------------------------------------------------===//
@@ -112,9 +105,9 @@ public:
   void setWireLoadModel(const std::string &wlm_name);
 
   // Getters
-  float getLength(const std::size_t& fanoutCount) const;
-  float getFanoutCap(const std::size_t& fanoutCount) const;
-  float getFanoutRes(const std::size_t& fanoutCount) const;
+  double getLength(const std::size_t& fanoutCount) const;
+  double getFanoutCap(const std::size_t& fanoutCount) const;
+  double getFanoutRes(const std::size_t& fanoutCount) const;
 
   // Properties
 private:
@@ -122,24 +115,24 @@ private:
    * length_5k = the length of one side of a block containing
    * 5k gates
    */
-  float length_sky = 23.2746;
-  float length_5k = 1.7460;
-  float length_3k = 1.5771;
-  float length_1k = 1.3446;
+  double length_sky = 23.2746;
+  double length_5k = 1.7460;
+  double length_3k = 1.5771;
+  double length_1k = 1.3446;
 
   /*
    *  fudge = correction factor, routing, placement, etc.
    */
-  float fudge = 1.0;
+  double fudge = 1.0;
 
   /* WLM names = { "sky", "5k", "3k", "1k" }*/
   std::string wire_load_name;
 
   // Resistance, Capacitance, extrapolation slope
-  float r, c, slope;
-  std::pair<std::size_t, float> fanout_length[6];
-  std::pair<std::size_t, float> fanout_resistance[6];
-  std::pair<std::size_t, float> fanout_capacitance[6];
+  double r, c, slope;
+  std::pair<std::size_t, double> fanout_length[6];
+  std::pair<std::size_t, double> fanout_resistance[6];
+  std::pair<std::size_t, double> fanout_capacitance[6];
 };
 
 //===---------------------------------------------------------------------===//

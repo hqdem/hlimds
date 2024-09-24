@@ -6,6 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/library/library_factory.h"
+#include "gate/library/readcells_srcfile_parser.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
 
 #include "gate/techmapper/techmapper_test_util.h"
@@ -19,8 +21,9 @@ namespace eda::gate::techmapper {
 class MatcherTest : public testing::Test {
 protected:
   MatcherTest() {
-    auto &library = context_.techMapContext.library; 
-    library = std::make_unique<library::SCLibrary>(techLib);
+    auto &library = context_.techMapContext.library;
+    eda::gate::library::ReadCellsParser parser(techLib);
+    library = library::SCLibraryFactory::newLibraryUPtr(parser);
 
     if (library != nullptr) {
       std::cout << "Loaded Liberty file: " << techLib << std::endl;
@@ -46,7 +49,7 @@ TEST_F(MatcherTest, RandomTruthTable) {
     kitty::create_random(tt);
     auto config = kitty::exact_p_canonization(tt);
     const auto &ctt = util::getTT(config); // canonized TT
-    std::vector<std::pair<library::SCLibrary::StandardCell, uint16_t>> scs;
+    std::vector<std::pair<library::StandardCell, uint16_t>> scs;
     pBoolMatcher_->match(scs, ctt);
     if(scs.empty()) {
       std::cout << "truth table " << kitty::to_hex(tt) <<

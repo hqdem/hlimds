@@ -8,72 +8,74 @@
 
 #pragma once
 
-#include "gate/library/readcells_iface.h"
-#include "gate/model/celltype.h"
-#include "util/kitty_utils.h"
-
-#include <readcells/groups.h>
-#include <readcells/token_parser.h>
+#include "gate/library/library_types.h"
 
 #include <string>
 
 namespace eda::gate::library {
 
-class SCLibrary {
+class SCLibrary final {
 public:
-  SCLibrary(const std::string &fileName);
-  virtual ~SCLibrary();
+  friend class SCLibraryFactory;
 
-  struct StandardCell {
-    model::CellTypeID cellTypeID;
-    std::vector<kitty::dynamic_truth_table> ctt; // canonized TT
-    std::vector<util::NpnTransformation> transform;
+  struct SCLibraryProperties {
+    uint maxArity = 0;
+    const StandardCell *cheapNegCell = nullptr;
+    const StandardCell *cheapOneCell = nullptr;
+    const StandardCell *cheapZeroCell = nullptr;  
   };
 
-  std::vector<StandardCell> &getCombCells() {
-    return combCells;
-  }
+  //movable, bot not copyable
+  SCLibrary (SCLibrary &&) = default;
+  SCLibrary &  operator= (SCLibrary &&) = default;
+  SCLibrary (const SCLibrary &) = delete;
+  SCLibrary & operator= (const SCLibrary &) = delete;
 
-  const Library &getLibrary() const  {
-    return library;
-  }
+  void addCells(std::vector<StandardCell> &&cells);
+  void addTemplates(std::vector<LutTemplate> &&templates);
 
-  //TODO: should be removed. Used only in readcells_iface_test
-  Library &getLibraryRaw() {
-    return library;
-  }
+  //Accesors for existing methods start
+  const StandardCell* getCellPtr(const model::CellTypeID &cellTypeID) const;
 
-  inline uint getMaxArity() const { return maxArity; }
+  //Accesors for existing methods end
+  const std::vector<StandardCell>& getCombCells() const {
+    return combCells_;
+  }
+  const std::vector<LutTemplate> & getTemplates() const {
+    return templates_;
+  };
+  const SCLibraryProperties& getProperties() const {
+    return properties_;
+  };
 
 private:
-  uint maxArity = 0;
-  std::vector<StandardCell> combCells;
-  std::vector<StandardCell> negCombCells;
-  std::vector<StandardCell> constOneCells;
-  std::vector<StandardCell> constZeroCells;
 
-  // const StandardCell *cheapBuf; TODO: add buffer to avoid using consts
-  const StandardCell *cheapNegCell;
-  const StandardCell *cheapOneCell;
-  const StandardCell *cheapZeroCell;
+  SCLibrary() = default;
 
-  void loadCombCell(const std::string &name);
-  const StandardCell *findCheapestCell(std::vector<StandardCell> &scs);
+  void internalLoadCombCell(StandardCell &&cell);
+  const StandardCell *findCheapestCell(
+    const std::vector<StandardCell> &scs) const;
   void findCheapestCells();
   void addSuperCell(
-      const model::CellTypeID cellTypeID,
-      const model::CellTypeID cellTypeIDToAdd,
+      const StandardCell &cellSrc,
+      const StandardCell &cellToAdd,
       void(*func)(std::string &in, const std::string &fIn),
       std::vector<StandardCell> &scs,
       uint output);
-  void addSuperCells();
-  void addConstCells();
 
-  // ReadCells
-  Group *ast;
-  Library library;
-  TokenParser tokParser;
-  ReadCellsIface *iface;
+  void addSuperCells();
+  void fillSearchMap();
+
+  SCLibraryProperties properties_;
+
+  std::vector<WireLoadModel> wires_;
+  std::vector<LutTemplate> templates_;
+  std::vector<StandardCell> combCells_;
+  std::vector<StandardCell> negCombCells_;
+  std::vector<StandardCell> constOneCells_;
+  std::vector<StandardCell> constZeroCells_;
+
+  std::unordered_map<model::CellTypeID, const StandardCell*> searchMap_;
 };
 
 } // namespace eda::gate::library

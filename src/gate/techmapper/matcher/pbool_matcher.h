@@ -9,12 +9,14 @@
 #pragma once
 
 #include "gate/techmapper/matcher/matcher.h"
+#include "util/kitty_utils.h" //For hash<kitty::dynamic_truth_table>
+
 #include <kitty/kitty.hpp>
 
 namespace eda::gate::techmapper {
 
 class PBoolMatcher final : public Matcher<PBoolMatcher, kitty::dynamic_truth_table> {
-  using StandardCell = library::SCLibrary::StandardCell;
+  using StandardCell = library::StandardCell;
 public:
 
   inline void match(

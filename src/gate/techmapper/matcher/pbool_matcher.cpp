@@ -15,7 +15,7 @@
 #include "gate/optimizer/synthesis/isop.h"
 
 namespace eda::gate::techmapper {
-using StandardCell = library::SCLibrary::StandardCell;
+using StandardCell = library::StandardCell;
 
 std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
     const kitty::dynamic_truth_table &truthTable,

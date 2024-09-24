@@ -59,7 +59,7 @@ techMapperWrapper::generateTechSubnet(
   SubnetTechMapperPCut techmapper(
       "SubnetTechMapper",
       context_,
-      techLibrary.getMaxArity(),
+      techLibrary.getProperties().maxArity,
       maxCutNum,
       matchFinder,
       estimator::getPPA);

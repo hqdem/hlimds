@@ -18,8 +18,8 @@ inline void printStatistics(model::SubnetID subnetID,
   size_t nCells = 0;
 
   std::unordered_map<std::string, int> statistic;
-  for (const auto &cell : library.getLibrary().getCells()) {
-    statistic[std::string(cell.getName())] = 0;
+  for (const auto &cell : library.getCombCells()) {
+    statistic[cell.name] = 0;
   }
   const auto &entries = model::Subnet::get(subnetID).getEntries();
   for (uint64_t i = 0; i < entries.size(); i++) {

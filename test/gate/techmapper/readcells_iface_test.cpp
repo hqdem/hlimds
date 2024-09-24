@@ -8,7 +8,7 @@
 
 #include "context/utopia_context.h"
 #include "gate/library/library.h"
-#include "gate/library/readcells_iface.h"
+//#include "gate/library/readcells_iface.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -21,6 +21,7 @@ const path techLibPath = home /
 
 namespace eda::gate::library {
 
+#if 0 //TODO: tests for new parser interface
 ReadCellsIface::Delay checkDelayInterpolation(library::SCLibrary &library) {
   
   ReadCellsIface iface(library.getLibraryRaw());
@@ -73,5 +74,5 @@ TEST_F(ReadCellsIfaceTest, DelayInterpolation) {
   }
   EXPECT_TRUE(isCorrect);
 }
-
+#endif
 } // namespace eda::gate::techmapper

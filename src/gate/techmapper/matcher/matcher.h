@@ -21,7 +21,7 @@ namespace eda::gate::techmapper {
 
 template<typename BaseType, typename KeyType>
 class Matcher {
-  using StandardCell = library::SCLibrary::StandardCell;
+  using StandardCell = library::StandardCell;
 
 public:
   static std::unique_ptr<BaseType> create(const std::vector<StandardCell> &cells) {

@@ -9,6 +9,8 @@
 #pragma once
 
 #include "gate/library/library.h"
+#include "gate/library/library_factory.h"
+#include "gate/library/readcells_srcfile_parser.h"
 #include "shell/shell.h"
 
 namespace eda::shell {
@@ -26,8 +28,9 @@ struct ReadLibertyCommand final : public UtopiaCommand {
     const std::string fileName = app.remaining().at(0);
     UTOPIA_SHELL_ERROR_IF_FILE_NOT_EXIST(interp, fileName);
 
+    eda::gate::library::ReadCellsParser parser(fileName);
     context->techMapContext.library =
-      std::make_unique<eda::gate::library::SCLibrary>(fileName);
+      eda::gate::library::SCLibraryFactory::newLibraryUPtr(parser);
     
     return TCL_OK;
   }

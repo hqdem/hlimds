@@ -31,6 +31,16 @@ static_assert(Indicator::AREA  == 0);
 static_assert(Indicator::DELAY == 1);
 static_assert(Indicator::POWER == 2);
 
+/// Returns the integral cost.
+inline Cost getIntegralCost(const CostVector &vector) {
+  const auto area  = vector[Indicator::AREA];
+  const auto delay = vector[Indicator::DELAY];
+  const auto power = vector[Indicator::POWER];
+
+  // Geometric mean of ADP and PDP.
+  return std::sqrt(area * delay * power * delay);
+}
+
 /// Aggregates two cost vector and assigns the result to the first one.
 inline void aggregateCost(CostVector &result, const CostVector &vector) {
   assert(vector.size() >= CostVector::DefaultSize);

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <valarray>
@@ -84,6 +85,10 @@ struct CostVector final {
     return CostVector(vector / other.vector);
   }
 
+  CostVector operator-(const Cost other) const {
+    return CostVector(vector - other);
+  }
+
   CostVector operator+(const Cost other) const {
     return CostVector(vector + other);
   }
@@ -117,6 +122,15 @@ struct CostVector final {
     return CostVector(vector * alpha + pivot.vector * (1. - alpha));
   }
 
+  Cost dot(const CostVector &other) const {
+    assert(vector.size() == other.vector.size());
+    Cost result = .0;
+    for (size_t i = 0; i < vector.size(); ++i) {
+      result += vector[i] * other.vector[i];
+    }
+    return result;
+  }
+
   CostVector &operator=(const CostVector &other) {
     vector = other.vector;
     return *this;
@@ -139,6 +153,26 @@ struct CostVector final {
 
   CostVector &operator/=(const CostVector &other) {
     vector /= other.vector;
+    return *this;
+  }
+
+  CostVector &operator+=(const Cost other) {
+    vector += other;
+    return *this;
+  }
+
+  CostVector &operator-=(const Cost other) {
+    vector -= other;
+    return *this;
+  }
+
+  CostVector &operator*=(const Cost other) {
+    vector *= other;
+    return *this;
+  }
+
+  CostVector &operator/=(const Cost other) {
+    vector /= other;
     return *this;
   }
 

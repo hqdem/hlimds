@@ -18,17 +18,22 @@
 /// Disables cut extraction and matching for outputs.
 #define UTOPIA_TECHMAP_MATCH_OUTPUTS 1
 
-/// Saves mapped subnet points when selecting best matches.
-#define UTOPIA_TECHMAP_SAVE_MAPPED_POINTS 1
-
 /// Outputs the cost vector.
-#define UTOPIA_LOG_VECTOR(prefix, vector)\
+#define UTOPIA_LOG_COST_VECTOR(prefix, vector)\
+  UTOPIA_LOG_INFO(prefix << std::endl\
+      << "Area:  " << vector[criterion::AREA]  << std::endl\
+      << "Delay: " << vector[criterion::DELAY] << std::endl\
+      << "Power: " << vector[criterion::POWER] << std::endl\
+      << "Total: " << criterion::getIntegralCost(vector) << std::endl)
+
+/// Outputs the tension vector.
+#define UTOPIA_LOG_TENSION_VECTOR(prefix, vector)\
   UTOPIA_LOG_INFO(prefix << std::endl\
       << "Area:  " << vector[criterion::AREA]  << std::endl\
       << "Delay: " << vector[criterion::DELAY] << std::endl\
       << "Power: " << vector[criterion::POWER] << std::endl)
 
-/// Outputs the cost vector.
+/// Outputs the cost and tension vectors.
 #define UTOPIA_LOG_COST_AND_TENSION_VECTORS(prefix, vector, tension)\
   UTOPIA_LOG_INFO(prefix << std::endl\
       << "Area:  " << vector[criterion::AREA]\
@@ -36,7 +41,8 @@
       << "Delay: " << vector[criterion::DELAY]\
           << " (" << tension[criterion::DELAY] << ")" << std::endl\
       << "Power: " << vector[criterion::POWER]\
-          << " (" << tension[criterion::POWER] << ")" << std::endl)
+          << " (" << tension[criterion::POWER] << ")" << std::endl\
+      << "Total: " << criterion::getIntegralCost(vector) << std::endl)
  
 namespace eda::gate::techmapper {
 
@@ -79,7 +85,7 @@ SubnetTechMapperBase::SubnetTechMapperBase(
 using MatchSelection = std::vector<const SubnetTechMapperBase::Match*>;
 
 /// Find best coverage by traversing the subnet in reverse order.
-static model::SubnetViewWalker findBestCoverage(
+static void findBestCoverage(
     const SubnetTechMapperBase::SubnetBuilderPtr &oldBuilder,
     const SubnetTechMapperBase::SubnetSpace &space,
     MatchSelection &matches) {
@@ -108,9 +114,7 @@ static model::SubnetViewWalker findBestCoverage(
         assert(!matches[entryID] && space[entryID]->hasSolution());
         matches[entryID] = &space[entryID]->getBest().solution;
         return true;
-      }, UTOPIA_TECHMAP_SAVE_MAPPED_POINTS);
-
-  return walker;
+      }, false);
 } 
 
 static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
@@ -121,37 +125,22 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
   MatchSelection matches(oldSize);
 
   // Find best coverage by traversing the subnet in reverse order.
-  model::SubnetViewWalker walker = findBestCoverage(oldBuilder, space, matches);
+  findBestCoverage(oldBuilder, space, matches);
 
   auto newBuilder = std::make_shared<model::SubnetBuilder>();
 
   // Maps old entry indices to new links.
   std::vector<model::Subnet::Link> links(oldSize);
 
-#if !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
   // Iterate over all subnet cells and handle the mapped ones.
   for (auto it = oldBuilder->begin(); it != oldBuilder->end(); ++it) {
     const auto entryID = *it;
-#else
-  // Iterate over the saved (mapped) subnet cells.
-  const auto &sequence = walker.getSavedEntries();
-  for (size_t s = 0; s < sequence.size(); ++s) {
-    const auto entryID = sequence[s].entryID;
-#endif // !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
-
     const auto &oldCell = oldBuilder->getCell(entryID);
 
     if (oldCell.isIn()) {
       // Add all inputs even if some of them are not used (matches[i] is null).
       links[entryID] = newBuilder->addInput();
-    }
-#if !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
-    else if (matches[entryID]) {
-#else
-    else {
-      assert(matches[entryID]);
-#endif // !UTOPIA_TECHMAP_SAVE_MAPPED_POINTS
-
+    } else if (matches[entryID]) {
       const auto &match = *matches[entryID];
  
       const auto &newType = model::CellType::get(match.typeID);
@@ -194,7 +183,7 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
         newBuilder->addOutput(link);
       }
 #endif // !UTOPIA_TECHMAP_MATCH_OUTPUTS
-    }
+    } // not input
 
     if (oldCell.isIn() || oldCell.isOut()) {
       auto &newCell = newBuilder->getCell(links[entryID].idx);
@@ -265,9 +254,6 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::techMap(
     // Must be called for all entries (even for inputs).
     const auto cuts = cutProvider(*builder, entryID);
     assert(!cuts.empty());
-
-    // TODO: Think about individual tensions and random noise for subnet points.
-    space[entryID]->reset(tension);
 
     // Handle the input cells.
     if (cell.isIn()) {
@@ -341,17 +327,59 @@ SubnetTechMapperBase::SubnetBuilderPtr SubnetTechMapperBase::map(
           status.vector, status.tension);
     }
 
-    if (!thisPtr->onRecovery(status)) break;
-    UTOPIA_LOG_VECTOR("Starting the recovery process w/ direction", tension);
+    if (!thisPtr->onRecovery(builder, status)) break;
+    UTOPIA_LOG_TENSION_VECTOR(
+        "Starting the recovery process w/ direction", tension);
   }
 
   if (!result) {
-    UTOPIA_ERROR("Incomplete mapping: "
-        "there are cuts that do not match library cells");
+    UTOPIA_ERROR(
+        "Incomplete mapping: there are cuts that do not match library cells");
   }
 
   thisPtr->onEnd(result);
   return result;
+}
+
+void SubnetTechMapperBase::onBegin(const SubnetBuilderPtr &oldBuilder) {
+  tryCount = 0;
+
+  // No penalties at the beginning.
+  tension = criterion::CostVector::Zero;
+
+  space.resize(oldBuilder->getMaxIdx() + 1);
+  for (auto i = oldBuilder->begin(); i != oldBuilder->end(); i.nextCell()) {
+    space[*i] = std::make_unique<CellSpace>(*context.criterion, tension);
+  }
+}
+
+bool SubnetTechMapperBase::onRecovery(const SubnetBuilderPtr &oldBuilder,
+                                      const Status &status) {
+  tryCount++;
+
+  // If no chance, break the technology mapping.
+  if (status.verdict == Status::UNSAT) {
+    return false;
+  }
+
+  const auto &unit = criterion::CostVector::Unit;
+
+  if (tryCount == 1) {
+    // Sharpen the initial tension vector.
+    const auto softmax = status.tension.softmax(.1 /* temperature */);
+    tension = softmax * (status.tension.norm(2.) / softmax.norm(2.));
+  } else {
+    // Modify the tension vector according to the current result.
+    constexpr criterion::Cost inflation = 1.01;
+    tension *= status.tension.smooth(unit, 0.5) * inflation;
+  }
+
+  for (auto i = oldBuilder->begin(); i != oldBuilder->end(); i.nextCell()) {
+    const auto &local = space[*i];
+    local->reset(tension);
+  }
+
+  return true;
 }
 
 } // namespace eda::gate::techmapper

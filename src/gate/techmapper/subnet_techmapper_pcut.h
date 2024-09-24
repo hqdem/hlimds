@@ -45,8 +45,9 @@ protected:
         oldBuilder.get(), maxCutSize, false /* extract on demand */);
   }
 
-  bool onRecovery(const Status &status) override {
-    if (!SubnetTechMapperBase::onRecovery(status)) {
+  bool onRecovery(const SubnetBuilderPtr &oldBuilder,
+                  const Status &status) override {
+    if (!SubnetTechMapperBase::onRecovery(oldBuilder, status)) {
       cutsPerCell = static_cast<uint16_t>(1.5 * cutsPerCell);
     } else {
       cutsPerCell += 2;

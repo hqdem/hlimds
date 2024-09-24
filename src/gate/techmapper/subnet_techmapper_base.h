@@ -127,40 +127,12 @@ protected:
     criterion::CostVector tension;
   };
 
-  virtual void onBegin(const SubnetBuilderPtr &oldBuilder) {
-    tryCount = 0;
-    space.resize(oldBuilder->getMaxIdx() + 1);
-    for (auto it = oldBuilder->begin(); it != oldBuilder->end(); it.nextCell()) {
-      space[*it] = std::make_unique<CellSpace>(
-          *context.criterion, criterion::CostVector::Zero /* no penalties */);
-    }
-  }
+  virtual void onBegin(const SubnetBuilderPtr &oldBuilder);
 
-  virtual bool onRecovery(const Status &status) {
-    if (status.verdict == Status::UNSAT) {
-      // No chance: break the technology mapping.
-      return false;
-    }
+  virtual bool onRecovery(const SubnetBuilderPtr &oldBuilder,
+                          const Status &status);
 
-    const auto &unit = criterion::CostVector::Unit;
-
-    if (tryCount == 0) {
-      // Sharpen the initial tension vector.
-      const auto softmax = status.tension.softmax(.1 /* temperature */);
-      tension = softmax * (status.tension.norm(2.) / softmax.norm(2.));
-    } else {
-      // Modify the tension vector according to the current result.
-      constexpr criterion::Cost inflation = 1.01;
-      tension *= status.tension.smooth(unit, 0.5) * inflation;
-    }
-
-    tryCount++;
-    return true;
-  }
-
-  virtual void onEnd(const SubnetBuilderPtr &newBuilder) {
-    // Do nothing.
-  }
+  virtual void onEnd(const SubnetBuilderPtr &newBuilder) {}
 
   bool hasSolutions(const optimizer::Cut &cut) const {
     for (const auto leafID : cut.leafIDs) {
@@ -211,6 +183,8 @@ protected:
   // State modified during technology mapping.
   uint16_t tryCount;
   SubnetSpace space;
+
+  criterion::CostVector vector;
   criterion::CostVector tension;
 
   // Cache of matches (to speed up multiple tries).

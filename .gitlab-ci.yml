@@ -19,6 +19,20 @@ stages:
   - coverage
   - valgrind
 
+debug_build_project:
+  stage: build
+  tags:
+    - docker
+
+  script:
+    - rm -rf ${BUILD_PATH}
+    - cd ${UTOPIA_HOME}
+    - cmake -S ${UTOPIA_HOME} -B ${BUILD_DIR} -G Ninja
+            -DGEN_DOC=ON
+            -DNPN4_USAGE_STATS=ON
+            -DUTOPIA_DEBUG=ON
+    - cmake --build ${BUILD_DIR}
+
 build_project:
   stage: build
   tags:
@@ -29,6 +43,9 @@ build_project:
     - cd ${UTOPIA_HOME}
     - cmake -S ${UTOPIA_HOME} -B ${BUILD_DIR} -G Ninja
     - cmake --build ${BUILD_DIR}
+
+  dependencies:
+    - debug_build_project
 
   artifacts:
     expire_in: 90 min

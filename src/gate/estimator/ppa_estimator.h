@@ -39,47 +39,47 @@ inline Result sumFromSubnetEntriesCells(model::SubnetID subnetID, Func func) {
   return result;
 }
 
-inline float getArea(const model::CellType &cellType) {
+inline double getArea(const model::CellType &cellType) {
   return cellType.getAttr().getPhysProps().area;
 }
 
-inline float getArea(model::SubnetID subnetID) {
-  return sumFromSubnetEntriesCells<float>(subnetID, 
+inline double getArea(model::SubnetID subnetID) {
+  return sumFromSubnetEntriesCells<double>(subnetID, 
           [](const auto &cell) { return getArea(cell.getType());});
 }
 
-inline float getLeakagePower(const model::CellType &cellType,
-                             const library::SCLibrary &library) {
-  const auto *cell = library.getLibrary().getCell(cellType.getName());
-  return cell ?
-      cell->getFloatAttribute("cell_leakage_power", FLT_MAX) : 0.0f;
+inline double getLeakagePower(const library::StandardCell &cell) {
+    //const auto *cell = library.getLibrary().getCell(cellType.getName());
+    auto leakagePower = cell.propertyLeakagePower;
+    assert(!std::isnan(leakagePower));
+    return leakagePower;
 }
 
-inline float getLeakagePower(model::SubnetID subnetID,
-                             const library::SCLibrary &library) {
-  return sumFromSubnetEntriesCells<float>(subnetID,
+inline double getLeakagePower(model::SubnetID subnetID,
+                              const library::SCLibrary &library) {
+  return sumFromSubnetEntriesCells<double>(subnetID,
           [&](const auto &cell) {
-            return getLeakagePower(cell.getType(), library); });
+            const auto *techCell = library.getCellPtr(cell.getTypeID());
+            assert(techCell != nullptr);
+            return getLeakagePower(*techCell); });
 }
 
-inline float getDelay(const model::CellType &cellType,
-                      const library::SCLibrary &library,
-                      float inputTransTime, float outputCap) {
-  return NLDM::delayEstimation(library.getLibrary(),
-     cellType.getName(), inputTransTime, outputCap);
+inline double getDelay(const library::StandardCell &cell,
+                       double inputTransTime, double outputCap) {
+  return NLDM::delayEstimation(cell, inputTransTime, outputCap);
 }
 
-inline float getArrivalTime(model::SubnetID subnetID,
+inline double getArrivalTime(model::SubnetID subnetID,
                             const library::SCLibrary &library) {
   int timingSense = 0;
-  std::unordered_map<uint64_t, float> arrivalMap, delayMap;
+  std::unordered_map<uint64_t, double> arrivalMap, delayMap;
 
-  float maxArrivalTime = 0;
-  float capacitance = 0;
+  double maxArrivalTime = 0;
+  double capacitance = 0;
   auto entries = model::Subnet::get(subnetID).getEntries();
   for (uint64_t i = 0; i < entries.size(); ++i) {
     if (!shouldSkipCell(entries[i].cell)) {
-      float delay = 0, arrival = 0;
+      double delay = 0, arrival = 0;
       for (const auto& link : entries[i].cell.link) {
         if (delayMap.count(link.idx)) {
           delay = std::max(delay, delayMap[link.idx]);
@@ -89,10 +89,13 @@ inline float getArrivalTime(model::SubnetID subnetID,
 
       size_t outNum = entries[i].cell.getOutNum();
       WLM wlm; // TODO
-      float fanoutCap = wlm.getFanoutCap(outNum) + capacitance;
-      float slew;
-      NLDM::delayEstimation(library.getLibrary(), entries[i].cell.getType().getName(),
-                            delay, fanoutCap, timingSense, slew, delay, capacitance);
+      double fanoutCap = wlm.getFanoutCap(outNum) + capacitance;
+      double slew;
+
+      const auto *cellPtr = library.getCellPtr(entries[i].cell.getTypeID());
+      assert(cellPtr != nullptr);
+      NLDM::delayEstimation(*cellPtr, delay, fanoutCap,
+                            timingSense, slew, delay, capacitance);
 
       arrivalMap[i] = slew + arrival;
       delayMap[i] = slew;
@@ -111,9 +114,13 @@ inline criterion::CostVector getPPA(
   const auto &cellType = model::CellType::get(cellTypeID);
   const auto name = cellType.getName();
 
+  const auto *cellPtr = techmapContext.library->getCellPtr(cellTypeID);
+  if (cellPtr == nullptr) {
+    assert(false && "calling getPPa for nonexistent CellTypeID");
+  }
   const auto area = getArea(cellType);
-  const auto delay = getDelay(cellType, *techmapContext.library, 0, 0); // TODO input transition time and output capacitance should be taken from Context
-  const auto power = getLeakagePower(cellType, *techmapContext.library);
+  const auto delay = getDelay(*cellPtr, 0, 0); // TODO input transition time and output capacitance should be taken from Context
+  const auto power = getLeakagePower(*cellPtr);
 
   return criterion::CostVector(area, delay, power);
 }

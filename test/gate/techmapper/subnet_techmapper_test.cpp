@@ -8,6 +8,8 @@
 
 #include "context/utopia_context.h"
 #include "gate/estimator/ppa_estimator.h"
+#include "gate/library/library_factory.h"
+#include "gate/library/readcells_srcfile_parser.h"
 #include "gate/model/utils/subnet_random.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/library/library.h"
@@ -32,8 +34,9 @@ class SubnetTechMapperTest : public testing::Test {
 protected:
   SubnetTechMapperTest() {
     auto &library = context_.techMapContext.library;
-    library = std::make_unique<library::SCLibrary>(techLib);
-    
+    eda::gate::library::ReadCellsParser parser(techLib);
+    library = library::SCLibraryFactory::newLibraryUPtr(parser);
+
     if (library != nullptr) {
       std::cout << "Loaded Liberty file: " << techLib << std::endl;
     } else {
@@ -65,7 +68,7 @@ protected:
     std::unique_ptr<optimizer::CutExtractor> cutExtractor{};
     auto cutProvider = [&](const model::SubnetBuilder &builder,
                            const size_t entryID) {
-      cutExtractor = 
+      cutExtractor =
         std::make_unique<optimizer::CutExtractor>(&builder, 6, true);
       return cutExtractor->getCuts(entryID);
       };
@@ -137,6 +140,22 @@ TEST_F(SubnetTechMapperTest, SimpleANDSubnet) {
   checkEQ(subnetID, mappedSubnetID);
 }
 
+TEST_F(SubnetTechMapperTest, SimpleANDNOTSubnet) {
+  auto builderPtr = std::make_shared<SubnetBuilder>();
+
+  const auto idx0 = builderPtr->addInput();
+  const auto idx1 = builderPtr->addInput();
+
+  const auto idx2 = builderPtr->addCell(model::AND, idx0, ~idx1);
+
+  builderPtr->addOutput(idx2);
+
+  const auto subnetID = builderPtr->make();
+  const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
+
+  checkEQ(subnetID, mappedSubnetID);
+}
+
 TEST_F(SubnetTechMapperTest, FourInANDSubnet) {
   auto builderPtr = std::make_shared<SubnetBuilder>();
 
@@ -150,6 +169,56 @@ TEST_F(SubnetTechMapperTest, FourInANDSubnet) {
   const auto idx6 = builderPtr->addCell(model::AND, idx4, idx5);
 
   builderPtr->addOutput(idx6);
+
+  const auto subnetID = builderPtr->make();
+  const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
+
+  checkEQ(subnetID, mappedSubnetID);
+}
+
+TEST_F(SubnetTechMapperTest, FourInANDNOTSubnet) {
+  auto builderPtr = std::make_shared<SubnetBuilder>();
+
+  const auto idx0 = builderPtr->addInput();
+  const auto idx1 = builderPtr->addInput();
+  const auto idx2 = builderPtr->addInput();
+  const auto idx3 = builderPtr->addInput();
+
+  const auto idx4 = builderPtr->addCell(model::AND, idx0, ~idx1);
+  const auto idx5 = builderPtr->addCell(model::AND, idx2, ~idx3);
+  const auto idx6 = builderPtr->addCell(model::AND, ~idx4, ~idx5);
+
+  builderPtr->addOutput(idx6);
+
+  const auto subnetID = builderPtr->make();
+  const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
+
+  checkEQ(subnetID, mappedSubnetID);
+}
+
+/* Test for subnet for a sky130_ha cell
+  0 <= in();
+  1 <= in();
+  4 <= and(0.0, 1.0);
+  5 <= and(0.0, ~1.0);
+  6 <= and(~0.0, 1.0);
+  7 <= and(~5.0, ~6.0);
+  2 <= out(4.0);
+  3 <= out(~7.0);
+ */
+TEST_F(SubnetTechMapperTest, HaCell) {
+  auto builderPtr = std::make_shared<SubnetBuilder>();
+
+  const auto idx0 = builderPtr->addInput();
+  const auto idx1 = builderPtr->addInput();
+
+  const auto idx2 = builderPtr->addCell(model::AND, idx0, idx1);
+  const auto idx3 = builderPtr->addCell(model::AND, idx0, ~idx1);
+  const auto idx4 = builderPtr->addCell(model::AND, ~idx0, idx1);
+  const auto idx5 = builderPtr->addCell(model::AND, ~idx3, ~idx4);
+
+  builderPtr->addOutput(idx2);
+  builderPtr->addOutput(~idx5);
 
   const auto subnetID = builderPtr->make();
   const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);

@@ -7,6 +7,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/library/library.h"
+#include "gate/library/readcells_srcfile_parser.h"
+#include "gate/library/library_factory.h"
+#include "gate/library/library_index.h"
 #include "util/env.h"
 
 #include "gate/techmapper/utils/read_sdc.h"
@@ -22,15 +25,86 @@ const path techLibPath = home /
                      "test/data/gate/techmapper";
 
 namespace eda::gate::library {
-bool checkLibParser(std::string libertyPath) {
-  SCLibrary library(libertyPath);
-  std::cout << "Loaded Liberty: " << libertyPath << std::endl;// TODO
 
-#ifdef UTOPIA_DEBUG
-  for (const auto& cell : library.getCombCells()) {
-    std::cout << cell.cellTypeID << std::endl;
+//Example1: index element is a pointer
+using SelectedTypeIsPtr = const StandardCell*;
+using SelectedVectorOfP = SCLibraryIndex<SelectedTypeIsPtr>::SelectionType;
+
+SelectedVectorOfP selectAllCellsAsPtrs(const SCLibrary& library) {
+  SelectedVectorOfP storage;
+  for (auto& cell: library.getCombCells()) {
+    storage.push_back(&cell);
   }
-#endif // UTOPIA_DEBUG
+  return storage;
+}
+struct SelectAllCellsFunctor {
+  const SCLibrary& library;
+
+  SelectedVectorOfP operator()() {
+    return selectAllCellsAsPtrs(library);
+  }
+};
+
+//Example2: index element is a shallow copy
+using SelectedTypeIsVal = StandardCell;
+using SelectedVectorV = SCLibraryIndex<SelectedTypeIsVal>::SelectionType;
+
+SelectedVectorV selectAllCellsAsShallowCopyVal(const SCLibrary& library,
+                                              int arg) {
+  (void)arg; //Example of passing arguments
+  SelectedVectorV storage;
+  for (auto& cell: library.getCombCells()) {
+    storage.push_back(cell);
+  }
+  return storage;
+}
+
+using SelectedTypeIsTemplPtr = const LutTemplate*;
+using SelectedVectorOfTemplP = SCLibraryIndex<SelectedTypeIsTemplPtr>::SelectionType;
+
+SelectedVectorOfTemplP selectAllTemplsAsPtrs(const SCLibrary& library) {
+  SelectedVectorOfTemplP storage;
+  for (auto& templ: library.getTemplates()) {
+    storage.push_back(&templ);
+  }
+  return storage;
+}
+
+bool checkLibParser2(std::string libertyPath) {
+  ReadCellsParser parser(libertyPath);
+  SCLibrary library = SCLibraryFactory::newLibrary(parser);
+  std::cout << "Loaded Liberty: " << libertyPath << std::endl;
+
+  #ifdef UTOPIA_DEBUG
+  for(const auto& cell : library.getCells()) {
+    std::cout << gate::model::CellType::get(cell.cellTypeID).getName()
+              << std::endl;
+  }
+  #endif // UTOPIA_DEBUG
+
+  SCLibraryIndex<SelectedTypeIsPtr> index1 (SelectAllCellsFunctor{library});
+  SCLibraryIndex<SelectedTypeIsPtr> index2 (
+    [&]{return selectAllCellsAsPtrs(library);});
+  SCLibraryIndex<SelectedTypeIsVal> index3 (
+    [&]{return selectAllCellsAsShallowCopyVal(library, 0);});
+  SCLibraryIndex<SelectedTypeIsTemplPtr> index4 (
+    [&]{return selectAllTemplsAsPtrs(library);});
+  for(auto cell : index1) {
+    std::cout << gate::model::CellType::get(cell->cellTypeID).getName()
+              << std::endl;
+  }
+  for(auto &templ : index4) {
+    std::cout << "Template:\n";
+    for (auto &var: templ->variables) {
+      std::cout << "Variable ID: " << std::setw(2)
+                << static_cast<int>(var.nameID) << " | Values: ";
+      for (auto &val : var.values) {
+        std::cout << val << " ";
+      }
+      std::cout <<"\n";
+    }
+    std::cout <<"\n";
+  }
   return true;
 }
 
@@ -44,13 +118,12 @@ const std::tuple<float, float, float> checkSDCParser(std::string sdcPath) {
   return constraints;
 }
 
-
-TEST(ReadLibertyTest, sky130_fd_sc_hd__ff_n40C_1v95) {
-  checkLibParser(techLibPath / "sky130_fd_sc_hd__ff_n40C_1v95.lib");
+TEST(ReadLibertyTest2, sky130_fd_sc_hd__ff_n40C_1v95) {
+  checkLibParser2(techLibPath / "sky130_fd_sc_hd__ff_n40C_1v95.lib");
 }
 
-TEST(ReadLibertyTest, sky130_fd_sc_hd__ff_100C_1v65) {
-  checkLibParser(techLibPath / "sky130_fd_sc_hd__ff_100C_1v65.lib");
+TEST(ReadLibertyTest2, sky130_fd_sc_hd__ff_100C_1v65) {
+  checkLibParser2(techLibPath / "sky130_fd_sc_hd__ff_100C_1v65.lib");
 }
 
 TEST(ReadSDCTest, test_100) {

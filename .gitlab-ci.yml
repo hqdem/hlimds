@@ -19,6 +19,7 @@ stages:
   - coverage
   - valgrind
 
+# Building the project in a debug mode
 debug_build_project:
   stage: build
   tags:
@@ -33,6 +34,7 @@ debug_build_project:
             -DUTOPIA_DEBUG=ON
     - cmake --build ${BUILD_DIR}
 
+# Building the project in default mode
 build_project:
   stage: build
   tags:
@@ -52,6 +54,7 @@ build_project:
     paths:
       - ${BUILD_PATH}
 
+# Running tests for the project
 test_project:
   stage: test
   tags:
@@ -75,6 +78,7 @@ test_project:
       junit: ${TEST_REPORTS_PATH}
     when: always
 
+# Collecting information about code coverage that is reached by tests
 get_coverage_info:
   stage: coverage
   coverage: '/^lines: \d+\.\d+\% \(.*\)/'
@@ -111,6 +115,7 @@ get_coverage_info:
         coverage_format: cobertura
         path: ${BUILD_PATH}/coverage.xml
 
+# Using Valgrind to analyse the project (demo only)
 valgrind_test_demo:
   stage: valgrind
   tags:

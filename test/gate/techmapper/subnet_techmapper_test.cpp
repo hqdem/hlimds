@@ -226,7 +226,7 @@ TEST_F(SubnetTechMapperTest, HaCell) {
   checkEQ(subnetID, mappedSubnetID);
 }
 
-TEST_F(SubnetTechMapperTest, DISABLED_RandomSubnet) {
+TEST_F(SubnetTechMapperTest, RandomSubnet) {
   const auto subnetID = model::randomSubnet(6, 2, 20, 2, 2);
   const auto builderPtr = std::make_shared<SubnetBuilder>(subnetID);
 
@@ -244,23 +244,18 @@ TEST_F(SubnetTechMapperTest, DISABLED_RandomSubnet) {
 
 TEST_F(SubnetTechMapperTest, GraphMLSubnetSmall) {
   auto builderPtr = parseGraphML("simple_spi_orig"); // 2k nodes
-  premapper::CellAigMapper aigMapper("aig");
-  // TODO: it's better to use buffer-insert pass
   // FIXME: do not call make(); implement another aigMapper.transform instead
   const auto subnetID = builderPtr->make();
-  const auto premappedBuilder = aigMapper.map(builderPtr);
   const auto mappedSubnetID =
-    commonPart(premappedBuilder, 1000000, 1000000, 1000000);
+    commonPart(builderPtr, 1000000, 1000000, 1000000);
   checkEQ(subnetID, mappedSubnetID);
 }
 
 TEST_F(SubnetTechMapperTest, DISABLED_GraphMLSubnetLarge) {
   auto builderPtr = parseGraphML("wb_conmax_orig"); // 80k nodes
-  premapper::CellAigMapper aigMapper("aig");
   const auto subnetID = builderPtr->make();
-  const auto premappedBuilder = aigMapper.map(builderPtr); // TODO: it's better to use buffer-insert pass
   const auto mappedSubnetID =
-    commonPart(premappedBuilder, 10000000, 10000000, 10000000);
+    commonPart(builderPtr, 10000000, 10000000, 10000000);
   checkEQ(subnetID, mappedSubnetID);
 }
 

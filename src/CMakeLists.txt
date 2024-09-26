@@ -28,9 +28,7 @@ list(JOIN CLANG_TIDY_EXCLUDE_LIST , CLANG_TIDY_LINE_FILTER)
 
 set(CMAKE_CXX_CLANG_TIDY
   clang-tidy;
-  -header-filter=src/.*;
-  -line-filter=[${CLANG_TIDY_LINE_FILTER},{"name":".h"},{"name":".cpp"}];
-  -checks=llvm-*,-llvm-header-guard;) # -warnings-as-errors;
+  -line-filter=[${CLANG_TIDY_LINE_FILTER},{"name":".h"},{"name":".cpp"}])
 
 # The compilation options.
 add_compile_options(-g3 -Wall -Wignored-qualifiers -DYYERROR_VERBOSE)

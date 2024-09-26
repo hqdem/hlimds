@@ -1,0 +1,7 @@
+HeaderFilterRegex: (src/umain.h|src/(base|context|data|diag|gate|rtl|shell|util)/.*)
+Checks: >
+  llvm-*,
+  readability-qualified-auto,
+  -llvm-qualified-auto,
+  -llvm-header-guard
+  

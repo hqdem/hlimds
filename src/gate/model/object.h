@@ -88,16 +88,13 @@ public:
   /// Constructs a null-valued FID.
   ObjectID(): ObjectID(OBJ_NULL_ID) {}
   /// Constructs a copy of the FID.
-  ObjectID(const ObjectID &r): value(r.value) {}
+  ObjectID(const ObjectID &) = default;
 
   /// Converts the FID to the 64-bit unsigned integer.
   operator uint64_t() const { return value; }
 
   /// Assigns the value to this FID.
-  ObjectID &operator =(ObjectID r) {
-    value = r.value;
-    return *this;
-  }
+  ObjectID &operator =(const ObjectID &) = default;
 
   /// Returns the SID.
   uint64_t getSID() const { return makeSID(value); }

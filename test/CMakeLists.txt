@@ -1,5 +1,34 @@
 # SPDX-License-Identifier: Apache-2.0
 
+add_library(utopia_tests OBJECT
+  gate/techmapper/techmapper_test_util.cpp
+  gate/translator/graphml_test_utils.cpp
+  gate/model/examples.cpp
+)
+add_library(Utopia::utopia_tests ALIAS utopia_tests)
+
+target_include_directories(utopia_tests
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/lib
+    ${PROJECT_SOURCE_DIR}/test
+    ${CMAKE_CURRENT_BINARY_DIR}/.. # config.h
+)
+
+target_link_libraries(utopia_tests
+  PRIVATE
+    minisat-lib-static
+    gtest_main
+    CLI
+    easyloggingpp
+    fmt
+    Kitty
+    readcells
+    Tcl::Tcl
+    Yosys::Yosys
+)
+
+
 # Set policy to operate with timestamps of extracted files
 cmake_policy(SET CMP0135 NEW)
 

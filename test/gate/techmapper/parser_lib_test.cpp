@@ -76,7 +76,7 @@ bool checkLibParser2(std::string libertyPath) {
   std::cout << "Loaded Liberty: " << libertyPath << std::endl;
 
   #ifdef UTOPIA_DEBUG
-  for(const auto& cell : library.getCells()) {
+  for(const auto& cell : library.getCombCells()) {
     std::cout << gate::model::CellType::get(cell.cellTypeID).getName()
               << std::endl;
   }

@@ -7,27 +7,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/sat_checker.h"
-#include "gate/library/sdc_manager.h"
+#include "gate/library/readcells_srcfile_parser.h"
 #include "gate/model/printer/net_printer.h"
-#include "gate/model/utils/subnet_random.h"
-#include "gate/premapper/cell_aigmapper.h"
+#include "gate/techmapper/matcher/pbool_matcher.h"
 #include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techmapper/utils/get_statistics.h"
 #include "gate/translator/graphml_test_utils.h"
 
-#include "gtest/gtest.h"
-
 #include <fstream>
-#include <memory>
 
 namespace eda::gate::techmapper {
 
-using AigMapper = premapper::CellAigMapper;
-using CellSymbol = model::CellSymbol;
-using Link = model::Subnet::Link;
-using LinkList = model::Subnet::LinkList;
-using NetBuilder = model::NetBuilder;
-using SDC = library::SDC;
 using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetID = model::SubnetID;
@@ -36,10 +25,10 @@ std::shared_ptr<SubnetBuilder> parseGraphML(const std::string &fileName) {
   return translator::translateGmlOpenabc(fileName);
 }
 
-SubnetID createPrimitiveSubnet(const CellSymbol symbol,
-                              const size_t nIn, const size_t arity) {
+SubnetID createPrimitiveSubnet(const model::CellSymbol symbol,
+                               const size_t nIn, const size_t arity) {
   SubnetBuilder builder;
-  LinkList links;
+  Subnet::LinkList links;
 
   for (size_t i = 0; i < nIn; i++) {
     const auto idx = builder.addInput();
@@ -55,7 +44,7 @@ SubnetID createPrimitiveSubnet(const CellSymbol symbol,
 void printVerilog(const SubnetID subnet) {
   static constexpr auto name = "techmappedNet";
   std::ofstream outFile("test/data/gate/techmapper/print/techmappedNet.v");
-  model::print(outFile, model::VERILOG, name, model::Subnet::get(subnet));
+  model::print(outFile, model::VERILOG, name, Subnet::get(subnet));
   std::cout << "Output Verilog file: " <<
     "test/data/gate/techmapper/print/techmappedNet.v" << std::endl;
   outFile.close();
@@ -63,13 +52,13 @@ void printVerilog(const SubnetID subnet) {
 
 bool checkAllCellsMapped(const SubnetID subnetID) {
   bool isTotalMapped = true;
-  auto entr = model::Subnet::get(subnetID).getEntries();
+  auto entr = Subnet::get(subnetID).getEntries();
   for (uint64_t entryIndex = 0; entryIndex < std::size(entr); entryIndex++) {
     auto cell = entr[entryIndex].cell;
     if (cell.isIn() || cell.isOut() || cell.isZero() || cell.isOne()) {
       continue;
     }
-    if (cell.getSymbol() != CellSymbol::UNDEF) {
+    if (cell.getSymbol() != model::CellSymbol::UNDEF) {
       isTotalMapped = false;
     }
     entryIndex += cell.more;
@@ -78,7 +67,7 @@ bool checkAllCellsMapped(const SubnetID subnetID) {
 }
 
 void checkEQ(const SubnetID origSubnetID, const SubnetID mappedSubnetID) {
-  debugger::SatChecker& checker = debugger::SatChecker::get();
+  auto& checker = debugger::SatChecker::get();
   EXPECT_TRUE(checker.areEquivalent(origSubnetID, mappedSubnetID).equal());
 }
 

@@ -60,6 +60,7 @@ target_link_libraries(Umain
     Utopia::RTL
     Utopia::Util
     Utopia::Shell
+    utopia_tests
     Yosys::Yosys
   PRIVATE
     CLI

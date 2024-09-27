@@ -72,8 +72,8 @@ protected:
                           inputTransTime,
                           totalOutputCap,
                           timingSense, slew, delay, cap);
-    EXPECT_DOUBLE_EQ(slew, slewRef);
-    EXPECT_DOUBLE_EQ(delay, delayRef);
+    EXPECT_FLOAT_EQ(slew, slewRef); // FIXME: use EXPECT_DOUBLE_EQ
+    EXPECT_FLOAT_EQ(delay, delayRef); // FIXME: use EXPECT_DOUBLE_EQ
   }
 
   ~EstimatorTest() override {}

@@ -294,7 +294,7 @@ public:
   /// Returns the weight of the cell identified by the index.
   using CellWeightProvider = std::function<float(EntryID)>;
   /// Calculates the real weight used for replace estimation.
-  using CellWeightModifier = std::function<float(float)>;
+  using CellWeightModifier = std::function<float(float, uint16_t)>;
   /// Performs a certain action in a certain situation.
   using CellActionCallback = std::function<void(EntryID)>;
 

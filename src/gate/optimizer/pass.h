@@ -194,7 +194,7 @@ inline SubnetPass rfp() {
         }
       };
   static Refactorer::CellWeightModifier weightModifier =
-      [](float p) {
+      [](float p, uint16_t) {
         return 2 * p * (1.f - p);
       };
   return std::make_shared<Refactorer>("rfp",
@@ -214,7 +214,7 @@ inline SubnetPass lrfp() {
   static Resynthesizer resynthesizer(ar);
 
   static LazyRefactorer::WeightCalculator weightCalculator =
-      [](SubnetBuilder & builder,
+      [](SubnetBuilder &builder,
          const std::vector<float> &inputWeights) {
         static ProbEstimator estimator;
         const auto weights = estimator.estimateProbs(builder, inputWeights);
@@ -224,7 +224,9 @@ inline SubnetPass lrfp() {
         }
       };
   static LazyRefactorer::CellWeightModifier weightModifier =
-      [](float p) { return 2 * p * (1.f - p); };
+      [](float p, uint16_t) {
+        return 2 * p * (1.f - p);
+      };
 
   static LazyRefactorer::ConeConstructor coneConstructor =
       LazyRefactorer::twoLvlBldr;

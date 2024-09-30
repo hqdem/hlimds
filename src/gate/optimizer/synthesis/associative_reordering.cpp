@@ -40,7 +40,7 @@ bool AssociativeReordering::isAssociative(const SubnetBuilder &builder) const {
 }
 
 bool AssociativeReordering::isOpen(SubnetView &view) const {
-  
+
   SubnetViewWalker walker(view);
   bool open = false;
   auto func = [&open](SubnetBuilder &builder,
@@ -148,8 +148,10 @@ float AssociativeReordering::getEffect(
   simpleMap.outputs.push_back(prelast);
   setWeights(*newBuilder, *info.builder);
 
-  std::function<float(float)> cellWeightModifier = 
-      [](float w) -> float {return w * (1 - w) * 2;};
+  std::function<float(float, uint16_t)> cellWeightModifier = 
+      [](float w, uint16_t) -> float {
+        return w * (1 - w) * 2;
+      };
   Effect effect = info.builder->evaluateReplace(*newBuilder, 
                                                 simpleMap, 
                                                 &cellWeightModifier);

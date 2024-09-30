@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include "gate/estimator/ppa_estimator.h"
 #include "gate/library/library_factory.h"
 #include "gate/techmapper/utils/get_statistics.h"
+#include "gate/techmapper/subnet_techmapper_pcut.h"
 #include "util/env.h"
 
 #include "gtest/gtest.h"
@@ -95,26 +97,22 @@ protected:
       std::make_unique<criterion::Criterion>(objective, constraints);
     std::unique_ptr<optimizer::CutExtractor> cutExtractor{};
 
-    auto cutProvider = [&](const SubnetBuilder &builder,
-                           const size_t entryID) {
-      cutExtractor =
-        std::make_unique<optimizer::CutExtractor>(&builder, 6, true);
-      return cutExtractor->getCuts(entryID);
-    };
-
     auto matchFinder = [&](const SubnetBuilder &builder,
                            const optimizer::Cut &cut) {
       return pBoolMatcher_->match(builder, cut);
     };
 
-    std::unique_ptr<SubnetTechMapperBase> techmapper =
-      std::make_unique<SubnetTechMapperBase>(
-        name_, context, cutProvider, matchFinder, estimator::getPPA);
+    SubnetTechMapperPCut techmapper(
+        "SubnetTechMapper",
+        context,
+        (*context.techMapContext.library).getProperties().maxArity,
+        4, //maxCutNum
+        matchFinder,
+        estimator::getPPA);
 
-    auto builder = techmapper->map(builderPtr);
+    auto builder = techmapper.map(builderPtr);
 
     EXPECT_TRUE(builder != nullptr);
-    techmapper.reset(nullptr);
 
     if (builder != nullptr) {
       const auto mappedSubnetID = builder->make();

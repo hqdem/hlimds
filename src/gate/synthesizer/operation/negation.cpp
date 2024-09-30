@@ -20,7 +20,7 @@ model::SubnetID synthNeg(const model::CellTypeAttr &attr) {
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
 
   builder.addOutputs(
-      convertToTwosComplementCode(builder, inputsForA, outSize, true));
+      convertToTwosComplementCode(builder, inputsForA, outSize));
 
   return builder.make();
 }

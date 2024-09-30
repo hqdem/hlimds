@@ -12,7 +12,7 @@
 
 namespace eda::gate::synthesizer {
 
-model::SubnetID synthAdd(const model::CellTypeAttr &attr) {
+model::SubnetID synthAddU(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
 
   const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
@@ -27,17 +27,68 @@ model::SubnetID synthAdd(const model::CellTypeAttr &attr) {
   return builder.make();
 }
 
-model::SubnetID synthSub(const model::CellTypeAttr &attr) {
+model::SubnetID synthAddS(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
 
-  const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
-  const auto outSize = attr.getOutWidth(0);
+  const uint16_t sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
+  const uint16_t outSize = attr.getOutWidth(0);
 
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
   model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
 
+  // the inputs as vectors must have the same size, and we fill the empty
+  // pseudo-zero bits with signs (basically we assume that if the inputs are not
+  // equal in size, then there is a zero in these empty bits)
+  if (sizeA < sizeB) {
+    inputsForA.resize(sizeB, inputsForA.back());
+  } else if (sizeA > sizeB) {
+    inputsForB.resize(sizeA, inputsForB.back());
+  }
+
+  builder.addOutputs(synthLadnerFisherAdd(builder, inputsForA, inputsForB,
+                                          outSize, true));
+  return builder.make();
+}
+
+model::SubnetID synthSubU(const model::CellTypeAttr &attr) {
+  model::SubnetBuilder builder;
+
+  uint16_t sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
+  const uint16_t outSize = attr.getOutWidth(0);
+
+  model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
+  model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
+
+  inputsForB = convertToTwosComplementCode(builder, inputsForB,
+                                           std::max(sizeA, sizeB), false);
+
+  builder.addOutputs(
+      synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize, true));
+
+  return builder.make();
+}
+
+model::SubnetID synthSubS(const model::CellTypeAttr &attr) {
+  model::SubnetBuilder builder;
+
+  uint16_t sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
+  const uint16_t outSize = attr.getOutWidth(0);
+
+  model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
+  model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
+  
+  uint16_t maxSize = std::max(sizeA, sizeB);
+  if (maxSize < outSize) {
+    ++sizeA, ++sizeB, ++maxSize;
+    inputsForA.push_back(inputsForA.back());
+    inputsForB.push_back(inputsForB.back());
+  }
+
+  if (sizeA < sizeB) {
+    inputsForA.resize(sizeB, inputsForA.back());
+  }
   inputsForB =
-      convertToTwosComplementCode(builder, inputsForB, std::max(sizeA, sizeB));
+      convertToTwosComplementCode(builder, inputsForB, maxSize);
 
   builder.addOutputs(
       synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize, true));
@@ -48,22 +99,24 @@ model::SubnetID synthSub(const model::CellTypeAttr &attr) {
 model::Subnet::LinkList
 convertToTwosComplementCode(model::SubnetBuilder &builder,
                             const model::Subnet::LinkList &inputsForA,
-                            const uint16_t targetSize,
-                            bool usedForSub) {
+                            const uint16_t targetSize, bool isSigned) {
   model::Subnet::LinkList inversed(targetSize);
+  // TODO: It is correct for unsigned, but for signed we should duplicate
+  // inversed elder bit to fill the pseudo-input
+  // (CHANGED FOR SIGNED NOW, NOT IN TESTS!!!)
   const auto one = builder.addCell(model::CellSymbol::ONE);
-
-  for (size_t i = 0; i < inputsForA.size(); ++i) {
+  size_t i = 0;
+  for (; i < inputsForA.size(); ++i) {
     inversed[i] = ~inputsForA[i];
   }
 
-  for (size_t i = inputsForA.size(); i < targetSize; ++i) {
-    inversed[i] = one;
+  const auto sign = isSigned ? inversed[i - 1] : one;
+  for (; i < targetSize; ++i) {
+    inversed[i] = sign;
   }
 
-
   // return digit been inversed and for wich was added 1
-  return synthLadnerFisherAdd(builder, inversed, {one}, targetSize, usedForSub);
+  return synthLadnerFisherAdd(builder, inversed, {one}, targetSize, true);
 }
 
 // well, why builder is pointer. Such construction shows obviously,
@@ -76,7 +129,7 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
                                              model::Subnet::LinkList inputsForA,
                                              model::Subnet::LinkList inputsForB,
                                              const uint16_t outSize,
-                                             bool usedForSub) {
+                                             bool useSign) {
   uint16_t sizeA = inputsForA.size(), sizeB = inputsForB.size();
 
   // the smallest is always in sizeB
@@ -100,9 +153,7 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
 
   // here is "xor" and "and" between each bit of both numbers
   // at this moment we add them only where it is necessary (where are 2 bits)
-
   for (uint16_t i = 0; i < outSizeB; ++i) {
-    // from verilog-like [n:0] to c++ [0:n]
     startOutputsP[i] =
         builder.addCell(model::CellSymbol::XOR, inputsForA[i], inputsForB[i]);
     gOutputs[i] =
@@ -221,17 +272,27 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
 
     // if we need zeroCell for carry out or for filling output
     if ((!isNotZero[gOutputs.size() - 1] || outSize > sizeA + 1) &&
-        !usedForSub) {
+        !useSign) {
       zeroCell = builder.addCell(model::CellSymbol::ZERO);
     }
     // if we need to add something to output and we have signed digit
-    else if (usedForSub) {
-      zeroCell = outputGates.back();
+    else if (useSign) {
+      zeroCell = builder.addCellTree(
+          model::CellSymbol::OR,
+          {builder.addCell(model::CellSymbol::AND, outputGates.back(),
+                           inputsForA.back()),
+           builder.addCell(model::CellSymbol::AND, outputGates.back(),
+                           inputsForB.back()),
+           builder.addCell(model::CellSymbol::AND, outputGates.back(),
+                           gOutputs.back()),
+           builder.addCell(model::CellSymbol::AND, gOutputs.back(),
+                           inputsForA.back(), inputsForB.back())},
+          2);
     }
 
     // add carry out. If it was not generated, set zero as output value
     // if we make sub, we add zeroCell anyway
-    outputGates.push_back(isNotZero[gOutputs.size() - 1] && !usedForSub
+    outputGates.push_back(isNotZero[gOutputs.size() - 1] && !useSign
                               ? gOutputs.back()
                               : zeroCell);
 

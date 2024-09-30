@@ -31,10 +31,10 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
   SubnetBuilder result(
-      shiftL ? eda::gate::synthesizer::synthShl(attr)
+      shiftL ? (useSign ? eda::gate::synthesizer::synthShlS(attr)
+                        : eda::gate::synthesizer::synthShlU(attr))
              : (useSign ? eda::gate::synthesizer::synthShrS(attr)
                         : eda::gate::synthesizer::synthShrU(attr)));
-
   Simulator simulator(result);
   Simulator::DataVector values(inputSize + shiftSize);
 
@@ -56,9 +56,9 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
                 ((1 << attr.getOutWidth(0)) - 1);
 
   if (useSign && values[inputSize - 1u]) {
-    res |= (1 << inputSize) - 1 -
-           ((1 << (inputSize - std::min<uint16_t>(inputSize, valB))) - 1);
-    res &= ((1 << attr.getOutWidth(0)) - 1);
+    int32_t fact = valA | (((1ull << 32) - 1) - ((1 << inputSize) - 1));
+    res = (shiftL ? (fact << valB) : (fact >> valB)) &
+                  ((1 << attr.getOutWidth(0)) - 1);
   }
 
   int32_t resSimulated = 0u;
@@ -68,15 +68,16 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   }
 
   if (res != resSimulated) {
-    std::clog << inputSize + 0 << " " << res << " " << valA << " " << valB
+    std::clog << inputSize + 0 << " " << (int)outSize << " " 
+              << res << " " << valA << " " << valB
               << " " << resSimulated << std::endl;
-    std::clog << Subnet::get(result.make());
+    // std::clog << Subnet::get(result.make());
   }
 
   return {res, resSimulated};
 }
 
-TEST(Synthesizer, ShiftLTestLargerOutput) {
+TEST(Synthesizer, ShiftLuTestLargerOutput) {
   const uint8_t startInp = 4u, endInp = 16u;
   const uint8_t startSh = 2u, endSh = 6u;
 
@@ -87,6 +88,25 @@ TEST(Synthesizer, ShiftLTestLargerOutput) {
       uint16_t outSize = static_cast<uint16_t>(inputSize + shiftSize);
 
       auto [res, resSimulated] = simulateShift(inputSize, shiftSize, outSize);
+
+      EXPECT_EQ(res, resSimulated);
+    }
+  }
+}
+
+
+TEST(Synthesizer, ShiftLsTestLargerOutput) {
+  const uint8_t startInp = 4u, endInp = 16u;
+  const uint8_t startSh = 2u, endSh = 6u;
+
+  srand(1u);
+
+  for (uint8_t inputSize = startInp; inputSize <= endInp; ++inputSize) {
+    for (uint8_t shiftSize = startSh; shiftSize < endSh; ++shiftSize) {
+      uint16_t outSize = static_cast<uint16_t>(inputSize + shiftSize);
+
+      auto [res, resSimulated] =
+          simulateShift(inputSize, shiftSize, outSize, true, true);
 
       EXPECT_EQ(res, resSimulated);
     }

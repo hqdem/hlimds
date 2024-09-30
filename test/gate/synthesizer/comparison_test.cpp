@@ -70,6 +70,10 @@ bool simulateComparator(
     std::clog << Subnet::get(result.make());
   }
 
+  if (sizeA == 8u && sizeB == 4u) {
+    std::clog << Subnet::get(result.make());
+  }
+
   return targetResult;
 }
 

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-
+add_compile_options(-fno-rtti)
 add_library(utopia_tests OBJECT
   gate/techmapper/techmapper_test_util.cpp
   gate/translator/graphml_test_utils.cpp

@@ -167,7 +167,7 @@ TEST_F(SubnetTechMapperSky130Test, RandomSubnet) {
   checkEQ(subnetID, mappedSubnetID);
 }
 
-TEST_F(SubnetTechMapperSky130Test, DISABLED_GraphMLSubnetSmall) {
+TEST_F(SubnetTechMapperSky130Test, GraphMLSubnetSmall) {
   auto builderPtr = parseGraphML("simple_spi_orig"); // 2k nodes
   // FIXME: do not call make(); implement another aigMapper.transform instead
   const auto subnetID = builderPtr->make();

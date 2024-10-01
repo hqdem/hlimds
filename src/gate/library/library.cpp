@@ -15,7 +15,9 @@ using CellTypeID = model::CellTypeID;
 
 void SCLibrary::addCells(std::vector<StandardCell> &&cells) {
   for (auto &cell : cells) {
-    internalLoadCombCell(std::move(cell));
+    if (cell.inputPins.size() < 8) { // FIXME: kitty's pcanonization doesn't support in>7
+      internalLoadCombCell(std::move(cell));
+    }
   }
   findCheapestCells();
   addSuperCells();

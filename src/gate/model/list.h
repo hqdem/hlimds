@@ -328,7 +328,7 @@ public:
 
 private:
   /// List identifier.
-  const ListID listID;
+  ListID listID;
   /// Pointer to the first block of the list.
   ListBlock<T> *head;
 };

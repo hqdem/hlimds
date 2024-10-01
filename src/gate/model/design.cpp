@@ -77,18 +77,21 @@ static void replace(const CellID oldCellID, const CellID newCellID,
 void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
                                 const std::vector<uint16_t> &newInputs,
                                 const std::vector<uint16_t> &newOutputs) {
-  for (size_t i = 0; i < mapping.size(); ++i) {
-    replace(oldCellID, newCellID, newInputs, newOutputs, mapping[i].inputs);
-    replace(oldCellID, newCellID, newInputs, newOutputs, mapping[i].outputs);
+  auto &subnets = result.subnets;
+  for (size_t i = 0; i < subnets.size(); ++i) {
+    auto &mapping = subnets[i].mapping;
+    replace(oldCellID, newCellID, newInputs, newOutputs, mapping.inputs);
+    replace(oldCellID, newCellID, newInputs, newOutputs, mapping.outputs);
   }
 }
 
 DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPIs(
-    const std::vector<SubnetID> &subnetIDs) const {
+    const NetDecomposer::Result &result) const {
+  const auto &subnets = result.subnets;
 
-  SubnetToFFSet flipFlopPIs(subnetIDs.size());
-  for (size_t i = 0; i < subnetIDs.size(); ++i) {
-    const auto &subnet = Subnet::get(subnetIDs[i]);
+  SubnetToFFSet flipFlopPIs(subnets.size());
+  for (size_t i = 0; i < subnets.size(); ++i) {
+    const auto &subnet = Subnet::get(subnets[i].subnetID);
     for (EntryID inN = 0; inN < subnet.getInNum(); ++inN) {
       const EntryID inEntryID = subnet.getInIdx(inN);
       const auto &inCell = subnet.getCell(inEntryID);
@@ -101,15 +104,15 @@ DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPIs(
 }
 
 DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
-    const std::vector<SubnetID> &subnetIDs,
-    const std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc,
+    const NetDecomposer::Result &result,
     const SubnetToFFSet &flipFlopPIs,
     SubnetToArcDescs &arcDesc) const {
+  const auto &subnets = result.subnets;
 
-  SubnetToSubnetSet adjList(subnetIDs.size());
-  arcDesc.resize(subnetIDs.size());
-  for (size_t i = 0; i < subnetIDs.size(); ++i) {
-    const auto &subnet = Subnet::get(subnetIDs[i]);
+  SubnetToSubnetSet adjList(subnets.size());
+  arcDesc.resize(subnets.size());
+  for (size_t i = 0; i < subnets.size(); ++i) {
+    const auto &subnet = Subnet::get(subnets[i].subnetID);
     for (uint16_t outN = 0; outN < subnet.getOutNum(); ++outN) {
       const EntryID outEntryID = subnet.getOutIdx(outN);
       const auto &outCell = subnet.getCell(outEntryID);
@@ -118,12 +121,12 @@ DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
       if (PILinking.first) {
         adjList[i].insert(PISubnetEntryIdx);
         arcDesc[i][PISubnetEntryIdx] =
-            ioEntryDesc[i].find(PILinking.second)->second;
+            subnets[i].entryToDesc.find(PILinking.second)->second;
       }
       if (POLinking.first) {
         adjList[i].insert(POSubnetEntryIdx);
         arcDesc[i][POSubnetEntryIdx] =
-            ioEntryDesc[i].find(POLinking.second)->second;
+            subnets[i].entryToDesc.find(POLinking.second)->second;
       }
       if (!outCell.isFlipFlop()) {
         continue;
@@ -132,7 +135,7 @@ DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
       for (size_t j = 0; j < flipFlopPIs.size(); ++j) {
         if (flipFlopPIs[j].find(flipFlopID) != flipFlopPIs[j].end()) {
           adjList[j].insert(i);
-          arcDesc[j][i] = ioEntryDesc[i].find(outEntryID)->second;
+          arcDesc[j][i] = subnets[i].entryToDesc.find(outEntryID)->second;
         }
       }
     }
@@ -141,12 +144,11 @@ DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
 }
 
 void DesignBuilder::setAdjList(
-    const std::vector<SubnetID> &subnetIDs,
-    const std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc,
+    const NetDecomposer::Result &result,
     SubnetToSubnetSet &adjList,
     SubnetToArcDescs &arcDesc) const {
-  auto flipFlopPIs = findFlipFlopPIs(subnetIDs);
-  adjList = findArcs(subnetIDs, ioEntryDesc, flipFlopPIs, arcDesc);
+  auto flipFlopPIs = findFlipFlopPIs(result);
+  adjList = findArcs(result, flipFlopPIs, arcDesc);
 }
 
 } // namespace eda::gate::model

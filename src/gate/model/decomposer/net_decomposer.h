@@ -37,7 +37,7 @@ public:
   };
 
   /// Maps net links to subnet input/output cell indices.
-  using LinkMap = std::unordered_map<Link, uint32_t>;
+  using LinkMap = std::unordered_map<Link, EntryID>;
   /// Maps net cells to the subnet links corresponding to the output ports.
   using CellMap = std::unordered_map<CellID, Subnet::LinkList>;
   /// Maps subnet entry index to connection descriptor.
@@ -49,29 +49,38 @@ public:
   /// Maps net cells/links to subnet cell indices.
   struct CellMapping final {
     size_t size;     // Original subnet size.
-    LinkMap inputs;  // Decomposition => composition.
+    LinkMap inputs;  // Result => composition.
     CellMap inners;  // Temporal result of decomposition.
-    LinkMap outputs; // Decomposition => composition.
+    LinkMap outputs; // Result => composition.
   };
 
-  /**
-   * @brief Decomposes the net into subnets, fills the cell mapping and inputs
-   * outputs entries descriptors.
-   */
-  bool decompose(const NetID netID,
-                 std::vector<SubnetID> &subnets,
-                 std::vector<CellMapping> &mapping,
-                 std::vector<EntryToDesc> &ioEntryDesc) const;
+  /// Subnet information.
+  struct SubnetDesc final {
+    SubnetDesc(const SubnetID subnetID,
+               const CellMapping &mapping,
+               const EntryToDesc &entryToDesc):
+      subnetID(subnetID), mapping(mapping), entryToDesc(entryToDesc) {}
+
+    SubnetID subnetID;
+    CellMapping mapping;
+    EntryToDesc entryToDesc;
+  };
+
+  /// Result of decomposition.
+  struct Result final {
+    List<CellID> inputs;
+    List<CellID> outputs;
+    std::vector<SubnetDesc> subnets;
+  };
+
+  /// Decomposes the net into subnets.
+  bool decompose(const NetID netID, Result &decomposition) const;
 
   /// Imitates decomposition of the net consisting of a single subnet.
-  bool decompose(const SubnetID subnetID,
-                 std::vector<SubnetID> &subnet,
-                 std::vector<CellMapping> &mapping,
-                 std::vector<EntryToDesc> &ioEntryDesc) const;
+  bool decompose(const SubnetID subnetID, Result &decomposition) const;
 
   /// Composes the subnets into a net.
-  NetID compose(const std::vector<SubnetID> &subnets,
-                const std::vector<CellMapping> &mapping) const;
+  NetID compose(const Result &decomposition) const;
 
 private:
   NetDecomposer() {}

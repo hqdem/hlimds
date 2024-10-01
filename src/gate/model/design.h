@@ -157,14 +157,13 @@ private:
 
     // Generate the soft block implementations.
     synthesizer::synthSoftBlocks(netID);
+    // Decompose the net into subnets.
+    NetDecomposer::get().decompose(netID, result);
 
-    std::vector<SubnetID> subnetIDs;
-    std::vector<NetDecomposer::EntryToDesc> ioEntryDesc;
-    NetDecomposer::get().decompose(netID, subnetIDs, mapping, ioEntryDesc);
     SubnetToSubnetSet adjList;
     SubnetToArcDescs arcDescs;
-    setAdjList(subnetIDs, ioEntryDesc, adjList, arcDescs);
-    setEntries(subnetIDs, adjList, arcDescs);
+    setAdjList(result, adjList, arcDescs);
+    setEntries(result, adjList, arcDescs);
   }
 
   void initialize(const SubnetID subnetID) {
@@ -174,17 +173,16 @@ private:
     nIn = subnet.getInNum();
     nOut = subnet.getOutNum();
 
-    std::vector<SubnetID> subnetIDs;
-    std::vector<NetDecomposer::EntryToDesc> ioEntryDesc;
-    NetDecomposer::get().decompose(subnetID, subnetIDs, mapping, ioEntryDesc);
+    NetDecomposer::get().decompose(subnetID, result);
     SubnetToSubnetSet adjList;
     SubnetToArcDescs arcDescs;
-    setAdjList(subnetIDs, ioEntryDesc, adjList, arcDescs);
-    setEntries(subnetIDs, adjList, arcDescs);
+    setAdjList(result, adjList, arcDescs);
+    setEntries(result, adjList, arcDescs);
   }
 
   std::pair<bool, EntryID> getPIConnectionEntry(const size_t i) const {
-    for (const auto &[oldLink, oldIdx] : mapping[i].inputs) {
+    const auto &subnets = result.subnets;
+    for (const auto &[oldLink, oldIdx] : subnets[i].mapping.inputs) {
       const auto oldSourceID = oldLink.source.getCellID();
       if (Cell::get(oldSourceID).getTypeID() == CELL_TYPE_ID_IN) {
         return { true, oldIdx };
@@ -194,7 +192,8 @@ private:
   }
 
   std::pair<bool, EntryID> getPOConnectionEntry(const size_t i) const {
-    for (const auto &[oldLink, oldIdx] : mapping[i].outputs) {
+    const auto &subnets = result.subnets;
+    for (const auto &[oldLink, oldIdx] : subnets[i].mapping.outputs) {
       const auto oldTargetID = oldLink.target.getCellID();
       if (Cell::get(oldTargetID).getTypeID() == CELL_TYPE_ID_OUT) {
         return { true, oldIdx };
@@ -271,19 +270,19 @@ public:
 
   /// Returns the number of subnets in the design.
   size_t getSubnetNum() const {
-    return subnets.size();
+    return entries.size();
   }
 
   /// Returns the i-th subnet entry.
   const SubnetEntry &getEntry(const size_t i) const {
-    assert(i < subnets.size());
-    return subnets[i];
+    assert(i < entries.size());
+    return entries[i];
   }
 
   /// Returns the i-th subnet entry.
   SubnetEntry &getEntry(const size_t i) {
-    assert(i < subnets.size());
-    return subnets[i];
+    assert(i < entries.size());
+    return entries[i];
   }
 
   /// Makes (if required) an i-th subnet and destroys the builder.
@@ -344,7 +343,7 @@ public:
   /// Returns the number of input/output/internal cells of the design.
   std::tuple<size_t, size_t, size_t> getCellNum(const bool withBufs) const {
     size_t nInt{0};
-    for (size_t i = 0; i < subnets.size(); ++i) {
+    for (size_t i = 0; i < entries.size(); ++i) {
       nInt += std::get<2>(getCellNum(i, withBufs));
     }
     return std::make_tuple(nIn, nOut, nInt);
@@ -352,7 +351,7 @@ public:
 
   /// Makes the subnets.
   void makeSubnets() {
-    for (size_t i = 0; i < subnets.size(); ++i) {
+    for (size_t i = 0; i < entries.size(); ++i) {
       auto &entry = getEntry(i);
       if (entry.builder != nullptr) {
         setSubnetID(i, entry.builder->make(DeleteBuffers));
@@ -378,7 +377,7 @@ public:
 
   /// Makes a global check point.
   void save(const std::string &point) {
-    for (size_t i = 0; i < subnets.size(); ++i) {
+    for (size_t i = 0; i < entries.size(); ++i) {
       save(i, point);
     }
 
@@ -396,7 +395,7 @@ public:
 
   /// Rolls back to the global check point.
   void rollback(const std::string &point) {
-    for (size_t i = 0; i < subnets.size(); ++i) {
+    for (size_t i = 0; i < entries.size(); ++i) {
       rollback(i, point);
     }
   }
@@ -420,7 +419,7 @@ public:
   bool isTechMapped() {
     // It is assumed that either all subnets are tech-mapped
     // or all subnets are not tech-mapped.
-    if (subnets.empty()) {
+    if (entries.empty()) {
       return false;
     }
 
@@ -432,57 +431,52 @@ public:
 
   /// Constructs a net.
   NetID make() {
-    const auto subnetIDs = getSubnetIDs();
-    return NetDecomposer::get().compose(subnetIDs, mapping);
+    updateSubnets();
+    return NetDecomposer::get().compose(result);
   }
 
   /// Constructs a net for the given check point.
   NetID make(const std::string &point) {
-    const auto subnetIDs = getSubnetIDs(point);
-    return NetDecomposer::get().compose(subnetIDs, mapping);
+    updateSubnets(point);
+    return NetDecomposer::get().compose(result);
   }
 
 private:
   using CellMapping = NetDecomposer::CellMapping;
 
-  std::vector<SubnetID> getSubnetIDs() {
-    std::vector<SubnetID> subnetIDs(subnets.size());
-    for (size_t i = 0; i < subnets.size(); ++i) {
-      subnetIDs[i] = getSubnetID(i);
+  void updateSubnets() {
+    for (size_t i = 0; i < entries.size(); ++i) {
+      result.subnets[i].subnetID = getSubnetID(i);
     }
-    return subnetIDs;
   }
 
-  std::vector<SubnetID> getSubnetIDs(const std::string &point) {
-    std::vector<SubnetID> subnetIDs(subnets.size());
-    for (size_t i = 0; i < subnets.size(); ++i) {
-      subnetIDs[i] = getSubnetID(i, point);
+  void updateSubnets(const std::string &point) {
+    for (size_t i = 0; i < entries.size(); ++i) {
+      result.subnets[i].subnetID = getSubnetID(i, point);
     }
-    return subnetIDs;
   }
 
   void setEntries(
-      const std::vector<SubnetID> &subnetIDs,
+      const NetDecomposer::Result &result,
       const SubnetToSubnetSet &adjList,
       const SubnetToArcDescs &arcDescs) {
 
-    for (size_t i = 0; i < subnetIDs.size(); ++i) {
-      subnets.emplace_back(subnetIDs[i], adjList[i], arcDescs[i]);
+    const auto &subnets = result.subnets;
+    for (size_t i = 0; i < subnets.size(); ++i) {
+      entries.emplace_back(subnets[i].subnetID, adjList[i], arcDescs[i]);
     }
   }
 
   SubnetToFFSet findFlipFlopPIs(
-      const std::vector<SubnetID> &subnetIDs) const;
+      const NetDecomposer::Result &result) const;
 
   SubnetToSubnetSet findArcs(
-      const std::vector<SubnetID> &subnetIDs,
-      const std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc,
+      const NetDecomposer::Result &result,
       const SubnetToFFSet &flipFlopPOs,
       SubnetToArcDescs &arcDesc) const;
 
   void setAdjList(
-      const std::vector<SubnetID> &subnetIDs,
-      const std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc,
+      const NetDecomposer::Result &result,
       SubnetToSubnetSet &adjList,
       SubnetToArcDescs &arcDescs) const;
 
@@ -498,8 +492,9 @@ private:
   const CellTypeID typeID{OBJ_NULL_ID};
 
   std::vector<std::string> points;
-  std::vector<SubnetEntry> subnets;
-  std::vector<CellMapping> mapping;
+  std::vector<SubnetEntry> entries;
+
+  NetDecomposer::Result result;
 
   size_t nIn;  // FIXME:
   size_t nOut; // FIXME:

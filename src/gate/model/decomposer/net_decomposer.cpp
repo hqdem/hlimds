@@ -36,6 +36,7 @@ using CellSet = std::unordered_set<CellID>;
 using CellMap = NetDecomposer::CellMap;
 
 using CellMapping = NetDecomposer::CellMapping;
+using EntryToDesc = NetDecomposer::EntryToDesc;
 
 /// Aggregates cell information.
 struct CellInfo final {
@@ -393,7 +394,6 @@ struct NetTraversalContext final {
   /// Stores the constructed components (including empty ones).
   std::vector<NetComponent> components;
 
-
   /// Maps cells to components.
   std::unordered_map<CellID, size_t> belongsTo;
   /// Components to be merged w/ the current one.
@@ -412,6 +412,7 @@ struct NetTraversalContext final {
 static std::vector<NetComponent> extractComponents(const Net &net) {
   NetTraversalContext context(net);
 
+  // DFS net traversal started from the outputs.
   while (!context.isCompleted()) {
     auto &entry = context.top();
 
@@ -454,16 +455,14 @@ static std::vector<NetComponent> extractComponents(const Net &net) {
 }
 
 /**
- * @brief Makes a subnet for the given net component and specifies PI, PO
- * connection descriptors.
+ * @brief Makes a subnet for the given net component and specifies IO
+ *        connection descriptors.
  */
-static SubnetID makeSubnet(
-    const Net &net,
-    const NetComponent &component,
-    CellMapping &mapping,
-    std::vector<NetDecomposer::EntryToDesc> &ioEntryDesc) {
+static SubnetID makeSubnet(const Net &net,
+                           const NetComponent &component,
+                           CellMapping &mapping,
+                           EntryToDesc &entryToDesc) {
   SubnetBuilder subnetBuilder;
-  ioEntryDesc.resize(ioEntryDesc.size() + 1);
 
   for (const auto &input : component.inputs) {
     const auto info = getCellInfo(input.source);
@@ -473,8 +472,9 @@ static SubnetID makeSubnet(
 
     const auto inputLink = makeInputLink(input);
     mapping.inputs.emplace(inputLink, link.idx);
-    ioEntryDesc.back()[link.idx] = component.inputsDesc.find(input)->second;
-  }
+
+    entryToDesc[link.idx] = component.inputsDesc.find(input)->second;
+  } // for component inputs.
 
   for (const auto &inner : component.inners) {
     const auto info = getCellInfo(inner);
@@ -502,7 +502,7 @@ static SubnetID makeSubnet(
     }
 
     mapping.inners.emplace(info.cellID, olinks);
-  }
+  } // for component inner cells.
 
   assert(!component.outputs.empty());
   for (const auto &output : component.outputs) {
@@ -514,86 +514,80 @@ static SubnetID makeSubnet(
 
     const auto outputLink = makeOutputLink(output);
     mapping.outputs.emplace(outputLink, olink.idx);
-    ioEntryDesc.back()[olink.idx] = component.outputsDesc.find(output)->second;
-  }
+
+    entryToDesc[olink.idx] = component.outputsDesc.find(output)->second;
+  } // for component outputs.
 
   const auto subnetID = subnetBuilder.make();
   const auto &subnet = Subnet::get(subnetID);
 
-  // Subnet size is required for proper composition.
+  // Original subnet size is required for proper composition.
   mapping.size = subnet.size();
 
   return subnetID;
 }
 
-bool NetDecomposer::decompose(const NetID netID,
-                              std::vector<SubnetID> &subnets,
-                              std::vector<CellMapping> &mapping,
-                              std::vector<EntryToDesc> &ioEntryDesc) const {
+bool NetDecomposer::decompose(const NetID netID, Result &result) const {
   assert(netID != OBJ_NULL_ID);
   const auto &net = Net::get(netID);
+
+  // Store the net interface.
+  result.inputs = net.getInputs();
+  result.outputs = net.getOutputs();
+
   const auto components = extractComponents(net);
 
-  assert(subnets.empty());
-  subnets.reserve(components.size());
-
-  assert(mapping.empty());
-  mapping.reserve(components.size());
+  assert(result.subnets.empty());
+  result.subnets.reserve(components.size());
 
   for (const auto &component : components) {
-    if (!component.empty()) {
-      if (component.inputs.empty()) {
-        UTOPIA_LOG_WARN("Non-empty net component has no inputs");
-      }
-
-      CellMapping subnetMapping;
-      subnets.push_back(makeSubnet(net, component, subnetMapping, ioEntryDesc));
-      mapping.push_back(subnetMapping);
+    if (component.empty()) {
+      continue;
     }
-  }
-  return true;
+    if (component.inputs.empty()) {
+      UTOPIA_LOG_WARN("Non-empty net component has no inputs");
+    }
 
-#if 0
-ABORTED:
-  subnets.clear();
-  mapping.clear();
-  return false;
-#endif
+    CellMapping mapping;
+    EntryToDesc entryToDesc;
+
+    const auto subnetID = makeSubnet(net, component, mapping, entryToDesc);
+    result.subnets.emplace_back(subnetID, mapping, entryToDesc);
+  }
+
+  return true;
 }
 
-bool NetDecomposer::decompose(const SubnetID subnetID,
-                              std::vector<SubnetID> &subnets,
-                              std::vector<CellMapping> &mapping,
-                              std::vector<EntryToDesc> &ioEntryDesc) const {
+bool NetDecomposer::decompose(const SubnetID subnetID, Result &result) const {
   assert(subnetID != OBJ_NULL_ID);
   const auto &subnet = Subnet::get(subnetID);
 
-  assert(subnets.empty());
-  subnets.push_back(subnetID);
-  ioEntryDesc.resize(1);
+  assert(result.subnets.empty());
 
-  assert(mapping.empty());
-  CellMapping subnetMapping;
+  CellMapping cellMapping;
+  EntryToDesc entryToDesc;
 
-  subnetMapping.size = subnet.size();
+  cellMapping.size = subnet.size();
 
   for (size_t i = 0; i < subnet.getInNum(); ++i) {
     const auto cellID = makeCell(IN);
+    result.inputs.push_back(cellID);
+
     const Link link{cellID, 0, OBJ_NULL_ID, 0};
-    subnetMapping.inputs.emplace(link, i);
-    ioEntryDesc.back()[subnet.getInIdx(i)] =
-        {getSignalType(Cell::get(cellID), 0)};
+    cellMapping.inputs.emplace(link, i);
+    entryToDesc[subnet.getInIdx(i)] = {getSignalType(Cell::get(cellID), 0)};
   }
 
   for (size_t i = 0; i < subnet.getOutNum(); ++i) {
     const auto cellID = makeCell(OUT, LinkEnd());
+    result.outputs.push_back(cellID);
+
     const Link link{OBJ_NULL_ID, 0, cellID, 0};
-    subnetMapping.outputs.emplace(link, subnet.size() - subnet.getOutNum() + i);
-    ioEntryDesc.back()[subnet.getOutIdx(i)] =
-        {getSignalType(Cell::get(cellID), 0)};
+    cellMapping.outputs.emplace(link, subnet.size() - subnet.getOutNum() + i);
+    entryToDesc[subnet.getOutIdx(i)] = {getSignalType(Cell::get(cellID), 0)};
   }
 
-  mapping.push_back(subnetMapping);
+  result.subnets.emplace_back(subnetID, cellMapping, entryToDesc);
   return true;
 }
 
@@ -771,16 +765,25 @@ static void addSubnet(NetBuilder &netBuilder,
   makeCellsForOutputs(netBuilder, subnet, mapping, inverse, inout);
 }
 
-NetID NetDecomposer::compose(const std::vector<SubnetID> &subnets,
-                             const std::vector<CellMapping> &mapping) const {
-  assert(subnets.size() == mapping.size());
-
+NetID NetDecomposer::compose(const Result &result) const {
   InOutCellMapping inout;
   inout.reserve(1024); // FIXME:
 
   NetBuilder netBuilder;
-  for (size_t i = 0; i < subnets.size(); ++i) {
-    addSubnet(netBuilder, subnets[i], mapping[i], inout);
+
+  const auto &inputs = result.inputs;
+  for (auto i = inputs.begin(); i != inputs.end(); ++i) {
+    makeCell(netBuilder, *i, inout);
+  }
+
+  const auto &outputs = result.outputs;
+  for (auto i = outputs.begin(); i != outputs.end(); ++i) {
+    makeCell(netBuilder, *i, inout);
+  }
+
+  const auto &subnets = result.subnets;
+  for (const auto &subnet : subnets) {
+    addSubnet(netBuilder, subnet.subnetID, subnet.mapping, inout);
   }
 
   return netBuilder.make();

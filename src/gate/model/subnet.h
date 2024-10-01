@@ -155,6 +155,11 @@ std::ostream &operator <<(std::ostream &out, const Subnet &subnet);
 class SubnetBuilder;
 class SubnetObject;
 
+template <typename T>
+using Allocator = std::allocator<T>;
+
+static Allocator<uint64_t> uint64Allocator;
+
 /// SubnetBuilder entries bidirectional iterator.
 class EntryIterator {
   friend class SubnetBuilder;
@@ -634,6 +639,41 @@ public:
     return desc[i].session;
   }
 
+  /// Sets next EntryID attribute for the i-th entry.
+  /// Required for entries with the same simulation bits.
+  void setNextWithSim(EntryID i, EntryID next) {
+    assert(desc[i].simBits && desc[next].simBits);
+    desc[i].simNext = next;
+  }
+
+  /// Sets the simulation bits for the outI-th fanout link of the i-th entry.
+  void setSim(EntryID i, uint16_t outI, uint64_t signature) {
+    if (!desc[i].simBits) {
+      desc[i].simN = getCell(i).getType().getOutNum();
+      desc[i].simBits = uint64Allocator.allocate(desc[i].simN);
+      for (uint16_t curOutI = 0; curOutI < desc[i].simN; ++curOutI) {
+        desc[i].simBits[curOutI] = 0;
+      }
+    }
+    desc[i].simBits[outI] = signature;
+  }
+
+  /// Returns the next EntryID attribute for the i-th entry.
+  /// Required for entries with the same simulation bits.
+  EntryID getNextWithSim(EntryID i) const {
+    return desc[i].simNext;
+  }
+
+  /// Returns simulation bits for the outI-th fanout link of the i-th entry.
+  uint64_t getSim(EntryID i, uint16_t outI) const {
+    const auto &cell = getCell(i);
+    assert(outI < cell.getType().getOutNum());
+    if (!desc[i].simBits) {
+      return 0u;
+    }
+    return desc[i].simBits[outI];
+  }
+
   /// Replaces the given single-output fragment w/ the given subnet (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
   /// Precondition: cell arities <= Cell::InPlaceLinks.
@@ -934,7 +974,63 @@ private:
         depth(invalidID),
         weight(0.),
         data(nullptr),
-        session(0) {}
+        session(0),
+        simNext(invalidID),
+        simBits(nullptr),
+        simN(0) {}
+
+    EntryDescriptor(const EntryDescriptor &other) : EntryDescriptor() {
+      this->prev = other.prev;
+      this->next = other.next;
+      this->depth = other.depth;
+      this->weight = other.weight;
+    }
+
+    EntryDescriptor(EntryDescriptor &&other) : EntryDescriptor() {
+      this->prev = std::move(other.prev);
+      this->next = std::move(other.prev);
+      this->depth = std::move(other.prev);
+      this->weight = std::move(other.prev);
+    }
+
+    EntryDescriptor &operator=(const EntryDescriptor &other) {
+      this->prev = other.prev;
+      this->next = other.next;
+      this->depth = other.depth;
+      this->weight = other.weight;
+      this->data = nullptr;
+      this->session = 0;
+      if (simBits) {
+        uint64Allocator.deallocate(simBits, simN);
+        simBits = nullptr;
+        this->simNext = invalidID;
+        this->simN = 0;
+      }
+      return *this;
+    }
+
+    EntryDescriptor &operator=(EntryDescriptor &&other) {
+      this->prev = std::move(other.prev);
+      this->next = std::move(other.next);
+      this->depth = std::move(other.depth);
+      this->weight = std::move(other.weight);
+      this->data = nullptr;
+      this->session = 0;
+      if (simBits) {
+        uint64Allocator.deallocate(simBits, simN);
+        simBits = nullptr;
+        this->simNext = invalidID;
+        this->simN = 0;
+      }
+      return *this;
+    }
+
+    ~EntryDescriptor() {
+      if (simBits) {
+        uint64Allocator.deallocate(simBits, simN);
+        simBits = nullptr;
+      }
+    }
 
     EntryID prev;
     EntryID next;
@@ -942,6 +1038,10 @@ private:
     float weight;
     void *data;
     uint32_t session;
+
+    EntryID simNext;
+    uint64_t *simBits;
+    uint16_t simN;
   };
 
   uint16_t nIn{0};

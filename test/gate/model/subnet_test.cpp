@@ -20,6 +20,7 @@
 namespace eda::gate::model {
 
 using DinTruthTable = kitty::dynamic_truth_table;
+using SignsContainer = std::vector<std::vector<uint64_t>>;
 
 static bool truthTablesEqual(
     const SubnetID subnetID,
@@ -74,6 +75,27 @@ inline void checkSessionsCorrect(
     const std::vector<uint32_t> &correctSessions) {
   for (const auto entry : builder) {
     EXPECT_EQ(builder.getSessionID(entry), correctSessions[entry]);
+  }
+}
+
+inline void checkSimsCorrect(
+    const SubnetBuilder &builder,
+    const SignsContainer &correctSigns) {
+  for (const auto entry : builder) {
+    if (correctSigns[entry].empty()) {
+      continue;
+    }
+    for (size_t j = 0; j < correctSigns[entry].size(); ++j) {
+      EXPECT_EQ(correctSigns[entry][j], builder.getSim(entry, j));
+    }
+  }
+}
+
+inline void checkNextSimsCorrect(
+    const SubnetBuilder &builder,
+    const std::vector<EntryID> &correctNextSigns) {
+  for (const auto entry : builder) {
+    EXPECT_EQ(builder.getNextWithSim(entry), correctNextSigns[entry]);
   }
 }
 
@@ -604,6 +626,93 @@ TEST(SubnetTest, SimpleReplaceConstTest) {
   const auto &result = Subnet::get(builder.make());
   std::cout << result << std::endl;
 #endif // UTOPIA_DEBUG
+}
+
+TEST(SubnetTest, SimSimpleAndReplace) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(3);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(OR, inputs[1], inputs[2]);
+  Subnet::Link link3 = builder.addCell(AND, link1, link2);
+  builder.addOutput(link3);
+
+  builder.setSim(inputs[0].idx, 0, 123);
+  builder.setSim(link3.idx, 0, 321);
+  builder.setNextWithSim(inputs[0].idx, link3.idx);
+
+  const std::vector<EntryID> correctNextSigns{
+    5, SubnetBuilder::invalidID, SubnetBuilder::invalidID,
+    SubnetBuilder::invalidID, SubnetBuilder::invalidID,
+    SubnetBuilder::invalidID, SubnetBuilder::invalidID
+  };
+
+  checkSimsCorrect(builder, {{123}, {0}, {0}, {0}, {0}, {321}, {}});
+  checkNextSimsCorrect(builder, correctNextSigns);
+
+  // Check simulations after replace
+  // RHS SubnetBuilder
+  SubnetBuilder rhsBuilder;
+
+  const Subnet::LinkList rhsInputs = rhsBuilder.addInputs(2);
+  const Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, rhsInputs[0],
+      rhsInputs[1]);
+  rhsBuilder.addOutput(rhsLink1);
+  const auto rhsID = rhsBuilder.make();
+
+  InOutMapping mapping({0, 1}, {5});
+
+  builder.replace(rhsID, mapping);
+
+  checkSimsCorrect(builder, {{123}, {0}, {0}, {0}, {0}, {0}, {}});
+  checkNextSimsCorrect(builder, correctNextSigns);
+}
+
+TEST(SubnetTest, SimFillingReplaced) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(2);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(BUF, link1);
+  builder.addOutput(link2);
+
+  builder.setSim(link1.idx, 0, 123);
+  builder.setSim(link2.idx, 0, 123);
+  builder.setNextWithSim(link1.idx, link2.idx);
+
+  // RHS SubnetBuilder
+  SubnetBuilder rhsBuilder;
+
+  const Subnet::LinkList rhsInputs = rhsBuilder.addInputs(2);
+  const Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, rhsInputs[0],
+      rhsInputs[1]);
+  rhsBuilder.addOutput(rhsLink1);
+  const auto rhsID = rhsBuilder.make();
+
+  InOutMapping mapping({0, 1}, {3});
+
+  builder.replace(rhsID, mapping);
+
+  // RHS2 SubnetBuilder
+  SubnetBuilder rhs2Builder;
+
+  const Subnet::LinkList rhs2Inputs = rhs2Builder.addInputs(2);
+  const Subnet::Link rhs2Link1 = rhs2Builder.addCell(BUF, rhs2Inputs[0]);
+  const Subnet::Link rhs2Link2 = rhs2Builder.addCell(OR, rhs2Link1,
+      rhs2Inputs[1]);
+  rhs2Builder.addOutput(rhs2Link2);
+  const auto rhs2ID = rhs2Builder.make();
+
+  InOutMapping mapping2({0, 1}, {3});
+
+  builder.replace(rhs2ID, mapping2);
+
+  checkSimsCorrect(builder, {{0}, {0}, {0}, {0}, {}});
+  checkNextSimsCorrect(builder, {
+      SubnetBuilder::invalidID, SubnetBuilder::invalidID,
+      SubnetBuilder::invalidID, SubnetBuilder::invalidID,
+      SubnetBuilder::invalidID
+  });
 }
 
 } // namespace eda::gate::model

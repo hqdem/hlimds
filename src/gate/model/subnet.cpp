@@ -694,11 +694,14 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
 }
 
 template <typename RhsContainer>
-void SubnetBuilder::incOldLinksRefcnt(
+float SubnetBuilder::incOldLinksRefcnt(
     const RhsContainer &rhsContainer,
     const EntryID rhsEntryID,
     const std::vector<EntryID> &rhsToLhs,
-    std::unordered_map<EntryID, uint32_t> &entryNewRefcount) const {
+    std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
+    const CellWeightModifier *weightModifier) const {
+      
+  float weightToAdd = 0.f;
   for (const auto &rhsLink : rhsContainer.getLinks(rhsEntryID)) {
     const auto rhsLinkIdx = rhsLink.idx;
     const auto lhsLinkIdx = rhsToLhs[rhsLinkIdx];
@@ -708,8 +711,13 @@ void SubnetBuilder::incOldLinksRefcnt(
     if (entryNewRefcount.find(lhsLinkIdx) == entryNewRefcount.end()) {
       entryNewRefcount[lhsLinkIdx] = entries[lhsLinkIdx].cell.refcount;
     }
+    const auto savedLinkRefcnt = entryNewRefcount[lhsLinkIdx];
+    weightToAdd +=
+        weight(getWeight(lhsLinkIdx), savedLinkRefcnt + 1, weightModifier) -
+        weight(getWeight(lhsLinkIdx), savedLinkRefcnt, weightModifier);
     ++entryNewRefcount[lhsLinkIdx];
   }
+  return weightToAdd;
 }
 
 template <typename RhsContainer, typename RhsIterable, typename RhsIt>
@@ -750,8 +758,10 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
         reusedLhsEntries.insert(lhsEntryID);
       } else {
         ++addedEntriesN;
-        addedWeight += weight(rhsEntryID, /*TODO*/ 0, weightProvider, weightModifier);
-        incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs, entryNewRefcount);
+        addedWeight += weight(rhsEntryID, rhsCell.refcount, weightProvider,
+            weightModifier);
+        addedWeight += incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs,
+            entryNewRefcount, weightModifier);
       }
       virtualDepth[rhsEntryID] = virtualDepth[rhsLink.idx] + 1;
       break;
@@ -782,8 +792,10 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     auto it = strash.end();
     if (isNewElem || (it = strash.find(key)) == strash.end()) {
       ++addedEntriesN;
-      addedWeight += weight(rhsEntryID, /*TODO*/ 0, weightProvider, weightModifier);
-      incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs, entryNewRefcount);
+      addedWeight += weight(rhsEntryID, rhsCell.refcount, weightProvider,
+          weightModifier);
+      addedWeight += incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs,
+          entryNewRefcount, weightModifier);
       continue;
     }
     rhsToLhs[rhsEntryID] = it->second;
@@ -806,7 +818,9 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
   int deletedEntriesN = 0;
   float deletedWeight = 0.0;
   deletedEntriesN++;
-  deletedWeight += weight(getWeight(lhsRootEntryID), /*TODO*/ 0, weightModifier);
+  const auto lhsRootCell = getCell(lhsRootEntryID);
+  deletedWeight +=
+      weight(getWeight(lhsRootEntryID), lhsRootCell.refcount, weightModifier);
   std::queue<EntryID> entryIDQueue;
   EntryID entryID = lhsRootEntryID;
   entryIDQueue.push(entryID);
@@ -816,16 +830,19 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
     const auto &cell = entries[entryID].cell;
     for (uint16_t i = 0; i < cell.arity; ++i) {
       const auto linkIdx = cell.link[i].idx;
-      if (entries[linkIdx].cell.isIn()) {
-        continue;
-      }
       if (entryNewRefcount.find(linkIdx) == entryNewRefcount.end()) {
         entryNewRefcount[linkIdx] = entries[linkIdx].cell.refcount;
       }
+      const auto savedLinkRefcnt = entryNewRefcount[linkIdx];
+      deletedWeight -=
+          weight(getWeight(linkIdx), savedLinkRefcnt - 1, weightModifier) -
+          weight(getWeight(linkIdx), savedLinkRefcnt, weightModifier);
       --entryNewRefcount[linkIdx];
+      if (entries[linkIdx].cell.isIn()) {
+        continue;
+      }
       if (!entryNewRefcount[linkIdx]) {
         ++deletedEntriesN;
-        deletedWeight += weight(getWeight(linkIdx), /*TODO*/ 0, weightModifier);
         entryIDQueue.push(linkIdx);
       }
     }

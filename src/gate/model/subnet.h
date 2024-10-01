@@ -778,12 +778,14 @@ private:
       const CellWeightModifier *weightModifier = nullptr) const;
 
   /// Increments virtual refcount of reused rhsEntryID links.
+  /// Returns weight delta after incrementing links refcount.
   template <typename RhsContainer>
-  void incOldLinksRefcnt(
+  float incOldLinksRefcnt(
       const RhsContainer &rhsContainer,
       const EntryID rhsEntryID,
       const std::vector<EntryID> &rhsToLhs,
-      std::unordered_map<EntryID, uint32_t> &entryNewRefcount) const;
+      std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
+      const CellWeightModifier *weightModifier) const;
 
   /// Template new entries evaluating method.
   template <typename RhsContainer, typename RhsIterable, typename RhsIt>

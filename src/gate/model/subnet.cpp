@@ -948,6 +948,12 @@ EntryID SubnetBuilder::allocEntry(CellTypeID typeID, const LinkList &links) {
 
   desc[idx].depth = 0;
   desc[idx].session = 0;
+  if (desc[idx].simBits) {
+    uint64Allocator.deallocate(desc[idx].simBits, desc[idx].simN);
+    desc[idx].simBits = nullptr;
+    desc[idx].simNext = invalidID;
+    desc[idx].simN = 0;
+  }
 
   for (const auto link : links) {
     desc[idx].depth = std::max(getDepth(idx), getDepth(link.idx) + 1);
@@ -1258,6 +1264,12 @@ Subnet::Link SubnetBuilder::replaceCell(
 
   if (!equalRoots) {
     desc[entryID].session = 0;
+    if (desc[entryID].simBits) {
+      uint64Allocator.deallocate(desc[entryID].simBits, desc[entryID].simN);
+      desc[entryID].simBits = nullptr;
+      desc[entryID].simNext = invalidID;
+      desc[entryID].simN = 0;
+    }
   }
   if (oldDepth != newDepth) {
     deleteDepthBounds(entryID);

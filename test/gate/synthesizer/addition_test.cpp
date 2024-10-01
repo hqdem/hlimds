@@ -74,7 +74,7 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
   int32_t resSimulated = 0u;
   for (int pos = outSize - 1; pos >= 0; --pos) {
     resSimulated <<= 1;
-    resSimulated |= simulator.getOutput(pos);
+    resSimulated |= simulator.getOutput(pos) & 1;
   }
 
   uint32_t mask = (1 << outSize) - 1;

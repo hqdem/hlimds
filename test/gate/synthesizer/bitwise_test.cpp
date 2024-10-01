@@ -33,7 +33,7 @@ uint32_t simulateBitwise(uint16_t sizeA, uint16_t sizeB, uint16_t outSize,
   CellTypeAttr::PortWidths inputs = {sizeA, sizeB};
   CellTypeAttr::PortWidths outputs = {outSize};
 
-  const CellTypeAttr &attr =
+  const auto &attr =
       CellTypeAttr::get(model::makeCellTypeAttr(inputs, outputs));
 
   SubnetBuilder result(toSimulate(attr));
@@ -56,7 +56,7 @@ uint32_t simulateBitwise(uint16_t sizeA, uint16_t sizeB, uint16_t outSize,
 
   for (int pos = outSize - 1; pos >= 0; --pos) {
     resSimulated <<= 1;
-    resSimulated |= simulator.getOutput(pos);
+    resSimulated |= simulator.getOutput(pos) & 1;
   }
 
   return resSimulated;

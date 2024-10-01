@@ -29,15 +29,16 @@ Simulator::Simulator(const SubnetBuilder &builder):
 
   size_t i = 0, p = 0;
   for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
-    const auto &cell = builder.getCell(*it);
+    const auto entryID = *it;
+    const auto &cell = builder.getCell(entryID);
 
     if (!cell.isIn()) {
-      const auto op = getFunction(cell, *it);
-      program.emplace_back(op, *it, builder.getLinks(*it));
+      const auto op = getFunction(cell, entryID);
+      program.emplace_back(op, entryID, builder.getLinks(entryID));
     }
 
     // Save the mapping between entries and indices.
-    const_cast<SubnetBuilder&>(builder).setDataVal<size_t>(*it, i);
+    const_cast<SubnetBuilder&>(builder).setDataVal<size_t>(entryID, i);
 
     pos[i] = p;
 

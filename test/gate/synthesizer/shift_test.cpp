@@ -64,7 +64,7 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   int32_t resSimulated = 0u;
   for (int pos = outSize - 1; pos >= 0; --pos) {
     resSimulated <<= 1;
-    resSimulated |= simulator.getOutput(pos);
+    resSimulated |= simulator.getOutput(pos) & 1;
   }
 
   if (res != resSimulated) {

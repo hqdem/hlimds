@@ -94,12 +94,14 @@ static_assert(sizeof(Cell) == CellID::Size);
 //===----------------------------------------------------------------------===//
 
 inline CellID makeCell(CellTypeID typeID) {
+  assert(typeID != OBJ_NULL_ID);
   const auto cellID = allocateObject<Cell>(typeID);
   assert(cellID != OBJ_NULL_ID);
   return cellID;
 }
 
 inline CellID makeCell(CellTypeID typeID, const Cell::LinkList &links) {
+  assert(typeID != OBJ_NULL_ID);
   const auto cellID = allocateObject<Cell>(typeID, links);
   assert(cellID != OBJ_NULL_ID);
   return cellID;

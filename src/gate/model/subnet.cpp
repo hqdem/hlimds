@@ -273,6 +273,7 @@ Subnet::LinkList SubnetBuilder::addMultiOutputCell(
 }
 
 Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
+  assert(typeID != OBJ_NULL_ID);
   assert(!CellType::get(typeID).isNegative()
       && "Negative cells are not allowed");
 

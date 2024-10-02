@@ -31,6 +31,21 @@ namespace eda::gate::techmapper {
 
 using SubnetTechMapperSky130Test = SubnetTechMapperTest<sky130lib>;
 
+TEST_F(SubnetTechMapperSky130Test, Consts) {
+  auto builderPtr = std::make_shared<model::SubnetBuilder>();
+
+  const auto idx0 = builderPtr->addCell(model::ONE);
+  const auto idx1 = builderPtr->addCell(model::ZERO);
+
+  builderPtr->addOutput(idx0);
+  builderPtr->addOutput(idx1);
+
+  const auto subnetID = builderPtr->make();
+  const auto mappedSubnetID = this->commonPart(builderPtr, 1000, 1000, 1000);
+
+  checkEQ(subnetID, mappedSubnetID);
+}
+
 TEST_F(SubnetTechMapperSky130Test, SimpleSubnet) {
   auto builderPtr = std::make_shared<model::SubnetBuilder>();
 

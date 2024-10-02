@@ -701,7 +701,7 @@ float SubnetBuilder::incOldLinksRefcnt(
     const std::vector<EntryID> &rhsToLhs,
     std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
     const CellWeightModifier *weightModifier) const {
-      
+
   float weightToAdd = 0.f;
   for (const auto &rhsLink : rhsContainer.getLinks(rhsEntryID)) {
     const auto rhsLinkIdx = rhsLink.idx;
@@ -740,6 +740,8 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
   std::vector<EntryID> rhsToLhs(rhsContainer.getMaxIdx() + 1, -1u);
   fillMapping(rhsContainer, iomapping, rhsToLhs);
 
+  const EntryID lhsRootEntryID = iomapping.getOut(0);
+  const auto &lhsRootCell = getCell(lhsRootEntryID);
   EntryID rhsRootEntryID = invalidID;
   EntryID i = 0;
   for (auto rhsIt = rhsIterable.begin(); rhsIt != rhsIterable.end();
@@ -749,6 +751,7 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     const auto &rhsCell = rhsContainer.getCell(rhsEntryID);
     if (rhsCell.isOut()) {
       const auto lhsEntryID = rhsToLhs[rhsEntryID];
+      const auto &lhsCell = getCell(lhsEntryID);
       if (!getCell(lhsEntryID).isOut()) {
         break;
       }
@@ -759,7 +762,7 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
         reusedLhsEntries.insert(lhsEntryID);
       } else {
         ++addedEntriesN;
-        addedWeight += weight(rhsEntryID, rhsCell.refcount, weightProvider,
+        addedWeight += weight(rhsEntryID, lhsCell.refcount, weightProvider,
             weightModifier);
         addedWeight += incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs,
             entryNewRefcount, weightModifier);
@@ -791,16 +794,21 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
     }
     StrashKey key(rhsCell.getTypeID(), newRhsLinks);
     auto it = strash.end();
-    if (isNewElem || (it = strash.find(key)) == strash.end()) {
-      ++addedEntriesN;
-      addedWeight += weight(rhsEntryID, rhsCell.refcount, weightProvider,
-          weightModifier);
-      addedWeight += incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs,
-          entryNewRefcount, weightModifier);
+    if (!isNewElem && (it = strash.find(key)) != strash.end()) {
+      rhsToLhs[rhsEntryID] = it->second;
+      reusedLhsEntries.insert(it->second);
       continue;
     }
-    rhsToLhs[rhsEntryID] = it->second;
-    reusedLhsEntries.insert(it->second);
+    ++addedEntriesN;
+    auto rhsItTmp = rhsIt;
+    const EntryID nextRhsEntryID = getEntryID(++rhsItTmp, i + 1);
+    bool isNewRoot = rhsContainer.getCell(nextRhsEntryID).isOut() &&
+        !lhsRootCell.isOut();
+    uint16_t newRefcnt = isNewRoot ? lhsRootCell.refcount : rhsCell.refcount;
+    addedWeight += weight(rhsEntryID, newRefcnt, weightProvider,
+        weightModifier);
+    addedWeight += incOldLinksRefcnt(rhsContainer, rhsEntryID, rhsToLhs,
+        entryNewRefcount, weightModifier);
   }
   return Effect{addedEntriesN, virtualDepth[rhsRootEntryID], addedWeight};
 }

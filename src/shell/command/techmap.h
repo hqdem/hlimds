@@ -31,6 +31,15 @@ struct TechMapCommand final : public UtopiaCommand {
     app.add_option("--objective", indicator, "Optimization criterion")
         ->expected(1)
         ->transform(CLI::CheckedTransformer(indicatorMap, CLI::ignore_case));
+    app.add_option("--area-constraint", areaConstraint,
+                   "If set wil override existing criterion")
+        ->expected(1);
+    app.add_option("--delay-constraint", delayConstraint,
+                   "If set wil override existing criterion")
+        ->expected(1);
+    app.add_option("--power-constraint", powerConstraint,
+                   "If set wil override existing criterion")
+        ->expected(1);
     app.allow_extras();
   }
 
@@ -55,14 +64,24 @@ struct TechMapCommand final : public UtopiaCommand {
 
     UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
 
-    gate::criterion::Constraints constraints = {
-        Constraint(gate::criterion::AREA,  45000),   // FIXME:
-        Constraint(gate::criterion::DELAY, 1),       // FIXME:
-        Constraint(gate::criterion::POWER, 25000)};  // FIXME:
+    constexpr gate::criterion::Cost maxCostValue {
+      std::numeric_limits<gate::criterion::Cost>::max()};
 
-    context->criterion = std::make_unique<Criterion>(
-        Objective(indicator), constraints);
-    
+    //TODO: fix default values (right now equals to FLOAT_MAX)
+    gate::criterion::Constraints constraints = {
+      Constraint(gate::criterion::AREA, 
+                 std::isnan(areaConstraint) ? maxCostValue : areaConstraint),
+      Constraint(gate::criterion::DELAY,
+                 std::isnan(delayConstraint) ? maxCostValue : delayConstraint),
+      Constraint(gate::criterion::POWER,
+                 std::isnan(powerConstraint) ? maxCostValue : powerConstraint)};
+
+    //TODO: don't overwrite once criterion is set in other places
+    if (!context->criterion) {
+      context->criterion = std::make_unique<Criterion>(
+                            Objective(indicator), constraints);
+    }
+
     techMapperWrapper tmw(*context, design);
     auto result = tmw.techMap();
     
@@ -76,6 +95,9 @@ struct TechMapCommand final : public UtopiaCommand {
   }
 
   Indicator indicator = Indicator::AREA;
+  gate::criterion::Cost areaConstraint = NAN;
+  gate::criterion::Cost delayConstraint = NAN;
+  gate::criterion::Cost powerConstraint = NAN;
 };
 
 } // namespace eda::shell

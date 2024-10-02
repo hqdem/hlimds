@@ -1,8 +1,8 @@
-find_path(Yosys_INCLUDE_DIR "kernel/yosys.h" PATH_SUFFIXES include)
+find_path(Yosys_INCLUDE_DIR "kernel/yosys.h" PATH_SUFFIXES include "share/yosys/include")
 
 # Allow Yosys_LIBRARY to be set manually
 if(NOT Yosys_LIBRARY)
-    find_library(Yosys_LIBRARY yosys PATH_SUFFIXES lib)
+    find_library(Yosys_LIBRARY yosys PATH_SUFFIXES lib "lib/yosys")
 endif()
 
 include(FindPackageHandleStandardArgs)

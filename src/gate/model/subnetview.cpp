@@ -213,8 +213,8 @@ static bool traverseForward(SubnetBuilder &builder,
                             const SubnetViewWalker::Visitor onBackwardDfsPush) {
   builder.startSession();
 
-  uint32_t nPureOut{0};
   std::unordered_set<EntryID> inout;
+  uint32_t nOutLeft{0};
 
   for (const auto inputID : iomapping.inputs) {
     builder.mark(inputID);
@@ -230,7 +230,7 @@ static bool traverseForward(SubnetBuilder &builder,
     }
   } // for output
 
-  nPureOut = stack.size();
+  nOutLeft = stack.size();
 
   for (const auto inputID : iomapping.inputs) {
     const auto isOut = (inout.find(inputID) != inout.end());
@@ -253,10 +253,13 @@ static bool traverseForward(SubnetBuilder &builder,
     } // for link
 
     if (isFinished) {
-      const auto isOut = (stack.size() <= nPureOut);
+      const auto isOut = (stack.size() <= nOutLeft);
       UTOPIA_ON_BACKWARD_DFS_POP(builder, false, isOut, i);
+
       builder.mark(i);
       stack.pop();
+
+      nOutLeft -= isOut ? 1 : 0;
     }
   } // while stack
 

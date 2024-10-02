@@ -51,9 +51,10 @@ techMapperWrapper::generateTechSubnet(
   auto pBoolMatcher {Matcher<PBoolMatcher, std::size_t>::create(
                       techLibrary.getCombCells())};
 
-  auto matchFinder = [&](
-    const SubnetBuilder &builder, const optimizer::Cut &cut){
-      return pBoolMatcher->match(builder, cut);};
+  auto matchFinder = [&](const SubnetBuilder &builder,
+                         const optimizer::Cut &cut,
+                         const bool constant){
+      return pBoolMatcher->match(builder, cut, constant);};
 
   // Techmapping
   SubnetTechMapperPCut techmapper(

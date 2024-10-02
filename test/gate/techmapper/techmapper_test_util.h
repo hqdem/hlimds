@@ -98,8 +98,9 @@ protected:
     std::unique_ptr<optimizer::CutExtractor> cutExtractor{};
 
     auto matchFinder = [&](const SubnetBuilder &builder,
-                           const optimizer::Cut &cut) {
-      return pBoolMatcher_->match(builder, cut);
+                           const optimizer::Cut &cut,
+                           const bool constant) {
+      return pBoolMatcher_->match(builder, cut, constant);
     };
 
     SubnetTechMapperPCut techmapper(

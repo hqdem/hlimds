@@ -32,11 +32,12 @@ public:
 
   std::vector<SubnetTechMapperBase::Match> match(
       const kitty::dynamic_truth_table &truthTable,
-      const optimizer::Cut &cut);
+      const std::vector<model::EntryID> &entryIdxs);
 
   std::vector<SubnetTechMapperBase::Match> match(
       const model::SubnetBuilder &builder,
-      const optimizer::Cut &cut) override;
+      const optimizer::Cut &cut,
+      const bool constant) override;
 };
 
 } // namespace eda::gate::techmapper

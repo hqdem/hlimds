@@ -48,7 +48,8 @@ public:
   using MatchFinder =
       std::function<std::vector<Match>(
                         const model::SubnetBuilder &,
-                        const optimizer::Cut &)>;
+                        const optimizer::Cut &,
+                        const bool constant)>;
   using CellEstimator =
       std::function<criterion::CostVector(
                         const model::CellTypeID,
@@ -160,13 +161,14 @@ protected:
                          const optimizer::CutsList &cuts);
 
   std::vector<Match> &getMatches(const model::SubnetBuilder &builder,
-                                 const optimizer::Cut &cut) {
+                                 const optimizer::Cut &cut,
+                                 const bool constant) {
     const auto i = cutMatches.find(cut);
     if (i != cutMatches.end()) {
       return i->second;
     }
 
-    const auto j = cutMatches.emplace(cut, matchFinder(builder, cut));
+    const auto j = cutMatches.emplace(cut, matchFinder(builder, cut, constant));
     return j.first->second;
   }
 

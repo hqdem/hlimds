@@ -19,13 +19,12 @@ using StandardCell = library::StandardCell;
 
 std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
     const kitty::dynamic_truth_table &truthTable,
-    const optimizer::Cut &cut) {
+    const std::vector<model::EntryID> &entryIdxs) {
   std::vector<SubnetTechMapperBase::Match> matches;
 
   auto config = kitty::exact_p_canonization(truthTable);
   const auto &ctt = util::getTT(config); // canonized TT
   util::NpnTransformation t = util::getTransformation(config);
-  std::vector<model::EntryID> entryIdxs(cut.leafIDs.begin(), cut.leafIDs.end());
   std::vector<std::pair<StandardCell, uint16_t>> scs;
 
   match(scs, ctt);
@@ -111,11 +110,19 @@ std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
 
 std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
     const model::SubnetBuilder &builder,
-    const optimizer::Cut &cut) {
-  model::SubnetView cone(builder, cut);
-  auto truthTable = cone.evaluateTruthTable();
+    const optimizer::Cut &cut,
+    const bool constant) {
+  if (cut.isTrivial()) {
+    const auto truthTable = kitty::create<kitty::dynamic_truth_table>(0);
+    return match(constant ? ~truthTable : truthTable, {});
+  }
 
-  return match(truthTable, cut);
+  const model::SubnetView cone(builder, cut);
+  const auto truthTable = cone.evaluateTruthTable();
+  const std::vector<model::EntryID> entryIdxs(
+      cut.leafIDs.begin(), cut.leafIDs.end());
+
+  return match(truthTable, entryIdxs);
 }
 
 } // namespace eda::gate::techmapper

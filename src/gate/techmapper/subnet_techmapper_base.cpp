@@ -208,26 +208,35 @@ void SubnetTechMapperBase::findCellSolutions(
     const model::EntryID entryID,
     const optimizer::CutsList &cuts) {
   const auto &cell = builder->getCell(entryID);
+  const auto isConstantCell = cell.isZero() || cell.isOne();
   const CellContext cellContext{static_cast<uint16_t>(cell.refcount)};
 
   for (const auto &cut : cuts) {
     assert(cut.rootID == entryID);
+    criterion::CostVector cutAggregation;
 
-    // Skip trivial and unmapped cuts.
-    if (cut.isTrivial() || !hasSolutions(cut)) {
+    if (isConstantCell) {
+      // Constant cut is of zero cost.
+      cutAggregation = criterion::CostVector::Zero;
+    } else if (!cut.isTrivial() && hasSolutions(cut)) {
+      // Aggregate the leaf cost vectors.
+      cutAggregation = costAggregator(getCostVectors(cut)); 
+    } else {
+      // Skip trivial and unmapped cuts.
       continue;
     }
-
-    const auto cutCostVectors = getCostVectors(cut);
-    const auto cutAggregation = costAggregator(cutCostVectors);
 
     if (!context.criterion->check(cutAggregation)) {
       continue;
     }
 
-    const auto &matches = getMatches(*builder, cut);
+    // Trivial cuts are treated as constants.
+    const auto &matches = getMatches(*builder, cut, cell.isOne());
 
     for (const auto &match : matches) {
+      assert((isConstantCell && match.links.empty())
+          || (match.links.size() == cut.size()));
+
       const auto cellCostVector = cellEstimator(
           match.typeID, cellContext, context.techMapContext);
       const auto costVector = cutAggregation + cellCostVector;
@@ -237,7 +246,7 @@ void SubnetTechMapperBase::findCellSolutions(
       }
 
       space[entryID]->add(match, costPropagator(costVector, cell.refcount));
-    } // for match
+    } // for matches
   } // for cuts
 }
 

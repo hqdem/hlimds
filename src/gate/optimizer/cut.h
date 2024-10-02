@@ -41,6 +41,11 @@ struct Cut final {
     return rootID == other.rootID && leafIDs == other.leafIDs;
   }
 
+  /// Returns the cut size.
+  uint16_t size() const {
+    return leafIDs.size();
+  }
+
   /// Returns the maximum size of the cut.
   uint16_t getK() const {
     return leafIDs.capacity();

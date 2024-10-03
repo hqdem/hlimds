@@ -12,33 +12,21 @@
 
 namespace eda::gate::synthesizer {
 
-inline void extend(model::SubnetBuilder &builder,
-                   model::Subnet::LinkList &word,
-                   const uint32_t width,
-                   const bool signExtend) {
-  if (word.size() >= width) return;
+void extend(
+    model::SubnetBuilder &builder,
+    model::Subnet::LinkList &word,
+    const uint32_t width,
+    const bool signExtend);
 
-  const auto link = (signExtend && !word.empty())
-      ? word.back()
-      : builder.addCell(model::ZERO);
+void extendOutput(
+    model::SubnetBuilder &builder,
+    const uint32_t width,
+    const bool signExtend);
 
-  while (word.size() < width) {
-    word.push_back(link);
-  }
-}
-
-inline void extendOutput(model::SubnetBuilder &builder,
-                         const uint32_t width,
-                         const bool signExtend) {
-  if (builder.getOutNum() >= width) return;
-
-  const auto link = (signExtend && builder.getOutNum() > 0)
-      ? builder.getLink(*builder.rbegin(), 0) /* MSB */
-      : builder.addCell(model::ZERO);
-
-  while (builder.getOutNum() < width) {
-    builder.addOutput(link);
-  }
-}
+model::Subnet::LinkList twosComplement(
+    model::SubnetBuilder &builder,
+    const model::Subnet::LinkList &word,
+    const uint32_t width,
+    const bool signExtend);
 
 } // namespace eda::gate::synthesizer

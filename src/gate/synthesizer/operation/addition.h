@@ -12,20 +12,11 @@
 
 namespace eda::gate::synthesizer {
 
+model::SubnetID synthAddS(const model::CellTypeAttr &attr);
 model::SubnetID synthAddU(const model::CellTypeAttr &attr);
 
-model::SubnetID synthAddS(const model::CellTypeAttr &attr);
-
-model::SubnetID synthSubU(const model::CellTypeAttr &attr);
-
 model::SubnetID synthSubS(const model::CellTypeAttr &attr);
-
-// Implementation of unary minus
-model::Subnet::LinkList
-convertToTwosComplementCode(model::SubnetBuilder &builder,
-                            const model::Subnet::LinkList &inputsForA,
-                            const uint16_t targetSize,
-                            bool isSigned = true);
+model::SubnetID synthSubU(const model::CellTypeAttr &attr);
 
 // As an explanation, here is a Verilog implementation of the 4-bit adder.
 // Other information can be found in link below.

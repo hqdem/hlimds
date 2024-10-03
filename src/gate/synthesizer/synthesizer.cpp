@@ -66,7 +66,8 @@ static SubnetID synthImpl(const CellType &type) {
   case GTu:    return synthGtU(attr);
   case GTEs:   return synthGteS(attr);
   case GTEu:   return synthGteU(attr);
-  case NEG:    return synthNeg(attr);
+  case NEGs:   return synthNegS(attr);
+  case NEGu:   return synthNegU(attr);
   case ADDs:   return synthAddS(attr);
   case ADDu:   return synthAddU(attr);
   case SUBs:   return synthSubS(attr);

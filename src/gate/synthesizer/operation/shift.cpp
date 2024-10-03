@@ -14,34 +14,25 @@ namespace eda::gate::synthesizer {
 
 model::SubnetID synthShlS(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
-
   builder.addOutputs(synthDefaultShiftL(builder, attr, true));
-
   return builder.make();
 }
 
 model::SubnetID synthShlU(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
-
   builder.addOutputs(synthDefaultShiftL(builder, attr));
-
   return builder.make();
 }
 
 model::SubnetID synthShrS(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
-
-  builder.addOutputs(
-      synthDefaultShiftR(builder, attr, true));
-
+  builder.addOutputs(synthDefaultShiftR(builder, attr, true));
   return builder.make();
 }
 
 model::SubnetID synthShrU(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
-
   builder.addOutputs(synthDefaultShiftR(builder, attr));
-
   return builder.make();
 }
 

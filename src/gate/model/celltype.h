@@ -259,8 +259,11 @@ enum CellSymbol : uint16_t {
 
   //===----------------------- Arithmetic Operations ----------------------===//
 
-  /// Negation (unary minus): OUT = -X.
-  NEG,
+  /// Negation (signed): OUT = -X.
+  NEGs,
+  /// Negation (unsigned): OUT = -X.
+  NEGu,
+  NEG = NEGu,
   /// Addition (signed): OUT = X + Y.
   ADDs,
   /// Addition (unsigned): OUT = X + Y.

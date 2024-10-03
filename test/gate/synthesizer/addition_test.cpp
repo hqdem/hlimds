@@ -199,7 +199,7 @@ TEST(Synthesizer, UnaryMinus) {
     const CellTypeAttr &attr =
         CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-    SubnetBuilder result(eda::gate::synthesizer::synthNeg(attr)); // FIXME:
+    SubnetBuilder result(eda::gate::synthesizer::synthNegU(attr)); // TODO: Add tests for NegS
 
     Simulator simulator(result);
     Simulator::DataVector values(sizeA);

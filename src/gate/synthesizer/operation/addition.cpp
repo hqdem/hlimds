@@ -7,25 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "addition.h"
+#include "utils.h"
 
 #include <cassert>
 
 namespace eda::gate::synthesizer {
-
-model::SubnetID synthAddU(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-
-  const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
-  const auto outSize = attr.getOutWidth(0);
-
-  model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
-  model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
-
-  builder.addOutputs(
-      synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize));
-
-  return builder.make();
-}
 
 model::SubnetID synthAddS(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
@@ -50,20 +36,17 @@ model::SubnetID synthAddS(const model::CellTypeAttr &attr) {
   return builder.make();
 }
 
-model::SubnetID synthSubU(const model::CellTypeAttr &attr) {
+model::SubnetID synthAddU(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
 
-  uint16_t sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
-  const uint16_t outSize = attr.getOutWidth(0);
+  const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
+  const auto outSize = attr.getOutWidth(0);
 
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
   model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
 
-  inputsForB = convertToTwosComplementCode(builder, inputsForB,
-                                           std::max(sizeA, sizeB), false);
-
   builder.addOutputs(
-      synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize, true));
+      synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize));
 
   return builder.make();
 }
@@ -87,8 +70,7 @@ model::SubnetID synthSubS(const model::CellTypeAttr &attr) {
   if (sizeA < sizeB) {
     inputsForA.resize(sizeB, inputsForA.back());
   }
-  inputsForB =
-      convertToTwosComplementCode(builder, inputsForB, maxSize);
+  inputsForB = twosComplement(builder, inputsForB, maxSize, true);
 
   builder.addOutputs(
       synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize, true));
@@ -96,27 +78,22 @@ model::SubnetID synthSubS(const model::CellTypeAttr &attr) {
   return builder.make();
 }
 
-model::Subnet::LinkList
-convertToTwosComplementCode(model::SubnetBuilder &builder,
-                            const model::Subnet::LinkList &inputsForA,
-                            const uint16_t targetSize, bool isSigned) {
-  model::Subnet::LinkList inversed(targetSize);
-  // TODO: It is correct for unsigned, but for signed we should duplicate
-  // inversed elder bit to fill the pseudo-input
-  // (CHANGED FOR SIGNED NOW, NOT IN TESTS!!!)
-  const auto one = builder.addCell(model::CellSymbol::ONE);
-  size_t i = 0;
-  for (; i < inputsForA.size(); ++i) {
-    inversed[i] = ~inputsForA[i];
-  }
+model::SubnetID synthSubU(const model::CellTypeAttr &attr) {
+  model::SubnetBuilder builder;
 
-  const auto sign = isSigned ? inversed[i - 1] : one;
-  for (; i < targetSize; ++i) {
-    inversed[i] = sign;
-  }
+  uint16_t sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
+  const uint16_t outSize = attr.getOutWidth(0);
 
-  // return digit been inversed and for wich was added 1
-  return synthLadnerFisherAdd(builder, inversed, {one}, targetSize, true);
+  model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
+  model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
+
+  const uint16_t maxSize = std::max(sizeA, sizeB);
+  inputsForB = twosComplement(builder, inputsForB, maxSize, false);
+
+  builder.addOutputs(
+      synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize, true));
+
+  return builder.make();
 }
 
 // well, why builder is pointer. Such construction shows obviously,

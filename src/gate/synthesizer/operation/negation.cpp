@@ -2,27 +2,34 @@
 //
 // Part of the Utopia EDA Project, under the Apache License v2.0
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2021 ISP RAS (http://www.ispras.ru)
+// Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
 
-#include "addition.h"
 #include "negation.h"
+#include "utils.h"
 
 namespace eda::gate::synthesizer {
 
-model::SubnetID synthNeg(const model::CellTypeAttr &attr) {
+static inline model::SubnetID synthNeg(const model::CellTypeAttr &attr,
+                                       const bool signExtend) {
   model::SubnetBuilder builder;
 
-  const auto sizeA = attr.getInWidth(0);
-  const auto outSize = attr.getOutWidth(0);
+  const auto wIn = attr.getInWidth(0);
+  const auto wOut = attr.getOutWidth(0);
 
-  model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
-
-  builder.addOutputs(
-      convertToTwosComplementCode(builder, inputsForA, outSize));
+  model::Subnet::LinkList inputs = builder.addInputs(wIn);
+  builder.addOutputs(twosComplement(builder, inputs, wOut, signExtend));
 
   return builder.make();
+}
+
+model::SubnetID synthNegS(const model::CellTypeAttr &attr) {
+  return synthNeg(attr, true);
+}
+
+model::SubnetID synthNegU(const model::CellTypeAttr &attr) {
+  return synthNeg(attr, false);
 }
 
 } // namespace eda::gate::synthesizer

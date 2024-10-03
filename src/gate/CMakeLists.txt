@@ -86,6 +86,7 @@ add_library(Gate OBJECT
   synthesizer/operation/negation.cpp
   synthesizer/operation/reduction.cpp
   synthesizer/operation/shift.cpp
+  synthesizer/operation/utils.cpp
   techmapper/matcher/pbool_matcher.cpp
   techmapper/subnet_techmapper_base.cpp
   techmapper/subnet_techmapper_pcut.cpp

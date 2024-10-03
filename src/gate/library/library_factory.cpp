@@ -35,7 +35,11 @@ std::unique_ptr<SCLibrary> SCLibraryFactory::newLibraryUPtr(
 bool SCLibraryFactory::fillLibrary(SCLibrary& library,
                                   CellSourceFileParserIface& parser) {
   library.addCells(parser.extractCells());
+  library.addWLMs(parser.extractWLMs());
   library.addTemplates(parser.extractTemplates());
+  auto properties = parser.extractProperties();
+  library.addProperties(properties.defaultWLM,
+                        std::move(properties.WLSelection));
   return true;
 }
 

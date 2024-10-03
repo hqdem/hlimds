@@ -82,6 +82,54 @@ std::vector<StandardCell> ReadCellsParser::extractCells() {
   return extractedCells;
 }
 
+std::vector<WireLoadModel> ReadCellsParser::extractWLMs() {
+  std::vector<WireLoadModel> wlms;
+  if (RCGetGroupPtr wlmGroup = library_.getGroup("wire_load");
+      wlmGroup != nullptr) {
+    for (const auto *model : *wlmGroup) {
+      WireLoadModel wlm;
+      wlm.name = model->getName();
+      wlm.resistance = model->getFloatAttribute("resistance", 0);
+      wlm.capacitance = model->getFloatAttribute("capacitance", 0);
+      wlm.slope = model->getFloatAttribute("slope", 0);
+      
+      if (const auto *fanoutList = model->getComplexAttrs("fanout_length");
+        fanoutList != nullptr) {
+        for (const auto *elem : *fanoutList) {
+          WireLoadModel::FanoutLength fanoutLength {
+            static_cast<size_t>(elem->values[0].ival), elem->values[1].fval};
+          wlm.wireLength.push_back(fanoutLength);
+        }
+        std::reverse(wlm.wireLength.begin(), wlm.wireLength.end());
+      }
+      wlms.push_back(wlm);
+    };
+  }
+  return wlms;
+}
+
+CSFProperties ReadCellsParser::extractProperties() {
+  CSFProperties props;
+  props.defaultWLM = std::string(library_.getStringAttribute("default_wire_load", ""));
+  if (RCGetGroupPtr wlSelection = library_.getGroup("wire_load_selection");
+      wlSelection != nullptr) {
+    for (const auto *elem : *wlSelection) {
+      if (const auto *origWLFromArea = elem->getComplexAttrs("wire_load_from_area");
+          origWLFromArea != nullptr) {
+        for (const auto *member : *origWLFromArea) {
+          WireLoadSelection::WireLoadFromArea wlFromArea;
+          wlFromArea.leftBound = member->values[0].ival;
+          wlFromArea.rightBound = member->values[1].ival;
+          wlFromArea.wlmName = member->values[2].sval;
+          props.WLSelection.wlmFromArea.push_back(wlFromArea);
+        }
+      }
+    }
+  }
+  std::reverse(props.WLSelection.wlmFromArea.begin(), props.WLSelection.wlmFromArea.end());
+  return props;
+}
+
 std::vector<LutTemplate> ReadCellsParser::extractTemplates() {
   std::vector<LutTemplate> templates;
 /* TODO: add this

@@ -11,6 +11,12 @@
 #include <vector>
 
 namespace eda::gate::library {
+
+struct CSFProperties {
+  std::string defaultWLM = "";
+  WireLoadSelection WLSelection;
+};
+
 /**
  * \brief Parser interface for cell files
  */
@@ -18,8 +24,9 @@ class CellSourceFileParserIface {
 public:
   //Methods to fill base types
   virtual std::vector<StandardCell> extractCells() = 0;
-  //virtual std::vector<WireLoadModel> extractWLMs() = 0;
+  virtual std::vector<WireLoadModel> extractWLMs() = 0;
   virtual std::vector<LutTemplate> extractTemplates() = 0;
+  virtual CSFProperties extractProperties() = 0;
   virtual ~CellSourceFileParserIface() {};
 };
 

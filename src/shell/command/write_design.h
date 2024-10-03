@@ -46,7 +46,10 @@ struct WriteDesignCommand : public UtopiaCommand {
 
   WriteDesignCommand(const char *name, const char *desc):
       UtopiaCommand(name, desc) {
-    subnetOption = app.add_option("--subnet", subnetIndex, "Subnet index");
+    subnetIndexOption = app.add_option(
+        "--subnet-index", subnetIndex, "Subnet index");
+    subnetSplitOption = app.add_flag(
+        "--subnet-split", "Printing all subnets");
     app.allow_extras();
   }
 
@@ -65,7 +68,7 @@ struct WriteDesignCommand : public UtopiaCommand {
     UTOPIA_SHELL_ERROR_IF(interp, !filePath.has_filename(),
         "path does not contain a file name");
 
-    if (subnetOption->count() != 0) {
+    if (subnetSplitOption->count() == 0 && subnetIndexOption->count() != 0) {
       UTOPIA_SHELL_ERROR_IF(interp, subnetIndex >= getDesign()->getSubnetNum(),
            fmt::format("subnet {} does not exist", subnetIndex));
     }
@@ -76,18 +79,32 @@ struct WriteDesignCommand : public UtopiaCommand {
           fmt::format("cannot create directory '{}'", dir));
     }
 
-    std::ofstream out(fileName);
-    if (subnetOption->count() == 0) {
-      printDesign(out, format, *getDesign());
+    if (subnetSplitOption->count() == 0) {
+      std::ofstream out(fileName);
+
+      if (subnetIndexOption->count() == 0) {
+        printDesign(out, format, *getDesign());
+      } else {
+        printSubnet(out, format, *getDesign(), subnetIndex);
+      }
     } else {
-      printSubnet(out, format, *getDesign(), subnetIndex);
+      for (size_t i = 0; i < getDesign()->getSubnetNum(); ++i) {
+        std::filesystem::path oldFilePath = fileName;
+
+        const std::string oldExt = oldFilePath.extension();
+        const std::string newExt = fmt::format("{}{}", i, oldExt);
+
+        std::ofstream out(oldFilePath.replace_extension(newExt));
+        printSubnet(out, format, *getDesign(), i);
+      }
     }
 
     return TCL_OK;
   }
 
   Format format{eda::gate::model::DEBUG};
-  CLI::Option *subnetOption;
+  CLI::Option *subnetIndexOption;
+  CLI::Option *subnetSplitOption;
   size_t subnetIndex;
 };
 

@@ -16,6 +16,11 @@
     passed = false;\
   }
 
+#define VALIDATE_WARN(logger, prop, msg)\
+  if (!(prop)) {\
+    UTOPIA_RAISE_WARN(logger, msg);\
+  }
+
 #define VALIDATE_QUIET(prop)\
   passed &= (prop)
 
@@ -601,10 +606,16 @@ static bool validateCell(const Subnet::Cell &cell,
 
   const auto &type = cell.getType();
   if (!type.isIn() && !type.isOut()) {
-    const auto isTechCell = type.isHard() || type.isCell();
-    VALIDATE(logger, (isTechCell == isTechMapped),
-       "Incorrect " << debugInfo(type) << ", expected a technology-" <<
-       (isTechMapped ? "" : "in") << "dependent one");
+    if (type.isZero() || type.isOne()) {
+      VALIDATE_WARN(logger, !isTechMapped,
+         "Constant " << debugInfo(type) <<
+         ", expected a technology-dependent one");
+    } else {
+      const auto isTechCell = type.isHard() || type.isCell();
+      VALIDATE(logger, (isTechCell == isTechMapped),
+         "Incorrect " << debugInfo(type) << ", expected a technology-" <<
+         (isTechMapped ? "" : "in") << "dependent one");
+    }
   }
 
   for (size_t i = 0; i < links.size(); ++i) {

@@ -9,12 +9,11 @@
 #pragma once
 
 #include "gate/debugger/base_checker.h"
-#include "gate/model/utils/subnet_to_bdd.h"
+#include "gate/model/utils/subnetview_to_bdd.h"
 
 namespace eda::gate::debugger {
 
-using CellBddMap = model::utils::CellBDDMap;
-using SubnetToBdd = model::utils::SubnetToBdd;
+using CellBddMap = model::utils::BddMap;
 
 /// Checks the equivalence of the specified nets using BDD construction.
 class BddChecker final : public BaseChecker,

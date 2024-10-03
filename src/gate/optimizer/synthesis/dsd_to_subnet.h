@@ -10,7 +10,8 @@
 #define DSD_TO_GNET_H
 
 #include "gate/model/subnet.h"
-#include "gate/model/utils/subnet_to_bdd.h"
+#include "gate/model/subnetview.h"
+#include "gate/model/utils/subnetview_to_bdd.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/logging.h"
@@ -38,12 +39,12 @@ namespace eda::gate::optimizer::synthesis {
 
 using CellSymbol = eda::gate::model::CellSymbol;
 using Subnet = eda::gate::model::Subnet;
-using SubnetID = eda::gate::model::SubnetID;
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using SubnetID = eda::gate::model::SubnetID;
 using SubnetObject = eda::gate::model::SubnetObject;
-using LinkList = Subnet::LinkList;
+using SubnetView = eda::gate::model::SubnetView;
 using Link = Subnet::Link;
-using SubnetToBdd = gate::model::utils::SubnetToBdd;
+using LinkList = Subnet::LinkList;
 
 /**
  * \brief BDD node and DdManager pair for passing to synthesize.

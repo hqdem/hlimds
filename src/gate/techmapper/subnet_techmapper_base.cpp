@@ -208,14 +208,13 @@ void SubnetTechMapperBase::findCellSolutions(
     const model::EntryID entryID,
     const optimizer::CutsList &cuts) {
   const auto &cell = builder->getCell(entryID);
-  const auto isConstantCell = cell.isZero() || cell.isOne();
   const CellContext cellContext{static_cast<uint16_t>(cell.refcount)};
 
   for (const auto &cut : cuts) {
     assert(cut.rootID == entryID);
     criterion::CostVector cutAggregation;
 
-    if (isConstantCell) {
+    if (cell.isZero() || cell.isOne()) {
       // Constant cut is of zero cost.
       cutAggregation = criterion::CostVector::Zero;
     } else if (!cut.isTrivial() && hasSolutions(cut)) {
@@ -231,10 +230,10 @@ void SubnetTechMapperBase::findCellSolutions(
     }
 
     // Trivial cuts are treated as constants.
-    const auto &matches = getMatches(*builder, cut, cell.isOne());
+    const auto &matches = getMatches(*builder, cut);
 
     for (const auto &match : matches) {
-      assert((isConstantCell && match.links.empty())
+      assert((cut.isTrivial() && match.links.empty())
           || (match.links.size() == cut.size()));
 
       const auto cellCostVector = cellEstimator(
@@ -264,9 +263,10 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::techMap(
     const auto cuts = cutProvider(*builder, entryID);
     assert(!cuts.empty());
 
-    // Handle the input cells.
-    if (cell.isIn()) {
-      const Match match{model::getCellTypeID(model::IN), {}, false};
+    // Handle the input and constant cells.
+    if (cell.isIn() ||
+        (!enableConstMapping && (cell.isZero() || cell.isOne()))) {
+      const Match match{cell.getTypeID(), {}, false};
       space[entryID]->add(match, criterion::CostVector::Zero);
       continue;
     }

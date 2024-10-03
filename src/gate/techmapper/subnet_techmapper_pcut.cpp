@@ -91,7 +91,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
     }
 
     // No matches => large cost.
-    matches[i] = matchFinder(builder, cut, false /* any */);
+    matches[i] = matchFinder(builder, cut);
     cost /= (matches[i].size() + .25);
 
     sorted[i] = {i, cost};
@@ -102,7 +102,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
   for (const auto &oldCut : goodOldCuts) {
     assert(!oldCut.isTrivial());
     cuts.push_back(oldCut);
-    matches.push_back(matchFinder(builder, oldCut, false /* any */));
+    matches.push_back(matchFinder(builder, oldCut));
     sorted.emplace_back(sorted.size(), 0. /* good */);
   }
 

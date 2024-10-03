@@ -15,6 +15,7 @@
 #include "gate/techmapper/subnet_techmapper_base.h"
 
 #include <functional>
+#include <unordered_map>
 #include <vector>
 
 namespace eda::gate::techmapper {
@@ -32,8 +33,7 @@ public:
 
   virtual std::vector<SubnetTechMapperBase::Match> match(
     const model::SubnetBuilder &builder,
-    const optimizer::Cut &cut,
-    const bool constant) = 0;
+    const optimizer::Cut &cut) = 0;
 
   virtual ~Matcher() = default;
 

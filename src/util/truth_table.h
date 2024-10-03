@@ -9,6 +9,7 @@
 #pragma once
 
 #include "gate/model/subnet.h"
+#include "util/hash.h"
 
 #include <kitty/kitty.hpp>
 
@@ -464,3 +465,21 @@ inline TruthTable computeCare(const std::vector<TruthTable> &tables) {
 }
 
 } // namespace eda::util
+
+namespace std {
+
+template <>
+struct hash<kitty::dynamic_truth_table> {
+  size_t operator()(const kitty::dynamic_truth_table &table) const noexcept {
+    size_t hash = 0;
+    for (auto i = table.begin(); i != table.end(); ++i) {
+      eda::util::hash_combine(hash, *i);
+    }
+    eda::util::hash_combine(hash, table.num_vars());
+    return hash;
+  }
+};
+
+} // namespace std
+
+

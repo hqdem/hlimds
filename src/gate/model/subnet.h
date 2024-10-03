@@ -111,12 +111,19 @@ public:
       return false;
     }
 
-    const auto entryID = nIn;
-    const auto &cell = getCell(entryID);
+    for (auto i = nIn; i < nEntry - nOut; ++i) {
+      const auto &cell = getCell(i);
 
-    // It is assumed that either all cells are logical or
-    // all cells are technological (one check is enough).
-    return !cell.getType().isGate();
+      if (cell.isZero() || cell.isOne()) {
+        continue;
+      }
+
+      // It is assumed that either all cells are logical or
+      // all cells are technological (one check is enough).
+      return !cell.getType().isGate();
+    }
+
+    return false;
   }
 
 private:
@@ -480,7 +487,7 @@ public:
       const auto entryID = *it;
       const auto &cell = getCell(entryID);
 
-      if (cell.isIn()) {
+      if (cell.isIn() || cell.isZero() || cell.isOne()) {
         continue;
       }
 

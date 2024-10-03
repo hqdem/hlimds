@@ -29,6 +29,8 @@ namespace eda::gate::techmapper {
  */
 class SubnetTechMapperBase : public optimizer::SubnetTransformer {
 public:
+  static constexpr auto enableConstMapping = false;
+
   struct Match final {
     model::CellTypeID typeID{model::OBJ_NULL_ID};
     model::Subnet::LinkList links{};
@@ -48,8 +50,7 @@ public:
   using MatchFinder =
       std::function<std::vector<Match>(
                         const model::SubnetBuilder &,
-                        const optimizer::Cut &,
-                        const bool constant)>;
+                        const optimizer::Cut &)>;
   using CellEstimator =
       std::function<criterion::CostVector(
                         const model::CellTypeID,
@@ -161,14 +162,13 @@ protected:
                          const optimizer::CutsList &cuts);
 
   std::vector<Match> &getMatches(const model::SubnetBuilder &builder,
-                                 const optimizer::Cut &cut,
-                                 const bool constant) {
+                                 const optimizer::Cut &cut) {
     const auto i = cutMatches.find(cut);
     if (i != cutMatches.end()) {
       return i->second;
     }
 
-    const auto j = cutMatches.emplace(cut, matchFinder(builder, cut, constant));
+    const auto j = cutMatches.emplace(cut, matchFinder(builder, cut));
     return j.first->second;
   }
 

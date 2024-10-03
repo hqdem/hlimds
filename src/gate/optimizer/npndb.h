@@ -14,6 +14,7 @@
 #include "util/citerator.h"
 #include "util/kitty_utils.h"
 #include "util/serializer.h"
+#include "util/truth_table.h"
 
 #include "kitty/kitty.hpp"
 

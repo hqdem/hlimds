@@ -18,7 +18,7 @@ namespace eda::gate::techmapper {
 using StandardCell = library::StandardCell;
 
 std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
-    const kitty::dynamic_truth_table &truthTable,
+    const util::TruthTable &truthTable,
     const std::vector<model::EntryID> &entryIdxs) {
   std::vector<SubnetTechMapperBase::Match> matches;
 
@@ -110,11 +110,11 @@ std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
 
 std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
     const model::SubnetBuilder &builder,
-    const optimizer::Cut &cut,
-    const bool constant) {
+    const optimizer::Cut &cut) {
   if (cut.isTrivial()) {
-    const auto truthTable = kitty::create<kitty::dynamic_truth_table>(0);
-    return match(constant ? ~truthTable : truthTable, {});
+    const auto truthTable = util::getZeroTruthTable<util::TruthTable>(0);
+    const auto isZero = builder.getCell(cut.rootID).isZero();
+    return match(isZero ? truthTable : ~truthTable, {});
   }
 
   const model::SubnetView cone(builder, cut);

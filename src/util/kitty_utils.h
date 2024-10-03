@@ -16,24 +16,6 @@
 #include <cmath>
 #include <vector>
 
-namespace std {
-template <>
-struct hash<kitty::dynamic_truth_table> {
-
-  size_t operator()(const kitty::dynamic_truth_table &table) const {
-    const size_t prime = 37;
-    size_t hash = 0;
-    for (auto iter = table.begin(); iter != table.end(); ++iter) {
-      hash += std::hash<size_t>()(*iter);
-      hash *= prime;
-    }
-    hash ^= table.num_vars();
-
-    return hash;
-  }
-};
-} // namespace std
-
 /**
  * \brief Utility methods for kitty lib.
  */

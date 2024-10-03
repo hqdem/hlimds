@@ -9,19 +9,17 @@
 #pragma once
 
 #include "gate/techmapper/matcher/matcher.h"
-#include "util/kitty_utils.h" //For hash<kitty::dynamic_truth_table>
-
-#include <kitty/kitty.hpp>
+#include "util/truth_table.h"
 
 namespace eda::gate::techmapper {
 
-class PBoolMatcher final : public Matcher<PBoolMatcher, kitty::dynamic_truth_table> {
+class PBoolMatcher final : public Matcher<PBoolMatcher, util::TruthTable> {
   using StandardCell = library::StandardCell;
-public:
 
+public:
   inline void match(
       std::vector<std::pair<StandardCell, uint16_t>> &scs,
-      const kitty::dynamic_truth_table &ctt) {
+      const util::TruthTable &ctt) {
 
     if (auto it = cells.find(ctt); it != cells.end()) {
       for (const auto &cell : it->second) {
@@ -31,13 +29,12 @@ public:
   }
 
   std::vector<SubnetTechMapperBase::Match> match(
-      const kitty::dynamic_truth_table &truthTable,
+      const util::TruthTable &truthTable,
       const std::vector<model::EntryID> &entryIdxs);
 
   std::vector<SubnetTechMapperBase::Match> match(
       const model::SubnetBuilder &builder,
-      const optimizer::Cut &cut,
-      const bool constant) override;
+      const optimizer::Cut &cut) override;
 };
 
 } // namespace eda::gate::techmapper

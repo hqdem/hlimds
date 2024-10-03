@@ -9,8 +9,8 @@
 #include "gate/library/library_factory.h"
 #include "gate/library/readcells_srcfile_parser.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
-
 #include "gate/techmapper/techmapper_test_util.h"
+#include "util/kitty_utils.h"
 
 #include "gtest/gtest.h"
 

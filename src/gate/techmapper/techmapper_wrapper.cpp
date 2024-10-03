@@ -52,9 +52,8 @@ techMapperWrapper::generateTechSubnet(
                       techLibrary.getCombCells())};
 
   auto matchFinder = [&](const SubnetBuilder &builder,
-                         const optimizer::Cut &cut,
-                         const bool constant){
-      return pBoolMatcher->match(builder, cut, constant);};
+                         const optimizer::Cut &cut){
+      return pBoolMatcher->match(builder, cut);};
 
   // Techmapping
   SubnetTechMapperPCut techmapper(

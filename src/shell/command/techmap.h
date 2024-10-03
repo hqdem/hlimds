@@ -32,13 +32,13 @@ struct TechMapCommand final : public UtopiaCommand {
         ->expected(1)
         ->transform(CLI::CheckedTransformer(indicatorMap, CLI::ignore_case));
     app.add_option("--area-constraint", areaConstraint,
-                   "If set wil override existing criterion")
+                   "Max area in um^2 (overrides SDC)")
         ->expected(1);
     app.add_option("--delay-constraint", delayConstraint,
-                   "If set wil override existing criterion")
+                   "Max delay in ns (overrides SDC)")
         ->expected(1);
     app.add_option("--power-constraint", powerConstraint,
-                   "If set wil override existing criterion")
+                   "Max power in uW (overrides SDC)")
         ->expected(1);
     app.allow_extras();
   }

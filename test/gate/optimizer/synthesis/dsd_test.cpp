@@ -7,10 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/subnet.h"
+#include "gate/model/subnetview.h"
 #include "gate/model/utils/subnet_random.h"
 #include "gate/model/utils/subnet_random.h"
-#include "gate/model/utils/subnet_to_bdd.h"
 #include "gate/model/utils/subnet_truth_table.h"
+#include "gate/model/utils/subnetview_to_bdd.h"
 #include "gate/optimizer/synthesis/dsd_to_subnet.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/simulator/simulator.h"
@@ -41,9 +42,9 @@ Subnet::Link addITE(Subnet::Link first,
 const Subnet& handle(const Subnet &subnet) {
   /* Convertion to BDD */
   Cudd manager(0, 0);
-  // Output gate is the last element in entries array
-  unsigned outputId = subnet.size() - 1;
-  BDD netBDD = SubnetToBdd::convert(subnet, outputId, manager);
+  eda::gate::model::SubnetBuilder builder(subnet);
+  eda::gate::model::SubnetView sv(builder);
+  BDD netBDD = convertBdd(sv, manager).at(0);
 
   LOG_DEBUG(Cudd_PrintDebug(netBDD.manager(), netBDD.getNode(), 0, 3));
 

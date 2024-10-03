@@ -60,9 +60,9 @@ SubnetObject DsdSynthesizer::synthesize(const TruthTable &table,
 
   /* Subnet to BDD convertion */
   Cudd manager(0, 0);
-  // Output gate is the last element in entries array
-  unsigned outputId = subnet.size() - 1;
-  BDD netBDD = SubnetToBdd::convert(subnet, outputId, manager);
+  SubnetBuilder builder(subnet);
+  model::SubnetView sv(builder);
+  BDD netBDD = model::utils::convertBdd(sv, manager).at(0);
 
   /* Initialize DSD manager by choosing a starting cache size */
   DSDNode *dsd;

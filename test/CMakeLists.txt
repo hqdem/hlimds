@@ -84,6 +84,7 @@ add_executable(${TEST_TARGET}
   gate/model/subnet_test.cpp
   gate/model/utils/bdd_dnf_test.cpp
   gate/model/utils/subnet_truth_table_test.cpp
+  gate/model/utils/subnetview_to_bdd_test.cpp
   gate/mutator/mutator_test.cpp
   gate/optimizer/balancer_test.cpp
   gate/optimizer/cone_builder_test.cpp
@@ -114,7 +115,6 @@ add_executable(${TEST_TARGET}
   gate/premapper/cell_premapper_test.cpp
   gate/premapper/cone_premapper_test.cpp
   gate/simulator/simulator_test.cpp
-  gate/subnet_to_bdd/subnet_to_bdd_test.cpp
   gate/synthesizer/addition_test.cpp
   gate/synthesizer/bitwise_test.cpp
   gate/synthesizer/comparison_test.cpp
@@ -125,16 +125,16 @@ add_executable(${TEST_TARGET}
   gate/techmapper/subnet_techmapper_test.cpp
   gate/techmapper/techmapper_test_util.cpp
   gate/translator/firrtl/firrtl_test.cpp
-  gate/translator/graphml_test_utils.cpp
   gate/translator/graphml_test.cpp
+  gate/translator/graphml_test_utils.cpp
   gate/translator/verilog/verilog_firrtl_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp
   test_main.cpp
   test_shell.cpp
+  util/bounded_set_test.cpp
   util/kitty_utils_test.cpp
   util/serializer_test.cpp
-  util/bounded_set_test.cpp
 )
 target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET}

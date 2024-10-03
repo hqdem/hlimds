@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/debugger/bdd_checker.h"
+#include "gate/model/utils/subnetview_to_bdd.h"
 
 #include <cassert>
 
@@ -17,8 +18,9 @@ CheckerResult BddChecker::isSat(const model::Subnet &subnet) const {
 
   Cudd manager(0, 0);
 
-  const auto outputID = subnet.size() - 1;
-  BDD netBdd = SubnetToBdd::convert(subnet, outputID, manager);
+  model::SubnetBuilder builder(subnet);
+  model::SubnetView sv(builder);
+  BDD netBdd = model::utils::convertBdd(sv, manager).at(0);
 
   return (netBdd == manager.bddZero())
       ? CheckerResult::EQUAL

@@ -25,7 +25,22 @@ void SCLibrary::addCells(std::vector<StandardCell> &&cells) {
 }
 
 void SCLibrary::addTemplates(std::vector<LutTemplate> &&templates) {
-  templates_ = templates;
+  templates_ = std::move(templates);
+}
+
+void SCLibrary::addWLMs(std::vector<WireLoadModel> &&wlms) {
+  wires_ = std::move(wlms);
+}
+
+void SCLibrary::addProperties(const std::string &defaultWLMsName,
+                              WireLoadSelection &&selection) {
+  for (const auto &wlm : wires_) {
+    if (wlm.name == defaultWLMsName) {
+      properties_.defaultWLM = &wlm;
+      break;
+    }
+  }
+  properties_.wlmSelection = std::move(selection);
 }
 
 void SCLibrary::fillSearchMap() {

@@ -68,9 +68,9 @@ public:
   /*
    *  delayEstimation uses Library to look for
    *  the concrete cell's timing values.
-   *  timingSence - Positive or Negative unate (rise or fall)
-   *  slew - ??
-   *  delay - ??
+   *  timingSense - Positive or Negative unate (rise or fall)
+   *  slew - trasition time
+   *  delay - cell's delay
    */
   static void delayEstimation(
     const library::StandardCell &cell,
@@ -84,66 +84,6 @@ public:
     const double outputTotalCap);
 };
 
-//===---------------------------------------------------------------------===//
-// WLM
-//===---------------------------------------------------------------------===//
 
-/*
- *  Wire-load Model
- *  Class for delay estimation, based on such attributes as:
- *   Resistance, Capacitance, Slope
- */
-class WLM {
-  friend class NLDM;
-
-public:
-  WLM();
-  WLM(const std::string &name);
-  virtual ~WLM() = default;
-
-  // Setter
-  void setWireLoadModel(const std::string &wlm_name);
-
-  // Getters
-  double getLength(const std::size_t& fanoutCount) const;
-  double getFanoutCap(const std::size_t& fanoutCount) const;
-  double getFanoutRes(const std::size_t& fanoutCount) const;
-
-  // Properties
-private:
-  /* length_top = the length of one side of a square die
-   * length_5k = the length of one side of a block containing
-   * 5k gates
-   */
-  double length_sky = 23.2746;
-  double length_5k = 1.7460;
-  double length_3k = 1.5771;
-  double length_1k = 1.3446;
-
-  /*
-   *  fudge = correction factor, routing, placement, etc.
-   */
-  double fudge = 1.0;
-
-  /* WLM names = { "sky", "5k", "3k", "1k" }*/
-  std::string wire_load_name;
-
-  // Resistance, Capacitance, extrapolation slope
-  double r, c, slope;
-  std::pair<std::size_t, double> fanout_length[6];
-  std::pair<std::size_t, double> fanout_resistance[6];
-  std::pair<std::size_t, double> fanout_capacitance[6];
-};
-
-//===---------------------------------------------------------------------===//
-// Delay estimator
-//===---------------------------------------------------------------------===//
-class DelayEstimator {
-public:
-  virtual ~DelayEstimator() = default;
-
-  NLDM nldm;
-  WLM wlm;
-};
 
 } // namespace eda::gate::estimator

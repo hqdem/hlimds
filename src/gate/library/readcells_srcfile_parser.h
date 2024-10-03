@@ -25,7 +25,9 @@ public:
   ReadCellsParser(std::string filename);
 
   std::vector<StandardCell> extractCells() override;
+  std::vector<WireLoadModel> extractWLMs() override;
   std::vector<LutTemplate> extractTemplates() override;
+  CSFProperties extractProperties() override;
 private:
   bool loadCombCell(StandardCell& standardCell,
                     const readcells::AttributeList &rcCell);

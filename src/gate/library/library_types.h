@@ -73,46 +73,45 @@ namespace eda::gate::library {
   struct LutTemplate {
     //In each template might be from 1 to 4 variables
     //for each variable there are several values.
-    struct Variable {
-      enum class NameID {
-        UndefinedVariable = -1,
-        InputNetTransition,
-        InputNoiseHeight,
-        InputNoiseWidth,
-        InputVoltage,
-        OutputNetLength,
-        OutputNetWireCap,
-        OutputNetPinCap,
-        OutputVoltage,
-        OutputTransition,
-        OutputPinTransition,
-        RelatedOutTotalOutputNetCapacitance,
-        RelatedOutOutputNetLength,
-        RelatedOutOutputNetWireCap,
-        RelatedOutOutputNetPinCap,
-        RelatedPinTransition,
-        FanoutNumber,
-        FanoutPinCapacitance,
-        TotalOutputNetCapacitance,
-        NormalizedVoltage,
-        Time,
-        ConstrainedPinTransition,
-        DriverSlew,
-        RcProduct,
-        ConnectDelay,
-        Template_End,
-        CurveParameters,
-        OutputNetTransition,
-        InputTransitionTime,
-        Frequency,
-        EqualOrOppositeNetCapacitance,
-        DefectSizeDiameter
-      };
 
-      NameID nameID;
-      std::vector<double> values;
+    enum class NameID {
+      UndefinedVariable = -1,
+      InputNetTransition,
+      InputNoiseHeight,
+      InputNoiseWidth,
+      InputVoltage,
+      OutputNetLength,
+      OutputNetWireCap,
+      OutputNetPinCap,
+      OutputVoltage,
+      OutputTransition,
+      OutputPinTransition,
+      RelatedOutTotalOutputNetCapacitance,
+      RelatedOutOutputNetLength,
+      RelatedOutOutputNetWireCap,
+      RelatedOutOutputNetPinCap,
+      RelatedPinTransition,
+      FanoutNumber,
+      FanoutPinCapacitance,
+      TotalOutputNetCapacitance,
+      NormalizedVoltage,
+      Time,
+      ConstrainedPinTransition,
+      DriverSlew,
+      RcProduct,
+      ConnectDelay,
+      Template_End,
+      CurveParameters,
+      OutputNetTransition,
+      InputTransitionTime,
+      Frequency,
+      EqualOrOppositeNetCapacitance,
+      DefectSizeDiameter
     };
-    std::vector<Variable> variables;
+
+    std::string name;
+    std::vector<NameID> variables;
+    std::vector<std::vector<double>> indexes;
   };
   
   struct LUT {
@@ -124,32 +123,28 @@ namespace eda::gate::library {
     LUT(LUT &&other) = default;
     LUT& operator=(LUT&& other) = default;
 
-    std::vector<std::vector<double>> indexes; //TODO: should it be here?
+    std::string name;
+    std::vector<std::vector<double>> indexes;
     std::vector<double> values;
   };
 
   struct Pin {
     std::string name;
-    double capacitance = 0.0;
-    std::vector<LUT> LUTs;
+    std::vector<LUT> powerFall, powerRise;
   };
 
   struct InputPin : Pin {
-    double fallCapacitance = 0.0, 
-          riseCapacitance = 0.0;
-
-    //TODO: might need own realization of std::optional to save memory
-    std::optional<LUT> powerFall;
-    std::optional<LUT> powerRise;
+    double capacitance = 0.0;
+    double fallCapacitance = 0.0;
+    double riseCapacitance = 0.0;
   };
 
   struct OutputPin : Pin {
-    //the maximum total capacitive load that an output pin can drive.
+    //TODO: according to Liberty might have "capacitance" atribute
+    //but in practise onlu input pins have it
     double maxCapacitance = 0.0;
     std::vector<LUT> delayFall, delayRise;
     std::vector<LUT> slewFall, slewRise;
-
-    std::vector<LUT> powerFall, powerRise;
 
     std::vector<int> timingSence; //TODO: probably used incorrectly
     std::string stringFunction; //TODO: probably should not be like that

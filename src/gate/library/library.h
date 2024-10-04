@@ -11,6 +11,7 @@
 #include "gate/library/library_types.h"
 
 #include <string>
+#include <unordered_set>
 
 namespace eda::gate::library {
 
@@ -33,10 +34,10 @@ public:
   SCLibrary (const SCLibrary &) = delete;
   SCLibrary & operator= (const SCLibrary &) = delete;
 
-  void addCells(std::vector<StandardCell> &&cells);
-  void addTemplates(std::vector<LutTemplate> &&templates);
-  void addWLMs(std::vector<WireLoadModel> &&wlms);
-  void addProperties(const std::string &defaultWLMsName,
+  bool addCells(std::vector<StandardCell> &&cells);
+  bool addTemplates(std::vector<LutTemplate> &&templates);
+  bool addWLMs(std::vector<WireLoadModel> &&wlms);
+  bool addProperties(const std::string &defaultWLMsName,
                      WireLoadSelection &&selection);
 
   //Accesors for existing methods start
@@ -74,7 +75,18 @@ private:
   void addSuperCells();
   void fillSearchMap();
 
+  struct CollisionMaps{
+    std::unordered_set<std::string> cellNames;
+    std::unordered_set<std::string> templateNames;
+    std::unordered_set<std::string> wlmNames;
+  };
+
+  bool checkCellCollisions(const std::vector<StandardCell> &cells);
+  bool checkTemplateCollisions(const std::vector<LutTemplate> &templates);
+  bool checkWLMCollisions(const std::vector<WireLoadModel> &wlms);
+
   SCLibraryProperties properties_;
+  CollisionMaps collisions_;
 
   std::vector<WireLoadModel> wires_;
   std::vector<LutTemplate> templates_;

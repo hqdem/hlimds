@@ -198,9 +198,11 @@ void printVerilogCellType(std::ostream &out, const CellType &type) {
 
 void printVerilogLibrary(std::ostream &out) {
   out << "//===" << std::string(70, '-') << "===//\n";
+  out << "//\n";
   out << "// Part of the Utopia EDA Project, under the Apache License v2.0\n";
   out << "// SPDX-License-Identifier: Apache-2.0\n";
   out << "// Copyright 2024 ISP RAS (http://www.ispras.ru)\n";
+  out << "//\n";
   out << "//===" << std::string(70, '-') << "===//\n";
 
   #define UTOPIA_FOREACH_GATE(S)\

@@ -24,6 +24,7 @@ using path = std::filesystem::path;
 namespace eda::gate::techmapper {
 
 using SubnetBuilder = model::SubnetBuilder;
+using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
 using SubnetID = model::SubnetID;
 
 inline const path home = eda::env::getHomePath();
@@ -38,7 +39,7 @@ inline const path sdcPath = home /
 inline const path sky130lib = home / "test/data/gate/techmapper/"
   "sky130_fd_sc_hd__ff_100C_1v65.lib";
 
-std::shared_ptr<SubnetBuilder> parseGraphML(const std::string &fileName);
+SubnetBuilderPtr parseGraphML(const std::string &fileName);
 void printVerilog(const SubnetID subnet);
 bool checkAllCellsMapped(const SubnetID subnetID);
 void checkEQ(const SubnetID origSubnetID, const SubnetID mappedSubnetID);
@@ -79,7 +80,7 @@ class SubnetTechMapperTest : public LibraryInitializer<LIBPATH> {
 protected:
   ~SubnetTechMapperTest() override {}
 
-  const SubnetID commonPart(
+  const SubnetBuilderPtr commonPart(
       const std::shared_ptr<SubnetBuilder> builderPtr,
       const float maxArea,
       const float maxDelay,
@@ -114,26 +115,45 @@ protected:
 
     EXPECT_TRUE(builder != nullptr);
 
-    if (builder != nullptr) {
-      const auto mappedSubnetID = builder->make();
+    return builder;
+  }
+
+  const SubnetID commonPartCheckEQ(
+      const std::shared_ptr<SubnetBuilder> builderPtr,
+      const float maxArea,
+      const float maxDelay,
+      const float maxPower,
+      SubnetID subnetID = model::OBJ_NULL_ID) {
+
+    const auto mappedBuilderPtr =
+      commonPart(builderPtr, maxArea, maxDelay, maxPower);
+
+    if (mappedBuilderPtr != nullptr) {
+      const auto mappedSubnetID = mappedBuilderPtr->make();
       EXPECT_TRUE(checkAllCellsMapped(mappedSubnetID));
 
+      auto &context = LibraryInitializer<LIBPATH>::context;
       printStatistics(mappedSubnetID, *context.techMapContext.library);
+
       printVerilog(mappedSubnetID);
       std::cout << "Mapped Subnet: " << model::Subnet::get(mappedSubnetID);
+      if (subnetID == model::OBJ_NULL_ID) {
+        subnetID = builderPtr->make();
+      }
+      checkEQ(subnetID, mappedSubnetID);
       return mappedSubnetID;
     } else {
-      return builderPtr->make(); // TODO
+      std::cerr << "Subnet has not been mapped!\n";
+      return model::OBJ_NULL_ID;
     }
   }
 
   void commonGenSubnetTests(
     SubnetID f(void), float area, float delay, float power) {
-  const auto subnetID = f();
-  const auto builderPtr = std::make_shared<SubnetBuilder>(subnetID);
-  const auto mappedSubnetID = commonPart(builderPtr, area, delay, power);
-  checkEQ(subnetID, mappedSubnetID);
-}
+    const auto subnetID = f();
+    const auto builderPtr = std::make_shared<SubnetBuilder>(subnetID);
+    commonPartCheckEQ(builderPtr, area, delay, power, subnetID);
+  }
 
 protected:
   static void SetUpTestSuite() {

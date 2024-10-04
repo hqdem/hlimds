@@ -5,27 +5,15 @@
 // Copyright 2024 ISP RAS (http://www.ispras.ru)
 //
 //===----------------------------------------------------------------------===//
-#include "gate/model/examples.h"
 
-#include "gate/estimator/ppa_estimator.h"
 #include "gate/library/readcells_srcfile_parser.h"
 #include "gate/model/utils/subnet_random.h"
-#include "gate/model/utils/subnet_truth_table.h"
-#include "gate/library/library.h"
 #include "gate/premapper/cell_aigmapper.h"
-#include "gate/techmapper/subnet_techmapper_base.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
-#include "gate/library/library.h"
-#include "gate/optimizer/cut_extractor.h"
 
 #include "gate/techmapper/techmapper_test_util.h"
-#include "gate/techmapper/utils/get_statistics.h"
 
 #include "gtest/gtest.h"
-
-#include <kitty/kitty.hpp>
-
-#include <memory>
 
 namespace eda::gate::techmapper {
 
@@ -40,10 +28,7 @@ TEST_F(SubnetTechMapperSky130Test, Consts) {
   builderPtr->addOutput(idx0);
   builderPtr->addOutput(idx1);
 
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID = this->commonPart(builderPtr, 1000, 1000, 1000);
-
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
 }
 
 TEST_F(SubnetTechMapperSky130Test, SimpleSubnet) {
@@ -58,10 +43,7 @@ TEST_F(SubnetTechMapperSky130Test, SimpleSubnet) {
 
   builderPtr->addOutput(idx4);
 
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID = this->commonPart(builderPtr, 1000, 1000, 1000);
-
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
 }
 
 TEST_F(SubnetTechMapperSky130Test, SimpleANDSubnet) {
@@ -74,10 +56,7 @@ TEST_F(SubnetTechMapperSky130Test, SimpleANDSubnet) {
 
   builderPtr->addOutput(idx2);
 
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
-
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
 }
 
 TEST_F(SubnetTechMapperSky130Test, SimpleANDNOTSubnet) {
@@ -90,10 +69,7 @@ TEST_F(SubnetTechMapperSky130Test, SimpleANDNOTSubnet) {
 
   builderPtr->addOutput(idx2);
 
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
-
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
 }
 
 TEST_F(SubnetTechMapperSky130Test, FourInANDSubnet) {
@@ -110,10 +86,7 @@ TEST_F(SubnetTechMapperSky130Test, FourInANDSubnet) {
 
   builderPtr->addOutput(idx6);
 
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
-
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
 }
 
 TEST_F(SubnetTechMapperSky130Test, FourInANDNOTSubnet) {
@@ -130,10 +103,7 @@ TEST_F(SubnetTechMapperSky130Test, FourInANDNOTSubnet) {
 
   builderPtr->addOutput(idx6);
 
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
-
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
 }
 
 /* Test for subnet for a sky130_ha cell
@@ -160,10 +130,7 @@ TEST_F(SubnetTechMapperSky130Test, HaCell) {
   builderPtr->addOutput(idx2);
   builderPtr->addOutput(~idx5);
 
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID = commonPart(builderPtr, 1000, 1000, 1000);
-
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
 }
 
 TEST_F(SubnetTechMapperSky130Test, RandomSubnet) {
@@ -177,26 +144,17 @@ TEST_F(SubnetTechMapperSky130Test, RandomSubnet) {
           model::Subnet::get(subnetID) << std::endl;
   std::cout << "AIG-premapped Random Subnet:" << std::endl <<
           model::Subnet::get(premappedSubnetID) << std::endl;
-  const auto mappedSubnetID =
-    commonPart(premappedBuilder, 100000, 100000, 100000);
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(premappedBuilder, 100000, 100000, 100000);
 }
 
 TEST_F(SubnetTechMapperSky130Test, GraphMLSubnetSmall) {
   auto builderPtr = parseGraphML("simple_spi_orig"); // 2k nodes
-  // FIXME: do not call make(); implement another aigMapper.transform instead
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID =
-    commonPart(builderPtr, 1000000, 1000000, 1000000);
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 1000000, 1000000, 1000000);
 }
 
 TEST_F(SubnetTechMapperSky130Test, DISABLED_GraphMLSubnetLarge) {
   auto builderPtr = parseGraphML("wb_conmax_orig"); // 80k nodes
-  const auto subnetID = builderPtr->make();
-  const auto mappedSubnetID =
-    commonPart(builderPtr, 10000000, 10000000, 10000000);
-  checkEQ(subnetID, mappedSubnetID);
+  commonPartCheckEQ(builderPtr, 10000000, 10000000, 10000000);
 }
 
 } // namespace eda::gate::techmapper

@@ -36,7 +36,11 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder,
   const size_t coneIns{window.getInNum()};
 
   if (careCutSize > cutSize) {
-    const auto &roots = window.getInputs();
+    const auto &rootLinks = window.getInputs();
+    model::EntryIDList roots(rootLinks.size());
+    for (uint16_t i = 0; i < window.getInNum(); ++i) {
+      roots[i] = rootLinks[i].idx;
+    }
     auto careWindow = getReconvergentCut(builder, roots, careCutSize);
     window.setCare(util::computeCare(careWindow.evaluateTruthTables()));
   }
@@ -48,7 +52,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder,
     std::vector<float> weights;
     weights.reserve(coneIns);
     for (size_t i = 0; i < coneIns; ++i) {
-      weights.push_back(builder.getWeight(window.getIn(i)));
+      weights.push_back(builder.getWeight(window.getIn(i).idx));
     }
     (*weightCalculator)(newConeBuilder, weights);
   }

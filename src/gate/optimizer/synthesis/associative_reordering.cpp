@@ -143,9 +143,9 @@ float AssociativeReordering::getEffect(
   simpleMap.inputs.resize(info.builder->getInNum());
   
   for (size_t i = 0; i < info.builder->getInNum(); ++i) {
-    simpleMap.inputs[i] = i;
+    simpleMap.inputs[i] = Link(i);
   }
-  simpleMap.outputs.push_back(prelast);
+  simpleMap.outputs.push_back(Link(prelast));
   setWeights(*newBuilder, *info.builder);
 
   std::function<float(float, uint16_t)> cellWeightModifier = 
@@ -367,7 +367,7 @@ void AssociativeReordering::setWeights(SubnetView &view,
   for (auto iter = newBuilder.begin(); 
       newBuilder.getCell(*iter).isIn(); ++iter) {
     
-    size_t posInPrnt = view.getInputs()[*iter];
+    size_t posInPrnt = view.getInputs()[*iter].idx;
     float p = prob[posInPrnt];
     p = (negLinks.count(posInPrnt)) ? 1 - p : p;
     newBuilder.setWeight(*iter, p);

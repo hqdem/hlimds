@@ -123,10 +123,10 @@ void ConePremapper::decomposeCell(const SubnetBuilderPtr &builder,
   auto links = rhsPtr->addInputs(cell.arity);
   for (size_t i = 0; i < links.size(); ++i) {
     const auto link = builderPtr->getLink(entryID, i);
-    iomapping.inputs.push_back(link.idx);
+    iomapping.inputs.push_back(Link(link.idx));
     links[i].inv = link.inv;
   }
-  iomapping.outputs.push_back(entryID);
+  iomapping.outputs.push_back(Link(entryID));
 
   Link outLink;
   if (cell.isMaj()) {
@@ -160,7 +160,7 @@ void ConePremapper::constantCase(const SubnetBuilderPtr &builder,
 
   SubnetBuilder *builderPtr = builder.get();
 
-  InOutMapping iomapping(model::EntryIDList{0}, model::EntryIDList{entryID});
+  InOutMapping iomapping(LinkList{Link(0)}, LinkList{Link(entryID)});
   model::SubnetView view(*builderPtr, iomapping);
   SubnetObject rhs = resynthesizer.resynthesize(view, arity);
   assert(!rhs.isNull() && "Subnet wasn't synthesized!");

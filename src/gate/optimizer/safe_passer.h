@@ -112,7 +112,7 @@ private:
     assert(/* Replacing unsafe root entry */
            isNewEntry.size() <= entry || !isNewEntry[entry]);
     assert(/* Current passer entry and rhs root entry differs */
-           rhsToLhsMapping.getOut(0) == entry);
+           rhsToLhsMapping.getOut(0).idx == entry);
 
     EntryIterator::operator++();
     saveNext = entry;

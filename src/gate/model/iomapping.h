@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "gate/model/subnet_base.h"
+
 #include <cstdint>
 #include <vector>
 
@@ -20,19 +22,33 @@ using EntryIDList = std::vector<EntryID>;
  * @brief Represents an input/output mapping for replacement.
  */
 struct InOutMapping final {
+  using Link = model::SubnetLink<EntryID>;
+  using LinkList = std::vector<Link>;
+
   InOutMapping() = default;
 
-  InOutMapping(const EntryIDList &inputs, const EntryIDList &outputs):
+  InOutMapping(const EntryIDList &inputIDs, const EntryIDList &outputIDs) {
+    inputs.reserve(inputIDs.size());
+    outputs.reserve(outputIDs.size());
+    for (uint16_t i = 0; i < inputIDs.size(); ++i) {
+      inputs.push_back(Link(inputIDs[i]));
+    }
+    for (uint16_t i = 0; i < outputIDs.size(); ++i) {
+      outputs.push_back(Link(outputIDs[i]));
+    }
+  }
+
+  InOutMapping(const LinkList &inputs, const LinkList &outputs):
       inputs(inputs), outputs(outputs) {}
 
   uint16_t getInNum() const { return inputs.size(); }
   uint16_t getOutNum() const { return outputs.size(); }
 
-  EntryID getIn(const uint16_t i) const { return inputs[i]; }
-  EntryID getOut(const uint16_t i) const { return outputs[i]; }
+  Link getIn(const uint16_t i) const { return inputs[i]; }
+  Link getOut(const uint16_t i) const { return outputs[i]; }
 
-  EntryIDList inputs;
-  EntryIDList outputs;
+  LinkList inputs;
+  LinkList outputs;
 };
 
 } // namespace eda::gate::model

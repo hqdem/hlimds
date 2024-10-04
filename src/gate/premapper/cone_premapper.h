@@ -26,6 +26,7 @@ public:
   using Cell = gate::model::Subnet::Cell;
   using InOutMapping = gate::model::InOutMapping;
   using Link = gate::model::Subnet::Link;
+  using LinkList = gate::model::Subnet::LinkList;
   using ResynthesizerBase = optimizer::ResynthesizerBase;
   using SafePasser = gate::optimizer::SafePasser;
   using SubnetBuilder = gate::model::SubnetBuilder;

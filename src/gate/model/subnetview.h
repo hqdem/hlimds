@@ -29,6 +29,7 @@ namespace eda::gate::model {
 class SubnetView final {
 public:
   using Cut = optimizer::Cut;
+  using Link = InOutMapping::Link;
   using TruthTable = eda::util::TruthTable;
 
   /// Constructs a subnet view corresponding to the whole subnet.
@@ -52,19 +53,19 @@ public:
     return iomapping.getOutNum();
   }
 
-  EntryID getIn(const uint16_t i) const {
+  Link getIn(const uint16_t i) const {
     return iomapping.getIn(i);
   }
 
-  EntryID getOut(const uint16_t i) const {
+  Link getOut(const uint16_t i) const {
     return iomapping.getOut(i);
   }
 
-  const EntryIDList &getInputs() const {
+  const InOutMapping::LinkList &getInputs() const {
     return iomapping.inputs;
   }
 
-  const EntryIDList &getOutputs() const {
+  const InOutMapping::LinkList &getOutputs() const {
     return iomapping.outputs;
   }
 
@@ -95,7 +96,7 @@ public:
 private:
   /// Evaluates the truth tables for the given cells.
   std::vector<TruthTable> evaluateTruthTables(
-      const EntryIDList &entryIDs) const;
+      const InOutMapping::LinkList &entryLinks) const;
 
   /// Input/output mapping.
   InOutMapping iomapping;

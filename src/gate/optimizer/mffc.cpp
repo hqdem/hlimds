@@ -10,13 +10,14 @@
 
 namespace eda::gate::optimizer {
 
-using Builder    = model::SubnetBuilder;
-using Cell       = model::Subnet::Cell;
-using EntryID    = model::EntryID;
-using Link       = model::Subnet::Link;
-using LinkList   = model::Subnet::LinkList;
-using Nodes      = model::EntryIDList;
-using SubnetView = model::SubnetView;
+using Builder     = model::SubnetBuilder;
+using Cell        = model::Subnet::Cell;
+using EntryID     = model::EntryID;
+using EntryIDList = model::EntryIDList;
+using Link        = model::Subnet::Link;
+using LinkList    = model::Subnet::LinkList;
+using Nodes       = model::EntryIDList;
+using SubnetView  = model::SubnetView;
 
 static void getMffcBounds(Builder &builder,
                           EntryID idx,
@@ -113,15 +114,20 @@ SubnetView getMffc(Builder &builder, EntryID rootID, const Nodes &cut) {
   Nodes bounds;
   bounds.reserve(cut.size());
   findMffcBounds(builder, rootID, counter, boundsID, bounds);
-  Nodes output{rootID};
 
-  return SubnetView{builder, {std::move(bounds), std::move(output)}};
+  return SubnetView{builder, {std::move(bounds), Nodes{rootID}}};
 }
 
 SubnetView getMffc(Builder &builder, const SubnetView &view) {
-  const Nodes &roots = view.getOutputs();
+  const auto &roots = view.getOutputs();
   assert((roots.size() == 1) && "Multiple outputs are not supported");
-  return getMffc(builder, roots[0], view.getInputs());
+
+  EntryIDList leaves(view.getInNum());
+  const auto &inputs = view.getInputs();
+  for (size_t i = 0; i < leaves.size(); ++i) {
+    leaves[i] = inputs[i].idx;
+  }
+  return getMffc(builder, roots[0].idx, leaves);
 }
 
 SubnetView getMffc(Builder &builder, EntryID rootID) {
@@ -178,9 +184,8 @@ SubnetView getMffc(Builder &builder, EntryID rootID, uint32_t maxDepth) {
   Nodes bounds;
   bounds.reserve(1u << (maxDepth + 1));
   findMffcBounds(builder, rootID, counter, boundsID, bounds);
-  Nodes output{rootID};
 
-  return SubnetView{builder, {std::move(bounds), std::move(output)}};
+  return SubnetView{builder, {std::move(bounds), Nodes{rootID}}};
 }
 
 } // namespace eda::gate::optimizer

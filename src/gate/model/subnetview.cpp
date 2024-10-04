@@ -29,14 +29,14 @@ SubnetView::SubnetView(const SubnetBuilder &parent):
   for (auto it = parent.begin(); i < nIn; ++it, ++i) {
     const auto &cell = parent.getCell(*it);
     assert(cell.isIn());
-    iomapping.inputs[i] = *it;
+    iomapping.inputs[i] = Link(*it);
   }
 
   uint32_t j = 0;
   for (auto it = --parent.end(); j < nOut; --it, ++j) {
     const auto &cell = parent.getCell(*it);
     assert(cell.isOut());
-    iomapping.outputs[nOut - j - 1] = *it;
+    iomapping.outputs[nOut - j - 1] = Link(*it);
   }
 }
 
@@ -46,7 +46,7 @@ SubnetView::SubnetView(const SubnetBuilder &parent, const EntryID rootID):
   SubnetViewWalker walker(*this);
 
   iomapping.inputs.reserve(parent.getInNum());
-  iomapping.outputs.push_back(rootID);
+  iomapping.outputs.push_back(Link(rootID));
 
   walker.run([this](SubnetBuilder &parent,
                     const bool isIn,
@@ -54,11 +54,11 @@ SubnetView::SubnetView(const SubnetBuilder &parent, const EntryID rootID):
                     const EntryID i) -> bool {
     const auto &cell = parent.getCell(i);
     if (cell.isIn() || cell.isZero() || cell.isOne()) {
-      iomapping.inputs.push_back(i);
+      iomapping.inputs.push_back(Link(i));
       return true;
     }
     // Stop traversal when root is visited.
-    return i != iomapping.getOut(0);
+    return i != iomapping.getOut(0).idx;
   });
 }
 
@@ -68,10 +68,10 @@ SubnetView::SubnetView(const SubnetBuilder &parent, const Cut &cut):
 
   iomapping.inputs.reserve(cut.leafIDs.size());
   for (const auto entryID : cut.leafIDs) {
-    iomapping.inputs.push_back(entryID);
+    iomapping.inputs.push_back(Link(entryID));
   }
 
-  iomapping.outputs.push_back(cut.rootID);
+  iomapping.outputs.push_back(Link(cut.rootID));
 }
 
 SubnetView::SubnetView(const SubnetBuilder &parent,
@@ -82,8 +82,8 @@ SubnetView::SubnetView(const SubnetBuilder &parent,
 }
 
 std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
-    const EntryIDList &entryIDs) const {
-  std::vector<TruthTable> result(entryIDs.size());
+    const InOutMapping::LinkList &entryLinks) const {
+  std::vector<TruthTable> result(entryLinks.size());
 
   SubnetViewWalker walker(*this);
   const auto arity = getInNum();
@@ -102,8 +102,8 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
       return true /* continue traversal */;
     });
 
-    for (size_t i = 0; i < entryIDs.size(); ++i) {
-      const auto tt = util::getTruthTable<util::TT6>(parent, entryIDs[i]);
+    for (size_t i = 0; i < entryLinks.size(); ++i) {
+      const auto tt = util::getTruthTable<util::TT6>(parent, entryLinks[i].idx);
       result[i] = util::convertTruthTable<util::TT6>(tt, arity);
     }
   } else {
@@ -121,8 +121,8 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
       return true /* continue traversal */;
     });
 
-    for (size_t i = 0; i < entryIDs.size(); ++i) {
-      const auto tt = util::getTruthTable<util::TTn>(parent, entryIDs[i]);
+    for (size_t i = 0; i < entryLinks.size(); ++i) {
+      const auto tt = util::getTruthTable<util::TTn>(parent, entryLinks[i].idx);
       result[i] = util::convertTruthTable<util::TTn>(tt, arity);
     }
   }
@@ -217,24 +217,24 @@ static bool traverseForward(SubnetBuilder &builder,
   uint32_t nOutLeft{0};
 
   for (const auto inputID : iomapping.inputs) {
-    builder.mark(inputID);
+    builder.mark(inputID.idx);
   } // for input
 
   std::stack<std::pair<EntryID /* entry */, uint16_t /* link */>> stack;
   for (const auto outputID : iomapping.outputs) {
-    if (!builder.isMarked(outputID)) {
-      UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, true, outputID);
-      stack.push({outputID, 0});
+    if (!builder.isMarked(outputID.idx)) {
+      UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, true, outputID.idx);
+      stack.push({outputID.idx, 0});
     } else {
-      inout.insert(outputID);
+      inout.insert(outputID.idx);
     }
   } // for output
 
   nOutLeft = stack.size();
 
   for (const auto inputID : iomapping.inputs) {
-    const auto isOut = (inout.find(inputID) != inout.end());
-    UTOPIA_ON_BACKWARD_DFS_POP(builder, true, isOut, inputID);
+    const auto isOut = (inout.find(inputID.idx) != inout.end());
+    UTOPIA_ON_BACKWARD_DFS_POP(builder, true, isOut, inputID.idx);
   } // for input
 
   while (!stack.empty()) {

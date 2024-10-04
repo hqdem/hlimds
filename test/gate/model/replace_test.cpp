@@ -251,7 +251,7 @@ TEST(ReplaceTest, ReplaceTwice) {
   rhs2Builder.addOutput(rhs2BufLink1);
 
   const auto rhs2ID = rhs2Builder.make();
-  InOutMapping mapping2({0}, {7});
+  InOutMapping mapping2(EntryIDList{0}, EntryIDList{7});
 
   const auto effect2 = builder.evaluateReplace(rhs2ID, mapping2);
   EXPECT_EQ(effect2.size, -1);
@@ -285,7 +285,7 @@ TEST(ReplaceTest, OneCell) {
   rhsBuilder.addOutput(rhsInputs[0]);
 
   const auto rhsID = rhsBuilder.make();
-  InOutMapping mapping({3}, {3});
+  InOutMapping mapping(EntryIDList{3}, EntryIDList{3});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -497,7 +497,7 @@ TEST(ReplaceTest, DeleteCell) {
   rhsBuilder.addOutput(inLink0);
 
   const auto rhsID = rhsBuilder.make();
-  InOutMapping mapping({0}, {1});
+  InOutMapping mapping(EntryIDList{0}, EntryIDList{1});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 1);
@@ -530,7 +530,7 @@ TEST(ReplaceTest, DeleteSeveralCells) {
   rhsBuilder.addOutput(inLink0);
 
   const auto rhsID = rhsBuilder.make();
-  InOutMapping mapping({0}, {3});
+  InOutMapping mapping(EntryIDList{0}, EntryIDList{3});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 3);
@@ -561,7 +561,7 @@ TEST(ReplaceTest, DeleteCellWithInvOut) {
   rhsBuilder.addOutput(~inLink0);
 
   const auto rhsID = rhsBuilder.make();
-  InOutMapping mapping({0}, {1});
+  InOutMapping mapping(EntryIDList{0}, EntryIDList{1});
 
   const auto effect = builder.evaluateReplace(rhsID, mapping);
   EXPECT_EQ(effect.size, 1);
@@ -1052,7 +1052,7 @@ TEST(ReplaceBuilderTest, ReplaceTwice) {
   const auto rhs2BufLink1 = rhs2Builder.addCell(model::BUF, rhs2BufLink0);
   rhs2Builder.addOutput(rhs2BufLink1);
 
-  InOutMapping mapping2({0}, {7});
+  InOutMapping mapping2(EntryIDList{0}, EntryIDList{7});
 
   const auto effect2 = builder.evaluateReplace(rhs2Builder, mapping2);
   EXPECT_EQ(effect2.size, -1);
@@ -1085,7 +1085,7 @@ TEST(ReplaceBuilderTest, OneCell) {
   const auto rhsInputs = rhsBuilder.addInputs(1);
   rhsBuilder.addOutput(rhsInputs[0]);
 
-  InOutMapping mapping({3}, {3});
+  InOutMapping mapping(EntryIDList{3}, EntryIDList{3});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 0);
@@ -1294,7 +1294,7 @@ TEST(ReplaceBuilderTest, DeleteCell) {
   const auto &inLink0 = rhsBuilder.addInput();
   rhsBuilder.addOutput(inLink0);
 
-  InOutMapping mapping({0}, {1});
+  InOutMapping mapping(EntryIDList{0}, EntryIDList{1});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 1);
@@ -1326,7 +1326,7 @@ TEST(ReplaceBuilderTest, DeleteSeveralCells) {
   const auto &inLink0 = rhsBuilder.addInput();
   rhsBuilder.addOutput(inLink0);
 
-  InOutMapping mapping({0}, {3});
+  InOutMapping mapping(EntryIDList{0}, EntryIDList{3});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 3);
@@ -1356,7 +1356,7 @@ TEST(ReplaceBuilderTest, DeleteCellWithInvOut) {
   const auto &inLink0 = rhsBuilder.addInput();
   rhsBuilder.addOutput(~inLink0);
 
-  InOutMapping mapping({0}, {1});
+  InOutMapping mapping(EntryIDList{0}, EntryIDList{1});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 1);
@@ -1772,7 +1772,7 @@ TEST(ReplaceBuilderTest, InOutInvert) {
   const auto &rhsInLink = rhsBuilder.addInput();
   rhsBuilder.addOutput(~rhsInLink);
 
-  InOutMapping mapping({0}, {1});
+  InOutMapping mapping(EntryIDList{0}, EntryIDList{1});
 
   const auto effect = builder.evaluateReplace(rhsBuilder, mapping);
   EXPECT_EQ(effect.size, 0);

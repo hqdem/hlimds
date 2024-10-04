@@ -77,14 +77,14 @@ public:
   /// Sets the input value.
   template <typename T = DataChunk>
   void setInput(uint16_t i, T value) {
-    const auto entryID = subnet.getIn(i);
+    const auto entryID = subnet.getIn(i).idx;
     setValue(entryID, value);
   }
 
   /// Gets the output value.
   template <typename T = DataChunk>
   T getOutput(uint16_t i) const {
-    const auto entryID = subnet.getOut(i);
+    const auto entryID = subnet.getOut(i).idx;
     return getValue(entryID);
   }
 

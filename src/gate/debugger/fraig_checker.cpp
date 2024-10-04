@@ -47,8 +47,8 @@ struct EqPointResult {
    * @param inputs Inputs mapping for a max cone.
    */
   EqPointResult(EqPointStatus status,
-                        std::vector<bool> counterExample,
-                        std::vector<uint32_t> inputs) {
+                        const std::vector<bool> &counterExample,
+                        const model::Subnet::LinkList &inputs) {
     assert(status == EqPointStatus::NOTEQUAL);
     this->status = status;
     this->counterExample = counterExample;
@@ -72,7 +72,7 @@ struct EqPointResult {
   counterExample[index].flip();
   std::vector<bool> proof(nIn, false);
   for (uint16_t i = 0; i < counterExampleSize; i++) {
-    proof[inputs[i]] = counterExample[i];
+    proof[inputs[i].idx] = counterExample[i];
   }
   for (size_t i = 0; i < proof.size(); i++) {
     storage[i].set(storageCount, proof[i]);
@@ -83,7 +83,7 @@ struct EqPointResult {
 private:
   bool counterExampleFlag = false;
   std::vector<bool> counterExample{};
-  std::vector<uint32_t> inputs{};
+  model::Subnet::LinkList inputs{};
 };
 
 EqPointResult check(const uint32_t point1,
@@ -104,12 +104,12 @@ EqPointResult check(const uint32_t point1,
   auto inputs2 = cone2.getInputs();
   std::unordered_map<uint32_t, uint32_t> inputToPos;
   for (size_t i = 0; i < inputs2.size(); i++) {
-    inputToPos[inputs2[i]] = i;
+    inputToPos[inputs2[i].idx] = i;
   }
 
   for (size_t i = 0; i < cone1InNum; ++i) {
     try {
-      inputToPos.at(inputs1[i]);
+      inputToPos.at(inputs1[i].idx);
     }
     catch (const std::out_of_range &e) {
       return EqPointResult::NOTEQUAL;

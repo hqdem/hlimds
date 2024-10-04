@@ -15,6 +15,8 @@ namespace eda::gate::optimizer {
 
 TEST(ReconvergenceTest, CorrectnessTest) {
   using CellSymbol    = eda::gate::model::CellSymbol;
+  using Link          = eda::gate::model::Subnet::Link;
+  using LinkList      = eda::gate::model::Subnet::LinkList;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   /*
   * in(0)  in(1) CONST - Inputs
@@ -36,14 +38,16 @@ TEST(ReconvergenceTest, CorrectnessTest) {
 
   const auto cutView = getReconvergentCut(builder, 5, 4);
 
-  const model::EntryIDList check = {1, 0};
+  const LinkList check = {Link(1), Link(0)};
 
   EXPECT_EQ(check, cutView.getInputs());
-  EXPECT_EQ(model::EntryIDList{5}, cutView.getOutputs());
+  EXPECT_EQ(LinkList{Link(5)}, cutView.getOutputs());
 }
 
 TEST(ReconvergenceTest, SimpleTest) {
   using CellSymbol    = eda::gate::model::CellSymbol;
+  using Link          = eda::gate::model::Subnet::Link;
+  using LinkList      = eda::gate::model::Subnet::LinkList;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   /*
   *   0  1  2  3  4  5 - Inputs
@@ -83,10 +87,10 @@ TEST(ReconvergenceTest, SimpleTest) {
 
   const auto cutView = getReconvergentCut(builder, rootId, cutSize);
 
-  const model::EntryIDList check = {11, 12, 13, 14};
+  const LinkList check = {Link(11), Link(12), Link(13), Link(14)};
 
   EXPECT_EQ(cutView.getInputs(), check);
-  EXPECT_EQ(cutView.getOutputs(), model::EntryIDList{rootId});
+  EXPECT_EQ(cutView.getOutputs(), LinkList{Link(rootId)});
 }
 
 } // namespace eda::gate::optimizer

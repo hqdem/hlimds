@@ -31,6 +31,7 @@ public:
   using Effect             = eda::gate::model::SubnetBuilder::Effect;
   using EntryMap           = std::unordered_map<size_t, size_t>;
   using InOutMapping       = eda::gate::model::InOutMapping;
+  using Link               = InOutMapping::Link;
   using Subnet             = eda::gate::model::Subnet;
   using SubnetBuilder      = eda::gate::model::SubnetBuilder;
   using SubnetID           = eda::gate::model::SubnetID;

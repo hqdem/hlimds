@@ -153,7 +153,7 @@ BddList convertBdd(const SubnetView &sv, const Cudd &cudd) {
 
   // Sort BDD's by PO EntryID
   for (auto i: sv.getOutputs()) {
-    result.push_back(map[i]);
+    result.push_back(map[i.idx]);
   }
 
   return result;

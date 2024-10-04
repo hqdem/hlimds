@@ -43,14 +43,14 @@ TEST(MffcTest, CutBound1) {
 
   const auto view = getMffc(builder, rootID, cut);
 
-  const model::EntryIDList &viewIns  = view.getInputs();
-  const model::EntryIDList &viewOuts = view.getOutputs();
+  const auto &viewIns  = view.getInputs();
+  const auto &viewOuts = view.getOutputs();
 
   // Check MFFC.
   EXPECT_EQ(viewIns.size(), 2);
-  EXPECT_TRUE(((viewIns[0] == 1) && (viewIns[1] == 3)) ||
-              ((viewIns[0] == 3) && (viewIns[1] == 1)));
-  EXPECT_TRUE((viewOuts.size() == 1) && (viewOuts[0] == rootID));
+  EXPECT_TRUE(((viewIns[0].idx == 1) && (viewIns[1].idx == 3)) ||
+              ((viewIns[0].idx == 3) && (viewIns[1].idx == 1)));
+  EXPECT_TRUE((viewOuts.size() == 1) && (viewOuts[0].idx == rootID));
   // Check refcounts.
   EXPECT_TRUE((builder.getCell(0).refcount == 1) &&
               (builder.getCell(1).refcount == 2) &&
@@ -62,6 +62,7 @@ TEST(MffcTest, CutBound1) {
 
 TEST(MffcTest, CutBound2) {
   using CellSymbol    = eda::gate::model::CellSymbol;
+  using Link          = eda::gate::model::Subnet::Link;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   /*
   * in(0)  in(1) CONST
@@ -81,12 +82,12 @@ TEST(MffcTest, CutBound2) {
   links.push_back(builder.addCell(CellSymbol::AND, links[3], links[4]));
   builder.addOutput(links.back());
 
-  model::EntryIDList cut{3, 4};
+  model::Subnet::LinkList cut{Link(3), Link(4)};
   model::EntryID rootID = 5;
 
-  const auto view = getMffc(builder, rootID, cut);
+  const auto view = getMffc(builder, rootID, {cut[0].idx, cut[1].idx});
   EXPECT_EQ(view.getInputs(), cut);
-  EXPECT_EQ(view.getOutputs()[0], rootID);
+  EXPECT_EQ(view.getOutputs()[0].idx, rootID);
   // Check refcounts.
   EXPECT_TRUE((builder.getCell(3).refcount == 1) &&
               (builder.getCell(4).refcount == 1) &&
@@ -95,6 +96,7 @@ TEST(MffcTest, CutBound2) {
 
 TEST(MffcTest, DepthBound1) {
   using CellSymbol    = eda::gate::model::CellSymbol;
+  using EntryID       = eda::gate::model::EntryID;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   /*
   *          in3 in4
@@ -123,14 +125,17 @@ TEST(MffcTest, DepthBound1) {
 
   const auto view = getMffc(builder, rootID, maxDepth);
 
-  const model::EntryIDList &viewIns  = view.getInputs();
-  const model::EntryIDList &viewOuts = view.getOutputs();
+  const auto &viewIns  = view.getInputs();
+  const auto &viewOuts = view.getOutputs();
   // Check MFFC.
   EXPECT_EQ(viewIns.size(), 4);
-  std::set<model::EntryID> cut(viewIns.begin(), viewIns.end());
-  std::set<model::EntryID> check{0, 1, 2, 5};
+  std::set<EntryID> cut;
+  for (const auto &in : viewIns) {
+    cut.insert(in.idx);
+  }
+  std::set<EntryID> check{0, 1, 2, 5};
   EXPECT_EQ(cut, check);
-  EXPECT_TRUE((viewOuts.size() == 1) && (viewOuts[0] == rootID));
+  EXPECT_TRUE((viewOuts.size() == 1) && (viewOuts[0].idx == rootID));
   // Check refcounts.
   for (SafePasser iter = builder.begin();
        !builder.getCell(*iter).isOut(); ++iter) {
@@ -141,6 +146,7 @@ TEST(MffcTest, DepthBound1) {
 
 TEST(MffcTest, DepthBound2) {
   using CellSymbol    = eda::gate::model::CellSymbol;
+  using EntryID       = eda::gate::model::EntryID;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   /*
   *   0  1  2  3  4  5 - Inputs
@@ -160,7 +166,7 @@ TEST(MffcTest, DepthBound2) {
   const size_t nInputs = 6;
   const size_t nLoops = 19;
   const size_t maxDepth = 3;
-  const model::EntryID rootId = 20;
+  const EntryID rootId = 20;
 
   SubnetBuilder builder;
   auto links = builder.addInputs(nInputs);
@@ -180,13 +186,15 @@ TEST(MffcTest, DepthBound2) {
 
   const auto view = getMffc(builder, rootId, maxDepth);
 
-  const std::set<model::EntryID> check{11, 12, 13, 14};
-  const std::set<model::EntryID> cut(view.getInputs().begin(),
-                                     view.getInputs().end());
+  const std::set<EntryID> check{11, 12, 13, 14};
+  std::set<EntryID> cut;
+  for (const auto &in : view.getInputs()) {
+    cut.insert(in.idx);
+  }
 
   EXPECT_EQ(view.getInputs().size(), 4);
   EXPECT_EQ(cut, check);
-  EXPECT_EQ(view.getOutputs(), std::vector<model::EntryID>{rootId});
+  EXPECT_EQ(view.getOutputs()[0].idx, rootId);
 }
 
 } // namespace eda::gate::optimizer

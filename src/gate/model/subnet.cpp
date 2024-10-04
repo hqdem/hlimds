@@ -444,10 +444,10 @@ void fillMapping<Subnet>(const Subnet &rhs,
   assert(rhs.getOutNum() == iomapping.getOutNum());
 
   for (uint16_t i = 0; i < iomapping.getInNum(); ++i) {
-    rhsToLhs[rhs.getInIdx(i)] = iomapping.getIn(i);
+    rhsToLhs[rhs.getInIdx(i)] = iomapping.getIn(i).idx;
   }
   for (uint16_t i = 0; i < iomapping.getOutNum(); ++i) {
-    rhsToLhs[rhs.getOutIdx(i)] = iomapping.getOut(i);
+    rhsToLhs[rhs.getOutIdx(i)] = iomapping.getOut(i).idx;
   }
 }
 
@@ -461,13 +461,13 @@ void fillMapping<SubnetBuilder>(const SubnetBuilder &rhs,
   uint16_t i = 0;
   for (auto it = rhs.begin(); it != rhs.end(); ++it, ++i) {
     if (!rhs.getCell(*it).isIn()) break;
-    rhsToLhs[*it] = iomapping.getIn(i);
+    rhsToLhs[*it] = iomapping.getIn(i).idx;
   }
 
   uint16_t j = 0;
   for (auto it = --rhs.end(); it != rhs.begin(); --it, ++j) {
     if (!rhs.getCell(*it).isOut()) break;
-    rhsToLhs[*it] = iomapping.getOut(rhs.getOutNum() - 1 - j);
+    rhsToLhs[*it] = iomapping.getOut(rhs.getOutNum() - 1 - j).idx;
   }
 }
 //-- FIXME:
@@ -626,7 +626,7 @@ SubnetBuilder::Effect SubnetBuilder::evaluateReplace(
   std::unordered_map<EntryID, uint32_t> entryNewRefcount;
   const auto addEffect = newEntriesEval(rhsContainer, iomapping,
       reusedLhsEntries, entryNewRefcount, weightProvider, weightModifier);
-  const auto delEffect = deletedEntriesEval(iomapping.getOut(0),
+  const auto delEffect = deletedEntriesEval(iomapping.getOut(0).idx,
       reusedLhsEntries, entryNewRefcount, weightModifier);
 
   return delEffect - addEffect;
@@ -740,7 +740,7 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
   std::vector<EntryID> rhsToLhs(rhsContainer.getMaxIdx() + 1, -1u);
   fillMapping(rhsContainer, iomapping, rhsToLhs);
 
-  const EntryID lhsRootEntryID = iomapping.getOut(0);
+  const EntryID lhsRootEntryID = iomapping.getOut(0).idx;
   const auto &lhsRootCell = getCell(lhsRootEntryID);
   EntryID rhsRootEntryID = invalidID;
   EntryID i = 0;

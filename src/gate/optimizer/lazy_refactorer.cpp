@@ -53,7 +53,7 @@ void LazyRefactorer::nodeProcessing(SubnetBuilder &builder,
     std::vector<float> weights;
     weights.reserve(coneIns);
     for (size_t i = 0; i < coneIns; ++i) {
-      weights.push_back(builder.getWeight(view.getIn(i)));
+      weights.push_back(builder.getWeight(view.getIn(i).idx));
     }
     (*weightCalculator)(newConeBuilder, weights);
   }
@@ -91,28 +91,28 @@ void LazyRefactorer::nodeProcessing(SubnetBuilder &builder,
 eda::gate::model::SubnetView LazyRefactorer::twoLvlBldr(SubnetBuilder &builder, 
                                                         size_t numCell) {
 
-  eda::gate::model::InOutMapping entryMap;
+  InOutMapping entryMap;
   const auto curLinks = builder.getLinks(numCell);
 
   if (curLinks.empty()) {
-    entryMap.inputs.push_back(numCell);
+    entryMap.inputs.push_back(Link(numCell));
   }
   
   for (auto curLink : curLinks) {
 
-    if (builder.getLinks(curLink.idx).empty()) {     
-      entryMap.inputs.push_back(curLink.idx);
+    if (builder.getLinks(curLink.idx).empty()) {
+      entryMap.inputs.push_back(Link(curLink.idx));
     } else {
 
       const Subnet::LinkList prevLinks = builder.getLinks(curLink.idx);
      
       for (auto l : prevLinks) {
-        entryMap.inputs.push_back(l.idx);
+        entryMap.inputs.push_back(Link(l.idx));
       }
     }
   }
 
-  entryMap.outputs.push_back(numCell);
+  entryMap.outputs.push_back(Link(numCell));
   return SubnetView(builder, entryMap);
 }
 

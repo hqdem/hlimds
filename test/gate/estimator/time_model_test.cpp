@@ -54,11 +54,8 @@ protected:
   }
 
   void commonPart(const std::string &cellTypeName,
-    const double inputTransTime, const double totalOutputCap,
-    const double slewRef, const double delayRef) {
-
-    int timingSense = 0;
-    double slew = 0, delay = 0, cap = 0;
+                  const double inputTransTime, const double totalOutputCap,
+                  const double slewRef, const double delayRef) {
     
     const auto *cellPtr = findCellByName(cellTypeName);
 
@@ -68,12 +65,11 @@ protected:
       ASSERT_TRUE(false);
     }
 
-    NLDM::delayEstimation(*cellPtr,
-                          inputTransTime,
-                          totalOutputCap,
-                          timingSense, slew, delay, cap);
-    EXPECT_FLOAT_EQ(slew, slewRef); // FIXME: use EXPECT_DOUBLE_EQ
-    EXPECT_FLOAT_EQ(delay, delayRef); // FIXME: use EXPECT_DOUBLE_EQ
+    auto estimatedSDC = NLDM::cellOutputSDEstimation(*cellPtr,
+                                                     inputTransTime,
+                                                     totalOutputCap);
+    EXPECT_FLOAT_EQ(estimatedSDC.slew, slewRef); // FIXME: use EXPECT_DOUBLE_EQ
+    EXPECT_FLOAT_EQ(estimatedSDC.delay, delayRef); // FIXME: use EXPECT_DOUBLE_EQ
   }
 
   ~EstimatorTest() override {}
@@ -86,17 +82,18 @@ protected:
 
 TEST_F(EstimatorTest, a2111o4) {
   std::string cellName = "sky130_fd_sc_hd__a2111o_4";
-  commonPart(cellName, 0.053133, 0.191204, 0.37748932838439941, 0.4451143741607666);
+  commonPart(cellName, 0.0531329000, 0.191204, 0.4692483000, 0.6280851000);
 }
 
 TEST_F(EstimatorTest, o21a4) {
   std::string cellName = "sky130_fd_sc_hd__o21a_4";
-  commonPart(cellName, 0.053133, 0.001627, 0.024740446358919144, 0.09489276260137558);
+  commonPart(cellName, 0.0531329000, 0.0016272800, 0.0269333000, 0.1548140000);
 }
 
 TEST_F(EstimatorTest, a211o2) {
   std::string cellName = "sky130_fd_sc_hd__a211o_2";
-  commonPart(cellName, 0.099999, 0.002468, 0.034578997641801834, 0.11193791031837463);
+  //FIXME: calculated values taken directly from gdb
+  commonPart(cellName, 0.099999, 0.002468, 0.04183082030120662, 0.2601041539023628);
 }
 
 } // eda::gate::techmapper

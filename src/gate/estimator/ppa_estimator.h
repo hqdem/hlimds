@@ -20,6 +20,8 @@
 
 namespace eda::gate::estimator {
 
+using CellContext = techmapper::SubnetTechMapperBase::CellContext;
+
 inline bool shouldSkipCell(const model::Subnet::Cell &cell) {
   return cell.isIn() || cell.isOut() || cell.isOne() || cell.isZero();
 }
@@ -64,57 +66,80 @@ inline double getLeakagePower(model::SubnetID subnetID,
             return getLeakagePower(*techCell); });
 }
 
+inline double getEstimatedOutCapacitance(const library::StandardCell &cell,
+                                         const library::WireLoadModel *wlm,
+                                         size_t fanout) {
+  if (fanout == 0) {
+    return 0.0;
+  }
+  double cellCap = NLDM::cellOutputCapEstimation(cell, fanout);
+  double fanoutCap = (wlm == nullptr) ? cellCap :
+                      cellCap + wlm->getFanoutCapacitance(fanout);
+  return fanoutCap;
+}
+
 inline double getDelay(const library::StandardCell &cell,
-                       double inputTransTime, double outputCap) {
-  return NLDM::delayEstimation(cell, inputTransTime, outputCap);
+                       const CellContext &cellContext,
+                       const library::SCLibrary &library) {
+  const auto maxInputByDelay = std::max_element(
+    cellContext.inputs.begin(),
+    cellContext.inputs.end(),
+    [](const CellContext::LinkedInputCell &a,
+        const CellContext::LinkedInputCell &b) {
+          return (*a.costs)[criterion::DELAY] < (*b.costs)[criterion::DELAY];
+    });
+  //TODO: just taking maximum input delay for now. Should be smarter about this
+  double inputDelay = maxInputByDelay != cellContext.inputs.end() ?
+                      (*maxInputByDelay->costs)[criterion::DELAY] :
+                      0.0;
+  // TODO: properly check that deafult wlm is set
+  const library::WireLoadModel *wlm = library.getProperties().defaultWLM;
+  double fanoutCap = getEstimatedOutCapacitance(cell, wlm, cellContext.fanout);
+  auto estimatedSDC = NLDM::cellOutputSDEstimation(cell, inputDelay, fanoutCap);
+  return estimatedSDC.delay;
 }
 
 inline double getArrivalTime(model::SubnetID subnetID,
-                            const library::SCLibrary &library) {
-  int timingSense = 0;
+                             const library::SCLibrary &library) {
   std::unordered_map<uint64_t, double> arrivalMap, delayMap;
 
   double maxArrivalTime = 0;
-  double capacitance = 0;
+  // TODO: properly check that deafult wlm is set
   const library::WireLoadModel *wlm = library.getProperties().defaultWLM;
 
   auto entries = model::Subnet::get(subnetID).getEntries();
-  for (uint64_t i = 0; i < entries.size(); ++i) {
-    if (!shouldSkipCell(entries[i].cell)) {
-      double delay = 0, arrival = 0;
-      for (const auto& link : entries[i].cell.link) {
-        if (delayMap.count(link.idx)) {
-          delay = std::max(delay, delayMap[link.idx]);
-          arrival = std::max(arrival, arrivalMap[link.idx]);
-        }
-      }
-
-      size_t outNum = entries[i].cell.getOutNum();
-      
-      /// TODO: get "capacitance" from inputs of next cells
-      // TODO: properly check that deafult wlm is set
-      double fanoutCap = (wlm == nullptr) ? capacitance :
-                          wlm->getFanoutCapacitance(outNum) + capacitance;
-      double slew = 0;
-
-      const auto *cellPtr = library.getCellPtr(entries[i].cell.getTypeID());
-      assert(cellPtr != nullptr);
-      NLDM::delayEstimation(*cellPtr, delay, fanoutCap,
-                            timingSense, slew, delay, capacitance);
-
-      arrivalMap[i] = slew + arrival;
-      delayMap[i] = slew;
-
-      maxArrivalTime = std::max(maxArrivalTime, arrivalMap[i]);
+  for (uint64_t i = 0; i < entries.size(); i += 1 + entries[i].cell.more) {
+    if (shouldSkipCell(entries[i].cell)) {
+      continue;
     }
-    i += entries[i].cell.more;
+    double delay = 0, arrival = 0;
+    for (const auto& link : entries[i].cell.link) {
+      if (delayMap.count(link.idx)) {
+        delay = std::max(delay, delayMap[link.idx]);
+        arrival = std::max(arrival, arrivalMap[link.idx]);
+      }
+    }
+    const auto *cellPtr = library.getCellPtr(entries[i].cell.getTypeID());
+    assert(cellPtr != nullptr);
+
+    size_t fanout = entries[i].cell.getOutNum();
+    
+    /// TODO: can do proper calculations instead of estimation
+    double fanoutCap = getEstimatedOutCapacitance(*cellPtr, wlm, fanout);
+    auto estimatedSD = NLDM::cellOutputSDEstimation(*cellPtr, delay,
+                                                      fanoutCap);
+
+    arrivalMap[i] = estimatedSD.slew + arrival;
+    delayMap[i] = estimatedSD.delay + delay;
+
+    maxArrivalTime = std::max(maxArrivalTime, delayMap[i]);
   }
   return maxArrivalTime;
 }
 
 inline criterion::CostVector getPPA(
     const model::CellTypeID cellTypeID,
-    const techmapper::SubnetTechMapperBase::CellContext &cellContext,
+    const CellContext &cellContext,
     const context::TechMapContext &techmapContext) {
   const auto &cellType = model::CellType::get(cellTypeID);
   const auto name = cellType.getName();
@@ -123,8 +148,9 @@ inline criterion::CostVector getPPA(
   if (cellPtr == nullptr) {
     assert(false && "calling getPPa for nonexistent CellTypeID");
   }
+
   const auto area = getArea(cellType);
-  const auto delay = getDelay(*cellPtr, 0, 0); // TODO input transition time and output capacitance should be taken from Context
+  const auto delay = getDelay(*cellPtr, cellContext, *techmapContext.library);
   const auto power = getLeakagePower(*cellPtr);
 
   return criterion::CostVector(area, delay, power);

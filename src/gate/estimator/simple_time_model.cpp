@@ -18,300 +18,174 @@
 
 namespace eda::gate::estimator {
 
-/// Interpolation
-double NLDM::getLutValue(const std::vector<double> &lutValues,
-                        DataTimingContext &context,
-                        const double x1, const double x2,
-                        const double y1, const double y2) {
-  if (!context.interpolate) {
-    return lutValues[context.index.ind1 * context.variablesCount + context.index.ind2];
-  }
-
-  /// Properties
-  double x0 = context.inputTransTime;
-  double y0 = context.outputTotalCap;
-  double x01 = 0, x20 = 0, y01 = 0, y20 = 0;
-  double T00 = 0, T11 = 0, T12 = 0, T21 = 0, T22 = 0;
-
-  /// Estimation
-  x01 = (x0 - x1) / (x2 - x1);
-  x20 = (x2 - x0) / (x2 - x1);
-  y01 = (y0 - y1) / (y2 - y1);
-  y20 = (y2 - y0) / (y2 - y1);
-
-  T11 = lutValues[context.index.back1 * context.variablesCount + context.index.back2];
-  T12 = lutValues[context.index.back1 * context.variablesCount + context.index.front2];
-  T21 = lutValues[context.index.front1 * context.variablesCount + context.index.back2];
-  T22 = lutValues[context.index.front1 * context.variablesCount + context.index.front2];
-
-  /// Result value
-  T00 = x20*y20*T11 + x20*y01*T12 + x01*y20*T21 + x01*y01*T22;
-  return T00;
+static double linearInterpolation(double val1, double val2,
+                                  double x1, double x2, double xt) {
+  double r10 = (x2 - xt) / (x2 - x1) * val1;
+  double r11 = (xt - x1) / (x2 - x1) * val2;
+  double res = r10 + r11;
+  return res;
 }
 
-void NLDM::pinTimingEstimator(//const std::vector<const LookupTable*> &luts,
-                              const std::vector<const library::LUT*> &luts,
-                              DataTimingContext &context) {
+// Bilinear interpolation
+//    │                     
+//    │Q12|     .R2    |Q22 
+// y2 │---┼------------┼----
+//    │   |     .      |    
+//    │   |     .      |    
+// yt │...|............|... 
+//    │   |     .      |    
+//    │   |     .      |    
+//    │   |     .      |    
+// y1 │---┼------------┼----
+//    │Q11|     .R1    |Q21 
+//    └─────────────────────
+//       x1     xt     x2   
 
-  //===-----------------------------------------------------------------===//
-  //  Properties
-  //===-----------------------------------------------------------------===//
-  std::vector<double> lutValues;
-  /// Values for interpolation
-  double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+static double bilinearInterpolation(double val11, double val12,
+                                    double val21, double val22,
+                                    double x1, double x2, double xt,
+                                    double y1, double y2, double yt) {
+#if 1 //optimized coefficient calculations
+  const double coef1 = (x2 - xt) / (x2 - x1);
+  const double coef2 = (xt - x1) / (x2 - x1);
+  double r1 = coef1 * val11 + coef2 * val21;
+  double r2 = coef1 * val12 + coef2 * val22;
+#else
+  double r1 = linearInterpolation(val11, val21, x1, x2, xt);
+  double r2 = linearInterpolation(val12, val22, x1, x2, xt);
+#endif
+  double p = linearInterpolation(r1, r2, y1, y2, yt);
+  return p;
+}
 
-  //===-----------------------------------------------------------------===//
-  //  Assign values from LookUp Tables
-  //===-----------------------------------------------------------------===//
-  if (luts[0] == nullptr) {
-    std::cerr << "Cell fall LUT is nullptr.\n";
-    assert(false);
-    return;
-  }
-  //===-----------------------------------------------------------------===//
-  //  Properties
-  //===-----------------------------------------------------------------===//
-  lutValues = luts[0]->values;
-  bool iterFlag = false;
-  //===-----------------------------------------------------------------===//
-  for (const auto &lutIndex : luts[0]->indexes) {
-    /// INTERPOLATION
-    if (std::find(lutIndex.begin(), lutIndex.end(),
-          context.inputTransTime) == std::end(lutIndex)) {
-      if (!iterFlag) {
-        /// Assign net_transition value
-        for (size_t i = 0; i < lutIndex.size(); ++i) {
-          if (lutIndex[i] < context.inputTransTime) {
-            context.index.back1 = i;
-            x1 = lutIndex[i];
-          }
-          else if (lutIndex[i] > context.inputTransTime) {
-            context.index.front1 = i;
-            x2 = lutIndex[i];
-            context.variablesCount = lutIndex.size();
-            iterFlag = true;
-            break;
-          }
-        }
-      }
-      else {
-        /// Assign output capacitance value
-        for (size_t i = 0; i < lutIndex.size(); ++i) {
-          if (lutIndex[i] < context.outputTotalCap) {
-            context.index.back2 = i;
-            y1 = lutIndex[i];
-          }
-          else if (lutIndex[i] > context.outputTotalCap) {
-            context.index.front2 = i;
-            y2 = lutIndex[i];
-            break;
-          }
-        }
-        bool tmpInterpolate = context.interpolate; // TODO
-        context.interpolate = true;
-        context.delayValues.push_back(
-              getLutValue(lutValues, context, x1, x2, y1, y2));
-        context.interpolate = tmpInterpolate;
-        break;
-      }
-    }
+static constexpr auto EPS10 = 10 * std::numeric_limits<double>::epsilon();
 
-    /// Assign found values
-    else if (std::find(lutIndex.begin(), lutIndex.end(),
-                          context.inputTransTime) != std::end(lutIndex)) {
-      if (!iterFlag) {
-        /// Assign net_transition value
-        for (size_t i = 0; i < lutIndex.size(); ++i) {
-          if (lutIndex[i] == context.inputTransTime) {
-            context.index.ind1 = i;
-            iterFlag = true;
-            break;
-          }
-        }
-      }
-      else {
-        /// Assign output capacitance value
-        for (size_t i = 0; i < lutIndex.size(); ++i) {
-          if (lutIndex[i] == context.outputTotalCap) {
-            context.index.ind2 = i;
-            context.variablesCount = lutIndex.size();
-            break;
-          }
-        }
-        context.delayValues.push_back(
-          lutValues[context.index.ind1 * context.variablesCount + context.index.ind2]);
-        break;
-      }
-    }
-  }
+inline bool eq_double(double a, double b) {
+    return std::fabs(a - b) < EPS10;
+}
+
+//return lower and uper iterators
+//if lower==end, then all elements are lesser than targetVal, {0,1} returned
+//if upper==begin, then all elements are greater than targetVal,
+// {end()-2, end()-1} returned 
+static inline std::pair<double, double>
+getInterpolationIndexes(const std::vector<double> &lutIndex, double targetVal) {
+  assert(lutIndex.size() >= 2); //TODO: need to handle this case
+  ssize_t lowID = -1, upID = -1;
+  auto doubleComp = [](double source, double value) {
+                      return source < value &&
+                             std::fabs(source - value) > EPS10;
+                    };
+  auto lower = std::lower_bound(lutIndex.begin(), lutIndex.end(),
+                                targetVal, doubleComp);
+  auto upper = std::upper_bound(lutIndex.begin(), lutIndex.end(),
+                                targetVal, doubleComp);
   
-
-  context.interpolate = (context.index.ind1 == -1) && (context.index.ind2 == -1);
-
-  for (size_t i = 1; i < 4; ++i) {
-    if (luts[i] == nullptr) {
-      std::cerr << "LUT is nullptr.\n";
-      assert(false);
-      return;
-    }
-    if (luts[i]->values.size() != 1) {
-      context.delayValues.push_back(
-        getLutValue(luts[i]->values, context, x1, x2, y1, y2));
+  if (upper == lutIndex.begin()) { //targetVal < lutIndex[0]
+    if (eq_double(*upper, targetVal)) { //targetVal == lutIndex[0]
+      lowID = 0; upID = 0;
     } else {
-      context.delayValues.push_back(0);
+      lowID = 0; upID = 1;
+    }
+  } else if (upper != lutIndex.end()) { // *lower < targetVal < *upper
+    if (eq_double(*lower, targetVal)) { // targetVal == *lower
+        lowID = std::distance(lutIndex.begin(), lower);
+        upID = lowID;
+    } else if (eq_double(*upper, targetVal)) { // targetVal == *upper
+        //TODO: this branch might be dead code
+        lowID = std::distance(lutIndex.begin(), upper);
+        upID = lowID;
+    } else { // *lower < targetVal < *upper
+      lowID = (lower == lutIndex.begin()) ? 
+              0 : std::distance(lutIndex.begin(), std::prev(lower));
+      upID = std::distance(lutIndex.begin(), upper);
+    }
+  } else { // lutIndex.back() < targetVal
+    if (lower != lutIndex.end() &&
+        eq_double(*lower, targetVal)) { // targetVal == *lower
+      lowID = lutIndex.size() - 1;
+      upID = lowID;
+    } else { // lutIndex.back() < targetVal
+      lowID = lutIndex.size() - 2;
+      upID = lutIndex.size() - 1;
     }
   }
+  return {lowID, upID};
 }
 
-void NLDM::pinFTimingEstimator(//const std::vector<const LookupTable*> &luts,
-                               const std::vector<const library::LUT*> &luts,
-                               DataTimingContext &context) {
-  //===-----------------------------------------------------------------===//
-  //  Properties
-  //===-----------------------------------------------------------------===//
-  std::vector<double> lutValues, result;
-  //===-----------------------------------------------------------------===//
-  for (size_t i = 0; i < 4; ++i) {
-    if (luts[i] != nullptr) {
-      lutValues = luts[i]->values;
-      result.push_back(
-        lutValues[context.index.ind1 * context.variablesCount + context.index.ind2]);
+static double getLut2Value(const library::LUT &lut,
+                           double targetX, double targetY) {
+  assert(lut.indexes.size() == 2);
+  double res = NAN;
+  const auto &indexX = lut.indexes[0];
+  const auto &indexY = lut.indexes[1];
+  auto [lowX, hiX] = getInterpolationIndexes(indexX, targetX);
+  auto [lowY, hiY] = getInterpolationIndexes(indexY, targetY);
+  if (lowX == hiX) {
+    if (lowY == hiY) { // found exact value in table
+      res = lut.getValue(lowX, lowY);
+    } else { // linear interpolation on Y
+      auto q1 = lut.getValue(lowX, lowY);
+      auto q2 = lut.getValue(lowX, hiY);
+      res = linearInterpolation(q1, q2, indexY[lowY], indexY[hiY], targetY);
     }
-    else {
-      /// Found cell has a "scalar" LUT
-      result.push_back(0);
+  } else {
+    if (lowY == hiY) { // linear interpolation on X
+      auto q1 = lut.getValue(lowX, lowY);
+      auto q2 = lut.getValue(hiX, lowY);
+      res = linearInterpolation(q1, q2, indexX[lowX], indexX[hiX], targetX);
+    } else { // bilinear interpolation on X Y
+      auto q11 = lut.getValue(lowX, lowY);
+      auto q21 = lut.getValue(hiX, lowY);
+      auto q12 = lut.getValue(lowX, hiY);
+      auto q22 = lut.getValue(hiX, hiY);
+      res = bilinearInterpolation(q11, q12, q21, q22,
+                                  indexX[lowX], indexX[hiX], targetX,
+                                  indexY[lowY], indexY[hiY], targetY);
     }
   }
-
-  context.delayValues = result;
+  return res;
 }
 
-void NLDM::pinITimingEstimator(//const std::vector<const LookupTable*> &luts,
-                               const std::vector<const library::LUT*> &luts,
-                               DataTimingContext &context) {
-  //===-----------------------------------------------------------------===//
-  //  Properties
-  //===-----------------------------------------------------------------===//
-  std::vector<double> lutValues, result;
-  double x1 = 0, x2 = 0,
-         y1 = 0, y2 = 0;
-  bool iterFlag = false;
-
-  assert(luts[0] != nullptr);
-  for (const auto &lutIndex : luts[0]->indexes) {
-  //for (const auto &it : (*luts[0])) {
-    if (!iterFlag) {
-      x1 = lutIndex[context.index.back1];
-      x2 = lutIndex[context.index.front1];
-      iterFlag = true;
-    }
-    else {
-      y1 = lutIndex[context.index.back2];
-      y2 = lutIndex[context.index.front2];
-    }
-  }
-  //===-----------------------------------------------------------------===//
-  bool tmpInterpolation = context.interpolate; // TODO
-  context.interpolate = true;
-  for (size_t i = 0; i < 4; ++i) {
-    if (luts[i] != nullptr) {
-      lutValues = luts[i]->values;
-      result.push_back(getLutValue(lutValues, context, x1, x2, y1, y2));
-    }
-    else {
-      /// Found cell has a "scalar" LUT
-      result.push_back(0);
-    }
-  }
-  context.interpolate = tmpInterpolation;
-  context.delayValues = result;
-}
-
-void NLDM::delayEstimation(const library::StandardCell &cell,
-                           const double inputTransTime,
-                           const double outputTotalCap,
-                           int &timingSense, double &slew, double &delay, double &cap) {
-  //===---------------------------------------------------------------===//
-  //  Properties
-  //===---------------------------------------------------------------===//
-  std::vector<double> cfall, crise, tfall, trise;
-  bool readyFlag = false;
-  int newTimingSense = timingSense;
-  DataTimingContext context{inputTransTime, outputTotalCap};
-
-  //===---------------------------------------------------------------===//
-  //  Delay and Slew estimation
-  //===---------------------------------------------------------------===//
-  cap = 0;
+/// NOTE: if fanout is 0 resulting capacitance is also 0
+double NLDM::cellOutputCapEstimation(const library::StandardCell &cell,
+                                     size_t fanout){
+  double capacitance = 0.0;
   std::for_each(cell.inputPins.begin(), cell.inputPins.end(),
     [&](const library::InputPin &pin) {
-      cap += pin.capacitance;
+      capacitance += pin.capacitance;
     });
   if (!cell.inputPins.empty()) {
-    cap = cap / cell.inputPins.size();
+    capacitance = (capacitance / cell.inputPins.size()) * fanout;
   }
-  for (const auto &pin : cell.outputPins) {
-    for (size_t i = 0; i < pin.delayFall.size(); ++i) {
-      std::vector<const library::LUT*> luts {
-        &pin.delayFall[i],
-        &pin.delayRise[i],
-        &pin.slewFall[i],
-        &pin.slewRise[i]};
-
-      if (!readyFlag) {
-        context.interpolate = true;
-        pinTimingEstimator(luts, context);
-        readyFlag = true;
-      } else {
-        if (!context.interpolate) {
-          pinFTimingEstimator(luts, context);
-        }
-        else {
-          pinITimingEstimator(luts, context);
-        }
-      }
-      cfall.push_back(context.delayValues[0]);
-      crise.push_back(context.delayValues[1]);
-      tfall.push_back(context.delayValues[2]);
-      trise.push_back(context.delayValues[3]);
-      newTimingSense = pin.timingSence[i];
-    }
-  }
-
-  if (crise.empty() || cfall.empty() || trise.empty() || tfall.empty()) {
-    delay = 0;
-    slew = 0;
-  } else {
-    if (timingSense == 0) {
-      delay = *max_element(crise.begin(), crise.end());
-      for (size_t i = 0; i < crise.size(); ++i)
-        if (crise[i] == delay) {
-          slew = (tfall[i] + trise[i])/2;
-          break;
-        }
-    }
-    else {
-      delay = *max_element(cfall.begin(), cfall.end());
-      for (size_t i = 0; i < cfall.size(); ++i)
-        if (cfall[i] == delay) {
-          slew = (tfall[i] + trise[i])/2;
-          break;
-        }
-    }
-  }
-  timingSense = newTimingSense;
+  return capacitance;
 }
 
-double NLDM::delayEstimation(const library::StandardCell &cell,
-                            const double inputTransTime,
-                            const double outputTotalCap) {
-  int timingSense = 0;
-  double slew = 0;
-  double delay = 0;
-  double cap = 0;
-  delayEstimation(cell, inputTransTime, outputTotalCap,
-    timingSense, slew, delay, cap);
-  return slew;
+NLDM::EstimatedSD NLDM::cellOutputSDEstimation(
+    const library::StandardCell &cell,
+    double inputTransTime,
+    double outputTotalCap) {
+  NLDM::EstimatedSD estimatedSDC {0.0, 0.0};
+
+  for (const auto &pin : cell.outputPins) {
+    size_t timingArcNum = pin.delayFall.size();
+    for (size_t i = 0; i < timingArcNum; ++i) {
+      //TODO: properly handle LUTs with other sizes
+      auto pinDelayFall = getLut2Value(pin.delayFall[i],
+                                       inputTransTime, outputTotalCap);
+      auto pinDelayRise = getLut2Value(pin.delayRise[i],
+                                       inputTransTime, outputTotalCap);
+      auto pinSlewFall = getLut2Value(pin.slewFall[i],
+                                      inputTransTime, outputTotalCap);
+      auto pinSlewRise = getLut2Value(pin.slewRise[i],
+                                      inputTransTime, outputTotalCap);
+      auto maxDelay = std::max(pinDelayFall, pinDelayRise);
+      auto maxSlew = std::max(pinSlewFall, pinSlewRise);
+      estimatedSDC.delay = std::max(estimatedSDC.delay, maxDelay);
+      estimatedSDC.slew = std::max(estimatedSDC.slew, maxSlew);
+    }
+  }
+  return estimatedSDC;
 }
 
 } // namespace eda::gate::estimator

@@ -126,6 +126,9 @@ namespace eda::gate::library {
     std::string name;
     std::vector<std::vector<double>> indexes;
     std::vector<double> values;
+    double getValue(size_t i, size_t j) const {
+      return values[i * indexes[0].size() + j];
+    }
   };
 
   struct Pin {

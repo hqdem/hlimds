@@ -16,28 +16,6 @@
 namespace eda::gate::estimator {
 
 //===---------------------------------------------------------------------===//
-// Structures, which contain data from LookUp-Tables
-//===---------------------------------------------------------------------===//
-/// Indexes from LUT
-struct Index {
-  std::size_t back1 = 0, front1 = 0,
-              back2 = 0, front2 = 0;
-  int ind1 = -1, ind2 = -1;
-};
-
-/// Struct contains timingInfo from LUTS
-struct DataTimingContext {
-  std::vector<double> delayValues = {};
-  std::size_t variablesCount = 7;
-  bool interpolate = true;
-  Index index;
-  double inputTransTime;
-  double outputTotalCap;
-  DataTimingContext(double inputTransTime, double outputTotalCap) :
-    inputTransTime(inputTransTime), outputTotalCap(outputTotalCap) {}
-};
-
-//===---------------------------------------------------------------------===//
 // NLDM
 //===---------------------------------------------------------------------===//
 
@@ -49,39 +27,28 @@ class NLDM {
 public:
   virtual ~NLDM() = default;
 
-private:
-  static double getLutValue(const std::vector<double>& lut_values,
-                    DataTimingContext &context,
-                    const double x1, const double x2,
-                    const double y1, const double y2);
+  //represents estimated values of Slew and Delay for cell as a whole
+  struct EstimatedSD {
+    double slew = NAN;
+    double delay = NAN;
+  };
 
-  static void pinTimingEstimator(const std::vector<const library::LUT*> &luts,
-                          DataTimingContext &context);
-
-  static void pinFTimingEstimator(const std::vector<const library::LUT*> &luts,
-                           DataTimingContext &context);
-
-  static void pinITimingEstimator(const std::vector<const library::LUT*> &luts,
-                           DataTimingContext &context);
-
-public:
-  /*
-   *  delayEstimation uses Library to look for
-   *  the concrete cell's timing values.
-   *  timingSense - Positive or Negative unate (rise or fall)
-   *  slew - trasition time
-   *  delay - cell's delay
-   */
-  static void delayEstimation(
+  /// @brief 
+  /// @param cell from SCLibrary
+  /// @param fanout amount of output links
+  /// @return 
+  static double cellOutputCapEstimation(const library::StandardCell &cell,
+                                        size_t fanout);
+  /// @brief Rough estimation of cell Slew and Delay.
+  /// @param cell from SCLibrary
+  /// @param inputTransTime single delay value that is assumed for each input pin.
+  /// @param outputTotalCap single output capacitance that is assumed for each output pin.
+  /// @return Slew and Delay calculated as maximum values among rise and fall
+  /// of each timing arc.
+  static EstimatedSD cellOutputSDEstimation(
     const library::StandardCell &cell,
-    const double inputTransTime,
-    const double outputTotalCap,
-    int &timingSense, double &slew, double &delay, double &cap);
-
-  static double delayEstimation(
-    const library::StandardCell &cell,
-    const double inputTransTime,
-    const double outputTotalCap);
+    double inputTransTime,
+    double outputTotalCap);
 };
 
 

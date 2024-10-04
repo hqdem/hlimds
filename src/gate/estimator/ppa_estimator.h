@@ -76,6 +76,8 @@ inline double getArrivalTime(model::SubnetID subnetID,
 
   double maxArrivalTime = 0;
   double capacitance = 0;
+  const library::WireLoadModel *wlm = library.getProperties().defaultWLM;
+
   auto entries = model::Subnet::get(subnetID).getEntries();
   for (uint64_t i = 0; i < entries.size(); ++i) {
     if (!shouldSkipCell(entries[i].cell)) {
@@ -88,9 +90,12 @@ inline double getArrivalTime(model::SubnetID subnetID,
       }
 
       size_t outNum = entries[i].cell.getOutNum();
-      WLM wlm; // TODO
-      double fanoutCap = wlm.getFanoutCap(outNum) + capacitance;
-      double slew;
+      
+      /// TODO: get "capacitance" from inputs of next cells
+      // TODO: properly check that deafult wlm is set
+      double fanoutCap = (wlm == nullptr) ? capacitance :
+                          wlm->getFanoutCapacitance(outNum) + capacitance;
+      double slew = 0;
 
       const auto *cellPtr = library.getCellPtr(entries[i].cell.getTypeID());
       assert(cellPtr != nullptr);

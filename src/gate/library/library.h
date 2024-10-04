@@ -20,6 +20,8 @@ public:
 
   struct SCLibraryProperties {
     uint maxArity = 0;
+    std::optional<WireLoadSelection> wlmSelection;
+    const WireLoadModel* defaultWLM = nullptr;
     const StandardCell *cheapNegCell = nullptr;
     const StandardCell *cheapOneCell = nullptr;
     const StandardCell *cheapZeroCell = nullptr;  
@@ -33,6 +35,9 @@ public:
 
   void addCells(std::vector<StandardCell> &&cells);
   void addTemplates(std::vector<LutTemplate> &&templates);
+  void addWLMs(std::vector<WireLoadModel> &&wlms);
+  void addProperties(const std::string &defaultWLMsName,
+                     WireLoadSelection &&selection);
 
   //Accesors for existing methods start
   const StandardCell* getCellPtr(const model::CellTypeID &cellTypeID) const;
@@ -41,10 +46,13 @@ public:
   const std::vector<StandardCell>& getCombCells() const {
     return combCells_;
   }
+  const std::vector<WireLoadModel> & getWLMs() const {
+    return wires_;
+  };
   const std::vector<LutTemplate> & getTemplates() const {
     return templates_;
   };
-  const SCLibraryProperties& getProperties() const {
+  const SCLibraryProperties & getProperties() const {
     return properties_;
   };
 

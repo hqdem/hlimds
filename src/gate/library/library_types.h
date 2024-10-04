@@ -17,11 +17,16 @@
 #include <optional>
 
 namespace eda::gate::library {
-  enum class SignalState {
-    to0 = 0,
-    to1
-  };
-  
+ 
+  struct WireLoadSelection {
+      struct WireLoadFromArea {
+        double leftBound = 0;
+        double rightBound = 0;
+        std::string wlmName = "";
+      };
+      std::vector<WireLoadFromArea> wlmFromArea;
+    };
+
   struct InputPin;
   struct OutputPin;
 
@@ -40,12 +45,29 @@ namespace eda::gate::library {
   };
 
   struct WireLoadModel {
-    model::CellTypeID wireTypeID;
+    struct FanoutLength {
+      size_t fanoutCount = 0;
+      double length = 0;
+    };
+    std::string name;
     /// @brief resistance, capacitance, extrapolation slope
     double resistance = 0.0;
     double capacitance = 0.0;
     double slope = 0.0;
-    std::vector<std::pair<uint, double>> wireLength;
+    std::vector<FanoutLength> wireLength;
+    
+    double getFanoutLength(size_t fanoutCount) const {
+      assert(fanoutCount > 0);
+      if (fanoutCount > wireLength.size()) {
+        return slope * (fanoutCount - wireLength.size()) * 
+               wireLength.back().length;
+      }
+      return wireLength[fanoutCount - 1].length;
+    };
+
+    double getFanoutCapacitance(size_t fanoutCount) const {
+      return getFanoutLength(fanoutCount) * capacitance;
+    };
   };
 
   struct LutTemplate {

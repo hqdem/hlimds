@@ -10,6 +10,8 @@
 
 #include "gate/estimator/ppa_estimator.h"
 
+#include <iostream>
+
 namespace eda::gate::techmapper {
 
 inline void printStatistics(model::SubnetID subnetID,

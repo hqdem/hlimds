@@ -13,7 +13,43 @@ namespace eda::gate::library {
 
 using CellTypeID = model::CellTypeID;
 
-void SCLibrary::addCells(std::vector<StandardCell> &&cells) {
+bool SCLibrary::checkCellCollisions(const std::vector<StandardCell> &cells) {
+  for (const auto &cell : cells) {
+    if (auto res = collisions_.cellNames.insert(cell.name);
+        res.second == false) {
+      throw std::runtime_error(
+        std::string("Cell name collision for: ") + cell.name);
+    return true;
+    }
+  }
+  return false;
+}
+
+bool SCLibrary::checkTemplateCollisions(const std::vector<LutTemplate> &templates) {
+  for (const auto &tmpl : templates) {
+    if (auto res = collisions_.templateNames.insert(tmpl.name);
+        res.second == false) {
+      throw std::runtime_error(
+        std::string("Template name collision for: ") + tmpl.name);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool SCLibrary::checkWLMCollisions(const std::vector<WireLoadModel> &wlms) {
+  for (const auto &wlm : wlms) {
+    if (auto res = collisions_.wlmNames.insert(wlm.name);
+        res.second == false) {
+      throw std::runtime_error(
+        std::string("WLM name collision for: ") + wlm.name);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool SCLibrary::addCells(std::vector<StandardCell> &&cells) {
   for (auto &cell : cells) {
     if (cell.inputPins.size() < 8) { // FIXME: kitty's pcanonization doesn't support in>7
       internalLoadCombCell(std::move(cell));
@@ -22,17 +58,28 @@ void SCLibrary::addCells(std::vector<StandardCell> &&cells) {
   findCheapestCells();
   addSuperCells();
   fillSearchMap();
+  return true;
 }
 
-void SCLibrary::addTemplates(std::vector<LutTemplate> &&templates) {
-  templates_ = std::move(templates);
+bool SCLibrary::addTemplates(std::vector<LutTemplate> &&templates) {
+  if (templates_.empty()) {
+    templates_ = std::move(templates);
+  } else {
+    templates_.insert(templates_.end(), templates.begin(), templates.end());
+  }
+  return true;
 }
 
-void SCLibrary::addWLMs(std::vector<WireLoadModel> &&wlms) {
-  wires_ = std::move(wlms);
+bool SCLibrary::addWLMs(std::vector<WireLoadModel> &&wlms) {
+  if (wires_.empty()) {
+    wires_ = std::move(wlms);
+  } else {
+    wires_.insert(wires_.end(), wlms.begin(), wlms.end());
+  }
+  return true;
 }
 
-void SCLibrary::addProperties(const std::string &defaultWLMsName,
+bool SCLibrary::addProperties(const std::string &defaultWLMsName,
                               WireLoadSelection &&selection) {
   for (const auto &wlm : wires_) {
     if (wlm.name == defaultWLMsName) {
@@ -41,6 +88,7 @@ void SCLibrary::addProperties(const std::string &defaultWLMsName,
     }
   }
   properties_.wlmSelection = std::move(selection);
+  return true;
 }
 
 void SCLibrary::fillSearchMap() {

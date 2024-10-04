@@ -89,17 +89,21 @@ bool checkLibParser2(std::string libertyPath) {
     [&]{return selectAllCellsAsShallowCopyVal(library, 0);});
   SCLibraryIndex<SelectedTypeIsTemplPtr> index4 (
     [&]{return selectAllTemplsAsPtrs(library);});
-  for(auto cell : index1) {
+  for(const auto cell : index1) {
     std::cout << gate::model::CellType::get(cell->cellTypeID).getName()
               << std::endl;
   }
-  for(auto &templ : index4) {
-    std::cout << "Template:\n";
-    for (auto &var: templ->variables) {
-      std::cout << "Variable ID: " << std::setw(2)
-                << static_cast<int>(var.nameID) << " | Values: ";
-      for (auto &val : var.values) {
-        std::cout << val << " ";
+  for(const auto &templ : index4) {
+    std::cout << "Template: " << templ->name << "\n";
+    for (const auto &var : templ->variables) {
+      std::cout << "Variable ID: " << static_cast<int>(var) << "\n";
+    }
+    std::cout << "Indexes:\n";
+    size_t i = 0;
+    for (auto &id : templ->indexes) {
+      std::cout << "[" << i++ << "]: ";
+      for (auto val : id) {
+        std::cout << val << ", ";
       }
       std::cout <<"\n";
     }

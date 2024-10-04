@@ -243,8 +243,14 @@ void NLDM::delayEstimation(const library::StandardCell &cell,
   //  Delay and Slew estimation
   //===---------------------------------------------------------------===//
   cap = 0;
+  std::for_each(cell.inputPins.begin(), cell.inputPins.end(),
+    [&](const library::InputPin &pin) {
+      cap += pin.capacitance;
+    });
+  if (!cell.inputPins.empty()) {
+    cap = cap / cell.inputPins.size();
+  }
   for (const auto &pin : cell.outputPins) {
-    cap += pin.capacitance;
     for (size_t i = 0; i < pin.delayFall.size(); ++i) {
       std::vector<const library::LUT*> luts {
         &pin.delayFall[i],

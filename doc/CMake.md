@@ -6,7 +6,7 @@ If you prefer to install CMake as package, please follow this [guide](https://ap
 
 ## Building from sources
 
-To build CMake 3.82.1 from sources, do the following:
+To build CMake 3.28.1 from sources, do the following:
 
 ```shell
 sudo apt install tar wget

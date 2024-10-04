@@ -272,37 +272,11 @@ void NetPrinterVerilog::onInterfaceEnd(std::ostream &out) {
 }
 
 void NetPrinterVerilog::onType(std::ostream &out, const CellType &cellType) {
-  const auto symbol = cellType.getSymbol();
-  switch(symbol & ~FLGMASK) {
-  case MAJ:      printMajType(out, cellType);
-                 out << "\n";
-                 break;
-  case DFF:      printDffType(out, cellType);
-                 out << "\n";
-                 break;
-  case sDFF:     printSDffType(out, cellType);
-                 out << "\n";
-                 break;
-  case aDFF:     printADffType(out, cellType);
-                 out << "\n";
-                 break;
-  case DFFrs:    printDffRsType(out, cellType);
-                 out << "\n";
-                 break;
-  case DLATCH:   printDLatchType(out, cellType);
-                 out << "\n";
-                 break;
-  case aDLATCH:  printADLatchType(out, cellType);
-                 out << "\n";
-                 break;
-  case DLATCHrs: printDLatchRsType(out, cellType);
-                 out << "\n";
-                 break;
-  case LATCHrs:  printLatchRsType(out, cellType);
-                 out << "\n";
-                 break;
-  default:       /* print nothing */
-                 break;
+  static constexpr auto BuiltInCellTypeDefinition = false;
+
+  if constexpr (BuiltInCellTypeDefinition) {
+    printVerilogCellType(out, cellType);
+    out << "\n";
   }
 }
 

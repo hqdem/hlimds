@@ -831,7 +831,7 @@ inline CellTypeID makeHardType(CellSymbol symbol,
   /* Short cell type identifier */ \
   extern const uint32_t CELL_TYPE_SID(symbol);
 
-#define UTOPIA_FOREACH_GATE(s) DECLARE_CELL_TYPE_ID(s)
+#define UTOPIA_FOREACH_GATE(S) DECLARE_CELL_TYPE_ID(S)
 #include "celltype_gates.inc"
 
 #define UTOPIA_FOREACH_GATE(S) \

@@ -8,21 +8,20 @@
 
 #pragma once
 
-#include "gate/model/printer/dataflow_printer.h"
+#include "gate/model/printer/net_printer_verilog_lib.h"
 #include "shell/shell.h"
 
 #include <ostream>
 
 namespace eda::shell {
 
-struct WriteDataflowCommand final : public UtopiaCommand {
-  WriteDataflowCommand(): UtopiaCommand(
-      "write_dataflow", "Writes the dataflow graph to a DOT file") {
+struct WriteVerilogLibraryCommand final : public UtopiaCommand {
+  WriteVerilogLibraryCommand(): UtopiaCommand(
+      "write_verilog_lib", "Writes the Verilog cell library") {
     app.allow_extras();
   }
 
   int run(Tcl_Interp *interp, int argc, const char *argv[]) override {
-    UTOPIA_SHELL_ERROR_IF_NO_DESIGN(interp);
     UTOPIA_SHELL_PARSE_ARGS(interp, app, argc, argv);
     UTOPIA_SHELL_ERROR_IF_NO_FILES(interp, app);
 
@@ -32,7 +31,7 @@ struct WriteDataflowCommand final : public UtopiaCommand {
     }
 
     std::ofstream out(fileName);
-    out << *getDesign();
+    eda::gate::model::printVerilogLibrary(out);
 
     return TCL_OK;
   }

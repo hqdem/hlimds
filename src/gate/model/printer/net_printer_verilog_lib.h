@@ -14,14 +14,17 @@
 
 namespace eda::gate::model {
 
-void printMajType(std::ostream &out, const CellType &type);
-void printDffType(std::ostream &out, const CellType &type);
-void printSDffType(std::ostream &out, const CellType &type);
-void printADffType(std::ostream &out, const CellType &type);
-void printDffRsType(std::ostream &out, const CellType &type);
-void printDLatchType(std::ostream &out, const CellType &type);
-void printADLatchType(std::ostream &out, const CellType &type);
-void printDLatchRsType(std::ostream &out, const CellType &type);
-void printLatchRsType(std::ostream &out, const CellType &type);
+void printVerilogMajType(std::ostream &out, const CellType &type);
+void printVerilogDffType(std::ostream &out, const CellType &type);
+void printVerilogSDffType(std::ostream &out, const CellType &type);
+void printVerilogADffType(std::ostream &out, const CellType &type);
+void printVerilogDffRsType(std::ostream &out, const CellType &type);
+void printVerilogDLatchType(std::ostream &out, const CellType &type);
+void printVerilogADLatchType(std::ostream &out, const CellType &type);
+void printVerilogDLatchRsType(std::ostream &out, const CellType &type);
+void printVerilogLatchRsType(std::ostream &out, const CellType &type);
+
+void printVerilogCellType(std::ostream &out, const CellType &type);
+void printVerilogLibrary(std::ostream &out);
 
 } // namespace eda::gate::model

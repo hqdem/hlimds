@@ -143,12 +143,27 @@ inline int printFile(Tcl_Interp *interp, const std::string &filePath) {
   return TCL_OK;
 }
 
-inline bool createDirectories(const std::string &dir) {
+inline bool createDirs(const std::string &dir) {
   if (std::filesystem::exists(dir)) {
     return true;
   }
   std::error_code error;
   return std::filesystem::create_directories(dir, error);
+}
+
+inline int createParentDirs(Tcl_Interp *interp, const std::string &fileName) {
+  std::filesystem::path filePath = fileName;
+
+  UTOPIA_SHELL_ERROR_IF(interp, !filePath.has_filename(),
+      "path does not contain a file name");
+
+  const std::string dir = filePath.remove_filename();
+  if (!dir.empty()) {
+    UTOPIA_SHELL_ERROR_IF(interp, !createDirs(dir),
+        fmt::format("cannot create directory '{}'", dir));
+  }
+
+  return TCL_OK;
 }
 
 //===----------------------------------------------------------------------===//

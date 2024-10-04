@@ -26,6 +26,7 @@
 #include "shell/command/version.h"
 #include "shell/command/write_dataflow.h"
 #include "shell/command/write_design.h"
+#include "shell/command/write_verilog_lib.h"
 #include "shell/shell.h"
 #include "util/env.h"
 
@@ -106,6 +107,7 @@ UtopiaShell::UtopiaShell() {
   addCommand(std::make_unique<WriteDebugCommand>());
   addCommand(std::make_unique<WriteDotCommand>());
   addCommand(std::make_unique<WriteVerilogCommand>());
+  addCommand(std::make_unique<WriteVerilogLibraryCommand>());
 }
 
 void UtopiaShell::printTitle(Tcl_Interp *interp) {

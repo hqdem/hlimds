@@ -76,20 +76,8 @@ struct WriteDesignCommand : public UtopiaCommand {
     UTOPIA_SHELL_ERROR_IF_NO_FILES(interp, app);
 
     const std::string fileName = app.remaining().at(0);
-    std::filesystem::path filePath = fileName;
-
-    UTOPIA_SHELL_ERROR_IF(interp, !filePath.has_filename(),
-        "path does not contain a file name");
-
-    if (subnetSplitOption->count() == 0 && subnetIndexOption->count() != 0) {
-      UTOPIA_SHELL_ERROR_IF(interp, subnetIndex >= getDesign()->getSubnetNum(),
-           fmt::format("subnet {} does not exist", subnetIndex));
-    }
-
-    const std::string dir = filePath.remove_filename();
-    if (!dir.empty()) {
-      UTOPIA_SHELL_ERROR_IF(interp, !createDirectories(dir),
-          fmt::format("cannot create directory '{}'", dir));
+    if (auto status = createParentDirs(interp, fileName); status != TCL_OK) {
+      return status;
     }
 
     if (subnetSplitOption->count() == 0) {

@@ -43,13 +43,13 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
 
   // when we generate digit as signed one, we need to save
   // one bit as zero, as it would be used as a sign bit
-  uint16_t valA = std::rand() % (1 << (sizeA));
+  uint16_t valA = std::rand() & ((1 << (sizeA)) - 1u);
   int32_t val = valA;
   for (uint8_t di = 0; di < sizeA; ++di, val >>= 1) {
     values[di] = val & 1;
   }
 
-  uint16_t valB = std::rand() % (1 << (sizeB));
+  uint16_t valB = std::rand() & ((1 << (sizeB)) - 1u);
   val = valB;
   for (uint8_t dj = 0; dj < sizeB; ++dj, val >>= 1) {
     values[sizeA + dj] = val & 1;
@@ -83,7 +83,7 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
   if (res != resSimulated) {
     std::clog << valA << " " << valB << "; " << sizeA << " " << sizeB << '\n';
   }
-  return {res & mask, resSimulated & mask};
+  return { res, resSimulated };
 }
 
 TEST(Synthesizer, FullOutputLadnerFisherTestAdd) {
@@ -164,6 +164,24 @@ TEST(Synthesizer, WiderOutputLadnerFisherTestSub) {
       }
     }
   }
+}
+
+TEST(Synthesizer, SumTest6s_2s) {
+  auto result = simulateAdder(6u, 2u, 6u, false, true);
+
+  EXPECT_EQ(result.first, result.second);
+}
+
+TEST(Synthesizer, SubTest6u_2u) {
+  auto result = simulateAdder(2u, 6u, 7u, true);
+
+  EXPECT_EQ(result.first, result.second);
+}
+
+TEST(Synthesizer, SubTest6s_2s) {
+  auto result = simulateAdder(2u, 6u, 6u, true, true);
+
+  EXPECT_EQ(result.first, result.second);
 }
 
 TEST(Synthesizer, WiderOutputLadnerFisherTestSignedSum) {

@@ -39,8 +39,8 @@ model::SubnetID synthAddS(const model::CellTypeAttr &attr) {
 model::SubnetID synthAddU(const model::CellTypeAttr &attr) {
   model::SubnetBuilder builder;
 
-  const auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
-  const auto outSize = attr.getOutWidth(0);
+  auto sizeA = attr.getInWidth(0), sizeB = attr.getInWidth(1);
+  auto outSize = attr.getOutWidth(0);
 
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
   model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
@@ -87,8 +87,12 @@ model::SubnetID synthSubU(const model::CellTypeAttr &attr) {
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
   model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
 
+  if (sizeB < outSize && sizeB > sizeA) {
+    ++sizeB;
+  }
   const uint16_t maxSize = std::max(sizeA, sizeB);
-  inputsForB = twosComplement(builder, inputsForB, maxSize, false);
+  inputsForB =
+      twosComplement(builder, inputsForB, maxSize, false);
 
   builder.addOutputs(
       synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize, true));

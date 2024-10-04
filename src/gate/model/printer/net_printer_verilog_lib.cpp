@@ -116,7 +116,7 @@ void printDLatchType(std::ostream &out, const CellType &type) {
   // Q(t) = ENA(level=1) ? D : Q(t-1).
   out << "module " << type.getName()
       << "(output reg Q, input D, input ENA);\n";
-  out << "  always @(ENA) begin\n";
+  out << "  always @(*) begin\n";
   out << "    if (" << getEnaLevel(type) << "ENA)\n";
   out << "      Q <= D;\n";
   out << "  end\n";
@@ -128,7 +128,7 @@ void printADLatchType(std::ostream &out, const CellType &type) {
   // Q(t) = RST(level=1) ? 0 : (ENA(level=1) ? D : Q(t-1)).
   out << "module " << type.getName()
       << "(output reg Q, input D, input ENA, input RST);\n";
-  out << "  always @(ENA or RST) begin\n";
+  out << "  always @(*) begin\n";
   out << "    if (" << getRstLevel(type) << "RST)\n";
   out << "      Q <= " << getRstValue(type) << ";\n";
   out << "    else if(" << getEnaLevel(type) << "ENA)\n";
@@ -142,7 +142,7 @@ void printDLatchRsType(std::ostream &out, const CellType &type) {
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (ENA(level=1) ? D : Q(t-1))).
   out << "module " << type.getName()
       << "(output reg Q, input D, input ENA, input RST, input SET);\n";
-  out << "  always @(ENA or RST or SET) begin\n";
+  out << "  always @(*) begin\n";
   out << "    if (" << getRstLevel(type) << "RST)\n";
   out << "      Q <= 0;\n";
   out << "    else if(" << getSetLevel(type) << "SET)\n";

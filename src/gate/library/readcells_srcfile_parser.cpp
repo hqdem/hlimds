@@ -51,8 +51,9 @@ ReadCellsParser::ReadCellsParser(std::string filename) {
 
     readcells::AstParser parser(library_, tokParser_);
     parser.run(*ast);
+  } else {
+    throw std::runtime_error("Failed to open file: " + filename);
   }
-  //TODO: throw in else
 }
 
 static bool isIsolationCell(const readcells::AttributeList &cell) {
@@ -132,16 +133,16 @@ CSFProperties ReadCellsParser::extractProperties() {
 
 std::vector<LutTemplate> ReadCellsParser::extractTemplates() {
   std::vector<LutTemplate> templates;
-/* TODO: add this
-  for (const auto &luTempl : library_.getTemplates()) {
+  for (const auto *luTempl : library_.getTemplates()) {
     LutTemplate t;
-    for (const auto &it : luTempl) {
-      t.variables.push_back(
-          {static_cast<LutTemplate::Variable::NameID>(it.id), it.values});
+    t.name = luTempl->getName();
+    for (const auto &index : *luTempl) {
+      t.variables.push_back(LutTemplate::NameID(index.id));
+      t.indexes.push_back(
+          convert_vector<std::allocator<double>>(index.values));
     }
     templates.push_back(std::move(t));
   }
-*/
   return templates;
 }
 
@@ -184,29 +185,26 @@ static inline bool setLut(std::vector<lutReciever> &receiver,
   return false;
 }
 
-static bool parseInputPin(const readcells::AttributeList &pin,
-                         std::vector<InputPin> &inputPins) {
-  InputPin in;
-  in.name = pin.getName();
-  in.capacitance = pin.getFloatAttribute("capacitance", 0);
-  in.fallCapacitance = pin.getFloatAttribute("fall_capacitance", 0);
-  in.riseCapacitance = pin.getFloatAttribute("rise_capacitance", 0);
-  
-  //extracting optional PwrLUTs
+static bool parsePinCommonPart(const readcells::AttributeList &pin,
+                               library::Pin &commonPin) {
+  commonPin.name = pin.getName();
   const RCGetGroupPtr ipGroup = pin.getGroup("internal_power");
   if (ipGroup != nullptr) {
     for (const auto *swPwr : *ipGroup) {
-      if (swPwr == nullptr) {
-        continue;
-      }
-      //TODO: instead of assert it is better to check that groups size is <=1
-      assert(!in.powerFall.has_value());
-      assert(!in.powerRise.has_value());
-
-      setLut(in.powerFall, "fall_power", *swPwr);
-      setLut(in.powerRise, "rise_power", *swPwr);
+      setLut(commonPin.powerFall, "fall_power", *swPwr);
+      setLut(commonPin.powerRise, "rise_power", *swPwr);
     }
   }
+  return true;
+}
+
+static bool parseInputPin(const readcells::AttributeList &rcPin,
+                         std::vector<InputPin> &inputPins) {
+  InputPin in;
+  parsePinCommonPart(rcPin, in);
+  in.capacitance = rcPin.getFloatAttribute("capacitance", 0);
+  in.fallCapacitance = rcPin.getFloatAttribute("fall_capacitance", 0);
+  in.riseCapacitance = rcPin.getFloatAttribute("rise_capacitance", 0);
   inputPins.push_back(std::move(in));
   return true;
 }
@@ -221,16 +219,15 @@ static std::string getOutputPinStringFunction(
   return result;
 }
 
-static bool parseOutputPin(const readcells::AttributeList &pin,
+static bool parseOutputPin(const readcells::AttributeList &rcPin,
                           std::vector<OutputPin> &outputPins) {
   OutputPin out;
-  out.name = pin.getName();
-  out.capacitance = pin.getFloatAttribute("capacitance", 0);
-  out.maxCapacitance = pin.getFloatAttribute("max_capacitance", 0);
-  out.stringFunction = getOutputPinStringFunction(pin);
+  parsePinCommonPart(rcPin, out);
+  out.maxCapacitance = rcPin.getFloatAttribute("max_capacitance", 0);
+  out.stringFunction = getOutputPinStringFunction(rcPin);
 
   //extracting Timing LUTs
-  const RCGetGroupPtr timingGroup = pin.getGroup("timing");
+  const RCGetGroupPtr timingGroup = rcPin.getGroup("timing");
   if (timingGroup != nullptr) {
     for (const auto *timing : *timingGroup) {
       setLut(out.delayFall, "cell_fall", *timing);
@@ -241,14 +238,7 @@ static bool parseOutputPin(const readcells::AttributeList &pin,
         timing->getIntegerAttribute("timing_sense", 0));
     }
   }
-  //extracting PwrLUTs
-  const RCGetGroupPtr ipGroup = pin.getGroup("internal_power");
-  if (ipGroup != nullptr) {
-    for (const auto *swPwr : *ipGroup) {
-      setLut(out.powerFall, "fall_power", *swPwr);
-      setLut(out.powerRise, "rise_power", *swPwr);
-    }
-  }
+
   outputPins.push_back(std::move(out));
   return true;
 }

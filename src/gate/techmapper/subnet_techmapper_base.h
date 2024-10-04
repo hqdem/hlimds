@@ -39,8 +39,14 @@ public:
   };
 
   struct CellContext final {
+    struct LinkedInputCell {
+      const criterion::CostVector* costs;
+      model::CellTypeID techID;
+    };
+    //ADP characteristics of input linked cells (zero for subnet inputs)
+    std::vector<LinkedInputCell> inputs;
     /// Logic-level fanout.
-    uint16_t fanout{0};
+    size_t fanout{0};
   };
 
   using CutProvider =
@@ -171,6 +177,11 @@ protected:
     const auto j = cutMatches.emplace(cut, matchFinder(builder, cut));
     return j.first->second;
   }
+
+  void GetMatchInputs(
+    const Match &match,
+    const SubnetBuilderPtr &builder,
+    CellContext &cellContext);
 
   // Maximum number of tries for recovery.
   const uint16_t maxTries{3};

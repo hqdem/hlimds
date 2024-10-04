@@ -203,12 +203,34 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
   return newBuilder;
 }
 
+void SubnetTechMapperBase::GetMatchInputs(
+    const Match &match,
+    const SubnetBuilderPtr &builder,
+    CellContext &cellContext) {
+
+  cellContext.inputs.resize(match.links.size());
+  size_t inputNum = 0;
+  for (const auto &inputLink : match.links) {
+    const auto &linkedCell = builder->getCell(inputLink.idx);
+    if (linkedCell.isIn()) {
+      //TODO: shouldit be -1 for unitialized CellTypeID?
+      cellContext.inputs[inputNum++] = {&criterion::CostVector::Zero, -1};
+    } else if (space[inputLink.idx]->hasSolution()) {
+      const auto &bestSolution = space[inputLink.idx]->getBest();
+      cellContext.inputs[inputNum++] = 
+        {&bestSolution.vector, bestSolution.solution.typeID};
+    } else {
+      assert(false && "Space shuld have solution for entry ID");
+    }        
+  }
+}
+
 void SubnetTechMapperBase::findCellSolutions(
     const SubnetBuilderPtr &builder,
     const model::EntryID entryID,
     const optimizer::CutsList &cuts) {
   const auto &cell = builder->getCell(entryID);
-  const CellContext cellContext{static_cast<uint16_t>(cell.refcount)};
+  CellContext cellContext{{}, cell.refcount};
 
   for (const auto &cut : cuts) {
     assert(cut.rootID == entryID);
@@ -236,6 +258,7 @@ void SubnetTechMapperBase::findCellSolutions(
       assert((cut.isTrivial() && match.links.empty())
           || (match.links.size() == cut.size()));
 
+      GetMatchInputs(match, builder, cellContext);
       const auto cellCostVector = cellEstimator(
           match.typeID, cellContext, context.techMapContext);
       const auto costVector = cutAggregation + cellCostVector;

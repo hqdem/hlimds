@@ -16,6 +16,6 @@ tar xzf cmake-3.28.1.tar.gz
 rm -rf cmake-3.28.1.tar.gz
 cd cmake-3.28.1
 ./bootstrap
-make
+make -j$(nproc)
 sudo make install
 ```

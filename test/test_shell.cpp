@@ -190,7 +190,7 @@ static void testWriteNoSubnet(const std::string &format,
                               const std::string &file) {
   std::stringstream script;
   script << "read_graphml " << graphMl << ";"
-         << "write_" << format << " --subnet 2 "
+         << "write_" << format << " --subnet-index 2 "
          << output << file;
   test(script.str(), false);
 }
@@ -199,7 +199,16 @@ static void testWriteSubnet(const std::string &format,
                             const std::string &file) {
   std::stringstream script;
   script << "read_graphml " << graphMl << ";"
-         << "write_" << format << " --subnet 0 "
+         << "write_" << format << " --subnet-index 0 "
+         << output << file;
+  test(script.str(), true);
+}
+
+static void testWriteSubnets(const std::string &format,
+                             const std::string &file) {
+  std::stringstream script;
+  script << "read_graphml " << graphMl << ";"
+         << "write_" << format << " --subnet-split "
          << output << file;
   test(script.str(), true);
 }
@@ -219,6 +228,7 @@ TEST(UtopiaShell, WriteNoSubnet_##format) {\
 }\
 TEST(UtopiaShell, WriteSubnet_##format) {\
   testWriteSubnet(#format, file);\
+  testWriteSubnets(#format, file);\
 }
 
 TEST_WRITE_FORMAT(debug, "design.out")

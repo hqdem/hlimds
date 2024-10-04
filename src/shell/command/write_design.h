@@ -15,6 +15,20 @@
 
 namespace eda::shell {
 
+static inline const eda::gate::model::Subnet &getSubnet(
+    eda::gate::model::DesignBuilder &designBuilder, size_t i) {
+  const auto subnetID = designBuilder.getSubnetID(i);
+  return eda::gate::model::Subnet::get(subnetID);
+}
+
+static inline bool isTrivialSubnet(
+    eda::gate::model::DesignBuilder &designBuilder, size_t i) {
+  const auto &subnet = getSubnet(designBuilder, i);
+  return subnet.getInNum() == 1
+      && subnet.getOutNum() == 1
+      && subnet.getCellNum() == 2;
+}
+ 
 static inline void printDesign(
     std::ostream &out,
     eda::gate::model::Format format,
@@ -34,10 +48,9 @@ static inline void printSubnet(
     size_t i) {
   namespace model = eda::gate::model;
 
-  const auto subnetID = designBuilder.getSubnetID(i);
-  const auto &subnet = model::Subnet::get(subnetID);
-
+  const auto &subnet = getSubnet(designBuilder, i);
   const auto subnetName = fmt::format("{}_{}", designBuilder.getName(), i);
+
   model::print(out, format, subnetName, subnet, model::OBJ_NULL_ID);
 }
 
@@ -89,10 +102,12 @@ struct WriteDesignCommand : public UtopiaCommand {
       }
     } else {
       for (size_t i = 0; i < getDesign()->getSubnetNum(); ++i) {
+        if (isTrivialSubnet(*getDesign(), i)) continue;
+
         std::filesystem::path oldFilePath = fileName;
 
         const std::string oldExt = oldFilePath.extension();
-        const std::string newExt = fmt::format("{}{}", i, oldExt);
+        const std::string newExt = fmt::format("{:05}{}", i, oldExt);
 
         std::ofstream out(oldFilePath.replace_extension(newExt));
         printSubnet(out, format, *getDesign(), i);

@@ -188,7 +188,7 @@ TEST(SubnetViewToBddTest, MajTest) {
   BddMap x;
 
   BDD result = addInputsAndConvert(subnetBuilder, manager, x);
-  BDD test = x[0] & x[1] | x[0] & x[2] | x[1] & x[2];
+  BDD test = (x[0] & x[1]) | (x[0] & x[2]) | (x[1] & x[2]);
   EXPECT_TRUE(result == test);
 }
 

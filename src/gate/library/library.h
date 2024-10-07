@@ -25,7 +25,7 @@ public:
     const WireLoadModel* defaultWLM = nullptr;
     const StandardCell *cheapNegCell = nullptr;
     const StandardCell *cheapOneCell = nullptr;
-    const StandardCell *cheapZeroCell = nullptr;  
+    const StandardCell *cheapZeroCell = nullptr;
   };
 
   //movable, bot not copyable
@@ -76,7 +76,6 @@ private:
   void addSuperCell(
       const StandardCell &cellSrc,
       const StandardCell &cellToAdd,
-      void(*func)(std::string &in, const std::string &fIn),
       std::vector<StandardCell> &scs,
       uint output);
 

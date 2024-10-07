@@ -52,4 +52,35 @@ TEST(ComputeCare, SimpleTest) {
   checkComputeCare(Subnet::get(builder.make()), "1101", 2);
 }
 
+TEST(ComputeCare, ConstTest) {
+  // care = 0b10
+  using LinkList = Subnet::LinkList;
+
+  SubnetBuilder constBuilder;
+
+  const auto link1 = constBuilder.addCell(CellSymbol::ONE);
+  constBuilder.addOutput(link1);
+  const auto attrID = model::makeCellTypeAttr();
+  const auto cellTypeID = model::makeCellType(
+    model::CellSymbol::UNDEF,
+    "cell_one",
+    constBuilder.make(),
+    attrID,
+    model::CellProperties{1, 0, 1, 1, 0, 0, 0, 0, 0},
+    0,
+    1);
+
+  SubnetBuilder builder;
+
+  LinkList links = builder.addInputs(1);
+  links.push_back(builder.addCell(cellTypeID,{}));
+  links.push_back(builder.addCell(CellSymbol::AND, links[0], links[1]));
+
+  builder.addOutputs({links.back()});
+  const auto &subnet = Subnet::get(builder.make());
+  std::cout << subnet << std::endl;
+
+  EXPECT_EQ(kitty::to_binary(model::evaluate(subnet)[0]) , "10" );
+}
+
 } // namespace eda::gate::model

@@ -57,8 +57,17 @@ struct LecCommand final : public UtopiaCommand {
     const bool verdict = checker.areEquivalent(
         *getDesign(), point1, point2).equal();
 
-    const char *result = verdict ? "equivalent" : "not equivalent";
-    return makeResult(interp, result);
+    UTOPIA_SHELL_OUT << (verdict ? "Passed: " : "Failed: ")
+                     << point1
+                     << (verdict ? " == " : " != ")
+                     << point2
+                     << std::endl;
+
+    if (!verdict) {
+      return makeError(interp, "check failed");
+    }
+
+    return TCL_OK;
   }
 
   LecType method = LecType::SAT;

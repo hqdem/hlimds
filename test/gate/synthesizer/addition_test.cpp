@@ -86,6 +86,30 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
   return { res, resSimulated };
 }
 
+TEST(Synthesizer, SubTest2u_6u) {
+  auto result = simulateAdder(2u, 6u, 7u, true);
+
+  EXPECT_EQ(result.first, result.second);
+}
+
+TEST(Synthesizer, SubTest2u_2u) {
+  auto result = simulateAdder(2u, 2u, 7u, true);
+
+  EXPECT_EQ(result.first, result.second);
+}
+
+TEST(Synthesizer, SubTest2s_6s) {
+  auto result = simulateAdder(2u, 6u, 6u, true, true);
+
+  EXPECT_EQ(result.first, result.second);
+}
+
+TEST(Synthesizer, SubTest6u_2u) {
+  auto result = simulateAdder(6u, 2u, 7u, true);
+
+  EXPECT_EQ(result.first, result.second);
+}
+
 TEST(Synthesizer, FullOutputLadnerFisherTestAdd) {
   const uint8_t start = 1u;
   const uint8_t end = 16u;
@@ -168,18 +192,6 @@ TEST(Synthesizer, WiderOutputLadnerFisherTestSub) {
 
 TEST(Synthesizer, SumTest6s_2s) {
   auto result = simulateAdder(6u, 2u, 6u, false, true);
-
-  EXPECT_EQ(result.first, result.second);
-}
-
-TEST(Synthesizer, SubTest6u_2u) {
-  auto result = simulateAdder(2u, 6u, 7u, true);
-
-  EXPECT_EQ(result.first, result.second);
-}
-
-TEST(Synthesizer, SubTest6s_2s) {
-  auto result = simulateAdder(2u, 6u, 6u, true, true);
 
   EXPECT_EQ(result.first, result.second);
 }

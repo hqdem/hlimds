@@ -65,6 +65,7 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
                                              model::Subnet::LinkList inputsForA,
                                              model::Subnet::LinkList inputsForB,
                                              const uint16_t outSize,
-                                             bool useSign = false);
+                                             bool useSign = false,
+                                             bool isUnsignedSub = false);
 
 } // namespace eda::gate::synthesizer

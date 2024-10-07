@@ -87,15 +87,17 @@ model::SubnetID synthSubU(const model::CellTypeAttr &attr) {
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
   model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
 
-  if (sizeB < outSize && sizeB > sizeA) {
-    ++sizeB;
+  uint16_t maxSize = std::max(sizeA, sizeB);
+  if (maxSize < outSize) {
+    ++maxSize;
   }
-  const uint16_t maxSize = std::max(sizeA, sizeB);
-  inputsForB =
-      twosComplement(builder, inputsForB, maxSize, false);
+  
+  inputsForB = twosComplement(builder, inputsForB, maxSize, false);
 
-  builder.addOutputs(
-      synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize, true));
+  // inputsForB size is >= inputsForA, so if we want to use a small
+  // optimization, connected with unsigned subscription
+  builder.addOutputs(synthLadnerFisherAdd(builder, inputsForB, inputsForA,
+                                          outSize, true, true));
 
   return builder.make();
 }
@@ -110,7 +112,9 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
                                              model::Subnet::LinkList inputsForA,
                                              model::Subnet::LinkList inputsForB,
                                              const uint16_t outSize,
-                                             bool useSign) {
+                                             bool useSign,
+                                             bool isUnsignedSub) {
+  useSign |= isUnsignedSub;
   uint16_t sizeA = inputsForA.size(), sizeB = inputsForB.size();
 
   // the smallest is always in sizeB
@@ -255,6 +259,15 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
     if ((!isNotZero[gOutputs.size() - 1] || outSize > sizeA + 1) &&
         !useSign) {
       zeroCell = builder.addCell(model::CellSymbol::ZERO);
+    }
+    // this is a shorter variant for the unsigned subscription operation
+    else if (isUnsignedSub) {
+      zeroCell = builder.addCell(
+          model::CellSymbol::OR,
+          builder.addCell(model::CellSymbol::AND, outputGates.back(),
+                           inputsForA.back()),
+          builder.addCell(model::CellSymbol::AND, outputGates.back(),
+                           gOutputs.back()));
     }
     // if we need to add something to output and we have signed digit
     else if (useSign) {

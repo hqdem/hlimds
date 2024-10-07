@@ -81,18 +81,22 @@ inline double getEstimatedOutCapacitance(const library::StandardCell &cell,
 inline double getDelay(const library::StandardCell &cell,
                        const CellContext &cellContext,
                        const library::SCLibrary &library) {
+// FIXME: Looks like calculation of arrival time instead of delay.
+#if 0
   const auto maxInputByDelay = std::max_element(
-    cellContext.inputs.begin(),
-    cellContext.inputs.end(),
-    [](const CellContext::LinkedInputCell &a,
-        const CellContext::LinkedInputCell &b) {
+    cellContext.links.begin(),
+    cellContext.links.end(),
+    [](const CellContext::LinkInfo &a,
+        const CellContext::LinkInfo &b) {
           return (*a.costs)[criterion::DELAY] < (*b.costs)[criterion::DELAY];
     });
   //TODO: just taking maximum input delay for now. Should be smarter about this
-  double inputDelay = maxInputByDelay != cellContext.inputs.end() ?
+  double inputDelay = maxInputByDelay != cellContext.links.end() ?
                       (*maxInputByDelay->costs)[criterion::DELAY] :
                       0.0;
-  // TODO: properly check that deafult wlm is set
+#endif
+  double inputDelay = 0.0;
+  // TODO: properly check that default wlm is set
   const library::WireLoadModel *wlm = library.getProperties().defaultWLM;
   double fanoutCap = getEstimatedOutCapacitance(cell, wlm, cellContext.fanout);
   auto estimatedSDC = NLDM::cellOutputSDEstimation(cell, inputDelay, fanoutCap);

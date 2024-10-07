@@ -39,12 +39,12 @@ public:
   };
 
   struct CellContext final {
-    struct LinkedInputCell {
-      const criterion::CostVector* costs;
-      model::CellTypeID techID;
+    struct LinkInfo final {
+      model::CellTypeID typeID{model::OBJ_NULL_ID};
+      uint16_t output{0};
     };
-    //ADP characteristics of input linked cells (zero for subnet inputs)
-    std::vector<LinkedInputCell> inputs;
+    /// Information on the link types.
+    std::vector<LinkInfo> links{};
     /// Logic-level fanout.
     size_t fanout{0};
   };
@@ -167,6 +167,10 @@ protected:
                          const model::EntryID entryID,
                          const optimizer::CutsList &cuts);
 
+  CellContext getCellContext(const SubnetBuilderPtr &builder,
+                             const model::Subnet::Cell &cell,
+                             const Match &match);
+
   std::vector<Match> &getMatches(const model::SubnetBuilder &builder,
                                  const optimizer::Cut &cut) {
     const auto i = cutMatches.find(cut);
@@ -177,11 +181,6 @@ protected:
     const auto j = cutMatches.emplace(cut, matchFinder(builder, cut));
     return j.first->second;
   }
-
-  void GetMatchInputs(
-    const Match &match,
-    const SubnetBuilderPtr &builder,
-    CellContext &cellContext);
 
   // Maximum number of tries for recovery.
   const uint16_t maxTries{3};

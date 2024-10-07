@@ -56,15 +56,26 @@ protected:
   // called before executing the first test
   static void SetUpTestSuite() {
     auto &library = context.techMapContext.library;
+    const std::string delim = " ";
+    std::string paths(LIBPATH);
+    size_t pos;
 
-    eda::gate::library::ReadCellsParser parser(LIBPATH);
-    library = library::SCLibraryFactory::newLibraryUPtr(parser);
+    library = library::SCLibraryFactory::newLibraryUPtr();
 
-    if (library != nullptr) {
-      std::cout << "Loaded Liberty file: " << LIBPATH << std::endl;
-    } else {
-      throw std::runtime_error("File loading failed");
-    }
+    do {
+      pos = paths.find(delim);
+      std::string path = paths.substr(0, pos);
+      paths.erase(0, pos + delim.length());
+
+      eda::gate::library::ReadCellsParser parser(path);
+      library::SCLibraryFactory::fillLibrary(*library, parser);
+
+      if (library != nullptr) {
+        std::cout << "Loaded Liberty file: " << path << std::endl;
+      } else {
+        throw std::runtime_error("File loading failed");
+      }
+    } while(pos != std::string::npos);
   }
 
   // called after the last test

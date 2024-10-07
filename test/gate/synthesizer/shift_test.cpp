@@ -38,13 +38,13 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   Simulator simulator(result);
   Simulator::DataVector values(inputSize + shiftSize);
 
-  uint16_t valA = std::rand() % (1 << inputSize);
+  uint16_t valA = std::rand() & ((1 << inputSize) - 1);
   uint16_t val = valA;
   for (uint8_t di = 0; di < inputSize; ++di, val >>= 1) {
     values[di] = val & 1;
   }
 
-  uint16_t valB = std::rand() % (1 << shiftSize);
+  uint16_t valB = std::rand() & ((1 << shiftSize) - 1);
   val = valB;
   for (uint8_t dj = 0; dj < shiftSize; ++dj, val >>= 1) {
     values[inputSize + dj] = val & 1;
@@ -68,13 +68,25 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   }
 
   if (res != resSimulated) {
-    std::clog << inputSize + 0 << " " << (int)outSize << " " 
+    std::clog << (int)inputSize << " " << (int)outSize << " " 
               << res << " " << valA << " " << valB
               << " " << resSimulated << std::endl;
     // std::clog << Subnet::get(result.make());
   }
 
   return {res, resSimulated};
+}
+
+TEST(Synthesizer, ShiftLs5s_3s) {
+  auto [res, resSimulated] = simulateShift(5u, 3u, 13u, true, true);
+
+  EXPECT_EQ(res, resSimulated);
+}
+
+TEST(Synthesizer, ShiftRu4u_4u) {
+  auto [res, resSimulated] = simulateShift(4u, 4u, 4u, false, false);
+
+  EXPECT_EQ(res, resSimulated);
 }
 
 TEST(Synthesizer, ShiftLuTestLargerOutput) {

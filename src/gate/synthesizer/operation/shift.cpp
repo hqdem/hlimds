@@ -122,7 +122,7 @@ model::Subnet::LinkList synthDefaultShiftL(model::SubnetBuilder &builder,
     }
 
     // save from one-element or
-    if (used > 1) {
+    if (orOperations.size() > 1) {
       outputs[out] = builder.addCellTree(model::CellSymbol::OR, orOperations, 2);
     } else {
       outputs[out] = orOperations[0];

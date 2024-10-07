@@ -18,30 +18,30 @@ static inline TT getLinkTable(const Subnet::Link &link, const TTs &tables) {
   return link.inv ? ~table : table;
 }
 
-static inline TT evaluateIn(const Subnet &subnet, size_t i) {
-  auto table = kitty::create<TT>(subnet.getInNum());
+static inline TT evaluateIn(size_t i, size_t origNumVars) {
+  auto table = kitty::create<TT>(origNumVars);
   kitty::create_nth_var(table, i);
   return table;
 }
 
 static inline TT evaluateOut(const Subnet &subnet,
     const Subnet::Cell &cell, const TTs &tables) {
-  return getLinkTable(cell.link[0], tables); 
+  return getLinkTable(cell.link[0], tables);
 }
 
-static inline TT evaluateZero(const Subnet &subnet) {
-  auto table = kitty::create<TT>(subnet.getInNum());
+static inline TT evaluateZero(size_t origNumVars) {
+  auto table = kitty::create<TT>(origNumVars);
   kitty::clear(table);
   return table;
 }
 
-static inline TT evaluateOne(const Subnet &subnet) {
-  return ~evaluateZero(subnet);
+static inline TT evaluateOne(size_t origNumVars) {
+  return ~evaluateZero(origNumVars);
 }
 
 static inline TT evaluateBuf(const Subnet &subnet,
     const Subnet::Cell &cell, const TTs &tables) {
-  return getLinkTable(cell.link[0], tables); 
+  return getLinkTable(cell.link[0], tables);
 }
 
 static inline TT evaluateAnd(const Subnet &subnet,
@@ -72,8 +72,9 @@ static inline TT evaluateXor(const Subnet &subnet,
 }
 
 static inline TT evaluateMaj(const Subnet &subnet,
-    const Subnet::Cell &cell, const size_t i, const TTs &tables) {
-  auto table = evaluateZero(subnet);
+    const Subnet::Cell &cell, const size_t i,
+    const TTs &tables, size_t origNumVars) {
+  auto table = evaluateZero(origNumVars);
 
   std::vector<TT> args(cell.getInNum());
   for (size_t j = 0; j < cell.getInNum(); ++j) {
@@ -94,7 +95,8 @@ static inline TT evaluateMaj(const Subnet &subnet,
   return table;
 }
 
-static std::vector<TT> evaluate(const Subnet &subnet, TTs &tables) {
+static std::vector<TT> evaluate(const Subnet &subnet, TTs &tables,
+                                size_t origNumVars) {
   std::vector<TT> result;
   result.reserve(subnet.getOutNum());
 
@@ -104,7 +106,7 @@ static std::vector<TT> evaluate(const Subnet &subnet, TTs &tables) {
 
     const auto &cell = entries[i].cell;
     const auto &type = cell.getType();
- 
+
     if (type.isSubnet()) {
       const auto &impl = type.getSubnet();
       assert(impl.getInNum() == cell.getInNum());
@@ -117,20 +119,21 @@ static std::vector<TT> evaluate(const Subnet &subnet, TTs &tables) {
         subtables.push_back({getLinkTable(subnet.getLink(i, j), tables)});
       }
 
-      tables.push_back(evaluate(impl, subtables));
+      tables.push_back(evaluate(impl, subtables, origNumVars));
     } else {
       TT table;
 
-           if (cell.isIn())   { table = evaluateIn  (subnet,       i        ); }
-      else if (cell.isOut())  { table = evaluateOut (subnet, cell,    tables); }
-      else if (cell.isZero()) { table = evaluateZero(subnet                 ); }
-      else if (cell.isOne())  { table = evaluateOne (subnet                 ); }
+           if (cell.isIn())   { table = evaluateIn  (i, origNumVars); }
+      else if (cell.isOut())  { table = evaluateOut (subnet, cell, tables); }
+      else if (cell.isZero()) { table = evaluateZero(origNumVars); }
+      else if (cell.isOne())  { table = evaluateOne (origNumVars); }
       else if (cell.isBuf())  { table = evaluateBuf (subnet, cell,    tables); }
       else if (cell.isAnd())  { table = evaluateAnd (subnet, cell, i, tables); }
       else if (cell.isOr())   { table = evaluateOr  (subnet, cell, i, tables); }
       else if (cell.isXor())  { table = evaluateXor (subnet, cell, i, tables); }
-      else if (cell.isMaj())  { table = evaluateMaj (subnet, cell, i, tables); }
-      else                    { assert(false && "Unknown subnet cell type");   }
+      else if (cell.isMaj())  { table = evaluateMaj (subnet, cell, i, tables,
+                                                     origNumVars); }
+      else                    { assert(false && "Unknown subnet cell type"); }
 
       tables.push_back({table});
 
@@ -155,7 +158,7 @@ std::vector<TT> evaluate(const Subnet &subnet) {
   TTs tables;
   tables.reserve(subnet.size());
 
-  return evaluate(subnet, tables);
+  return evaluate(subnet, tables, subnet.getInNum());
 }
 
 TT computeCare(const Subnet &subnet) {

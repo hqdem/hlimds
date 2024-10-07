@@ -130,6 +130,10 @@ TEST(ReadLibertyTest2, sky130_fd_sc_hd__ff_100C_1v65) {
   checkLibParser2(techLibPath / "sky130_fd_sc_hd__ff_100C_1v65.lib");
 }
 
+TEST(ReadLibertyTest2, nand) {
+  checkLibParser2(techLibPath / "nand.lib");
+}
+
 TEST(ReadSDCTest, test_100) {
   const auto &constraints = checkSDCParser(techLibPath / "test.sdc");
 

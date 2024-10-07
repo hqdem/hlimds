@@ -295,30 +295,6 @@ void SCLibrary::findCheapestCells() {
   properties_.cheapZeroCell = findCheapestCell(constZeroCells_);
 }
 
-inline void replaceSubStr(std::string &in, const std::string &subStr,
-                                           const std::string &newSubStr) {
-  size_t pos = 0;
-  while ((pos = in.find(subStr, pos)) != std::string::npos) {
-    in.replace(pos, subStr.length(), newSubStr);
-    pos += newSubStr.length();
-  }
-}
-
-void inverseFirstInput(std::string &in, const std::string &fIn) {
-  std::string invFirstInput = "!(" + fIn + ")";
-  replaceSubStr(in, fIn, invFirstInput);
-}
-
-void highFirstInput(std::string &in, const std::string &fIn) {
-  std::string one = "(1)";
-  replaceSubStr(in, fIn, one);
-}
-
-void lowFirstInput(std::string &in, const std::string &fIn) {
-  std::string zero = "(0)";
-  replaceSubStr(in, fIn, zero);
-}
-
 static model::CellTypeAttrID createSuperCellPropertiesAttr(
     const StandardCell &cellSrc,
     const StandardCell &cellToAdd) {
@@ -382,7 +358,6 @@ static gate::model::SubnetID buildSuperCellSubnet(
 void SCLibrary::addSuperCell(
     const StandardCell &cellSrc,
     const StandardCell &cellToAdd,
-    void(*updateFunc)(std::string &in, const std::string &fIn),
     std::vector<StandardCell> &scs,
     uint output) {
 
@@ -408,27 +383,12 @@ void SCLibrary::addSuperCell(
   std::vector<kitty::dynamic_truth_table> ctt;
   std::vector<util::NpnTransformation> t;
   // Calculate new truth table for the supercell.
-#if 0 //TODO: enable when evaluate method is fixed
   const auto tt = model::evaluate(model::Subnet::get(subnetID));
   for (uint i = 0; i < cellType.getOutNum(); i++) {
     auto config = kitty::exact_p_canonization(tt[i]);
     ctt.push_back(util::getTT(config)); // canonized TT
     t.push_back(util::getTransformation(config));
   }
-#else
-  for (uint i = 0; i < cellType.getOutNum(); i++) {
-    auto strFunc = cellSrc.outputPins[i].stringFunction;
-    const auto inputNames = getInputNames(cellSrc.inputPins);
-    updateFunc(strFunc, inputNames[0]);
-
-    kitty::dynamic_truth_table tt(inputNames.size());
-    kitty::create_from_formula(tt, strFunc, inputNames);
-
-    auto config = kitty::exact_p_canonization(tt);
-    ctt.push_back(util::getTT(config)); // canonized TT
-    t.push_back(util::getTransformation(config));
-  }
-#endif
 
 #ifdef DEBUG_MOUTS
   if (cellType.getOutNum() > 1) {
@@ -469,8 +429,7 @@ void SCLibrary::addSuperCells() {
     if (cell.inputPins.size() != 2) {
       continue;
     }
-    addSuperCell(cell, *properties_.cheapNegCell,
-      inverseFirstInput, superCells, 0);
+    addSuperCell(cell, *properties_.cheapNegCell, superCells, 0);
 
     uint output = 0;
     for (const auto& ctt : properties_.cheapOneCell->ctt) {
@@ -481,8 +440,7 @@ void SCLibrary::addSuperCells() {
     }
     assert(output < model::CellType::get(
                       properties_.cheapOneCell->cellTypeID).getOutNum());
-    addSuperCell(cell, *properties_.cheapOneCell,
-      highFirstInput, superCells, output);
+    addSuperCell(cell, *properties_.cheapOneCell,superCells, output);
 
     output = 0;
     for (const auto& ctt : properties_.cheapZeroCell->ctt) {
@@ -493,9 +451,7 @@ void SCLibrary::addSuperCells() {
     }
     assert(output < model::CellType::get(
                       properties_.cheapZeroCell->cellTypeID).getOutNum());
-
-    addSuperCell(cell, *properties_.cheapZeroCell,
-      lowFirstInput, superCells, output);
+    addSuperCell(cell, *properties_.cheapZeroCell, superCells, output);
   }
   combCells_.insert(combCells_.end(), superCells.begin(), superCells.end());
 }

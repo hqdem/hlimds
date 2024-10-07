@@ -55,9 +55,6 @@ bool SCLibrary::addCells(std::vector<StandardCell> &&cells) {
       internalLoadCombCell(std::move(cell));
     }
   }
-  findCheapestCells();
-  addSuperCells();
-  fillSearchMap();
   return true;
 }
 

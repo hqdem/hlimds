@@ -44,6 +44,10 @@ techMapperWrapper::generateTechSubnet(
 
   //TODO: should be const ref
   auto &techLibrary = *context_.techMapContext.library;
+
+  // Find cheapest cells and calculate super cells over them.
+  techLibrary.prepareLib();
+
   // Maximum number of cuts per cell
   constexpr uint16_t maxCutNum = 4;
 

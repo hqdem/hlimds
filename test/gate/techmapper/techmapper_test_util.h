@@ -98,6 +98,9 @@ protected:
       std::make_unique<criterion::Criterion>(objective, constraints);
     std::unique_ptr<optimizer::CutExtractor> cutExtractor{};
 
+    auto &techLibrary = *context.techMapContext.library;
+    techLibrary.prepareLib();
+
     auto matchFinder = [&](const SubnetBuilder &builder,
                            const optimizer::Cut &cut) {
       return pBoolMatcher_->match(builder, cut);
@@ -106,7 +109,7 @@ protected:
     SubnetTechMapperPCut techmapper(
         "SubnetTechMapper",
         context,
-        (*context.techMapContext.library).getProperties().maxArity,
+        techLibrary.getProperties().maxArity,
         4, //maxCutNum
         matchFinder,
         estimator::getPPA);

@@ -56,6 +56,14 @@ public:
   const SCLibraryProperties & getProperties() const {
     return properties_;
   };
+  void prepareLib() {
+    if (!libPrepared) {
+      findCheapestCells();
+      addSuperCells();
+      fillSearchMap();
+      libPrepared = true;
+    }
+  };
 
 private:
 
@@ -94,6 +102,7 @@ private:
   std::vector<StandardCell> negCombCells_;
   std::vector<StandardCell> constOneCells_;
   std::vector<StandardCell> constZeroCells_;
+  bool libPrepared = false;
 
   std::unordered_map<model::CellTypeID, const StandardCell*> searchMap_;
 };

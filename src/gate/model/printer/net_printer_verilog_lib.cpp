@@ -103,7 +103,7 @@ void printVerilogDffRsType(std::ostream &out, const CellType &type) {
   out << "  always @(" << getClkEdge(type) << " CLK or RST or SET) begin\n";
   out << "    if (" << getRstLevel(type) << "RST)\n";
   out << "      Q <= 0;\n";
-  out << "    else if (" << getSetLevel(type) << "set)\n";
+  out << "    else if (" << getSetLevel(type) << "SET)\n";
   out << "      Q <= 1;\n";
   out << "    else\n";
   out << "      Q <= D;\n";

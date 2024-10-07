@@ -194,23 +194,44 @@ enum CellSymbol : uint16_t {
   /// Reduction XNOR: OUT = ~(X[1] + ... + X[n]) (mod 2).
   RXNOR,
 
-  //===--------------------------- Multiplexors ---------------------------===//
+  //===------------------ Multiplexors / Demultiplexors -------------------===//
 
-  /// Multiplexor 2-to-1: OUT = S == 0 ? X : Y.
+  /// Multibit MUX 2-to-1 (S, X[*], Y[*]):
+  /// OUT[i] = (S == 0 ? X[i] : Y[i]).
   MUX2,
+  /// Bitwise MUX (S[*], X[*], Y[*]):
+  /// OUT[i] = (S[i] == 0 ? X[i] : Y[i]).
+  BMUX,
+  /// Multibit MUX (S[*], X[*]), |X| = |OUT| * 2^|S|:
+  /// OUT[i] = X[INDEX(S) * |OUT| + i].
+  MUX,
+  /// Multibit DEMUX (S[*], X[*]), |OUT| = |X| * 2^|S|:
+  /// OUT[i] = ((i / |X|) == INDEX(S)) ? X[i % |X|] : 0.
+  DEMUX,
 
   //===------------------------- Shift Operations -------------------------===//
 
-  /// Shift left (signed): OUT = X << Y.
+  /// Shift left (signed [X is signed, Y is unsigned]):
+  /// OUT = X << Y.
   SHLs,
-  /// Shift left (unsigned): OUT = X << Y.
+  /// Shift left (unsigned [X is unsigned, Y is unsigned]):
+  /// OUT = X << Y.
   SHLu,
   SHL = SHLu,
-  /// Shift right (signed): OUT = X >> Y.
+  /// Shift right (signed [X is signed, Y is unsigned]):
+  /// OUT = X >> Y.
   SHRs,
-  /// Shift right (unsigned): OUT = X >> Y.
+  /// Shift right (unsigned [X is unsigned, Y is unsigned]):
+  /// OUT = X >> Y.
   SHRu,
   SHR = SHRu,
+  /// Shift (signed [X is signed, Y is signed]):
+  /// OUT = (Y >= 0) ? SHRs(X, Y) : SHLs(X, -Y).
+  SHIFTs,
+  /// Shift (unsigned [X is unsigned, Y is signed]):
+  /// OUT = (Y >= 0) ? SHRu(X, Y) : SHLu(X, -Y).
+  SHIFTu,
+  SHIFT = SHIFTu,
 
   //===----------------------- Comparison Operations ----------------------===//
 

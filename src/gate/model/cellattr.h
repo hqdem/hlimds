@@ -27,7 +27,8 @@ struct PhysicalProperties final {
   float area{0.};
   float delay{0.};
   float power{0.};
-  uint32_t __padding{0};
+
+  uint32_t padding__{0};
 };
 static_assert(sizeof(PhysicalProperties) == 16);
 
@@ -51,10 +52,12 @@ struct Port final {
   std::string getName() const { return String::get(nameID); }
 
   StringID nameID;
+
   uint16_t width;
   uint16_t input;
   uint16_t index;
-  uint16_t __padding{0};
+
+  uint16_t padding__{0};
 };
 static_assert(sizeof(Port) == 16);
 
@@ -211,7 +214,7 @@ private:
   /// Number of output (multi-bit) ports.
   uint16_t nOutPort{Unknown};
 
-  uint8_t __padding[12];
+  uint8_t padding__[12];
 };
 
 static_assert(sizeof(CellTypeAttr) == CellTypeAttrID::Size);

@@ -90,6 +90,7 @@ public:
     bool hasArc(const size_t i) const {
       return arcs.find(i) != arcs.end();
     }
+
     /**
      * @brief Returns true if the current entry has an input arc with the
      * primary inputs of the net, false otherwise.
@@ -97,6 +98,7 @@ public:
     bool hasPIArc() const {
       return connectedPI;
     }
+
     /**
      * @brief Returns true if the current entry has an input arc with the
      * primary outputs of the net, false otherwise.

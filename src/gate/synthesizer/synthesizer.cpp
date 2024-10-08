@@ -55,8 +55,8 @@ static SubnetID synthImpl(const CellType &type) {
   case DEMUX:  return synthDemux(attr);
   case SHLs:   return synthShlS(attr);
   case SHLu:   return synthShlU(attr);
-  case SHRu:   return synthShrU(attr);
   case SHRs:   return synthShrS(attr);
+  case SHRu:   return synthShrU(attr);
   case SHIFTs: return synthShiftS(attr);
   case SHIFTu: return synthShiftU(attr);
   case EQs:    return synthEqS(attr);

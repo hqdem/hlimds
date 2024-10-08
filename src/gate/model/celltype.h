@@ -197,10 +197,10 @@ enum CellSymbol : uint16_t {
   //===------------------ Multiplexors / Demultiplexors -------------------===//
 
   /// Multibit MUX 2-to-1 (S, X[*], Y[*]):
-  /// OUT[i] = (S == 0 ? X[i] : Y[i]).
+  /// OUT[i] = (S == 0) ? X[i] : Y[i].
   MUX2,
   /// Bitwise MUX (S[*], X[*], Y[*]), |S| == |X| == |Y|:
-  /// OUT[i] = (S[i] == 0 ? X[i] : Y[i]).
+  /// OUT[i] = (S[i] == 0) ? X[i] : Y[i].
   BMUX,
   /// Multibit MUX (S[*], X[*]), |X| == |OUT| * 2^|S|:
   /// OUT[i] = X[INDEX(S) * |OUT| + i].
@@ -493,7 +493,7 @@ struct CellProperties {
     associative(associative),
     regroupable(regroupable),
     negative(negative),
-    __padding(0) {}
+    padding__(0) {}
 
   /// Cell/soft flags identify the cell kind:
   /// 00: Hard (block w/ unknown structure);
@@ -511,7 +511,7 @@ struct CellProperties {
   unsigned associative   : 1;
   unsigned regroupable   : 1;
   unsigned negative      : 1;
-  unsigned __padding     : 7;
+  unsigned padding__     : 7;
 };
 #pragma pack(pop)
 

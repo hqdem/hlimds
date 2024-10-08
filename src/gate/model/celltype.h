@@ -199,13 +199,13 @@ enum CellSymbol : uint16_t {
   /// Multibit MUX 2-to-1 (S, X[*], Y[*]):
   /// OUT[i] = (S == 0 ? X[i] : Y[i]).
   MUX2,
-  /// Bitwise MUX (S[*], X[*], Y[*]):
+  /// Bitwise MUX (S[*], X[*], Y[*]), |S| == |X| == |Y|:
   /// OUT[i] = (S[i] == 0 ? X[i] : Y[i]).
   BMUX,
-  /// Multibit MUX (S[*], X[*]), |X| = |OUT| * 2^|S|:
+  /// Multibit MUX (S[*], X[*]), |X| == |OUT| * 2^|S|:
   /// OUT[i] = X[INDEX(S) * |OUT| + i].
   MUX,
-  /// Multibit DEMUX (S[*], X[*]), |OUT| = |X| * 2^|S|:
+  /// Multibit DEMUX (S[*], X[*]), |OUT| == |X| * 2^|S|:
   /// OUT[i] = ((i / |X|) == INDEX(S)) ? X[i % |X|] : 0.
   DEMUX,
 

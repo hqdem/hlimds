@@ -12,31 +12,45 @@
 
 namespace eda::gate::synthesizer {
 
-model::SubnetID synthShlS(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-  builder.addOutputs(synthDefaultShiftL(builder, attr, true));
-  return builder.make();
+// implement simple mux, creating targetOutputSize and operations
+static model::Subnet::LinkList synthMuxForShift(
+    model::SubnetBuilder &builder,
+    model::Subnet::LinkList muxInputs,
+    const uint64_t targetOutputsSize) {
+  // We choose min. If inputs is bigger, we do need to use
+  // all values for output and add some zeroes.
+  // When the smallest is 2 ^ mixInputsSize, we choose it
+  model::Subnet::LinkList andOperationsList(targetOutputsSize);
+
+  for (auto &val : muxInputs) {
+    val = ~val;
+  }
+
+  uint64_t iterCount = 0u;
+  for (auto &iter : andOperationsList) {
+    // save from one-element and
+    if (muxInputs.size() > 1) {
+      iter = builder.addCell(model::CellSymbol::AND, muxInputs);
+    } else {
+      iter = muxInputs.back();
+    }
+
+    auto prev = iterCount++;
+    for (uint8_t idx = 0u; idx < muxInputs.size(); ++idx) {
+      // in fact, we cannot have more than 63 muxInputs. we use idx as
+      // index for bit, making a mask. When we have same idx-th bit,
+      // we have 0 as a result. Else, when the bit value changed, we have 1
+      // as a result, and we do the inversion
+      auto mask = (1ull << idx);
+      muxInputs[idx] =
+          (prev & mask) ^ (iterCount & mask) ? ~muxInputs[idx] : muxInputs[idx];
+    }
+  }
+
+  return andOperationsList;
 }
 
-model::SubnetID synthShlU(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-  builder.addOutputs(synthDefaultShiftL(builder, attr));
-  return builder.make();
-}
-
-model::SubnetID synthShrS(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-  builder.addOutputs(synthDefaultShiftR(builder, attr, true));
-  return builder.make();
-}
-
-model::SubnetID synthShrU(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-  builder.addOutputs(synthDefaultShiftR(builder, attr));
-  return builder.make();
-}
-
-void addInvertedMux(
+static void addInvertedMux(
     model::SubnetBuilder &builder,
     model::Subnet::LinkList &orOperations,
     const eda::gate::model::Subnet::Link &input,
@@ -52,9 +66,10 @@ void addInvertedMux(
       builder.addCell(model::CellSymbol::AND, invert ? ~invMux : invMux, input));
 }
 
-model::Subnet::LinkList synthDefaultShiftL(model::SubnetBuilder &builder,
-                                           const model::CellTypeAttr &attr,
-                                           bool useSign) {
+static model::Subnet::LinkList synthDefaultShiftL(
+    model::SubnetBuilder &builder,
+    const model::CellTypeAttr &attr,
+    bool useSign) {
   const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);
   const auto sizeOutput = attr.getOutWidth(0);
 
@@ -140,9 +155,10 @@ model::Subnet::LinkList synthDefaultShiftL(model::SubnetBuilder &builder,
   return outputs;
 }
 
-model::Subnet::LinkList synthDefaultShiftR(model::SubnetBuilder &builder,
-                                           const model::CellTypeAttr &attr,
-                                           bool useSign) {
+static model::Subnet::LinkList synthDefaultShiftR(
+    model::SubnetBuilder &builder,
+    const model::CellTypeAttr &attr,
+    bool useSign) {
   const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);
   const auto sizeOutput = attr.getOutWidth(0);
 
@@ -219,42 +235,38 @@ model::Subnet::LinkList synthDefaultShiftR(model::SubnetBuilder &builder,
   return outputs;
 }
 
-// implement simple mux, creating targetOutputSize and operations
-model::Subnet::LinkList
-synthMuxForShift(model::SubnetBuilder &builder,
-                 model::Subnet::LinkList muxInputs,
-                 const uint64_t targetOutputsSize) {
-  // We choose min. If inputs is bigger, we do need to use
-  // all values for output and add some zeroes.
-  // When the smallest is 2 ^ mixInputsSize, we choose it
-  model::Subnet::LinkList andOperationsList(targetOutputsSize);
+model::SubnetID synthShlS(const model::CellTypeAttr &attr) {
+  model::SubnetBuilder builder;
+  builder.addOutputs(synthDefaultShiftL(builder, attr, true));
+  return builder.make();
+}
 
-  for (auto &val : muxInputs) {
-    val = ~val;
-  }
+model::SubnetID synthShlU(const model::CellTypeAttr &attr) {
+  model::SubnetBuilder builder;
+  builder.addOutputs(synthDefaultShiftL(builder, attr, false));
+  return builder.make();
+}
 
-  uint64_t iterCount = 0u;
-  for (auto &iter : andOperationsList) {
-    // save from one-element and
-    if (muxInputs.size() > 1) {
-      iter = builder.addCell(model::CellSymbol::AND, muxInputs);
-    } else {
-      iter = muxInputs.back();
-    }
+model::SubnetID synthShrS(const model::CellTypeAttr &attr) {
+  model::SubnetBuilder builder;
+  builder.addOutputs(synthDefaultShiftR(builder, attr, true));
+  return builder.make();
+}
 
-    auto prev = iterCount++;
-    for (uint8_t idx = 0u; idx < muxInputs.size(); ++idx) {
-      // in fact, we cannot have more than 63 muxInputs. we use idx as
-      // index for bit, making a mask. When we have same idx-th bit,
-      // we have 0 as a result. Else, when the bit value changed, we have 1
-      // as a result, and we do the inversion
-      auto mask = (1ull << idx);
-      muxInputs[idx] =
-          (prev & mask) ^ (iterCount & mask) ? ~muxInputs[idx] : muxInputs[idx];
-    }
-  }
+model::SubnetID synthShrU(const model::CellTypeAttr &attr) {
+  model::SubnetBuilder builder;
+  builder.addOutputs(synthDefaultShiftR(builder, attr, false));
+  return builder.make();
+}
 
-  return andOperationsList;
+model::SubnetID synthShiftS(const model::CellTypeAttr &attr) {
+  // TODO:
+  return model::OBJ_NULL_ID;
+}
+
+model::SubnetID synthShiftU(const model::CellTypeAttr &attr) {
+  // TODO:
+  return model::OBJ_NULL_ID;
 }
 
 } // namespace eda::gate::synthesizer

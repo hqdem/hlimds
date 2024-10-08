@@ -14,4 +14,10 @@ namespace eda::gate::synthesizer {
 
 model::SubnetID synthMux2(const model::CellTypeAttr &attr);
 
+model::SubnetID synthBMux(const model::CellTypeAttr &attr);
+
+model::SubnetID synthMux(const model::CellTypeAttr &attr);
+
+model::SubnetID synthDemux(const model::CellTypeAttr &attr);
+ 
 } // namespace eda::gate::synthesizer

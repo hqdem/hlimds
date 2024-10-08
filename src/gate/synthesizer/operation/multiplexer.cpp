@@ -31,4 +31,19 @@ model::SubnetID synthMux2(const model::CellTypeAttr &attr) {
   return builder.make();
 }
 
+model::SubnetID synthBMux(const model::CellTypeAttr &attr) {
+  // TODO:
+  return model::OBJ_NULL_ID;
+}
+
+model::SubnetID synthMux(const model::CellTypeAttr &attr) {
+  // TODO:
+  return model::OBJ_NULL_ID;
+}
+
+model::SubnetID synthDemux(const model::CellTypeAttr &attr) {
+  // TODO:
+  return model::OBJ_NULL_ID;
+}
+
 } // namespace eda::gate::synthesizer

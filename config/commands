@@ -18,3 +18,4 @@ write_dataflow
 write_debug
 write_dot
 write_verilog
+write_verilog_lib

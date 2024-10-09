@@ -36,24 +36,44 @@ void printVerilogMajType(std::ostream &out, const CellType &type) {
   }
 }
 
+static inline std::string getEdge(const bool positive) {
+  return positive ? "posedge" : "negedge";
+}
+
+static inline std::string getLevel(const bool positive) {
+  return positive ? "" : "~";
+}
+
+static inline std::string getValue(const bool positive) {
+  return positive ? "1" : "0";
+}
+
 static inline std::string getClkEdge(const CellType &type) {
-  return type.getClkEdge() ? "posedge" : "negedge";
+  return getEdge(type.getClkEdge());
+}
+
+static inline std::string getRstEdge(const CellType &type) {
+  return getEdge(type.getRstLevel());
+}
+
+static inline std::string getSetEdge(const CellType &type) {
+  return getEdge(type.getSetLevel());
 }
 
 static inline std::string getEnaLevel(const CellType &type) {
-  return type.getEnaLevel() ? "" : "~";
-} 
+  return getLevel(type.getEnaLevel());
+}
 
 static inline std::string getRstLevel(const CellType &type) {
-  return type.getRstLevel() ? "" : "~";
+  return getLevel(type.getRstLevel());
 }
 
 static inline std::string getSetLevel(const CellType &type) {
-  return type.getSetLevel() ? "" : "~";
+  return getLevel(type.getSetLevel());
 }
 
 static inline std::string getRstValue(const CellType &type) {
-  return type.getRstValue() ? "1" : "0";
+  return getValue(getRstValue());
 }
 
 void printVerilogDffType(std::ostream &out, const CellType &type) {
@@ -86,7 +106,8 @@ void printVerilogADffType(std::ostream &out, const CellType &type) {
   // Q(t) = RST(level=1) ? 0 : (CLK(posedge) ? D : Q(t-1)).
   out << "module " << type.getName()
       << "(output reg Q, input D, input CLK, input RST);\n";
-  out << "  always @(" << getClkEdge(type) << " CLK or RST) begin\n";
+  out << "  always @(" << getClkEdge(type) << " CLK or "
+                       << getRstEdge(type) << " RST) begin\n";
   out << "    if (" << getRstLevel(type) << "RST)\n";
   out << "      Q <= " << getRstValue(type) << ";\n";
   out << "    else\n";
@@ -100,7 +121,9 @@ void printVerilogDffRsType(std::ostream &out, const CellType &type) {
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
   out << "module " << type.getName()
       << "(output reg Q, input D, input CLK, input RST, input SET);\n";
-  out << "  always @(" << getClkEdge(type) << " CLK or RST or SET) begin\n";
+  out << "  always @(" << getClkEdge(type) << " CLK or "
+                       << getRstEdge(type) << " RST or "
+                       << getSetEdge(type) << " SET) begin\n";
   out << "    if (" << getRstLevel(type) << "RST)\n";
   out << "      Q <= 0;\n";
   out << "    else if (" << getSetLevel(type) << "SET)\n";
@@ -158,7 +181,7 @@ void printVerilogLatchRsType(std::ostream &out, const CellType &type) {
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : Q(t-1)).
   out << "module " << type.getName()
       << "(output reg Q, input RST, input SET);\n";
-  out << "  always @(RST or SET) begin\n";
+  out << "  always @(*) begin\n";
   out << "    if (" << getRstLevel(type) << "RST)\n";
   out << "      Q <= 0;\n";
   out << "    else if (" << getSetLevel(type) << "SET)\n";

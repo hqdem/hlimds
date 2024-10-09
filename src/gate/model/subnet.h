@@ -649,7 +649,7 @@ public:
   /// Sets next EntryID attribute for the i-th entry.
   /// Required for entries with the same simulation bits.
   void setNextWithSim(EntryID i, EntryID next) {
-    assert(desc[i].simBits && desc[next].simBits);
+    assert(desc[i].simBits && (next == invalidID || desc[next].simBits));
     desc[i].simNext = next;
   }
 

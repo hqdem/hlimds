@@ -82,4 +82,25 @@ TEST(LecCloneTest, 4AndOr) {
   cloneTest(makeSubnet4AndOr());
 }
 
+TEST(LecCloneTest, OnlyInputsAndOutput) {
+  model::SubnetBuilder builder;
+  const auto input = builder.addInput();
+  builder.addOutput(input);
+  auto subnetID = builder.make();
+
+  model::SubnetBuilder builder2;
+  const auto input2 = builder2.addInput();
+  const auto const1 = builder2.addCell(model::ONE);
+  const auto and2 = builder2.addCell(model::AND, const1, input2);
+  builder2.addOutput(and2);
+  auto subnetID2 = builder2.make();
+
+  BaseChecker::CellToCell map;
+  map[0] = 0;
+  map[1] = 1;
+
+  EXPECT_TRUE(BaseChecker::getChecker(options::SAT).
+              areEquivalent(subnetID, subnetID2, map).equal());
+}
+
 } // namespace eda::gate::debugger

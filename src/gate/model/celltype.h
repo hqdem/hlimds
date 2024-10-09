@@ -196,16 +196,22 @@ enum CellSymbol : uint16_t {
 
   //===------------------ Multiplexors / Demultiplexors -------------------===//
 
+  /// Bitwise MUX 2-to-1 (S[*], X[*], Y[*]), |S| == |X| == |Y|:
+  /// OUT[i] = (S[i] == 0) ? X[i] : Y[i].
+  BMUX,
   /// Multibit MUX 2-to-1 (S, X[*], Y[*]):
   /// OUT[i] = (S == 0) ? X[i] : Y[i].
   MUX2,
-  /// Bitwise MUX (S[*], X[*], Y[*]), |S| == |X| == |Y|:
-  /// OUT[i] = (S[i] == 0) ? X[i] : Y[i].
-  BMUX,
-  /// Multibit MUX (S[*], X[*]), |X| == |OUT| * 2^|S|:
+  /// Multibit MUX *-to-1 (S[*], X[*]), |X| == |OUT| * 2^|S|:
   /// OUT[i] = X[INDEX(S) * |OUT| + i].
   MUX,
-  /// Multibit DEMUX (S[*], X[*]), |OUT| == |X| * 2^|S|:
+  /// Bitwise DEMUX 1-to-2 (S[*], X[*]):
+  /// OUT[s][i] = (S[i] == s) ? X[i] : 0, s=0,1.
+  BDEMUX,
+  /// Multibit DEMUX 1-to-2 (S, X[*]):
+  /// OUT[s][i] = (S == s) ? X[i] : 0, s=0,1.
+  DEMUX2,
+  /// Multibit DEMUX 1-to-* (S[*], X[*]), |OUT| == |X| * 2^|S|:
   /// OUT[i] = ((i / |X|) == INDEX(S)) ? X[i % |X|] : 0.
   DEMUX,
 

@@ -73,7 +73,7 @@ static inline std::string getSetLevel(const CellType &type) {
 }
 
 static inline std::string getRstValue(const CellType &type) {
-  return getValue(getRstValue());
+  return getValue(type.getRstValue());
 }
 
 void printVerilogDffType(std::ostream &out, const CellType &type) {

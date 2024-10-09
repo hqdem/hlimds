@@ -29,4 +29,8 @@ model::Subnet::LinkList twosComplement(
     const uint32_t width,
     const bool signExtend);
 
+model::Subnet::LinkList absoluteValue(
+    model::SubnetBuilder &builder,
+    const model::Subnet::LinkList &word);
+
 } // namespace eda::gate::synthesizer

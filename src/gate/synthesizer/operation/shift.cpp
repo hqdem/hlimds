@@ -6,7 +6,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "multiplexer.h"
 #include "shift.h"
+#include "utils.h"
 
 #include <algorithm>
 
@@ -68,25 +70,22 @@ static void addInvertedMux(
 
 static model::Subnet::LinkList synthDefaultShiftL(
     model::SubnetBuilder &builder,
-    const model::CellTypeAttr &attr,
+    const model::Subnet::LinkList &inputs,
+    const model::Subnet::LinkList &muxInputs,
+    size_t sizeOutput,
     bool useSign) {
-  const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);
-  const auto sizeOutput = attr.getOutWidth(0);
-
-  model::Subnet::LinkList inputs = builder.addInputs(sizeInput);
-  const model::Subnet::LinkList muxInputs = builder.addInputs(sizeMux);
   model::Subnet::LinkList outputs(sizeOutput);
 
   // to implement min number of mux, outputs of which would be used
   // choose min from 2^muxInputs and outputs size
-  const auto muxOutputSize =
-      sizeMux > 63 ? sizeOutput
-                   : std::min<uint64_t>(1ull << sizeMux, sizeOutput);
+  const auto muxOutputSize = muxInputs.size() > 63
+      ? sizeOutput
+      : std::min<uint64_t>(1ull << muxInputs.size(), sizeOutput);
   const auto maxOutSize =
       std::min<uint16_t>(muxOutputSize + inputs.size() - 1u, sizeOutput);
 
   // and operations for all multiplexors
-  auto andOperations = synthMuxForShift(builder, muxInputs, muxOutputSize);
+  const auto andOperations = synthMuxForShift(builder, muxInputs, muxOutputSize);
 
   auto iterAnd = andOperations.begin(), iterInput = inputs.begin();
   // number of inputs, can be used at this moment
@@ -131,9 +130,9 @@ static model::Subnet::LinkList synthDefaultShiftL(
       // if there is no digit to be chosen by mux,
       // it will choose sign bit, inputs.back()
       model::Subnet::LinkList andOperationsForSigned(
-        andOperations.begin(), iterAnd);
+          andOperations.begin(), iterAnd);
       addInvertedMux(
-        builder, orOperations, inputs.back(), andOperationsForSigned, false);      
+          builder, orOperations, inputs.back(), andOperationsForSigned, false);      
     }
 
     // save from one-element or
@@ -157,18 +156,15 @@ static model::Subnet::LinkList synthDefaultShiftL(
 
 static model::Subnet::LinkList synthDefaultShiftR(
     model::SubnetBuilder &builder,
-    const model::CellTypeAttr &attr,
+    const model::Subnet::LinkList &inputs,
+    const model::Subnet::LinkList &muxInputs,
+    size_t sizeOutput,
     bool useSign) {
-  const auto sizeInput = attr.getInWidth(0), sizeMux = attr.getInWidth(1);
-  const auto sizeOutput = attr.getOutWidth(0);
-
-  const model::Subnet::LinkList inputs = builder.addInputs(sizeInput);
-  const model::Subnet::LinkList muxInputs = builder.addInputs(sizeMux);
   model::Subnet::LinkList outputs(sizeOutput);
 
-  const uint64_t muxOutSize =
-      sizeMux > 63 ? inputs.size()
-                   : std::min<uint64_t>(1ull << sizeMux, inputs.size());
+  const uint64_t muxOutSize = muxInputs.size() > 63
+      ? inputs.size()
+      : std::min<uint64_t>(1ull << muxInputs.size(), inputs.size());
   // and operations for all multiplexers
   const auto andOperations = synthMuxForShift(builder, muxInputs, muxOutSize);
 
@@ -212,7 +208,7 @@ static model::Subnet::LinkList synthDefaultShiftR(
 
     if (useSign) {
       model::Subnet::LinkList andOperationsForSigned(
-        andOperations.begin(), iterAnd + used);
+          andOperations.begin(), iterAnd + used);
       // unlike left risht, right shift requires 
       // to add inverted "and" operation for left muxes
       addInvertedMux(builder, orOperations, inputs.back(), andOperationsForSigned);      
@@ -235,38 +231,73 @@ static model::Subnet::LinkList synthDefaultShiftR(
   return outputs;
 }
 
-model::SubnetID synthShlS(const model::CellTypeAttr &attr) {
+static inline model::SubnetID synthShl(
+    const model::CellTypeAttr &attr,
+    const bool signExtend) {
   model::SubnetBuilder builder;
-  builder.addOutputs(synthDefaultShiftL(builder, attr, true));
+
+  const auto arg0 = builder.addInputs(attr.getInWidth(0));
+  const auto arg1 = builder.addInputs(attr.getInWidth(1));
+  const auto size = attr.getOutWidth(0);
+
+  builder.addOutputs(synthDefaultShiftL(builder, arg0, arg1, size, signExtend));
   return builder.make();
+}
+
+static inline model::SubnetID synthShr(
+    const model::CellTypeAttr &attr,
+    const bool signExtend) {
+  model::SubnetBuilder builder;
+
+  const auto arg0 = builder.addInputs(attr.getInWidth(0));
+  const auto arg1 = builder.addInputs(attr.getInWidth(1));
+  const auto size = attr.getOutWidth(0);
+
+  builder.addOutputs(synthDefaultShiftR(builder, arg0, arg1, size, signExtend));
+  return builder.make();
+}
+
+// TODO: This looks inefficient.
+static inline model::SubnetID synthShift(
+    const model::CellTypeAttr &attr,
+    const bool signExtend) {
+  model::SubnetBuilder builder;
+
+  const auto arg0 = builder.addInputs(attr.getInWidth(0));
+  const auto arg1 = builder.addInputs(attr.getInWidth(1));
+  const auto size = attr.getOutWidth(0);
+
+  const auto shift = absoluteValue(builder, arg1);
+
+  builder.addOutputs(addMux2(builder, arg1.back(),
+      synthDefaultShiftR(builder, arg0, shift, size, signExtend),
+      synthDefaultShiftL(builder, arg0, shift, size, signExtend)));
+
+  return builder.make();
+}
+
+model::SubnetID synthShlS(const model::CellTypeAttr &attr) {
+  return synthShl(attr, true);
 }
 
 model::SubnetID synthShlU(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-  builder.addOutputs(synthDefaultShiftL(builder, attr, false));
-  return builder.make();
+  return synthShl(attr, false);
 }
 
 model::SubnetID synthShrS(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-  builder.addOutputs(synthDefaultShiftR(builder, attr, true));
-  return builder.make();
+  return synthShr(attr, true);
 }
 
 model::SubnetID synthShrU(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-  builder.addOutputs(synthDefaultShiftR(builder, attr, false));
-  return builder.make();
+  return synthShr(attr, false);
 }
 
 model::SubnetID synthShiftS(const model::CellTypeAttr &attr) {
-  // TODO:
-  return model::OBJ_NULL_ID;
+  return synthShift(attr, true);
 }
 
 model::SubnetID synthShiftU(const model::CellTypeAttr &attr) {
-  // TODO:
-  return model::OBJ_NULL_ID;
+  return synthShift(attr, false);
 }
 
 } // namespace eda::gate::synthesizer

@@ -14,7 +14,7 @@ namespace eda::gate::synthesizer {
 
 // Binary MUX 2-to-1 (S, X, Y):
 // OUT = (S == 0) ? X : Y.
-static inline model::Subnet::Link addMux2(
+model::Subnet::Link addMux2(
     model::SubnetBuilder &builder,
     const model::Subnet::Link &s,
     const model::Subnet::Link &x,
@@ -24,21 +24,9 @@ static inline model::Subnet::Link addMux2(
       builder.addCell(model::AND,  s, y));
 }
 
-// Binary DEMUX 1-to-2 (S, X):
-// OUT[s] = (S == s) ? X: 0, s=0,1.
-static inline std::pair<model::Subnet::Link, model::Subnet::Link> addDemux2(
-    model::SubnetBuilder &builder,
-    const model::Subnet::Link &s,
-    const model::Subnet::Link &x) {
-  return {
-      builder.addCell(model::AND, ~s, x),
-      builder.addCell(model::AND,  s, x)
-  };
-}
-
-// Multibit MUX 2-to-1 (S, X[*], Y[*]):
-// OUT[i] = (S == 0) ? X[i] : Y[i].
-static inline model::Subnet::LinkList addMux2(
+// Multibit MUX 2-to-1 (S, X[*]):
+// OUT[i] = (S == 0) ? X[i] : X[|X|/2 + i].
+model::Subnet::LinkList addMux2(
     model::SubnetBuilder &builder,
     const model::Subnet::Link &s,
     const model::Subnet::LinkList &x) {
@@ -50,9 +38,36 @@ static inline model::Subnet::LinkList addMux2(
   return links;
 }
 
+// Multibit MUX 2-to-1 (S, X[*], Y[*]):
+// OUT[i] = (S == 0) ? X[i] : Y[i].
+model::Subnet::LinkList addMux2(
+    model::SubnetBuilder &builder,
+    const model::Subnet::Link &s,
+    const model::Subnet::LinkList &x,
+    const model::Subnet::LinkList &y) {
+  assert(x.size() == y.size());
+  model::Subnet::LinkList links(x.size());
+  for (size_t i = 0; i < links.size(); ++i) {
+    links[i] = addMux2(builder, s, x[i], y[i]);
+  }
+  return links;
+}
+
+// Binary DEMUX 1-to-2 (S, X):
+// OUT[s] = (S == s) ? X: 0, s=0,1.
+std::pair<model::Subnet::Link, model::Subnet::Link> addDemux2(
+    model::SubnetBuilder &builder,
+    const model::Subnet::Link &s,
+    const model::Subnet::Link &x) {
+  return {
+      builder.addCell(model::AND, ~s, x),
+      builder.addCell(model::AND,  s, x)
+  };
+}
+
 // Multibit DEMUX 1-to-2 (S, X[*]):
 // OUT[i] = ((i / |X|) == INDEX(S)) ? X[i % |X|] : 0.
-static inline model::Subnet::LinkList addDemux2(
+model::Subnet::LinkList addDemux2(
     model::SubnetBuilder &builder,
     const model::Subnet::Link &s,
     const model::Subnet::LinkList &x) {

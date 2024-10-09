@@ -70,4 +70,19 @@ model::Subnet::LinkList twosComplement(
   return synthLadnerFisherAdd(builder, inverted, {one}, width, true);
 }
 
+model::Subnet::LinkList absoluteValue(
+    model::SubnetBuilder &builder,
+    const model::Subnet::LinkList &word) {
+  const auto sign = word.back();
+
+  // If sign == 1, construct the twos-complement code.
+  // If sign == 0, left the word unchanged.
+  model::Subnet::LinkList temp(word.size());
+  for (size_t i = 0; i < word.size(); ++i) {
+    temp[i] = builder.addCell(model::XOR, word[i], sign);
+  }
+
+  return synthLadnerFisherAdd(builder, temp, {sign}, word.size(), true);
+}
+
 } // namespace eda::gate::synthesizer

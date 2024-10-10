@@ -147,6 +147,13 @@ TEST_F(SubnetTechMapperSky130Test, RandomSubnet) {
   commonPartCheckEQ(premappedBuilder, 100000, 100000, 100000);
 }
 
+TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetEqvFailSimple) {
+  const auto subnetID = model::randomSubnet(3, 1, 6, 3, 3, 1128735825);
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+  const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
+  commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
+}
+
 TEST_F(SubnetTechMapperSky130Test, GraphMLSubnetSmall) {
   auto builderPtr = parseGraphML("simple_spi_orig"); // 2k nodes
   commonPartCheckEQ(builderPtr, 1000000, 1000000, 1000000);

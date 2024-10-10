@@ -30,6 +30,7 @@ protected:
     } else {
       throw std::runtime_error("File loading failed");
     }
+    library->prepareLib();
     pBoolMatcher_ = std::move(
         Matcher<PBoolMatcher, kitty::dynamic_truth_table>::create(
           library->getCombCells()));

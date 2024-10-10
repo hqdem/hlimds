@@ -147,6 +147,14 @@ TEST_F(SubnetTechMapperSky130Test, RandomSubnet) {
   commonPartCheckEQ(premappedBuilder, 100000, 100000, 100000);
 }
 
+//Only 6 input cuts will be build for cell 17 and no match will be found
+TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetCutsTooBig) {
+  const auto subnetID = model::randomSubnet(6, 2, 20, 3, 3, 1217212573);
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+  const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
+  commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
+}
+
 TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetEqvFailSimple) {
   const auto subnetID = model::randomSubnet(3, 1, 6, 3, 3, 1128735825);
   std::cout << model::Subnet::get(subnetID) << std::endl;

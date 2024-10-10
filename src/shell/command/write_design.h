@@ -15,6 +15,15 @@
 
 namespace eda::shell {
 
+static inline std::string getSubnetLocalName(size_t i) {
+  return fmt::format("{:06}", i);
+}
+
+static inline std::string getSubnetGlobalName(
+    eda::gate::model::DesignBuilder &designBuilder, size_t i) {
+  return fmt::format("{}_{}", designBuilder.getName(), getSubnetLocalName(i));
+}
+
 static inline const eda::gate::model::Subnet &getSubnet(
     eda::gate::model::DesignBuilder &designBuilder, size_t i) {
   const auto subnetID = designBuilder.getSubnetID(i);
@@ -49,7 +58,7 @@ static inline void printSubnet(
   namespace model = eda::gate::model;
 
   const auto &subnet = getSubnet(designBuilder, i);
-  const auto subnetName = fmt::format("{}_{}", designBuilder.getName(), i);
+  const auto subnetName = getSubnetGlobalName(designBuilder, i);
 
   model::print(out, format, subnetName, subnet, model::OBJ_NULL_ID);
 }
@@ -94,8 +103,9 @@ struct WriteDesignCommand : public UtopiaCommand {
 
         std::filesystem::path oldFilePath = fileName;
 
+        const std::string number = getSubnetLocalName(i);
         const std::string oldExt = oldFilePath.extension();
-        const std::string newExt = fmt::format("{:05}{}", i, oldExt);
+        const std::string newExt = fmt::format("{}{}", number, oldExt);
 
         std::ofstream out(oldFilePath.replace_extension(newExt));
         printSubnet(out, format, *getDesign(), i);

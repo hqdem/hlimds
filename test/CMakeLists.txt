@@ -146,6 +146,8 @@ target_link_libraries(${TEST_TARGET}
 )
 
 include(GoogleTest)
-gtest_discover_tests(${TEST_TARGET})
+
+# Discover GTest tests till 1 min timeout expired
+gtest_discover_tests(${TEST_TARGET} PROPERTIES DISCOVERY_TIMEOUT 60)
 
 file(COPY data DESTINATION .)

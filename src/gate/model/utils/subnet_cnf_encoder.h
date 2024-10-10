@@ -138,8 +138,8 @@ public:
   }
 
   void encode(const Subnet &subnet,
-      SubnetEncoderContext &context, Solver &solver) const {
-
+              SubnetEncoderContext &context,
+              Solver &solver) const {
     const auto &entries = subnet.getEntries();
     for (size_t i = 0; i < entries.size(); ++i) {
       const auto &cell = entries[i].cell;
@@ -190,35 +190,39 @@ public:
     }
   }
 
-  Variable encodeEqual(
-      SubnetEncoderContext &context,
-      Subnet::Link lhs,
-      bool rhs)  const {
-    auto p = context.newVar();
+  Variable encodeEqual(SubnetEncoderContext &context,
+                       const Subnet::Link lhs,
+                       const bool rhs)  const {
+    const auto p = context.newVar();
     Property &prop = context.createNewProp(p);
-    Literal lit1 = context.lit(lhs, rhs);
-    Literal lit2 = solver::makeLit(p, 1);
-    LitVec clauseToAdd1{lit1, ~lit2};
-    LitVec clauseToAdd2{~lit1, lit2};
+
+    const Literal lit1 = context.lit(lhs, rhs);
+    const Literal lit2 = solver::makeLit(p, 1);
+
+    const LitVec clauseToAdd1{  lit1, ~lit2 };
+    const LitVec clauseToAdd2{ ~lit1,  lit2 };
+
     prop.formula.push_back(clauseToAdd1);
     prop.formula.push_back(clauseToAdd2);
 
     return p;
   }
 
-  Variable encodeEqual(
-      SubnetEncoderContext &context,
-      Subnet::Link lhs,
-      Subnet::Link rhs) const {
-    auto p = context.newVar();
+  Variable encodeEqual(SubnetEncoderContext &context,
+                       const Subnet::Link lhs,
+                       const Subnet::Link rhs) const {
+    const auto p = context.newVar();
     Property &prop = context.createNewProp(p);
-    Literal lit1 = context.lit(lhs, 1);
-    Literal lit2 = context.lit(rhs, 1);
-    Literal lit3 = solver::makeLit(p, 1);
-    LitVec clauseToAdd1{lit1, lit2, lit3};
-    LitVec clauseToAdd2{lit1, ~lit2, ~lit3};
-    LitVec clauseToAdd3{~lit1, lit2, ~lit3};
-    LitVec clauseToAdd4{~lit1, ~lit2, lit3};
+
+    const Literal lit1 = context.lit(lhs, 1);
+    const Literal lit2 = context.lit(rhs, 1);
+    const Literal lit3 = solver::makeLit(p, 1);
+
+    const LitVec clauseToAdd1{  lit1,  lit2,  lit3 };
+    const LitVec clauseToAdd2{  lit1, ~lit2, ~lit3 };
+    const LitVec clauseToAdd3{ ~lit1,  lit2, ~lit3 };
+    const LitVec clauseToAdd4{ ~lit1, ~lit2,  lit3 };
+
     prop.formula.insert(prop.formula.end(),
       {clauseToAdd1, clauseToAdd2, clauseToAdd3, clauseToAdd4}
     );
@@ -229,40 +233,58 @@ public:
 private:
   SubnetEncoder() {}
 
-  void encodeIn(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeIn(const Subnet &subnet,
+                const Subnet::Cell &cell,
+                const size_t idx,
+                SubnetEncoderContext &context,
+                Solver &solver) const {
     assert(cell.arity == 0);
     context.setVar(idx);
   }
 
-  void encodeZero(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeZero(const Subnet &subnet,
+                  const Subnet::Cell &cell,
+                  const size_t idx,
+                  SubnetEncoderContext &context,
+                  Solver &solver) const {
     assert(cell.arity == 0);
     context.setVar(idx);
     solver.addClause(context.lit(idx, 0, 0));
   }
 
-  void encodeOne(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeOne(const Subnet &subnet,
+                 const Subnet::Cell &cell,
+                 const size_t idx,
+                 SubnetEncoderContext &context,
+                 Solver &solver) const {
     assert(cell.arity == 0);
     context.setVar(idx);
     solver.addClause(context.lit(idx, 0, 1));
   }
 
-  void encodeBuf(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeBuf(const Subnet &subnet,
+                 const Subnet::Cell &cell,
+                 const size_t idx,
+                 SubnetEncoderContext &context,
+                 Solver &solver) const {
     assert(cell.arity == 1);
     context.setVar(idx);
     solver.encodeBuf(context.lit(idx, 0, 1), context.lit(cell.link[0], 1));
   }
 
-  void encodeOut(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeOut(const Subnet &subnet,
+                 const Subnet::Cell &cell,
+                 const size_t idx,
+                 SubnetEncoderContext &context,
+                 Solver &solver) const {
     encodeBuf(subnet, cell, idx, context, solver);
   }
 
-  void encodeAnd(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeAnd(const Subnet &subnet,
+                 const Subnet::Cell &cell,
+                 const size_t idx,
+                 SubnetEncoderContext &context,
+                 Solver &solver) const {
     if (cell.arity == 1) {
       encodeBuf(subnet, cell, idx, context, solver);
       return;
@@ -283,8 +305,11 @@ private:
     solver.addClause(clause);
   }
 
-  void encodeOr(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeOr(const Subnet &subnet,
+                const Subnet::Cell &cell,
+                const size_t idx,
+                SubnetEncoderContext &context,
+                Solver &solver) const {
     if (cell.arity == 1) {
       encodeBuf(subnet, cell, idx, context, solver);
       return;
@@ -305,8 +330,11 @@ private:
     solver.addClause(clause);
   }
 
-  void encodeXor(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeXor(const Subnet &subnet,
+                 const Subnet::Cell &cell,
+                 const size_t idx,
+                 SubnetEncoderContext &context,
+                 Solver &solver) const {
     if (cell.arity == 1) {
       encodeBuf(subnet, cell, idx, context, solver);
       return;
@@ -330,8 +358,11 @@ private:
     }
   }
 
-  void encodeMaj(const Subnet &subnet, const Subnet::Cell &cell, size_t idx,
-      SubnetEncoderContext &context, Solver &solver) const {
+  void encodeMaj(const Subnet &subnet,
+                 const Subnet::Cell &cell,
+                 const size_t idx,
+                 SubnetEncoderContext &context,
+                 Solver &solver) const {
     if (cell.arity == 1) {
       encodeBuf(subnet, cell, idx, context, solver);
       return;

@@ -43,7 +43,11 @@ void buildCell(const model::Subnet::Cell &cell,
   LinkList newLinks;
   for (size_t j = 0; j < cell.arity; ++j) {
     Link oldLink = source.getLink(idx, j);
-    Link newLink{map[oldLink.idx].idx, oldLink.inv != 0};
+
+    const auto out = static_cast<uint8_t>(oldLink.out);
+    const auto inv = static_cast<bool>(oldLink.inv);
+
+    Link newLink{map[oldLink.idx].idx, out, inv};
     newLinks.push_back(newLink);
   }
 

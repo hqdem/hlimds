@@ -67,7 +67,7 @@ bool checkAllCellsMapped(const SubnetID subnetID) {
 }
 
 void checkEQ(const SubnetID origSubnetID, const SubnetID mappedSubnetID) {
-  auto& checker = debugger::SatChecker::get();
+  auto &checker = debugger::SatChecker::get();
   EXPECT_TRUE(checker.areEquivalent(origSubnetID, mappedSubnetID).equal());
 }
 

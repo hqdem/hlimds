@@ -12,6 +12,7 @@
 #include "gate/model/utils/subnet_cnf_encoder.h"
 
 #include <cassert>
+#include <vector>
 
 namespace eda::gate::debugger {
 
@@ -21,21 +22,21 @@ class SatChecker final : public BaseChecker,
 
 public:
   CheckerResult isSat(const model::Subnet &subnet) const override {
-    assert(subnet.getOutNum() == 1);
+    assert(subnet.getOutNum() == 1 && "Miter w/ multiple outputs");
 
-    const auto &encoder = model::SubnetEncoder::get();
     solver::Solver solver;
     model::SubnetEncoderContext context(subnet, solver);
 
+    const auto &encoder = model::SubnetEncoder::get();
     encoder.encode(subnet, context, solver);
     solver.addClause(context.lit(subnet.getOut(0), 1));
 
     if (solver.solve()) {
-      std::vector<bool> counterEx;
+      std::vector<bool> counterExample;
       for (size_t i = 0; i < subnet.getInNum(); ++i) {
-        counterEx.push_back(solver.value(context.var(i, 0)));
+        counterExample.push_back(solver.value(context.var(i, 0)));
       }
-      return CheckerResult(CheckerResult::NOTEQUAL, counterEx);
+      return CheckerResult(CheckerResult::NOTEQUAL, counterExample);
     }
 
     return CheckerResult::EQUAL;

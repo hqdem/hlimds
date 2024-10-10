@@ -110,7 +110,6 @@ protected:
     std::unique_ptr<optimizer::CutExtractor> cutExtractor{};
 
     auto &techLibrary = *context.techMapContext.library;
-    techLibrary.prepareLib();
 
     auto matchFinder = [&](const SubnetBuilder &builder,
                            const optimizer::Cut &cut) {
@@ -174,6 +173,7 @@ protected:
     LibraryInitializer<LIBPATH>::SetUpTestSuite();
     auto &library =
       LibraryInitializer<LIBPATH>::context.techMapContext.library;
+    library->prepareLib();
     pBoolMatcher_ = std::move(
       Matcher<PBoolMatcher, kitty::dynamic_truth_table>::
         create(library->getCombCells()));

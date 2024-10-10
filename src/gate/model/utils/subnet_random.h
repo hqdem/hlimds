@@ -18,8 +18,18 @@
 
 namespace eda::gate::model {
 
+/// @brief generate random subnet with given parameters
+/// @param nIn number of subnet inputs
+/// @param nOut number of subnet outputs
+/// @param nCell number of cells in subnet including inputs and outputs 
+///              (should be >= nIn + nOut)
+/// @param minArity lower bound for cell arity distribution
+/// @param maxArity upper bound for cell arity distribution
+/// @param seed seed for random generation. Defaults to -1 which is "don't use seed"
+/// @return subnetID for randomply generated subnet
 inline SubnetID randomSubnet(
-    size_t nIn, size_t nOut, size_t nCell, size_t minArity, size_t maxArity) {
+    size_t nIn, size_t nOut, size_t nCell, size_t minArity, size_t maxArity,
+    ssize_t seed = -1) {
   assert(nIn > 0 && nOut > 0);
   assert(nCell >= (nIn + nOut));
   assert(minArity <= maxArity);
@@ -46,6 +56,9 @@ inline SubnetID randomSubnet(
 
   std::random_device device;
   std::mt19937 generator(device());
+  if (seed != -1) {
+    generator.seed(seed);
+  }
 
   for (size_t i = nIn; i < (nCell - nOut); ++i) {
     const auto symbol = symbols[symbolDist(generator)];

@@ -95,12 +95,8 @@ TEST(LecCloneTest, OnlyInputsAndOutput) {
   builder2.addOutput(and2);
   auto subnetID2 = builder2.make();
 
-  BaseChecker::CellToCell map;
-  map[0] = 0;
-  map[1] = 1;
-
   EXPECT_TRUE(BaseChecker::getChecker(options::SAT).
-              areEquivalent(subnetID, subnetID2, map).equal());
+              areEquivalent(subnetID, subnetID2).equal());
 }
 
 } // namespace eda::gate::debugger

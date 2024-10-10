@@ -15,8 +15,10 @@
 #include <queue>
 #include <unordered_set>
 
-/// Disables cut extraction and matching for outputs.
+/// Enables cut extraction and matching for outputs.
 #define UTOPIA_TECHMAP_MATCH_OUTPUTS 1
+/// Enables skipping cuts and matches if the constraints are violated.
+#define UTOPIA_TECHMAP_SKIP_INFEASIBLE_SOLUTIONS 0
 
 /// Outputs the cost vector.
 #define UTOPIA_LOG_COST_VECTOR(prefix, vector)\
@@ -46,7 +48,14 @@
  
 namespace eda::gate::techmapper {
 
-static criterion::CostVector defaultCostAggregator(
+criterion::CostVector defaultCutEstimator(
+    const model::SubnetBuilder &,
+    const optimizer::Cut &,
+    const SubnetTechMapperBase::CellContext &) {
+  return criterion::CostVector::Zero;
+}
+
+criterion::CostVector defaultCostAggregator(
     const std::vector<criterion::CostVector> &vectors) {
   criterion::CostVector result = criterion::CostVector::Zero;
 
@@ -57,8 +66,9 @@ static criterion::CostVector defaultCostAggregator(
   return result;
 }
 
-static criterion::CostVector defaultCostPropagator(
-    const criterion::CostVector &vector, const uint32_t fanout) {
+criterion::CostVector defaultCostPropagator(
+    const criterion::CostVector &vector,
+    const uint32_t fanout) {
   const auto divisor = fanout ? fanout : 1;
 
   return criterion::CostVector(
@@ -71,15 +81,48 @@ SubnetTechMapperBase::SubnetTechMapperBase(
     const std::string &name,
     const context::UtopiaContext &context,
     const CutProvider cutProvider,
+    const CutEstimator cutEstimator,
+    const MatchFinder matchFinder,
+    const CellEstimator cellEstimator,
+    const CostAggregator costAggregator,
+    const CostPropagator costPropagator):
+    optimizer::SubnetTransformer(name),
+    context(context),
+    cutProvider(cutProvider),
+    cutEstimator(cutEstimator),
+    matchFinder(matchFinder),
+    cellEstimator(cellEstimator),
+    costAggregator(costAggregator),
+    costPropagator(costPropagator) {}
+
+SubnetTechMapperBase::SubnetTechMapperBase(
+    const std::string &name,
+    const context::UtopiaContext &context,
+    const CutProvider cutProvider,
+    const CutEstimator cutEstimator,
     const MatchFinder matchFinder,
     const CellEstimator cellEstimator):
     SubnetTechMapperBase(name,
                          context,
                          cutProvider,
+                         cutEstimator,
                          matchFinder,
                          cellEstimator,
                          defaultCostAggregator,
                          defaultCostPropagator) {}
+
+SubnetTechMapperBase::SubnetTechMapperBase(
+    const std::string &name,
+    const context::UtopiaContext &context,
+    const CutProvider cutProvider,
+    const MatchFinder matchFinder,
+    const CellEstimator cellEstimator):
+    SubnetTechMapperBase(name,
+                         context,
+                         cutProvider,
+                         defaultCutEstimator,
+                         matchFinder,
+                         cellEstimator) {}
 
 /// Maps a entry ID to the best match (null stands for no match).
 using MatchSelection = std::vector<const SubnetTechMapperBase::Match*>;
@@ -203,32 +246,51 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
   return newBuilder;
 }
 
+SubnetTechMapperBase::CellContext::LinkInfo SubnetTechMapperBase::getLinkInfo(
+    const model::SubnetBuilder &builder,
+    const model::EntryID sourceID,
+    const uint16_t sourcePort) {
+  const auto &source = builder.getCell(sourceID);
+
+  if (source.isIn()) {
+    return { model::OBJ_NULL_ID, sourcePort };
+  }
+  if (space[sourceID]->hasSolution()) {
+    const auto &best = space[sourceID]->getBest();
+    return { best.solution.typeID, sourcePort };
+  }
+
+  // Reachable for cut pre-estimators.
+  return { model::OBJ_NULL_ID, sourcePort };
+}       
+
 SubnetTechMapperBase::CellContext SubnetTechMapperBase::getCellContext(
-    const SubnetBuilderPtr &builder,
-    const model::Subnet::Cell &cell,
+    const model::SubnetBuilder &builder,
+    const model::EntryID entryID,
+    const optimizer::Cut &cut) {
+  CellContext cellContext;
+  cellContext.fanout = builder.getCell(entryID).refcount;
+  cellContext.links.resize(cut.size());
+
+  size_t i = 0;
+  for (const auto leafID : cut.leafIDs) {
+    cellContext.links[i++] = getLinkInfo(builder, leafID, 0xffff /* unknown */);
+  }
+
+  return cellContext;
+}
+
+SubnetTechMapperBase::CellContext SubnetTechMapperBase::getCellContext(
+    const model::SubnetBuilder &builder,
+    const model::EntryID entryID,
     const Match &match) {
   CellContext cellContext;
-  cellContext.fanout = cell.refcount;
+  cellContext.fanout = builder.getCell(entryID).refcount;
   cellContext.links.resize(match.links.size());
 
-  for (size_t i = 0; i < match.links.size(); ++i) {
-    const auto &link = match.links[i];
-    const auto &source = builder->getCell(link.idx);
-
-    if (source.isIn()) {
-      cellContext.links[i] = {
-          model::OBJ_NULL_ID,
-          static_cast<uint16_t>(link.out)
-      };
-    } else if (space[link.idx]->hasSolution()) {
-      const auto &best = space[link.idx]->getBest();
-      cellContext.links[i] = {
-          best.solution.typeID,
-          static_cast<uint16_t>(link.out)
-      };
-    } else {
-      assert(false && "No solution found for input link");
-    }        
+  size_t i = 0;
+  for (const auto &link : match.links) {
+    cellContext.links[i++] = getLinkInfo(builder, link.idx, link.out);
   }
 
   return cellContext;
@@ -255,9 +317,15 @@ void SubnetTechMapperBase::findCellSolutions(
       continue;
     }
 
-    if (!context.criterion->check(cutAggregation)) {
+#if UTOPIA_TECHMAP_SKIP_INFEASIBLE_SOLUTIONS
+    const auto preCellContext = getCellContext(*builder, entryID, cut);
+    const auto preCellVector = cutEstimator(*builder, cut, preCellContext);
+    const auto preCostVector = cutAggregation + preCellVector;
+
+    if (!context.criterion->check(preCostVector)) {
       continue;
     }
+#endif // UTOPIA_TECHMAP_SKIP_INFEASIBLE_SOLUTIONS
 
     // Trivial cuts are treated as constants.
     const auto &matches = getMatches(*builder, cut);
@@ -266,15 +334,17 @@ void SubnetTechMapperBase::findCellSolutions(
       assert((cut.isTrivial() && match.links.empty())
           || (match.links.size() == cut.size()));
 
-      auto cellContext = getCellContext(builder, cell, match);
+      const auto cellContext = getCellContext(*builder, entryID, match);
 
-      const auto cellCostVector = cellEstimator(
+      const auto cellVector = cellEstimator(
           match.typeID, cellContext, context.techMapContext);
-      const auto costVector = cutAggregation + cellCostVector;
+      const auto costVector = cutAggregation + cellVector;
 
+#if UTOPIA_TECHMAP_SKIP_INFEASIBLE_SOLUTIONS
       if (!context.criterion->check(costVector)) {
         continue;
       }
+#endif // UTOPIA_TECHMAP_SKIP_INFEASIBLE_SOLUTIONS
 
       space[entryID]->add(match, costPropagator(costVector, cell.refcount));
     } // for matches

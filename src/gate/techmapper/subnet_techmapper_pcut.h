@@ -24,10 +24,19 @@ public:
                        const context::UtopiaContext &context,
                        const uint16_t maxCutSize,
                        const uint16_t maxCutNum,
+                       const CutEstimator cutEstimator,
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator,
                        const CostAggregator costAggregator,
                        const CostPropagator costPropagator);
+
+  SubnetTechMapperPCut(const std::string &name,
+                       const context::UtopiaContext &context,
+                       const uint16_t maxCutSize,
+                       const uint16_t maxCutNum,
+                       const CutEstimator cutEstimator,
+                       const MatchFinder matchFinder,
+                       const CellEstimator cellEstimator);
 
   SubnetTechMapperPCut(const std::string &name,
                        const context::UtopiaContext &context,

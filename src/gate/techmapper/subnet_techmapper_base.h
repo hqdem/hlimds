@@ -53,6 +53,11 @@ public:
       std::function<optimizer::CutsList(
                         const model::SubnetBuilder &,
                         const model::EntryID entryID)>;
+  using CutEstimator =
+      std::function<criterion::CostVector(
+                        const model::SubnetBuilder &,
+                        const optimizer::Cut &,
+                        const CellContext &)>;
   using MatchFinder =
       std::function<std::vector<Match>(
                         const model::SubnetBuilder &,
@@ -78,17 +83,18 @@ public:
   SubnetTechMapperBase(const std::string &name,
                        const context::UtopiaContext &context,
                        const CutProvider cutProvider,
+                       const CutEstimator cutEstimator,
                        const MatchFinder matchFinder,
                        const CellEstimator cellEstimator,
                        const CostAggregator costAggregator,
-                       const CostPropagator costPropagator):
-      optimizer::SubnetTransformer(name),
-      context(context),
-      cutProvider(cutProvider),
-      matchFinder(matchFinder),
-      cellEstimator(cellEstimator),
-      costAggregator(costAggregator),
-      costPropagator(costPropagator) {}
+                       const CostPropagator costPropagator);
+
+  SubnetTechMapperBase(const std::string &name,
+                       const context::UtopiaContext &context,
+                       const CutProvider cutProvider,
+                       const CutEstimator cutEstimator,
+                       const MatchFinder matchFinder,
+                       const CellEstimator cellEstimator);
 
   SubnetTechMapperBase(const std::string &name,
                        const context::UtopiaContext &context,
@@ -167,8 +173,16 @@ protected:
                          const model::EntryID entryID,
                          const optimizer::CutsList &cuts);
 
-  CellContext getCellContext(const SubnetBuilderPtr &builder,
-                             const model::Subnet::Cell &cell,
+  CellContext::LinkInfo getLinkInfo(const model::SubnetBuilder &builder,
+                                    const model::EntryID sourceID,
+                                    uint16_t sourcePort);
+
+  CellContext getCellContext(const model::SubnetBuilder &builder,
+                             const model::EntryID entryID,
+                             const optimizer::Cut &cut);
+
+  CellContext getCellContext(const model::SubnetBuilder &builder,
+                             const model::EntryID entryID,
                              const Match &match);
 
   std::vector<Match> &getMatches(const model::SubnetBuilder &builder,
@@ -186,7 +200,9 @@ protected:
   const uint16_t maxTries{3};
 
   const context::UtopiaContext &context;
+
   const CutProvider cutProvider;
+  const CutEstimator cutEstimator;
   const MatchFinder matchFinder;
   const CellEstimator cellEstimator;
   const CostAggregator costAggregator;
@@ -202,5 +218,17 @@ protected:
   // Cache of matches (to speed up multiple tries).
   std::unordered_map<optimizer::Cut, std::vector<Match>> cutMatches;
 };
+
+criterion::CostVector defaultCutEstimator(
+    const model::SubnetBuilder &builder,
+    const optimizer::Cut &cut,
+    const SubnetTechMapperBase::CellContext &cellContext);
+
+criterion::CostVector defaultCostAggregator(
+    const std::vector<criterion::CostVector> &vectors);
+
+criterion::CostVector defaultCostPropagator(
+    const criterion::CostVector &vector,
+    const uint32_t fanout);
 
 } // namespace eda::gate::techmapper

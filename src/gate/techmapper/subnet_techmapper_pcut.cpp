@@ -27,6 +27,7 @@ SubnetTechMapperPCut::SubnetTechMapperPCut(
     const context::UtopiaContext &context,
     const uint16_t maxCutSize,
     const uint16_t maxCutNum,
+    const CutEstimator cutEstimator,
     const MatchFinder matchFinder,
     const CellEstimator cellEstimator,
     const CostAggregator costAggregator,
@@ -34,6 +35,7 @@ SubnetTechMapperPCut::SubnetTechMapperPCut(
     SubnetTechMapperBase(name,
                          context,
                          UTOPIA_CUT_PROVIDER_LAMBDA(),
+                         cutEstimator,
                          matchFinder,
                          cellEstimator,
                          costAggregator,
@@ -45,14 +47,33 @@ SubnetTechMapperPCut::SubnetTechMapperPCut(
     const context::UtopiaContext &context,
     const uint16_t maxCutSize,
     const uint16_t maxCutNum,
+    const CutEstimator cutEstimator,
     const MatchFinder matchFinder,
     const CellEstimator cellEstimator):
-    SubnetTechMapperBase(name,
+    SubnetTechMapperPCut(name,
                          context,
-                         UTOPIA_CUT_PROVIDER_LAMBDA(),
+                         maxCutSize,
+                         maxCutNum,
+                         cutEstimator,
                          matchFinder,
-                         cellEstimator),
-    maxCutSize(maxCutSize), maxCutNum(maxCutNum) {}
+                         cellEstimator,
+                         defaultCostAggregator,
+                         defaultCostPropagator) {}
+
+SubnetTechMapperPCut::SubnetTechMapperPCut(
+    const std::string &name,
+    const context::UtopiaContext &context,
+    const uint16_t maxCutSize,
+    const uint16_t maxCutNum,
+    const MatchFinder matchFinder,
+    const CellEstimator cellEstimator):
+    SubnetTechMapperPCut(name,
+                         context,
+                         maxCutSize,
+                         maxCutNum,
+                         defaultCutEstimator,
+                         matchFinder,
+                         cellEstimator) {}
 
 void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
                                         const model::EntryID entryID) {
@@ -82,19 +103,21 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
 
   for (size_t i = 0; i < cuts.size(); ++i) {
     const auto &cut = cuts[i];
+    const auto cellContext = getCellContext(builder, entryID, cut);
 
     criterion::Cost cost;
     if (cut.isTrivial()) {
       cost = 0. /* trivial cut must be included */;
     } else {
-      const auto leafVectors = getCostVectors(cut);
-      const auto aggregation = costAggregator(leafVectors);
-      cost = context.criterion->getPenalizedCost(aggregation, tension);
+      const auto prevVector = costAggregator(getCostVectors(cut));
+      const auto cellVector = cutEstimator(builder, cut, cellContext);
+      const auto costVector = prevVector + cellVector;
+      cost = context.criterion->getPenalizedCost(costVector, tension);
     }
 
     // No matches => large cost.
     matches[i] = matchFinder(builder, cut);
-    cost /= (std::log(matches[i].size() + 1.) + .1);
+    cost /= (std::log2(matches[i].size() + 1.) + .1);
 
     sorted[i] = {i, cost};
     goodOldCuts.erase(cut);

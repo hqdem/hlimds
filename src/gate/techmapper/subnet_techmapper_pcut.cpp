@@ -6,10 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "subnet_techmapper_pcut.h"
+#include "diag/logger.h"
+#include "gate/techmapper/subnet_techmapper_pcut.h"
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 namespace eda::gate::techmapper {
 
@@ -92,7 +94,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
 
     // No matches => large cost.
     matches[i] = matchFinder(builder, cut);
-    cost /= (matches[i].size() + .25);
+    cost /= (std::log(matches[i].size() + 1.) + .1);
 
     sorted[i] = {i, cost};
     goodOldCuts.erase(cut);
@@ -113,6 +115,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
   optimizer::CutsList pcuts;
   pcuts.reserve(n);
 
+  size_t matchCount = 0;
   for (size_t i = 0; i < n; ++i) {
     const auto index = sorted[i].first;
     const auto &pcut = cuts[index];
@@ -121,6 +124,14 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
     pcuts.push_back(pcut);
     // Cache the cut matches.
     cutMatches.emplace(pcut, matches[index]);
+
+    matchCount += matches[index].size();
+  }
+
+  if (matchCount <= 1 /* trivial cut */) {
+    const auto &cell = builder.getCell(entryID);
+    UTOPIA_LOG_WARN("No p-cut matches found for "
+        << fmt::format("cell#{}:{}", entryID, cell.getType().getName()));
   }
 
   cutExtractor->setCuts(entryID, pcuts);

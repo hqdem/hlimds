@@ -79,8 +79,8 @@ std::tuple<EntryID, EntryID, EntryID> DesignBuilder::getCellNum(
 }
 
 static void replace(const CellID oldCellID, const CellID newCellID,
-                    const std::vector<uint16_t> &newInputs,
-                    const std::vector<uint16_t> &newOutputs,
+                    const std::vector<uint32_t> &newInputs,
+                    const std::vector<uint32_t> &newOutputs,
                     LinkMap &linkMap) {
   assert(oldCellID != newCellID);
 
@@ -114,8 +114,8 @@ static void replace(const CellID oldCellID, const CellID newCellID,
 }
 
 void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
-                                const std::vector<uint16_t> &newInputs,
-                                const std::vector<uint16_t> &newOutputs) {
+                                const std::vector<uint32_t> &newInputs,
+                                const std::vector<uint32_t> &newOutputs) {
   auto &subnets = result.subnets;
   for (size_t i = 0; i < subnets.size(); ++i) {
     auto &mapping = subnets[i].mapping;

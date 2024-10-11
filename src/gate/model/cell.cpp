@@ -38,12 +38,12 @@ Cell::LinkList Cell::getLinks() const {
   return links;
 }
 
-LinkEnd Cell::getLink(uint16_t port) const {
+LinkEnd Cell::getLink(uint32_t port) const {
   Array<uint64_t> array(arrayID);
   return LinkEnd::unpack(array[port]);
 }
 
-void Cell::setLink(uint16_t port, const LinkEnd &source) {
+void Cell::setLink(uint32_t port, const LinkEnd &source) {
   assert(port < fanin);
   Array<uint64_t> array(arrayID);
   assert(!LinkEnd::unpack(array[port]).isValid());

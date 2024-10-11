@@ -352,8 +352,8 @@ public:
 
   /// Replaces the flip-flop or the latch.
   void replaceCell(const CellID oldCellID, const CellID newCellID,
-                   const std::vector<uint16_t> &newInputs,
-                   const std::vector<uint16_t> &newOutputs);
+                   const std::vector<uint32_t> &newInputs,
+                   const std::vector<uint32_t> &newOutputs);
 
   /// Checks if the design is tech-mapped.
   bool isTechMapped() {

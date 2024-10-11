@@ -14,6 +14,7 @@
 #include "gate/model/object.h"
 #include "gate/model/storage.h"
 
+#include <limits>
 #include <vector>
 
 namespace eda::gate::model {
@@ -34,8 +35,8 @@ class Cell final : public Object<Cell, CellID> {
 public:
   using LinkList = std::vector<LinkEnd>;
 
-  static constexpr uint16_t MaxFanin  = 0xffff;
-  static constexpr uint16_t MaxFanout = 0xffff;
+  static constexpr uint32_t MaxFanin  = (1u << LinkEnd::PortBits) - 1;
+  static constexpr uint32_t MaxFanout = std::numeric_limits<uint32_t>::max();
 
   bool isIn()   const { return typeSID == CELL_TYPE_SID_IN;   }
   bool isOut()  const { return typeSID == CELL_TYPE_SID_OUT;  }
@@ -59,15 +60,15 @@ public:
   CellSymbol getSymbol() const { return getType().getSymbol(); }
 
   /// Returns the cell fan-in (the number of inputs).
-  uint16_t getFanin() const { return fanin; }
+  uint32_t getFanin() const { return fanin; }
   /// Returns the cell fan-out (reference count for all outputs).
-  uint16_t getFanout() const { return fanout; }
+  uint64_t getFanout() const { return fanout; }
 
   /// Returns the input links of the cell.
   LinkList getLinks() const;
 
   /// Returns the input link of the cell.
-  LinkEnd getLink(uint16_t port) const;
+  LinkEnd getLink(uint32_t port) const;
 
 private:
   Cell(CellTypeID typeID): typeSID(typeID.getSID()) {}
@@ -75,16 +76,18 @@ private:
   Cell(CellTypeID typeID, const LinkList &links);
 
   /// Set the input link (used by NetBuilder).
-  void setLink(uint16_t port, const LinkEnd &source);
+  void setLink(uint32_t port, const LinkEnd &source);
 
   /// Cell type SID.
   const uint32_t typeSID;
+  uint32_t padding1__{0};
 
-  uint16_t fanin{0};
-  uint16_t fanout{0};
+  uint32_t fanin{0};
+  uint32_t fanout{0};
 
   /// Links in the external list.
   ArrayID arrayID{OBJ_NULL_ID};
+  uint64_t padding2__{0};
 };
 
 static_assert(sizeof(Cell) == CellID::Size);

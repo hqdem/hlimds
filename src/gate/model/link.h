@@ -23,9 +23,12 @@ class Cell;
 
 class LinkEnd final : public Object<LinkEnd, LinkEndID> {
 public:
+  static constexpr auto PortBits = 23;
+  static constexpr auto PortMask = (1u << PortBits) - 1;
+
   static LinkEnd unpack(uint64_t value) {
-    CellID cellID = CellID::makeFID(value >> 24);
-    uint16_t port = (value >> 8) & 0xffff;
+    CellID cellID = CellID::makeFID(value >> (PortBits + 1));
+    uint32_t port = (value >> 1) & PortMask;
     bool valid = value & 1;
 
     return valid ? LinkEnd(cellID, port) : LinkEnd();
@@ -37,8 +40,9 @@ public:
 
   LinkEnd(): value(0) {}
 
-  LinkEnd(CellID cellID, uint16_t port):
-      value((cellID.getSID() << 24) | (static_cast<uint64_t>(port) << 8) | 1) {}
+  LinkEnd(CellID cellID, uint32_t port):
+      value((cellID.getSID() << (PortBits + 1))
+          | (static_cast<uint64_t>(port) << 1) | 1) {}
 
   explicit LinkEnd(CellID cellID): LinkEnd(cellID, 0) {}
 
@@ -47,16 +51,16 @@ public:
   bool operator ==(const LinkEnd &r) const noexcept { return value == r.value; }
 
   /// Returns the identifier of the source cell.
-  CellID getCellID() const { return CellID::makeFID(value >> 24); }
+  CellID getCellID() const { return CellID::makeFID(value >> (PortBits + 1)); }
   /// Returns the reference to the source cell.
   const Cell &getCell() const;
   /// Returns the output port of the source cell.
-  uint16_t getPort() const { return (value >> 8) & 0xffff; }
+  uint32_t getPort() const { return (value >> 1) & PortMask; }
   /// Checks whether the link-end is valid.
   bool isValid() const { return value & 1; }
 
 private:
-  /// Packed value: [cell SID:40 | port:16 | valid:1].
+  /// Packed value: [cell SID:40 | port:23 | valid:1].
   uint64_t value;
 };
 
@@ -70,8 +74,8 @@ struct Link final : public Object<Link, LinkID> {
   Link() {}
   Link(const LinkEnd &source, const LinkEnd &target):
       source(source), target(target) {}
-  Link(CellID sourceID, uint16_t sourcePort,
-       CellID targetID, uint16_t targetPort):
+  Link(CellID sourceID, uint32_t sourcePort,
+       CellID targetID, uint32_t targetPort):
       Link(LinkEnd{sourceID, sourcePort}, LinkEnd{targetID, targetPort}) {}
 
   Link(const Link &) = default;

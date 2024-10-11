@@ -122,34 +122,48 @@ using DesignMapper = std::shared_ptr<DesignTransformer>;
 
 class EachSubnetInPlaceTransformer final : public DesignInPlaceTransformer {
 public:
-  EachSubnetInPlaceTransformer(const SubnetPass &pass):
-      DesignInPlaceTransformer(pass->getName()), pass(pass) {}
+  EachSubnetInPlaceTransformer(const SubnetPass &pass,
+                               const bool skipTrivial = true):
+      DesignInPlaceTransformer(pass->getName()),
+      pass(pass),
+      skipTrivial(skipTrivial) {}
 
   void transform(
       const std::shared_ptr<model::DesignBuilder> &builder) const override {
     for (size_t i = 0; i < builder->getSubnetNum(); ++i) {
-      pass->transform(builder->getSubnetBuilder(i));
+      const auto &subnetBuilder = builder->getSubnetBuilder(i);
+      if (!(skipTrivial && subnetBuilder->isTrivial())) {
+        pass->transform(builder->getSubnetBuilder(i));
+      }
     }
   }
 
 private:
   const SubnetPass pass;
+  const bool skipTrivial;
 };
 
 class EachSubnetTransformer final : public DesignInPlaceTransformer {
 public:
-  EachSubnetTransformer(const SubnetMapper &mapper):
-      DesignInPlaceTransformer(mapper->getName()), mapper(mapper) {}
+  EachSubnetTransformer(const SubnetMapper &mapper,
+                        const bool skipTrivial = true):
+      DesignInPlaceTransformer(mapper->getName()),
+      mapper(mapper),
+      skipTrivial(skipTrivial) {}
 
   void transform(
       const std::shared_ptr<model::DesignBuilder> &builder) const override {
     for (size_t i = 0; i < builder->getSubnetNum(); ++i) {
-      builder->setSubnetBuilder(i, mapper->map(builder->getSubnetBuilder(i)));
+      const auto &subnetBuilder = builder->getSubnetBuilder(i);
+      if (!(skipTrivial && subnetBuilder->isTrivial())) {
+        builder->setSubnetBuilder(i, mapper->map(subnetBuilder));
+      }
     }
   }
 
 private:
   const SubnetMapper mapper;
+  const bool skipTrivial;
 };
 
 } // namespace eda::gate::optimizer

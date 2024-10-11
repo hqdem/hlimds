@@ -33,9 +33,7 @@ static inline const eda::gate::model::Subnet &getSubnet(
 static inline bool isTrivialSubnet(
     eda::gate::model::DesignBuilder &designBuilder, size_t i) {
   const auto &subnet = getSubnet(designBuilder, i);
-  return subnet.getInNum() == 1
-      && subnet.getOutNum() == 1
-      && subnet.getCellNum() == 2;
+  return subnet.isTrivial();
 }
  
 static inline void printDesign(

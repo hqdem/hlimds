@@ -56,17 +56,20 @@ public:
   using Entry = model::SubnetEntry<uint32_t>;
   static_assert(sizeof(Entry) == 32);
 
-  Subnet &operator =(const Subnet &) = delete;
+  Subnet &operator=(const Subnet &) = delete;
   Subnet(const Subnet &) = delete;
 
-  /// Returns the overall number of entries including inputs and outputs.
+  /// Checks whether the subnet contains only inputs and outputs.
+  bool isTrivial() const { return nCell <= nIn + nOut; }
+
+  /// Returns the overall number of entries including entries w/ links.
   uint32_t size() const { return nEntry; }
 
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
-  /// Returns the number of cells.
+  /// Returns the number of cells including inputs and outputs.
   uint32_t getCellNum() const { return nCell; }
   /// Returns the number of buffers.
   uint32_t getBufNum() const { return nBuf; }
@@ -108,7 +111,7 @@ public:
 
   /// Check if the subnet is tech-mapped.
   bool isTechMapped() const {
-    if (nEntry <= (nIn + nOut)) {
+    if (isTrivial()) {
       return false;
     }
 
@@ -154,7 +157,7 @@ private:
 
 static_assert(sizeof(Subnet) == SubnetID::Size);
 
-std::ostream &operator <<(std::ostream &out, const Subnet &subnet);
+std::ostream &operator<<(std::ostream &out, const Subnet &subnet);
 
 //===----------------------------------------------------------------------===//
 // Subnet Builder
@@ -359,13 +362,16 @@ public:
       const CellWeightProvider *weightProvider = nullptr):
       SubnetBuilder(Subnet::get(subnetID), weightProvider) {}
 
-  SubnetBuilder &operator =(const SubnetBuilder &) = delete;
+  SubnetBuilder &operator=(const SubnetBuilder &) = delete;
+
+  /// Checks whether the subnet contains only inputs and outputs.
+  bool isTrivial() const { return nCell <= nIn + nOut; }
 
   /// Returns the number of inputs.
   uint16_t getInNum() const { return nIn; }
   /// Returns the number of outputs.
   uint16_t getOutNum() const { return nOut; }
-  /// Returns the number of cells.
+  /// Returns the number of cells including inputs and outputs.
   uint32_t getCellNum() const { return nCell; }
   /// Returns the number of buffers.
   uint32_t getBufNum() const { return nBuf; }
@@ -1096,7 +1102,7 @@ public:
     other.subnetBuilderPtr.reset();
   }
 
-  SubnetObject &operator =(SubnetObject &&other) {
+  SubnetObject &operator=(SubnetObject &&other) {
     subnetID = other.subnetID;
     subnetBuilderPtr = other.subnetBuilderPtr;
     other.subnetBuilderPtr.reset();

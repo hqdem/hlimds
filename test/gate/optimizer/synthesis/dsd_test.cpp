@@ -42,7 +42,7 @@ Subnet::Link addITE(Subnet::Link first,
 const Subnet& handle(const Subnet &subnet) {
   /* Convertion to BDD */
   Cudd manager(0, 0);
-  eda::gate::model::SubnetBuilder builder(subnet);
+  auto builder = std::make_shared<SubnetBuilder>(subnet);
   eda::gate::model::SubnetView sv(builder);
   BDD netBDD = convertBdd(sv, manager).at(0);
 

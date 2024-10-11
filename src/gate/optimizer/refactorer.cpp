@@ -24,11 +24,11 @@ void Refactorer::transform(const std::shared_ptr<SubnetBuilder> &builder) const 
   for (SafePasser iter(builderPtr->begin()); 
        iter != builderPtr->end() && !builderPtr->getCell(*iter).isOut();
        ++iter) {
-    nodeProcessing(*builderPtr, iter);
+    nodeProcessing(builder, iter);
   }
 }
 
-void Refactorer::nodeProcessing(SubnetBuilder &builder,
+void Refactorer::nodeProcessing(const std::shared_ptr<SubnetBuilder> &builder,
                                 SafePasser &iter) const {
   const size_t entryID{*iter};
 
@@ -52,7 +52,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder,
     std::vector<float> weights;
     weights.reserve(coneIns);
     for (size_t i = 0; i < coneIns; ++i) {
-      weights.push_back(builder.getWeight(window.getIn(i).idx));
+      weights.push_back(builder->getWeight(window.getIn(i).idx));
     }
     (*weightCalculator)(newConeBuilder, weights);
   }
@@ -60,7 +60,7 @@ void Refactorer::nodeProcessing(SubnetBuilder &builder,
   auto newConeMap = window.getInOutMapping();
 
   auto effect
-      = builder.evaluateReplace(newCone, newConeMap, weightModifier);
+      = builder->evaluateReplace(newCone, newConeMap, weightModifier);
   if ((*replacePredicate)(effect)) {
     iter.replace(newCone, newConeMap);
   }

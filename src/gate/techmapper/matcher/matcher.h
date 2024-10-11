@@ -25,15 +25,17 @@ class Matcher {
   using StandardCell = library::StandardCell;
 
 public:
-  static std::unique_ptr<BaseType> create(const std::vector<StandardCell> &cells) {
+  static std::unique_ptr<BaseType> create(
+        const std::vector<StandardCell> &cells) {
+
     auto instance = std::make_unique<BaseType>();
     instance->initMap(cells);
     return instance;
   }
 
   virtual std::vector<SubnetTechMapperBase::Match> match(
-    const model::SubnetBuilder &builder,
-    const optimizer::Cut &cut) = 0;
+      const std::shared_ptr<model::SubnetBuilder> &builder,
+      const optimizer::Cut &cut) = 0;
 
   virtual ~Matcher() = default;
 

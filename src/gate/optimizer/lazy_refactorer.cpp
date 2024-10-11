@@ -12,35 +12,33 @@
 
 namespace eda::gate::optimizer {
 
-using SubnetBuilder = eda::gate::model::SubnetBuilder;  
-using Subnet = eda::gate::model::Subnet;
+using SubnetView = eda::gate::model::SubnetView;
 
 using Visitor = std::function<bool(SubnetBuilder &builder,
                                    const bool isIn,
                                    const bool isOut,
                                    const size_t entryID)>;
 
-void LazyRefactorer::transform(
-    const std::shared_ptr<SubnetBuilder> &builderPtr) const {
+void LazyRefactorer::transform(const SubnetBuilderPtr &builderPtr) const {
   SubnetBuilder *builder = builderPtr.get();
   ConflictGraph g;
   if (weightCalculator) {
     (*weightCalculator)(*builder, {});
   }
-  for (auto iter = builder->begin(); 
+  for (auto iter = builder->begin();
        iter != builder->end() && !builder->getCell(*iter).isOut();
        ++iter) {
-    nodeProcessing(*builder, iter, g);
+    nodeProcessing(builderPtr, iter, g);
   }
   g.findBestColoring(builder);
 }
 
-void LazyRefactorer::nodeProcessing(SubnetBuilder &builder,
-                                    EntryIterator &iter, 
+void LazyRefactorer::nodeProcessing(const SubnetBuilderPtr &builderPtr,
+                                    EntryIterator &iter,
                                     ConflictGraph &g) const {
 
   const size_t entryID{*iter};
-  SubnetView view = (*coneConstructor)(builder, entryID);
+  SubnetView view = (*coneConstructor)(builderPtr, entryID);
   const size_t coneIns{view.getInNum()};
 
   auto newCone = resynthesizer.resynthesize(view, 2);
@@ -53,15 +51,16 @@ void LazyRefactorer::nodeProcessing(SubnetBuilder &builder,
     std::vector<float> weights;
     weights.reserve(coneIns);
     for (size_t i = 0; i < coneIns; ++i) {
-      weights.push_back(builder.getWeight(view.getIn(i).idx));
+      weights.push_back(builderPtr->getWeight(view.getIn(i).idx));
     }
     (*weightCalculator)(newConeBuilder, weights);
   }
 
   auto newConeMap = view.getInOutMapping();
-  auto effect = builder.evaluateReplace(newCone, newConeMap, weightModifier);
+  auto effect = builderPtr->evaluateReplace(
+      newCone, newConeMap, weightModifier);
 
-  SubnetView newWindow(builder, newConeMap);
+  SubnetView newWindow(builderPtr, newConeMap);
   
   if ((effect.weight - eps) > eps) {
 
@@ -88,11 +87,11 @@ void LazyRefactorer::nodeProcessing(SubnetBuilder &builder,
   }
 }
 
-eda::gate::model::SubnetView LazyRefactorer::twoLvlBldr(SubnetBuilder &builder, 
-                                                        size_t numCell) {
+SubnetView LazyRefactorer::twoLvlBldr(const SubnetBuilderPtr &builderPtr,
+                                      size_t numCell) {
 
   InOutMapping entryMap;
-  const auto curLinks = builder.getLinks(numCell);
+  const auto curLinks = builderPtr->getLinks(numCell);
 
   if (curLinks.empty()) {
     entryMap.inputs.push_back(Link(numCell));
@@ -100,11 +99,11 @@ eda::gate::model::SubnetView LazyRefactorer::twoLvlBldr(SubnetBuilder &builder,
   
   for (auto curLink : curLinks) {
 
-    if (builder.getLinks(curLink.idx).empty()) {
+    if (builderPtr->getLinks(curLink.idx).empty()) {
       entryMap.inputs.push_back(Link(curLink.idx));
     } else {
 
-      const Subnet::LinkList prevLinks = builder.getLinks(curLink.idx);
+      const Subnet::LinkList prevLinks = builderPtr->getLinks(curLink.idx);
      
       for (auto l : prevLinks) {
         entryMap.inputs.push_back(Link(l.idx));
@@ -113,7 +112,7 @@ eda::gate::model::SubnetView LazyRefactorer::twoLvlBldr(SubnetBuilder &builder,
   }
 
   entryMap.outputs.push_back(Link(numCell));
-  return SubnetView(builder, entryMap);
+  return SubnetView(builderPtr, entryMap);
 }
 
 } // namespace eda::gate::optimizer

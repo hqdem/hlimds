@@ -111,7 +111,7 @@ protected:
 
     auto &techLibrary = *context.techMapContext.library;
 
-    auto matchFinder = [&](const SubnetBuilder &builder,
+    auto matchFinder = [&](const SubnetBuilderPtr &builder,
                            const optimizer::Cut &cut) {
       return pBoolMatcher_->match(builder, cut);
     };

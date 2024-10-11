@@ -34,6 +34,7 @@ public:
   using Link               = InOutMapping::Link;
   using Subnet             = eda::gate::model::Subnet;
   using SubnetBuilder      = eda::gate::model::SubnetBuilder;
+  using SubnetBuilderPtr   = std::shared_ptr<SubnetBuilder>;
   using SubnetID           = eda::gate::model::SubnetID;
   using SubnetObject       = eda::gate::model::SubnetObject;
   using SubnetView         = eda::gate::model::SubnetView;
@@ -48,7 +49,7 @@ public:
   
   /// Constructs cone for Cell in SubnetBuilder.
   using ConeConstructor =
-      std::function<SubnetView(SubnetBuilder &, size_t root)>;
+      std::function<SubnetView(const SubnetBuilderPtr &, size_t root)>;
   
   /// Calculates weigts of SubnetBuilder Cells with input weights. 
   using WeightCalculator = 
@@ -82,13 +83,13 @@ public:
    *
    * @param builder SubnetBuilder with the subnet to rewrite.
    */
-  void transform(const std::shared_ptr<SubnetBuilder> &builder) const override;
+  void transform(const SubnetBuilderPtr &builder) const override;
 
-  static SubnetView twoLvlBldr(SubnetBuilder &builder, size_t numCell);
+  static SubnetView twoLvlBldr(const SubnetBuilderPtr &builder, size_t numCell);
 
 private:
 
-  void nodeProcessing(SubnetBuilder &builder,
+  void nodeProcessing(const SubnetBuilderPtr &builder,
                       EntryIterator &iter, 
                       ConflictGraph &g) const; 
 

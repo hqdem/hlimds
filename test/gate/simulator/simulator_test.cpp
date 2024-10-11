@@ -25,7 +25,7 @@ TEST(SimulatorTest, SimpleTest) {
 
   for (size_t i = 0; i < nSubnet; ++i) {
     const auto id = model::randomSubnet(nIn, nOut, nCell, minArity, maxArity);
-    model::SubnetBuilder builder(id);
+    auto builder = std::make_shared<model::SubnetBuilder>(id);
 
     Simulator simulator(builder);
     Simulator::DataVector values(nIn);

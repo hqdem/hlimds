@@ -88,7 +88,7 @@ private:
 
 EqPointResult check(const uint32_t point1,
                     const uint32_t point2,
-                    const model::SubnetBuilder &builder) {
+                    const std::shared_ptr<model::SubnetBuilder> &builder) {
 
   model::SubnetView cone1(builder, point1);
 
@@ -153,7 +153,8 @@ void simulate(simulator::Simulator &simulator,
 }
 
 CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
-  model::SubnetBuilder miterBuilder(subnet);
+  auto miterBuilderPtr = std::make_shared<model::SubnetBuilder>(subnet);
+  auto &miterBuilder = *miterBuilderPtr;
   uint16_t storageCount = 0;
   SimValuesStorage storage(subnet.getInNum());
 
@@ -162,7 +163,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
     const uint16_t nIn = miterBuilder.getInNum();
 
     // Simulation
-    simulator::Simulator simulator(miterBuilder);
+    simulator::Simulator simulator(miterBuilderPtr);
     if (storageCount) {
       simulate(simulator, nIn, storage);
       storageCount = 0;
@@ -192,7 +193,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
             continue;
           }
           compareCount += 1;
-          auto res = check(cellIdx1, cellIdx2, miterBuilder);
+          auto res = check(cellIdx1, cellIdx2, miterBuilderPtr);
           res.fillStorage(storage, storageCount, nIn);
           if (res.status == EqPointResult::EQUAL) {
             toBeMerged[cellIdx2].insert(cellIdx1);

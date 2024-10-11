@@ -62,8 +62,8 @@ SubnetBuilderPtr ConePremapper::map(const SubnetBuilderPtr &builder) const {
     }
     if (skip) continue;
 
-    const auto cutView = optimizer::getReconvergentCut(*builderPtr, entryID, k);
-    const auto mffc = optimizer::getMffc(*builderPtr, cutView);
+    const auto cutView = optimizer::getReconvergentCut(builder, entryID, k);
+    const auto mffc = optimizer::getMffc(builder, cutView);
     const InOutMapping &iomapping = mffc.getInOutMapping();
     if (iomapping.inputs == iomapping.outputs) {
       if (cell.arity > k) {
@@ -158,10 +158,8 @@ void ConePremapper::constantCase(const SubnetBuilderPtr &builder,
                                  SafePasser &iter,
                                  const model::EntryID entryID) const {
 
-  SubnetBuilder *builderPtr = builder.get();
-
   InOutMapping iomapping(LinkList{Link(0)}, LinkList{Link(entryID)});
-  model::SubnetView view(*builderPtr, iomapping);
+  model::SubnetView view(builder, iomapping);
   SubnetObject rhs = resynthesizer.resynthesize(view, arity);
   assert(!rhs.isNull() && "Subnet wasn't synthesized!");
   iter.replace(rhs, iomapping);

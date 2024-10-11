@@ -33,13 +33,15 @@ public:
   using TruthTable = eda::util::TruthTable;
 
   /// Constructs a subnet view corresponding to the whole subnet.
-  SubnetView(const SubnetBuilder &parent);
+  SubnetView(const std::shared_ptr<SubnetBuilder> &parent);
   /// Constructs a subnet view corresponding to the maximum cone.
-  SubnetView(const SubnetBuilder &parent, const EntryID rootID);
+  SubnetView(const std::shared_ptr<SubnetBuilder> &parent,
+             const EntryID rootID);
   /// Constructs a subnet view corresponding to the given cut.
-  SubnetView(const SubnetBuilder &parent, const Cut &cut);
+  SubnetView(const std::shared_ptr<SubnetBuilder> &parent, const Cut &cut);
   /// Constructs a subnet view corresponding to the given IO mapping.
-  SubnetView(const SubnetBuilder &parent, const InOutMapping &iomapping);
+  SubnetView(const std::shared_ptr<SubnetBuilder> &parent,
+             const InOutMapping &iomapping);
 
   const InOutMapping &getInOutMapping() const {
     return iomapping;
@@ -89,7 +91,7 @@ public:
 
   SubnetObject &getSubnet();
 
-  const SubnetBuilder &getParent() const {
+  const SubnetObject &getParent() const {
     return parent;
   }
 
@@ -104,11 +106,11 @@ private:
   /// Common care specification for all outputs.
   TruthTable care;
 
-  /// Subnet object corresponding to the view (constructed on demand).
-  SubnetObject subnet;
+  /// Parent subnet object corresponding to the view.
+  const SubnetObject parent;
 
-  /// Parent subnet builder.
-  const SubnetBuilder &parent;
+  /// Subnet object corresponding to the view (construct on demand).
+  SubnetObject subnet;
 };
 
 //===----------------------------------------------------------------------===//

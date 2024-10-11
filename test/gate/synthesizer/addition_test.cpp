@@ -32,7 +32,7 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
   const CellTypeAttr &attr =
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-  SubnetBuilder result(
+  auto result = std::make_shared<SubnetBuilder>(
       makeSub ? (generateAsSigned ? eda::gate::synthesizer::synthSubS(attr)
                                   : eda::gate::synthesizer::synthSubU(attr))
               : (generateAsSigned ? eda::gate::synthesizer::synthAddS(attr)
@@ -229,7 +229,8 @@ TEST(Synthesizer, UnaryMinus) {
     const CellTypeAttr &attr =
         CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-    SubnetBuilder result(eda::gate::synthesizer::synthNegU(attr)); // TODO: Add tests for NegS
+    auto result = std::make_shared<SubnetBuilder>(
+        eda::gate::synthesizer::synthNegU(attr)); // TODO: Add tests for NegS
 
     Simulator simulator(result);
     Simulator::DataVector values(sizeA);

@@ -70,23 +70,29 @@ template<>
 inline eda::gate::model::SubnetBuilder construct<eda::gate::model::SubnetBuilder>(
     const model::SubnetView &window) {
 
-    auto newW = model::SubnetView(window.getParent(), window.getInOutMapping());
-    model::SubnetBuilder newBuilder {newW.getSubnet().make()};
+  const auto &parent = window.getParent();
+  if (parent.isNull()) {
+    return model::SubnetBuilder();
+  }
+
+  auto newW = model::SubnetView(window.getParent().builderPtr(),
+                                window.getInOutMapping());
+  model::SubnetBuilder newBuilder {newW.getSubnet().make()};
     
-    model::SubnetViewWalker walker(window);
-    size_t curIn{0};
-    auto func = [&newBuilder, &curIn](eda::gate::model::SubnetBuilder &builder,
-                                      const bool isIn,
-                                      const bool isOut,
-                                      const size_t entryID) ->bool {
-      if (isIn) {
-        newBuilder.setWeight(curIn, builder.getWeight(entryID));
-        curIn++;
-        return true;
-      }
-      return false;
-    };
-    walker.run(func);
+  model::SubnetViewWalker walker(window);
+  size_t curIn{0};
+  auto func = [&newBuilder, &curIn](eda::gate::model::SubnetBuilder &builder,
+                                    const bool isIn,
+                                    const bool isOut,
+                                    const size_t entryID) ->bool {
+    if (isIn) {
+      newBuilder.setWeight(curIn, builder.getWeight(entryID));
+      curIn++;
+      return true;
+    }
+    return false;
+  };
+  walker.run(func);
 
   return newBuilder;
 }

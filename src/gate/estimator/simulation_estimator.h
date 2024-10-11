@@ -82,13 +82,13 @@ public:
 
   /**
    * @brief Simulates the subnet and stores information about cells states.
-   * @param subnet The subnet for simulation.
+   * @param builder The subnet for simulation.
    * @param inValuesList The input values for simulation of the subnet.
    * @return Switches from 1 to 0 and from 0 to 1 for the subnet and count
    * of on state for cells.
    */
   std::tuple<Switches, Switches, OnStates> simulate(
-      const Builder &builder,
+      const std::shared_ptr<Builder> &builder,
       const InValuesList &inValuesList) const;
 
 private:

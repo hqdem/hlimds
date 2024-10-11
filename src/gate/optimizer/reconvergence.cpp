@@ -11,6 +11,7 @@
 namespace eda::gate::optimizer {
 
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using SubnetBuilderPtr = std::shared_ptr<gate::model::SubnetBuilder>;
 
 static unsigned computeCost(SubnetBuilder &builder, model::EntryID idx) {
   const auto &cell = builder.getCell(idx);
@@ -57,7 +58,7 @@ static model::EntryID findBestLeave(SubnetBuilder &builder,
   return bestLeave;
 }
 
-model::SubnetView getReconvergentCut(SubnetBuilder &builder,
+model::SubnetView getReconvergentCut(const SubnetBuilderPtr &builder,
                                      const model::EntryIDList &roots,
                                      uint16_t cutSize) {
 
@@ -66,12 +67,12 @@ model::SubnetView getReconvergentCut(SubnetBuilder &builder,
   model::EntryIDList leaves(roots.begin(), roots.end());
   leaves.reserve(cutSize + 1);
 
-  builder.startSession();
+  builder->startSession();
   // Construct a cut.
   while (true) {
-    auto bestLeave = findBestLeave(builder, leaves, cutSize);
+    auto bestLeave = findBestLeave(*builder, leaves, cutSize);
     if (bestLeave == (model::EntryID)-1) {
-      builder.endSession();
+      builder->endSession();
       // Case when there are only constant inputs.
       if (leaves.empty()) {
         return model::SubnetView{builder, {roots, roots}};
@@ -79,17 +80,17 @@ model::SubnetView getReconvergentCut(SubnetBuilder &builder,
       return model::SubnetView{builder, {leaves, roots}};
     }
     // Replace the best leave with it inputs.
-    for (const auto &link : builder.getLinks(leaves[bestLeave])) {
-      const auto &cell = builder.getCell(link.idx);
+    for (const auto &link : builder->getLinks(leaves[bestLeave])) {
+      const auto &cell = builder->getCell(link.idx);
       bool constant = (cell.isZero() || cell.isOne());
-      if (!constant && !builder.isMarked(link.idx)) {
-        builder.mark(link.idx);
+      if (!constant && !builder->isMarked(link.idx)) {
+        builder->mark(link.idx);
         leaves.push_back(link.idx);
       }
     }
     leaves.erase(leaves.begin() + bestLeave);
   }
-  builder.endSession();
+  builder->endSession();
   return model::SubnetView{builder, {leaves, roots}};
 }
 

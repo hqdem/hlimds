@@ -21,11 +21,14 @@
 namespace eda::gate::model {
 
 struct Domain final {
+  Domain(const CellID sourceID):
+      sourceID(sourceID) {}
+
   // Clock/reset signal.
-  CellID source;
+  CellID sourceID{OBJ_NULL_ID};
 
   // Flip-flops of the domain.
-  // TODO:
+  std::vector<CellID> flipFlops;
 
   // Hard/soft blocks of the domain.
   // TODO:
@@ -36,6 +39,7 @@ struct Domain final {
 
 using ClockDomain = Domain;
 using ResetDomain = Domain;
+
 using EntryID = model::EntryID;
 
 class DesignBuilder final {
@@ -149,100 +153,18 @@ public:
     ConnectionDesc POArcDesc;
   };
 
-private:
-  void initialize(const NetID netID) {
-    assert(netID != OBJ_NULL_ID);
-    const auto &net = Net::get(netID);
-
-    nIn = net.getInNum();
-    nOut = net.getOutNum();
-
-    // Generate the soft block implementations.
-    synthesizer::synthSoftBlocks(netID);
-    // Decompose the net into subnets.
-    NetDecomposer::get().decompose(netID, result);
-
-    SubnetToSubnetSet adjList;
-    SubnetToArcDescs arcDescs;
-    setAdjList(result, adjList, arcDescs);
-    setEntries(result, adjList, arcDescs);
-  }
-
-  void initialize(const SubnetID subnetID) {
-    assert(subnetID != OBJ_NULL_ID);
-    const auto &subnet = Subnet::get(subnetID);
-
-    nIn = subnet.getInNum();
-    nOut = subnet.getOutNum();
-
-    NetDecomposer::get().decompose(subnetID, result);
-    SubnetToSubnetSet adjList;
-    SubnetToArcDescs arcDescs;
-    setAdjList(result, adjList, arcDescs);
-    setEntries(result, adjList, arcDescs);
-  }
-
-  std::pair<bool, EntryID> getPIConnectionEntry(const size_t i) const {
-    const auto &subnets = result.subnets;
-    for (const auto &[oldLink, oldIdx] : subnets[i].mapping.inputs) {
-      const auto oldSourceID = oldLink.source.getCellID();
-      if (Cell::get(oldSourceID).getTypeID() == CELL_TYPE_ID_IN) {
-        return { true, oldIdx };
-      }
-    }
-    return { false, EntryID() };
-  }
-
-  std::pair<bool, EntryID> getPOConnectionEntry(const size_t i) const {
-    const auto &subnets = result.subnets;
-    for (const auto &[oldLink, oldIdx] : subnets[i].mapping.outputs) {
-      const auto oldTargetID = oldLink.target.getCellID();
-      if (Cell::get(oldTargetID).getTypeID() == CELL_TYPE_ID_OUT) {
-        return { true, oldIdx };
-      }
-    }
-    return { false, EntryID() };
-  }
-
-public:
   /// Constructs a design builder w/ the given name from the net.
-  DesignBuilder(const std::string &name, const NetID netID):
-      name(name), typeID(OBJ_NULL_ID) {
-    initialize(netID);
-  }
-
-  /// Constructs a design builder from the net.
-  DesignBuilder(const NetID netID):
-      DesignBuilder(DefaultName, netID) {}
-
+  DesignBuilder(const std::string &name, const NetID netID);
+  /// Constructs a design builder w/ the default name from the net.
+  DesignBuilder(const NetID netID);
   /// Constructs a design builder w/ the given name from the subnet.
-  DesignBuilder(const std::string &name, const SubnetID subnetID):
-        name(name), typeID(OBJ_NULL_ID) {
-    initialize(subnetID);
-  }
-
-  /// Constructs a design builder from the subnet.
-  DesignBuilder(const SubnetID subnetID):
-      DesignBuilder(DefaultName, subnetID) {}
-
+  DesignBuilder(const std::string &name, const SubnetID subnetID);
+  /// Constructs a design builder w/ the default name from the subnet.
+  DesignBuilder(const SubnetID subnetID);
   /// Constructs a design builder w/ the given name from the cell type.
-  DesignBuilder(const std::string &name, const CellTypeID typeID):
-      name(name), typeID(typeID) {
-    assert(typeID != OBJ_NULL_ID);
-
-    const auto &type = CellType::get(typeID);
-    assert(type.hasImpl());
-
-    if (type.isNet()) {
-      initialize(type.getNetID());
-    } else {
-      initialize(type.getSubnetID());
-    }
-  }
-
-  /// Constructs a design builder from the cell type.
-  DesignBuilder(const CellTypeID typeID):
-      DesignBuilder(DefaultName, typeID) {}
+  DesignBuilder(const std::string &name, const CellTypeID typeID);
+  /// Constructs a design builder w/ the default name from the cell type.
+  DesignBuilder(const CellTypeID typeID);
 
   /// Return the design name.
   const std::string getName() const {
@@ -265,9 +187,25 @@ public:
   }
 
   /// Returns the type information associated w/ the design.
-  CellType &getType() const {
+  const CellType &getType() const {
     assert(typeID != OBJ_NULL_ID);
     return CellType::get(typeID);
+  }
+
+  /// Checks whether the design has the associated net.
+  bool hasNet() const {
+    return netID != OBJ_NULL_ID;
+  }
+
+  /// Returns the net identifier associated w/ the design.
+  NetID getNetID() const {
+    return netID;
+  }
+
+  /// Returns the net associated w/ the design.
+  const Net &getNet() const {
+    assert(netID != OBJ_NULL_ID);
+    return Net::get(netID);
   }
 
   /// Returns the number of subnets in the design.
@@ -446,6 +384,31 @@ public:
 private:
   using CellMapping = NetDecomposer::CellMapping;
 
+  void initialize(const NetID netID);
+  void initialize(const SubnetID subnetID);
+
+  std::pair<bool, EntryID> getPIConnectionEntry(const size_t i) const {
+    const auto &subnets = result.subnets;
+    for (const auto &[oldLink, oldIdx] : subnets[i].mapping.inputs) {
+      const auto oldSourceID = oldLink.source.getCellID();
+      if (Cell::get(oldSourceID).getTypeID() == CELL_TYPE_ID_IN) {
+        return { true, oldIdx };
+      }
+    }
+    return { false, EntryID() };
+  }
+
+  std::pair<bool, EntryID> getPOConnectionEntry(const size_t i) const {
+    const auto &subnets = result.subnets;
+    for (const auto &[oldLink, oldIdx] : subnets[i].mapping.outputs) {
+      const auto oldTargetID = oldLink.target.getCellID();
+      if (Cell::get(oldTargetID).getTypeID() == CELL_TYPE_ID_OUT) {
+        return { true, oldIdx };
+      }
+    }
+    return { false, EntryID() };
+  }
+
   void updateSubnets() {
     for (size_t i = 0; i < entries.size(); ++i) {
       result.subnets[i].subnetID = getSubnetID(i);
@@ -482,16 +445,18 @@ private:
       SubnetToSubnetSet &adjList,
       SubnetToArcDescs &arcDescs) const;
 
-  // Clock domains.
-  // TODO
-
-  // Reset domains.
-  // TODO
-
   /// Design name.
   std::string name;
   /// Type information.
   const CellTypeID typeID{OBJ_NULL_ID};
+  /// Original net identifier.
+  const NetID netID{OBJ_NULL_ID};
+
+  /// Clock domains.
+  std::vector<ClockDomain> clockDomains;
+  /// Reset domains.
+  std::vector<ResetDomain> resetDomains;
+
 
   std::vector<std::string> points;
   std::vector<SubnetEntry> entries;

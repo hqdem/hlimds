@@ -22,14 +22,23 @@ struct SubnetLink final {
 
   SubnetLink(SubnetSize idx, uint8_t out, bool inv):
       idx(idx), out(out), inv(inv) {}
-  SubnetLink(SubnetSize idx, bool inv): SubnetLink(idx, 0, inv) {}
-  explicit SubnetLink(SubnetSize idx): SubnetLink(idx, false) {}
+
+  SubnetLink(SubnetSize idx, bool inv):
+      SubnetLink(idx, 0, inv) {}
+
+  explicit SubnetLink(SubnetSize idx):
+      SubnetLink(idx, false) {}
+
   SubnetLink(): SubnetLink(0) {}
 
-  SubnetLink operator~() const { return SubnetLink(idx, out, !inv); }
+  SubnetLink operator~() const {
+    return SubnetLink(idx, out, !inv);
+  }
+
   bool operator==(const SubnetLink &other) const {
     return other.idx == idx && other.inv == inv && other.out == out;
   }
+
   bool operator!=(const SubnetLink &other) const {
     return !(*this == other);
   }
@@ -153,17 +162,18 @@ union SubnetEntry {
   using SubnetLinkList = typename SubnetLink<SubnetSize>::SubnetLinkList;
 
   SubnetEntry() {}
+
   SubnetEntry(CellTypeID typeID, const SubnetLinkList &links):
       cell(typeID, links) {}
+
   SubnetEntry(
-    CellTypeID typeID, const SubnetLinkList &links, uint32_t flipFlopID):
+      CellTypeID typeID, const SubnetLinkList &links, uint32_t flipFlopID):
       cell(typeID, links, flipFlopID) {}
+
   SubnetEntry(const SubnetLinkList &links, uint16_t startWith) {
     const uint16_t size = links.size() - startWith;
-    for (uint16_t i = 0;
-         i < size && i < SubnetCell<SubnetSize>::InEntryLinks;
-         ++i) {
-
+    constexpr auto inEntryLinks = SubnetCell<SubnetSize>::InEntryLinks;
+    for (uint16_t i = 0; i < size && i < inEntryLinks; ++i) {
       link[i] = links[startWith + i];
     }
   }

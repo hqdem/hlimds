@@ -16,6 +16,45 @@ namespace eda::gate::model {
 using LinkSet = std::unordered_set<Link>;
 using LinkMap = NetDecomposer::LinkMap;
 
+static NetID getCellTypeNetID(const CellTypeID typeID) {
+  const auto &type = CellType::get(typeID);
+  if (type.isNet()) {
+    return type.getNetID();
+  } 
+  return OBJ_NULL_ID;
+}
+
+DesignBuilder::DesignBuilder(const std::string &name, const NetID netID):
+    name(name), typeID(OBJ_NULL_ID), netID(netID) {
+  initialize(netID);
+}
+
+DesignBuilder::DesignBuilder(const NetID netID):
+    DesignBuilder(DefaultName, netID) {}
+
+DesignBuilder::DesignBuilder(const std::string &name, const SubnetID subnetID):
+      name(name), typeID(OBJ_NULL_ID), netID(OBJ_NULL_ID) {
+  initialize(subnetID);
+}
+
+DesignBuilder::DesignBuilder(const SubnetID subnetID):
+    DesignBuilder(DefaultName, subnetID) {}
+
+DesignBuilder::DesignBuilder(const std::string &name, const CellTypeID typeID):
+    name(name), typeID(typeID), netID(getCellTypeNetID(typeID)) {
+  const auto &type = CellType::get(typeID);
+  assert(type.hasImpl());
+
+  if (type.isNet()) {
+    initialize(type.getNetID());
+  } else {
+    initialize(type.getSubnetID());
+  }
+}
+
+DesignBuilder::DesignBuilder(const CellTypeID typeID):
+    DesignBuilder(DefaultName, typeID) {}
+
 std::tuple<EntryID, EntryID, EntryID> DesignBuilder::getCellNum(
     const size_t i,
     const bool withBufs) const {
@@ -83,6 +122,76 @@ void DesignBuilder::replaceCell(const CellID oldCellID, const CellID newCellID,
     replace(oldCellID, newCellID, newInputs, newOutputs, mapping.inputs);
     replace(oldCellID, newCellID, newInputs, newOutputs, mapping.outputs);
   }
+}
+
+//===----------------------------------------------------------------------===//
+// Private Methods
+//===----------------------------------------------------------------------===//
+
+static void identifyClockAndResetDomains(
+    const Net &net,
+    std::vector<ClockDomain> &clockDomains,
+    std::vector<ResetDomain> &resetDomains) {
+
+  std::unordered_map<CellID, size_t> clocks;
+  std::unordered_map<CellID, size_t> resets;
+
+  const auto cells = net.getFlipFlops();
+  for (auto i = cells.begin(); i != cells.end(); ++i) {
+    const auto &cell = Cell::get(*i);
+    const auto &type = cell.getType();
+
+    if (type.isDff() || type.isSDff() || type.isADff() || type.isDffRs()) {
+      const auto &source = cell.getLink(CellPin::DFF_IN_CLK);
+      const auto sourceID = source.getCellID();
+
+      size_t index = clocks.size();
+      if (const auto found = clocks.find(sourceID); found != clocks.end()) {
+        index = found->second;
+      } else {
+        clocks.emplace(sourceID, clocks.size());
+        clockDomains.emplace_back(sourceID);
+      }
+
+      clockDomains[index].flipFlops.push_back(*i);
+    }
+
+    // TODO: Fill the reset domains.
+  }
+}
+
+void DesignBuilder::initialize(const NetID netID) {
+  assert(netID != OBJ_NULL_ID);
+  const auto &net = Net::get(netID);
+
+  nIn = net.getInNum();
+  nOut = net.getOutNum();
+
+  identifyClockAndResetDomains(net, clockDomains, resetDomains);
+
+  // Generate the soft block implementations.
+  synthesizer::synthSoftBlocks(netID);
+  // Decompose the net into subnets.
+  NetDecomposer::get().decompose(netID, result);
+
+  SubnetToSubnetSet adjList;
+  SubnetToArcDescs arcDescs;
+  setAdjList(result, adjList, arcDescs);
+  setEntries(result, adjList, arcDescs);
+}
+
+void DesignBuilder::initialize(const SubnetID subnetID) {
+  assert(subnetID != OBJ_NULL_ID);
+  const auto &subnet = Subnet::get(subnetID);
+
+  nIn = subnet.getInNum();
+  nOut = subnet.getOutNum();
+
+  NetDecomposer::get().decompose(subnetID, result);
+  SubnetToSubnetSet adjList;
+  SubnetToArcDescs arcDescs;
+  setAdjList(result, adjList, arcDescs);
+  setEntries(result, adjList, arcDescs);
 }
 
 DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPIs(

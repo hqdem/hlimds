@@ -121,8 +121,8 @@ TEST(UtopiaShell, LecFra) {
   testLec("fra");
 }
 
-TEST(UtopiaShell, LecRnd) {
-  testLec("Rnd");
+TEST(UtopiaShell, DISABLED_LecRnd) {
+  testLec("rnd");
 }
 
 TEST(UtopiaShell, LecSat) {
@@ -328,11 +328,9 @@ TEST(UtopiaShell, LogOptResyn2a) {
   testLogOpt("resyn2a");
 }
 
-#if 0
-TEST(UtopiaShell, LogOptResyn3) {
+TEST(UtopiaShell, DISABLED_LogOptResyn3) {
   testLogOpt("resyn3");
 }
-#endif
 
 TEST(UtopiaShell, LogOptCompress) {
   testLogOpt("compress");

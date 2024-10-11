@@ -27,10 +27,7 @@ namespace eda::gate::debugger {
 
 class SeqChecker final : public BaseChecker {
 public:
-
-  /**
-   * @copydoc BaseChecker2::isSat
-   */
+  /// @copydoc BaseChecker2::isSat
   CheckerResult isSat(const model::Subnet &subnet) const override;
 
   // Sets the number of attempts to find registers stuck at a constant

@@ -21,6 +21,7 @@ class SatChecker final : public BaseChecker,
   friend class util::Singleton<SatChecker>;
 
 public:
+  /// @copydoc BaseChecker::isSat
   CheckerResult isSat(const model::Subnet &subnet) const override {
     assert(subnet.getOutNum() == 1 && "Miter w/ multiple outputs");
 

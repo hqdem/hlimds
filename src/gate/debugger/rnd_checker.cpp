@@ -58,8 +58,8 @@ CheckerResult RndChecker::isSat(const model::Subnet &subnet) const {
   simulator::Simulator::DataVector values(inputNum);
 
   if (!exhaustive) {
-    for (uint64_t t = 0; t < tries; t++) {
-      for (uint64_t i = 0; i < inputNum; i++) {
+    for (size_t t = 0; t < tries; t++) {
+      for (size_t i = 0; i < inputNum; i++) {
         values[i] = std::rand();
       }
       simulator.simulate(values);

@@ -22,9 +22,7 @@ class RndChecker final : public BaseChecker,
   friend class util::Singleton<RndChecker>;
 
 public:
-  /**
-   * @copydoc BaseChecker::isSat
-   */
+  /// @copydoc BaseChecker::isSat
   CheckerResult isSat(const model::Subnet &subnet) const override;
 
   /// Sets the number of random values checked, if the check is inexhaustive.
@@ -38,10 +36,12 @@ public:
   void setExhaustive(bool exhaustive) { this->exhaustive = exhaustive; }
 
 private:
-  RndChecker(bool exhaustive = true, unsigned tries = 0) {
+  RndChecker(bool exhaustive, unsigned tries) {
     this->exhaustive = exhaustive;
     this->tries = tries;
   }
+
+  RndChecker(): RndChecker(false, 1024) {}
 
   unsigned tries;
   bool exhaustive;

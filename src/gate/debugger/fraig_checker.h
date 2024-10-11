@@ -29,9 +29,7 @@ class FraigChecker final : public BaseChecker,
   friend class util::Singleton<FraigChecker>;
 
 public:
-  /**
-   * @copydoc BaseChecker::isSat
-   */
+  /// @copydoc BaseChecker::isSat
   CheckerResult isSat(const model::Subnet &subnet) const override;
 
   /// Simulator arity limit

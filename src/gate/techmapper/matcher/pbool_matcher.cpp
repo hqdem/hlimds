@@ -35,7 +35,8 @@ std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
 
     assert(techCell.ctt[output] == ctt);
 
-    model::Subnet::LinkList linkList(techCell.transform[output].permutation.size());
+    model::Subnet::LinkList linkList(
+        techCell.transform[output].permutation.size());
     uint i = 0;
     for (const auto &index : t.permutation) {
       linkList[techCell.transform[output].permutation.at(i++)] =
@@ -109,11 +110,11 @@ std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
 }
 
 std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
-    const model::SubnetBuilder &builder,
+    const std::shared_ptr<model::SubnetBuilder> &builder,
     const optimizer::Cut &cut) {
   if (cut.isTrivial()) {
     const auto truthTable = util::getZeroTruthTable<util::TruthTable>(0);
-    const auto isZero = builder.getCell(cut.rootID).isZero();
+    const auto isZero = builder->getCell(cut.rootID).isZero();
     return match(isZero ? truthTable : ~truthTable, {});
   }
 

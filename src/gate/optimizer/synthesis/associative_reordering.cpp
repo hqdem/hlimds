@@ -268,10 +268,11 @@ std::shared_ptr<SubnetBuilder> AssociativeReordering::makeBuilder(
   return newBuilder;
 }
 
-void AssociativeReordering::dfsBuilder(const SubnetBuilder &builder, 
-                                       size_t start, 
-                                       std::vector<model::EntryID> &mapInputs, 
-                                       std::set<model::EntryID> &negLinks) const {
+void AssociativeReordering::dfsBuilder(
+    const SubnetBuilder &builder, 
+    size_t start, 
+    std::vector<model::EntryID> &mapInputs, 
+    std::set<model::EntryID> &negLinks) const {
 
   std::stack<size_t> st;
   st.push(start);
@@ -348,21 +349,23 @@ void AssociativeReordering::setWeights(SubnetBuilder &newBuilder,
   }
 }
 
-void AssociativeReordering::setWeights(SubnetView &view, 
-                                       SubnetBuilder &newBuilder, 
-                                       const std::set<model::EntryID> &negLinks) const {
+void AssociativeReordering::setWeights(
+    SubnetView &view,
+    SubnetBuilder &newBuilder,
+    const std::set<model::EntryID> &negLinks) const {
   
   std::vector<float> inpProb;
   
-  for (auto iter = view.getParent().begin(); 
-      view.getParent().getCell(*iter).isIn(); ++iter) {
+  const SubnetBuilder &builder = view.getParent().builder();
+  for (auto iter = builder.begin();
+      builder.getCell(*iter).isIn(); ++iter) {
     
-    float weight = view.getParent().getWeight(*iter);
+    float weight = builder.getWeight(*iter);
     inpProb.push_back(weight);
   }
 
   Estimator probEst;
-  std::vector<float> prob = probEst.estimateProbs(view.getParent(), inpProb);
+  std::vector<float> prob = probEst.estimateProbs(builder, inpProb);
 
   for (auto iter = newBuilder.begin(); 
       newBuilder.getCell(*iter).isIn(); ++iter) {
@@ -376,23 +379,23 @@ void AssociativeReordering::setWeights(SubnetView &view,
 }
 
 model::SubnetObject AssociativeReordering::synthesize(
-    const SubnetBuilder &builder, 
+    const SubnetBuilderPtr &builder, 
     uint16_t maxArity) const {                                             
 
-  auto last = (builder.end().prev()); 
+  auto last = (builder->end().prev()); 
   auto curCell = last.prev(); 
 
   float max = 0.0;
   std::shared_ptr<SubnetBuilder> rhs = std::make_shared<SubnetBuilder>();
   InOutMapping goodRhsToLhs;
   
-  for (; builder.getDepth(*curCell) > 1; --curCell) {
+  for (; builder->getDepth(*curCell) > 1; --curCell) {
   
     auto curNum = *curCell; 
     std::vector<model::EntryID> mapInp;
     std::set<model::EntryID> negLinks;
-    
-    dfsBuilder(builder, curNum, mapInp, negLinks);
+
+    dfsBuilder(*builder, curNum, mapInp, negLinks);
     model::InOutMapping map(mapInp, {curNum});
     SubnetView view(builder, map);
     
@@ -400,13 +403,13 @@ model::SubnetObject AssociativeReordering::synthesize(
       continue;
     }
     std::shared_ptr<SubnetBuilder> builderPtr = makeBuilder(view);
-    
+
     if (!isAssociative(*builderPtr)) {
       continue;
     }
     setWeights(view, *builderPtr, negLinks);
     std::set<model::EntryID> negInputs;
-    
+
     for (size_t i = 0; i < mapInp.size(); ++i) {
       if (negLinks.count(mapInp[i])) {
         negInputs.insert(i);
@@ -414,9 +417,9 @@ model::SubnetObject AssociativeReordering::synthesize(
     }
 
     std::vector<float> weights(builderPtr->getInNum());
-    for (auto iter = builderPtr->begin(); 
+    for (auto iter = builderPtr->begin();
         builderPtr->getCell(*iter).isIn(); ++iter) {
-      
+
       weights[*iter] = builderPtr->getWeight(*iter);
     }
 
@@ -428,7 +431,7 @@ model::SubnetObject AssociativeReordering::synthesize(
     std::vector<int> permut (maxArity * width, -1);
     std::vector<size_t> inEl (width, 0);
     float maxEffect = 0.0;
-    
+
     FragmentInfo info(builderPtr, weights, depth, maxArity);
     std::map<float, size_t> wMap;
     combination(permut, maxEffect, inEl, 0, wMap, info);
@@ -437,18 +440,18 @@ model::SubnetObject AssociativeReordering::synthesize(
 
       max = maxEffect;
       const CellSymbol symbol = builderPtr->getCell(*frPreLast).getSymbol();
-      std::vector<std::set<int>> goodPermut = createSet(info.goodPermutation, 
+      std::vector<std::set<int>> goodPermut = createSet(info.goodPermutation,
                                                         maxArity);
       goodRhsToLhs = map;
-      rhs = createBuilder(mapInp.size(), 
-                          depth, 
-                          maxArity, 
-                          goodPermut, 
-                          symbol, 
+      rhs = createBuilder(mapInp.size(),
+                          depth,
+                          maxArity,
+                          goodPermut,
+                          symbol,
                           negInputs);
     }
   }
- 
+
   if (std::fabs(max) <= epsilon) {
     return model::SubnetObject{model::OBJ_NULL_ID};
   }

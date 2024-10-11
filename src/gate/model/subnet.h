@@ -21,6 +21,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -1083,25 +1084,27 @@ class SubnetObject final {
 public:
   SubnetObject() {}
   SubnetObject(const SubnetID subnetID): subnetID(subnetID) {}
+  SubnetObject(const std::shared_ptr<SubnetBuilder> &builderPtr):
+      subnetBuilderPtr(builderPtr) {}
 
   SubnetObject(const SubnetObject &) = delete;
   SubnetObject &operator=(const SubnetObject &) = delete;
 
   SubnetObject(SubnetObject &&other) {
     subnetID = other.subnetID;
-    subnetBuilder = other.subnetBuilder;
-    other.subnetBuilder = nullptr;
+    subnetBuilderPtr = other.subnetBuilderPtr;
+    other.subnetBuilderPtr.reset();
   }
 
   SubnetObject &operator =(SubnetObject &&other) {
     subnetID = other.subnetID;
-    subnetBuilder = other.subnetBuilder;
-    other.subnetBuilder = nullptr;
+    subnetBuilderPtr = other.subnetBuilderPtr;
+    other.subnetBuilderPtr.reset();
     return *this;
   }
 
   bool isNull() const {
-    return subnetID == OBJ_NULL_ID && !subnetBuilder;
+    return subnetID == OBJ_NULL_ID && !subnetBuilderPtr;
   }
 
   bool hasObject() const {
@@ -1109,7 +1112,7 @@ public:
   }
 
   bool hasBuilder() const {
-    return subnetBuilder != nullptr;
+    return subnetBuilderPtr != nullptr;
   }
 
   SubnetID id() const {
@@ -1123,18 +1126,22 @@ public:
   }
 
   const SubnetBuilder &builder() const {
-    assert(subnetBuilder);
-    return *subnetBuilder;
+    assert(subnetBuilderPtr);
+    return *subnetBuilderPtr;
   }
 
   SubnetBuilder &builder() {
-    if (!subnetBuilder) {
-      subnetBuilder = (subnetID != OBJ_NULL_ID)
-          ? new SubnetBuilder(subnetID)
-          : new SubnetBuilder();
+    if (!subnetBuilderPtr) {
+      subnetBuilderPtr = (subnetID != OBJ_NULL_ID)
+          ? std::make_shared<SubnetBuilder>(subnetID)
+          : std::make_shared<SubnetBuilder>();
     }
 
-    return *subnetBuilder;
+    return *subnetBuilderPtr;
+  }
+
+  const std::shared_ptr<SubnetBuilder> &builderPtr() const {
+    return subnetBuilderPtr;
   }
 
   SubnetID make() {
@@ -1142,8 +1149,8 @@ public:
       return subnetID;
     }
 
-    assert(subnetBuilder);
-    subnetID = subnetBuilder->make();
+    assert(subnetBuilderPtr);
+    subnetID = subnetBuilderPtr->make();
 
     return subnetID;
   }
@@ -1156,20 +1163,15 @@ public:
     if (subnetID != OBJ_NULL_ID) {
       Subnet::release(subnetID);
     }
-    if (subnetBuilder) {
-      delete subnetBuilder;
-      subnetBuilder = nullptr;
+    if (subnetBuilderPtr) {
+      subnetBuilderPtr.reset();
     }
   }
 
-  ~SubnetObject() {
-    if (subnetBuilder) {
-      delete subnetBuilder;
-    }
-  }
+  ~SubnetObject() = default;
 
 private:
-  SubnetBuilder *subnetBuilder{nullptr};
+  std::shared_ptr<SubnetBuilder> subnetBuilderPtr{nullptr};
   SubnetID subnetID{OBJ_NULL_ID};
 };
 

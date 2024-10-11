@@ -11,6 +11,7 @@
 namespace eda::gate::optimizer {
 
 using Builder     = model::SubnetBuilder;
+using BuilderPtr  = std::shared_ptr<model::SubnetBuilder>;
 using Cell        = model::Subnet::Cell;
 using EntryID     = model::EntryID;
 using EntryIDList = model::EntryIDList;
@@ -102,23 +103,23 @@ static uint32_t dereferenceCells(Builder &builder,
   return boundsID;
 }
 
-SubnetView getMffc(Builder &builder, EntryID rootID, const Nodes &cut) {
+SubnetView getMffc(const BuilderPtr &builder, EntryID root, const Nodes &cut) {
   const auto nLeaves = cut.size();
-  if ((nLeaves == 1) && (rootID == cut[0])) {
-    return SubnetView{builder, {Nodes{rootID}, Nodes{rootID}}};
+  if ((nLeaves == 1) && (root == cut[0])) {
+    return SubnetView{builder, {Nodes{root}, Nodes{root}}};
   }
 
   size_t counter = 0;
-  const auto boundsID = dereferenceCells(builder, rootID, counter, cut);
+  const auto boundsID = dereferenceCells(*builder, root, counter, cut);
 
   Nodes bounds;
   bounds.reserve(cut.size());
-  findMffcBounds(builder, rootID, counter, boundsID, bounds);
+  findMffcBounds(*builder, root, counter, boundsID, bounds);
 
-  return SubnetView{builder, {std::move(bounds), Nodes{rootID}}};
+  return SubnetView{builder, {std::move(bounds), Nodes{root}}};
 }
 
-SubnetView getMffc(Builder &builder, const SubnetView &view) {
+SubnetView getMffc(const BuilderPtr &builder, const SubnetView &view) {
   const auto &roots = view.getOutputs();
   assert((roots.size() == 1) && "Multiple outputs are not supported");
 
@@ -130,7 +131,7 @@ SubnetView getMffc(Builder &builder, const SubnetView &view) {
   return getMffc(builder, roots[0].idx, leaves);
 }
 
-SubnetView getMffc(Builder &builder, EntryID rootID) {
+SubnetView getMffc(const BuilderPtr &builder, EntryID rootID) {
   Nodes emptyBounds;
   return getMffc(builder, rootID, emptyBounds);
 }
@@ -173,19 +174,19 @@ static uint32_t dereferenceCells(Builder &builder,
   return boundsID;
 }
 
-SubnetView getMffc(Builder &builder, EntryID rootID, uint32_t maxDepth) {
+SubnetView getMffc(const BuilderPtr &builder, EntryID root, uint32_t maxDepth) {
   if (!maxDepth) {
-    return SubnetView{builder, {Nodes{rootID}, Nodes{rootID}}};
+    return SubnetView{builder, {Nodes{root}, Nodes{root}}};
   }
 
   size_t counter = 0;
-  const auto boundsID = dereferenceCells(builder, rootID, counter, maxDepth);
+  const auto boundsID = dereferenceCells(*builder, root, counter, maxDepth);
 
   Nodes bounds;
   bounds.reserve(1u << (maxDepth + 1));
-  findMffcBounds(builder, rootID, counter, boundsID, bounds);
+  findMffcBounds(*builder, root, counter, boundsID, bounds);
 
-  return SubnetView{builder, {std::move(bounds), Nodes{rootID}}};
+  return SubnetView{builder, {std::move(bounds), Nodes{root}}};
 }
 
 } // namespace eda::gate::optimizer

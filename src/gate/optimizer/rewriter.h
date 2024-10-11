@@ -66,7 +66,7 @@ public:
 
 private:
   void rewriteOnNode(
-      SubnetBuilder &builder,
+      const std::shared_ptr<SubnetBuilder> &builder,
       SafePasser &iter,
       CutExtractor &cutExtractor,
       const CellActionCallback *cutRecompute,

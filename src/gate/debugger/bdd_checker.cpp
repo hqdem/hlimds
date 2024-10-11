@@ -18,8 +18,8 @@ CheckerResult BddChecker::isSat(const model::Subnet &subnet) const {
 
   Cudd manager(0, 0);
 
-  model::SubnetBuilder builder(subnet);
-  model::SubnetView sv(builder);
+  auto builderPtr = std::make_shared<model::SubnetBuilder>(subnet);
+  model::SubnetView sv(builderPtr);
   BDD netBdd = model::utils::convertBdd(sv, manager).at(0);
 
   return (netBdd == manager.bddZero())

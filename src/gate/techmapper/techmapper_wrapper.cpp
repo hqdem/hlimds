@@ -17,10 +17,11 @@
 
 namespace eda::gate::techmapper {
 
-using Subnet        = model::Subnet;
-using SubnetBuilder = model::SubnetBuilder;
-using SubnetID      = model::SubnetID;
-using CutExtractor  = optimizer::CutExtractor;
+using Subnet           = model::Subnet;
+using SubnetBuilder    = model::SubnetBuilder;
+using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
+using SubnetID         = model::SubnetID;
+using CutExtractor     = optimizer::CutExtractor;
 
 techMapperWrapper::techMapResult techMapperWrapper::techMap() {
     
@@ -55,7 +56,7 @@ techMapperWrapper::generateTechSubnet(
   auto pBoolMatcher {Matcher<PBoolMatcher, std::size_t>::create(
                       techLibrary.getCombCells())};
 
-  auto matchFinder = [&](const SubnetBuilder &builder,
+  auto matchFinder = [&](const SubnetBuilderPtr &builder,
                          const optimizer::Cut &cut){
       return pBoolMatcher->match(builder, cut);};
 

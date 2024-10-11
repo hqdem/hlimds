@@ -17,35 +17,36 @@ namespace eda::gate::model {
 // Subnet View
 //===----------------------------------------------------------------------===//
 
-SubnetView::SubnetView(const SubnetBuilder &parent):
-    parent(parent) {
-  const auto nIn = parent.getInNum();
+SubnetView::SubnetView(const std::shared_ptr<SubnetBuilder> &builder):
+    parent(builder) {
+  const auto nIn = builder->getInNum();
   iomapping.inputs.resize(nIn);
 
-  const auto nOut = parent.getOutNum();
+  const auto nOut = builder->getOutNum();
   iomapping.outputs.resize(nOut);
 
   uint32_t i = 0;
-  for (auto it = parent.begin(); i < nIn; ++it, ++i) {
-    const auto &cell = parent.getCell(*it);
+  for (auto it = builder->begin(); i < nIn; ++it, ++i) {
+    const auto &cell = builder->getCell(*it);
     assert(cell.isIn());
     iomapping.inputs[i] = Link(*it);
   }
 
   uint32_t j = 0;
-  for (auto it = --parent.end(); j < nOut; --it, ++j) {
-    const auto &cell = parent.getCell(*it);
+  for (auto it = --builder->end(); j < nOut; --it, ++j) {
+    const auto &cell = builder->getCell(*it);
     assert(cell.isOut());
     iomapping.outputs[nOut - j - 1] = Link(*it);
   }
 }
 
-SubnetView::SubnetView(const SubnetBuilder &parent, const EntryID rootID):
-    parent(parent) {
+SubnetView::SubnetView(const std::shared_ptr<SubnetBuilder> &builder,
+                       const EntryID rootID):
+    parent(builder) {
   // Find all reachable inputs for the given root cell.
   SubnetViewWalker walker(*this);
 
-  iomapping.inputs.reserve(parent.getInNum());
+  iomapping.inputs.reserve(builder->getInNum());
   iomapping.outputs.push_back(Link(rootID));
 
   walker.run([this](SubnetBuilder &parent,
@@ -62,8 +63,9 @@ SubnetView::SubnetView(const SubnetBuilder &parent, const EntryID rootID):
   });
 }
 
-SubnetView::SubnetView(const SubnetBuilder &parent, const Cut &cut):
-    parent(parent) {
+SubnetView::SubnetView(const std::shared_ptr<SubnetBuilder> &builder,
+                       const Cut &cut):
+    parent(builder) {
   assert(!cut.leafIDs.empty());
 
   iomapping.inputs.reserve(cut.leafIDs.size());
@@ -74,9 +76,9 @@ SubnetView::SubnetView(const SubnetBuilder &parent, const Cut &cut):
   iomapping.outputs.push_back(Link(cut.rootID));
 }
 
-SubnetView::SubnetView(const SubnetBuilder &parent,
+SubnetView::SubnetView(const std::shared_ptr<SubnetBuilder> &builder,
                        const InOutMapping &iomapping):
-    iomapping(iomapping), parent(parent) {
+    iomapping(iomapping), parent(builder) {
   assert(!iomapping.inputs.empty());
   assert(!iomapping.outputs.empty());
 }
@@ -103,12 +105,13 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
     });
 
     for (size_t i = 0; i < entryLinks.size(); ++i) {
-      const auto tt = util::getTruthTable<util::TT6>(parent, entryLinks[i].idx);
+      const auto tt = util::getTruthTable<util::TT6>(parent.builder(),
+                                                     entryLinks[i].idx);
       result[i] = util::convertTruthTable<util::TT6>(tt, arity);
     }
   } else {
     std::vector<TruthTable> tables;
-    tables.reserve(parent.getCellNum());
+    tables.reserve(parent.builder().getCellNum());
 
     walker.run([&tables, &nIn, arity](SubnetBuilder &parent,
                                       const bool isIn,
@@ -122,7 +125,8 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
     });
 
     for (size_t i = 0; i < entryLinks.size(); ++i) {
-      const auto tt = util::getTruthTable<util::TTn>(parent, entryLinks[i].idx);
+      const auto tt = util::getTruthTable<util::TTn>(parent.builder(),
+                                                     entryLinks[i].idx);
       result[i] = util::convertTruthTable<util::TTn>(tt, arity);
     }
   }
@@ -293,7 +297,7 @@ bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
                                   const Visitor onBackwardDfsPush,
                                   const bool saveEntries) {
   assert(onBackwardDfsPop || onBackwardDfsPush);
-  auto &builder = const_cast<SubnetBuilder&>(view.getParent());
+  auto &builder = const_cast<SubnetBuilder&>(view.getParent().builder());
 
   if (entries && !onBackwardDfsPush) {
     return traverseForward(builder, *entries, onBackwardDfsPop);
@@ -330,7 +334,7 @@ bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
 
 bool SubnetViewWalker::runBackward(const Visitor visitor,
                                    const bool saveEntries) {
-  auto &builder = const_cast<SubnetBuilder&>(view.getParent());
+  auto &builder = const_cast<SubnetBuilder&>(view.getParent().builder());
 
   if (!entries) {
     entries = std::make_unique<Entries>();

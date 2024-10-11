@@ -41,7 +41,7 @@ void NpnEstimator::estimate(const SubnetBuilderPtr &builder,
         continue;
       }
 
-      SubnetView cone(*(builder.get()), cut);
+      SubnetView cone(builder, cut);
       auto tt = cone.evaluateTruthTable();
       auto ttk = nVars < k ? kitty::extend_to(tt, k) : tt;
 

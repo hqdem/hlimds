@@ -36,7 +36,7 @@ uint32_t simulateBitwise(uint16_t sizeA, uint16_t sizeB, uint16_t outSize,
   const auto &attr =
       CellTypeAttr::get(model::makeCellTypeAttr(inputs, outputs));
 
-  SubnetBuilder result(toSimulate(attr));
+  auto result = std::make_shared<SubnetBuilder>(toSimulate(attr));
   Simulator simulator(result);
   Simulator::DataVector values(sizeA + sizeB);
 

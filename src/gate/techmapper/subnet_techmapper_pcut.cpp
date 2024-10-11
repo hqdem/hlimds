@@ -16,7 +16,7 @@
 namespace eda::gate::techmapper {
 
 #define UTOPIA_CUT_PROVIDER_LAMBDA()\
-  [this](const model::SubnetBuilder &builder,\
+  [this](const std::shared_ptr<model::SubnetBuilder> &builder,\
          const model::EntryID entryID) -> optimizer::CutsList {\
     computePCuts(builder, entryID);\
     return cutExtractor->getCuts(entryID);\
@@ -75,7 +75,7 @@ SubnetTechMapperPCut::SubnetTechMapperPCut(
                          matchFinder,
                          cellEstimator) {}
 
-void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
+void SubnetTechMapperPCut::computePCuts(const SubnetBuilderPtr &builder,
                                         const model::EntryID entryID) {
   const size_t n = cutsPerCell + 1 /* trivial cut */;
 
@@ -103,14 +103,14 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
 
   for (size_t i = 0; i < cuts.size(); ++i) {
     const auto &cut = cuts[i];
-    const auto cellContext = getCellContext(builder, entryID, cut);
+    const auto cellContext = getCellContext(*builder, entryID, cut);
 
     criterion::Cost cost;
     if (cut.isTrivial()) {
       cost = 0. /* trivial cut must be included */;
     } else {
       const auto prevVector = costAggregator(getCostVectors(cut));
-      const auto cellVector = cutEstimator(builder, cut, cellContext);
+      const auto cellVector = cutEstimator(*builder, cut, cellContext);
       const auto costVector = prevVector + cellVector;
       cost = context.criterion->getPenalizedCost(costVector, tension);
     }
@@ -152,7 +152,7 @@ void SubnetTechMapperPCut::computePCuts(const model::SubnetBuilder &builder,
   }
 
   if (matchCount <= 1 /* trivial cut */) {
-    const auto &cell = builder.getCell(entryID);
+    const auto &cell = builder->getCell(entryID);
     UTOPIA_LOG_WARN("No p-cut matches found for "
         << fmt::format("cell#{}:{}", entryID, cell.getType().getName()));
   }

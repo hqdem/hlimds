@@ -120,7 +120,9 @@ inline SubnetPass rfarea(const std::string &name,
   static synthesis::MMFactorSynthesizer mmFactor;
   static Resynthesizer resynthesizer(mmFactor);
   static Refactorer::WindowConstructor windowConstructor =
-  [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
+      [](const std::shared_ptr<model::SubnetBuilder> &builder,
+         size_t root,
+         uint16_t cutSize) {
     return getReconvergentCut(builder, root, cutSize);
   };
   return std::make_shared<Refactorer>(name,
@@ -158,7 +160,9 @@ inline SubnetPass rfd() {
   static synthesis::MMSynthesizer mm;
   static Resynthesizer resynthesizer(mm);
   static Refactorer::WindowConstructor windowConstructor =
-  [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
+      [](const std::shared_ptr<model::SubnetBuilder> &builder,
+         size_t root,
+         uint16_t cutSize) {
     return getReconvergentCut(builder, root, cutSize);
   };
   static Refactorer::ReplacePredicate replacePredicate =
@@ -177,7 +181,9 @@ inline SubnetPass rfp() {
   static synthesis::MMSynthesizer mm;
   static Resynthesizer resynthesizer(mm);
   static Refactorer::WindowConstructor windowConstructor =
-  [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
+      [](const std::shared_ptr<model::SubnetBuilder> &builder,
+         size_t root,
+         uint16_t cutSize) {
     return getReconvergentCut(builder, root, cutSize);
   };
   static const float stage{0.1f};
@@ -208,7 +214,7 @@ inline SubnetPass rfp() {
 
 inline SubnetPass lrfp() {
 
-  using Resynthesizer = Resynthesizer<SubnetBuilder>;
+  using Resynthesizer = Resynthesizer<std::shared_ptr<SubnetBuilder>>;
 
   static synthesis::AssociativeReordering ar;
   static Resynthesizer resynthesizer(ar);

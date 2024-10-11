@@ -16,6 +16,7 @@ namespace eda::gate::optimizer {
 using Subnet = model::Subnet;
 using SubnetID = model::SubnetID;
 using SubnetBuilder = model::SubnetBuilder;
+using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
 using SubnetView = model::SubnetView;
 using Link = model::Subnet::Link;
 using EntryID = model::EntryID;
@@ -95,7 +96,7 @@ static bool coneValid(const SubnetBuilder &builder,
   return true;
 }
 
-static bool cutConeValid(const SubnetBuilder &builder,
+static bool cutConeValid(const SubnetBuilderPtr &builder,
                          const CutExtractor &cutExtractor,
                          const EntryID origEntryID) {
   const auto &cuts = cutExtractor.getCuts(origEntryID);
@@ -107,14 +108,14 @@ static bool cutConeValid(const SubnetBuilder &builder,
     if (!coneOutputCorrect(coneSubnet) ||
         coneSubnet.getInNum() != cut.leafIDs.size() ||
         !inputsAtTheBeginning(coneSubnet) ||
-        !coneValid(builder, coneSubnet, origEntryID, coneEntryID, false)) {
+        !coneValid(*builder, coneSubnet, origEntryID, coneEntryID, false)) {
       return false;
     }
   }
   return true;
 }
 
-static bool maxConeValid(const SubnetBuilder &builder,
+static bool maxConeValid(const SubnetBuilderPtr &builder,
                          const EntryID origEntryID) {
   SubnetView cone(builder, origEntryID);
   const auto &coneSubnet = cone.getSubnet().makeObject();
@@ -122,13 +123,13 @@ static bool maxConeValid(const SubnetBuilder &builder,
 
   return coneOutputCorrect(coneSubnet) &&
          inputsAtTheBeginning(coneSubnet) &&
-         coneValid(builder, coneSubnet, origEntryID, coneEntryID, true);
+         coneValid(*builder, coneSubnet, origEntryID, coneEntryID, true);
 }
 
-static void conesValid(const SubnetBuilder &builder,
+static void conesValid(const SubnetBuilderPtr &builder,
                        const CutExtractor *cutExtractor = nullptr) {
-  for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
-    if (builder.getCell(*it).isOut()) {
+  for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
+    if (builder->getCell(*it).isOut()) {
       continue;
     }
     EXPECT_TRUE(cutExtractor ?
@@ -138,134 +139,134 @@ static void conesValid(const SubnetBuilder &builder,
 }
 
 TEST(ConeBuilderTest, SimpleTest) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(2);
-  const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
-  builder.addOutput(andLink0);
+  const auto inputs = builder->addInputs(2);
+  const auto andLink0 = builder->addCell(model::AND, inputs[0], inputs[1]);
+  builder->addOutput(andLink0);
 
-  CutExtractor cutExtractor(&builder, 5, true);
+  CutExtractor cutExtractor(builder.get(), 5, true);
   conesValid(builder, &cutExtractor);
 }
 
 TEST(ConeBuilderTest, OneElementCut) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  builder.addOutput(builder.addInput());
+  builder->addOutput(builder->addInput());
 
-  CutExtractor cutExtractor(&builder, 2, true);
+  CutExtractor cutExtractor(builder.get(), 2, true);
   conesValid(builder, &cutExtractor);
 }
 
 TEST(ConeBuilderTest, CutLimit) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(3);
-  const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
-  const auto andLink1 = builder.addCell(model::AND, andLink0, inputs[2]);
-  builder.addOutput(andLink1);
+  const auto inputs = builder->addInputs(3);
+  const auto andLink0 = builder->addCell(model::AND, inputs[0], inputs[1]);
+  const auto andLink1 = builder->addCell(model::AND, andLink0, inputs[2]);
+  builder->addOutput(andLink1);
 
-  CutExtractor cutExtractor(&builder, 2, true);
+  CutExtractor cutExtractor(builder.get(), 2, true);
   conesValid(builder, &cutExtractor);
 }
 
 TEST(ConeBuilderTest, OverlapLinks3UsagesCut) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(3);
-  const auto bufLink0 = builder.addCell(model::BUF, inputs[2]);
-  const auto andLink0 = builder.addCell(model::AND, bufLink0, inputs[1]);
-  const auto andLink1 = builder.addCell(model::AND, bufLink0, inputs[0]);
-  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0,
+  const auto inputs = builder->addInputs(3);
+  const auto bufLink0 = builder->addCell(model::BUF, inputs[2]);
+  const auto andLink0 = builder->addCell(model::AND, bufLink0, inputs[1]);
+  const auto andLink1 = builder->addCell(model::AND, bufLink0, inputs[0]);
+  const auto andLink2 = builder->addCell(model::AND, bufLink0, andLink0,
                                         andLink1);
-  builder.addOutput(andLink2);
+  builder->addOutput(andLink2);
 
-  CutExtractor cutExtractor(&builder, 3, true);
+  CutExtractor cutExtractor(builder.get(), 3, true);
   conesValid(builder, &cutExtractor);
 }
 
 TEST(ConeBuilderTest, MaxCone) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(3);
-  const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
-  const auto andLink1 = builder.addCell(model::AND, andLink0, inputs[2]);
-  builder.addOutput(andLink1);
+  const auto inputs = builder->addInputs(3);
+  const auto andLink0 = builder->addCell(model::AND, inputs[0], inputs[1]);
+  const auto andLink1 = builder->addCell(model::AND, andLink0, inputs[2]);
+  builder->addOutput(andLink1);
 
   conesValid(builder);
 }
 
 TEST(ConeBuilderTest, OverlapLinks) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(3);
-  const auto andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
-  const auto andLink1 = builder.addCell(model::AND, inputs[1], inputs[2]);
-  const auto andLink2 = builder.addCell(model::AND, andLink0, andLink1);
-  builder.addOutput(andLink2);
+  const auto inputs = builder->addInputs(3);
+  const auto andLink0 = builder->addCell(model::AND, inputs[0], inputs[1]);
+  const auto andLink1 = builder->addCell(model::AND, inputs[1], inputs[2]);
+  const auto andLink2 = builder->addCell(model::AND, andLink0, andLink1);
+  builder->addOutput(andLink2);
 
   conesValid(builder);
 }
 
 TEST(ConeBuilderTest, OverlapLinksReverse) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(2);
-  const auto andLink0 = builder.addCell(model::AND, inputs[1], inputs[0]);
-  const auto andLink1 = builder.addCell(model::AND, inputs[1], andLink0);
-  builder.addOutput(andLink1);
+  const auto inputs = builder->addInputs(2);
+  const auto andLink0 = builder->addCell(model::AND, inputs[1], inputs[0]);
+  const auto andLink1 = builder->addCell(model::AND, inputs[1], andLink0);
+  builder->addOutput(andLink1);
 
   conesValid(builder);
 }
 
 TEST(ConeBuilderTest, OverlapLinks3UsagesMax) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(3);
-  const auto bufLink0 = builder.addCell(model::BUF, inputs[2]);
-  const auto andLink0 = builder.addCell(model::AND, bufLink0, inputs[1]);
-  const auto andLink1 = builder.addCell(model::AND, bufLink0, inputs[0]);
-  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0,
+  const auto inputs = builder->addInputs(3);
+  const auto bufLink0 = builder->addCell(model::BUF, inputs[2]);
+  const auto andLink0 = builder->addCell(model::AND, bufLink0, inputs[1]);
+  const auto andLink1 = builder->addCell(model::AND, bufLink0, inputs[0]);
+  const auto andLink2 = builder->addCell(model::AND, bufLink0, andLink0,
                                         andLink1);
-  builder.addOutput(andLink2);
+  builder->addOutput(andLink2);
 
   conesValid(builder);
 }
 
 TEST(ConeBuilderTest, OutputPort) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(3);
-  const auto bufLink0 = builder.addCell(model::BUF, ~inputs[2]);
-  const auto andLink0 = builder.addCell(model::AND, bufLink0, inputs[1]);
-  const auto andLink1 = builder.addCell(model::AND, bufLink0, inputs[0]);
-  const auto andLink2 = builder.addCell(model::AND, bufLink0, andLink0,
+  const auto inputs = builder->addInputs(3);
+  const auto bufLink0 = builder->addCell(model::BUF, ~inputs[2]);
+  const auto andLink0 = builder->addCell(model::AND, bufLink0, inputs[1]);
+  const auto andLink1 = builder->addCell(model::AND, bufLink0, inputs[0]);
+  const auto andLink2 = builder->addCell(model::AND, bufLink0, andLink0,
                                         ~andLink1);
-  builder.addOutput(andLink2);
+  builder->addOutput(andLink2);
 
-  CutExtractor cutExtractor(&builder, 10, true);
+  CutExtractor cutExtractor(builder.get(), 10, true);
   conesValid(builder, &cutExtractor);
 }
 
 TEST(ConeBuilderTest, InvertorFlag) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  const auto inputs = builder.addInputs(3);
-  const auto bufLink0 = builder.addCell(model::BUF, inputs[2]);
-  const auto andLink0 = builder.addCell(model::AND, bufLink0, ~inputs[1]);
-  const auto andLink1 = builder.addCell(model::AND, bufLink0, inputs[0]);
-  const auto andLink2 = builder.addCell(model::AND, bufLink0, ~andLink0,
+  const auto inputs = builder->addInputs(3);
+  const auto bufLink0 = builder->addCell(model::BUF, inputs[2]);
+  const auto andLink0 = builder->addCell(model::AND, bufLink0, ~inputs[1]);
+  const auto andLink1 = builder->addCell(model::AND, bufLink0, inputs[0]);
+  const auto andLink2 = builder->addCell(model::AND, bufLink0, ~andLink0,
                                         andLink1);
-  builder.addOutput(andLink2);
+  builder->addOutput(andLink2);
 
-  CutExtractor cutExtractor(&builder, 10, true);
+  CutExtractor cutExtractor(builder.get(), 10, true);
   conesValid(builder, &cutExtractor);
 }
 
 TEST(ConeBuilderTest, OneElementMaxCone) {
-  SubnetBuilder builder;
+  auto builder = std::make_shared<SubnetBuilder>();
 
-  builder.addOutput(builder.addInput());
+  builder->addOutput(builder->addInput());
 
   conesValid(builder);
 }

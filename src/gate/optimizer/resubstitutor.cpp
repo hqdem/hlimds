@@ -30,6 +30,7 @@ using InOutMapping     = eda::gate::model::InOutMapping;
 using Link             = eda::gate::model::Subnet::Link;
 using LinkList         = eda::gate::model::Subnet::LinkList;
 using SubnetBuilder    = eda::gate::model::SubnetBuilder;
+using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
 using SubnetView       = eda::gate::model::SubnetView;
 using SubnetViewWalker = eda::gate::model::SubnetViewWalker;
 using Symbol           = eda::gate::model::CellSymbol;
@@ -1322,7 +1323,7 @@ static void addInnerToInputs(SubnetBuilder &builder,
   }
 }
 
-static SubnetView getCareView(SubnetBuilder &builder,
+static SubnetView getCareView(const SubnetBuilderPtr &builderPtr,
                               model::EntryID pivot,
                               const model::EntryIDList &roots,
                               const model::EntryIDList &branches,
@@ -1330,13 +1331,14 @@ static SubnetView getCareView(SubnetBuilder &builder,
                               CellTables &cellTables,
                               uint32_t innerID) {
 
-  builder.startSession();
+  builderPtr->startSession();
+  SubnetBuilder &builder = *builderPtr;
 
   InOutMapping iomapping;
   if (arity > 6) {
     for (size_t i = 0; i < branches.size(); ++i) {
       auto zero = util::getZeroTruthTable<TTn>(arity);
-      builder.mark(branches[i]);
+      builderPtr->mark(branches[i]);
       iomapping.inputs.push_back(Link(branches[i]));
       cellTables.pushBranch(std::move(zero));
       util::setTruthTable<TTn>(builder, branches[i], cellTables.back());
@@ -1344,7 +1346,7 @@ static SubnetView getCareView(SubnetBuilder &builder,
   } else {
     for (size_t i = 0; i < branches.size(); ++i) {
       const auto zero = util::getZeroTruthTable<TT6>(arity);
-      builder.mark(branches[i]);
+      builderPtr->mark(branches[i]);
       iomapping.inputs.push_back(Link(branches[i]));
       util::setTruthTable<TT6>(builder, branches[i], zero);
     }
@@ -1354,13 +1356,13 @@ static SubnetView getCareView(SubnetBuilder &builder,
     addInnerToInputs(builder, iomapping, r, innerID);
   }
 
-  builder.endSession();
+  builderPtr->endSession();
 
   for (size_t i = 0; i < roots.size(); ++i) {
     iomapping.outputs.push_back(Link(roots[i]));
   }
 
-  return SubnetView{builder, iomapping};
+  return SubnetView{builderPtr, iomapping};
 }
 
 static void reserveOuters(const SubnetView &view,
@@ -1384,20 +1386,21 @@ static void reserveOuters(const SubnetView &view,
   });
 }
 
-static TruthTable computeCare(SubnetBuilder &builder,
+static TruthTable computeCare(const SubnetBuilderPtr &builderPtr,
                               const SubnetView &view,
                               const model::EntryIDList &roots,
                               const model::EntryIDList &branches,
                               uint64_t status,
                               CellTables &tables) {
 
+  SubnetBuilder &builder = *builderPtr;
   const auto k = view.getInNum();
   const auto pivot = view.getOut(0).idx;
 
   // Mark inner nodes (from pivot to cut).
   const auto innerID = markInner(builder, view);
 
-  const auto careView = getCareView(builder, pivot, roots, branches,
+  const auto careView = getCareView(builderPtr, pivot, roots, branches,
                                     k, tables, innerID);
 
   if (k > 6) {
@@ -1618,9 +1621,7 @@ static bool isAcceptable(const SubnetBuilder *builderPtr,
   return true;
 }
 
-void Resubstitutor::transform(
-    const std::shared_ptr<SubnetBuilder> &builder) const {
-
+void Resubstitutor::transform(const SubnetBuilderPtr &builder) const {
   SubnetBuilder *builderPtr = builder.get();
   builderPtr->enableFanouts();
 
@@ -1640,7 +1641,7 @@ void Resubstitutor::transform(
     }
 
     cellTables.clear();
-    const auto view = getReconvergentCut(*builderPtr, pivot, cutSize);
+    const auto view = getReconvergentCut(builder, pivot, cutSize);
 
     // Mark TFO of reconvergent cut bypassing pivot.
     markCutTFO(*builderPtr, view, maxLevels);
@@ -1660,7 +1661,7 @@ void Resubstitutor::transform(
     simulateCone(*builderPtr, view, cellTables);
     cellTables.setPivotID(cellTables.size() - 1);
 
-    const auto care = computeCare(*builderPtr, view, roots,
+    const auto care = computeCare(builder, view, roots,
                                   branches, status, cellTables);
 
     const auto arity = view.getInNum();
@@ -1672,7 +1673,7 @@ void Resubstitutor::transform(
       continue;
     }
 
-    const auto mffc = getMffc(*builderPtr, view);
+    const auto mffc = getMffc(builder, view);
 
     Divisors divs;
     divs.reserveUnates(maxDivisors);

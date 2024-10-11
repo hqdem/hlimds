@@ -30,7 +30,7 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
   const CellTypeAttr &attr =
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-  SubnetBuilder result(
+  auto result = std::make_shared<SubnetBuilder>(
       shiftL ? (useSign ? eda::gate::synthesizer::synthShlS(attr)
                         : eda::gate::synthesizer::synthShlU(attr))
              : (useSign ? eda::gate::synthesizer::synthShrS(attr)
@@ -71,7 +71,7 @@ std::pair<int32_t, int32_t> simulateShift(uint8_t inputSize, uint8_t shiftSize,
     std::clog << (int)inputSize << " " << (int)outSize << " " 
               << res << " " << valA << " " << valB
               << " " << resSimulated << std::endl;
-    // std::clog << Subnet::get(result.make());
+    // std::clog << Subnet::get(result->make());
   }
 
   return {res, resSimulated};

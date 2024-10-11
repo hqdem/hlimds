@@ -24,15 +24,15 @@ using Switches      = eda::gate::estimator::SimulationEstimator::Switches;
 
 TEST(SwitchActivityTest, ToggleRateTest) {
   // Generating Subnet.
-  SubnetBuilder builder;
-  const auto in = builder.addInputs(6);
+  auto builder = std::make_shared<SubnetBuilder>();
+  const auto in = builder->addInputs(6);
   LinkList links(5);
-  links[0] = builder.addCell(CellSymbol::OR,  in[0], in[1]);
-  links[1] = builder.addCell(CellSymbol::AND, links[0], in[2]);
-  links[2] = builder.addCell(CellSymbol::XOR, links[1], in[3]);
-  links[3] = builder.addCell(CellSymbol::AND, in[4], in[5]);
-  links[4] = builder.addCell(CellSymbol::XOR, links[2], links[3]);
-  builder.addOutput(links[4]);
+  links[0] = builder->addCell(CellSymbol::OR,  in[0], in[1]);
+  links[1] = builder->addCell(CellSymbol::AND, links[0], in[2]);
+  links[2] = builder->addCell(CellSymbol::XOR, links[1], in[3]);
+  links[3] = builder->addCell(CellSymbol::AND, in[4], in[5]);
+  links[4] = builder->addCell(CellSymbol::XOR, links[2], links[3]);
+  builder->addOutput(links[4]);
 
   SimEstimator simEstimator;
   InValuesList data;

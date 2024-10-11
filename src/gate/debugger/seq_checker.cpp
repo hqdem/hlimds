@@ -247,7 +247,7 @@ const model::Subnet &structuralRegisterSweep(
   flips.clear();
   getFlipsIds(uniq, flips);
 
-  model::SubnetBuilder uniqBuilder(uniq); // FIXME:
+  auto uniqBuilder = std::make_shared<model::SubnetBuilder>(uniq);
   simulator::Simulator simulator(uniqBuilder);
   simulator::Simulator::DataVector values(uniq.getInNum());
   std::set<size_t> stuckZero, stuckOne;

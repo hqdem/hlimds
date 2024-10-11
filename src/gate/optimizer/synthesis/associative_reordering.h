@@ -20,6 +20,7 @@ namespace eda::gate::optimizer::synthesis {
 
 /// @cond ALIASES
 using SubnetBuilder = eda::gate::model::SubnetBuilder;
+using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
 using CellSymbol = eda::gate::model::CellSymbol;
 using SubnetView = eda::gate::model::SubnetView;
 using SubnetID = eda::gate::model::SubnetID;
@@ -35,14 +36,14 @@ public:
   /// Empty constructor.
   FragmentInfo() {};
 
-  FragmentInfo(std::shared_ptr<SubnetBuilder> builder, 
+  FragmentInfo(SubnetBuilderPtr builder, 
                std::vector<float> &wghts,
                size_t depth, 
                size_t arity) : 
                   
   builder(builder), weights(wghts), depth(depth), arity(arity) {}; 
 
-  std::shared_ptr<SubnetBuilder> builder;
+  SubnetBuilderPtr builder;
   std::vector<float> weights;
   size_t depth;
   size_t arity;
@@ -54,40 +55,40 @@ public:
  * of cone's function.
  */
 
-class AssociativeReordering : public Synthesizer<SubnetBuilder> {
+class AssociativeReordering : public Synthesizer<SubnetBuilderPtr> {
 public:
 
 /// Empty constructor.
 AssociativeReordering() {};
 
 /// Synthesizes a SubnetObject for the given builder and care specification.
-virtual model::SubnetObject synthesize(const SubnetBuilder &builder,
+virtual model::SubnetObject synthesize(const SubnetBuilderPtr &builder,
                                        const util::TruthTable &care,
                                        const uint16_t maxArity = -1) const {
   return synthesize(builder, maxArity);
 };
 
 /// Synthesizes a SubnetObject for the given builder.
-virtual model::SubnetObject synthesize(const SubnetBuilder &builder, 
+virtual model::SubnetObject synthesize(const SubnetBuilderPtr &builder, 
                                        uint16_t maxArity = -1) const;
 
 private:
 
-void dfsBuilder(const SubnetBuilder &builder, 
-                size_t start, 
-                std::vector<model::EntryID> &mapInputs, 
+void dfsBuilder(const SubnetBuilder &builder,
+                size_t start,
+                std::vector<model::EntryID> &mapInputs,
                 std::set<model::EntryID> &negInpts) const;
 
 std::shared_ptr<SubnetBuilder> makeBuilder(
-    SubnetView &view, 
+    SubnetView &view,
     const std::set<model::EntryID> &negInpts = {}) const;
 
 std::shared_ptr<SubnetBuilder> createBuilder(
-    const size_t numInputs, 
+    const size_t numInputs,
     size_t depth,
     const size_t arity,
-    std::vector<std::set<int>> &permut, 
-    const CellSymbol cellSymbol, 
+    std::vector<std::set<int>> &permut,
+    const CellSymbol cellSymbol,
     const std::set<model::EntryID> &negInputs = {}) const;
 
 float getEffect(FragmentInfo &info,
@@ -100,14 +101,14 @@ void combination(std::vector<int> &permutation,
                  std::map<float, size_t> &pos,
                  FragmentInfo &info) const;
 
-std::vector<std::set<int>> createSet(const std::vector<int> &vec, 
+std::vector<std::set<int>> createSet(const std::vector<int> &vec,
                                      const size_t arity) const;
 
-void setWeights(SubnetBuilder &newBuilder, 
+void setWeights(SubnetBuilder &newBuilder,
                 SubnetBuilder &parent) const;
 
 void setWeights(SubnetView &view,
-                SubnetBuilder &newBuilder, 
+                SubnetBuilder &newBuilder,
                 const std::set<model::EntryID> &negLinks = {}) const;
 
 bool isAssociative(const SubnetBuilder &builder) const;

@@ -28,13 +28,13 @@ void Rewriter::transform(const std::shared_ptr<SubnetBuilder> &builder) const {
   for (SafePasser iter(builderPtr->begin(), &cutRecompute);
        !builderPtr->getCell(*iter).isOut();
        ++iter) {
-    rewriteOnNode(*builderPtr, iter, cutExtractor, &cutRecompute,
+    rewriteOnNode(builder, iter, cutExtractor, &cutRecompute,
         &cutRecomputeDepthCond);
   }
 }
 
 void Rewriter::rewriteOnNode(
-    SubnetBuilder &builder,
+    const std::shared_ptr<SubnetBuilder> &builder,
     SafePasser &iter,
     CutExtractor &cutExtractor,
     const CellActionCallback *cutRecompute,
@@ -52,7 +52,7 @@ void Rewriter::rewriteOnNode(
       continue;
     }
     const auto rhsToLhs = cone.getInOutMapping();
-    float curMetricValue = cost(builder.evaluateReplace(rhs, rhsToLhs));
+    float curMetricValue = cost(builder->evaluateReplace(rhs, rhsToLhs));
     if (curMetricValue - bestMetricValue > metricEps) {
       bestMetricValue = curMetricValue;
       bestRhs = std::move(rhs);

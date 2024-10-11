@@ -65,7 +65,7 @@ protected:
   }
 
 private:
-  void computePCuts(const model::SubnetBuilder &builder,
+  void computePCuts(const SubnetBuilderPtr &builder,
                     const model::EntryID entryID);
 
   const uint16_t maxCutSize;

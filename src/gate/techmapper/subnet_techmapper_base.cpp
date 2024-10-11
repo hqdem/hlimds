@@ -132,7 +132,7 @@ static void findBestCoverage(
     const SubnetTechMapperBase::SubnetBuilderPtr &oldBuilder,
     const SubnetTechMapperBase::SubnetSpace &space,
     MatchSelection &matches) {
-  model::SubnetView view(*oldBuilder);
+  model::SubnetView view(oldBuilder);
   model::SubnetViewWalker walker(view,
       [&matches](model::SubnetBuilder &,
                  const uint32_t entryID) -> uint16_t {
@@ -328,7 +328,7 @@ void SubnetTechMapperBase::findCellSolutions(
 #endif // UTOPIA_TECHMAP_SKIP_INFEASIBLE_SOLUTIONS
 
     // Trivial cuts are treated as constants.
-    const auto &matches = getMatches(*builder, cut);
+    const auto &matches = getMatches(builder, cut);
 
     for (const auto &match : matches) {
       assert((cut.isTrivial() && match.links.empty())
@@ -362,7 +362,7 @@ SubnetTechMapperBase::Status SubnetTechMapperBase::techMap(
     const auto &cell = builder->getCell(entryID);
 
     // Must be called for all entries (even for inputs).
-    const auto cuts = cutProvider(*builder, entryID);
+    const auto cuts = cutProvider(builder, entryID);
     assert(!cuts.empty());
 
     // Handle the input and constant cells.

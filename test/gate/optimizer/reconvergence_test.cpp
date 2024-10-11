@@ -27,14 +27,14 @@ TEST(ReconvergenceTest, CorrectnessTest) {
   *         |
   *        out
   */
-  SubnetBuilder builder;
-  auto links = builder.addInputs(2);
-  links.push_back(builder.addCell(CellSymbol::ONE));
+  auto builder = std::make_shared<SubnetBuilder>();
+  auto links = builder->addInputs(2);
+  links.push_back(builder->addCell(CellSymbol::ONE));
 
-  links.push_back(builder.addCell(CellSymbol::AND, links[0], links[1]));
-  links.push_back(builder.addCell(CellSymbol::AND, links[1], links[2]));
-  links.push_back(builder.addCell(CellSymbol::AND, links[3], links[4]));
-  builder.addOutput(links.back());
+  links.push_back(builder->addCell(CellSymbol::AND, links[0], links[1]));
+  links.push_back(builder->addCell(CellSymbol::AND, links[1], links[2]));
+  links.push_back(builder->addCell(CellSymbol::AND, links[3], links[4]));
+  builder->addOutput(links.back());
 
   const auto cutView = getReconvergentCut(builder, 5, 4);
 
@@ -69,8 +69,8 @@ TEST(ReconvergenceTest, SimpleTest) {
   const size_t nLoops = 19;
   const model::EntryID rootId = 20;
 
-  SubnetBuilder builder;
-  auto links = builder.addInputs(nInputs);
+  auto builder = std::make_shared<SubnetBuilder>();
+  auto links = builder->addInputs(nInputs);
 
   size_t skip = nInputs - 1;
   size_t line = skip;
@@ -80,10 +80,10 @@ TEST(ReconvergenceTest, SimpleTest) {
       line--;
       continue;
     }
-    const auto link = builder.addCell(CellSymbol::AND, {links[i], links[i+1]});
+    const auto link = builder->addCell(CellSymbol::AND, {links[i], links[i+1]});
     links.push_back(link);
   }
-  builder.addOutput(links.back());
+  builder->addOutput(links.back());
 
   const auto cutView = getReconvergentCut(builder, rootId, cutSize);
 

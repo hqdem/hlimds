@@ -23,6 +23,7 @@ namespace eda::gate::simulator {
 class Simulator final {
 public:
   using SubnetBuilder = model::SubnetBuilder;
+  using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
   using SubnetView = model::SubnetView;
   using EntryID = model::EntryID;
   using Cell = model::Subnet::Cell;
@@ -35,7 +36,7 @@ public:
   /// Data chunk size in bits.
   static constexpr uint16_t DataChunkBits = (sizeof(DataChunk) << 3);
 
-  Simulator(const SubnetBuilder &builder);
+  Simulator(const SubnetBuilderPtr &builder);
 
   /// Evaluates the output and inner values from the input ones.
   template <typename T = DataVector>
@@ -139,7 +140,7 @@ private:
   }
 
   size_t index(EntryID entryID) const {
-    const auto idx = subnet.getParent().getDataVal<size_t>(entryID);
+    const auto idx = subnet.getParent().builder().getDataVal<size_t>(entryID);
     return pos[idx];
   }
 
@@ -497,11 +498,11 @@ private:
   //------------------------------------------------------------------------//
 
   const Function opCell = [this](EntryID entryID, const LinkList &links) {
-    const auto &cell = subnet.getParent().getCell(entryID);
+    const auto &cell = subnet.getParent().builder().getCell(entryID);
     const auto &type = cell.getType();
     const auto &subnet = type.getSubnet();
 
-    SubnetBuilder builder(subnet);
+    auto builder = std::make_shared<SubnetBuilder>(subnet);
     Simulator simulator(builder);
 
     for (uint16_t i = 0; i < subnet.getInNum(); ++i) {
@@ -516,7 +517,7 @@ private:
   };
 
   Function getCell(EntryID entryID, uint16_t nIn, uint16_t nOut) const {
-    const auto &cell = subnet.getParent().getCell(entryID);
+    const auto &cell = subnet.getParent().builder().getCell(entryID);
     const auto &type = cell.getType();
     assert(type.isSubnet());
 

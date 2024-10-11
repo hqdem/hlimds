@@ -58,7 +58,7 @@ void SimulationEstimator::estimate(const std::shared_ptr<Builder> &builder,
     inValuesList.push_back(std::move(cacheList));
   }
 
-  auto [on, off, onStates] = simulate(*(builder.get()), inValuesList);
+  auto [on, off, onStates] = simulate(builder, inValuesList);
 
   Probabilities switching(on.size());
   for (size_t id{0}; id < on.size(); ++id) {
@@ -70,12 +70,13 @@ void SimulationEstimator::estimate(const std::shared_ptr<Builder> &builder,
 }
 
 std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
-    const Builder &builder, const InValuesList &inValuesList) const {
+    const std::shared_ptr<Builder> &builder,
+    const InValuesList &inValuesList) const {
 
   Simulator simulator(builder);
 
-  const size_t inputs = builder.getInNum();
-  const auto size = builder.getMaxIdx() + 1;
+  const size_t inputs = builder->getInNum();
+  const auto size = builder->getMaxIdx() + 1;
 
   Switches switchesOn(size);
   Switches switchesOff(size);
@@ -91,7 +92,7 @@ std::tuple<Switches, Switches, OnStates> SimulationEstimator::simulate(
 
     simulator.simulate(values);
 
-    for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
+    for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
       const auto id = *it;
       Cache cache = simulator.getValue(id);
       onStates[id] += popCount(cache) * 1.f;

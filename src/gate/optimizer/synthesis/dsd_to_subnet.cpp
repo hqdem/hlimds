@@ -60,7 +60,7 @@ SubnetObject DsdSynthesizer::synthesize(const TruthTable &table,
 
   /* Subnet to BDD convertion */
   Cudd manager(0, 0);
-  SubnetBuilder builder(subnet);
+  auto builder = std::make_shared<SubnetBuilder>(subnet);
   model::SubnetView sv(builder);
   BDD netBDD = model::utils::convertBdd(sv, manager).at(0);
 

@@ -51,7 +51,7 @@ public:
 
   using CutProvider =
       std::function<optimizer::CutsList(
-                        const model::SubnetBuilder &,
+                        const std::shared_ptr<model::SubnetBuilder> &,
                         const model::EntryID entryID)>;
   using CutEstimator =
       std::function<criterion::CostVector(
@@ -60,7 +60,7 @@ public:
                         const CellContext &)>;
   using MatchFinder =
       std::function<std::vector<Match>(
-                        const model::SubnetBuilder &,
+                        const std::shared_ptr<model::SubnetBuilder> &,
                         const optimizer::Cut &)>;
   using CellEstimator =
       std::function<criterion::CostVector(
@@ -185,7 +185,7 @@ protected:
                              const model::EntryID entryID,
                              const Match &match);
 
-  std::vector<Match> &getMatches(const model::SubnetBuilder &builder,
+  std::vector<Match> &getMatches(const SubnetBuilderPtr &builder,
                                  const optimizer::Cut &cut) {
     const auto i = cutMatches.find(cut);
     if (i != cutMatches.end()) {

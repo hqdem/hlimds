@@ -33,7 +33,7 @@ public:
       const std::vector<model::EntryID> &entryIdxs);
 
   std::vector<SubnetTechMapperBase::Match> match(
-      const model::SubnetBuilder &builder,
+      const std::shared_ptr<model::SubnetBuilder> &builder,
       const optimizer::Cut &cut) override;
 };
 

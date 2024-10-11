@@ -53,7 +53,7 @@ CheckerResult RndChecker::isSat(const model::Subnet &subnet) const {
 
   const auto inputNum = subnet.getInNum();
 
-  model::SubnetBuilder builder(subnet); // FIXME:
+  auto builder = std::make_shared<model::SubnetBuilder>(subnet);
   simulator::Simulator simulator(builder);
   simulator::Simulator::DataVector values(inputNum);
 

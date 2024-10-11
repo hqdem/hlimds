@@ -36,8 +36,8 @@ public:
   /// @endcond
 
   /// Constructs cut for Cell in SubnetBuilder.
-  using WindowConstructor =
-      std::function<SubnetView(SubnetBuilder &, size_t, uint16_t)>;
+  using WindowConstructor = std::function
+      <SubnetView(const std::shared_ptr<SubnetBuilder> &, size_t, uint16_t)>;
 
   /// The Predecate for replacing.
   using ReplacePredicate = std::function<bool(const Effect &)>;
@@ -73,7 +73,8 @@ public:
 
 private:
 
-  void nodeProcessing(SubnetBuilder &builder, SafePasser &iter) const; 
+  void nodeProcessing(const std::shared_ptr<SubnetBuilder> &builder,
+                      SafePasser &iter) const;
 
   const ResynthesizerBase &resynthesizer;
   const WindowConstructor *windowConstructor;

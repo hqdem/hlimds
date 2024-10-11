@@ -12,33 +12,34 @@
 
 namespace eda::gate::simulator {
 
-static size_t getStateSize(const Simulator::SubnetBuilder &builder) {
+static size_t getStateSize(const Simulator::SubnetBuilderPtr &builder) {
   size_t nBits = 0;
-  for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
-    const auto &cell = builder.getCell(*it);
+  for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
+    const auto &cell = builder->getCell(*it);
     nBits += (cell.isOut() ? 1u : cell.getOutNum());
   }
   return nBits;
 }
 
-Simulator::Simulator(const SubnetBuilder &builder):
+Simulator::Simulator(const SubnetBuilderPtr &builder):
     state(getStateSize(builder)),
-    pos(builder.getCellNum()),
-    subnet(SubnetView(builder)) {
-  program.reserve(builder.getCellNum());
+    pos(builder->getCellNum()),
+    subnet(builder) {
+  program.reserve(builder->getCellNum());
 
   size_t i = 0, p = 0;
-  for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
+  for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
     const auto entryID = *it;
-    const auto &cell = builder.getCell(entryID);
+    const auto &cell = builder->getCell(entryID);
 
     if (!cell.isIn()) {
       const auto op = getFunction(cell, entryID);
-      program.emplace_back(op, entryID, builder.getLinks(entryID));
+      program.emplace_back(op, entryID, builder->getLinks(entryID));
     }
 
     // Save the mapping between entries and indices.
-    const_cast<SubnetBuilder&>(builder).setDataVal<size_t>(entryID, i);
+    //const_cast<SubnetBuilder&>(builder).setDataVal<size_t>(entryID, i);
+    builder->setDataVal<size_t>(entryID, i);
 
     pos[i] = p;
 

@@ -464,18 +464,19 @@ TEST(ReplaceTest, AddCellAfterReplace) {
 }
 
 TEST(ReplaceTest, SameCone) {
-  SubnetBuilder builder;
-  addCellsToBuilder1(builder);
+  auto builder = std::make_shared<SubnetBuilder>();
+  addCellsToBuilder1(*builder);
 
   SubnetView cone(builder, 5);
   const auto coneSubnetID = cone.getSubnet().make();
 
-  const auto effect = builder.evaluateReplace(coneSubnetID, cone.getInOutMapping());
+  const auto effect = builder->evaluateReplace(coneSubnetID,
+                                               cone.getInOutMapping());
   EXPECT_EQ(effect.size, 0);
   EXPECT_EQ(effect.depth, 0);
-  builder.replace(coneSubnetID, cone.getInOutMapping());
-  printBidirectCellsTrav(builder);
-  const SubnetID resultID = builder.make();
+  builder->replace(coneSubnetID, cone.getInOutMapping());
+  printBidirectCellsTrav(*builder);
+  const SubnetID resultID = builder->make();
   const Subnet &result = Subnet::get(resultID);
   std::cout << result << '\n';
 

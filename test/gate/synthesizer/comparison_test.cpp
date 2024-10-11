@@ -34,7 +34,7 @@ bool simulateComparator(
   const CellTypeAttr &attr =
       CellTypeAttr::get(eda::gate::model::makeCellTypeAttr(inputs, outputs));
 
-  SubnetBuilder result(toSimulate(attr));
+  auto result = std::make_shared<SubnetBuilder>(toSimulate(attr));
   Simulator simulator(result);
   Simulator::DataVector values(sizeA + sizeB);
 
@@ -67,11 +67,11 @@ bool simulateComparator(
   if (!targetResult) {
     std::clog << operation(valA, valB) << " " << valA << " " << valB << " "
               << (simulator.getOutput(0) & 1) << std::endl;
-    std::clog << Subnet::get(result.make());
+    std::clog << Subnet::get(result->make());
   }
 
   if (sizeA == 8u && sizeB == 4u) {
-    std::clog << Subnet::get(result.make());
+    std::clog << Subnet::get(result->make());
   }
 
   return targetResult;

@@ -14,13 +14,13 @@ CellTypeAttr::CellTypeAttr(const PortVector &io):
     nInPort(getInNum(io)), nOutPort(getOutNum(io)) {
   assert(io.size() <= MaxPortNum);
 
-  uint16_t index{0};
-  uint32_t width{0};
+  PortIndex index{0};
+  PortWidth width{0};
 
-  uint16_t i{0}, j{nInPort};
+  PortIndex i{0}, j{nInPort};
   for (const auto &port : io) {
     assert(port.width);
-    uint16_t &k = port.input ? i : j;
+    PortIndex &k = port.input ? i : j;
 
     ports[k] = port;
     ports[k++].index = index;
@@ -43,8 +43,8 @@ CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
     nInPort(widthIn.size()), nOutPort(widthOut.size()) {
   assert(widthIn.size() + widthOut.size() <= MaxPortNum);
 
-  uint16_t index{0};
-  uint32_t width{0};
+  PortIndex index{0};
+  PortWidth width{0};
 
   for (const auto w : widthIn) {
     assert(w);
@@ -70,18 +70,19 @@ CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
   setPhysProps(props);
 }
 
-std::pair<uint16_t, uint16_t> CellTypeAttr::mapPinToPort(uint16_t i) const {
+std::pair<CellTypeAttr::PortIndex, CellTypeAttr::PortWidth>
+CellTypeAttr::mapPinToPort(const PinIndex i) const {
   assert(hasPortInfo());
 
-  uint16_t width{0};
-  for (size_t index = 0; index < nInPort + nOutPort; ++index) {
+  PortWidth width{0};
+  for (PortIndex index = 0; index < nInPort + nOutPort; ++index) {
     if (i < width + ports[index].width)
       return {index, i - width};
     width += ports[index].width;
   }
 
-  assert(false);
-  return {Unknown, Unknown};
+  assert(false && "Pin is out of range");
+  return {Unknown, 0};
 }
 
 } // namespace eda::gate::model

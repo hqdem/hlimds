@@ -145,13 +145,13 @@ uint getInCount(Operation *op) {
   return inCount;
 }
 
-std::vector<uint16_t> getPortWidthIn(Operation *op) {
-  std::vector<uint16_t> bitWidthIn;
+std::vector<PortWidth> getPortWidthIn(Operation *op) {
+  std::vector<PortWidth> bitWidthIn;
   if (isInstance(op)) {
     auto instanceOp = mlir::dyn_cast<InstanceOp>(op);
     for (size_t i = 0; i < instanceOp->getNumResults(); i++) {
       if (instanceOp.getPortDirection(i) == Direction::In) {
-        uint16_t inputWidth = getResultWidth(instanceOp, i);
+        auto inputWidth = getResultWidth(instanceOp, i);
         bitWidthIn.push_back(inputWidth);
       }
     }
@@ -164,16 +164,16 @@ std::vector<uint16_t> getPortWidthIn(Operation *op) {
   } else if (isRegisterWithReset(op)) {
       // RegReset has a reset value of arbitrary width.
       for (size_t i = 0; i < op->getNumOperands(); i++) {
-        uint16_t inputWidth = getOperandWidth(op, i);
+        auto inputWidth = getOperandWidth(op, i);
         bitWidthIn.push_back(inputWidth);
       }
       for (size_t i = 0; i < op->getNumResults(); i++) {
-        uint16_t inputWidth = getResultWidth(op, i);
+        auto inputWidth = getResultWidth(op, i);
         bitWidthIn.push_back(inputWidth);
       }
   } else {
     for (auto &&operandType : op->getOperandTypes()) {
-      uint16_t inputWidth = getTypeWidth(operandType);
+      auto inputWidth = getTypeWidth(operandType);
       bitWidthIn.push_back(inputWidth);
     }
   }
@@ -197,24 +197,24 @@ uint getOutCount(Operation *op) {
   return outCount;
 }
 
-std::vector<uint16_t> getPortWidthOut(Operation *op) {
-  std::vector<uint16_t> bitWidthOut;
+std::vector<PortWidth> getPortWidthOut(Operation *op) {
+  std::vector<PortWidth> bitWidthOut;
   if (isInstance(op)) {
     auto instanceOp = mlir::dyn_cast<InstanceOp>(op);
     for (size_t i = 0; i < instanceOp->getNumResults(); i++) {
       if (instanceOp.getPortDirection(i) == Direction::Out) {
-        uint16_t outputWidth = getResultWidth(instanceOp, i);
+        auto outputWidth = getResultWidth(instanceOp, i);
         bitWidthOut.push_back(outputWidth);
       }
     }
   } else if (isAnyRegister(op)) {
     for (size_t i = 0; i < op->getNumResults(); i++) {
-      uint16_t outputWidth = getResultWidth(op, i);
+      auto outputWidth = getResultWidth(op, i);
       bitWidthOut.push_back(outputWidth);
     }
   } else {
     for (auto &&resultType : op->getResultTypes()) {
-      uint16_t outputWidth = getTypeWidth(resultType);
+      auto outputWidth = getTypeWidth(resultType);
       bitWidthOut.push_back(outputWidth);
     }
   }
@@ -300,12 +300,12 @@ CellSymbol getCellSymbol(Operation *op) {
   return cellSymbol;
 }
 
-std::vector<uint16_t> getModulePortWidths(FModuleOp fModuleOp, Direction dir) {
-  std::vector<uint16_t> modulePortWidths;
+std::vector<PortWidth> getModulePortWidths(FModuleOp fModuleOp, Direction dir) {
+  std::vector<PortWidth> modulePortWidths;
   for (size_t i = 0; i < fModuleOp.getNumPorts(); i++) {
     if (fModuleOp.getPortDirection(i) == dir &&
         !(mlir::dyn_cast<PropertyType>(fModuleOp.getPortType(i)))) {
-      uint16_t portWidth = getTypeWidth(fModuleOp.getPortType(i));
+      auto portWidth = getTypeWidth(fModuleOp.getPortType(i));
       modulePortWidths.push_back(portWidth);
     }
   }

@@ -85,6 +85,7 @@ using OwningOpRef = mlir::OwningOpRef<Type>;
 using Pass = mlir::Pass;
 using PassManager = mlir::PassManager;
 using PortInfo = circt::firrtl::PortInfo;
+using PortWidth = eda::gate::model::CellTypeAttr::PortWidth;
 using PropAssignOp = circt::firrtl::PropAssignOp;
 using PropertyType = circt::firrtl::PropertyType;
 using Region = mlir::Region;
@@ -921,8 +922,8 @@ void LowFIRRTLToNetPass::getToLinkKeysSynthOps(const Value &val,
 
 void LowFIRRTLToNetPass::processInstance(InstanceOp instOp,
     NetBuilder *netBuilder) {
-  const std::vector<uint16_t> portWidthIn = getPortWidthIn(instOp);
-  const std::vector<uint16_t> portWidthOut = getPortWidthOut(instOp);
+  const std::vector<PortWidth> portWidthIn = getPortWidthIn(instOp);
+  const std::vector<PortWidth> portWidthOut = getPortWidthOut(instOp);
   const CellSymbol cellSymbol = getCellSymbol(instOp);
   const std::string &cellTypeName = instOp.getModuleName().str();
   CellTypeKey cellTypeKey(cellTypeName, portWidthIn, portWidthOut);
@@ -938,7 +939,7 @@ void LowFIRRTLToNetPass::processInstance(InstanceOp instOp,
   }
   std::vector<LinkEnd> linkEnds;
   for (uint i = 0; i < portWidthIn.size(); i++) {
-    for (uint16_t j = 0; j < portWidthIn[i]; j++) {
+    for (PortWidth j = 0; j < portWidthIn[i]; j++) {
       linkEnds.push_back(LinkEnd());
     }
   }
@@ -970,8 +971,8 @@ void LowFIRRTLToNetPass::processInstance(InstanceOp instOp,
 
 void LowFIRRTLToNetPass::processSynthesizable(Operation *synthOp,
     FModuleOp fModuleOp, NetBuilder *netBuilder) {
-  const std::vector<uint16_t> portWidthIn = getPortWidthIn(synthOp);
-  const std::vector<uint16_t> portWidthOut = getPortWidthOut(synthOp);
+  const std::vector<PortWidth> portWidthIn = getPortWidthIn(synthOp);
+  const std::vector<PortWidth> portWidthOut = getPortWidthOut(synthOp);
   const CellSymbol cellSymbol = getCellSymbol(synthOp);
   auto linkEnds = getLinkEnds(synthOp, fModuleOp);
   const std::string &cellTypeName = synthOp->getName().stripDialect().str();
@@ -1116,7 +1117,7 @@ void LowFIRRTLToNetPass::processBitManipulation(Operation *op,
     FModuleOp fModuleOp, NetBuilder *netBuilder, CellID &cellIDForZero) {
   auto linkEnds = getLinkEnds(op, fModuleOp);
   std::vector<LinkEnd> outLinkEnds;
-  const std::vector<uint16_t> portWidthIn = getPortWidthIn(op);
+  const std::vector<PortWidth> portWidthIn = getPortWidthIn(op);
   if (isPad(op)) {
     auto padOp = mlir::dyn_cast<PadPrimOp>(op);
     processPad(padOp, cellIDForZero, portWidthIn.back(), linkEnds, outLinkEnds,

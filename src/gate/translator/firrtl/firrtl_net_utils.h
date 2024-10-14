@@ -62,6 +62,7 @@ using Operation = mlir::Operation;
 using OrPrimOp = circt::firrtl::OrPrimOp;
 using OrRPrimOp = circt::firrtl::OrRPrimOp;
 using PadPrimOp = circt::firrtl::PadPrimOp;
+using PortWidth = eda::gate::model::CellTypeAttr::PortWidth;
 using PrintFOp = circt::firrtl::PrintFOp;
 using PropAssignOp = circt::firrtl::PropAssignOp;
 using PropertyType = circt::firrtl::PropertyType;
@@ -357,9 +358,9 @@ uint findOpResultNumber(const Value val,
                         FModuleOp fModuleOp);
 
 uint getInCount(Operation *op);
-std::vector<uint16_t> getPortWidthIn(Operation *op);
+std::vector<PortWidth> getPortWidthIn(Operation *op);
 uint getOutCount(Operation *op);
-std::vector<uint16_t> getPortWidthOut(Operation *op);
+std::vector<PortWidth> getPortWidthOut(Operation *op);
 
 Operation *getSourceOperation(Operation *destOp, const Value operand);
 
@@ -367,7 +368,7 @@ Value getDestValue(Operation *destOp, const uint inNum);
 
 CellSymbol getCellSymbol(Operation *op);
 
-std::vector<uint16_t> getModulePortWidths(FModuleOp fModuleOp, Direction dir);
+std::vector<PortWidth> getModulePortWidths(FModuleOp fModuleOp, Direction dir);
 
 uint getNetInPortNum(Operation *op,
                      const uint portNum,

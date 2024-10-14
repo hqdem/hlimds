@@ -23,13 +23,13 @@ class Net final : public Object<Net, NetID> {
   friend class Storage<Net>;
 
 public:
-  Net &operator =(const Net &r) = delete;
-  Net(const Net &r) = delete;
+  Net &operator =(const Net &other) = delete;
+  Net(const Net &other) = delete;
 
-  List<CellID> getInputs() const { return List<CellID>(inputs); }
-  List<CellID> getOutputs() const { return List<CellID>(outputs); }
-  List<CellID> getCombCells() const { return List<CellID>(combCells); }
-  List<CellID> getFlipFlops() const { return List<CellID>(flipFlops); }
+  List<CellID> getInputs()     const { return List<CellID>(inputs);     }
+  List<CellID> getOutputs()    const { return List<CellID>(outputs);    }
+  List<CellID> getCombCells()  const { return List<CellID>(combCells);  }
+  List<CellID> getFlipFlops()  const { return List<CellID>(flipFlops);  }
   List<CellID> getSoftBlocks() const { return List<CellID>(softBlocks); }
   List<CellID> getHardBlocks() const { return List<CellID>(hardBlocks); }
 

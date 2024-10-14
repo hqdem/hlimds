@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/link.h"
 #include "gate/model/object.h"
 #include "gate/model/storage.h"
 #include "gate/model/string.h"
@@ -15,6 +16,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 namespace eda::gate::model {
@@ -30,21 +32,26 @@ struct PhysicalProperties final {
 
   uint32_t padding__{0};
 };
+
 static_assert(sizeof(PhysicalProperties) == 16);
 
 struct Port final {
-  Port(const std::string &name, uint16_t width, bool input, uint16_t index = 0):
+  using Width = uint32_t;
+  using Flags = uint16_t;
+  using Index = uint16_t;
+
+  Port(const std::string &name, Width width, bool input, Index index = 0):
       nameID(allocateObject<String>(name)),
       width(width), input(input), index(index) {}
 
-  Port(uint16_t width, bool input, uint16_t index = 0):
+  Port(Width width, bool input, Index index = 0):
       nameID(OBJ_NULL_ID),
       width(width), input(input), index(index) {}
 
-  Port(const std::string &name, bool input, uint16_t index = 0):
+  Port(const std::string &name, bool input, Index index = 0):
       Port(name, 1, input, index) {}
 
-  Port(bool input, uint16_t index = 0):
+  Port(bool input, Index index = 0):
       Port(1, input, index) {}
 
   Port(): Port(0, false, 0) {}
@@ -53,55 +60,64 @@ struct Port final {
 
   StringID nameID;
 
-  uint16_t width;
-  uint16_t input;
-  uint16_t index;
-
-  uint16_t padding__{0};
+  Width width;
+  Flags input;
+  Index index;
 };
+
 static_assert(sizeof(Port) == 16);
 
 class CellTypeAttr final : public Object<CellTypeAttr, CellTypeAttrID> {
   friend class Storage<CellTypeAttr>;
 
 public:
-  using PortWidths = std::vector<uint16_t>;
+  using PortIndex = Port::Index;
+  using PortWidth = Port::Width;
+
+  using PinIndex = LinkEnd::PortType;
+
+  using PortWidths = std::vector<PortWidth>;
   using PortVector = std::vector<Port>;
 
-  static constexpr uint16_t Unknown = 0xffff;
-  static constexpr uint16_t MaxBitWidth = 0xfffe;
-  static constexpr uint16_t MaxPortNum = 254;
+  static constexpr PortIndex Unknown = std::numeric_limits<PortIndex>::max();
+  static constexpr PortWidth MaxBitWidth = std::numeric_limits<PortWidth>::max();
+  static constexpr PortIndex MaxPortNum = 254;
 
-  static uint16_t checkBitWidth(size_t width) {
-    assert(width <= MaxBitWidth);
-    return width;
+  static PortWidth checkBitWidth(const size_t w) {
+    assert(w <= MaxBitWidth);
+    return w;
   }
 
-  static uint16_t getBitWidth(const PortWidths &widths) {
-    size_t n{0};
+  static PortIndex checkPortNum(const size_t n) {
+    assert(n <= MaxPortNum);
+    return n;
+  }
+
+  static PortWidth getBitWidth(const PortWidths &widths) {
+    size_t w{0};
     for (const auto width : widths) {
-      n += width;
+      w += width;
     }
-    return checkBitWidth(n);
+    return checkBitWidth(w);
   }
 
-  static uint16_t getInNum(const PortVector &ports) {
+  static PortIndex getInNum(const PortVector &ports) {
     size_t n{0};
     for (const auto &port : ports) {
       if (port.input) n++;
     }
-    return n;
+    return checkPortNum(n);
   }
 
-  static uint16_t getOutNum(const PortVector &ports) {
+  static PortIndex getOutNum(const PortVector &ports) {
     size_t n{0};
     for (const auto &port : ports) {
       if (!port.input) n++;
     }
-    return n;
+    return checkPortNum(n);
   }
 
-  static uint16_t getInBitWidth(const PortVector &ports) {
+  static PortWidth getInBitWidth(const PortVector &ports) {
     size_t n{0};
     for (const auto &port : ports) {
       if (port.input) n += port.width;
@@ -109,75 +125,75 @@ public:
     return checkBitWidth(n);
   }
 
-  static uint16_t getOutBitWidth(const PortVector &ports) {
-    size_t n{0};
+  static PortWidth getOutBitWidth(const PortVector &ports) {
+    size_t w{0};
     for (const auto &port : ports) {
-      if (!port.input) n += port.width;
+      if (!port.input) w += port.width;
     }
-    return checkBitWidth(n);
+    return checkBitWidth(w);
   }
 
   bool hasPortInfo() const {
     return nInPort != Unknown && nOutPort != Unknown;
   }
 
-  uint16_t getInPortNum() const {
+  PortIndex getInPortNum() const {
     assert(hasPortInfo());
     return nInPort;
   }
 
-  uint16_t getOutPortNum() const {
+  PortIndex getOutPortNum() const {
     assert(hasPortInfo());
     return nOutPort;
   }
 
-  const Port &getPort(uint16_t i) const {
+  const Port &getPort(const PortIndex i) const {
     assert(hasPortInfo());
     return ports[i];
   }
 
-  const Port &getInPort(uint16_t i) const {
+  const Port &getInPort(const PortIndex i) const {
     return getPort(i);
   }
 
-  const Port &getOutPort(uint16_t i) const {
+  const Port &getOutPort(const PortIndex i) const {
     return getPort(nInPort + i);
   }
 
-  uint16_t getWidth(uint16_t i) const {
+  PortWidth getWidth(const PortIndex i) const {
     return getPort(i).width;
   }
 
-  uint16_t getInWidth(uint16_t i) const {
+  PortWidth getInWidth(const PortIndex i) const {
     return getInPort(i).width;
   }
 
-  uint16_t getInWidth() const {
-    uint16_t n{0};
-    for (uint16_t i = 0; i < nInPort; ++i) {
-      n += getInWidth(i);
+  PortWidth getInWidth() const {
+    size_t w{0};
+    for (PortIndex i = 0; i < nInPort; ++i) {
+      w += getInWidth(i);
     }
-    return n;
+    return checkBitWidth(w);
   }
 
-  uint16_t getOutWidth(uint16_t i) const {
+  PortWidth getOutWidth(const PortIndex i) const {
     return getOutPort(i).width;
   }
 
-  uint16_t getOutWidth() const {
-    uint16_t n{0};
-    for (uint16_t i = 0; i < nOutPort; ++i) {
-      n += getOutWidth(i);
+  PortWidth getOutWidth() const {
+    size_t w{0};
+    for (PortIndex i = 0; i < nOutPort; ++i) {
+      w += getOutWidth(i);
     }
-    return n;
+    return w;
   }
 
-  std::pair<uint16_t, uint16_t> mapPinToPort(uint16_t i) const;
+  std::pair<PortIndex, PortWidth> mapPinToPort(const PinIndex i) const;
 
   PortVector getOrderedPorts() const {
-    const size_t n = nInPort + nOutPort;
+    const PortIndex n = nInPort + nOutPort;
     PortVector ordered(n);
-    for (size_t i = 0; i < n; ++i) {
+    for (PortIndex i = 0; i < n; ++i) {
       const auto &port = ports[i];
       ordered[port.index] = port;
     }

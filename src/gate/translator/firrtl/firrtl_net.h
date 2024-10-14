@@ -35,6 +35,7 @@ template<typename Type>
 using OwningOpRef = mlir::OwningOpRef<Type>;
 using Pass = mlir::Pass;
 using PassManager = mlir::PassManager;
+using PortWidth = eda::gate::model::CellTypeAttr::PortWidth;
 
 namespace eda::gate::translator {
 
@@ -63,8 +64,8 @@ struct LinkKey final {
  */
 struct CellTypeKey final {
   CellTypeKey(const std::string &name,
-              const std::vector<uint16_t> portWidthIn,
-              const std::vector<uint16_t> portWidthOut) :
+              const std::vector<PortWidth> portWidthIn,
+              const std::vector<PortWidth> portWidthOut) :
       name(name),
       portWidthIn(portWidthIn),
       portWidthOut(portWidthOut) {}
@@ -72,8 +73,8 @@ struct CellTypeKey final {
   bool operator==(const CellTypeKey &cellTypeKey) const;
 
   const std::string name;
-  const std::vector<uint16_t> portWidthIn;
-  const std::vector<uint16_t> portWidthOut;
+  const std::vector<PortWidth> portWidthIn;
+  const std::vector<PortWidth> portWidthOut;
 };
 
 } // namespace eda::gate::translator

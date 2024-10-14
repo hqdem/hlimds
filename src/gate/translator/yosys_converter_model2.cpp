@@ -260,9 +260,9 @@ std::vector<int> YosysConverterModel2::combineVectors(
   return combined_vector;
 }
 
-std::vector<std::uint16_t> YosysConverterModel2::combineVectorsSize(
+std::vector<YosysConverterModel2::PortWidth> YosysConverterModel2::combineVectorsSize(
     const std::vector<std::vector<int>> &vectors) {
-  std::vector<std::uint16_t> combined_vector;
+  std::vector<PortWidth> combined_vector;
   for (const auto &vec : vectors) {
     combined_vector.push_back(vec.size());
   }
@@ -272,8 +272,8 @@ std::vector<std::uint16_t> YosysConverterModel2::combineVectorsSize(
 void YosysConverterModel2::makeRestCell(
     int indexOperator, std::vector<int> &q, std::vector<std::vector<int>> &leafs, bool sign) {
   std::vector<int> linearLeafs = combineVectors(leafs);
-  std::vector<std::uint16_t> linearLeafsSize = combineVectorsSize(leafs);
-  std::vector<std::uint16_t> linearQSize = { static_cast<unsigned short>(q.size()) };
+  std::vector<PortWidth> linearLeafsSize = combineVectorsSize(leafs);
+  std::vector<PortWidth> linearQSize = { static_cast<PortWidth>(q.size()) };
   makeSoftOperatorCell(
       indexOperator, q, linearLeafs, linearLeafsSize, linearQSize, sign);
 }
@@ -715,7 +715,7 @@ void YosysConverterModel2::insertYosysCells(
 }
 
 void YosysConverterModel2::makeSoftOperatorCell(
-    int typeFunction, std::vector<int> &root, std::vector<int> &leaf, std::vector<std::uint16_t> &widthIn, std::vector<std::uint16_t> &widthOut, bool sign) {
+    int typeFunction, std::vector<int> &root, std::vector<int> &leaf, std::vector<PortWidth> &widthIn, std::vector<PortWidth> &widthOut, bool sign) {
   Signal *lhs = makeSignal(root);
   Signal *rhs = makeSignal(leaf);
   auto attr = Attributes(widthIn, widthOut);
@@ -861,7 +861,7 @@ void YosysConverterModel2::gatherPortsInfo(
 
 void YosysConverterModel2::fillInitCellData(
     RTLIL::Module *nested, PortsInfo *portsInfo) {
-  std::vector<std::uint16_t> wIn, wOut;
+  std::vector<PortWidth> wIn, wOut;
   for (size_t i = 0; i < portsInfo->orderInputs.size(); i++) {
     wIn.push_back(1);
   }

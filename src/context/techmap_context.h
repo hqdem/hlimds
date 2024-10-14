@@ -18,4 +18,4 @@ struct TechMapContext final {
   std::unique_ptr<gate::library::SCLibrary> library;
 };
 
-} //namespace eda::context
+} // namespace eda::context

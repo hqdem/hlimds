@@ -32,6 +32,7 @@ class YosysConverterModel2 {
   using LinkList = eda::gate::model::Cell::LinkList;
   using NetBuilder = eda::gate::model::NetBuilder;
   using NetID = eda::gate::model::NetID;
+  using PortWidth = eda::gate::model::CellTypeAttr::PortWidth;
 
   std::ostream &debug;
 
@@ -106,10 +107,10 @@ class YosysConverterModel2 {
   };
 
   struct Attributes {
-    std::vector<std::uint16_t> widthIn;
-    std::vector<std::uint16_t> widthOut;
+    std::vector<PortWidth> widthIn;
+    std::vector<PortWidth> widthOut;
     Attributes() = default;
-    Attributes(std::vector<std::uint16_t> wIn, std::vector<std::uint16_t> wOut) :
+    Attributes(std::vector<PortWidth> wIn, std::vector<PortWidth> wOut) :
       widthIn(wIn), widthOut(wOut) {}
   };
 
@@ -186,7 +187,7 @@ private:
   static std::vector<int> combineVectors(
       const std::vector<std::vector<int>> &vectors);
 
-  static std::vector<std::uint16_t> combineVectorsSize(
+  static std::vector<PortWidth> combineVectorsSize(
       const std::vector<std::vector<int>> &vectors);
 
   void makeRestCell(
@@ -236,7 +237,7 @@ private:
   void insertYosysCells(Signal *lhs, Signal *rhs);
 
   void makeSoftOperatorCell(
-      int typeFunction, std::vector<int> &root, std::vector<int> &leaf, std::vector<std::uint16_t> &widthIn, std::vector<std::uint16_t> &widthOut, bool sign);
+      int typeFunction, std::vector<int> &root, std::vector<int> &leaf, std::vector<PortWidth> &widthIn, std::vector<PortWidth> &widthOut, bool sign);
 
   void makeConnectArnity1(
       const int typeFunction, const IdDict<Yosys::RTLIL::SigSpec> &cons);

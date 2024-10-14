@@ -33,9 +33,10 @@ class Cell final : public Object<Cell, CellID> {
   friend class NetBuilder;
 
 public:
+  using PortType = LinkEnd::PortType;
   using LinkList = std::vector<LinkEnd>;
 
-  static constexpr uint32_t MaxFanin  = (1u << LinkEnd::PortBits) - 1;
+  static constexpr PortType MaxFanin  = (1u << LinkEnd::PortBits) - 1;
   static constexpr uint32_t MaxFanout = std::numeric_limits<uint32_t>::max();
 
   bool isIn()   const { return typeSID == CELL_TYPE_SID_IN;   }
@@ -60,15 +61,15 @@ public:
   CellSymbol getSymbol() const { return getType().getSymbol(); }
 
   /// Returns the cell fan-in (the number of inputs).
-  uint32_t getFanin() const { return fanin; }
+  PortType getFanin() const { return fanin; }
   /// Returns the cell fan-out (reference count for all outputs).
-  uint64_t getFanout() const { return fanout; }
+  uint32_t getFanout() const { return fanout; }
 
   /// Returns the input links of the cell.
   LinkList getLinks() const;
 
   /// Returns the input link of the cell.
-  LinkEnd getLink(uint32_t port) const;
+  LinkEnd getLink(const PortType port) const;
 
 private:
   Cell(CellTypeID typeID): typeSID(typeID.getSID()) {}
@@ -76,13 +77,13 @@ private:
   Cell(CellTypeID typeID, const LinkList &links);
 
   /// Set the input link (used by NetBuilder).
-  void setLink(uint32_t port, const LinkEnd &source);
+  void setLink(const PortType port, const LinkEnd &source);
 
   /// Cell type SID.
   const uint32_t typeSID;
   uint32_t padding1__{0};
 
-  uint32_t fanin{0};
+  PortType fanin{0};
   uint32_t fanout{0};
 
   /// Links in the external list.

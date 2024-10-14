@@ -13,7 +13,7 @@
 
 namespace eda::gate::model {
 
-Cell::Cell(CellTypeID typeID, const LinkList &links):
+Cell::Cell(const CellTypeID typeID, const LinkList &links):
     typeSID(typeID.getSID()), fanin(links.size()), fanout(0) {
   if (!links.empty()) {
     Array<uint64_t> array(links.size());
@@ -38,12 +38,12 @@ Cell::LinkList Cell::getLinks() const {
   return links;
 }
 
-LinkEnd Cell::getLink(uint32_t port) const {
+LinkEnd Cell::getLink(const PortType port) const {
   Array<uint64_t> array(arrayID);
   return LinkEnd::unpack(array[port]);
 }
 
-void Cell::setLink(uint32_t port, const LinkEnd &source) {
+void Cell::setLink(const PortType port, const LinkEnd &source) {
   assert(port < fanin);
   Array<uint64_t> array(arrayID);
   assert(!LinkEnd::unpack(array[port]).isValid());

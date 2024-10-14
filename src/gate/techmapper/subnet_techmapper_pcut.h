@@ -65,6 +65,15 @@ protected:
   }
 
 private:
+  criterion::Cost estimateCut(const SubnetBuilderPtr &builder,
+                              const optimizer::Cut &cut,
+                              const CellContext &cellContext) {
+    const auto prevVector = costAggregator(getCostVectors(cut));
+    const auto cellVector = cutEstimator(*builder, cut, cellContext);
+    const auto costVector = prevVector + cellVector;
+    return context.criterion->getPenalizedCost(costVector, tension);
+  }
+
   void computePCuts(const SubnetBuilderPtr &builder,
                     const model::EntryID entryID);
 

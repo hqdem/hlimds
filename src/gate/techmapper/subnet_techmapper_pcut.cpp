@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <tuple>
 
 namespace eda::gate::techmapper {
 
@@ -99,7 +100,7 @@ void SubnetTechMapperPCut::computePCuts(const SubnetBuilderPtr &builder,
 
   auto cuts = cutExtractor->getCuts(entryID);
   std::vector<std::vector<Match>> matches(cuts.size());
-  std::vector<std::pair<size_t, criterion::Cost>> sorted(cuts.size());
+  std::vector<std::tuple<size_t, criterion::Cost, bool>> sorted(cuts.size());
 
   for (size_t i = 0; i < cuts.size(); ++i) {
     const auto &cut = cuts[i];
@@ -109,17 +110,14 @@ void SubnetTechMapperPCut::computePCuts(const SubnetBuilderPtr &builder,
     if (cut.isTrivial()) {
       cost = 0. /* trivial cut must be included */;
     } else {
-      const auto prevVector = costAggregator(getCostVectors(cut));
-      const auto cellVector = cutEstimator(*builder, cut, cellContext);
-      const auto costVector = prevVector + cellVector;
-      cost = context.criterion->getPenalizedCost(costVector, tension);
+      cost = estimateCut(builder, cut, cellContext);
     }
 
     // No matches => large cost.
     matches[i] = matchFinder(builder, cut);
     cost /= (std::log2(matches[i].size() + 1.) + .1);
 
-    sorted[i] = {i, cost};
+    sorted[i] = {i, cost, !matches[i].empty()};
     goodOldCuts.erase(cut);
   }
 
@@ -128,11 +126,12 @@ void SubnetTechMapperPCut::computePCuts(const SubnetBuilderPtr &builder,
     assert(!oldCut.isTrivial());
     cuts.push_back(oldCut);
     matches.push_back(matchFinder(builder, oldCut));
-    sorted.emplace_back(sorted.size(), 0. /* good */);
+    sorted.emplace_back(sorted.size(), 0. /* good */, !matches.back().empty());
   }
 
   std::sort(sorted.begin(), sorted.end(), [](const auto &lhs, const auto &rhs) {
-    return lhs.second < rhs.second;
+    return (std::get<2>(lhs) && !std::get<2>(rhs))
+        || (std::get<1>(lhs) < std::get<1>(rhs));
   });
 
   optimizer::CutsList pcuts;
@@ -140,7 +139,7 @@ void SubnetTechMapperPCut::computePCuts(const SubnetBuilderPtr &builder,
 
   size_t matchCount = 0;
   for (size_t i = 0; i < n; ++i) {
-    const auto index = sorted[i].first;
+    const auto index = std::get<0>(sorted[i]);
     const auto &pcut = cuts[index];
 
     // Store priority cuts.

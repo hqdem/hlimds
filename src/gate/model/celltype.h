@@ -852,17 +852,17 @@ inline CellTypeID makeHardType(CellSymbol symbol,
 #define CELL_TYPE_ID(symbol)  CELL_TYPE_ID_##symbol
 #define CELL_TYPE_SID(symbol) CELL_TYPE_SID_##symbol
 
-#define DECLARE_CELL_TYPE_ID(symbol) \
-  /* Full cell type identifier */ \
-  extern const CellTypeID CELL_TYPE_ID(symbol); \
-  /* Short cell type identifier */ \
+#define DECLARE_CELL_TYPE_ID(symbol)\
+  /* Full cell type identifier */\
+  extern const CellTypeID CELL_TYPE_ID(symbol);\
+  /* Short cell type identifier */\
   extern const uint32_t CELL_TYPE_SID(symbol);
 
 #define UTOPIA_FOREACH_GATE(S) DECLARE_CELL_TYPE_ID(S)
 #include "celltype_gates.inc"
 
-#define UTOPIA_FOREACH_GATE(S) \
-  case S: return CELL_TYPE_ID_##S;
+#define UTOPIA_FOREACH_GATE(S)\
+  case S: return CELL_TYPE_ID(S);
 constexpr uint64_t getCellTypeID(CellSymbol symbol) {
   switch(symbol) {
 #include "celltype_gates.inc"
@@ -870,8 +870,8 @@ constexpr uint64_t getCellTypeID(CellSymbol symbol) {
   }
 }
 
-#define UTOPIA_FOREACH_GATE(S) \
-  case S: return CELL_TYPE_SID_##S;
+#define UTOPIA_FOREACH_GATE(S)\
+  case S: return CELL_TYPE_SID(S);
 constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
   switch(symbol) {
 #include "celltype_gates.inc"
@@ -881,6 +881,14 @@ constexpr uint32_t getCellTypeSID(CellSymbol symbol) {
 
 inline const CellType &getCellType(CellSymbol symbol) {
   return CellType::get(getCellTypeID(symbol));
+}
+
+#define UTOPIA_FOREACH_GATE(S)\
+  if (CellType::get(CELL_TYPE_ID(S)).getName() == typeName) return S;
+inline CellSymbol getSymbol(const std::string &typeName) {
+#include "celltype_gates.inc"
+  assert(false && "Unknown cell type");
+  return CellSymbol::UNDEF;
 }
 
 } // namespace eda::gate::model

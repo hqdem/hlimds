@@ -6,23 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/model/subnet.h"
 #include "gate/translator/logdb.h"
 
-namespace eda::gate::translator {
+#include <memory>
 
-static model::CellSymbol getSymbol(const std::string &buf) {
-  if (buf == "in"  ) return model::CellSymbol::IN  ;
-  if (buf == "out" ) return model::CellSymbol::OUT ;
-  if (buf == "zero") return model::CellSymbol::ZERO;
-  if (buf == "one" ) return model::CellSymbol::ONE ;
-  if (buf == "buf" ) return model::CellSymbol::BUF ;
-  if (buf == "and" ) return model::CellSymbol::AND ;
-  if (buf == "or"  ) return model::CellSymbol::OR  ;
-  if (buf == "xor" ) return model::CellSymbol::XOR ;
-  if (buf == "maj" ) return model::CellSymbol::MAJ ;
-  assert(false && "Unsupported cell type while importing\n");
-  return model::CellSymbol::UNDEF;
-}
+namespace eda::gate::translator {
 
 static void parseLine(const std::shared_ptr<model::SubnetBuilder> &builderPtr,
                       model::Subnet::LinkList &links, 
@@ -32,7 +21,7 @@ static void parseLine(const std::shared_ptr<model::SubnetBuilder> &builderPtr,
   std::istringstream stream(line);
   std::string buf;
   std::getline(stream, buf, delimiter);
-  auto symbol = getSymbol(buf);
+  auto symbol = model::getSymbol(buf);
 
   model::Subnet::LinkList cellLinks;
   for (;std::getline(stream, buf, delimiter);) {
@@ -55,7 +44,7 @@ static void parseLine(const std::shared_ptr<model::SubnetBuilder> &builderPtr,
   links.push_back(link);
 }
 
-optimizer::NpnDatabase LogdbTranslator::translate(std::istream &in) const {
+optimizer::NpnDatabase LogDbTranslator::translate(std::istream &in) const {
   const char delimiter = ' ';
   optimizer::NpnDatabase db;
   model::Subnet::LinkList links;

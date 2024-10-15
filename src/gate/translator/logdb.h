@@ -8,16 +8,18 @@
 
 #pragma once
 
-#include "gate/model/subnet.h"
 #include "gate/optimizer/npndb.h"
 
-#include <memory>
+#include <fstream>
+#include <iostream>
 #include <string>
 
 namespace eda::gate::translator {
 
-// Translates file with logic database into NpnDatabase class.
-class LogdbTranslator {
+/**
+ * @brief Translates file with logic database into NpnDatabase class.
+ */
+class LogDbTranslator final {
 public:
   optimizer::NpnDatabase translate(std::istream &in) const;
 

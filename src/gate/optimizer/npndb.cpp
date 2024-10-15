@@ -76,7 +76,7 @@ void NpnDatabase::erase(const TT &tt) {
 }
 
 NpnDatabase NpnDatabase::importFrom(const std::string &filename) {
-  translator::LogdbTranslator translator;
+  translator::LogDbTranslator translator;
   return translator.translate(filename);
 }
 

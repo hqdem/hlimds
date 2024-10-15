@@ -27,22 +27,25 @@ namespace eda::gate::model {
  * @brief Base Net/Subnet printer class.
  */
 class NetPrinter {
+  using OriginalID = uint64_t;
+  using PrintingID = uint32_t;
 public:
   /// Cell information.
   struct CellInfo final {
-    CellInfo(const CellType &type, size_t cell):
-        type(type), cell(cell) {}
+    CellInfo(const CellType &type,
+             const std::pair<OriginalID, PrintingID> &cellIDs):
+        type(type), cellIDs(cellIDs) {}
 
     std::string getType() const {
       return type.get().getName();
     }
 
     std::string getName() const {
-      return fmt::format("{}_{}", getType(), cell);
+      return fmt::format("{}_{}", getType(), cellIDs.second);
     }
 
     const std::reference_wrapper<const CellType> type;
-    const size_t cell;
+    const std::pair<OriginalID, PrintingID> cellIDs;
   };
 
   /// Port information.
@@ -161,13 +164,10 @@ protected:
 
 private:
   const std::vector<Pass> passes;
-
-  using OriginalID = uint64_t;
-  using PrintingID = uint32_t;
   std::unordered_map<OriginalID, PrintingID> cellIDs;
 
   /// Unifies the input and output names in designs w/ the same interface.
-  size_t getCellPrintingID(OriginalID cellID) {
+  PrintingID getCellPrintingID(OriginalID cellID) {
     PrintingID cellPrintingID{0};
     if (const auto found = cellIDs.find(cellID); found != cellIDs.end()) {
       cellPrintingID = found->second;

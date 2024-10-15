@@ -127,6 +127,7 @@ add_executable(${TEST_TARGET}
   gate/translator/firrtl/firrtl_test.cpp
   gate/translator/graphml_test.cpp
   gate/translator/graphml_test_utils.cpp
+  gate/translator/logdb_test.cpp
   gate/translator/verilog/verilog_firrtl_test.cpp
   lib/minisat/minisat_test.cpp
   rtl/parser/ril/ril_test.cpp

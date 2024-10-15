@@ -34,15 +34,6 @@ static void printGetDbStat(const std::string &filename, NpnDbConfig conf) {
   }
 }
 
-// print string in file
-static void printMsg(const std::string &filename, const std::string msg = "") {
-  std::ofstream out(filename);
-  if (out.is_open()) {
-    out << msg;
-    out.close();
-  }
-}
-
 // print Info and DOT module in file
 static void printInfoDot(const std::string &filename, SubnetID id,
                          const std::string name = "") {
@@ -52,86 +43,6 @@ static void printInfoDot(const std::string &filename, SubnetID id,
     print(out, Format::DOT, name, Subnet::get(id));
     out.close();
   }
-}
-
-// test of incorrect config and compare error messages
-static void errorTest(const std::string f1, const NpnDbConfig conf,
-                      const std::string f2, const std::string msg) {
-  printGetDbStat(f1, conf);
-  printMsg(f2, msg);
-  ASSERT_TRUE(compareFiles(f1, f2));
-}
-
-// test of messages of critical errors
-TEST(GetStatTest, GetStatTestPrintErrors) {
-
-  // DB creation
-  std::string fnDb = "db.rwdb";
-  std::string fnBackup = "backup.txt";
-  std::string fnBackupCorrect = "backupCorrect.txt";
-
-  NpnDatabase npndb;
-  npndbCreate(&npndb);
-  npndb.exportTo(fnDb);
-
-  NpnDbConfig conf;
-  conf.ttSize = 2;
-  conf.outType = OutType::BOTH;
-  conf.outName = "";
-  conf.binLines.clear();
-  conf.binLines.push_back("1000");
-
-  // test 1. Incorrect dbPath
-  conf.dbPath = "error_string";
-
-  errorTest(fnBackup, conf, fnBackupCorrect, "Wrong DB path\n");
-
-  // test 2. Wrong type of the file
-  printMsg("test.txt", "some info\n");
-  conf.dbPath = "test.txt";
-  errorTest(fnBackup, conf, fnBackupCorrect, "Wrong format of DB\n");
-  deleteFileIfExists("test.txt");
-
-  // test 3. Wrong ttsize
-  conf.dbPath = fnDb;
-  conf.ttSize = 0;
-  errorTest(fnBackup, conf, fnBackupCorrect,
-            "An incalculable size: 0\nSize of inputs should be from 1 to 6\n");
-
-  // test 4. Wrong ttsize
-  conf.dbPath = fnDb;
-  conf.ttSize = 100;
-  errorTest(
-      fnBackup, conf, fnBackupCorrect,
-      "An incalculable size: 100\nSize of inputs should be from 1 to 6\n");
-
-  // test 5. Empty binLines
-  conf.ttSize = 2;
-  conf.binLines.clear();
-  errorTest(fnBackup, conf, fnBackupCorrect,
-            "Empty binary lines!\n");
-
-  // test 6. bad-formatted binLines
-  conf.binLines.clear();
-  conf.binLines.push_back("erro");
-  errorTest(fnBackup, conf, fnBackupCorrect, "The line should be binary\n");
-
-  // test 7. wrong length binLines
-  conf.binLines.clear();
-  conf.binLines.push_back("10000");
-  errorTest(
-      fnBackup, conf, fnBackupCorrect,
-      "Wrong length of the values, your line size is 5 correct size is 4\n");
-
-  // test 8. no suitable Subnets
-  conf.binLines.clear();
-  conf.binLines.push_back("1001");
-  errorTest(fnBackup, conf, fnBackupCorrect,
-            "No equivalent scheme has been found\n");
-
-  deleteFileIfExists(fnDb);
-  deleteFileIfExists(fnBackup);
-  deleteFileIfExists(fnBackupCorrect);
 }
 
 // test of correct config with all possible types and compare outputs

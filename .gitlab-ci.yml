@@ -100,6 +100,12 @@ get_coverage_info:
             --cobertura ${BUILD_PATH}/coverage.xml --cobertura-pretty
             --gcov-ignore-errors all
             --print-summary
+            --exclude "${BUILD_PATH}/.*"
+            --exclude "${CIRCT_ROOT}/.*"
+            --exclude "${UTOPIA_HOME}/lib/.*"
+            --exclude "/usr/.*"
+            --exclude "${Yosys_ROOT}/.*"
+
   when: always
 
   dependencies:

@@ -121,21 +121,28 @@ struct WriteDesignCommand : public UtopiaCommand {
 
 struct WriteDebugCommand final : public WriteDesignCommand {
   WriteDebugCommand(): WriteDesignCommand(
-          "write_debug", "Writes the design to a debug file") {
+      "write_debug", "Writes the design to a debug file") {
     setFormat(eda::gate::model::DEBUG);
   }
 };
 
 struct WriteDotCommand final : public WriteDesignCommand {
   WriteDotCommand(): WriteDesignCommand(
-          "write_dot", "Writes the design to a DOT file") {
+      "write_dot", "Writes the design to a DOT file") {
     setFormat(eda::gate::model::DOT);
+  }
+};
+
+struct WriteLogDbCommand final : public WriteDesignCommand {
+  WriteLogDbCommand(): WriteDesignCommand(
+      "write_logdb", "Writes the dsign to a LogDb file") {
+    setFormat(eda::gate::model::LOGDB);
   }
 };
 
 struct WriteVerilogCommand final : public WriteDesignCommand {
   WriteVerilogCommand(): WriteDesignCommand(
-          "write_verilog", "Writes the design to a Verilog file") {
+      "write_verilog", "Writes the design to a Verilog file") {
     setFormat(eda::gate::model::VERILOG);
   }
 };

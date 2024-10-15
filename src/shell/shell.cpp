@@ -106,6 +106,7 @@ UtopiaShell::UtopiaShell() {
   addCommand(std::make_unique<WriteDataflowCommand>());
   addCommand(std::make_unique<WriteDebugCommand>());
   addCommand(std::make_unique<WriteDotCommand>());
+  addCommand(std::make_unique<WriteLogDbCommand>());
   addCommand(std::make_unique<WriteVerilogCommand>());
   addCommand(std::make_unique<WriteVerilogLibraryCommand>());
 }

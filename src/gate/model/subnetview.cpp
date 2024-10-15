@@ -164,7 +164,8 @@ SubnetObject &SubnetView::getSubnet() {
     }
     parent.setDataVal<EntryID>(i, newLink.idx);
 
-    if (isOut && !oldCell.isOut()) {
+    const auto notAddedAsOutput = isIn || !oldCell.isOut();
+    if (isOut && notAddedAsOutput) {
       subnetBuilder.addOutput(newLink);
     }
 

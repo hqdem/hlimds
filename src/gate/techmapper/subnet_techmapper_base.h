@@ -29,7 +29,7 @@ namespace eda::gate::techmapper {
  */
 class SubnetTechMapperBase : public optimizer::SubnetTransformer {
 public:
-  static constexpr auto enableConstMapping = false;
+  static constexpr auto enableConstMapping = true;
 
   struct Match final {
     model::CellTypeID typeID{model::OBJ_NULL_ID};

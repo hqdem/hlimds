@@ -36,6 +36,7 @@ public:
              const std::pair<OriginalID, PrintingID> &cellIDs):
         type(type), cellIDs(cellIDs) {}
 
+
     std::string getType() const {
       return type.get().getName();
     }

@@ -32,7 +32,7 @@ NetPrinter::LinkInfo NetPrinter::getLinkInfo(const LinkEnd &source,
       getPortInfo(source.getCellID(), source.getPort()),
       getPortInfo(target.getCellID(), target.getPort()),
       false
-  }; 
+  };
 }
 
 NetPrinter::LinksInfo NetPrinter::getLinksInfo(CellID cellID) {
@@ -44,7 +44,7 @@ NetPrinter::LinksInfo NetPrinter::getLinksInfo(CellID cellID) {
   for (uint16_t j = 0; j < links.size(); ++j) {
     const LinkEnd source(links[j]);
     const LinkEnd target(cellID, j);
-   
+
     linksInfo.emplace_back(getLinkInfo(source, target));
   }
 
@@ -61,7 +61,7 @@ void NetPrinter::visitTypes(std::ostream &out, const List<CellID> &cells) {
     onType(out, CellType::get(typeID));
   }
 }
- 
+
 void NetPrinter::visitTypes(std::ostream &out, const Net &net) {
   // TODO: Implement list view combining a number of lists.
   visitTypes(out, net.getInputs());
@@ -155,7 +155,7 @@ NetPrinter::LinkInfo NetPrinter::getLinkInfo(
       PortInfo{getCellInfo(subnet, link.idx), static_cast<uint16_t>(link.out)},
       PortInfo{getCellInfo(subnet, idx), j},
       static_cast<bool>(link.inv)
-  }; 
+  };
 }
 
 NetPrinter::LinksInfo NetPrinter::getLinksInfo(

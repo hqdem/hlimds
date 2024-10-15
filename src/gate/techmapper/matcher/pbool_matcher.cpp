@@ -76,6 +76,7 @@ std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
     try {
       const auto ttToCheck = model::evaluate(model::Subnet::get(subnetID));
       if (truthTable != ttToCheck[0]) {
+        std::cout << "Truth table equivalence check failed:\n";
         std::cout << "requested truthTable=" << kitty::to_hex(truthTable) << std::endl;
         std::cout << "correspondent subnet=\n" << model::Subnet::get(beforeID) << std::endl;
         std::cout << "constructed subnet=\n" << model::Subnet::get(subnetID) << std::endl;
@@ -89,14 +90,18 @@ std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
     debugger::SatChecker &checker = debugger::SatChecker::get();
     const auto checkerResult = checker.areEquivalent(beforeID, subnetID);
     if(!checkerResult.equal()) {
+      std::cout <<"###################################################################################\n";
+      std::cout << techCell.name << "\n";
+      std::cout <<"###################################################################################\n";
+      std::cout << "Subnet equivalence check failed:\n";
       auto tt2 = model::evaluate(model::Subnet::get(subnetID));
       std::cout << model::Subnet::get(beforeID) << "tt=" << kitty::to_hex(truthTable) << std::endl << std::endl;
       std::cout << model::Subnet::get(subnetID) << "tt2[0]=" << kitty::to_hex(tt2[0]) << std::endl;
       std::cout << "requested truthTable=" << kitty::to_hex(truthTable) << std::endl;
       std::cout << "canonized truthTable=" << kitty::to_hex(ctt) << "; perm vector: "; for (const auto perm : t.permutation) std::cout << (int)(perm) << " "; std::cout << std::endl;
       std::cout << "canonized cell truthTable=" << kitty::to_hex(techCell.ctt[output]) << "; perm vector: "; for (const auto perm : techCell.transform[output].permutation) std::cout << (int)(perm) << " "; std::cout << std::endl;
-      std::cout << "requested subnet: " << model::Subnet::get(beforeID) << std::endl;
-      std::cout << "found subnet: " << model::Subnet::get(subnetID) << std::endl;
+      std::cout << "requested subnet:\n" << model::Subnet::get(beforeID) << std::endl;
+      std::cout << "found subnet:\n" << model::Subnet::get(subnetID) << std::endl;
       std::cout << "output number: " << output << std::endl;
       std::cout << "links in subnet: "; for (const auto entry : entryIdxs) std::cout << (int) entry << " "; std::cout << std::endl;
       std::cout << "links to be connected: "; for (const auto input : linkList) std::cout << (int) input.idx << " "; std::cout << std::endl;

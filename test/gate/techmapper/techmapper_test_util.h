@@ -39,6 +39,9 @@ inline const path sdcPath = home /
 inline const path sky130lib = home / "test/data/gate/techmapper/"
   "sky130_fd_sc_hd__ff_100C_1v65.lib";
 
+inline const path nandlib = home / "test/data/gate/techmapper/"
+  "nand.lib";
+
 SubnetBuilderPtr parseGraphML(const std::string &fileName);
 void printVerilog(const SubnetID subnet);
 bool checkAllCellsMapped(const SubnetID subnetID);
@@ -149,7 +152,7 @@ protected:
       printStatistics(mappedSubnetID, *context.techMapContext.library);
 
       printVerilog(mappedSubnetID);
-      std::cout << "Mapped Subnet: " << model::Subnet::get(mappedSubnetID);
+      std::cout << "Mapped Subnet:\n" << model::Subnet::get(mappedSubnetID);
       if (subnetID == model::OBJ_NULL_ID) {
         subnetID = builderPtr->make();
       }

@@ -9,8 +9,11 @@
 #pragma once
 
 #include "gate/library/library_types.h"
+#include "util/truth_table.h" //TODO: try to move to source
 
+#include <list>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace eda::gate::library {
@@ -23,9 +26,9 @@ public:
     uint maxArity = 0;
     std::optional<WireLoadSelection> wlmSelection;
     const WireLoadModel* defaultWLM = nullptr;
-    const StandardCell *cheapNegCell = nullptr;
-    const StandardCell *cheapOneCell = nullptr;
-    const StandardCell *cheapZeroCell = nullptr;
+    std::pair<const StandardCell*, size_t> cheapNegCell = {nullptr,-1};
+    std::pair<const StandardCell*, size_t> cheapOneCell = {nullptr,-1};
+    std::pair<const StandardCell*, size_t> cheapZeroCell = {nullptr,-1};
   };
 
   //movable, bot not copyable
@@ -60,9 +63,18 @@ public:
     if (!libPrepared) {
       findCheapestCells();
       addSuperCells();
+      addConstCells();
+      completePclasses();
+      updateProperties();
       fillSearchMap();
       libPrepared = true;
     }
+  };
+
+  // TODO: should be moved somewhere else
+  struct CanonInfo {
+    util::TruthTable ctt;
+    util::NpnTransformation transform;
   };
 
 private:
@@ -70,8 +82,8 @@ private:
   SCLibrary() = default;
 
   void internalLoadCombCell(StandardCell &&cell);
-  const StandardCell *findCheapestCell(
-    const std::vector<StandardCell> &scs) const;
+   std::pair<const StandardCell*, size_t> findCheapestCell(
+    const std::vector< std::pair<StandardCell, size_t>> &scs) const;
   void findCheapestCells();
   void addSuperCell(
       const StandardCell &cellSrc,
@@ -80,7 +92,9 @@ private:
       uint output);
 
   void addSuperCells();
+  void addConstCells();
   void fillSearchMap();
+  void updateProperties();
 
   struct CollisionMaps{
     std::unordered_set<std::string> cellNames;
@@ -92,16 +106,45 @@ private:
   bool checkTemplateCollisions(const std::vector<LutTemplate> &templates);
   bool checkWLMCollisions(const std::vector<WireLoadModel> &wlms);
 
+
+  using CellLogPair = std::pair<const StandardCell*, uint16_t>;
+  using CttMap = std::unordered_map<util::TruthTable, std::vector<CellLogPair>>;
+
+  void completePclasses();
+  void completeP1classes(CttMap &existingCttP1);
+  void completeP2classes(CttMap &existingCttP2);
+  void completeP3classes(CttMap &existingCttP3, CttMap &existingCttP2);
+  CellLogPair buildP2CellForF3MiniTerm(uint8_t miniTermF3, CttMap &existingCttP2);
+  CellLogPair buildF3termEquivalentCell(
+    const std::vector<CanonInfo> &termCanons,
+    const std::vector<CellLogPair> &cellEquivalents,
+    CttMap &existingCttP2);
+
+  std::pair<CellLogPair, CellLogPair> createP2AndOR(CttMap &existingCttP2, const CellLogPair &exCellInv);
+  CellLogPair buildP2CellForF2MiniTerm(
+    uint8_t miniTermF2, 
+    const CellLogPair &cellAndP,
+    const CellLogPair &cellInvP);
+  CellLogPair buildF2termEquivalentCell(
+    const std::vector<CanonInfo> &termCanons,
+    const std::vector<CellLogPair> &cellEquivalents,
+    const CellLogPair &exCellOr);
+  CellLogPair getBaseP2Term(CttMap &existingCttP2, const CellLogPair &exCellInv);
+  CellLogPair addNegOutput(const CellLogPair &sourceCell, const CellLogPair &exCellInv);
+
   SCLibraryProperties properties_;
   CollisionMaps collisions_;
 
   std::vector<WireLoadModel> wires_;
   std::vector<LutTemplate> templates_;
   std::vector<StandardCell> combCells_;
-  std::vector<StandardCell> negCombCells_;
-  std::vector<StandardCell> constOneCells_;
-  std::vector<StandardCell> constZeroCells_;
+  std::vector< std::pair<StandardCell, size_t>> negCombCells_;
+  std::vector< std::pair<StandardCell, size_t>> constOneCells_;
+  std::vector< std::pair<StandardCell, size_t>> constZeroCells_;
   bool libPrepared = false;
+
+  //TODO: remove
+  std::list<StandardCell> pComplCells_;
 
   std::unordered_map<model::CellTypeID, const StandardCell*> searchMap_;
 };

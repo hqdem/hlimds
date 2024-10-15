@@ -29,23 +29,26 @@ namespace eda::gate::model {
 class NetPrinter {
   using OriginalID = uint64_t;
   using PrintingID = uint32_t;
+
 public:
   /// Cell information.
   struct CellInfo final {
     CellInfo(const CellType &type,
-             const std::pair<OriginalID, PrintingID> &cellIDs):
-        type(type), cellIDs(cellIDs) {}
+             OriginalID originalID,
+             PrintingID printingID):
+        type(type), originalID(originalID), printingID(printingID) {}
 
     std::string getType() const {
       return type.get().getName();
     }
 
     std::string getName() const {
-      return fmt::format("{}_{}", getType(), cellIDs.second);
+      return fmt::format("{}_{}", getType(), printingID);
     }
 
     const std::reference_wrapper<const CellType> type;
-    const std::pair<OriginalID, PrintingID> cellIDs;
+    const OriginalID originalID;
+    const PrintingID printingID;
   };
 
   /// Port information.

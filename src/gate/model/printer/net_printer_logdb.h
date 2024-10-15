@@ -14,12 +14,11 @@
 
 namespace eda::gate::model {
 
-class NetPrinterLogdb final : public NetPrinter,
-                              public util::Singleton<NetPrinterLogdb> {
+class NetPrinterLogDb final : public NetPrinter,
+                              public util::Singleton<NetPrinterLogDb> {
+  friend class util::Singleton<NetPrinterLogDb>;
 
-  friend class util::Singleton<NetPrinterLogdb>;
-
-  NetPrinterLogdb(): NetPrinter({{Pass::CELL, 0}}) {}
+  NetPrinterLogDb(): NetPrinter({{Pass::CELL, 0}}) {}
 
   void onCell(std::ostream &out,
               const CellInfo &cellInfo,
@@ -31,23 +30,14 @@ class NetPrinterLogdb final : public NetPrinter,
     for (const auto &linkInfo : linksInfo) {
       out << ' ';
       if (linkInfo.inv) out << '~';
-      out << linkInfo.sourceInfo.cellInfo.cellIDs.first;
+      out << linkInfo.sourceInfo.cellInfo.originalID;
       if (linkInfo.sourceInfo.port) out << '.' << linkInfo.sourceInfo.port;
     }
     out << '\n';
   }
 
   void printCellType(std::ostream &out, const CellType &type) const {
-         if (type.isIn()  ) out << "in"  ;
-    else if (type.isOut() ) out << "out" ;
-    else if (type.isZero()) out << "zero";
-    else if (type.isOne() ) out << "one" ;
-    else if (type.isBuf() ) out << "buf" ;
-    else if (type.isAnd() ) out << "and" ;
-    else if (type.isOr()  ) out << "or"  ;
-    else if (type.isXor() ) out << "xor" ;
-    else if (type.isMaj() ) out << "maj" ;
-    else throw std::runtime_error("Unsupported cell type while printing\n");
+    out << type.getName();
   }
 };
 

@@ -18,8 +18,8 @@ namespace eda::gate::model {
 enum Format {
   DEBUG,
   DOT,
-  VERILOG,
-  LOGDB
+  LOGDB,
+  VERILOG
 };
 
 void print(std::ostream &out,

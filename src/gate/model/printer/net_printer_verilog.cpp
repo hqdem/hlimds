@@ -27,7 +27,7 @@ static inline std::string getInstanceName(
     return "";
 
   // Instances of technological cells and IPs should be named.
-  return fmt::format("{}_cell_{}", cellInfo.getType(), cellInfo.cellIDs.second);
+  return fmt::format("{}_cell_{}", cellInfo.getType(), cellInfo.printingID);
 }
 
 static inline std::string getLinkExpr(const NetPrinter::LinkInfo &linkInfo) {
@@ -286,7 +286,7 @@ void NetPrinterVerilog::onPort(std::ostream &out,
   const auto &type = cellInfo.type.get();
  
   // Save mapping between input/output cells and pin indices.
-  pins.emplace(cellInfo.cellIDs.second, index);
+  pins.emplace(cellInfo.printingID, index);
 
   if (printOriginalInterface) {
     if (type.isIn()) {
@@ -328,7 +328,7 @@ void NetPrinterVerilog::onCell(std::ostream &out,
   }
 
   if (type.isIn() && printOriginalInterface) {
-    const auto found = pins.find(cellInfo.cellIDs.second);
+    const auto found = pins.find(cellInfo.printingID);
     assert(found != pins.end());
 
     const auto rhs = getPinName(topLevelTypeID, found->second);
@@ -340,7 +340,7 @@ void NetPrinterVerilog::onCell(std::ostream &out,
     std::string lhs;
 
     if (printOriginalInterface) {
-      const auto found = pins.find(cellInfo.cellIDs.second);
+      const auto found = pins.find(cellInfo.printingID);
       assert(found != pins.end());
 
       lhs = getPinName(topLevelTypeID, found->second);

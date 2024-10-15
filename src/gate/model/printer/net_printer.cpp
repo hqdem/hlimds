@@ -20,10 +20,10 @@ static NetPrinter &getPrinter(Format format) {
     return NetPrinterDebug::get();
   case DOT:
     return NetPrinterDot::get();
+  case LOGDB:
+    return NetPrinterLogDb::get();
   case VERILOG:
     return NetPrinterVerilog::get();
-  case LOGDB:
-    return NetPrinterLogdb::get();
   default:
     return NetPrinterDebug::get();
   }

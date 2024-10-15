@@ -19,7 +19,7 @@ namespace eda::gate::model {
 
 NetPrinter::CellInfo NetPrinter::getCellInfo(CellID cellID) {
   const auto cellPrintingID = getCellPrintingID(cellID);
-  return CellInfo{Cell::get(cellID).getType(), {cellID, cellPrintingID}};
+  return CellInfo{Cell::get(cellID).getType(), cellID, cellPrintingID};
 }
 
 NetPrinter::PortInfo NetPrinter::getPortInfo(CellID cellID, uint16_t port) {
@@ -139,7 +139,7 @@ NetPrinter::CellInfo NetPrinter::getCellInfo(
   const auto &cell = entries[idx].cell;
 
   const auto cellPrintingID = getCellPrintingID(idx);
-  return CellInfo{cell.getType(), {idx, cellPrintingID}};
+  return CellInfo{cell.getType(), idx, cellPrintingID};
 }
 
 NetPrinter::PortInfo NetPrinter::getPortInfo(

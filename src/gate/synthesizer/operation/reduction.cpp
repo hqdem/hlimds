@@ -16,15 +16,13 @@ static inline model::SubnetID synthROp(const model::CellSymbol symbol,
                                        const bool positive) {
   model::SubnetBuilder builder;
 
-  const auto wOut = attr.getOutWidth(0);
-
   const auto arg = builder.addInputs(attr.getInWidth(0));
   const auto res = builder.addCellTree(symbol, arg, 2);
   builder.addOutput(positive ? res : ~res);
 
   // Comparison and reduction operator results are unsigned,
   // regardless of the operands [IEEE 1800-2017 11.8.1].
-  extendOutput(builder, wOut, false /* zero extension */);
+  extendOutput(builder, attr.getOutWidth(0), false /* zero extension */);
 
   return builder.make();
 }

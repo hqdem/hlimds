@@ -7,13 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "comparison.h"
+#include "utils.h"
 
 #include <algorithm>
 
 namespace eda::gate::synthesizer {
 
 // xor operations for two inputs
-model::Subnet::LinkList
+static model::Subnet::LinkList
 generatePropagate(const model::Subnet::LinkList &inputsA,
                   const model::Subnet::LinkList &inputsB,
                   model::SubnetBuilder &builder, bool inverse = false) {
@@ -39,10 +40,11 @@ generatePropagate(const model::Subnet::LinkList &inputsA,
 }
 
 // (more & signB) | (more & ~signA) | (signB & signA)
-model::Subnet::Link generateSignedComparison(const model::Subnet::Link &more,
-                                             const model::Subnet::Link &signA,
-                                             const model::Subnet::Link &signB,
-                                             model::SubnetBuilder &builder) {
+static model::Subnet::Link
+generateSignedComparison(const model::Subnet::Link &more,
+                         const model::Subnet::Link &signA,
+                         const model::Subnet::Link &signB,
+                         model::SubnetBuilder &builder) {
   const auto firstAnd = builder.addCell(model::CellSymbol::AND, more, signB);
   const auto secondAnd = builder.addCell(model::CellSymbol::AND, more, ~signA);
   const auto thirdAnd = builder.addCell(model::CellSymbol::AND, ~signA, signB);
@@ -51,7 +53,7 @@ model::Subnet::Link generateSignedComparison(const model::Subnet::Link &more,
                              {firstAnd, secondAnd, thirdAnd}, 2);
 }
 
-std::pair<model::Subnet::Link, model::Subnet::LinkList>
+static std::pair<model::Subnet::Link, model::Subnet::LinkList>
 generateComparison(model::Subnet::LinkList inputsA,
                    model::Subnet::LinkList inputsB,
                    model::SubnetBuilder &builder, bool useEquality = false) {
@@ -170,10 +172,10 @@ generateComparison(model::Subnet::LinkList inputsA,
 
 // just filling smaller array with its sign
 // to make it same size, as larger one
-void fillBySignum(model::SubnetBuilder::LinkList &inputsA,
-                  const model::Subnet::Link signA,
-                  model::SubnetBuilder::LinkList &inputsB,
-                  const model::Subnet::Link signB) {
+static void fillBySignum(model::SubnetBuilder::LinkList &inputsA,
+                         const model::Subnet::Link signA,
+                         model::SubnetBuilder::LinkList &inputsB,
+                         const model::Subnet::Link signB) {
   auto &inputs = inputsA.size() > inputsB.size() ? inputsB : inputsA;
   const auto &sign = inputsA.size() > inputsB.size() ? signB : signA;
   // we can conver to 32-bit int, because max possible size of input is uin16_t
@@ -184,9 +186,56 @@ void fillBySignum(model::SubnetBuilder::LinkList &inputsA,
   }
 }
 
-// default generator for comparison for greater/less than unsigned
-model::SubnetID synthNtU(const model::CellTypeAttr &attr, bool makeSwap) {
+// used for creating unsigned equation (with inputs generation)
+static model::SubnetID synthXeqU(const model::CellTypeAttr &attr,
+                                 bool positive) {
+  model::SubnetBuilder builder;
 
+  auto inputsForA = builder.addInputs(attr.getInWidth(0));
+  auto inputsForB = builder.addInputs(attr.getInWidth(1));
+
+  const auto propagate = generatePropagate(inputsForA, inputsForB, builder);
+
+  const auto link = propagate.size() > 1
+      ? ~builder.addCellTree(model::CellSymbol::OR, propagate, 2)
+      : ~propagate.back();
+
+  builder.addOutput(positive ? link : ~link);
+
+  // Comparison and reduction operator results are unsigned,
+  // regardless of the operands [IEEE 1800-2017 11.8.1].
+  extendOutput(builder, attr.getOutWidth(0), false /* zero extension */);
+
+  return builder.make();
+}
+
+// used for creating (fully, with inputs) signed equation
+static model::SubnetID synthXeqS(const model::CellTypeAttr &attr,
+                                 bool positive) {
+  model::SubnetBuilder builder;
+
+  auto inputsForA = builder.addInputs(attr.getInWidth(0));
+  auto inputsForB = builder.addInputs(attr.getInWidth(1));
+
+  fillBySignum(inputsForA, inputsForA.back(), inputsForB, inputsForB.back());
+  const auto propagate = generatePropagate(inputsForA, inputsForB, builder);
+
+  const auto link = propagate.size() > 1
+      ? ~builder.addCellTree(model::CellSymbol::OR, propagate, 2)
+      : ~propagate.back();
+
+  builder.addOutput(positive ? link : ~link);
+
+  // Comparison and reduction operator results are unsigned,
+  // regardless of the operands [IEEE 1800-2017 11.8.1].
+  extendOutput(builder, attr.getOutWidth(0), false /* zero extension */);
+
+  return builder.make();
+}
+
+// default generator for comparison for greater/less than unsigned
+static model::SubnetID synthXtU(const model::CellTypeAttr &attr,
+                                bool makeSwap) {
   model::SubnetBuilder builder;
 
   auto inputsForA = builder.addInputs(attr.getInWidth(0));
@@ -198,11 +247,16 @@ model::SubnetID synthNtU(const model::CellTypeAttr &attr, bool makeSwap) {
 
   builder.addOutput(generateComparison(inputsForA, inputsForB, builder).first);
 
+  // Comparison and reduction operator results are unsigned,
+  // regardless of the operands [IEEE 1800-2017 11.8.1].
+  extendOutput(builder, attr.getOutWidth(0), false /* zero extension */);
+
   return builder.make();
 }
 
 // default generator for comparison for greater/less than signed
-model::SubnetID synthNtS(const model::CellTypeAttr &attr, bool makeSwap) {
+static model::SubnetID synthXtS(const model::CellTypeAttr &attr,
+                                bool makeSwap) {
   bool useSign = attr.getInWidth(0) != 1 || attr.getInWidth(1) != 1;
 
   if (useSign) {
@@ -225,14 +279,19 @@ model::SubnetID synthNtS(const model::CellTypeAttr &attr, bool makeSwap) {
 
     builder.addOutput(generateSignedComparison(more, signA, signB, builder));
 
+    // Comparison and reduction operator results are unsigned,
+    // regardless of the operands [IEEE 1800-2017 11.8.1].
+    extendOutput(builder, attr.getOutWidth(0), false /* zero extension */);
+
     return builder.make();
   }
-  return synthNtU(attr, !makeSwap);
+
+  return synthXtU(attr, !makeSwap);
 }
 
 // default generator for comparison for greater/less than or equal unsigned
-model::SubnetID synthNteU(const model::CellTypeAttr &attr, bool makeSwap) {
-
+static model::SubnetID synthXteU(const model::CellTypeAttr &attr,
+                                 bool makeSwap) {
   model::SubnetBuilder builder;
 
   auto inputsForA = builder.addInputs(attr.getInWidth(0));
@@ -252,11 +311,16 @@ model::SubnetID synthNteU(const model::CellTypeAttr &attr, bool makeSwap) {
 
   builder.addOutput(builder.addCell(model::CellSymbol::OR, equal, more));
 
+  // Comparison and reduction operator results are unsigned,
+  // regardless of the operands [IEEE 1800-2017 11.8.1].
+  extendOutput(builder, attr.getOutWidth(0), false /* zero extension */);
+
   return builder.make();
 }
 
 // default generator for comparison for greater/less than or equal signed
-model::SubnetID synthNteS(const model::CellTypeAttr &attr, bool makeSwap) {
+static model::SubnetID synthXteS(const model::CellTypeAttr &attr,
+                                 bool makeSwap) {
   bool useSign = attr.getInWidth(0) != 1 || attr.getInWidth(1) != 1;
 
   if (useSign) {
@@ -291,106 +355,62 @@ model::SubnetID synthNteS(const model::CellTypeAttr &attr, bool makeSwap) {
 
     builder.addOutput(builder.addCell(model::CellSymbol::OR, equal, more));
 
+    // Comparison and reduction operator results are unsigned,
+    // regardless of the operands [IEEE 1800-2017 11.8.1].
+    extendOutput(builder, attr.getOutWidth(0), false /* zero extension */);
+
     return builder.make();
   }
-  return synthNteU(attr, !makeSwap);
-}
 
-// used for creating unsigned equation (with inputs generation)
-model::Subnet::Link synthDefaultEqU(const model::CellTypeAttr &attr,
-                                    model::SubnetBuilder &builder) {
-  auto inputsForA = builder.addInputs(attr.getInWidth(0));
-  auto inputsForB = builder.addInputs(attr.getInWidth(1));
-
-  const auto propagate = generatePropagate(inputsForA, inputsForB, builder);
-
-  return propagate.size() > 1
-             ? ~builder.addCellTree(model::CellSymbol::OR, propagate, 2)
-             : ~propagate.back();
-}
-
-// used for creating (fully, with inputs) signed equation
-model::Subnet::Link synthDefaultEqS(const model::CellTypeAttr &attr,
-                                    model::SubnetBuilder &builder) {
-
-  auto inputsForA = builder.addInputs(attr.getInWidth(0));
-  auto inputsForB = builder.addInputs(attr.getInWidth(1));
-
-  fillBySignum(inputsForA, inputsForA.back(), inputsForB, inputsForB.back());
-
-  const auto propagate = generatePropagate(inputsForA, inputsForB, builder);
-  return propagate.size() > 1
-             ? ~builder.addCellTree(model::CellSymbol::OR, propagate, 2)
-             : ~propagate.back();
-}
-
-// functions for creating final subnets
-model::SubnetID synthEqU(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-
-  const auto output = synthDefaultEqU(attr, builder);
-  builder.addOutput(output);
-
-  return builder.make();
+  return synthXteU(attr, !makeSwap);
 }
 
 model::SubnetID synthEqS(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-
-  const auto output = synthDefaultEqS(attr, builder);
-  builder.addOutput(output);
-
-  return builder.make();
+  return synthXeqS(attr, true);
 }
 
-model::SubnetID synthNeqU(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-
-  const auto output = synthDefaultEqU(attr, builder);
-  builder.addOutput(~output);
-
-  return builder.make();
+model::SubnetID synthEqU(const model::CellTypeAttr &attr) {
+  return synthXeqU(attr, true);
 }
 
 model::SubnetID synthNeqS(const model::CellTypeAttr &attr) {
-  model::SubnetBuilder builder;
-
-  const auto output = synthDefaultEqS(attr, builder);
-  builder.addOutput(~output);
-
-  return builder.make();
+  return synthXeqS(attr, false);
 }
 
-model::SubnetID synthLtU(const model::CellTypeAttr &attr) {
-  return synthNtU(attr, true);
+model::SubnetID synthNeqU(const model::CellTypeAttr &attr) {
+  return synthXeqU(attr, false);
 }
 
 model::SubnetID synthLtS(const model::CellTypeAttr &attr) {
-  return synthNtS(attr, true);
+  return synthXtS(attr, true);
 }
 
-model::SubnetID synthLteU(const model::CellTypeAttr &attr) {
-  return synthNteU(attr, true);
+model::SubnetID synthLtU(const model::CellTypeAttr &attr) {
+  return synthXtU(attr, true);
 }
 
 model::SubnetID synthLteS(const model::CellTypeAttr &attr) {
-  return synthNteS(attr, true);
+  return synthXteS(attr, true);
+}
+
+model::SubnetID synthLteU(const model::CellTypeAttr &attr) {
+  return synthXteU(attr, true);
 }
 
 model::SubnetID synthGtU(const model::CellTypeAttr &attr) {
-  return synthNtU(attr, false);
+  return synthXtU(attr, false);
 }
 
 model::SubnetID synthGtS(const model::CellTypeAttr &attr) {
-  return synthNtS(attr, false);
-}
-
-model::SubnetID synthGteU(const model::CellTypeAttr &attr) {
-  return synthNteU(attr, false);
+  return synthXtS(attr, false);
 }
 
 model::SubnetID synthGteS(const model::CellTypeAttr &attr) {
-  return synthNteS(attr, false);
+  return synthXteS(attr, false);
+}
+
+model::SubnetID synthGteU(const model::CellTypeAttr &attr) {
+  return synthXteU(attr, false);
 }
 
 } // namespace eda::gate::synthesizer

@@ -248,7 +248,7 @@ static bool validateReduce(const CellType &type, diag::Logger &logger) {
   bool passed = true;
   VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
   VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  // Extension is allowed.
+  // Zero-extension is allowed.
 #if 0
   VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0, 1);
 #endif
@@ -279,7 +279,10 @@ static bool validateCompare(const CellType &type, diag::Logger &logger) {
   bool passed = true;
   VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
   VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  // Zero-extension is allowed.
+#if 0
   VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0, 1);
+#endif
   return passed;
 }
 

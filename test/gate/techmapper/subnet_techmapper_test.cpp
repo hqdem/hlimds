@@ -15,9 +15,38 @@
 
 #include "gtest/gtest.h"
 
+#include <ctime>
+
 namespace eda::gate::techmapper {
 
 using SubnetTechMapperSky130Test = SubnetTechMapperTest<sky130lib>;
+using SubnetTechMapperNandLibTest = SubnetTechMapperTest<nandlib>;
+
+TEST_F(SubnetTechMapperNandLibTest, FillP3FromP2ConstCrash) {
+  auto builderPtr = std::make_shared<model::SubnetBuilder>();
+
+  const auto idx0 = builderPtr->addCell(model::ONE);
+  const auto idx1 = builderPtr->addCell(model::ZERO);
+
+  builderPtr->addOutput(idx0);
+  builderPtr->addOutput(idx1);
+
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
+}
+
+TEST_F(SubnetTechMapperNandLibTest, RandomMIGSubnetEqvFail) {
+  const auto subnetID = model::randomSubnet(6, 2, 20, 3, 3, 0);
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+  const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
+  commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
+}
+
+TEST_F(SubnetTechMapperNandLibTest, FillP3FromP2_SimpleEqv) {
+  const auto subnetID = model::randomSubnet(3, 1, 6, 3, 3, 1128735825);
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+  const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
+  commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
+}
 
 TEST_F(SubnetTechMapperSky130Test, Consts) {
   auto builderPtr = std::make_shared<model::SubnetBuilder>();
@@ -147,6 +176,53 @@ TEST_F(SubnetTechMapperSky130Test, RandomSubnet) {
   commonPartCheckEQ(premappedBuilder, 100000, 100000, 100000);
 }
 
+TEST_F(SubnetTechMapperSky130Test, SimpleMAJSubnet) {
+  auto builderPtr = std::make_shared<SubnetBuilder>();
+
+  const auto idx0 = builderPtr->addInput();
+  const auto idx1 = builderPtr->addInput();
+  const auto idx2 = builderPtr->addInput();
+
+  const auto idx3 = builderPtr->addCell(model::MAJ, idx0, idx1, idx2);
+
+  builderPtr->addOutput(idx3);
+
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
+}
+
+
+TEST_F(SubnetTechMapperSky130Test, SimpleMAJ3Subnet) {
+  auto builderPtr = std::make_shared<SubnetBuilder>();
+
+  const auto idx0 = builderPtr->addInput();
+  const auto idx1 = builderPtr->addInput();
+  const auto idx2 = builderPtr->addInput();
+  const auto idx3 = builderPtr->addInput();
+
+  const auto idx4 = builderPtr->addCell(model::MAJ, idx0, idx1, idx2);
+  const auto idx5 = builderPtr->addCell(model::MAJ, idx1, idx2, idx3);
+  const auto idx6 = builderPtr->addCell(model::MAJ, idx3, idx4, idx5);
+
+  builderPtr->addOutput(idx6);
+
+  commonPartCheckEQ(builderPtr, 1000, 1000, 1000);
+}
+
+TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnet) {
+  auto srval = std::time(nullptr);
+  std::srand(srval);
+  for (int i = 0; i < 100; ++i) {
+    size_t rand = std::rand();
+    std::cout << "\nRAND SEED: " << rand << " "
+              << "\nSRAND: " << srval << std::endl << std::flush;
+    const auto subnetID = model::randomSubnet(6, 2, 20, 3, 3, rand);
+    std::cout << model::Subnet::get(subnetID) << std::endl;
+    const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
+    commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
+  }
+}
+
+
 //Only 6 input cuts will be build for cell 17 and no match will be found
 TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetCutsTooBig) {
   const auto subnetID = model::randomSubnet(6, 2, 20, 3, 3, 1217212573);
@@ -155,8 +231,29 @@ TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetCutsTooBig) {
   commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
 }
 
+TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetConstZero) {
+  const auto subnetID = model::randomSubnet(3, 2, 8, 3, 3, 395060860);
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+  const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
+  commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
+}
+
+TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetEqvFail) {
+  const auto subnetID = model::randomSubnet(6, 2, 20, 3, 3, 0);
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+  const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
+  commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
+}
+
 TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetEqvFailSimple) {
   const auto subnetID = model::randomSubnet(3, 1, 6, 3, 3, 1128735825);
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+  const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
+  commonPartCheckEQ(builderPtr, 100000, 100000, 100000);
+}
+
+TEST_F(SubnetTechMapperSky130Test, RandomMIGSubnetConstOne) {
+  const auto subnetID = model::randomSubnet(3, 1, 6, 3, 3, 861021530);
   std::cout << model::Subnet::get(subnetID) << std::endl;
   const auto builderPtr = std::make_shared<SubnetBuilder> (subnetID);
   commonPartCheckEQ(builderPtr, 100000, 100000, 100000);

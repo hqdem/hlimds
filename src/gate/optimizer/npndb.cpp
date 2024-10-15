@@ -8,6 +8,7 @@
 
 #include "gate/model/printer/net_printer.h"
 #include "gate/optimizer/npndb.h"
+#include "gate/translator/logdb.h"
 
 namespace eda::gate::optimizer {
 
@@ -75,17 +76,26 @@ void NpnDatabase::erase(const TT &tt) {
 }
 
 NpnDatabase NpnDatabase::importFrom(const std::string &filename) {
-  std::ifstream in(filename);
-  NpnDatabase result = NpnDatabaseSerializer().deserialize(in);
-  return result;
+  translator::LogdbTranslator translator;
+  return translator.translate(filename);
 }
 
 void NpnDatabase::exportTo(const std::string &filename) const {
   std::ofstream out(filename);
-  NpnDatabaseSerializer().serialize(out, *this);
+  if (!out.is_open()) {
+    throw std::runtime_error("Error of opening file to export\n");
+  }
+
+  for (const auto &ttToSubnetList : storage) {
+    for (const auto &subnetID : ttToSubnetList.second) {
+      model::print(out, model::Format::LOGDB, model::Subnet::get(subnetID));
+      out << '\n';
+    }
+  }
 }
 
-void NpnDatabaseSerializer::serialize(std::ostream &out, const NpnDatabase &obj) {
+void NpnDatabaseSerializer::serialize(std::ostream &out,
+                                      const NpnDatabase &obj) {
   storageSerializer.serialize(out, obj.storage);
 }
 

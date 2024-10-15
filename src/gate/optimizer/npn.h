@@ -14,7 +14,9 @@
 namespace eda::gate::optimizer {
 
 extern uint16_t npn4[];
+extern uint32_t npn5[];
 
 constexpr size_t npn4Num = 222;
+constexpr size_t npn5Num = 343;
 
 } // namespace eda::gate::optimizer

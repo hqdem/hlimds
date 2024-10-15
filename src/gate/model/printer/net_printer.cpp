@@ -9,6 +9,7 @@
 #include "net_printer.h"
 #include "net_printer_debug.h"
 #include "net_printer_dot.h"
+#include "net_printer_logdb.h"
 #include "net_printer_verilog.h"
 
 namespace eda::gate::model {
@@ -21,6 +22,8 @@ static NetPrinter &getPrinter(Format format) {
     return NetPrinterDot::get();
   case VERILOG:
     return NetPrinterVerilog::get();
+  case LOGDB:
+    return NetPrinterLogdb::get();
   default:
     return NetPrinterDebug::get();
   }

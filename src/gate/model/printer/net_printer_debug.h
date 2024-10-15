@@ -23,7 +23,7 @@ class NetPrinterDebug final : public NetPrinter,
               const CellInfo &cellInfo,
               const LinksInfo &linksInfo,
               unsigned pass) override {
-    out << cellInfo.cell << " <= " << cellInfo.getType();
+    out << cellInfo.cellIDs.second << " <= " << cellInfo.getType();
 
     out << "(";
 
@@ -32,7 +32,8 @@ class NetPrinterDebug final : public NetPrinter,
       if (comma) out << ", ";
 
       if (linkInfo.inv) out << "~";
-      out << linkInfo.sourceInfo.cellInfo.cell << "." << linkInfo.sourceInfo.port;
+      out << linkInfo.sourceInfo.cellInfo.cellIDs.second <<
+      "." << linkInfo.sourceInfo.port;
 
       comma = true;
     }

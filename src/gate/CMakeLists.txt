@@ -95,6 +95,7 @@ add_library(Gate OBJECT
   translator/firrtl/firrtl_net_utils.cpp
   translator/firrtl.cpp
   translator/graphml.cpp
+  translator/logdb.cpp
   translator/model2.cpp
   translator/verilog/verilog_firrtl.cpp
   translator/yosys_converter_firrtl.cpp

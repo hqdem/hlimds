@@ -8,6 +8,8 @@
 
 #include "gate/library/library_factory.h"
 #include "gate/library/readcells_srcfile_parser.h"
+#include "gate/model/subnetview.h"
+#include "gate/optimizer/cut_extractor.h"
 #include "gate/techmapper/matcher/pbool_matcher.h"
 #include "gate/techmapper/techmapper_test_util.h"
 #include "util/kitty_utils.h"
@@ -60,4 +62,25 @@ TEST_F(MatcherTest, RandomTruthTable) {
     EXPECT_TRUE(!scs.empty());
   }
 }
+
+//TODO: we are testing SubnetView::getSubnet() function, so test
+// should be moved somewhere in test/gate/model dirrectory
+TEST_F(MatcherTest, TrivialCut) {
+
+  auto builderPtr = std::make_shared<SubnetBuilder>();
+
+  const auto idx0 = builderPtr->addInput();
+  builderPtr->addOutput(idx0);
+
+  auto cut = optimizer::Cut(6, 1, true /* immutable */);
+  model::SubnetView cone(builderPtr, cut);
+  auto &subnetObj = cone.getSubnet();
+  size_t inNum = subnetObj.builder().getInNum();
+  size_t outNum = subnetObj.builder().getOutNum();
+  EXPECT_TRUE(inNum == 1 && outNum == 1);
+  auto subnetID = subnetObj.make();
+  std::cout << model::Subnet::get(subnetID) << std::endl;
+
+}
+
 } // namespace eda::gate::techmapper

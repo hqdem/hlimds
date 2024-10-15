@@ -38,7 +38,6 @@ public:
              PrintingID printingID):
         type(type), originalID(originalID), printingID(printingID) {}
 
-
     std::string getType() const {
       return type.get().getName();
     }

@@ -355,9 +355,9 @@ SCLibrary::createP2AndOR(CttMap &existingCttP2, const CellLogPair &exCellInv) {
     existingCttP2[andCell.first->ctt[andCell.second]].push_back(andCell);
   }
   if (existingCttP2.count(canonOr.ctt)) {
-    andCell = existingCttP2[canonOr.ctt][0];
+    orCell = existingCttP2[canonOr.ctt][0];
   } else if (existingCttP2.count(canonOrNeg.ctt)) {
-    andCell = addNegOutput(existingCttP2[canonOrNeg.ctt][0], exCellInv);
+    orCell = addNegOutput(existingCttP2[canonOrNeg.ctt][0], exCellInv);
     existingCttP2[andCell.first->ctt[andCell.second]].push_back(andCell);
   } else {
     if (termCell.first == nullptr) {
@@ -1524,7 +1524,6 @@ void SCLibrary::addConstCells() {
     const std::pair<const StandardCell*, size_t> &cheapCell = cheapCells[i];
     for (size_t inputLinkNum = 1; inputLinkNum < 2; ++ inputLinkNum) {
       model::SubnetBuilder builder;
-      model::SubnetBuilder::LinkList inputLinks[inputLinkNum];
 
       for(size_t i = 0; i < inputLinkNum; ++i) {
         builder.addInput();

@@ -130,8 +130,10 @@ void SubnetTechMapperPCut::computePCuts(const SubnetBuilderPtr &builder,
   }
 
   std::sort(sorted.begin(), sorted.end(), [](const auto &lhs, const auto &rhs) {
-    return (std::get<2>(lhs) && !std::get<2>(rhs))
-        || (std::get<1>(lhs) < std::get<1>(rhs));
+    const auto lmatches = std::get<2>(lhs);
+    const auto rmatches = std::get<2>(rhs);
+    return (lmatches && !rmatches)
+        || (lmatches == rmatches && std::get<1>(lhs) < std::get<1>(rhs));
   });
 
   optimizer::CutsList pcuts;

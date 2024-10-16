@@ -509,9 +509,9 @@ void SubnetBuilder::replace(
   std::unordered_map<EntryID, EntryID> rhsToLhs;
   // Predefining rhsToLhs
   fillMapping<SubnetView>(rhs, iomapping, rhsToLhs);
-  replace<SubnetBuilder, SubnetView, SubnetViewIter>(
+  replace<SubnetBuilder, SubnetView, SubnetViewIterator>(
       rhsBuilder, rhs, rhs.getInOutMapping().getOut(0).idx, iomapping, rhsToLhs,
-      [&](SubnetViewIter iter, EntryID i) {
+      [&](SubnetViewIterator iter, EntryID i) {
         return *iter;
       }, &weightProvider, onNewCell, onEqualDepth, onGreaterDepth,
       onRecomputedDepth);
@@ -769,9 +769,9 @@ SubnetBuilder::Effect SubnetBuilder::newEntriesEval(
   // Predefining rhsToLhs
   fillMapping(rhs, iomapping, rhsToLhs);
 
-  return newEntriesEval<SubnetBuilder, SubnetView, SubnetViewIter>(
+  return newEntriesEval<SubnetBuilder, SubnetView, SubnetViewIterator>(
     rhsBuilder, rhs, iomapping, rhsToLhs,
-    [&](SubnetViewIter iter, EntryID i) {
+    [&](SubnetViewIterator iter, EntryID i) {
       return *iter;
     },
     reusedLhsEntries, entryNewRefcount, weightProvider, weightModifier

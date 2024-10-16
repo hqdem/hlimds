@@ -59,6 +59,7 @@ SubnetView::SubnetView(const std::shared_ptr<SubnetBuilder> &builder,
       iomapping.inputs.push_back(Link(i));
       return true;
     }
+
     // Stop traversal when root is visited.
     return i != iomapping.getOut(0).idx;
   });
@@ -181,6 +182,18 @@ SubnetObject &SubnetView::getSubnet() {
 // Subnet View Walker
 //===----------------------------------------------------------------------===//
 
+#define UTOPIA_ON_BACKWARD_DFS_POP(builder, isIn, isOut, cellID)\
+  if (onBackwardDfsPop && !isAborted &&\
+    !(*onBackwardDfsPop)(builder, isIn, isOut, cellID)) {\
+    isAborted = true;\
+  }
+
+#define UTOPIA_ON_BACKWARD_DFS_PUSH(builder, isIn, isOut, cellID)\
+  if (onBackwardDfsPush && !isAborted &&\
+    !(*onBackwardDfsPush)(builder, isIn, isOut, cellID)) {\
+    isAborted = true;\
+  }
+
 static inline uint16_t defaultArityProvider(
     SubnetBuilder &builder, const EntryID entryID) {
   return builder.getCell(entryID).arity;
@@ -241,8 +254,10 @@ bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
   if (entries && !onBackwardDfsPush) {
     return traverseForward(builder, *entries, onBackwardDfsPop);
   }
+
   Visitor onBackwardDfsPopEx;
   Visitor onBackwardDfsPushEx;
+
   if (saveEntries) {
     entries = std::make_unique<Entries>();
     entries->reserve(builder.getCellNum());
@@ -264,15 +279,18 @@ bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
           return true /* traverse all entries */;
         };
   }
+
   const auto *onDfsPopPtr = onBackwardDfsPopEx ? &onBackwardDfsPopEx :
       (onBackwardDfsPop ? &onBackwardDfsPop : nullptr);
   const auto *onDfsPushPtr = onBackwardDfsPushEx ? &onBackwardDfsPushEx :
       (onBackwardDfsPush ? &onBackwardDfsPush : nullptr);
-  auto it = SubnetViewIter(&view, SubnetViewIter::BEGIN, arityProvider,
+  auto it = SubnetViewIterator(&view, SubnetViewIterator::BEGIN, arityProvider,
       linkProvider, onDfsPopPtr, onDfsPushPtr);
+
   while (it != view.end() && !it.isAborted) {
     ++it;
   }
+
   return !it.isAborted;
 }
 
@@ -302,33 +320,33 @@ bool SubnetViewWalker::runBackward(const Visitor visitor,
 // Subnet View Iterator
 //===----------------------------------------------------------------------===//
 
-SubnetViewIter::SubnetViewIter(
+SubnetViewIterator::SubnetViewIterator(
     const SubnetView *view,
-    const ConstructionT constructionT,
+    const Position position,
     const Visitor *onBackwardDfsPop,
     const Visitor *onBackwardDfsPush):
-  SubnetViewIter(view,
-                 constructionT,
-                 defaultArityProvider,
-                 defaultLinkProvider,
-                 onBackwardDfsPop,
-                 onBackwardDfsPush) {}
+    SubnetViewIterator(view,
+                       position,
+                       defaultArityProvider,
+                       defaultLinkProvider,
+                       onBackwardDfsPop,
+                       onBackwardDfsPush) {}
 
-SubnetViewIter::SubnetViewIter(
+SubnetViewIterator::SubnetViewIterator(
     const SubnetView *view,
-    const ConstructionT constructionT,
+    const Position position,
     const ArityProvider arityProvider,
     const LinkProvider linkProvider,
     const Visitor *onBackwardDfsPop,
     const Visitor *onBackwardDfsPush):
-  view(view),
-  arityProvider(arityProvider),
-  linkProvider(linkProvider),
-  onBackwardDfsPop(onBackwardDfsPop),
-  onBackwardDfsPush(onBackwardDfsPush) {
+    view(view),
+    arityProvider(arityProvider),
+    linkProvider(linkProvider),
+    onBackwardDfsPop(onBackwardDfsPop),
+    onBackwardDfsPush(onBackwardDfsPush) {
 
   isAborted = false;
-  switch (constructionT) {
+  switch (position) {
   case BEGIN:
     prepareIteration();
     if (nInLeft) {
@@ -343,21 +361,21 @@ SubnetViewIter::SubnetViewIter(
     break;
 
   default:
-    assert(false && "Unknown iterator construction type.");
+    assert(false && "Unknown iterator type");
   }
 }
 
-SubnetViewIter::reference SubnetViewIter::operator*() const {
+SubnetViewIterator::reference SubnetViewIterator::operator*() const {
   return entryLink.first;
 }
 
-SubnetViewIter::pointer SubnetViewIter::operator->() const {
+SubnetViewIterator::pointer SubnetViewIterator::operator->() const {
   return &operator*();
 }
 
-SubnetViewIter &SubnetViewIter::operator++() {
-  SubnetBuilder &builder =
-      const_cast<SubnetBuilder &>(view->getParent().builder());
+SubnetViewIterator &SubnetViewIterator::operator++() {
+  auto &builder = const_cast<SubnetBuilder &>(view->getParent().builder());
+
   if (nInLeft) {
     nextPI();
     return *this;
@@ -370,11 +388,11 @@ SubnetViewIter &SubnetViewIter::operator++() {
   }
 
   bool isFinished = false;
-  EntryID saveI = SubnetBuilder::invalidID;
+  EntryID savedID = SubnetBuilder::invalidID;
 
   while (!isFinished) {
     auto &[i, j] = stack.top();
-    saveI = i;
+    savedID = i;
     const auto arity = arityProvider(builder, i);
 
     isFinished = true;
@@ -382,10 +400,7 @@ SubnetViewIter &SubnetViewIter::operator++() {
       const auto link = linkProvider(builder, i, j);
       if (marked.find(link.idx) == marked.end()) {
         isFinished = false;
-        if (onBackwardDfsPush && !isAborted &&
-            !(*onBackwardDfsPush)(builder, false, false, link.idx)) {
-          isAborted = true;
-        }
+        UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, false, link.idx);
         stack.push({link.idx, 0});
         break;
       }
@@ -393,39 +408,33 @@ SubnetViewIter &SubnetViewIter::operator++() {
   }
 
   const auto isOut = (stack.size() <= nOutLeft);
-  if (onBackwardDfsPop && !isAborted &&
-      !(*onBackwardDfsPop)(builder, false, isOut, saveI)) {
-    isAborted = true;
-  }
+  UTOPIA_ON_BACKWARD_DFS_POP(builder, false, isOut, savedID);
 
-  marked.insert(saveI);
-  entryLink = {saveI, 0};
+  marked.insert(savedID);
+  entryLink = {savedID, 0};
   stack.pop();
 
-  nOutLeft -= isOut ? 1 : 0;
-
+  nOutLeft -= (isOut ? 1 : 0);
   return *this;
 }
 
-SubnetViewIter SubnetViewIter::next() const {
-  return ++SubnetViewIter(*this);
+SubnetViewIterator SubnetViewIterator::next() const {
+  return ++SubnetViewIterator(*this);
 }
 
-void SubnetViewIter::prepareIteration() {
+void SubnetViewIterator::prepareIteration() {
   const InOutMapping &iomapping = view->getInOutMapping();
   assert(iomapping.getOutNum());
-  SubnetBuilder &builder =
-      const_cast<SubnetBuilder &>(view->getParent().builder());
+
+  auto &builder = const_cast<SubnetBuilder &>(view->getParent().builder());
+
   for (const auto inputID : iomapping.inputs) {
     marked.insert(inputID.idx);
   } // for input
 
   for (const auto outputID : iomapping.outputs) {
     if (marked.find(outputID.idx) == marked.end()) {
-      if (onBackwardDfsPush && !isAborted &&
-          !(*onBackwardDfsPush)(builder, false, true, outputID.idx)) {
-        isAborted = true;
-      }
+      UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, true, outputID.idx);
       stack.push({outputID.idx, 0});
     } else {
       inout.insert(outputID.idx);
@@ -436,20 +445,16 @@ void SubnetViewIter::prepareIteration() {
   nInLeft = iomapping.getInNum();
 }
 
-void SubnetViewIter::nextPI() {
-  //assert(nInLeft);
+void SubnetViewIterator::nextPI() {
+  auto &builder = const_cast<SubnetBuilder &>(view->getParent().builder());
 
-  SubnetBuilder &builder =
-      const_cast<SubnetBuilder &>(view->getParent().builder());
   const InOutMapping &iomapping = view->getInOutMapping();
-  const uint16_t curIn = iomapping.getInNum() - nInLeft;
-  const auto &inEntry = iomapping.getIn(curIn);
-  const auto isOut = (inout.find(inEntry.idx) != inout.end());
+  const uint16_t currentIn = iomapping.getInNum() - nInLeft;
+  const auto &inEntry = iomapping.getIn(currentIn);
 
-  if (onBackwardDfsPop && !isAborted &&
-      !(*onBackwardDfsPop)(builder, true, isOut, inEntry.idx)) {
-    isAborted = true;
-  }
+  const auto isOut = (inout.find(inEntry.idx) != inout.end());
+  UTOPIA_ON_BACKWARD_DFS_POP(builder, true, isOut, inEntry.idx);
+
   entryLink = {inEntry.idx, 0};
   nInLeft--;
 }

@@ -20,18 +20,20 @@
 namespace eda::gate::model {
 
 //===----------------------------------------------------------------------===//
-// Subnet View
+// Subnet View Iterator
 //===----------------------------------------------------------------------===//
 
 class SubnetView;
 class SubnetViewWalker;
 
-/// SubnetView forward iterator.
-class SubnetViewIter final {
+/**
+ * @brief SubnetView forward iterator.
+ */
+class SubnetViewIterator final {
   friend class SubnetView;
   friend class SubnetViewWalker;
 
-  enum ConstructionT {
+  enum Position {
     /// To construct SubnetView::begin().
     BEGIN,
     /// To construct SubnetView::end().
@@ -72,17 +74,17 @@ private:
     return builder.getLink(entryID, linkIdx);
   }
 
-  SubnetViewIter(
+  SubnetViewIterator(
       const SubnetView *view,
-      const ConstructionT constructionT,
+      const Position position,
       const ArityProvider arityProvider,
       const LinkProvider linkProvider,
       const Visitor *onBackwardDfsPop = nullptr,
       const Visitor *onBackwardDfsPush = nullptr);
 
-  SubnetViewIter(
+  SubnetViewIterator(
       const SubnetView *view,
-      const ConstructionT constructionT,
+      const Position position,
       const Visitor *onBackwardDfsPop = nullptr,
       const Visitor *onBackwardDfsPush = nullptr);
 
@@ -91,21 +93,21 @@ private:
   void nextPI();
 
 public:
-  bool operator==(const SubnetViewIter &other) const {
+  bool operator==(const SubnetViewIterator &other) const {
     return this->view == other.view &&
         this->entryLink.first == other.entryLink.first;
   }
 
-  bool operator!=(const SubnetViewIter &other) const {
+  bool operator!=(const SubnetViewIterator &other) const {
     return !(*this == other);
   }
 
   reference operator*() const;
   pointer operator->() const;
 
-  SubnetViewIter &operator++();
-  SubnetViewIter operator++(int) = delete;
-  SubnetViewIter next() const;
+  SubnetViewIterator &operator++();
+  SubnetViewIterator operator++(int) = delete;
+  SubnetViewIterator next() const;
 
 private:
   const SubnetView *view{nullptr};
@@ -196,12 +198,12 @@ public:
     return parent;
   }
 
-  SubnetViewIter begin() const {
-    return SubnetViewIter(this, SubnetViewIter::BEGIN);
+  SubnetViewIterator begin() const {
+    return SubnetViewIterator(this, SubnetViewIterator::BEGIN);
   }
 
-  SubnetViewIter end() const {
-    return SubnetViewIter(this, SubnetViewIter::END);
+  SubnetViewIterator end() const {
+    return SubnetViewIterator(this, SubnetViewIterator::END);
   }
 
 private:
@@ -239,9 +241,9 @@ public:
     BACKWARD
   };
 
-  using ArityProvider = SubnetViewIter::ArityProvider;
-  using LinkProvider = SubnetViewIter::LinkProvider;
-  using Visitor = SubnetViewIter::Visitor;
+  using ArityProvider = SubnetViewIterator::ArityProvider;
+  using LinkProvider = SubnetViewIterator::LinkProvider;
+  using Visitor = SubnetViewIterator::Visitor;
 
   /// Traversal entry.
   struct Entry final {

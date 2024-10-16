@@ -249,7 +249,7 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
 SubnetTechMapperBase::CellContext::LinkInfo SubnetTechMapperBase::getLinkInfo(
     const model::SubnetBuilder &builder,
     const model::EntryID sourceID,
-    const uint16_t sourcePort) {
+    const uint16_t sourcePort) const {
   const auto &source = builder.getCell(sourceID);
 
   if (source.isIn()) {
@@ -266,10 +266,9 @@ SubnetTechMapperBase::CellContext::LinkInfo SubnetTechMapperBase::getLinkInfo(
 
 SubnetTechMapperBase::CellContext SubnetTechMapperBase::getCellContext(
     const model::SubnetBuilder &builder,
-    const model::EntryID entryID,
-    const optimizer::Cut &cut) {
+    const optimizer::Cut &cut) const {
   CellContext cellContext;
-  cellContext.fanout = builder.getCell(entryID).refcount;
+  cellContext.fanout = builder.getCell(cut.rootID).refcount;
   cellContext.links.resize(cut.size());
 
   size_t i = 0;
@@ -283,7 +282,7 @@ SubnetTechMapperBase::CellContext SubnetTechMapperBase::getCellContext(
 SubnetTechMapperBase::CellContext SubnetTechMapperBase::getCellContext(
     const model::SubnetBuilder &builder,
     const model::EntryID entryID,
-    const Match &match) {
+    const Match &match) const {
   CellContext cellContext;
   cellContext.fanout = builder.getCell(entryID).refcount;
   cellContext.links.resize(match.links.size());
@@ -318,10 +317,7 @@ void SubnetTechMapperBase::findCellSolutions(
     }
 
 #if UTOPIA_TECHMAP_SKIP_INFEASIBLE_SOLUTIONS
-    const auto preCellContext = getCellContext(*builder, entryID, cut);
-    const auto preCellVector = cutEstimator(*builder, cut, preCellContext);
-    const auto preCostVector = cutAggregation + preCellVector;
-
+    const auto preCostVector = estimateCutVector(*builder, cut);
     if (!context.criterion->check(preCostVector)) {
       continue;
     }

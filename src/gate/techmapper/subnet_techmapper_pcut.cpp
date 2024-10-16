@@ -104,14 +104,10 @@ void SubnetTechMapperPCut::computePCuts(const SubnetBuilderPtr &builder,
 
   for (size_t i = 0; i < cuts.size(); ++i) {
     const auto &cut = cuts[i];
-    const auto cellContext = getCellContext(*builder, entryID, cut);
 
-    criterion::Cost cost;
-    if (cut.isTrivial()) {
-      cost = 0. /* trivial cut must be included */;
-    } else {
-      cost = estimateCut(builder, cut, cellContext);
-    }
+    criterion::Cost cost = cut.isTrivial()
+       ? 0. /* trivial cut must be included */
+       : estimateCutCost(builder, cut, true /* penalize */);
 
     // No matches => large cost.
     matches[i] = matchFinder(builder, cut);

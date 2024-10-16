@@ -175,15 +175,32 @@ protected:
 
   CellContext::LinkInfo getLinkInfo(const model::SubnetBuilder &builder,
                                     const model::EntryID sourceID,
-                                    uint16_t sourcePort);
+                                    uint16_t sourcePort) const;
+
+  CellContext getCellContext(const model::SubnetBuilder &builder,
+                             const optimizer::Cut &cut) const;
 
   CellContext getCellContext(const model::SubnetBuilder &builder,
                              const model::EntryID entryID,
-                             const optimizer::Cut &cut);
+                             const Match &match) const;
 
-  CellContext getCellContext(const model::SubnetBuilder &builder,
-                             const model::EntryID entryID,
-                             const Match &match);
+  criterion::CostVector estimateCutVector(const SubnetBuilderPtr &builder,
+                                          const optimizer::Cut &cut) const {
+    const auto cellContext = getCellContext(*builder, cut);
+    const auto prevVector = costAggregator(getCostVectors(cut));
+    const auto cellVector = cutEstimator(*builder, cut, cellContext);
+    return prevVector + cellVector;
+  }
+
+  criterion::Cost estimateCutCost(const SubnetBuilderPtr &builder,
+                                  const optimizer::Cut &cut,
+                                  const bool penalize = false) const {
+    const auto costVector = estimateCutVector(builder, cut);
+
+    return penalize
+        ? context.criterion->getPenalizedCost(costVector, tension)
+        : context.criterion->getCost(costVector);
+  }
 
   std::vector<Match> &getMatches(const SubnetBuilderPtr &builder,
                                  const optimizer::Cut &cut) {

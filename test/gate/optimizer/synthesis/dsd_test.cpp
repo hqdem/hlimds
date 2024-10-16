@@ -15,6 +15,7 @@
 #include "gate/optimizer/synthesis/dsd_to_subnet.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/simulator/simulator.h"
+#include "gate/optimizer/resynthesizer.h"
 
 #include "gtest/gtest.h"
 
@@ -40,18 +41,13 @@ Subnet::Link addITE(Subnet::Link first,
 }
 
 const Subnet& handle(const Subnet &subnet) {
-  /* Convertion to BDD */
-  Cudd manager(0, 0);
   auto builder = std::make_shared<SubnetBuilder>(subnet);
   eda::gate::model::SubnetView sv(builder);
-  BDD netBDD = convertBdd(sv, manager).at(0);
-
-  LOG_DEBUG(Cudd_PrintDebug(netBDD.manager(), netBDD.getNode(), 0, 3));
 
   /* Resynthesis */
-  DsdSynthesizer test;
-  BddWithDdManager pair{netBDD.getNode(), manager.getManager()};
-  const auto &result = test.synthesize(pair).makeObject();
+  DsdSynthesizer dsdSynthesizer;
+  eda::gate::optimizer::Resynthesizer<Bdd> res(dsdSynthesizer);
+  const auto &result = res.resynthesize(sv).makeObject();
   LOG_DEBUG(result);
 
   return result;

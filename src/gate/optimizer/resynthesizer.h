@@ -8,9 +8,13 @@
 
 #pragma once
 
+#include "gate/model/bdd.h"
 #include "gate/model/subnetview.h"
+#include "gate/model/utils/subnetview_to_bdd.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/truth_table.h"
+
+#include "cuddObj.hh"
 
 #include <cassert>
 #include <cstdint>
@@ -96,4 +100,13 @@ inline eda::gate::model::SubnetBuilder construct<eda::gate::model::SubnetBuilder
 
   return newBuilder;
 }
+
+template<>
+inline model::Bdd construct<model::Bdd>(
+    const model::SubnetView &window) {
+  Cudd *manager = new Cudd(0, 0);
+  BDD cuddBdd = eda::gate::model::utils::convertBdd(window, *manager).at(0);
+  return {cuddBdd, manager};
+}
+
 } // namespace eda::gate::optimizer

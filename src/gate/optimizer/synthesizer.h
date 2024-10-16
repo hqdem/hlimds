@@ -8,8 +8,11 @@
 
 #pragma once
 
+#include "gate/model/bdd.h"
 #include "gate/model/subnet.h"
 #include "util/truth_table.h"
+
+#include <cuddObj.hh>
 
 #include <cassert>
 #include <cstdint>
@@ -44,8 +47,11 @@ public:
       const IR &ir,
       const uint16_t maxArity = -1) const {
     return synthesize(ir, util::TruthTable{}, maxArity);
-  }  
+  }
 };
+
+/// BDD-based synthesizer.
+using BddSynthesizer = Synthesizer<model::Bdd>;
 
 /// Truth-table-based synthesizer.
 using TruthTableSynthesizer = Synthesizer<util::TruthTable>;

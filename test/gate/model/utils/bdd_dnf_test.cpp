@@ -25,7 +25,7 @@ void checkDnfCorrectness(BDD &bdd, Cudd &cudd) {
   DsdSynthesizer dsd;
 
   auto first = dsd.synthesize(tt);
-  auto second = dsd.synthesize({bdd.getNode(), cudd.getManager()});
+  auto second = dsd.synthesize({bdd, &cudd});
 
   const auto &s1 = first.makeObject();
   const auto &s2 = second.makeObject();

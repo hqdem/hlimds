@@ -10,17 +10,18 @@
 
 namespace eda::gate::optimizer::synthesis {
 
-SubnetObject DsdSynthesizer::synthesize(const BddWithDdManager &pair,
+SubnetObject DsdSynthesizer::synthesize(const model::Bdd &bdd,
                                         const TruthTable &,
                                         uint16_t maxArity) const {
   DSDNode *dsd;
   DSDManager *dmanager;
+  DdManager *manager = bdd.cudd->getManager();
 
   /* Initialize DSD manager by choosing a starting cache size */
-  dmanager = DSD_Init(pair.manager, Cudd_ReadMemoryInUse(pair.manager)/2);
+  dmanager = DSD_Init(manager, Cudd_ReadMemoryInUse(manager)/2);
 
   /* Create a DSD from a BDD */
-  dsd = DSD_Create(dmanager, pair.bdd);
+  dsd = DSD_Create(dmanager, bdd.diagram.getNode());
 
   /* Always reference after creation */
   DSD_Ref(dmanager, dsd);
@@ -34,7 +35,7 @@ SubnetObject DsdSynthesizer::synthesize(const BddWithDdManager &pair,
   SubnetBuilder &subnetBuilder{object.builder()};
   LinkList inputsList;
   /* Create PIs */
-  int numVars = Cudd_ReadSize(pair.manager);
+  int numVars = Cudd_ReadSize(manager);
   for (int i = 0; i < numVars; ++i) {
     inputsList.emplace_back(subnetBuilder.addInput());
   }

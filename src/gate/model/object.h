@@ -129,7 +129,7 @@ using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 4096, 32, 12>;
 using LinkEndID      = ObjectID<TAG_LINK_END, 8, 50, 3>;
 using LinkID         = ObjectID<TAG_LINK, 16, 50, 4>;
 using NetID          = ObjectID<TAG_NET, 64, 32, 6>;
-using SubnetID       = ObjectID<TAG_SUBNET, 32, 32, 5>;
+using SubnetID       = ObjectID<TAG_SUBNET, 64, 32, 6>;
 using StringID       = ObjectID<TAG_STRING, 32, 32, 5>;
 using ListBlockID    = ObjectID<TAG_LIST_BLOCK, 64, 32, 6>;
 

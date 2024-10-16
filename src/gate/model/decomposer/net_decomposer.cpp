@@ -466,14 +466,24 @@ static SubnetID makeSubnet(const Net &net,
 
   for (const auto &input : component.inputs) {
     const auto info = getCellInfo(input.source);
-    const auto link = info.type.isCombinational()
-        ? subnetBuilder.addInput()
-        : subnetBuilder.addInput(info.cellID.getSID());
-
+    const auto link = subnetBuilder.addInput();
     const auto inputLink = makeInputLink(input);
     mapping.inputs.emplace(inputLink, link.idx);
+    const auto &iConnectionDesc = component.inputsDesc.find(input)->second;
 
-    entryToDesc[link.idx] = component.inputsDesc.find(input)->second;
+    if (info.type.isCombinational()) {
+      entryToDesc[link.idx] = {
+        iConnectionDesc,
+        false,
+        static_cast<uint64_t>(-1)
+      };
+    } else {
+      entryToDesc[link.idx] = {
+        iConnectionDesc,
+        true,
+        info.cellID.getSID()
+      };
+    }
   } // for component inputs.
 
   for (const auto &inner : component.inners) {
@@ -508,14 +518,25 @@ static SubnetID makeSubnet(const Net &net,
   for (const auto &output : component.outputs) {
     const auto info = getCellInfo(output.target);
     const auto ilink = makeLink(output.source, mapping);
-    const auto olink = info.type.isCombinational()
-        ? subnetBuilder.addOutput(ilink)
-        : subnetBuilder.addOutput(ilink, info.cellID.getSID());
+    const auto olink = subnetBuilder.addOutput(ilink);
 
     const auto outputLink = makeOutputLink(output);
     mapping.outputs.emplace(outputLink, olink.idx);
+    const auto &oConnectionDesc = component.outputsDesc.find(output)->second;
 
-    entryToDesc[olink.idx] = component.outputsDesc.find(output)->second;
+    if (info.type.isCombinational()) {
+      entryToDesc[olink.idx] = {
+        oConnectionDesc,
+        false,
+        static_cast<uint64_t>(-1)
+      };
+    } else {
+      entryToDesc[olink.idx] = {
+        oConnectionDesc,
+        true,
+        info.cellID.getSID()
+      };
+    }
   } // for component outputs.
 
   const auto subnetID = subnetBuilder.make();
@@ -575,7 +596,11 @@ bool NetDecomposer::decompose(const SubnetID subnetID, Result &result) const {
 
     const Link link{cellID, 0, OBJ_NULL_ID, 0};
     cellMapping.inputs.emplace(link, i);
-    entryToDesc[subnet.getInIdx(i)] = {getSignalType(Cell::get(cellID), 0)};
+    entryToDesc[subnet.getInIdx(i)] = {
+      {getSignalType(Cell::get(cellID), 0)},
+      false,
+      static_cast<uint64_t>(-1)
+    };
   }
 
   for (size_t i = 0; i < subnet.getOutNum(); ++i) {
@@ -584,7 +609,11 @@ bool NetDecomposer::decompose(const SubnetID subnetID, Result &result) const {
 
     const Link link{OBJ_NULL_ID, 0, cellID, 0};
     cellMapping.outputs.emplace(link, subnet.size() - subnet.getOutNum() + i);
-    entryToDesc[subnet.getOutIdx(i)] = {getSignalType(Cell::get(cellID), 0)};
+    entryToDesc[subnet.getOutIdx(i)] = {
+      {getSignalType(Cell::get(cellID), 0)},
+      false,
+      static_cast<uint64_t>(-1)
+    };
   }
 
   result.subnets.emplace_back(subnetID, cellMapping, entryToDesc);

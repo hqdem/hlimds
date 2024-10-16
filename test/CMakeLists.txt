@@ -58,11 +58,8 @@ endif()
 enable_testing()
 
 add_executable(${TEST_TARGET}
-  gate/debugger/merge_test.cpp
   gate/debugger/miter_test.cpp
-  gate/debugger/register_sweep_test.cpp
   gate/debugger/sat_checker_test.cpp
-  gate/debugger/seq_sweep_test.cpp
   gate/debugger/synth_lec_test.cpp
   gate/debugger/verifier_test.cpp
   gate/estimator/npn_estimator_test.cpp

@@ -170,7 +170,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
     } else {
       simulate(simulator, nIn);
     }
-    
+
     std::unordered_map<uint64_t, std::set<uint32_t>> eqClassToIdx;
     model::SubnetBuilder::MergeMap toBeMerged;
     std::unordered_set<uint32_t> checked;
@@ -206,7 +206,7 @@ CheckerResult FraigChecker::isSat(const model::Subnet &subnet) const {
         eqClassToIdx[eqClass].insert(cellIdx1);
       }
     } // for idx-to-val
-    
+
     if (toBeMerged.empty()) {
       break;
     }

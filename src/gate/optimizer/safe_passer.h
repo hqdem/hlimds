@@ -22,12 +22,13 @@ class SafePasser : public EntryIterator {
 
   using InOutMapping = eda::gate::model::InOutMapping;
   using Subnet = eda::gate::model::Subnet;
+  using EntryID = model::EntryID;
   using SubnetID = eda::gate::model::SubnetID;
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetObject = eda::gate::model::SubnetObject;
   using CellActionCallback = SubnetBuilder::CellActionCallback;
   using CellCallbackCondition =
-      std::function<void(const uint32_t, const uint32_t, const uint32_t)>;
+      std::function<void(const EntryID, const uint32_t, const uint32_t)>;
   using CellWeightProvider = SubnetBuilder::CellWeightProvider;
 
   enum Direction {
@@ -47,7 +48,7 @@ public:
    */
   SafePasser(
     EntryIterator iter,
-    const std::function<void(const uint32_t)> *onEachEntry = nullptr);
+    const std::function<void(const EntryID)> *onEachEntry = nullptr);
 
   SafePasser &operator=(const SafePasser &other) = delete;
   SafePasser &operator=(SafePasser &&other) = default;
@@ -107,7 +108,7 @@ public:
 private:
   /// Checks replacement possibility and saves old cone root next entry.
   void prepareForReplace(
-      const uint32_t rhsOutEntryID,
+      const EntryID rhsOutEntryID,
       const InOutMapping &rhsToLhsMapping) {
     assert(/* Replacing unsafe root entry */
            isNewEntry.size() <= entry || !isNewEntry[entry]);
@@ -161,7 +162,7 @@ private:
 
   std::vector<char> isNewEntry{};
   std::vector<char> isPassedEntry{};
-  const std::function<void(const uint32_t)> *onEachEntry;
+  const std::function<void(const EntryID)> *onEachEntry;
 
   value_type saveNext{SubnetBuilder::invalidID};
 };

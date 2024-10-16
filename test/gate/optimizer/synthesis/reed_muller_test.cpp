@@ -20,7 +20,7 @@ namespace eda::gate::optimizer::synthesis {
 
 using DinTruthTable = kitty::dynamic_truth_table;
 using Link = model::Subnet::Link;
-using LinkList = std::vector<Link>;
+using LinkList = model::Subnet::LinkList;
 using Polynomial = std::vector<uint64_t>;
 using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
@@ -36,7 +36,7 @@ void optimalEquality(uint64_t len) {
   kitty::create_from_binary_string(t, s);
   auto &s1 = r.synthesize(t).makeObject();
   ReedMuller x1(sumOfTerms), x2(numberOfTerms), x3(longestTerm);
-  
+
   auto &s2 = x1.synthesize(t).makeObject();
   auto &s3 = x2.synthesize(t).makeObject();
   auto &s4 = x3.synthesize(t).makeObject();
@@ -46,7 +46,7 @@ void optimalEquality(uint64_t len) {
   testSubnetToSubnet(s1, s4);
 }
 
-// check if TTs synthesized by different methods and chosen using 
+// check if TTs synthesized by different methods and chosen using
 // different metrics are equal
 TEST(ReedMuller, OptimalEqualityTestOn3Vars) { optimalEquality(3); }
 

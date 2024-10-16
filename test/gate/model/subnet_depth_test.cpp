@@ -14,10 +14,13 @@
 
 namespace eda::gate::model {
 
+using SubnetDepth = model::SubnetDepth;
+using SubnetBuilder = model::SubnetBuilder;
+
 inline void checkDepth(const Subnet &subnet,
-                       const std::vector<uint32_t> &correctDepth) {
+                       const std::vector<SubnetDepth> &correctDepth) {
   const auto &entries = subnet.getEntries();
-  std::vector<uint32_t> depth(entries.size(), 0);
+  std::vector<SubnetDepth> depth(entries.size(), 0);
   for (size_t i = 0; i < entries.size(); ++i) {
     for (const auto &link : subnet.getLinks(i)) {
       depth[i] = std::max(depth[i], depth[link.idx] + 1);
@@ -62,8 +65,10 @@ TEST(SubnetDepthTest, LinkEntriesTest1) {
   builder.addOutput(xorLink0);
   const auto &result = Subnet::get(builder.make());
 
-  checkDepth(result, {0, 0, 0, 0, 0, 0, 0, 0, 1, uint32_t(-1), 2, uint32_t(-1),
-                      3, uint32_t(-1), 3, 4});
+  checkDepth(result, {0, 0, 0, 0, 0, 0, 0, 0, 1, SubnetBuilder::invalidDepth, 2,
+                      SubnetBuilder::invalidDepth, 3,
+                      SubnetBuilder::invalidDepth, SubnetBuilder::invalidDepth,
+                      3, 4});
 }
 
 TEST(SubnetDepthTest, LinkEntriesTest2) {
@@ -81,7 +86,8 @@ TEST(SubnetDepthTest, LinkEntriesTest2) {
   builder.addOutput(xorLink1);
   const auto &result = Subnet::get(builder.make());
 
-  checkDepth(result, {0, 0, 0, 0, 0, 0, 1, 1, 2, 2, uint32_t(-1), 3, 3});
+  checkDepth(result, {0, 0, 0, 0, 0, 0, 1, 1, 2, 2, SubnetBuilder::invalidDepth,
+                      3, 3});
 }
 
 TEST(SubnetDepthTest, LinkEntriesTest3) {
@@ -108,8 +114,10 @@ TEST(SubnetDepthTest, LinkEntriesTest3) {
   const auto &result = Subnet::get(builder.make());
 
   checkDepth(result, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2,
-                      uint32_t(-1), uint32_t(-1), 2, uint32_t(-1), uint32_t(-1),
-                      3, 3});
+                      SubnetBuilder::invalidDepth, SubnetBuilder::invalidDepth,
+                      SubnetBuilder::invalidDepth, 2,
+                      SubnetBuilder::invalidDepth, SubnetBuilder::invalidDepth,
+                      SubnetBuilder::invalidDepth, 3, 3});
 }
 
 TEST(SubnetDepthTest, ReuseCellsFollowingRoot) {

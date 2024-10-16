@@ -38,7 +38,7 @@ class Subnet final : public Object<Subnet, SubnetID> {
 
 public:
   /// Returns the entry/link indices of the j-th link of the i-th entry.
-  static std::pair<uint32_t, uint16_t> getLinkIndices(uint32_t i, uint16_t j) {
+  static std::pair<EntryID, uint16_t> getLinkIndices(EntryID i, uint16_t j) {
     if (j < Cell::InPlaceLinks) {
       return {i, j};
     }
@@ -46,15 +46,10 @@ public:
     return {i + 1 + (k / Cell::InEntryLinks), k % Cell::InEntryLinks};
   }
 
-  using Link = model::SubnetLink<uint32_t>;
-  using LinkList = model::SubnetLink<uint32_t>::SubnetLinkList;
-  static_assert(sizeof(Link) == 4);
-
-  using Cell = model::SubnetCell<uint32_t>;
-  static_assert(sizeof(Cell) == 32);
-
-  using Entry = model::SubnetEntry<uint32_t>;
-  static_assert(sizeof(Entry) == 32);
+  using Link = model::SubnetLink;
+  using LinkList = model::SubnetLinkList;
+  using Cell = model::SubnetCell;
+  using Entry = model::SubnetEntry;
 
   Subnet &operator=(const Subnet &) = delete;
   Subnet(const Subnet &) = delete;
@@ -63,42 +58,44 @@ public:
   bool isTrivial() const { return nCell <= nIn + nOut; }
 
   /// Returns the overall number of entries including entries w/ links.
-  uint32_t size() const { return nEntry; }
+  SubnetSz size() const { return nEntry; }
 
   /// Returns the number of inputs.
-  uint16_t getInNum() const { return nIn; }
+  SubnetSz getInNum() const { return nIn; }
   /// Returns the number of outputs.
-  uint16_t getOutNum() const { return nOut; }
+  SubnetSz getOutNum() const { return nOut; }
   /// Returns the number of cells including inputs and outputs.
-  uint32_t getCellNum() const { return nCell; }
+  SubnetSz getCellNum() const { return nCell; }
   /// Returns the number of buffers.
-  uint32_t getBufNum() const { return nBuf; }
+  SubnetSz getBufNum() const { return nBuf; }
 
   /// Returns the i-th input index.
-  uint32_t getInIdx(const uint32_t i) const { return i; }
+  EntryID getInIdx(const uint32_t i) const { return static_cast<EntryID>(i); }
   /// Returns the i-th output index.
-  uint32_t getOutIdx(const uint32_t i) const { return nEntry - nOut + i; }
+  EntryID getOutIdx(const uint32_t i) const {
+    return nEntry - nOut + static_cast<EntryID>(i);
+  }
   /// Returns the maximum entry index.
-  uint32_t getMaxIdx() const { return nEntry - 1; }
+  EntryID getMaxIdx() const { return nEntry - 1; }
 
   /// Returns the i-th cell.
-  const Cell &getCell(uint32_t i) const { return entries[i].cell; }
+  const Cell &getCell(EntryID i) const { return entries[i].cell; }
 
   /// Returns the j-th link of the i-th cell.
-  const Link &getLink(uint32_t i, uint16_t j) const;
+  const Link &getLink(EntryID i, uint16_t j) const;
   /// Returns the links of the i-th cell.
-  const LinkList getLinks(uint32_t i) const; // FIXME: Deprecated.
+  const LinkList getLinks(EntryID i) const; // FIXME: Deprecated.
   /// Returns an array filled by the links.
-  const Link *getLinks(uint32_t i, Link *links, uint16_t &nLinks) const;
+  const Link *getLinks(EntryID i, Link *links, uint16_t &nLinks) const;
 
   /// Returns the i-th input link.
-  Link getIn(uint32_t i) const {
+  Link getIn(EntryID i) const {
     assert(i < nIn);
     return Link(i, 0, 0);
   }
 
   /// Returns the i-th output link.
-  Link getOut(uint32_t i) const {
+  Link getOut(EntryID i) const {
     assert(i < nOut);
     return entries[nEntry - nOut + i].cell.link[0];
   }
@@ -107,7 +104,7 @@ public:
   const Array<Entry> &getEntries() const { return entries; }
 
   /// Returns the minimum and maximum path lengths.
-  std::pair<uint32_t, uint32_t> getPathLength() const;
+  std::pair<SubnetSz, SubnetSz> getPathLength() const;
 
   /// Check if the subnet is tech-mapped.
   bool isTechMapped() const {
@@ -132,27 +129,30 @@ public:
 
 private:
   /// Constructs a subnet.
-  Subnet(uint16_t nIn,
-         uint16_t nOut,
-         uint32_t nCell,
-         uint32_t nBuf,
+  Subnet(SubnetSz nIn,
+         SubnetSz nOut,
+         SubnetSz nCell,
+         SubnetSz nBuf,
          const std::vector<Entry> &entries):
       nIn(nIn), nOut(nOut), nCell(nCell), nBuf(nBuf), nEntry(entries.size()),
       entries(ArrayBlock<Entry>::allocate(entries, true, true)) {}
 
   /// Number of inputs.
-  const uint16_t nIn;
+  const SubnetSz nIn;
   /// Number of outputs.
-  const uint16_t nOut;
+  const SubnetSz nOut;
   /// Number of cells.
-  const uint32_t nCell;
+  const SubnetSz nCell;
   /// Number of buffers.
-  const uint32_t nBuf;
+  const SubnetSz nBuf;
   /// Total number of entries.
-  const uint32_t nEntry;
+  const SubnetSz nEntry;
 
   /// Topologically sorted array of entries.
   const Array<Entry> entries;
+
+  /// Tmp fields
+  uint64_t tmp1;
 };
 
 static_assert(sizeof(Subnet) == SubnetID::Size);
@@ -318,6 +318,7 @@ public:
 
   /// Fanouts container wrapper;
   using FanoutsContainer = std::vector<EntryID>;
+  using EntryToEntry = std::unordered_map<EntryID, EntryID>;
 
   /// Represents a replacement effect.
   struct Effect final {
@@ -337,9 +338,9 @@ public:
     float weight{0.};
   };
 
-  static SubnetID makeZero(const uint16_t nIn);
-  static SubnetID makeOne(const uint16_t nIn);
-  static SubnetID makeConst(const uint16_t nIn, const bool value);
+  static SubnetID makeZero(const SubnetSz nIn);
+  static SubnetID makeOne(const SubnetSz nIn);
+  static SubnetID makeConst(const SubnetSz nIn, const bool value);
 
   //FIXME: Make constructors private.
   SubnetBuilder() {
@@ -370,13 +371,13 @@ public:
   bool isTrivial() const { return nCell <= nIn + nOut; }
 
   /// Returns the number of inputs.
-  uint16_t getInNum() const { return nIn; }
+  SubnetSz getInNum() const { return nIn; }
   /// Returns the number of outputs.
-  uint16_t getOutNum() const { return nOut; }
+  SubnetSz getOutNum() const { return nOut; }
   /// Returns the number of cells including inputs and outputs.
-  uint32_t getCellNum() const { return nCell; }
+  SubnetSz getCellNum() const { return nCell; }
   /// Returns the number of buffers.
-  uint32_t getBufNum() const { return nBuf; }
+  SubnetSz getBufNum() const { return nBuf; }
 
   /// Returns the maximum entry index.
   EntryID getMaxIdx() const { return entries.size() - 1; }
@@ -402,17 +403,17 @@ public:
   }
 
   /// Returns the depth of the i-th cell.
-  uint32_t getDepth(EntryID i) const {
+  SubnetDepth getDepth(EntryID i) const {
     return desc[i].depth;
   }
 
   /// Returns the first cell in the topological order with the passed depth.
-  EntryID getFirstWithDepth(uint32_t d) const {
+  EntryID getFirstWithDepth(SubnetDepth d) const {
     return depthBounds[d].first;
   }
 
   /// Returns the last cell in the topological order with the passed depth.
-  EntryID getLastWithDepth(uint32_t d) const {
+  EntryID getLastWithDepth(SubnetDepth d) const {
     return depthBounds[d].second;
   }
 
@@ -518,24 +519,6 @@ public:
     return addCell(OUT, link);
   }
 
-  /// Adds a flip-flop-related input.
-  Link addInput(uint32_t flipFlopID) {
-    const auto result = addInput();
-    auto &cell = entries[result.idx].cell;
-    cell.flipFlop = 1;
-    cell.flipFlopID = flipFlopID;
-    return result;
-  }
-
-  /// Adds a flip-flop-related output.
-  Link addOutput(Link link, uint32_t flipFlopID) {
-    const auto result = addOutput(link);
-    auto &cell = entries[result.idx].cell;
-    cell.flipFlop = 1;
-    cell.flipFlopID = flipFlopID;
-    return result;
-  }
-
   /// Adds a multi-output general-type cell.
   LinkList addMultiOutputCell(CellTypeID typeID, const LinkList &links);
 
@@ -579,9 +562,9 @@ public:
   }
 
   /// Adds the given number of inputs.
-  LinkList addInputs(uint16_t nIn) {
+  LinkList addInputs(SubnetSz nIn) {
     LinkList result(nIn);
-    for (uint16_t i = 0; i < nIn; ++i) {
+    for (SubnetSz i = 0; i < nIn; ++i) {
       result[i] = Link(addInput());
     }
     return result;
@@ -837,7 +820,7 @@ private:
       const RhsIterable &rhsIterable,
       const EntryID rhsOutEntryID,
       const InOutMapping &iomapping,
-      std::unordered_map<EntryID, EntryID> &rhsToLhs,
+      EntryToEntry &rhsToLhs,
       const std::function<EntryID(RhsIt iter, EntryID i)> &getEntryID,
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
@@ -859,7 +842,7 @@ private:
   float incOldLinksRefcnt(
       const RhsContainer &rhsContainer,
       const EntryID rhsEntryID,
-      const std::unordered_map<EntryID, EntryID> &rhsToLhs,
+      const EntryToEntry &rhsToLhs,
       std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
       const CellWeightModifier *weightModifier) const;
 
@@ -869,7 +852,7 @@ private:
       const RhsContainer &rhsContainer,
       const RhsIterable &rhsIterable,
       const InOutMapping &iomapping,
-      std::unordered_map<EntryID, EntryID> &rhsToLhs,
+      EntryToEntry &rhsToLhs,
       const std::function<EntryID(RhsIt iter, EntryID i)> &getEntryID,
       std::unordered_set<EntryID> &reusedLhsEntries,
       std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
@@ -926,11 +909,11 @@ private:
 
   /// Adds fanoutID index in the sourceID fanouts storage
   /// (if fanouts storing is enabled).
-  void addFanout(EntryID sourceID, uint32_t fanoutID);
+  void addFanout(EntryID sourceID, EntryID fanoutID);
 
   /// Deletes fanoutID index from the sourceID fanouts storage
   /// (if fanouts storing is enabled).
-  void delFanout(EntryID sourceID, uint32_t fanoutID);
+  void delFanout(EntryID sourceID, EntryID fanoutID);
 
   /// Allocates an entry and returns its index.
   EntryID allocEntry(bool isBuf);
@@ -1007,6 +990,8 @@ private:
   void destrashEntry(EntryID entryID);
 
 public:
+  static constexpr SubnetDepth invalidDepth = static_cast<SubnetDepth>(-1);
+
   static constexpr EntryID invalidID = static_cast<EntryID>(-1);
 
   static constexpr EntryID normalOrderID = invalidID - 1;
@@ -1018,7 +1003,7 @@ private:
     EntryDescriptor():
         prev(normalOrderID),
         next(normalOrderID),
-        depth(invalidID),
+        depth(invalidDepth),
         weight(0.),
         data(nullptr),
         session(0),
@@ -1081,7 +1066,7 @@ private:
 
     EntryID prev;
     EntryID next;
-    uint32_t depth;
+    SubnetDepth depth;
     float weight;
     void *data;
     uint32_t session;
@@ -1091,10 +1076,10 @@ private:
     uint16_t simN;
   };
 
-  uint16_t nIn{0};
-  uint16_t nOut{0};
-  uint32_t nCell{0};
-  uint32_t nBuf{0};
+  SubnetSz nIn{0};
+  SubnetSz nOut{0};
+  SubnetSz nCell{0};
+  SubnetSz nBuf{0};
 
   std::vector<Entry> entries;
   bool isDisassembled{false};

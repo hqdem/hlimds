@@ -176,7 +176,7 @@ TEST(SubnetTest, AddSingleOutputSubnetTest) {
 }
 
 TEST(SubnetTest, SimpleStrashTest) {
-  constexpr uint32_t InNum = 5;
+  constexpr uint32_t InNum = 3;
   constexpr uint32_t OutNum = 10;
 
   SubnetBuilder builder;
@@ -403,7 +403,7 @@ TEST(SubnetTest, FanoutsReplace) {
 
   Subnet::LinkList rhsInputs = rhsBuilder.addInputs(4);
   Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, inputs[0], inputs[1],
-      inputs[2], inputs[3]);
+      inputs[2]);
   Subnet::Link rhsLink2 = rhsBuilder.addCell(BUF, rhsLink1);
   rhsBuilder.addOutput(rhsLink2);
   const auto rhsID = rhsBuilder.make();
@@ -413,7 +413,7 @@ TEST(SubnetTest, FanoutsReplace) {
   builder.replace(rhsID, mapping);
 
   checkFanoutsCorrect(
-      builder, {{4, 9}, {4, 9}, {9}, {9}, {7}, {}, {8}, {}, {}, {6}}
+      builder, {{4, 9}, {4, 9}, {9}, {}, {7}, {}, {8}, {}, {}, {6}}
   );
 }
 
@@ -434,7 +434,7 @@ TEST(SubnetTest, FanoutsReplaceTwice) {
 
   Subnet::LinkList rhsInputs = rhsBuilder.addInputs(4);
   Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, inputs[0], inputs[1],
-      inputs[2], inputs[3]);
+      inputs[2]);
   Subnet::Link rhsLink2 = rhsBuilder.addCell(BUF, rhsLink1);
   rhsBuilder.addOutput(rhsLink2);
   const auto rhsID = rhsBuilder.make();

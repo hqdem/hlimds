@@ -79,14 +79,14 @@ private:
       const Position position,
       const ArityProvider arityProvider,
       const LinkProvider linkProvider,
-      const Visitor *onBackwardDfsPop = nullptr,
-      const Visitor *onBackwardDfsPush = nullptr);
+      const Visitor onBackwardDfsPop = Visitor(),
+      const Visitor onBackwardDfsPush = Visitor());
 
   SubnetViewIterator(
       const SubnetView *view,
       const Position position,
-      const Visitor *onBackwardDfsPop = nullptr,
-      const Visitor *onBackwardDfsPush = nullptr);
+      const Visitor onBackwardDfsPop = Visitor(),
+      const Visitor onBackwardDfsPush = Visitor());
 
   void prepareIteration();
 
@@ -114,15 +114,15 @@ private:
   std::pair<value_type, uint16_t> entryLink{SubnetBuilder::invalidID, 0};
   const ArityProvider arityProvider;
   const LinkProvider linkProvider;
-  const Visitor *onBackwardDfsPop{nullptr};
-  const Visitor *onBackwardDfsPush{nullptr};
+  const Visitor onBackwardDfsPop;
+  const Visitor onBackwardDfsPush;
 
   // Iterator state
   bool isAborted{false};
   std::unordered_set<EntryID> marked;
   std::unordered_set<EntryID> inout;
-  uint32_t nInLeft{0};
-  uint32_t nOutLeft{0};
+  SubnetSz nInLeft{0};
+  SubnetSz nOutLeft{0};
   std::stack<std::pair<EntryID /* entry */, uint16_t /* link */>> stack;
 };
 
@@ -134,6 +134,7 @@ public:
   using Cut = optimizer::Cut;
   using Link = InOutMapping::Link;
   using TruthTable = eda::util::TruthTable;
+  using SubnetSz = model::SubnetSz;
 
   /// Constructs a subnet view corresponding to the whole subnet.
   SubnetView(const std::shared_ptr<SubnetBuilder> &parent);
@@ -150,19 +151,19 @@ public:
     return iomapping;
   }
 
-  uint16_t getInNum() const {
+  SubnetSz getInNum() const {
     return iomapping.getInNum();
   }
 
-  uint16_t getOutNum() const {
+  SubnetSz getOutNum() const {
     return iomapping.getOutNum();
   }
 
-  Link getIn(const uint16_t i) const {
+  Link getIn(const SubnetSz i) const {
     return iomapping.getIn(i);
   }
 
-  Link getOut(const uint16_t i) const {
+  Link getOut(const SubnetSz i) const {
     return iomapping.getOut(i);
   }
 

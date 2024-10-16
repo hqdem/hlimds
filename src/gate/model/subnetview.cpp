@@ -26,14 +26,14 @@ SubnetView::SubnetView(const std::shared_ptr<SubnetBuilder> &builder):
   const auto nOut = builder->getOutNum();
   iomapping.outputs.resize(nOut);
 
-  uint32_t i = 0;
+  SubnetSz i = 0;
   for (auto it = builder->begin(); i < nIn; ++it, ++i) {
     const auto &cell = builder->getCell(*it);
     assert(cell.isIn());
     iomapping.inputs[i] = Link(*it);
   }
 
-  uint32_t j = 0;
+  SubnetSz j = 0;
   for (auto it = --builder->end(); j < nOut; --it, ++j) {
     const auto &cell = builder->getCell(*it);
     assert(cell.isOut());
@@ -92,7 +92,7 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
   SubnetViewWalker walker(*this);
   const auto arity = getInNum();
 
-  uint32_t nIn = 0;
+  SubnetSz nIn = 0;
 
   // Optimized calculator for views w/ a small number of inputs.
   if (arity <= 6) {
@@ -156,7 +156,7 @@ SubnetObject &SubnetView::getSubnet() {
     } else {
       assert(oldCell.getInNum() > 0);
       Subnet::LinkList newLinks(oldCell.getInNum());
-      for (uint16_t j = 0; j < oldCell.getInNum(); ++j) {
+      for (SubnetSz j = 0; j < oldCell.getInNum(); ++j) {
         const auto &oldLink = parent.getLink(i, j);
         const auto newIdx = parent.getDataVal<EntryID>(oldLink.idx);
         const bool oldInv = oldLink.inv;
@@ -184,13 +184,13 @@ SubnetObject &SubnetView::getSubnet() {
 
 #define UTOPIA_ON_BACKWARD_DFS_POP(builder, isIn, isOut, cellID)\
   if (onBackwardDfsPop && !isAborted &&\
-    !(*onBackwardDfsPop)(builder, isIn, isOut, cellID)) {\
+    !onBackwardDfsPop(builder, isIn, isOut, cellID)) {\
     isAborted = true;\
   }
 
 #define UTOPIA_ON_BACKWARD_DFS_PUSH(builder, isIn, isOut, cellID)\
   if (onBackwardDfsPush && !isAborted &&\
-    !(*onBackwardDfsPush)(builder, isIn, isOut, cellID)) {\
+    !onBackwardDfsPush(builder, isIn, isOut, cellID)) {\
     isAborted = true;\
   }
 
@@ -280,12 +280,9 @@ bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
         };
   }
 
-  const auto *onDfsPopPtr = onBackwardDfsPopEx ? &onBackwardDfsPopEx :
-      (onBackwardDfsPop ? &onBackwardDfsPop : nullptr);
-  const auto *onDfsPushPtr = onBackwardDfsPushEx ? &onBackwardDfsPushEx :
-      (onBackwardDfsPush ? &onBackwardDfsPush : nullptr);
   auto it = SubnetViewIterator(&view, SubnetViewIterator::BEGIN, arityProvider,
-      linkProvider, onDfsPopPtr, onDfsPushPtr);
+      linkProvider, onBackwardDfsPopEx ? onBackwardDfsPopEx : onBackwardDfsPop,
+      onBackwardDfsPushEx ? onBackwardDfsPushEx : onBackwardDfsPush);
 
   while (it != view.end() && !it.isAborted) {
     ++it;
@@ -323,8 +320,8 @@ bool SubnetViewWalker::runBackward(const Visitor visitor,
 SubnetViewIterator::SubnetViewIterator(
     const SubnetView *view,
     const Position position,
-    const Visitor *onBackwardDfsPop,
-    const Visitor *onBackwardDfsPush):
+    const Visitor onBackwardDfsPop,
+    const Visitor onBackwardDfsPush):
     SubnetViewIterator(view,
                        position,
                        defaultArityProvider,
@@ -337,8 +334,8 @@ SubnetViewIterator::SubnetViewIterator(
     const Position position,
     const ArityProvider arityProvider,
     const LinkProvider linkProvider,
-    const Visitor *onBackwardDfsPop,
-    const Visitor *onBackwardDfsPush):
+    const Visitor onBackwardDfsPop,
+    const Visitor onBackwardDfsPush):
     view(view),
     arityProvider(arityProvider),
     linkProvider(linkProvider),
@@ -449,7 +446,7 @@ void SubnetViewIterator::nextPI() {
   auto &builder = const_cast<SubnetBuilder &>(view->getParent().builder());
 
   const InOutMapping &iomapping = view->getInOutMapping();
-  const uint16_t currentIn = iomapping.getInNum() - nInLeft;
+  const SubnetSz currentIn = iomapping.getInNum() - nInLeft;
   const auto &inEntry = iomapping.getIn(currentIn);
 
   const auto isOut = (inout.find(inEntry.idx) != inout.end());

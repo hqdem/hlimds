@@ -15,14 +15,15 @@
 
 namespace eda::gate::model {
 
-using EntryID = uint32_t;
+using EntryID = model::EntryID;
+using SubnetSz = model::SubnetSz;
 using EntryIDList = std::vector<EntryID>;
 
 /**
  * @brief Represents an input/output mapping for replacement.
  */
 struct InOutMapping final {
-  using Link = model::SubnetLink<EntryID>;
+  using Link = model::SubnetLink;
   using LinkList = std::vector<Link>;
 
   InOutMapping() = default;
@@ -41,11 +42,11 @@ struct InOutMapping final {
   InOutMapping(const LinkList &inputs, const LinkList &outputs):
       inputs(inputs), outputs(outputs) {}
 
-  uint16_t getInNum() const { return inputs.size(); }
-  uint16_t getOutNum() const { return outputs.size(); }
+  SubnetSz getInNum() const { return inputs.size(); }
+  SubnetSz getOutNum() const { return outputs.size(); }
 
-  Link getIn(const uint16_t i) const { return inputs[i]; }
-  Link getOut(const uint16_t i) const { return outputs[i]; }
+  Link getIn(const SubnetSz i) const { return inputs[i]; }
+  Link getOut(const SubnetSz i) const { return outputs[i]; }
 
   LinkList inputs;
   LinkList outputs;

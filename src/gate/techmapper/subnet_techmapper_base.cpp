@@ -45,7 +45,7 @@
       << "Power: " << vector[criterion::POWER]\
           << " (" << tension[criterion::POWER] << ")" << std::endl\
       << "Total: " << criterion::getIntegralCost(vector) << std::endl)
- 
+
 namespace eda::gate::techmapper {
 
 criterion::CostVector defaultCutEstimator(
@@ -158,7 +158,7 @@ static void findBestCoverage(
         matches[entryID] = &space[entryID]->getBest().solution;
         return true;
       }, false);
-} 
+}
 
 static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
     const SubnetTechMapperBase::SubnetSpace &space,
@@ -185,7 +185,7 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
       links[entryID] = newBuilder->addInput();
     } else if (matches[entryID]) {
       const auto &match = *matches[entryID];
- 
+
       const auto &newType = model::CellType::get(match.typeID);
       assert(newType.getInNum() == match.links.size());
 
@@ -202,7 +202,7 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
               << fmt::format("link#{}", j) << " of "
               << fmt::format("cell#{}:{}", entryID, oldType.getName()));
           return nullptr /* error */;
-        } 
+        }
 
         if (newType.isCell() && newLinks[j].inv) {
           UTOPIA_ERROR("Invertor (logical gate NOT) "
@@ -211,7 +211,7 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
           return nullptr /* error */;
         }
       }
-      
+
       const auto outs = newBuilder->addMultiOutputCell(match.typeID, newLinks);
       const auto link = outs[match.output];
       links[entryID] = match.inversion ? ~link : link;
@@ -227,12 +227,6 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
       }
 #endif // !UTOPIA_TECHMAP_MATCH_OUTPUTS
     } // not input
-
-    if (oldCell.isIn() || oldCell.isOut()) {
-      auto &newCell = newBuilder->getCell(links[entryID].idx);
-      newCell.flipFlop = oldCell.flipFlop;
-      newCell.flipFlopID = oldCell.flipFlopID;
-    }
   } // for cell
 
   const auto oldOutNum = oldBuilder->getOutNum();
@@ -310,7 +304,7 @@ void SubnetTechMapperBase::findCellSolutions(
       cutAggregation = criterion::CostVector::Zero;
     } else if (!cut.isTrivial() && hasSolutions(cut)) {
       // Aggregate the leaf cost vectors.
-      cutAggregation = costAggregator(getCostVectors(cut)); 
+      cutAggregation = costAggregator(getCostVectors(cut));
     } else {
       // Skip trivial and unmapped cuts.
       continue;

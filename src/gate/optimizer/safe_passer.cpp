@@ -14,7 +14,7 @@ namespace eda::gate::optimizer {
 
 SafePasser::SafePasser(
   EntryIterator iter,
-  const std::function<void(const uint32_t)> *onEachEntry) :
+  const std::function<void(const EntryID)> *onEachEntry) :
     EntryIterator(iter),
     builderToTransform(const_cast<SubnetBuilder *>(builder)),
     onEachEntry(onEachEntry) {
@@ -104,7 +104,7 @@ void SafePasser::replace(
   }
 
   auto &_isNewEntry = this->isNewEntry;
-  std::function addNewCell = [&_isNewEntry, &onNewCell](const uint32_t entryID) {
+  std::function addNewCell = [&_isNewEntry, &onNewCell](const EntryID entryID) {
     if (_isNewEntry.size() <= entryID) {
       _isNewEntry.resize(entryID + 1, false);
     }
@@ -118,7 +118,7 @@ void SafePasser::replace(
 
   const auto &_builder = builder;
   std::function onRecompDepthWrap =
-      [&onRecomputedDepth, oldRootDepth, &_builder](const uint32_t entryID) {
+      [&onRecomputedDepth, oldRootDepth, &_builder](const EntryID entryID) {
     if (onRecomputedDepth) {
       (*onRecomputedDepth)(entryID, oldRootDepth, _builder->getDepth(entryID));
     }
@@ -144,7 +144,7 @@ void SafePasser::replace(
   const auto &rhsEntries = Subnet::get(rhsID).getEntries();
   prepareForReplace(rhsEntries.size() - 1, rhsToLhsMapping);
   auto &_isNewEntry = this->isNewEntry;
-  std::function addNewCell = [&_isNewEntry, &onNewCell](const uint32_t entryID) {
+  std::function addNewCell = [&_isNewEntry, &onNewCell](const EntryID entryID) {
     if (_isNewEntry.size() <= entryID) {
       _isNewEntry.resize(entryID + 1, false);
     }
@@ -158,7 +158,7 @@ void SafePasser::replace(
 
   const auto &_builder = builder;
   std::function onRecompDepthWrap =
-      [&onRecomputedDepth, oldRootDepth, &_builder](const uint32_t entryID) {
+      [&onRecomputedDepth, oldRootDepth, &_builder](const EntryID entryID) {
     if (onRecomputedDepth) {
       (*onRecomputedDepth)(entryID, oldRootDepth, _builder->getDepth(entryID));
     }
@@ -182,7 +182,7 @@ void SafePasser::replace(
   const bool rootLastDepth = builder->getLastWithDepth(oldRootDepth) == entry;
   prepareForReplace(*(--rhsBuilder.end()), rhsToLhsMapping);
   auto &_isNewEntry = this->isNewEntry;
-  std::function addNewCell = [&_isNewEntry, &onNewCell](const uint32_t entryID) {
+  std::function addNewCell = [&_isNewEntry, &onNewCell](const EntryID entryID) {
     if (_isNewEntry.size() <= entryID) {
       _isNewEntry.resize(entryID + 1, false);
     }
@@ -196,7 +196,7 @@ void SafePasser::replace(
 
   const auto &_builder = builder;
   std::function onRecompDepthWrap =
-      [&onRecomputedDepth, oldRootDepth, &_builder] (const uint32_t entryID) {
+      [&onRecomputedDepth, oldRootDepth, &_builder] (const EntryID entryID) {
     if (onRecomputedDepth) {
       (*onRecomputedDepth)(entryID, oldRootDepth, _builder->getDepth(entryID));
     }

@@ -9,6 +9,7 @@
 #ifndef DSD_TO_GNET_H
 #define DSD_TO_GNET_H
 
+#include "gate/model/bdd.h"
 #include "gate/model/subnet.h"
 #include "gate/model/subnetview.h"
 #include "gate/model/utils/subnetview_to_bdd.h"
@@ -61,7 +62,7 @@ struct BddWithDdManager {
  * the article "Achieving Scalable Hardware Verification
  * with Symbolic Simulation" by Valeria Bertacco (2003).
 */
-class DsdSynthesizer : public Synthesizer<BddWithDdManager>,
+class DsdSynthesizer : public BddSynthesizer,
                        public TruthTableSynthesizer {
 
 public:
@@ -79,11 +80,11 @@ public:
   // Convenience Methods
   //===--------------------------------------------------------------------===//
 
-  using Synthesizer<BddWithDdManager>::synthesize;
+  using BddSynthesizer::synthesize;
   using TruthTableSynthesizer::synthesize;
 
   /// Synthesize.
-  SubnetObject synthesize(const BddWithDdManager &pair, const TruthTable &,
+  SubnetObject synthesize(const model::Bdd &bdd, const TruthTable &,
                           uint16_t maxArity = -1) const override;
   SubnetObject synthesize(const TruthTable &table, const TruthTable &care,
                           uint16_t maxArity = -1) const override;

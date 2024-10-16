@@ -23,8 +23,8 @@ class Net final : public Object<Net, NetID> {
   friend class Storage<Net>;
 
 public:
-  Net &operator =(const Net &other) = delete;
-  Net(const Net &other) = delete;
+  Net &operator =(const Net &) = delete;
+  Net(const Net &) = delete;
 
   List<CellID> getInputs()     const { return List<CellID>(inputs);     }
   List<CellID> getOutputs()    const { return List<CellID>(outputs);    }
@@ -34,29 +34,20 @@ public:
   List<CellID> getHardBlocks() const { return List<CellID>(hardBlocks); }
 
   /// Returns the number of inputs.
-  uint16_t getInNum() const { return nInputs; }
+  uint32_t getInNum() const { return nInputs; }
   /// Returns the number of outputs.
-  uint16_t getOutNum() const { return nOutputs; }
-  /// Returns the number of combinational gates/cells.
-  uint32_t getCombNum() const { return nCombCells; }
-  /// Returns the number of flip-flops and latches.
-  uint32_t getFlipNum() const { return nFlipFlops; }
-  /// Returns the number of hard blocks.
-  uint16_t getHardNum() const { return nHardBlocks; }
-  /// Returns the number of soft blocks and subnets.
-  uint16_t getSoftNum() const { return nSoftBlocks; }
-
+  uint32_t getOutNum() const { return nOutputs; }
   /// Returns the overall number of cells.
-  size_t getCellNum() const {
-    size_t nIn   = getInNum();
-    size_t nOut  = getOutNum();
-    size_t nComb = getCombNum();
-    size_t nFlip = getFlipNum();
-    size_t nHard = getHardNum();
-    size_t nSoft = getSoftNum();
+  uint32_t getCellNum() const { return nCells; }
 
-    return nIn + nOut + nComb + nFlip + nHard + nSoft;
-  }
+  /// Returns the number of combinational gates/cells.
+  uint32_t getCombNum() const { return getCombCells().size(); }
+  /// Returns the number of flip-flops and latches.
+  uint32_t getFlipNum() const { return getFlipFlops().size(); }
+  /// Returns the number of hard blocks.
+  uint32_t getHardNum() const { return getHardBlocks().size(); }
+  /// Returns the number of soft blocks and subnets.
+  uint32_t getSoftNum() const { return getSoftBlocks().size(); }
 
 private:
   Net(ListID inputs,
@@ -65,12 +56,9 @@ private:
       ListID flipFlops,
       ListID hardBlocks,
       ListID softBlocks,
-      uint16_t nInputs,
-      uint16_t nOutputs,
-      uint32_t nCombCells,
-      uint32_t nFlipFlops,
-      uint16_t nHardBlocks,
-      uint16_t nSoftBlocks):
+      uint32_t nInputs,
+      uint32_t nOutputs,
+      uint32_t nCells):
       inputs(inputs),
       outputs(outputs),
       combCells(combCells),
@@ -79,10 +67,7 @@ private:
       softBlocks(softBlocks),
       nInputs(nInputs),
       nOutputs(nOutputs),
-      nCombCells(nCombCells),
-      nFlipFlops(nFlipFlops),
-      nHardBlocks(nHardBlocks),
-      nSoftBlocks(nSoftBlocks) {}
+      nCells(nCells) {}
 
   /// Primary inputs.
   ListID inputs;
@@ -91,7 +76,7 @@ private:
 
   /// Combinational gates/cells.
   ListID combCells;
-  /// Triggers (flip-flops and latches).
+  /// Sequential cells (flip-flops and latches).
   ListID flipFlops;
 
   /// Technology-dependent blocks w/ unknown structure and functionality.
@@ -99,12 +84,11 @@ private:
   /// Blocks w/ known structure (subnets).
   ListID softBlocks;
 
-  uint16_t nInputs;
-  uint16_t nOutputs;
-  uint32_t nCombCells;
-  uint32_t nFlipFlops;
-  uint16_t nHardBlocks;
-  uint16_t nSoftBlocks;
+  uint32_t nInputs;
+  uint32_t nOutputs;
+  uint32_t nCells;
+
+  uint32_t padding__{0};
 };
 
 static_assert(sizeof(Net) == NetID::Size);

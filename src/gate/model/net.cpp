@@ -57,22 +57,22 @@ void NetBuilder::connect(CellID cellID, uint16_t port, LinkEnd source) {
 }
 
 NetID NetBuilder::make() {
-  uint16_t nInputs = inputs.size();
+  const uint32_t nInputs = inputs.size();
   assert(nInputs == inputs.size());
 
-  uint16_t nOutputs = outputs.size();
+  const uint32_t nOutputs = outputs.size();
   assert(nOutputs == outputs.size());
 
-  uint32_t nCombCells = combCells.size();
+  const uint32_t nCombCells = combCells.size();
   assert(nCombCells == combCells.size());
 
-  uint32_t nFlipFlops = flipFlops.size();
+  const uint32_t nFlipFlops = flipFlops.size();
   assert(nFlipFlops == flipFlops.size());
   
-  uint16_t nHardBlocks = hardBlocks.size();
+  const uint32_t nHardBlocks = hardBlocks.size();
   assert(nHardBlocks == hardBlocks.size());
 
-  uint16_t nSoftBlocks = softBlocks.size();
+  const uint32_t nSoftBlocks = softBlocks.size();
   assert(nSoftBlocks == softBlocks.size());
 
   return allocateObject<Net>(
@@ -84,10 +84,7 @@ NetID NetBuilder::make() {
     softBlocks.getID(),
     nInputs,
     nOutputs,
-    nCombCells,
-    nFlipFlops,
-    nHardBlocks,
-    nSoftBlocks);
+    nInputs + nOutputs + nCombCells + nFlipFlops + nHardBlocks + nSoftBlocks);
 }
 
 //===----------------------------------------------------------------------===//

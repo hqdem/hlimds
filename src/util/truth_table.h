@@ -294,25 +294,21 @@ inline const TT &getTruthTable(const SB &builder, size_t i) {
 
 template <>
 inline const TTn &getTruthTable<TTn>(const SB &builder, size_t i) {
-  assert(builder.isMarked(i));
   return *builder.getDataPtr<TTn>(i);
 }
 
 template <>
 inline const TT4 &getTruthTable<TT4>(const SB &builder, size_t i) {
-  assert(builder.isMarked(i));
   return builder.getDataVal<TT4>(i);
 }
 
 template <>
 inline const TT5 &getTruthTable<TT5>(const SB &builder, size_t i) {
-  assert(builder.isMarked(i));
   return builder.getDataVal<TT5>(i);
 }
 
 template <>
 inline const TT6 &getTruthTable<TT6>(const SB &builder, size_t i) {
-  assert(builder.isMarked(i));
   return builder.getDataVal<TT6>(i);
 }
 

@@ -23,6 +23,107 @@ namespace eda::gate::model {
 // Subnet View
 //===----------------------------------------------------------------------===//
 
+class SubnetView;
+class SubnetViewWalker;
+
+/// SubnetView forward iterator.
+class SubnetViewIter final {
+  friend class SubnetView;
+  friend class SubnetViewWalker;
+
+  enum ConstructionT {
+    /// To construct SubnetView::begin().
+    BEGIN,
+    /// To construct SubnetView::end().
+    END
+  };
+
+public:
+  typedef EntryID value_type;
+  typedef std::ptrdiff_t difference_type;
+  typedef const value_type *pointer;
+  typedef const value_type &reference;
+  typedef std::forward_iterator_tag iterator_category;
+
+  using Visitor =
+      std::function<bool(
+                         SubnetBuilder &builder,
+                         const bool isIn,
+                         const bool isOut,
+                         const EntryID entryID)>;
+  using ArityProvider =
+      std::function<uint16_t(
+                        SubnetBuilder &builder,
+                        const EntryID entryID)>;
+  using LinkProvider =
+      std::function<Subnet::Link(
+                        SubnetBuilder &builder,
+                        const EntryID entryID,
+                        const uint16_t linkIdx)>;
+
+private:
+  static inline uint16_t defaultArityProvider(
+      SubnetBuilder &builder, const EntryID entryID) {
+    return builder.getCell(entryID).arity;
+  }
+
+  static inline Subnet::Link defaultLinkProvider(
+      SubnetBuilder &builder, const EntryID entryID, const uint16_t linkIdx) {
+    return builder.getLink(entryID, linkIdx);
+  }
+
+  SubnetViewIter(
+      const SubnetView *view,
+      const ConstructionT constructionT,
+      const ArityProvider arityProvider,
+      const LinkProvider linkProvider,
+      const Visitor *onBackwardDfsPop = nullptr,
+      const Visitor *onBackwardDfsPush = nullptr);
+
+  SubnetViewIter(
+      const SubnetView *view,
+      const ConstructionT constructionT,
+      const Visitor *onBackwardDfsPop = nullptr,
+      const Visitor *onBackwardDfsPush = nullptr);
+
+  void prepareIteration();
+
+  void nextPI();
+
+public:
+  bool operator==(const SubnetViewIter &other) const {
+    return this->view == other.view &&
+        this->entryLink.first == other.entryLink.first;
+  }
+
+  bool operator!=(const SubnetViewIter &other) const {
+    return !(*this == other);
+  }
+
+  reference operator*() const;
+  pointer operator->() const;
+
+  SubnetViewIter &operator++();
+  SubnetViewIter operator++(int) = delete;
+  SubnetViewIter next() const;
+
+private:
+  const SubnetView *view{nullptr};
+  std::pair<value_type, uint16_t> entryLink{SubnetBuilder::invalidID, 0};
+  const ArityProvider arityProvider;
+  const LinkProvider linkProvider;
+  const Visitor *onBackwardDfsPop{nullptr};
+  const Visitor *onBackwardDfsPush{nullptr};
+
+  // Iterator state
+  bool isAborted{false};
+  std::unordered_set<EntryID> marked;
+  std::unordered_set<EntryID> inout;
+  uint32_t nInLeft{0};
+  uint32_t nOutLeft{0};
+  std::stack<std::pair<EntryID /* entry */, uint16_t /* link */>> stack;
+};
+
 /**
  * @brief Functionally closed subnet fragment (window).
  */
@@ -95,6 +196,14 @@ public:
     return parent;
   }
 
+  SubnetViewIter begin() const {
+    return SubnetViewIter(this, SubnetViewIter::BEGIN);
+  }
+
+  SubnetViewIter end() const {
+    return SubnetViewIter(this, SubnetViewIter::END);
+  }
+
 private:
   /// Evaluates the truth tables for the given cells.
   std::vector<TruthTable> evaluateTruthTables(
@@ -130,21 +239,9 @@ public:
     BACKWARD
   };
 
-  using ArityProvider =
-      std::function<uint16_t(
-                        SubnetBuilder &builder,
-                        const EntryID entryID)>;
-  using LinkProvider =
-      std::function<Subnet::Link(
-                        SubnetBuilder &builder,
-                        const EntryID entryID,
-                        const uint16_t linkIdx)>;
-  using Visitor =
-      std::function<bool(
-                        SubnetBuilder &builder,
-                        const bool isIn,
-                        const bool isOut,
-                        const EntryID entryID)>;
+  using ArityProvider = SubnetViewIter::ArityProvider;
+  using LinkProvider = SubnetViewIter::LinkProvider;
+  using Visitor = SubnetViewIter::Visitor;
 
   /// Traversal entry.
   struct Entry final {
@@ -178,7 +275,7 @@ public:
    * @param saveEntries       Indicates whether to save entries to optimize
    *                          next runs (if required).
    *
-   * @return false iff traversal is aborted.
+   * @return false if traversal is aborted.
    */
   bool runForward(const Visitor onBackwardDfsPop,
                   const Visitor onBackwardDfsPush,

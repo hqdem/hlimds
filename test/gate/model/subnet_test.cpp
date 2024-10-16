@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/subnet.h"
+#include "gate/model/subnetview.h"
 #include "gate/model/utils/subnet_checking.h"
 #include "gate/model/utils/subnet_cnf_encoder.h"
 #include "gate/model/utils/subnet_truth_table.h"
@@ -21,6 +22,8 @@ namespace eda::gate::model {
 
 using DinTruthTable = kitty::dynamic_truth_table;
 using SignsContainer = std::vector<std::vector<uint64_t>>;
+using SubnetView = model::SubnetView;
+using SubnetViewWalker = model::SubnetViewWalker;
 
 static bool truthTablesEqual(
     const SubnetID subnetID,
@@ -714,5 +717,32 @@ TEST(SubnetTest, SimFillingReplaced) {
       SubnetBuilder::invalidID
   });
 }
+
+TEST(SubnetTest, ViewCntOutAnd) {
+  auto builder = std::make_shared<SubnetBuilder>();
+
+  Subnet::LinkList inputs = builder->addInputs(3);
+  Subnet::Link link1 = builder->addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder->addCell(OR, inputs[1], inputs[2]);
+  Subnet::Link link3 = builder->addCell(AND, link1, link2);
+  builder->addOutput(link3);
+  SubnetView view(builder);
+
+  SubnetViewWalker walker(view);
+  size_t andOutCnt = 0;
+  walker.run([&andOutCnt](SubnetBuilder &parent,
+                const bool isIn,
+                const bool isOut,
+                const EntryID i) -> bool {
+    const auto &cell = parent.getCell(i);
+    if (cell.isAnd() || cell.isOut()) {
+      ++andOutCnt;
+      return true;
+    }
+    return false;
+  }, SubnetViewWalker::BACKWARD);
+  ASSERT_TRUE(andOutCnt == 2);
+}
+
 
 } // namespace eda::gate::model

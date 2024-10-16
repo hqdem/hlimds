@@ -18,9 +18,14 @@ namespace eda::gate::model {
 
 using SafePasser = optimizer::SafePasser;
 using ReverseSafePasser = optimizer::ReverseSafePasser;
+using SubnetBuilderPtr = std::shared_ptr<SubnetBuilder>;
+using Effect = SubnetBuilder::Effect;
 
 template<typename IterT>
-void printCellsTrav(SubnetBuilder &builder, IterT it, IterT contaiterEnd) {
+static void printCellsTrav(
+    SubnetBuilder &builder,
+    IterT it,
+    IterT contaiterEnd) {
   for (; it != contaiterEnd; ++it) {
     const auto &cell = builder.getEntry(*it).cell;
     std::cout << "Current entry ID: " << *it << "; input entries IDs: ";
@@ -32,7 +37,7 @@ void printCellsTrav(SubnetBuilder &builder, IterT it, IterT contaiterEnd) {
   std::cout << '\n';
 }
 
-void printBidirectCellsTrav(SubnetBuilder &builder) {
+static void printBidirectCellsTrav(SubnetBuilder &builder) {
   std::cout << "Forward entries traversal:\n";
   printCellsTrav(builder, (SafePasser)builder.begin(),
                  (SafePasser)builder.end());
@@ -41,12 +46,18 @@ void printBidirectCellsTrav(SubnetBuilder &builder) {
                  (ReverseSafePasser)builder.rend());
 }
 
-bool linksEqual(const Subnet::Link &targetLink, const Subnet::Link &srcLink) {
+static bool linksEqual(
+    const Subnet::Link &targetLink,
+    const Subnet::Link &srcLink) {
+
   return targetLink.out == srcLink.out &&
          targetLink.inv == srcLink.inv;
 }
 
-bool cellsEqual(const Subnet::Cell &targetCell, const Subnet::Cell &srcCell) {
+static bool cellsEqual(
+    const Subnet::Cell &targetCell,
+    const Subnet::Cell &srcCell) {
+
   if (!(targetCell.arity == srcCell.arity &&
         targetCell.flipFlop == srcCell.flipFlop &&
         targetCell.flipFlopID == srcCell.flipFlopID &&
@@ -61,6 +72,11 @@ bool cellsEqual(const Subnet::Cell &targetCell, const Subnet::Cell &srcCell) {
     }
   }
   return true;
+}
+
+static bool effectsEqual(const Effect &effect1, const Effect &effect2) {
+  return effect1.size == effect2.size && effect1.depth == effect2.depth &&
+      std::fabs(effect1.weight - effect2.weight) < 1e-6;
 }
 
 // Checks subnets equality. This method works only for subnets which cells have
@@ -1953,6 +1969,92 @@ TEST(ReplaceBuilderTest, WeightsEvalNewRoot) {
   );
 
   EXPECT_TRUE(std::fabs(effect.weight) < 1e-6);
+}
+
+TEST(ReplaceViewTest, DifferentViews) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(3);
+  Subnet::Link link1 = builder.addCell(AND, inputs[0], inputs[1]);
+  Subnet::Link link2 = builder.addCell(OR, inputs[1], inputs[2]);
+  Subnet::Link link3 = builder.addCell(AND, link1, link2);
+  builder.addOutput(link3);
+
+  /// RHS SubnetBuilder
+  SubnetBuilderPtr rhsBuilder = std::make_shared<SubnetBuilder>();
+
+  Subnet::LinkList rhsInputs = rhsBuilder->addInputs(3);
+  Subnet::Link rhsLink1 = rhsBuilder->addCell(OR, rhsInputs[0], rhsInputs[1]);
+  Subnet::Link rhsLink2 = rhsBuilder->addCell(AND, rhsInputs[1], rhsInputs[2]);
+  Subnet::Link rhsLink3 = rhsBuilder->addCell(XOR, rhsLink1, rhsLink2);
+  rhsBuilder->addOutput(rhsLink1);
+  rhsBuilder->addOutput(rhsLink3);
+
+  InOutMapping viewMapping1({0, 1}, {6});
+  SubnetView view1(rhsBuilder, viewMapping1);
+
+  InOutMapping viewMapping2({1, 0}, {6});
+  SubnetView view2(rhsBuilder, viewMapping2);
+
+  InOutMapping viewMapping3({0, 1, 2}, {7});
+  SubnetView view3(rhsBuilder, viewMapping3);
+
+  InOutMapping mapping1({0, 1}, {3});
+  const auto &effect1 = builder.evaluateReplace(view1, mapping1);
+  const auto correctEffect1 = SubnetBuilder::Effect{0, 0, 0.f};
+  InOutMapping mapping2({1, 2}, {4});
+  const auto &effect2 = builder.evaluateReplace(view2, mapping2);
+  const auto correctEffect2 = SubnetBuilder::Effect{0, 0, 0.f};
+  InOutMapping mapping3({0, 1, 2}, {3});
+  const auto &effect3 = builder.evaluateReplace(view3, mapping3);
+  const auto correctEffect3 = SubnetBuilder::Effect{-2, -1, 0.f};
+
+  EXPECT_TRUE(effectsEqual(effect1, correctEffect1));
+  EXPECT_TRUE(effectsEqual(effect2, correctEffect2));
+  EXPECT_TRUE(effectsEqual(effect3, correctEffect3));
+
+  builder.replace(view3, mapping3);
+  const SubnetID resultID3 = builder.make();
+
+  {
+    SubnetBuilder builder;
+    const auto &inputLinks = builder.addInputs(3);
+    const auto &orLink0 = builder.addCell(model::OR, inputLinks[0],
+        inputLinks[1]);
+    const auto &orLink1 = builder.addCell(model::OR, inputLinks[1],
+        inputLinks[2]);
+    const auto &andLink0 = builder.addCell(model::AND, inputLinks[1],
+        inputLinks[2]);
+    const auto &xorLink0 = builder.addCell(model::XOR, orLink0, andLink0);
+    const auto &andLink1 = builder.addCell(model::AND, xorLink0, orLink1);
+
+    builder.addOutput(andLink1);
+    subnetsEqual(resultID3, builder.make());
+  }
+}
+
+TEST(ReplaceViewTest, OneCell) {
+  SubnetBuilder builder;
+  addCellsToBuilder1(builder);
+
+  auto rhsBuilder = std::make_shared<SubnetBuilder>();
+  const auto rhsInputs = rhsBuilder->addInputs(1);
+  rhsBuilder->addOutput(rhsInputs[0]);
+  InOutMapping rhsMapping(EntryIDList{0}, EntryIDList{1});
+  SubnetView view(rhsBuilder, rhsMapping);
+
+  InOutMapping mapping(EntryIDList{3}, EntryIDList{3});
+  const auto effect = builder.evaluateReplace(view, mapping);
+  const auto correctEffect = SubnetBuilder::Effect{0, 0, 0.f};
+  EXPECT_TRUE(effectsEqual(effect, correctEffect));
+  builder.replace(view, mapping);
+  const SubnetID resultID = builder.make();
+
+  {
+    SubnetBuilder builder;
+    addCellsToBuilder1(builder);
+    subnetsEqual(resultID, builder.make());
+  }
 }
 
 } // namespace eda::gate::model

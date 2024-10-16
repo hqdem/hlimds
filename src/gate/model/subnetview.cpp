@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/model/subnetview.h"
+#include "gate/model/subnet.h"
 
 #include <cassert>
 #include <unordered_set>
@@ -202,78 +203,15 @@ SubnetViewWalker::SubnetViewWalker(const SubnetView &view,
     arityProvider(arityProvider),
     linkProvider(linkProvider) {}
 
-#define UTOPIA_ON_BACKWARD_DFS_POP(builder, isIn, isOut, cellID)\
-  if (onBackwardDfsPop && !onBackwardDfsPop(builder, isIn, isOut, cellID))\
-    goto ABORTED
-
-#define UTOPIA_ON_BACKWARD_DFS_PUSH(builder, isIn, isOut, cellID)\
-  if (onBackwardDfsPush && !onBackwardDfsPush(builder, isIn, isOut, cellID))\
-    goto ABORTED
-
 static bool traverseForward(SubnetBuilder &builder,
                             const InOutMapping &iomapping,
                             const SubnetViewWalker::ArityProvider arityProvider,
                             const SubnetViewWalker::LinkProvider linkProvider,
                             const SubnetViewWalker::Visitor onBackwardDfsPop,
                             const SubnetViewWalker::Visitor onBackwardDfsPush) {
-  builder.startSession();
-
-  std::unordered_set<EntryID> inout;
-  uint32_t nOutLeft{0};
-
-  for (const auto inputID : iomapping.inputs) {
-    builder.mark(inputID.idx);
-  } // for input
-
-  std::stack<std::pair<EntryID /* entry */, uint16_t /* link */>> stack;
-  for (const auto outputID : iomapping.outputs) {
-    if (!builder.isMarked(outputID.idx)) {
-      UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, true, outputID.idx);
-      stack.push({outputID.idx, 0});
-    } else {
-      inout.insert(outputID.idx);
-    }
-  } // for output
-
-  nOutLeft = stack.size();
-
-  for (const auto inputID : iomapping.inputs) {
-    const auto isOut = (inout.find(inputID.idx) != inout.end());
-    UTOPIA_ON_BACKWARD_DFS_POP(builder, true, isOut, inputID.idx);
-  } // for input
-
-  while (!stack.empty()) {
-    auto &[i, j] = stack.top();
-    const auto arity = arityProvider(builder, i);
-
-    bool isFinished = true;
-    for (; j < arity; ++j) {
-      const auto link = linkProvider(builder, i, j);
-      if (!builder.isMarked(link.idx)) {
-        isFinished = false;
-        UTOPIA_ON_BACKWARD_DFS_PUSH(builder, false, false, link.idx);
-        stack.push({link.idx, 0});
-        break;
-      }
-    } // for link
-
-    if (isFinished) {
-      const auto isOut = (stack.size() <= nOutLeft);
-      UTOPIA_ON_BACKWARD_DFS_POP(builder, false, isOut, i);
-
-      builder.mark(i);
-      stack.pop();
-
-      nOutLeft -= isOut ? 1 : 0;
-    }
-  } // while stack
-
-  builder.endSession();
-  return true;
-
-ABORTED:
-  builder.endSession();
-  return false;
+  SubnetView view(std::make_shared<SubnetBuilder>(builder), iomapping);
+  SubnetViewWalker walker(view, arityProvider, linkProvider);
+  return walker.runForward(onBackwardDfsPop, onBackwardDfsPush);
 }
 
 static inline bool traverseForward(SubnetBuilder &builder,
@@ -303,34 +241,39 @@ bool SubnetViewWalker::runForward(const Visitor onBackwardDfsPop,
   if (entries && !onBackwardDfsPush) {
     return traverseForward(builder, *entries, onBackwardDfsPop);
   }
-  if (!saveEntries) {
-    return traverseForward(builder, view.getInOutMapping(),
-        arityProvider, linkProvider, onBackwardDfsPop, onBackwardDfsPush);
+  Visitor onBackwardDfsPopEx;
+  Visitor onBackwardDfsPushEx;
+  if (saveEntries) {
+    entries = std::make_unique<Entries>();
+    entries->reserve(builder.getCellNum());
+
+    bool doPop{onBackwardDfsPop != nullptr};
+    onBackwardDfsPopEx =
+        [this, &doPop, onBackwardDfsPop](SubnetBuilder &builder,
+            const bool isIn, const bool isOut, const EntryID entryID) -> bool {
+          doPop = doPop && onBackwardDfsPop(builder, isIn, isOut, entryID);
+          entries->emplace_back(isIn, isOut, entryID);
+          return true /* traverse all entries */;
+        };
+
+    bool doPush{onBackwardDfsPush != nullptr};
+    onBackwardDfsPushEx =
+        [&doPush, onBackwardDfsPush](SubnetBuilder &builder,
+            const bool isIn, const bool isOut, const EntryID entryID) -> bool {
+          doPush = doPush && onBackwardDfsPush(builder, isIn, isOut, entryID);
+          return true /* traverse all entries */;
+        };
   }
-
-  entries = std::make_unique<Entries>();
-  entries->reserve(builder.getCellNum());
-
-  bool doPop{onBackwardDfsPop != nullptr};
-  const Visitor onBackwardDfsPopEx =
-      [this, &doPop, onBackwardDfsPop](SubnetBuilder &builder,
-          const bool isIn, const bool isOut, const EntryID entryID) -> bool {
-        doPop = doPop && onBackwardDfsPop(builder, isIn, isOut, entryID);
-        entries->emplace_back(isIn, isOut, entryID);
-        return true /* traverse all entries */;
-      };
-
-  bool doPush{onBackwardDfsPush != nullptr};
-  const Visitor onBackwardDfsPushEx =
-      [&doPush, onBackwardDfsPush](SubnetBuilder &builder,
-          const bool isIn, const bool isOut, const EntryID entryID) -> bool {
-        doPush = doPush && onBackwardDfsPush(builder, isIn, isOut, entryID);
-        return true /* traverse all entries */;
-      };
-
-  return traverseForward(builder, view.getInOutMapping(),
-      arityProvider, linkProvider, onBackwardDfsPopEx,
-      (onBackwardDfsPush ? onBackwardDfsPushEx : nullptr));
+  const auto *onDfsPopPtr = onBackwardDfsPopEx ? &onBackwardDfsPopEx :
+      (onBackwardDfsPop ? &onBackwardDfsPop : nullptr);
+  const auto *onDfsPushPtr = onBackwardDfsPushEx ? &onBackwardDfsPushEx :
+      (onBackwardDfsPush ? &onBackwardDfsPush : nullptr);
+  auto it = SubnetViewIter(&view, SubnetViewIter::BEGIN, arityProvider,
+      linkProvider, onDfsPopPtr, onDfsPushPtr);
+  while (it != view.end() && !it.isAborted) {
+    ++it;
+  }
+  return !it.isAborted;
 }
 
 bool SubnetViewWalker::runBackward(const Visitor visitor,
@@ -353,6 +296,162 @@ bool SubnetViewWalker::runBackward(const Visitor visitor,
   }
 
   return traverseBackward(builder, *entries, visitor);
+}
+
+//===----------------------------------------------------------------------===//
+// Subnet View Iterator
+//===----------------------------------------------------------------------===//
+
+SubnetViewIter::SubnetViewIter(
+    const SubnetView *view,
+    const ConstructionT constructionT,
+    const Visitor *onBackwardDfsPop,
+    const Visitor *onBackwardDfsPush):
+  SubnetViewIter(view,
+                 constructionT,
+                 defaultArityProvider,
+                 defaultLinkProvider,
+                 onBackwardDfsPop,
+                 onBackwardDfsPush) {}
+
+SubnetViewIter::SubnetViewIter(
+    const SubnetView *view,
+    const ConstructionT constructionT,
+    const ArityProvider arityProvider,
+    const LinkProvider linkProvider,
+    const Visitor *onBackwardDfsPop,
+    const Visitor *onBackwardDfsPush):
+  view(view),
+  arityProvider(arityProvider),
+  linkProvider(linkProvider),
+  onBackwardDfsPop(onBackwardDfsPop),
+  onBackwardDfsPush(onBackwardDfsPush) {
+
+  isAborted = false;
+  switch (constructionT) {
+  case BEGIN:
+    prepareIteration();
+    if (nInLeft) {
+      nextPI();
+    } else {
+      operator++();
+    }
+    break;
+
+  case END:
+    entryLink = {SubnetBuilder::upperBoundID, 0};
+    break;
+
+  default:
+    assert(false && "Unknown iterator construction type.");
+  }
+}
+
+SubnetViewIter::reference SubnetViewIter::operator*() const {
+  return entryLink.first;
+}
+
+SubnetViewIter::pointer SubnetViewIter::operator->() const {
+  return &operator*();
+}
+
+SubnetViewIter &SubnetViewIter::operator++() {
+  SubnetBuilder &builder =
+      const_cast<SubnetBuilder &>(view->getParent().builder());
+  if (nInLeft) {
+    nextPI();
+    return *this;
+  }
+
+  if (stack.empty()) {
+    assert(entryLink.first != SubnetBuilder::upperBoundID);
+    entryLink = {SubnetBuilder::upperBoundID, 0};
+    return *this;
+  }
+
+  bool isFinished = false;
+  EntryID saveI = SubnetBuilder::invalidID;
+
+  while (!isFinished) {
+    auto &[i, j] = stack.top();
+    saveI = i;
+    const auto arity = arityProvider(builder, i);
+
+    isFinished = true;
+    for (; j < arity; ++j) {
+      const auto link = linkProvider(builder, i, j);
+      if (marked.find(link.idx) == marked.end()) {
+        isFinished = false;
+        if (onBackwardDfsPush && !isAborted &&
+            !(*onBackwardDfsPush)(builder, false, false, link.idx)) {
+          isAborted = true;
+        }
+        stack.push({link.idx, 0});
+        break;
+      }
+    } // for link
+  }
+
+  const auto isOut = (stack.size() <= nOutLeft);
+  if (onBackwardDfsPop && !isAborted &&
+      !(*onBackwardDfsPop)(builder, false, isOut, saveI)) {
+    isAborted = true;
+  }
+
+  marked.insert(saveI);
+  entryLink = {saveI, 0};
+  stack.pop();
+
+  nOutLeft -= isOut ? 1 : 0;
+
+  return *this;
+}
+
+SubnetViewIter SubnetViewIter::next() const {
+  return ++SubnetViewIter(*this);
+}
+
+void SubnetViewIter::prepareIteration() {
+  const InOutMapping &iomapping = view->getInOutMapping();
+  assert(iomapping.getOutNum());
+  SubnetBuilder &builder =
+      const_cast<SubnetBuilder &>(view->getParent().builder());
+  for (const auto inputID : iomapping.inputs) {
+    marked.insert(inputID.idx);
+  } // for input
+
+  for (const auto outputID : iomapping.outputs) {
+    if (marked.find(outputID.idx) == marked.end()) {
+      if (onBackwardDfsPush && !isAborted &&
+          !(*onBackwardDfsPush)(builder, false, true, outputID.idx)) {
+        isAborted = true;
+      }
+      stack.push({outputID.idx, 0});
+    } else {
+      inout.insert(outputID.idx);
+    }
+  } // for output
+
+  nOutLeft = stack.size();
+  nInLeft = iomapping.getInNum();
+}
+
+void SubnetViewIter::nextPI() {
+  //assert(nInLeft);
+
+  SubnetBuilder &builder =
+      const_cast<SubnetBuilder &>(view->getParent().builder());
+  const InOutMapping &iomapping = view->getInOutMapping();
+  const uint16_t curIn = iomapping.getInNum() - nInLeft;
+  const auto &inEntry = iomapping.getIn(curIn);
+  const auto isOut = (inout.find(inEntry.idx) != inout.end());
+
+  if (onBackwardDfsPop && !isAborted &&
+      !(*onBackwardDfsPop)(builder, true, isOut, inEntry.idx)) {
+    isAborted = true;
+  }
+  entryLink = {inEntry.idx, 0};
+  nInLeft--;
 }
 
 } // namespace eda::gate::model

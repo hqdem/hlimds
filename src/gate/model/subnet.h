@@ -297,6 +297,8 @@ struct std::hash<eda::gate::model::StrashKey> {
 
 namespace eda::gate::model {
 
+class SubnetView;
+
 class SubnetBuilder final {
   friend EntryIterator;
   friend SubnetObject;
@@ -701,6 +703,20 @@ public:
 
   /// Replaces the given single-output fragment w/ the given subnet (rhs).
   /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
+  /// Preconditions:
+  /// 1. Cell arities <= Cell::InPlaceLinks.
+  /// 2. SubnetView inner mapping maps its parent PIs and PO.
+  /// 3. SubnetView is fanout free.
+  void replace(
+      const SubnetView &rhs,
+      const InOutMapping &iomapping,
+      const CellActionCallback *onNewCell = nullptr,
+      const CellActionCallback *onEqualDepth = nullptr,
+      const CellActionCallback *onGreaterDepth = nullptr,
+      const CellActionCallback *onRecomputedDepth = nullptr);
+
+  /// Replaces the given single-output fragment w/ the given subnet (rhs).
+  /// rhsToLhs maps the rhs inputs and output to the subnet boundary cells.
   /// Precondition: cell arities <= Cell::InPlaceLinks.
   void replace(
       const SubnetID rhsID,
@@ -725,6 +741,12 @@ public:
   /// Returns the effect of the replacement with rhs.
   Effect evaluateReplace(
       const SubnetObject &rhs,
+      const InOutMapping &iomapping,
+      const CellWeightModifier *weightModifier = nullptr) const;
+
+  /// Returns the effect of the replacement with rhs.
+  Effect evaluateReplace(
+      const SubnetView &rhs,
       const InOutMapping &iomapping,
       const CellWeightModifier *weightModifier = nullptr) const;
 
@@ -815,6 +837,7 @@ private:
       const RhsIterable &rhsIterable,
       const EntryID rhsOutEntryID,
       const InOutMapping &iomapping,
+      std::unordered_map<EntryID, EntryID> &rhsToLhs,
       const std::function<EntryID(RhsIt iter, EntryID i)> &getEntryID,
       const CellWeightProvider *weightProvider = nullptr,
       const CellActionCallback *onNewCell = nullptr,
@@ -826,7 +849,6 @@ private:
   template <typename RhsContainer>
   Effect evaluateReplace(
       const RhsContainer &rhsContainer,
-      const EntryID rhsOutEntryID,
       const InOutMapping &iomapping,
       const CellWeightProvider *weightProvider = nullptr,
       const CellWeightModifier *weightModifier = nullptr) const;
@@ -837,7 +859,7 @@ private:
   float incOldLinksRefcnt(
       const RhsContainer &rhsContainer,
       const EntryID rhsEntryID,
-      const std::vector<EntryID> &rhsToLhs,
+      const std::unordered_map<EntryID, EntryID> &rhsToLhs,
       std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
       const CellWeightModifier *weightModifier) const;
 
@@ -847,7 +869,18 @@ private:
       const RhsContainer &rhsContainer,
       const RhsIterable &rhsIterable,
       const InOutMapping &iomapping,
+      std::unordered_map<EntryID, EntryID> &rhsToLhs,
       const std::function<EntryID(RhsIt iter, EntryID i)> &getEntryID,
+      std::unordered_set<EntryID> &reusedLhsEntries,
+      std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
+      const CellWeightProvider *weightProvider,
+      const CellWeightModifier *weightModifier) const;
+
+  /// Returns the add-effect of the replacement:
+  /// the number of cells (value of weight) added and new depth of the root.
+  Effect newEntriesEval(
+      const SubnetView &rhs,
+      const InOutMapping &iomapping,
       std::unordered_set<EntryID> &reusedLhsEntries,
       std::unordered_map<EntryID, uint32_t> &entryNewRefcount,
       const CellWeightProvider *weightProvider,
@@ -1132,7 +1165,12 @@ public:
   }
 
   const SubnetBuilder &builder() const {
-    assert(subnetBuilderPtr);
+    if (!subnetBuilderPtr) {
+      subnetBuilderPtr = (subnetID != OBJ_NULL_ID)
+          ? std::make_shared<SubnetBuilder>(subnetID)
+          : std::make_shared<SubnetBuilder>();
+    }
+
     return *subnetBuilderPtr;
   }
 
@@ -1150,7 +1188,7 @@ public:
     return subnetBuilderPtr;
   }
 
-  SubnetID make() {
+  SubnetID make() const {
     if (subnetID != OBJ_NULL_ID) {
       return subnetID;
     }
@@ -1177,8 +1215,8 @@ public:
   ~SubnetObject() = default;
 
 private:
-  std::shared_ptr<SubnetBuilder> subnetBuilderPtr{nullptr};
-  SubnetID subnetID{OBJ_NULL_ID};
+  mutable std::shared_ptr<SubnetBuilder> subnetBuilderPtr{nullptr};
+  mutable SubnetID subnetID{OBJ_NULL_ID};
 };
 
 } // namespace eda::gate::model

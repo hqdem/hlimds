@@ -17,7 +17,7 @@ using namespace eda::gate::model::utils;
 using BuilderPtr = std::shared_ptr<SubnetBuilder>;
 
 BDD addInputsAndConvert(BuilderPtr &builderPtr, Cudd &manager, BddMap &x) {
-  for (int i = 0; i < builderPtr->getInNum(); i++) {
+  for (size_t i = 0; i < builderPtr->getInNum(); i++) {
     x[i] = manager.bddVar(i);
   }
   SubnetView sv(builderPtr);
@@ -306,7 +306,7 @@ TEST(SubnetViewToBddTest, ForestAndTest) {
   Cudd manager(0, 0);
   BddMap x;
 
-  for (int i = 0; i < builderPtr->getInNum(); i++) {
+  for (size_t i = 0; i < builderPtr->getInNum(); i++) {
     x[i] = manager.bddVar(i);
   }
 
@@ -321,7 +321,7 @@ TEST(SubnetViewToBddTest, ForestAndTest) {
 TEST(SubnetViewToBddTest, nineAndTest) {
   auto builderPtr = std::make_shared<SubnetBuilder>();
   Subnet::LinkList list;
-  for (int i = 0; i < 9; ++i) {
+  for (size_t i = 0; i < 9; ++i) {
     list.push_back(builderPtr->addCell(IN));
   }
   Subnet::Link out = builderPtr->addCell(AND, list);
@@ -330,7 +330,7 @@ TEST(SubnetViewToBddTest, nineAndTest) {
   Cudd manager(0, 0);
   BddMap x;
 
-  for (int i = 0; i < builderPtr->getInNum(); i++) {
+  for (size_t i = 0; i < builderPtr->getInNum(); i++) {
     x[i] = manager.bddVar(i);
   }
 

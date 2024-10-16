@@ -183,12 +183,12 @@ std::shared_ptr<SubnetBuilder> AssociativeReordering::createBuilder(
       
       for (size_t j = 0; j < arity; ++j) {
         std::set<int> s = permut[i];
-        size_t idx = -1;
+        size_t idx = -1u;
         
         LinkList ll;
         
-        for (auto ID : s) {
-          if (ID != -1) {
+        for (model::EntryID ID : s) {
+          if (ID != -1u) {
             auto pred = [ID](Link l) { return l.idx == ID; };
             auto l = std::find_if(inputs.begin(), inputs.end(), pred);
             ll.push_back(*l); 

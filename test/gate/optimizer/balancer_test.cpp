@@ -88,27 +88,13 @@ void printBalancingInfo(SubnetBuilder &builder,
   EXPECT_EQ(expectedDepthAfter, depthAfterBalance);
 }
 
-TEST(Balancer, DoubleLinksSwap) {
-  SubnetBuilder builder;
-  const auto &inputs = builder.addInputs(8);
-  const auto &andLink0 = builder.addCell(model::AND, inputs[0], inputs[1]);
-  const auto &andLink1 = builder.addCell(model::AND, andLink0, inputs[2]);
-  const auto &andLink2 = builder.addCell(model::AND, inputs[3], inputs[4]);
-  const auto &andLink3 = builder.addCell(model::AND, andLink2, inputs[5]);
-  const auto &andLink4 = builder.addCell(model::AND, andLink3, inputs[6],
-                                         andLink1, inputs[7]);
-  builder.addOutput(andLink4);
-
-  printBalancingInfo(builder, 4, 3);
-}
-
 TEST(Balancer, SeveralLinksToSwap) {
   SubnetBuilder builder;
-  const auto &inputs = builder.addInputs(6);
-  const auto &andLink0 = builder.addCell(model::AND, inputs[4], inputs[5]);
-  const auto &andLink1 = builder.addCell(model::AND, inputs[3], andLink0);
+  const auto &inputs = builder.addInputs(5);
+  const auto &andLink0 = builder.addCell(model::AND, inputs[3], inputs[4]);
+  const auto &andLink1 = builder.addCell(model::AND, inputs[2], andLink0);
   const auto &andLink2 = builder.addCell(model::AND, inputs[0], inputs[1],
-                                         inputs[2], andLink1);
+                                         andLink1);
   builder.addOutput(andLink2);
 
   printBalancingInfo(builder, 4, 3);
@@ -239,46 +225,16 @@ TEST(Balancer, Arity3) {
   printBalancingInfo(builder, 4, 3);
 }
 
-TEST(Balancer, Arity4) {
+TEST(Balancer, Arity3_2) {
   SubnetBuilder builder;
-  const auto &inputs = builder.addInputs(8);
-  const auto &orLink0 = builder.addCell(model::OR, inputs[2], inputs[3]);
-  const auto &andLink0 = builder.addCell(model::AND, orLink0, inputs[4],
-                                         inputs[5], inputs[6]);
-  const auto &andLink1 = builder.addCell(model::AND, inputs[0], inputs[1],
-                                         andLink0, inputs[7]);
+  const auto &inputs = builder.addInputs(7);
+  const auto &orLink0 = builder.addCell(model::OR, inputs[0], inputs[1]);
+  const auto &orLink1 = builder.addCell(model::OR, inputs[2], inputs[3]);
+  const auto &andLink0 = builder.addCell(model::AND, orLink0, orLink1,
+                                         inputs[4]);
+  const auto &andLink1 = builder.addCell(model::AND, andLink0, inputs[5],
+                                         inputs[6]);
   builder.addOutput(andLink1);
-
-  printBalancingInfo(builder, 4, 3);
-}
-
-TEST(Balancer, Arity4_2) {
-  SubnetBuilder builder;
-  const auto &inputs = builder.addInputs(10);
-  const auto &orLink0 = builder.addCell(model::OR, inputs[2], inputs[3]);
-  const auto &andLink0 = builder.addCell(model::AND, orLink0, inputs[4],
-                                         inputs[5], inputs[6]);
-  const auto &andLink1 = builder.addCell(model::AND, inputs[8], inputs[9]);
-  const auto &andLink2 = builder.addCell(model::AND, inputs[7], andLink1);
-  const auto &andLink3 = builder.addCell(model::AND, inputs[0], inputs[1],
-                                         andLink0, andLink2);
-  builder.addOutput(andLink3);
-
-  printBalancingInfo(builder, 4, 3);
-}
-
-TEST(Balancer, Arity4LR) {
-  SubnetBuilder builder;
-  const auto &inputs = builder.addInputs(10);
-  const auto &andLink0 = builder.addCell(model::AND, inputs[3], inputs[4]);
-  const auto &andLink1 = builder.addCell(model::AND, inputs[5], inputs[6]);
-  const auto &andLink2 = builder.addCell(model::AND, inputs[1], inputs[2],
-                                         andLink0);
-  const auto &andLink3 = builder.addCell(model::AND, andLink1, inputs[7],
-                                         inputs[8]);
-  const auto &andLink4 = builder.addCell(model::AND, inputs[0], andLink2,
-                                         andLink3, inputs[9]);
-  builder.addOutput(andLink4);
 
   printBalancingInfo(builder, 4, 3);
 }

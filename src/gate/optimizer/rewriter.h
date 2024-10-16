@@ -28,6 +28,7 @@ class Rewriter final : public SubnetInPlaceTransformer {
 public:
   using InOutMapping = model::InOutMapping;
   using Subnet = model::Subnet;
+  using EntryID = model::EntryID;
   using SubnetBuilder = model::SubnetBuilder;
   using SubnetObject = model::SubnetObject;
   using SubnetView = model::SubnetView;
@@ -35,7 +36,7 @@ public:
   using Effect = SubnetBuilder::Effect;
   using CellActionCallback = SubnetBuilder::CellActionCallback;
   using CellCallbackCondition =
-      std::function<void(const uint32_t, const uint32_t, const uint32_t)>;
+      std::function<void(const EntryID, const uint32_t, const uint32_t)>;
 
   /**
    * @brief Constructs a rewriter.

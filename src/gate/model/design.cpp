@@ -203,9 +203,10 @@ DesignBuilder::SubnetToFFSet DesignBuilder::findFlipFlopPIs(
     const auto &subnet = Subnet::get(subnets[i].subnetID);
     for (EntryID inN = 0; inN < subnet.getInNum(); ++inN) {
       const EntryID inEntryID = subnet.getInIdx(inN);
-      const auto &inCell = subnet.getCell(inEntryID);
-      if (inCell.isFlipFlop()) {
-        flipFlopPIs[i].insert(inCell.flipFlopID);
+      const auto &inEntryDesc =
+          result.subnets[i].entryToDesc.find(inEntryID)->second;
+      if (inEntryDesc.flipFlop) {
+        flipFlopPIs[i].insert(inEntryDesc.flipFlopID);
       }
     }
   }
@@ -222,29 +223,30 @@ DesignBuilder::SubnetToSubnetSet DesignBuilder::findArcs(
   arcDesc.resize(subnets.size());
   for (size_t i = 0; i < subnets.size(); ++i) {
     const auto &subnet = Subnet::get(subnets[i].subnetID);
+    const auto &entryToDesc = subnets[i].entryToDesc;
     for (uint16_t outN = 0; outN < subnet.getOutNum(); ++outN) {
       const EntryID outEntryID = subnet.getOutIdx(outN);
-      const auto &outCell = subnet.getCell(outEntryID);
+      const auto &outDesc = entryToDesc.find(outEntryID)->second;
       const auto PILinking = getPIConnectionEntry(i);
       const auto POLinking = getPOConnectionEntry(i);
       if (PILinking.first) {
         adjList[i].insert(PISubnetEntryIdx);
         arcDesc[i][PISubnetEntryIdx] =
-            subnets[i].entryToDesc.find(PILinking.second)->second;
+            subnets[i].entryToDesc.find(PILinking.second)->second.connectionDesc;
       }
       if (POLinking.first) {
         adjList[i].insert(POSubnetEntryIdx);
         arcDesc[i][POSubnetEntryIdx] =
-            subnets[i].entryToDesc.find(POLinking.second)->second;
+            subnets[i].entryToDesc.find(POLinking.second)->second.connectionDesc;
       }
-      if (!outCell.isFlipFlop()) {
+      if (!outDesc.flipFlop) {
         continue;
       }
-      const auto flipFlopID = outCell.flipFlopID;
+      const auto flipFlopID = outDesc.flipFlopID;
       for (size_t j = 0; j < flipFlopPIs.size(); ++j) {
         if (flipFlopPIs[j].find(flipFlopID) != flipFlopPIs[j].end()) {
           adjList[j].insert(i);
-          arcDesc[j][i] = subnets[i].entryToDesc.find(outEntryID)->second;
+          arcDesc[j][i] = outDesc.connectionDesc;
         }
       }
     }

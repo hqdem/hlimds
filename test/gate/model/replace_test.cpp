@@ -59,8 +59,6 @@ static bool cellsEqual(
     const Subnet::Cell &srcCell) {
 
   if (!(targetCell.arity == srcCell.arity &&
-        targetCell.flipFlop == srcCell.flipFlop &&
-        targetCell.flipFlopID == srcCell.flipFlopID &&
         targetCell.more == srcCell.more &&
         targetCell.refcount == srcCell.refcount &&
         targetCell.type == srcCell.type)) {

@@ -151,7 +151,7 @@ SubnetID getNoBufsSubnet() {
 
 SubnetID getBufsSubnet2() {
   auto builder = std::make_shared<SubnetBuilder>();
-  const auto &links = builder->addInputs(5);
+  const auto &links = builder->addInputs(3);
   const auto &bufLink0 = builder->addCell(model::BUF, ~links[0]);
   const auto &orLink0 = builder->addCell(model::OR, bufLink0, links[1]);
   const auto &andLink0 = builder->addCell(model::AND, links[1], links[2]);
@@ -159,7 +159,7 @@ SubnetID getBufsSubnet2() {
   const auto &bufLink2 = builder->addCell(model::BUF, ~andLink0);
   const auto &andLink1 = builder->addCell(model::AND, links[0], bufLink2);
   const auto &xorLink0 = builder->addCell(model::XOR, bufLink1, orLink0,
-                                         andLink1, links[3], links[4]);
+                                          andLink1);
   const auto &bufLink3 = builder->addCell(model::BUF, ~xorLink0);
   builder->addOutput(bufLink3);
   return builder->make();
@@ -194,15 +194,14 @@ TEST(RewriterTest, ReduceTest3) {
   const SubnetID subnetID = getBufsSubnet2();
 
   auto builder = std::make_shared<SubnetBuilder>();
-  const auto &inputLinks = builder->addInputs(5);
+  const auto &inputLinks = builder->addInputs(3);
   const auto &orLink0 = builder->addCell(model::OR, inputLinks[0],
-                                        inputLinks[1]);
+                                         inputLinks[1]);
   const auto &andLink0 = builder->addCell(model::AND, inputLinks[1],
-                                         inputLinks[2]);
+                                          inputLinks[2]);
   const auto &andLink1 = builder->addCell(model::AND, inputLinks[0], andLink0);
   const auto &xorLink0 = builder->addCell(model::XOR, orLink0, orLink0,
-                                         andLink1, inputLinks[3],
-                                         inputLinks[4]);
+                                          andLink1);
   builder->addOutput(xorLink0);
 
   runTest(resynthesizer, subnetID, builder->make());

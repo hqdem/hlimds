@@ -32,8 +32,16 @@ public:
     ENABLE,
   };
 
+  /// Descriptor of cell out signal.
   struct ConnectionDesc final {
     SignalType signalType;
+  };
+
+  /// Descriptor of Subnet entry.
+  struct EntryDesc final {
+    ConnectionDesc connectionDesc;
+    bool flipFlop{false};
+    uint64_t flipFlopID{static_cast<uint64_t>(-1)};
   };
 
   /// Maps net links to subnet input/output cell indices.
@@ -41,7 +49,7 @@ public:
   /// Maps net cells to the subnet links corresponding to the output ports.
   using CellMap = std::unordered_map<CellID, Subnet::LinkList>;
   /// Maps subnet entry index to connection descriptor.
-  using EntryToDesc = std::unordered_map<EntryID, ConnectionDesc>;
+  using EntryToDesc = std::unordered_map<EntryID, EntryDesc>;
 
   using LinkDescVec = std::vector<std::pair<Link, ConnectionDesc>>;
   using LinkToDesc = std::unordered_map<Link, ConnectionDesc>;

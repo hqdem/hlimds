@@ -18,7 +18,8 @@ namespace eda::gate::optimizer {
  * basis (`SubnetBasis` struct).
  */
 struct SubnetInfo {
-  uint32_t inNum, outNum, innerNum, depth;
+  model::SubnetSz inNum, outNum, innerNum;
+  model::SubnetDepth depth;
   uint16_t maxArity;
   SubnetBasis basis;
 

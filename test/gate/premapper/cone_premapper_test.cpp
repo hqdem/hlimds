@@ -62,7 +62,7 @@ static void runConePremappers(const std::string &file) {
 }
 
 TEST(ConePremapperTest, ArityChecking) {
-  const size_t nIn = 5;
+  const size_t nIn = 3;
 
   const auto original = std::make_shared<Builder>();
   const auto links = original->addInputs(nIn);

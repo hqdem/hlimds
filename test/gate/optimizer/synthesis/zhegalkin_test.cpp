@@ -19,7 +19,7 @@ namespace eda::gate::optimizer::synthesis {
 
   using DinTruthTable = kitty::dynamic_truth_table;
   using Link = model::Subnet::Link;
-  using LinkList = std::vector<Link>;
+  using LinkList = model::Subnet::LinkList;
   using Polynomial = std::vector<uint64_t>;
   using Subnet = model::Subnet;
   using SubnetBuilder = model::SubnetBuilder;
@@ -99,8 +99,8 @@ TEST(Zhegalkin, correctTestOnDiffSizes) {
       ASSERT_EQ(r.apply(f, eda::util::toBinString(i, sizes[j])),
           kitty::get_bit(t, i));
     }
-  } 
-} 
+  }
+}
 
 // see if the "00000000" on 3 variables synthesizes a correct function
 TEST(Zhegalkin, correctTestOnAllZeroes) {
@@ -160,11 +160,11 @@ TEST(Zhegalkin, subnetToSubnetOn4Vars) {
   LinkList output;
   output.push_back(builder.addCell(model::AND, input[1], input[3]));
   output.push_back(builder.addCell(model::AND, input[0], input[1], input[3]));
-  output.push_back(builder.addCell(model::AND, input[0], input[1], 
+  output.push_back(builder.addCell(model::AND, input[0], input[1],
     input[2], input[3]));
 
   output.push_back(split);
-  
+
   builder.addOutput(builder.addCell(model::XOR, output));
 
   const auto &subnet = Subnet::get(builder.make());
@@ -173,7 +173,7 @@ TEST(Zhegalkin, subnetToSubnetOn4Vars) {
   testSubnetToSubnet(net, subnet);
 }
 
-// Test if the "synthesize()" method works correctly 
+// Test if the "synthesize()" method works correctly
 // (it generates Subnet that is equal to the truth table it's based on)
 TEST(Zhegalkin, subnetToTTOn2Vars) { testSubnetToTruthTable(2); }
 

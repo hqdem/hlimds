@@ -15,20 +15,19 @@
 
 namespace eda::gate::model {
 
+struct SubnetLink;
+
+using EntryID = uint64_t;
+using SubnetSz = uint64_t;
+using SubnetDepth = uint32_t;
+using SubnetLinkList = std::vector<SubnetLink>;
+
 /// Link source.
-template <typename SubnetSize>
 struct SubnetLink final {
-  using SubnetLinkList = std::vector<SubnetLink<SubnetSize>>;
-
-  SubnetLink(SubnetSize idx, uint8_t out, bool inv):
+  SubnetLink(EntryID idx, uint8_t out, bool inv):
       idx(idx), out(out), inv(inv) {}
-
-  SubnetLink(SubnetSize idx, bool inv):
-      SubnetLink(idx, 0, inv) {}
-
-  explicit SubnetLink(SubnetSize idx):
-      SubnetLink(idx, false) {}
-
+  SubnetLink(EntryID idx, bool inv): SubnetLink(idx, 0, inv) {}
+  explicit SubnetLink(EntryID idx): SubnetLink(idx, false) {}
   SubnetLink(): SubnetLink(0) {}
 
   SubnetLink operator~() const {
@@ -44,36 +43,29 @@ struct SubnetLink final {
   }
 
   /// Entry index.
-  SubnetSize idx : sizeof(SubnetSize) <= 4 ? 28 : 60;
+  EntryID idx : 60;
   /// Output port.
   uint32_t out : 3;
   /// Invertor flag (for invertor graphs, e.g. AIG).
   uint32_t inv : 1;
 };
+static_assert(sizeof(SubnetLink) == 8);
 
 /// Cell entry.
-template <typename SubnetSize>
 struct SubnetCell final {
-  using SubnetLinkList = typename SubnetLink<SubnetSize>::SubnetLinkList;
-
-  static constexpr auto FlipFlopBits = 32;
   static constexpr auto ArityBits = 6;
   static constexpr auto RefCountBits = 20;
 
   static constexpr uint16_t MaxArity = (1 << ArityBits) - 1;
   static constexpr uint32_t MaxRefCount = (1 << RefCountBits) - 1;
 
-  static constexpr uint16_t InPlaceLinks = 5;
-  static constexpr uint16_t InEntryLinks = 8;
+  static constexpr uint16_t InPlaceLinks = 3;
+  static constexpr uint16_t InEntryLinks = 4;
 
   /// Constructs a cell.
   SubnetCell(
     CellTypeID typeID,
-    const SubnetLinkList &links,
-    bool flipFlop,
-    uint32_t flipFlopID):
-      flipFlop(flipFlop),
-      flipFlopID(flipFlopID),
+    const SubnetLinkList &links):
       arity(links.size()),
       more((links.size() + (InEntryLinks - 1) - InPlaceLinks) / InEntryLinks),
       refcount(0),
@@ -88,15 +80,6 @@ struct SubnetCell final {
     }
   }
 
-  /// Constructs a non-flip-flop cell.
-  SubnetCell(CellTypeID typeID, const SubnetLinkList &links):
-      SubnetCell(typeID, links, false, 0) {}
-
-  /// Constructs a flip-flop cell.
-  SubnetCell(
-    CellTypeID typeID, const SubnetLinkList &links, uint32_t flipFlopID):
-      SubnetCell(typeID, links, true, flipFlopID) {}
-
   bool isIn()   const { return type == CELL_TYPE_SID_IN;    }
   bool isOut()  const { return type == CELL_TYPE_SID_OUT;   }
   bool isZero() const { return type == CELL_TYPE_SID_ZERO;  }
@@ -107,8 +90,6 @@ struct SubnetCell final {
   bool isXor()  const { return type == CELL_TYPE_SID_XOR;   }
   bool isMaj()  const { return type == CELL_TYPE_SID_MAJ;   }
   bool isNull() const { return type == CellTypeID::NullSID; }
-
-  bool isFlipFlop() const { return flipFlop; }
 
   CellTypeID getTypeID() const { return CellTypeID::makeFID(type); }
   const CellType &getType() const { return CellType::get(getTypeID()); }
@@ -136,11 +117,6 @@ struct SubnetCell final {
     refcount--;
   }
 
-  /// Flip-flop input/output flag.
-  uint64_t flipFlop : 1;
-  /// Unique flip-flop identifier (for flip-flip inputs/outputs).
-  uint64_t flipFlopID : FlipFlopBits;
-
   /// Cell arity.
   uint64_t arity : ArityBits;
   /// Number of entries for additional links.
@@ -153,33 +129,33 @@ struct SubnetCell final {
   uint32_t type;
 
   /// Input links.
-  SubnetLink<SubnetSize> link[InPlaceLinks];
+  SubnetLink link[InPlaceLinks];
 };
+static_assert(sizeof(SubnetCell) == 32);
 
 /// Generalized entry: a cell or an array of additional links.
-template <typename SubnetSize>
 union SubnetEntry {
-  using SubnetLinkList = typename SubnetLink<SubnetSize>::SubnetLinkList;
-
   SubnetEntry() {}
 
   SubnetEntry(CellTypeID typeID, const SubnetLinkList &links):
       cell(typeID, links) {}
 
   SubnetEntry(
-      CellTypeID typeID, const SubnetLinkList &links, uint32_t flipFlopID):
-      cell(typeID, links, flipFlopID) {}
-
+    CellTypeID typeID, const SubnetLinkList &links, uint32_t flipFlopID):
+      cell(typeID, links) {}
   SubnetEntry(const SubnetLinkList &links, uint16_t startWith) {
     const uint16_t size = links.size() - startWith;
-    constexpr auto inEntryLinks = SubnetCell<SubnetSize>::InEntryLinks;
-    for (uint16_t i = 0; i < size && i < inEntryLinks; ++i) {
+    for (uint16_t i = 0;
+         i < size && i < SubnetCell::InEntryLinks;
+         ++i) {
+
       link[i] = links[startWith + i];
     }
   }
 
-  SubnetCell<SubnetSize> cell;
-  SubnetLink<SubnetSize> link[SubnetCell<SubnetSize>::InEntryLinks];
+  SubnetCell cell;
+  SubnetLink link[SubnetCell::InEntryLinks];
 };
+static_assert(sizeof(SubnetEntry) == 32);
 
 } // namespace eda::gate::model

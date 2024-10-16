@@ -127,7 +127,7 @@ static void printAllArcs(
     std::ostream &out,
     const DesignBuilder &builder,
     std::unordered_set<size_t> &printedLabels,
-    uint32_t &maxSubnetSize) {
+    SubnetSz &maxSubnetSize) {
 
   const size_t nSubnet = builder.getSubnetNum();
   bool inOutLink = false;
@@ -173,7 +173,7 @@ std::ostream &operator <<(std::ostream &out, const DesignBuilder &builder) {
   out << "digraph " << builder.getName() << " {\n";
   out << "graph [ranksep=2.0];\n";
 
-  uint32_t maxSubnetSize = 0;
+  SubnetSz maxSubnetSize = 0;
   std::unordered_set<size_t> printedLabels;
 
   printAllArcs(out, builder, printedLabels, maxSubnetSize);

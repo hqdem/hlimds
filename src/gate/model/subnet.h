@@ -315,6 +315,8 @@ public:
   using CellWeightModifier = std::function<float(float, uint16_t)>;
   /// Performs a certain action in a certain situation.
   using CellActionCallback = std::function<void(EntryID)>;
+  /// Checks if a cell type satisfies some condition.
+  using CellTypePredicate = std::function<bool(CellTypeID)>;
 
   /// Fanouts container wrapper;
   using FanoutsContainer = std::vector<EntryID>;
@@ -522,6 +524,11 @@ public:
   /// Adds a multi-output general-type cell.
   LinkList addMultiOutputCell(CellTypeID typeID, const LinkList &links);
 
+  /// Adds a multi-output general-type cell and performs inlining.
+  LinkList addCellRecursively(CellTypeID typeID,
+                              const LinkList &links,
+                              const CellTypePredicate inlinePredicate);
+
   /// Adds a single-output general-type cell.
   Link addCell(CellTypeID typeID, const LinkList &links);
 
@@ -584,12 +591,17 @@ public:
   /// Adds the subnet and connects it via the specified links.
   /// Does not add the output cells (it should be done explicitly).
   /// Returns the output links.
-  LinkList addSubnet(const Subnet &subnet, const LinkList &links,
-                     const CellWeightProvider *weightProvider = nullptr);
+  LinkList addSubnet(const Subnet &subnet,
+                     const LinkList &links,
+                     const CellWeightProvider *weightProvider = nullptr,
+                     const CellTypePredicate *inlinePredicate = nullptr);
 
-  LinkList addSubnet(SubnetID subnetID, const LinkList &links,
-                     const CellWeightProvider *weightProvider = nullptr) {
-    return addSubnet(Subnet::get(subnetID), links, weightProvider);
+  LinkList addSubnet(SubnetID subnetID,
+                     const LinkList &links,
+                     const CellWeightProvider *weightProvider = nullptr,
+                     const CellTypePredicate *inlinePredicate = nullptr) {
+    return addSubnet(
+        Subnet::get(subnetID), links, weightProvider, inlinePredicate);
   }
 
   /// Adds the single-output subnet and connects it via the specified links.

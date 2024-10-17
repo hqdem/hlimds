@@ -212,7 +212,12 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
         }
       }
 
-      const auto outs = newBuilder->addMultiOutputCell(match.typeID, newLinks);
+      const auto outs = newBuilder->addCellRecursively(match.typeID, newLinks,
+          [](auto typeID) /* inlining predicate */ {
+            const auto &type = model::CellType::get(typeID);
+            return type.getSubnet().isTechMapped();
+          });
+
       const auto link = outs[match.output];
       links[entryID] = match.inversion ? ~link : link;
 

@@ -273,6 +273,23 @@ Subnet::LinkList SubnetBuilder::addMultiOutputCell(
   return result;
 }
 
+Subnet::LinkList SubnetBuilder::addCellRecursively(
+    CellTypeID typeID,
+    const LinkList &links,
+    const CellTypePredicate inlinePredicate) {
+  assert(inlinePredicate && "Inlining predicate should be provided");
+
+  const auto &type = CellType::get(typeID);
+  const auto isApplicable = type.hasImpl() && type.isSubnet();
+
+  if (!isApplicable || !inlinePredicate(typeID)) {
+    return addMultiOutputCell(typeID, links);
+  }
+
+  // Resubstitute the cell w/ its implementation.
+  return addSubnet(type.getSubnet(), links, nullptr, &inlinePredicate);
+}
+
 Subnet::Link SubnetBuilder::addCell(CellTypeID typeID, const LinkList &links) {
   assert(typeID != OBJ_NULL_ID);
   assert(!CellType::get(typeID).isNegative()
@@ -322,7 +339,8 @@ Subnet::Link SubnetBuilder::addCellTree(
 Subnet::LinkList SubnetBuilder::addSubnet(
     const Subnet &subnet,
     const LinkList &links,
-    const CellWeightProvider *weightProvider) {
+    const CellWeightProvider *weightProvider,
+    const CellTypePredicate *inlinePredicate) {
   const auto &subnetEntries = subnet.getEntries();
 
   const auto offset = (entries.size() - subnet.getInNum());
@@ -333,7 +351,7 @@ Subnet::LinkList SubnetBuilder::addSubnet(
   for (SubnetSz i = subnet.getInNum(); i < subnetEntries.size(); ++i) {
     auto newLinks = subnet.getLinks(i);
 
-    for (uint16_t j = 0; j < newLinks.size(); ++j) {
+    for (uint32_t j = 0; j < newLinks.size(); ++j) {
       auto &newLink = newLinks[j];
       if (newLink.idx < subnet.getInNum()) {
         const bool inv = newLink.inv;
@@ -358,8 +376,12 @@ Subnet::LinkList SubnetBuilder::addSubnet(
           destrashEntry(existingEntryIt->second);
         }
       }
-      const auto link = addCell(cell.getTypeID(), newLinks);
-      setWeight(link.idx, weight(i, weightProvider));
+
+      const auto cellLinks = inlinePredicate
+          ? addCellRecursively(cell.getTypeID(), newLinks, *inlinePredicate)
+          : addMultiOutputCell(cell.getTypeID(), newLinks);
+
+      setWeight(cellLinks[0].idx, weight(i, weightProvider));
     }
   }
 

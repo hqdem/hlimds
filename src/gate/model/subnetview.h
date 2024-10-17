@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "gate/function/truth_table.h"
 #include "gate/model/iomapping.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/cut.h"
-#include "util/truth_table.h"
 
 #include <cstddef>
 #include <functional>
@@ -133,7 +133,6 @@ class SubnetView final {
 public:
   using Cut = optimizer::Cut;
   using Link = InOutMapping::Link;
-  using TruthTable = eda::util::TruthTable;
   using SubnetSz = model::SubnetSz;
 
   /// Constructs a subnet view corresponding to the whole subnet.

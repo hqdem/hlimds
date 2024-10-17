@@ -18,7 +18,7 @@ namespace eda::gate::techmapper {
 using StandardCell = library::StandardCell;
 
 std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
-    const util::TruthTable &truthTable,
+    const model::TruthTable &truthTable,
     const std::vector<model::EntryID> &entryIdxs) {
   std::vector<SubnetTechMapperBase::Match> matches;
 
@@ -118,7 +118,7 @@ std::vector<SubnetTechMapperBase::Match> PBoolMatcher::match(
     const std::shared_ptr<model::SubnetBuilder> &builder,
     const optimizer::Cut &cut) {
   if (cut.isTrivial()) {
-    const auto truthTable = util::getZeroTruthTable<util::TruthTable>(0);
+    const auto truthTable = model::getZeroTruthTable<model::TruthTable>(0);
     const auto isZero = builder->getCell(cut.rootID).isZero();
     return match(isZero ? truthTable : ~truthTable, {});
   }

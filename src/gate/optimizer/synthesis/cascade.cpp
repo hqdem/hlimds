@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/optimizer/synthesis/cascade.h"
-#include "util/truth_table.h"
 
 #include <cstring>
 #include <memory>
@@ -19,7 +18,7 @@ using CNF = CascadeSynthesizer::CNF;
 using Subnet = model::Subnet;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetObject = model::SubnetObject;
-using TruthTable = util::TruthTable;
+using TruthTable = model::TruthTable;
 
 void CascadeSynthesizer::initialize(
     CNF &output, int times, int num1, int num2, int num3) const {

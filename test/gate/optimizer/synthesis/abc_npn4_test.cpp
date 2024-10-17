@@ -20,7 +20,7 @@
 using Synthesizer = eda::gate::optimizer::AbcNpn4Synthesizer;
 
 inline void testHexString(uint16_t k, const std::string &hex) {
-  eda::util::TruthTable func(k);
+  eda::gate::model::TruthTable func(k);
   kitty::create_from_hex_string(func, hex);
 
   const auto result = Synthesizer::get().synthesize(func);
@@ -225,7 +225,7 @@ TEST(AbcNpn4Test, AllNpn4Test) {
 
     const auto hex = stream.str();
 
-    eda::util::TruthTable func(k);
+    eda::gate::model::TruthTable func(k);
     kitty::create_from_hex_string(func, hex);
 
     const auto npnCanon = kitty::exact_npn_canonization(func);

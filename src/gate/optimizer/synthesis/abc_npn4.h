@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/function/truth_table.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/singleton.h"
@@ -31,8 +32,8 @@ public:
   using Synthesizer::synthesize;
 
   model::SubnetObject synthesize(
-      const util::TruthTable &tt,
-      const util::TruthTable &,
+      const model::TruthTable &tt,
+      const model::TruthTable &,
       const uint16_t maxArity = -1) const override;
 
 #ifdef NPN4_USAGE_STATS

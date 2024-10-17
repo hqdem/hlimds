@@ -6,10 +6,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "gate/function/truth_table.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/npndb.h"
 #include "gate/optimizer/synthesizer.h"
-#include "util/truth_table.h"
 
 #include <filesystem>
 #include <string>
@@ -29,7 +29,7 @@ public:
 
   virtual ~DbSynthesizer() = default;
 
-  SubnetObject synthesize(const util::TTn &func, NpnDatabase &db) const {
+  SubnetObject synthesize(const model::TTn &func, NpnDatabase &db) const {
     const auto &iter = db.get(func);
     if (iter.isEnd()) {
       return SubnetObject();

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/function/truth_table.h"
 #include "gate/optimizer/synthesis/unitized_table.h"
 #include "gate/optimizer/synthesizer.h"
 
@@ -43,7 +44,7 @@ public:
   using SubnetBuilder = eda::gate::model::SubnetBuilder;
   using SubnetID      = eda::gate::model::SubnetID;
   using SubnetObject  = eda::gate::model::SubnetObject;
-  using TruthTable    = util::TruthTable;
+  using TruthTable    = eda::gate::model::TruthTable;
   using UnitizedTable = eda::gate::optimizer::synthesis::UnitizedTable;
 
   /// Empty constructor.

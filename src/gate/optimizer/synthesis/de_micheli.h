@@ -57,7 +57,7 @@ public:
   using Link         = eda::gate::model::Subnet::Link;
   using LinkList     = eda::gate::model::Subnet::LinkList;
   using SubnetObject = eda::gate::model::SubnetObject;
-  using TruthTable   = util::TruthTable;
+  using TruthTable   = eda::gate::model::TruthTable;
 
   static constexpr size_t BOUND = 2000;
   static constexpr size_t OUTID = 4611686018427387903;

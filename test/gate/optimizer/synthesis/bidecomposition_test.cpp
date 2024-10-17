@@ -28,7 +28,7 @@ void BiDecompositionTest(size_t numVars) {
     for (int i = 0; i < (1 << numVars); ++i) {
       funcString += std::to_string(std::rand() & 1);
     }
-    eda::util::TruthTable tt(numVars);
+    eda::gate::model::TruthTable tt(numVars);
     kitty::create_from_binary_string(tt, funcString);
     const auto &subnet = biDecomposition.synthesize(tt).makeObject();
     EXPECT_EQ(tt, eda::gate::model::evaluate(subnet)[0]);

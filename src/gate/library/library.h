@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "gate/function/truth_table.h" //TODO: try to move to source
 #include "gate/library/library_types.h"
-#include "util/truth_table.h" //TODO: try to move to source
 
 #include <list>
 #include <string>
@@ -73,7 +73,7 @@ public:
 
   // TODO: should be moved somewhere else
   struct CanonInfo {
-    util::TruthTable ctt;
+    model::TruthTable ctt;
     util::NpnTransformation transform;
   };
 
@@ -108,7 +108,7 @@ private:
 
 
   using CellLogPair = std::pair<const StandardCell*, uint16_t>;
-  using CttMap = std::unordered_map<util::TruthTable, std::vector<CellLogPair>>;
+  using CttMap = std::unordered_map<model::TruthTable, std::vector<CellLogPair>>;
 
   void completePclasses();
   void completeP1classes(CttMap &existingCttP1);

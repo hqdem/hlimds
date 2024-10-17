@@ -85,7 +85,7 @@ SubnetView::SubnetView(const std::shared_ptr<SubnetBuilder> &builder,
   assert(!iomapping.outputs.empty());
 }
 
-std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
+std::vector<TruthTable> SubnetView::evaluateTruthTables(
     const InOutMapping::LinkList &entryLinks) const {
   std::vector<TruthTable> result(entryLinks.size());
 
@@ -100,16 +100,16 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
                              const bool isIn,
                              const bool isOut,
                              const EntryID i) -> bool {
-      const auto tt = util::getTruthTable<util::TT6>(
+      const auto tt = getTruthTable<TT6>(
           parent, arity, i, isIn, nIn++);
-      util::setTruthTable<util::TT6>(parent, i, tt);
+      setTruthTable<TT6>(parent, i, tt);
       return true /* continue traversal */;
     });
 
     for (size_t i = 0; i < entryLinks.size(); ++i) {
-      const auto tt = util::getTruthTable<util::TT6>(parent.builder(),
+      const auto tt = getTruthTable<TT6>(parent.builder(),
                                                      entryLinks[i].idx);
-      result[i] = util::convertTruthTable<util::TT6>(tt, arity);
+      result[i] = convertTruthTable<TT6>(tt, arity);
     }
   } else {
     std::vector<TruthTable> tables;
@@ -119,17 +119,17 @@ std::vector<SubnetView::TruthTable> SubnetView::evaluateTruthTables(
                                       const bool isIn,
                                       const bool isOut,
                                       const EntryID i) -> bool {
-      const auto tt = util::getTruthTable<TruthTable>(
+      const auto tt = getTruthTable<TruthTable>(
           parent, arity, i, isIn, nIn++);
       tables.push_back(tt);
-      util::setTruthTable<TruthTable>(parent, i, tables.back());
+      setTruthTable<TruthTable>(parent, i, tables.back());
       return true /* continue traversal */;
     });
 
     for (size_t i = 0; i < entryLinks.size(); ++i) {
-      const auto tt = util::getTruthTable<util::TTn>(parent.builder(),
+      const auto tt = getTruthTable<TTn>(parent.builder(),
                                                      entryLinks[i].idx);
-      result[i] = util::convertTruthTable<util::TTn>(tt, arity);
+      result[i] = convertTruthTable<TTn>(tt, arity);
     }
   }
 

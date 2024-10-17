@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/function/truth_table.h"
 #include "gate/model/subnetview.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/mffc.h"
@@ -15,7 +16,6 @@
 #include "gate/optimizer/safe_passer.h"
 #include "gate/optimizer/transformer.h"
 #include "util/bits.h"
-#include "util/truth_table.h"
 
 #include <string>
 

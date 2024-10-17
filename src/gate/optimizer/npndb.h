@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "gate/function/truth_table.h"
 #include "gate/model/serializer.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/subnet_info.h"
 #include "util/citerator.h"
 #include "util/kitty_utils.h"
 #include "util/serializer.h"
-#include "util/truth_table.h"
 
 #include "kitty/kitty.hpp"
 

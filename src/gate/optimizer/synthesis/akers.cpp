@@ -50,7 +50,7 @@ struct ConstantId {
 
 /// The variables for building the subnet.
 struct BuildVars {
-  eda::gate::model::SubnetBuilder &builder;
+  model::SubnetBuilder &builder;
   std::vector<size_t> idx;
 };
 

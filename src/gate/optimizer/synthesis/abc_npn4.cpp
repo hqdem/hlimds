@@ -85,16 +85,16 @@ struct Database final {
     Node():
         table(k), symbol(model::ZERO) {}
 
-    Node(const util::TruthTable &table, model::CellSymbol symbol):
+    Node(const model::TruthTable &table, model::CellSymbol symbol):
         table(table), symbol(symbol) {}
 
-    Node(const util::TruthTable &table,
+    Node(const model::TruthTable &table,
          model::CellSymbol symbol,
          model::Subnet::Link link0,
          model::Subnet::Link link1):
         table(table), symbol(symbol), link{link0, link1} {}
 
-    const util::TruthTable table;
+    const model::TruthTable table;
     const model::CellSymbol symbol;
     const model::Subnet::Link link[2];
   };
@@ -112,7 +112,7 @@ struct Database final {
   Database();
 
   /// Returns the subnetID for the given table.
-  model::SubnetID find(const util::TruthTable &tt) const;
+  model::SubnetID find(const model::TruthTable &tt) const;
 
   /// Stores precomputed AIGs for practical NPN classes.
   std::vector<Node> aig;
@@ -124,10 +124,10 @@ Database::Database() {
   static constexpr auto npn4Num = 222;
 
   aig.emplace_back();
-  aig.emplace_back(kitty::nth_var<util::TruthTable>(k, 0), model::IN);
-  aig.emplace_back(kitty::nth_var<util::TruthTable>(k, 1), model::IN);
-  aig.emplace_back(kitty::nth_var<util::TruthTable>(k, 2), model::IN);
-  aig.emplace_back(kitty::nth_var<util::TruthTable>(k, 3), model::IN);
+  aig.emplace_back(kitty::nth_var<model::TruthTable>(k, 0), model::IN);
+  aig.emplace_back(kitty::nth_var<model::TruthTable>(k, 1), model::IN);
+  aig.emplace_back(kitty::nth_var<model::TruthTable>(k, 2), model::IN);
+  aig.emplace_back(kitty::nth_var<model::TruthTable>(k, 3), model::IN);
 
   // Reconstruct the ABC forest.
   for (size_t i = 0;; ++i) {
@@ -185,8 +185,8 @@ Database::Database() {
   }
 }
 
-model::SubnetID Database::find(const util::TruthTable &tt) const {
-  const util::TruthTable ttk =
+model::SubnetID Database::find(const model::TruthTable &tt) const {
+  const model::TruthTable ttk =
       tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
 
   const auto npnCanon = kitty::exact_npn_canonization(ttk);
@@ -278,8 +278,8 @@ static Database database;
 #endif // NPN4_USAGE_STATS
 
 model::SubnetObject AbcNpn4Synthesizer::synthesize(
-    const util::TruthTable &tt,
-    const util::TruthTable &,
+    const model::TruthTable &tt,
+    const model::TruthTable &,
     const uint16_t maxArity) const {
 
   static std::vector<model::SubnetID> cache[k + 1] {
@@ -291,7 +291,7 @@ model::SubnetObject AbcNpn4Synthesizer::synthesize(
   };
 
 #ifdef NPN4_USAGE_STATS
-  const util::TruthTable
+  const model::TruthTable
       ttk = tt.num_vars() < k ? kitty::extend_to(tt, k) : tt;
 
   const auto npnCanon = kitty::exact_npn_canonization(ttk);

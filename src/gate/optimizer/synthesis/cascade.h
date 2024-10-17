@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/function/truth_table.h"
 #include "gate/model/subnet.h"
 #include "gate/optimizer/synthesizer.h"
 
@@ -28,7 +29,7 @@ public:
   /// Conjunctive normal form
   using CNF = std::vector<std::vector<int>>;
   using SubnetObject = model::SubnetObject;
-  using TruthTable = util::TruthTable;
+  using TruthTable = model::TruthTable;
 
   CascadeSynthesizer() {}
 

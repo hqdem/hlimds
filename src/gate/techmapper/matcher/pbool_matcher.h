@@ -8,18 +8,18 @@
 
 #pragma once
 
+#include "gate/function/truth_table.h"
 #include "gate/techmapper/matcher/matcher.h"
-#include "util/truth_table.h"
 
 namespace eda::gate::techmapper {
 
-class PBoolMatcher final : public Matcher<PBoolMatcher, util::TruthTable> {
+class PBoolMatcher final : public Matcher<PBoolMatcher, model::TruthTable> {
   using StandardCell = library::StandardCell;
 
 public:
   inline void match(
       std::vector<std::pair<StandardCell, uint16_t>> &scs,
-      const util::TruthTable &ctt) {
+      const model::TruthTable &ctt) {
 
     if (auto it = cells.find(ctt); it != cells.end()) {
       for (const auto &cell : it->second) {
@@ -29,7 +29,7 @@ public:
   }
 
   std::vector<SubnetTechMapperBase::Match> match(
-      const util::TruthTable &truthTable,
+      const model::TruthTable &truthTable,
       const std::vector<model::EntryID> &entryIdxs);
 
   std::vector<SubnetTechMapperBase::Match> match(

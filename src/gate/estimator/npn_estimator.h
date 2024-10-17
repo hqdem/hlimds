@@ -9,9 +9,9 @@
 #pragma once
 
 #include "gate/estimator/estimator.h"
+#include "gate/function/truth_table.h"
 #include "gate/model/subnet.h"
 #include "util/kitty_utils.h"
-#include "util/truth_table.h"
 
 #include "kitty/kitty.hpp"
 

@@ -18,7 +18,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace eda::util {
+namespace eda::gate::model {
 
 //===----------------------------------------------------------------------===//
 // Data types
@@ -281,70 +281,78 @@ inline TTn convertTruthTable<TT6>(const TT6 &tt, size_t arity) {
 // Truth table calculator
 //===----------------------------------------------------------------------===//
 
-using SB   = gate::model::SubnetBuilder;
-using Link = gate::model::Subnet::Link;
-using Cell = gate::model::Subnet::Cell;
-
 template <typename TT>
-inline const TT &getTruthTable(const SB &builder, size_t i) {
+inline const TT &getTruthTable(
+    const SubnetBuilder &builder, size_t i) {
   assert(false && "Specialization is required");
   static TT tt{};
   return tt;
 }
 
 template <>
-inline const TTn &getTruthTable<TTn>(const SB &builder, size_t i) {
+inline const TTn &getTruthTable<TTn>(
+    const SubnetBuilder &builder, size_t i) {
   return *builder.getDataPtr<TTn>(i);
 }
 
 template <>
-inline const TT4 &getTruthTable<TT4>(const SB &builder, size_t i) {
+inline const TT4 &getTruthTable<TT4>(
+    const SubnetBuilder &builder, size_t i) {
   return builder.getDataVal<TT4>(i);
 }
 
 template <>
-inline const TT5 &getTruthTable<TT5>(const SB &builder, size_t i) {
+inline const TT5 &getTruthTable<TT5>(
+    const SubnetBuilder &builder, size_t i) {
   return builder.getDataVal<TT5>(i);
 }
 
 template <>
-inline const TT6 &getTruthTable<TT6>(const SB &builder, size_t i) {
+inline const TT6 &getTruthTable<TT6>(
+    const SubnetBuilder &builder, size_t i) {
   return builder.getDataVal<TT6>(i);
 }
 
 template <typename TT>
-inline void setTruthTable(SB &builder, size_t i, const TT &tt) {
+inline void setTruthTable(
+    SubnetBuilder &builder, size_t i, const TT &tt) {
   assert(false && "Specialization is required");
 }
 
 template <>
-inline void setTruthTable<TTn>(SB &builder, size_t i, const TTn &tt) {
+inline void setTruthTable<TTn>(
+    SubnetBuilder &builder, size_t i, const TTn &tt) {
   builder.setDataPtr(i, &tt /* Data should be alive */);
 }
 
 template <>
-inline void setTruthTable<TT4>(SB &builder, size_t i, const TT4 &tt) {
+inline void setTruthTable<TT4>(
+    SubnetBuilder &builder, size_t i, const TT4 &tt) {
   builder.setDataVal<TT4>(i, tt);
 }
 
 template <>
-inline void setTruthTable<TT5>(SB &builder, size_t i, const TT5 &tt) {
+inline void setTruthTable<TT5>(
+    SubnetBuilder &builder, size_t i, const TT5 &tt) {
   builder.setDataVal<TT5>(i, tt);
 }
 
 template <>
-inline void setTruthTable<TT6>(SB &builder, size_t i, const TT6 &tt) {
+inline void setTruthTable<TT6>(
+    SubnetBuilder &builder, size_t i, const TT6 &tt) {
   builder.setDataVal<TT6>(i, tt);
 }
 
 template <typename TT>
-inline TT getTruthTable(const SB &builder, const Link &link) {
+inline TT getTruthTable(
+    const SubnetBuilder &builder, const Subnet::Link &link) {
   const auto &tt = getTruthTable<TT>(builder, link.idx);
   return link.inv ? ~tt : tt;
 }
 
 template <typename TT>
-inline TT getTruthTable(const SB &builder, size_t i, size_t j) {
+inline TT getTruthTable(
+    const SubnetBuilder &builder, size_t i, size_t j) {
   return getTruthTable<TT>(builder, builder.getLink(i, j));
 }
 
@@ -354,12 +362,14 @@ inline TT getInTruthTable(size_t arity, size_t i) {
 }
 
 template <typename TT>
-inline TT getBufTruthTable(const SB &builder, const Cell &cell) {
+inline TT getBufTruthTable(
+    const SubnetBuilder &builder, const Subnet::Cell &cell) {
   return getTruthTable<TT>(builder, cell.link[0]);
 }
 
 template <typename TT>
-inline TT getAndTruthTable(const SB &builder, const Cell &cell, size_t i) {
+inline TT getAndTruthTable(
+    const SubnetBuilder &builder, const Subnet::Cell &cell, size_t i) {
   auto tt = getTruthTable<TT>(builder, cell.link[0]);
   for (size_t j = 1; j < cell.arity; ++j) {
     tt &= getTruthTable<TT>(builder, i, j);
@@ -368,7 +378,8 @@ inline TT getAndTruthTable(const SB &builder, const Cell &cell, size_t i) {
 }
 
 template <typename TT>
-inline TT getOrTruthTable(const SB &builder, const Cell &cell, size_t i) {
+inline TT getOrTruthTable(
+    const SubnetBuilder &builder, const Subnet::Cell &cell, size_t i) {
   auto tt = getTruthTable<TT>(builder, cell.link[0]);
   for (size_t j = 1; j < cell.arity; ++j) {
     tt |= getTruthTable<TT>(builder, i, j);
@@ -377,7 +388,8 @@ inline TT getOrTruthTable(const SB &builder, const Cell &cell, size_t i) {
 }
 
 template <typename TT>
-inline TT getXorTruthTable(const SB &builder, const Cell &cell, size_t i) {
+inline TT getXorTruthTable(
+    const SubnetBuilder &builder, const Subnet::Cell &cell, size_t i) {
   auto tt = getTruthTable<TT>(builder, cell.link[0]);
   for (size_t j = 1; j < cell.arity; ++j) {
     tt ^= getTruthTable<TT>(builder, i, j);
@@ -386,7 +398,8 @@ inline TT getXorTruthTable(const SB &builder, const Cell &cell, size_t i) {
 }
 
 template <typename TT>
-inline TT getMajTruthTable(const SB &builder, const Cell &cell, size_t i) {
+inline TT getMajTruthTable(
+    const SubnetBuilder &builder, const Subnet::Cell &cell, size_t i) {
   auto tt = getTruthTable<TT>(builder, cell.link[0]);
   clearTruthTable<TT>(tt);
 
@@ -411,7 +424,7 @@ inline TT getMajTruthTable(const SB &builder, const Cell &cell, size_t i) {
 
 template <typename TT>
 inline TT getTruthTable(
-    const SB &builder, size_t arity, size_t i, bool isIn, size_t nIn) {
+    const SubnetBuilder &builder, size_t arity, size_t i, bool isIn, size_t nIn) {
   const auto &cell = builder.getCell(i);
 
   if (isIn) {
@@ -460,7 +473,7 @@ inline TruthTable computeCare(const std::vector<TruthTable> &tables) {
   return care;
 }
 
-} // namespace eda::util
+} // namespace eda::gate::model
 
 namespace std {
 
@@ -477,5 +490,3 @@ struct hash<kitty::dynamic_truth_table> {
 };
 
 } // namespace std
-
-

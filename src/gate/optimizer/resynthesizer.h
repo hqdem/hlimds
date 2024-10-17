@@ -9,10 +9,10 @@
 #pragma once
 
 #include "gate/function/bdd.h"
+#include "gate/function/truth_table.h"
 #include "gate/model/subnetview.h"
 #include "gate/model/utils/subnetview_to_bdd.h"
 #include "gate/optimizer/synthesizer.h"
-#include "util/truth_table.h"
 
 #include <cassert>
 #include <cstdint>
@@ -63,7 +63,7 @@ private:
 };
 
 template<>
-inline util::TruthTable construct<util::TruthTable>(
+inline model::TruthTable construct<model::TruthTable>(
     const model::SubnetView &window) {
   return window.evaluateTruthTable();
 }

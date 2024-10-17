@@ -68,7 +68,7 @@ static CanonInfo getCanonF(uint64_t functionBinRep) {
   std::reverse(binaryString.begin(), binaryString.end());
   binaryString.resize(1<<NUMVAR);// kitty wants string to have exact number of characters
   std::reverse(binaryString.begin(), binaryString.end());
-  util::TruthTable tt(NUMVAR);
+  model::TruthTable tt(NUMVAR);
   kitty::create_from_binary_string(tt, binaryString);
   auto epc = kitty::exact_p_canonization(tt);
   auto canonTt = util::getTT(epc);
@@ -76,8 +76,8 @@ static CanonInfo getCanonF(uint64_t functionBinRep) {
   return {canonTt, transform};
 }
 
-static std::set<util::TruthTable> generateP2classes() {
-  std::set<util::TruthTable> eqClasses;
+static std::set<model::TruthTable> generateP2classes() {
+  std::set<model::TruthTable> eqClasses;
   for (size_t functionBinRep = 0; functionBinRep < 16; ++functionBinRep) {
     auto canon = getCanonF<2>(functionBinRep);
     eqClasses.insert(canon.ctt);
@@ -85,8 +85,8 @@ static std::set<util::TruthTable> generateP2classes() {
   return eqClasses;
 }
 
-static std::set<util::TruthTable> generateP3classes() {
-  std::set<util::TruthTable> eqClasses;
+static std::set<model::TruthTable> generateP3classes() {
+  std::set<model::TruthTable> eqClasses;
   for (size_t functionBinRep = 0; functionBinRep < 256; ++functionBinRep) {
     auto canon = getCanonF<3>(functionBinRep);
     eqClasses.insert(canon.ctt);

@@ -7,11 +7,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/estimator/probabilistic_estimate.h"
+#include "gate/function/truth_table.h"
 #include "gate/model/utils/subnet_truth_table.h"
 #include "gate/optimizer/reconvergence.h"
 #include "gate/optimizer/refactorer.h"
-
-#include "util/truth_table.h"
 
 namespace eda::gate::optimizer {
 
@@ -42,7 +41,7 @@ void Refactorer::nodeProcessing(const std::shared_ptr<SubnetBuilder> &builder,
       roots[i] = rootLinks[i].idx;
     }
     auto careWindow = getReconvergentCut(builder, roots, careCutSize);
-    window.setCare(util::computeCare(careWindow.evaluateTruthTables()));
+    window.setCare(model::computeCare(careWindow.evaluateTruthTables()));
   }
 
   auto newCone = resynthesizer.resynthesize(window, 2);

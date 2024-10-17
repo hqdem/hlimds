@@ -9,8 +9,8 @@
 #pragma once
 
 #include "gate/function/bdd.h"
+#include "gate/function/truth_table.h"
 #include "gate/model/subnet.h"
-#include "util/truth_table.h"
 
 #include <cassert>
 #include <cstdint>
@@ -34,7 +34,7 @@ public:
    */
   virtual model::SubnetObject synthesize(
       const IR &ir,
-      const util::TruthTable &care,
+      const model::TruthTable &care,
       const uint16_t maxArity = -1) const = 0;
 
   /**
@@ -44,14 +44,14 @@ public:
   model::SubnetObject synthesize(
       const IR &ir,
       const uint16_t maxArity = -1) const {
-    return synthesize(ir, util::TruthTable{}, maxArity);
+    return synthesize(ir, model::TruthTable{}, maxArity);
   }
 };
 
 /// BDD-based synthesizer.
 using BddSynthesizer = Synthesizer<model::Bdd>;
 
-/// Truth-table-based synthesizer.
-using TruthTableSynthesizer = Synthesizer<util::TruthTable>;
+/// TT-based synthesizer.
+using TruthTableSynthesizer = Synthesizer<model::TruthTable>;
 
 } // namespace eda::gate::optimizer

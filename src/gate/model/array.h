@@ -39,31 +39,31 @@ class ArrayIterator final {
 
 public:
   ArrayIterator(const ArrayIterator<T> &) = default;
-  ArrayIterator &operator =(const ArrayIterator<T> &) = default;
+  ArrayIterator &operator=(const ArrayIterator<T> &) = default;
 
-  bool operator ==(const ArrayIterator<T> &r) const {
+  bool operator==(const ArrayIterator<T> &r) const {
     return block == r.block && index == r.index;
   }
 
-  bool operator !=(const ArrayIterator<T> &r) const {
+  bool operator!=(const ArrayIterator<T> &r) const {
     return !(*this == r);
   }
 
   /// Prefix increment operator.
-  ArrayIterator<T> &operator ++() {
+  ArrayIterator<T> &operator++() {
     ++index;
     return *this;
   }
 
   /// Postfix increment operator.
-  ArrayIterator<T> operator ++(int) {
+  ArrayIterator<T> operator++(int) {
     auto temp = *this;
     ++*this;
     return temp;
   }
 
   /// Dereferencing operator.
-  T &operator *() {
+  T &operator*() {
     assert(block != nullptr);
     return reinterpret_cast<T&>(block->items[index]);
   }
@@ -110,8 +110,8 @@ public:
   /// Returns the end iterator.
   ArrayIterator<T> end() const { return ArrayIterator<T>(block, block->capacity); }
 
-  T &operator [](size_t i) { return block->items[i]; }
-  const T &operator [](size_t i) const { return block->items[i]; }
+  T &operator[](size_t i) { return block->items[i]; }
+  const T &operator[](size_t i) const { return block->items[i]; }
 
 private:
   /// Array identifier.

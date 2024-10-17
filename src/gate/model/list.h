@@ -27,7 +27,10 @@ class ListBlock final : public Object<ListBlock<T>, ListBlockID> {
   friend class Storage<ListBlock<T>>;
 
   static_assert(sizeof(T) == 8 || sizeof(T) == 16 || sizeof(T) == 32);
-  static constexpr size_t MinCapacity = 32 / sizeof(T);
+
+  static constexpr size_t HeadSize = 32;
+  static constexpr size_t DataSize = ListBlockID::Size - HeadSize;
+  static constexpr size_t MinCapacity = DataSize / sizeof(T);
 
 public:
   /// Returns the block size in bytes depending on the capacity.
@@ -39,9 +42,7 @@ public:
 
   /// Returns the block capacity depending on the size in bytes.
   static constexpr uint32_t getSizeInItems(size_t sizeInBytes) {
-    return sizeInBytes < ListBlockID::Size
-        ? 0
-        : (sizeInBytes - ListBlockID::Size) / sizeof(T) + MinCapacity;
+    return sizeInBytes <= HeadSize ? 0 : (sizeInBytes - HeadSize) / sizeof(T);
   }
 
   /// Allocates a block w/ the specified capacity.
@@ -56,7 +57,7 @@ public:
       const std::vector<T> &items, bool begin, bool end) {
     const auto blockID = allocate(items.size(), begin, end);
     auto *block = accessObject<ListBlock<T>>(blockID);
-    assert(block->capacity == items.size());
+    assert(block->capacity >= items.size());
     for (size_t i = 0; i < items.size(); ++i) {
       block->items[i] = items[i];
     }
@@ -83,7 +84,7 @@ public:
     }
   }
 
-  ListBlock<T> &operator =(const ListBlock<T> &r) = delete;
+  ListBlock<T> &operator=(const ListBlock<T> &r) = delete;
   ListBlock(const ListBlock<T> &r) = delete;
 
   /// Returns the pointer to the previous block.
@@ -145,18 +146,18 @@ class ListIterator final {
 
 public:
   ListIterator(const ListIterator<T> &) = default;
-  ListIterator &operator =(const ListIterator<T> &) = default;
+  ListIterator &operator=(const ListIterator<T> &) = default;
 
-  bool operator ==(const ListIterator<T> &r) const {
+  bool operator==(const ListIterator<T> &r) const {
     return blockID == r.blockID && index == r.index;
   }
 
-  bool operator !=(const ListIterator<T> &r) const {
+  bool operator!=(const ListIterator<T> &r) const {
     return !(*this == r);
   }
 
   /// Prefix increment operator.
-  ListIterator<T> &operator ++() {
+  ListIterator<T> &operator++() {
     assert(block != nullptr);
 
     if (block->size == 0 || index == block->last) {
@@ -174,14 +175,14 @@ public:
   }
 
   /// Postfix increment operator.
-  ListIterator<T> operator ++(int) {
+  ListIterator<T> operator++(int) {
     auto temp = *this;
     ++*this;
     return temp;
   }
 
   /// Dereferencing operator.
-  T &operator *() {
+  T &operator*() {
     assert(block != nullptr);
     return reinterpret_cast<T&>(block->items[index]);
   }

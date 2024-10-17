@@ -13,7 +13,7 @@ namespace eda::gate::model {
 static CellTypeAttr::PortVector convert(
     const CellTypeAttr::PortVector &io) {
   assert(io.size() <= CellTypeAttr::MaxPortNum);
-  CellTypeAttr::PortVector ports;
+  CellTypeAttr::PortVector ports(io.size());
 
   Port::Index index{0};
   Port::Width width{0};
@@ -37,8 +37,9 @@ static CellTypeAttr::PortVector convert(
 static CellTypeAttr::PortVector convert(
     const CellTypeAttr::PortWidths &widthIn,
     const CellTypeAttr::PortWidths &widthOut) {
-  assert(widthIn.size() + widthOut.size() <= CellTypeAttr::MaxPortNum);
-  CellTypeAttr::PortVector ports;
+  const auto size = widthIn.size() + widthOut.size();
+  assert(size <= CellTypeAttr::MaxPortNum);
+  CellTypeAttr::PortVector ports(size);
 
   Port::Index index{0};
   Port::Width width{0};

@@ -26,7 +26,7 @@ static inline std::string getInstanceName(
   if (type.isGate() && !type.isMaj() && !type.isSeqGate())
     return "";
 
-  // Instances of technological cells and IPs should be named.
+  // Instances of technological cells and macroblocks should be named.
   return fmt::format("{}_cell_{}", cellInfo.getType(), cellInfo.printingID);
 }
 
@@ -72,60 +72,80 @@ static inline void assignConstant(
       << " = " << (type.isZero() ? "0" : "1") << " ;\n";
 }
 
-static inline void defineInputBinding(
+static inline void bindInput(
     std::ostream &out, const NetPrinter::LinkInfo &linkInfo) {
   out << getLinkExpr(linkInfo);
 }
 
-static void defineInputBinding(
+static void bindInput(
     std::ostream &out,
     const NetPrinter::LinksInfo &linksInfo,
     size_t index,
-    size_t width) {
-  assert(width > 0);
+    const Port &port) {
+  assert(port.width > 0);
+  const auto bindByName = !port.getName().empty();
 
-  if (width == 1) {
-    defineInputBinding(out, linksInfo[index]);
+  if (bindByName) { 
+    out << "." << port.getName() << "( ";
+  }
+
+  if (port.width == 1) {
+    bindInput(out, linksInfo[index]);
   } else {
     out << "{ ";
     bool comma = false;
-    for (size_t i = 0; i < width; ++i) {
+    for (size_t i = 0; i < port.width; ++i) {
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
-      defineInputBinding(out, linksInfo[index + width - 1 - i]);
+      bindInput(out, linksInfo[index + port.width - 1 - i]);
       comma = true;
     }
     // Space before "}" is for escaped identifiers.
     out << " }";
   }
+
+  if (bindByName) {
+    // Space before ")" is for escaped identifiers.
+    out << " )";
+  }
 }
 
-static inline void defineOutputBinding(
+static inline void bindOutput(
     std::ostream &out, const NetPrinter::PortInfo &portInfo) {
   out << portInfo.getName();
 }
 
-static void defineOutputBinding(
+static void bindOutput(
     std::ostream &out,
     const NetPrinter::CellInfo &cellInfo,
     size_t index,
-    size_t width) {
-  assert(width > 0);
+    const Port &port) {
+  assert(port.width > 0);
+  const auto bindByName = !port.getName().empty();
 
-  if (width == 1) {
-    defineOutputBinding(out, NetPrinter::PortInfo(cellInfo, index));
+  if (bindByName) {
+    out << "." << port.getName() << "( ";
+  }
+
+  if (port.width == 1) {
+    bindOutput(out, NetPrinter::PortInfo(cellInfo, index));
   } else {
     out << "{ ";
     bool comma = false;
-    for (size_t i = 0; i < width; ++i) {
+    for (size_t i = 0; i < port.width; ++i) {
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
-      const auto upperBitIndex = index + width - 1 - i;
-      defineOutputBinding(out, NetPrinter::PortInfo(cellInfo, upperBitIndex));
+      const auto upperBitIndex = index + port.width - 1 - i;
+      bindOutput(out, NetPrinter::PortInfo(cellInfo, upperBitIndex));
       comma = true;
     }
     // Space before "}" is for escaped identifiers.
     out << " }";
+  }
+
+  if (bindByName) {
+    // Space before ")" is for escaped identifiers.
+    out << " )";
   }
 }
 
@@ -154,14 +174,14 @@ static void instantiateCell(
     for (uint16_t output = 0; output < type.getOutNum(); ++output) {
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
-      defineOutputBinding(out, NetPrinter::PortInfo(cellInfo, output));
+      bindOutput(out, NetPrinter::PortInfo(cellInfo, output));
       comma = true;
     }
 
     for (auto linkInfo : linksInfo) {
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
-      defineInputBinding(out, linkInfo);
+      bindInput(out, linkInfo);
       comma = true;
     }
   } else {
@@ -176,10 +196,10 @@ static void instantiateCell(
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
       if (port.input) {
-        defineInputBinding(out, linksInfo, input, port.width);
+        bindInput(out, linksInfo, input, port);
         input += port.width;
       } else {
-        defineOutputBinding(out, cellInfo, output, port.width);
+        bindOutput(out, cellInfo, output, port);
         output += port.width;
       }
       comma = true;

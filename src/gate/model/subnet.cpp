@@ -10,6 +10,7 @@
 #include "gate/model/subnet.h"
 #include "gate/model/subnetview.h"
 
+#include <cmath>
 #include <cstring>
 #include <queue>
 
@@ -261,7 +262,7 @@ const Subnet::Link *SubnetBuilder::getLinks(
 Subnet::LinkList SubnetBuilder::addMultiOutputCell(
     CellTypeID typeID, const LinkList &links) {
   const auto &type = CellType::get(typeID);
-  LinkList result(type.getOutNum());
+  LinkList result(std::max<size_t>(type.getOutNum(), 1));
 
   result[0] = addCell(typeID, links);
   const auto idx = result[0].idx;

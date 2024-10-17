@@ -125,7 +125,7 @@ enum ObjectTag : uint8_t {
 //------------------ = ObjectID<Tag, Bytes, |SID|, AlignZeroBits>
 using CellID         = ObjectID<TAG_CELL, 32, 40, 5>;
 using CellTypeID     = ObjectID<TAG_CELL_TYPE, 32, 32, 5>;
-using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 4096, 32, 12>;
+using CellTypeAttrID = ObjectID<TAG_CELL_TYPE_ATTR, 64, 32, 6>;
 using LinkEndID      = ObjectID<TAG_LINK_END, 8, 50, 3>;
 using LinkID         = ObjectID<TAG_LINK, 16, 50, 4>;
 using NetID          = ObjectID<TAG_NET, 64, 32, 6>;

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "gate/model/array.h"
 #include "gate/model/link.h"
 #include "gate/model/object.h"
 #include "gate/model/storage.h"
@@ -81,7 +82,7 @@ public:
 
   static constexpr PortIndex Unknown = std::numeric_limits<PortIndex>::max();
   static constexpr PortWidth MaxBitWidth = std::numeric_limits<PortWidth>::max();
-  static constexpr PortIndex MaxPortNum = 254;
+  static constexpr PortIndex MaxPortNum = std::numeric_limits<PortIndex>::max();
 
   static PortWidth checkBitWidth(const size_t w) {
     assert(w <= MaxBitWidth);
@@ -209,7 +210,7 @@ public:
   }
 
 private:
-  CellTypeAttr() {}
+  CellTypeAttr();
   CellTypeAttr(const PortVector &io);
   CellTypeAttr(const PortVector &io,
                const PhysicalProperties &props);
@@ -223,14 +224,14 @@ private:
   PhysicalProperties props;
 
   /// Input/output ports (inputs come before outputs).
-  Port ports[MaxPortNum];
+  const Array<Port> ports;
 
   /// Number of input (multi-bit) ports.
   uint16_t nInPort{Unknown};
   /// Number of output (multi-bit) ports.
   uint16_t nOutPort{Unknown};
 
-  uint8_t padding__[12];
+  uint8_t padding__[24];
 };
 
 static_assert(sizeof(CellTypeAttr) == CellTypeAttrID::Size);

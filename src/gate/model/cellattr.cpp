@@ -10,17 +10,18 @@
 
 namespace eda::gate::model {
 
-CellTypeAttr::CellTypeAttr(const PortVector &io):
-    nInPort(getInNum(io)), nOutPort(getOutNum(io)) {
-  assert(io.size() <= MaxPortNum);
+static CellTypeAttr::PortVector convert(
+    const CellTypeAttr::PortVector &io) {
+  assert(io.size() <= CellTypeAttr::MaxPortNum);
+  CellTypeAttr::PortVector ports;
 
-  PortIndex index{0};
-  PortWidth width{0};
+  Port::Index index{0};
+  Port::Width width{0};
 
-  PortIndex i{0}, j{nInPort};
+  Port::Index i{0}, j{CellTypeAttr::getInNum(io)};
   for (const auto &port : io) {
     assert(port.width);
-    PortIndex &k = port.input ? i : j;
+    Port::Index &k = port.input ? i : j;
 
     ports[k] = port;
     ports[k++].index = index;
@@ -29,22 +30,18 @@ CellTypeAttr::CellTypeAttr(const PortVector &io):
     width += port.width;
   }
 
-  assert(width <= MaxBitWidth);
+  assert(width <= CellTypeAttr::MaxBitWidth);
+  return ports;
 }
 
-CellTypeAttr::CellTypeAttr(const PortVector &io,
-                           const PhysicalProperties &props):
-    CellTypeAttr(io) {
-  setPhysProps(props);
-}
+static CellTypeAttr::PortVector convert(
+    const CellTypeAttr::PortWidths &widthIn,
+    const CellTypeAttr::PortWidths &widthOut) {
+  assert(widthIn.size() + widthOut.size() <= CellTypeAttr::MaxPortNum);
+  CellTypeAttr::PortVector ports;
 
-CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
-                           const PortWidths &widthOut):
-    nInPort(widthIn.size()), nOutPort(widthOut.size()) {
-  assert(widthIn.size() + widthOut.size() <= MaxPortNum);
-
-  PortIndex index{0};
-  PortWidth width{0};
+  Port::Index index{0};
+  Port::Width width{0};
 
   for (const auto w : widthIn) {
     assert(w);
@@ -60,8 +57,27 @@ CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
     width += w;
   }
 
-  assert(width <= MaxBitWidth);
+  assert(width <= CellTypeAttr::MaxBitWidth);
+  return ports;
 }
+
+CellTypeAttr::CellTypeAttr():
+    ports(ArrayBlock<Port>::allocate(0, true, true)) {}
+
+CellTypeAttr::CellTypeAttr(const PortVector &io):
+    ports(ArrayBlock<Port>::allocate(convert(io), true, true)),
+    nInPort(getInNum(io)), nOutPort(getOutNum(io)) {}
+
+CellTypeAttr::CellTypeAttr(const PortVector &io,
+                           const PhysicalProperties &props):
+    CellTypeAttr(io) {
+  setPhysProps(props);
+}
+
+CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
+                           const PortWidths &widthOut):
+    ports(ArrayBlock<Port>::allocate(convert(widthIn, widthOut), true, true)),
+    nInPort(widthIn.size()), nOutPort(widthOut.size()) {}
 
 CellTypeAttr::CellTypeAttr(const PortWidths &widthIn,
                            const PortWidths &widthOut,

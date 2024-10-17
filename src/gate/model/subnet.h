@@ -151,8 +151,7 @@ private:
   /// Topologically sorted array of entries.
   const Array<Entry> entries;
 
-  /// Tmp fields
-  uint64_t tmp1;
+  uint64_t padding__{0};
 };
 
 static_assert(sizeof(Subnet) == SubnetID::Size);

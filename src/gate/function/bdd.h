@@ -6,14 +6,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BDD_H
-#define BDD_H
+#pragma once
 
 #include "cuddObj.hh"
 
 namespace eda::gate::model {
 
-struct Bdd {
+struct Bdd final {
   ~Bdd() {
     //FIXME
     // delete cudd;
@@ -23,5 +22,3 @@ struct Bdd {
 };
 
 } // namespace eda::gate::model
-
-#endif // BDD_H

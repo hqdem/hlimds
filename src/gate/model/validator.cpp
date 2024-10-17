@@ -11,7 +11,7 @@
 #include <fmt/format.h>
 
 #define VALIDATE_BEGIN bool passed = true; {
-#define VALIDATE_END   }
+#define VALIDATE_END   } return passed;
 
 #define VALIDATE(logger, prop, msg)\
   if (!(prop)) {\
@@ -265,9 +265,9 @@ static bool validateBMux(const CellType &type, diag::Logger &logger) {
   VALIDATE_BEGIN
     VALIDATE_CELLTYPE_IN_PORTS(logger, type, 3);
     VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-    VALIDATE_CELLTYPE_IN_IN_WIDTH(logger, type, 1, 2);
-    VALIDATE_CELLTYPE_IN_IN_WIDTH(logger, type, 0, 1);
-    VALIDATE_CELLTYPE_IN_OUT_WIDTH(logger, type, 0, 0);
+    VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 1, 2);
+    VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 0, 1);
+    VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
   VALIDATE_END
 }
 
@@ -297,7 +297,7 @@ static bool validateMux(const CellType &type, diag::Logger &logger) {
 }
 
 /// Validates BDEMUX.
-static bool validateDemux(const CellType &type, diag::Logger &logger) {
+static bool validateBDemux(const CellType &type, diag::Logger &logger) {
   // Bitwise DEMUX 1-to-2 (S[*], X[*]):
   // OUT[s][i] = (S[i] == s) ? X[i] : 0, s=0,1.
   VALIDATE_BEGIN

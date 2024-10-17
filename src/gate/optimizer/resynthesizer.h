@@ -8,13 +8,11 @@
 
 #pragma once
 
-#include "gate/model/bdd.h"
+#include "gate/function/bdd.h"
 #include "gate/model/subnetview.h"
 #include "gate/model/utils/subnetview_to_bdd.h"
 #include "gate/optimizer/synthesizer.h"
 #include "util/truth_table.h"
-
-#include "cuddObj.hh"
 
 #include <cassert>
 #include <cstdint>

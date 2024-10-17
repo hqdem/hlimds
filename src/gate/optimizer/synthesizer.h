@@ -8,11 +8,9 @@
 
 #pragma once
 
-#include "gate/model/bdd.h"
+#include "gate/function/bdd.h"
 #include "gate/model/subnet.h"
 #include "util/truth_table.h"
-
-#include <cuddObj.hh>
 
 #include <cassert>
 #include <cstdint>

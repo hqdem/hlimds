@@ -9,7 +9,7 @@
 #ifndef DSD_TO_GNET_H
 #define DSD_TO_GNET_H
 
-#include "gate/model/bdd.h"
+#include "gate/function/bdd.h"
 #include "gate/model/subnet.h"
 #include "gate/model/subnetview.h"
 #include "gate/model/utils/subnetview_to_bdd.h"

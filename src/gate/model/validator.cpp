@@ -10,6 +10,9 @@
 
 #include <fmt/format.h>
 
+#define VALIDATE_BEGIN bool passed = true; {
+#define VALIDATE_END   }
+
 #define VALIDATE(logger, prop, msg)\
   if (!(prop)) {\
     UTOPIA_RAISE_ERROR(logger, msg);\
@@ -92,374 +95,450 @@ static inline std::string debugInfo(const CellType &type) {
 
 /// Validates IN.
 static bool validateIn(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 0);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 0);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates OUT.
 static bool validateOut(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 1);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 0);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 1);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 0);
+  VALIDATE_END
 }
 
 /// Validates ZERO and ONE.
 static bool validateConst(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 0);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 0);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates BUF and NOT.
 static bool validateLogic1(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 1);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 1);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates AND, OR, XOR, NAND, NOR, and XNOR.
 static bool validateLogic2plus(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS_ge(logger, type, 2);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS_ge(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates MAJ.
 static bool validateLogicMaj(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS_ge(logger, type, 3);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS_ge(logger, type, 3);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates DFF*.
 static bool validateDff(const CellType &type, diag::Logger &logger) {
   // D flip-flop (Q, D, CLK):
   // Q(t) = CLK(posedge) ? D : Q(t-1).
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates sDFF*.
 static bool validateSDff(const CellType &type, diag::Logger &logger) {
   // D flip-flop w/ synchronous reset (Q, D, CLK, RST):
   // Q(t) = CLK(posedge) ? (RST ? 0 : D) : Q(t-1).
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates aDFF*.
 static bool validateADff(const CellType &type, diag::Logger &logger) {
   // D flip-flop w/ asynchronous reset (Q, D, CLK, RST):
   // Q(t) = RST(level=1) ? 0 : (CLK(posedge) ? D : Q(t-1)).
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates DFFrs*.
 static bool validateDffRs(const CellType &type, diag::Logger &logger) {
   // D flip-flop w/ (asynchronous) reset and set (Q, D, CLK, RST, SET):
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (CLK(posedge) ? D : Q(t-1))).
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 4);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 4);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates DLATCH*.
 static bool validateDLatch(const CellType &type, diag::Logger &logger) {
   // D latch (Q, D, ENA):
   // Q(t) = ENA(level=1) ? D : Q(t-1).
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates aDLATCH*.
 static bool validateADLatch(const CellType &type, diag::Logger &logger) {
   // D latch w/ asynchronous reset (Q, D, ENA, RST):
   // Q(t) = RST(level=1) ? 0 : (ENA(level=1) ? D : Q(t-1)).
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 3);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates DLATCHrs*.
 static bool validateDLatchRs(const CellType &type, diag::Logger &logger) {
   // D latch w/ (asynchronous) reset and set (Q, D, ENA, RST, SET):
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : (ENA(level=1) ? D : Q(t-1))).
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 4);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 4);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates LATCHrs*.
 static bool validateLatchRs(const CellType &type, diag::Logger &logger) {
   // RS latch (Q, RST, SET):
   // Q(t) = RST(level=1) ? 0 : (SET(level=1) ? 1 : Q(t-1)).
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates BNOT.
 static bool validateBitwise1(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  // Extension is allowed.
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+    // Extension is allowed.
 #if 0
-  VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
+    VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
 #endif
-  return passed;
+  VALIDATE_END
 }
 
 /// Validates BAND, BOR, BXOR, BNAND, BNOR, and BXNOR.
 static bool validateBitwise2(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  // Extension is allowed.
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+    // Extension is allowed.
 #if 0
-  VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 0, 1);
-  VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
+    VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 0, 1);
+    VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
 #endif
-  return passed;
+  VALIDATE_END
 }
 
 /// Validates RAND, ROR, RXOR, RNAND, RNOR, and RXNOR.
 static bool validateReduce(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  // Zero-extension is allowed.
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+    // Zero-extension is allowed.
 #if 0
-  VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0, 1);
+    VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0, 1);
 #endif
-  return passed;
+  VALIDATE_END
+}
+
+/// Validates BMUX.
+static bool validateBMux(const CellType &type, diag::Logger &logger) {
+  // Bitwise MUX 2-to-1 (S[*], X[*], Y[*]), |S| == |X| == |Y|:
+  // OUT[i] = (S[i] == 0) ? X[i] : Y[i].
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 3);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+    VALIDATE_CELLTYPE_IN_IN_WIDTH(logger, type, 1, 2);
+    VALIDATE_CELLTYPE_IN_IN_WIDTH(logger, type, 0, 1);
+    VALIDATE_CELLTYPE_IN_OUT_WIDTH(logger, type, 0, 0);
+  VALIDATE_END
 }
 
 /// Validates MUX2.
 static bool validateMux2(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 3);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  VALIDATE_CELLTYPE_IN_WIDTH(logger, type, 0, 1);
-  VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 1, 2);
-  VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 1, 0);
-  return passed;
+  // Multibit MUX 2-to-1 (S, X[*], Y[*]):
+  // OUT[i] = (S == 0) ? X[i] : Y[i].
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 3);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+    VALIDATE_CELLTYPE_IN_WIDTH(logger, type, 0, 1);
+    VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 1, 2);
+    VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 1, 0);
+  VALIDATE_END
 }
 
-/// Validates SHL and SHR*.
+/// Validates MUX.
+static bool validateMux(const CellType &type, diag::Logger &logger) {
+  // Multibit MUX *-to-1 (S[*], X[*]), |X| == |OUT| * 2^|S|:
+  // OUT[i] = X[INDEX(S) * |OUT| + i].
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+    VALIDATE_CELLTYPE_IN_WIDTH(logger, type, 1,
+        type.getAttr().getOutWidth(0) << type.getAttr().getInWidth(0));
+  VALIDATE_END
+}
+
+/// Validates BDEMUX.
+static bool validateDemux(const CellType &type, diag::Logger &logger) {
+  // Bitwise DEMUX 1-to-2 (S[*], X[*]):
+  // OUT[s][i] = (S[i] == s) ? X[i] : 0, s=0,1.
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_IN_IN_WIDTHS(logger, type, 0, 1);
+    VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 0, 0);
+    VALIDATE_CELLTYPE_OUT_OUT_WIDTHS(logger, type, 0, 1);
+  VALIDATE_END
+}
+
+/// Validates DEMUX2.
+static bool validateDemux2(const CellType &type, diag::Logger &logger) {
+  // Multibit DEMUX 1-to-2 (S, X[*]):
+  // OUT[s][i] = (S == s) ? X[i] : 0, s=0,1.
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_IN_WIDTH(logger, type, 0, 1);
+    VALIDATE_CELLTYPE_IN_OUT_WIDTHS(logger, type, 1, 0);
+    VALIDATE_CELLTYPE_OUT_OUT_WIDTHS(logger, type, 0, 1);
+  VALIDATE_END
+}
+
+/// Validates DEMUX.
+static bool validateDemux(const CellType &type, diag::Logger &logger) {
+  // Multibit DEMUX 1-to-* (S[*], X[*]), |OUT| == |X| * 2^|S|:
+  // OUT[i] = ((i / |X|) == INDEX(S)) ? X[i % |X|] : 0.
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+    VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0,
+        type.getAttr().getInWidth(1) << type.getAttr().getInWidth(0));
+  VALIDATE_END
+}
+
+/// Validates SHL*, SHR*, and SHIFT*.
 static bool validateShift(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates EQ*, NEQ*, EQX*, NEQX*, LT*, LTE*, GT*, and GTE*.
 static bool validateCompare(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  // Zero-extension is allowed.
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+    // Zero-extension is allowed.
 #if 0
-  VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0, 1);
+    VALIDATE_CELLTYPE_OUT_WIDTH(logger, type, 0, 1);
 #endif
-  return passed;
+  VALIDATE_END
 }
 
 /// Validates NEG.
 static bool validateArith1(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 1);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates ADD, SUB, MUL*, DIV*, REM*, and MOD*.
 static bool validateArith2(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
-  return passed;
+  VALIDATE_BEGIN
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, 2);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, 1);
+  VALIDATE_END
 }
 
 /// Validates UNDEF.
 static bool validateUndef(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
+  VALIDATE_BEGIN
+    const auto &attr = type.getAttr();
+    const auto ports = attr.getOrderedPorts();
 
-  const auto &attr = type.getAttr();
-  const auto ports = attr.getOrderedPorts();
-
-  size_t nIn{0}, nOut{0}, wIn{0}, wOut{0};
-  for (const auto &port : ports) {
-    VALIDATE(logger, port.width > 0, "Zero port width");
-    if (port.input) {
-      nIn += 1;
-      wIn += port.width;
-    } else {
-      nOut += 1;
-      wOut += port.width;
+    size_t nIn{0}, nOut{0}, wIn{0}, wOut{0};
+    for (const auto &port : ports) {
+      VALIDATE(logger, port.width > 0, "Zero port width");
+      if (port.input) {
+        nIn += 1;
+        wIn += port.width;
+      } else {
+        nOut += 1;
+        wOut += port.width;
+      }
     }
-  }
 
-  VALIDATE_CELLTYPE_IN_PORTS(logger, type, nIn);
-  VALIDATE_CELLTYPE_OUT_PORTS(logger, type, nOut);
-  VALIDATE_CELLTYPE_IN_PINS(logger, type, wIn);
-  VALIDATE_CELLTYPE_OUT_PINS(logger, type, wOut);
-  VALIDATE(logger, ((nIn + nOut) <= CellTypeAttr::MaxPortNum),
-      "Too many input/output ports");
-  VALIDATE(logger, ((wIn + wOut) <= CellTypeAttr::MaxBitWidth),
-      "Too many input/output pins");
-
-  return passed;
+    VALIDATE_CELLTYPE_IN_PORTS(logger, type, nIn);
+    VALIDATE_CELLTYPE_OUT_PORTS(logger, type, nOut);
+    VALIDATE_CELLTYPE_IN_PINS(logger, type, wIn);
+    VALIDATE_CELLTYPE_OUT_PINS(logger, type, wOut);
+    VALIDATE(logger, ((nIn + nOut) <= CellTypeAttr::MaxPortNum),
+        "Too many input/output ports");
+    VALIDATE(logger, ((wIn + wOut) <= CellTypeAttr::MaxBitWidth),
+        "Too many input/output pins");
+  VALIDATE_END
 }
 
 bool validateCellType(const CellType &type, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(type));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(type));
 
-  VALIDATE(logger, (type.isGate() || type.hasAttr()),
-      "Non-gate cell has no attributes");
+    VALIDATE(logger, (type.isGate() || type.hasAttr()),
+        "Non-gate cell has no attributes");
 
-  if (type.isNet()) {
-    const auto &net = type.getNet();
-    VALIDATE(logger, (net.getInNum() == type.getInNum()),
-        "Incorrect number of input pins in the net implementation");
-    VALIDATE(logger, (net.getOutNum() == type.getOutNum()),
-        "Incorrect number of output pints in the net implementation");
-    VALIDATE_QUIET(validateNet(net, logger));
-  } else if (type.isSubnet()) {
-    const auto &subnet = type.getSubnet();
-    VALIDATE(logger, (subnet.getInNum() == type.getInNum()),
-        "Incorrect number of input pins in the subnet implementation");
-    VALIDATE(logger, (subnet.getOutNum() == type.getOutNum()),
-        "Incorrect number of output pins in the subnet implementation");
-    VALIDATE_QUIET(validateSubnet(subnet, logger));
-  }
+    if (type.isNet()) {
+      const auto &net = type.getNet();
+      VALIDATE(logger, (net.getInNum() == type.getInNum()),
+          "Incorrect number of input pins in the net implementation");
+      VALIDATE(logger, (net.getOutNum() == type.getOutNum()),
+          "Incorrect number of output pints in the net implementation");
+      VALIDATE_QUIET(validateNet(net, logger));
+    } else if (type.isSubnet()) {
+      const auto &subnet = type.getSubnet();
+      VALIDATE(logger, (subnet.getInNum() == type.getInNum()),
+          "Incorrect number of input pins in the subnet implementation");
+      VALIDATE(logger, (subnet.getOutNum() == type.getOutNum()),
+          "Incorrect number of output pins in the subnet implementation");
+      VALIDATE_QUIET(validateSubnet(subnet, logger));
+    }
 
-  switch(type.getSymbol() & ~FLGMASK) {
-  case IN:       VALIDATE_QUIET(validateIn(type, logger));
-                 break;
-  case OUT:      VALIDATE_QUIET(validateOut(type, logger));
-                 break;
-  case ZERO:     [[fallthrough]]; // Constants
-  case ONE:      VALIDATE_QUIET(validateConst(type, logger));
-                 break;
-  case BUF:      [[fallthrough]]; // Unary logic gates
-  case NOT:      VALIDATE_QUIET(validateLogic1(type, logger));
-                 break;
-  case AND:      [[fallthrough]]; // Binary logic gates
-  case OR:       [[fallthrough]];
-  case XOR:      [[fallthrough]];
-  case NAND:     [[fallthrough]];
-  case NOR:      [[fallthrough]];
-  case XNOR:     VALIDATE_QUIET(validateLogic2plus(type, logger));
-                 break;
-  case MAJ:      VALIDATE_QUIET(validateLogicMaj(type, logger));
-                 break;
-  case DFF:      VALIDATE_QUIET(validateDff(type, logger));
-                 break;
-  case sDFF:     VALIDATE_QUIET(validateSDff(type, logger));
-                 break;
-  case aDFF:     VALIDATE_QUIET(validateADff(type, logger));
-                 break;
-  case DFFrs:    VALIDATE_QUIET(validateDffRs(type, logger));
-                 break;
-  case DLATCH:   VALIDATE_QUIET(validateDLatch(type, logger));
-                 break;
-  case aDLATCH:  VALIDATE_QUIET(validateADLatch(type, logger));
-                 break;
-  case DLATCHrs: VALIDATE_QUIET(validateDLatchRs(type, logger));
-                 break;
-  case LATCHrs:  VALIDATE_QUIET(validateLatchRs(type, logger));
-                 break;
-  case BNOT:     VALIDATE_QUIET(validateBitwise1(type, logger));
-                 break;
-  case BAND:     [[fallthrough]]; // Binary bitwise operations
-  case BOR:      [[fallthrough]];
-  case BXOR:     [[fallthrough]];
-  case BNAND:    [[fallthrough]];
-  case BNOR:     [[fallthrough]];
-  case BXNOR:    VALIDATE_QUIET(validateBitwise2(type, logger));
-                 break;
-  case RAND:     [[fallthrough]]; // Reduction operations
-  case ROR:      [[fallthrough]];
-  case RXOR:     [[fallthrough]];
-  case RNAND:    [[fallthrough]];
-  case RNOR:     [[fallthrough]];
-  case RXNOR:    VALIDATE_QUIET(validateReduce(type, logger));
-                 break;
-  case MUX2:     VALIDATE_QUIET(validateMux2(type, logger));
-                 break;
-  case SHLs:     [[fallthrough]]; // Shift operations
-  case SHLu:     [[fallthrough]];
-  case SHRs:     [[fallthrough]];
-  case SHRu:     VALIDATE_QUIET(validateShift(type, logger));
-                 break;
-  case EQs:      [[fallthrough]]; // Comparison operations
-  case EQu:      [[fallthrough]];
-  case NEQs:     [[fallthrough]];
-  case NEQu:     [[fallthrough]];
-  case EQXs:     [[fallthrough]];
-  case EQXu:     [[fallthrough]];
-  case NEQXs:    [[fallthrough]];
-  case NEQXu:    [[fallthrough]];
-  case LTs:      [[fallthrough]];
-  case LTu:      [[fallthrough]];
-  case LTEs:     [[fallthrough]];
-  case LTEu:     [[fallthrough]];
-  case GTs:      [[fallthrough]];
-  case GTu:      [[fallthrough]];
-  case GTEs:     [[fallthrough]];
-  case GTEu:     VALIDATE_QUIET(validateCompare(type, logger));
-                 break;
-  case NEG:      VALIDATE_QUIET(validateArith1(type, logger));
-                 break;
-  case ADDs:     [[fallthrough]]; // Binary arithmetic operations
-  case ADDu:     [[fallthrough]];
-  case SUBs:     [[fallthrough]];
-  case SUBu:     [[fallthrough]];
-  case MULs:     [[fallthrough]];
-  case MULu:     [[fallthrough]];
-  case DIVs:     [[fallthrough]];
-  case DIVu:     [[fallthrough]];
-  case REMs:     [[fallthrough]];
-  case REMu:     [[fallthrough]];
-  case MODs:     VALIDATE_QUIET(validateArith2(type, logger));
-                 break;
-  case UNDEF:    VALIDATE_QUIET(validateUndef(type, logger));
-                 break;
-  default:       VALIDATE(logger, false, "Unknown cell symbol");
-                 break;
-  }
+    switch(type.getSymbol() & ~FLGMASK) {
+    case IN:       VALIDATE_QUIET(validateIn(type, logger));
+                   break;
+    case OUT:      VALIDATE_QUIET(validateOut(type, logger));
+                   break;
+    case ZERO:     [[fallthrough]]; // Constants
+    case ONE:      VALIDATE_QUIET(validateConst(type, logger));
+                   break;
+    case BUF:      [[fallthrough]]; // Unary logic gates
+    case NOT:      VALIDATE_QUIET(validateLogic1(type, logger));
+                   break;
+    case AND:      [[fallthrough]]; // Binary logic gates
+    case OR:       [[fallthrough]];
+    case XOR:      [[fallthrough]];
+    case NAND:     [[fallthrough]];
+    case NOR:      [[fallthrough]];
+    case XNOR:     VALIDATE_QUIET(validateLogic2plus(type, logger));
+                   break;
+    case MAJ:      VALIDATE_QUIET(validateLogicMaj(type, logger));
+                   break;
+    case DFF:      VALIDATE_QUIET(validateDff(type, logger));
+                   break;
+    case sDFF:     VALIDATE_QUIET(validateSDff(type, logger));
+                   break;
+    case aDFF:     VALIDATE_QUIET(validateADff(type, logger));
+                   break;
+    case DFFrs:    VALIDATE_QUIET(validateDffRs(type, logger));
+                   break;
+    case DLATCH:   VALIDATE_QUIET(validateDLatch(type, logger));
+                   break;
+    case aDLATCH:  VALIDATE_QUIET(validateADLatch(type, logger));
+                   break;
+    case DLATCHrs: VALIDATE_QUIET(validateDLatchRs(type, logger));
+                   break;
+    case LATCHrs:  VALIDATE_QUIET(validateLatchRs(type, logger));
+                   break;
+    case BNOT:     VALIDATE_QUIET(validateBitwise1(type, logger));
+                   break;
+    case BAND:     [[fallthrough]]; // Binary bitwise operations
+    case BOR:      [[fallthrough]];
+    case BXOR:     [[fallthrough]];
+    case BNAND:    [[fallthrough]];
+    case BNOR:     [[fallthrough]];
+    case BXNOR:    VALIDATE_QUIET(validateBitwise2(type, logger));
+                   break;
+    case RAND:     [[fallthrough]]; // Reduction operations
+    case ROR:      [[fallthrough]];
+    case RXOR:     [[fallthrough]];
+    case RNAND:    [[fallthrough]];
+    case RNOR:     [[fallthrough]];
+    case RXNOR:    VALIDATE_QUIET(validateReduce(type, logger));
+                   break;
+    case BMUX:     VALIDATE_QUIET(validateBMux(type, logger));
+                   break;
+    case MUX2:     VALIDATE_QUIET(validateMux2(type, logger));
+                   break;
+    case MUX:      VALIDATE_QUIET(validateMux(type, logger));
+                   break;
+    case BDEMUX:   VALIDATE_QUIET(validateBDemux(type, logger));
+                   break;
+    case DEMUX2:   VALIDATE_QUIET(validateDemux2(type, logger));
+                   break;
+    case DEMUX:    VALIDATE_QUIET(validateDemux(type, logger));
+                   break;
+    case SHLs:     [[fallthrough]]; // Shift operations
+    case SHLu:     [[fallthrough]];
+    case SHRs:     [[fallthrough]];
+    case SHRu:     [[fallthrough]];
+    case SHIFTs:   [[fallthrough]];
+    case SHIFTu:   VALIDATE_QUIET(validateShift(type, logger));
+                   break;
+    case EQs:      [[fallthrough]]; // Comparison operations
+    case EQu:      [[fallthrough]];
+    case NEQs:     [[fallthrough]];
+    case NEQu:     [[fallthrough]];
+    case EQXs:     [[fallthrough]];
+    case EQXu:     [[fallthrough]];
+    case NEQXs:    [[fallthrough]];
+    case NEQXu:    [[fallthrough]];
+    case LTs:      [[fallthrough]];
+    case LTu:      [[fallthrough]];
+    case LTEs:     [[fallthrough]];
+    case LTEu:     [[fallthrough]];
+    case GTs:      [[fallthrough]];
+    case GTu:      [[fallthrough]];
+    case GTEs:     [[fallthrough]];
+    case GTEu:     VALIDATE_QUIET(validateCompare(type, logger));
+                   break;
+    case NEG:      VALIDATE_QUIET(validateArith1(type, logger));
+                   break;
+    case ADDs:     [[fallthrough]]; // Binary arithmetic operations
+    case ADDu:     [[fallthrough]];
+    case SUBs:     [[fallthrough]];
+    case SUBu:     [[fallthrough]];
+    case MULs:     [[fallthrough]];
+    case MULu:     [[fallthrough]];
+    case DIVs:     [[fallthrough]];
+    case DIVu:     [[fallthrough]];
+    case REMs:     [[fallthrough]];
+    case REMu:     [[fallthrough]];
+    case MODs:     VALIDATE_QUIET(validateArith2(type, logger));
+                   break;
+    case UNDEF:    VALIDATE_QUIET(validateUndef(type, logger));
+                   break;
+    default:       VALIDATE(logger, false, "Unknown cell symbol");
+                   break;
+    }
 
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 bool validateCellType(const CellTypeID typeID, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE(logger, (typeID != OBJ_NULL_ID), "Null cell-type identifier");
-  return passed && validateCellType(CellType::get(typeID), logger);
+  VALIDATE_BEGIN
+    VALIDATE(logger, (typeID != OBJ_NULL_ID), "Null cell-type identifier");
+    VALIDATE_QUIET(validateCellType(CellType::get(typeID), logger));
+  VALIDATE_END
 }
 
 //===----------------------------------------------------------------------===//
@@ -483,76 +562,77 @@ static inline std::string debugInfo(const Net &net) {
 static bool validateLinkSource(const LinkEnd &source,
                                const size_t i,
                                diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(source, i));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(source, i));
 
-  VALIDATE(logger, (source.isValid() && source.getCellID() != OBJ_NULL_ID),
-      "Unconnected link source");
+    VALIDATE(logger, (source.isValid() && source.getCellID() != OBJ_NULL_ID),
+        "Unconnected link source");
 
-  const auto &cell = source.getCell();
-  const auto &type = cell.getType();
-  VALIDATE(logger, (source.getPort() < type.getOutNum()),
-      "Incorrect source pin: " << source.getPort() <<
-      ", source cell has " << type.getOutNum() << " output pins");
+    const auto &cell = source.getCell();
+    const auto &type = cell.getType();
+    VALIDATE(logger, (source.getPort() < type.getOutNum()),
+        "Incorrect source pin: " << source.getPort() <<
+        ", source cell has " << type.getOutNum() << " output pins");
 
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 static bool validateCell(const CellID &cellID, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(cellID));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(cellID));
 
-  const auto &cell = Cell::get(cellID);
-  const auto &type = cell.getType();
-  VALIDATE_QUIET(validateCellType(type, logger));
-  VALIDATE(logger, (!type.isInNumFixed() || cell.getFanin() == type.getInNum()),
-      "Incorrect number of inputs: " << cell.getFanin() <<
-      ", expected " << type.getInNum());
+    const auto &cell = Cell::get(cellID);
+    const auto &type = cell.getType();
+    VALIDATE_QUIET(validateCellType(type, logger));
+    VALIDATE(logger, (!type.isInNumFixed() || cell.getFanin() == type.getInNum()),
+        "Incorrect number of inputs: " << cell.getFanin() <<
+        ", expected " << type.getInNum());
 
-  const auto links = cell.getLinks();
-  VALIDATE(logger, (links.size() == cell.getFanin()),
-      "Incorrect number of links: " << links.size() <<
-      ", expected " << cell.getFanin());
+    const auto links = cell.getLinks();
+    VALIDATE(logger, (links.size() == cell.getFanin()),
+        "Incorrect number of links: " << links.size() <<
+        ", expected " << cell.getFanin());
 
-  for (uint16_t i = 0; i < links.size(); ++i) {
-    VALIDATE_QUIET(validateLinkSource(links[i], i, logger));
-  }
+    for (uint16_t i = 0; i < links.size(); ++i) {
+      VALIDATE_QUIET(validateLinkSource(links[i], i, logger));
+    }
 
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 static bool validateCells(const List<CellID> &cells, diag::Logger &logger) {
-  bool passed = true;
-  for (auto i = cells.begin(); i != cells.end(); ++i) {
-    VALIDATE_QUIET(validateCell(*i, logger));
-  }
-  return passed;
+  VALIDATE_BEGIN
+    for (auto i = cells.begin(); i != cells.end(); ++i) {
+      VALIDATE_QUIET(validateCell(*i, logger));
+    }
+  VALIDATE_END
 }
 
 bool validateNet(const Net &net, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(net));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(net));
 
-  VALIDATE(logger, (net.getInNum() > 0), "No inputs");
-  VALIDATE(logger, (net.getOutNum() > 0), "No outputs");
+    VALIDATE(logger, (net.getInNum() > 0), "No inputs");
+    VALIDATE(logger, (net.getOutNum() > 0), "No outputs");
 
-  VALIDATE_QUIET(validateCells(net.getInputs(), logger));
-  VALIDATE_QUIET(validateCells(net.getOutputs(), logger));
-  VALIDATE_QUIET(validateCells(net.getCombCells(), logger));
-  VALIDATE_QUIET(validateCells(net.getFlipFlops(), logger));
-  VALIDATE_QUIET(validateCells(net.getSoftBlocks(), logger));
-  VALIDATE_QUIET(validateCells(net.getHardBlocks(), logger));
+    VALIDATE_QUIET(validateCells(net.getInputs(), logger));
+    VALIDATE_QUIET(validateCells(net.getOutputs(), logger));
+    VALIDATE_QUIET(validateCells(net.getCombCells(), logger));
+    VALIDATE_QUIET(validateCells(net.getFlipFlops(), logger));
+    VALIDATE_QUIET(validateCells(net.getSoftBlocks(), logger));
+    VALIDATE_QUIET(validateCells(net.getHardBlocks(), logger));
 
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 bool validateNet(const NetID netID, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE(logger, (netID != OBJ_NULL_ID), "Null net identifier");
-  return passed && validateNet(Net::get(netID), logger);
+  VALIDATE_BEGIN
+    VALIDATE(logger, (netID != OBJ_NULL_ID), "Null net identifier");
+    VALIDATE_QUIET(validateNet(Net::get(netID), logger));
+  VALIDATE_END
 }
 
 //===----------------------------------------------------------------------===//
@@ -579,22 +659,22 @@ static inline std::string debugInfo(const SubnetBuilder &builder) {
 static bool validateCell(const Subnet::Cell &cell,
                          const size_t entryID,
                          diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(cell, entryID));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(cell, entryID));
 
-  const auto &type = cell.getType();
-  VALIDATE_QUIET(validateCellType(type, logger));
-  VALIDATE(logger,
-      (!type.isInNumFixed() || cell.getInNum() == type.getInNum()),
-      "Incorrect number of input pins: " << cell.getInNum() <<
-      ", expected " << type.getInNum());
-  VALIDATE(logger,
-      (!type.isOutNumFixed() || cell.getOutNum() == type.getOutNum()),
-      "Incorrect number of output pins: " << cell.getOutNum() <<
-      ", expected " << type.getOutNum());
+    const auto &type = cell.getType();
+    VALIDATE_QUIET(validateCellType(type, logger));
+    VALIDATE(logger,
+        (!type.isInNumFixed() || cell.getInNum() == type.getInNum()),
+        "Incorrect number of input pins: " << cell.getInNum() <<
+        ", expected " << type.getInNum());
+    VALIDATE(logger,
+        (!type.isOutNumFixed() || cell.getOutNum() == type.getOutNum()),
+        "Incorrect number of output pins: " << cell.getOutNum() <<
+        ", expected " << type.getOutNum());
 
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 static bool validateCell(const Subnet::Cell &cell,
@@ -602,75 +682,74 @@ static bool validateCell(const Subnet::Cell &cell,
                          const Subnet::LinkList &links,
                          const bool isTechMapped,
                          diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(cell, entryID));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(cell, entryID));
   
-  VALIDATE_QUIET(validateCell(cell, entryID, logger));
+    VALIDATE_QUIET(validateCell(cell, entryID, logger));
 
-  const auto &type = cell.getType();
-  if (!type.isIn() && !type.isOut()) {
-    if (type.isZero() || type.isOne()) {
-      VALIDATE_WARN(logger, !isTechMapped,
-         "Constant " << debugInfo(type) <<
-         ", expected a technology-dependent one");
-    } else {
-      const auto isTechCell = type.isHard() || type.isCell();
-      VALIDATE(logger, (isTechCell == isTechMapped),
-         "Incorrect " << debugInfo(type) << ", expected a technology-" <<
-         (isTechMapped ? "" : "in") << "dependent one");
+    const auto &type = cell.getType();
+    if (!type.isIn() && !type.isOut()) {
+      if (type.isZero() || type.isOne()) {
+        VALIDATE_WARN(logger, !isTechMapped,
+           "Constant " << debugInfo(type) <<
+           ", expected a technology-dependent one");
+      } else {
+        const auto isTechCell = type.isHard() || type.isCell();
+        VALIDATE(logger, (isTechCell == isTechMapped),
+           "Incorrect " << debugInfo(type) << ", expected a technology-" <<
+           (isTechMapped ? "" : "in") << "dependent one");
+      }
     }
-  }
 
-  for (size_t i = 0; i < links.size(); ++i) {
-    VALIDATE(logger, (!isTechMapped || !links[i].inv),
-        "Invertor " << debugInfo(links[i], i) <<
-        " (logical gate NOT) in a tech-mapped subnet");
-  }
+    for (size_t i = 0; i < links.size(); ++i) {
+      VALIDATE(logger, (!isTechMapped || !links[i].inv),
+          "Invertor " << debugInfo(links[i], i) <<
+          " (logical gate NOT) in a tech-mapped subnet");
+    }
 
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 bool validateSubnet(const Subnet &subnet, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(subnet));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(subnet));
 
-  const auto isTechMapped = subnet.isTechMapped();
-  const auto &entries = subnet.getEntries();
+    const auto isTechMapped = subnet.isTechMapped();
+    const auto &entries = subnet.getEntries();
 
-  for (size_t i = 0; i < entries.size(); ++i) {
-    const auto &cell = entries[i].cell;
-    const auto links = subnet.getLinks(i);
-
-    VALIDATE_QUIET(validateCell(cell, i, links, isTechMapped, logger));
-    i += cell.more;
-  }
+    for (size_t i = 0; i < entries.size(); ++i) {
+      const auto &cell = entries[i].cell;
+      const auto links = subnet.getLinks(i);
+      VALIDATE_QUIET(validateCell(cell, i, links, isTechMapped, logger));
+      i += cell.more;
+    }
  
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 bool validateSubnet(const SubnetBuilder &builder, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(builder));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(builder));
 
-  const auto isTechMapped = builder.isTechMapped();
+    const auto isTechMapped = builder.isTechMapped();
 
-  for (auto i = builder.begin(); i != builder.end(); i.nextCell()) {
-    const auto &cell = builder.getCell(*i);
-    const auto links = builder.getLinks(*i);
-
-    VALIDATE_QUIET(validateCell(cell, *i, links, isTechMapped, logger));
-  }
+    for (auto i = builder.begin(); i != builder.end(); i.nextCell()) {
+      const auto &cell = builder.getCell(*i);
+      const auto links = builder.getLinks(*i);
+      VALIDATE_QUIET(validateCell(cell, *i, links, isTechMapped, logger));
+    }
  
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 bool validateSubnet(const SubnetID subnetID, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE(logger, (subnetID != OBJ_NULL_ID), "Null subnet identifier");
-  return passed && validateSubnet(Subnet::get(subnetID), logger);
+  VALIDATE_BEGIN
+    VALIDATE(logger, (subnetID != OBJ_NULL_ID), "Null subnet identifier");
+    VALIDATE_QUIET(validateSubnet(Subnet::get(subnetID), logger));
+  VALIDATE_END
 }
 
 //===----------------------------------------------------------------------===//
@@ -682,24 +761,24 @@ static inline std::string debugInfo(const DesignBuilder &builder) {
 }
 
 bool validateDesign(const DesignBuilder &builder, diag::Logger &logger) {
-  bool passed = true;
-  VALIDATE_GROUP_BEGIN(logger, debugInfo(builder));
+  VALIDATE_BEGIN
+    VALIDATE_GROUP_BEGIN(logger, debugInfo(builder));
 
-  for (size_t i = 0; i < builder.getSubnetNum(); ++i) {
-    const auto &entry = builder.getEntry(i);
-    VALIDATE(logger,
-        (entry.subnetID != OBJ_NULL_ID) != (entry.builder != nullptr),
-        "Inconsistent subnet");
+    for (size_t i = 0; i < builder.getSubnetNum(); ++i) {
+      const auto &entry = builder.getEntry(i);
+      VALIDATE(logger,
+          (entry.subnetID != OBJ_NULL_ID) != (entry.builder != nullptr),
+          "Inconsistent subnet");
 
-    if (entry.subnetID != OBJ_NULL_ID) {
-      VALIDATE_QUIET(validateSubnet(entry.subnetID, logger));
-    } else {
-      VALIDATE_QUIET(validateSubnet(*entry.builder, logger));
+      if (entry.subnetID != OBJ_NULL_ID) {
+        VALIDATE_QUIET(validateSubnet(entry.subnetID, logger));
+      } else {
+        VALIDATE_QUIET(validateSubnet(*entry.builder, logger));
+      }
     }
-  }
 
-  VALIDATE_GROUP_END(logger);
-  return passed;
+    VALIDATE_GROUP_END(logger);
+  VALIDATE_END
 }
 
 } // namespace eda::gate::model

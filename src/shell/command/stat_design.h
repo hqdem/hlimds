@@ -58,12 +58,11 @@ struct StatDesignCommand final : public UtopiaCommand {
       depth = std::max<size_t>(subnet.getPathLength().second, depth);
 
       if (isTechMapped) {
-        const auto &pLibrary = context->techMapContext.library;
-        UTOPIA_SHELL_ERROR_IF(interp, !pLibrary,
-                              "can't access techMap library");
+        const auto &library = context->techMapContext.library;
+        UTOPIA_SHELL_ERROR_IF(interp, !library, "cannot access library");
         area += estimator::getArea(subnetID);
-        power += estimator::getLeakagePower(subnetID, *pLibrary);
-        delay = std::max<float>(estimator::getArrivalTime(subnetID, *pLibrary),
+        power += estimator::getLeakagePower(subnetID, *library);
+        delay = std::max<float>(estimator::getArrivalTime(subnetID, *library),
                                 delay);
       }
     } // for subnet

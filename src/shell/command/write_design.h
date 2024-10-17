@@ -135,7 +135,7 @@ struct WriteDotCommand final : public WriteDesignCommand {
 
 struct WriteLogDbCommand final : public WriteDesignCommand {
   WriteLogDbCommand(): WriteDesignCommand(
-      "write_logdb", "Writes the dsign to a LogDb file") {
+      "write_logdb", "Writes the design to a LogDb file") {
     setFormat(eda::gate::model::LOGDB);
   }
 };

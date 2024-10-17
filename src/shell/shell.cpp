@@ -22,6 +22,7 @@
 #include "shell/command/stat_design.h"
 #include "shell/command/stat_logdb.h"
 #include "shell/command/techmap.h"
+#include "shell/command/unmap.h"
 #include "shell/command/verilog_to_fir.h"
 #include "shell/command/version.h"
 #include "shell/command/write_dataflow.h"
@@ -99,6 +100,7 @@ UtopiaShell::UtopiaShell() {
   addCommand(std::make_unique<StatDesignCommand>());
   addCommand(std::make_unique<StatLogDbCommand>());
   addCommand(std::make_unique<TechMapCommand>());
+  addCommand(std::make_unique<UnmapCommand>());
 #ifdef UTOPIA_SHELL_ENABLE_VERILOG_TO_FIR
   addCommand(std::make_unique<VerilogToFirCommand>());
 #endif // UTOPIA_SHELL_ENABLE_VERILOG_TO_FIR

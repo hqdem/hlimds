@@ -79,7 +79,7 @@ struct TechMapCommand final : public UtopiaCommand {
     //TODO: don't overwrite once criterion is set in other places
     if (!context->criterion) {
       context->criterion = std::make_unique<Criterion>(
-                            Objective(indicator), constraints);
+          Objective(indicator), constraints);
     }
 
     techMapperWrapper tmw(*context, design);

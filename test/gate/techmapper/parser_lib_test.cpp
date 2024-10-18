@@ -10,9 +10,8 @@
 #include "gate/library/readcells_srcfile_parser.h"
 #include "gate/library/library_factory.h"
 #include "gate/library/library_index.h"
-#include "util/env.h"
-
 #include "gate/techmapper/utils/read_sdc.h"
+#include "util/env.h"
 
 #include "gtest/gtest.h"
 
@@ -128,6 +127,28 @@ TEST(ReadLibertyTest2, sky130_fd_sc_hd__ff_n40C_1v95) {
 
 TEST(ReadLibertyTest2, sky130_fd_sc_hd__ff_100C_1v65) {
   checkLibParser2(techLibPath / "sky130_fd_sc_hd__ff_100C_1v65.lib");
+}
+
+TEST(WireLoadTest, sky130_fd_sc_hd__ff_100C_1v65) {
+  ReadCellsParser parser(techLibPath / "sky130_fd_sc_hd__ff_100C_1v65.lib");
+  SCLibrary library = SCLibraryFactory::newLibrary(parser);
+  std::cout << "Loaded Liberty: "
+            << techLibPath / "sky130_fd_sc_hd__ff_100C_1v65.lib" << std::endl;
+
+  std::vector<WireLoadModel> models;
+  std::vector<WireLoadModel::FanoutLength> fanoutLength =
+    { {1, 23.2746}, {2, 32.1136},
+      {3, 48.4862}, {4, 64.0974},
+      {5, 86.2649}, {6, 84.2649} };
+  models.emplace_back("Small", 0.0745, 1.42e-05, 8.3631, fanoutLength);
+  models.emplace_back("Medium", 0.0745, 1.42e-05, 8.3631, fanoutLength);
+  models.emplace_back("Large", 0.0745, 1.42e-05, 8.3631, fanoutLength);
+  models.emplace_back("Huge", 0.0745, 1.42e-05, 8.3631, fanoutLength);
+
+  for (const auto &wlm : library.getWLMs()) {
+    size_t count = std::count(models.begin(), models.end(), wlm);
+    EXPECT_EQ(count, 1);
+  }
 }
 
 TEST(ReadLibertyTest2, nand) {

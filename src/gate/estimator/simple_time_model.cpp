@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "gate/estimator/simple_time_model.h"
+#include "util/double_math.h"
 #include "util/env.h"
 
 #include <algorithm>
@@ -18,91 +19,48 @@
 
 namespace eda::gate::estimator {
 
-static double linearInterpolation(double val1, double val2,
-                                  double x1, double x2, double xt) {
-  double r10 = (x2 - xt) / (x2 - x1) * val1;
-  double r11 = (xt - x1) / (x2 - x1) * val2;
-  double res = r10 + r11;
-  return res;
-}
-
-// Bilinear interpolation
-//    │                     
-//    │Q12|     .R2    |Q22 
-// y2 │---┼------------┼----
-//    │   |     .      |    
-//    │   |     .      |    
-// yt │...|............|... 
-//    │   |     .      |    
-//    │   |     .      |    
-//    │   |     .      |    
-// y1 │---┼------------┼----
-//    │Q11|     .R1    |Q21 
-//    └─────────────────────
-//       x1     xt     x2   
-
-static double bilinearInterpolation(double val11, double val12,
-                                    double val21, double val22,
-                                    double x1, double x2, double xt,
-                                    double y1, double y2, double yt) {
-#if 1 //optimized coefficient calculations
-  const double coef1 = (x2 - xt) / (x2 - x1);
-  const double coef2 = (xt - x1) / (x2 - x1);
-  double r1 = coef1 * val11 + coef2 * val21;
-  double r2 = coef1 * val12 + coef2 * val22;
-#else
-  double r1 = linearInterpolation(val11, val21, x1, x2, xt);
-  double r2 = linearInterpolation(val12, val22, x1, x2, xt);
-#endif
-  double p = linearInterpolation(r1, r2, y1, y2, yt);
-  return p;
-}
-
-static constexpr auto EPS10 = 10 * std::numeric_limits<double>::epsilon();
-
-inline bool eq_double(double a, double b) {
-    return std::fabs(a - b) < EPS10;
-}
+using namespace eda::util::doubleMath;
 
 //return lower and uper iterators
 //if lower==end, then all elements are lesser than targetVal, {0,1} returned
 //if upper==begin, then all elements are greater than targetVal,
-// {end()-2, end()-1} returned 
+// {end()-2, end()-1} returned
 static inline std::pair<double, double>
 getInterpolationIndexes(const std::vector<double> &lutIndex, double targetVal) {
   assert(lutIndex.size() >= 2); //TODO: need to handle this case
+  constexpr auto prescision = EPSDOUBLE * 10;
   ssize_t lowID = -1, upID = -1;
   auto doubleComp = [](double source, double value) {
                       return source < value &&
-                             std::fabs(source - value) > EPS10;
+                      !eqvDouble(source, value, prescision);
                     };
   auto lower = std::lower_bound(lutIndex.begin(), lutIndex.end(),
                                 targetVal, doubleComp);
   auto upper = std::upper_bound(lutIndex.begin(), lutIndex.end(),
                                 targetVal, doubleComp);
-  
+
   if (upper == lutIndex.begin()) { //targetVal < lutIndex[0]
-    if (eq_double(*upper, targetVal)) { //targetVal == lutIndex[0]
+    if (eqvDouble(*upper, targetVal, prescision)) { //targetVal == lutIndex[0]
       lowID = 0; upID = 0;
     } else {
       lowID = 0; upID = 1;
     }
   } else if (upper != lutIndex.end()) { // *lower < targetVal < *upper
-    if (eq_double(*lower, targetVal)) { // targetVal == *lower
+    if (eqvDouble(*lower, targetVal, prescision)) { // targetVal == *lower
         lowID = std::distance(lutIndex.begin(), lower);
         upID = lowID;
-    } else if (eq_double(*upper, targetVal)) { // targetVal == *upper
+    } else if (eqvDouble(*upper, targetVal, prescision)) { // targetVal==*upper
         //TODO: this branch might be dead code
         lowID = std::distance(lutIndex.begin(), upper);
         upID = lowID;
     } else { // *lower < targetVal < *upper
-      lowID = (lower == lutIndex.begin()) ? 
+      lowID = (lower == lutIndex.begin()) ?
               0 : std::distance(lutIndex.begin(), std::prev(lower));
       upID = std::distance(lutIndex.begin(), upper);
     }
   } else { // lutIndex.back() < targetVal
     if (lower != lutIndex.end() &&
-        eq_double(*lower, targetVal)) { // targetVal == *lower
+        eqvDouble(*lower, targetVal, prescision)) { // targetVal == *lower
       lowID = lutIndex.size() - 1;
       upID = lowID;
     } else { // lutIndex.back() < targetVal

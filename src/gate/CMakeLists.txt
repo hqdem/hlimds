@@ -140,7 +140,6 @@ target_link_libraries(Gate
     Mockturtle
     parallel_hashmap
     Json
-  PRIVATE
     Utopia::Diag
     Utopia::Util
     CLI

@@ -31,8 +31,8 @@ model::SubnetID synthAddS(const model::CellTypeAttr &attr) {
     inputsForB.resize(sizeA, inputsForB.back());
   }
 
-  builder.addOutputs(synthLadnerFisherAdd(builder, inputsForA, inputsForB,
-                                          outSize, true));
+  builder.addOutputs(
+      synthLadnerFisherAdd(builder, inputsForA, inputsForB, outSize, true));
   return builder.make();
 }
 
@@ -59,7 +59,7 @@ model::SubnetID synthSubS(const model::CellTypeAttr &attr) {
 
   model::Subnet::LinkList inputsForA = builder.addInputs(sizeA);
   model::Subnet::LinkList inputsForB = builder.addInputs(sizeB);
-  
+
   uint16_t maxSize = std::max(sizeA, sizeB);
   if (maxSize < outSize) {
     ++sizeA, ++sizeB, ++maxSize;
@@ -91,9 +91,13 @@ model::SubnetID synthSubU(const model::CellTypeAttr &attr) {
   if (maxSize < outSize) {
     ++maxSize;
   }
-  
+
   inputsForB = twosComplement(builder, inputsForB, maxSize, false);
 
+  // inputsForB size is >= inputsForA, so if we want to use a small
+  // optimization, connected with unsigned subscription
+  builder.addOutputs(synthLadnerFisherAdd(builder, inputsForB, inputsForA,
+                                          outSize, true, true));
   // inputsForB size is >= inputsForA, so if we want to use a small
   // optimization, connected with unsigned subscription
   builder.addOutputs(synthLadnerFisherAdd(builder, inputsForB, inputsForA,
@@ -112,8 +116,7 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
                                              model::Subnet::LinkList inputsForA,
                                              model::Subnet::LinkList inputsForB,
                                              const uint16_t outSize,
-                                             bool useSign,
-                                             bool isUnsignedSub) {
+                                             bool useSign, bool isUnsignedSub) {
   useSign |= isUnsignedSub;
   uint16_t sizeA = inputsForA.size(), sizeB = inputsForB.size();
 
@@ -190,7 +193,7 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
         model::Subnet::Link childG = gOutputs[child];
 
         // wire p_next = p_child & p_parent;
-        // if this is not first iteration
+        // if this is not the first iteration
         // we add "black cell"
         if ((batch + 1u) ^ basicStep) {
           pOutputs[child] =
@@ -218,11 +221,13 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
     // gOutputs in this case is moved on 1 element
     // like 1 for gOutputs is 0 for pOutputs
     auto childG = gOutputs[pos];
-    // if parentG is not Zero, add "AND"
-    if (isNotZero[pos - 1]) {
+    // if parentG is not a Zero, add an "AND"
+    // (second part of condition protects from unused carry out generation)
+    if (isNotZero[pos - 1] && pos != outSize - 1u) {
       gOutputs[pos] = builder.addCell(model::CellSymbol::AND, pOutputs[pos],
                                       gOutputs[pos - 1]);
-      // if current pos is still in sizeB borders, we need to add "OR" oper
+      // if current pos is still in the sizeB borders,
+      // we need to add an "OR" oper
       if (isNotZero[pos]) {
         gOutputs[pos] =
             builder.addCell(model::CellSymbol::OR, childG, gOutputs[pos]);
@@ -236,11 +241,9 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
   model::Subnet::LinkList outputGates;
   outputGates.reserve(outSize);
 
-  // at first bit, as we have no carry in, we can just add it without "XOR"
+  // at the first bit, as we have no carry in, we can just add it without "XOR"
   outputGates.push_back(startOutputsP[0]);
 
-  // here we create sum. As in verilog it should be [n:0],
-  // we should add bits in a reverse way
   for (uint16_t i = 1; i < outSizeA; ++i) {
     const model::Subnet::Link sum =
         isNotZero[i - 1] ? builder.addCell(model::CellSymbol::XOR,
@@ -256,18 +259,15 @@ model::Subnet::LinkList synthLadnerFisherAdd(model::SubnetBuilder &builder,
     model::Subnet::Link zeroCell;
 
     // if we need zeroCell for carry out or for filling output
-    if ((!isNotZero[gOutputs.size() - 1] || outSize > sizeA + 1) &&
-        !useSign) {
+    if ((!isNotZero[gOutputs.size() - 1] || outSize > sizeA + 1) && !useSign) {
       zeroCell = builder.addCell(model::CellSymbol::ZERO);
     }
     // this is a shorter variant for the unsigned subscription operation
     else if (isUnsignedSub) {
-      zeroCell = builder.addCell(
-          model::CellSymbol::OR,
-          builder.addCell(model::CellSymbol::AND, outputGates.back(),
-                           inputsForA.back()),
-          builder.addCell(model::CellSymbol::AND, outputGates.back(),
-                           gOutputs.back()));
+      zeroCell =
+          builder.addCell(model::CellSymbol::OR, outputGates.back(),
+                          builder.addCell(model::CellSymbol::AND,
+                                          outputGates.back(), gOutputs.back()));
     }
     // if we need to add something to output and we have signed digit
     else if (useSign) {

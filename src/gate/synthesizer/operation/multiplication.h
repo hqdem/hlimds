@@ -15,4 +15,16 @@ namespace eda::gate::synthesizer {
 model::SubnetID synthMulS(const model::CellTypeAttr &attr);
 model::SubnetID synthMulU(const model::CellTypeAttr &attr);
 
+model::Subnet::LinkList
+synthKaratsubaMultiplyer(model::SubnetBuilder &builder,
+                         model::Subnet::LinkList &inputsForA,
+                         model::Subnet::LinkList &inputsForB,
+                         const uint16_t outSize, bool useSign = false);
+
+model::Subnet::LinkList
+synthSimpleMultipyer(model::SubnetBuilder &builder,
+                     model::Subnet::LinkList &inputsForA,
+                     model::Subnet::LinkList &inputsForB,
+                     const uint16_t outSize, bool useSign = false);
+
 } // namespace eda::gate::synthesizer

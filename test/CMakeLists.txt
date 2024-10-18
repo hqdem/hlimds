@@ -115,6 +115,7 @@ add_executable(${TEST_TARGET}
   gate/synthesizer/addition_test.cpp
   gate/synthesizer/bitwise_test.cpp
   gate/synthesizer/comparison_test.cpp
+  gate/synthesizer/multiplication_test.cpp
   gate/synthesizer/shift_test.cpp
   gate/techmapper/matcher_test.cpp
   gate/techmapper/parser_lib_test.cpp

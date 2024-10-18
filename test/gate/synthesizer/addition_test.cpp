@@ -81,6 +81,7 @@ std::pair<int32_t, int32_t> simulateAdder(uint16_t sizeA, uint16_t sizeB,
   res &= mask;
   resSimulated &= mask;
   if (res != resSimulated) {
+    std::clog << Subnet::get(result->make());
     std::clog << valA << " " << valB << "; " << sizeA << " " << sizeB << '\n';
   }
   return { res, resSimulated };

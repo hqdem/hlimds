@@ -953,14 +953,18 @@ SubnetBuilder::Effect SubnetBuilder::deletedEntriesEval(
         entryNewRefcount[linkIdx] = entries[linkIdx].cell.refcount;
       }
       const auto savedLinkRefcnt = entryNewRefcount[linkIdx];
-      deletedWeight -=
-          weight(getWeight(linkIdx), savedLinkRefcnt - 1, weightModifier) -
-          weight(getWeight(linkIdx), savedLinkRefcnt, weightModifier);
+      if (savedLinkRefcnt > 1) {
+        deletedWeight -=
+            weight(getWeight(linkIdx), savedLinkRefcnt - 1, weightModifier) -
+            weight(getWeight(linkIdx), savedLinkRefcnt, weightModifier);
+      }
       --entryNewRefcount[linkIdx];
       if (entries[linkIdx].cell.isIn()) {
         continue;
       }
       if (!entryNewRefcount[linkIdx]) {
+        deletedWeight -=
+            0.f - weight(getWeight(linkIdx), savedLinkRefcnt, weightModifier);
         ++deletedEntriesN;
         entryIDQueue.push(linkIdx);
       }

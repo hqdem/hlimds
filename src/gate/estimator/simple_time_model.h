@@ -33,10 +33,10 @@ public:
     double delay = NAN;
   };
 
-  /// @brief 
+  /// @brief
   /// @param cell from SCLibrary
   /// @param fanout amount of output links
-  /// @return 
+  /// @return
   static double cellOutputCapEstimation(const library::StandardCell &cell,
                                         size_t fanout);
   /// @brief Rough estimation of cell Slew and Delay.

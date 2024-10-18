@@ -10,6 +10,7 @@
 
 #include "gate/model/celltype.h"
 #include "kitty/dynamic_truth_table.hpp"
+#include "util/double_math.h"
 #include "util/npn_transformation.h"
 
 #include <cmath> //for NAN
@@ -17,7 +18,8 @@
 #include <optional>
 
 namespace eda::gate::library {
- 
+
+  using namespace eda::util::doubleMath;
   struct WireLoadSelection {
       struct WireLoadFromArea {
         double leftBound = 0;
@@ -48,18 +50,39 @@ namespace eda::gate::library {
     struct FanoutLength {
       size_t fanoutCount = 0;
       double length = 0;
+
+      friend bool operator==(const FanoutLength &lhs,
+                             const FanoutLength &rhs) {
+        return (lhs.fanoutCount == rhs.fanoutCount)
+                && eqvDouble(lhs.length, rhs.length);
+      }
     };
-    std::string name;
-    /// @brief resistance, capacitance, extrapolation slope
-    double resistance = 0.0;
-    double capacitance = 0.0;
-    double slope = 0.0;
-    std::vector<FanoutLength> wireLength;
-    
+
+    WireLoadModel() = default;
+    ~WireLoadModel() = default;
+    WireLoadModel(const std::string &name, double resistance, double capacitance,
+                  double slope, const std::vector<FanoutLength> &fanoutLength):
+      name(name), resistance(resistance), capacitance(capacitance),
+      slope(slope), wireLength(fanoutLength) {};
+
+    friend bool operator==(const WireLoadModel &lhs,
+                           const WireLoadModel &rhs) {
+      return (lhs.name == rhs.name)
+             && eqvDouble(lhs.resistance, rhs.resistance)
+             && eqvDouble(lhs.capacitance, rhs.capacitance)
+             && eqvDouble(lhs.slope, rhs.slope)
+             && (lhs.wireLength == rhs.wireLength);
+    };
+
+    friend bool operator!=(const WireLoadModel &lhs,
+                           const WireLoadModel &rhs) {
+      return !(lhs == rhs);
+    };
+
     double getFanoutLength(size_t fanoutCount) const {
       assert(fanoutCount > 0);
       if (fanoutCount > wireLength.size()) {
-        return slope * (fanoutCount - wireLength.size()) * 
+        return slope * (fanoutCount - wireLength.size()) *
                wireLength.back().length;
       }
       return wireLength[fanoutCount - 1].length;
@@ -68,6 +91,12 @@ namespace eda::gate::library {
     double getFanoutCapacitance(size_t fanoutCount) const {
       return getFanoutLength(fanoutCount) * capacitance;
     };
+
+    std::string name;
+    double resistance = 0.0;
+    double capacitance = 0.0;
+    double slope = 0.0;
+    std::vector<FanoutLength> wireLength;
   };
 
   struct LutTemplate {
@@ -113,11 +142,11 @@ namespace eda::gate::library {
     std::vector<NameID> variables;
     std::vector<std::vector<double>> indexes;
   };
-  
+
   struct LUT {
     LUT() = default;
     ~LUT() = default;
-    
+
     LUT(const LUT &other) = default;
     LUT& operator=(const LUT& other) = default;
     LUT(LUT &&other) = default;

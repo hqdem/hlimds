@@ -107,6 +107,8 @@ sudo make install
    git clone https://github.com/YosysHQ/yosys.git <yosys-dir>
    cd <yosys-dir>
    git checkout yosys-0.44
+   git submodule init
+   git submodule update
    ```
 
 2. Make sure your system meets the requirements listed in `<yosys-dir>/README.md`

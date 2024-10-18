@@ -13,9 +13,11 @@ set_name
 stat_design
 stat_logdb
 techmap
+unmap
 version
 write_dataflow
 write_debug
 write_dot
+write_logdb
 write_verilog
 write_verilog_lib

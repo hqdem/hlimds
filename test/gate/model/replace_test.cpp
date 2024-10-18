@@ -1969,6 +1969,45 @@ TEST(ReplaceBuilderTest, WeightsEvalNewRoot) {
   EXPECT_TRUE(std::fabs(effect.weight) < 1e-6);
 }
 
+TEST(ReplaceBuilderTest, WeightsNoRefEffect) {
+  SubnetBuilder builder;
+
+  Subnet::LinkList inputs = builder.addInputs(2);
+  Subnet::Link link1 = builder.addCell(BUF, inputs[0]);
+  Subnet::Link link2 = builder.addCell(AND, link1, inputs[1]);
+  builder.addOutput(link2);
+
+  std::vector<float> weights{1, 1, 1, 1, 1};
+  for (auto it = builder.begin(); it != builder.end(); ++it) {
+    const EntryID j = *it;
+    builder.setWeight(j, weights[j]);
+  }
+
+  /// RHS SubnetBuilder
+  SubnetBuilder rhsBuilder;
+
+  Subnet::LinkList rhsInputs = rhsBuilder.addInputs(2);
+  Subnet::Link rhsLink1 = rhsBuilder.addCell(OR, rhsInputs[0], rhsInputs[1]);
+  rhsBuilder.addOutput(rhsLink1);
+  std::vector<float> rhsWeights{1, 1, 1, 1};
+  for (auto it = rhsBuilder.begin(); it != rhsBuilder.end(); ++it) {
+    const EntryID j = *it;
+    rhsBuilder.setWeight(j, rhsWeights[j]);
+  }
+
+  InOutMapping mapping({0, 1}, {3});
+  SubnetBuilder::CellWeightModifier weightModifier =
+      [](float p, uint16_t refcount) {
+        return p * 2;
+  };
+
+  const auto effect = builder.evaluateReplace(
+    rhsBuilder, mapping, &weightModifier
+  );
+
+  EXPECT_TRUE(std::fabs(effect.weight - 2.f) < 1e-6);
+}
+
 TEST(ReplaceViewTest, DifferentViews) {
   SubnetBuilder builder;
 

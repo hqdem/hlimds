@@ -176,7 +176,7 @@ static SubnetTechMapperBase::SubnetBuilderPtr makeMappedSubnet(
   std::vector<model::Subnet::Link> links(oldSize);
 
   // Iterate over all subnet cells and handle the mapped ones.
-  for (auto it = oldBuilder->begin(); it != oldBuilder->end(); ++it) {
+  for (auto it = oldBuilder->begin(); it != oldBuilder->end(); it.nextCell()) {
     const auto entryID = *it;
     const auto &oldCell = oldBuilder->getCell(entryID);
 

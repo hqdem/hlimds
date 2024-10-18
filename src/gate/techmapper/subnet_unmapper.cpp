@@ -20,7 +20,7 @@ SubnetUnmapper::SubnetBuilderPtr SubnetUnmapper::map(
   // Maps old links (w/o invertors) to new ones.
   std::unordered_map<model::Subnet::Link, model::Subnet::Link> links;
 
-  for (auto it = builder->begin(); it != builder->end(); ++it) {
+  for (auto it = builder->begin(); it != builder->end(); it.nextCell()) {
     const auto entryID = *it;
     const auto &oldCell = builder->getCell(entryID);
 

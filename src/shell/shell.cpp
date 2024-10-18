@@ -29,7 +29,6 @@
 #include "shell/command/write_design.h"
 #include "shell/command/write_verilog_lib.h"
 #include "shell/shell.h"
-#include "util/env.h"
 
 namespace eda::shell {
 

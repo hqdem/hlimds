@@ -12,7 +12,6 @@
 #include "diag/logger.h"
 #include "diag/terminal_printer.h"
 #include "gate/model/design.h"
-#include "util/singleton.h"
 
 #include <CLI/CLI.hpp>
 #include <fmt/format.h>
@@ -22,14 +21,12 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef>
-#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <string>
-#include <vector>
 
 #define UTOPIA_SHELL_OUT std::cout
 #define UTOPIA_SHELL_ERR std::cerr

@@ -140,7 +140,7 @@ Probabilities ProbabilityEstimator::estimateProbs(
 
   Probabilities probs(builder.getMaxIdx() + 1);
 
-  for (auto it = builder.begin(); it != builder.end(); ++it) {
+  for (auto it = builder.begin(); it != builder.end(); it.nextCell()) {
     estimateCell(builder, probs, *it, probabilities);
   }
 

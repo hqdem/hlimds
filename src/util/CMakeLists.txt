@@ -7,12 +7,11 @@ add_library(Util OBJECT
 
 target_include_directories(Util
   PUBLIC
-    ${PROJECT_SOURCE_DIR}/lib/kitty/include
     ${PROJECT_SOURCE_DIR}/src)
 
 add_library(Utopia::Util ALIAS Util)
 
 target_link_libraries(Util
-  PRIVATE
-    fmt
+  PUBLIC
+    Kitty
 )

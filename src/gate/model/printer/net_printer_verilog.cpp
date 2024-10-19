@@ -72,32 +72,32 @@ static inline void assignConstant(
       << " = " << (type.isZero() ? "0" : "1") << " ;\n";
 }
 
-static inline void bindInput(
+static inline void bindInputPin(
     std::ostream &out, const NetPrinter::LinkInfo &linkInfo) {
   out << getLinkExpr(linkInfo);
 }
 
-static void bindInput(
+static void bindInputPort(
     std::ostream &out,
     const NetPrinter::LinksInfo &linksInfo,
     size_t index,
     const Port &port) {
   assert(port.width > 0);
-  const auto bindByName = !port.getName().empty();
+  const auto bindByName = port.hasName();
 
   if (bindByName) { 
     out << "." << port.getName() << "( ";
   }
 
   if (port.width == 1) {
-    bindInput(out, linksInfo[index]);
+    bindInputPin(out, linksInfo[index]);
   } else {
     out << "{ ";
     bool comma = false;
     for (size_t i = 0; i < port.width; ++i) {
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
-      bindInput(out, linksInfo[index + port.width - 1 - i]);
+      bindInputPin(out, linksInfo[index + port.width - 1 - i]);
       comma = true;
     }
     // Space before "}" is for escaped identifiers.
@@ -110,25 +110,25 @@ static void bindInput(
   }
 }
 
-static inline void bindOutput(
+static inline void bindOutputPin(
     std::ostream &out, const NetPrinter::PortInfo &portInfo) {
   out << portInfo.getName();
 }
 
-static void bindOutput(
+static void bindOutputPort(
     std::ostream &out,
     const NetPrinter::CellInfo &cellInfo,
     size_t index,
     const Port &port) {
   assert(port.width > 0);
-  const auto bindByName = !port.getName().empty();
+  const auto bindByName = port.hasName();
 
   if (bindByName) {
     out << "." << port.getName() << "( ";
   }
 
   if (port.width == 1) {
-    bindOutput(out, NetPrinter::PortInfo(cellInfo, index));
+    bindOutputPin(out, NetPrinter::PortInfo(cellInfo, index));
   } else {
     out << "{ ";
     bool comma = false;
@@ -136,7 +136,7 @@ static void bindOutput(
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
       const auto upperBitIndex = index + port.width - 1 - i;
-      bindOutput(out, NetPrinter::PortInfo(cellInfo, upperBitIndex));
+      bindOutputPin(out, NetPrinter::PortInfo(cellInfo, upperBitIndex));
       comma = true;
     }
     // Space before "}" is for escaped identifiers.
@@ -174,14 +174,14 @@ static void instantiateCell(
     for (uint16_t output = 0; output < type.getOutNum(); ++output) {
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
-      bindOutput(out, NetPrinter::PortInfo(cellInfo, output));
+      bindOutputPin(out, NetPrinter::PortInfo(cellInfo, output));
       comma = true;
     }
 
     for (auto linkInfo : linksInfo) {
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
-      bindInput(out, linkInfo);
+      bindInputPin(out, linkInfo);
       comma = true;
     }
   } else {
@@ -196,10 +196,10 @@ static void instantiateCell(
       // Space before "," is for escaped identifiers.
       if (comma) out << " , ";
       if (port.input) {
-        bindInput(out, linksInfo, input, port);
+        bindInputPort(out, linksInfo, input, port);
         input += port.width;
       } else {
-        bindOutput(out, cellInfo, output, port);
+        bindOutputPort(out, cellInfo, output, port);
         output += port.width;
       }
       comma = true;

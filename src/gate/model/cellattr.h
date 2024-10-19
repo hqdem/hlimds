@@ -46,7 +46,6 @@ struct Port final {
       width(width), input(input), index(index) {}
 
   Port(Width width, bool input, Index index = 0):
-      nameID(OBJ_NULL_ID),
       width(width), input(input), index(index) {}
 
   Port(const std::string &name, bool input, Index index = 0):
@@ -57,9 +56,10 @@ struct Port final {
 
   Port(): Port(0, false, 0) {}
 
+  bool hasName() const { return nameID != OBJ_NULL_ID; }
   std::string getName() const { return String::get(nameID); }
 
-  StringID nameID;
+  StringID nameID{OBJ_NULL_ID};
 
   Width width;
   Flags input;

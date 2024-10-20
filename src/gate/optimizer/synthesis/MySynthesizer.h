@@ -18,7 +18,7 @@ using LinkList = model::Subnet::LinkList;
 using SOP = std::vector<Cube>;
 using SubnetBuilder = model::SubnetBuilder;
 using SubnetObject = model::SubnetObject;
-using TruthTable = util::TruthTable;
+using TruthTable = model::TruthTable;
 /// @endcond
 
 class MySynthesizer final : public TruthTableSynthesizer {

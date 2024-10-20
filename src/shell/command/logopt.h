@@ -65,6 +65,7 @@ struct LogOptCommand final : public UtopiaCommand {
 
     // Refactoring.
     ADD_CMD(app, pass::rf,  "rf",  "Refactoring");
+    ADD_CMD(app, pass::myrf,  "myrf",  "Refactoring myrf");
     ADD_CMD(app, pass::rfz, "rfz", "Refactoring w/ zero-cost replacements");
     ADD_CMD(app, pass::rfa, "rfa", "Area-aware refactoring");
     ADD_CMD(app, pass::rfd, "rfd", "Depth-aware refactoring");

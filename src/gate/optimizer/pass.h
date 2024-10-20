@@ -23,6 +23,7 @@
 #include "gate/optimizer/synthesis/db_xag4_synthesizer.h"
 #include "gate/optimizer/synthesis/isop.h"
 #include "gate/premapper/premapper.h"
+#include "gate/synthesizer/MySynthesizer.h"
 
 #include <fmt/format.h>
 
@@ -340,3 +341,18 @@ inline DesignPass foreach(const SubnetMapper &mapper) {
 }
 
 } // namespace eda::gate::optimizer
+
+inline SubnetPass myrf() {
+  static synthesis::MySynthesizer mySynthesizer;
+  static Resynthesizer resynthesizer(mySynthesizer);
+  static Refactorer::ReplacePredicate replacePredicate =
+      [](const SubnetEffect &effect) { return effect.size > 0; };
+
+  static Refactorer::WindowConstructor windowConstructor =
+      [](model::SubnetBuilder &builder, size_t root, uint16_t cutSize) {
+        return getReconvergentCut(builder, root, cutSize);
+      };
+
+  return std::make_shared<Refactorer>("myrf", resynthesizer, &windowConstructor,
+                                      8, 16, &replacePredicate);
+}

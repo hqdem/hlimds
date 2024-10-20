@@ -1,5 +1,5 @@
 ### Path to input circuits
-set files [glob workdir/utopia-eda/data_for_testing/*.graphml]
+set files [glob /workdir/utopia-eda/data_for_testing/*.graphml]
 ### Path to folder with resutls
 set resultsPath log/
 

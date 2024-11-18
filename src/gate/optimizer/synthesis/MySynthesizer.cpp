@@ -31,7 +31,7 @@ static std::pair<TruthTable, bool> handleCare(
   return {inv ? inverseFuncWithCare : funcWithCare, inv};
 }
 
-Link synthFromImplicant(Cube cube,
+Link synthesImplicant(Cube cube,
                         const LinkList &inputs,
                         SubnetBuilder &subnetBuilder,
                         uint16_t maxArity) {
@@ -49,13 +49,13 @@ Link synthFromImplicant(Cube cube,
     return subnetBuilder.addCellTree(model::AND, links, maxArity);
 }
 
-Link synthFromImplicant_list(const CubesList &implicants,
+Link synthesImplicants(const CubesList &implicants,
                              const LinkList &inputs,
                              SubnetBuilder &subnetBuilder,
                              uint16_t maxArity) {
     LinkList links;
     for (uint16_t i = 0; i < implicants.size(); ++i) {
-        const Link link = synthFromImplicant(implicants[i], inputs, subnetBuilder, maxArity);
+        const Link link = synthesImplicant(implicants[i], inputs, subnetBuilder, maxArity);
         links.push_back(link);
     }
     if (links.size() == 1) {
@@ -77,7 +77,7 @@ SubnetObject MySynthesizer::synthesize(const TruthTable &func,
         return SubnetBuilder::makeConst(tt.num_vars(), value ^ inv);
     }
 
-    Link output(synthFromImplicant_list(kitty::get_prime_implicants_morreale(tt), ins, subnetBuilder, maxArity));
+    Link output(synthesImplicants(kitty::get_prime_implicants_morreale(tt), ins, subnetBuilder, maxArity));
     subnetBuilder.addOutput(inv ? ~output : output);
     return object;
 }
